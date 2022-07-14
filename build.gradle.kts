@@ -36,6 +36,7 @@ kotlin {
         }
         val commonTest by getting {
             dependencies {
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
                 implementation(kotlin("test"))
             }
         }
@@ -49,9 +50,12 @@ kotlin {
         }
         val jvmTest by getting {
             dependencies {
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
                 implementation(kotlin("test"))
                 // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java
                 implementation("org.seleniumhq.selenium:selenium-java:4.2.2")
+                // https://mvnrepository.com/artifact/commons-io/commons-io
+                implementation("commons-io:commons-io:2.11.0")
 
             }
         }
