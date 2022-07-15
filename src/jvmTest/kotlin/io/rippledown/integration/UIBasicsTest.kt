@@ -10,23 +10,16 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class UIBasicsTest {
-
-    private lateinit var driver: WebDriver
+internal class UIBasicsTest: UITestBase() {
 
     @BeforeTest
     fun setup() {
-        System.setProperty("webdriver.chrome.driver","C:\\chromedriver\\chromedriver.exe")
-        val options = ChromeOptions()
-        driver = ChromeDriver(options)
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10))
-        driver.manage().window()?.maximize()
-        driver.get("http://127.0.0.1:9090")
+        setupWebDriver()
     }
 
     @AfterTest
-    fun driverClose() {
-        driver.close()
+    fun cleanup() {
+        driverClose()
     }
 
     @Test

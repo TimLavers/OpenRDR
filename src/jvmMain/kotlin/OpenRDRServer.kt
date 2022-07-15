@@ -7,8 +7,10 @@ import io.ktor.routing.*
 import io.ktor.serialization.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.rippledown.server.ServerApplication
 
 fun main() {
+    val application = ServerApplication()
     embeddedServer(Netty, 9090) {
         install(ContentNegotiation) {
             json()
@@ -31,6 +33,9 @@ fun main() {
             }
             static("/") {
                 resources("")
+            }
+            get("/api/waitingCasesInfo") {
+                call.respond(application.waitingCasesInfo())
             }
         }
     }.start(wait = true)

@@ -1,4 +1,4 @@
-package io.rippledown.model
+package io.rippledown.server
 
 import com.google.common.io.Files
 import io.rippledown.CaseTestUtils
@@ -13,16 +13,11 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-internal class CaseTest {
+public object
+internal class ServerApplicationTest {
 
     @Test
     fun readFromFile() {
-        val caseString = CaseTestUtils.caseData("Case1")
-        val deserialized = Json.decodeFromString<RDRCase>(caseString)
-        assertEquals(deserialized.caseData.size, 2)
-        assertEquals(deserialized.name, "Case1")
-        assertEquals(deserialized.caseData["TSH"], "0.667")
-        assertEquals(deserialized.caseData["ABC"], "6.7")
 
     }
 }
