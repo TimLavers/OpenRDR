@@ -1,23 +1,33 @@
 package io.rippledown.server
 
-import com.google.common.io.Files
 import io.rippledown.CaseTestUtils
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import org.apache.commons.io.FileUtils
-import org.apache.commons.io.StandardLineSeparator
 import java.io.File
-import java.nio.charset.StandardCharsets
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-public object
 internal class ServerApplicationTest {
 
     @Test
-    fun readFromFile() {
+    fun casesDir() {
+        val app = ServerApplication()
+        assertEquals(app.casesDir, File("temp/cases"))
+        assertTrue(app.casesDir.exists())
+    }
 
+    @Test
+    fun waitingCasesInfo() {
+        val app = ServerApplication()
+        FileUtils.cleanDirectory(app.casesDir)
+        assertEquals(app.waitingCasesInfo().resourcePath, File("temp/cases").absolutePath)
+        assertEquals(app.waitingCasesInfo().count, 0)
+
+        // Move some cases into the directory.
+        FileUtils.copyFileToDirectory(CaseTestUtils.caseFile("Case3"), app.casesDir)
+        assertEquals(app.waitingCasesInfo().count, 1)
+
+        FileUtils.copyFileToDirectory(CaseTestUtils.caseFile("Case2"), app.casesDir)
+        assertEquals(app.waitingCasesInfo().count, 2)
     }
 }

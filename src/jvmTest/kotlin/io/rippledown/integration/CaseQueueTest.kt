@@ -1,6 +1,7 @@
 package io.rippledown.integration
 
 import io.rippledown.CaseTestUtils
+import io.rippledown.integration.pageobjects.CaseQueuePO
 import org.apache.commons.io.FileUtils
 import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver
@@ -17,7 +18,7 @@ internal class CaseQueueTest: UITestBase() {
 
     @BeforeTest
     fun setup() {
-        copyCases()
+        cleanupCasesDir()
         setupWebDriver()
     }
 
@@ -28,15 +29,28 @@ internal class CaseQueueTest: UITestBase() {
 
     @Test
     fun numberOfWaitingCasesIsShown() {
-        val waitingCasesElement = driver.findElement(By.id("number_of_cases_waiting_value"))
-        assertEquals(waitingCasesElement.text, "3")
+        val caseQueuesPO = CaseQueuePO(driver)
+        // No cases at start.
+        assertEquals(caseQueuesPO.numberWaiting(), 0)
+
+        // Copy a case.
+        copyCase("Case2")
+        caseQueuesPO.refresh()
+        assertEquals(caseQueuesPO.numberWaiting(), 1)
+
+        // Copy another case.
+        copyCase("Case1")
+        caseQueuesPO.refresh()
+        assertEquals(caseQueuesPO.numberWaiting(), 2)
     }
 
-    private fun copyCases() {
+    private fun cleanupCasesDir() {
         val destination = File("temp/cases")
         FileUtils.cleanDirectory(destination)
-        FileUtils.copyFileToDirectory(CaseTestUtils.caseFile("Case1"), destination)
-//        FileUtils.copyFileToDirectory(CaseTestUtils.caseFile("Case2"), destination)
-        FileUtils.copyFileToDirectory(CaseTestUtils.caseFile("Case3"), destination)
+    }
+
+    private fun copyCase(caseName: String) {
+        val destination = File("temp/cases")
+        FileUtils.copyFileToDirectory(CaseTestUtils.caseFile(caseName), destination)
     }
 }

@@ -2,6 +2,7 @@ import io.rippledown.model.CasesInfo
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import react.*
+import react.dom.html.ReactHTML.button
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.h1
 import react.dom.html.ReactHTML.h2
@@ -32,5 +33,15 @@ val OpenRDRUI = FC<Props> {
     div {
         +"${waitingCasesInfo.count}"
         id = "number_of_cases_waiting_value"
+    }
+    button {
+        +"Update"
+        onClick = {
+            console.log("Clicked")
+            scope.launch {
+                waitingCasesInfo = getWaitingCasesInfo()
+            }
+        }
+        id = "refresh_waiting_cases_info_button"
     }
 }
