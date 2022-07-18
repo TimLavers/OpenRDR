@@ -1,11 +1,18 @@
+import api.getWaitingCasesInfo
+import csstype.FontFamily
+import csstype.FontSize
+import csstype.px
+import csstype.rgb
 import io.rippledown.model.CasesInfo
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import react.*
-import react.dom.html.ReactHTML.button
+import react.FC
+import react.css.css
+import react.Props
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.h1
-import react.dom.html.ReactHTML.h2
+import react.useEffectOnce
+import react.useState
 
 private val scope = MainScope()
 
@@ -18,30 +25,18 @@ val OpenRDRUI = FC<Props> {
         }
     }
 
-    h1 {
-        +"Open RippleDown"
-        id = "main_heading"
-    }
-    h2 {
-        +"Number of cases waiting"
-        id = "number_of_cases_waiting_heading"
-    }
     div {
-        +waitingCasesInfo.resourcePath
-        id = "number_of_cases_waiting_path"
-    }
-    div {
-        +"${waitingCasesInfo.count}"
-        id = "number_of_cases_waiting_value"
-    }
-    button {
-        +"Update"
-        onClick = {
-            console.log("Clicked")
-            scope.launch {
-                waitingCasesInfo = getWaitingCasesInfo()
-            }
+        css {
+            fontFamily = FontFamily.sansSerif
         }
-        id = "refresh_waiting_cases_info_button"
+        h1 {
+            +"Open RippleDown"
+            css {
+//                backgroundColor = rgb(198, 0, 232)
+                color = rgb(24, 24, 198)
+            }
+            id = "main_heading"
+        }
+        CaseQueue()
     }
 }

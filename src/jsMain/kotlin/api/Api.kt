@@ -1,4 +1,5 @@
-import io.ktor.http.*
+package api
+
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.features.json.JsonFeature
