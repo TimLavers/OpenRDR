@@ -25,9 +25,14 @@ internal class ServerApplicationTest {
 
         // Move some cases into the directory.
         FileUtils.copyFileToDirectory(CaseTestUtils.caseFile("Case3"), app.casesDir)
-        assertEquals(app.waitingCasesInfo().count, 1)
+        val ci1 = app.waitingCasesInfo()
+        assertEquals(ci1.count, 1)
+        assertEquals(ci1.caseIds[0].name, "Case3")
 
         FileUtils.copyFileToDirectory(CaseTestUtils.caseFile("Case2"), app.casesDir)
-        assertEquals(app.waitingCasesInfo().count, 2)
+        val ci2 = app.waitingCasesInfo()
+        assertEquals(ci2.count, 2)
+        assertEquals(ci2.caseIds[0].name, "Case2")
+        assertEquals(ci2.caseIds[1].name, "Case3")
     }
 }
