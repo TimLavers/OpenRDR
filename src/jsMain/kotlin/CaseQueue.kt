@@ -55,11 +55,14 @@ val CaseQueue = FC<Props> {
                         showCaseList = true
                     }
                 }
+                disabled = waitingCasesInfo.count == 0
                 id = "review_cases_button"
             }
         }
     }
     if (showCaseList) {
-        CaseList()
+        CaseList {
+            caseIds = waitingCasesInfo.caseIds
+        }
     }
 }

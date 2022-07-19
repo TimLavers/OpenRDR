@@ -3,23 +3,18 @@ package io.rippledown.integration
 import io.rippledown.CaseTestUtils
 import io.rippledown.integration.pageobjects.CaseQueuePO
 import org.apache.commons.io.FileUtils
-import org.openqa.selenium.By
-import org.openqa.selenium.WebDriver
-import org.openqa.selenium.chrome.ChromeDriver
-import org.openqa.selenium.chrome.ChromeOptions
 import java.io.File
-import java.time.Duration
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import kotlin.test.*
 
 internal class CaseQueueTest: UITestBase() {
+
+    private lateinit var caseQueuePO: CaseQueuePO
 
     @BeforeTest
     fun setup() {
         cleanupCasesDir()
         setupWebDriver()
+        caseQueuePO = CaseQueuePO(driver)
     }
 
     @AfterTest
@@ -28,20 +23,42 @@ internal class CaseQueueTest: UITestBase() {
     }
 
     @Test
+    fun reviewButtonDisabledIfNoCasesWaiting() {
+        assertFalse(caseQueuePO.reviewButtonIsEnabled())
+
+        copyCase("Case2")
+        pause()//todo use Awaitility
+        caseQueuePO.refresh()
+        assertTrue(caseQueuePO.reviewButtonIsEnabled())
+    }
+
+    @Test
+    fun showCaseList() {
+        copyCase("Case2")
+        copyCase("Case1")
+        caseQueuePO.refresh()
+
+        val listPO = caseQueuePO.review()
+        val casesListed = listPO.casesListed()
+        assertEquals(casesListed.size, 2)
+        assertEquals(casesListed[0], "Case1")
+        assertEquals(casesListed[1], "Case2")
+    }
+
+    @Test
     fun numberOfWaitingCasesIsShown() {
-        val caseQueuesPO = CaseQueuePO(driver)
         // No cases at start.
-        assertEquals(caseQueuesPO.numberWaiting(), 0)
+        assertEquals(caseQueuePO.numberWaiting(), 0)
 
         // Copy a case.
         copyCase("Case2")
-        caseQueuesPO.refresh()
-        assertEquals(caseQueuesPO.numberWaiting(), 1)
+        caseQueuePO.refresh()
+        assertEquals(caseQueuePO.numberWaiting(), 1)
 
         // Copy another case.
         copyCase("Case1")
-        caseQueuesPO.refresh()
-        assertEquals(caseQueuesPO.numberWaiting(), 2)
+        caseQueuePO.refresh()
+        assertEquals(caseQueuePO.numberWaiting(), 2)
     }
 
     private fun cleanupCasesDir() {

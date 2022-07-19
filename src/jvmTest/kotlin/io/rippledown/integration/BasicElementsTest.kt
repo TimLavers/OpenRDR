@@ -1,16 +1,12 @@
 package io.rippledown.integration
 
 import org.openqa.selenium.By
-import org.openqa.selenium.WebDriver
-import org.openqa.selenium.chrome.ChromeDriver
-import org.openqa.selenium.chrome.ChromeOptions
-import java.time.Duration
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class UIBasicsTest: UITestBase() {
+internal class BasicElementsTest: UITestBase() {
 
     @BeforeTest
     fun setup() {

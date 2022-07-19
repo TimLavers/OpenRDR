@@ -1,5 +1,6 @@
 import api.getWaitingCasesInfo
 import csstype.*
+import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -15,7 +16,11 @@ import react.dom.html.ReactHTML.ul
 
 private val scope = MainScope()
 
-val CaseList = FC<Props> {
+external interface CaseListHandler : Props {
+    var caseIds: List<CaseId>
+}
+
+val CaseList = FC<CaseListHandler> { props ->
     div {
         css {
             after {
@@ -25,6 +30,7 @@ val CaseList = FC<Props> {
         }
         div {
             +"Cases "
+            id = "case_list_container"
             css {
                 className = "left_column"
                 backgroundColor = rgb(128, 128, 128)
@@ -33,11 +39,11 @@ val CaseList = FC<Props> {
                 padding = Length("12px")
             }
             ul {
-                li {
-                    +"Case1"
-                }
-                li {
-                    +"Case2"
+                for (caseId in props.caseIds) {
+                    li {
+                        +caseId.name
+                        id = caseId.name
+                    }
                 }
             }
         }

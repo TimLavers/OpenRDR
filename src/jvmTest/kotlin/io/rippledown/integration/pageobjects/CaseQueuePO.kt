@@ -14,4 +14,15 @@ class CaseQueuePO(private val driver: WebDriver) {
         val refreshButton = driver.findElement(By.id("refresh_waiting_cases_info_button"))
         refreshButton.click()
     }
+
+    fun review(): CaseListPO {
+        reviewButton().click()
+        return CaseListPO(driver)
+    }
+
+    fun reviewButtonIsEnabled(): Boolean {
+        return reviewButton().isEnabled
+    }
+
+    private fun reviewButton() = driver.findElement(By.id("review_cases_button"))
 }
