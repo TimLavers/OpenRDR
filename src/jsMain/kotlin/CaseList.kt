@@ -1,22 +1,12 @@
-import api.getWaitingCasesInfo
 import csstype.*
 import io.rippledown.model.CaseId
-import io.rippledown.model.CasesInfo
 import io.rippledown.model.RDRCase
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
-import react.*
+import react.FC
+import react.Props
 import react.css.css
-import react.dom.html.ReactHTML
-import react.dom.html.ReactHTML.a
-import react.dom.html.ReactHTML.button
 import react.dom.html.ReactHTML.div
-import react.dom.html.ReactHTML.h2
 import react.dom.html.ReactHTML.li
-import react.dom.html.ReactHTML.span
 import react.dom.html.ReactHTML.ul
-
-private val scope = MainScope()
 
 external interface CaseListHandler : Props {
     var caseIds: List<CaseId>

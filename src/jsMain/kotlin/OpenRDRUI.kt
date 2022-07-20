@@ -1,6 +1,5 @@
 import csstype.FontFamily
 import csstype.TextAlign
-import csstype.rgb
 import react.FC
 import react.Props
 import react.css.css
@@ -15,7 +14,7 @@ val OpenRDRUI = FC<Props> {
         h1 {
             +"Open RippleDown"
             css {
-                color = rgb(24, 24, 198)
+                color = rdBlue
                 textAlign = TextAlign.center
             }
             id = "main_heading"

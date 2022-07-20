@@ -1,25 +1,13 @@
-import api.getWaitingCasesInfo
 import csstype.*
-import io.rippledown.model.CaseId
-import io.rippledown.model.CasesInfo
 import io.rippledown.model.RDRCase
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
-import react.*
+import react.FC
+import react.Props
 import react.css.css
-import react.dom.html.ReactHTML
-import react.dom.html.ReactHTML.a
-import react.dom.html.ReactHTML.button
 import react.dom.html.ReactHTML.div
-import react.dom.html.ReactHTML.h2
-import react.dom.html.ReactHTML.li
-import react.dom.html.ReactHTML.span
 import react.dom.html.ReactHTML.table
+import react.dom.html.ReactHTML.td
 import react.dom.html.ReactHTML.th
 import react.dom.html.ReactHTML.tr
-import react.dom.html.ReactHTML.ul
-
-private val scope = MainScope()
 
 external interface CaseViewHandler : Props {
     var case: RDRCase
@@ -27,22 +15,62 @@ external interface CaseViewHandler : Props {
 
 val CaseView = FC<CaseViewHandler> { props ->
     div {
-        +props.case.name
         css {
-            backgroundColor = rgb(192, 64, 128)
             float = Float.left
             width = Length("70%")
-            padding = Length("12px")
+            padding = px12
+        }
+        div {
+            +props.case.name
+            css {
+                paddingBottom = px4
+                paddingLeft = px8
+                color = rdBlue
+                fontStyle = FontStyle.italic
+                fontWeight = FontWeight.bold
+            }
         }
         table {
+            css {
+                border = Length("1px")
+                borderColor = rgb( 128, 128, 128)
+                borderStyle = LineStyle.solid
+            }
             tr {
                 th {
-                    +"Datum"
-                    id = "case_table_header_datum"
+                    +"Attribute"
+                    css {
+                        padding = px8
+                    }
+                    id = "case_table_header_attribute"
                 }
                 th {
                     +"Value"
+                    css {
+                        padding = px8
+                    }
                     id = "case_table_header_value"
+                }
+            }
+            props.case.caseData.forEach {
+                tr {
+                    css {
+                        nthChild("even") {
+                            backgroundColor = rgb(224, 224, 224)
+                        }
+                    }
+                    td {
+                        +it.key
+                        css {
+                            padding = px8
+                        }
+                    }
+                    td {
+                        +it.value
+                        css {
+                            padding = px8
+                        }
+                    }
                 }
             }
         }
