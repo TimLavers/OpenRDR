@@ -1,6 +1,8 @@
+import api.getCase
 import api.getWaitingCasesInfo
 import csstype.*
 import io.rippledown.model.CasesInfo
+import io.rippledown.model.RDRCase
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import react.*
@@ -15,6 +17,7 @@ private val scope = MainScope()
 val CaseQueue = FC<Props> {
     var waitingCasesInfo by useState(CasesInfo(emptyList(), ""))
     var showCaseList: Boolean by useState(false)
+    var selectedCase: RDRCase? by useState(null)
 
     useEffectOnce {
         scope.launch {
@@ -63,6 +66,13 @@ val CaseQueue = FC<Props> {
     if (showCaseList) {
         CaseList {
             caseIds = waitingCasesInfo.caseIds
+            onCaseSelected = {
+                console.log("Selected: ", it)
+                scope.launch {
+                    selectedCase = getCase(it)
+                }
+            }
+            currentCase = selectedCase
         }
     }
 }

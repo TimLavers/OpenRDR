@@ -37,6 +37,10 @@ fun main() {
             get("/api/waitingCasesInfo") {
                 call.respond(application.waitingCasesInfo())
             }
+            get("/api/case") {
+                val id =call.parameters["id"] ?:error("Invalid case id.")
+                call.respond(application.case(id))
+            }
         }
     }.start(wait = true)
 }

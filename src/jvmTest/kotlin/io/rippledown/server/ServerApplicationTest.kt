@@ -17,6 +17,17 @@ internal class ServerApplicationTest {
     }
 
     @Test
+    fun case() {
+        val app = ServerApplication()
+        FileUtils.copyFileToDirectory(CaseTestUtils.caseFile("Case1"), app.casesDir)
+        val retrieved = app.case("Case1")
+        assertEquals(retrieved.name, "Case1")
+        assertEquals(retrieved.caseData["TSH"], "0.667")
+        assertEquals(retrieved.caseData["ABC"], "6.7")
+        assertEquals(retrieved.caseData.size, 2)
+    }
+
+    @Test
     fun waitingCasesInfo() {
         val app = ServerApplication()
         FileUtils.cleanDirectory(app.casesDir)

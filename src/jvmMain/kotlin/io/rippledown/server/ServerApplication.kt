@@ -18,12 +18,19 @@ class ServerApplication {
 
     fun waitingCasesInfo(): CasesInfo {
         fun readCaseDetails(file: File): CaseId {
-            val data = FileUtils.readFileToString(file, StandardCharsets.UTF_8)
-            val case = Json.decodeFromString<RDRCase>(data)
-            return CaseId(case.name, case.name)
+            return CaseId(getCaseFromFile(file).name, getCaseFromFile(file).name)
         }
         val caseFiles = casesDir.listFiles()
         val idsList = caseFiles?.map { file -> readCaseDetails(file) } ?: emptyList()
         return CasesInfo(idsList, casesDir.absolutePath)
+    }
+
+    fun case(id: String): RDRCase {
+        return getCaseFromFile(File(casesDir, "$id.json"))
+    }
+
+    private fun getCaseFromFile(file: File): RDRCase {
+        val data = FileUtils.readFileToString(file, StandardCharsets.UTF_8)
+        return Json.decodeFromString(data)
     }
 }
