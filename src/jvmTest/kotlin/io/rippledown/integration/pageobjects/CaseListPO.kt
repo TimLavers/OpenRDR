@@ -14,4 +14,10 @@ class CaseListPO(private val driver: WebDriver) {
     fun casesListed(): List<String> {
         return containerElement().findElements(By.tagName("li")).map { it.text }
     }
+
+    fun select(caseName: String): CaseViewPO {
+        val id = "case_list_item_$caseName"
+        driver.findElement(By.id(id)).click()
+        return CaseViewPO(driver)
+    }
 }

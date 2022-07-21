@@ -20,8 +20,10 @@ val CaseView = FC<CaseViewHandler> { props ->
             width = Length("70%")
             padding = px12
         }
+        id = "case_view_container"
         div {
             +props.case.name
+            id = "case_view_case_name"
             css {
                 paddingBottom = px4
                 paddingLeft = px8
@@ -61,12 +63,14 @@ val CaseView = FC<CaseViewHandler> { props ->
                     }
                     td {
                         +it.key
+                        id = "attribute_name_cell_${it.key}"
                         css {
                             padding = px8
                         }
                     }
                     td {
                         +it.value
+                        id = "attribute_value_cell_${it.key}"
                         css {
                             padding = px8
                         }

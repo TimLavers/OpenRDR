@@ -1,9 +1,6 @@
 package io.rippledown.integration
 
-import io.rippledown.CaseTestUtils
 import io.rippledown.integration.pageobjects.CaseQueuePO
-import org.apache.commons.io.FileUtils
-import java.io.File
 import kotlin.test.*
 
 internal class CaseQueueTest: UITestBase() {
@@ -59,15 +56,5 @@ internal class CaseQueueTest: UITestBase() {
         copyCase("Case1")
         caseQueuePO.refresh()
         assertEquals(caseQueuePO.numberWaiting(), 2)
-    }
-
-    private fun cleanupCasesDir() {
-        val destination = File("temp/cases")
-        FileUtils.cleanDirectory(destination)
-    }
-
-    private fun copyCase(caseName: String) {
-        val destination = File("temp/cases")
-        FileUtils.copyFileToDirectory(CaseTestUtils.caseFile(caseName), destination)
     }
 }

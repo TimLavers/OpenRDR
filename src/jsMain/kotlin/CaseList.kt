@@ -38,7 +38,7 @@ val CaseList = FC<CaseListHandler> { props ->
                 for (caseId in props.caseIds) {
                     li {
                         +caseId.name
-                        id = caseId.name
+                        id = "case_list_item_${caseId.name}"
                         css {
                             textDecorationLine = TextDecorationLine.underline
                             padding = Length("3px")
@@ -55,6 +55,8 @@ val CaseList = FC<CaseListHandler> { props ->
             CaseView {
                 case = props.currentCase!!
             }
+        } else {
+            NoCaseView()
         }
     }
 }
