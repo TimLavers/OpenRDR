@@ -38,11 +38,11 @@ val CaseQueue = FC<Props> {
     }
     span {
         div {
-            css {
-                padding = Length("12px")
-            }
             button {
                 +"Refresh"
+                css {
+                    padding = px4
+                }
                 onClick = {
                     scope.launch {
                         waitingCasesInfo = getWaitingCasesInfo()
@@ -52,6 +52,9 @@ val CaseQueue = FC<Props> {
             }
             button {
                 +"Review"
+                css {
+                    padding = px4
+                }
                 onClick = {
                     scope.launch {
                         waitingCasesInfo = getWaitingCasesInfo()
@@ -67,7 +70,6 @@ val CaseQueue = FC<Props> {
         CaseList {
             caseIds = waitingCasesInfo.caseIds
             onCaseSelected = {
-                console.log("Selected: ", it)
                 scope.launch {
                     selectedCase = getCase(it)
                 }

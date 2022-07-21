@@ -5,8 +5,10 @@ import react.Props
 import react.css.css
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.table
+import react.dom.html.ReactHTML.tbody
 import react.dom.html.ReactHTML.td
 import react.dom.html.ReactHTML.th
+import react.dom.html.ReactHTML.thead
 import react.dom.html.ReactHTML.tr
 
 external interface CaseViewHandler : Props {
@@ -38,41 +40,45 @@ val CaseView = FC<CaseViewHandler> { props ->
                 borderColor = rgb( 128, 128, 128)
                 borderStyle = LineStyle.solid
             }
-            tr {
-                th {
-                    +"Attribute"
-                    css {
-                        padding = px8
+            thead {
+                tr {
+                    th {
+                        +"Attribute"
+                        css {
+                            padding = px8
+                        }
+                        id = "case_table_header_attribute"
                     }
-                    id = "case_table_header_attribute"
-                }
-                th {
-                    +"Value"
-                    css {
-                        padding = px8
+                    th {
+                        +"Value"
+                        css {
+                            padding = px8
+                        }
+                        id = "case_table_header_value"
                     }
-                    id = "case_table_header_value"
                 }
             }
-            props.case.caseData.forEach {
-                tr {
-                    css {
-                        nthChild("even") {
-                            backgroundColor = rgb(224, 224, 224)
-                        }
-                    }
-                    td {
-                        +it.key
-                        id = "attribute_name_cell_${it.key}"
+            tbody {
+                props.case.caseData.forEach {
+                    tr {
                         css {
-                            padding = px8
+                            nthChild("even") {
+                                backgroundColor = rgb(224, 224, 224)
+                            }
                         }
-                    }
-                    td {
-                        +it.value
-                        id = "attribute_value_cell_${it.key}"
-                        css {
-                            padding = px8
+                        td {
+                            +it.key
+                            id = "attribute_name_cell_${it.key}"
+                            css {
+                                padding = px8
+                            }
+                        }
+                        td {
+                            +it.value
+                            id = "attribute_value_cell_${it.key}"
+                            css {
+                                padding = px8
+                            }
                         }
                     }
                 }

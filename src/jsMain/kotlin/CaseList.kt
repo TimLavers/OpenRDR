@@ -29,11 +29,11 @@ val CaseList = FC<CaseListHandler> { props ->
                 className = "left_column"
                 float = Float.left
                 width = Length("10%")
-                padding = Length("12px")
+                padding = px12
             }
             ul {
                 css {
-                    paddingInlineStart = Length("0px")
+                    paddingInlineStart = px0
                 }
                 for (caseId in props.caseIds) {
                     li {
@@ -41,7 +41,7 @@ val CaseList = FC<CaseListHandler> { props ->
                         id = "case_list_item_${caseId.name}"
                         css {
                             textDecorationLine = TextDecorationLine.underline
-                            padding = Length("3px")
+                            padding = px4
                             listStyle = ListStyle.none
                         }
                         onClick = {
