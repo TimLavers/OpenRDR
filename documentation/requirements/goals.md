@@ -1,4 +1,4 @@
-# Goal
+# Goals
 Our goal with OpenRDR is to build an open source implementation of RippleDown that
 can be used for education, research, and also in commercial applications.
 

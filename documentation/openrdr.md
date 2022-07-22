@@ -17,3 +17,17 @@ by the new information. Any such conflicts are presented to the expert. By compa
 the conflict case with the case for which the new information is being added,
 the expert is motivated to add extra justifications that differentiate the
 two cases and prevent over-generalisations.
+
+## Project documentation
+Technical goals are documented in [Goals](./requirements/goals.md).
+
+The requirements arising from these goals are documented in their own page (for
+example [Milestone 1 Requirements](./requirements/milestone1_requirements.md)).
+
+The requirements are labelled with work tickets which are recorded in 
+a dedicated page, [Work Tickets](./tickets/work_tickets.md).
+
+The work tickets are used to label the production code implementing, and the test
+code validating, the requirements.
+
+Design decisions are logged in [Design Decisions](./design/design_decisions.md).
