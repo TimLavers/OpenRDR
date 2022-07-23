@@ -14,16 +14,16 @@ internal class ReferenceRangeTest {
             ReferenceRange(null, null)
         }
         assertFailsWith<IllegalStateException> {
-            ReferenceRange(1.0F, 1.0F)
+            ReferenceRange("1.0", "1.0")
         }
         assertFailsWith<IllegalStateException> {
-            ReferenceRange(1.0F, 1.0F)
+            ReferenceRange("1.0", "1.0")
         }
     }
     
     @Test
     fun isHigh() {
-        val interval = ReferenceRange(2.0F, 3.0F)
+        val interval = ReferenceRange("2.0", "3.0")
         // Value float null
         assertFalse(interval.isHigh(Value("Whatever")))
         
@@ -51,7 +51,7 @@ internal class ReferenceRangeTest {
 
     @Test
     fun isHighNoUpperBound() {
-        val interval = ReferenceRange(2.0F, null)
+        val interval = ReferenceRange("2.0", null)
         // Value float null
         assertFalse(interval.isHigh(Value("Whatever")))
 
@@ -69,7 +69,7 @@ internal class ReferenceRangeTest {
 
     @Test
     fun isHighNoLowerBound() {
-        val interval = ReferenceRange(null, 3.0F)
+        val interval = ReferenceRange(null, "3.0")
         // Value float null
         assertFalse(interval.isHigh(Value("Whatever")))
 
@@ -89,7 +89,7 @@ internal class ReferenceRangeTest {
 
     @Test
     fun isNormal() {
-        val interval = ReferenceRange(2.0F, 3.0F)
+        val interval = ReferenceRange("2.0", "3.0")
         // Value float null
         assertFalse(interval.isNormal(Value("Whatever")))
         
@@ -119,7 +119,7 @@ internal class ReferenceRangeTest {
 
     @Test
     fun isNormalNoLowerBound() {
-        val interval = ReferenceRange(null, 3.0F)
+        val interval = ReferenceRange(null, "3.0")
         // Value float null
         assertFalse(interval.isNormal(Value("Whatever")))
 
@@ -137,7 +137,7 @@ internal class ReferenceRangeTest {
 
     @Test
     fun isNormalNoUpperBound() {
-        val interval = ReferenceRange(2.0F, null)
+        val interval = ReferenceRange("2.0", null)
         // Value float null
         assertFalse(interval.isNormal(Value("Whatever")))
 
@@ -157,7 +157,7 @@ internal class ReferenceRangeTest {
 
     @Test
     fun isLow() {
-        val interval = ReferenceRange(2.0F, 3.0F)
+        val interval = ReferenceRange("2.0", "3.0")
         // Value float null
         assertFalse(interval.isLow(Value("Whatever")))
         
@@ -187,7 +187,7 @@ internal class ReferenceRangeTest {
 
     @Test
     fun isLowNoLowerBound() {
-        val interval = ReferenceRange(null, 3.0F)
+        val interval = ReferenceRange(null, "3.0")
         // Value float null
         assertFalse(interval.isLow(Value("Whatever")))
 
@@ -207,7 +207,7 @@ internal class ReferenceRangeTest {
 
     @Test
     fun isLowNoUpperBound() {
-        val interval = ReferenceRange(2.0F, null)
+        val interval = ReferenceRange("2.0", null)
         // Value float null
         assertFalse(interval.isLow(Value("Whatever")))
 
@@ -226,15 +226,15 @@ internal class ReferenceRangeTest {
 
     @Test
     fun jsonSerialisation() {
-        val rr1 = ReferenceRange(0.5F, 0.9F)
+        val rr1 = ReferenceRange("0.5", "0.9")
         val sd1 = serializeDeserialize(rr1)
         assertEquals(sd1, rr1)
 
-        val rr2 = ReferenceRange(0.5F, null)
+        val rr2 = ReferenceRange("0.5", null)
         val sd2 = serializeDeserialize(rr2)
         assertEquals(sd2, rr2)
 
-        val rr3 = ReferenceRange(null, 34.0F)
+        val rr3 = ReferenceRange(null, "34.0")
         val sd3 = serializeDeserialize(rr3)
         assertEquals(sd3, rr3)
     }

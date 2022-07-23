@@ -1,5 +1,7 @@
 import csstype.*
 import io.rippledown.model.RDRCase
+import io.rippledown.model.ReferenceRange
+import io.rippledown.model.TestResult
 import react.FC
 import react.Props
 import react.css.css
@@ -15,6 +17,11 @@ external interface CaseViewHandler : Props {
     var case: RDRCase
 }
 
+/**
+ * A tabular representation of an RDRCase.
+ *
+ *  ORD2
+ */
 val CaseView = FC<CaseViewHandler> { props ->
     div {
         css {
@@ -56,6 +63,13 @@ val CaseView = FC<CaseViewHandler> { props ->
                         }
                         id = "case_table_header_value"
                     }
+                    th {
+                        +"Reference Range"
+                        css {
+                            padding = px8
+                        }
+                        id = "case_table_header_reference_range"
+                    }
                 }
             }
             tbody {
@@ -74,8 +88,15 @@ val CaseView = FC<CaseViewHandler> { props ->
                             }
                         }
                         td {
-                            +it.value.value.text
+                            +resultText(it.value)
                             id = "attribute_value_cell_${it.key}"
+                            css {
+                                padding = px8
+                            }
+                        }
+                        td {
+                            +rangeText(it.value.referenceRange)
+                            id = "reference_range_cell_${it.key}"
                             css {
                                 padding = px8
                             }
@@ -85,4 +106,20 @@ val CaseView = FC<CaseViewHandler> { props ->
             }
         }
     }
+}
+fun resultText(result: TestResult):String {
+    val unit = result.units ?: ""
+    return "${result.value.text} $unit"
+}
+fun rangeText(referenceRange: ReferenceRange?): String {
+    if (referenceRange == null) {
+        return ""
+    }
+    if (referenceRange.upperString == null) {
+        return "(<${referenceRange.lowerString})"
+    }
+    if (referenceRange.lowerString == null) {
+        return "(>${referenceRange.upperString})"
+    }
+    return "(${referenceRange.lowerString} - ${referenceRange.upperString})"
 }

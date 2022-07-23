@@ -19,10 +19,18 @@ normal range depends on factors such as the age and sex of the patient.
 **Unit**
 Measurement units for a `Value`.
 
-**Result**
+**TestResult**
 Combination of a `Value`, a `Reference Range` (optional) and a `Unit` (optional)
 associated with a particular `Attribute` in a data set. 
 
-**Case**
-A collection of `Attribute`s and corresponding `Result`s for a particular set of related data. 
+**RDRCase**
+A collection of `Attribute`s and corresponding `TestResult`s for a particular set of related data. 
 A typical example is the set of test results for a patient on a particular date.
+
+### User interface
+**CaseView:**
+An `RDRCase` is presented to the user as a table with three columns. 
+Each `Attribute` and its values in the case in a single row with the `Attribute`
+in the first column, the `Value` and `Unit`s in the second column, and the
+`ReferenceRange` in the third column.
+[ORD2](../tickets/work_tickets.md)

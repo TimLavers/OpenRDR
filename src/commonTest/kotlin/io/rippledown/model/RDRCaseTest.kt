@@ -35,9 +35,9 @@ internal class RDRCaseTest {
     @Test
     fun addResult() {
         val case1 = RDRCase("Case1")
-        val tshResult = Result(Value("0.67"), ReferenceRange(0.5F, 4.0F), "mU/L")
+        val tshResult = TestResult(Value("0.67"), ReferenceRange("0.5", "4.0"), "mU/L")
         case1.addResult("TSH", tshResult)
-        val freeT4Result = Result(Value("16"), ReferenceRange(10F, 20.0F), "pmol/L")
+        val freeT4Result = TestResult(Value("16"), ReferenceRange("10", "20.0"), "pmol/L")
         case1.addResult("Free T4", freeT4Result)
         assertEquals(case1.caseData.size, 2)
         val tshInCase = case1.caseData["TSH"]!!
@@ -56,9 +56,9 @@ internal class RDRCaseTest {
     @Test
     fun addResultTwice() {
         val case1 = RDRCase("Case1")
-        val tshResult = Result(Value("0.67"), ReferenceRange(0.5F, 4.0F), "mU/L")
+        val tshResult = TestResult(Value("0.67"), ReferenceRange("0.5", "4.0"), "mU/L")
         case1.addResult("TSH", tshResult)
-        val tshResult2 = Result(Value("0.68"), ReferenceRange(0.5F, 4.0F), "mU/L")
+        val tshResult2 = TestResult(Value("0.68"), ReferenceRange("0.5", "4.0"), "mU/L")
         case1.addResult("TSH", tshResult2)
         assertEquals(case1.caseData.size, 1)
         val tshInCase = case1.caseData["TSH"]!!
@@ -85,11 +85,11 @@ internal class RDRCaseTest {
 
         val case3 = RDRCase("Case3")
         case3.addValue("Age", "52")
-        val tshResult = Result(Value("0.67"), ReferenceRange(0.5F, 4.0F), "mU/L")
+        val tshResult = TestResult(Value("0.67"), ReferenceRange("0.5", "4.0"), "mU/L")
         case3.addResult("TSH", tshResult)
-        val abcResult = Result(Value("0.67"), null, "mU/L")
+        val abcResult = TestResult(Value("0.67"), null, "mU/L")
         case3.addResult("ABC", abcResult)
-        val defResult = Result(Value("100"), ReferenceRange(90F, 400F),null )
+        val defResult = TestResult(Value("100"), ReferenceRange("90", "400"),null )
         case3.addResult("DEF", defResult)
         val sd3 = serializeDeserialize(case3)
         assertEquals(sd3, case3)

@@ -6,8 +6,8 @@
         "text": "0.667"
       },
       "referenceRange": {
-        "lower": 0.5,
-        "upper": 4.0
+        "lowerString": "0.50",
+        "upperString": "4.0"
       },
       "units": "mU/L"
     },

@@ -1,12 +1,19 @@
 package io.rippledown.model
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 //ORD1
 @Serializable
-data class ReferenceRange(val lower: Float?, val upper: Float?) {
+data class ReferenceRange(val lowerString: String?, val upperString: String?) {
+    @Transient
+    val lower = lowerString?.toFloat()
+    @Transient
+    val upper = upperString?.toFloat()
+
     init {
-        check(lower != null || upper != null)
+        check(lowerString != null || upperString != null)
+
         if (lower != null && upper != null) {
             check(lower < upper)
         }

@@ -3,6 +3,7 @@ package io.rippledown.integration.pageobjects
 import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver
 
+// ORD2
 class CaseViewPO(private val driver: WebDriver) {
 
 
@@ -28,5 +29,12 @@ class CaseViewPO(private val driver: WebDriver) {
         }
 
         return result
+    }
+
+    fun referenceRange(attribute: String): String {
+        val containerElement = containerElement()
+        val idOfRangeCellForAttribute = "reference_range_cell_$attribute"
+        val attributeValueCell = containerElement.findElement(By.id(idOfRangeCellForAttribute))
+        return attributeValueCell!!.text
     }
 }
