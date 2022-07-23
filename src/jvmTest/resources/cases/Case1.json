@@ -1,7 +1,22 @@
 {
   "name": "Case1",
   "caseData": {
-    "TSH": "0.667",
-    "ABC": "6.7"
+    "TSH": {
+      "value": {
+        "text": "0.667"
+      },
+      "referenceRange": {
+        "lower": 0.5,
+        "upper": 4.0
+      },
+      "units": "mU/L"
+    },
+    "ABC": {
+      "value": {
+        "text": "6.7"
+      },
+      "referenceRange": null,
+      "units": "mU/L"
+    }
   }
 }

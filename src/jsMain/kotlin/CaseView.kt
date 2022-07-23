@@ -74,7 +74,7 @@ val CaseView = FC<CaseViewHandler> { props ->
                             }
                         }
                         td {
-                            +it.value
+                            +it.value.value.text
                             id = "attribute_value_cell_${it.key}"
                             css {
                                 padding = px8

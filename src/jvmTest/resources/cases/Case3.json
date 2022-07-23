@@ -1,7 +1,22 @@
 {
   "name": "Case3",
   "caseData": {
-    "TSH": "0.49",
-    "CDE": "10.2"
+    "TSH": {
+      "value": {
+        "text": "0.49"
+      },
+      "referenceRange": {
+        "lower": 0.5,
+        "upper": 4.0
+      },
+      "units": "mU/L"
+    },
+    "CDE": {
+      "value": {
+        "text": "10.2"
+      },
+      "referenceRange":null,
+      "units": null
+    }
   }
 }

@@ -20,7 +20,7 @@ internal class RDRCaseTest {
         val case1 = RDRCase("Case1")
         case1.addValue("TSH", "0.667")
         assertEquals(case1.caseData.size, 1)
-        assertEquals(case1.caseData["TSH"], "0.667")
+        assertEquals(case1.caseData["TSH"]!!.value.text, "0.667")
     }
 
     @Test
@@ -29,7 +29,40 @@ internal class RDRCaseTest {
         case1.addValue("TSH", "0.67")
         case1.addValue("TSH", "0.68")
         assertEquals(case1.caseData.size, 1)
-        assertEquals(case1.caseData["TSH"], "0.68")
+        assertEquals(case1.caseData["TSH"]!!.value.text, "0.68")
+    }
+
+    @Test
+    fun addResult() {
+        val case1 = RDRCase("Case1")
+        val tshResult = Result(Value("0.67"), ReferenceRange(0.5F, 4.0F), "mU/L")
+        case1.addResult("TSH", tshResult)
+        val freeT4Result = Result(Value("16"), ReferenceRange(10F, 20.0F), "pmol/L")
+        case1.addResult("Free T4", freeT4Result)
+        assertEquals(case1.caseData.size, 2)
+        val tshInCase = case1.caseData["TSH"]!!
+        assertEquals(tshInCase.value.text, "0.67")
+        assertEquals(tshInCase.units, "mU/L")
+        assertEquals(tshInCase.referenceRange!!.lower, 0.5F)
+        assertEquals(tshInCase.referenceRange!!.upper, 4.0F)
+
+        val freeT4InCase = case1.caseData["Free T4"]!!
+        assertEquals(freeT4InCase.value.text, "16")
+        assertEquals(freeT4InCase.units, "pmol/L")
+        assertEquals(freeT4InCase.referenceRange!!.lower, 10F)
+        assertEquals(freeT4InCase.referenceRange!!.upper, 20F)
+    }
+
+    @Test
+    fun addResultTwice() {
+        val case1 = RDRCase("Case1")
+        val tshResult = Result(Value("0.67"), ReferenceRange(0.5F, 4.0F), "mU/L")
+        case1.addResult("TSH", tshResult)
+        val tshResult2 = Result(Value("0.68"), ReferenceRange(0.5F, 4.0F), "mU/L")
+        case1.addResult("TSH", tshResult2)
+        assertEquals(case1.caseData.size, 1)
+        val tshInCase = case1.caseData["TSH"]!!
+        assertEquals(tshInCase.value.text, "0.68")
     }
 
     @Test
@@ -49,6 +82,17 @@ internal class RDRCaseTest {
         case2.addValue("ABC", "6.7")
         val sd2 = serializeDeserialize(case2)
         assertEquals(sd2, case2)
+
+        val case3 = RDRCase("Case3")
+        case3.addValue("Age", "52")
+        val tshResult = Result(Value("0.67"), ReferenceRange(0.5F, 4.0F), "mU/L")
+        case3.addResult("TSH", tshResult)
+        val abcResult = Result(Value("0.67"), null, "mU/L")
+        case3.addResult("ABC", abcResult)
+        val defResult = Result(Value("100"), ReferenceRange(90F, 400F),null )
+        case3.addResult("DEF", defResult)
+        val sd3 = serializeDeserialize(case3)
+        assertEquals(sd3, case3)
     }
 
     private fun serializeDeserialize(rdrCase: RDRCase): RDRCase {

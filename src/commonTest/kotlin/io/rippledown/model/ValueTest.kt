@@ -13,14 +13,14 @@ internal class ValueTest {
     @Test
     fun construction() {
         val value = Value("blah")
-        assertEquals(value.value, "blah")
+        assertEquals(value.text, "blah")
         assertNull(value.real)
     }
 
     @Test
     fun real() {
         val value = Value("2.718")
-        assertEquals(value.value, "2.718")
+        assertEquals(value.text, "2.718")
         assertEquals(value.real!!, 2.718F)
     }
 

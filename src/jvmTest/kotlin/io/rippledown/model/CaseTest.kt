@@ -14,7 +14,7 @@ internal class CaseTest {
         val deserialized = Json.decodeFromString<RDRCase>(caseString)
         assertEquals(deserialized.caseData.size, 2)
         assertEquals(deserialized.name, "Case1")
-        assertEquals(deserialized.caseData["TSH"], "0.667")
-        assertEquals(deserialized.caseData["ABC"], "6.7")
+        assertEquals(deserialized.caseData["TSH"]!!.value.text, "0.667")
+        assertEquals(deserialized.caseData["ABC"]!!.value.text, "6.7")
     }
 }
