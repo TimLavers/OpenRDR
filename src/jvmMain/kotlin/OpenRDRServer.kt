@@ -2,11 +2,13 @@ import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.serialization.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.rippledown.model.Interpretation
 import io.rippledown.server.ServerApplication
 
 fun main() {
@@ -40,6 +42,10 @@ fun main() {
             get("/api/case") {
                 val id =call.parameters["id"] ?:error("Invalid case id.")
                 call.respond(application.case(id))
+            }
+            post("/api/saveInterpretation") {
+                val interpretation = call.receive<Interpretation>()
+                application.saveInterpretation(interpretation)
             }
         }
     }.start(wait = true)
