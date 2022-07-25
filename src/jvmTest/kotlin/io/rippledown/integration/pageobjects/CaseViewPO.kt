@@ -6,7 +6,6 @@ import org.openqa.selenium.WebDriver
 // ORD2
 class CaseViewPO(private val driver: WebDriver) {
 
-
     private fun containerElement() = driver.findElement(By.id("case_view_container"))
 
     fun nameShown(): String {
@@ -27,7 +26,6 @@ class CaseViewPO(private val driver: WebDriver) {
                 result[attributeName] = attributeValue
             }
         }
-
         return result
     }
 
@@ -36,5 +34,12 @@ class CaseViewPO(private val driver: WebDriver) {
         val idOfRangeCellForAttribute = "reference_range_cell_$attribute"
         val attributeValueCell = containerElement.findElement(By.id(idOfRangeCellForAttribute))
         return attributeValueCell!!.text
+    }
+
+    fun setInterpretationText(text: String) {
+        val textArea = containerElement().findElement(By.id("interpretation_text_area"))
+        textArea.sendKeys(text)
+        val sendButton = containerElement().findElement(By.id("send_interpretation_button"))
+        sendButton.click()
     }
 }

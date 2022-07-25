@@ -1,14 +1,19 @@
+import api.getWaitingCasesInfo
 import csstype.*
 import io.rippledown.model.RDRCase
 import io.rippledown.model.ReferenceRange
 import io.rippledown.model.TestResult
+import kotlinx.coroutines.launch
 import react.FC
 import react.Props
 import react.css.css
+import react.dom.html.ReactHTML
+import react.dom.html.ReactHTML.button
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.table
 import react.dom.html.ReactHTML.tbody
 import react.dom.html.ReactHTML.td
+import react.dom.html.ReactHTML.textarea
 import react.dom.html.ReactHTML.th
 import react.dom.html.ReactHTML.thead
 import react.dom.html.ReactHTML.tr
@@ -102,6 +107,28 @@ val CaseView = FC<CaseViewHandler> { props ->
                             }
                         }
                     }
+                }
+            }
+        }
+        div {
+            textarea {
+                id = "interpretation_text_area"
+                rows = 10
+                cols = 72
+                onChange = {
+                    console.log("TA.onChange")
+                }
+            }
+           div {
+                button {
+                    +"Send interpretation"
+                    css {
+                        padding = px4
+                    }
+                    onClick = {
+                        console.log("Interp send clicked")
+                    }
+                    id = "send_interpretation_button"
                 }
             }
         }

@@ -46,3 +46,7 @@ It has this workflow:
 - Cases that have been approved are deleted from the 'inputs' directory.
 
 **Ticket:** [ORD3](../tickets/work_tickets.md)
+
+## Example cases
+The cases described in the TSH paper by Vasikaran and Loh will be available
+for review.

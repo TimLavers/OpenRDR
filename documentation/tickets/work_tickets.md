@@ -9,3 +9,6 @@ Write code to generate the case view for Milestone 1.
 ### ORD3: Case processing {#ORD3}
 Implement the Clinical Decision Support System workflow for Milestone 1.
 
+### ORD4: Example cases {#ORD4}
+Provide the cases described in Vasikaran and Loh.
+
