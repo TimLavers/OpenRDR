@@ -52,3 +52,33 @@ val TSH6 = tshCase {
     age = 76
     clinicalNotes = "Routine check."
 }.build()
+
+val TSH7 = tshCase {
+    name = "1.4.7"
+    tsh = "14.0"
+    freeT4 = "13"
+    age = 62
+    clinicalNotes = "Constipation."
+}.build()
+
+val TSH8 = tshCase {
+    name = "1.4.8"
+    tsh = "0.05"
+    freeT4 = "13"
+    age = 27
+    clinicalNotes = "Period of amenorrhea 12/40 weeks."
+}.build()
+
+val TSH9 = tshCase {
+    name = "1.4.9"
+    tsh = "4.6"
+    freeT4 = "13"
+    age = 32
+    clinicalNotes = "Trying for a baby."
+    testValue {
+        attribute = "TPO Antibodies"
+        value = "33"
+        units = "kU/L"
+        lowerBound = "6"
+    }
+}.build()

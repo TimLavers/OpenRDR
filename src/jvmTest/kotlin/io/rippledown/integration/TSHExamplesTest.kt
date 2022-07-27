@@ -108,6 +108,21 @@ internal class TSHExamplesTest: UITestBase() {
         assertEquals(dataShown["Tests"], "TFTs")
         assertEquals(dataShown["Clinical Notes"], "Routine check.")
 
+        caseViewPO = caseListPO.select("1.4.9")
+        assertEquals(caseViewPO.nameShown(), "1.4.9")
+        dataShown = caseViewPO.valuesShown()
+        assertEquals(dataShown.size, 8)
+        assertEquals(dataShown["Age"], "32")
+        assertEquals(dataShown["Sex"], "F")
+        assertEquals(dataShown["TSH"], "4.6 mU/L")
+        assertEquals(caseViewPO.referenceRange("TSH"), "(0.50 - 4.0)")
+        assertEquals(dataShown["Free T4"], "13 pmol/L")
+        assertEquals(caseViewPO.referenceRange("Free T4"), "(10 - 20)")
+        assertEquals(dataShown["Patient Location"], "General Practice.")
+        assertEquals(dataShown["Tests"], "TFTs")
+        assertEquals(dataShown["Clinical Notes"], "Trying for a baby.")
+        assertEquals(dataShown["TPO Antibodies"], "33 kU/L")
+        assertEquals(caseViewPO.referenceRange("TPO Antibodies"), "(<6)")
     }
 
     private fun setupCases() {
@@ -118,5 +133,6 @@ internal class TSHExamplesTest: UITestBase() {
         writeCaseToInputDir(TSH4)
         writeCaseToInputDir(TSH5)
         writeCaseToInputDir(TSH6)
+        writeCaseToInputDir(TSH9)
     }
 }

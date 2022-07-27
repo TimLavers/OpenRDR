@@ -49,7 +49,7 @@ val CaseView = FC<CaseViewHandler> { props ->
         table {
             css {
                 border = Length("1px")
-                borderColor = rgb( 128, 128, 128)
+                borderColor = rgb(128, 128, 128)
                 borderStyle = LineStyle.solid
             }
             thead {
@@ -132,12 +132,19 @@ val CaseView = FC<CaseViewHandler> { props ->
                 }
             }
         }
+//        InterpretationView {
+//            onSubmit = { input ->
+//                console.log("InterpretationVew.onsubmit: $input")
+//            }
+//        }
     }
 }
-fun resultText(result: TestResult):String {
+
+fun resultText(result: TestResult): String {
     val unit = result.units ?: ""
     return "${result.value.text} $unit"
 }
+
 fun rangeText(referenceRange: ReferenceRange?): String {
     if (referenceRange == null) {
         return ""

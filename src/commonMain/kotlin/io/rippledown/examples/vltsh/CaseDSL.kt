@@ -1,9 +1,6 @@
 package io.rippledown.examples.vltsh
 
-import io.rippledown.model.RDRCase
-import io.rippledown.model.ReferenceRange
-import io.rippledown.model.TestResult
-import io.rippledown.model.Value
+import io.rippledown.model.*
 
 fun tshCase(lambda: CaseTemplate.() -> Unit): CaseTemplate {
     val template = CaseTemplate()
@@ -19,6 +16,7 @@ data class CaseTemplate(var name: String = "", var tsh: String = "", var freeT4:
     var location: String = "General Practice."
     var clinicalNotes: String = ""
     var tests: String = "TFTs"
+    val extraResults = mutableMapOf<String, TestResult>()
 
     fun build(): RDRCase {
         val result = RDRCase(name)
@@ -31,6 +29,29 @@ data class CaseTemplate(var name: String = "", var tsh: String = "", var freeT4:
         result.addValue("Patient Location", location)
         result.addValue("Tests", tests)
         result.addValue("Clinical Notes", clinicalNotes)
+        extraResults.forEach {
+            result.addResult(it.key, it.value)
+        }
         return result
+    }
+
+    fun testValue(lambda: TestResultTemplate.() -> Unit): TestResultTemplate {
+        val template = TestResultTemplate()
+        template.lambda()
+        extraResults[template.attribute] = template.result()
+        return template
+    }
+}
+class TestResultTemplate(var attribute: String = "", var value: String = "") {
+    var lowerBound: String? = null
+    var upperBound: String? = null
+    var units: String? = null
+
+    fun result(): TestResult {
+        var range: ReferenceRange? = null
+        if (lowerBound != null || upperBound != null) {
+            range =ReferenceRange(lowerBound, upperBound)
+        }
+        return TestResult(Value(value), range, units)
     }
 }
