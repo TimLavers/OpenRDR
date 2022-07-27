@@ -93,7 +93,7 @@ internal class TSHExamplesTest: UITestBase() {
         assertEquals(dataShown["Patient Location"], "General Practice.")
         assertEquals(dataShown["Tests"], "TFTs")
         assertEquals(dataShown["Clinical Notes"], "Weight gain.")
-
+stop()
         caseViewPO = caseListPO.select("1.4.6")
         assertEquals(caseViewPO.nameShown(), "1.4.6")
         dataShown = caseViewPO.valuesShown()

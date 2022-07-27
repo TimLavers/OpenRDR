@@ -43,7 +43,7 @@ fun main() {
                 val id =call.parameters["id"] ?:error("Invalid case id.")
                 call.respond(application.case(id))
             }
-            post("/api/saveInterpretation") {
+            post("/api/interpretationSubmitted") {
                 val interpretation = call.receive<Interpretation>()
                 application.saveInterpretation(interpretation)
             }

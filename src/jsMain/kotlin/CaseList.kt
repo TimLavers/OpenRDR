@@ -1,6 +1,10 @@
+import api.getCase
+import api.interpretationSubmitted
 import csstype.*
 import io.rippledown.model.CaseId
 import io.rippledown.model.RDRCase
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import react.FC
 import react.Props
 import react.css.css
@@ -13,6 +17,8 @@ external interface CaseListHandler : Props {
     var onCaseSelected: (String) -> Unit
     var currentCase: RDRCase?
 }
+
+private val scope = MainScope()
 
 val CaseList = FC<CaseListHandler> { props ->
     div {
@@ -54,6 +60,12 @@ val CaseList = FC<CaseListHandler> { props ->
         if (props.currentCase != null) {
             CaseView {
                 case = props.currentCase!!
+                onInterpretationSubmitted = {
+                    console.log("...on interp submitted:  $it")
+                    scope.launch {
+                        interpretationSubmitted(it)
+                    }
+                }
             }
         } else {
             NoCaseView()

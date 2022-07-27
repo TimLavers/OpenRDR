@@ -1,12 +1,12 @@
 import api.getWaitingCasesInfo
 import csstype.*
-import io.rippledown.model.RDRCase
-import io.rippledown.model.ReferenceRange
-import io.rippledown.model.TestResult
+import io.rippledown.model.*
 import kotlinx.coroutines.launch
-import react.FC
-import react.Props
+import org.w3c.dom.HTMLInputElement
+import org.w3c.dom.events.Event
+import react.*
 import react.css.css
+import react.dom.events.ChangeEvent
 import react.dom.html.ReactHTML
 import react.dom.html.ReactHTML.button
 import react.dom.html.ReactHTML.div
@@ -20,6 +20,7 @@ import react.dom.html.ReactHTML.tr
 
 external interface CaseViewHandler : Props {
     var case: RDRCase
+    var onInterpretationSubmitted: (Interpretation) -> Unit
 }
 
 /**
@@ -28,6 +29,7 @@ external interface CaseViewHandler : Props {
  *  ORD2
  */
 val CaseView = FC<CaseViewHandler> { props ->
+    var interpretationText = ""
     div {
         css {
             float = Float.left
@@ -116,7 +118,7 @@ val CaseView = FC<CaseViewHandler> { props ->
                 rows = 10
                 cols = 72
                 onChange = {
-                    console.log("TA.onChange")
+                    interpretationText = it.target.value
                 }
             }
            div {
@@ -125,18 +127,18 @@ val CaseView = FC<CaseViewHandler> { props ->
                     css {
                         padding = px4
                     }
+
                     onClick = {
-                        console.log("Interp send clicked")
+                        id = "send_interpretation_button"
+                        val caseId = CaseId(props.case.name, props.case.name)
+                        console.log("caseId: $caseId")
+                        val interpretation = Interpretation(caseId, interpretationText)
+                        console.log("interpretation: $interpretation")
+                        props.onInterpretationSubmitted(interpretation)
                     }
-                    id = "send_interpretation_button"
                 }
             }
         }
-//        InterpretationView {
-//            onSubmit = { input ->
-//                console.log("InterpretationVew.onsubmit: $input")
-//            }
-//        }
     }
 }
 
