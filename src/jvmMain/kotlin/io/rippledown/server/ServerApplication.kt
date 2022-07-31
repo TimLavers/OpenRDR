@@ -1,9 +1,6 @@
 package io.rippledown.server
 
-import io.rippledown.model.CaseId
-import io.rippledown.model.CasesInfo
-import io.rippledown.model.Interpretation
-import io.rippledown.model.RDRCase
+import io.rippledown.model.*
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -32,7 +29,7 @@ class ServerApplication {
     fun case(id: String): RDRCase {
         return getCaseFromFile(File(casesDir, "$id.json"))
     }
-    fun saveInterpretation(interpretation: Interpretation) {
+    fun saveInterpretation(interpretation: Interpretation): OperationResult {
         val fileName = "${interpretation.caseId.id}.interpretation.json"
         val file = File(interpretationsDir, fileName)
         if (file.exists()) {
@@ -43,6 +40,7 @@ class ServerApplication {
         // Now delete the corresponding case file.
         val caseFile = File(casesDir, "${interpretation.caseId.id}.json")
         FileUtils.delete(caseFile)
+        return OperationResult("Interpretation submitted")
     }
 
     private fun getCaseFromFile(file: File): RDRCase {

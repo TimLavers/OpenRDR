@@ -45,9 +45,9 @@ internal class CaseViewTest: UITestBase() {
     }
 
     private fun setupCases() {
-        cleanupCasesDir()
-        copyCase("Case1")
-        copyCase("Case2")
-        copyCase("Case3")
+        labServerProxy.cleanCasesDir()
+        labServerProxy.copyCase("Case1")
+        labServerProxy.copyCase("Case2")
+        labServerProxy.copyCase("Case3")
     }
 }

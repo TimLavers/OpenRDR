@@ -1,6 +1,7 @@
 package io.rippledown.integration
 
 import io.rippledown.CaseTestUtils
+import io.rippledown.integration.labsystem.LabServerProxy
 import io.rippledown.model.RDRCase
 import org.apache.commons.io.FileUtils
 import org.openqa.selenium.WebDriver
@@ -15,8 +16,7 @@ import java.nio.charset.StandardCharsets
 import java.nio.charset.StandardCharsets.UTF_8
 
 open class UITestBase {
-    val inputDir = File("temp/cases")
-
+    val labServerProxy = LabServerProxy()
     lateinit var driver: WebDriver
 
     fun setupWebDriver() {
@@ -32,17 +32,4 @@ open class UITestBase {
         driver.close()
     }
 
-    fun cleanupCasesDir() {
-        FileUtils.cleanDirectory(inputDir)
-    }
-
-    fun copyCase(caseName: String) {
-        FileUtils.copyFileToDirectory(CaseTestUtils.caseFile(caseName), inputDir)
-    }
-
-    fun writeCaseToInputDir(rdrCase: RDRCase) {
-        val file = File(inputDir, "${rdrCase.name}.json")
-        val serialized = Json.encodeToString(rdrCase)
-        FileUtils.writeStringToFile(file, serialized, UTF_8)
-    }
 }

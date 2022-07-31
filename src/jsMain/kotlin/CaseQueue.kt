@@ -73,6 +73,22 @@ val CaseQueue = FC<Props> {
                     selectedCase = getCase(it)
                 }
             }
+            onCaseProcessed = {
+                console.log("on case parocessed......")
+                scope.launch {
+                    waitingCasesInfo = getWaitingCasesInfo()
+                    caseIds = waitingCasesInfo.caseIds
+                    showCaseList = true
+                    if (waitingCasesInfo.count > 0) {
+                        val toSelect = waitingCasesInfo.caseIds[0]
+                        scope.launch {
+                            selectedCase = getCase(toSelect.id)
+                        }
+                    } else {
+                        selectedCase = null
+                    }
+                }
+            }
             currentCase = selectedCase
         }
     }

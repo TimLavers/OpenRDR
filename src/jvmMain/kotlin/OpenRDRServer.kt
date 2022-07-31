@@ -45,7 +45,8 @@ fun main() {
             }
             post("/api/interpretationSubmitted") {
                 val interpretation = call.receive<Interpretation>()
-                application.saveInterpretation(interpretation)
+                val result = application.saveInterpretation(interpretation)
+                call.respond(HttpStatusCode.OK, result)
             }
         }
     }.start(wait = true)

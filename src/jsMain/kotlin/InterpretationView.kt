@@ -28,15 +28,9 @@ val InterpretationView = FC<InputProps> { props ->
     form {
         id = "the_form"
         onSubmit = submitHandler
-//        input {
-//            type = InputType.text
-//            onChange = changeHandler
-//            value = text
-//        }
         input {
             type = InputType.button
             value = "Submit"
-//            onSubmit = submitHandler
         }
     }
     textarea {

@@ -16,6 +16,7 @@ external interface CaseListHandler : Props {
     var caseIds: List<CaseId>
     var onCaseSelected: (String) -> Unit
     var currentCase: RDRCase?
+    var onCaseProcessed: (String) -> Unit
 }
 
 private val scope = MainScope()
@@ -61,9 +62,9 @@ val CaseList = FC<CaseListHandler> { props ->
             CaseView {
                 case = props.currentCase!!
                 onInterpretationSubmitted = {
-                    console.log("...on interp submitted:  $it")
                     scope.launch {
                         interpretationSubmitted(it)
+                        props.onCaseProcessed("")
                     }
                 }
             }

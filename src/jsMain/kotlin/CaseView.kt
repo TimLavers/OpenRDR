@@ -115,6 +115,7 @@ val CaseView = FC<CaseViewHandler> { props ->
         div {
             textarea {
                 id = "interpretation_text_area"
+                defaultValue = ""
                 rows = 10
                 cols = 72
                 onChange = {
@@ -124,16 +125,14 @@ val CaseView = FC<CaseViewHandler> { props ->
            div {
                 button {
                     +"Send interpretation"
+                    id = "send_interpretation_button"
                     css {
                         padding = px4
                     }
 
                     onClick = {
-                        id = "send_interpretation_button"
                         val caseId = CaseId(props.case.name, props.case.name)
-                        console.log("caseId: $caseId")
                         val interpretation = Interpretation(caseId, interpretationText)
-                        console.log("interpretation: $interpretation")
                         props.onInterpretationSubmitted(interpretation)
                     }
                 }

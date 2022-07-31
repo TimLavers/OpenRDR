@@ -126,13 +126,13 @@ stop()
     }
 
     private fun setupCases() {
-        cleanupCasesDir()
-        writeCaseToInputDir(TSH1)
-        writeCaseToInputDir(TSH2)
-        writeCaseToInputDir(TSH3)
-        writeCaseToInputDir(TSH4)
-        writeCaseToInputDir(TSH5)
-        writeCaseToInputDir(TSH6)
-        writeCaseToInputDir(TSH9)
+        labServerProxy.cleanCasesDir()
+        labServerProxy.writeCaseToInputDir(TSH1)
+        labServerProxy.writeCaseToInputDir(TSH2)
+        labServerProxy.writeCaseToInputDir(TSH3)
+        labServerProxy.writeCaseToInputDir(TSH4)
+        labServerProxy.writeCaseToInputDir(TSH5)
+        labServerProxy.writeCaseToInputDir(TSH6)
+        labServerProxy.writeCaseToInputDir(TSH9)
     }
 }

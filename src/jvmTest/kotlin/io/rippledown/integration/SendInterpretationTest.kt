@@ -2,7 +2,6 @@ package io.rippledown.integration
 
 import io.rippledown.integration.pageobjects.CaseListPO
 import io.rippledown.integration.pageobjects.CaseQueuePO
-import io.rippledown.integration.pageobjects.NoCaseViewPO
 import kotlin.test.*
 
 // ORD2
@@ -28,23 +27,45 @@ internal class SendInterpretationTest: UITestBase() {
 
     @Test
     fun setInterpretationForCase() {
+        // Initially, no interpretations have been sent to the lab system.
+        assertEquals(labServerProxy.interpretationsReceived(), 0)
+
+        // Check that Case1, Case2 and Case3 are listed.
+        assertEquals(caseListPO.casesListed(), listOf("Case1", "Case2", "Case3"))
+
+        // Select Case2.
         val caseViewPO = caseListPO.select("Case2")
         assertEquals(caseViewPO.nameShown(), "Case2") //sanity
 
-        caseViewPO.setInterpretationText("Puzzling results.")
-        stop()
-        val dataShown = caseViewPO.valuesShown()
-        assertEquals(dataShown.size, 2)
-        assertEquals(dataShown["TSH"], "0.72 mU/L")
-        assertEquals(caseViewPO.referenceRange("TSH"), "(0.50 - 4.0)")
-        assertEquals(dataShown["CDE"], "9.7")
-        assertEquals(caseViewPO.referenceRange("CDE"), "")
+        // Set its interpretation and send it.
+        val case2Interpretation = "Puzzling results."
+        caseViewPO.setInterpretationText(case2Interpretation)
+        pause()
+
+        // Check that 1 interpretation has now been received by the lab system.
+        assertEquals(labServerProxy.interpretationsReceived(), 1)
+
+        // Check that the interpretation for Case2 is as set in the user interface.
+        assertEquals(labServerProxy.interpretationReceived("Case2"), case2Interpretation)
+
+        // Check that there are two remaining input cases: Case1 and Case3.
+        assertEquals(labServerProxy.inputCases(), setOf("Case1", "Case3"))
+
+        // Check that the case list in the user interface shows just Case1 and Case3.
+        assertEquals(caseListPO.casesListed(), listOf("Case1", "Case3"))
+
+        // Check that Case1 is selected.
+        assertEquals(caseViewPO.nameShown(), "Case1") //sanity
+
+        // Check that the interpretation field is blank.
+        assertEquals(caseViewPO.interpretationText(), "")
     }
 
     private fun setupCases() {
-        cleanupCasesDir()
-        copyCase("Case1")
-        copyCase("Case2")
-        copyCase("Case3")
+        labServerProxy.cleanInterpretationsDir()
+        labServerProxy.cleanCasesDir()
+        labServerProxy.copyCase("Case1")
+        labServerProxy.copyCase("Case2")
+        labServerProxy.copyCase("Case3")
     }
 }

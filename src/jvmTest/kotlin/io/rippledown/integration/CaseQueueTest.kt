@@ -9,7 +9,7 @@ internal class CaseQueueTest: UITestBase() {
 
     @BeforeTest
     fun setup() {
-        cleanupCasesDir()
+        labServerProxy.cleanCasesDir()
         setupWebDriver()
         caseQueuePO = CaseQueuePO(driver)
     }
@@ -23,7 +23,7 @@ internal class CaseQueueTest: UITestBase() {
     fun reviewButtonDisabledIfNoCasesWaiting() {
         assertFalse(caseQueuePO.reviewButtonIsEnabled())
 
-        copyCase("Case2")
+        labServerProxy.copyCase("Case2")
         pause()//todo use Awaitility
         caseQueuePO.refresh()
         assertTrue(caseQueuePO.reviewButtonIsEnabled())
@@ -31,8 +31,8 @@ internal class CaseQueueTest: UITestBase() {
 
     @Test
     fun showCaseList() {
-        copyCase("Case2")
-        copyCase("Case1")
+        labServerProxy.copyCase("Case2")
+        labServerProxy.copyCase("Case1")
         caseQueuePO.refresh()
 
         val listPO = caseQueuePO.review()
@@ -48,12 +48,12 @@ internal class CaseQueueTest: UITestBase() {
         assertEquals(caseQueuePO.numberWaiting(), 0)
 
         // Copy a case.
-        copyCase("Case2")
+        labServerProxy.copyCase("Case2")
         caseQueuePO.refresh()
         assertEquals(caseQueuePO.numberWaiting(), 1)
 
         // Copy another case.
-        copyCase("Case1")
+        labServerProxy.copyCase("Case1")
         caseQueuePO.refresh()
         assertEquals(caseQueuePO.numberWaiting(), 2)
     }
