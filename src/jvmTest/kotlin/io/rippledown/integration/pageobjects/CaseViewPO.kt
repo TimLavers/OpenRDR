@@ -1,10 +1,15 @@
 package io.rippledown.integration.pageobjects
 
+import io.rippledown.integration.pause
 import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver
 
 // ORD2
 class CaseViewPO(private val driver: WebDriver) {
+
+    init {
+        pause()//Need to wait for the case to render else we get a stale element. todo use a better mechanism
+    }
 
     private fun containerElement() = driver.findElement(By.id("case_view_container"))
 

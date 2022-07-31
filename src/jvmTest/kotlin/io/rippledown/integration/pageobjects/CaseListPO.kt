@@ -1,5 +1,6 @@
 package io.rippledown.integration.pageobjects
 
+import io.rippledown.integration.pause
 import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver
 

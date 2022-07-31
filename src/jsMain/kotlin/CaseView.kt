@@ -31,6 +31,7 @@ external interface CaseViewHandler : Props {
 val CaseView = FC<CaseViewHandler> { props ->
     var interpretationText = ""
     div {
+        key = props.case.name
         css {
             float = Float.left
             width = Length("70%")
@@ -115,7 +116,6 @@ val CaseView = FC<CaseViewHandler> { props ->
         div {
             textarea {
                 id = "interpretation_text_area"
-                defaultValue = ""
                 rows = 10
                 cols = 72
                 onChange = {
@@ -134,6 +134,7 @@ val CaseView = FC<CaseViewHandler> { props ->
                         val caseId = CaseId(props.case.name, props.case.name)
                         val interpretation = Interpretation(caseId, interpretationText)
                         props.onInterpretationSubmitted(interpretation)
+                        interpretationText = ""
                     }
                 }
             }
