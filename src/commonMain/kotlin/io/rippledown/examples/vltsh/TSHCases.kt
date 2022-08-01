@@ -67,6 +67,7 @@ val TSH8 = tshCase {
     freeT4 = "13"
     age = 27
     clinicalNotes = "Period of amenorrhea 12/40 weeks."
+    location = "Obstetric clinic."
 }.build()
 
 val TSH9 = tshCase {
@@ -81,4 +82,30 @@ val TSH9 = tshCase {
         units = "kU/L"
         lowerBound = "6"
     }
+}.build()
+
+val TSH10 = tshCase {
+    name = "1.4.10"
+    tsh = "0.02"
+    freeT4 = "18"
+    age = 55
+    sex = "M"
+    clinicalNotes = "Feeling very tired."
+}.build()
+val TSH11 = tshCase {
+    name = "1.4.11"
+    tsh = "0.02"
+    freeT4 = "18"
+    freeT3 = "6.1"
+    age = 55
+    sex = "M"
+    clinicalNotes = "Hyperthyroid?"
+}.build()
+val TSH12 = tshCase {
+    name = "1.4.12"
+    tsh = "59"
+    freeT4 = "<5"
+    age = 74
+    sex = "M"
+    clinicalNotes = "Hypothyroid?"
 }.build()
