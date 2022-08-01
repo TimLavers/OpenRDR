@@ -4,17 +4,15 @@ import io.rippledown.CaseTestUtils
 import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.apache.commons.io.FileUtils
 import java.io.File
-import java.nio.charset.StandardCharsets
 import java.nio.charset.StandardCharsets.UTF_8
 
 class LabServerProxy {
-    val inputDir = File("temp/cases")
-    val interpretationsDir = File("temp/interpretations")
+    private val inputDir = File("temp/cases")
+    private val interpretationsDir = File("temp/interpretations")
 
     fun interpretationsReceived(): Int {
         return interpretationsDir.listFiles()!!.size

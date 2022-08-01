@@ -1,4 +1,3 @@
-import api.getCase
 import api.interpretationSubmitted
 import csstype.*
 import io.rippledown.model.CaseId

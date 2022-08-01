@@ -1,39 +1,47 @@
-import org.w3c.dom.HTMLFormElement
-import react.*
-import org.w3c.dom.HTMLInputElement
-import react.dom.events.ChangeEventHandler
-import react.dom.events.FormEventHandler
-import react.dom.html.InputType
-import react.dom.html.ReactHTML.form
-import react.dom.html.ReactHTML.input
+import io.rippledown.model.CaseId
+import io.rippledown.model.Interpretation
+import io.rippledown.model.RDRCase
+import react.FC
+import react.Props
+import react.css.css
+import react.dom.html.ReactHTML
+import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.textarea
+import react.key
 
-external interface InputProps : Props {
-    var onSubmit: (String) -> Unit
+external interface InterpretationViewHandler : Props {
+    var case: RDRCase
+    var onInterpretationSubmitted: (Interpretation) -> Unit
 }
 
-val InterpretationView = FC<InputProps> { props ->
-    val (text, setText) = useState("")
+val InterpretationView = FC<InterpretationViewHandler> { props ->
+    var interpretationText = ""
 
-    val submitHandler: FormEventHandler<HTMLFormElement> = {
-        it.preventDefault()
-        setText("")
-        props.onSubmit(text)
-    }
-
-    val changeHandler: ChangeEventHandler<HTMLInputElement> = {
-        setText(it.target.value)
-    }
-
-    form {
-        id = "the_form"
-        onSubmit = submitHandler
-        input {
-            type = InputType.button
-            value = "Submit"
+    div {
+        key = props.case.name
+        textarea {
+            id = "interpretation_text_area"
+            rows = 10
+            cols = 72
+            onChange = {
+                interpretationText = it.target.value
+            }
         }
-    }
-    textarea {
-        form = "the_form"
+        div {
+            ReactHTML.button {
+                +"Send interpretation"
+                id = "send_interpretation_button"
+                css {
+                    padding = px4
+                }
+
+                onClick = {
+                    val caseId = CaseId(props.case.name, props.case.name)
+                    val interpretation = Interpretation(caseId, interpretationText)
+                    props.onInterpretationSubmitted(interpretation)
+                    interpretationText = ""
+                }
+            }
+        }
     }
 }

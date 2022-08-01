@@ -13,10 +13,10 @@ data class CaseTemplate(var name: String = "", var tsh: String = "", var freeT4:
     private val defaultFreeT4Range = ReferenceRange("10", "20")
     var sex: String = "F"
     var age: Int = 0
-    var location: String = "General Practice."
+    private var location: String = "General Practice."
     var clinicalNotes: String = ""
-    var tests: String = "TFTs"
-    val extraResults = mutableMapOf<String, TestResult>()
+    private var tests: String = "TFTs"
+    private val extraResults = mutableMapOf<String, TestResult>()
 
     fun build(): RDRCase {
         val result = RDRCase(name)
@@ -44,7 +44,7 @@ data class CaseTemplate(var name: String = "", var tsh: String = "", var freeT4:
 }
 class TestResultTemplate(var attribute: String = "", var value: String = "") {
     var lowerBound: String? = null
-    var upperBound: String? = null
+    private var upperBound: String? = null
     var units: String? = null
 
     fun result(): TestResult {

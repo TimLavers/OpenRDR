@@ -1,22 +1,19 @@
-import api.getWaitingCasesInfo
 import csstype.*
-import io.rippledown.model.*
-import kotlinx.coroutines.launch
-import org.w3c.dom.HTMLInputElement
-import org.w3c.dom.events.Event
-import react.*
+import io.rippledown.model.Interpretation
+import io.rippledown.model.RDRCase
+import io.rippledown.model.ReferenceRange
+import io.rippledown.model.TestResult
+import react.FC
+import react.Props
 import react.css.css
-import react.dom.events.ChangeEvent
-import react.dom.html.ReactHTML
-import react.dom.html.ReactHTML.button
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.table
 import react.dom.html.ReactHTML.tbody
 import react.dom.html.ReactHTML.td
-import react.dom.html.ReactHTML.textarea
 import react.dom.html.ReactHTML.th
 import react.dom.html.ReactHTML.thead
 import react.dom.html.ReactHTML.tr
+import react.key
 
 external interface CaseViewHandler : Props {
     var case: RDRCase
@@ -29,7 +26,6 @@ external interface CaseViewHandler : Props {
  *  ORD2
  */
 val CaseView = FC<CaseViewHandler> { props ->
-    var interpretationText = ""
     div {
         key = props.case.name
         css {
@@ -113,31 +109,9 @@ val CaseView = FC<CaseViewHandler> { props ->
                 }
             }
         }
-        div {
-            textarea {
-                id = "interpretation_text_area"
-                rows = 10
-                cols = 72
-                onChange = {
-                    interpretationText = it.target.value
-                }
-            }
-           div {
-                button {
-                    +"Send interpretation"
-                    id = "send_interpretation_button"
-                    css {
-                        padding = px4
-                    }
-
-                    onClick = {
-                        val caseId = CaseId(props.case.name, props.case.name)
-                        val interpretation = Interpretation(caseId, interpretationText)
-                        props.onInterpretationSubmitted(interpretation)
-                        interpretationText = ""
-                    }
-                }
-            }
+        InterpretationView {
+             case = props.case
+            onInterpretationSubmitted = props.onInterpretationSubmitted
         }
     }
 }

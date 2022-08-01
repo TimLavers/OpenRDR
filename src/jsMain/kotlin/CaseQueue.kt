@@ -74,7 +74,6 @@ val CaseQueue = FC<Props> {
                 }
             }
             onCaseProcessed = {
-                console.log("on case parocessed......")
                 scope.launch {
                     waitingCasesInfo = getWaitingCasesInfo()
                     caseIds = waitingCasesInfo.caseIds

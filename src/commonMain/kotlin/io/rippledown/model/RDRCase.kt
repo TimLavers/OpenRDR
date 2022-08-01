@@ -14,10 +14,6 @@ data class RDRCase(val name: String) {
         caseData[attribute] = result
     }
 
-    fun addValue(attribute: Attribute, value: String) {
-        caseData[attribute.name] = TestResult(value)
-    }
-
     fun get(attribute: Attribute): TestResult? {
         return caseData[attribute.name]
     }
