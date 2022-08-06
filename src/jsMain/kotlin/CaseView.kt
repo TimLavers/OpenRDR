@@ -77,7 +77,7 @@ val CaseView = FC<CaseViewHandler> { props ->
                 }
             }
             tbody {
-                props.case.caseData.forEach {
+                props.case.latestEpisode().forEach {
                     tr {
                         css {
                             nthChild("even") {

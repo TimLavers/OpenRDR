@@ -8,6 +8,8 @@ fun tshCase(lambda: CaseTemplate.() -> Unit): CaseTemplate {
     return template
 }
 
+const val defaultTestDate = 1659752689505L
+
 data class CaseTemplate(var name: String = "", var tsh: String = "", var freeT4: String = "") {
     private val defaultTSHRange = ReferenceRange("0.50", "4.0")
     private val defaultFreeT4Range = ReferenceRange("10", "20")
@@ -22,18 +24,18 @@ data class CaseTemplate(var name: String = "", var tsh: String = "", var freeT4:
 
     fun build(): RDRCase {
         val result = RDRCase(name)
-        result.addValue("Sex", sex)
-        result.addValue("Age", age.toString())
-        result.addResult("TSH", TestResult(Value(tsh), defaultTSHRange, " mU/L"))
+        result.addValue("Sex", sex, defaultTestDate)
+        result.addValue("Age", age.toString(), defaultTestDate)
+        result.addResult("TSH", TestResult(Value(tsh), defaultTestDate, defaultTSHRange, " mU/L"))
         if (freeT4.isNotBlank()) {
-            result.addResult("Free T4", TestResult(Value(freeT4), defaultFreeT4Range, " pmol/L"))
+            result.addResult("Free T4", TestResult(Value(freeT4), defaultTestDate, defaultFreeT4Range, " pmol/L"))
         }
         if (freeT3.isNotBlank()) {
-            result.addResult("Free T3", TestResult(Value(freeT3), defaultFreeT3Range, " pmol/L"))
+            result.addResult("Free T3", TestResult(Value(freeT3), defaultTestDate, defaultFreeT3Range, " pmol/L"))
         }
-        result.addValue("Patient Location", location)
-        result.addValue("Tests", tests)
-        result.addValue("Clinical Notes", clinicalNotes)
+        result.addValue("Patient Location", location, defaultTestDate)
+        result.addValue("Tests", tests, defaultTestDate)
+        result.addValue("Clinical Notes", clinicalNotes, defaultTestDate)
         extraResults.forEach {
             result.addResult(it.key, it.value)
         }
@@ -58,6 +60,6 @@ class TestResultTemplate(var attribute: String = "", var value: String = "") {
         if (lowerBound != null || upperBound != null) {
             range = ReferenceRange(lowerBound, upperBound)
         }
-        return TestResult(Value(value), range, units)
+        return TestResult(Value(value), defaultTestDate, range, units)
     }
 }
