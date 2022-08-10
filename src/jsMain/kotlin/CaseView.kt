@@ -77,7 +77,7 @@ val CaseView = FC<CaseViewHandler> { props ->
                 }
             }
             tbody {
-                props.case.latestEpisode().forEach {
+                props.case.data.forEach {
                     tr {
                         css {
                             nthChild("even") {
@@ -85,22 +85,22 @@ val CaseView = FC<CaseViewHandler> { props ->
                             }
                         }
                         td {
-                            +it.key
-                            id = "attribute_name_cell_${it.key}"
+                            +it.key.attribute.name
+                            id = "attribute_name_cell_${it.key.attribute.name}"
                             css {
                                 padding = px8
                             }
                         }
                         td {
                             +resultText(it.value)
-                            id = "attribute_value_cell_${it.key}"
+                            id = "attribute_value_cell_${it.key.attribute.name}"
                             css {
                                 padding = px8
                             }
                         }
                         td {
                             +rangeText(it.value.referenceRange)
-                            id = "reference_range_cell_${it.key}"
+                            id = "reference_range_cell_${it.key.attribute.name}"
                             css {
                                 padding = px8
                             }

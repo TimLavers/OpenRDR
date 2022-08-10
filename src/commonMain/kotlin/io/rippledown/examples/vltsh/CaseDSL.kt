@@ -23,23 +23,23 @@ data class CaseTemplate(var name: String = "", var tsh: String = "", var freeT4:
     private val extraResults = mutableMapOf<String, TestResult>()
 
     fun build(): RDRCase {
-        val result = RDRCase(name)
-        result.addValue("Sex", sex, defaultTestDate)
-        result.addValue("Age", age.toString(), defaultTestDate)
-        result.addResult("TSH", TestResult(Value(tsh), defaultTestDate, defaultTSHRange, " mU/L"))
+        val result = RDRCaseBuilder()
+        result.addValue("Sex", defaultTestDate, sex )
+        result.addValue("Age", defaultTestDate, age.toString())
+        result.addResult("TSH", defaultTestDate, TestResult(Value(tsh), defaultTSHRange, " mU/L"))
         if (freeT4.isNotBlank()) {
-            result.addResult("Free T4", TestResult(Value(freeT4), defaultTestDate, defaultFreeT4Range, " pmol/L"))
+            result.addResult("Free T4", defaultTestDate, TestResult(Value(freeT4), defaultFreeT4Range, " pmol/L"))
         }
         if (freeT3.isNotBlank()) {
-            result.addResult("Free T3", TestResult(Value(freeT3), defaultTestDate, defaultFreeT3Range, " pmol/L"))
+            result.addResult("Free T3", defaultTestDate, TestResult(Value(freeT3), defaultFreeT3Range, " pmol/L"))
         }
-        result.addValue("Patient Location", location, defaultTestDate)
-        result.addValue("Tests", tests, defaultTestDate)
-        result.addValue("Clinical Notes", clinicalNotes, defaultTestDate)
+        result.addValue("Patient Location", defaultTestDate,  location)
+        result.addValue("Tests", defaultTestDate, tests)
+        result.addValue("Clinical Notes", defaultTestDate, clinicalNotes)
         extraResults.forEach {
-            result.addResult(it.key, it.value)
+            result.addResult(it.key, defaultTestDate, it.value)
         }
-        return result
+        return result.build(name)
     }
 
     fun testValue(lambda: TestResultTemplate.() -> Unit): TestResultTemplate {
@@ -60,6 +60,6 @@ class TestResultTemplate(var attribute: String = "", var value: String = "") {
         if (lowerBound != null || upperBound != null) {
             range = ReferenceRange(lowerBound, upperBound)
         }
-        return TestResult(Value(value), defaultTestDate, range, units)
+        return TestResult(Value(value), range, units)
     }
 }

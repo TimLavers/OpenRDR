@@ -44,7 +44,8 @@ class ServerApplication {
     }
 
     private fun getCaseFromFile(file: File): RDRCase {
+        val format = Json { allowStructuredMapKeys = true }
         val data = FileUtils.readFileToString(file, UTF_8)
-        return Json.decodeFromString(data)
+        return format.decodeFromString(data)
     }
 }

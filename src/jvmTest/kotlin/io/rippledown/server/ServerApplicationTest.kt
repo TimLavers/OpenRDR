@@ -79,8 +79,8 @@ internal class ServerApplicationTest {
         FileUtils.copyFileToDirectory(CaseTestUtils.caseFile("Case1"), app.casesDir)
         val retrieved = app.case("Case1")
         assertEquals(retrieved.name, "Case1")
-        assertEquals(retrieved.latestEpisode()["TSH"]!!.value.text, "0.667")
-        assertEquals(retrieved.latestEpisode()["ABC"]!!.value.text, "6.7")
+        assertEquals(retrieved.get("TSH")!!.value.text, "0.667")
+        assertEquals(retrieved.get("ABC")!!.value.text, "6.7")
         assertEquals(retrieved.caseData.size, 2)
     }
 

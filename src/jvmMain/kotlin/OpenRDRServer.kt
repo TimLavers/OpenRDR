@@ -10,12 +10,13 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.rippledown.model.Interpretation
 import io.rippledown.server.ServerApplication
+import kotlinx.serialization.json.Json
 
 fun main() {
     val application = ServerApplication()
     embeddedServer(Netty, 9090) {
         install(ContentNegotiation) {
-            json()
+            json(Json { allowStructuredMapKeys = true })
         }
         install(CORS) {
             method(HttpMethod.Get)

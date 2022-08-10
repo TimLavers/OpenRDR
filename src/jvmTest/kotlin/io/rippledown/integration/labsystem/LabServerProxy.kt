@@ -43,7 +43,8 @@ class LabServerProxy {
 
     fun writeCaseToInputDir(rdrCase: RDRCase) {
         val file = File(inputDir, "${rdrCase.name}.json")
-        val serialized = Json.encodeToString(rdrCase)
+        val format = Json { allowStructuredMapKeys = true }
+        val serialized = format.encodeToString(rdrCase)
         FileUtils.writeStringToFile(file, serialized, UTF_8)
     }
 }

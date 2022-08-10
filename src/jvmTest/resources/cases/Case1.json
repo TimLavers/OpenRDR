@@ -1,24 +1,34 @@
 {
   "name": "Case1",
-  "caseData": {
-    "TSH": [{
+  "data": [
+    {
+      "attribute": {
+        "name": "TSH"
+      },
+      "date": 1659752689505
+    },
+    {
       "value": {
         "text": "0.667"
       },
-      "date": 1659752689505,
       "referenceRange": {
         "lowerString": "0.50",
         "upperString": "4.0"
       },
       "units": "mU/L"
-    }],
-    "ABC": [{
+    },
+    {
+      "attribute": {
+        "name": "ABC"
+      },
+      "date": 1659752689505
+    },
+    {
       "value": {
         "text": "6.7"
       },
-      "date": 1659752689505,
       "referenceRange": null,
       "units": "mU/L"
-    }]
-  }
+    }
+  ]
 }

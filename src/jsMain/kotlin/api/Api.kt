@@ -8,11 +8,12 @@ import io.ktor.http.*
 import io.rippledown.model.*
 
 import kotlinx.browser.window
+import kotlinx.serialization.json.Json
 
 val endpoint = window.location.origin
 
 val jsonClient = HttpClient {
-    install(JsonFeature) { serializer = KotlinxSerializer() }
+    install(JsonFeature) { serializer = KotlinxSerializer(Json { allowStructuredMapKeys = true }) }
 }
 
 suspend fun getWaitingCasesInfo(): CasesInfo {

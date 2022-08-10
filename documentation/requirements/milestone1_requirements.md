@@ -1,6 +1,7 @@
 # Milestone 1 Requirements
 Milestone 1 will be a system for providing interpretations for Thyroid cases in a 
-Clinical Pathology setting, using the rules 
+Clinical Pathology setting, using the rules set out in the paper cited 
+in [Goals](goals.md).
 
 ## Basic concepts
 The basic data structures needed for Milestone 1 are given below.  
@@ -9,6 +10,9 @@ The basic data structures needed for Milestone 1 are given below.
 **Attribute:**
 A well-defined concept understood by experts and used by them to make classifications. For example, age, sex,
 a clinical test such as TSH or LDL Cholesterol.
+
+**TestEvent:**
+An `Attribute` and a point in time, representing a specific measurement for a patient.
 
 **Value:**
 The value for an `Attribute` within a data set. Could be numerical, textual, or boolean.
@@ -53,6 +57,8 @@ It has this workflow:
 ## Example cases
 The cases described in the TSH paper by Vasikaran and Loh will be available
 for review.
+
+**Ticket:** [ORD4](../tickets/work_tickets.md)
 
 ## Condition syntax
 To express the justifications for the comments given in the TSH paper,
