@@ -19,6 +19,17 @@ class CaseListTest : ReactTestSupport {
         }
         val ids = renderer.root.findAllByType(CaseList).map { c -> c.props.caseIds }
         ids shouldBe listOf(caseIds)
-
     }
+
+    @Test
+    fun shouldShowNoCaseView() {
+        val renderer = render {
+            CaseList {
+                attrs.caseIds = emptyList()
+            }
+        }
+        val noCaseView = renderer.root.findAllByType(NoCaseView)
+        noCaseView.size shouldBe 1
+    }
+
 }

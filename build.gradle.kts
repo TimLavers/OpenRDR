@@ -9,6 +9,7 @@ val reactVersion = "17.0.2-pre.299-kotlin-1.6.10"
 val kotlinExtensionsVersion = "1.0.1-pre.364"
 val reactTestRendererVersion = "17.0.2"
 val kotestVersion = "5.4.1"
+val webDriverVersion = "4.4.3"
 
 plugins {
     kotlin("multiplatform") version "1.7.10"
@@ -59,6 +60,7 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
                 implementation(kotlin("test"))
                 implementation("org.seleniumhq.selenium:selenium-java:4.2.2")
+                implementation("io.github.bonigarcia:webdrivermanager:$webDriverVersion")
                 implementation("commons-io:commons-io:2.11.0")
 
             }
