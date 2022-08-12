@@ -11,6 +11,8 @@ import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.li
 import react.dom.html.ReactHTML.ul
 
+const val CASELIST_ID = "case_list_container"
+
 external interface CaseListHandler : Props {
     var caseIds: List<CaseId>
     var onCaseSelected: (String) -> Unit
@@ -30,7 +32,7 @@ val CaseList = FC<CaseListHandler> { props ->
         }
         div {
             +"Cases "
-            id = "case_list_container"
+            id = CASELIST_ID
             css {
                 className = "left_column"
                 float = Float.left
