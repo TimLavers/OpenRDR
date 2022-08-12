@@ -6,11 +6,9 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlinx.serialization.*
-import kotlinx.serialization.json.*
 
 internal class RDRCaseTest {
-    private val defaultDate = 90000L
+    private val defaultDate = 1659752689505
 
     @Test
     fun getCaseData() {
@@ -58,6 +56,83 @@ internal class RDRCaseTest {
         assertEquals(freeT4InCase.units, "pmol/L")
         assertEquals(freeT4InCase.referenceRange!!.lower, 10F)
         assertEquals(freeT4InCase.referenceRange!!.upper, 20F)
+    }
+
+    @Test
+    fun oneAttributeTwoEpisodes() {
+        val tsh = Attribute("TSH")
+        val builder = RDRCaseBuilder()
+        val range1 = ReferenceRange("0.5", "4.0")
+        val tshResult1 = TestResult(Value("0.67"), range1, "mU/L")
+        builder.addResult(tsh.name, defaultDate, tshResult1)
+        val range0 = ReferenceRange("0.25", "2.90")
+        val tshResult0 = TestResult(Value("0.08"), range0, "mU/L")
+        val yesterday = daysAgo(1)
+        builder.addResult(tsh.name, yesterday, tshResult0)
+        val case = builder.build("Case1")
+        assertEquals(case.getLatest(tsh)!!.value, Value("0.67"))
+        assertEquals(case.getLatest(tsh)!!.referenceRange, range1)
+
+        checkValues(case, tsh, "0.08", "0.67")
+    }
+
+    @Test
+    fun twoAttributesWithSamplesOnDifferentDates() {
+        val tsh = Attribute("TSH")
+        val tshRange = ReferenceRange("0.5", "4.0")
+        val tshResult = TestResult(Value("0.67"), tshRange, "mU/L")
+
+        val ft4 = Attribute("FT4")
+        val ft4Range = ReferenceRange("0.25", "2.90")
+        val ft4Result = TestResult(Value("0.08"), ft4Range, "mU/L")
+
+        val builder = RDRCaseBuilder()
+        builder.addResult(tsh.name, defaultDate, tshResult)
+        val yesterday = daysAgo(1)
+        builder.addResult(ft4.name, yesterday, ft4Result)
+
+        val case = builder.build("Case1")
+        val datesInCase = case.dates
+        assertEquals(datesInCase.size, 2)
+        assertEquals(datesInCase[0], yesterday)
+        assertEquals(datesInCase[1], defaultDate)
+
+        assertEquals(case.getLatest(tsh)!!.value, Value("0.67"))
+        assertEquals(case.getLatest(tsh)!!.referenceRange, tshRange)
+
+        assertEquals(case.getLatest(ft4)!!.value, Value(""))
+        assertEquals(case.getLatest(tsh)!!.referenceRange, null)
+
+        checkValues(case, tsh, "", "0.67")
+        checkValues(case, ft4, "0.08", "")
+    }
+
+    @Test
+    fun threeAttributesThreeDatesDenseCase() {
+        val d0 = daysAgo(3)
+        val d1 = daysAgo(2)
+        val d2 = daysAgo(1)
+        val builder = RDRCaseBuilder()
+        builder.addValue("A", d0, "A0")
+        builder.addValue("A", d1, "A1")
+        builder.addValue("A", d2, "A2")
+        builder.addValue("B", d0, "B0")
+        builder.addValue("B", d1, "B1")
+        builder.addValue("B", d2, "B2")
+        builder.addValue("C", d0, "C0")
+        builder.addValue("C", d1, "C1")
+        builder.addValue("C", d2, "C2")
+
+        val case = builder.build("Case1")
+        val datesInCase = case.dates
+        assertEquals(datesInCase.size, 3)
+        assertEquals(datesInCase[0], d0)
+        assertEquals(datesInCase[1], d1)
+        assertEquals(datesInCase[2], d2)
+
+        checkValues(case, "A", "A1", "A2", "A3")
+        checkValues(case, "B", "B1", "B2", "B3")
+        checkValues(case, "C", "C1", "C2", "C3")
     }
 
     @Test
@@ -110,5 +185,20 @@ internal class RDRCaseTest {
         val format = Json { allowStructuredMapKeys = true }
         val serialized = format.encodeToString(rdrCase)
         return format.decodeFromString(serialized)
+    }
+
+    private fun daysAgo(n: Int): Long {
+        return defaultDate - n * 24 * 60 * 60 * 1000
+    }
+
+    private fun checkValues(case: RDRCase, attribute: Attribute, vararg expectedValues: String) {
+        checkValues(case, attribute.name, expectedValues=expectedValues)
+    }
+    private fun checkValues(case: RDRCase, attributeName: String, vararg expectedValues: String) {
+        val inCase = case.values(attributeName)!!
+        assertEquals(expectedValues.size, inCase.size)
+        inCase.zip(expectedValues).forEach {
+            assertEquals(it.first.value.text, it.second)
+        }
     }
 }
