@@ -1,5 +1,7 @@
 package io.rippledown.integration
 
+import io.github.bonigarcia.wdm.config.DriverManagerType.CHROME
+import io.github.bonigarcia.wdm.managers.ChromeDriverManager
 import io.rippledown.integration.labsystem.LabServerProxy
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
@@ -11,12 +13,23 @@ open class UITestBase {
     lateinit var driver: WebDriver
 
     fun setupWebDriver() {
-        System.setProperty("webdriver.chrome.driver", "C:\\chromedriver\\chromedriver.exe")
+        driver = getChromeDriver()
+        with(driver) {
+            manage().timeouts().implicitlyWait(Duration.ofSeconds(10))
+            manage().window()?.maximize()
+            get("http://127.0.0.1:9090")
+        }
+    }
+
+    fun getChromeDriver(): WebDriver {
+        ChromeDriverManager.getInstance(CHROME).setup()
         val options = ChromeOptions()
-        driver = ChromeDriver(options)
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10))
-        driver.manage().window()?.maximize()
-        driver.get("http://127.0.0.1:9090")
+        with(options) {
+            addArguments("--disable-extensions")
+            addArguments("--disable-application-cache")
+            addArguments("--disable-web-security")
+        }
+        return ChromeDriver(options)
     }
 
     fun driverClose() {
