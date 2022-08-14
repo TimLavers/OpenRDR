@@ -81,7 +81,7 @@ internal class ServerApplicationTest {
         assertEquals(retrieved.name, "Case1")
         assertEquals(retrieved.get("TSH")!!.value.text, "0.667")
         assertEquals(retrieved.get("ABC")!!.value.text, "6.7")
-        assertEquals(retrieved.caseData.size, 2)
+        assertEquals(2, retrieved.data.size)
     }
 
     @Test

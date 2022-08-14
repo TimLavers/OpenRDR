@@ -13,7 +13,8 @@ internal class RDRCaseTest {
     @Test
     fun getCaseData() {
         val case1 = RDRCase("Case1", emptyMap())
-        assertTrue(case1.caseData.isEmpty())
+        assertTrue(case1.dates.isEmpty())
+        assertTrue(case1.data.isEmpty())
     }
 
     @Test
@@ -21,8 +22,8 @@ internal class RDRCaseTest {
         val builder1 = RDRCaseBuilder()
         builder1.addValue("TSH", defaultDate,"0.667")
         val case1 = builder1.build("Case1")
-        assertEquals(case1.caseData.size, 1)
-        assertEquals(case1.get("TSH")!!.value.text, "0.667")
+        assertEquals(1, case1.dates.size)
+        assertEquals("0.667", case1.get("TSH")!!.value.text)
     }
 
     @Test
@@ -31,8 +32,8 @@ internal class RDRCaseTest {
         builder1.addValue("TSH", defaultDate, "0.67")
         builder1.addValue("TSH", defaultDate, "0.68")
         val case1 = builder1.build("Case1")
-        assertEquals(case1.caseData.size, 1)
-        assertEquals(case1.get("TSH")!!.value.text, "0.68")
+        assertEquals(case1.dates.size, 1)
+        assertEquals("0.68", case1.get("TSH")!!.value.text)
     }
 
     @Test
@@ -44,7 +45,7 @@ internal class RDRCaseTest {
         builder1.addResult("Free T4", defaultDate, freeT4Result)
 
         val case1 = builder1.build("Case1")
-        assertEquals(case1.caseData.size, 2)
+        assertEquals(2, case1.data.size)
         val tshInCase = case1.get("TSH")!!
         assertEquals(tshInCase.value.text, "0.67")
         assertEquals(tshInCase.units, "mU/L")
@@ -70,6 +71,10 @@ internal class RDRCaseTest {
         val yesterday = daysAgo(1)
         builder.addResult(tsh.name, yesterday, tshResult0)
         val case = builder.build("Case1")
+        assertEquals(2, case.dates.size)
+        assertEquals(yesterday, case.dates[0])
+        assertEquals(defaultDate, case.dates[1])
+
         assertEquals(case.getLatest(tsh)!!.value, Value("0.67"))
         assertEquals(case.getLatest(tsh)!!.referenceRange, range1)
 
@@ -101,7 +106,7 @@ internal class RDRCaseTest {
         assertEquals(case.getLatest(tsh)!!.referenceRange, tshRange)
 
         assertEquals(case.getLatest(ft4)!!.value, Value(""))
-        assertEquals(case.getLatest(tsh)!!.referenceRange, null)
+        assertEquals(case.getLatest(ft4)!!.referenceRange, null)
 
         checkValues(case, tsh, "", "0.67")
         checkValues(case, ft4, "0.08", "")
@@ -113,15 +118,15 @@ internal class RDRCaseTest {
         val d1 = daysAgo(2)
         val d2 = daysAgo(1)
         val builder = RDRCaseBuilder()
-        builder.addValue("A", d0, "A0")
-        builder.addValue("A", d1, "A1")
-        builder.addValue("A", d2, "A2")
-        builder.addValue("B", d0, "B0")
-        builder.addValue("B", d1, "B1")
-        builder.addValue("B", d2, "B2")
-        builder.addValue("C", d0, "C0")
-        builder.addValue("C", d1, "C1")
-        builder.addValue("C", d2, "C2")
+        builder.addValue("A", d0, "A1")
+        builder.addValue("A", d1, "A2")
+        builder.addValue("A", d2, "A3")
+        builder.addValue("B", d0, "B1")
+        builder.addValue("B", d1, "B2")
+        builder.addValue("B", d2, "B3")
+        builder.addValue("C", d0, "C1")
+        builder.addValue("C", d1, "C2")
+        builder.addValue("C", d2, "C3")
 
         val case = builder.build("Case1")
         val datesInCase = case.dates
@@ -133,6 +138,10 @@ internal class RDRCaseTest {
         checkValues(case, "A", "A1", "A2", "A3")
         checkValues(case, "B", "B1", "B2", "B3")
         checkValues(case, "C", "C1", "C2", "C3")
+
+        // Check serialisation.
+        val sd = serializeDeserialize(case)
+        assertEquals(sd, case)
     }
 
     @Test
@@ -143,7 +152,7 @@ internal class RDRCaseTest {
         val tshResult2 = TestResult(Value("0.68"), ReferenceRange("0.5", "4.0"), "mU/L")
         builder1.addResult("TSH", defaultDate, tshResult2)
         val case1 = builder1.build("Case1")
-        assertEquals(case1.caseData.size, 1)
+        assertEquals(1, case1.dates.size)
         val tshInCase = case1.get("TSH")!!
         assertEquals(tshInCase.value.text, "0.68")
     }

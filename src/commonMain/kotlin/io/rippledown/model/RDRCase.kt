@@ -1,7 +1,13 @@
 package io.rippledown.model
 
-import io.ktor.util.*
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.encoding.*
 
 /*
  Set of (Attribute, TestResult) pairs in which
@@ -37,10 +43,43 @@ class RDRCaseBuilder {
     }
 }
 
-@Serializable
-data class RDRCase(val name: String, val data: Map<TestEvent, TestResult>) {
+object RDRCaseSerializer : KSerializer<RDRCase> {
+    @OptIn(ExperimentalSerializationApi::class)
+    private val mapSerializer = MapSerializer<TestEvent, TestResult>(TestEvent.serializer(), TestResult.serializer())
+    override val descriptor: SerialDescriptor =
+        buildClassSerialDescriptor("RDRCase") {
+            element("name", String.serializer().descriptor)
+            element("data", mapSerializer.descriptor)
+        }
 
-    val caseData: Map<String, TestResult> = data.entries.associate { it.key.attribute.name to it.value }.toMap()
+
+    override fun serialize(encoder: Encoder, value: RDRCase) {
+        encoder.encodeStructure(descriptor) {
+            encodeStringElement(descriptor, 0, value.name)
+            encodeSerializableElement(descriptor, 1, mapSerializer, value.data)
+        }
+    }
+
+    override fun deserialize(decoder: Decoder): RDRCase {
+        var name = ""
+        var map: Map<TestEvent, TestResult> = emptyMap()
+        decoder.decodeStructure(descriptor) {
+            // Loop label needed so that break statement works in js.
+            parseLoop@ while (true) {
+                when (val index = decodeElementIndex(descriptor)) {
+                    0 -> name = decodeStringElement(descriptor, 0)
+                    1 -> map = decodeSerializableElement(descriptor, 1, mapSerializer)
+                    CompositeDecoder.DECODE_DONE -> break@parseLoop
+                    else -> error("Unexpected index: $index")
+                }
+            }
+        }
+        return RDRCase(name, map)
+    }
+}
+
+@Serializable(RDRCaseSerializer::class)
+data class RDRCase(val name: String, val data: Map<TestEvent, TestResult>) {
     val dates: List<Long>
     private val attributes: Set<Attribute>
     private val dateToEpisode: Map<Long, Map<Attribute, TestResult>>
@@ -77,11 +116,11 @@ data class RDRCase(val name: String, val data: Map<TestEvent, TestResult>) {
         return result
     }
 
-    fun get(attribute: String): TestResult? {
-        return caseData[attribute]
+    fun get(attributeName: String): TestResult? {
+        return getLatest(Attribute(attributeName))
     }
 
     fun getLatest(attribute: Attribute): TestResult? {
-        return caseData[attribute.name]
+        return dateToEpisode[dates.last()]!![attribute]
     }
 }
