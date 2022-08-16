@@ -9,23 +9,6 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.*
 
-/*
- Set of (Attribute, TestResult) pairs in which
- no two pairs contain have the same attribute
- and test results with the same date.
- The case can be organised as a table of TestResults,
- with each column representing TestResults with
- the same date, columns ordered chronologically,
- and rows representing results for the same attribute.
- In this arrangement, some entries will be blank if
- not all attributes got results on all of the dates.
-
- So is {Attribute, Date} a fundamental? Do we want
- {Attribute, Date} -> TestResult as the data structure.
- What is {Attribute, Date}??
-
- */
-
 class RDRCaseBuilder {
     private val caseData: MutableMap<TestEvent, TestResult> = mutableMapOf()
 
@@ -45,7 +28,7 @@ class RDRCaseBuilder {
 
 object RDRCaseSerializer : KSerializer<RDRCase> {
     @OptIn(ExperimentalSerializationApi::class)
-    private val mapSerializer = MapSerializer<TestEvent, TestResult>(TestEvent.serializer(), TestResult.serializer())
+    private val mapSerializer = MapSerializer(TestEvent.serializer(), TestResult.serializer())
     override val descriptor: SerialDescriptor =
         buildClassSerialDescriptor("RDRCase") {
             element("name", String.serializer().descriptor)
@@ -78,6 +61,16 @@ object RDRCaseSerializer : KSerializer<RDRCase> {
     }
 }
 
+/**
+ * An RDRCase is a set of (TestEvent, TestResult) pairs in which
+ * no two TestEvents have the same attribute and date.
+ * The case can be organised as a table of TestResults,
+ * in which columns represent TestResults with
+ * the same date and rows represent results for
+ * the same attribute. In this arrangement,
+ * a blank TestResult is given on dates at which
+ * there was no TestEvent for an Attribute.
+ */
 @Serializable(RDRCaseSerializer::class)
 data class RDRCase(val name: String, val data: Map<TestEvent, TestResult>) {
     val dates: List<Long>
@@ -114,6 +107,13 @@ data class RDRCase(val name: String, val data: Map<TestEvent, TestResult>) {
             result.add(dateToEpisode[it]!![attribute]!!)
         }
         return result
+    }
+
+    fun resultsFor(attribute: Attribute): ResultsList? {
+        if (!attributes.contains(attribute)) {
+            return null
+        }
+        return ResultsList(values(attribute.name)!!)
     }
 
     fun get(attributeName: String): TestResult? {

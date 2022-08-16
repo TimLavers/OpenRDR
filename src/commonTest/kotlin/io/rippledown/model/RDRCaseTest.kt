@@ -5,6 +5,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 internal class RDRCaseTest {
@@ -110,6 +111,12 @@ internal class RDRCaseTest {
 
         checkValues(case, tsh, "", "0.67")
         checkValues(case, ft4, "0.08", "")
+
+        val ft4Values = case.resultsFor(ft4)
+        assertEquals(2, ft4Values!!.size)
+        assertEquals("0.08", ft4Values[0].value.text)
+        assertEquals("", ft4Values[1].value.text)
+        assertEquals("mU/L", ft4Values.units)
     }
 
     @Test
