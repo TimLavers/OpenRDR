@@ -19,7 +19,7 @@ internal class TestResultTest {
 
     @Test
     fun construction2() {
-        val result = TestResult("1234", defaultDate)
+        val result = TestResult("1234")
         assertEquals(result.value, Value("1234"))
         assertNull(result.units)
         assertNull(result.referenceRange)
@@ -27,7 +27,7 @@ internal class TestResultTest {
 
     @Test
     fun jsonSerialisation() {
-        val result1 = TestResult("1234", defaultDate)
+        val result1 = TestResult("1234")
         val sd1 = serializeDeserialize(result1)
         assertEquals(sd1, result1)
 

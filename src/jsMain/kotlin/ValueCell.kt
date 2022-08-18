@@ -7,13 +7,14 @@ import react.css.css
 import react.dom.html.ReactHTML
 
 external interface ValueCellHandler: Props {
+    var index: Int
     var value: TestResult
     var attribute: Attribute
 }
 val ValueCell = FC<ValueCellHandler> {
     ReactHTML.td {
         +resultText(it.value)
-        id = "attribute_value_cell_${it.attribute.name}"
+        id = "attribute_value_cell_${it.attribute.name}_${it.index}"
         css {
             padding = px8
         }

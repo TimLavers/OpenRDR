@@ -5,11 +5,17 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 internal class RDRCaseTest {
     private val defaultDate = 1659752689505
+    private val today = defaultDate
+    private val yesterday = daysAgo(1)
+    private val lastWeek = daysAgo(7)
+    private val tsh = Attribute("TSH")
+    private val tshRange = ReferenceRange("0.5", "4.0")
+    private val ft4 = Attribute("FT4")
+    private val ft4Range = ReferenceRange("0.25", "2.90")
 
     @Test
     fun getCaseData() {
@@ -62,7 +68,6 @@ internal class RDRCaseTest {
 
     @Test
     fun oneAttributeTwoEpisodes() {
-        val tsh = Attribute("TSH")
         val builder = RDRCaseBuilder()
         val range1 = ReferenceRange("0.5", "4.0")
         val tshResult1 = TestResult(Value("0.67"), range1, "mU/L")
@@ -83,13 +88,53 @@ internal class RDRCaseTest {
     }
 
     @Test
-    fun twoAttributesWithSamplesOnDifferentDates() {
-        val tsh = Attribute("TSH")
-        val tshRange = ReferenceRange("0.5", "4.0")
-        val tshResult = TestResult(Value("0.67"), tshRange, "mU/L")
+    fun dates() {
+        assertEquals(0, RDRCase("Empty", emptyMap()).dates.size)
 
-        val ft4 = Attribute("FT4")
-        val ft4Range = ReferenceRange("0.25", "2.90")
+        val builder1 = RDRCaseBuilder()
+        builder1.addResult(tsh, yesterday, TestResult("9.4"))
+        assertEquals(1, builder1.build("1").dates.size)
+        assertEquals(yesterday, builder1.build("1").dates[0])
+
+        val builder2 = RDRCaseBuilder()
+        builder2.addResult(tsh, yesterday, TestResult("9.4"))
+        builder2.addResult(tsh, lastWeek, TestResult("9.4"))
+        builder2.addResult(tsh, today, TestResult("9.9"))
+        val case2 = builder2.build("1")
+        assertEquals(3, case2.dates.size)
+        assertEquals(lastWeek, case2.dates[0])
+        assertEquals(yesterday, case2.dates[1])
+        assertEquals(today, case2.dates[2])
+    }
+
+    @Test
+    fun attributes() {
+        assertEquals(0, RDRCase("Empty", emptyMap()).attributes.size)
+
+        val builder1 = RDRCaseBuilder()
+        builder1.addResult(tsh, yesterday, TestResult("9.4"))
+        assertEquals(1, builder1.build("1").attributes.size)
+        assertEquals(tsh, builder1.build("1").attributes.first())
+
+        val builder2 = RDRCaseBuilder()
+        builder2.addResult(tsh, yesterday, TestResult("9.4"))
+        builder2.addResult(tsh, lastWeek, TestResult("9.4"))
+        builder2.addResult(tsh, today, TestResult("9.9"))
+        val case2 = builder2.build("2")
+        assertEquals(1, case2.attributes.size)
+        assertEquals(tsh, case2.attributes.first())
+
+        val ft4Result = TestResult(Value("0.08"), ft4Range, "mU/L")
+        builder2.addResult(ft4, yesterday, ft4Result)
+        val case3 = builder2.build("3")
+        assertEquals(2, case3.attributes.size)
+        assertTrue(case3.attributes.contains(tsh))
+        assertTrue(case3.attributes.contains(ft4))
+    }
+
+    @Test
+    fun twoAttributesWithSamplesOnDifferentDates() {
+        val tshResult = TestResult(Value("0.67"), tshRange, "mU/L")
         val ft4Result = TestResult(Value("0.08"), ft4Range, "mU/L")
 
         val builder = RDRCaseBuilder()

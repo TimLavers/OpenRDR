@@ -13,11 +13,14 @@ class RDRCaseBuilder {
     private val caseData: MutableMap<TestEvent, TestResult> = mutableMapOf()
 
     fun addValue(attribute: String, date: Long, value: String) {
-        addResult(attribute, date, TestResult(value, date))
+        addResult(attribute, date, TestResult(value))
     }
 
     fun addResult(attribute: String, date: Long, result: TestResult) {
-        val testEvent = TestEvent(Attribute(attribute), date)
+        addResult(Attribute(attribute), date, result)
+    }
+    fun addResult(attribute: Attribute, date: Long, result: TestResult) {
+        val testEvent = TestEvent(attribute, date)
         caseData[testEvent] = result
     }
 
@@ -34,7 +37,6 @@ object RDRCaseSerializer : KSerializer<RDRCase> {
             element("name", String.serializer().descriptor)
             element("data", mapSerializer.descriptor)
         }
-
 
     override fun serialize(encoder: Encoder, value: RDRCase) {
         encoder.encodeStructure(descriptor) {
@@ -74,7 +76,7 @@ object RDRCaseSerializer : KSerializer<RDRCase> {
 @Serializable(RDRCaseSerializer::class)
 data class RDRCase(val name: String, val data: Map<TestEvent, TestResult>) {
     val dates: List<Long>
-    private val attributes: Set<Attribute>
+    val attributes: Set<Attribute>
     private val dateToEpisode: Map<Long, Map<Attribute, TestResult>>
 
     init {
@@ -89,7 +91,7 @@ data class RDRCase(val name: String, val data: Map<TestEvent, TestResult>) {
 
             attributes.forEach { attribute ->
                 val key = TestEvent(attribute, it)
-                val result = data[key] ?: TestResult("", it)
+                val result = data[key] ?: TestResult("")
                 attributeMap[attribute] = result
             }
             dateToEpisodeMutable[it] = attributeMap.toMap()

@@ -10,7 +10,8 @@ external interface CaseTableBodyHandler: Props {
 }
 val CaseTableBody = FC<CaseTableBodyHandler> {
     ReactHTML.tbody {
-        it.case.data.forEach {
+        it.case.attributes.forEach { a ->
+            val results = it.case.resultsFor(a)!!
             ReactHTML.tr {
                 css {
                     nthChild("even") {
@@ -18,15 +19,18 @@ val CaseTableBody = FC<CaseTableBodyHandler> {
                     }
                 }
                 AttributeCell {
-                    attribute = it.key.attribute
+                    attribute = a
                 }
-                ValueCell {
-                    attribute = it.key.attribute
-                    value = it.value
+                results.forEachIndexed() { i, result ->
+                    ValueCell {
+                        index = i
+                        attribute = a
+                        value = result
+                    }
                 }
                 ReferenceRangeCell {
-                    attribute = it.key.attribute
-                    value = it.value
+                    attribute = a
+                    value = results[0]
                 }
             }
         }
