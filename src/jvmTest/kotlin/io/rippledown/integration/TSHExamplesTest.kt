@@ -198,6 +198,10 @@ internal class TSHExamplesTest: UITestBase() {
 
         caseViewPO = caseListPO.select("1.4.13")
         assertEquals(caseViewPO.nameShown(), "1.4.13")
+        val datesShown = caseViewPO.datesShown()
+        assertEquals(2, datesShown.size)
+        assertEquals("2022-08-18 13:07", datesShown[0])
+        assertEquals("2022-08-25 14:22", datesShown[1])
         dataShown = caseViewPO.valuesShown()
         assertEquals(dataShown.size, 7)
         assertEquals(dataShown["Age"]!![0], "74")

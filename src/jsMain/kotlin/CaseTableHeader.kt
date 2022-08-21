@@ -2,7 +2,6 @@ import csstype.FontSize
 import csstype.FontStyle
 import csstype.FontWeight
 import csstype.WhiteSpace
-import io.rippledown.model.Attribute
 import react.FC
 import react.Props
 import react.css.css
@@ -10,7 +9,6 @@ import react.dom.html.ReactHTML
 import react.dom.html.ReactHTML.th
 
 import kotlinx.datetime.*
-import react.ReactDsl
 import react.dom.html.ReactHTML.thead
 import react.dom.html.ReactHTML.tr
 
@@ -61,9 +59,14 @@ val EpisodeDateCell = FC<EpisodeDateCellHandler> {
     }
 }
 fun formatDate(date: Long): String {
+    fun pad(n: Int): String {
+        return if (n < 10) "0$n" else "$n"
+    }
     val instant = Instant.fromEpochMilliseconds(date)
-    val dateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
+    val dateTime = instant.toLocalDateTime(TimeZone.UTC)
     val datePart = dateTime.date.toString()
-    val timePart = "${dateTime.time.hour}:${dateTime.time.minute}"
+    val hoursString = pad(dateTime.time.hour)
+    val minutesString = pad(dateTime.time.minute)
+    val timePart = "$hoursString:$minutesString"
     return "$datePart $timePart"
 }
