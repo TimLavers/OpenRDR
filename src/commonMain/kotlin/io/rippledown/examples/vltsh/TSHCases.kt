@@ -109,3 +109,39 @@ val TSH12 = tshCase {
     sex = "M"
     clinicalNotes = "Hypothyroid?"
 }.build()
+val TSH13 = multiEpisodeCase {
+    name = "1.4.13"
+    sex = "M"
+    dates {
+        datesCSL = "2022-08-18T13:07:44.475Z, 2022-08-25T14:22:51.942Z"
+    }
+    testValues {
+        attribute = "TSH"
+        units = "mU/L"
+        lowerBound = "0.50"
+        upperBound = "4.0"
+        valuesCSL = "59, 40"
+    }
+    testValues {
+        attribute = "Free T4"
+        units = "pmol/L"
+        lowerBound = "10"
+        upperBound = "20"
+        valuesCSL = "<5, 8"
+    }
+    clinicalNotes {
+        values_separated = "Hypothyroid? _ Hypothyroid, started T4 replacement 1 week ago."
+    }
+    testValues {
+        attribute = "Age"
+        valuesCSL = "74, 74"
+    }
+    testValues {
+        attribute = "Tests"
+        valuesCSL = "TFTs, TFTs"
+    }
+    testValues {
+        attribute = "Patient Location"
+        valuesCSL = "General Practice., General Practice."
+    }
+}.build()

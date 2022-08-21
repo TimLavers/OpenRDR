@@ -196,6 +196,27 @@ internal class TSHExamplesTest: UITestBase() {
         assertEquals(dataShown["Tests"]!![0], "TFTs")
         assertEquals(dataShown["Clinical Notes"]!![0], "Hypothyroid?")
 
+        caseViewPO = caseListPO.select("1.4.13")
+        assertEquals(caseViewPO.nameShown(), "1.4.13")
+        dataShown = caseViewPO.valuesShown()
+        assertEquals(dataShown.size, 7)
+        assertEquals(dataShown["Age"]!![0], "74")
+        assertEquals(dataShown["Age"]!![1], "74")
+        assertEquals(dataShown["Sex"]!![0], "M")
+        assertEquals(dataShown["Sex"]!![1], "M")
+        assertEquals(dataShown["TSH"]!![0], "59 mU/L")
+        assertEquals(dataShown["TSH"]!![1], "40 mU/L")
+        assertEquals(caseViewPO.referenceRange("TSH"), "(0.50 - 4.0)")
+        assertEquals(dataShown["Free T4"]!![0], "<5 pmol/L")
+        assertEquals(dataShown["Free T4"]!![1], "8 pmol/L")
+        assertEquals(caseViewPO.referenceRange("Free T4"), "(10 - 20)")
+        assertEquals(dataShown["Patient Location"]!![0], "General Practice.")
+        assertEquals(dataShown["Patient Location"]!![1], "General Practice.")
+        assertEquals(dataShown["Tests"]!![0], "TFTs")
+        assertEquals(dataShown["Tests"]!![1], "TFTs")
+        assertEquals(dataShown["Clinical Notes"]!![0], "Hypothyroid?")
+        assertEquals(dataShown["Clinical Notes"]!![1], "Hypothyroid, started T4 replacement 1 week ago.")
+
     }
 
     private fun setupCases() {
@@ -212,5 +233,6 @@ internal class TSHExamplesTest: UITestBase() {
         labServerProxy.writeCaseToInputDir(TSH10)
         labServerProxy.writeCaseToInputDir(TSH11)
         labServerProxy.writeCaseToInputDir(TSH12)
+        labServerProxy.writeCaseToInputDir(TSH13)
     }
 }

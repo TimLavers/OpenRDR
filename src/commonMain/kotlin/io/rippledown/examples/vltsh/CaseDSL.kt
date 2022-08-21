@@ -1,6 +1,7 @@
 package io.rippledown.examples.vltsh
 
 import io.rippledown.model.*
+import kotlinx.datetime.Instant
 
 fun tshCase(lambda: CaseTemplate.() -> Unit): CaseTemplate {
     val template = CaseTemplate()
@@ -61,5 +62,89 @@ class TestResultTemplate(var attribute: String = "", var value: String = "") {
             range = ReferenceRange(lowerBound, upperBound)
         }
         return TestResult(Value(value), range, units)
+    }
+}
+
+fun multiEpisodeCase(lambda: MultiEpisodeCaseTemplate.() -> Unit): MultiEpisodeCaseTemplate {
+    val template = MultiEpisodeCaseTemplate()
+    template.lambda()
+    return template
+}
+
+data class MultiEpisodeCaseTemplate(var name: String = "") {
+    var dates: List<Long> = emptyList()
+    var attributeToValues = mutableMapOf<Attribute, List<TestResult>>()
+    var sex = "F"
+
+    fun build(): RDRCase {
+        val builder = RDRCaseBuilder()
+        val numberOfEpisodes = dates.size
+        require(dates.size > 0) { "dates should not be empty"}
+        attributeToValues.forEach {
+            require(it.value.size == numberOfEpisodes) { "Each attribute should have $numberOfEpisodes values, ${it.key} has ${it.value.size}." }
+        }
+        dates.forEachIndexed { index, date ->
+            attributeToValues.forEach {
+                val testResult = it.value[index]
+                builder.addResult(it.key, date, testResult)
+            }
+            builder.addResult("Sex", date,TestResult( sex))
+        }
+        return builder.build(name)
+    }
+
+    fun dates(lambda: DatesTemplate.() -> Unit): DatesTemplate {
+        val template = DatesTemplate()
+        template.lambda()
+        dates = template.dateList()
+        return template
+    }
+
+    fun testValues(lambda: TestResultsTemplate.() -> Unit): TestResultsTemplate {
+        val template = TestResultsTemplate()
+        template.lambda()
+        attributeToValues[Attribute(template.attribute)] = template.results()
+        return template
+    }
+
+    fun clinicalNotes(lambda: ClinicalNotesTemplate.() -> Unit): ClinicalNotesTemplate {
+        val template = ClinicalNotesTemplate()
+        template.lambda()
+        attributeToValues[Attribute(template.attribute)] = template.results()
+        return template
+    }
+}
+
+class DatesTemplate(var datesCSL: String = "") {
+
+    fun dateList(): List<Long> {
+        println("datesCSL: $datesCSL")
+        val dateList = mutableListOf<Long>()
+        datesCSL.split(",").forEach { dateList.add(parseDate(it.trim())) }
+        return dateList
+    }
+
+    private fun parseDate(dateString: String): Long {
+        return Instant.parse(dateString).toEpochMilliseconds()
+    }
+}
+class TestResultsTemplate(var attribute: String = "", var valuesCSL: String = "") {
+    var lowerBound: String? = null
+    var upperBound: String? = null
+    var units: String? = null
+    val valueList = mutableListOf<String>()
+
+    fun results(): List<TestResult> {
+        var range: ReferenceRange? = null
+        if (lowerBound != null || upperBound != null) {
+            range = ReferenceRange(lowerBound, upperBound)
+        }
+        return valuesCSL.split(",").map{ s: String -> TestResult(s.trim(), range, units) }
+    }
+}
+class ClinicalNotesTemplate(var attribute: String = "Clinical Notes", var values_separated: String = "") {
+
+    fun results(): List<TestResult> {
+        return values_separated.split("_").map { s: String -> TestResult(s.trim(), null, null) }
     }
 }
