@@ -145,3 +145,31 @@ val TSH13 = multiEpisodeCase {
         valuesCSL = "General Practice., General Practice."
     }
 }.build()
+val TSH14 = tshCase {
+    name = "1.4.14"
+    tsh = "0.72"
+    freeT4 = "16"
+    age = 43
+    clinicalNotes = "On T4 replacement."
+}.build()
+val TSH15 = tshCase {
+    name = "1.4.15"
+    tsh = "5.6"
+    freeT4 = "12"
+    age = 54
+    clinicalNotes = "On T4 Replacement."
+}.build()
+val TSH16 = tshCase {
+    name = "1.4.16"
+    tsh = "0.02"
+    freeT4 = "19"
+    age = 61
+    clinicalNotes = "On T4 Replacement."
+}.build()
+val TSH17 = tshCase {
+    name = "1.4.17"
+    tsh = "0.12"
+    freeT4 = "19"
+    age = 51
+    clinicalNotes = "Previous total thyroidectomy for thyroid cancer. On thyroxine."
+}.build()

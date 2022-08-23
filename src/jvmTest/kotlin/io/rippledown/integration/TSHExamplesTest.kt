@@ -3,6 +3,7 @@ package io.rippledown.integration
 import io.rippledown.examples.vltsh.*
 import io.rippledown.integration.pageobjects.CaseListPO
 import io.rippledown.integration.pageobjects.CaseQueuePO
+import io.rippledown.integration.pageobjects.CaseViewPO
 import kotlin.test.*
 
 // ORD4
@@ -10,6 +11,8 @@ internal class TSHExamplesTest: UITestBase() {
 
     private lateinit var caseQueuePO: CaseQueuePO
     private lateinit var caseListPO: CaseListPO
+    private lateinit var caseViewPO: CaseViewPO
+    private lateinit var dataShown: Map<String, List<String>>
 
     @BeforeTest
     fun setup() {
@@ -28,7 +31,7 @@ internal class TSHExamplesTest: UITestBase() {
 
     @Test
     fun tshCases() {
-        var caseViewPO = caseListPO.select("1.4.1")
+        caseViewPO = caseListPO.select("1.4.1")
         assertEquals(caseViewPO.nameShown(), "1.4.1")
         var dataShown = caseViewPO.valuesShown()
         assertEquals(dataShown.size, 7)
@@ -221,6 +224,42 @@ internal class TSHExamplesTest: UITestBase() {
         assertEquals(dataShown["Clinical Notes"]!![0], "Hypothyroid?")
         assertEquals(dataShown["Clinical Notes"]!![1], "Hypothyroid, started T4 replacement 1 week ago.")
 
+        selectCaseAndCheckName("1.4.14")
+        assertEquals(dataShown.size, 7)
+        checkAgeSexTestsLocation(43, "F")
+        checkTSH("0.72")
+        checkFreeT4("16")
+        checkNotes( "On T4 replacement.")
+
+    }
+
+    private fun selectCaseAndCheckName(name: String) {
+        caseViewPO = caseListPO.select(name)
+        dataShown = caseViewPO.valuesShown()
+        assertEquals(name, caseViewPO.nameShown())
+    }
+
+    private fun checkAgeSexTestsLocation(age: Int, sex: String, tests: String = "TFTs", location: String = "General Practice.") {
+        assertEquals(dataShown["Age"]!![0], "$age")
+        assertEquals(dataShown["Sex"]!![0], sex)
+        assertEquals(dataShown["Tests"]!![0], tests)
+        assertEquals(dataShown["Patient Location"]!![0], location)
+    }
+
+    private fun checkNotes(value: String) {
+        assertEquals(value, dataShown["Clinical Notes"]!![0])
+    }
+
+    private fun checkTSH(value: String) {
+        assertEquals(dataShown["TSH"]!![0], "$value mU/L")
+        assertEquals(caseViewPO.referenceRange("TSH"), "(0.50 - 4.0)")
+    }
+
+    private fun checkFreeT4(value: String) {
+        val dataShown = caseViewPO.valuesShown()
+        assertEquals(dataShown["Free T4"]!![0], "$value pmol/L")
+        assertEquals(caseViewPO.referenceRange("Free T4"), "(10 - 20)")
+
     }
 
     private fun setupCases() {
@@ -238,5 +277,9 @@ internal class TSHExamplesTest: UITestBase() {
         labServerProxy.writeCaseToInputDir(TSH11)
         labServerProxy.writeCaseToInputDir(TSH12)
         labServerProxy.writeCaseToInputDir(TSH13)
+        labServerProxy.writeCaseToInputDir(TSH14)
+        labServerProxy.writeCaseToInputDir(TSH15)
+        labServerProxy.writeCaseToInputDir(TSH16)
+        labServerProxy.writeCaseToInputDir(TSH17)
     }
 }
