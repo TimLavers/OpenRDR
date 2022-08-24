@@ -157,14 +157,14 @@ val TSH15 = tshCase {
     tsh = "5.6"
     freeT4 = "12"
     age = 54
-    clinicalNotes = "On T4 Replacement."
+    clinicalNotes = "On T4 replacement."
 }.build()
 val TSH16 = tshCase {
     name = "1.4.16"
     tsh = "0.02"
     freeT4 = "19"
     age = 61
-    clinicalNotes = "On T4 Replacement."
+    clinicalNotes = "On T4 replacement."
 }.build()
 val TSH17 = tshCase {
     name = "1.4.17"
