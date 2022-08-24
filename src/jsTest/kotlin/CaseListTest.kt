@@ -62,4 +62,38 @@ class CaseListTest : ReactTestSupport {
         val heading = headingDiv.props.asDynamic()["children"][0] as String
         heading shouldBe "Cases "
     }
+
+    @Test
+    fun shouldSelectACaseIdWhenClicked() {
+        val caseA = "case A"
+        val caseB = "case B"
+        val caseC = "case C"
+        var selectedCaseName: String? = null
+        val renderer = render {
+            CaseList {
+                attrs.caseIds = listOf(
+                    CaseId(id = "1", name = caseA),
+                    CaseId(id = "2", name = caseB),
+                    CaseId(id = "3", name = caseC)
+                )
+                attrs.currentCase = RDRCase(name = caseA)
+                attrs.onCaseSelected = {
+                    selectedCaseName = it
+                    println("selected $it")
+                }
+            }
+        }
+        val listItem = renderer.root.findAllByType("li")
+            .first {
+                it.props.asDynamic()["id"] == "case_list_item_$caseB"
+            }
+
+        selectedCaseName shouldBe null
+
+        listItem.props.asDynamic().onClick()
+
+        selectedCaseName shouldBe caseB
+    }
+
+
 }

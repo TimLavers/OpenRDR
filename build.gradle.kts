@@ -84,6 +84,8 @@ kotlin {
 
                 implementation(kotlin("test-js"))
                 implementation(npm("react-test-renderer", reactTestRendererVersion))
+                implementation(npm("@testing-library/react", "13.3.0"))
+                implementation(npm("@testing-library/user-event", "14.4.3"))
 
                 implementation("io.kotest:kotest-assertions-core-js:$kotestVersion")
                 implementation("io.kotest:kotest-framework-api-js:$kotestVersion")

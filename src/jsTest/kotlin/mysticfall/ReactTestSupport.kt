@@ -7,6 +7,10 @@ import react.RBuilder
 import react.RBuilderSingle
 import react.ReactElement
 
+/**
+ * @author Xavier Cho
+ * @see <a href="https://github.com/mysticfall/kotlin-react-test">Kotlin API for React Test Renderer</a>
+ */
 interface ReactTestSupport {
     fun ReactTestSupport.act(block: () -> Unit): Unit = TestRendererGlobal.act(block)
 
