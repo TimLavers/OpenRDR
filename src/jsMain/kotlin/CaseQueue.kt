@@ -1,4 +1,4 @@
-import api.ApiImpl
+import api.Api
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.RDRCase
 import kotlinx.coroutines.MainScope
@@ -22,7 +22,7 @@ val CaseQueue = FC<Props> {
 
     useEffectOnce {
         scope.launch {
-            waitingCasesInfo = ApiImpl().getWaitingCasesInfo()
+            waitingCasesInfo = Api().getWaitingCasesInfo()
         }
     }
 
@@ -46,7 +46,7 @@ val CaseQueue = FC<Props> {
                 }
                 onClick = {
                     scope.launch {
-                        waitingCasesInfo = ApiImpl().getWaitingCasesInfo()
+                        waitingCasesInfo = Api().getWaitingCasesInfo()
                     }
                 }
                 id = "refresh_waiting_cases_info_button"
@@ -58,7 +58,7 @@ val CaseQueue = FC<Props> {
                 }
                 onClick = {
                     scope.launch {
-                        waitingCasesInfo = ApiImpl().getWaitingCasesInfo()
+                        waitingCasesInfo = Api().getWaitingCasesInfo()
                         showCaseList = true
                     }
                 }
@@ -72,18 +72,18 @@ val CaseQueue = FC<Props> {
             caseIds = waitingCasesInfo.caseIds
             onCaseSelected = {
                 scope.launch {
-                    selectedCase = ApiImpl().getCase(it)
+                    selectedCase = Api().getCase(it)
                 }
             }
             onCaseProcessed = {
                 scope.launch {
-                    waitingCasesInfo = ApiImpl().getWaitingCasesInfo()
+                    waitingCasesInfo = Api().getWaitingCasesInfo()
                     caseIds = waitingCasesInfo.caseIds
                     showCaseList = true
                     if (waitingCasesInfo.count > 0) {
                         val toSelect = waitingCasesInfo.caseIds[0]
                         scope.launch {
-                            selectedCase = ApiImpl().getCase(toSelect.id)
+                            selectedCase = Api().getCase(toSelect.id)
                         }
                     } else {
                         selectedCase = null

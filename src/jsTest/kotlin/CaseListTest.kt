@@ -2,11 +2,16 @@ import api.Api
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.CaseId
 import io.rippledown.model.Interpretation
+import io.rippledown.model.OperationResult
 import io.rippledown.model.RDRCase
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runTest
 import mysticfall.ReactTestSupport
 import react.dom.html.ReactHTML.button
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.li
+import kotlin.js.Date
 import kotlin.test.Test
 
 class CaseListTest : ReactTestSupport {
@@ -99,16 +104,16 @@ class CaseListTest : ReactTestSupport {
         selectedCaseName shouldBe caseB
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun shouldProcessCaseWhenButtonClicked() {
+    fun shouldProcessCaseWhenButtonClicked() = runTest {
         val caseA = "case A"
         val caseB = "case B"
         val caseC = "case C"
         var caseWasProcessed = false
 
-        class ApiMock : Api {
-            override fun interpretationSubmitted(interpretation: Interpretation) {
-            }
+        class ApiMock : Api() {
+            override suspend fun interpretationSubmitted(interpretation: Interpretation) = OperationResult("")
         }
 
         val renderer = render {
@@ -133,8 +138,11 @@ class CaseListTest : ReactTestSupport {
 
         caseWasProcessed shouldBe false
 
-        button.props.asDynamic().onClick()
+        launch {
+            button.props.asDynamic().onClick()
+        }.join()
 
+        println("after join ${Date.now()}")
         caseWasProcessed shouldBe true
     }
 
