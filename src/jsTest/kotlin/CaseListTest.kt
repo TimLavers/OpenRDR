@@ -1,7 +1,12 @@
+import api.Api
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.CaseId
+import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import mysticfall.ReactTestSupport
+import react.dom.html.ReactHTML.button
+import react.dom.html.ReactHTML.div
+import react.dom.html.ReactHTML.li
 import kotlin.test.Test
 
 class CaseListTest : ReactTestSupport {
@@ -55,7 +60,7 @@ class CaseListTest : ReactTestSupport {
                 attrs.caseIds = listOf<CaseId>()
             }
         }
-        val headingDiv = renderer.root.findAllByType("div")
+        val headingDiv = renderer.root.findAllByType(div.toString())
             .first {
                 it.props.asDynamic()["id"] == CASELIST_ID
             }
@@ -64,7 +69,7 @@ class CaseListTest : ReactTestSupport {
     }
 
     @Test
-    fun shouldSelectACaseIdWhenClicked() {
+    fun shouldSelectACaseIdWhenCaseNameClicked() {
         val caseA = "case A"
         val caseB = "case B"
         val caseC = "case C"
@@ -79,11 +84,10 @@ class CaseListTest : ReactTestSupport {
                 attrs.currentCase = RDRCase(name = caseA)
                 attrs.onCaseSelected = {
                     selectedCaseName = it
-                    println("selected $it")
                 }
             }
         }
-        val listItem = renderer.root.findAllByType("li")
+        val listItem = renderer.root.findAllByType(li.toString())
             .first {
                 it.props.asDynamic()["id"] == "case_list_item_$caseB"
             }
@@ -95,5 +99,45 @@ class CaseListTest : ReactTestSupport {
         selectedCaseName shouldBe caseB
     }
 
+    @Test
+    fun shouldProcessCaseWhenButtonClicked() {
+        val caseA = "case A"
+        val caseB = "case B"
+        val caseC = "case C"
+        var caseWasProcessed = false
+
+        class ApiMock : Api {
+            override fun interpretationSubmitted(interpretation: Interpretation) {
+            }
+        }
+
+        val renderer = render {
+            CaseList {
+                attrs.caseIds = listOf(
+                    CaseId(id = "1", name = caseA),
+                    CaseId(id = "2", name = caseB),
+                    CaseId(id = "3", name = caseC)
+                )
+                attrs.currentCase = RDRCase(name = caseA)
+                attrs.onCaseProcessed = {
+                    caseWasProcessed = true
+                }
+                attrs.api = ApiMock()
+            }
+        }
+
+        val button = renderer.root.findAllByType(button.toString())
+            .first {
+                it.props.asDynamic()["id"] == "send_interpretation_button"
+            }
+
+        caseWasProcessed shouldBe false
+
+        button.props.asDynamic().onClick()
+
+        caseWasProcessed shouldBe true
+    }
 
 }
+
+

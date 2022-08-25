@@ -1,15 +1,17 @@
-import api.getCase
-import api.getWaitingCasesInfo
+import api.ApiImpl
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.RDRCase
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import react.*
+import react.FC
+import react.Props
 import react.css.css
 import react.dom.html.ReactHTML.button
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.h2
 import react.dom.html.ReactHTML.span
+import react.useEffectOnce
+import react.useState
 
 private val scope = MainScope()
 
@@ -20,7 +22,7 @@ val CaseQueue = FC<Props> {
 
     useEffectOnce {
         scope.launch {
-            waitingCasesInfo = getWaitingCasesInfo()
+            waitingCasesInfo = ApiImpl().getWaitingCasesInfo()
         }
     }
 
@@ -44,7 +46,7 @@ val CaseQueue = FC<Props> {
                 }
                 onClick = {
                     scope.launch {
-                        waitingCasesInfo = getWaitingCasesInfo()
+                        waitingCasesInfo = ApiImpl().getWaitingCasesInfo()
                     }
                 }
                 id = "refresh_waiting_cases_info_button"
@@ -56,7 +58,7 @@ val CaseQueue = FC<Props> {
                 }
                 onClick = {
                     scope.launch {
-                        waitingCasesInfo = getWaitingCasesInfo()
+                        waitingCasesInfo = ApiImpl().getWaitingCasesInfo()
                         showCaseList = true
                     }
                 }
@@ -70,18 +72,18 @@ val CaseQueue = FC<Props> {
             caseIds = waitingCasesInfo.caseIds
             onCaseSelected = {
                 scope.launch {
-                    selectedCase = getCase(it)
+                    selectedCase = ApiImpl().getCase(it)
                 }
             }
             onCaseProcessed = {
                 scope.launch {
-                    waitingCasesInfo = getWaitingCasesInfo()
+                    waitingCasesInfo = ApiImpl().getWaitingCasesInfo()
                     caseIds = waitingCasesInfo.caseIds
                     showCaseList = true
                     if (waitingCasesInfo.count > 0) {
                         val toSelect = waitingCasesInfo.caseIds[0]
                         scope.launch {
-                            selectedCase = getCase(toSelect.id)
+                            selectedCase = ApiImpl().getCase(toSelect.id)
                         }
                     } else {
                         selectedCase = null
