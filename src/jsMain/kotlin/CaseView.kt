@@ -110,7 +110,7 @@ val CaseView = FC<CaseViewHandler> { props ->
             }
         }
         InterpretationView {
-             case = props.case
+            case = props.case
             onInterpretationSubmitted = props.onInterpretationSubmitted
         }
     }
@@ -121,15 +121,13 @@ fun resultText(result: TestResult): String {
     return "${result.value.text} $unit"
 }
 
-fun rangeText(referenceRange: ReferenceRange?): String {
-    if (referenceRange == null) {
-        return ""
+fun rangeText(referenceRange: ReferenceRange?) =
+    with(referenceRange) {
+        when {
+            this == null -> ""
+            lowerString == null && upperString == null -> ""
+            lowerString == null -> "(> $upperString)"
+            upperString == null -> "(< $lowerString)"
+            else -> "($lowerString - $upperString)"
+        }
     }
-    if (referenceRange.upperString == null) {
-        return "(<${referenceRange.lowerString})"
-    }
-    if (referenceRange.lowerString == null) {
-        return "(>${referenceRange.upperString})"
-    }
-    return "(${referenceRange.lowerString} - ${referenceRange.upperString})"
-}

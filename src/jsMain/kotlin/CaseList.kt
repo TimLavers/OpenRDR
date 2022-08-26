@@ -1,6 +1,6 @@
-import api.Api
 import csstype.*
 import io.rippledown.model.CaseId
+import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -10,7 +10,6 @@ import react.css.css
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.li
 import react.dom.html.ReactHTML.ul
-import kotlin.js.Date
 
 const val CASELIST_ID = "case_list_container"
 
@@ -18,8 +17,7 @@ external interface CaseListHandler : Props {
     var caseIds: List<CaseId>
     var onCaseSelected: (String) -> Unit
     var currentCase: RDRCase?
-    var onCaseProcessed: () -> Unit
-    var api: Api
+    var onCaseProcessed: suspend (Interpretation) -> Unit
 }
 
 private val scope = MainScope()
@@ -64,12 +62,9 @@ val CaseList = FC<CaseListHandler> { props ->
         if (props.currentCase != null) {
             CaseView {
                 case = props.currentCase!!
-                onInterpretationSubmitted = {
+                onInterpretationSubmitted = { interpretation ->
                     scope.launch {
-                        props.api.interpretationSubmitted(it)
-                        props.onCaseProcessed()
-                        println(" [after caseProcessed ${Date.now()}] ")
-
+                        props.onCaseProcessed(interpretation)
                     }
                 }
             }

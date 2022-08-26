@@ -1,4 +1,6 @@
-import api.Api
+import api.getCase
+import api.getWaitingCasesInfo
+import api.saveInterpretation
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.RDRCase
 import kotlinx.coroutines.MainScope
@@ -22,7 +24,7 @@ val CaseQueue = FC<Props> {
 
     useEffectOnce {
         scope.launch {
-            waitingCasesInfo = Api().getWaitingCasesInfo()
+            waitingCasesInfo = getWaitingCasesInfo()
         }
     }
 
@@ -46,7 +48,7 @@ val CaseQueue = FC<Props> {
                 }
                 onClick = {
                     scope.launch {
-                        waitingCasesInfo = Api().getWaitingCasesInfo()
+                        waitingCasesInfo = getWaitingCasesInfo()
                     }
                 }
                 id = "refresh_waiting_cases_info_button"
@@ -58,7 +60,7 @@ val CaseQueue = FC<Props> {
                 }
                 onClick = {
                     scope.launch {
-                        waitingCasesInfo = Api().getWaitingCasesInfo()
+                        waitingCasesInfo = getWaitingCasesInfo()
                         showCaseList = true
                     }
                 }
@@ -72,18 +74,20 @@ val CaseQueue = FC<Props> {
             caseIds = waitingCasesInfo.caseIds
             onCaseSelected = {
                 scope.launch {
-                    selectedCase = Api().getCase(it)
+                    selectedCase = getCase(it)
                 }
             }
-            onCaseProcessed = {
+            onCaseProcessed = { interpretation ->
+                //maybe retrieve the next case or null, rather than case ids
                 scope.launch {
-                    waitingCasesInfo = Api().getWaitingCasesInfo()
+                    saveInterpretation(interpretation)
+                    waitingCasesInfo = getWaitingCasesInfo()
                     caseIds = waitingCasesInfo.caseIds
                     showCaseList = true
                     if (waitingCasesInfo.count > 0) {
                         val toSelect = waitingCasesInfo.caseIds[0]
                         scope.launch {
-                            selectedCase = Api().getCase(toSelect.id)
+                            selectedCase = getCase(toSelect.id)
                         }
                     } else {
                         selectedCase = null

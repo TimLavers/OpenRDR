@@ -1,17 +1,15 @@
-import api.Api
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.CaseId
-import io.rippledown.model.Interpretation
-import io.rippledown.model.OperationResult
 import io.rippledown.model.RDRCase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import mysticfall.ReactTestSupport
 import react.dom.html.ReactHTML.button
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.li
-import kotlin.js.Date
 import kotlin.test.Test
 
 class CaseListTest : ReactTestSupport {
@@ -107,27 +105,18 @@ class CaseListTest : ReactTestSupport {
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun shouldProcessCaseWhenButtonClicked() = runTest {
-        val caseA = "case A"
-        val caseB = "case B"
-        val caseC = "case C"
-        var caseWasProcessed = false
-
-        class ApiMock : Api() {
-            override suspend fun interpretationSubmitted(interpretation: Interpretation) = OperationResult("")
-        }
+        val caseIdA = CaseId(id = "case A", name = "case A")
+        val caseIdB = CaseId(id = "case B", name = "case B")
+        val caseIdC = CaseId(id = "case C", name = "case C")
+        var processedCaseId: CaseId? = null
 
         val renderer = render {
             CaseList {
-                attrs.caseIds = listOf(
-                    CaseId(id = "1", name = caseA),
-                    CaseId(id = "2", name = caseB),
-                    CaseId(id = "3", name = caseC)
-                )
-                attrs.currentCase = RDRCase(name = caseA)
-                attrs.onCaseProcessed = {
-                    caseWasProcessed = true
+                attrs.caseIds = listOf(caseIdA, caseIdB, caseIdC)
+                attrs.currentCase = RDRCase(name = "case B")
+                attrs.onCaseProcessed = { interpretation ->
+                    processedCaseId = interpretation.caseId
                 }
-                attrs.api = ApiMock()
             }
         }
 
@@ -136,14 +125,15 @@ class CaseListTest : ReactTestSupport {
                 it.props.asDynamic()["id"] == "send_interpretation_button"
             }
 
-        caseWasProcessed shouldBe false
+        processedCaseId shouldBe null
 
         launch {
-            button.props.asDynamic().onClick()
+            withContext(Dispatchers.Default) {
+                button.props.asDynamic().onClick() as Unit
+            }
         }.join()
 
-        println("after join ${Date.now()}")
-        caseWasProcessed shouldBe true
+        processedCaseId shouldBe caseIdB
     }
 
 }
