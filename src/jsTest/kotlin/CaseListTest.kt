@@ -9,7 +9,6 @@ import kotlinx.coroutines.withContext
 import mysticfall.ReactTestSupport
 import react.dom.html.ReactHTML.button
 import react.dom.html.ReactHTML.div
-import react.dom.html.ReactHTML.em
 import react.dom.html.ReactHTML.li
 import kotlin.test.Test
 
