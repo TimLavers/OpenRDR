@@ -22,10 +22,13 @@ internal class CaseQueueTest: UITestBase() {
     @Test
     fun reviewButtonDisabledIfNoCasesWaiting() {
         assertFalse(caseQueuePO.reviewButtonIsEnabled())
+    }
 
+    @Test
+    fun reviewButtonEnabledIfCasesWaiting() {
         labServerProxy.copyCase("Case2")
-        pause()//todo use Awaitility
         caseQueuePO.refresh()
+        pause()//todo use Awaitility
         assertTrue(caseQueuePO.reviewButtonIsEnabled())
     }
 

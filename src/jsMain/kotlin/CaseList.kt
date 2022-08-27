@@ -1,6 +1,6 @@
-import api.interpretationSubmitted
 import csstype.*
 import io.rippledown.model.CaseId
+import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -11,11 +11,13 @@ import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.li
 import react.dom.html.ReactHTML.ul
 
+const val CASELIST_ID = "case_list_container"
+
 external interface CaseListHandler : Props {
     var caseIds: List<CaseId>
     var onCaseSelected: (String) -> Unit
     var currentCase: RDRCase?
-    var onCaseProcessed: (String) -> Unit
+    var onCaseProcessed: suspend (Interpretation) -> Unit
 }
 
 private val scope = MainScope()
@@ -30,7 +32,7 @@ val CaseList = FC<CaseListHandler> { props ->
         }
         div {
             +"Cases "
-            id = "case_list_container"
+            id = CASELIST_ID
             css {
                 className = "left_column"
                 float = Float.left
@@ -60,10 +62,9 @@ val CaseList = FC<CaseListHandler> { props ->
         if (props.currentCase != null) {
             CaseView {
                 case = props.currentCase!!
-                onInterpretationSubmitted = {
+                onInterpretationSubmitted = { interpretation ->
                     scope.launch {
-                        interpretationSubmitted(it)
-                        props.onCaseProcessed("")
+                        props.onCaseProcessed(interpretation)
                     }
                 }
             }

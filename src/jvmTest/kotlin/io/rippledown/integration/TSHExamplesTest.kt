@@ -4,7 +4,10 @@ import io.rippledown.examples.vltsh.*
 import io.rippledown.integration.pageobjects.CaseListPO
 import io.rippledown.integration.pageobjects.CaseQueuePO
 import io.rippledown.integration.pageobjects.CaseViewPO
-import kotlin.test.*
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 // ORD4
 internal class TSHExamplesTest: UITestBase() {
@@ -92,7 +95,7 @@ internal class TSHExamplesTest: UITestBase() {
         checkFreeT4("13")
         checkNotes( "Trying for a baby.")
         assertEquals(dataShown["TPO Antibodies"]!![0], "33 kU/L")
-        assertEquals(caseViewPO.referenceRange("TPO Antibodies"), "(<6)")
+        assertEquals(caseViewPO.referenceRange("TPO Antibodies"), "(< 6)")
 
         selectCaseAndCheckName("1.4.10")
         assertEquals(dataShown.size, 7)

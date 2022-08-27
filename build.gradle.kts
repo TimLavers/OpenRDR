@@ -1,15 +1,20 @@
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
-val kotlinVersion = "1.6.10"
+val kotlinVersion = "1.7.10"
 val serializationVersion = "1.3.2"
 val ktorVersion = "1.6.7"
 val logbackVersion = "1.2.10"
 val reactVersion = "17.0.2-pre.299-kotlin-1.6.10"
 
+val kotlinExtensionsVersion = "1.0.1-pre.364"
+val reactTestRendererVersion = "17.0.2"
+val kotestVersion = "5.4.1"
+val webDriverVersion = "4.4.3"
+
 plugins {
-    kotlin("multiplatform") version "1.6.10"
-    application //to run JVM part
-    kotlin("plugin.serialization") version "1.6.10"
+    kotlin("multiplatform") version "1.7.10"
+    application
+    kotlin("plugin.serialization") version "1.7.10"
 }
 
 group = "io.rippledown"
@@ -27,6 +32,7 @@ kotlin {
             binaries.executable()
         }
     }
+
     sourceSets {
         val commonMain by getting {
             dependencies {
@@ -54,9 +60,8 @@ kotlin {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
                 implementation(kotlin("test"))
-                // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java
                 implementation("org.seleniumhq.selenium:selenium-java:4.2.2")
-                // https://mvnrepository.com/artifact/commons-io/commons-io
+                implementation("io.github.bonigarcia:webdrivermanager:$webDriverVersion")
                 implementation("commons-io:commons-io:2.11.0")
 
             }
@@ -70,6 +75,24 @@ kotlin {
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react:$reactVersion")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom:$reactVersion")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react-css:$reactVersion")
+
+            }
+        }
+        val jsTest by getting {
+            dependencies {
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-react-legacy:$reactVersion")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-extensions:$kotlinExtensionsVersion")
+
+                implementation(kotlin("test-js"))
+                implementation(npm("react-test-renderer", reactTestRendererVersion))
+//                implementation(npm("@testing-library/react", "13.3.0"))
+//                implementation(npm("@testing-library/user-event", "14.4.3"))
+
+                implementation("io.kotest:kotest-assertions-core-js:$kotestVersion")
+                implementation("io.kotest:kotest-framework-api-js:$kotestVersion")
+                implementation("io.kotest:kotest-framework-engine-js:$kotestVersion")
+
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
 
             }
         }
@@ -91,15 +114,15 @@ tasks.getByName<Jar>("jvmJar") {
     }
     val webpackTask = tasks.getByName<KotlinWebpack>(taskName)
     dependsOn(webpackTask) // make sure JS gets compiled first
-    from(File(webpackTask.destinationDirectory, webpackTask.outputFileName)) // bring output file along into the JAR
+    from(
+        File(
+            webpackTask.destinationDirectory,
+            webpackTask.outputFileName
+        )
+    ) // bring output file along into the JAR
 }
 
 tasks {
-    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions {
-            jvmTarget = "1.8"
-        }
-    }
     test {
         useJUnitPlatform()
     }

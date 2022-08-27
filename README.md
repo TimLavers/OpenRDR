@@ -7,9 +7,7 @@ The background, requirements, design principles, and so on to the project are do
 documentation is [OpenRDR](./documentation/openrdr.md).
 
 ## Setup
-Install Java 1.8 and Gradle.
-
-Install Chromedriver (for testing) in `C:\chromedriver\chromedriver.exe` (need to fix this location requirement).
+Install Java 17 and Gradle.
 
 Import the Gradle project into IntelliJ.
 
