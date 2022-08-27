@@ -1,6 +1,6 @@
-import api.interpretationSubmitted
 import csstype.*
 import io.rippledown.model.CaseId
+import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -17,7 +17,7 @@ external interface CaseListHandler : Props {
     var caseIds: List<CaseId>
     var onCaseSelected: (String) -> Unit
     var currentCase: RDRCase?
-    var onCaseProcessed: (String) -> Unit
+    var onCaseProcessed: suspend (Interpretation) -> Unit
 }
 
 private val scope = MainScope()
@@ -62,10 +62,9 @@ val CaseList = FC<CaseListHandler> { props ->
         if (props.currentCase != null) {
             CaseView {
                 case = props.currentCase!!
-                onInterpretationSubmitted = {
+                onInterpretationSubmitted = { interpretation ->
                     scope.launch {
-                        interpretationSubmitted(it)
-                        props.onCaseProcessed("")
+                        props.onCaseProcessed(interpretation)
                     }
                 }
             }

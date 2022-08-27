@@ -3,7 +3,10 @@ package io.rippledown.integration
 import io.rippledown.examples.vltsh.*
 import io.rippledown.integration.pageobjects.CaseListPO
 import io.rippledown.integration.pageobjects.CaseQueuePO
-import kotlin.test.*
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 // ORD4
 internal class TSHExamplesTest: UITestBase() {
@@ -150,7 +153,7 @@ internal class TSHExamplesTest: UITestBase() {
         assertEquals(dataShown["Tests"], "TFTs")
         assertEquals(dataShown["Clinical Notes"], "Trying for a baby.")
         assertEquals(dataShown["TPO Antibodies"], "33 kU/L")
-        assertEquals(caseViewPO.referenceRange("TPO Antibodies"), "(<6)")
+        assertEquals(caseViewPO.referenceRange("TPO Antibodies"), "(< 6)")
 
         caseViewPO = caseListPO.select("1.4.10")
         assertEquals(caseViewPO.nameShown(), "1.4.10")

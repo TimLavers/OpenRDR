@@ -1,15 +1,19 @@
 import api.getCase
 import api.getWaitingCasesInfo
+import api.saveInterpretation
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.RDRCase
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import react.*
+import react.FC
+import react.Props
 import react.css.css
 import react.dom.html.ReactHTML.button
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.h2
 import react.dom.html.ReactHTML.span
+import react.useEffectOnce
+import react.useState
 
 private val scope = MainScope()
 
@@ -73,8 +77,10 @@ val CaseQueue = FC<Props> {
                     selectedCase = getCase(it)
                 }
             }
-            onCaseProcessed = {
+            onCaseProcessed = { interpretation ->
+                //maybe retrieve the next case or null, rather than case ids
                 scope.launch {
+                    saveInterpretation(interpretation)
                     waitingCasesInfo = getWaitingCasesInfo()
                     caseIds = waitingCasesInfo.caseIds
                     showCaseList = true
