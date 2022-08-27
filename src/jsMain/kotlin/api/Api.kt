@@ -1,9 +1,9 @@
 package api
 
 import io.ktor.client.*
-import io.ktor.client.features.json.*
-import io.ktor.client.features.json.serializer.*
 import io.ktor.client.request.*
+import io.ktor.client.features.json.JsonFeature
+import io.ktor.client.features.json.serializer.KotlinxSerializer
 import io.ktor.http.*
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.Interpretation

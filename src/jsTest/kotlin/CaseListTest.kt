@@ -9,6 +9,7 @@ import kotlinx.coroutines.withContext
 import mysticfall.ReactTestSupport
 import react.dom.html.ReactHTML.button
 import react.dom.html.ReactHTML.div
+import react.dom.html.ReactHTML.em
 import react.dom.html.ReactHTML.li
 import kotlin.test.Test
 
@@ -47,7 +48,7 @@ class CaseListTest : ReactTestSupport {
         val renderer = render {
             CaseList {
                 attrs.caseIds = listOf(CaseId(id = "1", name = caseName))
-                attrs.currentCase = RDRCase(name = caseName)
+                attrs.currentCase = RDRCase(name = caseName, data = emptyMap())
             }
         }
         val caseViews = renderer.root.findAllByType(CaseView)
@@ -84,7 +85,7 @@ class CaseListTest : ReactTestSupport {
                     CaseId(id = "2", name = caseB),
                     CaseId(id = "3", name = caseC)
                 )
-                attrs.currentCase = RDRCase(name = caseA)
+                attrs.currentCase = RDRCase(name = caseA, data = emptyMap())
                 attrs.onCaseSelected = {
                     selectedCaseName = it
                 }
@@ -113,7 +114,7 @@ class CaseListTest : ReactTestSupport {
         val renderer = render {
             CaseList {
                 attrs.caseIds = listOf(caseIdA, caseIdB, caseIdC)
-                attrs.currentCase = RDRCase(name = "case B")
+                attrs.currentCase = RDRCase(name = "case B", data = emptyMap())
                 attrs.onCaseProcessed = { interpretation ->
                     processedCaseId = interpretation.caseId
                 }

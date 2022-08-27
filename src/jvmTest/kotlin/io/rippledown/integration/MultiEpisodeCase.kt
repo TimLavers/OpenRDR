@@ -41,8 +41,8 @@ internal class MultiEpisodeCase: UITestBase() {
 
         val datesShown = caseViewPO.datesShown()
         assertEquals(2, datesShown.size)
-        assertEquals("2022-08-05 22:31", datesShown[0])
-        assertEquals("2022-08-06 12:24", datesShown[1])
+        assertEquals("2022-08-05 12:31", datesShown[0])
+        assertEquals("2022-08-06 02:24", datesShown[1])
     }
 
     private fun setupCases() {
