@@ -9,6 +9,8 @@ import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.textarea
 import react.key
 
+const val SEND_INTERPRETATION_BUTTON_ID = "send-interpretation-button"
+
 external interface InterpretationViewHandler : Props {
     var case: RDRCase
     var onInterpretationSubmitted: (Interpretation) -> Unit
@@ -30,7 +32,7 @@ val InterpretationView = FC<InterpretationViewHandler> { props ->
         div {
             ReactHTML.button {
                 +"Send interpretation"
-                id = "send_interpretation_button"
+                id = SEND_INTERPRETATION_BUTTON_ID
                 css {
                     padding = px4
                 }

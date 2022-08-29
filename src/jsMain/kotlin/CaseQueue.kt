@@ -1,6 +1,3 @@
-import api.getCase
-import api.getWaitingCasesInfo
-import api.saveInterpretation
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.RDRCase
 import kotlinx.coroutines.MainScope
@@ -15,16 +12,23 @@ import react.dom.html.ReactHTML.span
 import react.useEffectOnce
 import react.useState
 
+const val NUMBER_OF_CASES_WAITING_ID = "number_of_cases_waiting_value"
+const val REFRESH_BUTTON_ID = "refresh_waiting_cases_info_button"
+
 private val scope = MainScope()
 
-val CaseQueue = FC<Props> {
+external interface CaseQueueHandler : Props {
+    var getWaitingCasesInfo: suspend () -> CasesInfo
+}
+
+val CaseQueue = FC<CaseQueueHandler> { props ->
     var waitingCasesInfo by useState(CasesInfo(emptyList(), ""))
     var showCaseList: Boolean by useState(false)
     var selectedCase: RDRCase? by useState(null)
 
     useEffectOnce {
         scope.launch {
-            waitingCasesInfo = getWaitingCasesInfo()
+            waitingCasesInfo = props.getWaitingCasesInfo()
         }
     }
 
@@ -36,22 +40,22 @@ val CaseQueue = FC<Props> {
         +"Cases waiting: "
         span {
             +"${waitingCasesInfo.count}"
-            id = "number_of_cases_waiting_value"
+            id = NUMBER_OF_CASES_WAITING_ID
         }
     }
     span {
         div {
             button {
                 +"Refresh"
+                id = REFRESH_BUTTON_ID
                 css {
                     padding = px4
                 }
                 onClick = {
                     scope.launch {
-                        waitingCasesInfo = getWaitingCasesInfo()
+                        waitingCasesInfo = props.getWaitingCasesInfo()
                     }
                 }
-                id = "refresh_waiting_cases_info_button"
             }
             button {
                 +"Review"

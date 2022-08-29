@@ -1,17 +1,13 @@
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.rippledown.model.CaseId
 import io.rippledown.model.RDRCase
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.withContext
 import mysticfall.ReactTestSupport
-import react.dom.html.ReactHTML.button
-import react.dom.html.ReactHTML.div
-import react.dom.html.ReactHTML.li
 import kotlin.test.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class CaseListTest : ReactTestSupport {
 
     @Test
@@ -24,10 +20,9 @@ class CaseListTest : ReactTestSupport {
             CaseList {
                 attrs.caseIds = caseIds
             }
-
         }
-        val ids = renderer.root.findAllByType(CaseList).map { c -> c.props.caseIds }
-        ids shouldBe listOf(caseIds)
+        val caseList = renderer.root.findByType(CaseList)
+        caseList.props.caseIds shouldBe caseIds
     }
 
     @Test
@@ -37,8 +32,8 @@ class CaseListTest : ReactTestSupport {
                 attrs.caseIds = emptyList()
             }
         }
-        val noCaseView = renderer.root.findAllByType(NoCaseView)
-        noCaseView.size shouldBe 1
+        val noCaseView = renderer.root.findByType(NoCaseView)
+        noCaseView shouldNotBe null
     }
 
     @Test
@@ -50,29 +45,23 @@ class CaseListTest : ReactTestSupport {
                 attrs.currentCase = RDRCase(name = caseName, data = emptyMap())
             }
         }
-        val caseViews = renderer.root.findAllByType(CaseView)
-        caseViews.size shouldBe 1
-
-        caseViews[0].props.case.name shouldBe caseName
+        val caseView = renderer.root.findByType(CaseView)
+        caseView.props.case.name shouldBe caseName
     }
 
     @Test
     fun shouldFindTheCaseListHeading() {
         val renderer = render {
             CaseList {
-                attrs.caseIds = listOf<CaseId>()
+                attrs.caseIds = listOf()
             }
         }
-        val headingDiv = renderer.root.findAllByType(div.toString())
-            .first {
-                it.props.asDynamic()["id"] == CASELIST_ID
-            }
-        val heading = headingDiv.props.asDynamic()["children"][0] as String
+        val heading = renderer.findById(CASELIST_ID).text()
         heading shouldBe "Cases "
     }
 
     @Test
-    fun shouldSelectACaseIdWhenCaseNameClicked() {
+    fun shouldSelectACaseIdWhenCaseNameClicked() = runTest {
         val caseA = "case A"
         val caseB = "case B"
         val caseC = "case C"
@@ -90,19 +79,13 @@ class CaseListTest : ReactTestSupport {
                 }
             }
         }
-        val listItem = renderer.root.findAllByType(li.toString())
-            .first {
-                it.props.asDynamic()["id"] == "case_list_item_$caseB"
-            }
+        val listItem = renderer.findById("case_list_item_$caseB")
 
         selectedCaseName shouldBe null
-
-        listItem.props.asDynamic().onClick()
-
+        click(listItem)
         selectedCaseName shouldBe caseB
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun shouldProcessCaseWhenButtonClicked() = runTest {
         val caseIdA = CaseId(id = "case A", name = "case A")
@@ -120,19 +103,9 @@ class CaseListTest : ReactTestSupport {
             }
         }
 
-        val button = renderer.root.findAllByType(button.toString())
-            .first {
-                it.props.asDynamic()["id"] == "send_interpretation_button"
-            }
-
+        val button = renderer.findById(SEND_INTERPRETATION_BUTTON_ID)
         processedCaseId shouldBe null
-
-        launch {
-            withContext(Dispatchers.Default) {
-                button.props.asDynamic().onClick() as Unit
-            }
-        }.join()
-
+        click(button)
         processedCaseId shouldBe caseIdB
     }
 
