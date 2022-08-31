@@ -1,8 +1,11 @@
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import mysticfall.ReactTestSupport
 import mysticfall.TestInstance
 import mysticfall.TestRenderer
@@ -21,24 +24,12 @@ class CaseQueueTest : ReactTestSupport {
     }
 
     @Test
-    fun shouldGetCasesWhenInitialised() = runTest {
-        val casesInfo = CasesInfo(
-            listOf(
-                CaseId("1", "case 1"),
-                CaseId("2", "case 2"),
-            ),
-            "some resource path"
-        )
-        lateinit var renderer: TestRenderer
-        renderer = render {
-            CaseQueue {
-                attrs.getWaitingCasesInfo = {
-                    casesInfo
-                }
-            }
+    fun reviewCasesButtonShouldBeInitiallyDisabled() {
+        val renderer = render {
+            CaseQueue()
         }
-        //Todo
-        renderer.findById(NUMBER_OF_CASES_WAITING_ID).text() shouldBe "2"
+        val reviewButton = renderer.findById(REVIEW_CASES_BUTTON_ID)
+        reviewButton.props.asDynamic()["disabled"].unsafeCast<Boolean>() shouldBe true
     }
 
     @Test
@@ -51,6 +42,7 @@ class CaseQueueTest : ReactTestSupport {
             ),
             "some resource path"
         )
+
         val renderer = render {
             CaseQueue {
                 attrs.getWaitingCasesInfo = {
@@ -62,6 +54,34 @@ class CaseQueueTest : ReactTestSupport {
         val refreshButton = renderer.findById(REFRESH_BUTTON_ID)
         click(refreshButton)
         renderer.findById(NUMBER_OF_CASES_WAITING_ID).text() shouldBe "3"
+    }
+
+    @Test
+    fun shouldGetCasesWhenInitialised() = runTest {
+        val casesInfo = CasesInfo(
+            listOf(
+                CaseId("1", "case 1"),
+                CaseId("2", "case 2"),
+            ),
+            "some resource path"
+        )
+        lateinit var renderer: TestRenderer
+        launch {
+            //wait for the coroutine in useEffectOnce to finish
+            withContext(Dispatchers.Main) {
+                //ensure that the useEffectOnce is called
+                act {
+                    renderer = render {
+                        CaseQueue {
+                            attrs.getWaitingCasesInfo = {
+                                casesInfo
+                            }
+                        }
+                    }
+                }
+            }
+        }.join()
+        renderer.findById(NUMBER_OF_CASES_WAITING_ID).text() shouldBe "${casesInfo.count}"
     }
 }
 

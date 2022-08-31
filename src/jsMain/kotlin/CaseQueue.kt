@@ -14,6 +14,7 @@ import react.useState
 
 const val NUMBER_OF_CASES_WAITING_ID = "number_of_cases_waiting_value"
 const val REFRESH_BUTTON_ID = "refresh_waiting_cases_info_button"
+const val REVIEW_CASES_BUTTON_ID = "review_cases_button"
 
 private val scope = MainScope()
 
@@ -59,6 +60,7 @@ val CaseQueue = FC<CaseQueueHandler> { props ->
             }
             button {
                 +"Review"
+                id = REVIEW_CASES_BUTTON_ID
                 css {
                     padding = px4
                 }
@@ -69,7 +71,6 @@ val CaseQueue = FC<CaseQueueHandler> { props ->
                     }
                 }
                 disabled = waitingCasesInfo.count == 0
-                id = "review_cases_button"
             }
         }
     }
