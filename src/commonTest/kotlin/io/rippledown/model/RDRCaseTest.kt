@@ -8,10 +8,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 internal class RDRCaseTest {
-    private val defaultDate = 1659752689505
-    private val today = defaultDate
-    private val yesterday = daysAgo(1)
-    private val lastWeek = daysAgo(7)
     private val tsh = Attribute("TSH")
     private val tshRange = ReferenceRange("0.5", "4.0")
     private val ft4 = Attribute("FT4")
@@ -246,10 +242,6 @@ internal class RDRCaseTest {
         val format = Json { allowStructuredMapKeys = true }
         val serialized = format.encodeToString(rdrCase)
         return format.decodeFromString(serialized)
-    }
-
-    private fun daysAgo(n: Int): Long {
-        return defaultDate - n * 24 * 60 * 60 * 1000
     }
 
     private fun checkValues(case: RDRCase, attribute: Attribute, vararg expectedValues: String) {

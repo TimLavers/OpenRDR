@@ -1,5 +1,6 @@
 package io.rippledown.model
 
+import io.kotest.matchers.shouldBe
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -94,7 +95,7 @@ internal class ReferenceRangeTest {
         assertFalse(interval.isNormal(Value("Whatever")))
         
         // Value float above
-        assertFalse(interval.isNormal(Value("3.0000001")))
+        assertFalse(interval.isNormal(Value("3.0001")))
         assertFalse(interval.isNormal(Value("3.5")))
         assertFalse(interval.isNormal(Value("35")))
         assertFalse(interval.isNormal(Value("350000")))
@@ -106,10 +107,10 @@ internal class ReferenceRangeTest {
         assertFalse(interval.isNormal(Value("1.99999")))
 
         // Value float is lower value
-        assertFalse(interval.isNormal(Value("2.0")))
+        interval.isNormal(Value("2.0")) shouldBe true
 
         // Value float is upper value
-        assertFalse(interval.isNormal(Value("3.0")))
+        interval.isNormal(Value("3.0")) shouldBe true
         
         // Value float in range
         assertTrue(interval.isNormal(Value("2.00001")))
@@ -124,7 +125,7 @@ internal class ReferenceRangeTest {
         assertFalse(interval.isNormal(Value("Whatever")))
 
         // Value float above
-        assertFalse(interval.isNormal(Value("3.0000001")))
+        assertFalse(interval.isNormal(Value("3.0001")))
         assertFalse(interval.isNormal(Value("350000")))
 
         // Value float below
@@ -132,7 +133,7 @@ internal class ReferenceRangeTest {
         assertTrue(interval.isNormal(Value("0.8")))
 
         // Value float is upper value
-        assertFalse(interval.isNormal(Value("3.0")))
+        interval.isNormal(Value("3.0")) shouldBe true
     }
 
     @Test
@@ -152,7 +153,7 @@ internal class ReferenceRangeTest {
         assertFalse(interval.isNormal(Value("1.99999")))
 
         // Value float is lower value
-        assertFalse(interval.isNormal(Value("2.0")))
+        interval.isNormal(Value("2.0")) shouldBe true
     }
 
     @Test
