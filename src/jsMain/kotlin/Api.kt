@@ -17,7 +17,7 @@ val jsonClient = HttpClient {
     install(JsonFeature) { serializer = KotlinxSerializer(Json { allowStructuredMapKeys = true }) }
 }
 
-suspend fun getWaitingCasesInfo(): CasesInfo = jsonClient.get("$endpoint/api/waitingCasesInfo")
+suspend fun waitingCasesInfo(): CasesInfo = jsonClient.get("$endpoint/api/waitingCasesInfo")
 
 suspend fun getCase(id: String): RDRCase = jsonClient.get("$endpoint/api/case?id=$id")
 

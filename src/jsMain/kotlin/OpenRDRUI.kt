@@ -1,5 +1,7 @@
 import csstype.FontFamily
 import csstype.TextAlign
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.async
 import react.FC
 import react.Props
 import react.css.css
@@ -19,6 +21,12 @@ val OpenRDRUI = FC<Props> {
             }
             id = "main_heading"
         }
-        CaseQueue()
+        CaseQueue {
+            getWaitingCasesInfo = {
+                MainScope().async {
+                    waitingCasesInfo()
+                }.await()
+            }
+        }
     }
 }
