@@ -66,7 +66,7 @@ val CaseQueue = FC<CaseQueueHandler> { props ->
                 }
                 onClick = {
                     scope.launch {
-                        waitingCasesInfo = getWaitingCasesInfo()
+                        waitingCasesInfo = props.getWaitingCasesInfo()
                         showCaseList = true
                     }
                 }
@@ -86,7 +86,7 @@ val CaseQueue = FC<CaseQueueHandler> { props ->
                 //maybe retrieve the next case or null, rather than case ids
                 scope.launch {
                     saveInterpretation(interpretation)
-                    waitingCasesInfo = getWaitingCasesInfo()
+                    waitingCasesInfo = props.getWaitingCasesInfo()
                     caseIds = waitingCasesInfo.caseIds
                     showCaseList = true
                     if (waitingCasesInfo.count > 0) {
