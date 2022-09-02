@@ -1,11 +1,9 @@
 package io.rippledown.model.condition
 
-import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlin.test.Test
 
 internal open class ConditionTestBase {
 
@@ -18,6 +16,58 @@ internal open class ConditionTestBase {
         val builder1 = RDRCaseBuilder()
         builder1.addValue(glucose.name, defaultDate,"0.667")
         return builder1.build("Glucose Only")
+    }
+
+    fun clinicalNotesCase(notes: String): RDRCase {
+        val builder1 = RDRCaseBuilder()
+        builder1.addValue(clinicalNotes.name, defaultDate,notes)
+        return builder1.build("Clinical Notes Only")
+    }
+
+    fun highTSHCase(): RDRCase {
+        val builder1 = RDRCaseBuilder()
+        builder1.addResult(tsh, defaultDate , TestResult("9.667", range, "pmol/L"))
+        return builder1.build("HighTSHCase")
+    }
+
+    fun tshValueNonNumericCase(): RDRCase {
+        val builder1 = RDRCaseBuilder()
+        builder1.addResult(tsh, defaultDate , TestResult("n.a.", range, "pmol/L"))
+        return builder1.build("TSHValueNonNumeric")
+    }
+
+    fun tshValueHasNoRangeCase(): RDRCase {
+        val builder1 = RDRCaseBuilder()
+        builder1.addValue(tsh.name, defaultDate,"0.667")
+        return builder1.build("NoTSHRange")
+    }
+
+    fun singleEpisodeCaseWithTSHNormal(): RDRCase {
+        val builder1 = RDRCaseBuilder()
+        builder1.addResult(tsh, defaultDate , TestResult("0.667", range, "pmol/L"))
+        return builder1.build("TSHNormal")
+    }
+
+    fun twoEpisodeCaseWithBothTSHValuesNormal(): RDRCase {
+        val builder = RDRCaseBuilder()
+        val tshResult1 = TestResult(Value("0.67"), range, "mU/L")
+        builder.addResult(tsh.name, defaultDate, tshResult1)
+        val range0 = ReferenceRange("0.25", "2.90")
+        val tshResult0 = TestResult(Value("2.10"), range0, "mU/L")
+        val yesterday = daysAgo(1)
+        builder.addResult(tsh.name, yesterday, tshResult0)
+        return builder.build("Two Episodes")
+    }
+
+    fun twoEpisodeCaseWithFirstTSHLowSecondNormal(): RDRCase {
+        val builder = RDRCaseBuilder()
+        val tshResult1 = TestResult(Value("0.67"), range, "mU/L")
+        builder.addResult(tsh.name, defaultDate, tshResult1)
+        val range0 = ReferenceRange("0.25", "2.90")
+        val tshResult0 = TestResult(Value("0.08"), range0, "mU/L")
+        val yesterday = daysAgo(1)
+        builder.addResult(tsh.name, yesterday, tshResult0)
+        return builder.build("Two Episodes")
     }
 
     fun twoEpisodeCase(attribute: Attribute, firstValue: String, secondValue: String): RDRCase {
@@ -66,8 +116,8 @@ internal open class ConditionTestBase {
         return builder.build("Case")
     }
 
-    fun serializeDeserialize(isNormal: Condition): Condition {
-        val serialized = Json.encodeToString(isNormal)
+    fun serializeDeserialize(condition: Condition): Condition {
+        val serialized = Json.encodeToString(condition)
         return Json.decodeFromString(serialized)
     }
 }

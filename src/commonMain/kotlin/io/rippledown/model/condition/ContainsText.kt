@@ -5,13 +5,13 @@ import io.rippledown.model.RDRCase
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class IsNormal(val attribute: Attribute) : Condition() {
+data class ContainsText(val attribute: Attribute, val toFind: String) : Condition() {
     override fun holds(case: RDRCase): Boolean {
         val latest = case.getLatest(attribute) ?: return false
-        return latest.isNormal()
+        return latest.value.text.contains(toFind)
     }
 
     override fun asText(): String {
-        return "${attribute.name} is normal"
+        return "${attribute.name} contains \"$toFind\""
     }
 }

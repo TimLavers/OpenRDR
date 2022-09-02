@@ -15,18 +15,17 @@ internal class IsNormalTest: ConditionTestBase() {
 
     @Test
     fun valueHasNoRange() {
-        val builder1 = RDRCaseBuilder()
-        builder1.addValue(tsh.name, defaultDate,"0.667")
-        val case1 = builder1.build("Case1")
-        condition.holds(case1) shouldBe false
+        condition.holds(tshValueHasNoRangeCase()) shouldBe false
+    }
+
+    @Test
+    fun valueNonNumeric() {
+        condition.holds(tshValueNonNumericCase()) shouldBe false
     }
 
     @Test
     fun valueNormal() {
-        val builder1 = RDRCaseBuilder()
-        builder1.addResult(tsh, defaultDate , TestResult("0.667", range, "pmol/L"))
-        val case = builder1.build("Case")
-        condition.holds(case) shouldBe true
+        condition.holds(singleEpisodeCaseWithTSHNormal()) shouldBe true
     }
 
     @Test
@@ -39,24 +38,13 @@ internal class IsNormalTest: ConditionTestBase() {
 
     @Test
     fun valueHigh() {
-        val builder1 = RDRCaseBuilder()
-        builder1.addResult(tsh, defaultDate , TestResult("9.667", range, "pmol/L"))
-        val case = builder1.build("Case")
-        condition.holds(case) shouldBe false
+        condition.holds(highTSHCase()) shouldBe false
     }
 
     @Test
     fun currentValueNormal() {
-        val builder = RDRCaseBuilder()
-        val tshResult1 = TestResult(Value("0.67"), range, "mU/L")
-        builder.addResult(tsh.name, defaultDate, tshResult1)
-        val range0 = ReferenceRange("0.25", "2.90")
-        val tshResult0 = TestResult(Value("0.08"), range0, "mU/L")
-        val yesterday = daysAgo(1)
-        builder.addResult(tsh.name, yesterday, tshResult0)
-        val case = builder.build("Case1")
-
-        condition.holds(case) shouldBe true
+        condition.holds(twoEpisodeCaseWithBothTSHValuesNormal()) shouldBe true
+        condition.holds(twoEpisodeCaseWithFirstTSHLowSecondNormal()) shouldBe true
     }
 
     @Test
