@@ -10,7 +10,7 @@ internal class HasNoCurrentValueTest: ConditionTestBase() {
 
     @Test
     fun attributeNotInCase() {
-        condition.holds(glucoseOnlyCase()) shouldBe true
+        condition.holds(glucoseOnlyCase()) shouldBe false
     }
 
     @Test
