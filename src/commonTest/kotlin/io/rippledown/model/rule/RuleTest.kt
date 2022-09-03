@@ -1,33 +1,16 @@
 package io.rippledown.model
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
-import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.kotest.matchers.string.startWith
-import io.rippledown.model.*
-import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.ConditionTestBase
-import io.rippledown.model.condition.ContainsText
-import io.rippledown.model.condition.IsNormal
 import io.rippledown.model.rule.Rule
+import io.rippledown.model.rule.RuleTestBase
 import kotlin.test.Test
 
-internal class RuleTest : ConditionTestBase() {
+internal class RuleTest : RuleTestBase() {
     private val conclusion1 = conc("First conclusion")
     private val conclusion2 = conc("Second conclusion")
     private val conclusion3 = conc("Third conclusion")
-    private val caseId = CaseId("Case1", "Case1")
-    private val interpretation = Interpretation(caseId, "")
-
-    private fun conc(text: String): Conclusion {
-        return Conclusion(text)
-    }
-
-    private fun cond(text: String): Condition {
-        return ContainsText(clinicalNotes, text)
-    }
 
     @Test
     fun adding_a_child_in_the_constructor_should_set_the_parent() {
@@ -162,216 +145,207 @@ internal class RuleTest : ConditionTestBase() {
         checkInterpretation(conclusion1)
     }
 
-    //    @Test
-//    fun `rule that does not apply to case and has no children`() {
-//        val conditions = setOf(cond("a"))
-//        val rule = Rule(null, conclusion1, conditions)
-//        val kase = Kase("bc")
-//
-//        val result = rule.apply(kase, interpretation)
-//        result shouldBe false
-//        checkInterpretation()//empty
-//    }
-//
-//    @Test
-//    fun `rule applies to case but child does not`() {
-//        val rule = setupRuleWithOneChild()
-//        val kase = Kase("ac")
-//
-//        val result = rule.apply(kase, interpretation)
-//        result shouldBe true
-//        checkInterpretation(conclusion1)
-//    }
-//
-//    @Test
-//    fun `rule applies to case and so does child`() {
-//        val conditions = setOf(cond("a"))
-//        val rule = Rule(null, conclusion1, conditions)
-//        val childConditions = setOf(cond("b"))
-//        val childRule = Rule(null, conclusion2, childConditions)
-//        rule.addChild(childRule)
-//        val kase = Kase("ab")
-//
-//        val result = rule.apply(kase, interpretation)
-//        result shouldBe true
-//        checkInterpretation(conclusion2)
-//    }
-//
-//    @Test
-//    fun `rule does not apply to case but child does`() {
-//        val rule = setupRuleWithOneChild()
-//        val kase = Kase("bc")
-//
-//        val result = rule.apply(kase, interpretation)
-//        result shouldBe false
-//        checkInterpretation()//empty
-//    }
-//
-//    @Test
-//    fun `rule does not apply to case nor does child`() {
-//        val rule = setupRuleWithOneChild()
-//        val kase = Kase("xy")
-//
-//        val result = rule.apply(kase, interpretation)
-//        result shouldBe false
-//        checkInterpretation()//empty
-//    }
-//
-//    @Test
-//    fun `rule applies no child does`() {
-//        val rule = setupRuleWithTwoChildren()
-//        val kase = Kase("a")
-//        val result = rule.apply(kase, interpretation)
-//        result shouldBe true
-//        checkInterpretation(conclusion1)
-//    }
-//
-//    @Test
-//    fun `rule applies and one child does`() {
-//        val rule = setupRuleWithTwoChildren()
-//        val kase = Kase("ab")
-//        val result = rule.apply(kase, interpretation)
-//        result shouldBe true
-//        checkInterpretation(conclusion2)
-//    }
-//
-//    @Test
-//    fun `rule applies and so do both children`() {
-//        val rule = setupRuleWithTwoChildren()
-//        val kase = Kase("abc")
-//        val result = rule.apply(kase, interpretation)
-//        result shouldBe true
-//        checkInterpretation(conclusion2, conclusion3)
-//    }
-//
-//    @Test
-//    fun addRuleTest() {
-//        val grandChildConditions = setOf(cond("a"), cond("c"))
-//        val grandChild = Rule(null, conclusion3, grandChildConditions)
-//        val childConditions = setOf(cond("b"))
-//        val childRule = Rule(null, conclusion2, childConditions)
-//        childRule.addChild(grandChild)
-//        childRule.conditions shouldEqual childRule.conditions
-//        childRule.conclusion shouldEqual childRule.conclusion
-//        val rootConditions = setOf(cond("a"), cond("b"))
-//        val root = Rule(null, conclusion1, rootConditions)
-//        root.addChild(childRule)
-//        root.conclusion shouldEqual root.conclusion
-//        root.conditions shouldEqual root.conditions
-//        root.childRules() should contain(childRule)
-//        val kase = Kase("abc")
-//        val result = root.apply(kase, interpretation)
-//        result shouldBe true
-//        checkInterpretation(conclusion3)
-//    }
-//
-//    @Test
-//    fun visitTest() {
-//        val conditions = setOf(cond("a"))
-//        val rule = Rule(null, conclusion1, conditions)
-//        val visited = mutableSetOf<Rule>()
-//        val action: ((Rule) -> (Unit)) = {
-//            visited.add(it)
-//        }
-//        rule.visit(action)
-//        visited.size shouldEqual 1
-//        visited should contain(rule)
-//    }
-//
-//    @Test
-//    fun `visit rule with children`() {
-//        val rule = setupRuleWithTwoChildren()
-//        val visited = mutableSetOf<Conclusion?>()
-//        val action: ((Rule) -> (Unit)) = {
-//            visited.add(it.conclusion)
-//        }
-//        rule.visit(action)
-//        val expected = mutableSetOf(conclusion1, conclusion2, conclusion3)
-//        visited shouldEqual expected
-//    }
-//
-//    @Test
-//    fun `visit deep`() {
-//        val rule = setupRuleWithOneChild()
-//        val grandChildConditions = setOf(cond("a"), cond("c"))
-//        val grandChild = Rule(null, conclusion3, grandChildConditions)
-//        rule.childRules().first().addChild(grandChild)
-//
-//        val visited = mutableSetOf<Conclusion?>()
-//        val action: ((Rule) -> (Unit)) = {
-//            visited.add(it.conclusion)
-//        }
-//        rule.visit(action)
-//        val expected = mutableSetOf(conclusion1, conclusion2, conclusion3)
-//        visited shouldEqual expected
-//    }
-//
-//    @Test
-//    fun `rule should be copied`() {
-//        val rule = setupRuleWithOneChild()
-//        val copy = rule.copy()
-//        (copy !== rule) shouldBe true
-//        copy.conclusion shouldBe rule.conclusion
-//        copy.conditions shouldEqual rule.conditions
-//        copy.childRules() shouldEqual rule.childRules()
-//    }
-//
-//    @Test
-//    fun `rule with null parent should be copied`() {
-//        val rule = setupRuleWithOneChild()
-//        val copy = rule.copy()
-//        (copy !== rule) shouldBe true
-//        copy.parent shouldBe rule.parent
-//        copy.conclusion shouldBe rule.conclusion
-//        copy.conditions shouldEqual rule.conditions
-//        copy.childRules() shouldEqual rule.childRules()
-//    }
-//
-//    @Test
-//    fun `rule with not null  parent should be copied`() {
-//        val rule = setupRuleWithOneChild()
-//        rule.parent = Rule(null)
-//        val copy = rule.copy()
-//        (copy !== rule) shouldBe true
-//        copy.parent shouldBe Rule(null)
-//        copy.conclusion shouldBe rule.conclusion
-//        copy.conditions shouldEqual rule.conditions
-//        copy.childRules() shouldEqual rule.childRules()
-//    }
-//    @Test
-//    fun `child rules should be copied`() {
-//        val rule = setupRuleWithOneChild()
-//        val copy = rule.copy()
-//        val copyChild = copy.childRules().iterator().next()
-//        val ruleChild = rule.childRules().iterator().next()
-//        copyChild shouldEqual ruleChild
-//        (copyChild !== ruleChild) shouldBe true
-//    }
-//
-//    @Test
-//    fun `conditions should be copied`() {
-//        val rule = setupRuleWithOneChild()
-//        val copy = rule.copy()
-//        val copyCondition = copy.conditions.iterator().next()
-//        val ruleCondition = rule.conditions.iterator().next()
-//        copyCondition shouldBe ruleCondition
-//    }
-//
-//    private fun setupRuleWithTwoChildren(): Rule {
-//        val rule = setupRuleWithOneChild()
-//        val childConditions = setOf(cond("c"))
-//        val childRule = Rule(null, conclusion3, childConditions)
-//        rule.addChild(childRule)
-//        return rule
-//    }
-//
-//    private fun setupRuleWithOneChild(): Rule {
-//        val rule = Rule(null, conclusion1, setOf(cond("a")))
-//        val childRule = Rule(null, conclusion2, setOf(cond("b")))
-//        rule.addChild(childRule)
-//        return rule
-//    }
-//
+    @Test
+    fun rule_that_does_not_apply_to_case_and_has_no_children() {
+        val conditions = setOf(cond("a"))
+        val rule = Rule(null, conclusion1, conditions)
+
+        val result = rule.apply(clinicalNotesCase("bc"), interpretation)
+        result shouldBe false
+        checkInterpretation()//empty
+    }
+
+    @Test
+    fun rule_applies_to_case_but_child_does_not() {
+        val rule = setupRuleWithOneChild()
+        val result = rule.apply(clinicalNotesCase("ac"), interpretation)
+        result shouldBe true
+        checkInterpretation(conclusion1)
+    }
+
+    @Test
+    fun rule_applies_to_case_and_so_does_child() {
+        val conditions = setOf(cond("a"))
+        val rule = Rule(null, conclusion1, conditions)
+        val childConditions = setOf(cond("b"))
+        val childRule = Rule(null, conclusion2, childConditions)
+        rule.addChild(childRule)
+
+        val result = rule.apply(clinicalNotesCase("ab"), interpretation)
+        result shouldBe true
+        checkInterpretation(conclusion2)
+    }
+
+    @Test
+    fun rule_does_not_apply_to_case_but_child_does() {
+        val rule = setupRuleWithOneChild()
+
+        val result = rule.apply(clinicalNotesCase("bc"), interpretation)
+        result shouldBe false
+        checkInterpretation()//empty
+    }
+
+    @Test
+    fun rule_does_not_apply_to_case_nor_does_child() {
+        val rule = setupRuleWithOneChild()
+
+        val result = rule.apply(clinicalNotesCase("xy"), interpretation)
+        result shouldBe false
+        checkInterpretation()//empty
+    }
+
+    @Test
+    fun rule_applies_no_child_does() {
+        val rule = setupRuleWithTwoChildren()
+        val result = rule.apply(clinicalNotesCase("a"), interpretation)
+        result shouldBe true
+        checkInterpretation(conclusion1)
+    }
+
+    @Test
+    fun rule_applies_and_one_child_does() {
+        val rule = setupRuleWithTwoChildren()
+        val result = rule.apply(clinicalNotesCase("ab"), interpretation)
+        result shouldBe true
+        checkInterpretation(conclusion2)
+    }
+
+    @Test
+    fun rule_applies_and_so_do_both_children() {
+        val rule = setupRuleWithTwoChildren()
+        val result = rule.apply(clinicalNotesCase("abc"), interpretation)
+        result shouldBe true
+        checkInterpretation(conclusion2, conclusion3)
+    }
+
+    @Test
+    fun addRuleTest() {
+        val grandChildConditions = setOf(cond("a"), cond("c"))
+        val grandChild = Rule(null, conclusion3, grandChildConditions)
+        val childConditions = setOf(cond("b"))
+        val childRule = Rule(null, conclusion2, childConditions)
+        childRule.addChild(grandChild)
+        childRule.conditions shouldBe  childRule.conditions
+        childRule.conclusion shouldBe childRule.conclusion
+        val rootConditions = setOf(cond("a"), cond("b"))
+        val root = Rule(null, conclusion1, rootConditions)
+        root.addChild(childRule)
+        root.conclusion shouldBe root.conclusion
+        root.conditions shouldBe root.conditions
+        root.childRules() shouldContain(childRule)
+        val result = root.apply(clinicalNotesCase("abc"), interpretation)
+        result shouldBe true
+        checkInterpretation(conclusion3)
+    }
+
+    @Test
+    fun visitTest() {
+        val conditions = setOf(cond("a"))
+        val rule = Rule(null, conclusion1, conditions)
+        val visited = mutableSetOf<Rule>()
+        val action: ((Rule) -> (Unit)) = {
+            visited.add(it)
+        }
+        rule.visit(action)
+        visited.size shouldBe 1
+        visited shouldContain (rule)
+    }
+
+    @Test
+    fun visit_rule_with_children() {
+        val rule = setupRuleWithTwoChildren()
+        val visited = mutableSetOf<Conclusion?>()
+        val action: ((Rule) -> (Unit)) = {
+            visited.add(it.conclusion)
+        }
+        rule.visit(action)
+        val expected = mutableSetOf(conclusion1, conclusion2, conclusion3)
+        visited shouldBe expected
+    }
+
+    @Test
+    fun visit_deep() {
+        val rule = setupRuleWithOneChild()
+        val grandChildConditions = setOf(cond("a"), cond("c"))
+        val grandChild = Rule(null, conclusion3, grandChildConditions)
+        rule.childRules().first().addChild(grandChild)
+
+        val visited = mutableSetOf<Conclusion?>()
+        val action: ((Rule) -> (Unit)) = {
+            visited.add(it.conclusion)
+        }
+        rule.visit(action)
+        val expected = mutableSetOf(conclusion1, conclusion2, conclusion3)
+        visited shouldBe expected
+    }
+
+    @Test
+    fun rule_should_be_copied() {
+        val rule = setupRuleWithOneChild()
+        val copy = rule.copy()
+        (copy !== rule) shouldBe true
+        copy.conclusion shouldBe rule.conclusion
+        copy.conditions shouldBe rule.conditions
+        copy.childRules() shouldBe rule.childRules()
+    }
+
+    @Test
+    fun rule_with_null_parent_should_be_copied() {
+        val rule = setupRuleWithOneChild()
+        val copy = rule.copy()
+        (copy !== rule) shouldBe true
+        copy.parent shouldBe rule.parent
+        copy.conclusion shouldBe rule.conclusion
+        copy.conditions shouldBe rule.conditions
+        copy.childRules() shouldBe rule.childRules()
+    }
+
+    @Test
+    fun rule_with_not_null_parent_should_be_copied() {
+        val rule = setupRuleWithOneChild()
+        rule.parent = Rule(null)
+        val copy = rule.copy()
+        (copy !== rule) shouldBe true
+        copy.parent shouldBe Rule(null)
+        copy.conclusion shouldBe rule.conclusion
+        copy.conditions shouldBe rule.conditions
+        copy.childRules() shouldBe rule.childRules()
+    }
+
+     @Test
+    fun child_rules_should_be_copied() {
+        val rule = setupRuleWithOneChild()
+        val copy = rule.copy()
+        val copyChild = copy.childRules().iterator().next()
+        val ruleChild = rule.childRules().iterator().next()
+        copyChild shouldBe ruleChild
+        (copyChild !== ruleChild) shouldBe true
+    }
+
+    @Test
+    fun conditions_should_be_copied() {
+        val rule = setupRuleWithOneChild()
+        val copy = rule.copy()
+        val copyCondition = copy.conditions.iterator().next()
+        val ruleCondition = rule.conditions.iterator().next()
+        copyCondition shouldBe ruleCondition
+    }
+
+    private fun setupRuleWithTwoChildren(): Rule {
+        val rule = setupRuleWithOneChild()
+        val childConditions = setOf(cond("c"))
+        val childRule = Rule(null, conclusion3, childConditions)
+        rule.addChild(childRule)
+        return rule
+    }
+
+    private fun setupRuleWithOneChild(): Rule {
+        val rule = Rule(null, conclusion1, setOf(cond("a")))
+        val childRule = Rule(null, conclusion2, setOf(cond("b")))
+        rule.addChild(childRule)
+        return rule
+    }
+
     private fun checkInterpretation(vararg conclusions: Conclusion) {
         checkInterpretation(interpretation, *conclusions)
     }

@@ -5,7 +5,7 @@ import io.rippledown.model.rule.RuleSummary
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Interpretation(val caseId: CaseId, val text: String) {
+data class Interpretation(val caseId: CaseId, val text: String = "") {
     private val rules = mutableSetOf<RuleSummary>()
 
     fun add(rule: Rule) {
