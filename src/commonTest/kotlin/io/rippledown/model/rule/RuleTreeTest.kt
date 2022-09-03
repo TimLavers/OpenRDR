@@ -8,7 +8,6 @@ import io.rippledown.model.rule.dsl.ruleTree
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-
 internal class RuleTreeTest : RuleTestBase() {
     private lateinit var tree: RuleTree
     private val A = "A"
@@ -43,7 +42,7 @@ internal class RuleTreeTest : RuleTestBase() {
     fun add_to_empty_root() {
         tree = ruleTree {
             child {
-                conclusion { A }
+                +A
                 condition {
                     attributeName = notes
                     constant = "a"
@@ -59,14 +58,14 @@ internal class RuleTreeTest : RuleTestBase() {
     fun add_to_root_that_has_one_child() {
         tree = ruleTree {
             child {
-                conclusion { A }
+                +A
                 condition {
                     attributeName = notes
                     constant = "a"
                 }
             }
             child {
-                conclusion { B }
+                +B
                 condition {
                     attributeName = notes
                     constant = "b"
@@ -82,13 +81,13 @@ internal class RuleTreeTest : RuleTestBase() {
     fun add_to_two_leaf_rules() {
         tree = ruleTree {
             child {
-                conclusion { "ConcA" }
+                + "ConcA"
                 condition {
                     attributeName = notes
                     constant = "a"
                 }
                 child {
-                    conclusion { "ConcC" }
+                    +"ConcC"
                     condition {
                         attributeName = notes
                         constant = "c"
@@ -96,13 +95,13 @@ internal class RuleTreeTest : RuleTestBase() {
                 }
             }
             child {
-                conclusion { "ConcB" }
+                + "ConcB"
                 condition {
                     attributeName = notes
                     constant = "b"
                 }
                 child {
-                    conclusion { "ConcC" }
+                    + "ConcC"
                     condition {
                         attributeName = notes
                         constant = "c"
@@ -375,7 +374,7 @@ internal class RuleTreeTest : RuleTestBase() {
     fun copy_tree_with_2_children() {
         tree = ruleTree {
             child {
-                conclusion { "ConcA" }
+                + "ConcA"
                 condition {
                     attributeName = notes
                     constant = "a"

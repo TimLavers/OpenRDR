@@ -66,6 +66,10 @@ class RULE_TEMPLATE : ABSTRACT_RULE_TEMPLATE() {
         conclusionDesc = init()
     }
 
+    operator fun String.unaryPlus() {
+        conclusionDesc = this
+    }
+
     fun stop() = apply {
         isStopping = true
     }
@@ -75,9 +79,6 @@ class RULE_TEMPLATE : ABSTRACT_RULE_TEMPLATE() {
         r.init()
         conditions.add(r.condition())
     }
-//    fun condition(init: RULE_TEMPLATE.() -> String) = apply {
-//        conditions.add(Condition(init()))
-//    }
 }
 class CONDITION_TEMPLATE {
     lateinit var attributeName: String
