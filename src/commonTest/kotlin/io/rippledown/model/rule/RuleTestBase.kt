@@ -1,5 +1,7 @@
 package io.rippledown.model.rule
 
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.shouldBe
 import io.rippledown.model.CaseId
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
@@ -18,4 +20,12 @@ internal open class RuleTestBase: ConditionTestBase() {
     fun cond(text: String): Condition {
         return ContainsText(clinicalNotes, text)
     }
+
+    fun checkInterpretation(interpretation: Interpretation, vararg conclusions: Conclusion) {
+        conclusions.size shouldBe interpretation.conclusions().size
+        conclusions.forEach {
+            interpretation.conclusions() shouldContain it
+        }
+    }
+
 }

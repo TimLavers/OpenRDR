@@ -349,11 +349,4 @@ internal class RuleTest : RuleTestBase() {
     private fun checkInterpretation(vararg conclusions: Conclusion) {
         checkInterpretation(interpretation, *conclusions)
     }
-
-    fun checkInterpretation(interpretation: Interpretation, vararg conclusions: Conclusion) {
-        conclusions.size shouldBe interpretation.conclusions().size
-        conclusions.forEach {
-            interpretation.conclusions() shouldContain it
-        }
-    }
 }
