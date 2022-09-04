@@ -10,7 +10,6 @@ abstract class RuleTreeChange(val tree: RuleTree) {
 }
 
 class ChangeTreeToAddConclusion(private val toBeAdded: Conclusion, tree: RuleTree) : RuleTreeChange(tree) {
-
     override fun updateRuleTree(case: RDRCase, conditions: Set<Condition>): Set<Rule> {
         val rule = tree.rule(toBeAdded, conditions)
         tree.root.addChild(rule)
@@ -23,16 +22,10 @@ class ChangeTreeToAddConclusion(private val toBeAdded: Conclusion, tree: RuleTre
 }
 
 open class ChangeTreeToRemoveConclusion(private val toBeRemoved: Conclusion, tree: RuleTree) : RuleTreeChange(tree) {
-
-    /**
-     * Adds a stopping rule under each rule giving the conclusion to be removed
-     *
-     * @return the stopping rules
-     */
     override fun updateRuleTree(case: RDRCase, conditions: Set<Condition>): Set<Rule> {
-        val interp = tree.apply(case)
+        val interpretation = tree.apply(case)
         val rulesChanged = mutableSetOf<Rule>()
-        interp.rulesGivingConclusion(toBeRemoved)
+        interpretation.rulesGivingConclusion(toBeRemoved)
                 .forEach {
                     val stoppingRule = tree.rule(null, conditions)
                     it.addChild(stoppingRule)
@@ -41,6 +34,7 @@ open class ChangeTreeToRemoveConclusion(private val toBeRemoved: Conclusion, tre
         return rulesChanged
     }
 
+    // Doesn't this depend on which rules are giving the conclusion??????
     override fun wouldChangeConclusions(conclusions: Set<Conclusion>): Boolean = conclusions.contains(toBeRemoved)
 }
 
@@ -58,6 +52,7 @@ class ChangeTreeToReplaceConclusion(private val toBeReplaced: Conclusion, privat
         return rulesChanged
     }
 
+    // Doesn't this depend on which rules are giving the conclusion??????
     override fun wouldChangeConclusions(conclusions: Set<Conclusion>): Boolean {
         return conclusions.contains(toBeReplaced) && !conclusions.contains(toBeReplacement)
     }
