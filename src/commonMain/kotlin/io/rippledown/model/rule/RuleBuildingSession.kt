@@ -13,7 +13,7 @@ class RuleBuildingSession(val case: RDRCase,
 
     fun cornerstoneCases(): Set<RDRCase> {
         return cornerstonesNotExempted
-                .filter { case != it }
+                .filter { case.name != it.name }
                 .filter(this::caseSatisfiesConditions)
                 .filter(this::wouldChangeInterpretation)
                 .toSet()
