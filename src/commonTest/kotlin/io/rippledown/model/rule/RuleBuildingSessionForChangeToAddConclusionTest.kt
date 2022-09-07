@@ -47,6 +47,7 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
     fun removing_a_condition_should_mean_that_the_corresponding_cornerstones_are_now_presented() {
         val addAction = ChangeTreeToAddConclusion(Conclusion("A"), RuleTree())
         val session = RuleBuildingSession(sessionCase, interpretationA, addAction, cornerstoneMap)
+        session.cornerstoneCases() shouldBe cornerstoneMap.keys
         val condition = ContainsText(clinicalNotes, "3")
         session.addCondition(condition)
         session.cornerstoneCases() shouldBe emptySet()

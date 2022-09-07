@@ -13,6 +13,6 @@ data class GreaterThanOrEqualTo(val attribute: Attribute, val d: Double) : Condi
     }
 
     override fun asText(): String {
-        return "${attribute.name} >= \"$d\""
+        return "${attribute.name} ≥ $d"
     }
 }

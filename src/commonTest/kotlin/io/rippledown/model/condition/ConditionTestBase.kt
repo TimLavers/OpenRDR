@@ -21,7 +21,7 @@ internal open class ConditionTestBase {
     fun clinicalNotesCase(notes: String): RDRCase {
         val builder1 = RDRCaseBuilder()
         builder1.addValue(clinicalNotes.name, defaultDate,notes)
-        return builder1.build("Clinical Notes Only")
+        return builder1.build(notes)
     }
 
     fun highTSHCase(): RDRCase {
