@@ -12,6 +12,7 @@ class RuleBuildingSession(val case: RDRCase,
     private val cornerstonesNotExempted = cornerstones.keys.toMutableSet()
 
     fun cornerstoneCases(): Set<RDRCase> {
+        println("cornerstonesNotExempted = ${cornerstonesNotExempted}")
         return cornerstonesNotExempted
                 .filter { case.name != it.name }
                 .filter(this::caseSatisfiesConditions)

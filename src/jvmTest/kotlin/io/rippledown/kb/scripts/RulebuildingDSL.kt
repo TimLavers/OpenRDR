@@ -8,6 +8,7 @@ import io.rippledown.model.condition.*
 
 const val addedConditionBeforeSessionStarted = "Session not started yet. Please define the case and action before adding a condition"
 val textAttribute = Attribute("Text")
+val numberAttribute = Attribute("Value")
 
 fun build(f: BuildTemplate.() -> Unit): BuildTemplate {
     val template = BuildTemplate()
@@ -26,10 +27,12 @@ class BuildTemplate {
         kb.addCornerstone(case)
     }
 
-//    fun case(i: Int) {
-//        val case = RDRCase(i.toString(), i.toString())
-//        kb.addCornerstone(case)
-//    }
+    fun case(i: Int) {
+        val caseBuilder = RDRCaseBuilder()
+        caseBuilder.addResult(numberAttribute, defaultDate, TestResult("$i"))
+        val case = caseBuilder.build("$i")
+        kb.addCornerstone(case)
+    }
 
     fun session(s: SessionTemplate.() -> Unit): SessionTemplate {
         val template = SessionTemplate(kb)
@@ -66,34 +69,42 @@ class SessionTemplate( val kb: KB) {
             throw Exception(addedConditionBeforeSessionStarted)
         }
     }
-//
-//    fun condition(i: Int) {
-//        try {
-//            session.addCondition(IntegerCondition(i))
-//        } catch (e: Exception) {
-//            throw Exception(addedConditionBeforeSessionStarted)
-//        }
-//    }
-//
+
+    fun condition(i: Int) {
+        try {
+            session.addCondition(GreaterThanOrEqualTo(numberAttribute, i.toDouble()))
+        } catch (e: Exception) {
+            throw Exception(addedConditionBeforeSessionStarted)
+        }
+    }
+
     fun requireCornerstones(vararg expectedCornerstones: String) {
-        session.cornerstones.map { it.key.name }.toSet() shouldBe expectedCornerstones.toSet()
+        session.cornerstoneCases().map { it.name }.toSet() shouldBe expectedCornerstones.toSet()
+    }
+
+    operator fun String.unaryPlus() {
+        addConclusion(this)
     }
 
     fun addConclusion(conclusion: String) {
         action = ChangeTreeToAddConclusion(Conclusion(conclusion), kb.ruleTree)
         session = kb.startSession(case, action)
     }
-//
-////    fun removeConclusion(conclusion: String) {
-////        action = RemoveAction(Conc(conclusion), kb.tree)
-////        session = kb.startSession(case, action)
-////    }
-////
-////    fun replaceConclusion(conclusion: String, replacement: String) {
-////        action = ReplaceAction(Conc(conclusion), Conc(replacement), kb.tree)
-////        session = kb.startSession(case, action)
-////    }
-//
+
+    operator fun String.unaryMinus() {
+        removeConclusion(this)
+    }
+
+    fun removeConclusion(conclusion: String) {
+        action = ChangeTreeToRemoveConclusion(Conclusion(conclusion), kb.ruleTree)
+        session = kb.startSession(case, action)
+    }
+
+    fun replaceConclusion(conclusion: String, replacement: String) {
+        action = ChangeTreeToReplaceConclusion(Conclusion(conclusion), Conclusion(replacement), kb.ruleTree)
+        session = kb.startSession(case, action)
+    }
+
     fun commit() {
         session.commit()
     }
