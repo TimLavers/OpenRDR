@@ -61,6 +61,10 @@ class SessionTemplate( val kb: KB) {
         kb.interpret(case)
     }
 
+    infix fun String.replaces(x: String) {
+        replaceConclusion(x, this)
+    }
+
     fun condition(c: String) {
         try {
             val condition = ContainsText(textAttribute, c)

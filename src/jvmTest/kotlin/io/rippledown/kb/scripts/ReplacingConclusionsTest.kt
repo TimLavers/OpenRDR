@@ -17,7 +17,7 @@ class ReplacingConclusionsTest {
             requireInterpretation("1", "A")
             session {
                 selectCase("1")
-                replaceConclusion("A", "B")
+                "B" replaces "A"
                 commit()
             }
             requireInterpretation("1", "B")
@@ -55,7 +55,7 @@ class ReplacingConclusionsTest {
 
             session {
                 selectCase("3")
-                replaceConclusion("B", "C")
+                "C" replaces "B"
                 condition("ab")
                 commit()
             }
@@ -96,7 +96,7 @@ class ReplacingConclusionsTest {
 
             session {
                 selectCase("2")
-                replaceConclusion("A", "B")
+                "B" replaces "A"
                 condition(2)
                 commit()
             }
