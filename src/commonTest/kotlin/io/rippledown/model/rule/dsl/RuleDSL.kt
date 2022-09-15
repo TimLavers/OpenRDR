@@ -4,9 +4,9 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.Conclusion
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ContainsText
-import io.rippledown.model.rule.NoConclusionRule
 import io.rippledown.model.rule.Rule
 import io.rippledown.model.rule.RuleTree
+import io.rippledown.util.randomString
 
 fun ruleTree(init: ABSTRACT_RULE_TEMPLATE.() -> Unit) : ROOT_TEMPLATE {
     val n = ROOT_TEMPLATE()
@@ -16,6 +16,7 @@ fun ruleTree(init: ABSTRACT_RULE_TEMPLATE.() -> Unit) : ROOT_TEMPLATE {
 
 open class ABSTRACT_RULE_TEMPLATE {
     protected lateinit var conclusionDesc: String
+    var id = randomString(5)
     protected var isStopping: Boolean = false
     protected val conditions = mutableSetOf<Condition>()
     protected val childRules = mutableListOf<RULE_TEMPLATE>()
@@ -27,7 +28,7 @@ open class ABSTRACT_RULE_TEMPLATE {
     }
 
     open fun rule(): Rule {
-        val result = if (isStopping) NoConclusionRule(conditions) else Rule(null, Conclusion(conclusionDesc), conditions)
+        val result = if (isStopping) Rule(id, null, null, conditions) else Rule(id, null, Conclusion(conclusionDesc), conditions)
         childRules.forEach { result.addChild(it.rule()) }
         return result
     }
@@ -45,7 +46,7 @@ class ROOT_TEMPLATE : ABSTRACT_RULE_TEMPLATE() {
     }
 
     override fun rule(): Rule {
-        val result = Rule(null, Conclusion(conclusionDesc), conditions)
+        val result = Rule(randomString(5),null, Conclusion(conclusionDesc), conditions)
         childRules.forEach { result.addChild(it.rule()) }
         return result
     }

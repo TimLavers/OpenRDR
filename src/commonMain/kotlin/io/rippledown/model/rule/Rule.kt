@@ -6,6 +6,7 @@ import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
 
 open class Rule(
+    val id: String,
     var parent: Rule? = null,
     val conclusion: Conclusion? = null,
     val conditions: Set<Condition> = mutableSetOf(),
@@ -16,7 +17,7 @@ open class Rule(
     }
 
     fun summary(): RuleSummary {
-        return RuleSummary(conclusion, conditions)
+        return RuleSummary(id, conclusion, conditions)
     }
 
     fun conditionsSatisfied(case: RDRCase): Boolean {
@@ -55,13 +56,13 @@ open class Rule(
     fun copy(): Rule {
         val copyChildRules = mutableSetOf<Rule>()
         childRules().forEach { r -> copyChildRules.add(r.copy()) }
-        val rule = Rule(null, conclusion?.copy(), conditions.toSet(), copyChildRules)
+        val rule = Rule(id,null, conclusion?.copy(), conditions.toSet(), copyChildRules)
         rule.parent = parent
         return rule
     }
 
     override fun toString(): String {
-        val sb = StringBuilder().append("Rule(")
+        val sb = StringBuilder().append("Rule($id, ")
         parent?.let { sb.append("parent=$parent") }
         conclusion?.let { sb.append(" conclusion=$conclusion") }
         if (conditions.isNotEmpty()) {
@@ -71,21 +72,25 @@ open class Rule(
         return sb.toString()
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is Rule) return false
-
+    fun structurallyEqual(other: Rule): Boolean {
         if (conclusion != other.conclusion) return false
         if (conditions != other.conditions) return false
         if (parent != other.parent) return false
+        return true
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as Rule
+
+        if (id != other.id) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        var result = conclusion?.hashCode() ?: 0
-        result = 31 * result + conditions.hashCode()
-        result = 31 * result + (parent?.hashCode() ?: 0)
-        return result
+        return id.hashCode()
     }
 }
