@@ -1,0 +1,21 @@
+If using webpack 5, the following npm dependencies need to be added as it no longer includes polyfills for node.js core modules by default:
+
+                implementation(npm("process", "0.11.10"))
+                implementation(npm("url", "0.11.0"))
+                implementation(npm("assert", "2.0.0"))
+                implementation(npm("util", "0.12.4"))
+                implementation(npm("path", "0.12.7"))
+                implementation(npm("browserify-zlib", "0.2.0"))
+                implementation(npm("stream-http", "3.2.0"))
+                implementation(npm("https-browserify", "1.0.0"))
+                implementation(npm("stream-browserify", "3.0.0"))
+                implementation(npm("timers", "0.1.1"))
+                implementation(npm("buffer", "6.0.3"))
+                implementation(npm("fs-extra", "10.1.0"))
+                implementation(npm("constants-browserify", "1.0.0"))
+
+Furthermore, the file patch.js needs to be added to the webpack.conf.d folder.
+
+See: https://github.com/facebook/create-react-app/issues/11756#issuecomment-1001162736
+
+Note: The patch.js file is not needed when using webpack 4.

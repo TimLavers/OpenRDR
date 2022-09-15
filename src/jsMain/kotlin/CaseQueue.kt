@@ -79,20 +79,20 @@ val CaseQueue = FC<CaseQueueHandler> { props ->
             caseIds = waitingCasesInfo.caseIds
             onCaseSelected = {
                 scope.launch {
-                    selectedCase = getCase(it)
+                    selectedCase = ApiClient().getCase(it)
                 }
             }
             onCaseProcessed = { interpretation ->
                 //maybe retrieve the next case or null, rather than case ids
                 scope.launch {
-                    saveInterpretation(interpretation)
+                    ApiClient().saveInterpretation(interpretation)
                     waitingCasesInfo = props.getWaitingCasesInfo()
                     caseIds = waitingCasesInfo.caseIds
                     showCaseList = true
                     if (waitingCasesInfo.count > 0) {
                         val toSelect = waitingCasesInfo.caseIds[0]
                         scope.launch {
-                            selectedCase = getCase(toSelect.id)
+                            selectedCase = ApiClient().getCase(toSelect.id)
                         }
                     } else {
                         selectedCase = null

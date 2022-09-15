@@ -7,6 +7,7 @@ val logbackVersion = "1.2.10"
 val reactVersion = "17.0.2-pre.299-kotlin-1.6.10"
 
 val kotlinExtensionsVersion = "1.0.1-pre.364"
+val testingLibraryReactVersion = "13.3.0"
 val reactTestRendererVersion = "17.0.2"
 val kotestVersion = "5.4.1"
 val webDriverVersion = "4.4.3"
@@ -43,7 +44,9 @@ kotlin {
         }
         val commonTest by getting {
             dependencies {
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
                 implementation(kotlin("test"))
+                implementation("io.kotest:kotest-assertions-core:$kotestVersion")
             }
         }
         val jvmMain by getting {
@@ -61,12 +64,15 @@ kotlin {
                 implementation(kotlin("test"))
                 implementation("org.seleniumhq.selenium:selenium-java:4.2.2")
                 implementation("io.github.bonigarcia:webdrivermanager:$webDriverVersion")
+                implementation("commons-io:commons-io:2.11.0")
 
             }
         }
         val jsMain by getting {
             dependencies {
                 implementation("io.ktor:ktor-client-js:$ktorVersion")
+                implementation("io.ktor:ktor-client-core-js:$ktorVersion")
+                implementation("io.ktor:ktor-http:$ktorVersion")
                 implementation("io.ktor:ktor-client-json:$ktorVersion")
                 implementation("io.ktor:ktor-client-serialization:$ktorVersion")
 
@@ -79,12 +85,14 @@ kotlin {
         val jsTest by getting {
             dependencies {
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react-legacy:$reactVersion")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom-legacy:$reactVersion")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-extensions:$kotlinExtensionsVersion")
+                implementation("io.ktor:ktor-client-mock:$ktorVersion")
 
                 implementation(kotlin("test-js"))
+                implementation(npm("@testing-library/react", testingLibraryReactVersion))
+                implementation(npm("react-dom", "18.2.0"))
                 implementation(npm("react-test-renderer", reactTestRendererVersion))
-//                implementation(npm("@testing-library/react", "13.3.0"))
-//                implementation(npm("@testing-library/user-event", "14.4.3"))
 
                 implementation("io.kotest:kotest-assertions-core-js:$kotestVersion")
                 implementation("io.kotest:kotest-framework-api-js:$kotestVersion")

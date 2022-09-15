@@ -24,7 +24,7 @@ val OpenRDRUI = FC<Props> {
         CaseQueue {
             getWaitingCasesInfo = {
                 MainScope().async {
-                    waitingCasesInfo()
+                    ApiClient().waitingCasesInfo()
                 }.await()
             }
         }
