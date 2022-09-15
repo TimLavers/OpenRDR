@@ -21,39 +21,35 @@ class ChangeTreeToAddConclusion(private val toBeAdded: Conclusion, tree: RuleTre
     }
 }
 
-open class ChangeTreeToRemoveConclusion(private val toBeRemoved: Conclusion, tree: RuleTree) : RuleTreeChange(tree) {
+open class ChangeTreeToRemoveConclusion(val toBeRemoved: Conclusion, tree: RuleTree) : RuleTreeChange(tree) {
     override fun updateRuleTree(case: RDRCase, conditions: Set<Condition>): Set<Rule> {
         val interpretation = tree.apply(case)
         val rulesChanged = mutableSetOf<Rule>()
-        interpretation.rulesGivingConclusion(toBeRemoved)
-                .forEach {
-                    val stoppingRule = tree.rule(null, conditions)
-                    it.addChild(stoppingRule)
-                    rulesChanged.add(stoppingRule)
+        val ruleIds = interpretation.idsOfRulesGivingConclusion(toBeRemoved)
+        val rulesGivingConclusion = tree.rules().filter { rule -> ruleIds.contains(rule.id)  }
+        rulesGivingConclusion.forEach {
+                    val newChild = createRule(tree, conditions)
+                    it.addChild(newChild)
+                    rulesChanged.add(newChild)
                 }
         return rulesChanged
+    }
+
+    open fun createRule(tree: RuleTree, conditions: Set<Condition>): Rule {
+        return tree.rule(null, conditions)
     }
 
     // Doesn't this depend on which rules are giving the conclusion??????
     override fun wouldChangeConclusions(conclusions: Set<Conclusion>): Boolean = conclusions.contains(toBeRemoved)
 }
 
-class ChangeTreeToReplaceConclusion(private val toBeReplaced: Conclusion, private val toBeReplacement: Conclusion, tree: RuleTree) : RuleTreeChange(tree) {
-
-    override fun updateRuleTree(case: RDRCase, conditions: Set<Condition>): Set<Rule> {
-        val interpretation = tree.apply(case)
-        val rulesChanged = mutableSetOf<Rule>()
-        interpretation.rulesGivingConclusion(toBeReplaced)
-                .forEach {
-                    val child = tree.rule(toBeReplacement, conditions)
-                    it.addChild(child)
-                    rulesChanged.add(child)
-                }
-        return rulesChanged
+class ChangeTreeToReplaceConclusion(toBeReplaced: Conclusion, private val replacement: Conclusion, tree: RuleTree) : ChangeTreeToRemoveConclusion(toBeReplaced,tree) {
+    override fun createRule(tree: RuleTree, conditions: Set<Condition>): Rule {
+        return tree.rule(replacement, conditions)
     }
 
     // Doesn't this depend on which rules are giving the conclusion??????
     override fun wouldChangeConclusions(conclusions: Set<Conclusion>): Boolean {
-        return conclusions.contains(toBeReplaced) && !conclusions.contains(toBeReplacement)
+        return conclusions.contains(toBeRemoved) && !conclusions.contains(replacement)
     }
 }

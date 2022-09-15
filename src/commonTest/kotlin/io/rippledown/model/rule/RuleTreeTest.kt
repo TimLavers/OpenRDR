@@ -1,5 +1,6 @@
 package io.rippledown.model.rule
 
+import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.CaseId
 import io.rippledown.model.Conclusion
@@ -228,18 +229,21 @@ internal class RuleTreeTest : RuleTestBase() {
     fun rules() {
         tree = ruleTree {
             child {
+                id = "c1"
                 conclusion { "ConcA" }
                 condition {
                     attributeName = notes
                     constant = "a"
                 }
                 child {
+                    id = "c11"
                     conclusion { "ConcA" }
                     condition {
                         attributeName = notes
                         constant = "b"
                     }
                     child {
+                        id = "c111"
                         conclusion { "ConcB" }
                         condition {
                             attributeName = notes
@@ -248,6 +252,7 @@ internal class RuleTreeTest : RuleTestBase() {
                     }
                 }
                 child {
+                    id = "c12"
                     conclusion { "ConcD" }
                     condition {
                         attributeName = notes
@@ -258,20 +263,14 @@ internal class RuleTreeTest : RuleTestBase() {
         }.build()
         tree.rules().size shouldBe 5
         tree.rules().contains(tree.root) shouldBe true
-        val r111 = Rule(null, Conclusion("ConcB"), setOf(cond("c")))
-        val childRules11: MutableSet<Rule> = mutableSetOf(r111)
-        val r11 = Rule(null, Conclusion("ConcA"), setOf(cond("b")), childRules11)
-        val r12 = Rule(null, Conclusion("ConcD"), setOf(cond("d")))
-        val childRules12: MutableSet<Rule> = mutableSetOf(r11, r12)
-        val r1 = Rule(null, Conclusion("ConcA"), setOf(cond("a")), childRules12)
-        tree.root.addChild(r1)
-        tree.rules() shouldBe setOf(tree.root, r1, r11, r111, r12)
+        tree.rules().map { rule -> rule.id } shouldContainAll listOf(tree.root.id, "c1", "c11", "c111", "c12")
     }
 
     @Test
     fun rulesWithConclusionTest() {
         tree = ruleTree {
             child {
+                id = "c1"
                 conclusion { "ConcA" }
                 condition {
                     attributeName = notes
@@ -319,12 +318,14 @@ internal class RuleTreeTest : RuleTestBase() {
     fun add_child_under_child_under_root() {
         tree = ruleTree {
             child {
+                id = "c1"
                 conclusion { "ConcA" }
                 condition {
                     attributeName = notes
                     constant = "a"
                 }
                 child {
+                    id = "c2"
                     conclusion { "ConcB" }
                     condition {
                         attributeName = notes
@@ -335,10 +336,8 @@ internal class RuleTreeTest : RuleTestBase() {
         }.build()
         tree.size() shouldBe 3L
         tree.rules().contains(tree.root) shouldBe true
-        val r1 = Rule(tree.root, Conclusion("ConcA"), setOf(cond("a")))
-        val r11 = Rule(r1, Conclusion("ConcB"), setOf(cond("b")))
 
-        tree.rules() shouldBe setOf(tree.root, r1, r11)
+        tree.rules().map { rule -> rule.id } shouldBe setOf(tree.root.id, "c1", "c2")
     }
 
     @Test

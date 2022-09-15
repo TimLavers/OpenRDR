@@ -1,5 +1,8 @@
 package io.rippledown.model
 
+import io.kotest.matchers.shouldBe
+import io.rippledown.model.condition.ContainsText
+import io.rippledown.model.rule.Rule
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -212,6 +215,42 @@ internal class RDRCaseTest {
     }
 
     @Test
+    fun interpretation() {
+        val case = basicCase()
+        case.interpretation.caseId.name shouldBe case.name
+        case.interpretation.caseId.id shouldBe case.name
+
+        case.interpretation.conclusions().size shouldBe 0
+    }
+
+    @Test
+    fun resetInterpretation() {
+        val case = basicCase()
+        val originalInterpretation = case.interpretation
+
+        case.resetInterpretation()
+        case.interpretation.caseId.name shouldBe case.name
+        case.interpretation.caseId.id shouldBe case.name
+        case.interpretation.conclusions().size shouldBe 0
+
+        (case.interpretation === originalInterpretation) shouldBe true
+    }
+
+    @Test
+    fun serializedWithInterpretation() {
+        val case = basicCase()
+        val conclusion = Conclusion("Tea is good.")
+        val root = Rule("root", null, null, emptySet(), mutableSetOf())
+        val conditions = setOf(ContainsText(tsh, "0.667"))
+        val rule = Rule("r", root, conclusion, conditions, mutableSetOf())
+        case.interpretation.add(rule)
+
+        val sd = serializeDeserialize(case)
+        sd.interpretation shouldBe case.interpretation
+        sd.interpretation.conclusions().first() shouldBe conclusion
+    }
+
+    @Test
     fun jsonSerialisation() {
         val case1 = RDRCase("Case1", emptyMap())
         val sd1 = serializeDeserialize(case1)
@@ -238,6 +277,12 @@ internal class RDRCaseTest {
         assertEquals(sd3, case3)
     }
 
+    private fun basicCase(): RDRCase {
+        val builder1 = RDRCaseBuilder()
+        builder1.addValue("TSH", defaultDate,"0.667")
+        return builder1.build("Case1")
+    }
+
     private fun serializeDeserialize(rdrCase: RDRCase): RDRCase {
         val format = Json { allowStructuredMapKeys = true }
         val serialized = format.encodeToString(rdrCase)
@@ -247,6 +292,7 @@ internal class RDRCaseTest {
     private fun checkValues(case: RDRCase, attribute: Attribute, vararg expectedValues: String) {
         checkValues(case, attribute.name, expectedValues=expectedValues)
     }
+
     private fun checkValues(case: RDRCase, attributeName: String, vararg expectedValues: String) {
         val inCase = case.values(attributeName)!!
         assertEquals(expectedValues.size, inCase.size)

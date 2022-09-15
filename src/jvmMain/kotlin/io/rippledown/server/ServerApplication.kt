@@ -1,5 +1,6 @@
 package io.rippledown.server
 
+import io.rippledown.kb.KB
 import io.rippledown.model.*
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -11,6 +12,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 class ServerApplication {
     val casesDir = File("temp/cases")
     val interpretationsDir = File("temp/interpretations")
+    val kb = KB("Thyroids")
 
     init {
         casesDir.mkdirs()
@@ -27,8 +29,10 @@ class ServerApplication {
     }
 
     fun case(id: String): RDRCase {
-        return getCaseFromFile(File(casesDir, "$id.json"))
+        val case = getCaseFromFile(File(casesDir, "$id.json"))
+        return case
     }
+
     fun saveInterpretation(interpretation: Interpretation): OperationResult {
         val fileName = "${interpretation.caseId.id}.interpretation.json"
         val file = File(interpretationsDir, fileName)

@@ -21,9 +21,9 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
     @Test
     fun a_session_for_a_remove_action_should_present_those_cornerstones_which_satisfy_the_conditions() {
         val removeAction = ChangeTreeToRemoveConclusion(Conclusion("A"), RuleTree())
-        val ruleGivingA = Rule(null, Conclusion("A"))
-        val ruleGivingB = Rule(null, Conclusion("B"))
-        val ruleGivingC = Rule(null, Conclusion("C"))
+        val ruleGivingA = Rule("ra",null, Conclusion("A"))
+        val ruleGivingB = Rule("rb",null, Conclusion("B"))
+        val ruleGivingC = Rule("rc",null, Conclusion("C"))
         val i1 = Interpretation(interp1.caseId, "")
         i1.add(ruleGivingA)
         i1.add(ruleGivingB)
@@ -41,9 +41,9 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
 
     @Test
     fun A_session_for_a_remove_action_should_only_present_those_cornerstones_whose_interpretations_would_change() {
-        val ruleGivingA = Rule(null, Conclusion("A"))
-        val ruleGivingB = Rule(null, Conclusion("B"))
-        val ruleGivingC = Rule(null, Conclusion("C"))
+        val ruleGivingA = Rule("ra", null, Conclusion("A"))
+        val ruleGivingB = Rule("rb", null, Conclusion("B"))
+        val ruleGivingC = Rule("rc", null, Conclusion("C"))
         val i1 = Interpretation(interp1.caseId, "")
         i1.add(ruleGivingA)
         i1.add(ruleGivingB)

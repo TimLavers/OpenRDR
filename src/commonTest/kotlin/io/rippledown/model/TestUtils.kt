@@ -8,4 +8,3 @@ const val defaultDate = 1659752689505
 const val today = defaultDate
 val yesterday = daysAgo(1)
 val  lastWeek = daysAgo(7)
-

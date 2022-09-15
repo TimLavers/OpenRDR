@@ -5,5 +5,4 @@ import io.rippledown.model.condition.Condition
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class RuleSummary(val conclusion: Conclusion?,
-                       val conditions: Set<Condition>)
+data class RuleSummary(val id: String, val conclusion: Conclusion?, val conditions: Set<Condition>)

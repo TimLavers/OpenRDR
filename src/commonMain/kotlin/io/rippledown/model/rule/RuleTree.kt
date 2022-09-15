@@ -5,9 +5,10 @@ import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
+import io.rippledown.util.randomString
 
 fun rootRule(): Rule {
-    return NoConclusionRule()
+    return Rule("root")
 }
 
 open class RuleTree(val root: Rule = rootRule()) {
@@ -65,6 +66,6 @@ open class RuleTree(val root: Rule = rootRule()) {
     }
 
     open fun rule(conclusion: Conclusion?, conditions: Set<Condition>): Rule {
-        return Rule(null, conclusion, conditions)
+        return Rule(randomString(8), null, conclusion, conditions)
     }
 }
