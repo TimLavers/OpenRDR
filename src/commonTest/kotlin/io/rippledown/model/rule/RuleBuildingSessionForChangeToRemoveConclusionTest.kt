@@ -16,7 +16,7 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
     private val cc2 = clinicalNotesCase("CC2")
     private val interp1 = Interpretation(CaseId("CC1", "CC1"))
     private val interp2 = Interpretation(CaseId("CC2", "CC2"))
-    private val cornerstoneMap = mutableMapOf(Pair(cc1, interp1), Pair(cc2, interp2))
+    private val cornerstoneMap = mutableSetOf(cc1, cc2)
 
     @Test
     fun a_session_for_a_remove_action_should_present_those_cornerstones_which_satisfy_the_conditions() {
@@ -24,16 +24,14 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
         val ruleGivingA = Rule("ra",null, Conclusion("A"))
         val ruleGivingB = Rule("rb",null, Conclusion("B"))
         val ruleGivingC = Rule("rc",null, Conclusion("C"))
-        val i1 = Interpretation(interp1.caseId, "")
-        i1.add(ruleGivingA)
-        i1.add(ruleGivingB)
-        val i2 = Interpretation(interp2.caseId, "")
-        i2.add(ruleGivingA)
-        i2.add(ruleGivingC)
+        cc1.interpretation.reset()
+        cc1.interpretation.add(ruleGivingA)
+        cc1.interpretation.add(ruleGivingB)
+        cc2.resetInterpretation()
+        cc2.interpretation.add(ruleGivingA)
+        cc2.interpretation.add(ruleGivingC)
 
-        cornerstoneMap[cc1] = i1
-        cornerstoneMap[cc2] = i2
-        val session = RuleBuildingSession(sessionCase, interpretationA, removeAction, cornerstoneMap)
+        val session = RuleBuildingSession(sessionCase,  removeAction, cornerstoneMap)
         val condition = ContainsText(clinicalNotes, "1")
         session.addCondition(condition)
         session.cornerstoneCases() shouldBe setOf(cc1)
@@ -44,25 +42,23 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
         val ruleGivingA = Rule("ra", null, Conclusion("A"))
         val ruleGivingB = Rule("rb", null, Conclusion("B"))
         val ruleGivingC = Rule("rc", null, Conclusion("C"))
-        val i1 = Interpretation(interp1.caseId, "")
-        i1.add(ruleGivingA)
-        i1.add(ruleGivingB)
-        val i2 = Interpretation(interp2.caseId, "")
-        i2.add(ruleGivingA)
-        i2.add(ruleGivingC)
+        cc1.resetInterpretation()
+        cc1.interpretation.add(ruleGivingA)
+        cc1.interpretation.add(ruleGivingB)
+        cc2.resetInterpretation()
+        cc2.interpretation.add(ruleGivingA)
+        cc2.interpretation.add(ruleGivingC)
 
-        cornerstoneMap[cc1] = i1
-        cornerstoneMap[cc2] = i2
         val removeAction = ChangeTreeToRemoveConclusion(Conclusion("A"), RuleTree())
-        val session = RuleBuildingSession(sessionCase, interpretationA, removeAction, cornerstoneMap)
+        val session = RuleBuildingSession(sessionCase, removeAction, cornerstoneMap)
         session.cornerstoneCases() shouldBe setOf(cc1, cc2)
 
         val removeAction2 = ChangeTreeToRemoveConclusion(Conclusion("B"), RuleTree())
-        val session2 = RuleBuildingSession(sessionCase, interpretationA, removeAction2, cornerstoneMap)
+        val session2 = RuleBuildingSession(sessionCase, removeAction2, cornerstoneMap)
         session2.cornerstoneCases() shouldBe setOf(cc1)
 
         val removeAction3 = ChangeTreeToRemoveConclusion(Conclusion("C"), RuleTree())
-        val session3 = RuleBuildingSession(sessionCase, interpretationA, removeAction3, cornerstoneMap)
+        val session3 = RuleBuildingSession(sessionCase, removeAction3, cornerstoneMap)
         session3.cornerstoneCases() shouldBe setOf(cc2)
     }
 
@@ -90,7 +86,7 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
 
         val removeAction = ChangeTreeToRemoveConclusion(Conclusion("A"), tree)
         val case = clinicalNotesCase("a")
-        RuleBuildingSession(case, interpretationA, removeAction, mapOf())
+        RuleBuildingSession(case,  removeAction, setOf())
             .addCondition(ContainsText(clinicalNotes, "a"))
             .commit()
 

@@ -23,7 +23,8 @@ class ChangeTreeToAddConclusion(private val toBeAdded: Conclusion, tree: RuleTre
 
 open class ChangeTreeToRemoveConclusion(val toBeRemoved: Conclusion, tree: RuleTree) : RuleTreeChange(tree) {
     override fun updateRuleTree(case: RDRCase, conditions: Set<Condition>): Set<Rule> {
-        val interpretation = tree.apply(case)
+        tree.apply(case)
+        val interpretation = case.interpretation
         val rulesChanged = mutableSetOf<Rule>()
         val ruleIds = interpretation.idsOfRulesGivingConclusion(toBeRemoved)
         val rulesGivingConclusion = tree.rules().filter { rule -> ruleIds.contains(rule.id)  }

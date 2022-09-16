@@ -30,6 +30,7 @@ class ServerApplication {
 
     fun case(id: String): RDRCase {
         val case = getCaseFromFile(File(casesDir, "$id.json"))
+        kb.interpret(case)
         return case
     }
 

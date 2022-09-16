@@ -30,13 +30,14 @@ internal class RuleTreeTest : RuleTestBase() {
 
     @Test
     fun no_conclusions_should_be_given_for_a_tree_with_only_the_root_rule() {
-        val interpretation = tree.apply(kase)
-        interpretation.conclusions() shouldBe setOf<Conclusion>()
+        tree.apply(kase)
+        kase.interpretation.conclusions() shouldBe setOf<Conclusion>()
     }
 
     @Test
     fun root_rule_should_not_apply_to_a_case() {
-        tree.apply(kase) shouldBe Interpretation(CaseId(kase.name, kase.name))
+        tree.apply(kase)
+        kase.interpretation shouldBe Interpretation(CaseId(kase.name, kase.name))
     }
 
     @Test
@@ -50,9 +51,8 @@ internal class RuleTreeTest : RuleTestBase() {
                 }
             }
         }.build()
-
-        val interpretation = tree.apply(kase)
-        checkInterpretation(interpretation, conclusionA)
+        tree.apply(kase)
+        checkInterpretation(kase.interpretation, conclusionA)
     }
 
     @Test
@@ -73,9 +73,8 @@ internal class RuleTreeTest : RuleTestBase() {
                 }
             }
         }.build()
-
-        val interpretation = tree.apply(kase)
-        checkInterpretation(interpretation, conclusionA, conclusionB)
+        tree.apply(kase)
+        checkInterpretation(kase.interpretation, conclusionA, conclusionB)
     }
 
     @Test
@@ -398,7 +397,7 @@ internal class RuleTreeTest : RuleTestBase() {
 
     private fun checkInterpretationForCase(text: String, vararg conclusions: String) {
         val case = clinicalNotesCase(text)
-        val interp = tree.apply(case)
-        interp.conclusions().map { it -> it.text }.toSet() shouldBe conclusions.toSet()
+        tree.apply(case)
+        case.interpretation.conclusions().map { it -> it.text }.toSet() shouldBe conclusions.toSet()
     }
 }
