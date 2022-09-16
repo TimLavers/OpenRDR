@@ -14,9 +14,9 @@ fun rootRule(): Rule {
 open class RuleTree(val root: Rule = rootRule()) {
 
     fun apply(kase: RDRCase): Interpretation {
-        val interpretation = Interpretation(CaseId(kase.name, kase.name))
-        root.childRules().forEach { it.apply(kase, interpretation) }//don't include the root conclusion
-        return interpretation
+        kase.resetInterpretation()
+        root.childRules().forEach { it.apply(kase, kase.interpretation) }//don't include the root conclusion
+        return kase.interpretation
     }
 
     //Note that the root is counted

@@ -16,7 +16,7 @@ internal class RuleBuildingSessionForChangeToReplaceConclusion : RuleTestBase() 
     private val cc2 = clinicalNotesCase("CC2")
     private val interp1 = Interpretation(CaseId("CC1", "CC1"))
     private val interp2 = Interpretation(CaseId("CC2", "CC2"))
-    private val cornerstoneMap = mutableMapOf(Pair(cc1, interp1), Pair(cc2, interp2))
+    private val cornerstoneMap = mutableSetOf(cc1,cc2)
 
     @Test
     fun a_session_for_a_replace_action_should_present_those_cornerstones_which_satisfy_the_conditions() {
@@ -24,16 +24,14 @@ internal class RuleBuildingSessionForChangeToReplaceConclusion : RuleTestBase() 
         val ruleGivingA = Rule("ra", null, Conclusion("A"))
         val ruleGivingB = Rule("rb", null, Conclusion("B"))
         val ruleGivingC = Rule("rc", null, Conclusion("C"))
-        val i1 = Interpretation(interp1.caseId, "")
-        i1.add(ruleGivingA)
-        i1.add(ruleGivingB)
-        val i2 = Interpretation(interp2.caseId, "")
-        i2.add(ruleGivingA)
-        i2.add(ruleGivingC)
+        cc1.resetInterpretation()
+        cc1.interpretation.add(ruleGivingA)
+        cc1.interpretation.add(ruleGivingB)
+        cc2.resetInterpretation()
+        cc2.interpretation.add(ruleGivingA)
+        cc2.interpretation.add(ruleGivingC)
 
-        cornerstoneMap[cc1] = i1
-        cornerstoneMap[cc2] = i2
-        val session = RuleBuildingSession(sessionCase, interpretationA, replaceAction, cornerstoneMap)
+        val session = RuleBuildingSession(sessionCase, replaceAction, cornerstoneMap)
         val condition = ContainsText(clinicalNotes, "1")
         session.addCondition(condition)
         session.cornerstoneCases() shouldBe setOf(cc1)
@@ -44,26 +42,24 @@ internal class RuleBuildingSessionForChangeToReplaceConclusion : RuleTestBase() 
         val ruleGivingA = Rule("ra", null, Conclusion("A"))
         val ruleGivingB = Rule("rb", null, Conclusion("B"))
         val ruleGivingC = Rule("rc", null, Conclusion("C"))
-        val i1 = Interpretation(interp1.caseId, "")
-        i1.add(ruleGivingA)
-        i1.add(ruleGivingB)
-        val i2 = Interpretation(interp2.caseId, "")
-        i2.add(ruleGivingA)
-        i2.add(ruleGivingC)
+        cc1.resetInterpretation()
+        cc1.interpretation.add(ruleGivingA)
+        cc1.interpretation.add(ruleGivingB)
+        cc2.resetInterpretation()
+        cc2.interpretation.add(ruleGivingA)
+        cc2.interpretation.add(ruleGivingC)
 
-        cornerstoneMap[cc1] = i1
-        cornerstoneMap[cc2] = i2
         val replaceAction = ChangeTreeToReplaceConclusion(Conclusion("A"), Conclusion("B"), RuleTree())
-        val session = RuleBuildingSession(sessionCase, interpretationA, replaceAction, cornerstoneMap)
+        val session = RuleBuildingSession(sessionCase, replaceAction, cornerstoneMap)
 //        session.cornerstoneCases() shouldBe setOf(cc1, cc2) ???
         session.cornerstoneCases() shouldBe setOf(cc2)
 
         val replaceAction2 = ChangeTreeToReplaceConclusion(Conclusion("B"), Conclusion("C"), RuleTree())
-        val session2 = RuleBuildingSession(sessionCase, interpretationA, replaceAction2, cornerstoneMap)
+        val session2 = RuleBuildingSession(sessionCase, replaceAction2, cornerstoneMap)
         session2.cornerstoneCases() shouldBe setOf(cc1)
 
         val replaceAction3 = ChangeTreeToReplaceConclusion(Conclusion("C"), Conclusion("D"), RuleTree())
-        val session3 = RuleBuildingSession(sessionCase, interpretationA, replaceAction3, cornerstoneMap)
+        val session3 = RuleBuildingSession(sessionCase, replaceAction3, cornerstoneMap)
         session3.cornerstoneCases() shouldBe setOf(cc2)
     }
 
@@ -91,7 +87,7 @@ internal class RuleBuildingSessionForChangeToReplaceConclusion : RuleTestBase() 
 
             val action = ChangeTreeToReplaceConclusion(Conclusion("A"), Conclusion("B"), tree)
         val case = clinicalNotesCase("a")
-        RuleBuildingSession(case, interpretationA, action, mapOf())
+        RuleBuildingSession(case, action, setOf())
             .addCondition(ContainsText(clinicalNotes, "a"))
             .commit()
 

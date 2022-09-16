@@ -7,18 +7,16 @@ class KB(val name: String) {
     val cornerstones = mutableSetOf<RDRCase>()
     val ruleTree = RuleTree()
 
-
-
     fun startSession(case: RDRCase, action: RuleTreeChange): RuleBuildingSession {
         //interpret the case and all cornerstones at the start of each session
-        val cornerstoneToInterpretation = mutableMapOf<RDRCase, Interpretation>()
-        cornerstones.forEach { cornerstoneToInterpretation[it] = interpret(it) }
-        return RuleBuildingSession(case, interpret(case), action, cornerstoneToInterpretation)
+        cornerstones.forEach { interpret(it) }
+        interpret(case)
+        return RuleBuildingSession(case, action, cornerstones)
     }
 
-    fun interpret(case: RDRCase): Interpretation {
+    fun interpret(case: RDRCase) {
         println("interpreting $case")
-        return ruleTree.apply(case)
+        ruleTree.apply(case)
     }
 
     fun addCornerstone(case: RDRCase) {

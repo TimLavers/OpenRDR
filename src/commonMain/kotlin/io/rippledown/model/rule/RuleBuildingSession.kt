@@ -5,11 +5,10 @@ import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
 
 class RuleBuildingSession(val case: RDRCase,
-                          val interpretation: Interpretation,
                           val action: RuleTreeChange,
-                          val cornerstones: Map<RDRCase, Interpretation>) {
+                          val cornerstones: Set<RDRCase>) {
     var conditions = mutableSetOf<Condition>()
-    private val cornerstonesNotExempted = cornerstones.keys.toMutableSet()
+    private val cornerstonesNotExempted = cornerstones.toMutableSet()
 
     fun cornerstoneCases(): Set<RDRCase> {
         return cornerstonesNotExempted
@@ -29,8 +28,8 @@ class RuleBuildingSession(val case: RDRCase,
     }
 
     private fun wouldChangeInterpretation(case: RDRCase): Boolean {
-        val interpForCase = cornerstones.get(case)
-        return action.wouldChangeConclusions(interpForCase!!.conclusions())
+        val interpForCase = case.interpretation
+        return action.wouldChangeConclusions(interpForCase.conclusions())
     }
 
     fun addCondition(condition: Condition): RuleBuildingSession {

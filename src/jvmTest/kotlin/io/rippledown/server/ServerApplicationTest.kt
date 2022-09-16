@@ -1,8 +1,14 @@
 package io.rippledown.server
 
+import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.shouldBe
 import io.rippledown.CaseTestUtils
+import io.rippledown.model.Attribute
 import io.rippledown.model.CaseId
+import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
+import io.rippledown.model.condition.GreaterThanOrEqualTo
+import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import org.apache.commons.io.FileUtils
 import java.io.File
 import kotlinx.serialization.decodeFromString
@@ -44,6 +50,7 @@ internal class ServerApplicationTest {
         app.saveInterpretation(interpretation)
         assertFalse(case1File.exists())
     }
+
     @Test
     fun saveInterpretation() {
         val app = ServerApplication()
@@ -82,6 +89,15 @@ internal class ServerApplicationTest {
         assertEquals(retrieved.get("TSH")!!.value.text, "0.667")
         assertEquals(retrieved.get("ABC")!!.value.text, "6.7")
         assertEquals(2, retrieved.data.size)
+        // No rules added.
+        retrieved.interpretation.conclusions().size shouldBe 0
+        // Add a rule.
+        val conclusion = Conclusion("ABC ok.")
+        val session = app.kb.startSession(retrieved, ChangeTreeToAddConclusion(conclusion, app.kb.ruleTree))
+        session.addCondition(GreaterThanOrEqualTo(Attribute("ABC"), 5.0))
+        session.commit()
+        val retrievedAgain = app.case("Case1")
+        retrievedAgain.interpretation.conclusions() shouldContainExactly setOf(conclusion)
     }
 
     @Test
