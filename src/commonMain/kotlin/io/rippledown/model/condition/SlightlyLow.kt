@@ -8,11 +8,11 @@ import kotlin.math.abs
 @Serializable
 data class SlightlyLow(val attribute: Attribute, val allowablePercentageBelowLowRangeCutoff: Int) : Condition() {
     init {
-        require(allowablePercentageBelowLowRangeCutoff > 0 && allowablePercentageBelowLowRangeCutoff < 100) {
+        require(allowablePercentageBelowLowRangeCutoff in 1..99) {
             "Cutoff should be an integer in the range [1, 99]."
         }
     }
-    val fraction = ((100 - allowablePercentageBelowLowRangeCutoff).toDouble())/100.0
+    private val fraction = ((100 - allowablePercentageBelowLowRangeCutoff).toDouble())/100.0
     override fun holds(case: RDRCase): Boolean {
         val latest = case.getLatest(attribute) ?: return false
 

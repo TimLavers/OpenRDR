@@ -15,7 +15,6 @@ class KB(val name: String) {
     }
 
     fun interpret(case: RDRCase) {
-        println("interpreting $case")
         ruleTree.apply(case)
     }
 

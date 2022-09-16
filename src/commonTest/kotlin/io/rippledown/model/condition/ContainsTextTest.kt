@@ -34,7 +34,7 @@ internal class ContainsTextTest: ConditionTestBase() {
         containsText.holds(createCase("")) shouldBe false
     }
 
-    fun createCase(notes: String): RDRCase {
+    private fun createCase(notes: String): RDRCase {
         val builder1 = RDRCaseBuilder()
         builder1.addResult(clinicalNotes, defaultDate , TestResult(notes))
         return builder1.build("Case")

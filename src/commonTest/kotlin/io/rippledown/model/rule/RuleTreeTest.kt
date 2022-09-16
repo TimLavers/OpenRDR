@@ -3,7 +3,6 @@ package io.rippledown.model.rule
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.CaseId
-import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.rule.dsl.ruleTree
 import kotlin.test.BeforeTest
@@ -31,7 +30,7 @@ internal class RuleTreeTest : RuleTestBase() {
     @Test
     fun no_conclusions_should_be_given_for_a_tree_with_only_the_root_rule() {
         tree.apply(kase)
-        kase.interpretation.conclusions() shouldBe setOf<Conclusion>()
+        kase.interpretation.conclusions() shouldBe setOf()
     }
 
     @Test
@@ -398,6 +397,6 @@ internal class RuleTreeTest : RuleTestBase() {
     private fun checkInterpretationForCase(text: String, vararg conclusions: String) {
         val case = clinicalNotesCase(text)
         tree.apply(case)
-        case.interpretation.conclusions().map { it -> it.text }.toSet() shouldBe conclusions.toSet()
+        case.interpretation.conclusions().map { it.text }.toSet() shouldBe conclusions.toSet()
     }
 }

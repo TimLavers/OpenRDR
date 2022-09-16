@@ -2,21 +2,16 @@ package io.rippledown.model.rule
 
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.CaseId
 import io.rippledown.model.Conclusion
-import io.rippledown.model.Interpretation
 import io.rippledown.model.condition.ContainsText
 import io.rippledown.model.rule.dsl.ruleTree
 import kotlin.test.Test
 
 internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase() {
     private val sessionCase = clinicalNotesCase("123")
-    private val interpretationA = Interpretation(CaseId("A", "A"))
     private val cc1 = clinicalNotesCase("CC1")
     private val cc2 = clinicalNotesCase("CC2")
-    private val interp1 = Interpretation(CaseId("CC1", "CC1"))
-    private val interp2 = Interpretation(CaseId("CC2", "CC2"))
-    private val cornerstoneMap = mutableSetOf(cc1, cc2)
+    private val cornerstones = mutableSetOf(cc1, cc2)
 
     @Test
     fun a_session_for_a_remove_action_should_present_those_cornerstones_which_satisfy_the_conditions() {
@@ -31,14 +26,14 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
         cc2.interpretation.add(ruleGivingA)
         cc2.interpretation.add(ruleGivingC)
 
-        val session = RuleBuildingSession(sessionCase,  removeAction, cornerstoneMap)
+        val session = RuleBuildingSession(sessionCase,  removeAction, cornerstones)
         val condition = ContainsText(clinicalNotes, "1")
         session.addCondition(condition)
         session.cornerstoneCases() shouldBe setOf(cc1)
     }
 
     @Test
-    fun A_session_for_a_remove_action_should_only_present_those_cornerstones_whose_interpretations_would_change() {
+    fun a_session_for_a_remove_action_should_only_present_those_cornerstones_whose_interpretations_would_change() {
         val ruleGivingA = Rule("ra", null, Conclusion("A"))
         val ruleGivingB = Rule("rb", null, Conclusion("B"))
         val ruleGivingC = Rule("rc", null, Conclusion("C"))
@@ -50,15 +45,15 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
         cc2.interpretation.add(ruleGivingC)
 
         val removeAction = ChangeTreeToRemoveConclusion(Conclusion("A"), RuleTree())
-        val session = RuleBuildingSession(sessionCase, removeAction, cornerstoneMap)
+        val session = RuleBuildingSession(sessionCase, removeAction, cornerstones)
         session.cornerstoneCases() shouldBe setOf(cc1, cc2)
 
         val removeAction2 = ChangeTreeToRemoveConclusion(Conclusion("B"), RuleTree())
-        val session2 = RuleBuildingSession(sessionCase, removeAction2, cornerstoneMap)
+        val session2 = RuleBuildingSession(sessionCase, removeAction2, cornerstones)
         session2.cornerstoneCases() shouldBe setOf(cc1)
 
         val removeAction3 = ChangeTreeToRemoveConclusion(Conclusion("C"), RuleTree())
-        val session3 = RuleBuildingSession(sessionCase, removeAction3, cornerstoneMap)
+        val session3 = RuleBuildingSession(sessionCase, removeAction3, cornerstones)
         session3.cornerstoneCases() shouldBe setOf(cc2)
     }
 

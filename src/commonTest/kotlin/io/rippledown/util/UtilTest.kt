@@ -11,7 +11,7 @@ class UtilTest {
 
         val checker = Regex("[\\da-z]{8}")
 
-        // Create 1000 random strings of length 8. Check that they
+        // Create 1000000 random strings of length 8. Check that they
         // all match the pattern, and check that they are distinct.
         val created = mutableSetOf<String>()
         repeat(1000000) {

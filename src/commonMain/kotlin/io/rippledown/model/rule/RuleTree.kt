@@ -1,6 +1,5 @@
 package io.rippledown.model.rule
 
-import io.rippledown.model.CaseId
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase

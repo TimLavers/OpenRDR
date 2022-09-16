@@ -2,9 +2,7 @@ package io.rippledown.model.rule
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.rippledown.model.Conclusion
 import kotlin.test.Test
-
 
 internal class NoConclusionRuleTest : RuleTestBase() {
 
@@ -47,7 +45,7 @@ internal class NoConclusionRuleTest : RuleTestBase() {
         //stopping rule is given
         val result2 = parent.apply(clinicalNotesCase("ab"), interpretation)
         result2 shouldBe true
-        interpretation.conclusions() shouldBe setOf<Conclusion>()
+        interpretation.conclusions() shouldBe setOf()
     }
 
     @Test
@@ -78,12 +76,12 @@ internal class NoConclusionRuleTest : RuleTestBase() {
         //non-stopping child rule only is given
         val result1 = parent.apply(clinicalNotesCase("ab"), interpretation)
         result1 shouldBe true
-        interpretation.conclusions() shouldBe setOf<Conclusion>(conclusionB)
+        interpretation.conclusions() shouldBe setOf(conclusionB)
 
         //both child rules are given
         val result2 = parent.apply(clinicalNotesCase("ab"), interpretation)
         result2 shouldBe true
-        interpretation.conclusions() shouldBe setOf<Conclusion>(conclusionB)
+        interpretation.conclusions() shouldBe setOf(conclusionB)
     }
 
     @Test
