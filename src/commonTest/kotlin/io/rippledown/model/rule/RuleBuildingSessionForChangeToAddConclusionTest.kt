@@ -2,26 +2,16 @@ package io.rippledown.model.rule
 
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.CaseId
 import io.rippledown.model.Conclusion
-import io.rippledown.model.Interpretation
 import io.rippledown.model.condition.ContainsText
 import io.rippledown.model.rule.dsl.ruleTree
 import kotlin.test.Test
 
 internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() {
     private val sessionCase = clinicalNotesCase("123")
-    private val interpretationA = Interpretation(CaseId("A", "A"))
     private val cc1 = clinicalNotesCase("CC1")
     private val cc2 = clinicalNotesCase("CC2")
-    private val interp1 = Interpretation(CaseId("CC1", "CC1"))
-    private val interp2 = Interpretation(CaseId("CC2", "CC2"))
-//    private val cornerstoneMap = mutableMapOf(Pair(cc1, interp1), Pair(cc2, interp2))
     private val cornerstoneMap = mutableSetOf(cc1, cc2)
-
-    init {
-//        cc1.interpretation.add(RuleSummary("r1", i))
-    }
 
     @Test
     fun a_session_for_an_add_action_should_present_all_cornerstones_if_there_are_no_conditions() {

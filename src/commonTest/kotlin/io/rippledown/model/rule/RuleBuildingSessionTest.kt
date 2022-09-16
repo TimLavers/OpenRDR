@@ -1,14 +1,11 @@
 package io.rippledown.model.rule
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.CaseId
 import io.rippledown.model.Conclusion
-import io.rippledown.model.Interpretation
 import kotlin.test.Test
 
 internal class RuleBuildingSessionTest : RuleTestBase() {
     private val caseA = clinicalNotesCase("a")
-    private val interpA = Interpretation(CaseId("CaseA", "CaseA"))
     private val addAction = ChangeTreeToAddConclusion(Conclusion("A"), RuleTree())
 
     @Test

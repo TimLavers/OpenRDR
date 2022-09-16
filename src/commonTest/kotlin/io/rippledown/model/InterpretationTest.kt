@@ -27,7 +27,7 @@ internal class InterpretationTest {
     @Test
     fun singleRule() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val conclusion = Conclusion("First conc")
+        val conclusion = Conclusion("First conclusion")
         val rule = Rule("r", null, conclusion, emptySet())
         interpretation.add(rule)
         checkSingleConclusion(interpretation,conclusion)
@@ -36,7 +36,7 @@ internal class InterpretationTest {
     @Test
     fun twoRulesWithSameConclusion() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val conclusion = Conclusion("First conc")
+        val conclusion = Conclusion("First conclusion")
         val rule0 = Rule("r0", null, conclusion, emptySet())
         val rule1 = Rule("r1", null, conclusion, emptySet())
         interpretation.add(rule0)
@@ -47,11 +47,11 @@ internal class InterpretationTest {
     @Test
     fun multipleRules() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val c0 = Conclusion("First conc")
+        val c0 = Conclusion("First conclusion")
         val rule0 = Rule("r0", null, c0, emptySet())
-        val c1 = Conclusion("Second conc")
+        val c1 = Conclusion("Second conclusion")
         val rule1 = Rule("r1", null, c1, emptySet())
-        val c2 = Conclusion("Third conc")
+        val c2 = Conclusion("Third conclusion")
         val rule2 = Rule("r2", null, c2, emptySet())
         interpretation.add(rule0)
         interpretation.add(rule1)

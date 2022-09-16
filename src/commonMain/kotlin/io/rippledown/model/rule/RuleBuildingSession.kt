@@ -1,12 +1,11 @@
 package io.rippledown.model.rule
 
-import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
 
 class RuleBuildingSession(val case: RDRCase,
-                          val action: RuleTreeChange,
-                          val cornerstones: Set<RDRCase>) {
+                          private val action: RuleTreeChange,
+                          cornerstones: Set<RDRCase>) {
     var conditions = mutableSetOf<Condition>()
     private val cornerstonesNotExempted = cornerstones.toMutableSet()
 
@@ -28,8 +27,7 @@ class RuleBuildingSession(val case: RDRCase,
     }
 
     private fun wouldChangeInterpretation(case: RDRCase): Boolean {
-        val interpForCase = case.interpretation
-        return action.wouldChangeConclusions(interpForCase.conclusions())
+        return action.wouldChangeConclusions(case.interpretation.conclusions())
     }
 
     fun addCondition(condition: Condition): RuleBuildingSession {

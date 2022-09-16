@@ -8,7 +8,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import io.kotest.matchers.shouldBe
 
-
 internal class TestResultTest {
 
     @Test
