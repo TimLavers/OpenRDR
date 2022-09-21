@@ -20,5 +20,4 @@ package-lock.json
 hs_err_pid*
 
 build/
-package.json
-package-lock.json
+.gradle/
