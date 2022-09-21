@@ -23,7 +23,6 @@ class CaseViewTest {
     fun shouldFormatOneSidedHighRange() {
         rangeText(ReferenceRange("1", null)) shouldBe "(< 1)"
     }
-
 }
 
 

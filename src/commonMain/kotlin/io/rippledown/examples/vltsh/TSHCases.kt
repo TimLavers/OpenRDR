@@ -173,3 +173,50 @@ val TSH17 = tshCase {
     age = 51
     clinicalNotes = "Previous total thyroidectomy for thyroid cancer. On thyroxine."
 }.build()
+val TSH18 = multiEpisodeCase {
+    name = "1.4.18"
+    dates {
+        datesCSL = "2022-08-18T13:07:44.475Z, 2022-02-25T14:22:51.942Z"
+    }
+    testValues {
+        attribute = "TSH"
+        units = "mU/L"
+        lowerBound = "0.50"
+        upperBound = "4.0"
+        valuesCSL = "4.3, 3.6"
+    }
+    testValues {
+        attribute = "Free T4"
+        units = "pmol/L"
+        lowerBound = "10"
+        upperBound = "20"
+        valuesCSL = "13, 12"
+    }
+    clinicalNotes {
+        values_separated = " _ Subclinical hypothyroidism, follow-up."
+    }
+    testValues {
+        attribute = "Age"
+        valuesCSL = "56, 56"
+    }
+    testValues {
+        attribute = "Tests"
+        valuesCSL = "TFTs, TFTs"
+    }
+}.build()
+val TSH19 = tshCase {
+    name = "1.4.19"
+    tsh = "0.03"
+    freeT4 = "20"
+    age = 37
+    clinicalNotes = "Amenorrhea."
+}.build()
+val TSH20 = tshCase {
+    name = "1.4.20"
+    name = "1.4.19"
+    tsh = "<0.01"
+    freeT4 = "16"
+    freeT3 = "5.5"
+    age = 53
+    clinicalNotes = "Annual check."
+}.build()

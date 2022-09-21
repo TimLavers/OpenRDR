@@ -45,6 +45,7 @@ kotlin {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
                 implementation(kotlin("test"))
+                implementation("io.kotest:kotest-assertions-core:$kotestVersion")
             }
         }
         val jvmMain by getting {

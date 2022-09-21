@@ -135,7 +135,4 @@ class CaseListTest : ReactTestSupport {
 
         processedCaseId shouldBe caseIdB
     }
-
 }
-
-
