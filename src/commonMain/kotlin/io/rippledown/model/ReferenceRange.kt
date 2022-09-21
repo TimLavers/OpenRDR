@@ -38,11 +38,11 @@ data class ReferenceRange(val lowerString: String?, val upperString: String?) {
     fun isNormal(v: Value): Boolean {
         v.real ?: return false
         if (upper == null) {//so lower non null
-            return v.real!! > lower!!
+            return v.real!! >= lower!!
         }
         if (lower == null) {//so upper non null
-            return v.real!! < upper
+            return v.real!! <= upper
         }
-        return v.real!! > lower && v.real!! < upper
+        return v.real!! >= lower && v.real!! <= upper
     }
 }

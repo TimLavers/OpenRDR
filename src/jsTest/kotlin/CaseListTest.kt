@@ -108,7 +108,4 @@ class CaseListTest : ReactTestSupport {
         click(button)
         processedCaseId shouldBe caseIdB
     }
-
 }
-
-

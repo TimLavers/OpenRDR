@@ -3,6 +3,7 @@ import react.FC
 import react.Props
 import react.css.css
 import react.dom.html.ReactHTML
+import react.key
 
 external interface AttributeCellHandler: Props {
     var attribute: Attribute
