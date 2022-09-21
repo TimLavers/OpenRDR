@@ -8,15 +8,39 @@ import io.ktor.routing.*
 import io.ktor.serialization.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
+import io.rippledown.model.OperationResult
+import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.IsNormal
 import io.rippledown.server.ServerApplication
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import org.slf4j.event.Level
+
+const val WAITING_CASES = "/api/waitingCasesInfo"
+const val CASE = "/api/case"
+const val START_SESSION = "/api/startSession"
+const val ADD_CONDITION = "/api/addCondition"
+const val COMMIT_SESSION = "/api/commitSession"
+const val CREATE_KB = "/api/createKB"
 
 fun main() {
     val application = ServerApplication()
     embeddedServer(Netty, 9090) {
         install(ContentNegotiation) {
             json(Json { allowStructuredMapKeys = true })
+        }
+        install(CallLogging) {
+            level = Level.TRACE
+            filter { call -> call.request.path().startsWith("/") }
+            format { call ->
+                val status = call.response.status()
+                val httpMethod = call.request.httpMethod.value
+                val userAgent = call.request.headers["User-Agent"]
+                "Status: $status, HTTP method: $httpMethod, User agent: $userAgent"
+            }
         }
         install(CORS) {
             method(HttpMethod.Get)
@@ -37,17 +61,40 @@ fun main() {
             static("/") {
                 resources("")
             }
-            get("/api/waitingCasesInfo") {
+            get(WAITING_CASES) {
                 call.respond(application.waitingCasesInfo())
             }
-            get("/api/case") {
-                val id =call.parameters["id"] ?:error("Invalid case id.")
+            get(CASE) {
+                val id = call.parameters["id"] ?: error("Invalid case id.")
                 call.respond(application.case(id))
             }
             post("/api/interpretationSubmitted") {
                 val interpretation = call.receive<Interpretation>()
                 val result = application.saveInterpretation(interpretation)
                 call.respond(HttpStatusCode.OK, result)
+            }
+            post(START_SESSION) {
+                val id = call.parameters["id"] ?: error("Invalid case id.")
+                val conclusion = call.receive<Conclusion>()
+                application.startRuleSessionToAddConclusion(id, conclusion)
+                call.respond(HttpStatusCode.OK, OperationResult("Session started"))
+            }
+            post(ADD_CONDITION) {
+                println("add condition----------------------")
+                val str = call.receiveText()
+                println("got this data as text: $str")
+                val condition = Json.decodeFromString(Condition.serializer(), str)
+                println("condition is: $condition")
+                application.addConditionToCurrentRuleBuildingSession(condition)
+                call.respond(HttpStatusCode.OK, OperationResult("Condition added"))
+            }
+            post(COMMIT_SESSION) {
+                application.commitCurrentRuleSession()
+                call.respond(HttpStatusCode.OK, OperationResult("Session committed"))
+            }
+            post(CREATE_KB) {
+                application.createKB()
+                call.respond(HttpStatusCode.OK, OperationResult("KB created"))
             }
         }
     }.start(wait = true)

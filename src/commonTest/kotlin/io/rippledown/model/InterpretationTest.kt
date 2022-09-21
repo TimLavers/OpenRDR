@@ -17,11 +17,58 @@ internal class InterpretationTest {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
         assertEquals(interpretation.caseId, caseId)
         assertEquals(interpretation.text, "Whatever, blah.")
+        assertEquals(interpretation.textGivenByRules(), "")
     }
 
     @Test
     fun testEmpty() {
         Interpretation(caseId, "Whatever, blah.").conclusions().size shouldBe 0
+    }
+
+    @Test
+    fun textGivenByRules() {
+        val interpretation = Interpretation(caseId, "Whatever, blah.")
+        interpretation.textGivenByRules() shouldBe ""
+
+        val conclusion = Conclusion("First conclusion")
+        val rule = Rule("r", null, conclusion, emptySet())
+        interpretation.add(rule)
+        interpretation.textGivenByRules() shouldBe conclusion.text
+    }
+
+    @Test
+    fun textGivenByRulesWithDuplicateConclusion() {
+        val interpretation = Interpretation(caseId, "Whatever, blah.")
+        val conclusion = Conclusion("First conclusion")
+        val rule0 = Rule("r0", null, conclusion, emptySet())
+        val rule1 = Rule("r1", null, conclusion, emptySet())
+        interpretation.add(rule0)
+        interpretation.add(rule1)
+        interpretation.textGivenByRules() shouldBe conclusion.text
+    }
+
+    @Test
+    fun textGivenByRulesWithNullRuleConclusion() {
+        val interpretation = Interpretation(caseId, "Whatever, blah.")
+        val conclusion = Conclusion("First conclusion")
+        val rule0 = Rule("r0", null, conclusion, emptySet())
+        val rule1 = Rule("r1", null, null, emptySet())
+        interpretation.add(rule0)
+        interpretation.add(rule1)
+        interpretation.textGivenByRules() shouldBe conclusion.text
+    }
+
+    @Test
+    fun textGivenByRulesHasConclusionsInABOrder() {
+        val interpretation = Interpretation(caseId, "Whatever, blah.")
+        val conclusion = Conclusion("First conclusion")
+        val rule0 = Rule("r0", null, Conclusion("C"), emptySet())
+        val rule1 = Rule("r1", null, Conclusion("A"), emptySet())
+        val rule2 = Rule("r2", null, Conclusion("B"), emptySet())
+        interpretation.add(rule0)
+        interpretation.add(rule1)
+        interpretation.add(rule2)
+        interpretation.textGivenByRules() shouldBe "A\nB\nC"
     }
 
     @Test

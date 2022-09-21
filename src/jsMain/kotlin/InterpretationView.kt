@@ -15,7 +15,9 @@ external interface InterpretationViewHandler : Props {
 }
 
 val InterpretationView = FC<InterpretationViewHandler> { props ->
-    var interpretationText = ""
+    console.log("Interp View, case: ${props.case.name}")
+    console.log("Interp View, tGBR: ${props.case.interpretation.textGivenByRules()}")
+    var interpretationText = props.case.interpretation.textGivenByRules()
 
     div {
         key = props.case.name
@@ -23,6 +25,7 @@ val InterpretationView = FC<InterpretationViewHandler> { props ->
             id = "interpretation_text_area"
             rows = 10
             cols = 72
+            defaultValue = interpretationText
             onChange = {
                 interpretationText = it.target.value
             }

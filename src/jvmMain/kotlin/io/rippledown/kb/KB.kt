@@ -1,17 +1,35 @@
 package io.rippledown.kb
 
 import io.rippledown.model.*
+import io.rippledown.model.condition.Condition
 import io.rippledown.model.rule.*
 
 class KB(val name: String) {
     val cornerstones = mutableSetOf<RDRCase>()
     val ruleTree = RuleTree()
+    private var ruleSession: RuleBuildingSession? = null
 
     fun startSession(case: RDRCase, action: RuleTreeChange): RuleBuildingSession {
         //interpret the case and all cornerstones at the start of each session
         cornerstones.forEach { interpret(it) }
         interpret(case)
         return RuleBuildingSession(case, action, cornerstones)
+    }
+
+    fun startRuleSessionToAddConclusion(case: RDRCase, conclusion: Conclusion) {
+        check(ruleSession == null)
+        ruleSession =  startSession(case, ChangeTreeToAddConclusion(conclusion, ruleTree))
+    }
+
+    fun addConditionToCurrentRuleSession(condition: Condition){
+        check(ruleSession != null)
+        ruleSession!!.addCondition(condition)
+    }
+
+    fun finishCurrentRuleSession() {
+        check(ruleSession != null)
+        ruleSession!!.commit()
+        ruleSession = null
     }
 
     fun interpret(case: RDRCase) {

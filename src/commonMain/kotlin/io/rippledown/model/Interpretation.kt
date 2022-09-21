@@ -8,6 +8,10 @@ import kotlinx.serialization.Serializable
 data class Interpretation(val caseId: CaseId, val text: String = "") {
     private val ruleSummaries = mutableSetOf<RuleSummary>()
 
+    fun textGivenByRules(): String {
+        return ruleSummaries.map { it.conclusion?.text }.filterNotNull().toSet().toMutableList().sortedWith(String.CASE_INSENSITIVE_ORDER).joinToString("\n")
+    }
+
     fun add(ruleSummary: RuleSummary) {
         ruleSummaries.add(ruleSummary)
     }
