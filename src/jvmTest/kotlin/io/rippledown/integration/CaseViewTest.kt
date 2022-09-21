@@ -13,6 +13,7 @@ internal class CaseViewTest: UITestBase() {
 
     @BeforeTest
     fun setup() {
+        resetKB()
         setupCases()
         setupWebDriver()
         caseQueuePO = CaseQueuePO(driver)

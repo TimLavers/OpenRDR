@@ -9,6 +9,7 @@ internal class CaseQueueTest: UITestBase() {
 
     @BeforeTest
     fun setup() {
+        resetKB()
         labServerProxy.cleanCasesDir()
         setupWebDriver()
         caseQueuePO = CaseQueuePO(driver)

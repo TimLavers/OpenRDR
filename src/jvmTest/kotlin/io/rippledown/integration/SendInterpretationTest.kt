@@ -12,6 +12,7 @@ internal class SendInterpretationTest: UITestBase() {
 
     @BeforeTest
     fun setup() {
+        resetKB()
         setupCases()
         setupWebDriver()
         caseQueuePO = CaseQueuePO(driver)
