@@ -23,3 +23,4 @@ build/
 .gradle/
 .idea/
 kotlin-js-store/
+temp/
