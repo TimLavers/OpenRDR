@@ -91,7 +91,6 @@ kotlin {
 
                 implementation(kotlin("test-js"))
                 implementation(npm("@testing-library/react", testingLibraryReactVersion))
-                implementation(npm("react-dom", "18.2.0"))
                 implementation(npm("react-test-renderer", reactTestRendererVersion))
 
                 implementation("io.kotest:kotest-assertions-core-js:$kotestVersion")

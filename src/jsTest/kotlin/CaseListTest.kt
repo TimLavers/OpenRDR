@@ -103,7 +103,7 @@ class CaseListTest : ReactTestSupport {
             }
         }
 
-        val button = renderer.findById(SEND_INTERPRETATION_BUTTON_ID)
+        val button = renderer.findById("send_interpretation_button")
         processedCaseId shouldBe null
         click(button)
         processedCaseId shouldBe caseIdB
