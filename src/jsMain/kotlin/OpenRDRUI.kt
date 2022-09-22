@@ -1,12 +1,18 @@
 import csstype.FontFamily
 import csstype.TextAlign
+import kotlinx.coroutines.CoroutineScope
 import react.FC
 import react.Props
 import react.css.css
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.h1
 
-val OpenRDRUI = FC<Props> {
+external interface OpenRDRUIHandler : Props {
+    var scope: CoroutineScope
+    var api: Api
+}
+
+val OpenRDRUI = FC<OpenRDRUIHandler> { handler ->
     div {
         css {
             fontFamily = FontFamily.sansSerif
@@ -19,6 +25,9 @@ val OpenRDRUI = FC<Props> {
             }
             id = "main_heading"
         }
-        CaseQueue()
+        CaseQueue {
+            scope = handler.scope
+            api = handler.api
+        }
     }
 }

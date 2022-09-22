@@ -1,9 +1,6 @@
-import api.getCase
-import api.getWaitingCasesInfo
-import api.saveInterpretation
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.RDRCase
-import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import react.FC
 import react.Props
@@ -15,16 +12,24 @@ import react.dom.html.ReactHTML.span
 import react.useEffectOnce
 import react.useState
 
-private val scope = MainScope()
+const val NUMBER_OF_CASES_WAITING_ID = "number_of_cases_waiting_value"
+const val REFRESH_BUTTON_ID = "refresh_waiting_cases_info_button"
+const val REVIEW_CASES_BUTTON_ID = "review_cases_button"
 
-val CaseQueue = FC<Props> {
+external interface CaseQueueHandler : Props {
+    var scope: CoroutineScope
+    var api: Api
+}
+
+val CaseQueue = FC<CaseQueueHandler> { handler ->
     var waitingCasesInfo by useState(CasesInfo(emptyList(), ""))
     var showCaseList: Boolean by useState(false)
     var selectedCase: RDRCase? by useState(null)
+    val api = handler.api
 
     useEffectOnce {
-        scope.launch {
-            waitingCasesInfo = getWaitingCasesInfo()
+        handler.scope.launch {
+            waitingCasesInfo = api.waitingCasesInfo()
         }
     }
 
@@ -36,58 +41,59 @@ val CaseQueue = FC<Props> {
         +"Cases waiting: "
         span {
             +"${waitingCasesInfo.count}"
-            id = "number_of_cases_waiting_value"
+            id = NUMBER_OF_CASES_WAITING_ID
         }
     }
     span {
         div {
             button {
                 +"Refresh"
+                id = REFRESH_BUTTON_ID
                 css {
                     padding = px4
                 }
                 onClick = {
-                    scope.launch {
-                        waitingCasesInfo = getWaitingCasesInfo()
+                    handler.scope.launch {
+                        waitingCasesInfo = api.waitingCasesInfo()
                     }
                 }
-                id = "refresh_waiting_cases_info_button"
             }
             button {
                 +"Review"
+                id = REVIEW_CASES_BUTTON_ID
                 css {
                     padding = px4
                 }
                 onClick = {
-                    scope.launch {
-                        waitingCasesInfo = getWaitingCasesInfo()
+                    handler.scope.launch {
+                        waitingCasesInfo = api.waitingCasesInfo()
                         showCaseList = true
                     }
                 }
                 disabled = waitingCasesInfo.count == 0
-                id = "review_cases_button"
             }
         }
     }
     if (showCaseList) {
         CaseList {
+            scope = handler.scope
             caseIds = waitingCasesInfo.caseIds
             onCaseSelected = {
-                scope.launch {
-                    selectedCase = getCase(it)
+                handler.scope.launch {
+                    selectedCase = handler.api.getCase(it)
                 }
             }
             onCaseProcessed = { interpretation ->
                 //maybe retrieve the next case or null, rather than case ids
-                scope.launch {
-                    saveInterpretation(interpretation)
-                    waitingCasesInfo = getWaitingCasesInfo()
+                handler.scope.launch {
+                    api.saveInterpretation(interpretation)
+                    waitingCasesInfo = api.waitingCasesInfo()
                     caseIds = waitingCasesInfo.caseIds
                     showCaseList = true
                     if (waitingCasesInfo.count > 0) {
                         val toSelect = waitingCasesInfo.caseIds[0]
-                        scope.launch {
-                            selectedCase = getCase(toSelect.id)
+                        handler.scope.launch {
+                            selectedCase = api.getCase(toSelect.id)
                         }
                     } else {
                         selectedCase = null
