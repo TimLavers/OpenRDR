@@ -2,7 +2,7 @@ import csstype.*
 import io.rippledown.model.CaseId
 import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
-import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import react.FC
 import react.Props
@@ -18,9 +18,8 @@ external interface CaseListHandler : Props {
     var onCaseSelected: (String) -> Unit
     var currentCase: RDRCase?
     var onCaseProcessed: suspend (Interpretation) -> Unit
+    var scope: CoroutineScope
 }
-
-private val scope = MainScope()
 
 val CaseList = FC<CaseListHandler> { props ->
     div {
@@ -63,7 +62,7 @@ val CaseList = FC<CaseListHandler> { props ->
             CaseView {
                 case = props.currentCase!!
                 onInterpretationSubmitted = { interpretation ->
-                    scope.launch {
+                    props.scope.launch {
                         props.onCaseProcessed(interpretation)
                     }
                 }

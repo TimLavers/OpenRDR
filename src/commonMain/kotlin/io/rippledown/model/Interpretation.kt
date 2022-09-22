@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
 @Serializable
-data class Interpretation(val caseId: CaseId, val text: String = "") {
+data class Interpretation(val caseId: CaseId = CaseId(), val text: String = "") {
     private val ruleSummaries = mutableSetOf<RuleSummary>()
 
     @Transient

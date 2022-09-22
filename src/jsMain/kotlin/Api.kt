@@ -14,7 +14,7 @@ import kotlinx.serialization.json.Json
 
 val endpoint = window.location.origin
 
-class ApiClient(engine: HttpClientEngine = Js.create()) {
+class Api(engine: HttpClientEngine = Js.create()) {
     val jsonClient = HttpClient(engine) {
         install(JsonFeature) {
             serializer = KotlinxSerializer(Json {

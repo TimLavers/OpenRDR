@@ -74,7 +74,7 @@ object RDRCaseSerializer : KSerializer<RDRCase> {
  * there was no TestEvent for an Attribute.
  */
 @Serializable(RDRCaseSerializer::class)
-data class RDRCase(val name: String, val data: Map<TestEvent, TestResult>) {
+data class RDRCase(val name: String = "", val data: Map<TestEvent, TestResult> = emptyMap()) {
     val dates: List<Long>
     val attributes: Set<Attribute>
     private val dateToEpisode: Map<Long, Map<Attribute, TestResult>>

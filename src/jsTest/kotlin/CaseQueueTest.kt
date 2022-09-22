@@ -1,53 +1,55 @@
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.withContext
+import mocks.engine
 import mysticfall.ReactTestSupport
 import mysticfall.TestInstance
 import mysticfall.TestRenderer
 import kotlin.test.Test
 
-
 @OptIn(ExperimentalCoroutinesApi::class)
 class CaseQueueTest : ReactTestSupport {
 
     @Test
-    fun shouldNotShowCaseListByDefault() {
+    fun shouldNotShowCaseListByDefault() = runTest {
         val renderer = render {
-            CaseQueue()
+            CaseQueue {
+                attrs.scope = this@runTest
+            }
         }
         renderer.root.findAllByType(CaseList) shouldBe emptyList<TestInstance<*>>()
     }
 
     @Test
-    fun reviewCasesButtonShouldBeInitiallyDisabled() {
+    fun reviewCasesButtonShouldBeInitiallyDisabled() = runTest {
         val renderer = render {
-            CaseQueue()
+            CaseQueue {
+                attrs.scope = this@runTest
+            }
         }
         val reviewButton = renderer.findById(REVIEW_CASES_BUTTON_ID)
         reviewButton.props.asDynamic()["disabled"].unsafeCast<Boolean>() shouldBe true
     }
 
+
     @Test
     fun shouldGetCasesWhenRefreshButtonIsClicked() = runTest {
-        val casesInfo = CasesInfo(
-            listOf(
-                CaseId("1", "case 1"),
-                CaseId("2", "case 2"),
-                CaseId("3", "case 3")
-            ),
-            "some resource path"
-        )
-
+        val mock = engine {
+            returnCasesInfo = CasesInfo(
+                listOf(
+                    CaseId("1", "case 1"),
+                    CaseId("2", "case 2"),
+                    CaseId("3", "case 3")
+                )
+            )
+        }
         val renderer = render {
             CaseQueue {
-                attrs.getWaitingCasesInfo = {
-                    casesInfo
-                }
+                attrs.api = Api(mock)
+                attrs.scope = this@runTest
             }
         }
 
@@ -56,32 +58,30 @@ class CaseQueueTest : ReactTestSupport {
         renderer.findById(NUMBER_OF_CASES_WAITING_ID).text() shouldBe "3"
     }
 
+
     @Test
     fun shouldGetCasesWhenInitialised() = runTest {
-        val casesInfo = CasesInfo(
-            listOf(
-                CaseId("1", "case 1"),
-                CaseId("2", "case 2"),
-            ),
-            "some resource path"
-        )
+        val mock = engine {
+            returnCasesInfo = CasesInfo(
+                listOf(
+                    CaseId("1", "case 1"),
+                    CaseId("2", "case 2"),
+                )
+            )
+        }
         lateinit var renderer: TestRenderer
         launch {
-            //wait for the coroutine in useEffectOnce to finish
-            withContext(Dispatchers.Main) {
-                //ensure that the useEffectOnce is called
-                act {
-                    renderer = render {
-                        CaseQueue {
-                            attrs.getWaitingCasesInfo = {
-                                casesInfo
-                            }
-                        }
+            //ensure that the useEffectOnce is called
+            act {
+                renderer = render {
+                    CaseQueue {
+                        attrs.api = Api(mock)
+                        attrs.scope = this@runTest
                     }
                 }
             }
         }.join()
-        renderer.findById(NUMBER_OF_CASES_WAITING_ID).text() shouldBe "${casesInfo.count}"
+        renderer.findById(NUMBER_OF_CASES_WAITING_ID).text() shouldBe "2"
     }
 
     @Test
@@ -90,15 +90,15 @@ class CaseQueueTest : ReactTestSupport {
             CaseId("1", "case 1"),
             CaseId("2", "case 2"),
         )
-        val casesInfo = CasesInfo(
-            caseIds,
-            "some resource path"
-        )
+        val mock = engine {
+            returnCasesInfo = CasesInfo(
+                caseIds
+            )
+        }
         val renderer = render {
             CaseQueue {
-                attrs.getWaitingCasesInfo = {
-                    casesInfo
-                }
+                attrs.api = Api(mock)
+                attrs.scope = this@runTest
             }
         }
         val refreshButton = renderer.findById(REFRESH_BUTTON_ID)
@@ -112,5 +112,3 @@ class CaseQueueTest : ReactTestSupport {
         caseList.props.caseIds shouldBe caseIds
     }
 }
-
-

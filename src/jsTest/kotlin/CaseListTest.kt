@@ -95,6 +95,7 @@ class CaseListTest : ReactTestSupport {
 
         val renderer = render {
             CaseList {
+                attrs.scope = this@runTest
                 attrs.caseIds = listOf(caseIdA, caseIdB, caseIdC)
                 attrs.currentCase = RDRCase(name = "case B", data = emptyMap())
                 attrs.onCaseProcessed = { interpretation ->
