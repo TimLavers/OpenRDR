@@ -16,6 +16,7 @@ plugins {
     kotlin("multiplatform") version "1.7.10"
     application
     kotlin("plugin.serialization") version "1.7.10"
+    id("io.ktor.plugin") version "2.1.1"
 }
 
 group = "io.rippledown"
@@ -108,8 +109,16 @@ application {
     mainClass.set("OpenRDRServerKt")
 }
 
-// include JS artifacts in any JAR we generate
 tasks.getByName<Jar>("jvmJar") {
+    includeJsArtifacts()
+}
+
+tasks.shadowJar {
+    includeJsArtifacts()
+}
+
+// include JS artifacts in any JAR we generate
+fun Jar.includeJsArtifacts() {
     val taskName = if (project.hasProperty("isProduction")
         || project.gradle.startParameter.taskNames.contains("installDist")
     ) {
@@ -125,6 +134,8 @@ tasks.getByName<Jar>("jvmJar") {
             webpackTask.outputFileName
         )
     ) // bring output file along into the JAR
+
+    manifest.attributes["Main-Class"] = "OpenRDRServerKt"
 }
 
 tasks {
