@@ -1,7 +1,6 @@
 package io.rippledown.model
 
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 
 //ORD1
 @Serializable
@@ -22,7 +21,7 @@ data class ReferenceRange(val lowerString: String?, val upperString: String?) {
         if (upper == null) {
             return false
         }
-         return v.real!! > upper
+         return v.real > upper
     }
 
     fun isLow(v: Value): Boolean {
@@ -30,17 +29,17 @@ data class ReferenceRange(val lowerString: String?, val upperString: String?) {
         if (lower == null) {
             return false
         }
-        return v.real!! < lower
+        return v.real < lower
     }
 
     fun isNormal(v: Value): Boolean {
         v.real ?: return false
         if (upper == null) {//so lower non null
-            return v.real!! >= lower!!
+            return v.real >= lower!!
         }
         if (lower == null) {//so upper non null
-            return v.real!! <= upper
+            return v.real <= upper
         }
-        return v.real!! >= lower && v.real!! <= upper
+        return v.real >= lower && v.real <= upper
     }
 }
