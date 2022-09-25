@@ -6,9 +6,7 @@ import kotlinx.serialization.Transient
 //ORD1
 @Serializable
 data class ReferenceRange(val lowerString: String?, val upperString: String?) {
-    @Transient
     val lower = lowerString?.toFloat()
-    @Transient
     val upper = upperString?.toFloat()
 
     init {

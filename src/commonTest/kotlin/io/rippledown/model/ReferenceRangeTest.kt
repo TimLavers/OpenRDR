@@ -33,7 +33,7 @@ internal class ReferenceRangeTest {
         assertTrue(interval.isHigh(Value("3.5")))
         assertTrue(interval.isHigh(Value("35")))
         assertTrue(interval.isHigh(Value("350000")))
-        
+
         // Value float below
         assertFalse(interval.isHigh(Value("-15")))
         assertFalse(interval.isHigh(Value("-1.5")))
@@ -45,7 +45,7 @@ internal class ReferenceRangeTest {
 
         // Value float is upper value
         assertFalse(interval.isHigh(Value("3.0")))
-        
+
         // Value float in range
         assertFalse(interval.isHigh(Value("2.5")))
     }

@@ -9,6 +9,7 @@ that are available on Kotlin Multiplatform. There are no well-supported arbitrar
 precision libraries available on Kotlin Multiplatform so we must stick with
 using `Double` to represent real numbers.
 
+## Avoiding floating-point confusion
 This however might not be a big problem because our main use-case is chemical
 pathology, which deals in fairly imprecise measurements anyway.
 
@@ -27,3 +28,9 @@ when the numbers being compared are extremely close. This is probably less
 likely to cause confusion amongst users than returning false in such situations,
 because the users are unlikely to conceive of conditions that reveal that
 a value of `0.9499999` is being treated as equal to `0.95`.
+
+## Displaying numbers in the browser
+A condition such as "TSH ≥ 1.0" is rendered as the string "TSH ≥ 1" in the browser.
+This is because JS has just a single number type. To display the condition correctly,
+we might need to know the precision to which the person typing the condition intended
+it to be applied.
