@@ -27,5 +27,4 @@ internal open class RuleTestBase: ConditionTestBase() {
             interpretation.conclusions() shouldContain it
         }
     }
-
 }

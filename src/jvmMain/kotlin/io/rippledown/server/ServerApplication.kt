@@ -1,6 +1,8 @@
 package io.rippledown.server
 
+import io.rippledown.kb.KB
 import io.rippledown.model.*
+import io.rippledown.model.condition.Condition
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -11,6 +13,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 class ServerApplication {
     val casesDir = File("temp/cases")
     val interpretationsDir = File("temp/interpretations")
+    var kb = KB("Thyroids")
 
     init {
         casesDir.mkdirs()
@@ -26,9 +29,26 @@ class ServerApplication {
         return CasesInfo(idsList, casesDir.absolutePath)
     }
 
-    fun case(id: String): RDRCase {
-        return getCaseFromFile(File(casesDir, "$id.json"))
+    fun createKB() {
+        kb = KB("Thyroids")
     }
+
+    fun startRuleSessionToAddConclusion(caseId: String, conclusion: Conclusion) {
+        kb.startRuleSessionToAddConclusion(case(caseId), conclusion)
+    }
+
+    fun addConditionToCurrentRuleBuildingSession(condition: Condition) {
+        kb.addConditionToCurrentRuleSession(condition)
+    }
+
+    fun commitCurrentRuleSession() = kb.finishCurrentRuleSession()
+
+    fun case(id: String): RDRCase {
+        val case = getCaseFromFile(File(casesDir, "$id.json"))
+        kb.interpret(case)
+        return case
+    }
+
     fun saveInterpretation(interpretation: Interpretation): OperationResult {
         val fileName = "${interpretation.caseId.id}.interpretation.json"
         val file = File(interpretationsDir, fileName)

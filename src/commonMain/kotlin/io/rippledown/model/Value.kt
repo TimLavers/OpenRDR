@@ -1,10 +1,10 @@
 package io.rippledown.model
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 @Serializable
 data class Value(val text: String) {
-    val real: Float? by lazy {
-        text.toFloatOrNull()
-    }
+    @Transient
+    val real = text.toFloatOrNull()
 }

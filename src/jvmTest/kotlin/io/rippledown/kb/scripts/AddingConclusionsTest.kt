@@ -34,7 +34,7 @@ class AddingConclusionsTest {
             requireInterpretation("Case1", "A")
             session {
                 selectCase("Case1")
-                addConclusion("B")
+                +"B"
                 condition("a")
                 requireCornerstones()
                 commit()
@@ -52,7 +52,7 @@ class AddingConclusionsTest {
             case("4", "abc")
             session {
                 selectCase("1")
-                addConclusion("A")
+                +"A"
                 requireCornerstones("2", "3", "4") //the current case is not a cornerstone
                 condition("a")
                 requireCornerstones("4")
@@ -73,7 +73,7 @@ class AddingConclusionsTest {
                 session {
                     selectCase("1")
                     condition("a")
-                    addConclusion("A")
+                    +"A"
                 }
             }
         }

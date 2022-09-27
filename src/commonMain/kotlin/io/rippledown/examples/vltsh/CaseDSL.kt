@@ -79,7 +79,7 @@ data class MultiEpisodeCaseTemplate(var name: String = "") {
     fun build(): RDRCase {
         val builder = RDRCaseBuilder()
         val numberOfEpisodes = dates.size
-        require(dates.size > 0) { "dates should not be empty"}
+        require(dates.isNotEmpty()) { "dates should not be empty"}
         attributeToValues.forEach {
             require(it.value.size == numberOfEpisodes) { "Each attribute should have $numberOfEpisodes values, ${it.key} has ${it.value.size}." }
         }
@@ -132,7 +132,6 @@ class TestResultsTemplate(var attribute: String = "", var valuesCSL: String = ""
     var lowerBound: String? = null
     var upperBound: String? = null
     var units: String? = null
-    val valueList = mutableListOf<String>()
 
     fun results(): List<TestResult> {
         var range: ReferenceRange? = null

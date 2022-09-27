@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
 val kotlinVersion = "1.7.10"
-val serializationVersion = "1.3.2"
+val serializationVersion = "1.4.0"
 val ktorVersion = "1.6.7"
 val logbackVersion = "1.2.10"
 val reactVersion = "17.0.2-pre.299-kotlin-1.6.10"
@@ -53,6 +53,7 @@ kotlin {
         val jvmMain by getting {
             dependencies {
                 implementation("io.ktor:ktor-serialization:$ktorVersion")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
                 implementation("io.ktor:ktor-server-core:$ktorVersion")
                 implementation("io.ktor:ktor-server-netty:$ktorVersion")
                 implementation("ch.qos.logback:logback-classic:$logbackVersion")
@@ -62,6 +63,11 @@ kotlin {
         val jvmTest by getting {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
+                implementation("io.ktor:ktor-client-core:$ktorVersion")
+                implementation("io.ktor:ktor-client-json:$ktorVersion")
+                implementation("io.ktor:ktor-client-serialization:$ktorVersion")
+//                implementation("io.ktor:ktor-client-jetty:$ktorVersion")
+                implementation("io.ktor:ktor-client-cio:$ktorVersion")
                 implementation(kotlin("test"))
                 implementation("org.seleniumhq.selenium:selenium-java:4.2.2")
                 implementation("io.github.bonigarcia:webdrivermanager:$webDriverVersion")

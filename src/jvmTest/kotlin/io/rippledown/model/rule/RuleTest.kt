@@ -1,9 +1,8 @@
-package io.rippledown.model.rule
+package io.rippledown.model
 
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.rippledown.model.Conclusion
 import io.rippledown.model.rule.Rule
 import io.rippledown.model.rule.RuleTestBase
 import kotlin.test.Test

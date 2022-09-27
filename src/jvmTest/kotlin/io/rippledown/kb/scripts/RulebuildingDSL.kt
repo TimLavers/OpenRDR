@@ -18,7 +18,7 @@ fun build(f: BuildTemplate.() -> Unit): BuildTemplate {
 
 class BuildTemplate {
     val defaultDate = 1659752689505
-    private val kb = KB()
+    private val kb = KB("")
 
     fun case(name: String, data: String) {
         val caseBuilder = RDRCaseBuilder()
@@ -42,8 +42,8 @@ class BuildTemplate {
 
     fun requireInterpretation(caseName: String, vararg expectedConclusions: String) {
         val case = kb.getCaseByName(caseName)
-        val interpretation = kb.interpret(case)
-        interpretation.conclusions() shouldBe expectedConclusions.map { Conclusion(it) }.toSet()
+        kb.interpret(case)
+        case.interpretation.conclusions() shouldBe expectedConclusions.map { Conclusion(it) }.toSet()
     }
 }
 
@@ -91,7 +91,7 @@ class SessionTemplate( val kb: KB) {
     }
 
     fun addConclusion(conclusion: String) {
-        action = ChangeTreeToAddConclusion(Conclusion(conclusion), kb.ruleTree)
+        action = ChangeTreeToAddConclusion(Conclusion(conclusion))
         session = kb.startSession(case, action)
     }
 
@@ -100,12 +100,12 @@ class SessionTemplate( val kb: KB) {
     }
 
     fun removeConclusion(conclusion: String) {
-        action = ChangeTreeToRemoveConclusion(Conclusion(conclusion), kb.ruleTree)
+        action = ChangeTreeToRemoveConclusion(Conclusion(conclusion))
         session = kb.startSession(case, action)
     }
 
     fun replaceConclusion(conclusion: String, replacement: String) {
-        action = ChangeTreeToReplaceConclusion(Conclusion(conclusion), Conclusion(replacement), kb.ruleTree)
+        action = ChangeTreeToReplaceConclusion(Conclusion(conclusion), Conclusion(replacement))
         session = kb.startSession(case, action)
     }
 

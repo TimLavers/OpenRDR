@@ -10,6 +10,7 @@ internal class BasicElementsTest: UITestBase() {
 
     @BeforeTest
     fun setup() {
+        resetKB()
         setupWebDriver()
     }
 

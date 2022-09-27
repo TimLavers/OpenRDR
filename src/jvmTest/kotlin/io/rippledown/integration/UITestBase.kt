@@ -3,6 +3,7 @@ package io.rippledown.integration
 import io.github.bonigarcia.wdm.config.DriverManagerType.CHROME
 import io.github.bonigarcia.wdm.managers.ChromeDriverManager
 import io.rippledown.integration.labsystem.LabServerProxy
+import io.rippledown.integration.restclient.RESTClient
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
@@ -10,6 +11,7 @@ import java.time.Duration
 
 open class UITestBase {
     val labServerProxy = LabServerProxy()
+    val restClient = RESTClient()
     lateinit var driver: WebDriver
 
     fun setupWebDriver() {
@@ -36,4 +38,7 @@ open class UITestBase {
         driver.close()
     }
 
+    fun resetKB() {
+        restClient.resetKB()
+    }
 }

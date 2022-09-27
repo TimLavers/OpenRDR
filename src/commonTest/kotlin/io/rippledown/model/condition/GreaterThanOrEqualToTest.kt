@@ -1,12 +1,13 @@
 package io.rippledown.model.condition
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.rippledown.model.Attribute
 import kotlin.test.Test
 
 internal class GreaterThanOrEqualToTest: ConditionTestBase() {
 
-    private val gte1 = GreaterThanOrEqualTo(tsh, 1.0)
+    private val gte1 = GreaterThanOrEqualTo(tsh, 1.01)
 
     @Test
     fun attributeNotInCase() {
@@ -38,6 +39,8 @@ internal class GreaterThanOrEqualToTest: ConditionTestBase() {
 
     @Test
     fun asText() {
-        gte1.asText() shouldBe "TSH ≥ 1.0"
+        // In the JVM we get "TSH ≥ 1.0" but in JS get "TSH ≥ 1".
+        // This is because JS has just a single number type.
+        gte1.asText() shouldContain "TSH ≥ 1"
     }
 }

@@ -94,7 +94,7 @@ internal class SlightlyLowTest: ConditionTestBase() {
         fivePercentLow.holds(createCase(0.94, 1.0)) shouldBe false
     }
 
-    fun createCase(tshValue: Double, lowerBound: Double): RDRCase {
+    private fun createCase(tshValue: Double, lowerBound: Double): RDRCase {
         val builder1 = RDRCaseBuilder()
         val referenceRange = ReferenceRange("$lowerBound", "10.0")
         builder1.addResult(tsh, defaultDate , TestResult("$tshValue", referenceRange, "pmol/L"))

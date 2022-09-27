@@ -17,6 +17,7 @@ internal class InterpretationTest {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
         assertEquals(interpretation.caseId, caseId)
         assertEquals(interpretation.text, "Whatever, blah.")
+        assertEquals(interpretation.textGivenByRules(), "")
     }
 
     @Test
@@ -25,10 +26,56 @@ internal class InterpretationTest {
     }
 
     @Test
+    fun textGivenByRules() {
+        val interpretation = Interpretation(caseId, "Whatever, blah.")
+        interpretation.textGivenByRules() shouldBe ""
+
+        val conclusion = Conclusion("First conclusion")
+        val rule = Rule("r", null, conclusion, emptySet())
+        interpretation.add(rule)
+        interpretation.textGivenByRules() shouldBe conclusion.text
+    }
+
+    @Test
+    fun textGivenByRulesWithDuplicateConclusion() {
+        val interpretation = Interpretation(caseId, "Whatever, blah.")
+        val conclusion = Conclusion("First conclusion")
+        val rule0 = Rule("r0", null, conclusion, emptySet())
+        val rule1 = Rule("r1", null, conclusion, emptySet())
+        interpretation.add(rule0)
+        interpretation.add(rule1)
+        interpretation.textGivenByRules() shouldBe conclusion.text
+    }
+
+    @Test
+    fun textGivenByRulesWithNullRuleConclusion() {
+        val interpretation = Interpretation(caseId, "Whatever, blah.")
+        val conclusion = Conclusion("First conclusion")
+        val rule0 = Rule("r0", null, conclusion, emptySet())
+        val rule1 = Rule("r1", null, null, emptySet())
+        interpretation.add(rule0)
+        interpretation.add(rule1)
+        interpretation.textGivenByRules() shouldBe conclusion.text
+    }
+
+    @Test
+    fun textGivenByRulesHasConclusionsInABOrder() {
+        val interpretation = Interpretation(caseId, "Whatever, blah.")
+        val conclusion = Conclusion("First conclusion")
+        val rule0 = Rule("r0", null, Conclusion("C"), emptySet())
+        val rule1 = Rule("r1", null, Conclusion("A"), emptySet())
+        val rule2 = Rule("r2", null, Conclusion("B"), emptySet())
+        interpretation.add(rule0)
+        interpretation.add(rule1)
+        interpretation.add(rule2)
+        interpretation.textGivenByRules() shouldBe "A\nB\nC"
+    }
+
+    @Test
     fun singleRule() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val conclusion = Conclusion("First conc")
-        val rule = Rule(null, conclusion, emptySet())
+        val conclusion = Conclusion("First conclusion")
+        val rule = Rule("r", null, conclusion, emptySet())
         interpretation.add(rule)
         checkSingleConclusion(interpretation,conclusion)
     }
@@ -36,9 +83,9 @@ internal class InterpretationTest {
     @Test
     fun twoRulesWithSameConclusion() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val conclusion = Conclusion("First conc")
-        val rule0 = Rule(null, conclusion, emptySet())
-        val rule1 = Rule(null, conclusion, emptySet())
+        val conclusion = Conclusion("First conclusion")
+        val rule0 = Rule("r0", null, conclusion, emptySet())
+        val rule1 = Rule("r1", null, conclusion, emptySet())
         interpretation.add(rule0)
         interpretation.add(rule1)
         checkSingleConclusion(interpretation, conclusion)
@@ -47,12 +94,12 @@ internal class InterpretationTest {
     @Test
     fun multipleRules() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val c0 = Conclusion("First conc")
-        val rule0 = Rule(null, c0, emptySet())
-        val c1 = Conclusion("Second conc")
-        val rule1 = Rule(null, c1, emptySet())
-        val c2 = Conclusion("Third conc")
-        val rule2 = Rule(null, c2, emptySet())
+        val c0 = Conclusion("First conclusion")
+        val rule0 = Rule("r0", null, c0, emptySet())
+        val c1 = Conclusion("Second conclusion")
+        val rule1 = Rule("r1", null, c1, emptySet())
+        val c2 = Conclusion("Third conclusion")
+        val rule2 = Rule("r2", null, c2, emptySet())
         interpretation.add(rule0)
         interpretation.add(rule1)
         interpretation.add(rule2)
@@ -63,20 +110,38 @@ internal class InterpretationTest {
     }
 
     @Test
-    fun rules_giving_conclusion() {
+    fun idsOfRulesGivingConclusion() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
         val concA = Conclusion("A")
         val concB = Conclusion("B")
-        val rule0 = Rule(null, concA, emptySet())
-        val rule1 = Rule(null, concA, emptySet())
-        val rule2 = Rule(null, concB, emptySet())
-        interpretation.rulesGivingConclusion(concA) shouldBe setOf()
+        val rule0 = Rule("r0", null, concA, emptySet())
+        val rule1 = Rule("r1", null, concA, emptySet())
+        val rule2 = Rule("r2", null, concB, emptySet())
+        interpretation.idsOfRulesGivingConclusion(concA) shouldBe setOf()
 
         interpretation.add(rule0)
         interpretation.add(rule1)
         interpretation.add(rule2)
-        interpretation.rulesGivingConclusion(concA) shouldBe  setOf(rule0, rule1)
-        interpretation.rulesGivingConclusion(concB) shouldBe setOf(rule2)
+        interpretation.idsOfRulesGivingConclusion(concA) shouldBe  setOf(rule0.id, rule1.id)
+        interpretation.idsOfRulesGivingConclusion(concB) shouldBe setOf(rule2.id)
+    }
+
+    @Test
+    fun addRuleSummary() {
+        val interpretation = Interpretation(caseId, "Whatever, blah.")
+        val c0 = Conclusion("First conc")
+        val rule0 = Rule("r0", null, c0, emptySet())
+        val c1 = Conclusion("Second conc")
+        val rule1 = Rule("r1", null, c1, emptySet())
+        val c2 = Conclusion("Third conc")
+        val rule2 = Rule("r2", null, c2, emptySet())
+        interpretation.add(rule0.summary())
+        interpretation.add(rule1.summary())
+        interpretation.add(rule2.summary())
+        interpretation.conclusions().size shouldBe  3
+        interpretation.conclusions() shouldContain c0
+        interpretation.conclusions() shouldContain c1
+        interpretation.conclusions() shouldContain c2
     }
 
     @Test

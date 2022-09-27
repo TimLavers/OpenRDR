@@ -1,21 +1,21 @@
 package io.rippledown.model.rule
 
-import io.rippledown.model.CaseId
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
+import java.util.*
 
 fun rootRule(): Rule {
-    return NoConclusionRule()
+    return Rule("root")
 }
 
 open class RuleTree(val root: Rule = rootRule()) {
 
     fun apply(kase: RDRCase): Interpretation {
-        val interpretation = Interpretation(CaseId(kase.name, kase.name))
-        root.childRules().forEach { it.apply(kase, interpretation) }//don't include the root conclusion
-        return interpretation
+        kase.resetInterpretation()
+        root.childRules().forEach { it.apply(kase, kase.interpretation) }//don't include the root conclusion
+        return kase.interpretation
     }
 
     //Note that the root is counted
@@ -65,6 +65,6 @@ open class RuleTree(val root: Rule = rootRule()) {
     }
 
     open fun rule(conclusion: Conclusion?, conditions: Set<Condition>): Rule {
-        return Rule(null, conclusion, conditions)
+        return Rule(UUID.randomUUID().toString(), null, conclusion, conditions)
     }
 }

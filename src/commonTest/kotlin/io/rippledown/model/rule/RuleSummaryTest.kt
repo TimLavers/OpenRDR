@@ -12,7 +12,7 @@ import kotlin.test.Test
 
 internal class RuleSummaryTest: ConditionTestBase() {
     private val conclusion = Conclusion("Capricious behaviour normal at that age.")
-    private val empty = RuleSummary(null, emptySet())
+    private val empty = RuleSummary("r1",null, emptySet())
     private val rs2: RuleSummary
     private val rs3: RuleSummary
 
@@ -20,13 +20,13 @@ internal class RuleSummaryTest: ConditionTestBase() {
         val conditions2 = mutableSetOf<Condition>()
         conditions2.add(SlightlyLow(glucose, 10))
         conditions2.add(IsNormal(tsh))
-        rs2 = RuleSummary(null, conditions2)
+        rs2 = RuleSummary("r2",null, conditions2)
 
         val conditions3 = mutableSetOf<Condition>()
         conditions3.add(IsNormal(glucose))
         conditions3.add(IsNormal(tsh))
         conditions3.add(ContainsText(clinicalNotes, "goats"))
-        rs3 = RuleSummary(conclusion, conditions3)
+        rs3 = RuleSummary("r3",conclusion, conditions3)
     }
 
     @Test
@@ -54,7 +54,10 @@ internal class RuleSummaryTest: ConditionTestBase() {
     fun serialization() {
         serializeDeserialize(empty) shouldBe empty
         serializeDeserialize(rs2) shouldBe rs2
-        serializeDeserialize(rs3) shouldBe rs3
+        val sd3 = serializeDeserialize(rs3)
+        sd3 shouldBe rs3
+        sd3.conditions shouldBe rs3.conditions
+        sd3.conclusion shouldBe conclusion
     }
 
     fun serializeDeserialize(ruleSummary: RuleSummary): RuleSummary {

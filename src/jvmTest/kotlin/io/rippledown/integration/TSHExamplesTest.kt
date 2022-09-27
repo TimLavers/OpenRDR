@@ -19,6 +19,7 @@ internal class TSHExamplesTest: UITestBase() {
 
     @BeforeTest
     fun setup() {
+        resetKB()
         setupCases()
         setupWebDriver()
         caseQueuePO = CaseQueuePO(driver)
