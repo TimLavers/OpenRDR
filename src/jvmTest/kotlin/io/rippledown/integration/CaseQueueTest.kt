@@ -37,6 +37,7 @@ internal class CaseQueueTest: UITestBase() {
     fun showCaseList() {
         labServerProxy.copyCase("Case2")
         labServerProxy.copyCase("Case1")
+        pause()//todo use Awaitility
         caseQueuePO.refresh()
 
         val listPO = caseQueuePO.review()

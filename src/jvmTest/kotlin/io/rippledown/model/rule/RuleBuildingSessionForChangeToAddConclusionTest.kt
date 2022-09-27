@@ -15,15 +15,15 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
 
     @Test
     fun a_session_for_an_add_action_should_present_all_cornerstones_if_there_are_no_conditions() {
-        val addAction = ChangeTreeToAddConclusion(Conclusion("A"), RuleTree())
-        val session = RuleBuildingSession(sessionCase, addAction, cornerstoneMap)
+        val addAction = ChangeTreeToAddConclusion(Conclusion("A"))
+        val session = RuleBuildingSession(RuleTree(), sessionCase, addAction, cornerstoneMap)
         session.cornerstoneCases() shouldBe cornerstoneMap
     }
 
     @Test
     fun a_session_for_an_add_action_should_present_those_cornerstones_which_satisfy_the_conditions() {
-        val addAction = ChangeTreeToAddConclusion(Conclusion("A"), RuleTree())
-        val session = RuleBuildingSession(sessionCase, addAction, cornerstoneMap)
+        val addAction = ChangeTreeToAddConclusion(Conclusion("A"))
+        val session = RuleBuildingSession(RuleTree(), sessionCase, addAction, cornerstoneMap)
         val condition = ContainsText(clinicalNotes, "1")
         session.addCondition(condition)
         session.cornerstoneCases() shouldBe setOf(cc1)
@@ -31,8 +31,8 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
 
     @Test
     fun a_session_for_an_add_action_should_present_no_cornerstones_if_none_satisfy_the_conditions() {
-        val addAction = ChangeTreeToAddConclusion(Conclusion("A"), RuleTree())
-        val session = RuleBuildingSession(sessionCase, addAction, cornerstoneMap)
+        val addAction = ChangeTreeToAddConclusion(Conclusion("A"))
+        val session = RuleBuildingSession(RuleTree(), sessionCase, addAction, cornerstoneMap)
         val condition = ContainsText(clinicalNotes, "3")
         session.addCondition(condition)
         session.cornerstoneCases() shouldBe emptySet()
@@ -40,8 +40,8 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
 
     @Test
     fun removing_a_condition_should_mean_that_the_corresponding_cornerstones_are_now_presented() {
-        val addAction = ChangeTreeToAddConclusion(Conclusion("A"), RuleTree())
-        val session = RuleBuildingSession(sessionCase, addAction, cornerstoneMap)
+        val addAction = ChangeTreeToAddConclusion(Conclusion("A"))
+        val session = RuleBuildingSession(RuleTree(), sessionCase, addAction, cornerstoneMap)
         session.cornerstoneCases() shouldBe cornerstoneMap
         val condition = ContainsText(clinicalNotes, "3")
         session.addCondition(condition)
@@ -52,8 +52,8 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
 
     @Test
     fun exempting_a_cornerstone_should_mean_that_it_is_no_longer_presented() {
-        val addAction = ChangeTreeToAddConclusion(Conclusion("A"), RuleTree())
-        val session = RuleBuildingSession(sessionCase, addAction, cornerstoneMap)
+        val addAction = ChangeTreeToAddConclusion(Conclusion("A"))
+        val session = RuleBuildingSession(RuleTree(), sessionCase, addAction, cornerstoneMap)
         session.exemptCornerstone(cc1)
         session.cornerstoneCases() shouldBe setOf(cc2)
     }
@@ -80,8 +80,8 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
         tree.root.childRules().size shouldBe 2 //sanity
         val rulesBefore = tree.rules()
 
-        val addAction = ChangeTreeToAddConclusion(Conclusion("A"), tree)
-        val session = RuleBuildingSession(sessionCase, addAction, setOf())
+        val addAction = ChangeTreeToAddConclusion(Conclusion("A"))
+        val session = RuleBuildingSession(tree, sessionCase, addAction, setOf())
         session
             .addCondition(ContainsText(clinicalNotes, "3"))
             .addCondition(ContainsText(clinicalNotes, "1"))

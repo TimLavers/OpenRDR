@@ -91,7 +91,7 @@ class SessionTemplate( val kb: KB) {
     }
 
     fun addConclusion(conclusion: String) {
-        action = ChangeTreeToAddConclusion(Conclusion(conclusion), kb.ruleTree)
+        action = ChangeTreeToAddConclusion(Conclusion(conclusion))
         session = kb.startSession(case, action)
     }
 
@@ -100,12 +100,12 @@ class SessionTemplate( val kb: KB) {
     }
 
     fun removeConclusion(conclusion: String) {
-        action = ChangeTreeToRemoveConclusion(Conclusion(conclusion), kb.ruleTree)
+        action = ChangeTreeToRemoveConclusion(Conclusion(conclusion))
         session = kb.startSession(case, action)
     }
 
     fun replaceConclusion(conclusion: String, replacement: String) {
-        action = ChangeTreeToReplaceConclusion(Conclusion(conclusion), Conclusion(replacement), kb.ruleTree)
+        action = ChangeTreeToReplaceConclusion(Conclusion(conclusion), Conclusion(replacement))
         session = kb.startSession(case, action)
     }
 
