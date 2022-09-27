@@ -3,17 +3,39 @@ package io.rippledown.model.rule
 import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
 
-class RuleBuildingSession(val case: RDRCase,
+class RuleBuildingSession(val tree: RuleTree,
+                          val case: RDRCase,
                           private val action: RuleTreeChange,
                           cornerstones: Set<RDRCase>) {
     var conditions = mutableSetOf<Condition>()
-    private val cornerstonesNotExempted = cornerstones.toMutableSet()
+    private val cornerstonesNotExempted = mutableSetOf<RDRCase>()
+
+    init {
+        // Get a copy of the rule tree.
+        val copyOfTree = tree.copy()
+        // Make the change to the copied tree.
+        copyOfTree.apply(case)
+        action.updateRuleTree(copyOfTree, case, emptySet())
+
+        // Interpret each cornerstone against the modified tree
+        // and also the original. Those cases for which these interpretations
+        // differ are conflicting cornerstones.
+        cornerstones
+            .filter { case.name != it.name }
+            .forEach {
+            copyOfTree.apply(it)
+            val conclusionsGivenByModifiedTree =  it.interpretation.conclusions()
+            tree.apply(it)
+            val conclusionsGivenByOriginalTree = it.interpretation.conclusions()
+            if (conclusionsGivenByModifiedTree != conclusionsGivenByOriginalTree) {
+                cornerstonesNotExempted.add(it)
+            }
+        }
+    }
 
     fun cornerstoneCases(): Set<RDRCase> {
         return cornerstonesNotExempted
-                .filter { case.name != it.name }
                 .filter(this::caseSatisfiesConditions)
-                .filter(this::wouldChangeInterpretation)
                 .toSet()
     }
 
@@ -24,10 +46,6 @@ class RuleBuildingSession(val case: RDRCase,
 
     private fun caseSatisfiesConditions(case: RDRCase): Boolean {
         return conditions.all { it.holds(case) }
-    }
-
-    private fun wouldChangeInterpretation(case: RDRCase): Boolean {
-        return action.wouldChangeConclusions(case.interpretation.conclusions())
     }
 
     fun addCondition(condition: Condition): RuleBuildingSession {
@@ -43,6 +61,6 @@ class RuleBuildingSession(val case: RDRCase,
     }
 
     fun commit(): Set<Rule> {
-        return action.updateRuleTree(case, conditions)
+        return action.updateRuleTree(tree, case, conditions)
     }
 }

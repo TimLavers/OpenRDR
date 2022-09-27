@@ -39,17 +39,23 @@ class RemovingConclusionsTest {
             session {
                 selectCase("1")
                 +"A"
+                requireCornerstones("2", "3")
                 condition("a")
+                requireCornerstones("3")
                 commit()
             }
+            requireInterpretation("1", "A")
+            requireInterpretation("2")
+            requireInterpretation("3", "A")
 
             session {
                 selectCase("2")
                 +"B"
+                requireCornerstones("1", "3")
                 condition("b")
+                requireCornerstones("3")
                 commit()
             }
-
             requireInterpretation("1", "A")
             requireInterpretation("2", "B")
             requireInterpretation("3", "A", "B")
@@ -57,7 +63,9 @@ class RemovingConclusionsTest {
             session {
                 selectCase("3")
                 -"B"
+                requireCornerstones("2")
                 condition("ab")
+                requireCornerstones()
                 commit()
             }
             requireInterpretation("1", "A")
@@ -77,35 +85,100 @@ class RemovingConclusionsTest {
             session {
                 selectCase("4")
                 +"A"
+                requireCornerstones("1", "2", "3")
                 condition(4)
+                requireCornerstones()
                 commit()
             }
 
             session {
                 selectCase("3")
                 +"A"
+                requireCornerstones("1", "2")
                 condition(3)
+                requireCornerstones()
                 commit()
             }
 
             session {
                 selectCase("1")
                 +"A"
+                requireCornerstones("2")
                 condition(1)
-                commit()
-            }
-
-            session {
-                selectCase("2")
-                -"A"
-                condition(2)
+                requireCornerstones("2")
                 commit()
             }
 
             requireInterpretation("1", "A")
+            requireInterpretation("2", "A")
+            requireInterpretation("3", "A")
+            requireInterpretation("4", "A")
+            session {
+                selectCase("2")
+                -"A"
+                requireCornerstones("1")
+                condition(2)
+                requireCornerstones()
+                commit()
+            }
+            requireInterpretation("1", "A")
             requireInterpretation("2")
             requireInterpretation("3", "A")
             requireInterpretation("4", "A")
+        }
+    }
+
+    @Test
+    fun cornerstone_not_presented_as_conflict_if_not_all_instances_of_conclusion_removed() {
+        build {
+            case("1", "a")
+            case("2", "b")
+            case("3", "ab")
+
+            requireInterpretation("1")
+            requireInterpretation("2")
+            requireInterpretation("3")
+
+            session {
+                selectCase("1")
+                +"A"
+                requireCornerstones("2", "3")
+                condition("a")
+                requireCornerstones("3")
+                commit()
+            }
+            requireInterpretation("1", "A")
+            requireInterpretation("2")
+            requireInterpretation("3", "A")
+
+            session {
+                selectCase("2")
+                +"A"
+                requireCornerstones()
+                condition("b")
+                requireCornerstones()
+                commit()
+            }
+            requireInterpretation("1", "A")
+            requireInterpretation("2", "A")
+            requireInterpretation("3", "A")
+
+            session {
+                selectCase("1")
+                -"A"
+                // Case 1 is not a conflicting cornerstone, as it is the
+                // case for which the rule is being built.
+                // Case 2 is not a conflicting cornerstone because the
+                // rule giving A for it is not being changed,
+                // Case 3 is not a conflicting cornerstone because it gets
+                // conclusion A from two rules, and one of these is not
+                // affected by the rule being built.
+                requireCornerstones()
+                commit()
+            }
+            requireInterpretation("1")
+            requireInterpretation("2", "A")
+            requireInterpretation("3", "A")
         }
     }
 }
