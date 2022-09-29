@@ -1,6 +1,7 @@
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
+import io.rippledown.model.RDRCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
@@ -110,5 +111,44 @@ class CaseQueueTest : ReactTestSupport {
 
         val caseList = renderer.root.findByType(CaseList)
         caseList.props.caseIds shouldBe caseIds
+    }
+
+    @Test
+    fun shouldShowNoCaseViewWhenInterpretationIsSubmittedAndThereAreNoMoreCaess() = runTest {
+        val caseName = "case 1"
+        val caseIds = listOf(
+            CaseId("1", caseName)
+        )
+        val mock = engine {
+            returnCasesInfo = CasesInfo(caseIds)
+            returnCase = RDRCase(caseName)
+        }
+        lateinit var renderer: TestRenderer
+        launch {
+            act {
+                renderer = render {
+                    CaseQueue {
+                        attrs.api = Api(mock)
+                        attrs.scope = this@runTest
+                    }
+                }
+            }
+        }.join()
+        val refreshButton = renderer.findById(REFRESH_BUTTON_ID)
+        val reviewButton = renderer.findById(REVIEW_CASES_BUTTON_ID)
+        click(refreshButton) //enable the review button
+        click(reviewButton) //show the case list and the case
+
+        val caseList = renderer.root.findByType(CaseList)
+        caseList.props.caseIds shouldBe caseIds
+
+        val caseLink = renderer.findById("$CASE_ID_PREFIX$caseName")
+        click(caseLink)
+
+//       val caseView = renderer.root.findByType(CaseView)
+        /* caseView.props.case.name shouldBe "case 1"
+         val submitButton = renderer.findById(SEND_INTERPRETATION_BUTTON_ID)
+
+         click(submitButton)*/
     }
 }

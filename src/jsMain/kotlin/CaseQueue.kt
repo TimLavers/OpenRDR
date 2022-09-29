@@ -11,6 +11,7 @@ import react.dom.html.ReactHTML.h2
 import react.dom.html.ReactHTML.span
 import react.useEffectOnce
 import react.useState
+import kotlin.js.Date
 
 const val NUMBER_OF_CASES_WAITING_ID = "number_of_cases_waiting_value"
 const val REFRESH_BUTTON_ID = "refresh_waiting_cases_info_button"
@@ -27,8 +28,10 @@ val CaseQueue = FC<CaseQueueHandler> { handler ->
     var selectedCase: RDRCase? by useState(null)
     val api = handler.api
 
+
     useEffectOnce {
         handler.scope.launch {
+            console.log("${Date().toISOString()} Getting waiting cases from useEffectOnce")
             waitingCasesInfo = api.waitingCasesInfo()
         }
     }
@@ -54,6 +57,7 @@ val CaseQueue = FC<CaseQueueHandler> { handler ->
                 }
                 onClick = {
                     handler.scope.launch {
+                        console.log("${Date().toISOString()} Getting waiting cases from refresh button")
                         waitingCasesInfo = api.waitingCasesInfo()
                     }
                 }
@@ -66,6 +70,7 @@ val CaseQueue = FC<CaseQueueHandler> { handler ->
                 }
                 onClick = {
                     handler.scope.launch {
+                        console.log("${Date().toISOString()} Getting waiting cases from REVIEW button")
                         waitingCasesInfo = api.waitingCasesInfo()
                         showCaseList = true
                     }
@@ -84,20 +89,24 @@ val CaseQueue = FC<CaseQueueHandler> { handler ->
                 }
             }
             onCaseProcessed = { interpretation ->
+                console.log("${Date().toISOString()} Case queue: about to save interpretation")
                 //maybe retrieve the next case or null, rather than case ids
-                handler.scope.launch {
-                    api.saveInterpretation(interpretation)
-                    waitingCasesInfo = api.waitingCasesInfo()
-                    caseIds = waitingCasesInfo.caseIds
-                    showCaseList = true
-                    if (waitingCasesInfo.count > 0) {
-                        val toSelect = waitingCasesInfo.caseIds[0]
-                        handler.scope.launch {
-                            selectedCase = api.getCase(toSelect.id)
-                        }
-                    } else {
-                        selectedCase = null
+                api.saveInterpretation(interpretation)
+                console.log("${Date().toISOString()} saved interpretation")
+                val wci = api.waitingCasesInfo()
+                console.log("${Date().toISOString()} retrieved waiting cases info $wci")
+                caseIds = wci.caseIds
+//                caseIds = waitingCasesInfo.caseIds
+                console.log("${Date().toISOString()}  updated case ids $caseIds")
+                showCaseList = true
+                if (caseIds.isNotEmpty()) {
+                    val toSelect = caseIds[0]
+                    handler.scope.launch {
+
+                        selectedCase = api.getCase(toSelect.id)
                     }
+                } else {
+                    selectedCase = null
                 }
             }
             currentCase = selectedCase

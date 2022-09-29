@@ -11,6 +11,7 @@ import io.rippledown.model.OperationResult
 import io.rippledown.model.RDRCase
 import kotlinx.browser.window
 import kotlinx.serialization.json.Json
+import kotlin.js.Date
 
 val endpoint = window.location.origin
 
@@ -26,7 +27,11 @@ class Api(engine: HttpClientEngine = Js.create()) {
 
     suspend fun getCase(id: String): RDRCase = jsonClient.get("$endpoint/api/case?id=$id")
 
-    suspend fun waitingCasesInfo(): CasesInfo = jsonClient.get("$endpoint/api/waitingCasesInfo")
+    suspend fun waitingCasesInfo(): CasesInfo {
+        val casesInfo: CasesInfo = jsonClient.get("$endpoint/api/waitingCasesInfo")
+        println("${Date().toISOString()} casesInfo from api: $casesInfo")
+        return casesInfo
+    }
 
     suspend fun saveInterpretation(interpretation: Interpretation): OperationResult {
         return jsonClient.post("$endpoint/api/interpretationSubmitted") {
@@ -34,5 +39,6 @@ class Api(engine: HttpClientEngine = Js.create()) {
             body = interpretation
         }
     }
+
 }
 
