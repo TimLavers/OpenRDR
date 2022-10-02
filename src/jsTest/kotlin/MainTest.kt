@@ -6,8 +6,9 @@ import io.rippledown.model.CasesInfo
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import mocks.config
 import mocks.defaultMock
-import mocks.engine
+import mocks.mock
 import mysticfall.ReactTestSupport
 import mysticfall.TestRenderer
 import kotlin.test.Test
@@ -28,7 +29,7 @@ class MainTest : ReactTestSupport {
 
     @Test
     fun caseViewShouldBeInitialisedWithTheWaitingCases() = runTest {
-        val mock = engine {
+        val config = config {
             returnCasesInfo = CasesInfo(
                 listOf(
                     CaseId("1", "case 1"),
@@ -43,7 +44,7 @@ class MainTest : ReactTestSupport {
                 renderer = render {
                     OpenRDRUI {
                         attrs.scope = this@runTest
-                        attrs.api = Api(mock)
+                        attrs.api = Api(mock(config))
                     }
                 }
             }

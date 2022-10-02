@@ -27,11 +27,7 @@ class Api(engine: HttpClientEngine = Js.create()) {
 
     suspend fun getCase(id: String): RDRCase = jsonClient.get("$endpoint/api/case?id=$id")
 
-    suspend fun waitingCasesInfo(): CasesInfo {
-        val casesInfo: CasesInfo = jsonClient.get("$endpoint/api/waitingCasesInfo")
-        println("${Date().toISOString()} casesInfo from api: $casesInfo")
-        return casesInfo
-    }
+    suspend fun waitingCasesInfo(): CasesInfo = jsonClient.get("$endpoint/api/waitingCasesInfo")
 
     suspend fun saveInterpretation(interpretation: Interpretation): OperationResult {
         return jsonClient.post("$endpoint/api/interpretationSubmitted") {
@@ -40,5 +36,9 @@ class Api(engine: HttpClientEngine = Js.create()) {
         }
     }
 
+}
+
+fun debug(msg: String) {
+    println("\n\n${Date().toISOString()} $msg")
 }
 

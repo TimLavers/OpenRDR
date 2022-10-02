@@ -2,7 +2,8 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
-import mocks.engine
+import mocks.config
+import mocks.mock
 import kotlin.test.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -11,11 +12,11 @@ class ApiTest {
     @Test
     fun getCaseTest() = runTest {
         val case = RDRCase("A", mapOf())
-        val mock = engine {
+        val config = config {
             returnCase = case
             expectedCaseId = "1"
         }
-        Api(mock).getCase("1") shouldBe case
+        Api(mock(config)).getCase("1") shouldBe case
     }
 
     @Test
@@ -26,23 +27,22 @@ class ApiTest {
                 CaseId("2", "case 2"),
             )
         )
-        val mock = engine {
+        val config = config {
             returnCasesInfo = expected
         }
 
-        Api(mock).waitingCasesInfo() shouldBe expected
+        Api(mock(config)).waitingCasesInfo() shouldBe expected
     }
 
     @Test
     fun saveInterpretationShouldReturnOperationResultTest() = runTest {
         val expectedResult = OperationResult("saved interpretation for case A")
         val interpretation = Interpretation(CaseId("id1", "Case A"), "report text")
-        val mock = engine {
+        val config = config {
             expectedInterpretation = interpretation
             returnOperationResult = expectedResult
         }
-
-        Api(mock).saveInterpretation(interpretation) shouldBe expectedResult
+        Api(mock(config)).saveInterpretation(interpretation) shouldBe expectedResult
     }
 }
 

@@ -5,7 +5,8 @@ import io.rippledown.model.RDRCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
-import mocks.engine
+import mocks.config
+import mocks.mock
 import mysticfall.ReactTestSupport
 import mysticfall.TestInstance
 import mysticfall.TestRenderer
@@ -38,7 +39,7 @@ class CaseQueueTest : ReactTestSupport {
 
     @Test
     fun shouldGetCasesWhenRefreshButtonIsClicked() = runTest {
-        val mock = engine {
+        val config = config {
             returnCasesInfo = CasesInfo(
                 listOf(
                     CaseId("1", "case 1"),
@@ -49,7 +50,7 @@ class CaseQueueTest : ReactTestSupport {
         }
         val renderer = render {
             CaseQueue {
-                attrs.api = Api(mock)
+                attrs.api = Api(mock(config))
                 attrs.scope = this@runTest
             }
         }
@@ -62,7 +63,7 @@ class CaseQueueTest : ReactTestSupport {
 
     @Test
     fun shouldGetCasesWhenInitialised() = runTest {
-        val mock = engine {
+        val config = config {
             returnCasesInfo = CasesInfo(
                 listOf(
                     CaseId("1", "case 1"),
@@ -70,13 +71,14 @@ class CaseQueueTest : ReactTestSupport {
                 )
             )
         }
+
         lateinit var renderer: TestRenderer
         launch {
             //ensure that the useEffectOnce is called
             act {
                 renderer = render {
                     CaseQueue {
-                        attrs.api = Api(mock)
+                        attrs.api = Api(mock(config))
                         attrs.scope = this@runTest
                     }
                 }
@@ -91,14 +93,14 @@ class CaseQueueTest : ReactTestSupport {
             CaseId("1", "case 1"),
             CaseId("2", "case 2"),
         )
-        val mock = engine {
+        val config = config {
             returnCasesInfo = CasesInfo(
                 caseIds
             )
         }
         val renderer = render {
             CaseQueue {
-                attrs.api = Api(mock)
+                attrs.api = Api(mock(config))
                 attrs.scope = this@runTest
             }
         }
@@ -114,21 +116,23 @@ class CaseQueueTest : ReactTestSupport {
     }
 
     @Test
-    fun shouldShowNoCaseViewWhenInterpretationIsSubmittedAndThereAreNoMoreCaess() = runTest {
+    fun shouldShowNoCaseViewWhenInterpretationIsSubmittedAndThereAreNoMoreCases() = runTest {
         val caseName = "case 1"
         val caseIds = listOf(
             CaseId("1", caseName)
         )
-        val mock = engine {
+        val config = config {
             returnCasesInfo = CasesInfo(caseIds)
             returnCase = RDRCase(caseName)
+            expectedCaseId = caseIds[0].id
         }
+
         lateinit var renderer: TestRenderer
         launch {
             act {
                 renderer = render {
                     CaseQueue {
-                        attrs.api = Api(mock)
+                        attrs.api = Api(mock(config))
                         attrs.scope = this@runTest
                     }
                 }
@@ -145,10 +149,16 @@ class CaseQueueTest : ReactTestSupport {
         val caseLink = renderer.findById("$CASE_ID_PREFIX$caseName")
         click(caseLink)
 
-//       val caseView = renderer.root.findByType(CaseView)
-        /* caseView.props.case.name shouldBe "case 1"
-         val submitButton = renderer.findById(SEND_INTERPRETATION_BUTTON_ID)
+        val caseView = renderer.root.findByType(CaseView)
+        caseView.props.case.name shouldBe "case 1"
 
-         click(submitButton)*/
+        //set the mock to return no cases
+        config.returnCasesInfo = CasesInfo(emptyList())
+
+        val submitButton = renderer.findById(SEND_INTERPRETATION_BUTTON_ID)
+        click(submitButton)
+
+        //check that the case list is no longer shown
+        renderer.root.findAllByType(CaseList) shouldBe emptyList<TestInstance<*>>()
     }
 }

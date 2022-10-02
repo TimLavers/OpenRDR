@@ -54,7 +54,7 @@ val CaseList = FC<CaseListHandler> { props ->
                             listStyle = ListStyle.none
                         }
                         onClick = {
-                            props.onCaseSelected(caseId.name)
+                            props.onCaseSelected(caseId.id)
                         }
                     }
                 }
