@@ -23,15 +23,19 @@ internal class TSHRulesTest: TSHTest() {
 
         selectCaseAndCheckName("1.4.4")
         checkInterpretation("Mildly increased TSH may be found in patients with subclinical hypothyroidism or sick euthyroid syndrome. Suggest measurement of FT4, TSH and thyroperoxidase (TPO) antibodies in 6 weeks.")
-        /*
+
         selectCaseAndCheckName("1.4.5")
+        checkInterpretation("Mildly increased TSH with a normal FT4 may be found in patients with subclinical hypothyroidism or sick euthyroid syndrome. Suggest repeat measurement with TPO antibodies in 6 weeks.")
 
         selectCaseAndCheckName("1.4.6")
+        checkInterpretation("Mildly increased TSH with a normal FT4 can be seen in the euthyroid elderly.")
 
-        selectCaseAndCheckName("1.4.7")
-
-        selectCaseAndCheckName("1.4.8")
-
+//        selectCaseAndCheckName("1.4.7")
+//        checkInterpretation("A moderately increased TSH with a normal FT4 is consistent with (mild) primary hypothyroidism.")
+//
+//        selectCaseAndCheckName("1.4.8")
+//        checkInterpretation("TSH reference intervals in pregnancy.")
+/*
         selectCaseAndCheckName("1.4.9")
 
         selectCaseAndCheckName("1.4.10")
@@ -64,15 +68,24 @@ internal class TSHRulesTest: TSHTest() {
     private fun buildRules() {
         val tsh = Attribute("TSH")
         val freeT4 = Attribute("Free T4")
-        val normalTSH = IsNormal(tsh)
-        val normalFreeT4 = IsNormal(freeT4)
-        val freeT4NotDone = HasNoCurrentValue(freeT4)
-        val freeT4SlightlyLow = SlightlyLow(freeT4, 20)
+        val tshNormal = IsNormal(tsh)
         val highTSH = IsHigh(tsh)
-        addCommentForCase("1.4.1", "Normal T4 and TSH are consistent with a euthyroid state.", normalTSH, normalFreeT4)
-        addCommentForCase("1.4.2", "Normal TSH is consistent with a euthyroid state.", normalTSH, freeT4NotDone)
-        addCommentForCase("1.4.3", "A mildly reduced FT4 with a normal TSH may be due to non-thyroidal illness or pituitary hypothyroidism.", normalTSH, freeT4SlightlyLow)
-        addCommentForCase("1.4.4", "Mildly increased TSH may be found in patients with subclinical hypothyroidism or sick euthyroid syndrome. Suggest measurement of FT4, TSH and thyroperoxidase (TPO) antibodies in 6 weeks.", highTSH, freeT4NotDone )
+        val tshSlightlyHigh = SlightlyHigh(tsh, 20)
+        val freeT4Normal = IsNormal(freeT4)
+        val freeT4NotDone = HasNoCurrentValue(freeT4)
+        val notElderly = LessThanOrEqualTo(Attribute("Age"), 69.0)
+        val elderly = GreaterThanOrEqualTo(Attribute("Age"), 70.0)
+        val freeT4SlightlyLow = SlightlyLow(freeT4, 20)
+        addCommentForCase("1.4.1", "Normal T4 and TSH are consistent with a euthyroid state.", tshNormal, freeT4Normal)
+        addCommentForCase("1.4.2", "Normal TSH is consistent with a euthyroid state.", tshNormal, freeT4NotDone)
+        addCommentForCase("1.4.3", "A mildly reduced FT4 with a normal TSH may be due to non-thyroidal illness or pituitary hypothyroidism.", tshNormal, freeT4SlightlyLow)
+        addCommentForCase("1.4.4", "Mildly increased TSH may be found in patients with subclinical hypothyroidism or sick euthyroid syndrome. Suggest measurement of FT4, TSH and thyroperoxidase (TPO) antibodies in 6 weeks.", highTSH, freeT4NotDone, notElderly )
+        addCommentForCase("1.4.5", "Mildly increased TSH with a normal FT4 may be found in patients with subclinical hypothyroidism or sick euthyroid syndrome. Suggest repeat measurement with TPO antibodies in 6 weeks.", highTSH, freeT4Normal, notElderly)
+        addCommentForCase("1.4.6", "Mildly increased TSH with a normal FT4 can be seen in the euthyroid elderly.", tshSlightlyHigh, elderly, freeT4Normal)
+//        addCommentForCase("1.4.", "")
+//        addCommentForCase("1.4.", "")
+//        addCommentForCase("1.4.", "")
+//        addCommentForCase("1.4.", "")
     }
 
     private fun addCommentForCase(caseName: String, comment: String, vararg conditions: Condition) {

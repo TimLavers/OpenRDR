@@ -30,6 +30,12 @@ internal open class ConditionTestBase {
         return builder1.build("HighTSHCase")
     }
 
+    fun lowTSHCase(): RDRCase {
+        val builder1 = RDRCaseBuilder()
+        builder1.addResult(tsh, defaultDate , TestResult("0.30", range, "pmol/L"))
+        return builder1.build("HighTSHCase")
+    }
+
     fun tshValueNonNumericCase(): RDRCase {
         val builder1 = RDRCaseBuilder()
         builder1.addResult(tsh, defaultDate , TestResult("n.a.", range, "pmol/L"))
