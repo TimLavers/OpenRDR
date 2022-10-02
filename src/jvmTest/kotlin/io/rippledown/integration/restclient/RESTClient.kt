@@ -4,10 +4,10 @@ import ADD_CONDITION
 import CASE
 import COMMIT_SESSION
 import CREATE_KB
-import START_SESSION
+import START_SESSION_TO_ADD_CONCLUSION
+import START_SESSION_TO_REPLACE_CONCLUSION
 import WAITING_CASES
 import io.ktor.client.*
-import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
 import io.ktor.client.features.json.JsonFeature
 import io.ktor.client.features.json.serializer.KotlinxSerializer
@@ -19,8 +19,6 @@ import io.rippledown.model.Conclusion
 import io.rippledown.model.OperationResult
 import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.IsNormal
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 
@@ -60,9 +58,21 @@ class RESTClient {
         require(currentCase != null)
         var result = OperationResult("")
         runBlocking {
-            result = jsonClient.post(endpoint + START_SESSION + "?id=${currentCase!!.name}") {
+            result = jsonClient.post(endpoint + START_SESSION_TO_ADD_CONCLUSION + "?id=${currentCase!!.name}") {
                 contentType(ContentType.Application.Json)
                 body = conclusion
+            }
+        }
+        return result
+    }
+
+    fun startSessionToReplaceConclusionForCurrentCase(toGo: Conclusion, replacement: Conclusion): OperationResult {
+        require(currentCase != null)
+        var result = OperationResult("")
+        runBlocking {
+            result = jsonClient.post(endpoint + START_SESSION_TO_REPLACE_CONCLUSION + "?id=${currentCase!!.name}") {
+                contentType(ContentType.Application.Json)
+                body = listOf(toGo, replacement)
             }
         }
         return result

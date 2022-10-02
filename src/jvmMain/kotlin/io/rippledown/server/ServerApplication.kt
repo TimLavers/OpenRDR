@@ -37,6 +37,10 @@ class ServerApplication {
         kb.startRuleSessionToAddConclusion(case(caseId), conclusion)
     }
 
+    fun startRuleSessionToReplaceConclusion(caseId: String, toGo: Conclusion, replacement: Conclusion) {
+        kb.startRuleSessionToReplaceConclusion(case(caseId), toGo, replacement)
+    }
+
     fun addConditionToCurrentRuleBuildingSession(condition: Condition) {
         kb.addConditionToCurrentRuleSession(condition)
     }

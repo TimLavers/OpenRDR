@@ -21,6 +21,11 @@ class KB(val name: String) {
         ruleSession =  startSession(case, ChangeTreeToAddConclusion(conclusion))
     }
 
+    fun startRuleSessionToReplaceConclusion(case: RDRCase, toGo: Conclusion, replacement: Conclusion) {
+        check(ruleSession == null)
+        ruleSession =  startSession(case, ChangeTreeToReplaceConclusion(toGo, replacement))
+    }
+
     fun addConditionToCurrentRuleSession(condition: Condition){
         check(ruleSession != null)
         ruleSession!!.addCondition(condition)

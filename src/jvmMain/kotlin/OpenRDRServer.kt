@@ -12,16 +12,14 @@ import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.OperationResult
 import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.IsNormal
 import io.rippledown.server.ServerApplication
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
 import org.slf4j.event.Level
 
 const val WAITING_CASES = "/api/waitingCasesInfo"
 const val CASE = "/api/case"
-const val START_SESSION = "/api/startSession"
+const val START_SESSION_TO_ADD_CONCLUSION = "/api/startSessionToAddConclusion"
+const val START_SESSION_TO_REPLACE_CONCLUSION = "/api/startSessionToReplaceConclusion"
 const val ADD_CONDITION = "/api/addCondition"
 const val COMMIT_SESSION = "/api/commitSession"
 const val CREATE_KB = "/api/createKB"
@@ -73,18 +71,21 @@ fun main() {
                 val result = application.saveInterpretation(interpretation)
                 call.respond(HttpStatusCode.OK, result)
             }
-            post(START_SESSION) {
+            post(START_SESSION_TO_ADD_CONCLUSION) {
                 val id = call.parameters["id"] ?: error("Invalid case id.")
                 val conclusion = call.receive<Conclusion>()
                 application.startRuleSessionToAddConclusion(id, conclusion)
                 call.respond(HttpStatusCode.OK, OperationResult("Session started"))
             }
+            post(START_SESSION_TO_REPLACE_CONCLUSION) {
+                val id = call.parameters["id"] ?: error("Invalid case id.")
+                val conclusionPair = call.receive<List<Conclusion>>()
+                application.startRuleSessionToReplaceConclusion(id, conclusionPair[0], conclusionPair[1])
+                call.respond(HttpStatusCode.OK, OperationResult("Session started"))
+            }
             post(ADD_CONDITION) {
-                println("add condition----------------------")
                 val str = call.receiveText()
-                println("got this data as text: $str")
                 val condition = Json.decodeFromString(Condition.serializer(), str)
-                println("condition is: $condition")
                 application.addConditionToCurrentRuleBuildingSession(condition)
                 call.respond(HttpStatusCode.OK, OperationResult("Condition added"))
             }
