@@ -12,6 +12,7 @@ import react.dom.html.ReactHTML.li
 import react.dom.html.ReactHTML.ul
 
 const val CASELIST_ID = "case_list_container"
+const val CASE_ID_PREFIX = "case_list_item_"
 
 external interface CaseListHandler : Props {
     var caseIds: List<CaseId>
@@ -41,18 +42,19 @@ val CaseList = FC<CaseListHandler> { props ->
             ul {
                 css {
                     paddingInlineStart = px0
+                    cursor = Cursor.default
                 }
                 for (caseId in props.caseIds) {
                     li {
                         +caseId.name
-                        id = "case_list_item_${caseId.name}"
+                        id = "$CASE_ID_PREFIX${caseId.name}"
                         css {
                             textDecorationLine = TextDecorationLine.underline
                             padding = px4
                             listStyle = ListStyle.none
                         }
                         onClick = {
-                            props.onCaseSelected(caseId.name)
+                            props.onCaseSelected(caseId.id)
                         }
                     }
                 }
@@ -63,6 +65,7 @@ val CaseList = FC<CaseListHandler> { props ->
                 case = props.currentCase!!
                 onInterpretationSubmitted = { interpretation ->
                     props.scope.launch {
+                        println("CaseList: onInterpretationSubmitted: $interpretation")
                         props.onCaseProcessed(interpretation)
                     }
                 }

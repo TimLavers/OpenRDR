@@ -85,19 +85,15 @@ val CaseQueue = FC<CaseQueueHandler> { handler ->
             }
             onCaseProcessed = { interpretation ->
                 //maybe retrieve the next case or null, rather than case ids
-                handler.scope.launch {
-                    api.saveInterpretation(interpretation)
-                    waitingCasesInfo = api.waitingCasesInfo()
-                    caseIds = waitingCasesInfo.caseIds
-                    showCaseList = true
-                    if (waitingCasesInfo.count > 0) {
-                        val toSelect = waitingCasesInfo.caseIds[0]
-                        handler.scope.launch {
-                            selectedCase = api.getCase(toSelect.id)
-                        }
-                    } else {
-                        selectedCase = null
-                    }
+                api.saveInterpretation(interpretation)
+                val wci = api.waitingCasesInfo()
+                caseIds = wci.caseIds
+                showCaseList = true
+                if (caseIds.isNotEmpty()) {
+                    selectedCase = api.getCase(caseIds[0].id)
+                } else {
+                    showCaseList = false
+                    selectedCase = null
                 }
             }
             currentCase = selectedCase

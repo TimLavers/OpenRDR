@@ -14,9 +14,9 @@ external interface InterpretationViewHandler : Props {
     var onInterpretationSubmitted: (Interpretation) -> Unit
 }
 
+const val SEND_INTERPRETATION_BUTTON_ID = "send_interpretation_button"
+
 val InterpretationView = FC<InterpretationViewHandler> { props ->
-    console.log("Interp View, case: ${props.case.name}")
-    console.log("Interp View, tGBR: ${props.case.interpretation.textGivenByRules()}")
     var interpretationText = props.case.interpretation.textGivenByRules()
 
     div {
@@ -33,7 +33,7 @@ val InterpretationView = FC<InterpretationViewHandler> { props ->
         div {
             ReactHTML.button {
                 +"Send interpretation"
-                id = "send_interpretation_button"
+                id = SEND_INTERPRETATION_BUTTON_ID
                 css {
                     padding = px4
                 }

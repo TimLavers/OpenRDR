@@ -65,25 +65,28 @@ class CaseListTest : ReactTestSupport {
         val caseA = "case A"
         val caseB = "case B"
         val caseC = "case C"
-        var selectedCaseName: String? = null
+        val caseId1 = CaseId(id = "1", name = caseA)
+        val caseId2 = CaseId(id = "2", name = caseB)
+        val caseId3 = CaseId(id = "3", name = caseC)
+        var selectedCaseId: String? = null
         val renderer = render {
             CaseList {
                 attrs.caseIds = listOf(
-                    CaseId(id = "1", name = caseA),
-                    CaseId(id = "2", name = caseB),
-                    CaseId(id = "3", name = caseC)
+                    caseId1,
+                    caseId2,
+                    caseId3
                 )
                 attrs.currentCase = RDRCase(name = caseA, data = emptyMap())
-                attrs.onCaseSelected = {
-                    selectedCaseName = it
+                attrs.onCaseSelected = { id ->
+                    selectedCaseId = id
                 }
             }
         }
-        val listItem = renderer.findById("case_list_item_$caseB")
+        val listItemForCaseB = renderer.findById("case_list_item_$caseB")
 
-        selectedCaseName shouldBe null
-        click(listItem)
-        selectedCaseName shouldBe caseB
+        selectedCaseId shouldBe null
+        click(listItemForCaseB)
+        selectedCaseId shouldBe caseId2.id
     }
 
     @Test
