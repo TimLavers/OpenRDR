@@ -70,6 +70,26 @@ internal open class ConditionTestBase {
         return builder.build("Two Episodes")
     }
 
+    fun twoEpisodeCaseWithFirstTSHNormalSecondHigh(): RDRCase {
+        val builder = RDRCaseBuilder()
+        val tshResult1 = TestResult(Value("4.67"), range, "mU/L")
+        builder.addResult(tsh.name, today, tshResult1)
+        val range0 = ReferenceRange("0.25", "2.90")
+        val tshResult0 = TestResult(Value("1.20"), range0, "mU/L")
+        builder.addResult(tsh.name, yesterday, tshResult0)
+        return builder.build("Two Episodes")
+    }
+
+    fun twoEpisodeCaseWithFirstTSHHighSecondNormal(): RDRCase {
+        val builder = RDRCaseBuilder()
+        val tshResult1 = TestResult(Value("1.67"), range, "mU/L")
+        builder.addResult(tsh.name, today, tshResult1)
+        val range0 = ReferenceRange("0.25", "2.90")
+        val tshResult0 = TestResult(Value("5.20"), range0, "mU/L")
+        builder.addResult(tsh.name, yesterday, tshResult0)
+        return builder.build("Two Episodes")
+    }
+
     fun twoEpisodeCase(attribute: Attribute, firstValue: String, secondValue: String): RDRCase {
         val builder = RDRCaseBuilder()
         val tshResult1 = TestResult(Value("0.67"), range, "mU/L")
