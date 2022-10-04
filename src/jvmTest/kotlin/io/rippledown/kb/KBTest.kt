@@ -4,6 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
 import io.rippledown.model.condition.GreaterThanOrEqualTo
+import io.rippledown.model.condition.LessThanOrEqualTo
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import kotlin.test.Test
 
@@ -108,6 +109,60 @@ class KBTest {
         shouldThrow<IllegalStateException> {
             kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion("Stuff.")))
         }.message shouldBe "Session already in progress."
+    }
+
+    @Test
+    fun startRuleSession() {
+        val kb = KB("Blah")
+        kb.addCase(createCase("Case1"))
+        val sessionCase = kb.getCaseByName("Case1")
+        kb.interpret(sessionCase)
+        sessionCase.interpretation.textGivenByRules() shouldBe ""
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion("Whatever.")))
+        kb.commitCurrentRuleSession()
+        kb.interpret(sessionCase)
+        sessionCase.interpretation.textGivenByRules() shouldBe "Whatever."
+    }
+
+    @Test
+    fun conflictingCases() {
+        val kb = KB("Blah")
+        kb.addCase(createCase("Case1", "1.0"))
+        kb.addCase(createCase("Case2", "2.0"))
+        val sessionCase = kb.getCaseByName("Case1")
+        sessionCase.interpretation.textGivenByRules() shouldBe ""
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion("Whatever.")))
+        kb.conflictingCasesInCurrentRuleSession().map { rdrCase -> rdrCase.name }.toSet() shouldBe setOf("Case2")
+    }
+
+    @Test
+    fun addCondition() {
+        val kb = KB("Blah")
+        kb.addCase(createCase("Case1", "1.0"))
+        kb.addCase(createCase("Case2", "2.0"))
+        val sessionCase = kb.getCaseByName("Case1")
+        sessionCase.interpretation.textGivenByRules() shouldBe ""
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion("Whatever.")))
+        kb.addConditionToCurrentRuleSession(LessThanOrEqualTo(Attribute("Glucose"), 1.2))
+        kb.conflictingCasesInCurrentRuleSession().size shouldBe 0
+    }
+
+    @Test
+    fun commitSession() {
+        val kb = KB("Blah")
+        kb.addCase(createCase("Case1", "1.0"))
+        kb.addCase(createCase("Case2", "2.0"))
+        val sessionCase = kb.getCaseByName("Case1")
+        val otherCase = kb.getCaseByName("Case1")
+        sessionCase.interpretation.textGivenByRules() shouldBe ""
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion("Whatever.")))
+        kb.interpret(otherCase)
+        // Rule not yet added...
+        otherCase.interpretation.textGivenByRules() shouldBe ""
+        kb.commitCurrentRuleSession()
+        // Rule now added...
+        kb.interpret(otherCase)
+        otherCase.interpretation.textGivenByRules() shouldBe "Whatever."
     }
 
     private fun createCondition(): GreaterThanOrEqualTo {
