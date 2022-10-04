@@ -5,44 +5,50 @@ import io.rippledown.model.condition.Condition
 import io.rippledown.model.rule.*
 
 class KB(val name: String) {
-    val cornerstones = mutableSetOf<RDRCase>()
-    val ruleTree = RuleTree()
+    private val cornerstones = mutableSetOf<RDRCase>()
+    private val ruleTree = RuleTree()
     private var ruleSession: RuleBuildingSession? = null
 
-    fun startSession(case: RDRCase, action: RuleTreeChange): RuleBuildingSession {
-        //interpret the case and all cornerstones at the start of each session
-//        cornerstones.forEach { interpret(it) }
-//        interpret(case)
-        return RuleBuildingSession(ruleTree, case, action, cornerstones)
+    fun containsCaseWithName(caseName: String): Boolean {
+        return cornerstones.find { rdrCase -> rdrCase.name == caseName } != null
     }
 
-    fun startRuleSessionToAddConclusion(case: RDRCase, conclusion: Conclusion) {
-        check(ruleSession == null)
-        ruleSession =  startSession(case, ChangeTreeToAddConclusion(conclusion))
+    fun addCase(case: RDRCase) {
+        require(!containsCaseWithName(case.name)) { "There is already a case with name ${case.name} in the KB."}
+        cornerstones.add(case)
     }
 
-    fun startRuleSessionToReplaceConclusion(case: RDRCase, toGo: Conclusion, replacement: Conclusion) {
-        check(ruleSession == null)
-        ruleSession =  startSession(case, ChangeTreeToReplaceConclusion(toGo, replacement))
+    fun getCaseByName(caseName: String): RDRCase {
+        return cornerstones.first { caseName == it.name }
+    }
+
+    fun startRuleSession(case: RDRCase, action: RuleTreeChange) {
+        check(ruleSession == null) { "Session already in progress." }
+        ruleSession =  RuleBuildingSession(ruleTree, case, action, cornerstones)
+    }
+
+    fun conflictingCasesInCurrentRuleSession(): Set<RDRCase> {
+        checkSession()
+        return ruleSession!!.cornerstoneCases()
     }
 
     fun addConditionToCurrentRuleSession(condition: Condition){
-        check(ruleSession != null)
+        checkSession()
         ruleSession!!.addCondition(condition)
     }
 
-    fun finishCurrentRuleSession() {
-        check(ruleSession != null)
+    fun commitCurrentRuleSession() {
+        checkSession()
         ruleSession!!.commit()
         ruleSession = null
     }
 
-    fun interpret(case: RDRCase) {
-        ruleTree.apply(case)
+    private fun checkSession() {
+        check(ruleSession != null) { "Rule session not started." }
     }
 
-    fun addCornerstone(case: RDRCase) {
-        cornerstones.add(case)
+    fun interpret(case: RDRCase) {
+        ruleTree.apply(case)
     }
 
     override fun equals(other: Any?): Boolean {

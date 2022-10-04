@@ -93,9 +93,9 @@ internal class ServerApplicationTest {
         retrieved.interpretation.conclusions().size shouldBe 0
         // Add a rule.
         val conclusion = Conclusion("ABC ok.")
-        val session = app.kb.startSession(retrieved, ChangeTreeToAddConclusion(conclusion))
-        session.addCondition(GreaterThanOrEqualTo(Attribute("ABC"), 5.0))
-        session.commit()
+        app.kb.startRuleSession(retrieved, ChangeTreeToAddConclusion(conclusion))
+        app.kb.addConditionToCurrentRuleSession(GreaterThanOrEqualTo(Attribute("ABC"), 5.0))
+        app.kb.commitCurrentRuleSession()
         val retrievedAgain = app.case("Case1")
         retrievedAgain.interpretation.conclusions() shouldContainExactly setOf(conclusion)
     }
