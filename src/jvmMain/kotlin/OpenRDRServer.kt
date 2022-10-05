@@ -12,11 +12,9 @@ import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.OperationResult
 import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.IsNormal
 import io.rippledown.server.ServerApplication
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
+import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 
 const val WAITING_CASES = "/api/waitingCasesInfo"
@@ -25,10 +23,20 @@ const val START_SESSION = "/api/startSession"
 const val ADD_CONDITION = "/api/addCondition"
 const val COMMIT_SESSION = "/api/commitSession"
 const val CREATE_KB = "/api/createKB"
+const val SHUTDOWN = "/api/shutdown"
+const val PING = "/api/ping"
+
+const val STARTING_SERVER = "Starting server"
+const val STOPPING_SERVER = "Stopping server"
+
+lateinit var server: NettyApplicationEngine
+
+val logger = LoggerFactory.getLogger("rdr")
 
 fun main() {
     val application = ServerApplication()
-    embeddedServer(Netty, 9090) {
+
+    server = embeddedServer(Netty, 9090) {
         install(ContentNegotiation) {
             json(Json { allowStructuredMapKeys = true })
         }
@@ -96,6 +104,15 @@ fun main() {
                 application.createKB()
                 call.respond(HttpStatusCode.OK, OperationResult("KB created"))
             }
+            get(PING) {
+                call.respond(HttpStatusCode.OK, "OK")
+            }
+            post(SHUTDOWN) {
+                logger.info(STOPPING_SERVER)
+                server.stop(0, 0)
+            }
         }
-    }.start(wait = true)
+    }
+    logger.info(STARTING_SERVER)
+    server.start(wait = true)
 }

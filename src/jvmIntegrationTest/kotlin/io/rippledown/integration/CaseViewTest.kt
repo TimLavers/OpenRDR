@@ -3,7 +3,10 @@ package io.rippledown.integration
 import io.rippledown.integration.pageobjects.CaseListPO
 import io.rippledown.integration.pageobjects.CaseQueuePO
 import io.rippledown.integration.pageobjects.NoCaseViewPO
-import kotlin.test.*
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 // ORD2
 internal class CaseViewTest: UITestBase() {
@@ -13,18 +16,18 @@ internal class CaseViewTest: UITestBase() {
 
     @BeforeTest
     fun setup() {
-        resetKB()
+        serverProxy.start()
         setupCases()
         setupWebDriver()
         caseQueuePO = CaseQueuePO(driver)
-        pause()//todo use Awaitility
-        caseQueuePO.refresh()
+        caseQueuePO.refresh().waitForNumberWaitingToBe(3)
         caseListPO = caseQueuePO.review()
     }
 
     @AfterTest
     fun cleanup() {
         driverClose()
+        serverProxy.shutdown()
     }
 
     @Test
@@ -46,9 +49,8 @@ internal class CaseViewTest: UITestBase() {
     }
 
     private fun setupCases() {
-        labServerProxy.cleanCasesDir()
-        labServerProxy.copyCase("Case1")
-        labServerProxy.copyCase("Case2")
-        labServerProxy.copyCase("Case3")
+        labProxy.copyCase("Case1")
+        labProxy.copyCase("Case2")
+        labProxy.copyCase("Case3")
     }
 }

@@ -2,8 +2,10 @@ package io.rippledown.integration
 
 import io.rippledown.integration.pageobjects.CaseListPO
 import io.rippledown.integration.pageobjects.CaseQueuePO
-import io.rippledown.integration.pageobjects.NoCaseViewPO
-import kotlin.test.*
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 // ORD2
 internal class MultiEpisodeCase: UITestBase() {
@@ -13,18 +15,18 @@ internal class MultiEpisodeCase: UITestBase() {
 
     @BeforeTest
     fun setup() {
-        resetKB()
+        serverProxy.start()
         setupCases()
         setupWebDriver()
         caseQueuePO = CaseQueuePO(driver)
-        pause()//todo use Awaitility
-        caseQueuePO.refresh()
+        caseQueuePO.refresh().waitForNumberWaitingToBe(1)
         caseListPO = caseQueuePO.review()
     }
 
     @AfterTest
     fun cleanup() {
         driverClose()
+        serverProxy.shutdown()
     }
 
     @Test
@@ -47,7 +49,7 @@ internal class MultiEpisodeCase: UITestBase() {
     }
 
     private fun setupCases() {
-        labServerProxy.cleanCasesDir()
-        labServerProxy.copyCase("Case4")
+        labProxy.cleanCasesDir()
+        labProxy.copyCase("Case4")
     }
 }
