@@ -11,6 +11,7 @@ val testingLibraryReactVersion = "13.3.0"
 val reactTestRendererVersion = "17.0.2"
 val kotestVersion = "5.4.1"
 val webDriverVersion = "4.4.3"
+val awaitilityVersion = "4.2.0"
 
 plugins {
     kotlin("multiplatform") version "1.7.10"
@@ -27,6 +28,41 @@ repositories {
 }
 kotlin {
     jvm {
+        compilations {
+
+            val integrationTest by compilations.creating {
+                defaultSourceSet {
+                    dependencies {
+                        implementation(kotlin("test"))
+                        implementation(kotlin("test-common"))
+                        implementation(kotlin("test-annotations-common"))
+                        implementation(kotlin("test-junit"))
+                        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
+                        implementation("io.ktor:ktor-client-core:$ktorVersion")
+                        implementation("io.ktor:ktor-client-json:$ktorVersion")
+                        implementation("io.ktor:ktor-client-serialization:$ktorVersion")
+                        implementation("io.ktor:ktor-client-cio:$ktorVersion")
+                        implementation("org.seleniumhq.selenium:selenium-java:4.2.2")
+                        implementation("io.github.bonigarcia:webdrivermanager:$webDriverVersion")
+                        implementation("io.kotest:kotest-assertions-core:$kotestVersion")
+                        implementation("org.awaitility:awaitility-kotlin:$awaitilityVersion")
+                    }
+                    dependsOn(sourceSets.getByName("jvmMain"))
+                }
+
+                // Create a test task to run the tests produced by this compilation:
+                tasks.register<Test>("integrationTest") {
+                    dependsOn(tasks.shadowJar)
+
+                    // Run the tests with the classpath containing the compile dependencies (including 'main'),
+                    // runtime dependencies, and the outputs of this compilation:
+                    classpath = compileDependencyFiles + runtimeDependencyFiles + output.allOutputs
+
+                    // Run only the tests from this compilation's outputs:
+                    testClassesDirs = output.classesDirs
+                }
+            }
+        }
         withJava()
     }
     js {

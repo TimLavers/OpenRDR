@@ -3,13 +3,13 @@ package io.rippledown.integration
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.pageobjects.CaseListPO
 import io.rippledown.integration.pageobjects.CaseQueuePO
-import io.rippledown.integration.pageobjects.NoCaseViewPO
 import io.rippledown.integration.restclient.RESTClient
 import io.rippledown.model.Attribute
 import io.rippledown.model.Conclusion
 import io.rippledown.model.condition.IsNormal
-import kotlinx.coroutines.runBlocking
-import kotlin.test.*
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
 
 
 // ORD2
@@ -21,19 +21,20 @@ internal class ShowCaseInterpretation : UITestBase() {
 
     @BeforeTest
     fun setup() {
+        serverProxy.start()
         resetKB()
         setupCases()
         buildRule()
         setupWebDriver()
         caseQueuePO = CaseQueuePO(driver)
-        pause()//todo use Awaitility
-        caseQueuePO.refresh()
+        caseQueuePO.refresh().waitForNumberWaitingToBe(3)
         caseListPO = caseQueuePO.review()
     }
 
     @AfterTest
     fun cleanup() {
         driverClose()
+        serverProxy.shutdown()
     }
 
     private fun buildRule() {
@@ -57,9 +58,8 @@ internal class ShowCaseInterpretation : UITestBase() {
     }
 
     private fun setupCases() {
-        labServerProxy.cleanCasesDir()
-        labServerProxy.copyCase("Case1")
-        labServerProxy.copyCase("Case2")
-        labServerProxy.copyCase("Case3")
+        labProxy.copyCase("Case1")
+        labProxy.copyCase("Case2")
+        labProxy.copyCase("Case3")
     }
 }

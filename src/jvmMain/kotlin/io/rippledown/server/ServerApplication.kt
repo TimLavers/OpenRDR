@@ -12,8 +12,8 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.time.LocalDateTime
 
 class ServerApplication {
-    val casesDir = File("temp/cases").apply { mkdirs() }
-    val interpretationsDir = File("temp/interpretations").apply { mkdirs() }
+    val casesDir = File("cases").apply { mkdirs() }
+    val interpretationsDir = File("interpretations").apply { mkdirs() }
     var kb = KB("Thyroids")
 
     fun createKB() {
@@ -31,19 +31,16 @@ class ServerApplication {
     fun commitCurrentRuleSession() = kb.finishCurrentRuleSession()
 
     fun waitingCasesInfo(): CasesInfo {
-        println("${LocalDateTime.now()} waitingCasesInfo start")
         fun readCaseDetails(file: File): CaseId {
             return CaseId(getCaseFromFile(file).name, getCaseFromFile(file).name)
         }
 
         val caseFiles = casesDir.listFiles()
         val idsList = caseFiles?.map { file -> readCaseDetails(file) } ?: emptyList()
-        println("${LocalDateTime.now()} waitingCasesInfo end: ${idsList}")
         return CasesInfo(idsList, casesDir.absolutePath)
     }
 
     fun case(id: String): RDRCase {
-        println("${LocalDateTime.now()}  get case for id = $id")
         val case = getCaseFromFile(File(casesDir, "$id.json"))
         kb.interpret(case)
         return case

@@ -10,13 +10,14 @@ internal class BasicElementsTest: UITestBase() {
 
     @BeforeTest
     fun setup() {
-        resetKB()
+        serverProxy.start()
         setupWebDriver()
     }
 
     @AfterTest
     fun cleanup() {
         driverClose()
+        serverProxy.shutdown()
     }
 
     @Test

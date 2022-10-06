@@ -9,10 +9,10 @@ import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.condition.GreaterThanOrEqualTo
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
-import org.apache.commons.io.FileUtils
-import java.io.File
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import org.apache.commons.io.FileUtils
+import java.io.File
 import java.nio.charset.StandardCharsets.UTF_8
 import kotlin.test.*
 
@@ -28,14 +28,14 @@ internal class ServerApplicationTest {
     @Test
     fun casesDir() {
         val app = ServerApplication()
-        assertEquals(app.casesDir, File("temp/cases"))
+        assertEquals(app.casesDir, File("cases"))
         assertTrue(app.casesDir.exists())
     }
 
     @Test
     fun interpretationsDir() {
         val app = ServerApplication()
-        assertEquals(app.interpretationsDir, File("temp/interpretations"))
+        assertEquals(app.interpretationsDir, File("interpretations"))
         assertTrue(app.interpretationsDir.exists())
     }
 
@@ -104,7 +104,7 @@ internal class ServerApplicationTest {
     fun waitingCasesInfo() {
         val app = ServerApplication()
         FileUtils.cleanDirectory(app.casesDir)
-        assertEquals(app.waitingCasesInfo().resourcePath, File("temp/cases").absolutePath)
+        assertEquals(app.waitingCasesInfo().resourcePath, File("cases").absolutePath)
         assertEquals(app.waitingCasesInfo().count, 0)
 
         // Move some cases into the directory.
