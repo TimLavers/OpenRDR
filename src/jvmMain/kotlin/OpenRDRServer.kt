@@ -71,32 +71,59 @@ fun main() {
                 val result = application.saveInterpretation(interpretation)
                 call.respond(HttpStatusCode.OK, result)
             }
-            post(START_SESSION_TO_ADD_CONCLUSION) {
-                val id = call.parameters["id"] ?: error("Invalid case id.")
-                val conclusion = call.receive<Conclusion>()
-                application.startRuleSessionToAddConclusion(id, conclusion)
-                call.respond(HttpStatusCode.OK, OperationResult("Session started"))
-            }
-            post(START_SESSION_TO_REPLACE_CONCLUSION) {
-                val id = call.parameters["id"] ?: error("Invalid case id.")
-                val conclusionPair = call.receive<List<Conclusion>>()
-                application.startRuleSessionToReplaceConclusion(id, conclusionPair[0], conclusionPair[1])
-                call.respond(HttpStatusCode.OK, OperationResult("Session started"))
-            }
-            post(ADD_CONDITION) {
-                val str = call.receiveText()
-                val condition = Json.decodeFromString(Condition.serializer(), str)
-                application.addConditionToCurrentRuleBuildingSession(condition)
-                call.respond(HttpStatusCode.OK, OperationResult("Condition added"))
-            }
-            post(COMMIT_SESSION) {
-                application.commitCurrentRuleSession()
-                call.respond(HttpStatusCode.OK, OperationResult("Session committed"))
-            }
+//            post(START_SESSION_TO_ADD_CONCLUSION) {
+//                val id = call.parameters["id"] ?: error("Invalid case id.")
+//                val conclusion = call.receive<Conclusion>()
+//                application.startRuleSessionToAddConclusion(id, conclusion)
+//                call.respond(HttpStatusCode.OK, OperationResult("Session started"))
+//            }
+//            post(START_SESSION_TO_REPLACE_CONCLUSION) {
+//                val id = call.parameters["id"] ?: error("Invalid case id.")
+//                val conclusionPair = call.receive<List<Conclusion>>()
+//                application.startRuleSessionToReplaceConclusion(id, conclusionPair[0], conclusionPair[1])
+//                call.respond(HttpStatusCode.OK, OperationResult("Session started"))
+//            }
+//            post(ADD_CONDITION) {
+//                val str = call.receiveText()
+//                val condition = Json.decodeFromString(Condition.serializer(), str)
+//                application.addConditionToCurrentRuleBuildingSession(condition)
+//                call.respond(HttpStatusCode.OK, OperationResult("Condition added"))
+//            }
+//            post(COMMIT_SESSION) {
+//                application.commitCurrentRuleSession()
+//                call.respond(HttpStatusCode.OK, OperationResult("Session committed"))
+//            }
             post(CREATE_KB) {
                 application.createKB()
                 call.respond(HttpStatusCode.OK, OperationResult("KB created"))
             }
         }
+        ruleSession(application)
     }.start(wait = true)
+}
+fun Application.ruleSession(application: ServerApplication) {
+    routing {
+        post(START_SESSION_TO_ADD_CONCLUSION) {
+            val id = call.parameters["id"] ?: error("Invalid case id.")
+            val conclusion = call.receive<Conclusion>()
+            application.startRuleSessionToAddConclusion(id, conclusion)
+            call.respond(HttpStatusCode.OK, OperationResult("Session started"))
+        }
+        post(START_SESSION_TO_REPLACE_CONCLUSION) {
+            val id = call.parameters["id"] ?: error("Invalid case id.")
+            val conclusionPair = call.receive<List<Conclusion>>()
+            application.startRuleSessionToReplaceConclusion(id, conclusionPair[0], conclusionPair[1])
+            call.respond(HttpStatusCode.OK, OperationResult("Session started"))
+        }
+        post(ADD_CONDITION) {
+            val str = call.receiveText()
+            val condition = Json.decodeFromString(Condition.serializer(), str)
+            application.addConditionToCurrentRuleBuildingSession(condition)
+            call.respond(HttpStatusCode.OK, OperationResult("Condition added"))
+        }
+        post(COMMIT_SESSION) {
+            application.commitCurrentRuleSession()
+            call.respond(HttpStatusCode.OK, OperationResult("Session committed"))
+        }
+    }
 }

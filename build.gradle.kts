@@ -67,6 +67,8 @@ kotlin {
                 implementation("io.ktor:ktor-client-json:$ktorVersion")
                 implementation("io.ktor:ktor-client-serialization:$ktorVersion")
                 implementation("io.ktor:ktor-client-cio:$ktorVersion")
+                implementation("io.ktor:ktor-server-test-host:$ktorVersion")
+                implementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
                 implementation(kotlin("test"))
                 implementation("org.seleniumhq.selenium:selenium-java:4.2.2")
                 implementation("io.github.bonigarcia:webdrivermanager:$webDriverVersion")

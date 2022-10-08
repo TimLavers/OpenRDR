@@ -178,7 +178,7 @@ class ReplacingConclusionsTest {
             }
             requireInterpretation("1", "Y")
             requireInterpretation("2", "Y")
-            requireInterpretation("3", "Y")
+            requireInterpretation("3", "nbm Y")
         }
     }
 }
