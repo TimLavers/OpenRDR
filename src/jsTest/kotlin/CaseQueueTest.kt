@@ -2,7 +2,6 @@ import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.RDRCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import mocks.config
@@ -292,7 +291,7 @@ class CaseQueueTest : ReactTestSupport {
 
             //check that the case list shows the two remaining case names
             requireNamesToBeShowingOnCaseList(caseName1, caseName3)
-            delay(1000)
+
             //and that the first one is selected
             requireCaseToBeSelected(caseName1)
         }
