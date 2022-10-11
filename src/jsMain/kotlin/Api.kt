@@ -11,7 +11,6 @@ import io.rippledown.model.OperationResult
 import io.rippledown.model.RDRCase
 import kotlinx.browser.window
 import kotlinx.serialization.json.Json
-import kotlin.js.Date
 
 val endpoint = window.location.origin
 
@@ -36,9 +35,5 @@ class Api(engine: HttpClientEngine = Js.create()) {
         }
     }
 
-}
-
-fun debug(msg: String) {
-    println("\n\n${Date().toISOString()} $msg")
 }
 

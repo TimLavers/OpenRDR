@@ -26,10 +26,9 @@ class EngineConfig {
     var returnCasesInfo: CasesInfo = CasesInfo(emptyList())
     var returnCase: RDRCase = RDRCase()
     var returnOperationResult: OperationResult = OperationResult()
-    var returnInterpretation: Interpretation = Interpretation()
 
     var expectedCaseId = ""
-    var expectedInterpretation = Interpretation()
+    var expectedInterpretation: Interpretation? = null
 
 }
 
@@ -63,7 +62,9 @@ private class EngineBuilder(private val config: EngineConfig) {
 
             "/api/interpretationSubmitted" -> {
                 val body = request.body as TextContent
-                if (config.expectedInterpretation.caseId.id.isNotBlank()) body.text shouldBe json.encodeToString(config.expectedInterpretation)
+                if (config.expectedInterpretation != null) {
+                    body.text shouldBe json.encodeToString(config.expectedInterpretation)
+                }
 
                 respond(
                     content = ByteReadChannel(

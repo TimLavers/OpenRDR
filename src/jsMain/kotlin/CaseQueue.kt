@@ -1,9 +1,7 @@
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.RDRCase
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import react.FC
-import react.Props
 import react.css.css
 import react.dom.html.ReactHTML.button
 import react.dom.html.ReactHTML.div
@@ -16,20 +14,17 @@ const val NUMBER_OF_CASES_WAITING_ID = "number_of_cases_waiting_value"
 const val REFRESH_BUTTON_ID = "refresh_waiting_cases_info_button"
 const val REVIEW_CASES_BUTTON_ID = "review_cases_button"
 
-external interface CaseQueueHandler : Props {
-    var scope: CoroutineScope
-    var api: Api
+external interface CaseQueueHandler : Handler {
 }
 
 val CaseQueue = FC<CaseQueueHandler> { handler ->
     var waitingCasesInfo by useState(CasesInfo(emptyList(), ""))
     var showCaseList: Boolean by useState(false)
     var selectedCase: RDRCase? by useState(null)
-    val api = handler.api
 
     useEffectOnce {
         handler.scope.launch {
-            waitingCasesInfo = api.waitingCasesInfo()
+            waitingCasesInfo = handler.api.waitingCasesInfo()
         }
     }
 
@@ -54,7 +49,7 @@ val CaseQueue = FC<CaseQueueHandler> { handler ->
                 }
                 onClick = {
                     handler.scope.launch {
-                        waitingCasesInfo = api.waitingCasesInfo()
+                        waitingCasesInfo = handler.api.waitingCasesInfo()
                     }
                 }
             }
@@ -66,7 +61,7 @@ val CaseQueue = FC<CaseQueueHandler> { handler ->
                 }
                 onClick = {
                     handler.scope.launch {
-                        waitingCasesInfo = api.waitingCasesInfo()
+                        waitingCasesInfo = handler.api.waitingCasesInfo()
                         showCaseList = true
                     }
                 }
@@ -77,26 +72,30 @@ val CaseQueue = FC<CaseQueueHandler> { handler ->
     if (showCaseList) {
         CaseList {
             scope = handler.scope
+            api = handler.api
             caseIds = waitingCasesInfo.caseIds
-            onCaseSelected = {
-                handler.scope.launch {
-                    selectedCase = handler.api.getCase(it)
-                }
-            }
-            onCaseProcessed = { interpretation ->
-                //maybe retrieve the next case or null, rather than case ids
-                api.saveInterpretation(interpretation)
-                val wci = api.waitingCasesInfo()
-                caseIds = wci.caseIds
-                showCaseList = true
-                if (caseIds.isNotEmpty()) {
-                    selectedCase = api.getCase(caseIds[0].id)
-                } else {
-                    showCaseList = false
-                    selectedCase = null
-                }
-            }
             currentCase = selectedCase
+            onCaseSelected = {
+                scope.launch {
+                    selectedCase = api.getCase(it)
+                }
+            }
+            onInterpretationSubmitted = {
+                scope.launch {
+                    val waiting = api.waitingCasesInfo()
+                    caseIds = waiting.caseIds
+                    if (caseIds.isNotEmpty()) {
+                        currentCase = api.getCase(caseIds[0].id)
+                        waitingCasesInfo = waiting
+                        selectedCase = currentCase
+                        showCaseList = true
+                    } else {
+                        currentCase = null
+                        showCaseList = false
+                        waitingCasesInfo = CasesInfo()
+                    }
+                }
+            }
         }
     }
 }

@@ -11,6 +11,8 @@ import mocks.defaultMock
 import mocks.mock
 import mysticfall.ReactTestSupport
 import mysticfall.TestRenderer
+import proxy.findById
+import proxy.text
 import kotlin.test.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)

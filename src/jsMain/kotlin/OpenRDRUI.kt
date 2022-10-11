@@ -7,12 +7,12 @@ import react.css.css
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.h1
 
-external interface OpenRDRUIHandler : Props {
+external interface Handler : Props {
     var scope: CoroutineScope
     var api: Api
 }
 
-val OpenRDRUI = FC<OpenRDRUIHandler> { handler ->
+val OpenRDRUI = FC<Handler> { handler ->
     div {
         css {
             fontFamily = FontFamily.sansSerif

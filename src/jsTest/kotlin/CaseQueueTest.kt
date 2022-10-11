@@ -1,15 +1,15 @@
-import io.kotest.matchers.shouldBe
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.RDRCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
 import mysticfall.ReactTestSupport
-import mysticfall.TestInstance
 import mysticfall.TestRenderer
+import proxy.*
 import kotlin.test.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -22,7 +22,7 @@ class CaseQueueTest : ReactTestSupport {
                 attrs.scope = this@runTest
             }
         }
-        renderer.root.findAllByType(CaseList) shouldBe emptyList<TestInstance<*>>()
+        renderer.requireCaseListNotToBeShowing()
     }
 
     @Test
@@ -32,8 +32,7 @@ class CaseQueueTest : ReactTestSupport {
                 attrs.scope = this@runTest
             }
         }
-        val reviewButton = renderer.findById(REVIEW_CASES_BUTTON_ID)
-        reviewButton.props.asDynamic()["disabled"].unsafeCast<Boolean>() shouldBe true
+        renderer.requireReviewButtonDisabled()
     }
 
 
@@ -54,10 +53,39 @@ class CaseQueueTest : ReactTestSupport {
                 attrs.scope = this@runTest
             }
         }
+        with(renderer) {
+            requireNumberOfCasesWaiting(0)
+            clickRefreshButton()
+            requireNumberOfCasesWaiting(3)
+        }
+    }
 
-        val refreshButton = renderer.findById(REFRESH_BUTTON_ID)
-        click(refreshButton)
-        renderer.findById(NUMBER_OF_CASES_WAITING_ID).text() shouldBe "3"
+    @Test
+    fun shouldNotShowCaseViewWhenRefreshButtonIsClickedAndThereAreNoMoreCases() = runTest {
+        val config = config {
+            returnCasesInfo = CasesInfo(
+                listOf(
+                    CaseId("1", "case 1"),
+                    CaseId("2", "case 2"),
+                    CaseId("3", "case 3")
+                )
+            )
+        }
+        val renderer = render {
+            CaseQueue {
+                attrs.api = Api(mock(config))
+                attrs.scope = this@runTest
+            }
+        }
+        with(renderer) {
+            clickRefreshButton()
+            requireNumberOfCasesWaiting(3) //Sanity check
+
+            config.returnCasesInfo = CasesInfo(emptyList())
+            clickRefreshButton()
+            requireNumberOfCasesWaiting(0)
+            requireNoCaseView()
+        }
     }
 
 
@@ -84,7 +112,8 @@ class CaseQueueTest : ReactTestSupport {
                 }
             }
         }.join()
-        renderer.findById(NUMBER_OF_CASES_WAITING_ID).text() shouldBe "2"
+        renderer.requireNumberOfCasesWaiting(2)
+
     }
 
     @Test
@@ -104,15 +133,41 @@ class CaseQueueTest : ReactTestSupport {
                 attrs.scope = this@runTest
             }
         }
-        val refreshButton = renderer.findById(REFRESH_BUTTON_ID)
-        val reviewButton = renderer.findById(REVIEW_CASES_BUTTON_ID)
-        click(refreshButton) //enable the review button
+        with(renderer) {
+            clickRefreshButton() //enable the review button
+            clickReviewButton()
+            requireNamesToBeShowingOnCaseList("case 1", "case 2")
+            requireNoCaseView()
+        }
+    }
 
-        renderer.root.findAllByType(CaseList) shouldBe emptyList<TestInstance<*>>()
-        click(reviewButton)
+    @Test
+    fun shouldShowCaseViewWhenACaseIsSelected() = runTest {
+        val caseName1 = "case 1"
+        val caseName2 = "case 2"
+        val caseIds = listOf(
+            CaseId("1", caseName1),
+            CaseId("2", caseName2),
+        )
+        val config = config {
+            returnCasesInfo = CasesInfo(caseIds)
+            returnCase = RDRCase(caseName1)
+        }
+        val renderer = render {
+            CaseQueue {
+                attrs.api = Api(mock(config))
+                attrs.scope = this@runTest
+            }
+        }
 
-        val caseList = renderer.root.findByType(CaseList)
-        caseList.props.caseIds shouldBe caseIds
+        with(renderer) {
+            clickRefreshButton() //enable the review button
+            clickReviewButton() //show the case list
+            requireNamesToBeShowingOnCaseList(caseName1, caseName2) //sanity check
+            requireNoCaseView()
+            selectCase(caseName1)
+            requireCaseToBeSelected(caseName1) //sanity check
+        }
     }
 
     @Test
@@ -124,41 +179,123 @@ class CaseQueueTest : ReactTestSupport {
         val config = config {
             returnCasesInfo = CasesInfo(caseIds)
             returnCase = RDRCase(caseName)
-            expectedCaseId = caseIds[0].id
+        }
+
+        val renderer = render {
+            CaseQueue {
+                attrs.api = Api(mock(config))
+                attrs.scope = this@runTest
+            }
+        }
+
+        with(renderer) {
+            clickRefreshButton() //enable the review button
+            clickReviewButton() //show the case list
+            requireNamesToBeShowingOnCaseList(caseName) //sanity check
+            selectCase(caseName)
+            requireCaseToBeSelected(caseName) //sanity check
+
+            //set the mock to return no cases
+            config.returnCasesInfo = CasesInfo(emptyList())
+
+            clickSubmitButton()
+            requireNoCaseView()
+            waitFor { numberOfCasesWaiting() == 0 }
+            requireCaseListNotToBeShowing()
+        }
+    }
+
+    @Test
+    fun shouldShowOneFewerCaseWhenInterpretationIsSubmitted() = runTest {
+        val caseName1 = "case 1"
+        val caseName2 = "case 2"
+        val config = config {
+            returnCasesInfo = CasesInfo(
+                listOf(
+                    CaseId("1", caseName1),
+                    CaseId("2", caseName2),
+                )
+            )
+            returnCase = RDRCase(caseName1)
         }
 
         lateinit var renderer: TestRenderer
         launch {
-            act {
-                renderer = render {
-                    CaseQueue {
-                        attrs.api = Api(mock(config))
-                        attrs.scope = this@runTest
-                    }
+            renderer = render {
+                CaseQueue {
+                    attrs.api = Api(mock(config))
+                    attrs.scope = this@runTest
                 }
             }
         }.join()
-        val refreshButton = renderer.findById(REFRESH_BUTTON_ID)
-        val reviewButton = renderer.findById(REVIEW_CASES_BUTTON_ID)
-        click(refreshButton) //enable the review button
-        click(reviewButton) //show the case list and the case
 
-        val caseList = renderer.root.findByType(CaseList)
-        caseList.props.caseIds shouldBe caseIds
+        with(renderer) {
+            clickRefreshButton() //enable the review button
+            clickReviewButton()  //show the case list and the case
+            selectCase(caseName1)
+            requireCaseToBeSelected(caseName1)
 
-        val caseLink = renderer.findById("$CASE_ID_PREFIX$caseName")
-        click(caseLink)
+            //set the mock to return one case
+            config.returnCasesInfo = CasesInfo(listOf(CaseId("2", caseName2)))
 
-        val caseView = renderer.root.findByType(CaseView)
-        caseView.props.case.name shouldBe "case 1"
+            clickSubmitButton()
+            waitFor { numberOfCasesWaiting() == 1 }
 
-        //set the mock to return no cases
-        config.returnCasesInfo = CasesInfo(emptyList())
-
-        val submitButton = renderer.findById(SEND_INTERPRETATION_BUTTON_ID)
-        click(submitButton)
-
-        //check that the case list is no longer shown
-        renderer.root.findAllByType(CaseList) shouldBe emptyList<TestInstance<*>>()
+            //check that the case list shows the one remaining case name
+            requireNamesToBeShowingOnCaseList(caseName2)
+        }
     }
+
+    @Test
+    fun shouldSelectTheFirstCaseWhenInterpretationForOtherCaseIsSubmitted() = runTest {
+        val caseName1 = "case 1"
+        val caseName2 = "case 2"
+        val caseName3 = "case 3"
+        val config = config {
+            returnCasesInfo = CasesInfo(
+                listOf(
+                    CaseId("1", caseName1),
+                    CaseId("2", caseName2),
+                    CaseId("3", caseName3),
+                )
+            )
+            returnCase = RDRCase(caseName2)
+        }
+
+        lateinit var renderer: TestRenderer
+        launch {
+            renderer = render {
+                CaseQueue {
+                    attrs.api = Api(mock(config))
+                    attrs.scope = this@runTest
+                }
+            }
+        }.join()
+
+        with(renderer) {
+            clickRefreshButton() //enable the review button
+            clickReviewButton()  //show the case list and the case
+            selectCase(caseName2)
+            requireCaseToBeSelected(caseName2)
+
+            //set the mock to return the other two cases
+            config.returnCasesInfo = CasesInfo(
+                listOf(
+                    CaseId("1", caseName1),
+                    CaseId("3", caseName3)
+                )
+            )
+            config.returnCase = RDRCase(caseName1)
+
+            clickSubmitButton()
+            waitFor { numberOfCasesWaiting() == 2 }
+
+            //check that the case list shows the two remaining case names
+            requireNamesToBeShowingOnCaseList(caseName1, caseName3)
+            delay(1000)
+            //and that the first one is selected
+            requireCaseToBeSelected(caseName1)
+        }
+    }
+
 }
