@@ -49,7 +49,6 @@ internal class SendInterpretationTest: UITestBase() {
         labProxy.waitForNumberOfInterpretationsToBe(1)
 
         // Check that the interpretation for Case2 is as set in the user interface.
-        caseQueuePO.refresh() //TODO fix this. It should refresh automatically.
         labProxy.interpretationReceived("Case2") shouldBe case2Interpretation
 
         // Check that there are two remaining input cases: Case1 and Case3.
