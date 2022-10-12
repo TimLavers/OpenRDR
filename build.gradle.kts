@@ -1,3 +1,4 @@
+import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
 val kotlinVersion = "1.7.10"
@@ -53,6 +54,7 @@ kotlin {
                 // Create a test task to run the tests produced by this compilation:
                 tasks.register<Test>("integrationTest") {
                     dependsOn(tasks.shadowJar)
+                    group = VERIFICATION_GROUP
 
                     // Run the tests with the classpath containing the compile dependencies (including 'main'),
                     // runtime dependencies, and the outputs of this compilation:
