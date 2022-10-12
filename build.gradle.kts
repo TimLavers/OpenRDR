@@ -15,9 +15,9 @@ val webDriverVersion = "4.4.3"
 val awaitilityVersion = "4.2.0"
 
 plugins {
-    kotlin("multiplatform") version "1.7.10"
+    kotlin("multiplatform") version "1.7.20"
     application
-    kotlin("plugin.serialization") version "1.7.10"
+    kotlin("plugin.serialization") version "1.7.20"
     id("io.ktor.plugin") version "2.1.1"
 }
 
