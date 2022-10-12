@@ -3,8 +3,6 @@ package mocks
 import io.kotest.matchers.shouldBe
 import io.ktor.client.engine.mock.*
 import io.ktor.http.*
-import io.ktor.http.HttpMethod.Companion.Get
-import io.ktor.http.HttpMethod.Companion.Post
 import io.ktor.http.content.*
 import io.ktor.utils.io.*
 import io.rippledown.model.CasesInfo
@@ -14,19 +12,27 @@ import io.rippledown.model.RDRCase
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-fun engine(block: EngineBuilder.() -> Unit) =
-    EngineBuilder()
-        .apply(block)
-        .build()
+fun mock(config: EngineConfig) = EngineBuilder(config).build()
 
-class EngineBuilder {
-    var returnCasesInfo = CasesInfo()
-    var returnCase = RDRCase()
-    var returnOperationResult = OperationResult()
+val defaultMock = mock(EngineConfig())
+
+fun config(block: EngineConfig.() -> Unit): EngineConfig {
+    val config = EngineConfig()
+    config.block()
+    return config
+}
+
+class EngineConfig {
+    var returnCasesInfo: CasesInfo = CasesInfo(emptyList())
+    var returnCase: RDRCase = RDRCase()
+    var returnOperationResult: OperationResult = OperationResult()
 
     var expectedCaseId = ""
-    var expectedInterpretation = Interpretation()
+    var expectedInterpretation: Interpretation? = null
 
+}
+
+private class EngineBuilder(private val config: EngineConfig) {
     private val json = Json {
         allowStructuredMapKeys = true
     }
@@ -34,10 +40,9 @@ class EngineBuilder {
     fun build() = MockEngine { request ->
         when (request.url.encodedPath) {
             "/api/waitingCasesInfo" -> {
-                request.method shouldBe Get
                 respond(
                     content = ByteReadChannel(
-                        json.encodeToString(returnCasesInfo)
+                        json.encodeToString(config.returnCasesInfo)
                     ),
                     status = HttpStatusCode.OK,
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
@@ -45,11 +50,10 @@ class EngineBuilder {
             }
 
             "/api/case" -> {
-                request.method shouldBe Get
-                request.url.parameters["id"] shouldBe expectedCaseId
+                if (config.expectedCaseId.isNotBlank()) request.url.parameters["id"] shouldBe config.expectedCaseId
                 respond(
                     content = ByteReadChannel(
-                        json.encodeToString(returnCase)
+                        json.encodeToString(config.returnCase)
                     ),
                     status = HttpStatusCode.OK,
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
@@ -57,13 +61,14 @@ class EngineBuilder {
             }
 
             "/api/interpretationSubmitted" -> {
-                request.method shouldBe Post
-                val expectedBody = request.body as TextContent
-                expectedBody.text shouldBe json.encodeToString(expectedInterpretation)
+                val body = request.body as TextContent
+                if (config.expectedInterpretation != null) {
+                    body.text shouldBe json.encodeToString(config.expectedInterpretation)
+                }
 
                 respond(
                     content = ByteReadChannel(
-                        json.encodeToString(returnOperationResult)
+                        json.encodeToString(config.returnOperationResult)
                     ),
                     status = HttpStatusCode.OK,
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
@@ -77,6 +82,3 @@ class EngineBuilder {
     }
 }
 
-val defaultMock = engine {
-    returnCasesInfo = CasesInfo()
-}

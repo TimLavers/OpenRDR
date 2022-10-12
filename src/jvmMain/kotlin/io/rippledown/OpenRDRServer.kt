@@ -17,6 +17,7 @@ import io.rippledown.model.OperationResult
 import io.rippledown.model.condition.Condition
 import io.rippledown.server.ServerApplication
 import kotlinx.serialization.json.Json
+import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 
 const val WAITING_CASES = "/api/waitingCasesInfo"
@@ -26,10 +27,20 @@ const val START_SESSION_TO_REPLACE_CONCLUSION = "/api/startSessionToReplaceConcl
 const val ADD_CONDITION = "/api/addCondition"
 const val COMMIT_SESSION = "/api/commitSession"
 const val CREATE_KB = "/api/createKB"
+const val SHUTDOWN = "/api/shutdown"
+const val PING = "/api/ping"
+
+const val STARTING_SERVER = "Starting server"
+const val STOPPING_SERVER = "Stopping server"
+
+lateinit var server: NettyApplicationEngine
+
+val logger = LoggerFactory.getLogger("rdr")
 
 fun main() {
     val application = ServerApplication()
-    embeddedServer(Netty, 9090) {
+
+    server = embeddedServer(Netty, 9090) {
         install(ContentNegotiation) {
             json()
 //            Json {
@@ -110,9 +121,19 @@ fun main() {
                 application.createKB()
                 call.respond(HttpStatusCode.OK, OperationResult("KB created"))
             }
+            get(PING) {
+                call.respond(HttpStatusCode.OK, "OK")
+            }
+            post(SHUTDOWN) {
+                logger.info(STOPPING_SERVER)
+                server.stop(0, 0)
+            }
         }
         ruleSession(application)
     }.start(wait = true)
+    }
+    logger.info(STARTING_SERVER)
+    server.start(wait = true)
 }
 fun Application.ruleSession(application: ServerApplication) {
     routing {

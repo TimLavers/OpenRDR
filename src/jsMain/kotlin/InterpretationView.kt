@@ -1,47 +1,51 @@
-import io.rippledown.model.CaseId
 import io.rippledown.model.Interpretation
-import io.rippledown.model.RDRCase
+import kotlinx.coroutines.launch
 import react.FC
-import react.Props
 import react.css.css
 import react.dom.html.ReactHTML
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.textarea
 import react.key
+import react.useState
 
-external interface InterpretationViewHandler : Props {
-    var case: RDRCase
-    var onInterpretationSubmitted: (Interpretation) -> Unit
+external interface InterpretationViewHandler : Handler {
+    var interpretation: Interpretation
+    var onInterpretationSubmitted: () -> Unit
 }
 
-val InterpretationView = FC<InterpretationViewHandler> { props ->
-    console.log("Interp View, case: ${props.case.name}")
-    console.log("Interp View, tGBR: ${props.case.interpretation.textGivenByRules()}")
-    var interpretationText = props.case.interpretation.textGivenByRules()
+const val INTERPRETATION_TEXT_AREA_ID = "interpretation_text_area"
+const val SEND_INTERPRETATION_BUTTON_ID = "send_interpretation_button"
+
+val InterpretationView = FC<InterpretationViewHandler> { handler ->
+    var interpretationText by useState(handler.interpretation.textGivenByRules())
 
     div {
-        key = props.case.name
+        key = handler.interpretation.caseId.name
         textarea {
-            id = "interpretation_text_area"
+            id = INTERPRETATION_TEXT_AREA_ID
             rows = 10
             cols = 72
-            defaultValue = interpretationText
             onChange = {
                 interpretationText = it.target.value
             }
+            value = interpretationText
         }
         div {
             ReactHTML.button {
                 +"Send interpretation"
-                id = "send_interpretation_button"
+                id = SEND_INTERPRETATION_BUTTON_ID
                 css {
                     padding = px4
                 }
 
                 onClick = {
-                    val caseId = CaseId(props.case.name, props.case.name)
+                    val caseId = handler.interpretation.caseId
                     val interpretation = Interpretation(caseId, interpretationText)
-                    props.onInterpretationSubmitted(interpretation)
+                    handler.scope.launch {
+                        handler.api.saveInterpretation(interpretation)
+                        handler.onInterpretationSubmitted()
+                    }
+
                     interpretationText = ""
                 }
             }

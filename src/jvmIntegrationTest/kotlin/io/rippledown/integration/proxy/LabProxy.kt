@@ -1,18 +1,25 @@
-package io.rippledown.integration.labsystem
+package io.rippledown.integration.proxy
 
-import io.rippledown.CaseTestUtils
 import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.apache.commons.io.FileUtils
+import org.awaitility.Awaitility.await
 import java.io.File
 import java.nio.charset.StandardCharsets.UTF_8
+import java.util.concurrent.TimeUnit
 
-class LabServerProxy {
-    private val inputDir = File("temp/cases")
-    private val interpretationsDir = File("temp/interpretations")
+class LabProxy(tempDir: File) {
+    private val inputDir = File(tempDir, "cases")
+    private val interpretationsDir = File(tempDir, "interpretations")
+
+    fun waitForNumberOfInterpretationsToBe(count: Int) {
+        await().atMost(5, TimeUnit.SECONDS).until {
+            interpretationsReceived() == count
+        }
+    }
 
     fun interpretationsReceived(): Int {
         return interpretationsDir.listFiles()!!.size

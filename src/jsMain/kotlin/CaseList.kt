@@ -1,27 +1,24 @@
 import csstype.*
 import io.rippledown.model.CaseId
-import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import react.FC
-import react.Props
 import react.css.css
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.li
 import react.dom.html.ReactHTML.ul
 
 const val CASELIST_ID = "case_list_container"
+const val CASE_ID_PREFIX = "case_list_item_"
+const val CASELIST_HEADING = "Cases"
 
-external interface CaseListHandler : Props {
+external interface CaseListHandler : Handler {
     var caseIds: List<CaseId>
-    var onCaseSelected: (String) -> Unit
     var currentCase: RDRCase?
-    var onCaseProcessed: suspend (Interpretation) -> Unit
-    var scope: CoroutineScope
+    var onCaseSelected: (String) -> Unit
+    var onInterpretationSubmitted: () -> Unit
 }
 
-val CaseList = FC<CaseListHandler> { props ->
+val CaseList = FC<CaseListHandler> { handler ->
     div {
         css {
             after {
@@ -30,7 +27,7 @@ val CaseList = FC<CaseListHandler> { props ->
             }
         }
         div {
-            +"Cases "
+            +CASELIST_HEADING
             id = CASELIST_ID
             css {
                 className = "left_column"
@@ -41,30 +38,31 @@ val CaseList = FC<CaseListHandler> { props ->
             ul {
                 css {
                     paddingInlineStart = px0
+                    cursor = Cursor.default
                 }
-                for (caseId in props.caseIds) {
+                for (caseId in handler.caseIds) {
                     li {
                         +caseId.name
-                        id = "case_list_item_${caseId.name}"
+                        id = "$CASE_ID_PREFIX${caseId.name}"
                         css {
                             textDecorationLine = TextDecorationLine.underline
                             padding = px4
                             listStyle = ListStyle.none
                         }
                         onClick = {
-                            props.onCaseSelected(caseId.name)
+                            handler.onCaseSelected(caseId.id)
                         }
                     }
                 }
             }
         }
-        if (props.currentCase != null) {
+        if (handler.currentCase != null) {
             CaseView {
-                case = props.currentCase!!
-                onInterpretationSubmitted = { interpretation ->
-                    props.scope.launch {
-                        props.onCaseProcessed(interpretation)
-                    }
+                scope = handler.scope
+                api = handler.api
+                case = handler.currentCase!!
+                onInterpretationSubmitted = {
+                    handler.onInterpretationSubmitted()
                 }
             }
         } else {

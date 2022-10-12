@@ -9,7 +9,11 @@ data class Interpretation(val caseId: CaseId = CaseId(), val text: String = "") 
     private val ruleSummaries = mutableSetOf<RuleSummary>()
 
     fun textGivenByRules(): String {
-        return ruleSummaries.map { it.conclusion?.text }.filterNotNull().toSet().toMutableList().sortedWith(String.CASE_INSENSITIVE_ORDER).joinToString("\n")
+        return ruleSummaries.map { it.conclusion?.text }
+            .filterNotNull()
+            .toMutableSet()//eliminate duplicates
+            .toMutableList()
+            .sortedWith(String.CASE_INSENSITIVE_ORDER).joinToString("\n")
     }
 
     fun add(ruleSummary: RuleSummary) {

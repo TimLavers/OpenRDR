@@ -1,5 +1,6 @@
 package io.rippledown.integration
 
+import io.kotest.matchers.shouldBe
 import io.rippledown.integration.pageobjects.CaseQueuePO
 import kotlin.test.*
 
@@ -9,8 +10,7 @@ internal class CaseQueueTest: UITestBase() {
 
     @BeforeTest
     fun setup() {
-        resetKB()
-        labServerProxy.cleanCasesDir()
+        serverProxy.start()
         setupWebDriver()
         caseQueuePO = CaseQueuePO(driver)
     }
@@ -18,6 +18,7 @@ internal class CaseQueueTest: UITestBase() {
     @AfterTest
     fun cleanup() {
         driverClose()
+        serverProxy.shutdown()
     }
 
     @Test
@@ -27,22 +28,19 @@ internal class CaseQueueTest: UITestBase() {
 
     @Test
     fun reviewButtonEnabledIfCasesWaiting() {
-        labServerProxy.copyCase("Case2")
-        caseQueuePO.refresh()
-        pause()//todo use Awaitility
+        labProxy.copyCase("Case2")
+        caseQueuePO.refresh().waitForNumberWaitingToBe(1)
         assertTrue(caseQueuePO.reviewButtonIsEnabled())
     }
 
     @Test
     fun showCaseList() {
-        labServerProxy.copyCase("Case2")
-        labServerProxy.copyCase("Case1")
-        pause()//todo use Awaitility
-        caseQueuePO.refresh()
+        labProxy.copyCase("Case2")
+        labProxy.copyCase("Case1")
+        caseQueuePO.refresh().waitForNumberWaitingToBe(2)
 
         val listPO = caseQueuePO.review()
         val casesListed = listPO.casesListed()
-        assertEquals(casesListed.size, 2)
         assertEquals(casesListed[0], "Case1")
         assertEquals(casesListed[1], "Case2")
     }
@@ -50,16 +48,14 @@ internal class CaseQueueTest: UITestBase() {
     @Test
     fun numberOfWaitingCasesIsShown() {
         // No cases at start.
-        assertEquals(caseQueuePO.numberWaiting(), 0)
+        caseQueuePO.numberWaiting() shouldBe 0
 
         // Copy a case.
-        labServerProxy.copyCase("Case2")
-        caseQueuePO.refresh()
-        assertEquals(caseQueuePO.numberWaiting(), 1)
+        labProxy.copyCase("Case2")
+        caseQueuePO.refresh().waitForNumberWaitingToBe(1)
 
         // Copy another case.
-        labServerProxy.copyCase("Case1")
-        caseQueuePO.refresh()
-        assertEquals(caseQueuePO.numberWaiting(), 2)
+        labProxy.copyCase("Case1")
+        caseQueuePO.refresh().waitForNumberWaitingToBe(2)
     }
 }
