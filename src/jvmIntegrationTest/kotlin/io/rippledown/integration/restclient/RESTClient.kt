@@ -14,9 +14,6 @@ import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
-import io.ktor.client.features.json.JsonFeature
-import io.ktor.client.features.json.serializer.*
-import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.rippledown.model.CasesInfo
@@ -29,7 +26,7 @@ import kotlinx.serialization.json.Json
 
 
 class RESTClient {
-    val endpoint = "http://127.0.0.1:9090"
+    val endpoint = "http://localhost:9090"
 
     val jsonClient =  HttpClient(CIO) {
         install(ContentNegotiation) {
@@ -46,7 +43,7 @@ class RESTClient {
     fun serverHasStarted(): Boolean {
         return runBlocking {
             try {
-                jsonClient.get<String>(endpoint + PING)
+                jsonClient.get(endpoint + PING)
                 true
             } catch (e: Exception) {
                 false
@@ -56,18 +53,9 @@ class RESTClient {
 
     fun getCaseWithName(name: String): RDRCase? {
         runBlocking {
-            casesInfo = jsonClient.get(endpoint + WAITING_CASES).body()
-        }
-    }
-
-    fun getCaseWithName(name: String): RDRCase? {
-        getCaseIds()
-        val caseId = casesInfo.caseIds.first { it.name == name }
-        runBlocking {
-            currentCase = jsonClient.get(endpoint + CASE + "?id=${caseId.id}").body()
-            val casesInfo: CasesInfo = jsonClient.get(endpoint + WAITING_CASES)
+            val casesInfo: CasesInfo = jsonClient.get(endpoint + WAITING_CASES).body()
             val caseId = casesInfo.caseIds.first { it.name == name }
-            currentCase = jsonClient.get(endpoint + CASE + "?id=${caseId.id}")
+            currentCase = jsonClient.get(endpoint + CASE + "?id=${caseId.id}").body()
         }
         return currentCase
     }

@@ -130,7 +130,6 @@ fun main() {
             }
         }
         ruleSession(application)
-    }.start(wait = true)
     }
     logger.info(STARTING_SERVER)
     server.start(wait = true)

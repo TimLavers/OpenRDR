@@ -29,7 +29,6 @@ repositories {
 kotlin {
     jvm {
         compilations {
-
             val integrationTest by compilations.creating {
                 defaultSourceSet {
                     dependencies {
@@ -38,10 +37,12 @@ kotlin {
                         implementation(kotlin("test-annotations-common"))
                         implementation(kotlin("test-junit"))
                         implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
-                        implementation("io.ktor:ktor-client-core:$ktorVersion")
-                        implementation("io.ktor:ktor-client-json:$ktorVersion")
-                        implementation("io.ktor:ktor-client-serialization:$ktorVersion")
-                        implementation("io.ktor:ktor-client-cio:$ktorVersion")
+                        implementation("io.ktor:ktor-client-core:$ktor_version")
+                        implementation("io.ktor:ktor-client-cio:$ktor_version")
+                        implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
+                        implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
+                        implementation("io.ktor:ktor-client-cio:$ktor_version")
+                        implementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
                         implementation("org.seleniumhq.selenium:selenium-java:4.2.2")
                         implementation("io.github.bonigarcia:webdrivermanager:$webDriverVersion")
                         implementation("io.kotest:kotest-assertions-core:$kotestVersion")
@@ -105,13 +106,11 @@ kotlin {
         val jvmTest by getting {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
-
                 implementation("io.ktor:ktor-client-core:$ktor_version")
                 implementation("io.ktor:ktor-client-cio:$ktor_version")
                 implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
                 implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
                 implementation("io.ktor:ktor-client-cio:$ktor_version")
-//                implementation("io.ktor:ktor-server-test-host:$ktor_version")
                 implementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
                 implementation(kotlin("test"))
                 implementation("org.seleniumhq.selenium:selenium-java:4.2.2")

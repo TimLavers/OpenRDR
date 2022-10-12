@@ -17,6 +17,7 @@ internal open class TSHTest: UITestBase() {
 
     @BeforeTest
     fun setup() {
+        serverProxy.start()
         resetKB()
         setupCases()
         setupWebDriver()
@@ -29,6 +30,7 @@ internal open class TSHTest: UITestBase() {
     @AfterTest
     fun cleanup() {
         driverClose()
+        serverProxy.shutdown()
     }
 
     fun selectCaseAndCheckName(name: String) {
@@ -38,23 +40,23 @@ internal open class TSHTest: UITestBase() {
     }
 
     open fun setupCases() {
-        labServerProxy.cleanCasesDir()
-        labServerProxy.writeCaseToInputDir(TSH1)
-        labServerProxy.writeCaseToInputDir(TSH2)
-        labServerProxy.writeCaseToInputDir(TSH3)
-        labServerProxy.writeCaseToInputDir(TSH4)
-        labServerProxy.writeCaseToInputDir(TSH5)
-        labServerProxy.writeCaseToInputDir(TSH6)
-        labServerProxy.writeCaseToInputDir(TSH7)
-        labServerProxy.writeCaseToInputDir(TSH8)
-        labServerProxy.writeCaseToInputDir(TSH9)
-        labServerProxy.writeCaseToInputDir(TSH10)
-        labServerProxy.writeCaseToInputDir(TSH11)
-        labServerProxy.writeCaseToInputDir(TSH12)
-        labServerProxy.writeCaseToInputDir(TSH13)
-        labServerProxy.writeCaseToInputDir(TSH14)
-        labServerProxy.writeCaseToInputDir(TSH15)
-        labServerProxy.writeCaseToInputDir(TSH16)
-        labServerProxy.writeCaseToInputDir(TSH17)
+        labProxy.cleanCasesDir()
+        labProxy.writeCaseToInputDir(TSH1)
+        labProxy.writeCaseToInputDir(TSH2)
+        labProxy.writeCaseToInputDir(TSH3)
+        labProxy.writeCaseToInputDir(TSH4)
+        labProxy.writeCaseToInputDir(TSH5)
+        labProxy.writeCaseToInputDir(TSH6)
+        labProxy.writeCaseToInputDir(TSH7)
+        labProxy.writeCaseToInputDir(TSH8)
+        labProxy.writeCaseToInputDir(TSH9)
+        labProxy.writeCaseToInputDir(TSH10)
+        labProxy.writeCaseToInputDir(TSH11)
+        labProxy.writeCaseToInputDir(TSH12)
+        labProxy.writeCaseToInputDir(TSH13)
+        labProxy.writeCaseToInputDir(TSH14)
+        labProxy.writeCaseToInputDir(TSH15)
+        labProxy.writeCaseToInputDir(TSH16)
+        labProxy.writeCaseToInputDir(TSH17)
     }
 }

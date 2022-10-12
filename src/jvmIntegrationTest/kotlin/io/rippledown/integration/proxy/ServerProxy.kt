@@ -44,7 +44,6 @@ class ServerProxy {
         await().atMost(Duration.ofSeconds(10)).until {
             logProxy.contains(STARTING_SERVER) && restClient.serverHasStarted()
         }
-
     }
 
     fun tempDir() = dirProxy.tempDir()
@@ -53,5 +52,4 @@ class ServerProxy {
         restClient.shutdown()
         process.destroyForcibly().waitFor()
     }
-
 }
