@@ -30,7 +30,7 @@ val CaseList = FC<CaseListHandler> { handler ->
             +CASELIST_HEADING
             id = CASELIST_ID
             css {
-//                className = "left_column"
+                textAlign = TextAlign.left
                 float = Float.left
                 width = 10.pct
                 padding = px12
@@ -47,7 +47,7 @@ val CaseList = FC<CaseListHandler> { handler ->
                         css {
                             textDecorationLine = TextDecorationLine.underline
                             padding = px4
-//                            listStyle = ListStyle.none
+                            listStyleType = None.none
                         }
                         onClick = {
                             handler.onCaseSelected(caseId.id)
