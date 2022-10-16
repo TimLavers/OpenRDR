@@ -10,11 +10,11 @@ import NoCaseView
 import REFRESH_BUTTON_ID
 import REVIEW_CASES_BUTTON_ID
 import SEND_INTERPRETATION_BUTTON_ID
+import io.kotest.assertions.timing.eventually
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import mysticfall.TestInstance
 import mysticfall.TestRenderer
@@ -105,15 +105,7 @@ fun TestRenderer.enterInterpretation(toEnter: String) {
     )
 }
 
-suspend fun waitFor(condition: () -> Boolean) {
-    var count = 0
-    while (!condition()) {
-        if (count++ > 100) {
-            throw Error("Condition not met in 10 secs")
-        }
-        delay(100)
-    }
-}
+suspend fun waitFor(condition: () -> Boolean) = eventually { condition() shouldBe true }
 
 
 fun TestRenderer.printJSON() = println("\n\n${stringify(toJSON(), null, space = 2)})}")

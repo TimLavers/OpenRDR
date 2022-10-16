@@ -1,14 +1,8 @@
-import csstype.FontSize
-import csstype.FontStyle
-import csstype.FontWeight
-import csstype.WhiteSpace
+import emotion.react.css
 import react.FC
 import react.Props
-import react.css.css
 import react.dom.html.ReactHTML
 import react.dom.html.ReactHTML.th
-
-import kotlinx.datetime.*
 import react.dom.html.ReactHTML.thead
 import react.dom.html.ReactHTML.tr
 

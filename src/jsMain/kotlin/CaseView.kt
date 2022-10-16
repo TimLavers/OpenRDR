@@ -1,10 +1,11 @@
 import csstype.*
+import emotion.react.css
 import io.rippledown.model.RDRCase
 import react.FC
-import react.css.css
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.table
-import react.key
+
+//import react.key
 
 const val CASEVIEW_CASE_NAME_ID = "case_view_case_name"
 
@@ -24,7 +25,7 @@ val CaseView = FC<CaseViewHandler> { props ->
         id = "case_view_container"
         css {
             float = Float.left
-            width = Length("70%")
+            width = 70.pct
             padding = px12
         }
         div {
@@ -40,7 +41,7 @@ val CaseView = FC<CaseViewHandler> { props ->
         }
         table {
             css {
-                border = Length("1px")
+                border = 1.px
                 borderColor = rgb(128, 128, 128)
                 borderStyle = LineStyle.solid
             }

@@ -1,11 +1,10 @@
+import emotion.react.css
 import io.rippledown.model.Interpretation
 import kotlinx.coroutines.launch
 import react.FC
-import react.css.css
 import react.dom.html.ReactHTML
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.textarea
-import react.key
 import react.useState
 
 external interface InterpretationViewHandler : Handler {

@@ -1,8 +1,8 @@
 import csstype.*
+import emotion.react.css
 import io.rippledown.model.CaseId
 import io.rippledown.model.RDRCase
 import react.FC
-import react.css.css
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.li
 import react.dom.html.ReactHTML.ul
@@ -30,9 +30,9 @@ val CaseList = FC<CaseListHandler> { handler ->
             +CASELIST_HEADING
             id = CASELIST_ID
             css {
-                className = "left_column"
+                textAlign = TextAlign.left
                 float = Float.left
-                width = Length("10%")
+                width = 10.pct
                 padding = px12
             }
             ul {
@@ -47,7 +47,7 @@ val CaseList = FC<CaseListHandler> { handler ->
                         css {
                             textDecorationLine = TextDecorationLine.underline
                             padding = px4
-                            listStyle = ListStyle.none
+                            listStyleType = None.none
                         }
                         onClick = {
                             handler.onCaseSelected(caseId.id)

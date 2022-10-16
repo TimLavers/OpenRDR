@@ -1,0 +1,63 @@
+{
+  "name": "Case4",
+  "data": [
+    {
+      "attribute": {
+        "name": "TSH"
+      },
+      "date": 1659752689505
+    },
+    {
+      "value": {
+        "text": "2.75"
+      },
+      "referenceRange": {
+        "lowerString": "0.50",
+        "upperString": "4.0"
+      },
+      "units": "mU/L"
+    },
+    {
+      "attribute": {
+        "name": "TSH"
+      },
+      "date": 1659702689505
+    },
+    {
+      "value": {
+        "text": "0.67"
+      },
+      "referenceRange": {
+        "lowerString": "0.50",
+        "upperString": "4.0"
+      },
+      "units": "mU/L"
+    },
+    {
+      "attribute": {
+        "name": "Stuff"
+      },
+      "date": 1659752689505
+    },
+    {
+      "value": {
+        "text": "6.7"
+      },
+      "referenceRange": null,
+      "units": "mU/L"
+    },
+    {
+      "attribute": {
+        "name": "Stuff"
+      },
+      "date": 1659702689505
+    },
+    {
+      "value": {
+        "text": "12.4"
+      },
+      "referenceRange": null,
+      "units": "mU/L"
+    }
+  ]
+}
