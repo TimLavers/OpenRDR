@@ -5,11 +5,11 @@ val kotlinVersion = "1.7.10"
 val serializationVersion = "1.4.0"
 val ktorVersion = "1.6.7"
 val logbackVersion = "1.2.10"
-val reactVersion = "17.0.2-pre.299-kotlin-1.6.10"
-
+val reactVersion = "18.2.0-pre.406"
+val reactEmotionVersion = "11.10.4-pre.406"
 val kotlinExtensionsVersion = "1.0.1-pre.364"
-val testingLibraryReactVersion = "13.3.0"
-val reactTestRendererVersion = "17.0.2"
+val testingLibraryReactVersion = "13.4.0"
+val reactTestRendererVersion = "18.0.0"
 val kotestVersion = "5.4.1"
 val webDriverVersion = "4.4.3"
 val awaitilityVersion = "4.2.0"
@@ -122,7 +122,7 @@ kotlin {
 
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react:$reactVersion")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom:$reactVersion")
-                implementation("org.jetbrains.kotlin-wrappers:kotlin-react-css:$reactVersion")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-emotion:$reactEmotionVersion")
 
             }
         }

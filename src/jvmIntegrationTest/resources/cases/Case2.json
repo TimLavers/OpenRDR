@@ -1,0 +1,34 @@
+{
+  "name": "Case2",
+  "data": [
+    {
+      "attribute": {
+        "name": "TSH"
+      },
+      "date": 1659752689505
+    },
+    {
+      "value": {
+        "text": "0.72"
+      },
+      "referenceRange": {
+        "lowerString": "0.50",
+        "upperString": "4.0"
+      },
+      "units": "mU/L"
+    },
+    {
+      "attribute": {
+        "name": "CDE"
+      },
+      "date": 1659752689505
+    },
+    {
+      "value": {
+        "text": "9.7"
+      },
+      "referenceRange": null,
+      "units": null
+    }
+  ]
+}

@@ -1,9 +1,9 @@
+import emotion.react.css
 import io.rippledown.model.Attribute
 import io.rippledown.model.ReferenceRange
 import io.rippledown.model.TestResult
 import react.FC
 import react.Props
-import react.css.css
 import react.dom.html.ReactHTML
 
 external interface ValueCellHandler: Props {

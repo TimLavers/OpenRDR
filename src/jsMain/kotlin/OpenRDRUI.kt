@@ -1,9 +1,9 @@
 import csstype.FontFamily
 import csstype.TextAlign
+import emotion.react.css
 import kotlinx.coroutines.CoroutineScope
 import react.FC
 import react.Props
-import react.css.css
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.h1
 

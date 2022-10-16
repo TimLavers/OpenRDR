@@ -35,7 +35,6 @@ object TestRendererGlobal {
     fun act(block: () -> Any) {
         val callback: () -> Nothing? = {
             block()
-
             undefined
         }
 

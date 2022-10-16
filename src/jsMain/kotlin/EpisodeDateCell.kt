@@ -2,12 +2,12 @@ import csstype.FontSize
 import csstype.FontStyle
 import csstype.FontWeight
 import csstype.WhiteSpace
+import emotion.react.css
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import react.FC
 import react.Props
-import react.css.css
 import react.dom.html.ReactHTML
 
 external interface EpisodeDateCellHandler: Props {
