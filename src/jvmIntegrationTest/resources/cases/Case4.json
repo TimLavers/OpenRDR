@@ -16,7 +16,8 @@
         "upperString": "4.0"
       },
       "units": "mU/L"
-    },{
+    },
+    {
       "attribute": {
         "name": "TSH"
       },

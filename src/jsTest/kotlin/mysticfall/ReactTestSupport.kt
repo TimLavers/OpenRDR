@@ -3,6 +3,7 @@
 package mysticfall
 
 import kotlinx.js.jso
+import react.Props
 import react.RBuilder
 import react.RBuilderSingle
 import react.ReactElement
@@ -28,7 +29,7 @@ interface ReactTestSupport {
     }
 
     fun ReactTestSupport.render(
-        mockFactory: (ReactElement) -> Any,
+        mockFactory: (ReactElement<Props>) -> Any,
         block: RBuilder.() -> Unit
     ): TestRenderer {
         val options = jso<TestRendererOptions> {

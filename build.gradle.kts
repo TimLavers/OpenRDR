@@ -1,22 +1,23 @@
+import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
 val kotlinVersion = "1.7.10"
 val serializationVersion = "1.4.0"
 val ktor_version = "2.0.3"
 val logbackVersion = "1.2.10"
-val reactVersion = "17.0.2-pre.299-kotlin-1.6.10"
-
+val reactVersion = "18.2.0-pre.406"
+val reactEmotionVersion = "11.10.4-pre.406"
 val kotlinExtensionsVersion = "1.0.1-pre.364"
-val testingLibraryReactVersion = "13.3.0"
-val reactTestRendererVersion = "17.0.2"
+val testingLibraryReactVersion = "13.4.0"
+val reactTestRendererVersion = "18.0.0"
 val kotestVersion = "5.4.1"
 val webDriverVersion = "4.4.3"
 val awaitilityVersion = "4.2.0"
 
 plugins {
-    kotlin("multiplatform") version "1.7.10"
+    kotlin("multiplatform") version "1.7.20"
     application
-    kotlin("plugin.serialization") version "1.7.10"
+    kotlin("plugin.serialization") version "1.7.20"
     id("io.ktor.plugin") version "2.1.2"
 }
 
@@ -54,6 +55,7 @@ kotlin {
                 // Create a test task to run the tests produced by this compilation:
                 tasks.register<Test>("integrationTest") {
                     dependsOn(tasks.shadowJar)
+                    group = VERIFICATION_GROUP
 
                     // Run the tests with the classpath containing the compile dependencies (including 'main'),
                     // runtime dependencies, and the outputs of this compilation:
@@ -126,7 +128,7 @@ kotlin {
                 implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react:$reactVersion")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom:$reactVersion")
-                implementation("org.jetbrains.kotlin-wrappers:kotlin-react-css:$reactVersion")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-emotion:$reactEmotionVersion")
 
             }
         }

@@ -1,7 +1,10 @@
-import csstype.*
+import csstype.Float
+import csstype.FontStyle
+import csstype.FontWeight
+import csstype.pct
+import emotion.react.css
 import react.FC
 import react.Props
-import react.css.css
 import react.dom.html.ReactHTML.div
 
 
@@ -11,7 +14,7 @@ val NoCaseView = FC<Props> {
         id = "no_case_view"
         css {
             float = Float.left
-            width = Length("70%")
+            width = 70.pct
             padding = px12
             paddingBottom = px4
             paddingLeft = px8
