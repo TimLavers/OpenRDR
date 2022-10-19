@@ -13,6 +13,7 @@ val reactTestRendererVersion = "18.0.0"
 val kotestVersion = "5.4.1"
 val webDriverVersion = "4.4.3"
 val awaitilityVersion = "4.2.0"
+val cucumberVersion = "7.5.0"
 
 plugins {
     kotlin("multiplatform") version "1.7.20"
@@ -62,6 +63,49 @@ kotlin {
 
                     // Run only the tests from this compilation's outputs:
                     testClassesDirs = output.classesDirs
+                }
+            }
+
+            val cucumberTest by compilations.creating {
+                defaultSourceSet {
+                    dependencies {
+                        implementation("io.cucumber:cucumber-java8:$cucumberVersion")
+                        implementation("io.cucumber:cucumber-junit:$cucumberVersion")
+                        implementation("io.cucumber:cucumber-picocontainer:$cucumberVersion")
+                    }
+                    dependsOn(sourceSets.getByName("jvmMain"))
+                    dependsOn(sourceSets.getByName("jvmIntegrationTest"))
+                }
+                val requirement = if (!project.hasProperty("requirement")) {
+                    "single"
+                } else {
+                    project.property("requirement")
+                }
+                val pathToRequirements = "${projectDir.path}/src/jvmCucumberTest/resources/requirements"
+                val argsForCuke = listOf(
+                    "--plugin", "junit:build/test-results/junit.xml",
+                    "--plugin", "html:build/test-results-html",
+                    "--tags", "@$requirement",
+                    "--glue", "steps",
+                    pathToRequirements
+                )
+
+                tasks.create("cucumberTest") {
+                    doLast {
+                        javaexec {
+                            maxHeapSize = "32G"
+                            main = "io.cucumber.core.cli.Main"
+                            args = argsForCuke
+                            classpath = compileDependencyFiles + runtimeDependencyFiles + output.allOutputs
+                        }
+                    }
+                    dependsOn(
+                        tasks.shadowJar,
+                        tasks.compileTestJava,
+                        tasks.processTestResources,
+                        tasks.getByName("jvmCucumberTestClasses"),
+                    )
+                    group = VERIFICATION_GROUP
                 }
             }
         }
