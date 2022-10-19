@@ -14,7 +14,7 @@ import react.ReactElement
 interface ReactTestSupport {
     fun ReactTestSupport.act(block: () -> Unit): Unit = TestRendererGlobal.act(block)
 
-    fun ReactTestSupport.render(block: RBuilder.() -> Unit): TestRenderer = render(null, block)
+    fun ReactTestSupport.trender(block: RBuilder.() -> Unit): TestRenderer = render(null, block)
 
     fun ReactTestSupport.render(
         options: TestRendererOptions? = null,

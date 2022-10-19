@@ -12,6 +12,7 @@ import REVIEW_CASES_BUTTON_ID
 import SEND_INTERPRETATION_BUTTON_ID
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -67,6 +68,12 @@ fun TestRenderer.requireCaseToBeSelected(caseName: String) {
 fun TestRenderer.requireNamesToBeShowingOnCaseList(vararg caseNames: String) {
     val caseList = root.findByType(CaseList)
     caseList.props.caseIds.map { it.name } shouldBe caseNames.toList()
+}
+
+suspend fun waitForEvents() {
+    withContext(Dispatchers.Default) {
+        delay(150) // Dispatchers.Default doesn't know about TestCoroutineScheduler
+    }
 }
 
 fun TestRenderer.requireNumberOfCasesWaiting(expected: Int) {

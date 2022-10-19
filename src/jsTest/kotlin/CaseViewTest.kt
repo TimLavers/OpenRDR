@@ -10,6 +10,7 @@ import mysticfall.ReactTestSupport
 import proxy.clickSubmitButton
 import proxy.requireCaseToBeSelected
 import proxy.requireInterpretation
+import proxy.waitForEvents
 import kotlin.test.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -59,6 +60,7 @@ class CaseViewTest : ReactTestSupport {
         }
         interpSubmitted shouldBe false
         renderer.clickSubmitButton()
+        waitForEvents()
         interpSubmitted shouldBe true
     }
 

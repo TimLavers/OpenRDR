@@ -4,6 +4,7 @@ import io.rippledown.model.Conclusion
 import io.rippledown.model.RDRCase
 import io.rippledown.model.rule.RuleSummary
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import mocks.defaultMock
 import mysticfall.ReactTestSupport
@@ -104,9 +105,9 @@ class CaseListTest : ReactTestSupport {
                 attrs.onInterpretationSubmitted = { interpSubmitted = true }
             }
         }
-
-        interpSubmitted shouldBe false
         renderer.clickSubmitButton()
-        interpSubmitted shouldBe true
+        this@runTest.launch {
+            interpSubmitted shouldBe true
+        }
     }
 }

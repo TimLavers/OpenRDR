@@ -1,8 +1,7 @@
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.RDRCase
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
@@ -55,7 +54,9 @@ class CaseQueueTest : ReactTestSupport {
         with(renderer) {
             requireNumberOfCasesWaiting(0)
             clickRefreshButton()
-            requireNumberOfCasesWaiting(3)
+        }
+        this@runTest.launch {
+            renderer.requireNumberOfCasesWaiting(3)
         }
     }
 
@@ -78,18 +79,19 @@ class CaseQueueTest : ReactTestSupport {
         }
         with(renderer) {
             clickRefreshButton()
+            waitForEvents()
             requireNumberOfCasesWaiting(3) //Sanity check
 
             config.returnCasesInfo = CasesInfo(emptyList())
             clickRefreshButton()
+            waitForEvents()
             requireNumberOfCasesWaiting(0)
             requireNoCaseView()
         }
     }
 
-
     @Test
-    fun shouldGetCasesWhenInitialised() = runTest {
+        fun shouldGetCasesWhenInitialised() = runTest {
         val config = config {
             returnCasesInfo = CasesInfo(
                 listOf(
@@ -111,8 +113,8 @@ class CaseQueueTest : ReactTestSupport {
                 }
             }
         }.join()
+        waitForEvents()
         renderer.requireNumberOfCasesWaiting(2)
-
     }
 
     @Test
@@ -135,9 +137,10 @@ class CaseQueueTest : ReactTestSupport {
         with(renderer) {
             clickRefreshButton() //enable the review button
             clickReviewButton()
-            requireNamesToBeShowingOnCaseList("case 1", "case 2")
-            requireNoCaseView()
         }
+        waitForEvents()
+        renderer.requireNamesToBeShowingOnCaseList("case 1", "case 2")
+        renderer.requireNoCaseView()
     }
 
     @Test
@@ -162,9 +165,13 @@ class CaseQueueTest : ReactTestSupport {
         with(renderer) {
             clickRefreshButton() //enable the review button
             clickReviewButton() //show the case list
+            waitForEvents()
+
             requireNamesToBeShowingOnCaseList(caseName1, caseName2) //sanity check
             requireNoCaseView()
+
             selectCase(caseName1)
+            waitForEvents()
             requireCaseToBeSelected(caseName1) //sanity check
         }
     }
@@ -190,14 +197,20 @@ class CaseQueueTest : ReactTestSupport {
         with(renderer) {
             clickRefreshButton() //enable the review button
             clickReviewButton() //show the case list
+            waitForEvents()
+
             requireNamesToBeShowingOnCaseList(caseName) //sanity check
             selectCase(caseName)
+            waitForEvents()
+
             requireCaseToBeSelected(caseName) //sanity check
 
             //set the mock to return no cases
             config.returnCasesInfo = CasesInfo(emptyList())
 
             clickSubmitButton()
+            waitForEvents()
+
             requireNoCaseView()
             waitFor { numberOfCasesWaiting() == 0 }
             requireCaseListNotToBeShowing()
@@ -231,16 +244,21 @@ class CaseQueueTest : ReactTestSupport {
         with(renderer) {
             clickRefreshButton() //enable the review button
             clickReviewButton()  //show the case list and the case
+            waitForEvents()
+
             selectCase(caseName1)
+            waitForEvents()
             requireCaseToBeSelected(caseName1)
 
             //set the mock to return one case
             config.returnCasesInfo = CasesInfo(listOf(CaseId("2", caseName2)))
 
             clickSubmitButton()
+            waitForEvents()
             waitFor { numberOfCasesWaiting() == 1 }
 
             //check that the case list shows the one remaining case name
+            waitForEvents()
             requireNamesToBeShowingOnCaseList(caseName2)
         }
     }
@@ -274,7 +292,10 @@ class CaseQueueTest : ReactTestSupport {
         with(renderer) {
             clickRefreshButton() //enable the review button
             clickReviewButton()  //show the case list and the case
+            waitForEvents()
+
             selectCase(caseName2)
+            waitForEvents()
             requireCaseToBeSelected(caseName2)
 
             //set the mock to return the other two cases
@@ -287,6 +308,8 @@ class CaseQueueTest : ReactTestSupport {
             config.returnCase = RDRCase(caseName1)
 
             clickSubmitButton()
+            waitForEvents()
+
             waitFor { numberOfCasesWaiting() == 2 }
 
             //check that the case list shows the two remaining case names
@@ -296,5 +319,4 @@ class CaseQueueTest : ReactTestSupport {
             requireCaseToBeSelected(caseName1)
         }
     }
-
 }

@@ -71,7 +71,7 @@ internal class TSHRulesTest : TSHTest() {
 
         val tshNormal = IsNormal(tsh)
         val highTSH = IsHigh(tsh)
-        val tshSlightlyHigh = SlightlyHigh(tsh, 20)
+        val shSlightlyHigh = SlightlyHigh(tsh, 20)
         val freeT4Normal = IsNormal(freeT4)
         val freeT4NotDone = HasNoCurrentValue(freeT4)
         val notElderly = LessThanOrEqualTo(Attribute("Age"), 69.0)
