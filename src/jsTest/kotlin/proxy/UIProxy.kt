@@ -96,10 +96,12 @@ fun TestRenderer.requireCaseListHeading(expected: String) {
 }
 
 fun TestRenderer.requireInterpretation(expected: String) {
-    val instance = findById(INTERPRETATION_TEXT_AREA_ID)
+    val instance = interpretationArea()
     val value = instance.props.asDynamic()["value"].unsafeCast<String>()
     value shouldBe expected
 }
+
+fun TestRenderer.interpretationArea() = findById(INTERPRETATION_TEXT_AREA_ID)
 
 fun TestRenderer.requireNoInterpretation() = requireInterpretation("")
 

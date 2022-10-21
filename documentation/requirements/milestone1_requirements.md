@@ -43,6 +43,15 @@ in the first column, the `Value` and `Unit`s in the second column, and the
 `ReferenceRange` in the third column.  
 **Ticket:** [ORD2](../tickets/work_tickets.md)
 
+**InterpretationView:**
+The `Interpretation` is presented as plain text. The text consists of all of the
+conclusions given for the case joined together with spaces between them.
+The order of the conclusions in this text is defined by the conclusion ordering.
+
+The text is shown in a text area with a monospaced font. This is because comments
+sometimes contain tables formed by white-spaces.
+**Ticket:** [ORD7](../tickets/work_tickets.md)
+
 ## Data processing
 The Clinical Decision Support System is backed by a Knowledge Base (KB).
 It has this workflow:

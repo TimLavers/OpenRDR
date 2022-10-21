@@ -4,9 +4,9 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
 import kotlin.test.Test
 
-internal class IsHighTest: ConditionTestBase() {
+internal class IsLowTest: ConditionTestBase() {
 
-    private val condition = IsHigh(tsh)
+    private val condition = IsLow(tsh)
 
     @Test
     fun attributeNotInCase() {
@@ -33,23 +33,20 @@ internal class IsHighTest: ConditionTestBase() {
         val builder1 = RDRCaseBuilder()
         builder1.addResult(tsh, defaultDate , TestResult("0.067", range, "pmol/L"))
         val case = builder1.build("Case")
-        condition.holds(case) shouldBe false
+        condition.holds(case) shouldBe true
     }
 
     @Test
     fun valueHigh() {
-        condition.holds(highTSHCase()) shouldBe true
-    }
-
-    @Test
-    fun valueHighAgainstOneSidedRange() {
-        condition.holds(highTSHWithOneSidedRangeCase()) shouldBe true
+        condition.holds(highTSHCase()) shouldBe false
     }
 
     @Test
     fun currentValueNormal() {
         condition.holds(twoEpisodeCaseWithFirstTSHHighSecondNormal()) shouldBe false
-        condition.holds(twoEpisodeCaseWithFirstTSHNormalSecondHigh()) shouldBe true
+        condition.holds(twoEpisodeCaseWithFirstTSHNormalSecondHigh()) shouldBe false
+        condition.holds(twoEpisodeCaseWithFirstTSHNormalSecondLow()) shouldBe true
+        condition.holds(twoEpisodeCaseWithFirstTSHLowSecondNormal()) shouldBe false
     }
 
     @Test
@@ -64,6 +61,6 @@ internal class IsHighTest: ConditionTestBase() {
 
     @Test
     fun asText() {
-        condition.asText() shouldBe "TSH is high"
+        condition.asText() shouldBe "TSH is low"
     }
 }

@@ -55,6 +55,8 @@ internal class ShowCaseInterpretation : UITestBase() {
         caseView2.interpretationText() shouldBe comment
         val caseView3 = caseListPO.select("Case3")
         caseView3.interpretationText() shouldBe ""
+
+        caseView3.interpretationArea().getCssValue("font-family") shouldBe "monospace"
     }
 
     private fun setupCases() {
