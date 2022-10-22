@@ -1,37 +1,10 @@
 package io.rippledown.integration
 
-import io.rippledown.examples.vltsh.*
-import io.rippledown.integration.pageobjects.CaseListPO
-import io.rippledown.integration.pageobjects.CaseQueuePO
-import io.rippledown.integration.pageobjects.CaseViewPO
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 // ORD4
-internal class TSHExamplesTest: UITestBase() {
-
-    private lateinit var caseQueuePO: CaseQueuePO
-    private lateinit var caseListPO: CaseListPO
-    private lateinit var caseViewPO: CaseViewPO
-    private lateinit var dataShown: Map<String, List<String>>
-
-    @BeforeTest
-    fun setup() {
-        serverProxy.start()
-        setupCases()
-        setupWebDriver()
-        caseQueuePO = CaseQueuePO(driver)
-        caseQueuePO.refresh().waitForNumberWaitingToBe(17)
-        caseListPO = caseQueuePO.review()
-    }
-
-    @AfterTest
-    fun cleanup() {
-        driverClose()
-        serverProxy.shutdown()
-    }
+internal class TSHExamplesTest: TSHTest() {
 
     @Test
     fun tshCases() {
@@ -174,12 +147,6 @@ internal class TSHExamplesTest: UITestBase() {
 
     }
 
-    private fun selectCaseAndCheckName(name: String) {
-        caseViewPO = caseListPO.select(name)
-        dataShown = caseViewPO.valuesShown()
-        assertEquals(name, caseViewPO.nameShown())
-    }
-
     private fun checkAgeSexTestsLocation(age: Int, sex: String, tests: String = "TFTs", location: String = "General Practice.") {
         assertEquals(dataShown["Age"]!![0], "$age")
         assertEquals(dataShown["Sex"]!![0], sex)
@@ -200,26 +167,5 @@ internal class TSHExamplesTest: UITestBase() {
         val dataShown = caseViewPO.valuesShown()
         assertEquals(dataShown["Free T4"]!![0], "$value pmol/L")
         assertEquals(caseViewPO.referenceRange("Free T4"), "(10 - 20)")
-
-    }
-
-    private fun setupCases() {
-        labProxy.writeCaseToInputDir(TSH1)
-        labProxy.writeCaseToInputDir(TSH2)
-        labProxy.writeCaseToInputDir(TSH3)
-        labProxy.writeCaseToInputDir(TSH4)
-        labProxy.writeCaseToInputDir(TSH5)
-        labProxy.writeCaseToInputDir(TSH6)
-        labProxy.writeCaseToInputDir(TSH7)
-        labProxy.writeCaseToInputDir(TSH8)
-        labProxy.writeCaseToInputDir(TSH9)
-        labProxy.writeCaseToInputDir(TSH10)
-        labProxy.writeCaseToInputDir(TSH11)
-        labProxy.writeCaseToInputDir(TSH12)
-        labProxy.writeCaseToInputDir(TSH13)
-        labProxy.writeCaseToInputDir(TSH14)
-        labProxy.writeCaseToInputDir(TSH15)
-        labProxy.writeCaseToInputDir(TSH16)
-        labProxy.writeCaseToInputDir(TSH17)
     }
 }

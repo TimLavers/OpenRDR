@@ -24,7 +24,9 @@ val CaseQueue = FC<CaseQueueHandler> { handler ->
 
     useEffectOnce {
         handler.scope.launch {
+            console.log("====================================")
             waitingCasesInfo = handler.api.waitingCasesInfo()
+            console.log("**********************************")
         }
     }
 

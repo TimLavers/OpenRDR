@@ -24,14 +24,14 @@ class BuildTemplate {
         val caseBuilder = RDRCaseBuilder()
         caseBuilder.addResult(textAttribute, defaultDate, TestResult(data))
         val case = caseBuilder.build(name)
-        kb.addCornerstone(case)
+        kb.addCase(case)
     }
 
     fun case(i: Int) {
         val caseBuilder = RDRCaseBuilder()
         caseBuilder.addResult(numberAttribute, defaultDate, TestResult("$i"))
         val case = caseBuilder.build("$i")
-        kb.addCornerstone(case)
+        kb.addCase(case)
     }
 
     fun session(s: SessionTemplate.() -> Unit): SessionTemplate {
@@ -47,14 +47,10 @@ class BuildTemplate {
     }
 }
 
-private fun KB.getCaseByName(caseName: String): RDRCase = let {
-    cornerstones.first { caseName == it.name }
-}
-
 class SessionTemplate( val kb: KB) {
     lateinit var case: RDRCase
-    lateinit var action: RuleTreeChange
-    lateinit var session: RuleBuildingSession
+//    lateinit var action: RuleTreeChange
+//    lateinit var session: RuleBuildingSession
 
     fun selectCase(name: String) {
         case = kb.getCaseByName(name)
@@ -68,7 +64,7 @@ class SessionTemplate( val kb: KB) {
     fun condition(c: String) {
         try {
             val condition = ContainsText(textAttribute, c)
-            session.addCondition(condition)
+            kb.addConditionToCurrentRuleSession(condition)
         } catch (e: Exception) {
             throw Exception(addedConditionBeforeSessionStarted)
         }
@@ -76,14 +72,14 @@ class SessionTemplate( val kb: KB) {
 
     fun condition(i: Int) {
         try {
-            session.addCondition(GreaterThanOrEqualTo(numberAttribute, i.toDouble()))
+            kb.addConditionToCurrentRuleSession(GreaterThanOrEqualTo(numberAttribute, i.toDouble()))
         } catch (e: Exception) {
             throw Exception(addedConditionBeforeSessionStarted)
         }
     }
 
     fun requireCornerstones(vararg expectedCornerstones: String) {
-        session.cornerstoneCases().map { it.name }.toSet() shouldBe expectedCornerstones.toSet()
+        kb.conflictingCasesInCurrentRuleSession().map { it.name }.toSet() shouldBe expectedCornerstones.toSet()
     }
 
     operator fun String.unaryPlus() {
@@ -91,8 +87,8 @@ class SessionTemplate( val kb: KB) {
     }
 
     fun addConclusion(conclusion: String) {
-        action = ChangeTreeToAddConclusion(Conclusion(conclusion))
-        session = kb.startSession(case, action)
+        val action = ChangeTreeToAddConclusion(Conclusion(conclusion))
+        kb.startRuleSession(case, action)
     }
 
     operator fun String.unaryMinus() {
@@ -100,16 +96,16 @@ class SessionTemplate( val kb: KB) {
     }
 
     fun removeConclusion(conclusion: String) {
-        action = ChangeTreeToRemoveConclusion(Conclusion(conclusion))
-        session = kb.startSession(case, action)
+        val action = ChangeTreeToRemoveConclusion(Conclusion(conclusion))
+        kb.startRuleSession(case, action)
     }
 
     fun replaceConclusion(conclusion: String, replacement: String) {
-        action = ChangeTreeToReplaceConclusion(Conclusion(conclusion), Conclusion(replacement))
-        session = kb.startSession(case, action)
+        val action = ChangeTreeToReplaceConclusion(Conclusion(conclusion), Conclusion(replacement))
+        kb.startRuleSession(case, action)
     }
 
     fun commit() {
-        session.commit()
+        kb.commitCurrentRuleSession()
     }
 }

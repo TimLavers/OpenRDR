@@ -3,6 +3,8 @@ package io.rippledown.server
 import io.rippledown.kb.KB
 import io.rippledown.model.*
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.rule.ChangeTreeToAddConclusion
+import io.rippledown.model.rule.ChangeTreeToReplaceConclusion
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -21,14 +23,18 @@ class ServerApplication {
     }
 
     fun startRuleSessionToAddConclusion(caseId: String, conclusion: Conclusion) {
-        kb.startRuleSessionToAddConclusion(case(caseId), conclusion)
+        kb.startRuleSession(case(caseId), ChangeTreeToAddConclusion(conclusion))
+    }
+
+    fun startRuleSessionToReplaceConclusion(caseId: String, toGo: Conclusion, replacement: Conclusion) {
+        kb.startRuleSession(case(caseId), ChangeTreeToReplaceConclusion(toGo, replacement))
     }
 
     fun addConditionToCurrentRuleBuildingSession(condition: Condition) {
         kb.addConditionToCurrentRuleSession(condition)
     }
 
-    fun commitCurrentRuleSession() = kb.finishCurrentRuleSession()
+    fun commitCurrentRuleSession() = kb.commitCurrentRuleSession()
 
     fun waitingCasesInfo(): CasesInfo {
         fun readCaseDetails(file: File): CaseId {

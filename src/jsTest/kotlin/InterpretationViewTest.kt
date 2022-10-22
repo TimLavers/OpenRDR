@@ -8,10 +8,7 @@ import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
 import mysticfall.ReactTestSupport
-import proxy.clickSubmitButton
-import proxy.enterInterpretation
-import proxy.requireInterpretation
-import proxy.requireNoInterpretation
+import proxy.*
 import kotlin.test.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -78,6 +75,7 @@ class InterpretationViewTest : ReactTestSupport {
         }
         with(renderer) {
             clickSubmitButton()
+            waitForEvents()
             called shouldBe true
         }
     }
@@ -100,10 +98,10 @@ class InterpretationViewTest : ReactTestSupport {
         }
         with(renderer) {
             enterInterpretation(enteredText)
+            waitForEvents()
             clickSubmitButton()
+            waitForEvents()
             called shouldBe true
         }
     }
-
-
 }
