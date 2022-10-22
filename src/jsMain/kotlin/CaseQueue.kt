@@ -9,6 +9,8 @@ import react.dom.html.ReactHTML.h2
 import react.dom.html.ReactHTML.span
 import react.useEffectOnce
 import react.useState
+import web.timers.setInterval
+import kotlin.time.Duration.Companion.seconds
 
 const val NUMBER_OF_CASES_WAITING_ID = "number_of_cases_waiting_value"
 const val REFRESH_BUTTON_ID = "refresh_waiting_cases_info_button"
@@ -23,8 +25,13 @@ val CaseQueue = FC<CaseQueueHandler> { handler ->
     var selectedCase: RDRCase? by useState(null)
 
     useEffectOnce {
-        handler.scope.launch {
-            waitingCasesInfo = handler.api.waitingCasesInfo()
+        console.log("\n\ncall set interval")
+        setInterval(2.seconds) {
+            console.log("\n\nlaunching waitingCasesInfo:")
+            handler.scope.launch {
+                console.log("\n\ncall waitingCasesInfo:")
+                waitingCasesInfo = handler.api.waitingCasesInfo()
+            }
         }
     }
 

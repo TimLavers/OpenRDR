@@ -1,8 +1,7 @@
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.RDRCase
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
@@ -111,6 +110,10 @@ class CaseQueueTest : ReactTestSupport {
                 }
             }
         }.join()
+        withContext(Dispatchers.Default) {
+            delay(2000) // Dispatchers.Default doesn't know about TestCoroutineScheduler
+        }
+        renderer.printJSON()
         renderer.requireNumberOfCasesWaiting(2)
 
     }
