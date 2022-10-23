@@ -112,6 +112,23 @@ class KBTest {
     }
 
     @Test
+    fun `cannot start a rule session if action is not applicable to session case`() {
+        val kb = KB("Blah")
+        kb.addCase(createCase("Case1", "1.0"))
+        kb.addCase(createCase("Case2", "1.0"))
+        val sessionCase = kb.getCaseByName("Case1")
+        val otherCase = kb.getCaseByName("Case1")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion("Whatever.")))
+        kb.commitCurrentRuleSession()
+        kb.interpret(otherCase)
+        otherCase.interpretation.textGivenByRules() shouldBe "Whatever." // sanity
+
+        shouldThrow<IllegalStateException> {
+            kb.startRuleSession(otherCase, ChangeTreeToAddConclusion(Conclusion("Whatever.")))
+        }.message shouldBe "Action ChangeTreeToAddConclusion(toBeAdded=Conclusion(text=Whatever.)) is not applicable to case Case1"
+    }
+
+    @Test
     fun startRuleSession() {
         val kb = KB("Blah")
         kb.addCase(createCase("Case1"))
@@ -153,7 +170,7 @@ class KBTest {
         kb.addCase(createCase("Case1", "1.0"))
         kb.addCase(createCase("Case2", "2.0"))
         val sessionCase = kb.getCaseByName("Case1")
-        val otherCase = kb.getCaseByName("Case1")
+        val otherCase = kb.getCaseByName("Case2")
         sessionCase.interpretation.textGivenByRules() shouldBe ""
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion("Whatever.")))
         kb.interpret(otherCase)

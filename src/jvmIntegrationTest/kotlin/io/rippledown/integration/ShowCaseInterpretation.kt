@@ -48,7 +48,6 @@ internal class ShowCaseInterpretation : UITestBase() {
 
     @Test
     fun caseShowsCommentAddedByRule() {
-        buildRule()
         val caseView1 = caseListPO.select("Case1")
         caseView1.interpretationText() shouldBe comment
         val caseView2 = caseListPO.select("Case2")

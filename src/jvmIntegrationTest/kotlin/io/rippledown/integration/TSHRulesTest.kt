@@ -46,24 +46,22 @@ internal class TSHRulesTest : TSHTest() {
         selectCaseAndCheckName("1.4.10")
         checkInterpretation("The suppressed TSH and normal FT4 are consistent with subclinical hyperthyroidism. \n" +
                 "Suggest measure free triiodothyronine (FT3).")
-
         selectCaseAndCheckName("1.4.11")
-        checkInterpretation("The increased FT3 and suppressed TSH (with a normal FT4) are consistent with T3 toxicosis. Suggest measure TSH-receptor antibodies (TRAb")
-
+        checkInterpretation("The increased FT3 and suppressed TSH (with a normal FT4) are consistent with T3 toxicosis. Suggest measure TSH-receptor antibodies (TRAb).")
         selectCaseAndCheckName("1.4.12")
         checkInterpretation("The severely increased TSH with a very low FT4 is consistent with primary hypothyroidism. Suggest measure TPO antibodies.")
-
         /*
-                selectCaseAndCheckName("1.4.13")
 
-                selectCaseAndCheckName("1.4.14")
+                        selectCaseAndCheckName("1.4.13")
 
-                selectCaseAndCheckName("1.4.15")
+                        selectCaseAndCheckName("1.4.14")
 
-                selectCaseAndCheckName("1.4.16")
+                        selectCaseAndCheckName("1.4.15")
 
-                selectCaseAndCheckName("1.4.17")
-        */
+                        selectCaseAndCheckName("1.4.16")
+
+                        selectCaseAndCheckName("1.4.17")
+                */
     }
 
     fun checkInterpretation(comment: String) {
@@ -91,7 +89,7 @@ internal class TSHRulesTest : TSHTest() {
         val tshModeratelyIncreased = GreaterThanOrEqualTo(tsh, 10.0)
         val tshHigh = IsHigh(tsh)
         val tshVeryHigh = GreaterThanOrEqualTo(tsh, 40.0) // What should this be?
-        val ft4VeryLow = Is(freeT4, "<5 pmol/L")
+        val ft4VeryLow = Is(freeT4, "<5")
         val t4SlightlyLow = SlightlyLow(freeT4, 20)
         val ft3High = IsHigh(ft3)
         val freeT4Normal = IsNormal(freeT4)
@@ -131,10 +129,10 @@ internal class TSHRulesTest : TSHTest() {
 
         replaceCommentForCase("1.4.7", report3b, report5, tshModeratelyIncreased)
         addCommentForCase("1.4.8", report6, tshLow, notesShowsTrimester1)
-        replaceCommentForCase("1.4.9", report3, report7, tpoHigh, notesShowsTryingForBaby)
+        replaceCommentForCase("1.4.9", report3b, report7, tpoHigh, notesShowsTryingForBaby)
         addCommentForCase("1.4.10", report8, tshLow, freeT4Normal, tiredness) // tiredness needed to exclude 1.4.8
         addCommentForCase("1.4.11", report8b, ft3High, tshLow, freeT4Normal)
-        addCommentForCase("1.4.12", report9, tshVeryHigh, ft4VeryLow)
+        replaceCommentForCase("1.4.12", report3, report9, tshVeryHigh, ft4VeryLow)
     }
 
     private fun addCommentForCase(caseName: String, comment: String, vararg conditions: Condition) {

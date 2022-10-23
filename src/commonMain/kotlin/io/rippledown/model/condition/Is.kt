@@ -8,6 +8,7 @@ import kotlinx.serialization.Serializable
 data class Is(val attribute: Attribute, val toFind: String) : Condition() {
     override fun holds(case: RDRCase): Boolean {
         val latest = case.getLatest(attribute) ?: return false
+        println("Is: attr text: '${latest.value.text}', toFind: '$toFind'")
         return latest.value.text == toFind
     }
 

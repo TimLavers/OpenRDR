@@ -5,18 +5,32 @@ import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
 
 abstract class RuleTreeChange {
+    abstract fun isApplicable(tree: RuleTree, case: RDRCase): Boolean
     abstract fun updateRuleTree(tree: RuleTree, case: RDRCase, conditions: Set<Condition> = setOf()): Set<Rule>
 }
 
 class ChangeTreeToAddConclusion(private val toBeAdded: Conclusion) : RuleTreeChange() {
+    override fun isApplicable(tree: RuleTree, case: RDRCase): Boolean {
+        return !tree.apply(case).conclusions().contains(toBeAdded)
+    }
+
     override fun updateRuleTree(tree: RuleTree, case: RDRCase, conditions: Set<Condition>): Set<Rule> {
         val rule = tree.rule(toBeAdded, conditions)
         tree.root.addChild(rule)
         return setOf(rule)
     }
+
+    override fun toString(): String {
+        return "ChangeTreeToAddConclusion(toBeAdded=$toBeAdded)"
+    }
 }
 
-open class ChangeTreeToRemoveConclusion(val toBeRemoved: Conclusion) : RuleTreeChange() {
+open class ChangeTreeToRemoveConclusion(internal val toBeRemoved: Conclusion) : RuleTreeChange() {
+
+    override fun isApplicable(tree: RuleTree, case: RDRCase): Boolean {
+        return tree.apply(case).conclusions().contains(toBeRemoved)
+    }
+
     override fun updateRuleTree(tree: RuleTree, case: RDRCase, conditions: Set<Condition>): Set<Rule> {
         tree.apply(case)
         val interpretation = case.interpretation
@@ -34,10 +48,20 @@ open class ChangeTreeToRemoveConclusion(val toBeRemoved: Conclusion) : RuleTreeC
     open fun createRule(tree: RuleTree, conditions: Set<Condition>): Rule {
         return tree.rule(null, conditions)
     }
+
+    override fun toString(): String {
+        return "ChangeTreeToRemoveConclusion(toBeRemoved=$toBeRemoved)"
+    }
 }
 
 class ChangeTreeToReplaceConclusion(toBeReplaced: Conclusion, private val replacement: Conclusion) : ChangeTreeToRemoveConclusion(toBeReplaced) {
     override fun createRule(tree: RuleTree, conditions: Set<Condition>): Rule {
         return tree.rule(replacement, conditions)
     }
+
+    override fun toString(): String {
+        return "ChangeTreeToReplaceConclusion(toBeReplaced=$toBeRemoved replacement=$replacement)"
+    }
+
+
 }

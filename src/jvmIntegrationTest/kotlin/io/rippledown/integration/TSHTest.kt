@@ -30,7 +30,7 @@ internal open class TSHTest: UITestBase() {
     @AfterTest
     fun cleanup() {
         driverClose()
-//        serverProxy.shutdown()
+        serverProxy.shutdown()
     }
 
     fun selectCaseAndCheckName(name: String) {
