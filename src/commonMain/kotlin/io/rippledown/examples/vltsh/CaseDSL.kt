@@ -53,7 +53,7 @@ data class CaseTemplate(var name: String = "", var tsh: String = "", var freeT4:
 
 class TestResultTemplate(var attribute: String = "", var value: String = "") {
     var lowerBound: String? = null
-    private var upperBound: String? = null
+    var upperBound: String? = null
     var units: String? = null
 
     fun result(): TestResult {

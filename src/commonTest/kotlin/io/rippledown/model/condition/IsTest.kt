@@ -4,9 +4,9 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
 import kotlin.test.Test
 
-internal class ContainsTextTest: ConditionTestBase() {
+internal class IsTest: ConditionTestBase() {
 
-    private val condition = ContainsText(tsh, "goat")
+    private val condition = Is(tsh, "goat")
 
     @Test
     fun attributeNotInCase() {
@@ -30,12 +30,16 @@ internal class ContainsTextTest: ConditionTestBase() {
 
     @Test
     fun holds() {
-        val containsText = ContainsText(clinicalNotes, "goat")
-        containsText.holds(createCase("")) shouldBe false
-        containsText.holds(createCase("sheep")) shouldBe false
-        containsText.holds(createCase("goat")) shouldBe true
-        containsText.holds(createCase("goats")) shouldBe true
-        containsText.holds(createCase("Goat")) shouldBe false
+        val isText = Is(clinicalNotes, "goat")
+        isText.holds(createCase("sheep")) shouldBe false
+        isText.holds(createCase("goat")) shouldBe true
+        isText.holds(createCase("Goat")) shouldBe false
+    }
+
+    @Test
+    fun nonAscii() {
+        val isText = Is(clinicalNotes, "<5 pmol/L")
+        isText.holds(createCase("<5 pmol/L")) shouldBe true
     }
 
     private fun createCase(notes: String): RDRCase {
@@ -51,6 +55,6 @@ internal class ContainsTextTest: ConditionTestBase() {
 
     @Test
     fun asText() {
-        condition.asText() shouldBe "TSH contains \"goat\""
+        condition.asText() shouldBe "TSH is \"goat\""
     }
 }

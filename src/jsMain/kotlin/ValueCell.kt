@@ -39,8 +39,8 @@ fun rangeText(referenceRange: ReferenceRange?) =
         when {
             this == null -> ""
             lowerString == null && upperString == null -> ""
-            lowerString == null -> "(> $upperString)"
-            upperString == null -> "(< $lowerString)"
+            lowerString == null -> "(< $upperString)"
+            upperString == null -> "(> $lowerString)"
             else -> "($lowerString - $upperString)"
         }
     }

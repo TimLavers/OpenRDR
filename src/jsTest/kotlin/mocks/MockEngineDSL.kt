@@ -62,8 +62,9 @@ private class EngineBuilder(private val config: EngineConfig) {
 
             "/api/interpretationSubmitted" -> {
                 val body = request.body as TextContent
+                val bodyAsInterpretation = Json.decodeFromString(Interpretation.serializer(), body.text)
                 if (config.expectedInterpretation != null) {
-                    body.text shouldBe json.encodeToString(config.expectedInterpretation)
+                    bodyAsInterpretation shouldBe config.expectedInterpretation
                 }
 
                 respond(

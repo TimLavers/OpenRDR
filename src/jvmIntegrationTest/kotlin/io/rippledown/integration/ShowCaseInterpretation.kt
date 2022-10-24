@@ -48,13 +48,14 @@ internal class ShowCaseInterpretation : UITestBase() {
 
     @Test
     fun caseShowsCommentAddedByRule() {
-        buildRule()
         val caseView1 = caseListPO.select("Case1")
         caseView1.interpretationText() shouldBe comment
         val caseView2 = caseListPO.select("Case2")
         caseView2.interpretationText() shouldBe comment
         val caseView3 = caseListPO.select("Case3")
         caseView3.interpretationText() shouldBe ""
+
+        caseView3.interpretationArea().getCssValue("font-family") shouldBe "monospace"
     }
 
     private fun setupCases() {

@@ -21,7 +21,7 @@ open class UITestBase {
         with(driver) {
             manage().timeouts().implicitlyWait(Duration.ofSeconds(10))
             manage().window()?.maximize()
-            get("http://127.0.0.1:9090")
+            get("http://localhost:9090")
         }
         return driver
     }

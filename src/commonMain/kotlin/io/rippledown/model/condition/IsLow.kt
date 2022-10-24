@@ -5,13 +5,13 @@ import io.rippledown.model.RDRCase
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class HasNoCurrentValue(val attribute: Attribute) : Condition() {
+data class IsLow(val attribute: Attribute) : Condition() {
     override fun holds(case: RDRCase): Boolean {
-        val latest = case.getLatest(attribute) ?: return true
-        return latest.value.text.isBlank()
+        val latest = case.getLatest(attribute) ?: return false
+        return latest.isLow()
     }
 
     override fun asText(): String {
-        return "${attribute.name} has no current value"
+        return "${attribute.name} is low"
     }
 }

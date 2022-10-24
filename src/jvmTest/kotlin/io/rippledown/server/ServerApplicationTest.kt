@@ -3,10 +3,7 @@ package io.rippledown.server
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.rippledown.CaseTestUtils
-import io.rippledown.model.Attribute
-import io.rippledown.model.CaseId
-import io.rippledown.model.Conclusion
-import io.rippledown.model.Interpretation
+import io.rippledown.model.*
 import io.rippledown.model.condition.GreaterThanOrEqualTo
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import kotlinx.serialization.decodeFromString
@@ -43,7 +40,7 @@ internal class ServerApplicationTest {
     fun saveInterpretationDeletesCase() {
         val app = ServerApplication()
         val caseId = CaseId("Case1", "Case1")
-        FileUtils.copyFileToDirectory(CaseTestUtils.caseFile("Case1"), app.casesDir)
+        setUpCaseFromFile("Case1", app)
         val case1File = File(app.casesDir, "Case1.json")
         assertTrue(case1File.exists())
         val interpretation = Interpretation(caseId, "Whatever, blah.")
@@ -54,7 +51,7 @@ internal class ServerApplicationTest {
     @Test
     fun saveInterpretation() {
         val app = ServerApplication()
-        FileUtils.copyFileToDirectory(CaseTestUtils.caseFile("Case1"), app.casesDir)
+        setUpCaseFromFile("Case1", app)
         val caseId = CaseId("Case1", "Case 1")
         val interpretation = Interpretation(caseId, "Whatever, blah.")
 
@@ -69,7 +66,7 @@ internal class ServerApplicationTest {
         assertEquals(deserialized.caseId, caseId)
 
         // Save it again, with a different comment.
-        FileUtils.copyFileToDirectory(CaseTestUtils.caseFile("Case1"), app.casesDir)
+        setUpCaseFromFile("Case1", app)
         val interpretation2 = Interpretation(caseId, "Sure.")
         app.saveInterpretation(interpretation2)
         assertEquals(app.interpretationsDir.listFiles()!!.size, 1)
@@ -83,7 +80,7 @@ internal class ServerApplicationTest {
     @Test
     fun case() {
         val app = ServerApplication()
-        FileUtils.copyFileToDirectory(CaseTestUtils.caseFile("Case1"), app.casesDir)
+        setUpCaseFromFile("Case1", app)
         val retrieved = app.case("Case1")
         assertEquals(retrieved.name, "Case1")
         assertEquals(retrieved.get("TSH")!!.value.text, "0.667")
@@ -93,9 +90,9 @@ internal class ServerApplicationTest {
         retrieved.interpretation.conclusions().size shouldBe 0
         // Add a rule.
         val conclusion = Conclusion("ABC ok.")
-        val session = app.kb.startSession(retrieved, ChangeTreeToAddConclusion(conclusion))
-        session.addCondition(GreaterThanOrEqualTo(Attribute("ABC"), 5.0))
-        session.commit()
+        app.kb.startRuleSession(retrieved, ChangeTreeToAddConclusion(conclusion))
+        app.kb.addConditionToCurrentRuleSession(GreaterThanOrEqualTo(Attribute("ABC"), 5.0))
+        app.kb.commitCurrentRuleSession()
         val retrievedAgain = app.case("Case1")
         retrievedAgain.interpretation.conclusions() shouldContainExactly setOf(conclusion)
     }
@@ -108,15 +105,63 @@ internal class ServerApplicationTest {
         assertEquals(app.waitingCasesInfo().count, 0)
 
         // Move some cases into the directory.
-        FileUtils.copyFileToDirectory(CaseTestUtils.caseFile("Case3"), app.casesDir)
+        setUpCaseFromFile("Case3", app)
         val ci1 = app.waitingCasesInfo()
         assertEquals(ci1.count, 1)
         assertEquals(ci1.caseIds[0].name, "Case3")
 
-        FileUtils.copyFileToDirectory(CaseTestUtils.caseFile("Case2"), app.casesDir)
+        setUpCaseFromFile("Case2", app)
         val ci2 = app.waitingCasesInfo()
         assertEquals(ci2.count, 2)
         assertEquals(ci2.caseIds[0].name, "Case2")
         assertEquals(ci2.caseIds[1].name, "Case3")
     }
+
+    @Test
+    fun createKB() {
+        val app = ServerApplication()
+        app.kb.name shouldBe "Thyroids"
+        app.kb.containsCaseWithName("Case1") shouldBe false //sanity
+        app.kb.addCase(createCase("Case1"))
+        app.kb.containsCaseWithName("Case1") shouldBe true
+
+        app.createKB()
+        app.kb.name shouldBe "Thyroids"
+        app.kb.containsCaseWithName("Case1") shouldBe false //kb rebuilt
+    }
+
+    @Test
+    fun startRuleSessionToAddConclusion() {
+        val app = ServerApplication()
+        val id = "Case1"
+        setUpCaseFromFile(id, app)
+        app.kb.addCase(createCase(id))
+        app.case(id).interpretation.conclusions() shouldBe emptySet()
+        app.startRuleSessionToAddConclusion(id, Conclusion("Whatever"))
+        app.commitCurrentRuleSession()
+        app.case(id).interpretation.textGivenByRules() shouldBe "Whatever"
+    }
+
+    private fun setUpCaseFromFile(id: String, app: ServerApplication) {
+        FileUtils.copyFileToDirectory(CaseTestUtils.caseFile(id), app.casesDir)
+    }
+
+    @Test
+    fun startSessionToReplaceConclusion() {
+        val app = ServerApplication()
+        val id = "Case1"
+        setUpCaseFromFile(id, app)
+        app.kb.addCase(createCase(id))
+        val conclusion1 = Conclusion("Whatever")
+        app.startRuleSessionToAddConclusion(id, conclusion1)
+        app.commitCurrentRuleSession()
+        app.case(id).interpretation.textGivenByRules() shouldBe conclusion1.text
+        val conclusion2 = Conclusion("Blah")
+        app.startRuleSessionToReplaceConclusion(id, conclusion1, conclusion2)
+        app.commitCurrentRuleSession()
+        app.case(id).interpretation.textGivenByRules() shouldBe conclusion2.text
+
+    }
+
+    private fun createCase(caseName: String) = CaseTestUtils.createCase(caseName)
 }

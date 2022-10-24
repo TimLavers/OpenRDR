@@ -13,8 +13,10 @@ import SEND_INTERPRETATION_BUTTON_ID
 import io.kotest.assertions.timing.eventually
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import mysticfall.TestInstance
 import mysticfall.TestRenderer
@@ -69,6 +71,12 @@ fun TestRenderer.requireNamesToBeShowingOnCaseList(vararg caseNames: String) {
     caseList.props.caseIds.map { it.name } shouldBe caseNames.toList()
 }
 
+suspend fun waitForEvents() {
+    withContext(Dispatchers.Default) {
+        delay(150) // Dispatchers.Default doesn't know about TestCoroutineScheduler
+    }
+}
+
 fun TestRenderer.requireNumberOfCasesWaiting(expected: Int) {
     numberOfCasesWaiting() shouldBe expected
 }
@@ -88,10 +96,12 @@ fun TestRenderer.requireCaseListHeading(expected: String) {
 }
 
 fun TestRenderer.requireInterpretation(expected: String) {
-    val instance = findById(INTERPRETATION_TEXT_AREA_ID)
+    val instance = interpretationArea()
     val value = instance.props.asDynamic()["value"].unsafeCast<String>()
     value shouldBe expected
 }
+
+fun TestRenderer.interpretationArea() = findById(INTERPRETATION_TEXT_AREA_ID)
 
 fun TestRenderer.requireNoInterpretation() = requireInterpretation("")
 

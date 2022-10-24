@@ -3,10 +3,11 @@ package io.rippledown.model.rule
 import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
 
-class RuleBuildingSession(val tree: RuleTree,
-                          val case: RDRCase,
-                          private val action: RuleTreeChange,
-                          cornerstones: Set<RDRCase>) {
+class RuleBuildingSession(
+    private val tree: RuleTree,
+    val case: RDRCase,
+    private val action: RuleTreeChange,
+    cornerstones: Set<RDRCase>) {
     var conditions = mutableSetOf<Condition>()
     private val cornerstonesNotExempted = mutableSetOf<RDRCase>()
 
@@ -51,7 +52,7 @@ class RuleBuildingSession(val tree: RuleTree,
     fun addCondition(condition: Condition): RuleBuildingSession {
         if (condition.holds(case))
             conditions.add(condition)
-        else throw Exception("Condition $condition was not true for the case")
+        else throw Exception("Condition $condition was not true for the case ${case.name}")
         return this
     }
 

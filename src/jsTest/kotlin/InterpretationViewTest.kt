@@ -1,3 +1,4 @@
+import browser.window
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.CaseId
 import io.rippledown.model.Conclusion
@@ -8,10 +9,9 @@ import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
 import mysticfall.ReactTestSupport
-import proxy.clickSubmitButton
-import proxy.enterInterpretation
-import proxy.requireInterpretation
-import proxy.requireNoInterpretation
+import org.w3c.dom.Element
+import proxy.*
+import react.dom.html.ReactHTML
 import kotlin.test.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -29,6 +29,12 @@ class InterpretationViewTest : ReactTestSupport {
             }
         }
         renderer.requireInterpretation(text)
+
+        // Check that the text area is in a monospaced font.
+        renderer.printJSON()
+//        val style = window.getComputedStyle(renderer.interpretationArea() as Element)
+//        println("style: $style")
+
     }
 
     @Test
@@ -78,6 +84,7 @@ class InterpretationViewTest : ReactTestSupport {
         }
         with(renderer) {
             clickSubmitButton()
+            waitForEvents()
             called shouldBe true
         }
     }
@@ -100,10 +107,10 @@ class InterpretationViewTest : ReactTestSupport {
         }
         with(renderer) {
             enterInterpretation(enteredText)
+            waitForEvents()
             clickSubmitButton()
+            waitForEvents()
             called shouldBe true
         }
     }
-
-
 }

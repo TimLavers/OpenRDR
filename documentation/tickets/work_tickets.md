@@ -12,3 +12,12 @@ Implement the Clinical Decision Support System workflow for Milestone 1.
 ### ORD4: Example cases {#ORD4}
 Provide the cases described in Vasikaran and Loh.
 
+### ORD5: Endpoints for rule building {#ORD5}
+Provide the server with API endpoints for building rules.
+
+### ORD6: Implement TSH rules {#ORD6}
+Use the API endpoints to build rules such that the cases described in Vasikaran and Loh
+get the interpretations given in the paper.
+
+### ORD7: Interpretation view {#ORD7}
+Show the interpretation of the case as plain text in a monospaced-font text area.

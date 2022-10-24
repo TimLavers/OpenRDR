@@ -14,6 +14,12 @@ internal class RuleBuildingSessionForChangeToReplaceConclusion : RuleTestBase() 
     private val cornerstones = mutableSetOf(cc1,cc2)
 
     @Test
+    fun toStringTest() {
+        val addAction = ChangeTreeToReplaceConclusion(Conclusion("Whatever"), Conclusion("Blah"))
+        addAction.toString() shouldBe "ChangeTreeToReplaceConclusion(toBeReplaced=Conclusion(text=Whatever) replacement=Conclusion(text=Blah))"
+    }
+
+    @Test
     fun a_session_for_a_replace_action_should_present_those_cornerstones_which_satisfy_the_conditions() {
         val tree = RuleTree()
         val replaceAction = ChangeTreeToReplaceConclusion(Conclusion("A"), Conclusion("D"))
@@ -81,5 +87,35 @@ internal class RuleBuildingSessionForChangeToReplaceConclusion : RuleTestBase() 
         ruleAdded.conditions shouldContainExactly setOf(ContainsText(clinicalNotes, "a"))
         ruleAdded.conclusion!!.text shouldBe "B"
         ruleAdded.parent!!.conclusion!!.text shouldBe "A"
-        }
+    }
+
+    @Test
+    fun isApplicable() {
+        val tree = ruleTree {
+            child {
+                +"A"
+                condition {
+                    attributeName = clinicalNotes.name
+                    constant = "a"
+                }
+            }
+            child {
+                +"B"
+                condition {
+                    attributeName = clinicalNotes.name
+                    constant = "b"
+                }
+            }
+        }.build()
+
+        val action = ChangeTreeToReplaceConclusion(Conclusion("A"), Conclusion("B"))
+        val case = clinicalNotesCase("c")
+        val caseA = clinicalNotesCase("a")
+        val caseB = clinicalNotesCase("b")
+        val caseAB = clinicalNotesCase("ab")
+        action.isApplicable(tree, case) shouldBe false
+        action.isApplicable(tree, caseA) shouldBe true
+        action.isApplicable(tree, caseB) shouldBe false
+        action.isApplicable(tree, caseAB) shouldBe true
+    }
 }

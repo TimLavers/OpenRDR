@@ -1,3 +1,4 @@
+import csstype.*
 import emotion.react.css
 import io.rippledown.model.Interpretation
 import kotlinx.coroutines.launch
@@ -22,6 +23,10 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
         key = handler.interpretation.caseId.name
         textarea {
             id = INTERPRETATION_TEXT_AREA_ID
+            css {
+                fontWeight = FontWeight.normal
+                fontFamily = FontFamily.monospace
+            }
             rows = 10
             cols = 72
             onChange = {

@@ -6,13 +6,16 @@ import COMMIT_SESSION
 import CREATE_KB
 import PING
 import SHUTDOWN
-import START_SESSION
+import START_SESSION_TO_ADD_CONCLUSION
+import START_SESSION_TO_REPLACE_CONCLUSION
 import WAITING_CASES
 import io.ktor.client.*
-import io.ktor.client.features.json.JsonFeature
-import io.ktor.client.features.json.serializer.*
+import io.ktor.client.call.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.Conclusion
 import io.rippledown.model.OperationResult
@@ -23,10 +26,16 @@ import kotlinx.serialization.json.Json
 
 
 class RESTClient {
-    val endpoint = "http://127.0.0.1:9090"
+    val endpoint = "http://localhost:9090"
 
-    val jsonClient = HttpClient {
-        install(JsonFeature) { serializer = KotlinxSerializer(Json { allowStructuredMapKeys = true }) }
+    val jsonClient =  HttpClient(CIO) {
+        install(ContentNegotiation) {
+            json(Json {
+                prettyPrint = true
+                isLenient = true
+                allowStructuredMapKeys = true
+            })
+        }
     }
 
     private var currentCase: RDRCase? = null
@@ -34,7 +43,7 @@ class RESTClient {
     fun serverHasStarted(): Boolean {
         return runBlocking {
             try {
-                jsonClient.get<String>(endpoint + PING)
+                jsonClient.get(endpoint + PING)
                 true
             } catch (e: Exception) {
                 false
@@ -44,9 +53,9 @@ class RESTClient {
 
     fun getCaseWithName(name: String): RDRCase? {
         runBlocking {
-            val casesInfo: CasesInfo = jsonClient.get(endpoint + WAITING_CASES)
+            val casesInfo: CasesInfo = jsonClient.get(endpoint + WAITING_CASES).body()
             val caseId = casesInfo.caseIds.first { it.name == name }
-            currentCase = jsonClient.get(endpoint + CASE + "?id=${caseId.id}")
+            currentCase = jsonClient.get(endpoint + CASE + "?id=${caseId.id}").body()
         }
         return currentCase
     }
@@ -55,10 +64,22 @@ class RESTClient {
         require(currentCase != null)
         var result = OperationResult("")
         runBlocking {
-            result = jsonClient.post(endpoint + START_SESSION + "?id=${currentCase!!.name}") {
+            result = jsonClient.post(endpoint + START_SESSION_TO_ADD_CONCLUSION + "?id=${currentCase!!.name}") {
                 contentType(ContentType.Application.Json)
-                body = conclusion
-            }
+                setBody(conclusion)
+            }.body()
+        }
+        return result
+    }
+
+    fun startSessionToReplaceConclusionForCurrentCase(toGo: Conclusion, replacement: Conclusion): OperationResult {
+        require(currentCase != null)
+        var result = OperationResult("")
+        runBlocking {
+            result = jsonClient.post(endpoint + START_SESSION_TO_REPLACE_CONCLUSION + "?id=${currentCase!!.name}") {
+                contentType(ContentType.Application.Json)
+                setBody(listOf(toGo, replacement))
+            }.body()
         }
         return result
     }
@@ -70,8 +91,8 @@ class RESTClient {
         runBlocking {
             result = jsonClient.post(endpoint + ADD_CONDITION) {
                 contentType(ContentType.Application.Json)
-                body = data
-            }
+                setBody(data)
+            }.body()
         }
         return result
     }
@@ -80,7 +101,7 @@ class RESTClient {
         var result = OperationResult("")
         runBlocking {
             result = jsonClient.post(endpoint + COMMIT_SESSION) {
-            }
+            }.body()
         }
         return result
     }
@@ -89,7 +110,7 @@ class RESTClient {
         var result = OperationResult("")
         runBlocking {
             result = jsonClient.post(endpoint + CREATE_KB) {
-            }
+            }.body()
         }
         return result
     }

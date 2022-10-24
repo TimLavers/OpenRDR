@@ -80,7 +80,7 @@ val TSH9 = tshCase {
         attribute = "TPO Antibodies"
         value = "33"
         units = "kU/L"
-        lowerBound = "6"
+        upperBound = "6"
     }
 }.build()
 
