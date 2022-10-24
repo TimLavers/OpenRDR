@@ -14,6 +14,12 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
     private val cornerstoneMap = mutableSetOf(cc1, cc2)
 
     @Test
+    fun toStringTest() {
+        val addAction = ChangeTreeToAddConclusion(Conclusion("Whatever"))
+        addAction.toString() shouldBe "ChangeTreeToAddConclusion(toBeAdded=Conclusion(text=Whatever))"
+    }
+
+    @Test
     fun a_session_for_an_add_action_should_present_all_cornerstones_if_there_are_no_conditions() {
         val addAction = ChangeTreeToAddConclusion(Conclusion("A"))
         val session = RuleBuildingSession(RuleTree(), sessionCase, addAction, cornerstoneMap)
@@ -95,5 +101,26 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
         ruleAdded.conditions shouldContainExactly setOf(ContainsText(clinicalNotes, "3"), ContainsText(clinicalNotes, "1"))
         ruleAdded.conclusion shouldBe Conclusion("A")
         ruleAdded.parent!!.parent shouldBe null
+    }
+
+    @Test
+    fun isApplicable() {
+        val tree = ruleTree {
+            child {
+                +"A"
+                condition {
+                    attributeName = clinicalNotes.name
+                    constant = "1"
+                }
+            }
+        }.build()
+
+        val addAction = ChangeTreeToAddConclusion(Conclusion("A"))
+
+        val hasConclusionAlready = clinicalNotesCase("1")
+        addAction.isApplicable(tree, hasConclusionAlready) shouldBe false
+
+        val doesNotHaveConclusionAlready = clinicalNotesCase("2")
+        addAction.isApplicable(tree, doesNotHaveConclusionAlready) shouldBe true
     }
 }

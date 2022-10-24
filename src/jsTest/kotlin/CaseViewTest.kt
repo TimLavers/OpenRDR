@@ -76,12 +76,12 @@ class CaseViewTest : ReactTestSupport {
 
     @Test
     fun shouldFormatOneSidedLowRange() {
-        rangeText(ReferenceRange(null, "2")) shouldBe "(> 2)"
+        rangeText(ReferenceRange("1", null)) shouldBe "(> 1)"
     }
 
     @Test
     fun shouldFormatOneSidedHighRange() {
-        rangeText(ReferenceRange("1", null)) shouldBe "(< 1)"
+        rangeText(ReferenceRange(null, "2")) shouldBe "(< 2)"
     }
 }
 

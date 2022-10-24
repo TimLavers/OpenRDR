@@ -24,6 +24,7 @@ class KB(val name: String) {
 
     fun startRuleSession(case: RDRCase, action: RuleTreeChange) {
         check(ruleSession == null) { "Session already in progress." }
+        check(action.isApplicable(ruleTree, case)) {"Action $action is not applicable to case ${case.name}"}
         ruleSession =  RuleBuildingSession(ruleTree, case, action, cornerstones)
     }
 

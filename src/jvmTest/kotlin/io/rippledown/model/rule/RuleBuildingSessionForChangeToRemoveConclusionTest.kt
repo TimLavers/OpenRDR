@@ -14,6 +14,12 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
     private val cornerstones = mutableSetOf(cc1, cc2)
 
     @Test
+    fun toStringTest() {
+        val addAction = ChangeTreeToRemoveConclusion(Conclusion("Whatever"))
+        addAction.toString() shouldBe "ChangeTreeToRemoveConclusion(toBeRemoved=Conclusion(text=Whatever))"
+    }
+
+    @Test
     fun a_session_for_a_remove_action_should_present_those_cornerstones_which_satisfy_the_conditions() {
         val tree = RuleTree()
         val removeAction = ChangeTreeToRemoveConclusion(Conclusion("A"))
@@ -81,5 +87,25 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
         ruleAdded.conditions shouldContainExactly setOf(ContainsText(clinicalNotes, "a"))
         ruleAdded.conclusion shouldBe null
         ruleAdded.parent!!.conclusion!!.text shouldBe "A"
+    }
+
+    @Test
+    fun isApplicable() {
+        val tree = ruleTree {
+            child {
+                +"A"
+                condition {
+                    attributeName = clinicalNotes.name
+                    constant = "a"
+                }
+            }
+        }.build()
+
+        val removeAction = ChangeTreeToRemoveConclusion(Conclusion("A"))
+        val caseWithConclusion = clinicalNotesCase("a")
+        removeAction.isApplicable(tree, caseWithConclusion) shouldBe true
+
+        val caseWithoutConclusion = clinicalNotesCase("b")
+        removeAction.isApplicable(tree, caseWithoutConclusion) shouldBe false
     }
 }

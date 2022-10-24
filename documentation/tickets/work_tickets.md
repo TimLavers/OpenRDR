@@ -19,3 +19,5 @@ Provide the server with API endpoints for building rules.
 Use the API endpoints to build rules such that the cases described in Vasikaran and Loh
 get the interpretations given in the paper.
 
+### ORD7: Interpretation view {#ORD7}
+Show the interpretation of the case as plain text in a monospaced-font text area.
