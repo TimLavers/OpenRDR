@@ -35,7 +35,7 @@ class CaseQueueTest : ReactTestSupport {
 
 
     @Test
-    fun shouldGetCasesWhenRefreshButtonIsClicked() = runTest {
+    fun shouldGetNumberOfWaitingCases() = runTest {
         val config = config {
             returnCasesInfo = CasesInfo(
                 listOf(
@@ -53,9 +53,7 @@ class CaseQueueTest : ReactTestSupport {
         }
         with(renderer) {
             requireNumberOfCasesWaiting(0)
-            clickRefreshButton()
-        }
-        this@runTest.launch {
+            waitForNextPoll()
             renderer.requireNumberOfCasesWaiting(3)
         }
     }
@@ -78,20 +76,18 @@ class CaseQueueTest : ReactTestSupport {
             }
         }
         with(renderer) {
-            clickRefreshButton()
-            waitForEvents()
+            waitForNextPoll()
             requireNumberOfCasesWaiting(3) //Sanity check
 
             config.returnCasesInfo = CasesInfo(emptyList())
-            clickRefreshButton()
-            waitForEvents()
+            waitForNextPoll()
             requireNumberOfCasesWaiting(0)
             requireNoCaseView()
         }
     }
 
     @Test
-        fun shouldGetCasesWhenInitialised() = runTest {
+    fun shouldGetCasesWhenInitialised() = runTest {
         val config = config {
             returnCasesInfo = CasesInfo(
                 listOf(
@@ -102,18 +98,16 @@ class CaseQueueTest : ReactTestSupport {
         }
 
         lateinit var renderer: TestRenderer
-        launch {
-            //ensure that the useEffectOnce is called
-            act {
-                renderer = render {
-                    CaseQueue {
-                        attrs.api = Api(mock(config))
-                        attrs.scope = this@runTest
-                    }
+        //ensure that the useEffectOnce is called
+        act {
+            renderer = render {
+                CaseQueue {
+                    attrs.api = Api(mock(config))
+                    attrs.scope = this@runTest
                 }
             }
-        }.join()
-        waitForEvents()
+        }
+        waitForNextPoll()
         renderer.requireNumberOfCasesWaiting(2)
     }
 
@@ -135,7 +129,7 @@ class CaseQueueTest : ReactTestSupport {
             }
         }
         with(renderer) {
-            clickRefreshButton() //enable the review button
+            waitForNextPoll() //enable the review button
             clickReviewButton()
         }
         waitForEvents()
@@ -163,7 +157,7 @@ class CaseQueueTest : ReactTestSupport {
         }
 
         with(renderer) {
-            clickRefreshButton() //enable the review button
+            waitForNextPoll() //enable the review button
             clickReviewButton() //show the case list
             waitForEvents()
 
@@ -195,7 +189,7 @@ class CaseQueueTest : ReactTestSupport {
         }
 
         with(renderer) {
-            clickRefreshButton() //enable the review button
+            waitForNextPoll() //enable the review button
             clickReviewButton() //show the case list
             waitForEvents()
 
@@ -242,7 +236,7 @@ class CaseQueueTest : ReactTestSupport {
         }.join()
 
         with(renderer) {
-            clickRefreshButton() //enable the review button
+            waitForNextPoll() //enable the review button
             clickReviewButton()  //show the case list and the case
             waitForEvents()
 
@@ -280,19 +274,18 @@ class CaseQueueTest : ReactTestSupport {
         }
 
         lateinit var renderer: TestRenderer
-        launch {
+        act {
             renderer = render {
                 CaseQueue {
                     attrs.api = Api(mock(config))
                     attrs.scope = this@runTest
                 }
             }
-        }.join()
+        }
 
         with(renderer) {
-            clickRefreshButton() //enable the review button
+            waitForNextPoll()
             clickReviewButton()  //show the case list and the case
-            waitForEvents()
 
             selectCase(caseName2)
             waitForEvents()

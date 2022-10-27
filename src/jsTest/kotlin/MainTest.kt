@@ -1,18 +1,15 @@
-import io.kotest.assertions.timing.eventually
-import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.defaultMock
 import mocks.mock
 import mysticfall.ReactTestSupport
 import mysticfall.TestRenderer
-import proxy.findById
-import proxy.text
+import proxy.requireNumberOfCasesWaiting
+import proxy.waitForNextPoll
 import kotlin.test.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -41,20 +38,16 @@ class MainTest : ReactTestSupport {
             )
         }
         lateinit var renderer: TestRenderer
-        launch {
-            act {
-                renderer = render {
-                    OpenRDRUI {
-                        attrs.scope = this@runTest
-                        attrs.api = Api(mock(config))
-                    }
+        act {
+            renderer = render {
+                OpenRDRUI {
+                    attrs.scope = this@runTest
+                    attrs.api = Api(mock(config))
                 }
             }
-        }.join()
-
-        eventually {
-            renderer.findById(NUMBER_OF_CASES_WAITING_ID).text() shouldBe "3"
         }
+        waitForNextPoll()
+        renderer.requireNumberOfCasesWaiting(3)
     }
 
 
