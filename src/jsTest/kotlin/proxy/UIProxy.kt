@@ -7,13 +7,12 @@ import CaseList
 import INTERPRETATION_TEXT_AREA_ID
 import NUMBER_OF_CASES_WAITING_ID
 import NoCaseView
-import REFRESH_BUTTON_ID
+import POLL_PERIOD
 import REVIEW_CASES_BUTTON_ID
 import SEND_INTERPRETATION_BUTTON_ID
 import io.kotest.assertions.timing.eventually
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -22,6 +21,7 @@ import mysticfall.TestInstance
 import mysticfall.TestRenderer
 import kotlin.js.Date
 import kotlin.js.JSON.stringify
+import kotlin.time.Duration.Companion.milliseconds
 
 
 fun TestRenderer.findById(id: String): TestInstance<*> {
@@ -48,9 +48,6 @@ suspend fun TestInstance<*>.click() =
 suspend fun TestRenderer.clickSubmitButton() =
     findById(SEND_INTERPRETATION_BUTTON_ID).click()
 
-suspend fun TestRenderer.clickRefreshButton() =
-    findById(REFRESH_BUTTON_ID).click()
-
 suspend fun TestRenderer.clickReviewButton() =
     findById(REVIEW_CASES_BUTTON_ID).click()
 
@@ -71,11 +68,14 @@ fun TestRenderer.requireNamesToBeShowingOnCaseList(vararg caseNames: String) {
     caseList.props.caseIds.map { it.name } shouldBe caseNames.toList()
 }
 
-suspend fun waitForEvents() {
-    withContext(Dispatchers.Default) {
-        delay(150) // Dispatchers.Default doesn't know about TestCoroutineScheduler
+suspend fun waitForEvents(timeout: Long = 150) {
+    withContext(Default) {
+        delay(timeout) // Dispatchers.Default doesn't know about TestCoroutineScheduler
     }
 }
+
+suspend fun waitForNextPoll() =
+    waitForEvents(POLL_PERIOD.plus(250.milliseconds).inWholeMilliseconds)//longer than the delay for the 1st poll
 
 fun TestRenderer.requireNumberOfCasesWaiting(expected: Int) {
     numberOfCasesWaiting() shouldBe expected

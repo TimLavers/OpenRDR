@@ -29,7 +29,7 @@ internal class CaseQueueTest: UITestBase() {
     @Test
     fun reviewButtonEnabledIfCasesWaiting() {
         labProxy.copyCase("Case2")
-        caseQueuePO.refresh().waitForNumberWaitingToBe(1)
+        caseQueuePO.waitForNumberWaitingToBe(1)
         assertTrue(caseQueuePO.reviewButtonIsEnabled())
     }
 
@@ -37,7 +37,7 @@ internal class CaseQueueTest: UITestBase() {
     fun showCaseList() {
         labProxy.copyCase("Case2")
         labProxy.copyCase("Case1")
-        caseQueuePO.refresh().waitForNumberWaitingToBe(2)
+        caseQueuePO.waitForNumberWaitingToBe(2)
 
         val listPO = caseQueuePO.review()
         val casesListed = listPO.casesListed()
@@ -52,10 +52,10 @@ internal class CaseQueueTest: UITestBase() {
 
         // Copy a case.
         labProxy.copyCase("Case2")
-        caseQueuePO.refresh().waitForNumberWaitingToBe(1)
+        caseQueuePO.waitForNumberWaitingToBe(1)
 
         // Copy another case.
         labProxy.copyCase("Case1")
-        caseQueuePO.refresh().waitForNumberWaitingToBe(2)
+        caseQueuePO.waitForNumberWaitingToBe(2)
     }
 }

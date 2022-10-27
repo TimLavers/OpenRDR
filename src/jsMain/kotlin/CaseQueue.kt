@@ -15,9 +15,9 @@ import kotlin.time.Duration.Companion.seconds
 const val NUMBER_OF_CASES_WAITING_ID = "number_of_cases_waiting_value"
 const val REFRESH_BUTTON_ID = "refresh_waiting_cases_info_button"
 const val REVIEW_CASES_BUTTON_ID = "review_cases_button"
+val POLL_PERIOD = 0.5.seconds
 
-external interface CaseQueueHandler : Handler {
-}
+external interface CaseQueueHandler : Handler
 
 val CaseQueue = FC<CaseQueueHandler> { handler ->
     var waitingCasesInfo by useState(CasesInfo(emptyList(), ""))
@@ -25,12 +25,11 @@ val CaseQueue = FC<CaseQueueHandler> { handler ->
     var selectedCase: RDRCase? by useState(null)
 
     useEffectOnce {
-        console.log("\n\ncall set interval")
-        setInterval(2.seconds) {
-            console.log("\n\nlaunching waitingCasesInfo:")
+        setInterval(delay = POLL_PERIOD) {
             handler.scope.launch {
-                console.log("\n\ncall waitingCasesInfo:")
-                waitingCasesInfo = handler.api.waitingCasesInfo()
+                val wci = handler.api.waitingCasesInfo()
+                showCaseList = wci.count > 0
+                waitingCasesInfo = wci
             }
         }
     }
@@ -48,18 +47,6 @@ val CaseQueue = FC<CaseQueueHandler> { handler ->
     }
     span {
         div {
-            button {
-                +"Refresh"
-                id = REFRESH_BUTTON_ID
-                css {
-                    padding = px4
-                }
-                onClick = {
-                    handler.scope.launch {
-                        waitingCasesInfo = handler.api.waitingCasesInfo()
-                    }
-                }
-            }
             button {
                 +"Review"
                 id = REVIEW_CASES_BUTTON_ID
