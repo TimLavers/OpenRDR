@@ -11,7 +11,7 @@ class CaseListPO(private val driver: WebDriver) {
 
     fun waitForCaseListToHaveSize(count: Int) {
         await().atMost(5L, TimeUnit.SECONDS).until {
-            containerElement().findElements(By.className("case_list_item")).size == count
+            casesListed().size == count
         }
     }
 

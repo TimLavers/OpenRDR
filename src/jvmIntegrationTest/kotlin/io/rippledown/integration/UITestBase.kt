@@ -16,16 +16,17 @@ open class UITestBase {
     val restClient = RESTClient()
     lateinit var driver: WebDriver
 
-    fun setupWebDriver() {
+    fun setupWebDriver(): WebDriver {
         driver = getChromeDriver()
         with(driver) {
             manage().timeouts().implicitlyWait(Duration.ofSeconds(10))
             manage().window()?.maximize()
             get("http://localhost:9090")
         }
+        return driver
     }
 
-    fun getChromeDriver(): WebDriver {
+    private fun getChromeDriver(): WebDriver {
         ChromeDriverManager.getInstance(CHROME).setup()
         val options = ChromeOptions()
         with(options) {
@@ -37,7 +38,11 @@ open class UITestBase {
     }
 
     fun driverClose() {
-        driver.close()
+        val tabs = driver.getWindowHandles() as LinkedHashSet<String>
+        tabs.forEach {
+            driver.switchTo().window(it)
+            driver.close()
+        }
     }
 
     fun resetKB() {
