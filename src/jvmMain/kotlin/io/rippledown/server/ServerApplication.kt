@@ -2,6 +2,8 @@ package io.rippledown.server
 
 import io.rippledown.kb.KB
 import io.rippledown.model.*
+import io.rippledown.model.caseview.CaseViewProperties
+import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.model.rule.ChangeTreeToReplaceConclusion
@@ -50,6 +52,10 @@ class ServerApplication {
         val case = getCaseFromFile(File(casesDir, "$id.json"))
         kb.interpret(case)
         return case
+    }
+
+    fun viewableCase(id: String): ViewableCase {
+        return ViewableCase(case(id), CaseViewProperties(emptyMap()))
     }
 
     fun saveInterpretation(interpretation: Interpretation): OperationResult {

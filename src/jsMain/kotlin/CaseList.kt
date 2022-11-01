@@ -2,6 +2,7 @@ import csstype.*
 import emotion.react.css
 import io.rippledown.model.CaseId
 import io.rippledown.model.RDRCase
+import io.rippledown.model.caseview.ViewableCase
 import react.FC
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.li
@@ -13,7 +14,7 @@ const val CASELIST_HEADING = "Cases"
 
 external interface CaseListHandler : Handler {
     var caseIds: List<CaseId>
-    var currentCase: RDRCase?
+    var currentCase: ViewableCase?
     var onCaseSelected: (String) -> Unit
     var onInterpretationSubmitted: () -> Unit
 }

@@ -1,5 +1,7 @@
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
+import io.rippledown.model.caseview.CaseViewProperties
+import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.rule.RuleSummary
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -18,9 +20,12 @@ class CaseTableBodyTest : ReactTestSupport {
         builder1.addValue("TSH", defaultDate, "2.37")
         builder1.addValue("FT4", defaultDate, "12.8")
         val case1 = builder1.build("Case1")
+        val properties = CaseViewProperties(emptyMap())
+        val viewableCase = ViewableCase(case1, properties)
+
         val renderer = render {
             CaseTableBody {
-                attrs.case = case1
+                attrs.case = viewableCase
             }
         }
         val rows = renderer.root.findAllByType("tr")

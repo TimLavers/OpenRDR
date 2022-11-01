@@ -10,6 +10,7 @@ import io.rippledown.model.CasesInfo
 import io.rippledown.model.Interpretation
 import io.rippledown.model.OperationResult
 import io.rippledown.model.RDRCase
+import io.rippledown.model.caseview.ViewableCase
 import kotlinx.browser.window
 
 val endpoint = window.location.origin
@@ -21,7 +22,7 @@ class Api(engine: HttpClientEngine = Js.create()) {
         }
     }
 
-    suspend fun getCase(id: String): RDRCase = jsonClient.get("$endpoint/api/case?id=$id").body()
+    suspend fun getCase(id: String): ViewableCase = jsonClient.get("$endpoint/api/case?id=$id").body()
 
     suspend fun waitingCasesInfo(): CasesInfo = jsonClient.get("$endpoint/api/waitingCasesInfo").body()
 

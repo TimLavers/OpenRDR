@@ -1,6 +1,7 @@
 import emotion.react.css
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.RDRCase
+import io.rippledown.model.caseview.ViewableCase
 import kotlinx.coroutines.launch
 import react.FC
 import react.dom.html.ReactHTML.button
@@ -22,7 +23,7 @@ external interface CaseQueueHandler : Handler
 val CaseQueue = FC<CaseQueueHandler> { handler ->
     var waitingCasesInfo by useState(CasesInfo(emptyList(), ""))
     var showCaseList: Boolean by useState(false)
-    var selectedCase: RDRCase? by useState(null)
+    var selectedCase: ViewableCase? by useState(null)
 
     useEffectOnce {
         setInterval(delay = POLL_PERIOD) {
