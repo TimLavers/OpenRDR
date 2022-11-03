@@ -49,13 +49,15 @@ class ServerApplication {
     }
 
     fun case(id: String): RDRCase {
-        val case = getCaseFromFile(File(casesDir, "$id.json"))
+        val case = uninterpretedCase(id)
         kb.interpret(case)
         return case
     }
 
+    private fun uninterpretedCase(id: String) = getCaseFromFile(File(casesDir, "$id.json"))
+
     fun viewableCase(id: String): ViewableCase {
-        return ViewableCase(case(id), CaseViewProperties(emptyMap()))
+        return kb.viewableInterpretedCase(uninterpretedCase(id))
     }
 
     fun saveInterpretation(interpretation: Interpretation): OperationResult {

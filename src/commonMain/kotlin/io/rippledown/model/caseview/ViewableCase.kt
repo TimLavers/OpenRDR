@@ -10,7 +10,13 @@ data class ViewableCase(val rdrCase: RDRCase, val viewProperties: CaseViewProper
     val dates = rdrCase.dates
     val interpretation = rdrCase.interpretation
 
+    init {
+        check(rdrCase.attributes == viewProperties.attributes.toSet()) {
+            "Case attributes do not match view properties attributes"
+        }
+    }
+
     fun attributes(): List<Attribute> {
-        return viewProperties.orderAttributes(rdrCase.attributes)
+        return viewProperties.attributes
     }
 }

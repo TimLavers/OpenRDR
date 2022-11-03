@@ -11,6 +11,49 @@ import kotlin.test.Test
 class KBTest {
 
     @Test
+    fun viewableInterpretedCase() {
+        val kb = KB("Blah")
+        val comment = "Coffee time!"
+        buildRuleToAddAComment(kb, comment)
+
+        val builder = RDRCaseBuilder()
+        builder.addValue("ABC", defaultDate, "10")
+        builder.addValue("DEF", defaultDate, "20")
+        val case =  builder.build("Case2")
+
+        case.interpretation.textGivenByRules() shouldBe ""
+        // Check that it has been interpreted.
+        val viewableCase = kb.viewableInterpretedCase(case)
+        viewableCase.interpretation.textGivenByRules() shouldBe comment
+
+        // Check that ordering is working by getting the current ordering
+        // and changing it, and then getting the case again and checking
+        // that the new ordering is applied.
+        val attributesInOriginalOrder = viewableCase.attributes()
+        kb.caseViewManager.moveJustBelow(attributesInOriginalOrder[0], attributesInOriginalOrder[1])
+        val caseAfterMove = kb.viewableInterpretedCase(case)
+        caseAfterMove.attributes() shouldBe listOf(attributesInOriginalOrder[1], attributesInOriginalOrder[0])
+    }
+
+    @Test
+    fun interpretCase() {
+        val kb = KB("Blah")
+        val comment = "Whatever."
+        buildRuleToAddAComment(kb, comment)
+        val case = createCase("Case1", "1.0")
+        case.interpretation.textGivenByRules() shouldBe ""
+        kb.interpret(case)
+        case.interpretation.textGivenByRules() shouldBe comment
+    }
+
+    private fun buildRuleToAddAComment(kb: KB, comment: String) {
+        kb.addCase(createCase("Case1", "1.0"))
+        val sessionCase = kb.getCaseByName("Case1")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion(comment)))
+        kb.commitCurrentRuleSession()
+    }
+
+    @Test
     fun equalsTest() {
         val kb1 = KB("Thyroids")
         val kb2 = KB("Glucose")

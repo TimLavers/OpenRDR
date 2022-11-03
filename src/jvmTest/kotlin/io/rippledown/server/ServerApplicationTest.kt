@@ -98,6 +98,26 @@ internal class ServerApplicationTest {
     }
 
     @Test
+    fun viewableCase() {
+        val app = ServerApplication()
+        setUpCaseFromFile("Case1", app)
+        val retrieved = app.viewableCase("Case1")
+        assertEquals(retrieved.name, "Case1")
+        assertEquals(retrieved.rdrCase.get("TSH")!!.value.text, "0.667")
+        assertEquals(retrieved.rdrCase.get("ABC")!!.value.text, "6.7")
+        assertEquals(2, retrieved.attributes().size)
+        // No rules added.
+        retrieved.interpretation.conclusions().size shouldBe 0
+        // Add a rule.
+        val conclusion = Conclusion("ABC ok.")
+        app.kb.startRuleSession(retrieved.rdrCase, ChangeTreeToAddConclusion(conclusion))
+        app.kb.addConditionToCurrentRuleSession(GreaterThanOrEqualTo(Attribute("ABC"), 5.0))
+        app.kb.commitCurrentRuleSession()
+        val retrievedAgain = app.viewableCase("Case1")
+        retrievedAgain.interpretation.conclusions() shouldContainExactly setOf(conclusion)
+    }
+
+    @Test
     fun waitingCasesInfo() {
         val app = ServerApplication()
         FileUtils.cleanDirectory(app.casesDir)

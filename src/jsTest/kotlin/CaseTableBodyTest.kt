@@ -20,7 +20,7 @@ class CaseTableBodyTest : ReactTestSupport {
         builder1.addValue("TSH", defaultDate, "2.37")
         builder1.addValue("FT4", defaultDate, "12.8")
         val case1 = builder1.build("Case1")
-        val properties = CaseViewProperties(emptyMap())
+        val properties = CaseViewProperties(listOf(Attribute("TSH"), Attribute("FT4")))
         val viewableCase = ViewableCase(case1, properties)
 
         val renderer = render {
