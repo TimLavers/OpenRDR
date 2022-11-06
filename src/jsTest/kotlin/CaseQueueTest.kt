@@ -147,7 +147,7 @@ class CaseQueueTest : ReactTestSupport {
         )
         val config = config {
             returnCasesInfo = CasesInfo(caseIds)
-            returnCase = RDRCase(caseName1)
+            returnCase = createCase(caseName1)
         }
         val renderer = render {
             CaseQueue {
@@ -178,7 +178,7 @@ class CaseQueueTest : ReactTestSupport {
         )
         val config = config {
             returnCasesInfo = CasesInfo(caseIds)
-            returnCase = RDRCase(caseName)
+            returnCase = createCase(caseName)
         }
 
         val renderer = render {
@@ -222,7 +222,7 @@ class CaseQueueTest : ReactTestSupport {
                     CaseId("2", caseName2),
                 )
             )
-            returnCase = RDRCase(caseName1)
+            returnCase = createCase(caseName1)
         }
 
         lateinit var renderer: TestRenderer
@@ -270,7 +270,7 @@ class CaseQueueTest : ReactTestSupport {
                     CaseId("3", caseName3),
                 )
             )
-            returnCase = RDRCase(caseName2)
+            returnCase = createCase(caseName2)
         }
 
         lateinit var renderer: TestRenderer
@@ -298,7 +298,7 @@ class CaseQueueTest : ReactTestSupport {
                     CaseId("3", caseName3)
                 )
             )
-            config.returnCase = RDRCase(caseName1)
+            config.returnCase = createCase(caseName1)
 
             clickSubmitButton()
             waitForEvents()

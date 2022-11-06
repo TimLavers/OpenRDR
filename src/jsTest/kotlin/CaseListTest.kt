@@ -1,7 +1,6 @@
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.CaseId
 import io.rippledown.model.Conclusion
-import io.rippledown.model.RDRCase
 import io.rippledown.model.rule.RuleSummary
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -44,7 +43,7 @@ class CaseListTest : ReactTestSupport {
         val renderer = render {
             CaseList {
                 attrs.caseIds = listOf(CaseId(id = "1", name = caseName))
-                attrs.currentCase = RDRCase(name = caseName)
+                attrs.currentCase = createCase(caseName)
             }
         }
         renderer.requireCaseToBeSelected(caseName)
@@ -76,7 +75,7 @@ class CaseListTest : ReactTestSupport {
                     caseId2,
                     caseId3
                 )
-                attrs.currentCase = RDRCase(name = caseA, data = emptyMap())
+                attrs.currentCase = createCase(caseA)
                 attrs.onCaseSelected = { id ->
                     selectedCaseId = id
                 }
@@ -92,9 +91,8 @@ class CaseListTest : ReactTestSupport {
         val caseName = "case a"
         val text = "Go to Bondi now!"
         val caseId = CaseId(name = caseName)
-        val rdrCase = RDRCase(name = caseName).apply {
-            interpretation.add(RuleSummary(conclusion = Conclusion(text)))
-        }
+        val rdrCase = createCase("Case 1")
+        rdrCase.interpretation.add(RuleSummary(conclusion = Conclusion(text)))
         var interpSubmitted = false
         val renderer = render {
             CaseList {

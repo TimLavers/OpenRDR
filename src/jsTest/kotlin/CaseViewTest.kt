@@ -1,7 +1,5 @@
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.Conclusion
-import io.rippledown.model.RDRCase
-import io.rippledown.model.ReferenceRange
+import io.rippledown.model.*
 import io.rippledown.model.rule.RuleSummary
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -18,22 +16,20 @@ class CaseViewTest : ReactTestSupport {
 
     @Test
     fun shouldShowCaseName() {
-        val caseName = "case a"
+        val name = "case a "
         val renderer = render {
             CaseView {
-                attrs.case = RDRCase(name = caseName)
+                attrs.case = createCase(name)
             }
         }
-        renderer.requireCaseToBeSelected(caseName)
+        renderer.requireCaseToBeSelected(name)
     }
 
     @Test
     fun shouldShowInterpretation() {
-        val caseName = "case a"
         val text = "Go to Bondi now!"
-        val rdrCase = RDRCase(name = caseName).apply {
-            interpretation.add(RuleSummary(conclusion = Conclusion(text)))
-        }
+        val rdrCase = createCase("case a ")
+        rdrCase.interpretation.add(RuleSummary(conclusion = Conclusion(text)))
         val renderer = render {
             CaseView {
                 attrs.case = rdrCase
@@ -44,11 +40,9 @@ class CaseViewTest : ReactTestSupport {
 
     @Test
     fun shouldCallInterpretationSubmitted() = runTest {
-        val caseName = "case a"
         val text = "Go to Bondi now!"
-        val rdrCase = RDRCase(name = caseName).apply {
-            interpretation.add(RuleSummary(conclusion = Conclusion(text)))
-        }
+        val rdrCase = createCase("case a ")
+        rdrCase.interpretation.add(RuleSummary(conclusion = Conclusion(text)))
         var interpSubmitted = false
         val renderer = render {
             CaseView {
@@ -84,5 +78,3 @@ class CaseViewTest : ReactTestSupport {
         rangeText(ReferenceRange(null, "2")) shouldBe "(< 2)"
     }
 }
-
-

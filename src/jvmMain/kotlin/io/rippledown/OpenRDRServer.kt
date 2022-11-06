@@ -11,6 +11,7 @@ import io.ktor.server.request.*
 import io.ktor.server.http.content.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.rippledown.model.Attribute
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.OperationResult
@@ -89,6 +90,11 @@ fun main() {
             get(CASE) {
                 val id = call.parameters["id"] ?: error("Invalid case id.")
                 call.respond(application.viewableCase(id))
+            }
+            post("/api/moveAttributeJustBelowOther") {
+                val attributePair = call.receive<Pair<Attribute, Attribute>>()
+                application.moveAttributeJustBelow(attributePair.first, attributePair.second)
+                call.respond(HttpStatusCode.OK, OperationResult("Attribute moved"))
             }
             post("/api/interpretationSubmitted") {
                 val interpretation = call.receive<Interpretation>()

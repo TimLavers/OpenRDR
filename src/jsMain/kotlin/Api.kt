@@ -5,20 +5,23 @@ import io.ktor.client.engine.*
 import io.ktor.client.engine.js.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
+import io.ktor.serialization.kotlinx.*
 import io.ktor.serialization.kotlinx.json.*
-import io.rippledown.model.CasesInfo
-import io.rippledown.model.Interpretation
-import io.rippledown.model.OperationResult
-import io.rippledown.model.RDRCase
+import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import kotlinx.browser.window
+import kotlinx.serialization.json.Json
 
 val endpoint = window.location.origin
 
 class Api(engine: HttpClientEngine = Js.create()) {
     val jsonClient = HttpClient(engine) {
         install(ContentNegotiation) {
-            json()
+            json(Json {
+                prettyPrint = true
+                isLenient = true
+                allowStructuredMapKeys = true
+            })
         }
     }
 
@@ -33,5 +36,11 @@ class Api(engine: HttpClientEngine = Js.create()) {
         }.body()
     }
 
+    suspend fun moveAttributeJustBelowOther(moved:Attribute, target: Attribute): OperationResult {
+        return jsonClient.post("$endpoint/api/moveAttributeJustBelowOther") {
+            contentType(ContentType.Application.Json)
+            setBody(Pair(moved, target))
+        }.body()
+    }
 }
 

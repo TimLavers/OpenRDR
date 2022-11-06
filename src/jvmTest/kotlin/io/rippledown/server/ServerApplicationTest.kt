@@ -103,7 +103,6 @@ internal class ServerApplicationTest {
         setUpCaseFromFile("Case1", app)
         val retrieved = app.viewableCase("Case1")
         assertEquals(retrieved.name, "Case1")
-        assertEquals(retrieved.rdrCase.get("TSH")!!.value.text, "0.667")
         assertEquals(retrieved.rdrCase.get("ABC")!!.value.text, "6.7")
         assertEquals(2, retrieved.attributes().size)
         // No rules added.
@@ -115,6 +114,20 @@ internal class ServerApplicationTest {
         app.kb.commitCurrentRuleSession()
         val retrievedAgain = app.viewableCase("Case1")
         retrievedAgain.interpretation.conclusions() shouldContainExactly setOf(conclusion)
+    }
+
+    @Test
+    fun moveAttributeJustBelow() {
+        val app = ServerApplication()
+        setUpCaseFromFile("Case1", app)
+        val retrieved = app.viewableCase("Case1")
+        val attributesBefore = retrieved.attributes()
+        attributesBefore.size shouldBe 2 // sanity
+        app.moveAttributeJustBelow(attributesBefore[0], attributesBefore[1])
+        // Get the case again and check that the order has been applied.
+        val retrievedAfter = app.viewableCase("Case1")
+        retrievedAfter.attributes()[0] shouldBe attributesBefore[1]
+        retrievedAfter.attributes()[1] shouldBe attributesBefore[0]
     }
 
     @Test

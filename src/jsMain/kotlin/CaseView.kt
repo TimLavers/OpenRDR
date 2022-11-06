@@ -1,6 +1,5 @@
 import csstype.*
 import emotion.react.css
-import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
 import react.FC
 import react.dom.html.ReactHTML.div
@@ -49,6 +48,8 @@ val CaseView = FC<CaseViewHandler> { props ->
             }
             CaseTableBody {
                 case = props.case
+                api = props.api
+                scope = props.scope
             }
         }
         InterpretationView {

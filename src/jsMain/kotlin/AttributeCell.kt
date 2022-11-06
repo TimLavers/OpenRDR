@@ -1,14 +1,13 @@
 import csstype.Cursor
 import dom.html.HTMLTableCellElement
-import dom.html.HTMLTableRowElement
 import emotion.react.css
 import io.rippledown.model.Attribute
+import kotlinx.coroutines.launch
 import react.FC
-import react.Props
 import react.dom.events.DragEvent
 import react.dom.html.ReactHTML
 
-external interface AttributeCellHandler: Props {
+external interface AttributeCellHandler: Handler {
     var attribute: Attribute
 }
 val AttributeCell = FC<AttributeCellHandler> {
@@ -21,7 +20,6 @@ val AttributeCell = FC<AttributeCellHandler> {
         }
         draggable = true
         onDragStart = { event ->
-            println("Drag started")
             event.dataTransfer.setData("text", it.attribute.name)
         }
         onDragEnd = {
@@ -35,6 +33,11 @@ val AttributeCell = FC<AttributeCellHandler> {
             event.preventDefault()
             println("Dropped onto: ${it.attribute.name}")
             println("on drop: ${event.dataTransfer.getData("text")}")
+            val targetName = it.attribute.name
+            val movedName = event.dataTransfer.getData("text")
+            it.scope.launch {
+                it.api.moveAttributeJustBelowOther(Attribute(movedName), Attribute(targetName))
+            }
         }
     }
 }
