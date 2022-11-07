@@ -12,7 +12,7 @@ class AttributeCellTest : ReactTestSupport {
         val tsh = Attribute("TSH")
         val renderer = render {
             AttributeCell {
-                attrs.attribute = tsh
+                attribute = tsh
             }
         }
         val cells = renderer.root.findAllByType(AttributeCell)

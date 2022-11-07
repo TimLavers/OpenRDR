@@ -3,34 +3,28 @@
 package mysticfall
 
 import kotlinx.js.jso
-import react.Props
-import react.RBuilder
-import react.RBuilderSingle
-import react.ReactElement
+import react.*
 
 /**
  * @author Xavier Cho
  * @see <a href="https://github.com/mysticfall/kotlin-react-test">Kotlin API for React Test Renderer</a>
  */
 interface ReactTestSupport {
-    fun ReactTestSupport.act(block: () -> Unit): Unit = TestRendererGlobal.act(block)
+    fun act(block: () -> Unit): Unit = TestRendererGlobal.act(block)
 
-    fun ReactTestSupport.trender(block: RBuilder.() -> Unit): TestRenderer = render(null, block)
+    fun render(block: ChildrenBuilder.() -> Unit) = render(null, block)
 
-    fun ReactTestSupport.render(
+    fun render(
         options: TestRendererOptions? = null,
-        block: RBuilder.() -> Unit
+        block: ChildrenBuilder.() -> Unit
     ): TestRenderer {
-        val builder = RBuilderSingle()
-
-        block(builder)
-
-        return TestRendererGlobal.create(builder.childList.first(), options).unsafeCast<TestRenderer>()
+        val ui = FC<PropsWithStyle> { block() }
+        return TestRendererGlobal.create(ui.create(), options).unsafeCast<TestRenderer>()
     }
 
-    fun ReactTestSupport.render(
+    fun render(
         mockFactory: (ReactElement<Props>) -> Any,
-        block: RBuilder.() -> Unit
+        block: ChildrenBuilder.() -> Unit
     ): TestRenderer {
         val options = jso<TestRendererOptions> {
             createNodeMock = mockFactory
@@ -39,12 +33,8 @@ interface ReactTestSupport {
         return render(options, block)
     }
 
-
-    fun ReactTestSupport.update(component: TestRenderer, replacement: RBuilder.() -> Unit) {
-        val builder = RBuilderSingle()
-
-        replacement(builder)
-
-        component.update(builder.childList.first())
+    fun update(component: TestRenderer, replacement: ChildrenBuilder.() -> Unit) {
+        val ui = FC<Props> { replacement() }
+        component.update(ui.create())
     }
 }

@@ -19,8 +19,8 @@ class MainTest : ReactTestSupport {
     fun caseQueueShouldShowOnTheMainWindow() = runTest {
         val renderer = render {
             OpenRDRUI {
-                attrs.scope = this@runTest
-                attrs.api = Api(defaultMock)
+                scope = this@runTest
+                api = Api(defaultMock)
             }
         }
         renderer.root.findAllByType(CaseQueue) shouldNotBe null
@@ -41,8 +41,8 @@ class MainTest : ReactTestSupport {
         act {
             renderer = render {
                 OpenRDRUI {
-                    attrs.scope = this@runTest
-                    attrs.api = Api(mock(config))
+                    scope = this@runTest
+                    api = Api(mock(config))
                 }
             }
         }

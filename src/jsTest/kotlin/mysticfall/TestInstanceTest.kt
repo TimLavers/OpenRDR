@@ -1,8 +1,13 @@
 package mysticfall
 
+import csstype.ClassName
 import kotlinx.js.jso
-import react.dom.*
-import react.react
+import proxy.printJSON
+import react.dom.html.ReactHTML.a
+import react.dom.html.ReactHTML.div
+import react.dom.html.ReactHTML.h1
+import react.dom.html.ReactHTML.h5
+import react.dom.html.ReactHTML.p
 import kotlin.js.json
 import kotlin.test.*
 
@@ -18,15 +23,14 @@ class TestInstanceTest : ReactTestSupport {
                 div {
                     +"Div 3"
 
-                    div(classes = "selected") {
+                    div {
+                        className = ClassName("selected")
                         +"Div 4"
                     }
                 }
             }
         }
-
         val selected = renderer.root.find { c -> c.props.asDynamic()["className"] == "selected" }
-
         assertEquals("Div 4", selected.props.asDynamic()["children"])
     }
 
@@ -41,29 +45,12 @@ class TestInstanceTest : ReactTestSupport {
         }
     }
 
-    /*
-     * According to the documentation, this test should fail, but somehow it doesn't.
-     */
-    @Test
-    @Ignore
-    fun testFindMultipleMatches() {
-        val renderer = render {
-            div {
-                h1 {}
-                div {}
-            }
-        }
-
-        assertFailsWith<Throwable> {
-            renderer.root.find { true }
-        }
-    }
-
     @Test
     fun testFindAll() {
         val renderer = render {
             div {
-                div(classes = "selected") {
+                div {
+                    className = ClassName("selected")
                     +"Div 1"
                 }
                 div {
@@ -72,7 +59,8 @@ class TestInstanceTest : ReactTestSupport {
                 div {
                     +"Div 3"
 
-                    div(classes = "selected") {
+                    div {
+                        className = ClassName("selected")
                         +"Div 4"
                     }
                 }
@@ -95,26 +83,6 @@ class TestInstanceTest : ReactTestSupport {
         assertTrue(renderer.root.findAll { false }.isEmpty())
     }
 
-    @Test
-    fun testFindByTypeClass() {
-        val renderer = render {
-            div {
-                div {
-                    +"Div 1"
-                }
-                child(TestClassComponent::class) {
-                    attrs {
-                        name = "Class Component"
-                    }
-                }
-            }
-        }
-
-        assertEquals(
-            "Class Component",
-            renderer.root.findByType(TestClassComponent::class.react).props.name
-        )
-    }
 
     @Test
     fun testFindByTypeFunction() {
@@ -123,9 +91,7 @@ class TestInstanceTest : ReactTestSupport {
                 +"Div 2"
 
                 TestFuncComponent {
-                    attrs {
-                        name = "Function Component"
-                    }
+                    name = "Function Component"
                 }
             }
         }
@@ -139,25 +105,20 @@ class TestInstanceTest : ReactTestSupport {
     @Test
     fun testFindByTypeSimpleFunction() {
         lateinit var renderer: TestRenderer
-
-
         act {
             renderer = render {
                 div {
-                    TestFuncComponentA {
-                        attrs {
-                            name = "Function ComponentA"
-                        }
+                    TestFuncComponent {
+                        name = "Function Component"
                     }
                 }
             }
         }
-        val component = renderer.root.findByType("div")
-        println(component!!.children.size)
+        val component = renderer.root.findByType("div")!!
+        assertEquals(1, component.children.size)
 
-        val name2 = component!!.children[0].props.asDynamic()["name"]
-        println("name2 = ${name2}")
-
+        val name = component.children[0].props.asDynamic()["name"]
+        assertEquals("Function Component", name)
     }
 
     @Test
@@ -246,17 +207,13 @@ class TestInstanceTest : ReactTestSupport {
                     +"Div 1"
                 }
                 TestFuncComponent {
-                    attrs {
-                        name = "Component 1"
-                    }
+                    name = "Component 1"
                 }
                 div {
                     +"Div 2"
 
                     TestFuncComponent {
-                        attrs {
-                            name = "Component 2"
-                        }
+                        name = "Component 2"
                     }
                 }
             }
@@ -314,9 +271,7 @@ class TestInstanceTest : ReactTestSupport {
                 }
                 div {
                     TestFuncComponent {
-                        attrs {
-                            name = "Component 1"
-                        }
+                        name = "Component 1"
                     }
                 }
             }
@@ -329,22 +284,14 @@ class TestInstanceTest : ReactTestSupport {
         assertEquals("Component 1", renderer.root.findByProps(props).props.name)
     }
 
-    /*
-     * According to the documentation, this test should fail, but somehow it doesn't.
-     */
     @Test
-    @Ignore
     fun testFindByPropsMultipleMatches() {
         val renderer = render {
             TestFuncComponent {
-                attrs {
-                    name = "Component 1"
-                }
+                name = "Component 1"
             }
             TestFuncComponent {
-                attrs {
-                    name = "Component 1"
-                }
+                name = "Component 1"
             }
         }
 
@@ -363,9 +310,7 @@ class TestInstanceTest : ReactTestSupport {
             div {
                 div {
                     TestFuncComponent {
-                        attrs {
-                            name = "Component 1"
-                        }
+                        name = "Component 1"
                     }
                 }
             }
@@ -384,17 +329,17 @@ class TestInstanceTest : ReactTestSupport {
     fun testFindByPropsJson() {
         val renderer = render {
             div {
-                a(classes = "selected") {
-                    attrs.href = "#anchor1"
-
+                a {
+                    className = ClassName("selected")
+                    href = "#anchor1"
                     +"Link 1"
                 }
                 a {
-                    attrs.href = "#anchor1"
-
+                    href = "#anchor1"
                     +"Link 2"
                 }
-                a(classes = "selected") {
+                a {
+                    className = ClassName("selected")
                     +"Link 3"
                 }
             }
@@ -412,7 +357,8 @@ class TestInstanceTest : ReactTestSupport {
     fun testFindByPropsJsonNoMatch() {
         val renderer = render {
             div {
-                a(classes = "selected") {
+                a {
+                    className = ClassName("selected")
                     +"Link 1"
                 }
             }
@@ -429,10 +375,12 @@ class TestInstanceTest : ReactTestSupport {
     fun testFindByPropsJsonMultipleMatches() {
         val renderer = render {
             div {
-                a(classes = "selected") {
+                a {
+                    className = ClassName("selected")
                     +"Link 1"
                 }
-                a(classes = "selected") {
+                a {
+                    className = ClassName("selected")
                     +"Link 2"
                 }
             }
@@ -450,21 +398,15 @@ class TestInstanceTest : ReactTestSupport {
         val renderer = render {
             div {
                 TestFuncComponent {
-                    attrs {
-                        name = "Component 1"
-                    }
+                    name = "Component 1"
                 }
                 div {
                     TestFuncComponent {
-                        attrs {
-                            name = "Component 1"
-                        }
+                        name = "Component 1"
                     }
                 }
                 TestFuncComponent {
-                    attrs {
-                        name = "Component 2"
-                    }
+                    name = "Component 2"
                 }
             }
         }
@@ -493,8 +435,9 @@ class TestInstanceTest : ReactTestSupport {
     fun testFindAllByPropsJsonNoMatch() {
         val renderer = render {
             div {
-                a(classes = "selected") {
-                    attrs.href = "#anchor1"
+                a {
+                    className = ClassName("selected")
+                    href = "#anchor1"
                 }
             }
         }
@@ -508,25 +451,13 @@ class TestInstanceTest : ReactTestSupport {
     fun testInstance() {
         val renderer = render {
             div {
-                child(TestClassComponent::class) {
-                    attrs {
-                        name = "Class Component"
-                    }
-                }
                 TestFuncComponent {
-                    attrs {
-                        name = "Function Component"
-                    }
+                    name = "Function Component"
                 }
             }
         }
 
-        val classComp = renderer.root.findByProps(json(Pair("name", "Class Component")))
-
-        assertTrue(classComp.instance is TestClassComponent)
-
         val funcComp = renderer.root.findByProps(json(Pair("name", "Function Component")))
-
         assertNull(funcComp.instance)
     }
 
@@ -534,25 +465,12 @@ class TestInstanceTest : ReactTestSupport {
     fun testType() {
         val renderer = render {
             div {
-                child(TestClassComponent::class) {
-                    attrs {
-                        name = "Class Component"
-                    }
-                }
                 TestFuncComponent {
-                    attrs {
-                        name = "Function Component"
-                    }
+                    name = "Function Component"
                 }
             }
         }
-
-        val classComp = renderer.root.findByProps(json(Pair("name", "Class Component")))
-
-        assertEquals(classComp.type, TestClassComponent::class.react)
-
         val funcComp = renderer.root.findByProps(json(Pair("name", "Function Component")))
-
         assertEquals(funcComp.type, TestFuncComponent)
     }
 
@@ -560,13 +478,12 @@ class TestInstanceTest : ReactTestSupport {
     fun testProps() {
         val renderer = render {
             div {
-                h5(classes = "title") {
+                h5 {
+                    className = ClassName("title")
                     +"Heading"
                 }
                 TestFuncComponent {
-                    attrs {
-                        name = "Function Component"
-                    }
+                    name = "Function Component"
                 }
             }
         }
@@ -582,23 +499,36 @@ class TestInstanceTest : ReactTestSupport {
     }
 
     @Test
-    fun testParent() {
+    fun testGrandParent() {
         val renderer = render {
             div {
-                div(classes = "header") {
+                div {
+                    className = ClassName("header")
                     p {
                         +"Body"
                     }
                 }
             }
         }
+        val p = renderer.root.findByType("p")!!
+        assertEquals("header", p.parent!!.props.asDynamic()["className"])
+    }
 
-        val p = renderer.root.findByType("p")
+    @Test
+    fun testParent() {
+        val renderer = render {
+            div {
+                className = ClassName("header")
+                p {
+                    +"Body"
+                }
+            }
+        }
+        renderer.printJSON()
 
-        assertNotNull(p?.parent)
-        assertEquals("header", p?.parent?.props.asDynamic()["className"])
-
-        assertNull(p?.parent?.parent?.parent)
+        val p = renderer.root.findByType("p")!!
+        val parent = p.parent!!
+        assertEquals("header", parent.props.asDynamic()["className"])
     }
 
     @Test
@@ -617,12 +547,11 @@ class TestInstanceTest : ReactTestSupport {
                 div {}
             }
         }
+        val divParent = renderer.root.children[0]
+        assertEquals(3, divParent.children.size)
 
-        assertEquals(3, renderer.root.children.size)
-
-        val div = renderer.root.children.first()
-        val headings = div.children.map { c -> c.props.asDynamic()["children"] }
-
+        val divFirstChild = divParent.children[0]
+        val headings = divFirstChild.children.map { c -> c.props.asDynamic()["children"] }
         assertContentEquals(listOf("Heading 1", "Heading 2"), headings)
     }
 }
