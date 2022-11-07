@@ -36,7 +36,7 @@ class CaseTableBodyTest : ReactTestSupport {
         val attributeCells = renderer.root.findAll{it.props.asDynamic()["id"] != null && (it.props.asDynamic()["id"] as String).startsWith("attribute_name_cell_") }
         println("atts ${attributeCells.size}")
         println("atts ${attributeCells[0].props.asDynamic()["children"].unsafeCast<String>()}")
-//        renderer.printJSON()
+        renderer.printJSON()
         println("row 0 ${rows[0].children.size}")
 //        println("row 0 child 0 ${rows[0].children[0].type}")
 //        println("row 0 child 1 ${rows[0].children[1].type}")
