@@ -17,7 +17,7 @@ class CaseQueueTest : ReactTestSupport {
     fun shouldNotShowCaseListByDefault() = runTest {
         val renderer = render {
             CaseQueue {
-                attrs.scope = this@runTest
+                scope = this@runTest
             }
         }
         renderer.requireCaseListNotToBeShowing()
@@ -27,7 +27,7 @@ class CaseQueueTest : ReactTestSupport {
     fun reviewCasesButtonShouldBeInitiallyDisabled() = runTest {
         val renderer = render {
             CaseQueue {
-                attrs.scope = this@runTest
+                scope = this@runTest
             }
         }
         renderer.requireReviewButtonDisabled()
@@ -47,8 +47,8 @@ class CaseQueueTest : ReactTestSupport {
         }
         val renderer = render {
             CaseQueue {
-                attrs.api = Api(mock(config))
-                attrs.scope = this@runTest
+                api = Api(mock(config))
+                scope = this@runTest
             }
         }
         with(renderer) {
@@ -71,8 +71,8 @@ class CaseQueueTest : ReactTestSupport {
         }
         val renderer = render {
             CaseQueue {
-                attrs.api = Api(mock(config))
-                attrs.scope = this@runTest
+                api = Api(mock(config))
+                scope = this@runTest
             }
         }
         with(renderer) {
@@ -102,8 +102,8 @@ class CaseQueueTest : ReactTestSupport {
         act {
             renderer = render {
                 CaseQueue {
-                    attrs.api = Api(mock(config))
-                    attrs.scope = this@runTest
+                    api = Api(mock(config))
+                    scope = this@runTest
                 }
             }
         }
@@ -124,8 +124,8 @@ class CaseQueueTest : ReactTestSupport {
         }
         val renderer = render {
             CaseQueue {
-                attrs.api = Api(mock(config))
-                attrs.scope = this@runTest
+                api = Api(mock(config))
+                scope = this@runTest
             }
         }
         with(renderer) {
@@ -151,8 +151,8 @@ class CaseQueueTest : ReactTestSupport {
         }
         val renderer = render {
             CaseQueue {
-                attrs.api = Api(mock(config))
-                attrs.scope = this@runTest
+                api = Api(mock(config))
+                scope = this@runTest
             }
         }
 
@@ -183,8 +183,8 @@ class CaseQueueTest : ReactTestSupport {
 
         val renderer = render {
             CaseQueue {
-                attrs.api = Api(mock(config))
-                attrs.scope = this@runTest
+                api = Api(mock(config))
+                scope = this@runTest
             }
         }
 
@@ -229,8 +229,8 @@ class CaseQueueTest : ReactTestSupport {
         launch {
             renderer = render {
                 CaseQueue {
-                    attrs.api = Api(mock(config))
-                    attrs.scope = this@runTest
+                    api = Api(mock(config))
+                    scope = this@runTest
                 }
             }
         }.join()
@@ -277,8 +277,8 @@ class CaseQueueTest : ReactTestSupport {
         act {
             renderer = render {
                 CaseQueue {
-                    attrs.api = Api(mock(config))
-                    attrs.scope = this@runTest
+                    api = Api(mock(config))
+                    scope = this@runTest
                 }
             }
         }

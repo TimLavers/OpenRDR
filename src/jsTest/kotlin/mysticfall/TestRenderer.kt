@@ -27,17 +27,15 @@ object TestRendererGlobal {
 
     private val renderer = require("react-test-renderer")
 
-    fun create(node: ReactNode): TestRenderer = renderer.create(node).unsafeCast<TestRenderer>()
+    fun create(node: ReactNode) = renderer.create(node).unsafeCast<TestRenderer>()
 
-    fun create(node: ReactNode, options: dynamic): TestRenderer =
-        renderer.create(node, options).unsafeCast<TestRenderer>()
+    fun create(node: ReactNode, options: dynamic) = renderer.create(node, options).unsafeCast<TestRenderer>()
 
     fun act(block: () -> Any) {
         val callback: () -> Nothing? = {
             block()
             undefined
         }
-
         renderer.act(callback)
     }
 }

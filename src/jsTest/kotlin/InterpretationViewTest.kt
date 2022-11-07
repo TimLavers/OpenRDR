@@ -1,4 +1,3 @@
-import browser.window
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.CaseId
 import io.rippledown.model.Conclusion
@@ -9,9 +8,7 @@ import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
 import mysticfall.ReactTestSupport
-import org.w3c.dom.Element
 import proxy.*
-import react.dom.html.ReactHTML
 import kotlin.test.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -25,7 +22,7 @@ class InterpretationViewTest : ReactTestSupport {
         }
         val renderer = render {
             InterpretationView {
-                attrs.interpretation = interpretation
+                this.interpretation = interpretation
             }
         }
         renderer.requireInterpretation(text)
@@ -41,7 +38,7 @@ class InterpretationViewTest : ReactTestSupport {
     fun shouldShowInitialInterpretationIfBlank() = runTest {
         val renderer = render {
             InterpretationView {
-                attrs.interpretation = Interpretation()
+                interpretation = Interpretation()
             }
         }
         renderer.requireNoInterpretation()
@@ -53,7 +50,7 @@ class InterpretationViewTest : ReactTestSupport {
         val interpretation = Interpretation()
         val renderer = render {
             InterpretationView {
-                attrs.interpretation = interpretation
+                this.interpretation = interpretation
             }
         }
         with(renderer) {
@@ -76,10 +73,10 @@ class InterpretationViewTest : ReactTestSupport {
         var called = false
         val renderer = render {
             InterpretationView {
-                attrs.scope = this@runTest
-                attrs.api = Api(mock(config))
-                attrs.interpretation = defaultInterpretation
-                attrs.onInterpretationSubmitted = { called = true }
+                scope = this@runTest
+                api = Api(mock(config))
+                interpretation = defaultInterpretation
+                onInterpretationSubmitted = { called = true }
             }
         }
         with(renderer) {
@@ -99,10 +96,10 @@ class InterpretationViewTest : ReactTestSupport {
         var called = false
         val renderer = render {
             InterpretationView {
-                attrs.scope = this@runTest
-                attrs.api = Api(mock(config))
-                attrs.interpretation = Interpretation(caseId = caseId)
-                attrs.onInterpretationSubmitted = { called = true }
+                scope = this@runTest
+                api = Api(mock(config))
+                interpretation = Interpretation(caseId = caseId)
+                onInterpretationSubmitted = { called = true }
             }
         }
         with(renderer) {

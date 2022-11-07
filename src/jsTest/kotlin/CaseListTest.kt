@@ -22,7 +22,7 @@ class CaseListTest : ReactTestSupport {
         )
         val renderer = render {
             CaseList {
-                attrs.caseIds = caseIds
+                this.caseIds = caseIds
             }
         }
         renderer.requireNamesToBeShowingOnCaseList("a", "b")
@@ -32,7 +32,7 @@ class CaseListTest : ReactTestSupport {
     fun shouldShowNoCaseView() {
         val renderer = render {
             CaseList {
-                attrs.caseIds = emptyList()
+                caseIds = emptyList()
             }
         }
         renderer.requireNoCaseView()
@@ -43,8 +43,8 @@ class CaseListTest : ReactTestSupport {
         val caseName = "case a"
         val renderer = render {
             CaseList {
-                attrs.caseIds = listOf(CaseId(id = "1", name = caseName))
-                attrs.currentCase = RDRCase(name = caseName)
+                caseIds = listOf(CaseId(id = "1", name = caseName))
+                currentCase = RDRCase(name = caseName)
             }
         }
         renderer.requireCaseToBeSelected(caseName)
@@ -54,7 +54,7 @@ class CaseListTest : ReactTestSupport {
     fun shouldShowTheCaseListHeading() {
         val renderer = render {
             CaseList {
-                attrs.caseIds = listOf()
+                caseIds = listOf()
             }
         }
         renderer.requireCaseListHeading(CASELIST_HEADING)
@@ -71,13 +71,13 @@ class CaseListTest : ReactTestSupport {
         var selectedCaseId: String? = null
         val renderer = render {
             CaseList {
-                attrs.caseIds = listOf(
+                caseIds = listOf(
                     caseId1,
                     caseId2,
                     caseId3
                 )
-                attrs.currentCase = RDRCase(name = caseA, data = emptyMap())
-                attrs.onCaseSelected = { id ->
+                currentCase = RDRCase(name = caseA, data = emptyMap())
+                onCaseSelected = { id ->
                     selectedCaseId = id
                 }
             }
@@ -98,11 +98,11 @@ class CaseListTest : ReactTestSupport {
         var interpSubmitted = false
         val renderer = render {
             CaseList {
-                attrs.scope = this@runTest
-                attrs.api = Api(defaultMock)
-                attrs.caseIds = listOf(caseId)
-                attrs.currentCase = rdrCase
-                attrs.onInterpretationSubmitted = { interpSubmitted = true }
+                scope = this@runTest
+                api = Api(defaultMock)
+                caseIds = listOf(caseId)
+                currentCase = rdrCase
+                onInterpretationSubmitted = { interpSubmitted = true }
             }
         }
         renderer.clickSubmitButton()
