@@ -12,8 +12,8 @@ class EpisodeDateCellTest : ReactTestSupport {
     fun creation() {
         val renderer = render {
             EpisodeDateCell {
-                attrs.index = 3
-                attrs.date = date0
+                index = 3
+                date = date0
             }
         }
         val cells = renderer.root.findAllByType(EpisodeDateCell)

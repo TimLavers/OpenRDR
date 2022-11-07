@@ -26,8 +26,8 @@ class CaseQueueUpdateTest : ReactTestSupport {
         act {
             renderer = render {
                 CaseQueue {
-                    attrs.api = Api(mock(config))
-                    attrs.scope = this@runTest
+                    api = Api(mock(config))
+                    scope = this@runTest
                 }
             }
         }

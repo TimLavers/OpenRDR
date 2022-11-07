@@ -19,7 +19,7 @@ class CaseViewTest : ReactTestSupport {
         val name = "case a "
         val renderer = render {
             CaseView {
-                attrs.case = createCase(name)
+                case = createCase(name)
             }
         }
         renderer.requireCaseToBeSelected(name)
@@ -32,7 +32,7 @@ class CaseViewTest : ReactTestSupport {
         rdrCase.interpretation.add(RuleSummary(conclusion = Conclusion(text)))
         val renderer = render {
             CaseView {
-                attrs.case = rdrCase
+                case = rdrCase
             }
         }
         renderer.requireInterpretation(text)
@@ -46,10 +46,10 @@ class CaseViewTest : ReactTestSupport {
         var interpSubmitted = false
         val renderer = render {
             CaseView {
-                attrs.scope = this@runTest
-                attrs.api = Api(defaultMock)
-                attrs.case = rdrCase
-                attrs.onInterpretationSubmitted = { interpSubmitted = true }
+                scope = this@runTest
+                api = Api(defaultMock)
+                case = rdrCase
+                onInterpretationSubmitted = { interpSubmitted = true }
             }
         }
         interpSubmitted shouldBe false

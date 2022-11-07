@@ -9,7 +9,7 @@ val reactVersion = "18.2.0-pre.406"
 val reactEmotionVersion = "11.10.4-pre.406"
 val kotlinExtensionsVersion = "1.0.1-pre.364"
 val testingLibraryReactVersion = "13.4.0"
-val reactTestRendererVersion = "18.0.0"
+val reactTestRendererVersion = "18.2.0"
 val kotestVersion = "5.4.1"
 val webDriverVersion = "4.4.3"
 val awaitilityVersion = "4.2.0"
@@ -180,8 +180,6 @@ kotlin {
         }
         val jsTest by getting {
             dependencies {
-                implementation("org.jetbrains.kotlin-wrappers:kotlin-react-legacy:$reactVersion")
-                implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom-legacy:$reactVersion")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-extensions:$kotlinExtensionsVersion")
                 implementation("io.ktor:ktor-client-mock:$ktor_version")
 

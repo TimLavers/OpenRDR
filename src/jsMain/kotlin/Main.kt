@@ -1,7 +1,7 @@
 import kotlinx.browser.document
 import kotlinx.coroutines.MainScope
 import react.create
-import react.dom.render
+import react.dom.client.createRoot
 
 fun main() {
     document.getElementById("root")?.let { container ->
@@ -9,7 +9,7 @@ fun main() {
             api = Api()
             scope = MainScope()
         }
-        render(ui, container)
+        createRoot(container).render(ui)
     }
 }
 

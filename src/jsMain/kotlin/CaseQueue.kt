@@ -14,7 +14,6 @@ import web.timers.setInterval
 import kotlin.time.Duration.Companion.seconds
 
 const val NUMBER_OF_CASES_WAITING_ID = "number_of_cases_waiting_value"
-const val REFRESH_BUTTON_ID = "refresh_waiting_cases_info_button"
 const val REVIEW_CASES_BUTTON_ID = "review_cases_button"
 val POLL_PERIOD = 0.5.seconds
 
