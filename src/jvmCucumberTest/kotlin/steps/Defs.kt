@@ -2,9 +2,11 @@ package steps
 
 import io.cucumber.datatable.DataTable
 import io.cucumber.java8.En
+import io.cucumber.java8.PendingException
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.UITestBase
 import io.rippledown.integration.pageobjects.CaseListPO
+import io.rippledown.integration.pageobjects.CaseViewPO
 import org.openqa.selenium.WebDriver
 import java.util.concurrent.TimeUnit
 
@@ -14,6 +16,7 @@ class Defs : En {
     val labProxy = uiTestBase.labProxy
 
     lateinit var caseListPO: CaseListPO
+    lateinit var caseView: CaseViewPO
     lateinit var driver: WebDriver
 
     init {
@@ -35,6 +38,21 @@ class Defs : En {
             }
         }
 
+        Given("a KB for which the initial attribute order is A, B, C:") {
+            // The attributes are by default ordered in the order in which
+            // they were seen by the KB.
+            labProxy.writeCaseWithDataToInputDir("CaseA", mapOf("A" to "1"))
+            labProxy.writeCaseWithDataToInputDir("CaseAB", mapOf("A" to "1", "B" to "2"))
+            labProxy.writeCaseWithDataToInputDir("CaseABC", mapOf("A" to "1", "B" to "2", "C" to "3"))
+        }
+
+        And("I select a case with all three attributes") {
+            caseView = caseListPO.select("CaseABC")
+        }
+
+        And("I move C below A") {
+            caseView.dragAttribute("C", "A")
+        }
         When("I start the client application") {
             //client application is started in the Before hook
             caseListPO = CaseListPO(driver)

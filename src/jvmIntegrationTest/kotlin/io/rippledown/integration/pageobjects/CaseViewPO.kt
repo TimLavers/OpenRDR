@@ -3,6 +3,7 @@ package io.rippledown.integration.pageobjects
 import io.rippledown.integration.pause
 import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver
+import org.openqa.selenium.interactions.Actions
 import kotlin.test.assertEquals
 
 // ORD2
@@ -51,7 +52,7 @@ class CaseViewPO(private val driver: WebDriver) {
             val rowCells = rowElement.findElements(By.tagName("td"))
             // First is the name.
             val attributeName = rowCells[0].text
-            assertEquals("attribute_name_cell_$attributeName", rowCells[0].getAttribute("id")) //Sanity check.
+            assertEquals(attributeCellId(attributeName), rowCells[0].getAttribute("id")) //Sanity check.
             // Last is the reference range. In between are the values.
             val numberOfEpisodes = rowCells.size - 2
             rowCells.forEachIndexed { index, cell ->
@@ -65,6 +66,16 @@ class CaseViewPO(private val driver: WebDriver) {
             result[attributeName] = valuesList
         }
         return result
+    }
+
+    private fun attributeCellId(attributeName: String?) = "attribute_name_cell_$attributeName"
+
+    fun dragAttribute(draggedAttribute: String, targetAttribute: String) {
+        val dragId = attributeCellId(draggedAttribute)
+        val draggedElement = driver.findElement(By.id(dragId))
+        val targetId = attributeCellId(targetAttribute)
+        val targetElement = driver.findElement(By.id(targetId))
+        Actions(driver).dragAndDrop(draggedElement, targetElement)
     }
 
     fun referenceRange(attribute: String): String {
