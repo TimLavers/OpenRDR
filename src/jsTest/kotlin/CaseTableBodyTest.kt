@@ -1,46 +1,46 @@
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.*
+import io.rippledown.model.Attribute
+import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.caseview.CaseViewProperties
 import io.rippledown.model.caseview.ViewableCase
-import io.rippledown.model.rule.RuleSummary
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runTest
-import mocks.defaultMock
+import io.rippledown.model.defaultDate
 import mysticfall.ReactTestSupport
-import org.w3c.dom.HTMLTableCellElement
-import proxy.*
+import proxy.text
 import kotlin.test.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class CaseTableBodyTest : ReactTestSupport {
 
     @Test
     fun attributeOrdering() {
         val builder1 = RDRCaseBuilder()
-        builder1.addValue("TSH", defaultDate, "2.37")
-        builder1.addValue("FT4", defaultDate, "12.8")
+        val tsh = Attribute("TSH")
+        val ft4 = Attribute("FT4")
+        val abc = Attribute("ABC")
+        val xyz = Attribute("XYZ")
+        builder1.addValue(ft4.name, defaultDate, "12.8")
+        builder1.addValue(abc.name, defaultDate, "12.9")
+        builder1.addValue(xyz.name, defaultDate, "1.9")
+        builder1.addValue(tsh.name, defaultDate, "2.37")
         val case1 = builder1.build("Case1")
-        val properties = CaseViewProperties(listOf(Attribute("TSH"), Attribute("FT4")))
+        val properties = CaseViewProperties(listOf(tsh, ft4, abc, xyz))
         val viewableCase = ViewableCase(case1, properties)
 
         val renderer = render {
             CaseTableBody {
-                attrs.case = viewableCase
+                case = viewableCase
             }
         }
         val rows = renderer.root.findAllByType("tr")
-        println("rows: ${rows.size}")
-        val blah = rows[0].children.map { c -> c.props.asDynamic()["className"] }
-        println("blah: $blah")
+        rows.size shouldBe 4
 
-        val attributeCells = renderer.root.findAll{it.props.asDynamic()["id"] != null && (it.props.asDynamic()["id"] as String).startsWith("attribute_name_cell_") }
-        println("atts ${attributeCells.size}")
-        println("atts ${attributeCells[0].props.asDynamic()["children"].unsafeCast<String>()}")
-        renderer.printJSON()
-        println("row 0 ${rows[0].children.size}")
-//        println("row 0 child 0 ${rows[0].children[0].type}")
-//        println("row 0 child 1 ${rows[0].children[1].type}")
-//        rows[0].findAllByType("td")[0].text() shouldBe "Attribute"
+        val attributeCells = renderer.root.findAll{
+            val id = it.props.asDynamic()["id"]
+            id != null && (id as String).startsWith("attribute_name_cell_")
+        }
+        attributeCells[0].text() shouldBe tsh.name
+        attributeCells[1].text() shouldBe ft4.name
+        attributeCells[2].text() shouldBe abc.name
+        attributeCells[3].text() shouldBe xyz.name
     }
 }
 

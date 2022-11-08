@@ -36,7 +36,7 @@ fun TestRenderer.findById(id: String): TestInstance<*> {
     }
 }
 
-fun TestInstance<*>.text() = props.asDynamic()["children"][0].unsafeCast<String>()
+fun TestInstance<*>.text() = props.asDynamic()["children"].unsafeCast<String>()
 
 suspend fun TestInstance<*>.click() =
     coroutineScope {
@@ -92,7 +92,7 @@ fun TestRenderer.requireNoCaseView() {
 }
 
 fun TestRenderer.requireCaseListHeading(expected: String) {
-    findById(CASELIST_ID).text() shouldBe expected
+    findById(CASELIST_ID).props.asDynamic()["children"][0].unsafeCast<String>() shouldBe expected
 }
 
 fun TestRenderer.requireInterpretation(expected: String) {
