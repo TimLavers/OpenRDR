@@ -2,7 +2,6 @@ package io.rippledown.integration
 
 import io.rippledown.integration.pageobjects.CaseListPO
 import io.rippledown.integration.pageobjects.CaseQueuePO
-import io.rippledown.integration.pageobjects.NoCaseViewPO
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -21,19 +20,13 @@ internal class CaseViewTest: UITestBase() {
         setupWebDriver()
         caseQueuePO = CaseQueuePO(driver)
         caseQueuePO.waitForNumberWaitingToBe(3)
-        caseListPO = caseQueuePO.review()
+        caseListPO = CaseListPO(driver)
     }
 
     @AfterTest
     fun cleanup() {
         driverClose()
         serverProxy.shutdown()
-    }
-
-    @Test
-    fun noCaseSelected() {
-        val noCaseView = NoCaseViewPO(driver)
-        assertEquals(noCaseView.text(), "No case selected")
     }
 
     @Test

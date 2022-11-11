@@ -24,7 +24,6 @@ class CaseViewPO(private val driver: WebDriver) {
         val containerElement = containerElement()
         // Get the case header.
         val headerElement = containerElement.findElement(By.tagName("thead"))
-        val valuesList = mutableListOf<String>()
         // Get all cells in the head.
         val rowCells = headerElement.findElements(By.tagName("th"))
         // First column and last columns are not dates.

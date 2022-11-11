@@ -1,13 +1,12 @@
-import io.kotest.matchers.shouldBe
 import io.rippledown.model.CaseId
-import io.rippledown.model.Conclusion
+import io.rippledown.model.CasesInfo
 import io.rippledown.model.RDRCase
-import io.rippledown.model.rule.RuleSummary
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
-import mocks.defaultMock
+import mocks.config
+import mocks.mock
 import mysticfall.ReactTestSupport
+import mysticfall.TestRenderer
 import proxy.*
 import kotlin.test.Test
 
@@ -15,39 +14,83 @@ import kotlin.test.Test
 class CaseListTest : ReactTestSupport {
 
     @Test
-    fun shouldListCaseNames() {
-        val caseIds = listOf(
+    fun shouldSelectACaseIdWhenCaseNameClicked() = runTest {
+        val caseA = "case A"
+        val caseB = "case B"
+        val caseC = "case C"
+        val caseId1 = CaseId(id = "1", name = caseA)
+        val caseId2 = CaseId(id = "2", name = caseB)
+        val caseId3 = CaseId(id = "3", name = caseC)
+        val threeCaseIds = listOf(caseId1, caseId2, caseId3)
+        val config = config {
+            returnCasesInfo = CasesInfo(threeCaseIds)
+            returnCase = RDRCase(caseA)
+        }
+        lateinit var renderer: TestRenderer
+        act {
+            renderer = render {
+                CaseList {
+                    caseIds = threeCaseIds
+                    api = Api(mock(config))
+                    scope = this@runTest
+                }
+            }
+        }
+        config.returnCase = RDRCase(caseB)
+        with(renderer) {
+            selectCase(caseB)
+            waitForEvents()
+            requireCaseToBeSelected(caseB)
+        }
+    }
+
+    @Test
+    fun shouldListCaseNames() = runTest {
+        val twoCaseIds = listOf(
             CaseId(id = "1", name = "a"),
             CaseId(id = "2", name = "b")
         )
+        val config = config {
+            returnCasesInfo = CasesInfo(twoCaseIds)
+            returnCase = RDRCase("a")
+        }
         val renderer = render {
             CaseList {
-                this.caseIds = caseIds
+                caseIds = twoCaseIds
+                api = Api(mock(config))
+                scope = this@runTest
+
             }
         }
+        waitForEvents()
         renderer.requireNamesToBeShowingOnCaseList("a", "b")
     }
 
     @Test
-    fun shouldShowNoCaseView() {
-        val renderer = render {
-            CaseList {
-                caseIds = emptyList()
-            }
+    fun shouldShowCaseViewForTheFirstCase() = runTest {
+        val caseName1 = "case 1"
+        val caseName2 = "case 2"
+        val twoCaseIds = listOf(
+            CaseId("1", caseName1),
+            CaseId("2", caseName2)
+        )
+        val config = config {
+            returnCasesInfo = CasesInfo(twoCaseIds)
+            returnCase = RDRCase(caseName1)
         }
-        renderer.requireNoCaseView()
-    }
 
-    @Test
-    fun shouldShowCaseViewForTheSelectedCase() {
-        val caseName = "case a"
-        val renderer = render {
-            CaseList {
-                caseIds = listOf(CaseId(id = "1", name = caseName))
-                currentCase = RDRCase(name = caseName)
+        lateinit var renderer: TestRenderer
+        act {
+            renderer = render {
+                CaseList {
+                    caseIds = twoCaseIds
+                    api = Api(mock(config))
+                    scope = this@runTest
+                }
             }
         }
-        renderer.requireCaseToBeSelected(caseName)
+        waitForEvents()
+        renderer.requireCaseToBeSelected(caseName1)
     }
 
     @Test
@@ -60,54 +103,5 @@ class CaseListTest : ReactTestSupport {
         renderer.requireCaseListHeading(CASELIST_HEADING)
     }
 
-    @Test
-    fun shouldSelectACaseIdWhenCaseNameClicked() = runTest {
-        val caseA = "case A"
-        val caseB = "case B"
-        val caseC = "case C"
-        val caseId1 = CaseId(id = "1", name = caseA)
-        val caseId2 = CaseId(id = "2", name = caseB)
-        val caseId3 = CaseId(id = "3", name = caseC)
-        var selectedCaseId: String? = null
-        val renderer = render {
-            CaseList {
-                caseIds = listOf(
-                    caseId1,
-                    caseId2,
-                    caseId3
-                )
-                currentCase = RDRCase(name = caseA, data = emptyMap())
-                onCaseSelected = { id ->
-                    selectedCaseId = id
-                }
-            }
-        }
-        selectedCaseId shouldBe null
-        renderer.selectCase(caseB)
-        selectedCaseId shouldBe caseId2.id
-    }
 
-    @Test
-    fun shouldCallInterpretationSubmitted() = runTest {
-        val caseName = "case a"
-        val text = "Go to Bondi now!"
-        val caseId = CaseId(name = caseName)
-        val rdrCase = RDRCase(name = caseName).apply {
-            interpretation.add(RuleSummary(conclusion = Conclusion(text)))
-        }
-        var interpSubmitted = false
-        val renderer = render {
-            CaseList {
-                scope = this@runTest
-                api = Api(defaultMock)
-                caseIds = listOf(caseId)
-                currentCase = rdrCase
-                onInterpretationSubmitted = { interpSubmitted = true }
-            }
-        }
-        renderer.clickSubmitButton()
-        this@runTest.launch {
-            interpSubmitted shouldBe true
-        }
-    }
 }

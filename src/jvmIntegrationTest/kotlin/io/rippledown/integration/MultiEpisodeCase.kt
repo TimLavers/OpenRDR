@@ -20,7 +20,7 @@ internal class MultiEpisodeCase: UITestBase() {
         setupWebDriver()
         caseQueuePO = CaseQueuePO(driver)
         caseQueuePO.waitForNumberWaitingToBe(1)
-        caseListPO = caseQueuePO.review()
+        caseListPO = CaseListPO(driver)
     }
 
     @AfterTest

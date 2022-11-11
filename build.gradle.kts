@@ -104,7 +104,7 @@ kotlin {
                         tasks.shadowJar,
                         tasks.compileTestJava,
                         tasks.processTestResources,
-                        tasks.getByName("jvmCucumberTestClasses"),
+                        tasks.getByName("jvmCucumberTestClasses")
                     )
                     group = VERIFICATION_GROUP
                 }
@@ -112,6 +112,7 @@ kotlin {
         }
         withJava()
     }
+
     js {
         browser {
             binaries.executable()

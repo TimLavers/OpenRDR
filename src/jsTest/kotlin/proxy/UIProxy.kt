@@ -6,13 +6,10 @@ import CASE_ID_PREFIX
 import CaseList
 import INTERPRETATION_TEXT_AREA_ID
 import NUMBER_OF_CASES_WAITING_ID
-import NoCaseView
 import POLL_PERIOD
-import REVIEW_CASES_BUTTON_ID
 import SEND_INTERPRETATION_BUTTON_ID
 import io.kotest.assertions.timing.eventually
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -48,12 +45,6 @@ suspend fun TestInstance<*>.click() =
 suspend fun TestRenderer.clickSubmitButton() =
     findById(SEND_INTERPRETATION_BUTTON_ID).click()
 
-suspend fun TestRenderer.clickReviewButton() =
-    findById(REVIEW_CASES_BUTTON_ID).click()
-
-suspend fun TestRenderer.requireReviewButtonDisabled() =
-    findById(REVIEW_CASES_BUTTON_ID).props.asDynamic()["disabled"].unsafeCast<Boolean>() shouldBe true
-
 suspend fun TestRenderer.selectCase(caseName: String) =
     findById("$CASE_ID_PREFIX$caseName").click()
 
@@ -85,10 +76,6 @@ fun TestRenderer.numberOfCasesWaiting() = findById(NUMBER_OF_CASES_WAITING_ID).t
 
 fun TestRenderer.requireCaseListNotToBeShowing() {
     root.findAllByType(CaseList) shouldBe emptyList<TestInstance<*>>()
-}
-
-fun TestRenderer.requireNoCaseView() {
-    root.findAllByType(NoCaseView) shouldNotBe null
 }
 
 fun TestRenderer.requireCaseListHeading(expected: String) {
