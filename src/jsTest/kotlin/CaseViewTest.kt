@@ -1,11 +1,10 @@
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.Conclusion
-import io.rippledown.model.RDRCase
-import io.rippledown.model.ReferenceRange
+import io.rippledown.model.*
 import io.rippledown.model.rule.RuleSummary
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
-import mocks.defaultMock
+import mocks.config
+import mocks.mock
 import mysticfall.ReactTestSupport
 import proxy.clickSubmitButton
 import proxy.requireCaseToBeSelected
@@ -49,19 +48,21 @@ class CaseViewTest : ReactTestSupport {
         val rdrCase = RDRCase(name = caseName).apply {
             interpretation.add(RuleSummary(conclusion = Conclusion(text)))
         }
-        var interpSubmitted = false
+
+        val config = config {
+            expectedInterpretation = Interpretation(CaseId(caseName, caseName), text = text)
+        }
         val renderer = render {
             CaseView {
                 scope = this@runTest
-                api = Api(defaultMock)
+                api = Api(mock(config))
                 case = rdrCase
-                onInterpretationSubmitted = { interpSubmitted = true }
             }
         }
-        interpSubmitted shouldBe false
+        renderer.requireInterpretation(text) //sanity check
+
         renderer.clickSubmitButton()
         waitForEvents()
-        interpSubmitted shouldBe true
     }
 
     @Test

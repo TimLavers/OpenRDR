@@ -118,7 +118,6 @@ data class MultiEpisodeCaseTemplate(var name: String = "") {
 class DatesTemplate(var datesCSL: String = "") {
 
     fun dateList(): List<Long> {
-        println("datesCSL: $datesCSL")
         val dateList = mutableListOf<Long>()
         datesCSL.split(",").forEach { dateList.add(parseDate(it.trim())) }
         return dateList

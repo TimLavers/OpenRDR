@@ -1,4 +1,3 @@
-import io.kotest.matchers.shouldBe
 import io.rippledown.model.CaseId
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
@@ -70,19 +69,17 @@ class InterpretationViewTest : ReactTestSupport {
         val config = config {
             expectedInterpretation = Interpretation(caseId, text)
         }
-        var called = false
         val renderer = render {
             InterpretationView {
                 scope = this@runTest
                 api = Api(mock(config))
                 interpretation = defaultInterpretation
-                onInterpretationSubmitted = { called = true }
             }
         }
         with(renderer) {
             clickSubmitButton()
             waitForEvents()
-            called shouldBe true
+            //assertion is in the mocked API call
         }
     }
 
@@ -93,13 +90,11 @@ class InterpretationViewTest : ReactTestSupport {
         val config = config {
             expectedInterpretation = Interpretation(caseId, enteredText)
         }
-        var called = false
         val renderer = render {
             InterpretationView {
                 scope = this@runTest
                 api = Api(mock(config))
                 interpretation = Interpretation(caseId = caseId)
-                onInterpretationSubmitted = { called = true }
             }
         }
         with(renderer) {
@@ -107,7 +102,7 @@ class InterpretationViewTest : ReactTestSupport {
             waitForEvents()
             clickSubmitButton()
             waitForEvents()
-            called shouldBe true
+            //assertion is in the mocked API call
         }
     }
 }

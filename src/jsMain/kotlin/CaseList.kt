@@ -2,10 +2,13 @@ import csstype.*
 import emotion.react.css
 import io.rippledown.model.CaseId
 import io.rippledown.model.RDRCase
+import kotlinx.coroutines.launch
 import react.FC
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.li
 import react.dom.html.ReactHTML.ul
+import react.useEffect
+import react.useState
 
 const val CASELIST_ID = "case_list_container"
 const val CASE_ID_PREFIX = "case_list_item_"
@@ -13,12 +16,23 @@ const val CASELIST_HEADING = "Cases"
 
 external interface CaseListHandler : Handler {
     var caseIds: List<CaseId>
-    var currentCase: RDRCase?
-    var onCaseSelected: (String) -> Unit
-    var onInterpretationSubmitted: () -> Unit
 }
 
 val CaseList = FC<CaseListHandler> { handler ->
+    var currentCase: RDRCase? by useState(null)
+
+    useEffect {
+        val names = handler.caseIds.map { it.name }
+        val currentCaseNullOrNotAvailable = currentCase == null || !names.contains(currentCase?.name)
+        if (currentCaseNullOrNotAvailable && names.isNotEmpty()) {
+            val firstCaseId = handler.caseIds[0]
+            handler.scope.launch {
+                val rdrCase = handler.api.getCase(firstCaseId.id)
+                currentCase = rdrCase
+            }
+        }
+    }
+
     div {
         css {
             after {
@@ -50,23 +64,20 @@ val CaseList = FC<CaseListHandler> { handler ->
                             listStyleType = None.none
                         }
                         onClick = {
-                            handler.onCaseSelected(caseId.id)
+                            handler.scope.launch {
+                                currentCase = handler.api.getCase(caseId.id)
+                            }
                         }
                     }
                 }
             }
         }
-        if (handler.currentCase != null) {
+        if (currentCase != null) {
             CaseView {
                 scope = handler.scope
                 api = handler.api
-                case = handler.currentCase!!
-                onInterpretationSubmitted = {
-                    handler.onInterpretationSubmitted()
-                }
+                case = currentCase!!
             }
-        } else {
-            NoCaseView()
         }
     }
 }

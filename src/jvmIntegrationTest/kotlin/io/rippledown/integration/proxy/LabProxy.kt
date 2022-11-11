@@ -48,6 +48,13 @@ class LabProxy(tempDir: File) {
         FileUtils.copyFileToDirectory(CaseTestUtils.caseFile(caseName), inputDir)
     }
 
+    fun deleteCase(caseName: String) {
+        val deleted = File(inputDir, "${caseName}.json").delete()
+        if (!deleted) {
+            throw IllegalStateException("Could not delete case $caseName")
+        }
+    }
+
     fun writeCaseToInputDir(rdrCase: RDRCase) {
         val file = File(inputDir, "${rdrCase.name}.json")
         val format = Json { allowStructuredMapKeys = true }

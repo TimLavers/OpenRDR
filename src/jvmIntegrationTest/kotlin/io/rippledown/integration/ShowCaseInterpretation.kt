@@ -28,7 +28,7 @@ internal class ShowCaseInterpretation : UITestBase() {
         setupWebDriver()
         caseQueuePO = CaseQueuePO(driver)
         caseQueuePO.waitForNumberWaitingToBe(3)
-        caseListPO = caseQueuePO.review()
+        caseListPO = CaseListPO(driver)
     }
 
     @AfterTest
