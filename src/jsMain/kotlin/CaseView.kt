@@ -10,6 +10,7 @@ const val CASEVIEW_CASE_NAME_ID = "case_view_case_name"
 external interface CaseViewHandler : Handler {
     var case: ViewableCase
     var onInterpretationSubmitted: () -> Unit
+    var onCaseEdited: () -> Unit
 }
 
 /**
@@ -50,6 +51,9 @@ val CaseView = FC<CaseViewHandler> { props ->
                 case = props.case
                 api = props.api
                 scope = props.scope
+                onCaseEdited = {
+                    props.onCaseEdited()
+                }
             }
         }
         InterpretationView {

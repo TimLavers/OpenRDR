@@ -40,6 +40,9 @@ class LabProxy(tempDir: File) {
     }
 
     fun cleanCasesDir() {
+        if (!inputDir.exists()) {
+            inputDir.mkdirs()
+        }
         FileUtils.cleanDirectory(inputDir)
     }
 

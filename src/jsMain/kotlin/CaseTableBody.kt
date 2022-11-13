@@ -6,6 +6,7 @@ import react.dom.html.ReactHTML
 
 external interface CaseTableBodyHandler: Handler {
     var case: ViewableCase
+    var onCaseEdited: () -> Unit
 }
 val CaseTableBody = FC<CaseTableBodyHandler> {
     ReactHTML.tbody {
@@ -21,6 +22,9 @@ val CaseTableBody = FC<CaseTableBodyHandler> {
                     attribute = a
                     api = it.api
                     scope = it.scope
+                    onCaseEdited = {
+                        it.onCaseEdited()
+                    }
                 }
                 results.forEachIndexed { i, result ->
                     ValueCell {

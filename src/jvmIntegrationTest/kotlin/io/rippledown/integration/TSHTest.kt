@@ -17,9 +17,9 @@ internal open class TSHTest: UITestBase() {
 
     @BeforeTest
     fun setup() {
-        serverProxy.start()
+//        serverProxy.start()
         resetKB()
-        setupCases()
+//        setupCases()
         setupWebDriver()
         caseQueuePO = CaseQueuePO(driver)
         pause()//todo use Awaitility
@@ -29,7 +29,7 @@ internal open class TSHTest: UITestBase() {
     @AfterTest
     fun cleanup() {
         driverClose()
-        serverProxy.shutdown()
+//        serverProxy.shutdown()
     }
 
     fun selectCaseAndCheckName(name: String) {

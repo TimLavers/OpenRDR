@@ -9,6 +9,7 @@ import react.dom.html.ReactHTML
 
 external interface AttributeCellHandler: Handler {
     var attribute: Attribute
+    var onCaseEdited: () -> Unit
 }
 val AttributeCell = FC<AttributeCellHandler> {
     ReactHTML.td {
@@ -21,6 +22,7 @@ val AttributeCell = FC<AttributeCellHandler> {
         draggable = true
         onDragStart = { event ->
             event.dataTransfer.setData("text", it.attribute.name)
+            println("Drag started, data tx is ${event.dataTransfer.getData("text")}")
         }
         onDragEnd = {
             println("Drag ended")
@@ -32,11 +34,12 @@ val AttributeCell = FC<AttributeCellHandler> {
                 event: DragEvent<HTMLTableCellElement> ->
             event.preventDefault()
             println("Dropped onto: ${it.attribute.name}")
-            println("on drop: ${event.dataTransfer.getData("text")}")
+            println("on drop data tx: ${event.dataTransfer.getData("text")}")
             val targetName = it.attribute.name
             val movedName = event.dataTransfer.getData("text")
             it.scope.launch {
                 it.api.moveAttributeJustBelowOther(Attribute(movedName), Attribute(targetName))
+                it.onCaseEdited()
             }
         }
     }

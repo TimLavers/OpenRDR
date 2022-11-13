@@ -17,6 +17,7 @@ external interface CaseListHandler : Handler {
     var currentCase: ViewableCase?
     var onCaseSelected: (String) -> Unit
     var onInterpretationSubmitted: () -> Unit
+    var onCaseEdited: () -> Unit
 }
 
 val CaseList = FC<CaseListHandler> { handler ->
@@ -64,6 +65,9 @@ val CaseList = FC<CaseListHandler> { handler ->
                 case = handler.currentCase!!
                 onInterpretationSubmitted = {
                     handler.onInterpretationSubmitted()
+                }
+                onCaseEdited = {
+                    handler.onCaseEdited()
                 }
             }
         } else {

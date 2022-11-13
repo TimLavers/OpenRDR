@@ -44,15 +44,27 @@ class Defs : En {
             labProxy.writeCaseWithDataToInputDir("CaseA", mapOf("A" to "1"))
             labProxy.writeCaseWithDataToInputDir("CaseAB", mapOf("A" to "1", "B" to "2"))
             labProxy.writeCaseWithDataToInputDir("CaseABC", mapOf("A" to "1", "B" to "2", "C" to "3"))
+            labProxy.writeCaseWithDataToInputDir("CaseABC2", mapOf("A" to "10", "B" to "20", "C" to "30"))
         }
 
         And("I select a case with all three attributes") {
             caseView = caseListPO.select("CaseABC")
         }
 
-        And("I move C below A") {
-            caseView.dragAttribute("C", "A")
+        And("if I select case {word}") { caseName: String ->
+            caseView = caseListPO.select(caseName)
         }
+
+        And("I move attribute {word} below attribute {word}") {moved: String, target: String ->
+            println("----------------------------------------------------------------------------------")
+            caseView.dragAttribute(moved, target)
+            Thread.sleep(1000)
+        }
+
+        Then("the case should show the attributes in order:") { dataTable: DataTable ->
+            caseView.attributes() shouldBe  dataTable.asList()
+        }
+
         When("I start the client application") {
             //client application is started in the Before hook
             caseListPO = CaseListPO(driver)
@@ -66,12 +78,15 @@ class Defs : En {
             Thread.sleep(TimeUnit.DAYS.toMillis(1L))
         }
 
+        And("pause briefly") {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(20L))
+        }
+
         Then("I should see the following cases in the case list:") { dataTable: DataTable ->
             val expectedCaseNames = dataTable.asList()
             caseListPO.waitForCaseListToHaveSize(expectedCaseNames.size)
             val actualCaseNames = caseListPO.casesListed()
             actualCaseNames shouldBe expectedCaseNames
         }
-
     }
 }

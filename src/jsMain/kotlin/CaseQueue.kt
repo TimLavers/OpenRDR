@@ -90,6 +90,15 @@ val CaseQueue = FC<CaseQueueHandler> { handler ->
                     }
                 }
             }
+            onCaseEdited = {
+                scope.launch {
+                    val id = currentCase!!.name
+                    println("case edited...reloading with id $id")
+                    currentCase = api.getCase(id)
+                    println("case reloaded")
+                    selectedCase = currentCase
+                }
+            }
         }
     }
 }
