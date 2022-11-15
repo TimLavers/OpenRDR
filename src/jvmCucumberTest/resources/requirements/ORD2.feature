@@ -2,8 +2,16 @@ Feature: Case View
 
   @single
   Scenario: Attribute order can be set by the user
-    Given a KB for which the initial attribute order is A, B, C:
-    And I start the client application
+    Given I start the client application
+    And case CaseA is provided having data:
+      |A|a|
+    And case CaseAB is provided having data:
+      |A|a|
+      |B|b|
+    And case CaseABC is provided having data:
+      |A|a|
+      |B|b|
+      |C|c|
     And if I select case CaseABC
     Then the case should show the attributes in order:
       | A |
@@ -15,9 +23,16 @@ Feature: Case View
       | C |
       | B |
       | A |
-    And if I select case CaseABC2
+    And case CaseABCD is provided having data:
+      |A|a|
+      |B|b|
+      |C|c|
+      |D|d|
+    And if I select case CaseABCD
     Then the case should show the attributes in order:
       | C |
       | B |
       | A |
+      | D |
+    And pause briefly
     And stop the client application

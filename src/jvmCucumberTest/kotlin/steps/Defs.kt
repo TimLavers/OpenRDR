@@ -9,6 +9,7 @@ import io.rippledown.integration.pageobjects.CaseListPO
 import io.rippledown.integration.pageobjects.CaseViewPO
 import org.openqa.selenium.WebDriver
 import java.util.concurrent.TimeUnit
+import java.util.function.BiConsumer
 
 class Defs : En {
     val uiTestBase = UITestBase()
@@ -38,15 +39,6 @@ class Defs : En {
             }
         }
 
-        Given("a KB for which the initial attribute order is A, B, C:") {
-            // The attributes are by default ordered in the order in which
-            // they were seen by the KB.
-            labProxy.writeCaseWithDataToInputDir("CaseA", mapOf("A" to "1"))
-            labProxy.writeCaseWithDataToInputDir("CaseAB", mapOf("A" to "1", "B" to "2"))
-            labProxy.writeCaseWithDataToInputDir("CaseABC", mapOf("A" to "1", "B" to "2", "C" to "3"))
-            labProxy.writeCaseWithDataToInputDir("CaseABC2", mapOf("A" to "10", "B" to "20", "C" to "30"))
-        }
-
         And("I select a case with all three attributes") {
             caseView = caseListPO.select("CaseABC")
         }
@@ -56,9 +48,15 @@ class Defs : En {
         }
 
         And("I move attribute {word} below attribute {word}") {moved: String, target: String ->
-            println("----------------------------------------------------------------------------------")
             caseView.dragAttribute(moved, target)
             Thread.sleep(1000)
+        }
+
+        Given(
+            "case {word} is provided having data:") { caseName: String, dataTable: DataTable ->
+            val attributeNameToValue = mutableMapOf<String, String>()
+            dataTable.asMap().forEach { (t, u) ->  attributeNameToValue[t] = u}
+            labProxy.writeCaseWithDataToInputDir(caseName, attributeNameToValue)
         }
 
         Then("the case should show the attributes in order:") { dataTable: DataTable ->
