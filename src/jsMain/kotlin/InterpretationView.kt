@@ -1,4 +1,5 @@
-import csstype.*
+import csstype.FontFamily
+import csstype.FontWeight
 import emotion.react.css
 import io.rippledown.model.Interpretation
 import kotlinx.coroutines.launch
@@ -10,7 +11,6 @@ import react.useState
 
 external interface InterpretationViewHandler : Handler {
     var interpretation: Interpretation
-    var onInterpretationSubmitted: () -> Unit
 }
 
 const val INTERPRETATION_TEXT_AREA_ID = "interpretation_text_area"
@@ -47,9 +47,7 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
                     val interpretation = Interpretation(caseId, interpretationText)
                     handler.scope.launch {
                         handler.api.saveInterpretation(interpretation)
-                        handler.onInterpretationSubmitted()
                     }
-
                     interpretationText = ""
                 }
             }

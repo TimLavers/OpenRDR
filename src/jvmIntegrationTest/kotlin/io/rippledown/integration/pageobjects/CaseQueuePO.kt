@@ -18,15 +18,4 @@ class CaseQueuePO(private val driver: WebDriver) {
         val waitingCasesElement = driver.findElement(By.id("number_of_cases_waiting_value"))
         return Integer.parseInt(waitingCasesElement.text)
     }
-
-    fun review(): CaseListPO {
-        reviewButton().click()
-        return CaseListPO(driver)
-    }
-
-    fun reviewButtonIsEnabled(): Boolean {
-        return reviewButton().isEnabled
-    }
-
-    private fun reviewButton() = driver.findElement(By.id("review_cases_button"))
 }

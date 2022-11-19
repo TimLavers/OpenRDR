@@ -20,7 +20,7 @@ internal class SendInterpretationTest: UITestBase() {
         setupWebDriver()
         caseQueuePO = CaseQueuePO(driver)
         caseQueuePO.waitForNumberWaitingToBe(3)
-        caseListPO = caseQueuePO.review()
+        caseListPO = CaseListPO(driver)
     }
 
     @AfterTest
@@ -55,6 +55,7 @@ internal class SendInterpretationTest: UITestBase() {
         labProxy.inputCases() shouldBe setOf("Case1", "Case3")
 
         // Check that the case list in the user interface shows just Case1 and Case3.
+        caseListPO.waitForCaseListToHaveSize(2)
         caseListPO.casesListed() shouldBe listOf("Case1", "Case3")
 
         // Check that Case1 is selected.

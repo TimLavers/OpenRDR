@@ -14,25 +14,21 @@ import kotlin.test.Test
 class CaseQueueTest : ReactTestSupport {
 
     @Test
-    fun shouldNotShowCaseListByDefault() = runTest {
-        val renderer = render {
-            CaseQueue {
-                scope = this@runTest
+    fun shouldNotShowCaseListIfThereAreNoCases() = runTest {
+        val config = config {
+            returnCasesInfo = CasesInfo(emptyList())
+        }
+        lateinit var renderer: TestRenderer
+        act {
+            renderer = render {
+                CaseQueue {
+                    scope = this@runTest
+                    api = Api(mock(config))
+                }
             }
         }
         renderer.requireCaseListNotToBeShowing()
     }
-
-    @Test
-    fun reviewCasesButtonShouldBeInitiallyDisabled() = runTest {
-        val renderer = render {
-            CaseQueue {
-                scope = this@runTest
-            }
-        }
-        renderer.requireReviewButtonDisabled()
-    }
-
 
     @Test
     fun shouldGetNumberOfWaitingCases() = runTest {
@@ -44,22 +40,26 @@ class CaseQueueTest : ReactTestSupport {
                     CaseId("3", "case 3")
                 )
             )
+            returnCase = RDRCase("case 1")
         }
-        val renderer = render {
-            CaseQueue {
-                api = Api(mock(config))
-                scope = this@runTest
+
+        lateinit var renderer: TestRenderer
+        act {
+            renderer = render {
+                CaseQueue {
+                    api = Api(mock(config))
+                    scope = this@runTest
+                }
             }
         }
         with(renderer) {
-            requireNumberOfCasesWaiting(0)
             waitForNextPoll()
-            renderer.requireNumberOfCasesWaiting(3)
+            requireNumberOfCasesWaiting(3)
         }
     }
 
     @Test
-    fun shouldNotShowCaseViewWhenRefreshButtonIsClickedAndThereAreNoMoreCases() = runTest {
+    fun shouldNotShowCaseViewWhenThereAreNoMoreCases() = runTest {
         val config = config {
             returnCasesInfo = CasesInfo(
                 listOf(
@@ -68,21 +68,23 @@ class CaseQueueTest : ReactTestSupport {
                     CaseId("3", "case 3")
                 )
             )
+            returnCase = RDRCase("case 1")
         }
-        val renderer = render {
-            CaseQueue {
-                api = Api(mock(config))
-                scope = this@runTest
+        lateinit var renderer: TestRenderer
+        act {
+            renderer = render {
+                CaseQueue {
+                    api = Api(mock(config))
+                    scope = this@runTest
+                }
             }
         }
         with(renderer) {
             waitForNextPoll()
             requireNumberOfCasesWaiting(3) //Sanity check
-
             config.returnCasesInfo = CasesInfo(emptyList())
             waitForNextPoll()
             requireNumberOfCasesWaiting(0)
-            requireNoCaseView()
         }
     }
 
@@ -112,15 +114,18 @@ class CaseQueueTest : ReactTestSupport {
     }
 
     @Test
-    fun shouldShowCaseListWhenReviewButtonClicked() = runTest {
+    fun shouldShowCaseList() = runTest {
+        val case1 = "case 1"
+        val case2 = "case 2"
         val caseIds = listOf(
-            CaseId("1", "case 1"),
-            CaseId("2", "case 2"),
+            CaseId("1", case1),
+            CaseId("2", case2),
         )
         val config = config {
             returnCasesInfo = CasesInfo(
                 caseIds
             )
+            returnCase = RDRCase(case1)
         }
         val renderer = render {
             CaseQueue {
@@ -128,13 +133,10 @@ class CaseQueueTest : ReactTestSupport {
                 scope = this@runTest
             }
         }
-        with(renderer) {
-            waitForNextPoll() //enable the review button
-            clickReviewButton()
-        }
-        waitForEvents()
-        renderer.requireNamesToBeShowingOnCaseList("case 1", "case 2")
-        renderer.requireNoCaseView()
+        waitForNextPoll()
+        renderer.requireNamesToBeShowingOnCaseList(case1, case2)
+        renderer.requireCaseToBeSelected(case1)
+
     }
 
     @Test
@@ -157,12 +159,10 @@ class CaseQueueTest : ReactTestSupport {
         }
 
         with(renderer) {
-            waitForNextPoll() //enable the review button
-            clickReviewButton() //show the case list
+            waitForNextPoll()
             waitForEvents()
 
             requireNamesToBeShowingOnCaseList(caseName1, caseName2) //sanity check
-            requireNoCaseView()
 
             selectCase(caseName1)
             waitForEvents()
@@ -171,7 +171,7 @@ class CaseQueueTest : ReactTestSupport {
     }
 
     @Test
-    fun shouldShowNoCaseViewWhenInterpretationIsSubmittedAndThereAreNoMoreCases() = runTest {
+    fun shouldShowNoCasesWhenInterpretationIsSubmittedAndThereAreNoMoreCases() = runTest {
         val caseName = "case 1"
         val caseIds = listOf(
             CaseId("1", caseName)
@@ -189,9 +189,7 @@ class CaseQueueTest : ReactTestSupport {
         }
 
         with(renderer) {
-            waitForNextPoll() //enable the review button
-            clickReviewButton() //show the case list
-            waitForEvents()
+            waitForNextPoll()
 
             requireNamesToBeShowingOnCaseList(caseName) //sanity check
             selectCase(caseName)
@@ -205,7 +203,6 @@ class CaseQueueTest : ReactTestSupport {
             clickSubmitButton()
             waitForEvents()
 
-            requireNoCaseView()
             waitFor { numberOfCasesWaiting() == 0 }
             requireCaseListNotToBeShowing()
         }
@@ -236,9 +233,7 @@ class CaseQueueTest : ReactTestSupport {
         }.join()
 
         with(renderer) {
-            waitForNextPoll() //enable the review button
-            clickReviewButton()  //show the case list and the case
-            waitForEvents()
+            waitForNextPoll()
 
             selectCase(caseName1)
             waitForEvents()
@@ -285,8 +280,6 @@ class CaseQueueTest : ReactTestSupport {
 
         with(renderer) {
             waitForNextPoll()
-            clickReviewButton()  //show the case list and the case
-
             selectCase(caseName2)
             waitForEvents()
             requireCaseToBeSelected(caseName2)
@@ -310,6 +303,30 @@ class CaseQueueTest : ReactTestSupport {
 
             //and that the first one is selected
             requireCaseToBeSelected(caseName1)
+        }
+    }
+
+    @Test
+    fun shouldSelectTheFirstCaseByDefault() = runTest {
+        val config = config {
+            returnCasesInfo = CasesInfo(
+                listOf(
+                    CaseId("1", "case 1"),
+                    CaseId("2", "case 2")
+                )
+            )
+            returnCase = RDRCase("case 1")
+        }
+        val renderer = render {
+            CaseQueue {
+                api = Api(mock(config))
+                scope = this@runTest
+            }
+        }
+        with(renderer) {
+            waitForNextPoll()
+            requireNumberOfCasesWaiting(2)
+            requireCaseToBeSelected("case 1")
         }
     }
 }

@@ -23,7 +23,7 @@ internal open class TSHTest: UITestBase() {
         setupWebDriver()
         caseQueuePO = CaseQueuePO(driver)
         pause()//todo use Awaitility
-        caseListPO = caseQueuePO.review()
+        caseListPO = CaseListPO(driver)
     }
 
     @AfterTest
