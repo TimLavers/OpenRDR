@@ -34,5 +34,4 @@ Feature: Case View
       | B |
       | A |
       | D |
-    And pause briefly
     And stop the client application

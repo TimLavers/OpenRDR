@@ -173,9 +173,6 @@ kotlin {
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react:$reactVersion")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom:$reactVersion")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-emotion:$reactEmotionVersion")
-// https://mvnrepository.com/artifact/org.jetbrains.kotlin-wrappers/kotlin-react-beautiful-dnd
-                implementation("org.jetbrains.kotlin-wrappers:kotlin-react-beautiful-dnd:13.1.0-pre.413")
-
             }
         }
         val jsTest by getting {
