@@ -19,11 +19,10 @@ import io.ktor.serialization.kotlinx.json.*
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.Conclusion
 import io.rippledown.model.OperationResult
-import io.rippledown.model.RDRCase
+import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
-
 
 class RESTClient {
     val endpoint = "http://localhost:9090"
@@ -38,7 +37,7 @@ class RESTClient {
         }
     }
 
-    private var currentCase: RDRCase? = null
+    private var currentCase: ViewableCase? = null
 
     fun serverHasStarted(): Boolean {
         return runBlocking {
@@ -51,7 +50,7 @@ class RESTClient {
         }
     }
 
-    fun getCaseWithName(name: String): RDRCase? {
+    fun getCaseWithName(name: String): ViewableCase? {
         runBlocking {
             val casesInfo: CasesInfo = jsonClient.get(endpoint + WAITING_CASES).body()
             val caseId = casesInfo.caseIds.first { it.name == name }

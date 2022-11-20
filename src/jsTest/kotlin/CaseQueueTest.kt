@@ -40,7 +40,7 @@ class CaseQueueTest : ReactTestSupport {
                     CaseId("3", "case 3")
                 )
             )
-            returnCase = RDRCase("case 1")
+            returnCase = createCase("case 1")
         }
 
         lateinit var renderer: TestRenderer
@@ -68,7 +68,7 @@ class CaseQueueTest : ReactTestSupport {
                     CaseId("3", "case 3")
                 )
             )
-            returnCase = RDRCase("case 1")
+            returnCase = createCase("case 1")
         }
         lateinit var renderer: TestRenderer
         act {
@@ -125,7 +125,7 @@ class CaseQueueTest : ReactTestSupport {
             returnCasesInfo = CasesInfo(
                 caseIds
             )
-            returnCase = RDRCase(case1)
+            returnCase = createCase(case1)
         }
         val renderer = render {
             CaseQueue {
@@ -315,7 +315,7 @@ class CaseQueueTest : ReactTestSupport {
                     CaseId("2", "case 2")
                 )
             )
-            returnCase = RDRCase("case 1")
+            returnCase = createCase("case 1")
         }
         val renderer = render {
             CaseQueue {

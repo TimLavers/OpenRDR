@@ -1,7 +1,6 @@
 import csstype.*
 import emotion.react.css
 import io.rippledown.model.CaseId
-import io.rippledown.model.RDRCase
 import kotlinx.coroutines.launch
 import io.rippledown.model.caseview.ViewableCase
 import react.FC
@@ -20,7 +19,7 @@ external interface CaseListHandler : Handler {
 }
 
 val CaseList = FC<CaseListHandler> { handler ->
-    var currentCase: RDRCase? by useState(null)
+    var currentCase: ViewableCase? by useState(null)
 
     useEffect {
         val names = handler.caseIds.map { it.name }

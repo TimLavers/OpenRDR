@@ -2,6 +2,7 @@ package steps
 
 import io.cucumber.datatable.DataTable
 import io.cucumber.java8.En
+import io.cucumber.java8.PendingException
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.UITestBase
 import io.rippledown.integration.pageobjects.CaseListPO
@@ -37,6 +38,10 @@ class Defs : En {
             }
         }
 
+        And("I select a case with all three attributes") {
+            caseViewPO = caseListPO.select("CaseABC")
+        }
+
         When("a new case with the name {string} is stored on the server") { caseName: String ->
             labProxy.copyCase(caseName)
         }
@@ -49,6 +54,36 @@ class Defs : En {
 
         When("the case with the name {string} is deleted on the server") { caseName: String ->
             labProxy.deleteCase(caseName)
+        }
+
+        And("if I select case {word}") { caseName: String ->
+            caseViewPO = caseListPO.select(caseName)
+        }
+
+        And("I move attribute {word} below attribute {word}") {moved: String, target: String ->
+            caseViewPO.dragAttribute(moved, target)
+            Thread.sleep(1000)
+        }
+
+        Given("I start the application and the initial Attribute order is A, B, C") {
+            labProxy.writeCaseWithDataToInputDir("Case1", mapOf("A" to "a"))
+            labProxy.writeCaseWithDataToInputDir("Case2", mapOf("A" to "a", "B" to "b"))
+            labProxy.writeCaseWithDataToInputDir("Case3", mapOf("A" to "a", "B" to "b", "C" to "c"))
+            // The attributes are created when the cases are parsed, so select them in the right order.
+            caseListPO.select("Case1")
+            caseListPO.select("Case2")
+            caseListPO.select("Case3")
+        }
+
+        Given(
+            "case {word} is provided having data:") { caseName: String, dataTable: DataTable ->
+            val attributeNameToValue = mutableMapOf<String, String>()
+            dataTable.asMap().forEach { (t, u) ->  attributeNameToValue[t] = u}
+            labProxy.writeCaseWithDataToInputDir(caseName, attributeNameToValue)
+        }
+
+        Then("the case should show the attributes in order:") { dataTable: DataTable ->
+            caseViewPO.attributes() shouldBe  dataTable.asList()
         }
 
         When("I start the client application") {
@@ -67,6 +102,10 @@ class Defs : En {
 
         And("pause") {
             Thread.sleep(TimeUnit.DAYS.toMillis(1L))
+        }
+
+        And("pause briefly") {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(20L))
         }
 
         Then("I (should )see the following cases in the case list:") { dataTable: DataTable ->

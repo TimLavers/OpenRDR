@@ -15,8 +15,6 @@ internal class TSHExamplesTest: TSHTest() {
         checkFreeT4("16")
         checkNotes( "Lethargy.")
 
-            caseViewPO.dragAttribute("Tests", "Sex")
-stop()
         selectCaseAndCheckName("1.4.2")
         assertEquals(dataShown.size, 6)
         checkAgeSexTestsLocation(28, "F")

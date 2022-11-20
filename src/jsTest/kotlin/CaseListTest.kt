@@ -24,7 +24,7 @@ class CaseListTest : ReactTestSupport {
         val threeCaseIds = listOf(caseId1, caseId2, caseId3)
         val config = config {
             returnCasesInfo = CasesInfo(threeCaseIds)
-            returnCase = RDRCase(caseA)
+            returnCase = createCase(caseA)
         }
         lateinit var renderer: TestRenderer
         act {
@@ -36,7 +36,7 @@ class CaseListTest : ReactTestSupport {
                 }
             }
         }
-        config.returnCase = RDRCase(caseB)
+        config.returnCase = createCase(caseB)
         with(renderer) {
             selectCase(caseB)
             waitForEvents()
@@ -52,7 +52,7 @@ class CaseListTest : ReactTestSupport {
         )
         val config = config {
             returnCasesInfo = CasesInfo(twoCaseIds)
-            returnCase = RDRCase("a")
+            returnCase = createCase("a")
         }
         val renderer = render {
             CaseList {
@@ -76,7 +76,7 @@ class CaseListTest : ReactTestSupport {
         )
         val config = config {
             returnCasesInfo = CasesInfo(twoCaseIds)
-            returnCase = RDRCase(caseName1)
+            returnCase = createCase(caseName1)
         }
 
         lateinit var renderer: TestRenderer

@@ -42,7 +42,8 @@ class CaseViewTest : ReactTestSupport {
     @Test
     fun shouldCallInterpretationSubmitted() = runTest {
         val text = "Go to Bondi now!"
-        val rdrCase = createCase("case a ")
+        val caseName = "case a "
+        val rdrCase = createCase(caseName)
         rdrCase.interpretation.add(RuleSummary(conclusion = Conclusion(text)))
 
         val config = config {
