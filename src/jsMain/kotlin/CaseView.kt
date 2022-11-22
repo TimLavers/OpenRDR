@@ -50,9 +50,7 @@ val CaseView = FC<CaseViewHandler> { props ->
                 case = props.case
                 api = props.api
                 scope = props.scope
-                onCaseEdited = {
-                    props.onCaseEdited()
-                }
+                onCaseEdited = props.onCaseEdited
             }
         }
         InterpretationView {

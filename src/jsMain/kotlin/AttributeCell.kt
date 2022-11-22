@@ -7,7 +7,7 @@ import react.FC
 import react.dom.events.DragEvent
 import react.dom.html.ReactHTML
 
-external interface AttributeCellHandler: Handler {
+external interface AttributeCellHandler : Handler {
     var attribute: Attribute
     var onCaseEdited: () -> Unit
 }
@@ -22,19 +22,12 @@ val AttributeCell = FC<AttributeCellHandler> {
         draggable = true
         onDragStart = { event ->
             event.dataTransfer.setData("text", it.attribute.name)
-            println("Drag started, data tx is ${event.dataTransfer.getData("text")}")
         }
-        onDragEnd = {
-            println("Drag ended")
-        }
-        onDragOver = {
-                event: DragEvent<HTMLTableCellElement> -> event.preventDefault()
-        }
-        onDrop = {
-                event: DragEvent<HTMLTableCellElement> ->
+        onDragOver = { event: DragEvent<HTMLTableCellElement> ->
             event.preventDefault()
-            println("Dropped onto: ${it.attribute.name}")
-            println("on drop data tx: ${event.dataTransfer.getData("text")}")
+        }
+        onDrop = { event: DragEvent<HTMLTableCellElement> ->
+            event.preventDefault()
             val targetName = it.attribute.name
             val movedName = event.dataTransfer.getData("text")
             it.scope.launch {

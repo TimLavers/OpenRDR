@@ -77,6 +77,13 @@ val CaseList = FC<CaseListHandler> { handler ->
                 scope = handler.scope
                 api = handler.api
                 case = currentCase!!
+                onCaseEdited = {
+                    scope.launch {
+                        val id = currentCase!!.name
+                        currentCase = api.getCase(id)
+                        case = currentCase!!
+                    }
+                }
             }
         }
     }

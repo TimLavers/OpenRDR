@@ -66,6 +66,8 @@ class Defs : En {
         }
 
         Given("I start the application and the initial Attribute order is A, B, C") {
+            caseListPO = CaseListPO(driver)
+            caseViewPO = CaseViewPO(driver)
             labProxy.writeCaseWithDataToInputDir("Case1", mapOf("A" to "a"))
             labProxy.writeCaseWithDataToInputDir("Case2", mapOf("A" to "a", "B" to "b"))
             labProxy.writeCaseWithDataToInputDir("Case3", mapOf("A" to "a", "B" to "b", "C" to "c"))

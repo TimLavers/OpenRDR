@@ -22,9 +22,7 @@ val CaseTableBody = FC<CaseTableBodyHandler> {
                     attribute = a
                     api = it.api
                     scope = it.scope
-                    onCaseEdited = {
-                        it.onCaseEdited()
-                    }
+                    onCaseEdited = it.onCaseEdited
                 }
                 results.forEachIndexed { i, result ->
                     ValueCell {
