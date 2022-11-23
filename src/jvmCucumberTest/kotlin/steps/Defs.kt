@@ -2,7 +2,6 @@ package steps
 
 import io.cucumber.datatable.DataTable
 import io.cucumber.java8.En
-import io.cucumber.java8.PendingException
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.UITestBase
 import io.rippledown.integration.pageobjects.CaseListPO
@@ -57,6 +56,10 @@ class Defs : En {
         }
 
         And("if I select case {word}") { caseName: String ->
+            caseViewPO = caseListPO.select(caseName)
+        }
+
+        When("I select case {word}") { caseName: String ->
             caseViewPO = caseListPO.select(caseName)
         }
 
