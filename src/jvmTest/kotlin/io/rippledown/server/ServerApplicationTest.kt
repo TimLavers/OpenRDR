@@ -193,7 +193,6 @@ internal class ServerApplicationTest {
         app.startRuleSessionToReplaceConclusion(id, conclusion1, conclusion2)
         app.commitCurrentRuleSession()
         app.case(id).interpretation.textGivenByRules() shouldBe conclusion2.text
-
     }
 
     private fun createCase(caseName: String) = CaseTestUtils.createCase(caseName)
