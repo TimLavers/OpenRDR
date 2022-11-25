@@ -1,14 +1,14 @@
 package mocks
 
+import createCase
 import io.kotest.matchers.shouldBe
 import io.ktor.client.engine.mock.*
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.utils.io.*
-import io.rippledown.model.CasesInfo
-import io.rippledown.model.Interpretation
-import io.rippledown.model.OperationResult
-import io.rippledown.model.RDRCase
+import io.rippledown.model.*
+import io.rippledown.model.caseview.ViewableCase
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -24,11 +24,13 @@ fun config(block: EngineConfig.() -> Unit): EngineConfig {
 
 class EngineConfig {
     var returnCasesInfo: CasesInfo = CasesInfo(emptyList())
-    var returnCase: RDRCase = RDRCase()
+    var returnCase: ViewableCase = createCase("The Case")
     var returnOperationResult: OperationResult = OperationResult()
 
     var expectedCaseId = ""
     var expectedInterpretation: Interpretation? = null
+    var expectedMovedAttribute: Attribute? = null
+    var expectedTargetAttribute: Attribute? = null
 
 }
 
@@ -66,6 +68,20 @@ private class EngineBuilder(private val config: EngineConfig) {
                 if (config.expectedInterpretation != null) {
                     bodyAsInterpretation shouldBe config.expectedInterpretation
                 }
+
+                respond(
+                    content = ByteReadChannel(
+                        json.encodeToString(config.returnOperationResult)
+                    ),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+            }
+            "/api/moveAttributeJustBelowOther" -> {
+                val body = request.body as TextContent
+                val data = Json.decodeFromString<Pair<Attribute, Attribute>>(body.text)
+                data.first shouldBe config.expectedMovedAttribute
+                data.second shouldBe config.expectedTargetAttribute
 
                 respond(
                     content = ByteReadChannel(

@@ -17,22 +17,20 @@ class CaseViewTest : ReactTestSupport {
 
     @Test
     fun shouldShowCaseName() {
-        val caseName = "case a"
+        val name = "case a "
         val renderer = render {
             CaseView {
-                case = RDRCase(name = caseName)
+                case = createCase(name)
             }
         }
-        renderer.requireCaseToBeSelected(caseName)
+        renderer.requireCaseToBeSelected(name)
     }
 
     @Test
     fun shouldShowInterpretation() {
-        val caseName = "case a"
         val text = "Go to Bondi now!"
-        val rdrCase = RDRCase(name = caseName).apply {
-            interpretation.add(RuleSummary(conclusion = Conclusion(text)))
-        }
+        val rdrCase = createCase("case a ")
+        rdrCase.interpretation.add(RuleSummary(conclusion = Conclusion(text)))
         val renderer = render {
             CaseView {
                 case = rdrCase
@@ -43,11 +41,10 @@ class CaseViewTest : ReactTestSupport {
 
     @Test
     fun shouldCallInterpretationSubmitted() = runTest {
-        val caseName = "case a"
         val text = "Go to Bondi now!"
-        val rdrCase = RDRCase(name = caseName).apply {
-            interpretation.add(RuleSummary(conclusion = Conclusion(text)))
-        }
+        val caseName = "case a "
+        val rdrCase = createCase(caseName)
+        rdrCase.interpretation.add(RuleSummary(conclusion = Conclusion(text)))
 
         val config = config {
             expectedInterpretation = Interpretation(CaseId(caseName, caseName), text = text)
@@ -85,5 +82,3 @@ class CaseViewTest : ReactTestSupport {
         rangeText(ReferenceRange(null, "2")) shouldBe "(< 2)"
     }
 }
-
-

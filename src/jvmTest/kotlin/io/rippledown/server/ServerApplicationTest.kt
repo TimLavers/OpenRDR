@@ -98,6 +98,39 @@ internal class ServerApplicationTest {
     }
 
     @Test
+    fun viewableCase() {
+        val app = ServerApplication()
+        setUpCaseFromFile("Case1", app)
+        val retrieved = app.viewableCase("Case1")
+        assertEquals(retrieved.name, "Case1")
+        assertEquals(retrieved.rdrCase.get("ABC")!!.value.text, "6.7")
+        assertEquals(2, retrieved.attributes().size)
+        // No rules added.
+        retrieved.interpretation.conclusions().size shouldBe 0
+        // Add a rule.
+        val conclusion = Conclusion("ABC ok.")
+        app.kb.startRuleSession(retrieved.rdrCase, ChangeTreeToAddConclusion(conclusion))
+        app.kb.addConditionToCurrentRuleSession(GreaterThanOrEqualTo(Attribute("ABC"), 5.0))
+        app.kb.commitCurrentRuleSession()
+        val retrievedAgain = app.viewableCase("Case1")
+        retrievedAgain.interpretation.conclusions() shouldContainExactly setOf(conclusion)
+    }
+
+    @Test
+    fun moveAttributeJustBelow() {
+        val app = ServerApplication()
+        setUpCaseFromFile("Case1", app)
+        val retrieved = app.viewableCase("Case1")
+        val attributesBefore = retrieved.attributes()
+        attributesBefore.size shouldBe 2 // sanity
+        app.moveAttributeJustBelow(attributesBefore[0], attributesBefore[1])
+        // Get the case again and check that the order has been applied.
+        val retrievedAfter = app.viewableCase("Case1")
+        retrievedAfter.attributes()[0] shouldBe attributesBefore[1]
+        retrievedAfter.attributes()[1] shouldBe attributesBefore[0]
+    }
+
+    @Test
     fun waitingCasesInfo() {
         val app = ServerApplication()
         FileUtils.cleanDirectory(app.casesDir)

@@ -1,6 +1,7 @@
 package io.rippledown.kb
 
 import io.rippledown.model.*
+import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.rule.*
 
@@ -8,6 +9,7 @@ class KB(val name: String) {
     private val cornerstones = mutableSetOf<RDRCase>()
     private val ruleTree = RuleTree()
     private var ruleSession: RuleBuildingSession? = null
+    val caseViewManager = CaseViewManager()
 
     fun containsCaseWithName(caseName: String): Boolean {
         return cornerstones.find { rdrCase -> rdrCase.name == caseName } != null
@@ -50,6 +52,11 @@ class KB(val name: String) {
 
     fun interpret(case: RDRCase) {
         ruleTree.apply(case)
+    }
+
+    fun viewableInterpretedCase(case: RDRCase): ViewableCase {
+        interpret(case)
+        return caseViewManager.getViewableCase(case)
     }
 
     override fun equals(other: Any?): Boolean {

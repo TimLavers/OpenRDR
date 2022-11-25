@@ -1,16 +1,15 @@
 import csstype.*
 import emotion.react.css
-import io.rippledown.model.RDRCase
+import io.rippledown.model.caseview.ViewableCase
 import react.FC
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.table
 
-//import react.key
-
 const val CASEVIEW_CASE_NAME_ID = "case_view_case_name"
 
 external interface CaseViewHandler : Handler {
-    var case: RDRCase
+    var case: ViewableCase
+    var onCaseEdited: () -> Unit
 }
 
 /**
@@ -49,6 +48,9 @@ val CaseView = FC<CaseViewHandler> { props ->
             }
             CaseTableBody {
                 case = props.case
+                api = props.api
+                scope = props.scope
+                onCaseEdited = props.onCaseEdited
             }
         }
         InterpretationView {

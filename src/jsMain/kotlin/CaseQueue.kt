@@ -1,4 +1,6 @@
 import io.rippledown.model.CasesInfo
+import io.rippledown.model.RDRCase
+import io.rippledown.model.caseview.ViewableCase
 import kotlinx.coroutines.launch
 import react.FC
 import react.dom.html.ReactHTML.div

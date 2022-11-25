@@ -11,6 +11,7 @@ import io.ktor.server.request.*
 import io.ktor.server.http.content.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.rippledown.model.Attribute
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.OperationResult
@@ -88,34 +89,17 @@ fun main() {
             }
             get(CASE) {
                 val id = call.parameters["id"] ?: error("Invalid case id.")
-                call.respond(application.case(id))
+                call.respond(application.viewableCase(id))
+            }
+            post("/api/moveAttributeJustBelowOther") {
+                val attributePair = call.receive<Pair<Attribute, Attribute>>()
+                application.moveAttributeJustBelow(attributePair.first, attributePair.second)
+                call.respond(HttpStatusCode.OK, OperationResult("Attribute moved"))
             }
             post("/api/interpretationSubmitted") {
                 val interpretation = call.receive<Interpretation>()
                 val result = application.saveInterpretation(interpretation)
                 call.respond(HttpStatusCode.OK, result)
-            }
-            post(START_SESSION_TO_ADD_CONCLUSION) {
-                val id = call.parameters["id"] ?: error("Invalid case id.")
-                val conclusion = call.receive<Conclusion>()
-                application.startRuleSessionToAddConclusion(id, conclusion)
-                call.respond(HttpStatusCode.OK, OperationResult("Session started"))
-            }
-            post(START_SESSION_TO_REPLACE_CONCLUSION) {
-                val id = call.parameters["id"] ?: error("Invalid case id.")
-                val conclusionPair = call.receive<List<Conclusion>>()
-                application.startRuleSessionToReplaceConclusion(id, conclusionPair[0], conclusionPair[1])
-                call.respond(HttpStatusCode.OK, OperationResult("Session started"))
-            }
-            post(ADD_CONDITION) {
-                val str = call.receiveText()
-                val condition = Json.decodeFromString(Condition.serializer(), str)
-                application.addConditionToCurrentRuleBuildingSession(condition)
-                call.respond(HttpStatusCode.OK, OperationResult("Condition added"))
-            }
-            post(COMMIT_SESSION) {
-                application.commitCurrentRuleSession()
-                call.respond(HttpStatusCode.OK, OperationResult("Session committed"))
             }
             post(CREATE_KB) {
                 application.createKB()

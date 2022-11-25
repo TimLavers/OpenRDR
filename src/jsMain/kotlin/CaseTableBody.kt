@@ -1,17 +1,17 @@
 import csstype.rgb
 import emotion.react.css
-import io.rippledown.model.RDRCase
+import io.rippledown.model.caseview.ViewableCase
 import react.FC
-import react.Props
 import react.dom.html.ReactHTML
 
-external interface CaseTableBodyHandler: Props {
-    var case: RDRCase
+external interface CaseTableBodyHandler: Handler {
+    var case: ViewableCase
+    var onCaseEdited: () -> Unit
 }
 val CaseTableBody = FC<CaseTableBodyHandler> {
     ReactHTML.tbody {
-        it.case.attributes.forEach { a ->
-            val results = it.case.resultsFor(a)!!
+        it.case.attributes().forEach { a ->
+            val results = it.case.rdrCase.resultsFor(a)!!
             ReactHTML.tr {
                 css {
                     nthChild("even") {
@@ -20,8 +20,11 @@ val CaseTableBody = FC<CaseTableBodyHandler> {
                 }
                 AttributeCell {
                     attribute = a
+                    api = it.api
+                    scope = it.scope
+                    onCaseEdited = it.onCaseEdited
                 }
-                results.forEachIndexed() { i, result ->
+                results.forEachIndexed { i, result ->
                     ValueCell {
                         index = i
                         attribute = a

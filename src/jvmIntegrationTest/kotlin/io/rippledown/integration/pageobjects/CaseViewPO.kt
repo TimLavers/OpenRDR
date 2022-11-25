@@ -37,6 +37,17 @@ class CaseViewPO(private val driver: WebDriver) {
         return result
     }
 
+    fun attributes(): List<String> {
+        val result = mutableListOf<String>()
+        val containerElement = containerElement()
+        val caseBodyElement = containerElement.findElement(By.tagName("tbody"))
+        caseBodyElement.findElements(By.tagName("tr")).forEach { rowElement ->
+            val rowCells = rowElement.findElements(By.tagName("td"))
+            result.add(rowCells[0].text)
+        }
+        return result
+    }
+
     fun valuesShown(): Map<String, List<String>> {
         val result = mutableMapOf<String, List<String>>()
 
@@ -50,9 +61,8 @@ class CaseViewPO(private val driver: WebDriver) {
             val rowCells = rowElement.findElements(By.tagName("td"))
             // First is the name.
             val attributeName = rowCells[0].text
-            assertEquals("attribute_name_cell_$attributeName", rowCells[0].getAttribute("id")) //Sanity check.
+            assertEquals(attributeCellId(attributeName), rowCells[0].getAttribute("id")) //Sanity check.
             // Last is the reference range. In between are the values.
-            val numberOfEpisodes = rowCells.size - 2
             rowCells.forEachIndexed { index, cell ->
                 if (index != 0 && index != rowCells.size - 1) {
                     val idOfValueCellForAttribute = "attribute_value_cell_${attributeName}_${index - 1}"
@@ -64,6 +74,12 @@ class CaseViewPO(private val driver: WebDriver) {
             result[attributeName] = valuesList
         }
         return result
+    }
+
+    private fun attributeCellId(attributeName: String?) = "attribute_name_cell_$attributeName"
+
+    fun dragAttribute(draggedAttribute: String, targetAttribute: String) {
+        DnD(driver).dragAttribute(draggedAttribute, targetAttribute)
     }
 
     fun referenceRange(attribute: String): String {

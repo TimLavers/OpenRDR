@@ -2,6 +2,8 @@ package io.rippledown.integration.proxy
 
 import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
+import io.rippledown.model.RDRCaseBuilder
+import io.rippledown.model.TestResult
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -9,6 +11,7 @@ import org.apache.commons.io.FileUtils
 import org.awaitility.Awaitility.await
 import java.io.File
 import java.nio.charset.StandardCharsets.UTF_8
+import java.time.Instant
 import java.util.concurrent.TimeUnit
 
 class LabProxy(tempDir: File) {
@@ -37,6 +40,9 @@ class LabProxy(tempDir: File) {
     }
 
     fun cleanCasesDir() {
+        if (!inputDir.exists()) {
+            inputDir.mkdirs()
+        }
         FileUtils.cleanDirectory(inputDir)
     }
 
@@ -60,5 +66,13 @@ class LabProxy(tempDir: File) {
         val format = Json { allowStructuredMapKeys = true }
         val serialized = format.encodeToString(rdrCase)
         FileUtils.writeStringToFile(file, serialized, UTF_8)
+    }
+
+    fun writeCaseWithDataToInputDir(name: String, attributeNameToValue: Map<String, String>) {
+        val builder = RDRCaseBuilder()
+        val now = Instant.now().toEpochMilli()
+        attributeNameToValue.forEach { (a, v) -> builder.addResult(a, now, TestResult(v)) }
+        val case = builder.build(name)
+        writeCaseToInputDir(case)
     }
 }

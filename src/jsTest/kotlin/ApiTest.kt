@@ -11,7 +11,7 @@ class ApiTest {
 
     @Test
     fun getCaseTest() = runTest {
-        val case = RDRCase("A", mapOf())
+        val case = createCase("A")
         val config = config {
             returnCase = case
             expectedCaseId = "1"
@@ -44,6 +44,17 @@ class ApiTest {
         }
         Api(mock(config)).saveInterpretation(interpretation) shouldBe expectedResult
     }
+
+    @Test
+    fun moveAttributeJustBelowOther() = runTest {
+        val expectedResult = OperationResult("Attribute moved.")
+        val moved =Attribute("A")
+        val target =Attribute("B")
+        val config = config {
+            returnOperationResult = expectedResult
+            expectedMovedAttribute = moved
+            expectedTargetAttribute = target
+        }
+        Api(mock(config)).moveAttributeJustBelowOther(moved, target) shouldBe expectedResult
+    }
 }
-
-

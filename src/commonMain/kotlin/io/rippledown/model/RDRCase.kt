@@ -1,7 +1,6 @@
 package io.rippledown.model
 
 import io.rippledown.model.rule.RuleSummary
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.MapSerializer
@@ -32,7 +31,6 @@ class RDRCaseBuilder {
 }
 
 object RDRCaseSerializer : KSerializer<RDRCase> {
-    @OptIn(ExperimentalSerializationApi::class)
     private val mapSerializer = MapSerializer(TestEvent.serializer(), TestResult.serializer())
     private val interpretationRulesSerializer = SetSerializer(RuleSummary.serializer())
     override val descriptor: SerialDescriptor =

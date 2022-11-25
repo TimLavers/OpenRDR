@@ -2,6 +2,7 @@ package io.rippledown.server
 
 import io.rippledown.kb.KB
 import io.rippledown.model.*
+import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.model.rule.ChangeTreeToReplaceConclusion
@@ -47,9 +48,17 @@ class ServerApplication {
     }
 
     fun case(id: String): RDRCase {
-        val case = getCaseFromFile(File(casesDir, "$id.json"))
+        val case = uninterpretedCase(id)
         kb.interpret(case)
         return case
+    }
+
+    fun viewableCase(id: String): ViewableCase {
+        return kb.viewableInterpretedCase(uninterpretedCase(id))
+    }
+
+    fun moveAttributeJustBelow(moved: Attribute, target: Attribute) {
+        kb.caseViewManager.moveJustBelow(moved, target)
     }
 
     fun saveInterpretation(interpretation: Interpretation): OperationResult {
@@ -74,4 +83,6 @@ class ServerApplication {
         val data = FileUtils.readFileToString(file, UTF_8)
         return format.decodeFromString(data)
     }
+
+    private fun uninterpretedCase(id: String) = getCaseFromFile(File(casesDir, "$id.json"))
 }
