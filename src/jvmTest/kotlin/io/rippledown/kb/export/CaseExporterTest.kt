@@ -26,7 +26,7 @@ class CaseExporterTest {
         val textFile = writeFileInDirectory(tempDir)
         shouldThrow<IllegalArgumentException>{
             CaseExporter(textFile, emptySet())
-        }.message shouldBe "Case export destination is not a directory"
+        }.message shouldBe "Case export destination is not a directory."
     }
 
     @Test
@@ -36,16 +36,15 @@ class CaseExporterTest {
         writeFileInDirectory(directory)
         shouldThrow<IllegalArgumentException>{
             CaseExporter(directory, emptySet())
-        }.message shouldBe "Case export directory is not empty"
+        }.message shouldBe "Case export directory is not empty."
     }
 
     @Test
     fun `destination should be exist`() {
         val directory = File(tempDir, "exportDir")
-        writeFileInDirectory(directory)
         shouldThrow<IllegalArgumentException>{
             CaseExporter(directory, emptySet())
-        }.message shouldBe "Case export directory does not exist"
+        }.message shouldBe "Case export destination is not an existing directory."
     }
 
     @Test
@@ -64,8 +63,11 @@ class CaseExporterTest {
         val case1 = CaseTestUtils.createCase(">>Cat<<")
         val case2 = CaseTestUtils.createCase(">>CAT<<")
         CaseExporter(tempDir, setOf(case1, case2)).export()
-        checkNamedFileContainsDataForCase("__Cat__", case1)
-        checkNamedFileContainsDataForCase("__CAT__2", case2)
+        val filesInDir = tempDir.listFiles()!!
+        val fileCat = if (filesInDir[0].name.startsWith("__Cat")) filesInDir[0] else filesInDir[1]
+        val fileCAT = if (filesInDir[0].name.startsWith("__CAT")) filesInDir[0] else filesInDir[1]
+        checkNamedFileContainsDataForCase(fileCat.name.split(".")[0], case1)
+        checkNamedFileContainsDataForCase(fileCAT.name.split(".")[0], case2)
     }
 
     private fun checkNamedFileContainsDataForCase(filename: String, case: RDRCase) {

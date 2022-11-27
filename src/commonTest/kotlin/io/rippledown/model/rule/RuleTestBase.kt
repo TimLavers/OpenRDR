@@ -9,7 +9,7 @@ import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionTestBase
 import io.rippledown.model.condition.ContainsText
 
-internal open class RuleTestBase: ConditionTestBase() {
+open class RuleTestBase: ConditionTestBase() {
     val caseId = CaseId("Case1", "Case1")
     val interpretation = Interpretation(caseId, "")
 

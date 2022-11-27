@@ -9,17 +9,7 @@ import kotlin.text.Charsets.UTF_8
 
 class CaseExporter(private val destination: File, val cases: Set<RDRCase>) {
     init {
-        require(destination.exists()) {
-            "Case export destination is not an existing directory."
-        }
-        require(destination.isDirectory()) {
-            "Case export destination is not a directory."
-        }
-        destination.listFiles()?.let {
-            require(it.isEmpty()) {
-                "Case export destination is not empty."
-            }
-        }
+        checkDirectoryIsSuitableForExport(destination, "Case")
     }
 
     fun export() {
