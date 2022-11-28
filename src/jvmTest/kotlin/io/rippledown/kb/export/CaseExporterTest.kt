@@ -7,19 +7,11 @@ import io.rippledown.model.*
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.apache.commons.io.FileUtils
-import org.junit.Before
 import java.io.File
 import java.nio.charset.Charset
-import kotlin.io.path.createTempDirectory
 import kotlin.test.Test
 
-class CaseExporterTest {
-    private var tempDir: File = createTempDirectory().toFile()
-
-    @Before
-    fun init() {
-        tempDir.mkdirs()
-    }
+class CaseExporterTest : ExporterTestBase() {
 
     @Test
     fun `destination should be a directory`() {
@@ -77,11 +69,5 @@ class CaseExporterTest {
         val deserialized = format.decodeFromString<RDRCase>(data)
         case.data shouldBe deserialized.data
         case.name shouldBe deserialized.name
-    }
-
-    private fun writeFileInDirectory(file: File): File {
-        val textFile = File(file, "blah.txt")
-        FileUtils.writeStringToFile(textFile, "Whatever", Charset.defaultCharset())
-        return textFile
     }
 }

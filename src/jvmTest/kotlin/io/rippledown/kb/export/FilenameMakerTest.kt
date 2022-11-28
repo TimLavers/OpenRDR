@@ -4,24 +4,11 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldEndWith
 import io.kotest.matchers.string.shouldStartWith
 import org.apache.commons.io.FileUtils
-import org.junit.Before
 import java.io.File
 import java.nio.charset.Charset
-import kotlin.io.path.createTempDirectory
 import kotlin.test.Test
 
-class FilenameMakerTest {
-    private var tempDir: File = createTempDirectory().toFile()
-
-    init {
-        tempDir.mkdirs()
-    }
-
-    @Before
-    fun init() {
-        FileUtils.cleanDirectory(tempDir)
-    }
-
+class FilenameMakerTest: ExporterTestBase() {
     @Test
     fun `handle empty`() {
         FilenameMaker(emptySet()).makeUniqueNames() shouldBe emptyMap()

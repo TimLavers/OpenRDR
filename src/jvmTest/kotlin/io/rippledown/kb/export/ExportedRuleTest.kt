@@ -1,7 +1,8 @@
 package io.rippledown.kb.export
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.*
+import io.rippledown.model.Attribute
+import io.rippledown.model.Conclusion
 import io.rippledown.model.condition.GreaterThanOrEqualTo
 import io.rippledown.model.condition.IsHigh
 import io.rippledown.model.rule.Rule
@@ -9,30 +10,17 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.apache.commons.io.FileUtils
-import org.junit.Before
 import java.io.File
-import kotlin.io.path.createTempDirectory
 import kotlin.test.Test
 import kotlin.text.Charsets.UTF_8
 
-class ExportedRuleTest {
+class ExportedRuleTest: ExporterTestBase() {
     private val id123 = "r123"
     private val id0 = "r0"
     private val conclusion1 = Conclusion("A trip to the beach is advised.")
-    private val tsh = Attribute("TSH")
     private val ft3 = Attribute("FT3")
     private val tshHigh = IsHigh(tsh)
     private val ft3GT2 = GreaterThanOrEqualTo(ft3, 2.0)
-    private var tempDir: File = createTempDirectory().toFile()
-
-    init {
-        tempDir.mkdirs()
-    }
-
-    @Before
-    fun init() {
-        FileUtils.cleanDirectory(tempDir)
-    }
 
     @Test
     fun constructor1() {

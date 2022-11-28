@@ -15,3 +15,9 @@ fun checkDirectoryIsSuitableForExport(destination: File, exportType: String) {
         }
     }
 }
+
+fun checkIsDirectory(file: File) {
+    require(file.exists() && file.isDirectory) {
+        "$file is not an existing directory."
+    }
+}

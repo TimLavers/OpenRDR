@@ -2,7 +2,6 @@ package io.rippledown.kb.export
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.rule.RuleTestBase
 import io.rippledown.model.rule.RuleTree
 import io.rippledown.model.rule.dsl.ruleTree
 import kotlinx.serialization.decodeFromString
@@ -10,17 +9,15 @@ import kotlinx.serialization.json.Json
 import org.apache.commons.io.FileUtils
 import org.junit.Before
 import java.io.File
-import java.nio.charset.Charset
-import kotlin.io.path.createTempDirectory
 import kotlin.test.Test
 import kotlin.text.Charsets.UTF_8
 
-class RuleExporterTest: RuleTestBase() {
-    private var tempDir: File = createTempDirectory().toFile()
+class RuleExporterTest: ExporterTestBase() {
     private lateinit var tree: RuleTree
 
     @Before
-    fun init() {
+    override fun init() {
+        super.init()
         tempDir.mkdirs()
         tree = RuleTree()
     }
@@ -98,11 +95,5 @@ class RuleExporterTest: RuleTestBase() {
             exportedRule.conclusion shouldBe it.conclusion
             exportedRule.conditions shouldBe  it.conditions
         }
-    }
-
-    private fun writeFileInDirectory(file: File): File {
-        val textFile = File(file, "blah.txt")
-        FileUtils.writeStringToFile(textFile, "Whatever", Charset.defaultCharset())
-        return textFile
     }
 }
