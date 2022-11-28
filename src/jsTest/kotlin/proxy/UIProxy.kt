@@ -79,7 +79,7 @@ fun TestRenderer.requireCaseListNotToBeShowing() {
 }
 
 fun TestRenderer.requireCaseListHeading(expected: String) {
-    findById(CASELIST_ID).props.asDynamic()["children"][0].unsafeCast<String>() shouldBe expected
+    findById(CASELIST_ID).text() shouldBe expected
 }
 
 fun TestRenderer.requireInterpretation(expected: String) {

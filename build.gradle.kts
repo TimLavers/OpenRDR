@@ -175,7 +175,7 @@ kotlin {
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react:$reactVersion")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom:$reactVersion")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-emotion:$reactEmotionVersion")
-//                implementation("org.jetbrains.kotlin-wrappers:kotlin-mui:$reactMuiVersion")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-mui:$reactMuiVersion")
             }
         }
         val jsTest by getting {
