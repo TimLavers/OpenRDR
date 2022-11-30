@@ -91,4 +91,31 @@ class CaseListTest : ReactTestSupport {
         waitForEvents()
         renderer.requireCaseToBeSelected(caseName1)
     }
+
+    @Test
+    fun shouldShowCaseListForManyCases() = runTest {
+        lateinit var renderer: TestRenderer
+
+        val caseIds = (1..100).map { i ->
+            CaseId(id = i.toString(), name = "case $i")
+        }
+
+        val config = config {
+            returnCasesInfo = CasesInfo(caseIds)
+            returnCase = createCase("case 1")
+        }
+        act {
+            renderer = render {
+                CaseList {
+                    this.caseIds = caseIds
+                    api = Api(mock(config))
+                    scope = this@runTest
+                }
+            }
+        }
+        waitForEvents()
+        config.expectedCaseId = "100"
+        renderer.selectCase("case 100")
+        //assertion is in the mock
+    }
 }

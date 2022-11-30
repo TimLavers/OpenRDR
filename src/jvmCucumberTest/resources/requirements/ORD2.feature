@@ -59,7 +59,7 @@ Feature: Order of Attributes in Case View
       | B | b |
       | C | c |
       | D | d |
-    When I select case CaseABCD
+    When I select case "CaseABCD"
     Then the case should show the attributes in order:
       | C |
       | B |

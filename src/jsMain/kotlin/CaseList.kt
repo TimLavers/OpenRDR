@@ -1,4 +1,5 @@
-import csstype.Cursor
+import csstype.Cursor.Companion.pointer
+import csstype.Overflow.Companion.scroll
 import csstype.px
 import io.rippledown.model.CaseId
 import io.rippledown.model.caseview.ViewableCase
@@ -35,16 +36,18 @@ val CaseList = FC<CaseListHandler> { handler ->
     }
 
     Grid {
-        container = true
         id = CASELIST_ID
+        container = true
 
         Grid {
             item = true
 
             List {
                 sx {
-                    cursor = Cursor.pointer
+                    cursor = pointer
                     width = 200.px
+                    overflowY = scroll
+                    maxHeight = 500.px
                 }
                 dense = true
 
@@ -53,7 +56,6 @@ val CaseList = FC<CaseListHandler> { handler ->
                         ListItemText {
                             +caseId.name
                         }
-
                         selected = currentCase?.name == caseId.name
                         id = "$CASE_ID_PREFIX${caseId.name}"
                         onClick = {

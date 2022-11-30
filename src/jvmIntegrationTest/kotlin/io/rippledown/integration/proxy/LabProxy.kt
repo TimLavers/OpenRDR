@@ -54,6 +54,8 @@ class LabProxy(tempDir: File) {
         FileUtils.copyFileToDirectory(CaseTestUtils.caseFile(caseName), inputDir)
     }
 
+    fun writeNewCaseFile(caseName: String) = CaseTestUtils.writeNewCaseFileToDirectory(caseName, inputDir)
+
     fun deleteCase(caseName: String) {
         val deleted = File(inputDir, "${caseName}.json").delete()
         if (!deleted) {
