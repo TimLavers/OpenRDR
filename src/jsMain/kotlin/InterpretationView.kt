@@ -1,13 +1,19 @@
-import csstype.FontFamily
-import csstype.FontWeight
-import emotion.react.css
+import dom.html.HTMLTextAreaElement
 import io.rippledown.model.Interpretation
 import kotlinx.coroutines.launch
+import mui.icons.material.QuestionMark
+import mui.material.*
+import mui.system.Breakpoint
+import mui.system.responsive
 import react.FC
-import react.dom.html.ReactHTML
-import react.dom.html.ReactHTML.div
-import react.dom.html.ReactHTML.textarea
+import react.ReactNode
 import react.useState
+
+inline var GridProps.xs: Any?
+    get() = asDynamic().xs
+    set(value) {
+        asDynamic().xs = value
+    }
 
 external interface InterpretationViewHandler : Handler {
     var interpretation: Interpretation
@@ -19,29 +25,48 @@ const val SEND_INTERPRETATION_BUTTON_ID = "send_interpretation_button"
 val InterpretationView = FC<InterpretationViewHandler> { handler ->
     var interpretationText by useState(handler.interpretation.textGivenByRules())
 
-    div {
-        key = handler.interpretation.caseId.name
-        textarea {
-            id = INTERPRETATION_TEXT_AREA_ID
-            css {
-                fontWeight = FontWeight.normal
-                fontFamily = FontFamily.monospace
+    Grid {
+        container = true
+        direction = responsive(GridDirection.row)
+        rowSpacing = responsive(Pair(Breakpoint.xs, 2))
+        Grid {
+            container = true
+            Grid {
+                item = true
+                xs = 4
+                key = handler.interpretation.caseId.name
+                TextField {
+                    id = INTERPRETATION_TEXT_AREA_ID
+                    label = "Interpretation".unsafeCast<ReactNode>()
+                    variant = FormControlVariant.filled
+                    minRows = 5
+                    multiline = true
+                    fullWidth = true
+                    onInput = { event ->
+                        interpretationText = event.target.unsafeCast<HTMLTextAreaElement>().value
+                    }
+                    value = interpretationText
+                }
             }
-            rows = 10
-            cols = 72
-            onChange = {
-                interpretationText = it.target.value
+            Grid {
+                item = true
+                IconButton {
+                    QuestionMark {
+                    }
+                    onClick = {
+                        println("clicked")
+                    }
+                }
             }
-            value = interpretationText
         }
-        div {
-            ReactHTML.button {
+        Grid {
+            item = true
+            Button {
                 +"Send interpretation"
                 id = SEND_INTERPRETATION_BUTTON_ID
-                css {
-                    padding = px4
-                }
-
+                variant = ButtonVariant.contained
+                color = ButtonColor.primary
+                size = Size.small
                 onClick = {
                     val caseId = handler.interpretation.caseId
                     val interpretation = Interpretation(caseId, interpretationText)
@@ -53,4 +78,21 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
             }
         }
     }
+
 }
+
+
+/*
+fun main() {
+    val container = document.createElement("div")
+    document.body!!.appendChild(container)
+
+    val example = InterpretationView.create {
+        interpretation = Interpretation(CaseId("1"), "")
+    }
+
+    createRoot(container.unsafeCast<dom.Element>()).render(example)
+}
+*/
+
+

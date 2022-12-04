@@ -5,10 +5,11 @@ val kotlinVersion = "1.7.21"
 val serializationVersion = "1.4.0"
 val ktor_version = "2.0.3"
 val logbackVersion = "1.2.10"
-val reactVersion = "18.2.0-pre.450"
-val reactEmotionVersion = "11.10.5-pre.450"
-val reactMuiVersion = "5.9.1-pre.450"
-val kotlinExtensionsVersion = "1.0.1-pre.450"
+val reactVersion = "18.2.0-pre.454"
+val reactEmotionVersion = "11.10.5-pre.454"
+val reactMuiVersion = "5.9.1-pre.454"
+val reactMuiIconVersion = "5.10.9-pre.454"
+val kotlinExtensionsVersion = "1.0.1-pre.454"
 val testingLibraryReactVersion = "13.4.0"
 val reactTestRendererVersion = "18.2.0"
 val kotestVersion = "5.5.4"
@@ -176,6 +177,9 @@ kotlin {
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom:$reactVersion")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-emotion:$reactEmotionVersion")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-mui:$reactMuiVersion")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-mui-icons:$reactMuiIconVersion")
+                implementation(npm("randomcolor", "0.6.2"))
+
             }
         }
         val jsTest by getting {
