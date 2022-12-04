@@ -124,7 +124,7 @@ class TestRendererTest : ReactTestSupport {
 
             div {
                 className = ClassName("test-component")
-                ref = elem
+                ref = elem.unsafeCast<Ref<dom.html.HTMLDivElement>>()
 
                 +name
             }

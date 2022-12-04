@@ -9,7 +9,7 @@ fun main() {
             api = Api()
             scope = MainScope()
         }
-        createRoot(container).render(ui)
+        createRoot(container.unsafeCast<dom.Element>()).render(ui)
     }
 }
 

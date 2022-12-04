@@ -1,6 +1,5 @@
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
-import io.rippledown.model.RDRCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mocks.config
@@ -92,16 +91,4 @@ class CaseListTest : ReactTestSupport {
         waitForEvents()
         renderer.requireCaseToBeSelected(caseName1)
     }
-
-    @Test
-    fun shouldShowTheCaseListHeading() {
-        val renderer = render {
-            CaseList {
-                caseIds = listOf()
-            }
-        }
-        renderer.requireCaseListHeading(CASELIST_HEADING)
-    }
-
-
 }

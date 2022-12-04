@@ -87,8 +87,8 @@ class Defs : En {
             labProxy.writeCaseWithDataToInputDir(caseName, attributeNameToValue)
         }
 
-        Then("the case should show the attributes in order:") { dataTable: DataTable ->
-            caseViewPO.attributes() shouldBe  dataTable.asList()
+        Then("^the case (should show|shows) the attributes in order:$") { ignoredOption: String, dataTable: DataTable ->
+            caseViewPO.attributes() shouldBe dataTable.asList()
         }
 
         When("I start the client application") {
