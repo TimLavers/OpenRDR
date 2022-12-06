@@ -41,6 +41,7 @@ val CaseList = FC<CaseListHandler> { handler ->
 
         Grid {
             item = true
+            xs = 2
 
             List {
                 sx {
@@ -73,6 +74,7 @@ val CaseList = FC<CaseListHandler> { handler ->
         }
         Grid {
             item = true
+            xs = 8
             if (currentCase != null) {
                 CaseView {
                     scope = handler.scope

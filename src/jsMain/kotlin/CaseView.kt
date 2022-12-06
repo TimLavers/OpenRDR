@@ -1,6 +1,9 @@
 import csstype.*
 import emotion.react.css
 import io.rippledown.model.caseview.ViewableCase
+import mui.material.Grid
+import mui.material.GridDirection
+import mui.system.responsive
 import react.FC
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.table
@@ -26,37 +29,52 @@ val CaseView = FC<CaseViewHandler> { props ->
             width = 70.pct
             padding = px12
         }
-        div {
-            +props.case.name
-            id = CASEVIEW_CASE_NAME_ID
-            css {
-                paddingBottom = px4
-                paddingLeft = px8
-                color = rdBlue
-                fontStyle = FontStyle.italic
-                fontWeight = FontWeight.bold
+        Grid {
+            container = true
+            direction = responsive(GridDirection.row)
+            Grid {
+                item = true
+                +props.case.name
+                id = CASEVIEW_CASE_NAME_ID
+                xs = 12
+                css {
+                    paddingBottom = px4
+                    paddingLeft = px8
+                    color = rdBlue
+                    fontStyle = FontStyle.italic
+                    fontWeight = FontWeight.bold
+                }
             }
-        }
-        table {
-            css {
-                border = 1.px
-                borderColor = rgb(128, 128, 128)
-                borderStyle = LineStyle.solid
+            Grid {
+                item = true
+                xs = 12
+                table {
+                    css {
+                        border = 1.px
+                        borderColor = rgb(128, 128, 128)
+                        borderStyle = LineStyle.solid
+                    }
+                    CaseTableHeader {
+                        dates = props.case.dates
+                    }
+                    CaseTableBody {
+                        case = props.case
+                        api = props.api
+                        scope = props.scope
+                        onCaseEdited = props.onCaseEdited
+                    }
+                }
             }
-            CaseTableHeader {
-                dates = props.case.dates
+            Grid {
+                item = true
+                xs = 12
+
+                InterpretationView {
+                    scope = props.scope
+                    api = props.api
+                    interpretation = props.case.interpretation
+                }
             }
-            CaseTableBody {
-                case = props.case
-                api = props.api
-                scope = props.scope
-                onCaseEdited = props.onCaseEdited
-            }
-        }
-        InterpretationView {
-            scope = props.scope
-            api = props.api
-            interpretation = props.case.interpretation
         }
     }
 }

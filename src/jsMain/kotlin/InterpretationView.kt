@@ -9,12 +9,6 @@ import react.FC
 import react.ReactNode
 import react.useState
 
-inline var GridProps.xs: Any?
-    get() = asDynamic().xs
-    set(value) {
-        asDynamic().xs = value
-    }
-
 external interface InterpretationViewHandler : Handler {
     var interpretation: Interpretation
 }
@@ -27,13 +21,16 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
 
     Grid {
         container = true
-        direction = responsive(GridDirection.row)
+        direction = responsive(GridDirection.column)
         rowSpacing = responsive(Pair(Breakpoint.xs, 2))
         Grid {
             container = true
+            direction = responsive(GridDirection.row)
+            spacing = responsive(Pair(Breakpoint.xs, 2))
+            xs = 10
             Grid {
                 item = true
-                xs = 4
+                xs = 11
                 key = handler.interpretation.caseId.name
                 TextField {
                     id = INTERPRETATION_TEXT_AREA_ID
@@ -50,6 +47,7 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
             }
             Grid {
                 item = true
+                xs = 1
                 IconButton {
                     QuestionMark {
                     }
@@ -94,5 +92,6 @@ fun main() {
     createRoot(container.unsafeCast<dom.Element>()).render(example)
 }
 */
+
 
 
