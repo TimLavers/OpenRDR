@@ -36,13 +36,12 @@ val CaseList = FC<CaseListHandler> { handler ->
     }
 
     Grid {
-        id = CASELIST_ID
         container = true
 
         Grid {
             item = true
+            id = CASELIST_ID
             xs = 2
-
             List {
                 sx {
                     cursor = pointer

@@ -22,12 +22,11 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
     Grid {
         container = true
         direction = responsive(GridDirection.column)
-        rowSpacing = responsive(Pair(Breakpoint.xs, 2))
+        rowSpacing = responsive(Pair(Breakpoint.xs, 1))
+
         Grid {
             container = true
             direction = responsive(GridDirection.row)
-            spacing = responsive(Pair(Breakpoint.xs, 2))
-            xs = 10
             Grid {
                 item = true
                 xs = 11
@@ -80,9 +79,9 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
 }
 
 
-/*
-fun main() {
+/*fun main() {
     val container = document.createElement("div")
+
     document.body!!.appendChild(container)
 
     val example = InterpretationView.create {
@@ -90,8 +89,8 @@ fun main() {
     }
 
     createRoot(container.unsafeCast<dom.Element>()).render(example)
-}
-*/
+}*/
+
 
 
 
