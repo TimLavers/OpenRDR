@@ -7,6 +7,7 @@ import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
 import mysticfall.ReactTestSupport
+import mysticfall.TestRenderer
 import proxy.*
 import kotlin.test.Test
 
@@ -19,15 +20,19 @@ class InterpretationViewTest : ReactTestSupport {
         val interpretation = Interpretation().apply {
             add(RuleSummary(conclusion = Conclusion(text)))
         }
-        val renderer = render {
-            InterpretationView {
-                this.interpretation = interpretation
+        lateinit var renderer: TestRenderer
+        act {
+            renderer = render {
+                InterpretationView {
+                    this.interpretation = interpretation
+                }
             }
         }
+
         renderer.requireInterpretation(text)
 
         // Check that the text area is in a monospaced font.
-        renderer.printJSON()
+//        renderer.printJSON()
 //        val style = window.getComputedStyle(renderer.interpretationArea() as Element)
 //        println("style: $style")
 

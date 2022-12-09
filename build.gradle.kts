@@ -1,15 +1,15 @@
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
-val kotlinVersion = "1.7.21"
+val kotlinVersion = "1.7.22"
 val serializationVersion = "1.4.0"
-val ktor_version = "2.0.3"
+val ktor_version = "2.1.3"
 val logbackVersion = "1.2.10"
-val reactVersion = "18.2.0-pre.454"
-val reactEmotionVersion = "11.10.5-pre.454"
-val reactMuiVersion = "5.9.1-pre.454"
-val reactMuiIconVersion = "5.10.9-pre.454"
-val kotlinExtensionsVersion = "1.0.1-pre.454"
+val reactVersion = "18.2.0-pre.457"
+val reactEmotionVersion = "11.10.5-pre.457"
+val reactMuiVersion = "5.9.1-pre.457"
+val reactMuiIconVersion = "5.10.9-pre.457"
+val kotlinExtensionsVersion = "1.0.1-pre.457"
 val testingLibraryReactVersion = "13.4.0"
 val reactTestRendererVersion = "18.2.0"
 val kotestVersion = "5.5.4"
@@ -18,10 +18,10 @@ val awaitilityVersion = "4.2.0"
 val cucumberVersion = "7.5.0"
 
 plugins {
-    kotlin("multiplatform") version "1.7.21"
+    kotlin("multiplatform") version "1.7.22"
     application
-    kotlin("plugin.serialization") version "1.7.21"
-    id("io.ktor.plugin") version "2.1.2"
+    kotlin("plugin.serialization") version "1.7.22"
+    id("io.ktor.plugin") version "2.2.1"
 }
 
 group = "io.rippledown"

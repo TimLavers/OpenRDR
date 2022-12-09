@@ -1,3 +1,4 @@
+import csstype.px
 import dom.html.HTMLTextAreaElement
 import io.rippledown.model.Interpretation
 import kotlinx.coroutines.launch
@@ -5,8 +6,8 @@ import mui.icons.material.QuestionMark
 import mui.material.*
 import mui.system.Breakpoint
 import mui.system.responsive
+import mui.system.sx
 import react.FC
-import react.ReactNode
 import react.useState
 
 external interface InterpretationViewHandler : Handler {
@@ -27,17 +28,17 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
         Grid {
             container = true
             direction = responsive(GridDirection.row)
+            sx {
+                marginTop = 5.px
+            }
             Grid {
                 item = true
                 xs = 11
                 key = handler.interpretation.caseId.name
                 TextField {
                     id = INTERPRETATION_TEXT_AREA_ID
-                    label = "Interpretation".unsafeCast<ReactNode>()
-                    variant = FormControlVariant.filled
                     minRows = 5
                     multiline = true
-                    fullWidth = true
                     onInput = { event ->
                         interpretationText = event.target.unsafeCast<HTMLTextAreaElement>().value
                     }

@@ -2,7 +2,7 @@
 
 package mysticfall
 
-import kotlinx.js.jso
+import js.core.jso
 import react.*
 
 /**
