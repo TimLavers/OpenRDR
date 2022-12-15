@@ -49,7 +49,7 @@ class InterpretationViewTest : ReactTestSupport {
     }
 
     @Test
-    fun shouldRenderEnteredInterpretation() {
+    fun shouldRenderEnteredInterpretation() = runTest {
         val enteredText = "And bring your flippers"
         val interpretation = Interpretation()
         val renderer = render {

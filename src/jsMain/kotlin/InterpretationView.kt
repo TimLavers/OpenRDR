@@ -1,13 +1,13 @@
-import csstype.px
-import dom.html.HTMLTextAreaElement
+import csstype.FontFamily
+import csstype.FontWeight
+import emotion.react.css
 import io.rippledown.model.Interpretation
 import kotlinx.coroutines.launch
 import mui.icons.material.QuestionMark
 import mui.material.*
-import mui.system.Breakpoint
 import mui.system.responsive
-import mui.system.sx
 import react.FC
+import react.dom.html.ReactHTML
 import react.useState
 
 external interface InterpretationViewHandler : Handler {
@@ -23,37 +23,28 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
     Grid {
         container = true
         direction = responsive(GridDirection.column)
-        rowSpacing = responsive(Pair(Breakpoint.xs, 1))
-
         Grid {
-            container = true
-            direction = responsive(GridDirection.row)
-            sx {
-                marginTop = 5.px
-            }
-            Grid {
-                item = true
-                xs = 11
-                key = handler.interpretation.caseId.name
-                TextField {
-                    id = INTERPRETATION_TEXT_AREA_ID
-                    minRows = 5
-                    multiline = true
-                    onInput = { event ->
-                        interpretationText = event.target.unsafeCast<HTMLTextAreaElement>().value
-                    }
-                    value = interpretationText
+            item = true
+            xs = 8
+            key = handler.interpretation.caseId.name
+            ReactHTML.textarea {
+                id = INTERPRETATION_TEXT_AREA_ID
+                css {
+                    fontWeight = FontWeight.normal
+                    fontFamily = FontFamily.monospace
                 }
+                rows = 10
+                cols = 70
+                onChange = {
+                    interpretationText = it.target.value
+                }
+                value = interpretationText
             }
-            Grid {
-                item = true
-                xs = 1
-                IconButton {
-                    QuestionMark {
-                    }
-                    onClick = {
-                        println("clicked")
-                    }
+            IconButton {
+                QuestionMark {
+                }
+                onClick = {
+                    println("clicked")
                 }
             }
         }
@@ -76,21 +67,7 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
             }
         }
     }
-
 }
-
-
-/*fun main() {
-    val container = document.createElement("div")
-
-    document.body!!.appendChild(container)
-
-    val example = InterpretationView.create {
-        interpretation = Interpretation(CaseId("1"), "")
-    }
-
-    createRoot(container.unsafeCast<dom.Element>()).render(example)
-}*/
 
 
 

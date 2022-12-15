@@ -29,7 +29,6 @@ interface ReactTestSupport {
         val options = jso<TestRendererOptions> {
             createNodeMock = mockFactory
         }
-
         return render(options, block)
     }
 

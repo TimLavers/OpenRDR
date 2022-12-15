@@ -165,7 +165,6 @@ kotlin {
                 implementation("org.seleniumhq.selenium:selenium-java:4.2.2")
                 implementation("io.github.bonigarcia:webdrivermanager:$webDriverVersion")
                 implementation("commons-io:commons-io:2.11.0")
-
             }
         }
         val jsMain by getting {
@@ -178,8 +177,6 @@ kotlin {
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-emotion:$reactEmotionVersion")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-mui:$reactMuiVersion")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-mui-icons:$reactMuiIconVersion")
-                implementation(npm("randomcolor", "0.6.2"))
-
             }
         }
         val jsTest by getting {
