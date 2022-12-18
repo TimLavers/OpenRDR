@@ -32,7 +32,7 @@ class CaseExporterTest : ExporterTestBase() {
     }
 
     @Test
-    fun `destination should be exist`() {
+    fun `destination should exist`() {
         val directory = File(tempDir, "exportDir")
         shouldThrow<IllegalArgumentException>{
             CaseExporter(directory, emptySet())

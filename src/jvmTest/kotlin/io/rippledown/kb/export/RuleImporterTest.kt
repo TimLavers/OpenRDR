@@ -30,7 +30,7 @@ class RuleImporterTest: ExporterTestBase() {
         tree = ruleTree {
             child {
                 id = "c1"
-                conclusion { "ConcA" }
+                conclusion { "ConclusionA" }
                 condition {
                     attributeName = clinicalNotes.name
                     constant = "a"
@@ -47,21 +47,21 @@ class RuleImporterTest: ExporterTestBase() {
         tree = ruleTree {
             child {
                 id = "c1"
-                conclusion { "ConcA" }
+                conclusion { "ConclusionA" }
                 condition {
                     attributeName = clinicalNotes.name
                     constant = "a"
                 }
                 child {
                     id = "c11"
-                    conclusion { "ConcA" }
+                    conclusion { "ConclusionA" }
                     condition {
                         attributeName = clinicalNotes.name
                         constant = "b"
                     }
                     child {
                         id = "c111"
-                        conclusion { "ConcB" }
+                        conclusion { "ConclusionB" }
                         condition {
                             attributeName = clinicalNotes.name
                             constant = "c"
@@ -70,7 +70,7 @@ class RuleImporterTest: ExporterTestBase() {
                 }
                 child {
                     id = "c12"
-                    conclusion { "ConcD" }
+                    conclusion { "ConclusionD" }
                     condition {
                         attributeName = clinicalNotes.name
                         constant = "d"
@@ -111,7 +111,7 @@ class RuleImporterTest: ExporterTestBase() {
         }.message shouldBe "Rule export destination is not an existing directory."
     }
 
-    fun exportImport(): RuleTree {
+    private fun exportImport(): RuleTree {
         RuleExporter(tempDir, tree).export()
         return RuleImporter(tempDir).import()
     }

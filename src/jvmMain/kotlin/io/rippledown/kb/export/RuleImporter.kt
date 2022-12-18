@@ -10,7 +10,7 @@ import java.io.File
 class RuleImporter(private val source: File) {
     init {
         checkIsDirectory(source)
-        require(source.listFiles().isNotEmpty()) {
+        require(source.listFiles()!!.isNotEmpty()) {
             "$source is empty."
         }
     }
