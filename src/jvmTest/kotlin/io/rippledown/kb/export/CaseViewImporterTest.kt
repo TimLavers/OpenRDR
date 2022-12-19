@@ -5,13 +5,13 @@ import io.rippledown.model.Attribute
 import java.io.File
 import kotlin.test.Test
 
-class AttributeImporterTest : ExporterTestBase() {
+class CaseViewImporterTest : ExporterTestBase() {
 
     @Test
     fun exportEmpty() {
         val textFile = File(tempDir,"Attributes.txt")
-        AttributeExporter(textFile, emptyList()).export()
-        val recovered = AttributeImporter(textFile).import()
+        CaseViewExporter(textFile, emptyList()).export()
+        val recovered = CaseViewImporter(textFile).import()
         recovered shouldBe emptyList()
     }
 
@@ -22,8 +22,8 @@ class AttributeImporterTest : ExporterTestBase() {
         val ft4 = Attribute("FT4")
         val attributeList = listOf(tsh, ft4, ft3)
         val textFile = File(tempDir,"Attributes.txt")
-        AttributeExporter(textFile, attributeList).export()
-        val recovered = AttributeImporter(textFile).import()
+        CaseViewExporter(textFile, attributeList).export()
+        val recovered = CaseViewImporter(textFile).import()
         recovered shouldBe attributeList
     }
 }

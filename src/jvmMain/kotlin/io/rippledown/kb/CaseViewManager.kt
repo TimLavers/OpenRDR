@@ -8,6 +8,12 @@ import io.rippledown.model.caseview.ViewableCase
 class CaseViewManager {
     private val attributeToIndex = mutableMapOf<Attribute, Int>()
 
+    fun allAttributesInOrder(): List<Attribute> {
+        val orderSet = mutableListOf<IndexedAttribute>()
+        attributeToIndex.map { IndexedAttribute(it.key, it.value) }.toCollection(orderSet)
+        return orderSet.sorted().map { it.attribute }
+    }
+
     fun getViewableCase(case: RDRCase): ViewableCase {
         val attributesSorted = case.attributes.map { getIndexedAttribute(it) }.sorted().toList().map { it.attribute }
         return ViewableCase(case, CaseViewProperties(attributesSorted))
@@ -52,5 +58,4 @@ internal data class IndexedAttribute(val attribute: Attribute, val index: Int) :
     override fun compareTo(other: IndexedAttribute): Int {
         return this.index.compareTo(other.index)
     }
-
 }

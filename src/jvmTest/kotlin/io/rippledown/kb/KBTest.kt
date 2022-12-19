@@ -1,6 +1,8 @@
 package io.rippledown.kb
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
 import io.rippledown.model.condition.GreaterThanOrEqualTo
@@ -91,6 +93,20 @@ class KBTest {
         val retrieved = kb.getCaseByName("Case1")
         retrieved.name shouldBe "Case1"
         retrieved.get("Glucose")!!.value.text shouldBe "1.2"
+    }
+
+    @Test
+    fun allCases() {
+        val kb = KB("Blah")
+        kb.allCases() shouldBe emptySet()
+        for (i in  1..10) {
+            kb.addCase(createCase("Case$i"))
+        }
+        kb.allCases() shouldHaveSize 10
+        for (i in  1..10) {
+            val retrieved = kb.getCaseByName("Case$i")
+            kb.allCases() shouldContain retrieved
+        }
     }
 
     @Test
