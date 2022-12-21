@@ -14,6 +14,11 @@ class CaseViewManager {
         return orderSet.sorted().map { it.attribute }
     }
 
+    fun setAttributes(attributesInOrder: List<Attribute>) {
+        attributeToIndex.clear()
+        attributesInOrder.forEachIndexed{index, attribute -> attributeToIndex[attribute] = index}
+    }
+
     fun getViewableCase(case: RDRCase): ViewableCase {
         val attributesSorted = case.attributes.map { getIndexedAttribute(it) }.sorted().toList().map { it.attribute }
         return ViewableCase(case, CaseViewProperties(attributesSorted))

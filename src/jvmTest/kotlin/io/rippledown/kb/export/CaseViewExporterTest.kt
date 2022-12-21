@@ -13,7 +13,7 @@ class CaseViewExporterTest : ExporterTestBase() {
     fun `destination should be a file`() {
         shouldThrow<IllegalArgumentException>{
             CaseViewExporter(tempDir, emptyList())
-        }.message shouldBe "Attribute export destination ${tempDir.name} is not a file."
+        }.message shouldBe "Case view export destination ${tempDir.name} is not a file."
     }
 
     @Test
@@ -21,7 +21,7 @@ class CaseViewExporterTest : ExporterTestBase() {
         val file = writeFileInDirectory(tempDir)
         shouldThrow<IllegalArgumentException>{
             CaseViewExporter(file, emptyList())
-        }.message shouldBe "Attribute export file ${file.name} is not empty."
+        }.message shouldBe "Case view export file ${file.name} is not empty."
     }
 
     @Test

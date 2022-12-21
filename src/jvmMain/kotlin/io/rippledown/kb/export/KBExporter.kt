@@ -5,29 +5,33 @@ import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
 
-class KBExporter(private val destination: File, val kb: KB) {
+open class KBExportImport(val destination: File) {
+    val kbDetailsFile = File(destination, "Details.txt")
+    val caseViewFile = File(destination, "CaseView.txt")
+    val casesDirectory = File(destination, "Cases")
+    val rulesDirectory = File(destination, "Rules")
+}
+class KBExporter(destination: File, val kb: KB): KBExportImport(destination) {
     init {
         checkDirectoryIsSuitableForExport(destination, "KB")
     }
 
     fun export() {
         // Details of the KB.
-        val kbDetailsFile = File(destination, "Details.txt")
         val writer = BufferedWriter(FileWriter(kbDetailsFile))
         writer.write(kb.name)
         writer.newLine()
         writer.close()
 
         // Case view.
-        val attributesFile = File(destination, "CaseView.txt")
-        CaseViewExporter(attributesFile, kb.caseViewManager.allAttributesInOrder())
+        CaseViewExporter(caseViewFile, kb.caseViewManager.allAttributesInOrder()).export()
 
         // Cases.
-        val casesDirectory = File(destination, "Cases")
+        casesDirectory.mkdirs()
         CaseExporter(casesDirectory, kb.allCases()).export()
 
         // Rules.
-        val rulesDirectory = File(destination, "Rules")
-        RuleExporter(rulesDirectory, kb.ruleTree)
+        rulesDirectory.mkdirs()
+        RuleExporter(rulesDirectory, kb.ruleTree).export()
     }
 }
