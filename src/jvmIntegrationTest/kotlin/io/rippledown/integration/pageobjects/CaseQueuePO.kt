@@ -14,8 +14,8 @@ class CaseQueuePO(private val driver: WebDriver) {
         return this
     }
 
-    fun numberWaiting(): Int {
-        val waitingCasesElement = driver.findElement(By.id("number_of_cases_waiting_value"))
-        return Integer.parseInt(waitingCasesElement.text)
-    }
+    fun numberWaiting() = driver.findElement(By.id("number_of_cases_waiting_value"))
+        .text
+        .substringAfter("Cases waiting: ")
+        .toInt()
 }

@@ -72,7 +72,10 @@ fun TestRenderer.requireNumberOfCasesWaiting(expected: Int) {
     numberOfCasesWaiting() shouldBe expected
 }
 
-fun TestRenderer.numberOfCasesWaiting() = findById(NUMBER_OF_CASES_WAITING_ID).text().toInt()
+fun TestRenderer.numberOfCasesWaiting() = findById(NUMBER_OF_CASES_WAITING_ID)
+    .text()
+    .substringAfter("Cases waiting: ")
+    .toInt()
 
 fun TestRenderer.requireCaseListNotToBeShowing() {
     root.findAllByType(CaseList) shouldBe emptyList<TestInstance<*>>()

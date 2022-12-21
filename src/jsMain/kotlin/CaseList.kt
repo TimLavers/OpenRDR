@@ -36,12 +36,12 @@ val CaseList = FC<CaseListHandler> { handler ->
     }
 
     Grid {
-        id = CASELIST_ID
         container = true
 
         Grid {
             item = true
-
+            id = CASELIST_ID
+            xs = 2
             List {
                 sx {
                     cursor = pointer
@@ -73,6 +73,7 @@ val CaseList = FC<CaseListHandler> { handler ->
         }
         Grid {
             item = true
+            xs = 8
             if (currentCase != null) {
                 CaseView {
                     scope = handler.scope

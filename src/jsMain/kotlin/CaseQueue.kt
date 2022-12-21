@@ -1,11 +1,7 @@
 import io.rippledown.model.CasesInfo
-import io.rippledown.model.RDRCase
-import io.rippledown.model.caseview.ViewableCase
 import kotlinx.coroutines.launch
+import mui.material.Typography
 import react.FC
-import react.dom.html.ReactHTML.div
-import react.dom.html.ReactHTML.h2
-import react.dom.html.ReactHTML.span
 import react.useEffectOnce
 import react.useState
 import web.timers.setInterval
@@ -22,22 +18,14 @@ val CaseQueue = FC<CaseQueueHandler> { handler ->
     useEffectOnce {
         setInterval(delay = POLL_PERIOD) {
             handler.scope.launch {
-                val wci = handler.api.waitingCasesInfo()
-                waitingCasesInfo = wci
+                waitingCasesInfo = handler.api.waitingCasesInfo()
             }
         }
     }
 
-    h2 {
-        +"Review queue"
-        id = "number_of_cases_waiting_heading"
-    }
-    div {
-        +"Cases waiting: "
-        span {
-            +"${waitingCasesInfo.count}"
-            id = NUMBER_OF_CASES_WAITING_ID
-        }
+    Typography {
+        +"Cases waiting: ${waitingCasesInfo.count}"
+        id = NUMBER_OF_CASES_WAITING_ID
     }
 
     if (waitingCasesInfo.count > 0) {
