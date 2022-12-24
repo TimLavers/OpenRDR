@@ -23,7 +23,7 @@ class Zipper(val directoryToZip: File) {
         return byteArrayOutputStream.toByteArray()
     }
 
-    fun zipFile(fileToZip: File, fileName: String, zipOut: ZipOutputStream) {
+    private fun zipFile(fileToZip: File, fileName: String, zipOut: ZipOutputStream) {
         if (fileToZip.isDirectory) {
             if (fileName.endsWith("/")) {
                 zipOut.putNextEntry(ZipEntry(fileName))

@@ -1,6 +1,10 @@
 package io.rippledown.server
 
 import io.rippledown.kb.KB
+import io.rippledown.kb.export.KBExporter
+import io.rippledown.kb.export.KBImporter
+import io.rippledown.kb.export.util.Unzipper
+import io.rippledown.kb.export.util.Zipper
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
@@ -13,6 +17,7 @@ import org.apache.commons.io.FileUtils
 import java.io.File
 import java.nio.charset.StandardCharsets.UTF_8
 import java.time.LocalDateTime
+import kotlin.io.path.createTempDirectory
 
 class ServerApplication {
     val casesDir = File("cases").apply { mkdirs() }
@@ -21,6 +26,23 @@ class ServerApplication {
 
     fun createKB() {
         kb = KB("Thyroids")
+    }
+
+    fun exportKBToZip(): ByteArray {
+        val tempDir: File = createTempDirectory().toFile()
+        KBExporter(tempDir, kb).export()
+        return Zipper(tempDir).zip()
+    }
+
+    fun importKBFromZip(zipBytes: ByteArray) {
+        val tempDir: File = createTempDirectory().toFile()
+        Unzipper(zipBytes, tempDir).unzip()
+        val subDirectories = tempDir.listFiles()
+        require(subDirectories != null && subDirectories.size == 1) {
+            "Invalid zip for KB import."
+        }
+        val rootDir = subDirectories[0]
+        kb = KBImporter(rootDir).import()
     }
 
     fun startRuleSessionToAddConclusion(caseId: String, conclusion: Conclusion) {
@@ -63,7 +85,7 @@ class ServerApplication {
 
     fun saveInterpretation(interpretation: Interpretation): OperationResult {
         val fileName = "${interpretation.caseId.id}.interpretation.json"
-        println("${LocalDateTime.now()}  saving interp = ${fileName}")
+        println("${LocalDateTime.now()}  saving interp = $fileName")
         val file = File(interpretationsDir, fileName)
         if (file.exists()) {
             file.delete()

@@ -11,6 +11,7 @@ import kotlinx.serialization.json.Json
 import org.apache.commons.io.FileUtils
 import java.io.File
 import java.nio.charset.StandardCharsets.UTF_8
+import java.nio.file.Files
 import kotlin.test.*
 
 internal class ServerApplicationTest {
@@ -173,6 +174,47 @@ internal class ServerApplicationTest {
         app.startRuleSessionToAddConclusion(id, Conclusion("Whatever"))
         app.commitCurrentRuleSession()
         app.case(id).interpretation.textGivenByRules() shouldBe "Whatever"
+    }
+
+    @Test
+    fun exportKBToZip() {
+        val app = ServerApplication()
+        // Add a case and a rule to the KB.
+        val id = "Case1"
+        setUpCaseFromFile(id, app)
+        app.kb.addCase(createCase(id))
+        val conclusion1 = Conclusion("Whatever")
+        app.startRuleSessionToAddConclusion(id, conclusion1)
+        app.commitCurrentRuleSession()
+        app.case(id).interpretation.textGivenByRules() shouldBe conclusion1.text
+
+        // Get the exported KB.
+        val exported = app.exportKBToZip()
+
+        // Clear the KB
+        app.createKB()
+        app.kb.allCases() shouldBe emptySet()
+        app.kb.ruleTree.size() shouldBe 1
+
+        // Import the exported KB.
+        app.importKBFromZip(exported)
+        app.kb.allCases().size shouldBe 1
+        app.kb.ruleTree.size() shouldBe 2
+        app.case(id).interpretation.textGivenByRules() shouldBe conclusion1.text
+    }
+
+    @Test
+    fun importKBFromZip() {
+        val zipFile = File("src/jvmTest/resources/export/KBExported.zip").toPath()
+        val app = ServerApplication()
+        app.kb.name shouldBe "Thyroids"
+        app.kb.allCases().size shouldBe 0
+        app.importKBFromZip(Files.readAllBytes(zipFile))
+
+        app.kb.name shouldBe "Whatever"
+        app.kb.allCases().size shouldBe 3
+        app.kb.ruleTree.size() shouldBe 2
+        app.case("Case1").interpretation.textGivenByRules() shouldBe "Glucose ok."
     }
 
     private fun setUpCaseFromFile(id: String, app: ServerApplication) {
