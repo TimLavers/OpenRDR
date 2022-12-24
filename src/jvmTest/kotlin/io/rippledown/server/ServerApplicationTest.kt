@@ -1,5 +1,6 @@
 package io.rippledown.server
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.rippledown.CaseTestUtils
@@ -215,6 +216,23 @@ internal class ServerApplicationTest {
         app.kb.allCases().size shouldBe 3
         app.kb.ruleTree.size() shouldBe 2
         app.case("Case1").interpretation.textGivenByRules() shouldBe "Glucose ok."
+    }
+
+    @Test
+    fun `handle zip in bad format`() {
+        val zipFile = File("src/jvmTest/resources/export/NoRootDir.zip").toPath()
+        val app = ServerApplication()
+        shouldThrow<IllegalArgumentException>{
+            app.importKBFromZip(Files.readAllBytes(zipFile))
+        }.message shouldBe "Invalid zip for KB import."
+    }
+
+    @Test
+    fun `handle empty zip`() {
+        val zipFile = File("src/jvmTest/resources/export/Empty.zip").toPath()
+        shouldThrow<IllegalArgumentException>{
+            ServerApplication().importKBFromZip(Files.readAllBytes(zipFile))
+        }.message shouldBe "Invalid zip for KB import."
     }
 
     private fun setUpCaseFromFile(id: String, app: ServerApplication) {
