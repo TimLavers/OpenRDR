@@ -166,6 +166,11 @@ internal class ServerApplicationTest {
     }
 
     @Test
+    fun kbName() {
+        ServerApplication().kbName() shouldBe KBInfo("Thyroids")
+    }
+
+    @Test
     fun startRuleSessionToAddConclusion() {
         val app = ServerApplication()
         val id = "Case1"
@@ -215,7 +220,10 @@ internal class ServerApplicationTest {
         app.kb.name shouldBe "Whatever"
         app.kb.allCases().size shouldBe 3
         app.kb.ruleTree.size() shouldBe 2
-        app.case("Case1").interpretation.textGivenByRules() shouldBe "Glucose ok."
+        val case = app.kb.getCaseByName("Case1")
+        val interpretedCase = app.kb.viewableInterpretedCase(case)
+        interpretedCase.interpretation.textGivenByRules() shouldBe "Glucose ok."
+        app.kbName() shouldBe KBInfo("Whatever")
     }
 
     @Test

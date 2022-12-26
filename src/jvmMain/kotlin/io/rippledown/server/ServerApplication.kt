@@ -28,6 +28,10 @@ class ServerApplication {
         kb = KB("Thyroids")
     }
 
+    fun kbName(): KBInfo {
+        return KBInfo(kb.name)
+    }
+
     fun exportKBToZip(): ByteArray {
         val tempDir: File = createTempDirectory().toFile()
         KBExporter(tempDir, kb).export()

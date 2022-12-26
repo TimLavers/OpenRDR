@@ -27,6 +27,7 @@ const val START_SESSION_TO_ADD_CONCLUSION = "/api/startSessionToAddConclusion"
 const val START_SESSION_TO_REPLACE_CONCLUSION = "/api/startSessionToReplaceConclusion"
 const val ADD_CONDITION = "/api/addCondition"
 const val COMMIT_SESSION = "/api/commitSession"
+const val KB_NAME = "/api/kbName"
 const val CREATE_KB = "/api/createKB"
 const val SHUTDOWN = "/api/shutdown"
 const val PING = "/api/ping"
@@ -101,22 +102,35 @@ fun main() {
                 val result = application.saveInterpretation(interpretation)
                 call.respond(HttpStatusCode.OK, result)
             }
-            post(CREATE_KB) {
-                application.createKB()
-                call.respond(HttpStatusCode.OK, OperationResult("KB created"))
-            }
-            get(PING) {
-                call.respond(HttpStatusCode.OK, "OK")
-            }
-            post(SHUTDOWN) {
-                logger.info(STOPPING_SERVER)
-                server.stop(0, 0)
-            }
         }
+        serverManagement(application)
+        kbManagement(application)
         ruleSession(application)
     }
     logger.info(STARTING_SERVER)
     server.start(wait = true)
+}
+fun Application.serverManagement(application: ServerApplication) {
+    routing {
+        get(PING) {
+            call.respond(HttpStatusCode.OK, "OK")
+        }
+        post(SHUTDOWN) {
+            logger.info(STOPPING_SERVER)
+            server.stop(0, 0)
+        }
+    }
+}
+fun Application.kbManagement(application: ServerApplication) {
+    routing {
+        post(CREATE_KB) {
+            application.createKB()
+            call.respond(HttpStatusCode.OK, OperationResult("KB created"))
+        }
+        get(KB_NAME) {
+            call.respond(application.kbName())
+        }
+    }
 }
 fun Application.ruleSession(application: ServerApplication) {
     routing {
