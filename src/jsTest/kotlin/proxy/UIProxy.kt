@@ -33,6 +33,16 @@ fun TestRenderer.findById(id: String): TestInstance<*> {
     }
 }
 
+suspend fun TestRenderer.waitForItemToHaveText( itemId: String, expectedText: String) {
+    repeat(10) {
+        if (findById(itemId).text() == expectedText) {
+            return
+        }
+        waitForEvents()
+    }
+    throw Error("Text $expectedText not found for item with id $itemId. Current value is: ${findById(itemId).text()}")
+}
+
 fun TestInstance<*>.text() = props.asDynamic()["children"].unsafeCast<String>()
 
 suspend fun TestInstance<*>.click() =

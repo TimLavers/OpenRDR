@@ -6,10 +6,7 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import io.rippledown.model.Attribute
-import io.rippledown.model.CasesInfo
-import io.rippledown.model.Interpretation
-import io.rippledown.model.OperationResult
+import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import kotlinx.browser.window
 import kotlinx.serialization.json.Json
@@ -26,6 +23,8 @@ class Api(engine: HttpClientEngine = Js.create()) {
             })
         }
     }
+
+    suspend fun kbInfo() = jsonClient.get("$endpoint/api/kbInfo").body<KBInfo>()
 
     suspend fun getCase(id: String): ViewableCase = jsonClient.get("$endpoint/api/case?id=$id").body()
 

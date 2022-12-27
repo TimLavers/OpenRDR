@@ -27,7 +27,7 @@ const val START_SESSION_TO_ADD_CONCLUSION = "/api/startSessionToAddConclusion"
 const val START_SESSION_TO_REPLACE_CONCLUSION = "/api/startSessionToReplaceConclusion"
 const val ADD_CONDITION = "/api/addCondition"
 const val COMMIT_SESSION = "/api/commitSession"
-const val KB_NAME = "/api/kbName"
+const val KB_INFO = "/api/kbInfo"
 const val CREATE_KB = "/api/createKB"
 const val SHUTDOWN = "/api/shutdown"
 const val PING = "/api/ping"
@@ -45,15 +45,6 @@ fun main() {
     server = embeddedServer(Netty, 9090) {
         install(ContentNegotiation) {
             json()
-//            Json {
-//                encodeDefaults = true
-//                isLenient = true
-//                allowSpecialFloatingPointValues = true
-//                allowStructuredMapKeys = true
-//                prettyPrint = false
-//                useArrayPolymorphism = false
-//            }
-//            json(Json { allowStructuredMapKeys = true })
         }
         install(CallLogging) {
             level = Level.INFO
@@ -127,7 +118,7 @@ fun Application.kbManagement(application: ServerApplication) {
             application.createKB()
             call.respond(HttpStatusCode.OK, OperationResult("KB created"))
         }
-        get(KB_NAME) {
+        get(KB_INFO) {
             call.respond(application.kbName())
         }
     }
