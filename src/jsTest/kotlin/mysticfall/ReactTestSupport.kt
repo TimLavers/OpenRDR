@@ -2,7 +2,7 @@
 
 package mysticfall
 
-import kotlinx.js.jso
+import js.core.jso
 import react.*
 
 /**
@@ -29,7 +29,6 @@ interface ReactTestSupport {
         val options = jso<TestRendererOptions> {
             createNodeMock = mockFactory
         }
-
         return render(options, block)
     }
 

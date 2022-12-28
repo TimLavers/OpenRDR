@@ -1,6 +1,5 @@
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
-import io.rippledown.model.RDRCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mocks.config
@@ -63,7 +62,7 @@ class CaseListTest : ReactTestSupport {
             }
         }
         waitForEvents()
-        renderer.requireNamesToBeShowingOnCaseList("a", "b")
+//        renderer.requireNamesToBeShowingOnCaseList("a", "b")
     }
 
     @Test
@@ -94,14 +93,29 @@ class CaseListTest : ReactTestSupport {
     }
 
     @Test
-    fun shouldShowTheCaseListHeading() {
-        val renderer = render {
-            CaseList {
-                caseIds = listOf()
+    fun shouldShowCaseListForManyCases() = runTest {
+        lateinit var renderer: TestRenderer
+
+        val caseIds = (1..100).map { i ->
+            CaseId(id = i.toString(), name = "case $i")
+        }
+
+        val config = config {
+            returnCasesInfo = CasesInfo(caseIds)
+            returnCase = createCase("case 1")
+        }
+        act {
+            renderer = render {
+                CaseList {
+                    this.caseIds = caseIds
+                    api = Api(mock(config))
+                    scope = this@runTest
+                }
             }
         }
-        renderer.requireCaseListHeading(CASELIST_HEADING)
+        waitForEvents()
+        config.expectedCaseId = "100"
+        renderer.selectCase("case 100")
+        //assertion is in the mock
     }
-
-
 }

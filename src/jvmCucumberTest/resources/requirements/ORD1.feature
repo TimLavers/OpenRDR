@@ -11,6 +11,13 @@ Feature: Show a list of cases
       | Case2 |
     And stop the client application
 
+  Scenario: Should be able to select the last in a long list of cases
+    Given a list of 1000 cases is stored on the server
+    And I start the client application
+    When I select case "Case 1000"
+    Then I should see the case "Case 1000" as the current case
+    And stop the client application
+
   Scenario: The list of cases should be updated when a new case is stored by the server
     Given a list of cases with the following names is stored on the server:
       | Case1 |

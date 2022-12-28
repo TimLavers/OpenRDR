@@ -1,18 +1,20 @@
-import csstype.*
-import emotion.react.css
+import csstype.Cursor.Companion.pointer
+import csstype.Overflow.Companion.scroll
+import csstype.px
 import io.rippledown.model.CaseId
-import kotlinx.coroutines.launch
 import io.rippledown.model.caseview.ViewableCase
+import kotlinx.coroutines.launch
+import mui.material.Grid
+import mui.material.List
+import mui.material.ListItemButton
+import mui.material.ListItemText
+import mui.system.sx
 import react.FC
-import react.dom.html.ReactHTML.div
-import react.dom.html.ReactHTML.li
-import react.dom.html.ReactHTML.ul
 import react.useEffect
 import react.useState
 
 const val CASELIST_ID = "case_list_container"
 const val CASE_ID_PREFIX = "case_list_item_"
-const val CASELIST_HEADING = "Cases"
 
 external interface CaseListHandler : Handler {
     var caseIds: List<CaseId>
@@ -33,58 +35,60 @@ val CaseList = FC<CaseListHandler> { handler ->
         }
     }
 
-    div {
-        css {
-            after {
-                display = Display.table
-                clear = Clear.both
-            }
-        }
-        div {
-            +CASELIST_HEADING
+    Grid {
+        container = true
+
+        Grid {
+            item = true
             id = CASELIST_ID
-            css {
-                textAlign = TextAlign.left
-                float = Float.left
-                width = 10.pct
-                padding = px12
-            }
-            ul {
-                css {
-                    paddingInlineStart = px0
-                    cursor = Cursor.default
+            xs = 2
+            List {
+                sx {
+                    cursor = pointer
+                    width = 200.px
+                    overflowY = scroll
+                    maxHeight = 500.px
                 }
+                dense = true
+
                 for (caseId in handler.caseIds) {
-                    li {
-                        +caseId.name
-                        id = "$CASE_ID_PREFIX${caseId.name}"
-                        css {
-                            textDecorationLine = TextDecorationLine.underline
-                            padding = px4
-                            listStyleType = None.none
+                    ListItemButton {
+                        ListItemText {
+                            +caseId.name
                         }
+                        selected = currentCase?.name == caseId.name
+                        id = "$CASE_ID_PREFIX${caseId.name}"
                         onClick = {
                             handler.scope.launch {
                                 currentCase = handler.api.getCase(caseId.id)
                             }
                         }
+                        sx {
+                            paddingTop = 0.px
+                            paddingBottom = 0.px
+                        }
                     }
                 }
             }
         }
-        if (currentCase != null) {
-            CaseView {
-                scope = handler.scope
-                api = handler.api
-                case = currentCase!!
-                onCaseEdited = {
-                    scope.launch {
-                        val id = currentCase!!.name
-                        currentCase = api.getCase(id)
-                        case = currentCase!!
+        Grid {
+            item = true
+            xs = 8
+            if (currentCase != null) {
+                CaseView {
+                    scope = handler.scope
+                    api = handler.api
+                    case = currentCase!!
+                    onCaseEdited = {
+                        scope.launch {
+                            val id = currentCase!!.name
+                            currentCase = api.getCase(id)
+                            case = currentCase!!
+                        }
                     }
                 }
             }
         }
     }
 }
+

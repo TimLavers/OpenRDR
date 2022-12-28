@@ -1,7 +1,7 @@
 package mysticfall
 
 import csstype.ClassName
-import kotlinx.js.jso
+import js.core.jso
 import proxy.printJSON
 import react.dom.html.ReactHTML.a
 import react.dom.html.ReactHTML.div

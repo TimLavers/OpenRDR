@@ -82,14 +82,17 @@ fun TestRenderer.requireNumberOfCasesWaiting(expected: Int) {
     numberOfCasesWaiting() shouldBe expected
 }
 
-fun TestRenderer.numberOfCasesWaiting() = findById(NUMBER_OF_CASES_WAITING_ID).text().toInt()
+fun TestRenderer.numberOfCasesWaiting() = findById(NUMBER_OF_CASES_WAITING_ID)
+    .text()
+    .substringAfter("Cases waiting: ")
+    .toInt()
 
 fun TestRenderer.requireCaseListNotToBeShowing() {
     root.findAllByType(CaseList) shouldBe emptyList<TestInstance<*>>()
 }
 
 fun TestRenderer.requireCaseListHeading(expected: String) {
-    findById(CASELIST_ID).props.asDynamic()["children"][0].unsafeCast<String>() shouldBe expected
+    findById(CASELIST_ID).text() shouldBe expected
 }
 
 fun TestRenderer.requireInterpretation(expected: String) {

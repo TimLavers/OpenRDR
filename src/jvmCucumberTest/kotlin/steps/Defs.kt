@@ -38,6 +38,12 @@ class Defs : En {
                 labProxy.copyCase(caseName)
             }
         }
+        Given("a list of {long} cases is stored on the server") { numberOfCases: Long ->
+            (1..numberOfCases).forEach { i ->
+                val padded = i.toString().padStart(3, '0')
+                labProxy.writeNewCaseFile("Case $padded")
+            }
+        }
 
         And("I select a case with all three attributes") {
             caseViewPO = caseListPO.select("CaseABC")
@@ -57,15 +63,15 @@ class Defs : En {
             labProxy.deleteCase(caseName)
         }
 
+        And("I select case {string}") { caseName: String ->
+            caseViewPO = caseListPO.select(caseName)
+        }
+
         And("if I select case {word}") { caseName: String ->
             caseViewPO = caseListPO.select(caseName)
         }
 
-        When("I select case {word}") { caseName: String ->
-            caseViewPO = caseListPO.select(caseName)
-        }
-
-        And("I move attribute {word} below attribute {word}") {moved: String, target: String ->
+        And("I move attribute {word} below attribute {word}") { moved: String, target: String ->
             caseViewPO.dragAttribute(moved, target)
             Thread.sleep(1000)
         }
@@ -82,15 +88,14 @@ class Defs : En {
             caseListPO.select("Case3")
         }
 
-        Given(
-            "case {word} is provided having data:") { caseName: String, dataTable: DataTable ->
+        Given("case {word} is provided having data:") { caseName: String, dataTable: DataTable ->
             val attributeNameToValue = mutableMapOf<String, String>()
-            dataTable.asMap().forEach { (t, u) ->  attributeNameToValue[t] = u}
+            dataTable.asMap().forEach { (t, u) -> attributeNameToValue[t] = u }
             labProxy.writeCaseWithDataToInputDir(caseName, attributeNameToValue)
         }
 
-        Then("the case should show the attributes in order:") { dataTable: DataTable ->
-            caseViewPO.attributes() shouldBe  dataTable.asList()
+        Then("^the case (should show|shows) the attributes in order:$") { ignoredOption: String, dataTable: DataTable ->
+            caseViewPO.attributes() shouldBe dataTable.asList()
         }
 
         Then("the displayed KB name should be {word}") { kbName: String ->

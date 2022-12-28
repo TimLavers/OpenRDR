@@ -1,25 +1,27 @@
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
-val kotlinVersion = "1.7.10"
+val kotlinVersion = "1.7.22"
 val serializationVersion = "1.4.0"
-val ktor_version = "2.0.3"
+val ktor_version = "2.1.3"
 val logbackVersion = "1.2.10"
-val reactVersion = "18.2.0-pre.406"
-val reactEmotionVersion = "11.10.4-pre.406"
-val kotlinExtensionsVersion = "1.0.1-pre.364"
+val reactVersion = "18.2.0-pre.457"
+val reactEmotionVersion = "11.10.5-pre.457"
+val reactMuiVersion = "5.9.1-pre.457"
+val reactMuiIconVersion = "5.10.9-pre.457"
+val kotlinExtensionsVersion = "1.0.1-pre.457"
 val testingLibraryReactVersion = "13.4.0"
 val reactTestRendererVersion = "18.2.0"
-val kotestVersion = "5.4.1"
+val kotestVersion = "5.5.4"
 val webDriverVersion = "4.4.3"
 val awaitilityVersion = "4.2.0"
 val cucumberVersion = "7.5.0"
 
 plugins {
-    kotlin("multiplatform") version "1.7.20"
+    kotlin("multiplatform") version "1.7.22"
     application
-    kotlin("plugin.serialization") version "1.7.20"
-    id("io.ktor.plugin") version "2.1.2"
+    kotlin("plugin.serialization") version "1.7.22"
+    id("io.ktor.plugin") version "2.2.1"
 }
 
 group = "io.rippledown"
@@ -163,7 +165,6 @@ kotlin {
                 implementation("org.seleniumhq.selenium:selenium-java:4.2.2")
                 implementation("io.github.bonigarcia:webdrivermanager:$webDriverVersion")
                 implementation("commons-io:commons-io:2.11.0")
-
             }
         }
         val jsMain by getting {
@@ -174,6 +175,8 @@ kotlin {
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react:$reactVersion")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom:$reactVersion")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-emotion:$reactEmotionVersion")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-mui:$reactMuiVersion")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-mui-icons:$reactMuiIconVersion")
             }
         }
         val jsTest by getting {

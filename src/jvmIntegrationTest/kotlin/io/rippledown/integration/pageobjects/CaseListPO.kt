@@ -31,7 +31,7 @@ class CaseListPO(private val driver: WebDriver) {
 
     fun casesListed() = listItems().map { it.text }
 
-    private fun listItems() = containerElement().findElements(By.tagName("li"))
+    private fun listItems() = containerElement().findElements(By.className("MuiTypography-root"))
 
     fun select(caseName: String): CaseViewPO {
         val id = "case_list_item_$caseName"
