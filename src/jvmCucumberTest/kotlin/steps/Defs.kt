@@ -2,21 +2,23 @@ package steps
 
 import io.cucumber.datatable.DataTable
 import io.cucumber.java8.En
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.UITestBase
 import io.rippledown.integration.pageobjects.CaseListPO
 import io.rippledown.integration.pageobjects.CaseViewPO
+import io.rippledown.integration.pageobjects.KBInfoPO
 import org.openqa.selenium.WebDriver
 import java.util.concurrent.TimeUnit
 
 class Defs : En {
-    val uiTestBase = UITestBase()
-    val serverProxy = uiTestBase.serverProxy
-    val labProxy = uiTestBase.labProxy
+    private val uiTestBase = UITestBase()
+    private val serverProxy = uiTestBase.serverProxy
+    private val labProxy = uiTestBase.labProxy
 
-    lateinit var caseListPO: CaseListPO
-    lateinit var caseViewPO: CaseViewPO
-    lateinit var driver: WebDriver
+    private lateinit var caseListPO: CaseListPO
+    private lateinit var caseViewPO: CaseViewPO
+    private lateinit var driver: WebDriver
 
     init {
         Before { scenario ->
@@ -89,6 +91,10 @@ class Defs : En {
 
         Then("the case should show the attributes in order:") { dataTable: DataTable ->
             caseViewPO.attributes() shouldBe  dataTable.asList()
+        }
+
+        Then("the displayed KB name should be {word}") { kbName: String ->
+            KBInfoPO(driver).headingText() shouldBe "Knowledge Base: $kbName"
         }
 
         When("I start the client application") {

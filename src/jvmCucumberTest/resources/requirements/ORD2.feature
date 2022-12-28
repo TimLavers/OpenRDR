@@ -12,7 +12,6 @@ Feature: Order of Attributes in Case View
       |C|c|
       |B|b|
       |A|a|
-    And pause
     And if I select case CaseA
     Then the case should show the attributes in order:
       | A |
