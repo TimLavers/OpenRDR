@@ -1,26 +1,30 @@
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
-val kotlinVersion = "1.7.22"
-val serializationVersion = "1.4.0"
-val ktor_version = "2.1.3"
-val logbackVersion = "1.2.10"
-val reactVersion = "18.2.0-pre.457"
-val reactEmotionVersion = "11.10.5-pre.457"
-val reactMuiVersion = "5.9.1-pre.457"
-val reactMuiIconVersion = "5.10.9-pre.457"
-val kotlinExtensionsVersion = "1.0.1-pre.457"
+val kotlinVersion = "1.8.0"
+val serializationVersion = "1.4.1"
+val kotlinxDateTimeVersion = "0.4.0"
+val kotlinxCoroutinesTestVersion = "1.6.4"
+val ktor_version = "2.2.1"
+val logbackVersion = "1.4.5"
+val reactVersion = "18.2.0-pre.465"
+val reactEmotionVersion = "11.10.5-pre.465"
+val reactMuiVersion = "5.9.1-pre.465"
+val reactMuiIconVersion = "5.10.9-pre.465"
+val kotlinExtensionsVersion = "1.0.1-pre.465"
 val testingLibraryReactVersion = "13.4.0"
 val reactTestRendererVersion = "18.2.0"
 val kotestVersion = "5.5.4"
-val webDriverVersion = "4.4.3"
+val webDriverVersion = "5.3.1"
 val awaitilityVersion = "4.2.0"
-val cucumberVersion = "7.5.0"
+val cucumberVersion = "7.10.1"
+val commonsIoVersion = "2.11.0"
+val seleniumJavaVersion = "4.2.2"
 
 plugins {
-    kotlin("multiplatform") version "1.7.22"
+    kotlin("multiplatform") version "1.8.0"
     application
-    kotlin("plugin.serialization") version "1.7.22"
+    kotlin("plugin.serialization") version "1.8.0"
     id("io.ktor.plugin") version "2.2.1"
 }
 
@@ -47,7 +51,7 @@ kotlin {
                         implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
                         implementation("io.ktor:ktor-client-cio:$ktor_version")
                         implementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
-                        implementation("org.seleniumhq.selenium:selenium-java:4.2.2")
+                        implementation("org.seleniumhq.selenium:selenium-java:$seleniumJavaVersion")
                         implementation("io.github.bonigarcia:webdrivermanager:$webDriverVersion")
                         implementation("io.kotest:kotest-assertions-core:$kotestVersion")
                         implementation("org.awaitility:awaitility-kotlin:$awaitilityVersion")
@@ -115,7 +119,7 @@ kotlin {
         withJava()
     }
 
-    js {
+    js(IR) {
         browser {
             binaries.executable()
         }
@@ -126,7 +130,7 @@ kotlin {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
                 implementation("io.ktor:ktor-client-core:$ktor_version")
-                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:$kotlinxDateTimeVersion")
             }
         }
         val commonTest by getting {
@@ -149,7 +153,7 @@ kotlin {
                 implementation("io.ktor:ktor-server-call-logging:$ktor_version")
                 implementation("io.ktor:ktor-server-netty:$ktor_version")
                 implementation("ch.qos.logback:logback-classic:$logbackVersion")
-                implementation("commons-io:commons-io:2.11.0")
+                implementation("commons-io:commons-io:$commonsIoVersion")
             }
         }
         val jvmTest by getting {
@@ -160,11 +164,10 @@ kotlin {
                 implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
                 implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
                 implementation("io.ktor:ktor-client-cio:$ktor_version")
-                implementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
                 implementation(kotlin("test"))
-                implementation("org.seleniumhq.selenium:selenium-java:4.2.2")
+                implementation("org.seleniumhq.selenium:selenium-java:$seleniumJavaVersion")
                 implementation("io.github.bonigarcia:webdrivermanager:$webDriverVersion")
-                implementation("commons-io:commons-io:2.11.0")
+                implementation("commons-io:commons-io:$commonsIoVersion")
             }
         }
         val jsMain by getting {
@@ -191,8 +194,7 @@ kotlin {
                 implementation("io.kotest:kotest-assertions-core-js:$kotestVersion")
                 implementation("io.kotest:kotest-framework-api-js:$kotestVersion")
                 implementation("io.kotest:kotest-framework-engine-js:$kotestVersion")
-
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinxCoroutinesTestVersion")
 
             }
         }
