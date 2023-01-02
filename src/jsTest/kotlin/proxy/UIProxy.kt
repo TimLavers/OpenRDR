@@ -8,6 +8,7 @@ import INTERPRETATION_TEXT_AREA_ID
 import NUMBER_OF_CASES_WAITING_ID
 import POLL_PERIOD
 import SEND_INTERPRETATION_BUTTON_ID
+import dom.html.HTMLTextAreaElement
 import io.kotest.assertions.timing.eventually
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.Dispatchers.Default
@@ -16,6 +17,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import mysticfall.TestInstance
 import mysticfall.TestRenderer
+import react.dom.events.ChangeEvent
 import kotlin.js.Date
 import kotlin.js.JSON.stringify
 import kotlin.time.Duration.Companion.milliseconds
@@ -95,14 +97,13 @@ fun TestRenderer.interpretationArea() = findById(INTERPRETATION_TEXT_AREA_ID)
 
 fun TestRenderer.requireNoInterpretation() = requireInterpretation("")
 
-fun TestRenderer.enterInterpretation(toEnter: String) {
-    findById(INTERPRETATION_TEXT_AREA_ID).props.asDynamic().onChange(
-        object {
-            val target = object {
-                val value = toEnter
-            }
-        }
-    )
+/**
+ * @see <a href="https://kotlinlang.org/docs/js-ir-migration.html#create-plain-js-objects-for-interoperability">Create plain JS objects for interoperability</a>
+ */
+fun TestRenderer.enterInterpretation(text: String) {
+    val jsName = kotlin.js.json("value" to text)
+    val jsEvent = kotlin.js.json("target" to jsName) as ChangeEvent<HTMLTextAreaElement>
+    interpretationArea().props.asDynamic().onChange(jsEvent)
 }
 
 suspend fun waitFor(condition: () -> Boolean) = eventually { condition() shouldBe true }
