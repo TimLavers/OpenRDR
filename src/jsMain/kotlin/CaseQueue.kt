@@ -8,7 +8,7 @@ import web.timers.setInterval
 import kotlin.time.Duration.Companion.seconds
 
 const val NUMBER_OF_CASES_WAITING_ID = "number_of_cases_waiting_value"
-val POLL_PERIOD = 0.5.seconds
+val POLL_PERIOD = 5.seconds
 
 external interface CaseQueueHandler : Handler
 

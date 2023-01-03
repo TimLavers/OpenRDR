@@ -1,5 +1,7 @@
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
+import io.rippledown.kb.ID_KB_INFO_HEADING
+import io.rippledown.kb.KBInfoPane
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mocks.config

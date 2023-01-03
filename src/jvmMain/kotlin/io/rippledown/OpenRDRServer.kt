@@ -1,14 +1,15 @@
 import io.ktor.http.*
+import io.ktor.http.content.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
+import io.ktor.server.http.content.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.callloging.*
 import io.ktor.server.plugins.compression.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.request.*
-import io.ktor.server.http.content.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.rippledown.model.Attribute
@@ -17,9 +18,13 @@ import io.rippledown.model.Interpretation
 import io.rippledown.model.OperationResult
 import io.rippledown.model.condition.Condition
 import io.rippledown.server.ServerApplication
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
+import java.io.BufferedOutputStream
+import java.io.ByteArrayOutputStream
 
 const val WAITING_CASES = "/api/waitingCasesInfo"
 const val CASE = "/api/case"
@@ -29,6 +34,7 @@ const val ADD_CONDITION = "/api/addCondition"
 const val COMMIT_SESSION = "/api/commitSession"
 const val KB_INFO = "/api/kbInfo"
 const val CREATE_KB = "/api/createKB"
+const val IMPORT_KB = "/api/importKB"
 const val SHUTDOWN = "/api/shutdown"
 const val PING = "/api/ping"
 
@@ -117,6 +123,33 @@ fun Application.kbManagement(application: ServerApplication) {
         post(CREATE_KB) {
             application.createKB()
             call.respond(HttpStatusCode.OK, OperationResult("KB created"))
+        }
+        post(IMPORT_KB) {
+            println("---------===============+++++++++++++++++++ IMPORT KB")
+            val multipart = call.receiveMultipart()
+            val allParts = multipart.readAllParts()
+            require(allParts.size == 1) {
+                "Zip import takes a single file."
+            }
+            val part = allParts[0]
+            println("===== import zip multipart part: ${part} ")
+            val partReader = ByteArrayOutputStream()
+            val buffered = BufferedOutputStream(partReader)
+            val fileItem = part as PartData.FileItem
+            println("========== file item: ${fileItem.originalFileName}")
+            println("========== file item: ${fileItem.contentType}")
+            fileItem.streamProvider().use {
+                val copied = it.copyTo(buffered)
+                println("============ bytes copied: $copied")
+                it.close()
+            }
+            withContext(Dispatchers.IO) {
+                buffered.flush()
+            }
+            val bytes = partReader.toByteArray()
+            println("========== import zip bytes length: ${bytes.size}")
+            application.importKBFromZip(bytes)
+            call.respond(HttpStatusCode.OK, OperationResult("KB imported"))
         }
         get(KB_INFO) {
             call.respond(application.kbName())
