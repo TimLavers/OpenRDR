@@ -23,7 +23,9 @@ class DirProxy {
         with(tempDir) {
             if (exists()) {
                 val deleted = deleteRecursively()
-                deleted shouldBe true
+                if (!deleted) {
+                    throw RuntimeException("Could not delete temp dir: ${tempDir.path}. Enter \"tskill -f java\" and try again.")
+                }
             }
             mkdir()
             //sanity checks
