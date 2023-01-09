@@ -1,3 +1,4 @@
+import emotion.react.Global
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -12,6 +13,7 @@ import io.ktor.utils.io.core.*
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import kotlinx.browser.window
+import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
 import org.w3c.xhr.FormData
 import web.file.File
@@ -31,20 +33,21 @@ class Api(engine: HttpClientEngine = Js.create()) {
 
     suspend fun kbInfo() = jsonClient.get("$endpoint/api/kbInfo").body<KBInfo>()
 
-    fun importKBFromZip(file: File): OperationResult {
+    fun importKBFromZip(file: File) {
+            val code: dynamic = js("window.doZipUpload")
+            val zipImportURL = "$endpoint/api/importKB"
+            println("++++++++++++++++ about to call zip import")
+            code(zipImportURL,file)
+            println("++++++++++++++++ zip import done")
+    }
 
-//            uploadZipSelectedFile = file
-        var uploadZipSelectedFile: dynamic = js("window.uploadZipSelectedFile")
-        uploadZipSelectedFile = file
-        val code: dynamic = js("window.doZipUpload2")
-        val zipImportURL = "$endpoint/api/importKB"
-        code(zipImportURL,file)
-//        js(code)
-//        val fd = FormData()
-//        fd.append(file.toString(), file ,file.name)
-//
-//        return jsonClient.submitFormWithBinaryData("$endpoint/api/kbImport", parts).body()
-        return OperationResult("Blah")
+    fun importInProgress(): Boolean {
+        val inProgressFlagRaw = window.asDynamic().uploadZipInProgress.unsafeCast<Any>()
+        console.log("inProgressFlagRaw: $inProgressFlagRaw")
+        if (inProgressFlagRaw == undefined) {
+            return false
+        }
+        return inProgressFlagRaw.unsafeCast<Boolean>()
     }
 
     suspend fun getCase(id: String): ViewableCase = jsonClient.get("$endpoint/api/case?id=$id").body()

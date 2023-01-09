@@ -1,20 +1,38 @@
 package io.rippledown.kb
 
-import js.core.get
-import react.dom.html.ReactHTML.input
+import kotlinx.coroutines.launch
 import mui.material.*
 import react.FC
 import react.dom.html.InputType
-import react.dom.html.ReactHTML.label
+import react.dom.html.ReactHTML.input
 import react.useState
-import web.buffer.Blob
 import web.file.File
-import web.file.FileReader
+import web.timers.Timeout
+import web.timers.clearInterval
+import web.timers.setInterval
 
-val KBImportDialog = FC<KBHandler> {kbHandler ->
+external interface KBImportDialogHandler: KBHandler {
+    var reloadKB: () -> Unit
+}
+
+val KBImportDialog = FC<KBImportDialogHandler> {kbHandler ->
     var isOpen by useState(false)
     var canSubmit by useState(false)
-    var selectedFile by useState<File>()
+    var selectedFile: File? by useState()
+    var timerId: Timeout? = null
+    fun waitForImportToFinish() {
+        timerId = setInterval(   {
+            println("About to check......")
+            val inProgress = kbHandler.api.importInProgress()
+            println("in prog: $inProgress")
+            if (inProgress != null && !inProgress) {
+                kbHandler.reloadKB()
+                println("Handler has donereload")
+                clearInterval(timerId!!)
+                println("Timer has been stopped")
+            }
+        }, 100)
+    }
 
     Button {
         +"Import"
@@ -40,16 +58,15 @@ val KBImportDialog = FC<KBHandler> {kbHandler ->
                 id = "select_zip"
                 name = "select_zip"
                 onChange = {
-                    println("---- on change. Event: ${it.target.files}")
-                    if (it.target.files != null) {
-                        println("++++++++++++++++ ${it.target.files!!.get(0).name}")
-                    }
-                    println("---- on change. Event: ${it.currentTarget.files}")
-                    selectedFile = it.currentTarget.files?.item(0)
-                    println("Selected file: $selectedFile")
-                    if (selectedFile != null && selectedFile!!.name.endsWith("zip")) {
-                        kbHandler.api.importKBFromZip(selectedFile!!)
-                        canSubmit = true
+                    if (it.target.files != null && it.target.files!!.length == 1) {
+                        val sf = it.currentTarget.files!!.item(0)!!
+                        println("sf: $sf")
+
+                        println("Selected file: $selectedFile")
+                        if (sf.name.endsWith("zip")) {
+                            selectedFile = sf
+                            canSubmit = true
+                        }
                     }
                 }
             }
@@ -63,6 +80,12 @@ val KBImportDialog = FC<KBHandler> {kbHandler ->
             Button {
                 onClick = {
                     isOpen = false
+                    println("Selected fiiiiiile: $selectedFile")
+                    kbHandler.api.importKBFromZip(selectedFile!!)
+                    println("Handler has done zip import: $selectedFile")
+                    waitForImportToFinish()
+//                    kbHandler.scope.launch {
+//                    }
                 }
                 +"Import"
                 id = "confirm_zip_import"
@@ -70,4 +93,5 @@ val KBImportDialog = FC<KBHandler> {kbHandler ->
             }
         }
     }
+
 }

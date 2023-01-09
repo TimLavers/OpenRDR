@@ -2,6 +2,7 @@ package io.rippledown.kb
 
 import Handler
 import io.rippledown.model.KBInfo
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mui.material.*
 import mui.material.styles.TypographyVariant
@@ -23,11 +24,13 @@ val KBInfoPane = FC<KBHandler> { handler ->
         }
     }
     Grid {
+        key = kbInfo.name
         container = true
         direction = responsive(GridDirection.row)
         spacing = responsive(2)
         Grid {
             item = true
+            key = kbInfo.name
             Typography {
                 +kbInfo.name
                 id = ID_KB_INFO_HEADING
@@ -41,6 +44,14 @@ val KBInfoPane = FC<KBHandler> { handler ->
             KBImportDialog {
                 api = handler.api
                 scope = handler.scope
+                reloadKB =  {
+                    handler.scope.launch {
+                        println("REloading kb...")
+                        val kbInfoNew = handler.api.kbInfo()
+                        println("REloaded kb...$kbInfoNew")
+                        kbInfo = kbInfoNew
+                    }
+                }
             }
         }
     }
