@@ -51,7 +51,7 @@ class LabProxy(tempDir: File) {
     }
 
     fun copyCase(caseName: String) {
-        FileUtils.copyFileToDirectory(CaseTestUtils.caseFile(caseName), inputDir)
+        FileUtils.copyFileToDirectory(ConfiguredTestData.caseFile(caseName), inputDir)
     }
 
     fun writeNewCaseFile(caseName: String) = CaseTestUtils.writeNewCaseFileToDirectory(caseName, inputDir)

@@ -8,6 +8,7 @@ import io.rippledown.integration.UITestBase
 import io.rippledown.integration.pageobjects.CaseListPO
 import io.rippledown.integration.pageobjects.CaseViewPO
 import io.rippledown.integration.pageobjects.KBInfoPO
+import io.rippledown.integration.proxy.ConfiguredTestData
 import org.openqa.selenium.WebDriver
 import java.util.concurrent.TimeUnit
 
@@ -88,6 +89,12 @@ class Defs : En {
             caseListPO.select("Case3")
         }
 
+        And("I import the configured zipped Knowledge Base {word}") { exported: String ->
+            val kbInfoPO = KBInfoPO(driver)
+            kbInfoPO.importKB(exported)
+            kbInfoPO.waitForKBToBeLoaded(exported)
+        }
+
         Given("case {word} is provided having data:") { caseName: String, dataTable: DataTable ->
             val attributeNameToValue = mutableMapOf<String, String>()
             dataTable.asMap().forEach { (t, u) -> attributeNameToValue[t] = u }
@@ -99,7 +106,7 @@ class Defs : En {
         }
 
         Then("the displayed KB name should be {word}") { kbName: String ->
-            KBInfoPO(driver).headingText() shouldBe "Knowledge Base: $kbName"
+            KBInfoPO(driver).headingText() shouldBe kbName
         }
 
         When("I start the client application") {

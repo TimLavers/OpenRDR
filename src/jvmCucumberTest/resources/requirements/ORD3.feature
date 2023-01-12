@@ -5,4 +5,8 @@ Feature: Knowledge Base management
     Given I start the client application
     Then the displayed KB name should be Thyroids
     And stop the client application
-#  Scenario: Attributes can be re-ordered by drag-and-drop
+  Scenario: A previously exported Knowledge Base can be imported
+    Given I start the client application
+    Then the displayed KB name should be Thyroids
+    And I import the configured zipped Knowledge Base Whatever
+    Then the displayed KB name should be Whatver

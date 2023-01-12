@@ -36,7 +36,6 @@ val KBInfoPane = FC<KBHandler> { handler ->
                 id = ID_KB_INFO_HEADING
                 variant = TypographyVariant.h6
                 align = TypographyAlign.left
-
             }
         }
         Grid {
