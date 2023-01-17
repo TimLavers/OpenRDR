@@ -1,6 +1,5 @@
 package io.rippledown.kb
 
-import kotlinx.coroutines.launch
 import mui.material.*
 import react.FC
 import react.dom.html.InputType
@@ -22,14 +21,10 @@ val KBImportDialog = FC<KBImportDialogHandler> {kbHandler ->
     var timerId: Timeout? = null
     fun waitForImportToFinish() {
         timerId = setInterval(   {
-            println("About to check......")
             val inProgress = kbHandler.api.importInProgress()
-            println("in prog: $inProgress")
-            if (inProgress != null && !inProgress) {
+            if (!inProgress) {
                 kbHandler.reloadKB()
-                println("Handler has donereload")
                 clearInterval(timerId!!)
-                println("Timer has been stopped")
             }
         }, 100)
     }
@@ -60,9 +55,6 @@ val KBImportDialog = FC<KBImportDialogHandler> {kbHandler ->
                 onChange = {
                     if (it.target.files != null && it.target.files!!.length == 1) {
                         val sf = it.currentTarget.files!!.item(0)!!
-                        println("sf: $sf")
-
-                        println("Selected file: $selectedFile")
                         if (sf.name.endsWith("zip")) {
                             selectedFile = sf
                             canSubmit = true
@@ -80,12 +72,8 @@ val KBImportDialog = FC<KBImportDialogHandler> {kbHandler ->
             Button {
                 onClick = {
                     isOpen = false
-                    println("Selected fiiiiiile: $selectedFile")
                     kbHandler.api.importKBFromZip(selectedFile!!)
-                    println("Handler has done zip import: $selectedFile")
                     waitForImportToFinish()
-//                    kbHandler.scope.launch {
-//                    }
                 }
                 +"Import"
                 id = "confirm_zip_import"
@@ -93,5 +81,4 @@ val KBImportDialog = FC<KBImportDialogHandler> {kbHandler ->
             }
         }
     }
-
 }

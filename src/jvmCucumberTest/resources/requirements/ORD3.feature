@@ -9,4 +9,4 @@ Feature: Knowledge Base management
     Given I start the client application
     Then the displayed KB name should be Thyroids
     And I import the configured zipped Knowledge Base Whatever
-    Then the displayed KB name should be Whatver
+    Then the displayed KB name should be Whatever

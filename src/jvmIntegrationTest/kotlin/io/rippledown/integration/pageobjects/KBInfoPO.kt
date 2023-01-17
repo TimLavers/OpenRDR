@@ -14,22 +14,19 @@ class KBInfoPO(private val driver: WebDriver) {
 
     fun kbName(): String? {
         val heading = headingText() ?: return null
-        return heading.split(":")[1].trim()
+        return heading.trim()
     }
 
     fun importKB(exportedFileName: String) {
+        println("importKB: $exportedFileName")
         val zipFile = ConfiguredTestData.kbZipFile(exportedFileName)
+        println("zipFile = ${zipFile.absolutePath}")
         activateImportKB().selectZipAndDoImport(zipFile)
     }
 
     private fun activateImportKB(): KBImportPO {
         val importButton = driver.findElement(By.id("import_from_zip"))
-        println("importButton: $importButton")
-        try {
-            importButton.click()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        importButton.click()
         return KBImportPO(driver)
     }
 
