@@ -12,7 +12,7 @@ class KBInfoPO(private val driver: WebDriver) {
         return headingElement().text!!
     }
 
-    fun kbName(): String? {
+    private fun kbName(): String? {
         val heading = headingText() ?: return null
         return heading.trim()
     }

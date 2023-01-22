@@ -8,7 +8,6 @@ import INTERPRETATION_TEXT_AREA_ID
 import NUMBER_OF_CASES_WAITING_ID
 import POLL_PERIOD
 import SEND_INTERPRETATION_BUTTON_ID
-import dom.html.HTMLTextAreaElement
 import io.kotest.assertions.timing.eventually
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.Dispatchers.Default
@@ -18,21 +17,30 @@ import kotlinx.coroutines.withContext
 import mysticfall.TestInstance
 import mysticfall.TestRenderer
 import react.dom.events.ChangeEvent
+import web.html.HTMLTextAreaElement
 import kotlin.js.Date
 import kotlin.js.JSON.stringify
 import kotlin.time.Duration.Companion.milliseconds
 
+fun TestRenderer.noItemWithIdIsShowing(id: String): Boolean {
+    return itemWithId(id) == undefined
+}
 
 fun TestRenderer.findById(id: String): TestInstance<*> {
-    val testInstance = root.findAll {
-        it.props.asDynamic()["id"] == id
-    }[0]
+    val testInstance = itemWithId(id)
 
     return if (testInstance != undefined) {
         testInstance
     } else {
         throw Error("Instance with id \"$id\" not found")
     }
+}
+
+private fun TestRenderer.itemWithId(id: String): TestInstance<*> {
+    val testInstance = root.findAll {
+        it.props.asDynamic()["id"] == id
+    }[0]
+    return testInstance
 }
 
 suspend fun TestRenderer.waitForItemToHaveText( itemId: String, expectedText: String) {

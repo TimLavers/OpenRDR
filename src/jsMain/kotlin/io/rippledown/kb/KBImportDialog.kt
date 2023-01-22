@@ -2,10 +2,10 @@ package io.rippledown.kb
 
 import mui.material.*
 import react.FC
-import react.dom.html.InputType
 import react.dom.html.ReactHTML.input
 import react.useState
 import web.file.File
+import web.html.InputType
 import web.timers.Timeout
 import web.timers.clearInterval
 import web.timers.setInterval
@@ -39,11 +39,13 @@ val KBImportDialog = FC<KBImportDialogHandler> {kbHandler ->
         }
     }
     Dialog {
+        id = "kb_import_dialog"
         open = isOpen
         DialogTitle {
             +"Import KB from zip file"
         }
         DialogContent {
+            id = "import_kb_dialog_content"
             DialogContentText {
                 +"Select a zip file containing an exported Open RippleDown KB"
             }

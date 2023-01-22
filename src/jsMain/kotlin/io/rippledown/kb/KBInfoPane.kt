@@ -45,10 +45,7 @@ val KBInfoPane = FC<KBHandler> { handler ->
                 scope = handler.scope
                 reloadKB =  {
                     handler.scope.launch {
-                        println("REloading kb...")
-                        val kbInfoNew = handler.api.kbInfo()
-                        println("REloaded kb...$kbInfoNew")
-                        kbInfo = kbInfoNew
+                        kbInfo = handler.api.kbInfo()
                     }
                 }
             }
