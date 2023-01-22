@@ -8,9 +8,10 @@ import mui.lab.TreeView
 import mui.material.TextField
 import mui.material.TextFieldProps
 import proxy.findById
+import proxy.printJSON
 import react.*
 import react.dom.html.ReactHTML.div
-import kotlin.test.Ignore
+import react.dom.html.ReactHTML.p
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -21,27 +22,29 @@ class MaterialDesignIgnoredTest : ReactTestSupport {
     @Test
     fun shouldRenderMuiTreeView() {
         val ComponentWithTreeView = FC<Props> {
-            div {
-                TreeView {
-                    TreeItem {
-                        id = "id_1"
-                        label = "label_1".unsafeCast<ReactNode>()
+            TreeView {
+
+                TreeItem {
+                    nodeId = "id_1"
+                    label = createElement(p, jso {
+                        title = "label 1"
                     }
-                    TreeItem {
-                        id = "id_2"
-                        label = "label_2".unsafeCast<ReactNode>()
-                    }
+                    )
+
                 }
             }
         }
         val renderer = render {
-            div {
-                ComponentWithTreeView {
-                }
+            ComponentWithTreeView {
             }
         }
-        val found = renderer.findById("id_2")
-        found.props.asDynamic().label.unsafeCast<String>() shouldBe "label_2"
+        renderer.printJSON()
+        val instances = renderer.root.findAllByType(TreeItem)
+
+        instances.map {
+            it.props.nodeId
+        } shouldBe listOf("id_1")
+
     }
 
     class ComponentWithTextField : Component<Props, State>() {

@@ -4,6 +4,7 @@ import csstype.ClassName
 import org.w3c.dom.Element
 import react.*
 import react.dom.html.ReactHTML.div
+import web.html.HTMLDivElement
 import kotlin.js.JSON.stringify
 import kotlin.js.json
 import kotlin.test.Test
@@ -124,7 +125,7 @@ class TestRendererTest : ReactTestSupport {
 
             div {
                 className = ClassName("test-component")
-                ref = elem.unsafeCast<Ref<dom.html.HTMLDivElement>>()
+                ref = elem.unsafeCast<Ref<HTMLDivElement>>()
 
                 +name
             }

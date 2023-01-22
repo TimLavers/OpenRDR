@@ -3,11 +3,14 @@ import io.rippledown.model.Interpretation
 import io.rippledown.model.rule.RuleSummary
 import kotlinx.browser.document
 import kotlinx.coroutines.MainScope
+import mui.icons.material.ExpandMore
+import mui.lab.MuiTreeView
 import mui.lab.TreeItem
+import mui.lab.TreeItemProps
 import mui.lab.TreeView
-import react.FC
-import react.ReactNode
-import react.create
+import mui.material.Button
+import mui.material.ListItemText
+import react.*
 import react.dom.client.createRoot
 
 external interface ConclusionsViewHandler : Handler {
@@ -29,26 +32,14 @@ val ConclusionsView = FC<ConclusionsViewHandler> { handler ->
                 TreeItem {
                     label = "Condition 2 for ${conclusion.text}".unsafeCast<ReactNode>()
                     nodeId = "${conclusion.text}.2"
+                    label = ListItemText.create{
+                        +"condition 2"
+                    }
+                }*/
                 }
             }
         }
-    }
 }
 
 
-fun main() {
-    document.getElementById("root")?.let { container ->
-        val text = "Go to Bondi now!"
-        val interpretation = Interpretation().apply {
-            (1..10).forEach {
-                add(RuleSummary(conclusion = Conclusion("$it $text")))
-            }
-        }
-        val ui = ConclusionsView.create {
-            api = Api()
-            scope = MainScope()
-            this.interpretation = interpretation
-        }
-        createRoot(container.unsafeCast<dom.Element>()).render(ui)
-    }
-}
+

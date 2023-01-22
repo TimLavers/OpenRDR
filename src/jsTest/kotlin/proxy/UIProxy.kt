@@ -8,7 +8,6 @@ import INTERPRETATION_TEXT_AREA_ID
 import NUMBER_OF_CASES_WAITING_ID
 import POLL_PERIOD
 import SEND_INTERPRETATION_BUTTON_ID
-import dom.html.HTMLTextAreaElement
 import io.kotest.assertions.timing.eventually
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.Dispatchers.Default
@@ -18,6 +17,7 @@ import kotlinx.coroutines.withContext
 import mysticfall.TestInstance
 import mysticfall.TestRenderer
 import react.dom.events.ChangeEvent
+import web.html.HTMLTextAreaElement
 import kotlin.js.Date
 import kotlin.js.JSON.stringify
 import kotlin.time.Duration.Companion.milliseconds

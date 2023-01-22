@@ -7,7 +7,7 @@ val kotlinxDateTimeVersion = "0.4.0"
 val kotlinxCoroutinesTestVersion = "1.6.4"
 val ktor_version = "2.2.1"
 val logbackVersion = "1.4.5"
-val reactVersion = "18.2.0-pre.465"
+val reactVersion = "18.2.0-pre.479"
 val reactEmotionVersion = "11.10.5-pre.465"
 val reactMuiVersion = "5.9.1-pre.465"
 val reactMuiIconVersion = "5.10.9-pre.465"
@@ -121,6 +121,11 @@ kotlin {
 
     js(IR) {
         browser {
+            testTask {
+                useKarma {
+                    useChrome()
+                }
+            }
             binaries.executable()
         }
     }
@@ -185,6 +190,7 @@ kotlin {
         val jsTest by getting {
             dependencies {
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-extensions:$kotlinExtensionsVersion")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom-test-utils:$reactVersion")
                 implementation("io.ktor:ktor-client-mock:$ktor_version")
 
                 implementation(kotlin("test-js"))
@@ -195,6 +201,7 @@ kotlin {
                 implementation("io.kotest:kotest-framework-api-js:$kotestVersion")
                 implementation("io.kotest:kotest-framework-engine-js:$kotestVersion")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinxCoroutinesTestVersion")
+
 
             }
         }

@@ -2,12 +2,16 @@ package mysticfall
 
 import io.kotest.matchers.shouldBe
 import mui.base.TextareaAutosize
+import mui.lab.TreeItem
+import mui.lab.TreeView
+import mui.lab.TreeViewProps
 import mui.material.Button
 import mui.material.TextField
 import mui.material.Typography
 import mui.material.styles.TypographyVariant
 import proxy.findById
-import react.FC
+import proxy.printJSON
+import react.*
 import react.dom.html.ReactHTML.div
 import kotlin.test.Ignore
 import kotlin.test.Test
@@ -84,7 +88,7 @@ class MaterialDesignTest : ReactTestSupport {
     @Test
     @Ignore
     fun shouldRenderMuiMultilineTextField() {
-        val ComponentWithTextField = FC<TestProps> { props ->
+        val ComponentWithTextField = FC<TestProps> { _ ->
             div {
                 TextField {
                     defaultValue = "Some text to show"
