@@ -8,10 +8,7 @@ val kotlinxCoroutinesTestVersion = "1.6.4"
 val ktor_version = "2.2.1"
 val logbackVersion = "1.4.5"
 val reactVersion = "18.2.0-pre.479"
-val reactEmotionVersion = "11.10.5-pre.465"
-val reactMuiVersion = "5.9.1-pre.465"
-val reactMuiIconVersion = "5.10.9-pre.465"
-val kotlinExtensionsVersion = "1.0.1-pre.465"
+val kotlinWrappersVersion = "1.0.0-pre.484"
 val testingLibraryReactVersion = "13.4.0"
 val reactTestRendererVersion = "18.2.0"
 val kotestVersion = "5.5.4"
@@ -121,11 +118,6 @@ kotlin {
 
     js(IR) {
         browser {
-            testTask {
-                useKarma {
-                    useChrome()
-                }
-            }
             binaries.executable()
         }
     }
@@ -180,17 +172,20 @@ kotlin {
                 implementation("io.ktor:ktor-client-js:$ktor_version")
                 implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
                 implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
-                implementation("org.jetbrains.kotlin-wrappers:kotlin-react:$reactVersion")
-                implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom:$reactVersion")
-                implementation("org.jetbrains.kotlin-wrappers:kotlin-emotion:$reactEmotionVersion")
-                implementation("org.jetbrains.kotlin-wrappers:kotlin-mui:$reactMuiVersion")
-                implementation("org.jetbrains.kotlin-wrappers:kotlin-mui-icons:$reactMuiIconVersion")
+                implementation(enforcedPlatform("org.jetbrains.kotlin-wrappers:kotlin-wrappers-bom:$kotlinWrappersVersion"))
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-react")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-emotion")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-mui")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-mui-icons")
             }
         }
         val jsTest by getting {
             dependencies {
-                implementation("org.jetbrains.kotlin-wrappers:kotlin-extensions:$kotlinExtensionsVersion")
-                implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom-test-utils:$reactVersion")
+                implementation(enforcedPlatform("org.jetbrains.kotlin-wrappers:kotlin-wrappers-bom:$kotlinWrappersVersion"))
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom-test-utils")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-extensions")
+
                 implementation("io.ktor:ktor-client-mock:$ktor_version")
 
                 implementation(kotlin("test-js"))
@@ -201,8 +196,6 @@ kotlin {
                 implementation("io.kotest:kotest-framework-api-js:$kotestVersion")
                 implementation("io.kotest:kotest-framework-engine-js:$kotestVersion")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinxCoroutinesTestVersion")
-
-
             }
         }
     }

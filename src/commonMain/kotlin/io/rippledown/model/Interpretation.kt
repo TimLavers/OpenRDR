@@ -28,8 +28,15 @@ data class Interpretation(val caseId: CaseId = CaseId(), val text: String = "") 
         return ruleSummaries.mapNotNull { it.conclusion }.toSet()
     }
 
+    fun conditionsForConclusion(conclusion: Conclusion): List<String> {
+        return ruleSummaries.filter { ruleSummary -> conclusion == ruleSummary.conclusion }
+            .flatMap { conclusion -> conclusion.conditions }
+            .map { condition -> condition.asText() }
+            .sortedWith(String.CASE_INSENSITIVE_ORDER)
+    }
+
     fun idsOfRulesGivingConclusion(conclusion: Conclusion): Set<String> {
-        return ruleSummaries.filter {  conclusion == it.conclusion }.map { it.id }.toSet()
+        return ruleSummaries.filter { conclusion == it.conclusion }.map { it.id }.toSet()
     }
 
     fun ruleSummaries(): Set<RuleSummary> {
