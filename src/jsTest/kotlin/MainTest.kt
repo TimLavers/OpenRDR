@@ -49,6 +49,4 @@ class MainTest : ReactTestSupport {
         waitForNextPoll()
         renderer.requireNumberOfCasesWaiting(3)
     }
-
-
 }

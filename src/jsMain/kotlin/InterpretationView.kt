@@ -44,7 +44,10 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
                 QuestionMark {
                 }
                 onClick = {
-                    println("clicked")
+                    debug("clicked icon button for interp ${handler.interpretation.caseId}")
+                    ConclusionsDialog {
+                        interpretation = handler.interpretation
+                    }
                 }
             }
         }

@@ -29,9 +29,8 @@ data class Interpretation(val caseId: CaseId = CaseId(), val text: String = "") 
     }
 
     fun conditionsForConclusion(conclusion: Conclusion): List<String> {
-        return ruleSummaries.filter { ruleSummary -> conclusion == ruleSummary.conclusion }
-            .flatMap { conclusion -> conclusion.conditions }
-            .map { condition -> condition.asText() }
+        return ruleSummaries.first { ruleSummary -> conclusion == ruleSummary.conclusion }
+            .conditions.map { condition -> condition.asText() }
             .sortedWith(String.CASE_INSENSITIVE_ORDER)
     }
 

@@ -32,6 +32,7 @@ repositories {
     mavenCentral()
 }
 kotlin {
+    jvmToolchain(17)
     jvm {
         compilations {
             val integrationTest by compilations.creating {
