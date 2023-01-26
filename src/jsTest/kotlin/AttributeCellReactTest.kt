@@ -1,21 +1,16 @@
-import js.core.get
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import io.rippledown.model.Attribute
-import kotlinext.js.asJsObject
+import js.core.get
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import mysticfall.ReactTestSupport
-import proxy.printJSON
+import kotlinx.coroutines.test.TestResult
 import react.VFC
-import react.dom.html.ReactHTML
 import react.dom.test.runReactTest
 import kotlin.test.Test
-import kotlinx.coroutines.test.TestResult
 
 class AttributeCellReactTest {
-    val tsh = Attribute("TSH")
+    private val tsh = Attribute("TSH")
 
-    val ACWrapper = VFC {
+    private val wrapper = VFC {
         AttributeCell {
             attribute = tsh
         }
@@ -23,7 +18,7 @@ class AttributeCellReactTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun initial(): TestResult = runReactTest(ACWrapper) { container ->
+    fun initial(): TestResult = runReactTest(wrapper) { container ->
         val element = container.getElementsByTagName("td")[0]
         element.id shouldBe attributeCellId(tsh)
         element.textContent shouldBe tsh.name

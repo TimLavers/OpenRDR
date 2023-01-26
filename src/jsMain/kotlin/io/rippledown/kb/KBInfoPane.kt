@@ -1,25 +1,29 @@
 package io.rippledown.kb
 
-import Handler
+import Api
 import io.rippledown.model.KBInfo
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import mui.material.*
 import mui.material.styles.TypographyVariant
 import mui.system.responsive
 import react.FC
+import react.Props
 import react.useEffectOnce
 import react.useState
 
-external interface KBHandler : Handler
+external interface KBHandler: Props {
+    var api: Api
+}
 
 const val ID_KB_INFO_HEADING = "kb_info_heading"
+val mainScope = MainScope()
 
 val KBInfoPane = FC<KBHandler> { handler ->
     var kbInfo by useState(KBInfo(""))
 
     useEffectOnce {
-        handler.scope.launch {
+        mainScope.launch {
             kbInfo = handler.api.kbInfo()
         }
     }
@@ -42,9 +46,8 @@ val KBInfoPane = FC<KBHandler> { handler ->
             item = true
             KBImportDialog {
                 api = handler.api
-                scope = handler.scope
                 reloadKB =  {
-                    handler.scope.launch {
+                    mainScope.launch {
                         kbInfo = handler.api.kbInfo()
                     }
                 }

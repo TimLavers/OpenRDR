@@ -27,7 +27,6 @@ val OpenRDRUI = FC<Handler> { handler ->
             id = "main_heading"
         }
         KBInfoPane{
-            scope = handler.scope
             api = handler.api
         }
         CaseQueue {
