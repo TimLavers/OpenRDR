@@ -1,6 +1,8 @@
 import io.rippledown.model.Interpretation
+import mui.icons.material.QuestionMark
 import mui.material.*
 import react.FC
+import react.ReactNode
 import react.useState
 
 external interface ConclusionsDialogHandler : Handler {
@@ -8,25 +10,38 @@ external interface ConclusionsDialogHandler : Handler {
 }
 
 val ConclusionsDialog = FC<ConclusionsDialogHandler> { handler ->
-    var isOpen by useState(true)
-
+    var isShowingConclusions by useState(false)
+    Tooltip {
+        title = "Why is this report given?".unsafeCast<ReactNode>()
+        IconButton {
+            QuestionMark {
+            }
+            id = "conclusions_dialog_open"
+            onClick = {
+                isShowingConclusions = true
+            }
+        }
+    }
     Dialog {
         id = "conclusions_dialog"
-        open = isOpen
+        open = isShowingConclusions
         DialogTitle {
             +"Comments and conditions"
         }
         DialogContent {
             id = "conclusions_dialog_content"
             DialogContentText {
-                +"Click a comment to see the conditions"
+                +"Click a comment to see why it is part of this report."
+            }
+            ConclusionsView {
+                interpretation = handler.interpretation
             }
         }
         DialogActions {
             Button {
-                onClick = { isOpen = false }
+                onClick = { isShowingConclusions = false }
                 +"Close"
-                id = "close_conclusions_dialog"
+                id = "conclusions_dialog_close"
             }
         }
     }
