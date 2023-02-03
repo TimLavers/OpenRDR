@@ -8,7 +8,6 @@ import kotlinx.coroutines.test.runTest
 import mui.lab.TreeItem
 import mui.lab.TreeView
 import react.*
-import react.dom.test.checkContainer
 import kotlin.test.Test
 
 class TreeViewTest {

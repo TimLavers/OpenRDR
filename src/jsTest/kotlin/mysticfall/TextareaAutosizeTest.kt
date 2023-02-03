@@ -6,7 +6,6 @@ import kotlinx.coroutines.test.runTest
 import mui.base.TextareaAutosize
 import proxy.findById
 import react.*
-import react.dom.test.checkContainer
 import kotlin.test.Test
 
 class TextareaAutosizeTest {

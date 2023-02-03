@@ -1,7 +1,9 @@
-package react.dom.test
+package mysticfall
 
 import js.core.globalThis
 import react.VFC
+import react.dom.test.createRoot
+import react.dom.test.unmount
 import web.dom.document
 import web.html.HTML.div
 import web.html.HTMLElement

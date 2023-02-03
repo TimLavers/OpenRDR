@@ -6,7 +6,6 @@ import kotlinx.coroutines.test.runTest
 import mui.material.TextField
 import proxy.findById
 import react.*
-import react.dom.test.checkContainer
 import kotlin.test.Test
 
 

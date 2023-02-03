@@ -4,8 +4,8 @@ import js.core.get
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
+import mysticfall.checkContainer
 import react.VFC
-import react.dom.test.checkContainer
 import kotlin.test.Test
 
 class AttributeCellReactTest {

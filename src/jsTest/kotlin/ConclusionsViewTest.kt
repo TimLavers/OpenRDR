@@ -7,8 +7,8 @@ import io.rippledown.model.rule.RuleSummary
 import js.core.get
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import mysticfall.checkContainer
 import react.VFC
-import react.dom.test.checkContainer
 import kotlin.test.Test
 
 

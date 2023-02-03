@@ -6,9 +6,9 @@ import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
 import mysticfall.ReactTestSupport
+import mysticfall.checkContainer
 import proxy.*
 import react.VFC
-import react.dom.test.checkContainer
 import kotlin.test.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
