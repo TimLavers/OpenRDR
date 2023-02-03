@@ -18,8 +18,8 @@ interface ReactTestSupport {
         options: TestRendererOptions? = null,
         block: ChildrenBuilder.() -> Unit
     ): TestRenderer {
-        val componentType = FC<Props> { block() }
-        return TestRendererGlobal.create(componentType.create(), options).unsafeCast<TestRenderer>()
+        val vfc = VFC { block() }
+        return TestRendererGlobal.create(vfc.create(), options).unsafeCast<TestRenderer>()
     }
 
     fun render(

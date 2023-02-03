@@ -1,12 +1,12 @@
 package mysticfall
 
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
-import js.core.get
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mui.base.TextareaAutosize
+import proxy.findById
 import react.*
-import react.dom.test.runReactTest
+import react.dom.test.checkContainer
 import kotlin.test.Test
 
 class TextareaAutosizeTest {
@@ -20,10 +20,11 @@ class TextareaAutosizeTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun shouldAssignIdsAndLabels() = runReactTest(Wrapper) { container ->
-        val byId = container.querySelectorAll("[id*='id_1']")[0]
-        byId.id shouldContain "id_1"
-        byId.textContent shouldBe "go to Bondi Beach"
+    fun shouldAssignIdsAndLabels() = runTest {
+        checkContainer(Wrapper) { container ->
+            val byId = container.findById("id_1")
+            byId.textContent shouldBe "go to Bondi Beach"
+        }
     }
 }
 

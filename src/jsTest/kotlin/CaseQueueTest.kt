@@ -1,6 +1,5 @@
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
-import io.rippledown.model.RDRCase
 import kotlinx.coroutines.*
 import kotlinx.coroutines.test.runTest
 import mocks.config

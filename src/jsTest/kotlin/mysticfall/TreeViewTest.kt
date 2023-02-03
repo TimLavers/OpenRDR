@@ -4,10 +4,11 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import js.core.get
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mui.lab.TreeItem
 import mui.lab.TreeView
 import react.*
-import react.dom.test.runReactTest
+import react.dom.test.checkContainer
 import kotlin.test.Test
 
 class TreeViewTest {
@@ -27,13 +28,15 @@ class TreeViewTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun shouldAssignIdsAndLabels() = runReactTest(TreeViewWrapper) { container ->
-        val elements = container.getElementsByClassName("MuiTreeItem-root")
-        elements.length shouldBe 2
-        elements[0].id shouldContain "id_1"
-        elements[0].textContent shouldBe "label_1"
-        elements[1].id shouldContain "id_2"
-        elements[1].textContent shouldBe "label_2"
+    fun shouldAssignIdsAndLabelsUsingRunTest() = runTest {
+        checkContainer(TreeViewWrapper) { container ->
+            val elements = container.getElementsByClassName("MuiTreeItem-root")
+            elements.length shouldBe 2
+            elements[0].id shouldContain "id_1"
+            elements[0].textContent shouldBe "label_1"
+            elements[1].id shouldContain "id_2"
+            elements[1].textContent shouldBe "label_2"
+        }
     }
 }
 

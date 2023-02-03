@@ -1,4 +1,4 @@
-#@single
+@single
 Feature: Show a list of cases
 
   @single
