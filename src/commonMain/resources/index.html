@@ -23,6 +23,15 @@
             window.uploadZipInProgress = false;
         })
     }
+
+    window.saveZip = function(data) {
+        console.log('save zip, data: ', data)
+        var url = window.URL.createObjectURL(data),
+            anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = saveas;
+        anchor.click();
+    }
 </script>
 </body>
 </html>

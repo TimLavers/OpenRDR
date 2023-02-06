@@ -15,6 +15,7 @@ import io.rippledown.model.caseview.ViewableCase
 import kotlinx.browser.window
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
+import org.w3c.files.Blob
 import org.w3c.xhr.FormData
 import web.file.File
 
@@ -39,6 +40,26 @@ class Api(engine: HttpClientEngine = Js.create()) {
             println("++++++++++++++++ about to call zip import")
             code(zipImportURL,file)
             println("++++++++++++++++ zip import done")
+    }
+
+    fun exportURL(): String {
+        return "$endpoint/api/exportKB"
+    }
+
+    suspend fun exportKBToZip() {
+            println("++++++++++++++++ about to call zip export")
+        val response = jsonClient.get("$endpoint/api/exportKB")
+        console.log("got response: ", response)
+        console.log("got heraders: ", response.headers)
+        console.log("got cont-disp: ", response.headers["Content-Disposition"])
+        console.log("got cont-type: ", response.headers["Content-Type"])
+//        val file = jsonClient.get("$endpoint/api/exportKB").body<File>()
+//            println("++++++++++++++++ zip export done, got bytes, length: ${file.size}")
+//        console.log("blob: ${file.size}")
+//        println("blob: ${file.size}")
+//        val code: dynamic = js("window.saveZip")
+//        code(file)
+        console.log("blobbbing done")
     }
 
     fun importInProgress(): Boolean {

@@ -14,8 +14,10 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.apache.commons.io.FileUtils
+import org.apache.commons.io.FileUtils.writeByteArrayToFile
 import java.io.File
 import java.nio.charset.StandardCharsets.UTF_8
+import java.nio.file.attribute.FileAttribute
 import java.time.LocalDateTime
 import kotlin.io.path.createTempDirectory
 
@@ -32,10 +34,13 @@ class ServerApplication {
         return KBInfo(kb.name)
     }
 
-    fun exportKBToZip(): ByteArray {
+    fun exportKBToZip(): File {
         val tempDir: File = createTempDirectory().toFile()
         KBExporter(tempDir, kb).export()
-        return Zipper(tempDir).zip()
+        val bytes = Zipper(tempDir).zip()
+        val file = File(tempDir, "${kb.name}.zip")
+        file.writeBytes(bytes)
+        return file
     }
 
     fun importKBFromZip(zipBytes: ByteArray) {

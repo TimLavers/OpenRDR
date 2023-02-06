@@ -53,5 +53,11 @@ val KBInfoPane = FC<KBHandler> { handler ->
                 }
             }
         }
+        Grid {
+            item = true
+            KBExportDialog {
+                api = handler.api
+            }
+        }
     }
 }

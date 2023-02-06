@@ -35,6 +35,7 @@ const val COMMIT_SESSION = "/api/commitSession"
 const val KB_INFO = "/api/kbInfo"
 const val CREATE_KB = "/api/createKB"
 const val IMPORT_KB = "/api/importKB"
+const val EXPORT_KB = "/api/exportKB"
 const val SHUTDOWN = "/api/shutdown"
 const val PING = "/api/ping"
 
@@ -125,31 +126,37 @@ fun Application.kbManagement(application: ServerApplication) {
             call.respond(HttpStatusCode.OK, OperationResult("KB created"))
         }
         post(IMPORT_KB) {
-            println("---------===============+++++++++++++++++++ IMPORT KB")
             val multipart = call.receiveMultipart()
             val allParts = multipart.readAllParts()
             require(allParts.size == 1) {
                 "Zip import takes a single file."
             }
             val part = allParts[0]
-            println("===== import zip multipart part: ${part} ")
             val partReader = ByteArrayOutputStream()
             val buffered = BufferedOutputStream(partReader)
             val fileItem = part as PartData.FileItem
-            println("========== file item: ${fileItem.originalFileName}")
-            println("========== file item: ${fileItem.contentType}")
             fileItem.streamProvider().use {
-                val copied = it.copyTo(buffered)
-                println("============ bytes copied: $copied")
+                it.copyTo(buffered)
                 it.close()
             }
             withContext(Dispatchers.IO) {
                 buffered.flush()
             }
             val bytes = partReader.toByteArray()
-            println("========== import zip bytes length: ${bytes.size}")
             application.importKBFromZip(bytes)
             call.respond(HttpStatusCode.OK, OperationResult("KB imported"))
+        }
+        get(EXPORT_KB) {
+            println("zip export.....")
+            val file = application.exportKBToZip()
+            println("got zip file, length: ${file.length()}")
+//            call.respondFile(file)
+            call.response.header(
+                HttpHeaders.ContentDisposition, ContentDisposition.Attachment.withParameter(
+                ContentDisposition.Parameters.FileName, "kb.zip"
+            ).toString())
+            call.respondFile(file)
+            println("zip response done")
         }
         get(KB_INFO) {
             call.respond(application.kbName())
