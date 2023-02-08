@@ -9,7 +9,10 @@ import io.rippledown.integration.pageobjects.CaseListPO
 import io.rippledown.integration.pageobjects.CaseViewPO
 import io.rippledown.integration.pageobjects.KBInfoPO
 import io.rippledown.integration.proxy.ConfiguredTestData
+import org.awaitility.Awaitility
 import org.openqa.selenium.WebDriver
+import java.io.File
+import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 class Defs : En {
@@ -89,10 +92,28 @@ class Defs : En {
             caseListPO.select("Case3")
         }
 
-        And("I import the configured zipped Knowledge Base {word}") { exported: String ->
+        Given("I import the configured zipped Knowledge Base {word}") { exported: String ->
             val kbInfoPO = KBInfoPO(driver)
             kbInfoPO.importKB(exported)
             kbInfoPO.waitForKBToBeLoaded(exported)
+        }
+
+        And("I export the current Knowledge Base") {
+            val kbInfoPO = KBInfoPO(driver)
+            kbInfoPO.exportKB()
+        }
+
+        Then("there is a file called Thyroids.zip in my downloads directory") {
+            Awaitility.await().atMost(Duration.ofSeconds(5)).until {
+                File(uiTestBase.downloadsDir(), "Thyroids.zip").exists()
+            }
+        }
+
+        Given("I import the exported Knowledge Base {word}") { kbName: String ->
+            val exportedZip = File(uiTestBase.downloadsDir(), "$kbName.zip")
+            val kbInfoPO = KBInfoPO(driver)
+            kbInfoPO.importFromZip(exportedZip)
+            kbInfoPO.waitForKBToBeLoaded(kbName)
         }
 
         Given("case {word} is provided having data:") { caseName: String, dataTable: DataTable ->

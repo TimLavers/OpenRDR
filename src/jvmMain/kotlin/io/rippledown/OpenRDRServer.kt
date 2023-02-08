@@ -147,16 +147,13 @@ fun Application.kbManagement(application: ServerApplication) {
             call.respond(HttpStatusCode.OK, OperationResult("KB imported"))
         }
         get(EXPORT_KB) {
-            println("zip export.....")
             val file = application.exportKBToZip()
-            println("got zip file, length: ${file.length()}")
-//            call.respondFile(file)
+            val kbName = application.kbName().name
             call.response.header(
                 HttpHeaders.ContentDisposition, ContentDisposition.Attachment.withParameter(
-                ContentDisposition.Parameters.FileName, "kb.zip"
+                ContentDisposition.Parameters.FileName, "$kbName.zip"
             ).toString())
             call.respondFile(file)
-            println("zip response done")
         }
         get(KB_INFO) {
             call.respond(application.kbName())

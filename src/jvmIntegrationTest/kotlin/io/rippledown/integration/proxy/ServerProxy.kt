@@ -18,12 +18,12 @@ class ServerProxy {
 
     init {
         systemOutputFile = File(dirProxy.tempDir(), "output.txt").apply { createNewFile() }
-        dirProxy.createAndCleanTempDir()
+        dirProxy.createAndCleanManagedDirectories()
     }
 
     fun start() {
         findJar()
-        dirProxy.createAndCleanTempDir()
+        dirProxy.createAndCleanManagedDirectories()
         logProxy.deleteLogfiles()
         process = ProcessBuilder("java", "-jar", jarFile.absolutePath)
             .redirectErrorStream(true)

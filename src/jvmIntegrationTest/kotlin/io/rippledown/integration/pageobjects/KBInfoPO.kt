@@ -4,6 +4,7 @@ import io.rippledown.integration.proxy.ConfiguredTestData
 import org.awaitility.Awaitility
 import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver
+import java.io.File
 import java.util.concurrent.TimeUnit
 
 class KBInfoPO(private val driver: WebDriver) {
@@ -18,10 +19,18 @@ class KBInfoPO(private val driver: WebDriver) {
     }
 
     fun importKB(exportedFileName: String) {
-        println("importKB: $exportedFileName")
         val zipFile = ConfiguredTestData.kbZipFile(exportedFileName)
-        println("zipFile = ${zipFile.absolutePath}")
+        importFromZip(zipFile)
+    }
+
+    fun importFromZip(zipFile: File) {
         activateImportKB().selectZipAndDoImport(zipFile)
+    }
+
+    fun exportKB() {
+        val exportButton = driver.findElement(By.id("export_to_zip"))
+        exportButton.click()
+        KBExportPO(driver).doExport()
     }
 
     private fun activateImportKB(): KBImportPO {

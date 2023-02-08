@@ -196,6 +196,7 @@ internal class ServerApplicationTest {
 
         // Get the exported KB.
         val exported = app.exportKBToZip()
+        exported.name shouldBe "${app.kb.name}.zip"
 
         // Clear the KB
         app.createKB()
@@ -203,7 +204,7 @@ internal class ServerApplicationTest {
         app.kb.ruleTree.size() shouldBe 1
 
         // Import the exported KB.
-        app.importKBFromZip(exported)
+        app.importKBFromZip(exported.readBytes())
         app.kb.allCases().size shouldBe 1
         app.kb.ruleTree.size() shouldBe 2
         app.case(id).interpretation.textGivenByRules() shouldBe conclusion1.text
