@@ -31,9 +31,13 @@ class KBInfoPaneTest  {
         headingById.textContent shouldBe "Glucose"
 
         val allButtons = container.getElementsByTagName(button)
-        allButtons.length shouldBe 1
+        allButtons.length shouldBe 2
         val importButton = allButtons[0]
         importButton.textContent shouldBe "Import"
         importButton.disabled shouldBe false
+
+        val exportButton = allButtons[1]
+        exportButton.textContent shouldBe "Export"
+        exportButton.disabled shouldBe false
     }
 }
