@@ -30,16 +30,16 @@ val KBExportDialog = FC<KBHandler> { kbHandler ->
         }
         DialogActions {
             Button {
-                onClick = { isOpen = false }
                 +"Cancel"
                 id = "cancel_zip_export"
+                onClick = { isOpen = false }
             }
             Link {
                 + "Export"
+                id = "confirm_zip_export"
                 component = Button
                 underline = LinkUnderline.none
                 href = kbHandler.api.exportURL()
-                id = "confirm_zip_export"
                 onClick = { isOpen = false }
             }
         }
