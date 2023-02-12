@@ -8,11 +8,7 @@ val kotlinxCoroutinesTestVersion = "1.6.4"
 val ktor_version = "2.2.1"
 val logbackVersion = "1.4.5"
 val reactVersion = "18.2.0-pre.479"
-val kotlinWrappersVersion = "1.0.0-pre.479"
-val reactEmotionVersion = "11.10.5-pre.465"
-val reactMuiVersion = "5.9.1-pre.479"
-val reactMuiIconVersion = "5.10.9-pre.479"
-val kotlinExtensionsVersion = "1.0.1-pre.479"
+val kotlinWrappersVersion = "1.0.0-pre.484"
 val testingLibraryReactVersion = "13.4.0"
 val reactTestRendererVersion = "18.2.0"
 val kotestVersion = "5.5.4"
@@ -36,6 +32,7 @@ repositories {
     mavenCentral()
 }
 kotlin {
+    jvmToolchain(17)
     jvm {
         compilations {
             val integrationTest by compilations.creating {
@@ -187,8 +184,8 @@ kotlin {
         val jsTest by getting {
             dependencies {
                 implementation(enforcedPlatform("org.jetbrains.kotlin-wrappers:kotlin-wrappers-bom:$kotlinWrappersVersion"))
-                implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom-test-utils:$kotlinWrappersVersion")
-                implementation("org.jetbrains.kotlin-wrappers:kotlin-extensions:$kotlinWrappersVersion")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom-test-utils")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-extensions")
 
                 implementation("io.ktor:ktor-client-mock:$ktor_version")
 

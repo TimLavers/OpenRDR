@@ -1,8 +1,8 @@
-import kotlinx.browser.document
 import kotlinx.coroutines.MainScope
 import react.create
 import react.dom.client.createRoot
 import web.dom.Element
+import web.dom.document
 
 fun main() {
     document.getElementById("root")?.let { container ->

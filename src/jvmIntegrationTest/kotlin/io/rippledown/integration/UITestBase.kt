@@ -50,6 +50,7 @@ open class UITestBase {
             driver.switchTo().window(it)
             driver.close()
         }
+        driver.quit()
     }
 
     fun resetKB() {

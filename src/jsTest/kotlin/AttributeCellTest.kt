@@ -1,9 +1,6 @@
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import io.rippledown.model.Attribute
-import kotlinext.js.asJsObject
 import mysticfall.ReactTestSupport
-import proxy.printJSON
 import react.dom.html.ReactHTML
 import kotlin.test.Test
 

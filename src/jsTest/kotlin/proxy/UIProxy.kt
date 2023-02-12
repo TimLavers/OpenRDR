@@ -10,6 +10,7 @@ import POLL_PERIOD
 import SEND_INTERPRETATION_BUTTON_ID
 import io.kotest.assertions.timing.eventually
 import io.kotest.matchers.shouldBe
+import js.core.get
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -17,6 +18,9 @@ import kotlinx.coroutines.withContext
 import mysticfall.TestInstance
 import mysticfall.TestRenderer
 import react.dom.events.ChangeEvent
+import web.dom.Element
+import web.dom.NodeListOf
+import web.html.HTMLElement
 import web.html.HTMLTextAreaElement
 import kotlin.js.Date
 import kotlin.js.JSON.stringify
@@ -118,6 +122,7 @@ fun TestRenderer.requireNoInterpretation() = requireInterpretation("")
 /**
  * @see <a href="https://kotlinlang.org/docs/js-ir-migration.html#create-plain-js-objects-for-interoperability">Create plain JS objects for interoperability</a>
  */
+
 fun TestRenderer.enterInterpretation(text: String) {
     val jsName = kotlin.js.json("value" to text)
     val jsEvent = kotlin.js.json("target" to jsName) as ChangeEvent<HTMLTextAreaElement>
@@ -133,4 +138,15 @@ fun debug(msg: String) {
     println("\n\n${Date().toISOString()} $msg")
 }
 
+fun HTMLElement.findById(id: String): Element {
+    val found = querySelectorAll("[id*='$id']")
+    if (found.length == 0) {
+        throw Error("Element containing id \"$id\" not found")
+    }
+    if (found.length > 1) {
+        throw Error("More than one element containing id \"$id\" found")
+    }
+    return found[0]
+}
 
+fun HTMLElement.findAllById(id: String): NodeListOf<Element> = querySelectorAll("[id*='$id']")

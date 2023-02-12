@@ -3,7 +3,6 @@ import csstype.FontWeight
 import emotion.react.css
 import io.rippledown.model.Interpretation
 import kotlinx.coroutines.launch
-import mui.icons.material.QuestionMark
 import mui.material.*
 import mui.system.responsive
 import react.FC
@@ -40,13 +39,11 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
                 }
                 value = interpretationText
             }
-            IconButton {
-                QuestionMark {
-                }
-                onClick = {
-                    println("clicked")
-                }
+
+            ConclusionsDialog {
+                interpretation = handler.interpretation
             }
+
         }
         Grid {
             item = true
