@@ -2,10 +2,10 @@ package mysticfall
 
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mui.material.TextField
 import proxy.findById
 import react.*
-import react.dom.test.runReactTest
 import kotlin.test.Test
 
 
@@ -23,8 +23,10 @@ class TextViewTest {
     }
 
     @Test
-    fun shouldRenderMuiMultilineTextField() = runReactTest(ComponentWithTextField) { container ->
-        val textViewElement = container.findById(textViewId)
-        textViewElement.textContent shouldBe content
+    fun shouldRenderMuiMultilineTextField() = runTest {
+        checkContainer(ComponentWithTextField) { container ->
+            val textViewElement = container.findById(textViewId)
+            textViewElement.textContent shouldBe content
+        }
     }
 }

@@ -19,6 +19,7 @@ import mysticfall.TestInstance
 import mysticfall.TestRenderer
 import react.dom.events.ChangeEvent
 import web.dom.Element
+import web.dom.NodeListOf
 import web.html.HTMLElement
 import web.html.HTMLTextAreaElement
 import kotlin.js.Date
@@ -129,3 +130,5 @@ fun HTMLElement.findById(id: String): Element {
     }
     return found[0]
 }
+
+fun HTMLElement.findAllById(id: String): NodeListOf<Element> = querySelectorAll("[id*='$id']")
