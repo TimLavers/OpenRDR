@@ -101,14 +101,14 @@ fun main() {
                 call.respond(HttpStatusCode.OK, result)
             }
         }
-        serverManagement(application)
+        serverManagement()
         kbManagement(application)
         ruleSession(application)
     }
     logger.info(STARTING_SERVER)
     server.start(wait = true)
 }
-fun Application.serverManagement(application: ServerApplication) {
+fun Application.serverManagement() {
     routing {
         get(PING) {
             call.respond(HttpStatusCode.OK, "OK")
@@ -122,7 +122,7 @@ fun Application.serverManagement(application: ServerApplication) {
 fun Application.kbManagement(application: ServerApplication) {
     routing {
         post(CREATE_KB) {
-            application.createKB()
+//            application.createKB()
             call.respond(HttpStatusCode.OK, OperationResult("KB created"))
         }
         post(IMPORT_KB) {

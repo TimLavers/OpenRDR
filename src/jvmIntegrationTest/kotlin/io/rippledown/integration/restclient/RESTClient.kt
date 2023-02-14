@@ -24,7 +24,7 @@ import io.rippledown.model.condition.Condition
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 
-class RESTClient {
+class imRESTClient {
     val endpoint = "http://localhost:9090"
 
     val jsonClient =  HttpClient(CIO) {

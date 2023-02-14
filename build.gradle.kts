@@ -162,6 +162,7 @@ kotlin {
                 implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
                 implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
                 implementation("io.ktor:ktor-client-cio:$ktor_version")
+                implementation("io.ktor:ktor-server-test-host:$ktor_version")
                 implementation(kotlin("test"))
                 implementation("org.seleniumhq.selenium:selenium-java:$seleniumJavaVersion")
                 implementation("io.github.bonigarcia:webdrivermanager:$webDriverVersion")
