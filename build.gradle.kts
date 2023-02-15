@@ -17,6 +17,7 @@ val awaitilityVersion = "4.2.0"
 val cucumberVersion = "7.10.1"
 val commonsIoVersion = "2.11.0"
 val seleniumJavaVersion = "4.2.2"
+val mockkVersion = "1.13.4"
 
 plugins {
     kotlin("multiplatform") version "1.8.0"
@@ -167,6 +168,7 @@ kotlin {
                 implementation("org.seleniumhq.selenium:selenium-java:$seleniumJavaVersion")
                 implementation("io.github.bonigarcia:webdrivermanager:$webDriverVersion")
                 implementation("commons-io:commons-io:$commonsIoVersion")
+                implementation("io.mockk:mockk:${mockkVersion}")
             }
         }
         val jsMain by getting {
