@@ -206,7 +206,7 @@ kotlin {
 }
 
 application {
-    mainClass.set("OpenRDRServerKt")
+    mainClass.set("io.rippledown.OpenRDRServerKt")
 }
 
 tasks.getByName<Jar>("jvmJar") {
@@ -235,7 +235,7 @@ fun Jar.includeJsArtifacts() {
         )
     ) // bring output file along into the JAR
 
-    manifest.attributes["Main-Class"] = "OpenRDRServerKt"
+    manifest.attributes["Main-Class"] = "io.rippledown.OpenRDRServerKt"
 }
 
 tasks {

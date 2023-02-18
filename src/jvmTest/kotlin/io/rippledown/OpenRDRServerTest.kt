@@ -1,10 +1,5 @@
 package io.rippledown
 
-import CREATE_KB
-import EXPORT_KB
-import IMPORT_KB
-import KB_INFO
-import PING
 import io.kotest.matchers.shouldBe
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -15,13 +10,13 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.testing.*
+import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
+import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.OperationResult
 import io.rippledown.server.ServerApplication
-import kbManagement
-import serverManagement
 import java.io.File
 import kotlin.io.path.readBytes
 import kotlin.test.Test
@@ -30,6 +25,7 @@ import kotlin.test.assertEquals
 class OpenRDRServerTest {
     lateinit var serverApplication: ServerApplication
     lateinit var serverApplicationSpy: ServerApplication
+    lateinit var serverApplicationMock: ServerApplication
     lateinit var httpClient: HttpClient
 
     @Test
@@ -91,15 +87,26 @@ class OpenRDRServerTest {
         verify { serverApplicationSpy.importKBFromZip(zipBytes) }
     }
 
+    @Test
+    fun waitingCases() = testApplication {
+        setup()
+        val result = httpClient.get(WAITING_CASES)
+        result.status shouldBe HttpStatusCode.OK
+        result.body<CasesInfo>().count shouldBe 0
+        verify { serverApplicationSpy.waitingCasesInfo() }
+    }
+
     private fun ApplicationTestBuilder.setup() {
         serverApplication = ServerApplication()
         serverApplicationSpy = spyk(serverApplication)
+        serverApplicationMock = mockk()
         application {
             install(io.ktor.server.plugins.contentnegotiation.ContentNegotiation) {
                 json()
             }
             serverManagement()
             kbManagement(serverApplicationSpy)
+            caseManagement(serverApplicationSpy)
         }
         httpClient = createClient {
             install(ContentNegotiation) {

@@ -1,14 +1,5 @@
 package io.rippledown.integration.restclient
 
-import ADD_CONDITION
-import CASE
-import COMMIT_SESSION
-import CREATE_KB
-import PING
-import SHUTDOWN
-import START_SESSION_TO_ADD_CONCLUSION
-import START_SESSION_TO_REPLACE_CONCLUSION
-import WAITING_CASES
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
@@ -16,6 +7,7 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import io.rippledown.*
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.Conclusion
 import io.rippledown.model.OperationResult
@@ -24,7 +16,7 @@ import io.rippledown.model.condition.Condition
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 
-class imRESTClient {
+class RESTClient {
     val endpoint = "http://localhost:9090"
 
     val jsonClient =  HttpClient(CIO) {
