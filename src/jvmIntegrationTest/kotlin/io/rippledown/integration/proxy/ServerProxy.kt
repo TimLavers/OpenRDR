@@ -1,6 +1,6 @@
 package io.rippledown.integration.proxy
 
-import io.rippledown.STARTING_SERVER
+import io.rippledown.server.STARTING_SERVER
 import io.rippledown.integration.restclient.RESTClient
 import org.awaitility.Awaitility.await
 import java.io.File

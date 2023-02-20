@@ -7,19 +7,20 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import io.rippledown.*
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.Conclusion
 import io.rippledown.model.OperationResult
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
+import io.rippledown.server.*
+import io.rippledown.server.routes.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 
 class RESTClient {
-    val endpoint = "http://localhost:9090"
+    private val endpoint = "http://localhost:9090"
 
-    val jsonClient =  HttpClient(CIO) {
+    private val jsonClient =  HttpClient(CIO) {
         install(ContentNegotiation) {
             json(Json {
                 prettyPrint = true
