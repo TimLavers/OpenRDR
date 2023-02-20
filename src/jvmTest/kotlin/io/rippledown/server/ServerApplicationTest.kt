@@ -1,5 +1,6 @@
 package io.rippledown.server
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.rippledown.CaseTestUtils
@@ -11,6 +12,7 @@ import kotlinx.serialization.json.Json
 import org.apache.commons.io.FileUtils
 import java.io.File
 import java.nio.charset.StandardCharsets.UTF_8
+import java.nio.file.Files
 import kotlin.test.*
 
 internal class ServerApplicationTest {
@@ -164,6 +166,11 @@ internal class ServerApplicationTest {
     }
 
     @Test
+    fun kbName() {
+        ServerApplication().kbName() shouldBe KBInfo("Thyroids")
+    }
+
+    @Test
     fun startRuleSessionToAddConclusion() {
         val app = ServerApplication()
         val id = "Case1"
@@ -173,6 +180,68 @@ internal class ServerApplicationTest {
         app.startRuleSessionToAddConclusion(id, Conclusion("Whatever"))
         app.commitCurrentRuleSession()
         app.case(id).interpretation.textGivenByRules() shouldBe "Whatever"
+    }
+
+    @Test
+    fun exportKBToZip() {
+        val app = ServerApplication()
+        // Add a case and a rule to the KB.
+        val id = "Case1"
+        setUpCaseFromFile(id, app)
+        app.kb.addCase(createCase(id))
+        val conclusion1 = Conclusion("Whatever")
+        app.startRuleSessionToAddConclusion(id, conclusion1)
+        app.commitCurrentRuleSession()
+        app.case(id).interpretation.textGivenByRules() shouldBe conclusion1.text
+
+        // Get the exported KB.
+        val exported = app.exportKBToZip()
+        exported.name shouldBe "${app.kb.name}.zip"
+
+        // Clear the KB
+        app.createKB()
+        app.kb.allCases() shouldBe emptySet()
+        app.kb.ruleTree.size() shouldBe 1
+
+        // Import the exported KB.
+        app.importKBFromZip(exported.readBytes())
+        app.kb.allCases().size shouldBe 1
+        app.kb.ruleTree.size() shouldBe 2
+        app.case(id).interpretation.textGivenByRules() shouldBe conclusion1.text
+    }
+
+    @Test
+    fun importKBFromZip() {
+        val zipFile = File("src/jvmTest/resources/export/KBExported.zip").toPath()
+        val app = ServerApplication()
+        app.kb.name shouldBe "Thyroids"
+        app.kb.allCases().size shouldBe 0
+        app.importKBFromZip(Files.readAllBytes(zipFile))
+
+        app.kb.name shouldBe "Whatever"
+        app.kb.allCases().size shouldBe 3
+        app.kb.ruleTree.size() shouldBe 2
+        val case = app.kb.getCaseByName("Case1")
+        val interpretedCase = app.kb.viewableInterpretedCase(case)
+        interpretedCase.interpretation.textGivenByRules() shouldBe "Glucose ok."
+        app.kbName() shouldBe KBInfo("Whatever")
+    }
+
+    @Test
+    fun `handle zip in bad format`() {
+        val zipFile = File("src/jvmTest/resources/export/NoRootDir.zip").toPath()
+        val app = ServerApplication()
+        shouldThrow<IllegalArgumentException>{
+            app.importKBFromZip(Files.readAllBytes(zipFile))
+        }.message shouldBe "Invalid zip for KB import."
+    }
+
+    @Test
+    fun `handle empty zip`() {
+        val zipFile = File("src/jvmTest/resources/export/Empty.zip").toPath()
+        shouldThrow<IllegalArgumentException>{
+            ServerApplication().importKBFromZip(Files.readAllBytes(zipFile))
+        }.message shouldBe "Invalid zip for KB import."
     }
 
     private fun setUpCaseFromFile(id: String, app: ServerApplication) {
@@ -193,7 +262,6 @@ internal class ServerApplicationTest {
         app.startRuleSessionToReplaceConclusion(id, conclusion1, conclusion2)
         app.commitCurrentRuleSession()
         app.case(id).interpretation.textGivenByRules() shouldBe conclusion2.text
-
     }
 
     private fun createCase(caseName: String) = CaseTestUtils.createCase(caseName)

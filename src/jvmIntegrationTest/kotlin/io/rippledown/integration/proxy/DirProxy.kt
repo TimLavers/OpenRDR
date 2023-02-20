@@ -6,25 +6,33 @@ import java.io.File
 class DirProxy {
     private lateinit var userDir: File
     private lateinit var tempDir: File
+    private lateinit var downloadsDir: File
     private var logDir: File
 
     init {
-        createAndCleanTempDir()
+        createAndCleanManagedDirectories()
         logDir = File(tempDir, "logs").apply { mkdir() }
     }
 
     fun userDir() = userDir
     fun tempDir() = tempDir
+    fun downloadsDir() = downloadsDir
     fun logDir() = logDir
 
-    fun createAndCleanTempDir() {
+    fun createAndCleanManagedDirectories() {
         userDir = File(System.getProperty("user.dir"))
         tempDir = File(userDir, "temp")
-        with(tempDir) {
+        cleanupAndCreateAnew(tempDir)
+        downloadsDir = File(userDir, "downloads")
+        cleanupAndCreateAnew(downloadsDir)
+    }
+
+    private fun cleanupAndCreateAnew(file: File) {
+        with(file) {
             if (exists()) {
                 val deleted = deleteRecursively()
                 if (!deleted) {
-                    throw RuntimeException("Could not delete temp dir: ${tempDir.path}. Enter \"tskill -f java\" and try again.")
+                    throw RuntimeException("Could not delete temp dir: ${file.path}. Enter \"tskill -f java\" and try again.")
                 }
             }
             mkdir()

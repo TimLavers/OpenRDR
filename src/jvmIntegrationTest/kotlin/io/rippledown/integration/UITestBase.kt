@@ -2,6 +2,7 @@ package io.rippledown.integration
 
 import io.github.bonigarcia.wdm.config.DriverManagerType.CHROME
 import io.github.bonigarcia.wdm.managers.ChromeDriverManager
+import io.rippledown.integration.proxy.DirProxy
 import io.rippledown.integration.proxy.LabProxy
 import io.rippledown.integration.proxy.ServerProxy
 import io.rippledown.integration.restclient.RESTClient
@@ -13,7 +14,8 @@ import java.time.Duration
 open class UITestBase {
     val serverProxy = ServerProxy()
     val labProxy = LabProxy(serverProxy.tempDir())
-    val restClient = RESTClient()
+    private val restClient = RESTClient()
+    private val dirProxy = DirProxy()
     lateinit var driver: WebDriver
 
     fun setupWebDriver(): WebDriver {
@@ -26,6 +28,8 @@ open class UITestBase {
         return driver
     }
 
+    fun downloadsDir() = dirProxy.downloadsDir()
+
     private fun getChromeDriver(): WebDriver {
         ChromeDriverManager.getInstance(CHROME).setup()
         val options = ChromeOptions()
@@ -33,6 +37,9 @@ open class UITestBase {
             addArguments("--disable-extensions")
             addArguments("--disable-application-cache")
             addArguments("--disable-web-security")
+            val prefsMap = mutableMapOf<String, Any>()
+            prefsMap.put("download.default_directory", downloadsDir().absolutePath)
+            options.setExperimentalOption("prefs", prefsMap )
         }
         return ChromeDriver(options)
     }

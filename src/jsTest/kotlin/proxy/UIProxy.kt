@@ -26,17 +26,35 @@ import kotlin.js.Date
 import kotlin.js.JSON.stringify
 import kotlin.time.Duration.Companion.milliseconds
 
+fun TestRenderer.noItemWithIdIsShowing(id: String): Boolean {
+    return itemWithId(id) == undefined
+}
 
 fun TestRenderer.findById(id: String): TestInstance<*> {
-    val testInstance = root.findAll {
-        it.props.asDynamic()["id"] == id
-    }[0]
+    val testInstance = itemWithId(id)
 
     return if (testInstance != undefined) {
         testInstance
     } else {
         throw Error("Instance with id \"$id\" not found")
     }
+}
+
+private fun TestRenderer.itemWithId(id: String): TestInstance<*> {
+    val testInstance = root.findAll {
+        it.props.asDynamic()["id"] == id
+    }[0]
+    return testInstance
+}
+
+suspend fun TestRenderer.waitForItemToHaveText( itemId: String, expectedText: String) {
+    repeat(10) {
+        if (findById(itemId).text() == expectedText) {
+            return
+        }
+        waitForEvents()
+    }
+    throw Error("Text $expectedText not found for item with id $itemId. Current value is: ${findById(itemId).text()}")
 }
 
 fun TestInstance<*>.text() = props.asDynamic()["children"].unsafeCast<String>()

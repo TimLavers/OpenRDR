@@ -1,6 +1,6 @@
 package io.rippledown.integration.proxy
 
-import STARTING_SERVER
+import io.rippledown.server.STARTING_SERVER
 import io.rippledown.integration.restclient.RESTClient
 import org.awaitility.Awaitility.await
 import java.io.File
@@ -18,12 +18,12 @@ class ServerProxy {
 
     init {
         systemOutputFile = File(dirProxy.tempDir(), "output.txt").apply { createNewFile() }
-        dirProxy.createAndCleanTempDir()
+        dirProxy.createAndCleanManagedDirectories()
     }
 
     fun start() {
         findJar()
-        dirProxy.createAndCleanTempDir()
+        dirProxy.createAndCleanManagedDirectories()
         logProxy.deleteLogfiles()
         process = ProcessBuilder("java", "-jar", jarFile.absolutePath)
             .redirectErrorStream(true)

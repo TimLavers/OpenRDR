@@ -32,6 +32,8 @@ class EngineConfig {
     var expectedMovedAttribute: Attribute? = null
     var expectedTargetAttribute: Attribute? = null
 
+    val returnKBInfo = KBInfo("Glucose")
+
 }
 
 private class EngineBuilder(private val config: EngineConfig) {
@@ -86,6 +88,15 @@ private class EngineBuilder(private val config: EngineConfig) {
                 respond(
                     content = ByteReadChannel(
                         json.encodeToString(config.returnOperationResult)
+                    ),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+            }
+            "/api/kbInfo" -> {
+                respond(
+                    content = ByteReadChannel(
+                        json.encodeToString(config.returnKBInfo)
                     ),
                     status = HttpStatusCode.OK,
                     headers = headersOf(HttpHeaders.ContentType, "application/json")

@@ -1,6 +1,7 @@
 import csstype.FontFamily
 import csstype.TextAlign
 import emotion.react.css
+import io.rippledown.kb.KBInfoPane
 import kotlinx.coroutines.CoroutineScope
 import react.FC
 import react.Props
@@ -24,6 +25,9 @@ val OpenRDRUI = FC<Handler> { handler ->
                 textAlign = TextAlign.center
             }
             id = "main_heading"
+        }
+        KBInfoPane{
+            api = handler.api
         }
         CaseQueue {
             scope = handler.scope

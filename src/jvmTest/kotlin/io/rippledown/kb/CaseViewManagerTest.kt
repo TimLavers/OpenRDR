@@ -28,20 +28,6 @@ class CaseViewManagerTest {
         manager = CaseViewManager()
     }
 
-    /*
-
-   -
-    - move to top-1
-    - move to bottom
-    - move up one
-    - move down one
-    - move onto self
-    - move up 2
-    - move down 2
-    - move up several
-    - move down several
-     */
-
     @Test
     fun `attributes in first case are above attributes in second case`() {
         val case1Attributes = listOf(a1, a3, a5)
@@ -113,6 +99,14 @@ class CaseViewManagerTest {
     }
 
     @Test
+    fun setAttributes() {
+        manager.setAttributes(listOf( a3, a2, a1))
+        val case = createCaseWithAttributesAndShowToManager(listOf(a1, a2, a3))
+        case.attributes() shouldBe listOf(a3, a2, a1)
+        manager.allAttributesInOrder() shouldBe listOf(a3, a2, a1)
+    }
+
+    @Test
     fun moveDownToJustBelow() {
         createCaseWithAttributesAndShowToManager(listOf(a1, a3, a5))
         manager.moveJustBelow(a1, a5)
@@ -147,6 +141,25 @@ class CaseViewManagerTest {
         manager.moveJustBelow(a1, a2)
         val caseAfter = manager.getViewableCase(case.rdrCase)
         caseAfter.attributes() shouldBe listOf(a6, a5, a4, a3, a2, a1)
+    }
+
+    @Test
+    fun allAttributesInOrder() {
+        createCaseWithAttributesAndShowToManager(listOf(a1))
+        createCaseWithAttributesAndShowToManager(listOf(a2))
+        createCaseWithAttributesAndShowToManager(listOf(a3))
+        createCaseWithAttributesAndShowToManager(listOf(a4))
+        manager.allAttributesInOrder() shouldBe listOf(a1, a2, a3, a4)
+        manager.moveJustBelow(a4, a1)
+        manager.moveJustBelow(a3, a4)
+        manager.moveJustBelow(a2, a3)
+        manager.moveJustBelow(a1, a2)
+        manager.allAttributesInOrder() shouldBe listOf(a4, a3, a2, a1)
+    }
+
+    @Test
+    fun allAttributesInOrderEmpty() {
+        manager.allAttributesInOrder() shouldBe listOf()
     }
 
     private fun createCaseWithAttributesAndShowToManager(attributes: List<Attribute>): ViewableCase {

@@ -62,7 +62,6 @@ internal class InterpretationTest {
     @Test
     fun textGivenByRulesHasConclusionsInABOrder() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val conclusion = Conclusion("First conclusion")
         val rule0 = Rule("r0", null, Conclusion("C"), emptySet())
         val rule1 = Rule("r1", null, Conclusion("A"), emptySet())
         val rule2 = Rule("r2", null, Conclusion("B"), emptySet())

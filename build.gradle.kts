@@ -17,6 +17,7 @@ val awaitilityVersion = "4.2.0"
 val cucumberVersion = "7.10.1"
 val commonsIoVersion = "2.11.0"
 val seleniumJavaVersion = "4.2.2"
+val mockkVersion = "1.13.4"
 
 plugins {
     kotlin("multiplatform") version "1.8.0"
@@ -162,10 +163,12 @@ kotlin {
                 implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
                 implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
                 implementation("io.ktor:ktor-client-cio:$ktor_version")
+                implementation("io.ktor:ktor-server-test-host:$ktor_version")
                 implementation(kotlin("test"))
                 implementation("org.seleniumhq.selenium:selenium-java:$seleniumJavaVersion")
                 implementation("io.github.bonigarcia:webdrivermanager:$webDriverVersion")
                 implementation("commons-io:commons-io:$commonsIoVersion")
+                implementation("io.mockk:mockk:${mockkVersion}")
             }
         }
         val jsMain by getting {
@@ -203,7 +206,7 @@ kotlin {
 }
 
 application {
-    mainClass.set("OpenRDRServerKt")
+    mainClass.set("io.rippledown.server.OpenRDRServerKt")
 }
 
 tasks.getByName<Jar>("jvmJar") {
@@ -232,7 +235,7 @@ fun Jar.includeJsArtifacts() {
         )
     ) // bring output file along into the JAR
 
-    manifest.attributes["Main-Class"] = "OpenRDRServerKt"
+    manifest.attributes["Main-Class"] = "io.rippledown.server.OpenRDRServerKt"
 }
 
 tasks {

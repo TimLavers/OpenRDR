@@ -100,5 +100,5 @@ class CaseViewPO(private val driver: WebDriver) {
         return interpretationArea().getAttribute("value")
     }
 
-    fun interpretationArea() = containerElement().findElement(By.id("interpretation_text_area"))
+    fun interpretationArea() = containerElement().findElement(By.id("interpretation_text_area"))!!
 }

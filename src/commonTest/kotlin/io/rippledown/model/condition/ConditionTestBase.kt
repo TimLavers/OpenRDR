@@ -5,7 +5,7 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-internal open class ConditionTestBase {
+open class ConditionTestBase {
 
     val tsh = Attribute("TSH")
     val glucose = Attribute("Glucose")

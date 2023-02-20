@@ -27,7 +27,6 @@ open class RuleTree(val root: Rule = rootRule()) {
         return result
     }
 
-    //Note that the root is not returned
     fun rules(): Set<Rule> {
         val result = mutableSetOf<Rule>()
         root.visit {

@@ -57,4 +57,10 @@ class ApiTest {
         }
         Api(mock(config)).moveAttributeJustBelowOther(moved, target) shouldBe expectedResult
     }
+
+    @Test
+    fun kbInfo() = runTest {
+        val expectedResult = KBInfo("Glucose")
+        Api(mock(config{})).kbInfo() shouldBe expectedResult
+    }
 }
