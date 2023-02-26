@@ -1,1 +1,0 @@
-https://github.com/turansky/seskar/tree/8d365387dc3a08c090f676e035dc752701140f82

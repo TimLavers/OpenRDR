@@ -12,14 +12,14 @@ Feature: Order of Attributes in Case View
       | C | c |
       | B | b |
       | A | a |
-    And if I select case CaseA
+    When I select case CaseA
     Then the case should show the attributes in order:
       | A |
-    And if I select case CaseAB
+    When I select case CaseAB
     Then the case should show the attributes in order:
       | A |
       | B |
-    And if I select case CaseABC
+    When I select case CaseABC
     Then the case should show the attributes in order:
       | A |
       | B |
@@ -27,12 +27,13 @@ Feature: Order of Attributes in Case View
     And stop the client application
 
   Scenario: Attributes can be re-ordered by drag-and-drop
-    Given I start the application and the initial Attribute order is A, B, C
+    Given I start the client application
+    And the initial Attribute order is A, B, C
     And case CaseABC is provided having data:
       | A | a |
       | B | b |
       | C | c |
-    And if I select case CaseABC
+    When I select case CaseABC
     And I move attribute C below attribute A
     And I move attribute A below attribute B
     Then the case should show the attributes in order:
@@ -42,12 +43,13 @@ Feature: Order of Attributes in Case View
     And stop the client application
 
   Scenario: New Attributes can be created after an Attribute re-ordering
-    Given I start the application and the initial Attribute order is A, B, C
+    Given I start the client application
+    And the initial Attribute order is A, B, C
     And case CaseABC is provided having data:
       | A | a |
       | B | b |
       | C | c |
-    And if I select case CaseABC
+    And I select case CaseABC
     And I move attribute C below attribute A
     And I move attribute A below attribute B
     And the case shows the attributes in order:
@@ -59,7 +61,7 @@ Feature: Order of Attributes in Case View
       | B | b |
       | C | c |
       | D | d |
-    When I select case "CaseABCD"
+    When I select case CaseABCD
     Then the case should show the attributes in order:
       | C |
       | B |

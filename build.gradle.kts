@@ -14,7 +14,7 @@ val reactTestRendererVersion = "18.2.0"
 val kotestVersion = "5.5.4"
 val webDriverVersion = "5.3.1"
 val awaitilityVersion = "4.2.0"
-val cucumberVersion = "7.10.1"
+val cucumberVersion = "7.11.1"
 val commonsIoVersion = "2.11.0"
 val seleniumJavaVersion = "4.2.2"
 val mockkVersion = "1.13.4"
@@ -75,9 +75,10 @@ kotlin {
             val cucumberTest by compilations.creating {
                 defaultSourceSet {
                     dependencies {
-                        implementation("io.cucumber:cucumber-java8:$cucumberVersion")
-                        implementation("io.cucumber:cucumber-junit:$cucumberVersion")
-                        implementation("io.cucumber:cucumber-picocontainer:$cucumberVersion")
+                        implementation(enforcedPlatform("io.cucumber:cucumber-bom:$cucumberVersion"))
+                        implementation("io.cucumber:cucumber-java8")
+                        implementation("io.cucumber:cucumber-junit")
+                        implementation("io.cucumber:cucumber-picocontainer")
                     }
                     dependsOn(sourceSets.getByName("jvmMain"))
                     dependsOn(sourceSets.getByName("jvmIntegrationTest"))
@@ -100,7 +101,7 @@ kotlin {
                     doLast {
                         javaexec {
                             maxHeapSize = "32G"
-                            main = "io.cucumber.core.cli.Main"
+                            mainClass.set("io.cucumber.core.cli.Main")
                             args = argsForCuke
                             classpath = compileDependencyFiles + runtimeDependencyFiles + output.allOutputs
                         }

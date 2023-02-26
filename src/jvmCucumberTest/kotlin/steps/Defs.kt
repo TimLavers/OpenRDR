@@ -2,13 +2,11 @@ package steps
 
 import io.cucumber.datatable.DataTable
 import io.cucumber.java8.En
-import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.UITestBase
 import io.rippledown.integration.pageobjects.CaseListPO
 import io.rippledown.integration.pageobjects.CaseViewPO
 import io.rippledown.integration.pageobjects.KBInfoPO
-import io.rippledown.integration.proxy.ConfiguredTestData
 import org.awaitility.Awaitility
 import org.openqa.selenium.WebDriver
 import java.io.File
@@ -45,7 +43,7 @@ class Defs : En {
         Given("a list of {long} cases is stored on the server") { numberOfCases: Long ->
             (1..numberOfCases).forEach { i ->
                 val padded = i.toString().padStart(3, '0')
-                labProxy.writeNewCaseFile("Case $padded")
+                labProxy.writeNewCaseFile("Case_$padded")
             }
         }
 
@@ -63,15 +61,11 @@ class Defs : En {
             }
         }
 
-        When("the case with the name {string} is deleted on the server") { caseName: String ->
+        When("the case with the name {word} is deleted on the server") { caseName: String ->
             labProxy.deleteCase(caseName)
         }
 
-        And("I select case {string}") { caseName: String ->
-            caseViewPO = caseListPO.select(caseName)
-        }
-
-        And("if I select case {word}") { caseName: String ->
+        And("I select case {word}") { caseName: String ->
             caseViewPO = caseListPO.select(caseName)
         }
 
@@ -80,9 +74,7 @@ class Defs : En {
             Thread.sleep(1000)
         }
 
-        Given("I start the application and the initial Attribute order is A, B, C") {
-            caseListPO = CaseListPO(driver)
-            caseViewPO = CaseViewPO(driver)
+        Given("the initial Attribute order is A, B, C") {
             labProxy.writeCaseWithDataToInputDir("Case1", mapOf("A" to "a"))
             labProxy.writeCaseWithDataToInputDir("Case2", mapOf("A" to "a", "B" to "b"))
             labProxy.writeCaseWithDataToInputDir("Case3", mapOf("A" to "a", "B" to "b", "C" to "c"))
@@ -126,7 +118,7 @@ class Defs : En {
             caseViewPO.attributes() shouldBe dataTable.asList()
         }
 
-        Then("the displayed KB name should be {word}") { kbName: String ->
+        Then("the displayed KB name is (now ){word}") { kbName: String ->
             KBInfoPO(driver).headingText() shouldBe kbName
         }
 
@@ -163,7 +155,7 @@ class Defs : En {
             caseListPO.waitForNoCases()
         }
 
-        Then("I should see the case {string} as the current case") { caseName: String ->
+        Then("I should see the case {word} as the current case") { caseName: String ->
             caseViewPO.nameShown() shouldBe caseName
         }
     }
