@@ -44,7 +44,7 @@ internal class SlightlyLowTest: ConditionTestBase() {
     fun rangeHasNoLowerBound() {
         val builder1 = RDRCaseBuilder()
         val range = ReferenceRange(null, "5.0")
-        builder1.addResult(tsh.name, defaultDate,TestResult("0.4", range, "mmol/L"))
+        builder1.addResult(tsh, defaultDate,TestResult("0.4", range, "mmol/L"))
         val case1 = builder1.build("Case1")
         tenPercentLow.holds(case1) shouldBe false
     }

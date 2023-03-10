@@ -13,13 +13,10 @@ import kotlinx.serialization.encoding.*
 class RDRCaseBuilder {
     private val caseData: MutableMap<TestEvent, TestResult> = mutableMapOf()
 
-    fun addValue(attribute: String, date: Long, value: String) {
+    fun addValue(attribute: Attribute, date: Long, value: String) {
         addResult(attribute, date, TestResult(value))
     }
 
-    fun addResult(attribute: String, date: Long, result: TestResult) {
-        addResult(Attribute(attribute), date, result)
-    }
     fun addResult(attribute: Attribute, date: Long, result: TestResult) {
         val testEvent = TestEvent(attribute, date)
         caseData[testEvent] = result
@@ -124,10 +121,6 @@ data class RDRCase(val name: String = "", val data: Map<TestEvent, TestResult> =
             return null
         }
         return ResultsList(values(attribute.name)!!)
-    }
-
-    fun get(attributeName: String): TestResult? {
-        return getLatest(Attribute(attributeName))
     }
 
     fun getLatest(attribute: Attribute): TestResult? {

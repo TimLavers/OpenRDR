@@ -16,7 +16,7 @@ internal class GreaterThanOrEqualToTest: ConditionTestBase() {
 
     @Test
     fun holds() {
-        val height = Attribute("Height")
+        val height = Attribute("Height", 100)
         val gte = GreaterThanOrEqualTo(height, 1.8)
         gte.holds(twoEpisodeCase(height, "1.78", "1.2")) shouldBe false
         gte.holds(twoEpisodeCase(height, "1.78", "1.799")) shouldBe false

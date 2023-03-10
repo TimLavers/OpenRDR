@@ -51,11 +51,11 @@ internal class IsNormalTest: ConditionTestBase() {
     fun currentValueNotNormal() {
         val builder = RDRCaseBuilder()
         val tshResult1 = TestResult(Value("8.67"), range, "mU/L")
-        builder.addResult(tsh.name, defaultDate, tshResult1)
+        builder.addResult(tsh, defaultDate, tshResult1)
         val range0 = ReferenceRange("0.25", "2.90")
         val tshResult0 = TestResult(Value("0.80"), range0, "mU/L")
         val yesterday = daysAgo(1)
-        builder.addResult(tsh.name, yesterday, tshResult0)
+        builder.addResult(tsh, yesterday, tshResult0)
         val case = builder.build("Case1")
 
         condition.holds(case) shouldBe false
@@ -65,11 +65,11 @@ internal class IsNormalTest: ConditionTestBase() {
     fun noValueNormal() {
         val builder = RDRCaseBuilder()
         val tshResult1 = TestResult(Value("8.67"), range, "mU/L")
-        builder.addResult(tsh.name, defaultDate, tshResult1)
+        builder.addResult(tsh, defaultDate, tshResult1)
         val range0 = ReferenceRange("0.25", "2.90")
         val tshResult0 = TestResult(Value("0.08"), range0, "mU/L")
         val yesterday = daysAgo(1)
-        builder.addResult(tsh.name, yesterday, tshResult0)
+        builder.addResult(tsh, yesterday, tshResult0)
         val case = builder.build("Case1")
 
         condition.holds(case) shouldBe false
@@ -88,6 +88,6 @@ internal class IsNormalTest: ConditionTestBase() {
     @Test
     fun asText() {
         condition.asText() shouldBe "TSH is normal"
-        IsNormal(Attribute("Blah !@#@#  Blah is normal")).asText() shouldBe "Blah !@#@#  Blah is normal is normal"
+        IsNormal(Attribute("Blah !@#@#  Blah is normal", 100)).asText() shouldBe "Blah !@#@#  Blah is normal is normal"
     }
 }

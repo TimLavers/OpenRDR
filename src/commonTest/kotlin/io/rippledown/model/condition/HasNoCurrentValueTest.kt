@@ -36,6 +36,6 @@ internal class HasNoCurrentValueTest: ConditionTestBase() {
     @Test
     fun asText() {
         condition.asText() shouldBe "TSH has no current value"
-        HasNoCurrentValue(Attribute("Blah !@#@#")).asText() shouldBe "Blah !@#@# has no current value"
+        HasNoCurrentValue(Attribute("Blah !@#@#", 100)).asText() shouldBe "Blah !@#@# has no current value"
     }
 }

@@ -1,5 +1,6 @@
 package io.rippledown
 
+import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.defaultDate
@@ -8,6 +9,8 @@ import java.io.File
 import java.nio.charset.StandardCharsets
 
 internal object CaseTestUtils {
+
+    private val glucose = Attribute("Glucose", -200)
 
     fun caseFile(caseName: String): File {
         return File("src/jvmTest/resources/cases/$caseName.json")
@@ -19,7 +22,7 @@ internal object CaseTestUtils {
 
     fun createCase(caseName: String, glucoseValue: String = "0.667"): RDRCase {
         val builder1 = RDRCaseBuilder()
-        builder1.addValue("Glucose", defaultDate, glucoseValue)
+        builder1.addValue(glucose, defaultDate, glucoseValue)
         return builder1.build(caseName)
     }
 }

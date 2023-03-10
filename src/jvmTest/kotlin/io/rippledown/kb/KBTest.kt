@@ -11,6 +11,7 @@ import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import kotlin.test.Test
 
 class KBTest {
+    val glucose = Attribute("Glucose", 5000)
 
     @Test
     fun viewableInterpretedCase() {
@@ -19,8 +20,8 @@ class KBTest {
         buildRuleToAddAComment(kb, comment)
 
         val builder = RDRCaseBuilder()
-        builder.addValue("ABC", defaultDate, "10")
-        builder.addValue("DEF", defaultDate, "20")
+        builder.addValue(Attribute("ABC", 300), defaultDate, "10")
+        builder.addValue(Attribute("DEF", 400), defaultDate, "20")
         val case =  builder.build("Case2")
 
         case.interpretation.textGivenByRules() shouldBe ""
@@ -92,7 +93,7 @@ class KBTest {
         kb.addCase(createCase("Case2"))
         val retrieved = kb.getCaseByName("Case1")
         retrieved.name shouldBe "Case1"
-        retrieved.get("Glucose")!!.value.text shouldBe "1.2"
+        retrieved.getLatest(glucose)!!.value.text shouldBe "1.2"
     }
 
     @Test
@@ -247,7 +248,7 @@ class KBTest {
 
     private fun createCase(caseName: String, glucoseValue: String = "0.667"): RDRCase {
         val builder1 = RDRCaseBuilder()
-        builder1.addValue("Glucose", defaultDate, glucoseValue)
+        builder1.addValue(glucose, defaultDate, glucoseValue)
         return builder1.build(caseName)
     }
 }

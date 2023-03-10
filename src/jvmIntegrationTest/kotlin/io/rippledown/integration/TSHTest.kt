@@ -10,8 +10,8 @@ import kotlin.test.assertEquals
 
 internal open class TSHTest: UITestBase() {
 
-    lateinit var caseQueuePO: CaseQueuePO
-    lateinit var caseListPO: CaseListPO
+    private lateinit var caseQueuePO: CaseQueuePO
+    private lateinit var caseListPO: CaseListPO
     lateinit var caseViewPO: CaseViewPO
     lateinit var dataShown: Map<String, List<String>>
 
@@ -40,22 +40,23 @@ internal open class TSHTest: UITestBase() {
 
     open fun setupCases() {
         labProxy.cleanCasesDir()
-        labProxy.writeCaseToInputDir(TSH1)
-        labProxy.writeCaseToInputDir(TSH2)
-        labProxy.writeCaseToInputDir(TSH3)
-        labProxy.writeCaseToInputDir(TSH4)
-        labProxy.writeCaseToInputDir(TSH5)
-        labProxy.writeCaseToInputDir(TSH6)
-        labProxy.writeCaseToInputDir(TSH7)
-        labProxy.writeCaseToInputDir(TSH8)
-        labProxy.writeCaseToInputDir(TSH9)
-        labProxy.writeCaseToInputDir(TSH10)
-        labProxy.writeCaseToInputDir(TSH11)
-        labProxy.writeCaseToInputDir(TSH12)
-        labProxy.writeCaseToInputDir(TSH13)
-        labProxy.writeCaseToInputDir(TSH14)
-        labProxy.writeCaseToInputDir(TSH15)
-        labProxy.writeCaseToInputDir(TSH16)
-        labProxy.writeCaseToInputDir(TSH17)
+        val tshCases = TSHCases()
+        labProxy.writeCaseToInputDir(tshCases.TSH1)
+        labProxy.writeCaseToInputDir(tshCases.TSH2)
+        labProxy.writeCaseToInputDir(tshCases.TSH3)
+        labProxy.writeCaseToInputDir(tshCases.TSH4)
+        labProxy.writeCaseToInputDir(tshCases.TSH5)
+        labProxy.writeCaseToInputDir(tshCases.TSH6)
+        labProxy.writeCaseToInputDir(tshCases.TSH7)
+        labProxy.writeCaseToInputDir(tshCases.TSH8)
+        labProxy.writeCaseToInputDir(tshCases.TSH9)
+        labProxy.writeCaseToInputDir(tshCases.TSH10)
+        labProxy.writeCaseToInputDir(tshCases.TSH11)
+        labProxy.writeCaseToInputDir(tshCases.TSH12)
+        labProxy.writeCaseToInputDir(tshCases.TSH13)
+        labProxy.writeCaseToInputDir(tshCases.TSH14)
+        labProxy.writeCaseToInputDir(tshCases.TSH15)
+        labProxy.writeCaseToInputDir(tshCases.TSH16)
+        labProxy.writeCaseToInputDir(tshCases.TSH17)
     }
 }

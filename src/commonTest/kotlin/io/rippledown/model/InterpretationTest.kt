@@ -12,6 +12,7 @@ import kotlin.test.assertEquals
 
 internal class InterpretationTest {
     private val caseId = CaseId("1234", "Case 1")
+    private var attributeId = 0
 
     @Test
     fun construction() {
@@ -155,10 +156,10 @@ internal class InterpretationTest {
     fun shouldReturnConditionsForConclusion() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
         val c0 = Conclusion("First conc")
-        val conditions0 = setOf(ContainsText(Attribute("A"), "text A"), ContainsText(Attribute("B"), "text B"))
+        val conditions0 = setOf(ContainsText(Attribute("A", attributeId++), "text A"), ContainsText(Attribute("B", attributeId++), "text B"))
         val rule0 = Rule("r0", null, c0, conditions0)
         val c1 = Conclusion("Second conc")
-        val conditions1 = setOf(ContainsText(Attribute("C"), "text C"), ContainsText(Attribute("D"), "text D"))
+        val conditions1 = setOf(ContainsText(Attribute("C", attributeId++), "text C"), ContainsText(Attribute("D", attributeId++), "text D"))
         val rule1 = Rule("r1", null, c1, conditions1)
         interpretation.add(rule0)
         interpretation.add(rule1)
@@ -171,10 +172,10 @@ internal class InterpretationTest {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
         val conclusion = Conclusion("First conc")
         val conditions = setOf(
-            ContainsText(Attribute("z"), "text z"),
-            ContainsText(Attribute("A"), "text A"),
-            ContainsText(Attribute("Y"), "text Y"),
-            ContainsText(Attribute("b"), "text b"),
+            ContainsText(Attribute("z", attributeId++), "text z"),
+            ContainsText(Attribute("A", attributeId++), "text A"),
+            ContainsText(Attribute("Y", attributeId++), "text Y"),
+            ContainsText(Attribute("b", attributeId++), "text b"),
         )
         val rule0 = Rule("r0", null, conclusion, conditions)
         interpretation.add(rule0)

@@ -23,22 +23,22 @@ data class CaseTemplate(var name: String = "", var tsh: String = "", var freeT4:
     private var tests: String = "TFTs"
     private val extraResults = mutableMapOf<String, TestResult>()
 
-    fun build(): RDRCase {
+    fun build(attributeFactory: AttributeFactory): RDRCase {
         val result = RDRCaseBuilder()
-        result.addValue("Sex", defaultTestDate, sex )
-        result.addValue("Age", defaultTestDate, age.toString())
-        result.addResult("TSH", defaultTestDate, TestResult(Value(tsh), defaultTSHRange, " mU/L"))
+        result.addValue(attributeFactory.create("Sex"), defaultTestDate, sex )
+        result.addValue(attributeFactory.create("Age"), defaultTestDate, age.toString())
+        result.addResult(attributeFactory.create("TSH"), defaultTestDate, TestResult(Value(tsh), defaultTSHRange, " mU/L"))
         if (freeT4.isNotBlank()) {
-            result.addResult("Free T4", defaultTestDate, TestResult(Value(freeT4), defaultFreeT4Range, " pmol/L"))
+            result.addResult(attributeFactory.create("Free T4"), defaultTestDate, TestResult(Value(freeT4), defaultFreeT4Range, " pmol/L"))
         }
         if (freeT3.isNotBlank()) {
-            result.addResult("Free T3", defaultTestDate, TestResult(Value(freeT3), defaultFreeT3Range, " pmol/L"))
+            result.addResult(attributeFactory.create("Free T3"), defaultTestDate, TestResult(Value(freeT3), defaultFreeT3Range, " pmol/L"))
         }
-        result.addValue("Patient Location", defaultTestDate,  location)
-        result.addValue("Tests", defaultTestDate, tests)
-        result.addValue("Clinical Notes", defaultTestDate, clinicalNotes)
+        result.addValue(attributeFactory.create("Patient Location"), defaultTestDate,  location)
+        result.addValue(attributeFactory.create("Tests"), defaultTestDate, tests)
+        result.addValue(attributeFactory.create("Clinical Notes"), defaultTestDate, clinicalNotes)
         extraResults.forEach {
-            result.addResult(it.key, defaultTestDate, it.value)
+            result.addResult(attributeFactory.create(it.key), defaultTestDate, it.value)
         }
         return result.build(name)
     }
@@ -52,7 +52,7 @@ data class CaseTemplate(var name: String = "", var tsh: String = "", var freeT4:
 }
 
 class TestResultTemplate(var attribute: String = "", var value: String = "") {
-    var lowerBound: String? = null
+    private var lowerBound: String? = null
     var upperBound: String? = null
     var units: String? = null
 
@@ -72,11 +72,11 @@ fun multiEpisodeCase(lambda: MultiEpisodeCaseTemplate.() -> Unit): MultiEpisodeC
 }
 
 data class MultiEpisodeCaseTemplate(var name: String = "") {
-    var dates: List<Long> = emptyList()
-    var attributeToValues = mutableMapOf<Attribute, List<TestResult>>()
+    private var dates: List<Long> = emptyList()
+    private var attributeToValues = mutableMapOf<Attribute, List<TestResult>>()
     var sex = "F"
 
-    fun build(): RDRCase {
+    fun build(attributeFactory: AttributeFactory): RDRCase {
         val builder = RDRCaseBuilder()
         val numberOfEpisodes = dates.size
         require(dates.isNotEmpty()) { "dates should not be empty"}
@@ -88,7 +88,7 @@ data class MultiEpisodeCaseTemplate(var name: String = "") {
                 val testResult = it.value[index]
                 builder.addResult(it.key, date, testResult)
             }
-            builder.addResult("Sex", date,TestResult( sex))
+            builder.addResult(attributeFactory.create("Sex"), date,TestResult( sex))
         }
         return builder.build(name)
     }

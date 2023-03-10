@@ -44,7 +44,7 @@ internal class SlightlyHighTest: ConditionTestBase() {
     fun rangeHasNoUpperBound() {
         val builder1 = RDRCaseBuilder()
         val range = ReferenceRange("5.0", null)
-        builder1.addResult(tsh.name, defaultDate,TestResult("12.0", range, "mmol/L"))
+        builder1.addResult(tsh, defaultDate,TestResult("12.0", range, "mmol/L"))
         val case1 = builder1.build("Case1")
         tenPercentHigh.holds(case1) shouldBe false
     }

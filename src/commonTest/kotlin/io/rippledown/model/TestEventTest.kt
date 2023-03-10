@@ -10,7 +10,7 @@ import kotlin.test.assertNotEquals
 
 // ORD1
 internal class TestEventTest {
-    val tsh = Attribute("TSH")
+    val tsh = Attribute("TSH", 3)
 
     @Test
     fun construction() {
