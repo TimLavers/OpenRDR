@@ -13,7 +13,7 @@ external interface ReactDiffViewerProps : Props {
 }
 
 @JsName("default")
-external val DiffViewer: FC<ReactDiffViewerProps>
+external val ReactDiffViewer: FC<ReactDiffViewerProps>
 
 
 

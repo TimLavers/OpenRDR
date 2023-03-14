@@ -13,7 +13,7 @@ val DifferenceViewer = FC<DifferenceViewerProps> { handler ->
     ReactHTML.h1 {
         +"Difference Viewer"
     }
-    DiffViewer.create {
+    ReactDiffViewer {
         oldValue = handler.oldValue
         newValue = handler.newValue
         splitView = true
