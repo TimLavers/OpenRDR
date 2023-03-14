@@ -1,9 +1,9 @@
-@single
+#@single
 Feature: Order of Attributes in Case View
 
   Scenario: Default Attribute order is by order created
     Given I start the client application
-    And case CaseA is provided having data:
+    And case CaseA are provided having data:
       | A | a |
     And case CaseAB is provided having data:
       | B | b |

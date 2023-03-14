@@ -1,29 +1,33 @@
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
-val kotlinVersion = "1.8.0"
+val kotlinVersion = "1.8.10"
 val serializationVersion = "1.4.1"
 val kotlinxDateTimeVersion = "0.4.0"
 val kotlinxCoroutinesTestVersion = "1.6.4"
 val ktor_version = "2.2.1"
 val logbackVersion = "1.4.5"
 val reactVersion = "18.2.0-pre.479"
-val kotlinWrappersVersion = "1.0.0-pre.484"
+val kotlinWrappersVersion = "1.0.0-pre.510"
+val diffUtilsVersion = "4.12"
+
 val testingLibraryReactVersion = "13.4.0"
 val reactTestRendererVersion = "18.2.0"
+val reactDiffViewerVersion = "3.1.1"
 val kotestVersion = "5.5.4"
 val webDriverVersion = "5.3.1"
 val awaitilityVersion = "4.2.0"
 val cucumberVersion = "7.11.1"
 val commonsIoVersion = "2.11.0"
+val commonsTextVersion = "1.10.0"
 val seleniumJavaVersion = "4.2.2"
 val mockkVersion = "1.13.4"
 
 plugins {
-    kotlin("multiplatform") version "1.8.0"
+    kotlin("multiplatform") version "1.8.10"
     application
-    kotlin("plugin.serialization") version "1.8.0"
-    id("io.ktor.plugin") version "2.2.1"
+    kotlin("plugin.serialization") version "1.8.10"
+    id("io.ktor.plugin") version "2.2.3"
 }
 
 group = "io.rippledown"
@@ -97,22 +101,18 @@ kotlin {
                     pathToRequirements
                 )
 
-                tasks.create("cucumberTest") {
-                    doLast {
-                        javaexec {
-                            maxHeapSize = "32G"
-                            mainClass.set("io.cucumber.core.cli.Main")
-                            args = argsForCuke
-                            classpath = compileDependencyFiles + runtimeDependencyFiles + output.allOutputs
-                        }
-                    }
+                tasks.register<JavaExec>("cucumberTest") {
+                    group = VERIFICATION_GROUP
+                    maxHeapSize = "32G"
+                    mainClass.set("io.cucumber.core.cli.Main")
+                    classpath = compileDependencyFiles + runtimeDependencyFiles + output.allOutputs
+                    args = argsForCuke
                     dependsOn(
                         tasks.shadowJar,
                         tasks.compileTestJava,
                         tasks.processTestResources,
                         tasks.getByName("jvmCucumberTestClasses")
                     )
-                    group = VERIFICATION_GROUP
                 }
             }
         }
@@ -154,6 +154,9 @@ kotlin {
                 implementation("io.ktor:ktor-server-netty:$ktor_version")
                 implementation("ch.qos.logback:logback-classic:$logbackVersion")
                 implementation("commons-io:commons-io:$commonsIoVersion")
+                implementation("io.github.java-diff-utils:java-diff-utils:$diffUtilsVersion")
+
+
             }
         }
         val jvmTest by getting {
@@ -183,6 +186,8 @@ kotlin {
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-emotion")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-mui")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-mui-icons")
+                implementation(npm("react-diff-viewer", reactDiffViewerVersion))
+
             }
         }
         val jsTest by getting {

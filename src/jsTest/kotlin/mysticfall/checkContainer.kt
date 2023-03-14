@@ -2,6 +2,7 @@ package mysticfall
 
 import js.core.globalThis
 import react.VFC
+import react.dom.test.act
 import react.dom.test.createRoot
 import react.dom.test.unmount
 import web.dom.document
@@ -13,7 +14,9 @@ suspend fun checkContainer(vfc: VFC, block: (container: HTMLElement) -> Unit) {
     val container = document.createElement(div)
     document.body.appendChild(container)
     val root = createRoot(container, vfc)
-    block(container)
+    act {
+        block(container)
+    }
     unmount(root)
 }
 
