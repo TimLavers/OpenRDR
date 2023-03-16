@@ -7,6 +7,7 @@ import io.ktor.server.application.*
 import io.ktor.server.testing.*
 import io.mockk.mockkClass
 import io.mockk.spyk
+import io.rippledown.server.routes.attributeManagement
 import io.rippledown.server.routes.caseManagement
 import io.rippledown.server.routes.kbManagement
 import io.rippledown.server.routes.serverManagement
@@ -42,6 +43,7 @@ open class OpenRDRServerTestBase {
             serverManagement()
             kbManagement(applicationToUse)
             caseManagement(applicationToUse)
+            attributeManagement(applicationToUse)
         }
     }
 }

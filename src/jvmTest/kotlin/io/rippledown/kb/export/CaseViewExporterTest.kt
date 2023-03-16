@@ -33,9 +33,9 @@ class CaseViewExporterTest : ExporterTestBase() {
 
     @Test
     fun exportMultiple() {
-        val tsh = Attribute("TSH")
-        val ft3 = Attribute("FT3")
-        val ft4 = Attribute("FT4")
+        val tsh = Attribute("TSH", 100)
+        val ft3 = Attribute("FT3", 200)
+        val ft4 = Attribute("FT4", 300)
         val attributeList = listOf(tsh, ft4, ft3)
         val textFile = File(tempDir,"Attributes.txt")
         CaseViewExporter(textFile, attributeList).export()

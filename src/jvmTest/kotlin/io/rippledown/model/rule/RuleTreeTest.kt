@@ -12,7 +12,6 @@ internal class RuleTreeTest : RuleTestBase() {
     private lateinit var tree: RuleTree
     private val A = "A"
     private val B = "B"
-    private val notes = clinicalNotes.name
     private val conclusionA = conc(A)
     private val conclusionB = conc(B)
     private val kase = clinicalNotesCase("abc")
@@ -45,7 +44,7 @@ internal class RuleTreeTest : RuleTestBase() {
             child {
                 +A
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "a"
                 }
             }
@@ -60,14 +59,14 @@ internal class RuleTreeTest : RuleTestBase() {
             child {
                 +A
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "a"
                 }
             }
             child {
                 +B
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "b"
                 }
             }
@@ -82,13 +81,13 @@ internal class RuleTreeTest : RuleTestBase() {
             child {
                 + "ConcA"
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "a"
                 }
                 child {
                     +"ConcC"
                     condition {
-                        attributeName = notes
+                        attribute = clinicalNotes
                         constant = "c"
                     }
                 }
@@ -96,13 +95,13 @@ internal class RuleTreeTest : RuleTestBase() {
             child {
                 + "ConcB"
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "b"
                 }
                 child {
                     + "ConcC"
                     condition {
-                        attributeName = notes
+                        attribute = clinicalNotes
                         constant = "c"
                     }
                 }
@@ -121,21 +120,21 @@ internal class RuleTreeTest : RuleTestBase() {
             child {
                 conclusion { "ConcA" }
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "a"
                 }
             }
             child {
                 conclusion { "ConcB" }
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "b"
                 }
             }
             child {
                 conclusion { "ConcC" }
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "c"
                 }
             }
@@ -159,7 +158,7 @@ internal class RuleTreeTest : RuleTestBase() {
             child {
                 conclusion { "ConcA" }
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "a"
                 }
             }
@@ -173,14 +172,14 @@ internal class RuleTreeTest : RuleTestBase() {
             child {
                 conclusion { "ConcA" }
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "a"
                 }
             }
             child {
                 conclusion { "ConcA" }
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "b"
                 }
             }
@@ -194,19 +193,19 @@ internal class RuleTreeTest : RuleTestBase() {
             child {
                 conclusion { "ConcA" }
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "a"
                 }
                 child {
                     conclusion { "ConcA" }
                     condition {
-                        attributeName = notes
+                        attribute = clinicalNotes
                         constant = "b"
                     }
                     child {
                         conclusion { "ConcB" }
                         condition {
-                            attributeName = notes
+                            attribute = clinicalNotes
                             constant = "c"
                         }
                     }
@@ -214,7 +213,7 @@ internal class RuleTreeTest : RuleTestBase() {
                 child {
                     conclusion { "ConcD" }
                     condition {
-                        attributeName = notes
+                        attribute = clinicalNotes
                         constant = "d"
                     }
                 }
@@ -230,21 +229,21 @@ internal class RuleTreeTest : RuleTestBase() {
                 id = "c1"
                 conclusion { "ConcA" }
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "a"
                 }
                 child {
                     id = "c11"
                     conclusion { "ConcA" }
                     condition {
-                        attributeName = notes
+                        attribute = clinicalNotes
                         constant = "b"
                     }
                     child {
                         id = "c111"
                         conclusion { "ConcB" }
                         condition {
-                            attributeName = notes
+                            attribute = clinicalNotes
                             constant = "c"
                         }
                     }
@@ -253,7 +252,7 @@ internal class RuleTreeTest : RuleTestBase() {
                     id = "c12"
                     conclusion { "ConcD" }
                     condition {
-                        attributeName = notes
+                        attribute = clinicalNotes
                         constant = "d"
                     }
                 }
@@ -271,25 +270,25 @@ internal class RuleTreeTest : RuleTestBase() {
                 id = "c1"
                 conclusion { "ConcA" }
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "a"
                 }
                 child {
                     conclusion { "ConcA" }
                     condition {
-                        attributeName = notes
+                        attribute = clinicalNotes
                         constant = "b"
                     }
                     child {
                         conclusion { "ConcB" }
                         condition {
-                            attributeName = notes
+                            attribute = clinicalNotes
                             constant = "c"
                         }
                         child {
                             conclusion { "ConcA" }
                             condition {
-                                attributeName = notes
+                                attribute = clinicalNotes
                                 constant = "d"
                             }
                         }
@@ -298,7 +297,7 @@ internal class RuleTreeTest : RuleTestBase() {
                 child {
                     conclusion { "ConcD" }
                     condition {
-                        attributeName = notes
+                        attribute = clinicalNotes
                         constant = "d"
                     }
                 }
@@ -319,14 +318,14 @@ internal class RuleTreeTest : RuleTestBase() {
                 id = "c1"
                 conclusion { "ConcA" }
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "a"
                 }
                 child {
                     id = "c2"
                     conclusion { "ConcB" }
                     condition {
-                        attributeName = notes
+                        attribute = clinicalNotes
                         constant = "b"
                     }
                 }
@@ -358,7 +357,7 @@ internal class RuleTreeTest : RuleTestBase() {
             child {
                 conclusion { "ConcA" }
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "a"
                 }
             }
@@ -373,14 +372,14 @@ internal class RuleTreeTest : RuleTestBase() {
             child {
                 + "ConcA"
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "a"
                 }
             }
             child {
                 conclusion { "ConcB" }
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "b"
                 }
             }

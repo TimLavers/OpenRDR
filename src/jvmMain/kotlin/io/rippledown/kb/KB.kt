@@ -6,6 +6,7 @@ import io.rippledown.model.condition.Condition
 import io.rippledown.model.rule.*
 
 class KB(val name: String, val ruleTree: RuleTree = RuleTree()) {
+    val attributeManager = AttributeManager()
     private val cornerstones = mutableSetOf<RDRCase>()
     private var ruleSession: RuleBuildingSession? = null
     val caseViewManager = CaseViewManager()

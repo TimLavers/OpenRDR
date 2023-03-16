@@ -15,6 +15,13 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.Files
 import kotlin.test.*
 
+
+fun RDRCase.getAttribute(attributeName: String): Attribute {
+    return attributes.first { attribute -> attribute.name == attributeName }
+}
+fun RDRCase.getLatest(attributeName: String): TestResult? {
+    return getLatest(getAttribute(attributeName))
+}
 internal class ServerApplicationTest {
 
     @BeforeTest
@@ -85,15 +92,16 @@ internal class ServerApplicationTest {
         setUpCaseFromFile("Case1", app)
         val retrieved = app.case("Case1")
         assertEquals(retrieved.name, "Case1")
-        assertEquals(retrieved.getLatest(Attribute("TSH"))!!.value.text, "0.667")
-        assertEquals(retrieved.getLatest(Attribute("ABC"))!!.value.text, "6.7")
+        assertEquals(retrieved.getLatest("TSH")!!.value.text, "0.667")
+        assertEquals(retrieved.getLatest("ABC")!!.value.text, "6.7")
         assertEquals(2, retrieved.data.size)
         // No rules added.
         retrieved.interpretation.conclusions().size shouldBe 0
         // Add a rule.
         val conclusion = Conclusion("ABC ok.")
         app.kb.startRuleSession(retrieved, ChangeTreeToAddConclusion(conclusion))
-        app.kb.addConditionToCurrentRuleSession(GreaterThanOrEqualTo(Attribute("ABC"), 5.0))
+        val abc = retrieved.getAttribute("ABC")
+        app.kb.addConditionToCurrentRuleSession(GreaterThanOrEqualTo(abc, 5.0))
         app.kb.commitCurrentRuleSession()
         val retrievedAgain = app.case("Case1")
         retrievedAgain.interpretation.conclusions() shouldContainExactly setOf(conclusion)
@@ -105,17 +113,26 @@ internal class ServerApplicationTest {
         setUpCaseFromFile("Case1", app)
         val retrieved = app.viewableCase("Case1")
         assertEquals(retrieved.name, "Case1")
-        assertEquals(retrieved.rdrCase.getLatest(Attribute("ABC"))!!.value.text, "6.7")
+        assertEquals(retrieved.rdrCase.getLatest("ABC")!!.value.text, "6.7")
         assertEquals(2, retrieved.attributes().size)
         // No rules added.
         retrieved.interpretation.conclusions().size shouldBe 0
         // Add a rule.
         val conclusion = Conclusion("ABC ok.")
         app.kb.startRuleSession(retrieved.rdrCase, ChangeTreeToAddConclusion(conclusion))
-        app.kb.addConditionToCurrentRuleSession(GreaterThanOrEqualTo(Attribute("ABC"), 5.0))
+        val abc = retrieved.rdrCase.getAttribute("ABC")
+        app.kb.addConditionToCurrentRuleSession(GreaterThanOrEqualTo(abc, 5.0))
         app.kb.commitCurrentRuleSession()
         val retrievedAgain = app.viewableCase("Case1")
         retrievedAgain.interpretation.conclusions() shouldContainExactly setOf(conclusion)
+    }
+
+    @Test
+    fun getOrCreateAttribute() {
+        val app = ServerApplication()
+        app.kb.attributeManager.all() shouldBe emptySet()
+        val attribute = app.getOrCreateAttribute("stuff")
+        app.kb.attributeManager.all() shouldBe setOf(attribute)
     }
 
     @Test

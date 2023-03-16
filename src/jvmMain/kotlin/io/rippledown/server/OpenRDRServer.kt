@@ -13,10 +13,8 @@ import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.rippledown.server.routes.caseManagement
-import io.rippledown.server.routes.kbManagement
-import io.rippledown.server.routes.ruleSession
-import io.rippledown.server.routes.serverManagement
+import io.rippledown.server.routes.*
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 
@@ -28,7 +26,7 @@ const val STOPPING_SERVER = "Stopping server"
 
 lateinit var server: NettyApplicationEngine
 
-val logger = LoggerFactory.getLogger("rdr")
+val logger: Logger = LoggerFactory.getLogger("rdr")
 
 fun main() {
     val application = ServerApplication()
@@ -71,6 +69,7 @@ fun main() {
         serverManagement()
         kbManagement(application)
         caseManagement(application)
+        attributeManagement(application)
         ruleSession(application)
     }
     logger.info(STARTING_SERVER)

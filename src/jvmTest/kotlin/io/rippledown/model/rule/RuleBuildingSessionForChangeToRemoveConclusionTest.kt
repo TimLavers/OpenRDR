@@ -57,14 +57,14 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
             child {
                 +"A"
                 condition {
-                    attributeName = clinicalNotes.name
+                    attribute = clinicalNotes
                     constant = "a"
                 }
             }
             child {
                 +"B"
                 condition {
-                    attributeName = clinicalNotes.name
+                    attribute = clinicalNotes
                     constant = "b"
                 }
             }
@@ -95,7 +95,7 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
             child {
                 +"A"
                 condition {
-                    attributeName = clinicalNotes.name
+                    attribute = clinicalNotes
                     constant = "a"
                 }
             }

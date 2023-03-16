@@ -1,5 +1,6 @@
 package io.rippledown.integration.proxy
 
+import io.rippledown.model.AttributeFactory
 import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
@@ -14,7 +15,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 
-class LabProxy(tempDir: File) {
+class LabProxy(tempDir: File, private val attributeFactory: AttributeFactory) {
     private val inputDir = File(tempDir, "cases")
     private val interpretationsDir = File(tempDir, "interpretations")
 
@@ -46,10 +47,6 @@ class LabProxy(tempDir: File) {
         FileUtils.cleanDirectory(inputDir)
     }
 
-    fun cleanInterpretationsDir() {
-        FileUtils.cleanDirectory(interpretationsDir)
-    }
-
     fun copyCase(caseName: String) {
         FileUtils.copyFileToDirectory(ConfiguredTestData.caseFile(caseName), inputDir)
     }
@@ -73,7 +70,7 @@ class LabProxy(tempDir: File) {
     fun writeCaseWithDataToInputDir(name: String, attributeNameToValue: Map<String, String>) {
         val builder = RDRCaseBuilder()
         val now = Instant.now().toEpochMilli()
-        attributeNameToValue.forEach { (a, v) -> builder.addResult(a, now, TestResult(v)) }
+        attributeNameToValue.forEach { (a, v) -> builder.addResult(attributeFactory.create(a), now, TestResult(v)) }
         val case = builder.build(name)
         writeCaseToInputDir(case)
     }

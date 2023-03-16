@@ -13,8 +13,8 @@ import java.time.Duration
 
 open class UITestBase {
     val serverProxy = ServerProxy()
-    val labProxy = LabProxy(serverProxy.tempDir())
-    private val restClient = RESTClient()
+    val restClient = RESTClient()
+    val labProxy = LabProxy(serverProxy.tempDir(), RestClientAttributeFactory(restClient))
     private val dirProxy = DirProxy()
     lateinit var driver: WebDriver
 
@@ -38,14 +38,14 @@ open class UITestBase {
             addArguments("--disable-application-cache")
             addArguments("--disable-web-security")
             val prefsMap = mutableMapOf<String, Any>()
-            prefsMap.put("download.default_directory", downloadsDir().absolutePath)
+            prefsMap["download.default_directory"] = downloadsDir().absolutePath
             options.setExperimentalOption("prefs", prefsMap )
         }
         return ChromeDriver(options)
     }
 
     fun driverClose() {
-        val tabs = driver.getWindowHandles() as LinkedHashSet<String>
+        val tabs = driver.windowHandles as LinkedHashSet<String>
         tabs.forEach {
             driver.switchTo().window(it)
             driver.close()

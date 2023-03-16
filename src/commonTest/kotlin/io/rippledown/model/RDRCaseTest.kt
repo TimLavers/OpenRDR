@@ -296,11 +296,7 @@ internal class RDRCaseTest {
     }
 
     private fun checkValues(case: RDRCase, attribute: Attribute, vararg expectedValues: String) {
-        checkValues(case, attribute.name, expectedValues=expectedValues)
-    }
-
-    private fun checkValues(case: RDRCase, attributeName: String, vararg expectedValues: String) {
-        val inCase = case.values(attributeName)!!
+        val inCase = case.values(attribute)!!
         assertEquals(expectedValues.size, inCase.size)
         inCase.zip(expectedValues).forEach {
             assertEquals(it.first.value.text, it.second)

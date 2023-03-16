@@ -13,13 +13,13 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class CaseViewManagerTest {
-
-    val a1 = Attribute("A1")
-    val a2 = Attribute("A2")
-    val a3 = Attribute("A3")
-    val a4 = Attribute("A4")
-    val a5 = Attribute("A5")
-    val a6 = Attribute("A6")
+    var id = 0
+    val a1 = Attribute("A1", id++)
+    val a2 = Attribute("A2", id++)
+    val a3 = Attribute("A3", id++)
+    val a4 = Attribute("A4", id++)
+    val a5 = Attribute("A5", id++)
+    val a6 = Attribute("A6", id++)
     private var manager = CaseViewManager()
 
     @BeforeTest

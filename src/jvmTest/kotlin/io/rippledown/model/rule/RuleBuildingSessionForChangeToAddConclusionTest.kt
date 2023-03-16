@@ -70,14 +70,14 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
             child {
                 +"A"
                 condition {
-                    attributeName = clinicalNotes.name
+                    attribute = clinicalNotes
                     constant = "1"
                 }
             }
             child {
                 +"B"
                 condition {
-                    attributeName = clinicalNotes.name
+                    attribute = clinicalNotes
                     constant = "3"
                 }
             }
@@ -109,7 +109,7 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
             child {
                 +"A"
                 condition {
-                    attributeName = clinicalNotes.name
+                    attribute = clinicalNotes
                     constant = "1"
                 }
             }

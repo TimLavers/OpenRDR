@@ -1,9 +1,9 @@
 package io.rippledown.integration
 
-import io.rippledown.examples.vltsh.*
 import io.rippledown.integration.pageobjects.CaseListPO
 import io.rippledown.integration.pageobjects.CaseQueuePO
 import io.rippledown.integration.pageobjects.CaseViewPO
+import io.rippledown.examples.vltsh.TSHCases
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.assertEquals
@@ -40,7 +40,7 @@ internal open class TSHTest: UITestBase() {
 
     open fun setupCases() {
         labProxy.cleanCasesDir()
-        val tshCases = TSHCases()
+        val tshCases = TSHCases(RestClientAttributeFactory(restClient))
         labProxy.writeCaseToInputDir(tshCases.TSH1)
         labProxy.writeCaseToInputDir(tshCases.TSH2)
         labProxy.writeCaseToInputDir(tshCases.TSH3)

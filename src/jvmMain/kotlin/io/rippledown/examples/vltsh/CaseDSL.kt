@@ -65,18 +65,18 @@ class TestResultTemplate(var attribute: String = "", var value: String = "") {
     }
 }
 
-fun multiEpisodeCase(lambda: MultiEpisodeCaseTemplate.() -> Unit): MultiEpisodeCaseTemplate {
-    val template = MultiEpisodeCaseTemplate()
+fun multiEpisodeCase(attributeFactory: AttributeFactory, lambda: MultiEpisodeCaseTemplate.() -> Unit): MultiEpisodeCaseTemplate {
+    val template = MultiEpisodeCaseTemplate(attributeFactory)
     template.lambda()
     return template
 }
 
-data class MultiEpisodeCaseTemplate(var name: String = "") {
+data class MultiEpisodeCaseTemplate(val attributeFactory: AttributeFactory, var name: String = "") {
     private var dates: List<Long> = emptyList()
     private var attributeToValues = mutableMapOf<Attribute, List<TestResult>>()
     var sex = "F"
 
-    fun build(attributeFactory: AttributeFactory): RDRCase {
+    fun build(): RDRCase {
         val builder = RDRCaseBuilder()
         val numberOfEpisodes = dates.size
         require(dates.isNotEmpty()) { "dates should not be empty"}
@@ -103,14 +103,14 @@ data class MultiEpisodeCaseTemplate(var name: String = "") {
     fun testValues(lambda: TestResultsTemplate.() -> Unit): TestResultsTemplate {
         val template = TestResultsTemplate()
         template.lambda()
-        attributeToValues[Attribute(template.attribute)] = template.results()
+        attributeToValues[attributeFactory.create(template.attribute)] = template.results()
         return template
     }
 
     fun clinicalNotes(lambda: ClinicalNotesTemplate.() -> Unit): ClinicalNotesTemplate {
         val template = ClinicalNotesTemplate()
         template.lambda()
-        attributeToValues[Attribute(template.attribute)] = template.results()
+        attributeToValues[attributeFactory.create(template.attribute)] = template.results()
         return template
     }
 }

@@ -82,10 +82,10 @@ class RULE_TEMPLATE : ABSTRACT_RULE_TEMPLATE() {
     }
 }
 class CONDITION_TEMPLATE {
-    lateinit var attributeName: String
+    lateinit var attribute: Attribute
     lateinit var constant: String
 
     fun condition(): Condition {
-        return ContainsText(Attribute(attributeName), constant)
+        return ContainsText(attribute, constant)
     }
 }

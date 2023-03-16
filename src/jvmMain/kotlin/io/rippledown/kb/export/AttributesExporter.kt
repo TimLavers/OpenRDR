@@ -5,14 +5,14 @@ import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
 
-class CaseViewExporter(private val destination: File, val attributes: List<Attribute>) {
+class AttributesExporter(private val destination: File, val attributes: Set<Attribute>) {
     init {
         if (destination.exists()) {
             require(destination.isFile) {
-                "Case view export destination ${destination.name} is not a file."
+                "Attributes export destination ${destination.name} is not a file."
             }
             require(destination.length() == 0L) {
-                "Case view export file ${destination.name} is not empty."
+                "Attributes export file ${destination.name} is not empty."
             }
         }
     }
@@ -20,7 +20,7 @@ class CaseViewExporter(private val destination: File, val attributes: List<Attri
     fun export() {
         val outputWriter = BufferedWriter(FileWriter(destination))
         attributes.forEach{
-            outputWriter.write("${it.id}")
+            outputWriter.write("${it.id} ${it.name}")
             outputWriter.newLine()
         }
         outputWriter.close()

@@ -55,21 +55,21 @@ class RuleExporterTest: ExporterTestBase() {
                 id = "c1"
                 conclusion { "ConclusionA" }
                 condition {
-                    attributeName = clinicalNotes.name
+                    attribute = clinicalNotes
                     constant = "a"
                 }
                 child {
                     id = "c11"
                     conclusion { "ConclusionA" }
                     condition {
-                        attributeName = clinicalNotes.name
+                        attribute = clinicalNotes
                         constant = "b"
                     }
                     child {
                         id = "c111"
                         conclusion { "ConclusionB" }
                         condition {
-                            attributeName = clinicalNotes.name
+                            attribute = clinicalNotes
                             constant = "c"
                         }
                     }
@@ -78,7 +78,7 @@ class RuleExporterTest: ExporterTestBase() {
                     id = "c12"
                     conclusion { "ConclusionD" }
                     condition {
-                        attributeName = clinicalNotes.name
+                        attribute = clinicalNotes
                         constant = "d"
                     }
                 }

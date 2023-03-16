@@ -104,8 +104,7 @@ data class RDRCase(val name: String = "", val data: Map<TestEvent, TestResult> =
         dateToEpisode = dateToEpisodeMutable.toMap()
     }
 
-    fun values(attributeName: String): List<TestResult>? {
-        val attribute = Attribute(attributeName)
+    fun values(attribute: Attribute): List<TestResult>? {
         if (!attributes.contains(attribute)) {
             return null
         }
@@ -120,7 +119,7 @@ data class RDRCase(val name: String = "", val data: Map<TestEvent, TestResult> =
         if (!attributes.contains(attribute)) {
             return null
         }
-        return ResultsList(values(attribute.name)!!)
+        return ResultsList(values(attribute)!!)
     }
 
     fun getLatest(attribute: Attribute): TestResult? {

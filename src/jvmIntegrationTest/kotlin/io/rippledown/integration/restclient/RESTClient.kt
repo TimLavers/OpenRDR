@@ -7,6 +7,7 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.Conclusion
 import io.rippledown.model.OperationResult
@@ -20,7 +21,7 @@ import kotlinx.serialization.json.Json
 class RESTClient {
     private val endpoint = "http://localhost:9090"
 
-    private val jsonClient =  HttpClient(CIO) {
+    private val jsonClient = HttpClient(CIO) {
         install(ContentNegotiation) {
             json(Json {
                 prettyPrint = true
@@ -51,6 +52,13 @@ class RESTClient {
         }
         return currentCase
     }
+
+    fun getOrCreateAttribute(name: String): Attribute = runBlocking {
+        jsonClient.post(endpoint + GET_OR_CREATE_ATTRIBUTE) {
+            setBody(name)
+        }.body()
+    }
+
 
     fun startSessionToAddConclusionForCurrentCase(conclusion: Conclusion): OperationResult {
         require(currentCase != null)

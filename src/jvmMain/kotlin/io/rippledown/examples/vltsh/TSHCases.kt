@@ -1,10 +1,6 @@
 package io.rippledown.examples.vltsh
 
-import io.rippledown.model.Attribute
-
-interface AttributeFactory {
-    fun create(name: String): Attribute
-}
+import io.rippledown.model.AttributeFactory
 
 /**
  * Cases from the paper "Interpretative commenting in clinical chemistry with worked
@@ -12,14 +8,7 @@ interface AttributeFactory {
  *
  * ORD4
  */
-class TSHCases {
-    class AF: AttributeFactory {
-        private var index = 1
-        override fun create(name: String): Attribute {
-            return Attribute(name)//index++
-        }
-    }
-    val attributeFactory = AF()
+class TSHCases(attributeFactory: AttributeFactory) {
 
     val TSH1 = tshCase {
         name = "1.4.1"
@@ -124,7 +113,7 @@ class TSHCases {
         sex = "M"
         clinicalNotes = "Hypothyroid?"
     }.build(attributeFactory)
-    val TSH13 = multiEpisodeCase {
+    val TSH13 = multiEpisodeCase(attributeFactory) {
         name = "1.4.13"
         sex = "M"
         dates {
@@ -159,7 +148,7 @@ class TSHCases {
             attribute = "Patient Location"
             valuesCSL = "General Practice., General Practice."
         }
-    }.build(attributeFactory)
+    }.build()
     val TSH14 = tshCase {
         name = "1.4.14"
         tsh = "0.72"
@@ -188,7 +177,7 @@ class TSHCases {
         age = 51
         clinicalNotes = "Previous total thyroidectomy for thyroid cancer. On thyroxine."
     }.build(attributeFactory)
-    val TSH18 = multiEpisodeCase {
+    val TSH18 = multiEpisodeCase(attributeFactory) {
         name = "1.4.18"
         dates {
             datesCSL = "2022-08-18T13:07:44.475Z, 2022-02-25T14:22:51.942Z"
@@ -218,7 +207,7 @@ class TSHCases {
             attribute = "Tests"
             valuesCSL = "TFTs, TFTs"
         }
-    }.build(attributeFactory)
+    }.build()
     val TSH19 = tshCase {
         name = "1.4.19"
         tsh = "0.03"

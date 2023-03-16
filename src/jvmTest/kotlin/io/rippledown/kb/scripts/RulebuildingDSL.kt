@@ -7,8 +7,8 @@ import io.rippledown.model.rule.*
 import io.rippledown.model.condition.*
 
 const val addedConditionBeforeSessionStarted = "Session not started yet. Please define the case and action before adding a condition"
-val textAttribute = Attribute("Text")
-val numberAttribute = Attribute("Value")
+val textAttribute = Attribute("Text", 100)
+val numberAttribute = Attribute("Value", 200)
 
 fun build(f: BuildTemplate.() -> Unit): BuildTemplate {
     val template = BuildTemplate()

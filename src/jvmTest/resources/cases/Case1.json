@@ -3,7 +3,8 @@
   "data": [
     {
       "attribute": {
-        "name": "TSH"
+        "name": "TSH",
+        "id": 1
       },
       "date": 1659752689505
     },
@@ -19,7 +20,8 @@
     },
     {
       "attribute": {
-        "name": "ABC"
+        "name": "ABC",
+        "id": 2
       },
       "date": 1659752689505
     },

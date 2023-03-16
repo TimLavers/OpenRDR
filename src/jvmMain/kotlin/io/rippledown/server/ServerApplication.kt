@@ -92,6 +92,10 @@ class ServerApplication {
         kb.caseViewManager.moveJustBelow(moved, target)
     }
 
+    fun getOrCreateAttribute(name: String): Attribute {
+        return kb.attributeManager.getOrCreate(name)
+    }
+
     fun saveInterpretation(interpretation: Interpretation): OperationResult {
         val fileName = "${interpretation.caseId.id}.interpretation.json"
         println("${LocalDateTime.now()}  saving interp = $fileName")
@@ -115,5 +119,14 @@ class ServerApplication {
         return format.decodeFromString(data)
     }
 
+    /*
+    Scale in 6ths F major
+    p48 of the
+    practise each interval with a finger wobble
+
+    Also in chained bowing, 2 interval slurs, and slurring across the position changes
+
+
+     */
     private fun uninterpretedCase(id: String) = getCaseFromFile(File(casesDir, "$id.json"))
 }

@@ -11,7 +11,6 @@ internal class ActionTest : RuleTestBase() {
     private val A = "A"
     private val B = "B"
     private val C = "C"
-    private val notes = clinicalNotes.name
 
     @Test
     fun an_AddAction_should_add_a_rule_under_be_the_root_rule() {
@@ -19,14 +18,14 @@ internal class ActionTest : RuleTestBase() {
             child {
                 +A
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "a"
                 }
             }
             child {
                 +B
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "b"
                 }
             }
@@ -52,14 +51,14 @@ internal class ActionTest : RuleTestBase() {
             child {
                 +A
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "a"
                 }
             }
             child {
                 +B
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "b"
                 }
             }
@@ -87,21 +86,21 @@ internal class ActionTest : RuleTestBase() {
             child {
                 +A
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "a"
                 }
             }
             child {
                 +A
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "b"
                 }
             }
             child {
                 +C
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "a"
                 }
             }
@@ -130,21 +129,21 @@ internal class ActionTest : RuleTestBase() {
             child {
                 +A
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "a"
                 }
             }
             child {
                 +A
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "b"
                 }
             }
             child {
                 +C
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "a"
                 }
             }
@@ -173,14 +172,14 @@ internal class ActionTest : RuleTestBase() {
             child {
                 +A
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "a"
                 }
             }
             child {
                 +B
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "b"
                 }
             }
@@ -209,21 +208,21 @@ internal class ActionTest : RuleTestBase() {
             child {
                 +A
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "a"
                 }
             }
             child {
                 +A
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "b"
                 }
             }
             child {
                 +B
                 condition {
-                    attributeName = notes
+                    attribute = clinicalNotes
                     constant = "b"
                 }
             }

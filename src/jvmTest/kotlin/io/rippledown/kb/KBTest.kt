@@ -14,6 +14,12 @@ class KBTest {
     val glucose = Attribute("Glucose", 5000)
 
     @Test
+    fun attributeManager() {
+        val kb = KB("Thyroids")
+        kb.attributeManager.all() shouldBe emptySet()
+    }
+
+    @Test
     fun viewableInterpretedCase() {
         val kb = KB("Blah")
         val comment = "Coffee time!"
@@ -220,7 +226,7 @@ class KBTest {
         val sessionCase = kb.getCaseByName("Case1")
         sessionCase.interpretation.textGivenByRules() shouldBe ""
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion("Whatever.")))
-        kb.addConditionToCurrentRuleSession(LessThanOrEqualTo(Attribute("Glucose"), 1.2))
+        kb.addConditionToCurrentRuleSession(LessThanOrEqualTo(glucose, 1.2))
         kb.conflictingCasesInCurrentRuleSession().size shouldBe 0
     }
 
@@ -243,7 +249,7 @@ class KBTest {
     }
 
     private fun createCondition(): GreaterThanOrEqualTo {
-        return GreaterThanOrEqualTo(Attribute("ABC"), 5.0)
+        return GreaterThanOrEqualTo(Attribute("ABC", 4567), 5.0)
     }
 
     private fun createCase(caseName: String, glucoseValue: String = "0.667"): RDRCase {
