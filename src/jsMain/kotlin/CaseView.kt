@@ -5,6 +5,7 @@ import mui.material.Box
 import mui.material.Typography
 import react.FC
 import react.dom.html.ReactHTML.table
+import tab.InterpretationTabs
 
 const val CASEVIEW_CASE_NAME_ID = "case_view_case_name"
 
@@ -49,7 +50,7 @@ val CaseView = FC<CaseViewHandler> { props ->
                 onCaseEdited = props.onCaseEdited
             }
         }
-        InterpretationView {
+        InterpretationTabs {
             scope = props.scope
             api = props.api
             interpretation = props.case.interpretation
