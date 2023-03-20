@@ -24,17 +24,23 @@ internal class ShowRuleCondition : UITestBase() {
     private val caseName = "Case1"
     private val tshComment = "Normal TSH"
     private val abcComment = "Unusual ABC value"
-    private val tsh = Attribute("TSH")
-    private val abc = Attribute("ABC")
-    private val condition1 = IsNormal(tsh)
-    private val condition2 = LessThanOrEqualTo(tsh, 0.7)
-    private val condition3 = GreaterThanOrEqualTo(abc, 6.1)
-    private val condition4 = LessThanOrEqualTo(abc, 7.1)
+    private lateinit var tsh : Attribute
+    private lateinit var abc : Attribute
+    private lateinit var condition1: IsNormal
+    private lateinit var condition2 : LessThanOrEqualTo
+    private lateinit var condition3 : GreaterThanOrEqualTo
+    private lateinit var condition4 : LessThanOrEqualTo
 
     @BeforeTest
     fun setup() {
         serverProxy.start()
         resetKB()
+        tsh = attributeFactory.create("TSH")
+        abc = attributeFactory.create("ABC")
+        condition1 = IsNormal(tsh)
+        condition2 = LessThanOrEqualTo(tsh, 0.7)
+        condition3 = GreaterThanOrEqualTo(abc, 6.1)
+        condition4 = LessThanOrEqualTo(abc, 7.1)
         setupCase()
         buildRuleForTSH()
         buildRuleForABC()

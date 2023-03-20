@@ -82,7 +82,7 @@ class Api(engine: HttpClientEngine = Js.create()) {
         }.body()
     }
 
-    suspend fun moveAttributeJustBelowOther(moved:Attribute, target: Attribute): OperationResult {
+    suspend fun moveAttributeJustBelowOther(moved: Int, target: Int): OperationResult {
         return jsonClient.post("$endpoint/api/moveAttributeJustBelowOther") {
             contentType(ContentType.Application.Json)
             setBody(Pair(moved, target))

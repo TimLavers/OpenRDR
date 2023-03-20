@@ -48,14 +48,14 @@ class ApiTest {
     @Test
     fun moveAttributeJustBelowOther() = runTest {
         val expectedResult = OperationResult("Attribute moved.")
-        val moved =Attribute("A")
-        val target =Attribute("B")
+        val moved = Attribute("A", 123)
+        val target = Attribute("B", 456)
         val config = config {
             returnOperationResult = expectedResult
-            expectedMovedAttribute = moved
-            expectedTargetAttribute = target
+            expectedMovedAttributeId = moved.id
+            expectedTargetAttributeId = target.id
         }
-        Api(mock(config)).moveAttributeJustBelowOther(moved, target) shouldBe expectedResult
+        Api(mock(config)).moveAttributeJustBelowOther(moved.id, target.id) shouldBe expectedResult
     }
 
     @Test

@@ -142,7 +142,7 @@ internal class ServerApplicationTest {
         val retrieved = app.viewableCase("Case1")
         val attributesBefore = retrieved.attributes()
         attributesBefore.size shouldBe 2 // sanity
-        app.moveAttributeJustBelow(attributesBefore[0], attributesBefore[1])
+        app.moveAttributeJustBelow(attributesBefore[0].id, attributesBefore[1].id)
         // Get the case again and check that the order has been applied.
         val retrievedAfter = app.viewableCase("Case1")
         retrievedAfter.attributes()[0] shouldBe attributesBefore[1]

@@ -16,7 +16,7 @@ import kotlin.test.Test
 class ConclusionsViewTest {
     private val comment1 = "Go to Bondi now!"
     private val comment2 = "Go to Bronte now!"
-    private val sun = Attribute("Sun")
+    private val sun = Attribute("Sun", 55)
 
     private fun wrapper(vararg comments: String) = VFC {
         comments.forEachIndexed { index, comment ->

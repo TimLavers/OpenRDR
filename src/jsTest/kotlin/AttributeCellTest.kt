@@ -10,7 +10,7 @@ class AttributeCellTest : ReactTestSupport {
 
     @Test
     fun creation() {
-        val tsh = Attribute("TSH")
+        val tsh = Attribute("TSH", 1)
         val renderer = render {
             AttributeCell {
                 attribute = tsh

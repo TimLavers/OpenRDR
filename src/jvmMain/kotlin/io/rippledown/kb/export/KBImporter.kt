@@ -1,5 +1,6 @@
 package io.rippledown.kb.export
 
+import io.rippledown.kb.AttributeManager
 import io.rippledown.kb.KB
 import io.rippledown.model.Attribute
 import java.io.File
@@ -14,15 +15,13 @@ class KBImporter(source: File): KBExportImport(source) {
 
         // Extract the attributes.
         val idToAttribute = AttributesImporter(attributesFile).import()
+        val attributeManager = AttributeManager(idToAttribute.values.toSet())
 
         // Extract the rule tree.
         val ruleTree = RuleImporter(rulesDirectory).import()
 
         // Create the result.
-        val result = KB(name, ruleTree)
-
-        // Restore the attributes for the result.
-        result.attributeManager.restoreWith(idToAttribute.values as Set<Attribute>)
+        val result = KB(name, attributeManager, ruleTree)
 
         // Add the cases.
         CaseImporter(casesDirectory).import().forEach { result.addCase(it) }

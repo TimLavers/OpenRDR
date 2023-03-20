@@ -14,10 +14,8 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.apache.commons.io.FileUtils
-import org.apache.commons.io.FileUtils.writeByteArrayToFile
 import java.io.File
 import java.nio.charset.StandardCharsets.UTF_8
-import java.nio.file.attribute.FileAttribute
 import java.time.LocalDateTime
 import kotlin.io.path.createTempDirectory
 
@@ -88,7 +86,9 @@ class ServerApplication {
         return kb.viewableInterpretedCase(uninterpretedCase(id))
     }
 
-    fun moveAttributeJustBelow(moved: Attribute, target: Attribute) {
+    fun moveAttributeJustBelow(movedId: Int, targetId: Int) {
+        val moved = kb.attributeManager.getById(movedId)
+        val target = kb.attributeManager.getById(targetId)
         kb.caseViewManager.moveJustBelow(moved, target)
     }
 
@@ -109,7 +109,7 @@ class ServerApplication {
         // Now delete the corresponding case file.
         val caseFile = File(casesDir, "${interpretation.caseId.id}.json")
         val deleted = FileUtils.delete(caseFile)
-        println("${LocalDateTime.now()} case deleted ${deleted}")
+        println("${LocalDateTime.now()} case deleted $deleted")
         return OperationResult("Interpretation submitted")
     }
 

@@ -1,12 +1,13 @@
 package io.rippledown.model
 
-import io.rippledown.examples.vltsh.defaultTestDate
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
+
+const val defaultTestDate = 1659752689505L
 
 // ORD1
 internal class TestEventTest {

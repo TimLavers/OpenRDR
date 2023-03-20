@@ -54,7 +54,7 @@ internal class AttributeTest {
     }
 
     @Test //Attr-3
-    fun `name must be less than 256 characters in length`() {
+    fun nameMustBeLessThan256CharactersInLength() {
         fun randomString(length: Int): String {
             //https://stackoverflow.com/questions/46943860/idiomatic-way-to-generate-a-random-alphanumeric-string-in-kotlin
             val alphabet: List<Char> = ('a'..'z') + ('A'..'Z')

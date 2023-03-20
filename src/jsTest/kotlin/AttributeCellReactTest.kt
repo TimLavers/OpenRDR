@@ -9,7 +9,7 @@ import react.VFC
 import kotlin.test.Test
 
 class AttributeCellReactTest {
-    val tsh = Attribute("TSH")
+    val tsh = Attribute("TSH", 34)
 
     val ACWrapper = VFC {
         AttributeCell {

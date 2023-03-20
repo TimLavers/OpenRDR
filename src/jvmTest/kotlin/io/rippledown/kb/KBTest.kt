@@ -8,20 +8,24 @@ import io.rippledown.model.*
 import io.rippledown.model.condition.GreaterThanOrEqualTo
 import io.rippledown.model.condition.LessThanOrEqualTo
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
+import org.junit.Before
 import kotlin.test.Test
 
 class KBTest {
-    val glucose = Attribute("Glucose", 5000)
+    private lateinit var kb : KB
+
+    @Before
+    fun setup() {
+        kb = KB("Blah")
+    }
 
     @Test
     fun attributeManager() {
-        val kb = KB("Thyroids")
         kb.attributeManager.all() shouldBe emptySet()
     }
 
     @Test
     fun viewableInterpretedCase() {
-        val kb = KB("Blah")
         val comment = "Coffee time!"
         buildRuleToAddAComment(kb, comment)
 
@@ -46,7 +50,6 @@ class KBTest {
 
     @Test
     fun interpretCase() {
-        val kb = KB("Blah")
         val comment = "Whatever."
         buildRuleToAddAComment(kb, comment)
         val case = createCase("Case1", "1.0")
@@ -80,31 +83,32 @@ class KBTest {
         (kb1.hashCode() == kb2.hashCode()) shouldBe true
     }
 
-    @Test(expected = NoSuchElementException::class)
+    @Test
     fun getCaseByNameWhenNoCases() {
-        KB("Blah").getCaseByName("Whatever")
+        shouldThrow<NoSuchElementException> {
+            kb.getCaseByName("Whatever")
+        }
     }
 
-    @Test(expected = NoSuchElementException::class)
+    @Test
     fun getCaseByNameUnknownCase() {
-        val kb = KB("Blah")
         kb.addCase(createCase("Case1"))
-        kb.getCaseByName("Whatever")
+        shouldThrow<NoSuchElementException> {
+            kb.getCaseByName("Whatever")
+        }
     }
 
     @Test
     fun getCase() {
-        val kb = KB("Blah")
         kb.addCase(createCase("Case1", "1.2"))
         kb.addCase(createCase("Case2"))
         val retrieved = kb.getCaseByName("Case1")
         retrieved.name shouldBe "Case1"
-        retrieved.getLatest(glucose)!!.value.text shouldBe "1.2"
+        retrieved.getLatest(glucose())!!.value.text shouldBe "1.2"
     }
 
     @Test
     fun allCases() {
-        val kb = KB("Blah")
         kb.allCases() shouldBe emptySet()
         for (i in  1..10) {
             kb.addCase(createCase("Case$i"))
@@ -118,7 +122,6 @@ class KBTest {
 
     @Test
     fun addCase() {
-        val kb = KB("Blah")
         for (i in  1..10) {
             kb.addCase(createCase("Case$i"))
         }
@@ -130,7 +133,6 @@ class KBTest {
 
     @Test
     fun containsCaseWithName() {
-        val kb = KB("Blah")
         for (i in  1..10) {
             val caseName = "Case$i"
             kb.containsCaseWithName(caseName) shouldBe false
@@ -141,7 +143,6 @@ class KBTest {
 
     @Test
     fun cannotAddCaseWithSameNameAsExistingCase() {
-        val kb = KB("Blah")
         kb.addCase(createCase("Blah"))
         kb.addCase(createCase("Whatever"))
         shouldThrow<IllegalArgumentException>{
@@ -151,7 +152,6 @@ class KBTest {
 
     @Test
     fun `rule session must be started for rule session operations`() {
-        val kb = KB("Blah")
         val noSessionMessage = "Rule session not started."
         shouldThrow<IllegalStateException>{
             kb.addConditionToCurrentRuleSession(createCondition())
@@ -168,7 +168,6 @@ class KBTest {
 
     @Test
     fun `cannot start a rule session if one is already started`() {
-        val kb = KB("Blah")
         kb.addCase(createCase("Case1"))
         val sessionCase = kb.getCaseByName("Case1")
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion("Whatever.")))
@@ -179,7 +178,6 @@ class KBTest {
 
     @Test
     fun `cannot start a rule session if action is not applicable to session case`() {
-        val kb = KB("Blah")
         kb.addCase(createCase("Case1", "1.0"))
         kb.addCase(createCase("Case2", "1.0"))
         val sessionCase = kb.getCaseByName("Case1")
@@ -196,7 +194,6 @@ class KBTest {
 
     @Test
     fun startRuleSession() {
-        val kb = KB("Blah")
         kb.addCase(createCase("Case1"))
         val sessionCase = kb.getCaseByName("Case1")
         kb.interpret(sessionCase)
@@ -209,7 +206,6 @@ class KBTest {
 
     @Test
     fun conflictingCases() {
-        val kb = KB("Blah")
         kb.addCase(createCase("Case1", "1.0"))
         kb.addCase(createCase("Case2", "2.0"))
         val sessionCase = kb.getCaseByName("Case1")
@@ -220,19 +216,17 @@ class KBTest {
 
     @Test
     fun addCondition() {
-        val kb = KB("Blah")
         kb.addCase(createCase("Case1", "1.0"))
         kb.addCase(createCase("Case2", "2.0"))
         val sessionCase = kb.getCaseByName("Case1")
         sessionCase.interpretation.textGivenByRules() shouldBe ""
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion("Whatever.")))
-        kb.addConditionToCurrentRuleSession(LessThanOrEqualTo(glucose, 1.2))
+        kb.addConditionToCurrentRuleSession(LessThanOrEqualTo(glucose(), 1.2))
         kb.conflictingCasesInCurrentRuleSession().size shouldBe 0
     }
 
     @Test
     fun commitSession() {
-        val kb = KB("Blah")
         kb.addCase(createCase("Case1", "1.0"))
         kb.addCase(createCase("Case2", "2.0"))
         val sessionCase = kb.getCaseByName("Case1")
@@ -248,13 +242,15 @@ class KBTest {
         otherCase.interpretation.textGivenByRules() shouldBe "Whatever."
     }
 
+    private fun glucose() = kb.attributeManager.getOrCreate("Glucose")
+
     private fun createCondition(): GreaterThanOrEqualTo {
         return GreaterThanOrEqualTo(Attribute("ABC", 4567), 5.0)
     }
 
     private fun createCase(caseName: String, glucoseValue: String = "0.667"): RDRCase {
         val builder1 = RDRCaseBuilder()
-        builder1.addValue(glucose, defaultDate, glucoseValue)
+        builder1.addValue(glucose(), defaultDate, glucoseValue)
         return builder1.build(caseName)
     }
 }

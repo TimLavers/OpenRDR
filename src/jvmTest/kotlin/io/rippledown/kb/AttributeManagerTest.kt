@@ -1,7 +1,10 @@
 package io.rippledown.kb
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.rippledown.model.Attribute
+import io.rippledown.util.randomString
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
@@ -45,7 +48,7 @@ class AttributeManagerTest {
     }
 
     @Test //Attr-5
-    fun `attribute names are not case sensitive`() {
+    fun `attribute names are case sensitive`() {
         val a1 = attributeManager.getOrCreate("aardvarks")
         a1.name shouldBe "aardvarks"
 
@@ -56,7 +59,43 @@ class AttributeManagerTest {
     }
 
     @Test
-    fun restoreWith() {
-        TODO()
+    fun `construct with set of attributes`() {
+        val initial = mutableSetOf<Attribute>()
+        repeat(100) {
+            initial.add(Attribute(randomString(12), it))
+        }
+        attributeManager = AttributeManager(initial)
+        initial.forEach{
+            it shouldBe attributeManager.getById(it.id)
+            it.name shouldBe attributeManager.getById(it.id).name
+        }
+    }
+
+    @Test
+    fun getById() {
+        val stored = mutableListOf<Attribute>()
+        repeat(100) {
+            stored.add(attributeManager.getOrCreate(randomString(12)))
+        }
+        stored.forEach{
+            it shouldBe attributeManager.getById(it.id)
+            it.name shouldBe attributeManager.getById(it.id).name
+        }
+    }
+
+    @Test
+    fun `get by id when attribute not in manager`() {
+        attributeManager.getOrCreate("Whatever")
+        attributeManager.getOrCreate("Stuff")
+        shouldThrow<NoSuchElementException> {
+            attributeManager.getById(99)
+        }
+    }
+
+    @Test
+    fun `get by id when empty`() {
+        shouldThrow<NoSuchElementException> {
+            attributeManager.getById(99)
+        }
     }
 }

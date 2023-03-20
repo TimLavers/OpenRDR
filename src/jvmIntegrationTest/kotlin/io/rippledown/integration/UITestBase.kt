@@ -14,6 +14,7 @@ import java.time.Duration
 open class UITestBase {
     val serverProxy = ServerProxy()
     val restClient = RESTClient()
+    val attributeFactory = RestClientAttributeFactory(restClient)
     val labProxy = LabProxy(serverProxy.tempDir(), RestClientAttributeFactory(restClient))
     private val dirProxy = DirProxy()
     lateinit var driver: WebDriver

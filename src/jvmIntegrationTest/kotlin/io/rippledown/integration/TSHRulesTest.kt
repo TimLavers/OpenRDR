@@ -2,7 +2,6 @@ package io.rippledown.integration
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.restclient.RESTClient
-import io.rippledown.model.Attribute
 import io.rippledown.model.Conclusion
 import io.rippledown.model.condition.*
 import kotlin.test.Test
@@ -64,11 +63,11 @@ internal class TSHRulesTest : TSHTest() {
                 */
     }
 
-    fun checkInterpretation(comment: String) {
+    private fun checkInterpretation(comment: String) {
         caseViewPO.interpretationText() shouldBe comment
     }
 
-    fun checkInterpretationIgnoringWhitespace(comment: String) {
+    private fun checkInterpretationIgnoringWhitespace(comment: String) {
         caseViewPO.interpretationText().replace("\\s".toRegex(), "") shouldBe comment.replace("\\s".toRegex(), "")
     }
 
@@ -78,11 +77,11 @@ internal class TSHRulesTest : TSHTest() {
     }
 
     private fun buildRules() {
-        val tsh = Attribute("TSH")
-        val freeT4 = Attribute("Free T4")
-        val ft3 = Attribute("Free T3")
-        val tpo = Attribute("TPO Antibodies")
-        val clinicalNotes = Attribute("Clinical Notes")
+        val tsh = attributeFactory.create("TSH")
+        val freeT4 = attributeFactory.create("Free T4")
+        val ft3 = attributeFactory.create("Free T3")
+        val tpo = attributeFactory.create("TPO Antibodies")
+        val clinicalNotes = attributeFactory.create("Clinical Notes")
 
         val tshLow = IsLow(tsh)
         val tshNormal = IsNormal(tsh)
@@ -94,7 +93,7 @@ internal class TSHRulesTest : TSHTest() {
         val ft3High = IsHigh(ft3)
         val freeT4Normal = IsNormal(freeT4)
         val tpoHigh = IsHigh(tpo)
-        val elderly = GreaterThanOrEqualTo(Attribute("Age"), 70.0)
+        val elderly = GreaterThanOrEqualTo(attributeFactory.create("Age"), 70.0)
         val notesShowsTrimester1 = ContainsText(clinicalNotes, "12/40 weeks")
         val notesShowsTryingForBaby = ContainsText(clinicalNotes, "Trying for a baby")
         val tiredness = ContainsText(clinicalNotes, "very tired")
