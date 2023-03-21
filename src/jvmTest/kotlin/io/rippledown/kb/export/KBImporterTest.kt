@@ -27,9 +27,9 @@ class KBImporterTest : ExporterTestBase() {
         // Create a simple KB.
         val kb = KB("Whatever")
         // Attributes.
-        val glucose = Attribute("Glucose",1000)
-        val ldl = Attribute("LDL", 2000)
-        val hdl = Attribute("HDL", 3000)
+        val glucose = kb.attributeManager.getOrCreate("Glucose")
+        val ldl = kb.attributeManager.getOrCreate("LDL")
+        val hdl = kb.attributeManager.getOrCreate("HDL")
         // Build some cases.
         val episodeDate = Instant.now().toEpochMilli()
         fun buildCase(name: String, glucoseValue: String, ldlValue: String, hdlValue: String): RDRCase {

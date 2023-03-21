@@ -1,5 +1,6 @@
 package io.rippledown.server
 
+import io.ktor.http.content.*
 import io.rippledown.kb.KB
 import io.rippledown.kb.export.KBExporter
 import io.rippledown.kb.export.KBImporter
@@ -114,19 +115,25 @@ class ServerApplication {
     }
 
     private fun getCaseFromFile(file: File): RDRCase {
+        // The json in the file has attributes with
+        // dummy ids. We parse the json into a case
+        // and then switch the attributes in it with
+        // ones in the KB. When we have a proper
+        // external case format, we can do something
+        // less confusing.
         val format = Json { allowStructuredMapKeys = true }
         val data = FileUtils.readFileToString(file, UTF_8)
-        return format.decodeFromString(data)
+        val caseWithDummyAttributes: RDRCase = format.decodeFromString(data)
+        val dataMap = mutableMapOf<TestEvent, TestResult>()
+        caseWithDummyAttributes.data.map {
+            val originalTestEvent = it.key
+            val originalAttribute = originalTestEvent.attribute
+            val newAttribute = kb.attributeManager.getOrCreate(originalAttribute.name)
+            val newTestEvent = TestEvent(newAttribute, originalTestEvent.date)
+            dataMap[newTestEvent] = it.value
+        }
+        return RDRCase(caseWithDummyAttributes.name, dataMap)
     }
 
-    /*
-    Scale in 6ths F major
-    p48 of the
-    practise each interval with a finger wobble
-
-    Also in chained bowing, 2 interval slurs, and slurring across the position changes
-
-
-     */
     private fun uninterpretedCase(id: String) = getCaseFromFile(File(casesDir, "$id.json"))
 }
