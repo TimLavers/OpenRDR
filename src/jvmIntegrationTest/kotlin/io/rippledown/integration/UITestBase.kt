@@ -38,6 +38,7 @@ open class UITestBase {
             addArguments("--disable-extensions")
             addArguments("--disable-application-cache")
             addArguments("--disable-web-security")
+            addArguments("--remote-allow-origins=*")
             val prefsMap = mutableMapOf<String, Any>()
             prefsMap["download.default_directory"] = downloadsDir().absolutePath
             options.setExperimentalOption("prefs", prefsMap )
