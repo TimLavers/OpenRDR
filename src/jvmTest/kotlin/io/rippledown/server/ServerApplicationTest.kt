@@ -172,13 +172,13 @@ internal class ServerApplicationTest {
     @Test
     fun createKB() {
         val app = ServerApplication()
-        app.kb.name shouldBe "Thyroids"
+        app.kb.name.name shouldBe "Thyroids"
         app.kb.containsCaseWithName("Case1") shouldBe false //sanity
         app.kb.addCase(createCase("Case1"))
         app.kb.containsCaseWithName("Case1") shouldBe true
 
         app.createKB()
-        app.kb.name shouldBe "Thyroids"
+        app.kb.name.name shouldBe "Thyroids"
         app.kb.containsCaseWithName("Case1") shouldBe false //kb rebuilt
     }
 
@@ -231,17 +231,18 @@ internal class ServerApplicationTest {
     fun importKBFromZip() {
         val zipFile = File("src/jvmTest/resources/export/KBExported.zip").toPath()
         val app = ServerApplication()
-        app.kb.name shouldBe "Thyroids"
+        app.kb.name.id shouldBe ""
+        app.kb.name.name shouldBe "Thyroids"
         app.kb.allCases().size shouldBe 0
         app.importKBFromZip(Files.readAllBytes(zipFile))
 
-        app.kb.name shouldBe "Whatever"
+        app.kb.name.name shouldBe "Whatever"
         app.kb.allCases().size shouldBe 3
         app.kb.ruleTree.size() shouldBe 2
         val case = app.kb.getCaseByName("Case1")
         val interpretedCase = app.kb.viewableInterpretedCase(case)
         interpretedCase.interpretation.textGivenByRules() shouldBe "Glucose ok."
-        app.kbName() shouldBe KBInfo("Whatever")
+        app.kbName() shouldBe KBInfo("123","Whatever")
     }
 
     @Test

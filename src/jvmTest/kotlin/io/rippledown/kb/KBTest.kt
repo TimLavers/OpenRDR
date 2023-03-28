@@ -8,6 +8,7 @@ import io.rippledown.model.*
 import io.rippledown.model.condition.GreaterThanOrEqualTo
 import io.rippledown.model.condition.LessThanOrEqualTo
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
+import io.rippledown.model.rule.RuleTree
 import org.junit.Before
 import kotlin.test.Test
 
@@ -67,13 +68,13 @@ class KBTest {
 
     @Test
     fun equalsTest() {
-        val kb1 = KB("Thyroids")
-        val kb2 = KB("Glucose")
-        val kb3 = KB("thyroids")
-        val kb4 = KB("Thyroids")
+        val kb1 = KB(KBInfo("1","Thyroids"), AttributeManager(), RuleTree())
+        val kb2 = KB(KBInfo("2","Glucose"), AttributeManager(), RuleTree())
+        val kb3 = KB(KBInfo("4","Glucose"), AttributeManager(), RuleTree())
+        val kb4 = KB(KBInfo("4","Thyroids"), AttributeManager(), RuleTree())
         (kb1 == kb2) shouldBe false
         (kb1 == kb3) shouldBe false
-        (kb1 == kb4) shouldBe true
+        (kb3 == kb4) shouldBe true
     }
 
     @Test

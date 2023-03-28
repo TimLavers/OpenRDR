@@ -18,7 +18,7 @@ fun build(f: BuildTemplate.() -> Unit): BuildTemplate {
 
 class BuildTemplate {
     val defaultDate = 1659752689505
-    private val kb = KB("")
+    private val kb = KB("TestKB")
 
     fun case(name: String, data: String) {
         val caseBuilder = RDRCaseBuilder()
