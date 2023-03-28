@@ -1,6 +1,5 @@
 package io.rippledown.server
 
-import io.ktor.http.content.*
 import io.rippledown.kb.KB
 import io.rippledown.kb.export.KBExporter
 import io.rippledown.kb.export.KBImporter
@@ -30,7 +29,7 @@ class ServerApplication {
     }
 
     fun kbName(): KBInfo {
-        return KBInfo(kb.name)
+        return kb.name
     }
 
     fun exportKBToZip(): File {
