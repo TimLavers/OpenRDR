@@ -27,30 +27,32 @@ internal class KBInfoTest {
     @Test //KBId-2
     fun nameNotBlank() {
         shouldThrow<IllegalArgumentException> {
-            KBInfo("")
+            KBInfo("id123","")
         }.message shouldBe "KBInfo name cannot be blank."
     }
 
     @Test //KBId-3
     fun nameMustBeLessThan128CharactersInLength() {
         repeat(127) {
-            KBInfo(randomString(it + 1))
+            KBInfo("id123", randomString(it + 1))
         }
         shouldThrow<IllegalArgumentException> {
-            KBInfo(randomString(128))
+            KBInfo("id123", randomString(128))
         }.message shouldBe "KBInfo names have maximum length 127."
     }
 
     @Test //KBId-9
     fun nameCannotContainNewline() {
         shouldThrow<IllegalArgumentException> {
-            KBInfo("What\never")
+            KBInfo("id123","What\never")
         }.message shouldBe "KBInfo name cannot contain a newline."
     }
 
     @Test //KBId-4
-    fun idBlank() {
-        KBInfo("","Name")
+    fun idNotBlank() {
+        shouldThrow<IllegalArgumentException> {
+            KBInfo("","Name")
+        }.message shouldBe "KBInfo id cannot be blank."
     }
 
     @Test //KBId-5
@@ -64,24 +66,30 @@ internal class KBInfoTest {
     }
 
     @Test //KBId-9
-    fun idCannotContainNewline() {
-        shouldThrow<IllegalArgumentException> {
-            KBInfo("123\n456","Name")
-        }.message shouldBe "KBInfo id cannot contain a newline."
+    fun validIdFormat() {
+        val bad = listOf("!a", "@b", "a%c", "s_d")
+        bad.forEach {
+            shouldThrow<IllegalArgumentException> {
+                KBInfo(it,"Name")
+            }.message shouldBe "KBInfo id should consist of letters, numbers, and - only."
+        }
+        val good = listOf("a")
+        good.forEach {
+                KBInfo(it,"Name")
+        }
     }
 
     @Test
     fun equalityIsById() {
-        KBInfo("", "Glucose") shouldBe KBInfo("", "Thyroid")
-        KBInfo("", "Glucose") shouldNotBe KBInfo("123", "Thyroid")
-        KBInfo("", "Glucose") shouldNotBe KBInfo("123", "Glucose")
+        KBInfo("1", "Glucose") shouldBe KBInfo("1", "Thyroid")
+        KBInfo("1", "Glucose") shouldNotBe KBInfo("123", "Thyroid")
+        KBInfo("1", "Glucose") shouldNotBe KBInfo("123", "Glucose")
         KBInfo("123", "Glucose") shouldBe KBInfo("123", "Thyroid")
         KBInfo("123abc", "Glucose") shouldNotBe KBInfo("123ABC", "Thyroid")
     }
 
     @Test
     fun hashCodeIsById() {
-        KBInfo("", "Glucose").hashCode() shouldBe KBInfo("", "Thyroid").hashCode()
         KBInfo("123", "Glucose").hashCode() shouldBe KBInfo("123", "Thyroid").hashCode()
     }
 

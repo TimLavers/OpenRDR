@@ -4,14 +4,17 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 class KBInfo(val id: String, val name: String) {
-    constructor(name: String): this("", name)
+    constructor(name: String): this(name, name)
 
     init {
         require(id.length < 128) {
             "KBInfo ids have maximum length 127."
         }
-        require(!id.contains('\n')) {
-            "KBInfo id cannot contain a newline."
+        require(id.isNotEmpty()) {
+            "KBInfo id cannot be blank."
+        }
+        require("[a-zA-Z0-9-]+".toRegex().matches(id)) {
+            "KBInfo id should consist of letters, numbers, and - only."
         }
         require(name.isNotEmpty()) {
             "KBInfo name cannot be blank."
