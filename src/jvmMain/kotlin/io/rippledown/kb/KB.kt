@@ -5,7 +5,7 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.rule.*
 
-class KB(val name: KBInfo,
+class KB(val kbInfo: KBInfo,
          val attributeManager: AttributeManager = AttributeManager(),
          val ruleTree: RuleTree = RuleTree()) {
 
@@ -73,12 +73,12 @@ class KB(val name: KBInfo,
 
         other as KB
 
-        if (name != other.name) return false
+        if (kbInfo != other.kbInfo) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        return name.hashCode()
+        return kbInfo.hashCode()
     }
 }

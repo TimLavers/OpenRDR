@@ -3,6 +3,7 @@ package io.rippledown.kb
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.rippledown.persistence.InMemoryPersistenceProvider
 import io.rippledown.util.EntityRetrieval
 import java.util.UUID
 import kotlin.test.BeforeTest
@@ -10,10 +11,12 @@ import kotlin.test.Test
 
 class KBManagerTest {
     private lateinit var kbManager: KBManager
+    private lateinit var persistenceProvider: InMemoryPersistenceProvider
 
     @BeforeTest
     fun setup() {
-        kbManager = KBManager()
+        persistenceProvider = InMemoryPersistenceProvider()
+        kbManager = KBManager(persistenceProvider)
     }
 
     @Test //KBM-1
@@ -29,6 +32,16 @@ class KBManagerTest {
         // Check that the id is a UUID //KBM-3
         UUID.fromString(info.id) shouldNotBe null
         kbManager.all() shouldContain info
+        // Check that the kb can be retrieved.
+        val retrievedKB = (kbManager.openKB(info.id) as EntityRetrieval.Success).entity
+        retrievedKB.kbInfo shouldBe info
+
+        // Rebuild the KBManager.
+        kbManager = KBManager(persistenceProvider)
+        kbManager.all() shouldContain info
+        // Check that the kb can be retrieved.
+        val retrievedKBAfterRebuild = (kbManager.openKB(info.id) as EntityRetrieval.Success).entity
+        retrievedKBAfterRebuild.kbInfo shouldBe info
     }
 
     @Test //KBM-2
@@ -50,7 +63,7 @@ class KBManagerTest {
         val info = kbManager.createKB(name)
 
         val success = kbManager.openKB(info.id) as EntityRetrieval.Success
-        success.entity.name shouldBe info
+        success.entity.kbInfo shouldBe info
     }
 
     @Test //KBM-4

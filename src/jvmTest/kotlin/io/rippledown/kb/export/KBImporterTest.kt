@@ -16,7 +16,7 @@ class KBImporterTest : ExporterTestBase() {
         val original = KB("Empty")
         KBExporter(tempDir, original).export()
         val rebuilt = KBImporter(tempDir).import()
-        rebuilt.name shouldBe original.name
+        rebuilt.kbInfo shouldBe original.kbInfo
         rebuilt.allCases().size shouldBe 0
         rebuilt.caseViewManager.allAttributesInOrder().size shouldBe 0
         rebuilt.ruleTree.size() shouldBe 1
@@ -58,7 +58,7 @@ class KBImporterTest : ExporterTestBase() {
         // Export and import.
         KBExporter(tempDir, kb).export()
         val rebuilt = KBImporter(tempDir).import()
-        rebuilt.name shouldBe kb.name
+        rebuilt.kbInfo shouldBe kb.kbInfo
         rebuilt.allCases().size shouldBe 3
         rebuilt.getCaseByName(case1.name) shouldBeEqualToComparingFields kb.getCaseByName(case1.name)
 

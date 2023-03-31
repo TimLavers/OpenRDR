@@ -172,13 +172,13 @@ internal class ServerApplicationTest {
     @Test
     fun createKB() {
         val app = ServerApplication()
-        app.kb.name.name shouldBe "Thyroids"
+        app.kb.kbInfo.name shouldBe "Thyroids"
         app.kb.containsCaseWithName("Case1") shouldBe false //sanity
         app.kb.addCase(createCase("Case1"))
         app.kb.containsCaseWithName("Case1") shouldBe true
 
         app.createKB()
-        app.kb.name.name shouldBe "Thyroids"
+        app.kb.kbInfo.name shouldBe "Thyroids"
         app.kb.containsCaseWithName("Case1") shouldBe false //kb rebuilt
     }
 
@@ -213,7 +213,7 @@ internal class ServerApplicationTest {
 
         // Get the exported KB.
         val exported = app.exportKBToZip()
-        exported.name shouldBe "${app.kb.name}.zip"
+        exported.name shouldBe "${app.kb.kbInfo}.zip"
 
         // Clear the KB
         app.createKB()
@@ -231,12 +231,12 @@ internal class ServerApplicationTest {
     fun importKBFromZip() {
         val zipFile = File("src/jvmTest/resources/export/KBExported.zip").toPath()
         val app = ServerApplication()
-        app.kb.name.id shouldBe ""
-        app.kb.name.name shouldBe "Thyroids"
+        app.kb.kbInfo.id shouldBe ""
+        app.kb.kbInfo.name shouldBe "Thyroids"
         app.kb.allCases().size shouldBe 0
         app.importKBFromZip(Files.readAllBytes(zipFile))
 
-        app.kb.name.name shouldBe "Whatever"
+        app.kb.kbInfo.name shouldBe "Whatever"
         app.kb.allCases().size shouldBe 3
         app.kb.ruleTree.size() shouldBe 2
         val case = app.kb.getCaseByName("Case1")

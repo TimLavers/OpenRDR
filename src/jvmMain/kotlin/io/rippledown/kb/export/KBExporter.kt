@@ -17,7 +17,7 @@ class KBExporter(destination: File, val kb: KB): KBExportImport(destination) {
 
     fun export() {
         // Details of the KB.
-        KBInfoExporter(ExportFile(kbDetailsFile, "KBInfo"), kb.name).export()
+        KBInfoExporter(ExportFile(kbDetailsFile, "KBInfo"), kb.kbInfo).export()
 
         // Attributes.
         AttributesExporter(attributesFile, kb.attributeManager.all()).export()

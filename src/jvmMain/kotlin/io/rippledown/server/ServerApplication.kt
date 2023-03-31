@@ -29,14 +29,14 @@ class ServerApplication {
     }
 
     fun kbName(): KBInfo {
-        return kb.name
+        return kb.kbInfo
     }
 
     fun exportKBToZip(): File {
         val tempDir: File = createTempDirectory().toFile()
         KBExporter(tempDir, kb).export()
         val bytes = Zipper(tempDir).zip()
-        val file = File(tempDir, "${kb.name}.zip")
+        val file = File(tempDir, "${kb.kbInfo}.zip")
         file.writeBytes(bytes)
         return file
     }
