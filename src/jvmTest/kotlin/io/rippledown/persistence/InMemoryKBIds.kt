@@ -1,6 +1,6 @@
 package io.rippledown.persistence
 
-class InMemoryIdToFlag: PersistentIdToFlag {
+class InMemoryKBIds: PersistentKBIds {
     private val idToFlag = mutableMapOf<String,Boolean>()
     override fun data(): Map<String, Boolean> {
         return idToFlag

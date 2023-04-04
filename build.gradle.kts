@@ -6,6 +6,7 @@ val serializationVersion = "1.4.1"
 val kotlinxDateTimeVersion = "0.4.0"
 val kotlinxCoroutinesTestVersion = "1.6.4"
 val ktor_version = "2.2.1"
+val exposedVersion="0.40.1"
 val logbackVersion = "1.4.5"
 val reactVersion = "18.2.0-pre.479"
 val kotlinWrappersVersion = "1.0.0-pre.484"
@@ -154,6 +155,10 @@ kotlin {
                 implementation("io.ktor:ktor-server-netty:$ktor_version")
                 implementation("ch.qos.logback:logback-classic:$logbackVersion")
                 implementation("commons-io:commons-io:$commonsIoVersion")
+                implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
+                implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
+                implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
+                implementation("org.postgresql:postgresql:42.5.4")
             }
         }
         val jvmTest by getting {
