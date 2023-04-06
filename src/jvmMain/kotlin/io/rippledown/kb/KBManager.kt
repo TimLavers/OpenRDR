@@ -12,7 +12,7 @@ class KBManager(val persistenceProvider: PersistenceProvider) {
     init {
         persistenceProvider.idStore().data().forEach{
             val id = it.key
-            val kbInfo = persistenceProvider.kbStore(id).kbInfo()
+            val kbInfo = persistenceProvider.kbPersistence(id).kbInfo()
             kbInfos.add(kbInfo)
         }
     }
@@ -24,7 +24,7 @@ class KBManager(val persistenceProvider: PersistenceProvider) {
     fun createKB(name: String): KBInfo {
         val id = UUID.randomUUID().toString()
         val result = KBInfo(id, name)
-        persistenceProvider.createKB(result)
+        persistenceProvider.createKBPersistence(result)
         kbInfos.add(result)
         return result
     }

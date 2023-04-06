@@ -8,14 +8,14 @@ class InMemoryPersistenceProvider: PersistenceProvider {
 
     override fun idStore(): PersistentKBIds = idStore
 
-    override fun createKB(kbInfo: KBInfo): PersistentKB {
+    override fun createKBPersistence(kbInfo: KBInfo): PersistentKB {
         idStore.add(kbInfo.id, true)
         val result = InMemoryKB(kbInfo)
         kbStore[kbInfo.id] = result
         return result
     }
 
-    override fun kbStore(id: String): PersistentKB {
+    override fun kbPersistence(id: String): PersistentKB {
         return kbStore[id]!!
     }
 }

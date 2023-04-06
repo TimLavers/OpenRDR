@@ -30,12 +30,13 @@ class PostgresPersistenceProvider: PersistenceProvider {
         return idStore
     }
 
-    override fun kbStore(id: String): PersistentKB {
-        TODO("Not yet implemented")
+    override fun kbPersistence(id: String): PersistentKB {
+        return PostgresKB(id)
     }
 
-    override fun createKB(kbInfo: KBInfo): PersistentKB {
-        TODO("Not yet implemented")
+    override fun createKBPersistence(kbInfo: KBInfo): PersistentKB {
+        idStore.add(kbInfo.id, true)
+        return createPostgresKB(kbInfo)
     }
 
     private fun allDatabasesInSystem(): Set<String> {

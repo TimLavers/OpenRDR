@@ -13,8 +13,8 @@ class KBInfo(val id: String, val name: String) {
         require(id.isNotEmpty()) {
             "KBInfo id cannot be blank."
         }
-        require("[a-zA-Z0-9-]+".toRegex().matches(id)) {
-            "KBInfo id should consist of letters, numbers, and - only."
+        require("[a-zA-Z0-9_]+".toRegex().matches(id)) {
+            "KBInfo id should consist of letters, numbers, and _ only."
         }
         require(name.isNotEmpty()) {
             "KBInfo name cannot be blank."

@@ -14,8 +14,11 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 const val KB_INFO_TABLE = "kb_info"
 
-fun createPostgresKb(dbName: String, kbInfo: KBInfo): PostgresKB {
-    Database.connect({ConnectionProvider.connection(dbName)})
+fun createPostgresKB(kbInfo: KBInfo): PostgresKB {
+    ConnectionProvider.systemConnection().use {
+        it.createStatement().executeUpdate("CREATE DATABASE ${kbInfo.id}")
+    }
+    Database.connect({ConnectionProvider.connection(kbInfo.id)})
     transaction {
         addLogger(StdOutSqlLogger)
         SchemaUtils.create(PKBInfos)
@@ -25,7 +28,7 @@ fun createPostgresKb(dbName: String, kbInfo: KBInfo): PostgresKB {
         }
         commit()
     }
-    return PostgresKB(dbName)
+    return PostgresKB(kbInfo.id)
 }
 
 class PostgresKB internal constructor(private val dbName: String): PersistentKB {
