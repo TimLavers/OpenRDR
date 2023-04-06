@@ -22,7 +22,7 @@ class PostgresKBIds(val dbName: String): PersistentKBIds {
         transaction {
             addLogger(StdOutSqlLogger)
             SchemaUtils.create(KBIds)
-            commit()
+//            commit()
         }
     }
 
@@ -40,7 +40,7 @@ class PostgresKBIds(val dbName: String): PersistentKBIds {
                 it[kbId] = key
                 it[deleted] = value
             }
-            commit()
+//            commit()
         }
     }
 }
