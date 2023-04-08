@@ -3,15 +3,11 @@ package io.rippledown.kb.export
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.rippledown.kb.KB
-import io.rippledown.model.rule.RuleTree
-import io.rippledown.model.rule.dsl.ruleTree
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
-import org.apache.commons.io.FileUtils
+import io.rippledown.model.KBInfo
+import io.rippledown.persistence.InMemoryKB
 import org.junit.Before
 import java.io.File
 import kotlin.test.Test
-import kotlin.text.Charsets.UTF_8
 
 class KBExporterTest: ExporterTestBase() {
     private lateinit var kb: KB
@@ -20,7 +16,7 @@ class KBExporterTest: ExporterTestBase() {
     override fun init() {
         super.init()
         tempDir.mkdirs()
-        kb = KB("Thyroids")
+        kb = KB(InMemoryKB(KBInfo("Thyroids")))
     }
 
     @Test

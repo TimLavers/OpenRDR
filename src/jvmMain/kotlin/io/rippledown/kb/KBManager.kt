@@ -6,7 +6,7 @@ import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.util.EntityRetrieval
 import java.util.*
 
-class KBManager(val persistenceProvider: PersistenceProvider) {
+class KBManager(private val persistenceProvider: PersistenceProvider) {
     private val kbInfos = mutableSetOf<KBInfo>()
 
     init {
@@ -36,7 +36,8 @@ class KBManager(val persistenceProvider: PersistenceProvider) {
         return if (kbInfo == null) {
             EntityRetrieval.Failure("Unknown id: $id.")
         } else {
-            EntityRetrieval.Success(KB(kbInfo, AttributeManager(), RuleTree()))
+            val persistentKB = persistenceProvider.kbPersistence(kbInfo.id)
+            EntityRetrieval.Success(KB(kbInfo, AttributeManager(persistentKB.attributeStore()), RuleTree()))
         }
     }
 }

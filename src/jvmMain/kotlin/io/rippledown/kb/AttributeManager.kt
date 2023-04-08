@@ -1,21 +1,22 @@
 package io.rippledown.kb
 
 import io.rippledown.model.Attribute
+import io.rippledown.persistence.AttributeStore
 
-class AttributeManager(attributes: Set<Attribute>) {
+class AttributeManager(private val attributeStore: AttributeStore) {
     private val nameToAttribute = mutableMapOf<String, Attribute>()
 
     init {
-        attributes.forEach {
+        attributeStore.all().forEach {
             nameToAttribute[it.name] = it
         }
     }
 
-    constructor() : this(emptySet())
-
     fun getOrCreate(name: String) : Attribute {
         return nameToAttribute.computeIfAbsent(name) {
-            Attribute(name, nameToAttribute.size)
+            val newAttribute = Attribute(name, nameToAttribute.size)
+            attributeStore.store(newAttribute)
+            newAttribute
         }
     }
 

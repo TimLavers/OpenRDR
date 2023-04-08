@@ -5,6 +5,7 @@ import io.rippledown.kb.KB
 import io.rippledown.model.*
 import io.rippledown.model.rule.*
 import io.rippledown.model.condition.*
+import io.rippledown.persistence.InMemoryKB
 
 const val addedConditionBeforeSessionStarted = "Session not started yet. Please define the case and action before adding a condition"
 val textAttribute = Attribute("Text", 100)
@@ -17,8 +18,8 @@ fun build(f: BuildTemplate.() -> Unit): BuildTemplate {
 }
 
 class BuildTemplate {
-    val defaultDate = 1659752689505
-    private val kb = KB("TestKB")
+    private val defaultDate = 1659752689505
+    private val kb = KB(InMemoryKB(KBInfo("TestKB")))
 
     fun case(name: String, data: String) {
         val caseBuilder = RDRCaseBuilder()
@@ -49,8 +50,6 @@ class BuildTemplate {
 
 class SessionTemplate( val kb: KB) {
     lateinit var case: RDRCase
-//    lateinit var action: RuleTreeChange
-//    lateinit var session: RuleBuildingSession
 
     fun selectCase(name: String) {
         case = kb.getCaseByName(name)
@@ -86,7 +85,7 @@ class SessionTemplate( val kb: KB) {
         addConclusion(this)
     }
 
-    fun addConclusion(conclusion: String) {
+    private fun addConclusion(conclusion: String) {
         val action = ChangeTreeToAddConclusion(Conclusion(conclusion))
         kb.startRuleSession(case, action)
     }
@@ -95,12 +94,12 @@ class SessionTemplate( val kb: KB) {
         removeConclusion(this)
     }
 
-    fun removeConclusion(conclusion: String) {
+    private fun removeConclusion(conclusion: String) {
         val action = ChangeTreeToRemoveConclusion(Conclusion(conclusion))
         kb.startRuleSession(case, action)
     }
 
-    fun replaceConclusion(conclusion: String, replacement: String) {
+    private fun replaceConclusion(conclusion: String, replacement: String) {
         val action = ChangeTreeToReplaceConclusion(Conclusion(conclusion), Conclusion(replacement))
         kb.startRuleSession(case, action)
     }

@@ -4,12 +4,15 @@ import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.rule.*
+import io.rippledown.persistence.PersistentKB
 
 class KB(val kbInfo: KBInfo,
-         val attributeManager: AttributeManager = AttributeManager(),
+         val attributeManager: AttributeManager,
          val ruleTree: RuleTree = RuleTree()) {
 
-    constructor(name: String) : this(KBInfo(name))
+    constructor(persistentKB: PersistentKB) : this(persistentKB.kbInfo(), AttributeManager(persistentKB.attributeStore()), RuleTree())
+
+    constructor(kbInfo: KBInfo, persistentKB: PersistentKB) : this(kbInfo, AttributeManager(persistentKB.attributeStore()), RuleTree())
 
     private val cornerstones = mutableSetOf<RDRCase>()
     private var ruleSession: RuleBuildingSession? = null

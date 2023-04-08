@@ -2,17 +2,23 @@ package io.rippledown.kb.export
 
 import io.rippledown.kb.AttributeManager
 import io.rippledown.kb.KB
+import io.rippledown.persistence.PersistenceProvider
 import java.io.File
 
-class KBImporter(source: File): KBExportImport(source) {
+class KBImporter(source: File, private val persistenceProvider: PersistenceProvider): KBExportImport(source) {
 
     fun import(): KB {
-        // Extract the name.
+        // Extract the name and id.
         val kbInfo = KBInfoImporter(kbDetailsFile).import()
+
+        // Using the name and id, create a KB.
+        val persistentKB = persistenceProvider.createKBPersistence(kbInfo)
 
         // Extract the attributes.
         val idToAttribute = AttributesImporter(attributesFile).import()
-        val attributeManager = AttributeManager(idToAttribute.values.toSet())
+        val attributeStore = persistentKB.attributeStore()
+        attributeStore.load(idToAttribute.values.toSet())
+        val attributeManager = AttributeManager(attributeStore)
 
         // Extract the rule tree.
         val ruleTree = RuleImporter(rulesDirectory).import()

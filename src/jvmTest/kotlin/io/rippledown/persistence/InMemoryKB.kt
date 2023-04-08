@@ -4,7 +4,9 @@ import io.rippledown.model.KBInfo
 
 class InMemoryKB(val kbInfo: KBInfo): PersistentKB {
 
-    override fun kbInfo(): KBInfo {
-        return kbInfo
-    }
+    private val attributeStore = InMemoryAttributeStore()
+
+    override fun kbInfo() = kbInfo
+
+    override fun attributeStore() = attributeStore
 }

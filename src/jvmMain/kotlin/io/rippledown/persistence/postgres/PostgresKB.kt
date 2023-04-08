@@ -1,6 +1,7 @@
 package io.rippledown.persistence.postgres
 
 import io.rippledown.model.KBInfo
+import io.rippledown.persistence.AttributeStore
 import io.rippledown.persistence.PersistentKB
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
@@ -53,6 +54,10 @@ class PostgresKB internal constructor(private val dbName: String): PersistentKB 
             "Should be precisely one KBInfo, found $resultList"
         }
         return resultList[0]
+    }
+
+    override fun attributeStore(): AttributeStore {
+        TODO("Not yet implemented")
     }
 }
 object PKBInfos: LongIdTable(name = KB_INFO_TABLE) {

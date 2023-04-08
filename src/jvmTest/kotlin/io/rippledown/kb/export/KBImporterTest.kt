@@ -6,16 +6,28 @@ import io.rippledown.kb.KB
 import io.rippledown.model.*
 import io.rippledown.model.condition.LessThanOrEqualTo
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
+import io.rippledown.persistence.InMemoryPersistenceProvider
+import io.rippledown.persistence.PersistenceProvider
 import java.time.Instant
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class KBImporterTest : ExporterTestBase() {
 
+    private lateinit var persistenceProvider: PersistenceProvider
+
+    @BeforeTest
+    fun setup() {
+        persistenceProvider = InMemoryPersistenceProvider()
+    }
+
     @Test
     fun exportImportEmpty() {
-        val original = KB("Empty")
+        val kbInfo = KBInfo("Empty")
+        val emptyKB = persistenceProvider.createKBPersistence(kbInfo)
+        val original = KB(emptyKB)
         KBExporter(tempDir, original).export()
-        val rebuilt = KBImporter(tempDir).import()
+        val rebuilt = KBImporter(tempDir, persistenceProvider).import()
         rebuilt.kbInfo shouldBe original.kbInfo
         rebuilt.allCases().size shouldBe 0
         rebuilt.caseViewManager.allAttributesInOrder().size shouldBe 0
@@ -25,7 +37,9 @@ class KBImporterTest : ExporterTestBase() {
     @Test
     fun exportImport() {
         // Create a simple KB.
-        val kb = KB("Whatever")
+        val kbInfo = KBInfo("Whatever")
+        val pKB = persistenceProvider.createKBPersistence(kbInfo)
+        val kb = KB(pKB)
         // Attributes.
         val glucose = kb.attributeManager.getOrCreate("Glucose")
         val ldl = kb.attributeManager.getOrCreate("LDL")
@@ -56,8 +70,11 @@ class KBImporterTest : ExporterTestBase() {
         kb.caseViewManager.setAttributes(listOf(hdl, ldl, glucose))
 
         // Export and import.
+        // Rebuild the persistence provider so that we're not attempting to have
+        // two copies of the same KB.
+        persistenceProvider = InMemoryPersistenceProvider()
         KBExporter(tempDir, kb).export()
-        val rebuilt = KBImporter(tempDir).import()
+        val rebuilt = KBImporter(tempDir, persistenceProvider).import()
         rebuilt.kbInfo shouldBe kb.kbInfo
         rebuilt.allCases().size shouldBe 3
         rebuilt.getCaseByName(case1.name) shouldBeEqualToComparingFields kb.getCaseByName(case1.name)

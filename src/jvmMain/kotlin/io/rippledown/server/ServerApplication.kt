@@ -1,6 +1,7 @@
 package io.rippledown.server
 
 import io.rippledown.kb.KB
+import io.rippledown.kb.KBManager
 import io.rippledown.kb.export.KBExporter
 import io.rippledown.kb.export.KBImporter
 import io.rippledown.kb.export.util.Unzipper
@@ -10,6 +11,9 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.model.rule.ChangeTreeToReplaceConclusion
+import io.rippledown.persistence.PersistenceProvider
+import io.rippledown.persistence.postgres.PostgresPersistenceProvider
+import io.rippledown.util.EntityRetrieval
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -19,13 +23,20 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.time.LocalDateTime
 import kotlin.io.path.createTempDirectory
 
-class ServerApplication {
+class ServerApplication(private val persistenceProvider: PersistenceProvider = PostgresPersistenceProvider()) {
     val casesDir = File("cases").apply { mkdirs() }
     val interpretationsDir = File("interpretations").apply { mkdirs() }
-    var kb = KB("Thyroids")
+    private val kbManager = KBManager(persistenceProvider)
+
+    lateinit var kb: KB
+
+    init {
+        createKB()
+    }
 
     fun createKB() {
-        kb = KB("Thyroids")
+        val kbInfo = kbManager.createKB("Thyroids")
+        kb = (kbManager.openKB(kbInfo.id) as EntityRetrieval.Success<KB>).entity
     }
 
     fun kbName(): KBInfo {
@@ -49,7 +60,7 @@ class ServerApplication {
             "Invalid zip for KB import."
         }
         val rootDir = subDirectories[0]
-        kb = KBImporter(rootDir).import()
+        kb = KBImporter(rootDir, persistenceProvider).import()
     }
 
     fun startRuleSessionToAddConclusion(caseId: String, conclusion: Conclusion) {

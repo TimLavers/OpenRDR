@@ -4,16 +4,20 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.model.Attribute
+import io.rippledown.persistence.AttributeStore
+import io.rippledown.persistence.InMemoryAttributeStore
 import io.rippledown.util.randomString
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class AttributeManagerTest {
     private lateinit var attributeManager: AttributeManager
+    private lateinit var attributeStore: AttributeStore
 
     @BeforeTest
     fun setup() {
-        attributeManager = AttributeManager()
+        attributeStore = InMemoryAttributeStore()
+        attributeManager = AttributeManager(attributeStore)
     }
 
     @Test
@@ -26,15 +30,18 @@ class AttributeManagerTest {
         val a1 = attributeManager.getOrCreate("a1")
         a1.name shouldBe "a1"
         attributeManager.all() shouldBe setOf(a1)
+        attributeStore.all() shouldBe setOf(a1)
 
         val a2 = attributeManager.getOrCreate("a2")
         a2.name shouldBe "a2"
         attributeManager.all() shouldBe setOf(a1, a2)
+        attributeStore.all() shouldBe setOf(a1, a2)
 
         val a3 = attributeManager.getOrCreate("a2")//Existing name
         a3.name shouldBe "a2"
         a3 shouldBe a2
         attributeManager.all() shouldBe setOf(a1, a2)
+        attributeStore.all() shouldBe setOf(a1, a2)
     }
 
     @Test //Attr-4
@@ -64,7 +71,8 @@ class AttributeManagerTest {
         repeat(100) {
             initial.add(Attribute(randomString(12), it))
         }
-        attributeManager = AttributeManager(initial)
+        attributeStore = InMemoryAttributeStore(initial)
+        attributeManager = AttributeManager(attributeStore)
         initial.forEach{
             it shouldBe attributeManager.getById(it.id)
             it.name shouldBe attributeManager.getById(it.id).name
