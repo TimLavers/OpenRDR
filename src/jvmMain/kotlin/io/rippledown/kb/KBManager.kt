@@ -37,7 +37,7 @@ class KBManager(private val persistenceProvider: PersistenceProvider) {
             EntityRetrieval.Failure("Unknown id: $id.")
         } else {
             val persistentKB = persistenceProvider.kbPersistence(kbInfo.id)
-            EntityRetrieval.Success(KB(kbInfo, AttributeManager(persistentKB.attributeStore()), RuleTree()))
+            EntityRetrieval.Success(KB(persistentKB))
         }
     }
 }

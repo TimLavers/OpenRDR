@@ -5,4 +5,5 @@ import io.rippledown.model.KBInfo
 interface PersistentKB {
     fun kbInfo(): KBInfo
     fun attributeStore(): AttributeStore
+    fun attributeOrderStore(): AttributeOrderStore
 }

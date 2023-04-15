@@ -1,7 +1,6 @@
 package io.rippledown.persistence.postgres
 
 import io.kotest.matchers.shouldBe
-import java.sql.*
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 

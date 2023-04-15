@@ -14,9 +14,7 @@ class AttributeManager(private val attributeStore: AttributeStore) {
 
     fun getOrCreate(name: String) : Attribute {
         return nameToAttribute.computeIfAbsent(name) {
-            val newAttribute = Attribute(name, nameToAttribute.size)
-            attributeStore.store(newAttribute)
-            newAttribute
+            attributeStore.create(name)
         }
     }
 

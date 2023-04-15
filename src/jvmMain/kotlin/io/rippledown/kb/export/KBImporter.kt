@@ -11,26 +11,30 @@ class KBImporter(source: File, private val persistenceProvider: PersistenceProvi
         // Extract the name and id.
         val kbInfo = KBInfoImporter(kbDetailsFile).import()
 
-        // Using the name and id, create a KB.
+        // Using the name and id, create a persistent KB.
         val persistentKB = persistenceProvider.createKBPersistence(kbInfo)
 
-        // Extract the attributes.
+        // Extract the attributes and load them into the persistent attribute store.
         val idToAttribute = AttributesImporter(attributesFile).import()
         val attributeStore = persistentKB.attributeStore()
         attributeStore.load(idToAttribute.values.toSet())
-        val attributeManager = AttributeManager(attributeStore)
+
+        // Extract the case view and store it in the persistent attribute order store.
+        val attributesInOrder = CaseViewImporter(caseViewFile, idToAttribute).import()
+        val attributeIdToIndex = mutableMapOf<Int,Int>()
+        attributesInOrder.forEachIndexed { index, attribute -> attributeIdToIndex[attribute.id] = index}
+        persistentKB.attributeOrderStore().load(attributeIdToIndex)
 
         // Extract the rule tree.
         val ruleTree = RuleImporter(rulesDirectory).import()
 
-        // Create the result.
-        val result = KB(kbInfo, attributeManager, ruleTree)
+        // Create the result KB.
+        val result = KB(persistentKB)
+//        result.ruleTree = ruleTree
 
         // Add the cases.
         CaseImporter(casesDirectory).import().forEach { result.addCase(it) }
 
-        // Rebuild the case view.
-        result.caseViewManager.setAttributes(CaseViewImporter(caseViewFile, idToAttribute).import())
         return result
     }
 }

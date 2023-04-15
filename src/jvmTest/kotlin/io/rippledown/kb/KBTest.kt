@@ -8,7 +8,7 @@ import io.rippledown.model.*
 import io.rippledown.model.condition.GreaterThanOrEqualTo
 import io.rippledown.model.condition.LessThanOrEqualTo
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
-import io.rippledown.persistence.InMemoryAttributeStore
+import io.rippledown.persistence.InMemoryKB
 import org.junit.Before
 import kotlin.test.Test
 
@@ -18,8 +18,7 @@ class KBTest {
     @Before
     fun setup() {
         val kbInfo = KBInfo("id123", "Blah")
-        val attributeManager = AttributeManager(InMemoryAttributeStore())
-        kb = KB(kbInfo, attributeManager)
+        kb = createKB(kbInfo)
     }
 
     @Test
@@ -70,10 +69,10 @@ class KBTest {
 
     @Test
     fun equalsTest() {
-        val kb1 = KB(KBInfo("1","Thyroids"), AttributeManager(InMemoryAttributeStore()))
-        val kb2 = KB(KBInfo("2","Glucose"), AttributeManager(InMemoryAttributeStore()))
-        val kb3 = KB(KBInfo("4","Glucose"), AttributeManager(InMemoryAttributeStore()))
-        val kb4 = KB(KBInfo("4","Thyroids"), AttributeManager(InMemoryAttributeStore()))
+        val kb1 = createKB(KBInfo("1","Thyroids"))
+        val kb2 = createKB(KBInfo("2","Glucose"))
+        val kb3 = createKB(KBInfo("4","Glucose"))
+        val kb4 = createKB(KBInfo("4","Thyroids"))
         (kb1 == kb2) shouldBe false
         (kb1 == kb3) shouldBe false
         (kb3 == kb4) shouldBe true
@@ -81,8 +80,8 @@ class KBTest {
 
     @Test
     fun hashCodeTest() {
-        val kb1 = KB(KBInfo("id123","Thyroids"), AttributeManager(InMemoryAttributeStore()))
-        val kb2 = KB(KBInfo("id123","Thyroids"), AttributeManager(InMemoryAttributeStore()))
+        val kb1 = createKB(KBInfo("id123","Thyroids"))
+        val kb2 = createKB(KBInfo("id123","Thyroids"))
         (kb1.hashCode() == kb2.hashCode()) shouldBe true
     }
 
@@ -256,4 +255,6 @@ class KBTest {
         builder1.addValue(glucose(), defaultDate, glucoseValue)
         return builder1.build(caseName)
     }
+
+    private fun createKB(kbInfo: KBInfo) = KB(InMemoryKB(kbInfo))
 }

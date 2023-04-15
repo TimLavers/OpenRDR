@@ -6,17 +6,14 @@ import io.rippledown.model.condition.Condition
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistentKB
 
-class KB(val kbInfo: KBInfo,
-         val attributeManager: AttributeManager,
-         val ruleTree: RuleTree = RuleTree()) {
+class KB(persistentKB: PersistentKB) {
 
-    constructor(persistentKB: PersistentKB) : this(persistentKB.kbInfo(), AttributeManager(persistentKB.attributeStore()), RuleTree())
-
-    constructor(kbInfo: KBInfo, persistentKB: PersistentKB) : this(kbInfo, AttributeManager(persistentKB.attributeStore()), RuleTree())
-
+    val kbInfo: KBInfo = persistentKB.kbInfo()
+    val attributeManager: AttributeManager = AttributeManager(persistentKB.attributeStore())
+    val ruleTree: RuleTree = RuleTree()
     private val cornerstones = mutableSetOf<RDRCase>()
     private var ruleSession: RuleBuildingSession? = null
-    val caseViewManager = CaseViewManager()
+    val caseViewManager: CaseViewManager = CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
 
     fun containsCaseWithName(caseName: String): Boolean {
         return cornerstones.find { rdrCase -> rdrCase.name == caseName } != null
@@ -76,9 +73,7 @@ class KB(val kbInfo: KBInfo,
 
         other as KB
 
-        if (kbInfo != other.kbInfo) return false
-
-        return true
+        return kbInfo == other.kbInfo
     }
 
     override fun hashCode(): Int {

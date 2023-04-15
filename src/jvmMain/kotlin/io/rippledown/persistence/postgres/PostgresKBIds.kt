@@ -3,26 +3,20 @@ package io.rippledown.persistence.postgres
 import io.rippledown.persistence.PersistentKBIds
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
-import org.jetbrains.exposed.dao.UUIDEntity
-import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
-import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.util.UUID
 
 const val KB_IDS_TABLE = "kb_ids"
 
-class PostgresKBIds(val dbName: String): PersistentKBIds {
-    private val database: Database = ConnectionProvider.database(dbName)
+class PostgresKBIds(private val dbName: String): PersistentKBIds {
 
     init {
         Database.connect({ConnectionProvider.connection(dbName)})
         transaction {
             addLogger(StdOutSqlLogger)
             SchemaUtils.create(KBIds)
-//            commit()
         }
     }
 
@@ -40,7 +34,6 @@ class PostgresKBIds(val dbName: String): PersistentKBIds {
                 it[kbId] = key
                 it[deleted] = value
             }
-//            commit()
         }
     }
 }

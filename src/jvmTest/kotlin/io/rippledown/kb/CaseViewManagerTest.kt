@@ -8,24 +8,57 @@ import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.TestResult
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.persistence.AttributeOrderStore
+import io.rippledown.persistence.InMemoryAttributeOrderStore
+import io.rippledown.persistence.InMemoryAttributeStore
 import java.time.Instant
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class CaseViewManagerTest {
-    var id = 0
-    val a1 = Attribute("A1", id++)
-    val a2 = Attribute("A2", id++)
-    val a3 = Attribute("A3", id++)
-    val a4 = Attribute("A4", id++)
-    val a5 = Attribute("A5", id++)
-    val a6 = Attribute("A6", id++)
-    private var manager = CaseViewManager()
+    private lateinit var a1: Attribute
+    private lateinit var a2: Attribute
+    private lateinit var a3: Attribute
+    private lateinit var a4: Attribute
+    private lateinit var a5: Attribute
+    private lateinit var a6: Attribute
+    private lateinit var attributeManager: AttributeManager
+    private lateinit var attributeOrderStore: AttributeOrderStore
+    private lateinit var manager: CaseViewManager
 
     @BeforeTest
     fun setup() {
-        println("setup")
-        manager = CaseViewManager()
+        attributeManager = AttributeManager(InMemoryAttributeStore())
+        a1 = attributeManager.getOrCreate("A1")
+        a2 = attributeManager.getOrCreate("A2")
+        a3 = attributeManager.getOrCreate("A3")
+        a4 = attributeManager.getOrCreate("A4")
+        a5 = attributeManager.getOrCreate("A5")
+        a6 = attributeManager.getOrCreate("A6")
+
+        attributeOrderStore = InMemoryAttributeOrderStore()
+        manager = CaseViewManager(attributeOrderStore, attributeManager)
+    }
+
+    @Test
+    fun `load from the attribute order store`() {
+        attributeOrderStore.store(a4.id, 1)
+        attributeOrderStore.store(a3.id, 2)
+        attributeOrderStore.store(a2.id, 3)
+        attributeOrderStore.store(a1.id, 4)
+        attributeOrderStore.store(a5.id, 5)
+        attributeOrderStore.store(a6.id, 6)
+        manager = CaseViewManager(attributeOrderStore, attributeManager)
+        manager.allAttributesInOrder() shouldBe listOf(a4, a3, a2, a1, a5, a6)
+    }
+
+    @Test
+    fun `load from the attribute order store with not all attributes in order store`() {
+        attributeOrderStore.store(a4.id, 1)
+        attributeOrderStore.store(a3.id, 2)
+        manager = CaseViewManager(attributeOrderStore, attributeManager)
+        manager.allAttributesInOrder()[0] shouldBe a4
+        manager.allAttributesInOrder()[1] shouldBe a3
     }
 
     @Test
@@ -144,6 +177,11 @@ class CaseViewManagerTest {
     }
 
     @Test
+    fun newAttribute() {
+
+    }
+
+    @Test
     fun allAttributesInOrder() {
         createCaseWithAttributesAndShowToManager(listOf(a1))
         createCaseWithAttributesAndShowToManager(listOf(a2))
@@ -175,5 +213,4 @@ class CaseViewManagerTest {
         }
         return builder.build(name)
     }
-
 }
