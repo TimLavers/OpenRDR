@@ -6,33 +6,35 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class PostgresKBTest {
-    private val glucose_db = "glucose_test"
-    private val thyroids_db = "thyroids_test"
+    private val glucoseDB = "glucose_test"
+    private val thyroidsDB = "thyroids_test"
 
     @BeforeTest
     fun setup() {
-        dropDB(glucose_db)
-        dropDB(thyroids_db)
+        dropDB(glucoseDB)
+        dropDB(thyroidsDB)
     }
 
     @Test
     fun create() {
-        val glucoseInfo = KBInfo( glucose_db, "Glucose")
-        val created = createPostgresKB(glucoseInfo)
-        created.kbInfo().id shouldBe glucoseInfo.id
-        created.kbInfo().name shouldBe glucoseInfo.name
-        created.attributeStore().all() shouldBe emptySet()
+        val glucoseInfo = KBInfo( glucoseDB, "Glucose")
+        val glucoseKB = createPostgresKB(glucoseInfo)
+        glucoseKB.kbInfo().id shouldBe glucoseInfo.id
+        glucoseKB.kbInfo().name shouldBe glucoseInfo.name
+        glucoseKB.attributeStore().all() shouldBe emptySet()
+        glucoseKB.attributeOrderStore().idToIndex() shouldBe emptyMap()
 
-        val thyroidsInfo = KBInfo(thyroids_db, "Thyroids")
-        val createdThyroids = createPostgresKB(thyroidsInfo)
-        createdThyroids.kbInfo().id shouldBe thyroidsInfo.id
-        createdThyroids.kbInfo().name shouldBe thyroidsInfo.name
-        createdThyroids.attributeStore().all() shouldBe emptySet()
+        val thyroidsInfo = KBInfo(thyroidsDB, "Thyroids")
+        val thyroidsKB = createPostgresKB(thyroidsInfo)
+        thyroidsKB.kbInfo().id shouldBe thyroidsInfo.id
+        thyroidsKB.kbInfo().name shouldBe thyroidsInfo.name
+        thyroidsKB.attributeStore().all() shouldBe emptySet()
+        thyroidsKB.attributeOrderStore().idToIndex() shouldBe emptyMap()
     }
 
     @Test
     fun attributeStore() {
-        val glucoseInfo = KBInfo( glucose_db, "Glucose")
+        val glucoseInfo = KBInfo( glucoseDB, "Glucose")
         var kb = createPostgresKB(glucoseInfo)
         val age = kb.attributeStore().create("Age")
         val sex = kb.attributeStore().create("Sex")
@@ -42,5 +44,19 @@ class PostgresKBTest {
         // Rebuild and check.
         kb = PostgresKB(glucoseInfo.id)
         kb.attributeStore().all() shouldBe setOf(age, sex)
+    }
+
+    @Test
+    fun attributeOrderStore() {
+        val glucoseInfo = KBInfo( glucoseDB, "Glucose")
+        var kb = createPostgresKB(glucoseInfo)
+        kb.attributeOrderStore().store(1, 345)
+        kb.attributeOrderStore().store(5, 99)
+
+        kb.attributeOrderStore().idToIndex() shouldBe mapOf(1 to 345, 5 to 99)
+
+        // Rebuild and check.
+        kb = PostgresKB(glucoseInfo.id)
+        kb.attributeOrderStore().idToIndex() shouldBe mapOf(1 to 345, 5 to 99)
     }
 }
