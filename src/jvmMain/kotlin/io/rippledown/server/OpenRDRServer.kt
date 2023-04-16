@@ -13,10 +13,7 @@ import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.rippledown.server.routes.caseManagement
-import io.rippledown.server.routes.kbManagement
-import io.rippledown.server.routes.ruleSession
-import io.rippledown.server.routes.serverManagement
+import io.rippledown.server.routes.*
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 
@@ -31,48 +28,51 @@ lateinit var server: NettyApplicationEngine
 val logger = LoggerFactory.getLogger("rdr")
 
 fun main() {
-    val application = ServerApplication()
 
-    server = embeddedServer(Netty, 9090) {
-        install(ContentNegotiation) {
-            json()
-        }
-        install(CallLogging) {
-            level = Level.INFO
-            filter { call -> call.request.path().startsWith("/") }
-            format { call ->
-                val status = call.response.status()
-                call.request.httpMethod
-                val httpMethod = call.request.httpMethod.value
-                val userAgent = call.request.headers["User-Agent"]
-                "Status: $status, HTTP method: $httpMethod, User agent: $userAgent"
-            }
-        }
-        install(CORS) {
-            allowMethod(HttpMethod.Get)
-            allowMethod(HttpMethod.Post)
-            allowMethod(HttpMethod.Delete)
-            anyHost()
-        }
-        install(Compression) {
-            gzip()
-        }
-        routing {
-            get("/") {
-                call.respondText(
-                    this::class.java.classLoader.getResource("index.html")!!.readText(),
-                    ContentType.Text.Html
-                )
-            }
-            static("/") {
-                resources("")
-            }
-        }
-        serverManagement()
-        kbManagement(application)
-        caseManagement(application)
-        ruleSession(application)
-    }
+    server = embeddedServer(Netty, 9090, module = Application::applicationModule)
     logger.info(STARTING_SERVER)
     server.start(wait = true)
+}
+
+fun Application.applicationModule() {
+    install(ContentNegotiation) {
+        json()
+    }
+    install(CallLogging) {
+        level = Level.INFO
+        filter { call -> call.request.path().startsWith("/") }
+        format { call ->
+            val status = call.response.status()
+            call.request.httpMethod
+            val httpMethod = call.request.httpMethod.value
+            val userAgent = call.request.headers["User-Agent"]
+            "Status: $status, HTTP method: $httpMethod, User agent: $userAgent"
+        }
+    }
+    install(CORS) {
+        allowMethod(HttpMethod.Get)
+        allowMethod(HttpMethod.Post)
+        allowMethod(HttpMethod.Delete)
+        anyHost()
+    }
+    install(Compression) {
+        gzip()
+    }
+    routing {
+        get("/") {
+            call.respondText(
+                this::class.java.classLoader.getResource("index.html")!!.readText(),
+                ContentType.Text.Html
+            )
+        }
+        static("/") {
+            resources("")
+        }
+    }
+    val application = ServerApplication()
+    serverManagement()
+    kbManagement(application)
+    caseManagement(application)
+    interpManagement(application)
+    ruleSession(application)
 }

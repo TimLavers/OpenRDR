@@ -1,65 +1,102 @@
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.*
+import io.rippledown.interpretation.InterpretationView
+import io.rippledown.model.CaseId
+import io.rippledown.model.Conclusion
+import io.rippledown.model.Interpretation
+import io.rippledown.model.ReferenceRange
 import io.rippledown.model.rule.RuleSummary
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
-import mysticfall.ReactTestSupport
 import proxy.clickSubmitButton
 import proxy.requireCaseToBeSelected
 import proxy.requireInterpretation
 import proxy.waitForEvents
+import react.VFC
+import react.dom.checkContainer
+import react.dom.createRootFor
 import kotlin.test.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class CaseViewTest : ReactTestSupport {
+class CaseViewTest {
 
     @Test
-    fun shouldShowCaseName() {
+    fun shouldShowCaseName() = runTest {
         val name = "case a "
-        val renderer = render {
+        val vfc = VFC {
             CaseView {
                 case = createCase(name)
             }
         }
-        renderer.requireCaseToBeSelected(name)
+        checkContainer(vfc) { container ->
+            with(container) {
+                requireCaseToBeSelected(name)
+            }
+        }
     }
 
     @Test
-    fun shouldShowInterpretation() {
+    fun shouldShowInterpretation() = runTest {
         val text = "Go to Bondi now!"
         val rdrCase = createCase("case a ")
         rdrCase.interpretation.add(RuleSummary(conclusion = Conclusion(text)))
-        val renderer = render {
+        val vfc = VFC {
             CaseView {
                 case = rdrCase
             }
         }
-        renderer.requireInterpretation(text)
+        createRootFor(vfc).requireInterpretation(text)
+    }
+
+    @Test
+    fun shouldSubmitDefaultInterpretation() = runTest {
+        val caseId = CaseId("1", "case A")
+        val text = "Go to Bondi now!"
+        val defaultInterpretation = Interpretation(caseId = caseId).apply {
+            add(RuleSummary(conclusion = Conclusion(text)))
+        }
+
+        val config = config {
+            expectedInterpretation = Interpretation(caseId, text)
+        }
+        val vfc = VFC {
+            InterpretationView {
+                scope = this@runTest
+                api = Api(mock(config))
+                interpretation = defaultInterpretation
+            }
+        }
+        with(createRootFor(vfc)) {
+            clickSubmitButton()
+            waitForEvents()
+            //assertion is in the mocked API call
+        }
     }
 
     @Test
     fun shouldCallInterpretationSubmitted() = runTest {
+        val caseName = "case A"
         val text = "Go to Bondi now!"
-        val caseName = "case a "
         val rdrCase = createCase(caseName)
         rdrCase.interpretation.add(RuleSummary(conclusion = Conclusion(text)))
 
         val config = config {
-            expectedInterpretation = Interpretation(CaseId(caseName, caseName), text = text)
+            expectedInterpretation = Interpretation(caseId = CaseId(caseName, caseName), text = text)
         }
-        val renderer = render {
+        val vfc = VFC {
             CaseView {
                 scope = this@runTest
                 api = Api(mock(config))
                 case = rdrCase
             }
         }
-        renderer.requireInterpretation(text) //sanity check
-
-        renderer.clickSubmitButton()
-        waitForEvents()
+        with(createRootFor(vfc)) {
+            requireInterpretation(text)
+            clickSubmitButton()
+            waitForEvents()
+            //assertion is in the mocked API call
+        }
     }
 
     @Test

@@ -7,13 +7,20 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import io.rippledown.constants.api.CASE
+import io.rippledown.constants.api.CREATE_KB
+import io.rippledown.constants.api.WAITING_CASES
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.Conclusion
 import io.rippledown.model.OperationResult
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
-import io.rippledown.server.*
-import io.rippledown.server.routes.*
+import io.rippledown.server.PING
+import io.rippledown.server.SHUTDOWN
+import io.rippledown.server.routes.ADD_CONDITION
+import io.rippledown.server.routes.COMMIT_SESSION
+import io.rippledown.server.routes.START_SESSION_TO_ADD_CONCLUSION
+import io.rippledown.server.routes.START_SESSION_TO_REPLACE_CONCLUSION
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 

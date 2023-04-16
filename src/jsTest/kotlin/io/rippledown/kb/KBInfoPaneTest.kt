@@ -2,16 +2,13 @@ package io.rippledown.kb
 
 import Api
 import io.kotest.matchers.shouldBe
-import io.ktor.util.*
-import io.rippledown.model.*
-import js.core.get
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
-import mysticfall.checkContainer
 import react.VFC
+import react.dom.checkContainer
 import web.html.HTML.button
 import kotlin.test.Test
 

@@ -10,7 +10,7 @@ class OpenRDRServerTest: OpenRDRServerTestBase() {
 
     @Test
     fun testPing() = testApplication {
-        setupWithSpy()
+        setup()
         val response = httpClient.get(PING)
         assertEquals(HttpStatusCode.OK, response.status)
     }

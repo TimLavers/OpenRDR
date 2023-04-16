@@ -9,6 +9,16 @@ abstract class RuleTreeChange {
     abstract fun updateRuleTree(tree: RuleTree, case: RDRCase, conditions: Set<Condition> = setOf()): Set<Rule>
 }
 
+class NoChange : RuleTreeChange() {
+    override fun isApplicable(tree: RuleTree, case: RDRCase): Boolean {
+        return false
+    }
+
+    override fun updateRuleTree(tree: RuleTree, case: RDRCase, conditions: Set<Condition>): Set<Rule> {
+        return setOf()
+    }
+}
+
 class ChangeTreeToAddConclusion(private val toBeAdded: Conclusion) : RuleTreeChange() {
     override fun isApplicable(tree: RuleTree, case: RDRCase): Boolean {
         return !tree.apply(case).conclusions().contains(toBeAdded)

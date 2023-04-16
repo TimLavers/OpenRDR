@@ -2,7 +2,6 @@ package io.rippledown.kb
 
 import Api
 import io.kotest.matchers.shouldBe
-import js.core.get
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
 import mocks.config

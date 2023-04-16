@@ -1,13 +1,18 @@
+package io.rippledown.interpretation
+
+import ConclusionsDialog
+import Handler
 import csstype.FontFamily
 import csstype.FontWeight
-import emotion.react.css
 import io.rippledown.model.Interpretation
 import kotlinx.coroutines.launch
 import mui.material.*
 import mui.system.responsive
+import mui.system.sx
 import react.FC
-import react.dom.html.ReactHTML
+import react.dom.onChange
 import react.useState
+import xs
 
 external interface InterpretationViewHandler : Handler {
     var interpretation: Interpretation
@@ -26,18 +31,19 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
             item = true
             xs = 8
             key = handler.interpretation.caseId.name
-            ReactHTML.textarea {
+            TextField {
                 id = INTERPRETATION_TEXT_AREA_ID
-                css {
+                fullWidth = true
+                multiline = true
+                sx {
                     fontWeight = FontWeight.normal
                     fontFamily = FontFamily.monospace
                 }
                 rows = 10
-                cols = 70
                 onChange = {
-                    interpretationText = it.target.value
+                    interpretationText = it.target.asDynamic().value
                 }
-                value = interpretationText
+                defaultValue = interpretationText
             }
 
             ConclusionsDialog {
@@ -55,9 +61,9 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
                 size = Size.small
                 onClick = {
                     val caseId = handler.interpretation.caseId
-                    val interpretation = Interpretation(caseId, interpretationText)
+                    val interpretation = Interpretation(caseId = caseId, text = interpretationText)
                     handler.scope.launch {
-                        handler.api.saveInterpretation(interpretation)
+                        val result = handler.api.saveInterpretation(interpretation)
                     }
                     interpretationText = ""
                 }

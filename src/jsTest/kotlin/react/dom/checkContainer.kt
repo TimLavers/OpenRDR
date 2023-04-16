@@ -1,4 +1,4 @@
-package mysticfall
+package react.dom
 
 import js.core.globalThis
 import react.VFC
@@ -20,4 +20,11 @@ suspend fun checkContainer(vfc: VFC, block: (container: HTMLElement) -> Unit) {
     unmount(root)
 }
 
+suspend fun createRootFor(vfc: VFC): HTMLElement {
+    globalThis.IS_REACT_ACT_ENVIRONMENT = true
+    val container = document.createElement(div)
+    document.body.appendChild(container)
+    createRoot(container, vfc)
+    return container
+}
 
