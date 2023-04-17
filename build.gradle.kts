@@ -183,6 +183,7 @@ kotlin {
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-emotion")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-mui")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-mui-icons")
+                implementation(npm("debounce", "1.2.1"))
             }
         }
         val jsTest by getting {

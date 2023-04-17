@@ -1,4 +1,4 @@
-@single
+@requirement
 Feature: Show a list of cases
 
   Scenario: Should show the list of cases that have been stored by the server

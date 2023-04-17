@@ -158,5 +158,15 @@ class Defs : En {
         Then("I should see the case {word} as the current case") { caseName: String ->
             caseViewPO.nameShown() shouldBe caseName
         }
+
+        And("I enter the text {string} in the interpretation field") { text: String ->
+            caseViewPO.setInterpretationText(text)
+        }
+        And("select the case {word}") { caseName: String ->
+            caseListPO.select(caseName)
+        }
+        Then("the interpretation field should contain the text {string}") { text: String ->
+            caseViewPO.interpretationText() shouldBe text
+        }
     }
 }
