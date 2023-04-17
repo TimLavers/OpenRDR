@@ -231,7 +231,7 @@ internal class ServerApplicationTest {
     fun `handle zip in bad format`() {
         val zipFile = File("src/jvmTest/resources/export/NoRootDir.zip").toPath()
         val app = ServerApplication()
-        shouldThrow<IllegalArgumentException>{
+        shouldThrow<IllegalArgumentException> {
             app.importKBFromZip(Files.readAllBytes(zipFile))
         }.message shouldBe "Invalid zip for KB import."
     }
@@ -239,7 +239,7 @@ internal class ServerApplicationTest {
     @Test
     fun `handle empty zip`() {
         val zipFile = File("src/jvmTest/resources/export/Empty.zip").toPath()
-        shouldThrow<IllegalArgumentException>{
+        shouldThrow<IllegalArgumentException> {
             ServerApplication().importKBFromZip(Files.readAllBytes(zipFile))
         }.message shouldBe "Invalid zip for KB import."
     }

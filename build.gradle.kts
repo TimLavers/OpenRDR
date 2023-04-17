@@ -1,30 +1,34 @@
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
-val kotlinVersion = "1.8.0"
+val kotlinVersion = "1.8.20"
 val serializationVersion = "1.4.1"
 val kotlinxDateTimeVersion = "0.4.0"
 val kotlinxCoroutinesTestVersion = "1.6.4"
 val ktor_version = "2.2.1"
 val logbackVersion = "1.4.5"
-val reactVersion = "18.2.0-pre.479"
-val kotlinWrappersVersion = "1.0.0-pre.484"
-val testingLibraryReactVersion = "13.4.0"
+val kotlinWrappersVersion = "1.0.0-pre.536"
+val diffUtilsVersion = "4.12"
+val testingLibraryReactVersion = "14.0.0"
 val reactTestRendererVersion = "18.2.0"
-val kotestVersion = "5.5.4"
-val webDriverVersion = "5.3.1"
+val kotestVersion = "5.5.5"
+val webDriverVersion = "5.3.2"
 val awaitilityVersion = "4.2.0"
-val cucumberVersion = "7.11.1"
+val cucumberVersion = "7.11.2"
 val commonsIoVersion = "2.11.0"
+val commonsTextVersion = "1.10.0"
 val seleniumJavaVersion = "4.2.2"
 val mockkVersion = "1.13.4"
 
 plugins {
-    kotlin("multiplatform") version "1.8.0"
+    kotlin("multiplatform") version "1.8.20"
     application
-    kotlin("plugin.serialization") version "1.8.0"
-    id("io.ktor.plugin") version "2.2.1"
+    kotlin("plugin.serialization") version "1.8.20"
+    id("io.ktor.plugin") version "2.2.3"
+    id("org.gretty") version "4.0.3"
+    jacoco
 }
+
 
 group = "io.rippledown"
 version = "1.0-SNAPSHOT"
@@ -97,22 +101,18 @@ kotlin {
                     pathToRequirements
                 )
 
-                tasks.create("cucumberTest") {
-                    doLast {
-                        javaexec {
-                            maxHeapSize = "32G"
-                            mainClass.set("io.cucumber.core.cli.Main")
-                            args = argsForCuke
-                            classpath = compileDependencyFiles + runtimeDependencyFiles + output.allOutputs
-                        }
-                    }
+                tasks.register<JavaExec>("cucumberTest") {
+                    group = VERIFICATION_GROUP
+                    maxHeapSize = "32G"
+                    mainClass.set("io.cucumber.core.cli.Main")
+                    classpath = compileDependencyFiles + runtimeDependencyFiles + output.allOutputs
+                    args = argsForCuke
                     dependsOn(
                         tasks.shadowJar,
                         tasks.compileTestJava,
                         tasks.processTestResources,
                         tasks.getByName("jvmCucumberTestClasses")
                     )
-                    group = VERIFICATION_GROUP
                 }
             }
         }
@@ -131,19 +131,17 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
                 implementation("io.ktor:ktor-client-core:$ktor_version")
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:$kotlinxDateTimeVersion")
+
             }
         }
         val commonTest by getting {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
                 implementation(kotlin("test"))
                 implementation("io.kotest:kotest-assertions-core:$kotestVersion")
             }
         }
         val jvmMain by getting {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
-
                 implementation("io.ktor:ktor-serialization:$ktor_version")
                 implementation("io.ktor:ktor-server-content-negotiation:$ktor_version")
                 implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
@@ -154,6 +152,8 @@ kotlin {
                 implementation("io.ktor:ktor-server-netty:$ktor_version")
                 implementation("ch.qos.logback:logback-classic:$logbackVersion")
                 implementation("commons-io:commons-io:$commonsIoVersion")
+                implementation("io.github.java-diff-utils:java-diff-utils:$diffUtilsVersion")
+
             }
         }
         val jvmTest by getting {
@@ -190,12 +190,10 @@ kotlin {
                 implementation(enforcedPlatform("org.jetbrains.kotlin-wrappers:kotlin-wrappers-bom:$kotlinWrappersVersion"))
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom-test-utils")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-extensions")
-
                 implementation("io.ktor:ktor-client-mock:$ktor_version")
 
                 implementation(kotlin("test-js"))
                 implementation(npm("@testing-library/react", testingLibraryReactVersion))
-                implementation(npm("react-test-renderer", reactTestRendererVersion))
 
                 implementation("io.kotest:kotest-assertions-core-js:$kotestVersion")
                 implementation("io.kotest:kotest-framework-api-js:$kotestVersion")
@@ -239,10 +237,17 @@ fun Jar.includeJsArtifacts() {
     manifest.attributes["Main-Class"] = "io.rippledown.server.OpenRDRServerKt"
 }
 
-tasks {
-    test {
-        useJUnitPlatform()
+tasks.jacocoTestReport {
+    group = "Reporting"
+    dependsOn(tasks.getByName("jvmTest"))
+    reports {
+        xml.required.set(false)
+        csv.required.set(false)
+        html.outputLocation.set(layout.buildDirectory.dir("reports/jacocoHtml"))
     }
+}
+tasks.getByName("jvmTest") {
+    finalizedBy(tasks.jacocoTestReport)
 }
 
 distributions {

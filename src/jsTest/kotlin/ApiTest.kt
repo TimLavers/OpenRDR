@@ -1,5 +1,6 @@
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
+import io.rippledown.model.diff.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mocks.config
@@ -61,6 +62,23 @@ class ApiTest {
     @Test
     fun kbInfo() = runTest {
         val expectedResult = KBInfo("Glucose")
-        Api(mock(config{})).kbInfo() shouldBe expectedResult
+        Api(mock(config {})).kbInfo() shouldBe expectedResult
+    }
+
+    @Test
+    fun interpretationChanges() = runTest {
+        val expectedResult = DiffList(
+            listOf(
+                Addition("This comment was added."),
+                Removal("This comment was removed."),
+                Replacement("This comment was replaced.", "This is the new comment."),
+                Unchanged("This comment was left alone."),
+            )
+        )
+        val config = config {
+            returnDiffList = expectedResult
+            expectedCaseId = "42"
+        }
+        Api(mock(config)).interpretationChanges("42") shouldBe expectedResult
     }
 }

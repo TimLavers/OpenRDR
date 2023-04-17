@@ -21,7 +21,7 @@ val OpenRDRUI = FC<Handler> { handler ->
         h1 {
             +"Open RippleDown"
             css {
-                color = rdBlue
+                color = blue
                 textAlign = TextAlign.center
             }
             id = "main_heading"

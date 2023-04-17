@@ -13,6 +13,7 @@ val CaseTableBody = FC<CaseTableBodyHandler> {
         it.case.attributes().forEach { a ->
             val results = it.case.rdrCase.resultsFor(a)!!
             ReactHTML.tr {
+                id = "case_table_row_${a.name}"
                 css {
                     nthChild("even") {
                         backgroundColor = rgb(224, 224, 224)

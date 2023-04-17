@@ -1,27 +1,30 @@
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
-import mysticfall.ReactTestSupport
-import react.dom.html.ReactHTML
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
+import proxy.findById
+import react.VFC
+import react.dom.createRootFor
+
 import kotlin.test.Test
 
 fun attributeCellId(attribute: Attribute) = "attribute_name_cell_${attribute.name}"
 
-class AttributeCellTest : ReactTestSupport {
+@OptIn(ExperimentalCoroutinesApi::class)
+class AttributeCellTest {
 
     @Test
-    fun creation() {
+    fun creation() = runTest {
         val tsh = Attribute("TSH")
-        val renderer = render {
+        val vfc = VFC {
             AttributeCell {
                 attribute = tsh
             }
         }
-        val cells = renderer.root.findAllByType(AttributeCell)
-        cells[0].props.attribute shouldBe tsh
-
-        val byId = renderer.root.findAllByType(ReactHTML.td.toString()).first()
-        byId.props.asDynamic()["id"].unsafeCast<String>() shouldBe attributeCellId(tsh)
-        byId.props.asDynamic()["children"].unsafeCast<String>() shouldBe tsh.name
-        byId.props.asDynamic()["draggable"].unsafeCast<Boolean>() shouldBe true
+        with(createRootFor(vfc)) {
+            val cell = findById(attributeCellId(tsh))
+            cell.textContent shouldBe tsh.name
+            cell.getAttribute("draggable") shouldBe "true"
+        }
     }
 }

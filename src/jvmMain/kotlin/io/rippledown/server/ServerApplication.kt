@@ -10,20 +10,20 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.model.rule.ChangeTreeToReplaceConclusion
+import io.rippledown.textdiff.diffList
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.apache.commons.io.FileUtils
-import org.apache.commons.io.FileUtils.writeByteArrayToFile
 import java.io.File
 import java.nio.charset.StandardCharsets.UTF_8
-import java.nio.file.attribute.FileAttribute
 import java.time.LocalDateTime
 import kotlin.io.path.createTempDirectory
 
 class ServerApplication {
     val casesDir = File("cases").apply { mkdirs() }
     val interpretationsDir = File("interpretations").apply { mkdirs() }
+
     var kb = KB("Thyroids")
 
     fun createKB() {
@@ -106,8 +106,11 @@ class ServerApplication {
         val caseFile = File(casesDir, "${interpretation.caseId.id}.json")
         val deleted = FileUtils.delete(caseFile)
         println("${LocalDateTime.now()} case deleted ${deleted}")
+
         return OperationResult("Interpretation submitted")
     }
+
+    fun diffListForCase(caseId: String) = diffList(case(caseId))
 
     private fun getCaseFromFile(file: File): RDRCase {
         val format = Json { allowStructuredMapKeys = true }
