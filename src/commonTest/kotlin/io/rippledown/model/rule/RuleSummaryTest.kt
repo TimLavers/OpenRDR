@@ -11,7 +11,7 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 
 internal class RuleSummaryTest: ConditionTestBase() {
-    private val conclusion = Conclusion("Capricious behaviour normal at that age.")
+    private val conclusion = Conclusion( 1, "Capricious behaviour normal at that age.")
     private val empty = RuleSummary("r1",null, emptySet())
     private val rs2: RuleSummary
     private val rs3: RuleSummary

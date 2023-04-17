@@ -67,11 +67,11 @@ internal class KBInfoTest {
 
     @Test //KBId-9
     fun validIdFormat() {
-        val bad = listOf("!a", "@b", "a%c", "s_d")
+        val bad = listOf("!a", "@b", "a%c", "s-d")
         bad.forEach {
             shouldThrow<IllegalArgumentException> {
                 KBInfo(it,"Name")
-            }.message shouldBe "KBInfo id should consist of letters, numbers, and - only."
+            }.message shouldBe "KBInfo id should consist of letters, numbers, and _ only."
         }
         val good = listOf("a")
         good.forEach {

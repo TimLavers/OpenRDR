@@ -32,7 +32,7 @@ internal class InterpretationTest {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
         interpretation.textGivenByRules() shouldBe ""
 
-        val conclusion = Conclusion("First conclusion")
+        val conclusion = Conclusion(1, "First conclusion")
         val rule = Rule("r", null, conclusion, emptySet())
         interpretation.add(rule)
         interpretation.textGivenByRules() shouldBe conclusion.text
@@ -41,7 +41,7 @@ internal class InterpretationTest {
     @Test
     fun textGivenByRulesWithDuplicateConclusion() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val conclusion = Conclusion("First conclusion")
+        val conclusion = Conclusion(1, "First conclusion")
         val rule0 = Rule("r0", null, conclusion, emptySet())
         val rule1 = Rule("r1", null, conclusion, emptySet())
         interpretation.add(rule0)
@@ -52,7 +52,7 @@ internal class InterpretationTest {
     @Test
     fun textGivenByRulesWithNullRuleConclusion() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val conclusion = Conclusion("First conclusion")
+        val conclusion = Conclusion(1, "First conclusion")
         val rule0 = Rule("r0", null, conclusion, emptySet())
         val rule1 = Rule("r1", null, null, emptySet())
         interpretation.add(rule0)
@@ -63,9 +63,9 @@ internal class InterpretationTest {
     @Test
     fun textGivenByRulesHasConclusionsInABOrder() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val rule0 = Rule("r0", null, Conclusion("C"), emptySet())
-        val rule1 = Rule("r1", null, Conclusion("A"), emptySet())
-        val rule2 = Rule("r2", null, Conclusion("B"), emptySet())
+        val rule0 = Rule("r0", null, Conclusion(1, "C"), emptySet())
+        val rule1 = Rule("r1", null, Conclusion(2, "A"), emptySet())
+        val rule2 = Rule("r2", null, Conclusion(3, "B"), emptySet())
         interpretation.add(rule0)
         interpretation.add(rule1)
         interpretation.add(rule2)
@@ -75,7 +75,7 @@ internal class InterpretationTest {
     @Test
     fun singleRule() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val conclusion = Conclusion("First conclusion")
+        val conclusion = Conclusion(2, "First conclusion")
         val rule = Rule("r", null, conclusion, emptySet())
         interpretation.add(rule)
         checkSingleConclusion(interpretation, conclusion)
@@ -84,7 +84,7 @@ internal class InterpretationTest {
     @Test
     fun twoRulesWithSameConclusion() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val conclusion = Conclusion("First conclusion")
+        val conclusion = Conclusion(1, "First conclusion")
         val rule0 = Rule("r0", null, conclusion, emptySet())
         val rule1 = Rule("r1", null, conclusion, emptySet())
         interpretation.add(rule0)
@@ -95,11 +95,11 @@ internal class InterpretationTest {
     @Test
     fun multipleRules() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val c0 = Conclusion("First conclusion")
+        val c0 = Conclusion(1, "First conclusion")
         val rule0 = Rule("r0", null, c0, emptySet())
-        val c1 = Conclusion("Second conclusion")
+        val c1 = Conclusion(2, "Second conclusion")
         val rule1 = Rule("r1", null, c1, emptySet())
-        val c2 = Conclusion("Third conclusion")
+        val c2 = Conclusion(3, "Third conclusion")
         val rule2 = Rule("r2", null, c2, emptySet())
         interpretation.add(rule0)
         interpretation.add(rule1)
@@ -113,8 +113,8 @@ internal class InterpretationTest {
     @Test
     fun idsOfRulesGivingConclusion() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val concA = Conclusion("A")
-        val concB = Conclusion("B")
+        val concA = Conclusion(1, "A")
+        val concB = Conclusion(2, "B")
         val rule0 = Rule("r0", null, concA, emptySet())
         val rule1 = Rule("r1", null, concA, emptySet())
         val rule2 = Rule("r2", null, concB, emptySet())
@@ -130,11 +130,11 @@ internal class InterpretationTest {
     @Test
     fun addRuleSummary() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val c0 = Conclusion("First conc")
+        val c0 = Conclusion(1, "First conc")
         val rule0 = Rule("r0", null, c0, emptySet())
-        val c1 = Conclusion("Second conc")
+        val c1 = Conclusion(2, "Second conc")
         val rule1 = Rule("r1", null, c1, emptySet())
-        val c2 = Conclusion("Third conc")
+        val c2 = Conclusion( 3, "Third conc")
         val rule2 = Rule("r2", null, c2, emptySet())
         interpretation.add(rule0.summary())
         interpretation.add(rule1.summary())
@@ -155,10 +155,10 @@ internal class InterpretationTest {
     @Test
     fun shouldReturnConditionsForConclusion() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val c0 = Conclusion("First conc")
+        val c0 = Conclusion(1, "First conc")
         val conditions0 = setOf(ContainsText(Attribute("A", attributeId++), "text A"), ContainsText(Attribute("B", attributeId++), "text B"))
         val rule0 = Rule("r0", null, c0, conditions0)
-        val c1 = Conclusion("Second conc")
+        val c1 = Conclusion(2, "Second conc")
         val conditions1 = setOf(ContainsText(Attribute("C", attributeId++), "text C"), ContainsText(Attribute("D", attributeId++), "text D"))
         val rule1 = Rule("r1", null, c1, conditions1)
         interpretation.add(rule0)
@@ -170,7 +170,7 @@ internal class InterpretationTest {
     @Test
     fun conditionsForConclusionShouldBeInAlphaOrder() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val conclusion = Conclusion("First conc")
+        val conclusion = Conclusion(1, "First conc")
         val conditions = setOf(
             ContainsText(Attribute("z", attributeId++), "text z"),
             ContainsText(Attribute("A", attributeId++), "text A"),

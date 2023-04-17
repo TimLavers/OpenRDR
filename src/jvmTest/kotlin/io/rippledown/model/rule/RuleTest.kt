@@ -8,9 +8,9 @@ import io.rippledown.model.rule.RuleTestBase
 import kotlin.test.Test
 
 internal class RuleTest : RuleTestBase() {
-    private val conclusion1 = conc("First conclusion")
-    private val conclusion2 = conc("Second conclusion")
-    private val conclusion3 = conc("Third conclusion")
+    private val conclusion1 = Conclusion(100,"First conclusion")
+    private val conclusion2 = Conclusion(200, "Second conclusion")
+    private val conclusion3 = Conclusion(300,"Third conclusion")
 
     @Test
     fun adding_a_child_in_the_constructor_should_set_the_parent() {

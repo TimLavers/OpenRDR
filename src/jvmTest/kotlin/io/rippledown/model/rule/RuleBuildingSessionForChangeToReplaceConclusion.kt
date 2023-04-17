@@ -15,17 +15,18 @@ internal class RuleBuildingSessionForChangeToReplaceConclusion : RuleTestBase() 
 
     @Test
     fun toStringTest() {
-        val addAction = ChangeTreeToReplaceConclusion(Conclusion("Whatever"), Conclusion("Blah"))
-        addAction.toString() shouldBe "ChangeTreeToReplaceConclusion(toBeReplaced=Conclusion(text=Whatever) replacement=Conclusion(text=Blah))"
+        val addAction = ChangeTreeToReplaceConclusion(Conclusion(4, "Whatever"), Conclusion(5, "Blah"))
+        addAction.toString() shouldBe "ChangeTreeToReplaceConclusion(toBeReplaced=Conclusion(id=4, text=Whatever) replacement=Conclusion(id=5, text=Blah))"
     }
 
     @Test
     fun a_session_for_a_replace_action_should_present_those_cornerstones_which_satisfy_the_conditions() {
         val tree = RuleTree()
-        val replaceAction = ChangeTreeToReplaceConclusion(Conclusion("A"), Conclusion("D"))
-        val ruleGivingA = Rule("ra", null, Conclusion("A"))
-        val ruleGivingB = Rule("rb", null, Conclusion("B"))
-        val ruleGivingC = Rule("rc", null, Conclusion("C"))
+        val conclusionA = conc("A", tree.root)
+        val replaceAction = ChangeTreeToReplaceConclusion(conclusionA, conc("D", tree.root))
+        val ruleGivingA = Rule("ra", null, conclusionA)
+        val ruleGivingB = Rule("rb", null, conc("B", tree.root))
+        val ruleGivingC = Rule("rc", null, conc("C", tree.root))
         tree.root.addChild(ruleGivingA)
         tree.root.addChild(ruleGivingB)
         tree.root.addChild(ruleGivingC)
@@ -39,14 +40,14 @@ internal class RuleBuildingSessionForChangeToReplaceConclusion : RuleTestBase() 
     @Test
     fun a_session_for_a_replace_action_should_only_present_those_cornerstones_whose_interpretations_would_change() {
         val tree = RuleTree()
-        val ruleGivingA = Rule("ra", null, Conclusion("A"))
-        val ruleGivingB = Rule("rb", null, Conclusion("B"))
-        val ruleGivingC = Rule("rc", null, Conclusion("C"))
+        val ruleGivingA = Rule("ra", null, conc("A", tree.root))
+        val ruleGivingB = Rule("rb", null, conc("B", tree.root))
+        val ruleGivingC = Rule("rc", null, conc("C", tree.root))
         tree.root.addChild(ruleGivingA)
         tree.root.addChild(ruleGivingB)
         tree.root.addChild(ruleGivingC)
 
-        val replaceAction = ChangeTreeToReplaceConclusion(Conclusion("A"), Conclusion("B"))
+        val replaceAction = ChangeTreeToReplaceConclusion(conc("A", tree.root), conc("B", tree.root))
         val session = RuleBuildingSession(tree, sessionCase, replaceAction, cornerstones)
         session.cornerstoneCases() shouldBe setOf(cc1, cc2)
     }
@@ -73,7 +74,7 @@ internal class RuleBuildingSessionForChangeToReplaceConclusion : RuleTestBase() 
         tree.root.childRules().size shouldBe 2 //sanity
         val rulesBefore = tree.rules()
 
-        val action = ChangeTreeToReplaceConclusion(Conclusion("A"), Conclusion("B"))
+        val action = ChangeTreeToReplaceConclusion(conc("A", tree.root), conc("B", tree.root))
         val case = clinicalNotesCase("a")
         RuleBuildingSession(tree, case, action, setOf())
             .addCondition(ContainsText(clinicalNotes, "a"))
@@ -108,7 +109,7 @@ internal class RuleBuildingSessionForChangeToReplaceConclusion : RuleTestBase() 
             }
         }.build()
 
-        val action = ChangeTreeToReplaceConclusion(Conclusion("A"), Conclusion("B"))
+        val action = ChangeTreeToReplaceConclusion(conc("A", tree.root), conc("B", tree.root))
         val case = clinicalNotesCase("c")
         val caseA = clinicalNotesCase("a")
         val caseB = clinicalNotesCase("b")

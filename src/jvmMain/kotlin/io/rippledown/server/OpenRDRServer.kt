@@ -70,6 +70,7 @@ fun main() {
         kbManagement(application)
         caseManagement(application)
         attributeManagement(application)
+        conclusionManagement(application)
         ruleSession(application)
     }
     logger.info(STARTING_SERVER)

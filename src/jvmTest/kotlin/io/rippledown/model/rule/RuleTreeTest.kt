@@ -3,6 +3,7 @@ package io.rippledown.model.rule
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.CaseId
+import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.rule.dsl.ruleTree
 import kotlin.test.BeforeTest
@@ -12,8 +13,6 @@ internal class RuleTreeTest : RuleTestBase() {
     private lateinit var tree: RuleTree
     private val A = "A"
     private val B = "B"
-    private val conclusionA = conc(A)
-    private val conclusionB = conc(B)
     private val kase = clinicalNotesCase("abc")
 
     @Test
@@ -50,7 +49,9 @@ internal class RuleTreeTest : RuleTestBase() {
             }
         }.build()
         tree.apply(kase)
-        checkInterpretation(kase.interpretation, conclusionA)
+        val conclusion1 = tree.root.childRules().first().conclusion!!
+        checkInterpretation(kase.interpretation, conclusion1)
+        conclusion1.text shouldBe A
     }
 
     @Test
@@ -72,7 +73,9 @@ internal class RuleTreeTest : RuleTestBase() {
             }
         }.build()
         tree.apply(kase)
-        checkInterpretation(kase.interpretation, conclusionA, conclusionB)
+        val conclusion1 = tree.root.childRules().first().conclusion!!
+        val conclusion2 = tree.root.childRules().last().conclusion!!
+        checkInterpretation(kase.interpretation, conclusion1, conclusion2)
     }
 
     @Test

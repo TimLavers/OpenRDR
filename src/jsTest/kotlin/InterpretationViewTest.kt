@@ -18,7 +18,7 @@ class InterpretationViewTest : ReactTestSupport {
     fun shouldShowInitialInterpretation() = runTest {
         val text = "Go to Bondi now!"
         val interpretation = Interpretation().apply {
-            add(RuleSummary(conclusion = Conclusion(text)))
+            add(RuleSummary(conclusion = Conclusion(1, text)))
         }
         lateinit var renderer: TestRenderer
         act {
@@ -68,7 +68,7 @@ class InterpretationViewTest : ReactTestSupport {
         val caseId = CaseId("1", "case A")
         val text = "Go to Bondi now!"
         val defaultInterpretation = Interpretation(caseId = caseId).apply {
-            add(RuleSummary(conclusion = Conclusion(text)))
+            add(RuleSummary(conclusion = Conclusion(1, text)))
         }
 
         val config = config {

@@ -4,8 +4,6 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.integration.pageobjects.CaseListPO
 import io.rippledown.integration.pageobjects.CaseQueuePO
 import io.rippledown.integration.restclient.RESTClient
-import io.rippledown.model.Attribute
-import io.rippledown.model.Conclusion
 import io.rippledown.model.condition.IsNormal
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -40,7 +38,8 @@ internal class ShowCaseInterpretation : UITestBase() {
     private fun buildRule() {
         val restClient = RESTClient()
         restClient.getCaseWithName("Case2")
-        restClient.startSessionToAddConclusionForCurrentCase(Conclusion(comment))
+        val conclusion = conclusionFactory.create(comment)
+        restClient.startSessionToAddConclusionForCurrentCase(conclusion)
         val tsh = attributeFactory.create("TSH")
         val condition = IsNormal(tsh)
         restClient.addConditionForCurrentSession(condition)

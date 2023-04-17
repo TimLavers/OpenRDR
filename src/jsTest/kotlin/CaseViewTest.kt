@@ -30,7 +30,7 @@ class CaseViewTest : ReactTestSupport {
     fun shouldShowInterpretation() {
         val text = "Go to Bondi now!"
         val rdrCase = createCase("case a ")
-        rdrCase.interpretation.add(RuleSummary(conclusion = Conclusion(text)))
+        rdrCase.interpretation.add(RuleSummary(conclusion = Conclusion(1, text)))
         val renderer = render {
             CaseView {
                 case = rdrCase
@@ -44,7 +44,7 @@ class CaseViewTest : ReactTestSupport {
         val text = "Go to Bondi now!"
         val caseName = "case a "
         val rdrCase = createCase(caseName)
-        rdrCase.interpretation.add(RuleSummary(conclusion = Conclusion(text)))
+        rdrCase.interpretation.add(RuleSummary(conclusion = Conclusion(1, text)))
 
         val config = config {
             expectedInterpretation = Interpretation(CaseId(caseName, caseName), text = text)

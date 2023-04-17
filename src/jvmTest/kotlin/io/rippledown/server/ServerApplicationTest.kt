@@ -98,7 +98,7 @@ internal class ServerApplicationTest {
         // No rules added.
         retrieved.interpretation.conclusions().size shouldBe 0
         // Add a rule.
-        val conclusion = Conclusion("ABC ok.")
+        val conclusion = app.kb.conclusionManager.getOrCreate("ABC ok.")
         app.kb.startRuleSession(retrieved, ChangeTreeToAddConclusion(conclusion))
         val abc = retrieved.getAttribute("ABC")
         app.kb.addConditionToCurrentRuleSession(GreaterThanOrEqualTo(abc, 5.0))
@@ -118,7 +118,7 @@ internal class ServerApplicationTest {
         // No rules added.
         retrieved.interpretation.conclusions().size shouldBe 0
         // Add a rule.
-        val conclusion = Conclusion("ABC ok.")
+        val conclusion = app.kb.conclusionManager.getOrCreate( "ABC ok.")
         app.kb.startRuleSession(retrieved.rdrCase, ChangeTreeToAddConclusion(conclusion))
         val abc = retrieved.rdrCase.getAttribute("ABC")
         app.kb.addConditionToCurrentRuleSession(GreaterThanOrEqualTo(abc, 5.0))
@@ -194,7 +194,7 @@ internal class ServerApplicationTest {
         setUpCaseFromFile(id, app)
         app.kb.addCase(createCase(id))
         app.case(id).interpretation.conclusions() shouldBe emptySet()
-        app.startRuleSessionToAddConclusion(id, Conclusion("Whatever"))
+        app.startRuleSessionToAddConclusion(id, app.kb.conclusionManager.getOrCreate("Whatever"))
         app.commitCurrentRuleSession()
         app.case(id).interpretation.textGivenByRules() shouldBe "Whatever"
     }
@@ -206,7 +206,7 @@ internal class ServerApplicationTest {
         val id = "Case1"
         setUpCaseFromFile(id, app)
         app.kb.addCase(createCase(id))
-        val conclusion1 = Conclusion("Whatever")
+        val conclusion1 = app.kb.conclusionManager.getOrCreate( "Whatever")
         app.startRuleSessionToAddConclusion(id, conclusion1)
         app.commitCurrentRuleSession()
         app.case(id).interpretation.textGivenByRules() shouldBe conclusion1.text
@@ -272,11 +272,11 @@ internal class ServerApplicationTest {
         val id = "Case1"
         setUpCaseFromFile(id, app)
         app.kb.addCase(createCase(id))
-        val conclusion1 = Conclusion("Whatever")
+        val conclusion1 = app.kb.conclusionManager.getOrCreate( "Whatever")
         app.startRuleSessionToAddConclusion(id, conclusion1)
         app.commitCurrentRuleSession()
         app.case(id).interpretation.textGivenByRules() shouldBe conclusion1.text
-        val conclusion2 = Conclusion("Blah")
+        val conclusion2 = app.kb.conclusionManager.getOrCreate("Blah")
         app.startRuleSessionToReplaceConclusion(id, conclusion1, conclusion2)
         app.commitCurrentRuleSession()
         app.case(id).interpretation.textGivenByRules() shouldBe conclusion2.text

@@ -63,7 +63,8 @@ class KBTest {
     private fun buildRuleToAddAComment(kb: KB, comment: String) {
         kb.addCase(createCase("Case1", "1.0"))
         val sessionCase = kb.getCaseByName("Case1")
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion(comment)))
+        val conclusion = kb.conclusionManager.getOrCreate(comment)
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(conclusion))
         kb.commitCurrentRuleSession()
     }
 
@@ -172,9 +173,10 @@ class KBTest {
     fun `cannot start a rule session if one is already started`() {
         kb.addCase(createCase("Case1"))
         val sessionCase = kb.getCaseByName("Case1")
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion("Whatever.")))
+        val conclusion = kb.conclusionManager.getOrCreate("Whatever.")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(conclusion))
         shouldThrow<IllegalStateException> {
-            kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion("Stuff.")))
+            kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Stuff.")))
         }.message shouldBe "Session already in progress."
     }
 
@@ -184,13 +186,13 @@ class KBTest {
         kb.addCase(createCase("Case2", "1.0"))
         val sessionCase = kb.getCaseByName("Case1")
         val otherCase = kb.getCaseByName("Case1")
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion("Whatever.")))
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
         kb.commitCurrentRuleSession()
         kb.interpret(otherCase)
         otherCase.interpretation.textGivenByRules() shouldBe "Whatever." // sanity
 
         shouldThrow<IllegalStateException> {
-            kb.startRuleSession(otherCase, ChangeTreeToAddConclusion(Conclusion("Whatever.")))
+            kb.startRuleSession(otherCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
         }.message shouldBe "Action ChangeTreeToAddConclusion(toBeAdded=Conclusion(text=Whatever.)) is not applicable to case Case1"
     }
 
@@ -200,7 +202,7 @@ class KBTest {
         val sessionCase = kb.getCaseByName("Case1")
         kb.interpret(sessionCase)
         sessionCase.interpretation.textGivenByRules() shouldBe ""
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion("Whatever.")))
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
         kb.commitCurrentRuleSession()
         kb.interpret(sessionCase)
         sessionCase.interpretation.textGivenByRules() shouldBe "Whatever."
@@ -212,7 +214,7 @@ class KBTest {
         kb.addCase(createCase("Case2", "2.0"))
         val sessionCase = kb.getCaseByName("Case1")
         sessionCase.interpretation.textGivenByRules() shouldBe ""
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion("Whatever.")))
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
         kb.conflictingCasesInCurrentRuleSession().map { rdrCase -> rdrCase.name }.toSet() shouldBe setOf("Case2")
     }
 
@@ -222,7 +224,7 @@ class KBTest {
         kb.addCase(createCase("Case2", "2.0"))
         val sessionCase = kb.getCaseByName("Case1")
         sessionCase.interpretation.textGivenByRules() shouldBe ""
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion("Whatever.")))
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion(1, "Whatever.")))
         kb.addConditionToCurrentRuleSession(LessThanOrEqualTo(glucose(), 1.2))
         kb.conflictingCasesInCurrentRuleSession().size shouldBe 0
     }
@@ -234,7 +236,7 @@ class KBTest {
         val sessionCase = kb.getCaseByName("Case1")
         val otherCase = kb.getCaseByName("Case2")
         sessionCase.interpretation.textGivenByRules() shouldBe ""
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion("Whatever.")))
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion(1, "Whatever.")))
         kb.interpret(otherCase)
         // Rule not yet added...
         otherCase.interpretation.textGivenByRules() shouldBe ""

@@ -59,6 +59,11 @@ class RESTClient {
         }.body()
     }
 
+    fun getOrCreateConclusion(text: String): Conclusion = runBlocking {
+        jsonClient.post(endpoint + GET_OR_CREATE_CONCLUSION) {
+            setBody(text)
+        }.body()
+    }
 
     fun startSessionToAddConclusionForCurrentCase(conclusion: Conclusion): OperationResult {
         require(currentCase != null)

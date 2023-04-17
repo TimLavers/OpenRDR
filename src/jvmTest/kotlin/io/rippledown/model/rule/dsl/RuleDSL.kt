@@ -6,7 +6,9 @@ import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ContainsText
 import io.rippledown.model.rule.Rule
 import io.rippledown.model.rule.RuleTree
+import io.rippledown.persistence.postgres.createPostgresKB
 import io.rippledown.util.randomString
+import kotlin.random.Random
 
 fun ruleTree(init: ABSTRACT_RULE_TEMPLATE.() -> Unit) : ROOT_TEMPLATE {
     val n = ROOT_TEMPLATE()
@@ -15,7 +17,8 @@ fun ruleTree(init: ABSTRACT_RULE_TEMPLATE.() -> Unit) : ROOT_TEMPLATE {
 }
 
 open class ABSTRACT_RULE_TEMPLATE {
-    protected lateinit var conclusionDesc: String
+    private val conclusionTextToId = mapOf("ROOT" to 999, "A" to 1000, "B" to 1001, "C" to 1002, "ConcA" to 1003, "ConcB" to 1004, "ConcC" to 1005, "ConcD" to 1006)
+    protected lateinit var conclusionText: String
     var id = randomString(5)
     protected var isStopping: Boolean = false
     protected val conditions = mutableSetOf<Condition>()
@@ -28,9 +31,16 @@ open class ABSTRACT_RULE_TEMPLATE {
     }
 
     open fun rule(): Rule {
-        val result = if (isStopping) Rule(id, null, null, conditions) else Rule(id, null, Conclusion(conclusionDesc), conditions)
+        val result = if (isStopping) Rule(id, null, null, conditions) else Rule(id, null, createConclusion(), conditions)
         childRules.forEach { result.addChild(it.rule()) }
         return result
+    }
+
+    fun createConclusion(): Conclusion {
+        if (conclusionTextToId.containsKey(conclusionText)) {
+            return Conclusion(conclusionTextToId[conclusionText]!!, conclusionText)
+        }
+        throw IllegalStateException("Unknown conclusion text: $conclusionText")
     }
 }
 
@@ -46,13 +56,13 @@ class ROOT_TEMPLATE : ABSTRACT_RULE_TEMPLATE() {
     }
 
     override fun rule(): Rule {
-        val result = Rule(randomString(5),null, Conclusion(conclusionDesc), conditions)
+        val result = Rule(randomString(5),null, createConclusion(), conditions)
         childRules.forEach { result.addChild(it.rule()) }
         return result
     }
 
     init {
-        conclusionDesc = "ROOT"
+        conclusionText = "ROOT"
     }
 }
 
@@ -64,11 +74,11 @@ class RULE_TEMPLATE : ABSTRACT_RULE_TEMPLATE() {
     }
 
     fun conclusion(init: RULE_TEMPLATE.() -> String) = apply {
-        conclusionDesc = init()
+        conclusionText = init()
     }
 
     operator fun String.unaryPlus() {
-        conclusionDesc = this
+        conclusionText = this
     }
 
     fun stop() = apply {

@@ -44,7 +44,7 @@ class BuildTemplate {
     fun requireInterpretation(caseName: String, vararg expectedConclusions: String) {
         val case = kb.getCaseByName(caseName)
         kb.interpret(case)
-        case.interpretation.conclusions() shouldBe expectedConclusions.map { Conclusion(it) }.toSet()
+        case.interpretation.conclusions().map { it.text } shouldBe expectedConclusions.toSet()
     }
 }
 
@@ -86,7 +86,7 @@ class SessionTemplate( val kb: KB) {
     }
 
     private fun addConclusion(conclusion: String) {
-        val action = ChangeTreeToAddConclusion(Conclusion(conclusion))
+        val action = ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate(conclusion))
         kb.startRuleSession(case, action)
     }
 
@@ -95,12 +95,12 @@ class SessionTemplate( val kb: KB) {
     }
 
     private fun removeConclusion(conclusion: String) {
-        val action = ChangeTreeToRemoveConclusion(Conclusion(conclusion))
+        val action = ChangeTreeToRemoveConclusion(kb.conclusionManager.getOrCreate(conclusion))
         kb.startRuleSession(case, action)
     }
 
     private fun replaceConclusion(conclusion: String, replacement: String) {
-        val action = ChangeTreeToReplaceConclusion(Conclusion(conclusion), Conclusion(replacement))
+        val action = ChangeTreeToReplaceConclusion(kb.conclusionManager.getOrCreate(conclusion), kb.conclusionManager.getOrCreate(replacement))
         kb.startRuleSession(case, action)
     }
 

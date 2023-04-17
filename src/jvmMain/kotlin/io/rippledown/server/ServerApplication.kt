@@ -107,6 +107,10 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         return kb.attributeManager.getOrCreate(name)
     }
 
+    fun getOrCreateConclusion(name: String): Attribute {
+        TODO()
+    }
+
     fun saveInterpretation(interpretation: Interpretation): OperationResult {
         val fileName = "${interpretation.caseId.id}.interpretation.json"
         println("${LocalDateTime.now()}  saving interp = $fileName")

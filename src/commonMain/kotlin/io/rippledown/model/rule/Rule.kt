@@ -46,9 +46,9 @@ open class Rule(
     fun apply(kase: RDRCase, interpretation: Interpretation): Boolean {
         if (!conditionsSatisfied(kase)) return false
         var childRuleApplied = false
-        childRules().forEach({
+        childRules().forEach {
             childRuleApplied = it.apply(kase, interpretation) || childRuleApplied
-        })
+        }
         if (!childRuleApplied) interpretation.add(this)
         return true
     }

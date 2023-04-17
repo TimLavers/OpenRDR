@@ -2,7 +2,6 @@ package io.rippledown.model.rule
 
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.Conclusion
 import io.rippledown.model.condition.ContainsText
 import io.rippledown.model.rule.dsl.ruleTree
 import kotlin.test.Test
@@ -33,7 +32,7 @@ internal class ActionTest : RuleTestBase() {
 
         tree.root.childRules().size shouldBe 2 //sanity
         val rulesBefore = tree.rules()
-        val addAction = ChangeTreeToAddConclusion(Conclusion(A))
+        val addAction = ChangeTreeToAddConclusion(conc(A, tree.root))
         addAction.updateRuleTree(tree, glucoseOnlyCase())
         tree.root.childRules().size shouldBe 3
         val rulesAdded = tree.rules().minus(rulesBefore)
@@ -46,7 +45,7 @@ internal class ActionTest : RuleTestBase() {
     }
 
     @Test
-    fun A_RemoveAction_should_add_a_Stopping_rule_for_the_conclusion_to_be_removed() {
+    fun a_RemoveAction_should_add_a_Stopping_rule_for_the_conclusion_to_be_removed() {
         val tree = ruleTree {
             child {
                 +A
@@ -67,7 +66,7 @@ internal class ActionTest : RuleTestBase() {
         tree.root.childRules().size shouldBe 2 //sanity
         val rulesBefore = tree.rules()
 
-        val removeAction = ChangeTreeToRemoveConclusion(Conclusion(A))
+        val removeAction = ChangeTreeToRemoveConclusion(conc(A, tree.root))
         removeAction.updateRuleTree(tree, clinicalNotesCase("a"))
 
         tree.root.childRules().size shouldBe 2
@@ -109,7 +108,7 @@ internal class ActionTest : RuleTestBase() {
         tree.root.childRules().size shouldBe 3 //sanity
         val rulesBefore = tree.rules()
 
-        val removeAction = ChangeTreeToRemoveConclusion(Conclusion(A))
+        val removeAction = ChangeTreeToRemoveConclusion(conc(A, tree.root))
         removeAction.updateRuleTree(tree, clinicalNotesCase("ab"))
 
         tree.root.childRules().size shouldBe 3
@@ -152,7 +151,7 @@ internal class ActionTest : RuleTestBase() {
         tree.root.childRules().size shouldBe 3 //sanity
         val rulesBefore = tree.rules()
 
-        val removeAction = ChangeTreeToRemoveConclusion(Conclusion(A))
+        val removeAction = ChangeTreeToRemoveConclusion(conc(A, tree.root))
         removeAction.updateRuleTree(tree, clinicalNotesCase("b"))
 
         tree.root.childRules().size shouldBe 3
@@ -188,7 +187,7 @@ internal class ActionTest : RuleTestBase() {
         tree.root.childRules().size shouldBe 2 //sanity
         val rulesBefore = tree.rules()
 
-        val replaceAction = ChangeTreeToReplaceConclusion(Conclusion(A), Conclusion(C))
+        val replaceAction = ChangeTreeToReplaceConclusion(conc(A, tree.root), conc(C, tree.root))
         replaceAction.updateRuleTree(tree, clinicalNotesCase("a"))
 
         tree.root.childRules().size shouldBe 2
@@ -231,7 +230,7 @@ internal class ActionTest : RuleTestBase() {
         tree.root.childRules().size shouldBe 3 //sanity
         val rulesBefore = tree.rules()
 
-        val replaceAction = ChangeTreeToReplaceConclusion(Conclusion(A), Conclusion(C))
+        val replaceAction = ChangeTreeToReplaceConclusion(conc(A, tree.root), conc(C, tree.root))
         replaceAction.updateRuleTree(tree, clinicalNotesCase("ab"))
 
         tree.root.childRules().size shouldBe 3

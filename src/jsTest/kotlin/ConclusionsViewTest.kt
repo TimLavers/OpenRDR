@@ -24,7 +24,7 @@ class ConclusionsViewTest {
                 interpretation = Interpretation().apply {
                     add(
                         RuleSummary(
-                            conclusion = Conclusion(comment),
+                            conclusion = Conclusion(1, comment),
                             conditions = setOf(ContainsText(sun, "shining $index"))
                         )
                     )

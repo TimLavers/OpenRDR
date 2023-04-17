@@ -6,7 +6,7 @@ import kotlin.test.Test
 
 internal class RuleBuildingSessionTest : RuleTestBase() {
     private val caseA = clinicalNotesCase("a")
-    private val addAction = ChangeTreeToAddConclusion(Conclusion("A"))
+    private val addAction = ChangeTreeToAddConclusion(Conclusion(3, "A"))
 
     @Test
     fun a_session_should_present_no_cornerstones_if_there_are_none() {

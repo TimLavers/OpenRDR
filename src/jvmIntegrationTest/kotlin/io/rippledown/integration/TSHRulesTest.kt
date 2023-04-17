@@ -2,7 +2,6 @@ package io.rippledown.integration
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.restclient.RESTClient
-import io.rippledown.model.Conclusion
 import io.rippledown.model.condition.*
 import kotlin.test.Test
 
@@ -137,7 +136,8 @@ internal class TSHRulesTest : TSHTest() {
     private fun addCommentForCase(caseName: String, comment: String, vararg conditions: Condition) {
         val restClient = RESTClient()
         restClient.getCaseWithName(caseName)
-        restClient.startSessionToAddConclusionForCurrentCase(Conclusion(comment))
+        val conclusion = conclusionFactory.create(comment)
+        restClient.startSessionToAddConclusionForCurrentCase(conclusion)
         conditions.forEach {
             restClient.addConditionForCurrentSession(it)
         }
@@ -152,7 +152,9 @@ internal class TSHRulesTest : TSHTest() {
     ) {
         val restClient = RESTClient()
         restClient.getCaseWithName(caseName)
-        restClient.startSessionToReplaceConclusionForCurrentCase(Conclusion(toGo), Conclusion(replacement))
+        val conclusionToGo = conclusionFactory.create(toGo)
+        val replacementConclusion = conclusionFactory.create(replacement)
+        restClient.startSessionToReplaceConclusionForCurrentCase(conclusionToGo, replacementConclusion)
         conditions.forEach {
             restClient.addConditionForCurrentSession(it)
         }

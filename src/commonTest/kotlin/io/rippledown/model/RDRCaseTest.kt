@@ -245,7 +245,7 @@ internal class RDRCaseTest {
     @Test
     fun serializedWithInterpretation() {
         val case = basicCase()
-        val conclusion = Conclusion("Tea is good.")
+        val conclusion = Conclusion(9, "Tea is good.")
         val root = Rule("root", null, null, emptySet(), mutableSetOf())
         val conditions = setOf(ContainsText(tsh, "0.667"))
         val rule = Rule("r", root, conclusion, conditions, mutableSetOf())
