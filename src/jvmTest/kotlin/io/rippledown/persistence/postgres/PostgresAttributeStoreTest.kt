@@ -8,25 +8,14 @@ import kotlin.IllegalArgumentException
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-class PostgresAttributeStoreTest {
-    private val dbName = "rdr_test"
+class PostgresAttributeStoreTest: PostgresStoreTest() {
     private lateinit var store: PostgresAttributeStore
 
-    init {
-        ConnectionProvider.systemConnection().use {
-            it.createStatement().executeUpdate("DROP DATABASE IF EXISTS $dbName")
-        }
-        ConnectionProvider.systemConnection().use {
-            it.createStatement().executeUpdate("CREATE DATABASE $dbName")
-        }
-    }
+    override fun tableName() = ATTRIBUTES_TABLE
 
     @BeforeTest
     fun setup() {
-        // Delete the table.
-        ConnectionProvider.systemConnection().use {
-            it.createStatement().executeUpdate("DROP TABLE IF EXISTS $KB_IDS_TABLE")
-        }
+        dropTable()
         store = PostgresAttributeStore(dbName)
     }
 

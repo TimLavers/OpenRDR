@@ -3,7 +3,6 @@ package io.rippledown.model.rule
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.CaseId
-import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.rule.dsl.ruleTree
 import kotlin.test.BeforeTest

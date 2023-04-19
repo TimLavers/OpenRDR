@@ -5,25 +5,14 @@ import io.kotest.matchers.shouldBe
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-class PostgresAttributeOrderStoreTest {
-    private val dbName = "rdr_test"
+class PostgresAttributeOrderStoreTest: PostgresStoreTest() {
     private lateinit var store: PostgresAttributeOrderStore
 
-    init {
-        ConnectionProvider.systemConnection().use {
-            it.createStatement().executeUpdate("DROP DATABASE IF EXISTS $dbName")
-        }
-        ConnectionProvider.systemConnection().use {
-            it.createStatement().executeUpdate("CREATE DATABASE $dbName")
-        }
-    }
+    override fun tableName() = ATTRIBUTE_INDEXES_TABLE
 
     @BeforeTest
     fun setup() {
-        // Delete the table.
-        ConnectionProvider.systemConnection().use {
-            it.createStatement().executeUpdate("DROP TABLE IF EXISTS $KB_IDS_TABLE")
-        }
+        dropTable()
         store = PostgresAttributeOrderStore(dbName)
     }
 

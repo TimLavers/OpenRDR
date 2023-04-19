@@ -1,20 +1,21 @@
 package io.rippledown.kb
 
-import io.rippledown.model.Attribute
 import io.rippledown.model.Conclusion
-import io.rippledown.persistence.AttributeStore
+import io.rippledown.persistence.ConclusionStore
 
-class ConclusionManager() {
+class ConclusionManager(private val conclusionStore: ConclusionStore) {
     private val textToConclusion = mutableMapOf<String, Conclusion>()
 
     init {
+        conclusionStore.all().forEach {
+            textToConclusion[it.text] = it
+        }
     }
 
     fun getOrCreate(text: String) : Conclusion {
-        TODO()
-//        return textToConclusion.computeIfAbsent(name) {
-//
-//        }
+        return textToConclusion.computeIfAbsent(text) {
+            conclusionStore.create(text)
+        }
     }
 
     fun all(): Set<Conclusion> {

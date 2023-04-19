@@ -6,4 +6,5 @@ interface PersistentKB {
     fun kbInfo(): KBInfo
     fun attributeStore(): AttributeStore
     fun attributeOrderStore(): AttributeOrderStore
+    fun conclusionStore(): ConclusionStore
 }
