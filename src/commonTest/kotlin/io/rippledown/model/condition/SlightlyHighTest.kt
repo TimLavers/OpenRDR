@@ -3,14 +3,33 @@ package io.rippledown.model.condition
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNot
 import io.kotest.matchers.string.startWith
 import io.rippledown.model.*
 import kotlin.test.Test
 
 internal class SlightlyHighTest: ConditionTestBase() {
 
-    private val tenPercentHigh = SlightlyHigh(tsh, 10)
-    private val fivePercentHigh = SlightlyHigh(tsh, 5)
+    private val tenPercentHigh = SlightlyHigh(100, tsh, 10)
+    private val fivePercentHigh = SlightlyHigh(500, tsh, 5)
+
+    @Test
+    fun id() {
+        tenPercentHigh.id shouldBe 100
+    }
+
+    @Test
+    fun sameAs() {
+        tenPercentHigh should beSameAs(tenPercentHigh)
+        tenPercentHigh should beSameAs(SlightlyHigh(100, tenPercentHigh.attribute, tenPercentHigh.allowablePercentageAboveHighRangeCutoff))
+        tenPercentHigh should beSameAs(SlightlyHigh(null, tenPercentHigh.attribute, tenPercentHigh.allowablePercentageAboveHighRangeCutoff))
+
+        tenPercentHigh shouldNot beSameAs(SlightlyLow(null, tenPercentHigh.attribute, tenPercentHigh.allowablePercentageAboveHighRangeCutoff))
+        tenPercentHigh shouldNot beSameAs(SlightlyHigh(null, tenPercentHigh.attribute, 11))
+        tenPercentHigh shouldNot beSameAs(SlightlyHigh(tenPercentHigh.id, tenPercentHigh.attribute, 11))
+        tenPercentHigh shouldNot beSameAs(SlightlyHigh(null, glucose, tenPercentHigh.allowablePercentageAboveHighRangeCutoff))
+        tenPercentHigh shouldNot beSameAs(SlightlyHigh(tenPercentHigh.id, glucose, tenPercentHigh.allowablePercentageAboveHighRangeCutoff))
+    }
 
     @Test
     fun allowedCutoffs() {
@@ -25,7 +44,7 @@ internal class SlightlyHighTest: ConditionTestBase() {
 
     private fun checkExceptionThrownForCutoff(cutoff: Int) {
         val exception = shouldThrow<IllegalArgumentException> {
-            SlightlyLow(tsh, cutoff)
+            SlightlyLow(88, tsh, cutoff)
         }
         exception.message should startWith("Cutoff should be an integer in the range [1, 99]")
     }

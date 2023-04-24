@@ -1,10 +1,10 @@
 package io.rippledown.model.rule
 
-import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Conclusion
 import io.rippledown.model.condition.ContainsText
 import io.rippledown.model.rule.dsl.ruleTree
+import io.rippledown.util.shouldBeEqualUsingSameAs
 import kotlin.test.Test
 
 internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase() {
@@ -32,7 +32,7 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
         tree.root.addChild(ruleGivingC)
 
         val session = RuleBuildingSession(tree, sessionCase,  removeAction, cornerstones)
-        val condition = ContainsText(clinicalNotes, "1")
+        val condition = ContainsText(null, clinicalNotes, "1")
         session.addCondition(condition)
         session.cornerstoneCases() shouldBe setOf(cc1)
     }
@@ -77,7 +77,7 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
         val removeAction = ChangeTreeToRemoveConclusion(conc("A", tree.root))
         val case = clinicalNotesCase("a")
         RuleBuildingSession(tree, case,  removeAction, setOf())
-            .addCondition(ContainsText(clinicalNotes, "a"))
+            .addCondition(ContainsText(null, clinicalNotes, "a"))
             .commit()
 
         tree.root.childRules().size shouldBe 2
@@ -85,7 +85,7 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
         rulesAdded.size shouldBe 1
         val ruleAdded = rulesAdded.random()
         ruleAdded.childRules() shouldBe emptySet()
-        ruleAdded.conditions shouldContainExactly setOf(ContainsText(clinicalNotes, "a"))
+        ruleAdded.conditions shouldBeEqualUsingSameAs setOf(ContainsText(null, clinicalNotes, "a"))
         ruleAdded.conclusion shouldBe null
         ruleAdded.parent!!.conclusion!!.text shouldBe "A"
     }

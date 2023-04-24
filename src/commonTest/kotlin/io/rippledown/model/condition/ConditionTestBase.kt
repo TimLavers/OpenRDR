@@ -11,6 +11,11 @@ open class ConditionTestBase {
     val glucose = Attribute("Glucose", 1)
     val clinicalNotes = Attribute("Clinical Notes", 2)
     val range = ReferenceRange("0.50", "4.00")
+    private val attributesById = mapOf(tsh.id to tsh, glucose.id to glucose, clinicalNotes.id to clinicalNotes)
+
+    fun attributeForId(id: Int): Attribute {
+        return attributesById[id]!!
+    }
 
     fun glucoseOnlyCase(): RDRCase {
         val builder1 = RDRCaseBuilder()

@@ -62,7 +62,7 @@ class SessionTemplate( val kb: KB) {
 
     fun condition(c: String) {
         try {
-            val condition = ContainsText(textAttribute, c)
+            val condition = ContainsText(null, textAttribute, c)
             kb.addConditionToCurrentRuleSession(condition)
         } catch (e: Exception) {
             throw Exception(addedConditionBeforeSessionStarted)
@@ -71,7 +71,7 @@ class SessionTemplate( val kb: KB) {
 
     fun condition(i: Int) {
         try {
-            kb.addConditionToCurrentRuleSession(GreaterThanOrEqualTo(numberAttribute, i.toDouble()))
+            kb.addConditionToCurrentRuleSession(GreaterThanOrEqualTo(attribute = numberAttribute, d = i.toDouble()))
         } catch (e: Exception) {
             throw Exception(addedConditionBeforeSessionStarted)
         }

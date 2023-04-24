@@ -7,5 +7,4 @@ interface ConclusionStore {
     fun create(text: String): Conclusion
     fun store(conclusion: Conclusion)
     fun load(conclusions: Set<Conclusion>)
-//    fun getById(id: Int): Conclusion?
 }

@@ -18,14 +18,14 @@ internal class RuleSummaryTest: ConditionTestBase() {
 
     init {
         val conditions2 = mutableSetOf<Condition>()
-        conditions2.add(SlightlyLow(glucose, 10))
-        conditions2.add(IsNormal(tsh))
+        conditions2.add(SlightlyLow(2000, glucose, 10))
+        conditions2.add(IsNormal(2001, tsh))
         rs2 = RuleSummary("r2",null, conditions2)
 
         val conditions3 = mutableSetOf<Condition>()
-        conditions3.add(IsNormal(glucose))
-        conditions3.add(IsNormal(tsh))
-        conditions3.add(ContainsText(clinicalNotes, "goats"))
+        conditions3.add(IsNormal(3000, glucose))
+        conditions3.add(IsNormal(3001, tsh))
+        conditions3.add(ContainsText(3002, clinicalNotes, "goats"))
         rs3 = RuleSummary("r3",conclusion, conditions3)
     }
 
@@ -39,9 +39,9 @@ internal class RuleSummaryTest: ConditionTestBase() {
     fun conditions() {
         empty.conditions.size shouldBe 0
 
-        rs3.conditions shouldContain IsNormal(glucose)
-        rs3.conditions shouldContain IsNormal(tsh)
-        rs3.conditions shouldContain ContainsText(clinicalNotes, "goats")
+        rs3.conditions shouldContain IsNormal(3000, glucose)
+        rs3.conditions shouldContain IsNormal(3001, tsh)
+        rs3.conditions shouldContain ContainsText(3002, clinicalNotes, "goats")
         rs3.conditions.size shouldBe 3
     }
 

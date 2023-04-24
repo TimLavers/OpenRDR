@@ -247,7 +247,7 @@ internal class RDRCaseTest {
         val case = basicCase()
         val conclusion = Conclusion(9, "Tea is good.")
         val root = Rule("root", null, null, emptySet(), mutableSetOf())
-        val conditions = setOf(ContainsText(tsh, "0.667"))
+        val conditions = setOf(ContainsText(100, tsh, "0.667"))
         val rule = Rule("r", root, conclusion, conditions, mutableSetOf())
         case.interpretation.add(rule)
 

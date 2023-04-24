@@ -6,9 +6,7 @@ import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ContainsText
 import io.rippledown.model.rule.Rule
 import io.rippledown.model.rule.RuleTree
-import io.rippledown.persistence.postgres.createPostgresKB
 import io.rippledown.util.randomString
-import kotlin.random.Random
 
 fun ruleTree(init: ABSTRACT_RULE_TEMPLATE.() -> Unit) : ROOT_TEMPLATE {
     val n = ROOT_TEMPLATE()
@@ -96,6 +94,6 @@ class CONDITION_TEMPLATE {
     lateinit var constant: String
 
     fun condition(): Condition {
-        return ContainsText(attribute, constant)
+        return ContainsText(null, attribute, constant)
     }
 }

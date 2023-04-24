@@ -14,7 +14,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 const val ATTRIBUTES_TABLE = "attributes"
 
-class PostgresAttributeStore(private val dbName: String): AttributeStore {
+class PostgresAttributeStore(private val dbName: String) : AttributeStore {
 
     init {
         Database.connect({ ConnectionProvider.connection(dbName) })
@@ -26,40 +26,36 @@ class PostgresAttributeStore(private val dbName: String): AttributeStore {
 
     override fun create(name: String): Attribute {
         val isNew = all().count { it.name == name } == 0 // todo use sql
-        require (isNew) {
+        require(isNew) {
             "An attribute with name $name already exists."
         }
-        var pgAttribute: PGAttribute? = null
-        transaction {
-            pgAttribute = PGAttribute.new {
+        return transaction {
+            val pgAttribute = PGAttribute.new {
                 attributeName = name
             }
+            return@transaction Attribute(pgAttribute.attributeName, pgAttribute.id.value)
         }
-        return Attribute(pgAttribute!!.attributeName, pgAttribute!!.id.value)
     }
 
-    override fun all(): Set<Attribute> {
+    override fun all() = transaction {
         val result = mutableSetOf<Attribute>()
-        transaction {
-            PGAttribute.all().forEach {
-                result.add(Attribute(it.attributeName, it.id.value))
-            }
+        PGAttribute.all().forEach {
+            result.add(Attribute(it.attributeName, it.id.value))
         }
-        return result
+        return@transaction result
     }
 
-    override fun store(attribute: Attribute) {
+    override fun store(attribute: Attribute) =
         transaction {
             PGAttribute[attribute.id].attributeName = attribute.name
         }
-    }
 
     override fun load(attributes: Set<Attribute>) {
         require(all().isEmpty()) {
             "Cannot load attributes if there are are some stored already."
         }
         transaction {
-            attributes.forEach{
+            attributes.forEach {
                 PGAttribute.new(it.id) {
                     attributeName = it.name
                 }
@@ -67,10 +63,13 @@ class PostgresAttributeStore(private val dbName: String): AttributeStore {
         }
     }
 }
-object PGAttributes: IntIdTable(name = ATTRIBUTES_TABLE) {
+
+object PGAttributes : IntIdTable(name = ATTRIBUTES_TABLE) {
     val attributeName = varchar("name", 256)
 }
-class PGAttribute(id: EntityID<Int>): IntEntity(id){
-    companion object: IntEntityClass<PGAttribute>(PGAttributes)
+
+class PGAttribute(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<PGAttribute>(PGAttributes)
+
     var attributeName by PGAttributes.attributeName
 }

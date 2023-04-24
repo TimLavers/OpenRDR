@@ -25,22 +25,17 @@ class PostgresConclusionStore(private val dbName: String): ConclusionStore {
         }
     }
 
-    override fun all(): Set<Conclusion> {
-        val result = mutableSetOf<Conclusion>()
-        transaction {
+    override fun all() = transaction {
+            val result = mutableSetOf<Conclusion>()
             PGConclusion.all().forEach {
                 result.add(Conclusion(it.id.value, it.conclusionText))
             }
+            return@transaction result
         }
-        return result
-    }
 
-//    override fun getById(id: Int) = transaction {
-//        PGConclusions. { PGConclusions.id eq id }.limit(1).single().let { it. }
-//    }
     override fun create(text: String): Conclusion {
-        val isNew = all().count { it.text == text } == 0 // todo use sql
-        require (isNew) {
+        val isNew = all().count { it.text == text } == 0
+        require(isNew) {
             "A conclusion with the given text already exists."
         }
         var pgConclusion: PGConclusion? = null
@@ -52,11 +47,10 @@ class PostgresConclusionStore(private val dbName: String): ConclusionStore {
         return Conclusion(pgConclusion!!.id.value, pgConclusion!!.conclusionText)
     }
 
-    override fun store(conclusion: Conclusion) {
+    override fun store(conclusion: Conclusion) =
         transaction {
             PGConclusion[conclusion.id].conclusionText = conclusion.text
         }
-    }
 
     override fun load(conclusions: Set<Conclusion>) {
         require(all().isEmpty()) {

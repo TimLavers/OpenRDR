@@ -75,8 +75,7 @@ open class Rule(
     fun structurallyEqual(other: Rule): Boolean {
         if (conclusion != other.conclusion) return false
         if (conditions != other.conditions) return false
-        if (parent != other.parent) return false
-        return true
+        return parent == other.parent
     }
 
     override fun equals(other: Any?): Boolean {
@@ -85,9 +84,7 @@ open class Rule(
 
         other as Rule
 
-        if (id != other.id) return false
-
-        return true
+        return id == other.id
     }
 
     override fun hashCode(): Int {

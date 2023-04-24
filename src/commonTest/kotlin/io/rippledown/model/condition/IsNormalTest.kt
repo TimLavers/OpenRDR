@@ -1,12 +1,30 @@
 package io.rippledown.model.condition
 
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNot
 import io.rippledown.model.*
 import kotlin.test.Test
 
 internal class IsNormalTest: ConditionTestBase() {
 
-    private val condition = IsNormal(tsh)
+    private val condition = IsNormal(1000, tsh)
+
+    @Test
+    fun id() {
+        condition.id shouldBe 1000
+    }
+
+    @Test
+    fun sameAs() {
+        condition should beSameAs(condition)
+        condition should beSameAs(IsNormal(100, condition.attribute))
+        condition should beSameAs(IsNormal(null, condition.attribute))
+
+        condition shouldNot beSameAs(IsLow(null, condition.attribute))
+        condition shouldNot beSameAs(IsNormal(null, glucose))
+        condition shouldNot beSameAs(IsNormal(condition.id, glucose))
+    }
 
     @Test
     fun attributeNotInCase() {
@@ -88,6 +106,6 @@ internal class IsNormalTest: ConditionTestBase() {
     @Test
     fun asText() {
         condition.asText() shouldBe "TSH is normal"
-        IsNormal(Attribute("Blah !@#@#  Blah is normal", 100)).asText() shouldBe "Blah !@#@#  Blah is normal is normal"
+        IsNormal(8888, Attribute("Blah !@#@#  Blah is normal", 100)).asText() shouldBe "Blah !@#@#  Blah is normal is normal"
     }
 }

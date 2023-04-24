@@ -1,9 +1,9 @@
 package io.rippledown.model.rule
 
-import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.condition.ContainsText
 import io.rippledown.model.rule.dsl.ruleTree
+import io.rippledown.util.shouldContainSameAs
 import kotlin.test.Test
 
 internal class ActionTest : RuleTestBase() {
@@ -162,7 +162,7 @@ internal class ActionTest : RuleTestBase() {
         ruleAdded.conditions shouldBe emptySet()
         ruleAdded.conclusion shouldBe null
         ruleAdded.parent!!.conclusion!!.text shouldBe A
-        ruleAdded.parent!!.conditions shouldContain ContainsText(clinicalNotes, "b")
+        ruleAdded.parent!!.conditions shouldContainSameAs( ContainsText(null, clinicalNotes, "b"))
     }
 
     @Test
@@ -198,7 +198,7 @@ internal class ActionTest : RuleTestBase() {
         ruleAdded.conditions shouldBe emptySet()
         ruleAdded.conclusion!!.text shouldBe C
         ruleAdded.parent!!.conclusion!!.text shouldBe A
-        ruleAdded.parent!!.conditions shouldContain ContainsText(clinicalNotes, "a")
+        ruleAdded.parent!!.conditions shouldContainSameAs ContainsText(null, clinicalNotes, "a")
     }
 
     @Test

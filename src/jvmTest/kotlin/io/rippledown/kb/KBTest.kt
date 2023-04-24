@@ -225,7 +225,7 @@ class KBTest {
         val sessionCase = kb.getCaseByName("Case1")
         sessionCase.interpretation.textGivenByRules() shouldBe ""
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion(1, "Whatever.")))
-        kb.addConditionToCurrentRuleSession(LessThanOrEqualTo(glucose(), 1.2))
+        kb.addConditionToCurrentRuleSession(LessThanOrEqualTo(null, glucose(), 1.2))
         kb.conflictingCasesInCurrentRuleSession().size shouldBe 0
     }
 
@@ -249,7 +249,7 @@ class KBTest {
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")
 
     private fun createCondition(): GreaterThanOrEqualTo {
-        return GreaterThanOrEqualTo(Attribute("ABC", 4567), 5.0)
+        return GreaterThanOrEqualTo(null, Attribute("ABC", 4567), 5.0)
     }
 
     private fun createCase(caseName: String, glucoseValue: String = "0.667"): RDRCase {

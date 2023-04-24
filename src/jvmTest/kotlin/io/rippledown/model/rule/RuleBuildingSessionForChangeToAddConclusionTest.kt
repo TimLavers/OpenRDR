@@ -1,10 +1,10 @@
 package io.rippledown.model.rule
 
-import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Conclusion
 import io.rippledown.model.condition.ContainsText
 import io.rippledown.model.rule.dsl.ruleTree
+import io.rippledown.util.shouldBeEqualUsingSameAs
 import kotlin.test.Test
 
 internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() {
@@ -30,7 +30,7 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
     fun a_session_for_an_add_action_should_present_those_cornerstones_which_satisfy_the_conditions() {
         val addAction = ChangeTreeToAddConclusion(Conclusion(1,"A"))
         val session = RuleBuildingSession(RuleTree(), sessionCase, addAction, cornerstoneMap)
-        val condition = ContainsText(clinicalNotes, "1")
+        val condition = ContainsText(null, clinicalNotes, "1")
         session.addCondition(condition)
         session.cornerstoneCases() shouldBe setOf(cc1)
     }
@@ -39,7 +39,7 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
     fun a_session_for_an_add_action_should_present_no_cornerstones_if_none_satisfy_the_conditions() {
         val addAction = ChangeTreeToAddConclusion(Conclusion(1, "A"))
         val session = RuleBuildingSession(RuleTree(), sessionCase, addAction, cornerstoneMap)
-        val condition = ContainsText(clinicalNotes, "3")
+        val condition = ContainsText(null, clinicalNotes, "3")
         session.addCondition(condition)
         session.cornerstoneCases() shouldBe emptySet()
     }
@@ -49,7 +49,7 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
         val addAction = ChangeTreeToAddConclusion(Conclusion(2, "A"))
         val session = RuleBuildingSession(RuleTree(), sessionCase, addAction, cornerstoneMap)
         session.cornerstoneCases() shouldBe cornerstoneMap
-        val condition = ContainsText(clinicalNotes, "3")
+        val condition = ContainsText(null, clinicalNotes, "3")
         session.addCondition(condition)
         session.cornerstoneCases() shouldBe emptySet()
         session.removeCondition(condition)
@@ -89,8 +89,8 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
         val addAction = ChangeTreeToAddConclusion(conc("A", tree.root))
         val session = RuleBuildingSession(tree, sessionCase, addAction, setOf())
         session
-            .addCondition(ContainsText(clinicalNotes, "3"))
-            .addCondition(ContainsText(clinicalNotes, "1"))
+            .addCondition(ContainsText(null, clinicalNotes, "3"))
+            .addCondition(ContainsText(null, clinicalNotes, "1"))
             .commit()
 
         tree.root.childRules().size shouldBe 3
@@ -98,7 +98,7 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
         rulesAdded.size shouldBe 1
         val ruleAdded = rulesAdded.random()
         ruleAdded.childRules() shouldBe emptySet()
-        ruleAdded.conditions shouldContainExactly setOf(ContainsText(clinicalNotes, "3"), ContainsText(clinicalNotes, "1"))
+        ruleAdded.conditions shouldBeEqualUsingSameAs setOf(ContainsText(null, clinicalNotes, "3"), ContainsText(null, clinicalNotes, "1"))
         ruleAdded.conclusion shouldBe conc( "A", tree.root)
         ruleAdded.parent!!.parent shouldBe null
     }

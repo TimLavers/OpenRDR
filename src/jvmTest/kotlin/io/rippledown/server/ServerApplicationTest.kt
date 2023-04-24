@@ -15,7 +15,6 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.Files
 import kotlin.test.*
 
-
 fun RDRCase.getAttribute(attributeName: String): Attribute {
     return attributes.first { attribute -> attribute.name == attributeName }
 }
@@ -101,7 +100,7 @@ internal class ServerApplicationTest {
         val conclusion = app.kb.conclusionManager.getOrCreate("ABC ok.")
         app.kb.startRuleSession(retrieved, ChangeTreeToAddConclusion(conclusion))
         val abc = retrieved.getAttribute("ABC")
-        app.kb.addConditionToCurrentRuleSession(GreaterThanOrEqualTo(abc, 5.0))
+        app.kb.addConditionToCurrentRuleSession(GreaterThanOrEqualTo(null, abc, 5.0))
         app.kb.commitCurrentRuleSession()
         val retrievedAgain = app.case("Case1")
         retrievedAgain.interpretation.conclusions() shouldContainExactly setOf(conclusion)
@@ -121,7 +120,7 @@ internal class ServerApplicationTest {
         val conclusion = app.kb.conclusionManager.getOrCreate( "ABC ok.")
         app.kb.startRuleSession(retrieved.rdrCase, ChangeTreeToAddConclusion(conclusion))
         val abc = retrieved.rdrCase.getAttribute("ABC")
-        app.kb.addConditionToCurrentRuleSession(GreaterThanOrEqualTo(abc, 5.0))
+        app.kb.addConditionToCurrentRuleSession(GreaterThanOrEqualTo(null, abc, 5.0))
         app.kb.commitCurrentRuleSession()
         val retrievedAgain = app.viewableCase("Case1")
         retrievedAgain.interpretation.conclusions() shouldContainExactly setOf(conclusion)

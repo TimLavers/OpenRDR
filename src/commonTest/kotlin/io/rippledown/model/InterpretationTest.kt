@@ -13,6 +13,7 @@ import kotlin.test.assertEquals
 internal class InterpretationTest {
     private val caseId = CaseId("1234", "Case 1")
     private var attributeId = 0
+    private var conditionId = 0
 
     @Test
     fun construction() {
@@ -156,10 +157,10 @@ internal class InterpretationTest {
     fun shouldReturnConditionsForConclusion() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
         val c0 = Conclusion(1, "First conc")
-        val conditions0 = setOf(ContainsText(Attribute("A", attributeId++), "text A"), ContainsText(Attribute("B", attributeId++), "text B"))
+        val conditions0 = setOf(containsText(Attribute("A", attributeId++), "text A"), containsText(Attribute("B", attributeId++), "text B"))
         val rule0 = Rule("r0", null, c0, conditions0)
         val c1 = Conclusion(2, "Second conc")
-        val conditions1 = setOf(ContainsText(Attribute("C", attributeId++), "text C"), ContainsText(Attribute("D", attributeId++), "text D"))
+        val conditions1 = setOf(containsText(Attribute("C", attributeId++), "text C"), containsText(Attribute("D", attributeId++), "text D"))
         val rule1 = Rule("r1", null, c1, conditions1)
         interpretation.add(rule0)
         interpretation.add(rule1)
@@ -172,10 +173,10 @@ internal class InterpretationTest {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
         val conclusion = Conclusion(1, "First conc")
         val conditions = setOf(
-            ContainsText(Attribute("z", attributeId++), "text z"),
-            ContainsText(Attribute("A", attributeId++), "text A"),
-            ContainsText(Attribute("Y", attributeId++), "text Y"),
-            ContainsText(Attribute("b", attributeId++), "text b"),
+            containsText(Attribute("z", attributeId++), "text z"),
+            containsText(Attribute("A", attributeId++), "text A"),
+            containsText(Attribute("Y", attributeId++), "text Y"),
+            containsText(Attribute("b", attributeId++), "text b"),
         )
         val rule0 = Rule("r0", null, conclusion, conditions)
         interpretation.add(rule0)
@@ -185,6 +186,10 @@ internal class InterpretationTest {
             "Y contains \"text Y\"",
             "z contains \"text z\""
         )
+    }
+
+    private fun containsText(attribute: Attribute, match: String): ContainsText {
+        return ContainsText(conditionId++, attribute, match)
     }
 
     private fun serializeDeserialize(interpretation: Interpretation): Interpretation {

@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 import kotlin.math.abs
 
 @Serializable
-data class SlightlyHigh(val attribute: Attribute, val allowablePercentageAboveHighRangeCutoff: Int) : Condition() {
+data class SlightlyHigh(override val id: Int? = null, val attribute: Attribute, val allowablePercentageAboveHighRangeCutoff: Int) : Condition() {
     init {
         require(allowablePercentageAboveHighRangeCutoff in 1..99) {
             "Cutoff should be an integer in the range [1, 99]."
@@ -34,5 +34,11 @@ data class SlightlyHigh(val attribute: Attribute, val allowablePercentageAboveHi
 
     override fun asText(): String {
         return "${attribute.name} is at most $allowablePercentageAboveHighRangeCutoff% high"
+    }
+
+    override fun sameAs(other: Condition): Boolean {
+        return if (other is SlightlyHigh) {
+            other.attribute == attribute && other.allowablePercentageAboveHighRangeCutoff == allowablePercentageAboveHighRangeCutoff
+        } else false
     }
 }

@@ -1,13 +1,12 @@
-package io.rippledown.model
+package io.rippledown.model.rule
 
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.rippledown.model.rule.Rule
-import io.rippledown.model.rule.RuleTestBase
+import io.rippledown.model.Conclusion
 import kotlin.test.Test
 
-internal class RuleTest : RuleTestBase() {
+internal class FurtherRuleTests : RuleTestBase() {
     private val conclusion1 = Conclusion(100,"First conclusion")
     private val conclusion2 = Conclusion(200, "Second conclusion")
     private val conclusion3 = Conclusion(300,"Third conclusion")
