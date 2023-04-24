@@ -22,8 +22,8 @@ val  lastWeek = daysAgo(7)
 fun beSameAs(length: Condition) = Matcher<Condition> { value ->
     MatcherResult(
         value.sameAs(length),
-        { "we expected length $length" },
-        { "string should not have length $length" },
+        { "expected $length but got $value" },
+        { "expected conditions not to be the same" },
     )
 }
 

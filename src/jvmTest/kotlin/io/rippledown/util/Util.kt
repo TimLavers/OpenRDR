@@ -2,6 +2,9 @@ package io.rippledown.util
 
 import io.rippledown.model.condition.Condition
 import kotlin.random.Random
+import kotlin.reflect.KParameter
+import kotlin.reflect.full.functions
+import kotlin.reflect.full.instanceParameter
 
 // https://www.baeldung.com/kotlin/random-alphanumeric-string
 private val charPool : List<Char> = ('a'..'z') + ('0'..'9')
@@ -33,4 +36,22 @@ infix fun Set<Condition>.shouldBeEqualUsingSameAs(value: Set<Condition>) {
     require (absent.isEmpty()) {
         "No conditions the same as $absent found in $value."
     }
+}
+
+// https://xa1.at/copy-data-class-reflection/
+fun copyByReflection(instance: Any, newValues: Map<String, Any?>): Any {
+    val instanceKClass = instance::class
+    require(instanceKClass.isData) { "instance must be data class" }
+
+    val copyFunction = instanceKClass.functions.single { function -> function.name == "copy" }
+
+    val valueArgs = copyFunction.parameters
+        .filter { parameter -> parameter.kind == KParameter.Kind.VALUE }
+        .mapNotNull { parameter ->
+            newValues[parameter.name]?.let { value -> parameter to value }
+        }
+
+    return copyFunction.callBy(
+        mapOf(copyFunction.instanceParameter!! to instance) + valueArgs
+    ) ?: error("copy didn't return a new instance")
 }

@@ -13,10 +13,7 @@ class InMemoryConclusionStore: ConclusionStore {
         val newConclusion = Conclusion(maxId + 1, text)
         conclusionSet.add(newConclusion)
         return newConclusion
-
     }
-
-//    override fun getById( id: Int) = conclusionSet.firstOrNull { it.id == id }
 
     override fun store(conclusion: Conclusion) {
         conclusionSet.add(conclusion)
