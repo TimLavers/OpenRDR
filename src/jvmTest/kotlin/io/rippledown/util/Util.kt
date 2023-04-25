@@ -49,7 +49,7 @@ fun copyByReflection(instance: Any, newValues: Map<String, Any?>): Any {
         .filter { parameter -> parameter.kind == KParameter.Kind.VALUE }
         .mapNotNull { parameter ->
             newValues[parameter.name]?.let { value -> parameter to value }
-        }
+         }
 
     return copyFunction.callBy(
         mapOf(copyFunction.instanceParameter!! to instance) + valueArgs

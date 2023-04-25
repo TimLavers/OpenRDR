@@ -19,10 +19,10 @@ const val today = defaultDate
 val yesterday = daysAgo(1)
 val  lastWeek = daysAgo(7)
 
-fun beSameAs(length: Condition) = Matcher<Condition> { value ->
+fun beSameAs(other: Condition) = Matcher<Condition> { value ->
     MatcherResult(
-        value.sameAs(length),
-        { "expected $length but got $value" },
+        value.sameAs(other),
+        { "expected $other but got $value" },
         { "expected conditions not to be the same" },
     )
 }

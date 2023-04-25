@@ -14,7 +14,6 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 const val CONCLUSIONS_TABLE = "conclusions"
 
-
 class PostgresConclusionStore(private val dbName: String): ConclusionStore {
 
     init {
