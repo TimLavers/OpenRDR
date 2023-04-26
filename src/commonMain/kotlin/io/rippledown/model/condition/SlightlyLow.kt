@@ -31,13 +31,11 @@ data class SlightlyLow(override val id: Int? = null, val attribute: Attribute, v
         return abs(realValue - cutoff) < 0.0001
     }
 
-    override fun asText(): String {
-        return "${attribute.name} is at most $allowablePercentageBelowLowRangeCutoff% low"
-    }
+    override fun asText() =  "${attribute.name} is at most $allowablePercentageBelowLowRangeCutoff% low"
 
-    override fun sameAs(other: Condition): Boolean {
-        return if (other is SlightlyLow) {
+    override fun alignAttributes(idToAttribute: (Int) -> Attribute) = SlightlyLow(id, idToAttribute(attribute.id), allowablePercentageBelowLowRangeCutoff)
+
+    override fun sameAs(other: Condition) = if (other is SlightlyLow) {
             other.attribute == attribute && other.allowablePercentageBelowLowRangeCutoff == allowablePercentageBelowLowRangeCutoff
         } else false
-    }
 }

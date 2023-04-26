@@ -20,4 +20,6 @@ data class HasNoCurrentValue(override val id: Int? = null, val attribute: Attrib
             other.attribute == attribute
         } else false
     }
+
+    override fun alignAttributes(idToAttribute: (Int) -> Attribute) = HasNoCurrentValue(id, idToAttribute(attribute.id))
 }

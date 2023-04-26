@@ -20,4 +20,6 @@ data class IsHigh(override val id: Int? = null, val attribute: Attribute) : Cond
             other.attribute == attribute
         } else false
     }
+
+    override fun alignAttributes(idToAttribute: (Int) -> Attribute) = IsHigh(id, idToAttribute(attribute.id))
 }

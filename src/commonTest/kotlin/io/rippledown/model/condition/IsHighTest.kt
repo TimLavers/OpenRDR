@@ -3,6 +3,8 @@ package io.rippledown.model.condition
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNot
+import io.kotest.matchers.types.shouldBeSameInstanceAs
+import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.rippledown.model.*
 import kotlin.test.Test
 
@@ -24,6 +26,14 @@ internal class IsHighTest: ConditionTestBase() {
         condition shouldNot beSameAs(IsLow(null, condition.attribute))
         condition shouldNot beSameAs(IsHigh(null, glucose))
         condition shouldNot beSameAs(IsHigh(condition.id, glucose))
+    }
+
+    @Test
+    fun alignAttributes() {
+        val conditionCopy = serializeDeserialize(condition) as IsHigh
+        conditionCopy.attribute shouldNotBeSameInstanceAs condition.attribute
+        val alignedCopy = conditionCopy.alignAttributes(::attributeForId)
+        alignedCopy.attribute shouldBeSameInstanceAs condition.attribute
     }
 
     @Test

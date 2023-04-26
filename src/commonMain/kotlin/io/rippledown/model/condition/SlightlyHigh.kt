@@ -36,6 +36,8 @@ data class SlightlyHigh(override val id: Int? = null, val attribute: Attribute, 
         return "${attribute.name} is at most $allowablePercentageAboveHighRangeCutoff% high"
     }
 
+    override fun alignAttributes(idToAttribute: (Int) -> Attribute) = SlightlyHigh(id, idToAttribute(attribute.id), allowablePercentageAboveHighRangeCutoff)
+
     override fun sameAs(other: Condition): Boolean {
         return if (other is SlightlyHigh) {
             other.attribute == attribute && other.allowablePercentageAboveHighRangeCutoff == allowablePercentageAboveHighRangeCutoff

@@ -103,6 +103,30 @@ class ConditionManagerTest {
         conditionManager.getById(9999) shouldBe null
     }
 
+    @Test //Cond-2
+    fun `created conditions use attributes from attribute manager`() {
+        val glucoseCopy = glucose.copy()
+        val templateCondition = IsHigh(null, glucoseCopy)
+        val createdCondition = conditionManager.getOrCreate(templateCondition) as IsHigh
+        createdCondition.attribute shouldBeSameInstanceAs glucose
+
+        // Rebuild.
+        conditionManager = ConditionManager(attributeManager, conditionStore)
+        val retrieved = conditionManager.getById(createdCondition.id!!) as IsHigh
+        retrieved.attribute shouldBeSameInstanceAs glucose
+    }
+
+    @Test //Cond-2
+    fun `loaded conditions should use attributes from attribute manager`() {
+        val glucoseCopy = glucose.copy()
+        val condition = IsHigh(900, glucoseCopy)
+        conditionStore.load(setOf(condition))
+
+        conditionManager = ConditionManager(attributeManager, conditionStore)
+        val loadedCondition = conditionManager.all().single() as IsHigh
+        loadedCondition.attribute shouldBeSameInstanceAs glucose
+    }
+
     @Test
     fun all() {
         repeat(100) {

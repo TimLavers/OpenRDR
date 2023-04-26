@@ -4,34 +4,45 @@ import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNot
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.types.shouldBeSameInstanceAs
+import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.rippledown.model.Attribute
 import io.rippledown.model.beSameAs
 import kotlin.test.Test
 
 internal class GreaterThanOrEqualToTest: ConditionTestBase() {
 
-    private val gte1 = GreaterThanOrEqualTo(99, tsh, 1.01)
+    private val condition = GreaterThanOrEqualTo(99, tsh, 1.01)
 
     @Test
     fun attributeNotInCase() {
-        gte1.holds(glucoseOnlyCase()) shouldBe false
+        condition.holds(glucoseOnlyCase()) shouldBe false
     }
 
     @Test
     fun id() {
-        gte1.id shouldBe 99
+        condition.id shouldBe 99
+    }
+
+    @Test
+    fun alignAttributes() {
+        val conditionCopy = serializeDeserialize(condition) as GreaterThanOrEqualTo
+        conditionCopy.attribute shouldNotBeSameInstanceAs condition.attribute
+        val alignedCopy = conditionCopy.alignAttributes(::attributeForId)
+        alignedCopy.attribute shouldBeSameInstanceAs condition.attribute
+        alignedCopy.d shouldBe condition.d
     }
 
     @Test
     fun sameAs() {
-        gte1 should beSameAs(gte1)
-        gte1 should beSameAs(GreaterThanOrEqualTo(100, gte1.attribute, gte1.d))
-        gte1 should beSameAs(GreaterThanOrEqualTo(null, gte1.attribute, gte1.d))
+        condition should beSameAs(condition)
+        condition should beSameAs(GreaterThanOrEqualTo(100, condition.attribute, condition.d))
+        condition should beSameAs(GreaterThanOrEqualTo(null, condition.attribute, condition.d))
 
-        gte1 shouldNot beSameAs(LessThanOrEqualTo(null, gte1.attribute, gte1.d))
-        gte1 shouldNot beSameAs(GreaterThanOrEqualTo(null, gte1.attribute, 1.02))
-        gte1 shouldNot beSameAs(GreaterThanOrEqualTo(gte1.id, gte1.attribute, 1.02))
-        gte1 shouldNot beSameAs(GreaterThanOrEqualTo(null, glucose, gte1.d))
+        condition shouldNot beSameAs(LessThanOrEqualTo(null, condition.attribute, condition.d))
+        condition shouldNot beSameAs(GreaterThanOrEqualTo(null, condition.attribute, 1.02))
+        condition shouldNot beSameAs(GreaterThanOrEqualTo(condition.id, condition.attribute, 1.02))
+        condition shouldNot beSameAs(GreaterThanOrEqualTo(null, glucose, condition.d))
     }
 
     @Test
@@ -47,20 +58,20 @@ internal class GreaterThanOrEqualToTest: ConditionTestBase() {
 
     @Test
     fun valueNonNumeric() {
-        gte1.holds(tshValueNonNumericCase()) shouldBe false
-        gte1.holds(twoEpisodeCaseWithCurrentTSHValueBlank()) shouldBe false
-        gte1.holds(twoEpisodeCaseWithCurrentTSHValueNonNumeric()) shouldBe false
+        condition.holds(tshValueNonNumericCase()) shouldBe false
+        condition.holds(twoEpisodeCaseWithCurrentTSHValueBlank()) shouldBe false
+        condition.holds(twoEpisodeCaseWithCurrentTSHValueNonNumeric()) shouldBe false
     }
 
     @Test
     fun jsonSerialisation() {
-        serializeDeserialize(gte1) shouldBe gte1
+        serializeDeserialize(condition) shouldBe condition
     }
 
     @Test
     fun asText() {
         // In the JVM we get "TSH ≥ 1.0" but in JS get "TSH ≥ 1".
         // This is because JS has just a single number type.
-        gte1.asText() shouldContain "TSH ≥ 1"
+        condition.asText() shouldContain "TSH ≥ 1"
     }
 }

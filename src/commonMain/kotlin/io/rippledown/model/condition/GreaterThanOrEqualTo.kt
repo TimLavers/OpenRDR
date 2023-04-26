@@ -21,4 +21,5 @@ data class GreaterThanOrEqualTo(override val id: Int? = null, val attribute: Att
             other.attribute == attribute && other.d.compareTo(d) == 0
         } else false
     }
+   override fun alignAttributes(idToAttribute: (Int) -> Attribute) = GreaterThanOrEqualTo(id, idToAttribute(attribute.id), d)
 }

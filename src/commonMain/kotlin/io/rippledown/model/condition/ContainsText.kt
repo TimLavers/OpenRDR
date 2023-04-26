@@ -15,9 +15,7 @@ data class ContainsText(override val id: Int? = null, val attribute: Attribute, 
         return "${attribute.name} contains \"$toFind\""
     }
 
-    override fun alignAttributes(idToAttribute: (Int) -> Attribute): Condition {
-        return ContainsText(id, idToAttribute(attribute.id), toFind)
-    }
+    override fun alignAttributes(idToAttribute: (Int) -> Attribute) = ContainsText(id, idToAttribute(attribute.id), toFind)
 
     override fun sameAs(other: Condition): Boolean {
         return if (other is ContainsText) {

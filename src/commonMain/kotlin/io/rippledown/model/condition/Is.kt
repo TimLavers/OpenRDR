@@ -20,4 +20,7 @@ data class Is(override val id: Int? = null, val attribute: Attribute, val toFind
             other.attribute == attribute
         } else false
     }
+
+    override fun alignAttributes(idToAttribute: (Int) -> Attribute) = Is(id, idToAttribute(attribute.id), toFind)
+
 }

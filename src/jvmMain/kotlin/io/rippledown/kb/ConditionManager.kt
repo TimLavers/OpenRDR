@@ -8,7 +8,7 @@ class ConditionManager(private val attributeManager: AttributeManager, private v
 
     init {
         conditionStore.all().forEach {
-            idToCondition[it.id!!] = it
+            idToCondition[it.id!!] = it.alignAttributes(::attributeForId)
         }
     }
 
@@ -21,12 +21,15 @@ class ConditionManager(private val attributeManager: AttributeManager, private v
         }
         return if (existing != null) existing else {
             val created = conditionStore.create(condition)
-            idToCondition[created.id!!] = created
-            created
+            val aligned = created.alignAttributes( ::attributeForId )
+            idToCondition[aligned.id!!] = aligned
+            aligned
         }
     }
 
     fun getById(id: Int): Condition? = idToCondition[id]
 
     fun all() = idToCondition.values.toSet()
+
+    fun attributeForId(id: Int) = attributeManager.getById(id)
 }

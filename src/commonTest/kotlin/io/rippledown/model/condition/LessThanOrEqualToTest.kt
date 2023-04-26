@@ -4,6 +4,8 @@ import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNot
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.types.shouldBeSameInstanceAs
+import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.rippledown.model.Attribute
 import io.rippledown.model.beSameAs
 import kotlin.test.Test
@@ -15,6 +17,15 @@ internal class LessThanOrEqualToTest: ConditionTestBase() {
     @Test
     fun id() {
         lte.id shouldBe 344
+    }
+
+    @Test
+    fun alignAttributes() {
+        val conditionCopy = serializeDeserialize(lte) as LessThanOrEqualTo
+        conditionCopy.attribute shouldNotBeSameInstanceAs lte.attribute
+        val alignedCopy = conditionCopy.alignAttributes(::attributeForId)
+        alignedCopy.attribute shouldBeSameInstanceAs lte.attribute
+        alignedCopy.d shouldBe lte.d
     }
 
     @Test

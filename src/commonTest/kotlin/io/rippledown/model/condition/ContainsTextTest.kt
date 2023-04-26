@@ -10,16 +10,16 @@ internal class ContainsTextTest: ConditionTestBase() {
 
     private val condition = ContainsText(88, tsh, "goat")
 
-    @Test
+    @Test //Cond-2
     fun alignAttributes() {
         val conditionCopy = serializeDeserialize(condition) as ContainsText
         conditionCopy.attribute shouldNotBeSameInstanceAs condition.attribute
-        val alignedCopy = conditionCopy.alignAttributes(::attributeForId) as ContainsText
+        val alignedCopy = conditionCopy.alignAttributes(::attributeForId)
         alignedCopy.attribute shouldBeSameInstanceAs condition.attribute
         alignedCopy.toFind shouldBe condition.toFind
     }
 
-    @Test
+    @Test //Cond-1
     fun id() {
         condition.id shouldBe 88
     }

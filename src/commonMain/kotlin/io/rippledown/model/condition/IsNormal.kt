@@ -20,4 +20,6 @@ data class IsNormal(override val id: Int? = null, val attribute: Attribute) : Co
             other.attribute == attribute
         } else false
     }
+
+    override fun alignAttributes(idToAttribute: (Int) -> Attribute) = IsNormal(id, idToAttribute(attribute.id))
 }

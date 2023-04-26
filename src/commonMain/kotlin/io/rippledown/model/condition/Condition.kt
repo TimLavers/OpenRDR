@@ -9,7 +9,7 @@ sealed class Condition() {
     abstract val id: Int?
     abstract fun holds(case: RDRCase): Boolean
     abstract fun asText(): String
-    open fun alignAttributes(idToAttribute: (Int) -> Attribute): Condition = this
+    abstract fun alignAttributes(idToAttribute: (Int) -> Attribute): Condition
     abstract fun sameAs(other: Condition): Boolean
 }
 

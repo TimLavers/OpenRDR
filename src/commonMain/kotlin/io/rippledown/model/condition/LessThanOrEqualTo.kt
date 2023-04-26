@@ -21,4 +21,6 @@ data class LessThanOrEqualTo(override val id: Int? = null, val attribute: Attrib
             other.attribute == attribute && other.d.compareTo(d) == 0
         } else false
     }
+
+    override fun alignAttributes(idToAttribute: (Int) -> Attribute) = LessThanOrEqualTo(id, idToAttribute(attribute.id), d)
 }

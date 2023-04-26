@@ -5,6 +5,8 @@ import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNot
 import io.kotest.matchers.string.startWith
+import io.kotest.matchers.types.shouldBeSameInstanceAs
+import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.rippledown.model.*
 import kotlin.test.Test
 
@@ -30,7 +32,16 @@ internal class SlightlyLowTest: ConditionTestBase() {
         tenPercentLow shouldNot beSameAs(SlightlyLow(null, glucose, tenPercentLow.allowablePercentageBelowLowRangeCutoff))
         tenPercentLow shouldNot beSameAs(SlightlyLow(tenPercentLow.id, glucose, tenPercentLow.allowablePercentageBelowLowRangeCutoff))
     }
-    
+
+    @Test
+    fun alignAttributes() {
+        val conditionCopy = serializeDeserialize(tenPercentLow) as SlightlyLow
+        conditionCopy.attribute shouldNotBeSameInstanceAs tenPercentLow.attribute
+        val alignedCopy = conditionCopy.alignAttributes(::attributeForId)
+        alignedCopy.attribute shouldBeSameInstanceAs tenPercentLow.attribute
+        alignedCopy.allowablePercentageBelowLowRangeCutoff shouldBe tenPercentLow.allowablePercentageBelowLowRangeCutoff
+    }
+
     @Test
     fun allowedCutoffs() {
         checkExceptionThrownForCutoff(200)
