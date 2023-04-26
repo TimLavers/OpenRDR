@@ -23,6 +23,7 @@ import kotlin.io.path.createTempDirectory
 class ServerApplication {
     val casesDir = File("cases").apply { mkdirs() }
     val interpretationsDir = File("interpretations").apply { mkdirs() }
+    val idToCase = mutableMapOf<String, RDRCase>()
 
     var kb = KB("Thyroids")
 
@@ -92,15 +93,8 @@ class ServerApplication {
         kb.caseViewManager.moveJustBelow(moved, target)
     }
 
-    fun saveInterpretation(interpretation: Interpretation): OperationResult {
-        val fileName = "${interpretation.caseId.id}.interpretation.json"
-        println("${LocalDateTime.now()}  saving interp = $fileName")
-        val file = File(interpretationsDir, fileName)
-        if (file.exists()) {
-            file.delete()
-            println("${LocalDateTime.now()}  file deleted")
-        }
-        FileUtils.writeStringToFile(file, Json.encodeToString(interpretation), UTF_8)
+    fun saveInterpretationAndDeleteCase(interpretation: Interpretation): OperationResult {
+        saveInterpretation(interpretation)
 
         // Now delete the corresponding case file.
         val caseFile = File(casesDir, "${interpretation.caseId.id}.json")
@@ -108,6 +102,26 @@ class ServerApplication {
         println("${LocalDateTime.now()} case deleted ${deleted}")
 
         return OperationResult("Interpretation submitted")
+    }
+
+    fun saveInterpretation(interpretation: Interpretation) {
+        val id = interpretation.caseId.id
+        val case = case(id)
+        case.interpretation.verifiedText = interpretation.verifiedText
+        idToCase[id] = case
+
+        writeInterpretationToFile(id, interpretation)
+    }
+
+    private fun writeInterpretationToFile(id: String, interpretation: Interpretation) {
+        val fileName = "$id.interpretation.json"
+        println("${LocalDateTime.now()}  saving interp = $fileName")
+        val file = File(interpretationsDir, fileName)
+        if (file.exists()) {
+            file.delete()
+            println("${LocalDateTime.now()}  file deleted")
+        }
+        FileUtils.writeStringToFile(file, Json.encodeToString(interpretation), UTF_8)
     }
 
     fun diffListForCase(caseId: String) = diffList(case(caseId))
@@ -118,5 +132,11 @@ class ServerApplication {
         return format.decodeFromString(data)
     }
 
-    private fun uninterpretedCase(id: String) = getCaseFromFile(File(casesDir, "$id.json"))
+    internal fun uninterpretedCase(id: String): RDRCase {
+        if (!idToCase.containsKey(id)) {
+            idToCase[id] = getCaseFromFile(File(casesDir, "$id.json"))
+        }
+        return idToCase.get(id)!!
+    }
 }
+

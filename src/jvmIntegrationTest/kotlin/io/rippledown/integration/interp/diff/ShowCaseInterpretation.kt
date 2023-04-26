@@ -1,8 +1,10 @@
-package io.rippledown.integration
+package io.rippledown.integration.interp.diff
 
 import io.kotest.matchers.shouldBe
+import io.rippledown.integration.UITestBase
 import io.rippledown.integration.pageobjects.CaseListPO
 import io.rippledown.integration.pageobjects.CaseQueuePO
+import io.rippledown.integration.pageobjects.InterpretationViewPO
 import io.rippledown.integration.restclient.RESTClient
 import io.rippledown.model.Attribute
 import io.rippledown.model.Conclusion
@@ -17,6 +19,7 @@ internal class ShowCaseInterpretation : UITestBase() {
 
     private lateinit var caseQueuePO: CaseQueuePO
     private lateinit var caseListPO: CaseListPO
+    private lateinit var interpretationViewPO: InterpretationViewPO
     private val comment = "Normal TSH."
 
     @BeforeTest
@@ -29,6 +32,7 @@ internal class ShowCaseInterpretation : UITestBase() {
         caseQueuePO = CaseQueuePO(driver)
         caseQueuePO.waitForNumberWaitingToBe(3)
         caseListPO = CaseListPO(driver)
+        interpretationViewPO = InterpretationViewPO(driver)
     }
 
     @AfterTest
@@ -48,12 +52,12 @@ internal class ShowCaseInterpretation : UITestBase() {
 
     @Test
     fun caseShowsCommentAddedByRule() {
-        val caseView1 = caseListPO.select("Case1")
-        caseView1.interpretationText() shouldBe comment
-        val caseView2 = caseListPO.select("Case2")
-        caseView2.interpretationText() shouldBe comment
-        val caseView3 = caseListPO.select("Case3")
-        caseView3.interpretationText() shouldBe ""
+        caseListPO.select("Case1")
+        interpretationViewPO.interpretationText() shouldBe comment
+        caseListPO.select("Case2")
+        interpretationViewPO.interpretationText() shouldBe comment
+        caseListPO.select("Case3")
+        interpretationViewPO.interpretationText() shouldBe ""
     }
 
     private fun setupCases() {

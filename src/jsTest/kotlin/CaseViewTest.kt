@@ -82,7 +82,7 @@ class CaseViewTest {
         rdrCase.interpretation.add(RuleSummary(conclusion = Conclusion(text)))
 
         val config = config {
-            expectedInterpretation = Interpretation(caseId = CaseId(caseName, caseName), text = text)
+            expectedInterpretation = Interpretation(caseId = CaseId(caseName, caseName), verifiedText = text)
         }
         val vfc = VFC {
             CaseView {

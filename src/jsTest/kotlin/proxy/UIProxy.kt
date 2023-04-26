@@ -6,7 +6,7 @@ import NUMBER_OF_CASES_WAITING_ID
 import POLL_PERIOD
 import io.kotest.matchers.shouldBe
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
-import io.rippledown.interpretation.INTERPRETATION_TEXT_AREA_ID
+import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_AREA
 import io.rippledown.interpretation.SEND_INTERPRETATION_BUTTON_ID
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.delay
@@ -60,13 +60,13 @@ fun HTMLElement.numberOfCasesWaiting() = findById(NUMBER_OF_CASES_WAITING_ID)
     .toInt()
 
 fun HTMLElement.requireInterpretation(expected: String) {
-    findById(INTERPRETATION_TEXT_AREA_ID).textContent shouldBe expected
+    findById(INTERPRETATION_TEXT_AREA).textContent shouldBe expected
 }
 
 suspend fun HTMLElement.enterInterpretation(text: String) {
     val jsName = kotlin.js.json("value" to text)
     val jsEvent = kotlin.js.json("target" to jsName) as EventInit
-    val element = findById(INTERPRETATION_TEXT_AREA_ID)
+    val element = findById(INTERPRETATION_TEXT_AREA)
     act {
         Simulate.change(element, jsEvent)
     }

@@ -20,7 +20,7 @@ import kotlin.test.Test
 class InterpretationViewTest {
 
     @Test
-    fun shouldShowInitialInterpretation() = runTest {
+    fun shouldShowInitialInterpretationIfVerifiedTextIsNull() = runTest {
         val text = "Go to Bondi now!"
         val interpretation = Interpretation().apply {
             add(RuleSummary(conclusion = Conclusion(text)))
@@ -35,7 +35,23 @@ class InterpretationViewTest {
     }
 
     @Test
-    fun shouldShowInitialInterpretationIfBlank() = runTest {
+    fun shouldShowVerifiedTextIfNotNull() = runTest {
+        val text = "Go to Bondi."
+        val verifiedText = "Go to Bondi now!"
+        val interpretation = Interpretation(verifiedText = verifiedText).apply {
+            add(RuleSummary(conclusion = Conclusion(text)))
+        }
+        val vfc = VFC {
+            InterpretationView {
+                this.interpretation = interpretation
+            }
+        }
+        createRootFor(vfc).requireInterpretation(verifiedText)
+
+    }
+
+    @Test
+    fun shouldShowBlankInterpretation() = runTest {
         val vfc = VFC {
             InterpretationView {
                 interpretation = Interpretation()
@@ -45,17 +61,37 @@ class InterpretationViewTest {
     }
 
     @Test
-    fun shouldRenderEnteredInterpretation() = runTest {
+    fun shouldShowEnteredText() = runTest {
         val enteredText = "And bring your flippers"
-        val interpretation = Interpretation()
         val vfc = VFC {
             InterpretationView {
-                this.interpretation = interpretation
+                scope = this@runTest
+                api = Api(mock(config {}))
+                interpretation = Interpretation()
             }
         }
         with(createRootFor(vfc)) {
             enterInterpretation(enteredText)
             requireInterpretation(enteredText)
+        }
+    }
+
+    @Test
+    fun shouldSaveVerifiedInterpretation() = runTest {
+        val verifiedText = "And bring your flippers"
+        val config = config {
+            expectedInterpretation = Interpretation(verifiedText = verifiedText)
+        }
+        val vfc = VFC {
+            InterpretationView {
+                scope = this@runTest
+                api = Api(mock(config))
+                interpretation = Interpretation()
+            }
+        }
+        with(createRootFor(vfc)) {
+            enterInterpretation(verifiedText)
+            //assertion is in the mocked API call
         }
     }
 

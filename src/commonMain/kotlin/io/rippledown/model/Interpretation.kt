@@ -5,11 +5,13 @@ import io.rippledown.model.rule.RuleSummary
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Interpretation(val caseId: CaseId = CaseId(), val text: String = "") {
+data class Interpretation(val caseId: CaseId = CaseId(), var verifiedText: String? = null) {
     private val ruleSummaries = mutableSetOf<RuleSummary>()
 
+    fun latestText() = if (verifiedText != null) verifiedText else textGivenByRules()
+
     fun textGivenByRules(): String {
-        return ruleSummaries.map { it.conclusion?.text }
+        return ruleSummaries.asSequence().map { it.conclusion?.text }
             .filterNotNull()
             .toMutableSet()//eliminate duplicates
             .toMutableList()

@@ -27,7 +27,7 @@ Feature: Show a list of cases
       | Case1 |
       | Case2 |
     When a new case with the name "Case3" is stored on the server
-    Then I should see the following cases in the case list:
+    Then I should see the following cases in the case list:Luna62625
       | Case1 |
       | Case2 |
       | Case3 |

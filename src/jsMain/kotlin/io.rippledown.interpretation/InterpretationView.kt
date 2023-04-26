@@ -4,6 +4,8 @@ import ConclusionsDialog
 import Handler
 import csstype.FontFamily
 import csstype.FontWeight
+import debug
+import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_AREA
 import io.rippledown.model.Interpretation
 import kotlinx.coroutines.launch
 import mui.material.*
@@ -18,11 +20,11 @@ external interface InterpretationViewHandler : Handler {
     var interpretation: Interpretation
 }
 
-const val INTERPRETATION_TEXT_AREA_ID = "interpretation_text_area"
 const val SEND_INTERPRETATION_BUTTON_ID = "send_interpretation_button"
 
 val InterpretationView = FC<InterpretationViewHandler> { handler ->
-    var interpretationText by useState(handler.interpretation.textGivenByRules())
+    val interp = handler.interpretation
+    var latestText by useState(interp.latestText())
 
     Grid {
         container = true
@@ -30,9 +32,9 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
         Grid {
             item = true
             xs = 8
-            key = handler.interpretation.caseId.name
+            key = interp.caseId.name
             TextField {
-                id = INTERPRETATION_TEXT_AREA_ID
+                id = INTERPRETATION_TEXT_AREA
                 fullWidth = true
                 multiline = true
                 sx {
@@ -41,13 +43,19 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
                 }
                 rows = 10
                 onChange = {
-                    interpretationText = it.target.asDynamic().value
+                    debug("onChange          : ${it.target.asDynamic().value}")
+                    handler.scope.launch {
+                        val changed = it.target.asDynamic().value
+                        latestText = changed
+                        interp.verifiedText = changed
+                        handler.api.saveVerifiedInterpretation(interp)
+                    }
                 }
-                defaultValue = interpretationText
+                defaultValue = latestText
             }
 
             ConclusionsDialog {
-                interpretation = handler.interpretation
+                this.interpretation = handler.interpretation
             }
 
         }
@@ -61,11 +69,11 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
                 size = Size.small
                 onClick = {
                     val caseId = handler.interpretation.caseId
-                    val interpretation = Interpretation(caseId = caseId, text = interpretationText)
+                    val verifiedInterpretation = Interpretation(caseId = caseId, verifiedText = latestText)
                     handler.scope.launch {
-                        val result = handler.api.saveInterpretation(interpretation)
+                        handler.api.saveInterpretation(verifiedInterpretation)
                     }
-                    interpretationText = ""
+                    latestText = ""
                 }
             }
         }

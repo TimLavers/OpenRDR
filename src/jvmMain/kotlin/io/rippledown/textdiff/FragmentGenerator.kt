@@ -11,15 +11,17 @@ fun diffList(case: RDRCase) = fragmentList(case).toDiffList()
 internal fun fragmentList(case: RDRCase): FragmentList {
     val interpretation = case.interpretation
     val original = interpretation.textGivenByRules()
-    val changed = interpretation.text
-
     val originalSentences = original.splitIntoSentences()
-    val changedSentences = changed.splitIntoSentences()
+    val changed = interpretation.verifiedText
 
-    val fragments = generateDifferences(originalSentences, changedSentences)
-    return FragmentList(fragments)
+    return if (changed == null) {
+        FragmentList(originalSentences.map { UnchangedFragment(it) })
+    } else {
+        val changedSentences = changed.splitIntoSentences()
+        val fragments = generateDifferences(originalSentences, changedSentences)
+        FragmentList(fragments)
+    }
 }
-
 
 internal fun String.splitIntoSentences() = split(REGEX).map { it.trim() }
 
@@ -45,14 +47,10 @@ internal fun List<Diff>.toFragmentList(mapper: TextToAlphabetMapper): List<Fragm
     return map { it.toFragment(mapper) }
 }
 
-internal fun Diff.toFragment(mapper: TextToAlphabetMapper): Fragment {
-    return when (this) {
-        is Unchanged -> UnchangedFragment(mapper.toText(left()))
-        is Addition -> AddedFragment(mapper.toText(right()))
-        is Removal -> RemovedFragment(mapper.toText(left()))
-        is Replacement -> ReplacedFragment(mapper.toText(left()), mapper.toText(right()))
-
-        else -> throw Exception("Unknown diff type") //todo why is this needed?
-    }
+internal fun Diff.toFragment(mapper: TextToAlphabetMapper) = when (this) {
+    is Unchanged -> UnchangedFragment(mapper.toText(left()))
+    is Addition -> AddedFragment(mapper.toText(right()))
+    is Removal -> RemovedFragment(mapper.toText(left()))
+    is Replacement -> ReplacedFragment(mapper.toText(left()), mapper.toText(right()))
 }
 

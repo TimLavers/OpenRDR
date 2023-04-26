@@ -1,7 +1,6 @@
 @requirement
 Feature: Reviewing the interpretation of a case
 
-  @single
   Scenario: The changes to an interpretation should be saved
     Given a list of cases with the following names is stored on the server:
       | Case1 |
