@@ -87,10 +87,10 @@ kotlin {
                     dependsOn(sourceSets.getByName("jvmMain"))
                     dependsOn(sourceSets.getByName("jvmIntegrationTest"))
                 }
-                val requirement = if (!project.hasProperty("requirement")) {
-                    "single"
-                } else {
+                val requirement = if (project.hasProperty("requirement")) {
                     project.property("requirement")
+                } else {
+                    "single"
                 }
                 val pathToRequirements = "${projectDir.path}/src/jvmCucumberTest/resources/requirements"
                 val argsForCuke = listOf(

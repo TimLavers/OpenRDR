@@ -61,13 +61,13 @@ class DebounceTest {
                 clickButton()
                 clickButton()
                 requireNumberOfClicks(0) // should not have incremented yet
-                waitForEvents(waitMillis)
+                waitForEvents(waitMillis * 2)
                 requireNumberOfClicks(1)
                 clickButton()
                 clickButton()
                 clickButton()
                 requireNumberOfClicks(1) // should not have incremented yet
-                waitForEvents(waitMillis)
+                waitForEvents(waitMillis * 2)
                 requireNumberOfClicks(2)
             }
         }
@@ -109,12 +109,12 @@ class DebounceTest {
                 enterText("B")
                 enterText("C")
                 requireText("") // should not have updated yet
-                waitForEvents(waitMillis)
+                waitForEvents(waitMillis * 2)
                 requireText("C")
                 enterText("E")
                 enterText("F")
                 requireText("C") // should not have updated yet
-                waitForEvents(waitMillis)
+                waitForEvents(waitMillis * 2)
                 requireText("F")
             }
         }

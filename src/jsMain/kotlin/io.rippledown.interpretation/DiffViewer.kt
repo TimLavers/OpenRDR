@@ -20,7 +20,6 @@ external interface DiffViewerHandler : Handler {
 
 val DiffViewer = FC<DiffViewerHandler> { handler ->
     TableContainer {
-        id = DIFF_VIEWER_TABLE
         title = "Changes"
         component = Paper
         Table {
@@ -57,6 +56,7 @@ val DiffViewer = FC<DiffViewerHandler> { handler ->
                 }
             }
             TableBody {
+                id = DIFF_VIEWER_TABLE
                 handler.changes.forEachIndexed() { index, change ->
                     TableRow {
                         id = "$DIFF_VIEWER_ROW$index"

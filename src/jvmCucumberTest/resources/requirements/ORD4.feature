@@ -13,5 +13,40 @@ Feature: Reviewing the interpretation of a case
     Then the interpretation field should contain the text "Go to Bondi."
     And stop the client application
 
+  Scenario: A new comment that is entered by the user should show as a addition in the changes panel
+    Given a new case with the name "Case1" is stored on the server
+    And the interpretation by the project of the case "Case1" is "Go to Bondi."
+    And I start the client application
+    And I should see the case Case1 as the current case
+    And the interpretation field should contain the text "Go to Bondi."
+    When I enter the text " And bring your flippers." in the interpretation field
+    And  the interpretation field should contain the text "Go to Bondi. And bring your flippers."
+    And I select the changes tab
+    Then I should see that the text "And bring your flippers." has been added
+    And stop the client application
+
+  Scenario: A comment that is deleted by the user should show as a removal in the changes panel
+    Given a new case with the name "Case1" is stored on the server
+    And the interpretation by the project of the case "Case1" is "Go to Bondi."
+    And I start the client application
+    And I should see the case Case1 as the current case
+    And the interpretation field should contain the text "Go to Bondi."
+    When I delete all the text in the interpretation field
+    And I select the changes tab
+    Then I should see that the text "Go to Bondi." has been deleted
+    And stop the client application
+
+  Scenario: A comment that is replaced by the user should show as a replacement in the changes panel
+    Given a new case with the name "Case1" is stored on the server
+    And the interpretation by the project of the case "Case1" is "Go to Bondi."
+    And I start the client application
+    And I should see the case Case1 as the current case
+    And the interpretation field should contain the text "Go to Bondi."
+    When I delete all the text in the interpretation field
+    And I enter the text "Go to Manly." in the interpretation field
+    And I select the changes tab
+    Then I should see that the text "Go to Bondi." has been replaced by "Go to Manly."
+    And stop the client application
+
 
 
