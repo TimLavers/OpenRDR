@@ -1,3 +1,4 @@
+import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
 import io.rippledown.interpretation.InterpretationView
 import io.rippledown.model.CaseId
 import io.rippledown.model.Conclusion
@@ -31,7 +32,6 @@ class InterpretationViewTest {
             }
         }
         createRootFor(vfc).requireInterpretation(text)
-
     }
 
     @Test
@@ -47,7 +47,6 @@ class InterpretationViewTest {
             }
         }
         createRootFor(vfc).requireInterpretation(verifiedText)
-
     }
 
     @Test
@@ -72,6 +71,7 @@ class InterpretationViewTest {
         }
         with(createRootFor(vfc)) {
             enterInterpretation(enteredText)
+            waitForEvents(timeout = 2 * DEBOUNCE_WAIT_PERIOD_MILLIS) //get past the debounce period
             requireInterpretation(enteredText)
         }
     }
@@ -136,7 +136,7 @@ class InterpretationViewTest {
         }
         with(createRootFor(vfc)) {
             enterInterpretation(enteredText)
-            waitForEvents()
+            waitForEvents(timeout = 2 * DEBOUNCE_WAIT_PERIOD_MILLIS) //get past the debounce period
             clickSubmitButton()
             waitForEvents()
             //assertion is in the mocked API call

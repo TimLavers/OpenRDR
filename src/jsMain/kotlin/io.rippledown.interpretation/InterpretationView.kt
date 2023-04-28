@@ -4,16 +4,18 @@ import ConclusionsDialog
 import Handler
 import csstype.FontFamily
 import csstype.FontWeight
-import debug
+import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_AREA
 import io.rippledown.model.Interpretation
 import kotlinx.coroutines.launch
 import mui.material.*
 import mui.system.responsive
 import mui.system.sx
+import npm.debounce
 import react.FC
 import react.dom.onChange
 import react.useState
+import web.html.HTMLDivElement
 import xs
 
 external interface InterpretationViewHandler : Handler {
@@ -21,10 +23,26 @@ external interface InterpretationViewHandler : Handler {
 }
 
 const val SEND_INTERPRETATION_BUTTON_ID = "send_interpretation_button"
+typealias FormEventAlias = (react.dom.events.FormEvent<HTMLDivElement>) -> Unit
 
 val InterpretationView = FC<InterpretationViewHandler> { handler ->
     val interp = handler.interpretation
     var latestText by useState(interp.latestText())
+
+    fun handleFormEvent(): FormEventAlias {
+        return {
+            handler.scope.launch {
+                val changed = it.target.asDynamic().value
+                latestText = changed
+                interp.verifiedText = changed
+                handler.api.saveVerifiedInterpretation(interp)
+            }
+        }
+    }
+
+    fun debounceFunction(): FormEventAlias {
+        return debounce(handleFormEvent(), DEBOUNCE_WAIT_PERIOD_MILLIS)
+    }
 
     Grid {
         container = true
@@ -42,15 +60,7 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
                     fontFamily = FontFamily.monospace
                 }
                 rows = 10
-                onChange = {
-                    debug("onChange          : ${it.target.asDynamic().value}")
-                    handler.scope.launch {
-                        val changed = it.target.asDynamic().value
-                        latestText = changed
-                        interp.verifiedText = changed
-                        handler.api.saveVerifiedInterpretation(interp)
-                    }
-                }
+                onChange = debounceFunction()
                 defaultValue = latestText
             }
 

@@ -4,6 +4,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.constants.interpretation.*
+import io.rippledown.integration.pause
 import org.openqa.selenium.By
 import org.openqa.selenium.Keys
 import org.openqa.selenium.WebDriver
@@ -15,6 +16,7 @@ class InterpretationViewPO(private val driver: WebDriver) {
     fun enterVerifiedText(text: String): InterpretationViewPO {
         val textArea = interpretationArea()
         textArea.sendKeys(text)
+        waitForDebouncePeriod()
         return this
     }
 
@@ -25,12 +27,10 @@ class InterpretationViewPO(private val driver: WebDriver) {
         return this
     }
 
-    fun interpretationText(): String {
-        return interpretationArea().getAttribute("value")
-    }
+    fun interpretationText() = interpretationArea().getAttribute("value")
 
     fun requireInterpretationText(expected: String): InterpretationViewPO {
-        interpretationArea().getAttribute("value") shouldBe expected
+        interpretationText() shouldBe expected
         return this
     }
 
@@ -132,7 +132,12 @@ class InterpretationViewPO(private val driver: WebDriver) {
         val textArea = driver.findElement(By.id(INTERPRETATION_TEXT_AREA))
         textArea.selectAllText()
         textArea.delete()
+        waitForDebouncePeriod()
         return this
+    }
+
+    private fun waitForDebouncePeriod() {
+        pause(2 * DEBOUNCE_WAIT_PERIOD_MILLIS)
     }
 
     fun WebElement.selectAllText() = sendKeys(Keys.chord(Keys.CONTROL, "a"))
