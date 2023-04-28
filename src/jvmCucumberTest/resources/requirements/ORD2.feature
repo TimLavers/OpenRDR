@@ -1,4 +1,3 @@
-@single
 Feature: Order of Attributes in Case View
 
   Scenario: Default Attribute order is by order created

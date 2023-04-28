@@ -1,7 +1,7 @@
-package io.rippledown.integration
+package io.rippledown.integration.interp.diff
 
-import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
+import io.rippledown.integration.UITestBase
 import io.rippledown.integration.pageobjects.CaseQueuePO
 import io.rippledown.integration.pageobjects.CaseViewPO
 import io.rippledown.integration.pageobjects.InterpretationViewPO
@@ -55,16 +55,56 @@ internal class ShowInterpretationDifference : UITestBase() {
     }
 
     @Test
-    fun shouldShowTheChangeWhenAFragmentIsAdded() {
-        withClue("sanity check") {
-            caseViewPO.nameShown() shouldBe caseName
-        }
+    fun shouldShowNoChangesIfTheUserHasNotChangedTheInterpretation() {
+        caseViewPO.nameShown() shouldBe caseName
         interpretationViewPO
+            .requireInterpretationText(tshComment)
             .selectChangesTab()
             .requireOriginalTextInRow(0, tshComment)
-        //todo complete this test
+            .requireChangedTextInRow(0, tshComment)
     }
 
+    @Test
+    fun shouldShowTheChangeWhenASentenceIsAdded() {
+        caseViewPO.nameShown() shouldBe caseName
+        val addedText = " This is a new sentence."
+        interpretationViewPO
+            .enterVerifiedText(addedText)
+            .requireInterpretationText("$tshComment$addedText")
+            .selectChangesTab()
+            .requireOriginalTextInRow(0, tshComment)
+            .requireChangedTextInRow(0, tshComment)
+            .requireNoCheckBoxInRow(0)
+            .requireOriginalTextInRow(1, "")
+            .requireChangedTextInRow(1, addedText.trim())
+            .requireCheckBoxInRow(1)
+    }
+
+    @Test
+    fun shouldShowTheChangeWhenASentenceIsRemoved() {
+        caseViewPO.nameShown() shouldBe caseName
+        interpretationViewPO
+            .deleteAllText()
+            .requireInterpretationText("")
+            .selectChangesTab()
+            .requireOriginalTextInRow(0, tshComment)
+            .requireChangedTextInRow(0, "")
+            .requireCheckBoxInRow(0)
+    }
+
+    @Test
+    fun shouldShowTheChangeWhenASentenceIsReplaced() {
+        caseViewPO.nameShown() shouldBe caseName
+        val replacementText = "This is a new sentence."
+        interpretationViewPO
+            .deleteAllText()
+            .enterVerifiedText(replacementText)
+            .requireInterpretationText(replacementText)
+            .selectChangesTab()
+            .requireOriginalTextInRow(0, tshComment)
+            .requireChangedTextInRow(0, replacementText)
+            .requireCheckBoxInRow(0)
+    }
 
     private fun setupCase() {
         labProxy.copyCase(caseName)

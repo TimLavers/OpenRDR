@@ -1,28 +1,147 @@
 package io.rippledown.integration.pageobjects
 
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.rippledown.constants.interpretation.DIFF_VIEWER_CHANGED
-import io.rippledown.constants.interpretation.DIFF_VIEWER_ORIGINAL
-import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
+import io.kotest.matchers.shouldNotBe
+import io.rippledown.constants.interpretation.*
+import io.rippledown.integration.pause
 import org.openqa.selenium.By
+import org.openqa.selenium.Keys
 import org.openqa.selenium.WebDriver
+import org.openqa.selenium.WebElement
 
 // ORD2
 class InterpretationViewPO(private val driver: WebDriver) {
 
+    fun enterVerifiedText(text: String): InterpretationViewPO {
+        val textArea = interpretationArea()
+        textArea.sendKeys(text)
+        waitForDebouncePeriod()
+        return this
+    }
+
+    fun setInterpretationTextAndSubmit(text: String): InterpretationViewPO {
+        enterVerifiedText(text)
+        val sendButton = driver.findElement(By.id("send_interpretation_button"))
+        sendButton.click()
+        return this
+    }
+
+    fun interpretationText() = interpretationArea().getAttribute("value")
+
+    fun requireInterpretationText(expected: String): InterpretationViewPO {
+        interpretationText() shouldBe expected
+        return this
+    }
+
+    fun interpretationArea() = driver.findElement(By.id(INTERPRETATION_TEXT_AREA))!!
 
     fun selectChangesTab(): InterpretationViewPO {
         driver.findElement(By.id(INTERPRETATION_TAB_CHANGES)).click()
         return this
     }
 
-    fun requireOriginalTextInRow(row: Int, text: String): InterpretationViewPO {
-        driver.findElement(By.id("$DIFF_VIEWER_ORIGINAL$row")).text shouldBe text
+    fun selectOriginalTab(): InterpretationViewPO {
+        driver.findElement(By.id(INTERPRETATION_TAB_ORIGINAL)).click()
         return this
     }
 
-    fun requireNoChangedTextInRow(row: Int): InterpretationViewPO {
-        driver.findElement(By.id("$DIFF_VIEWER_CHANGED$row")).text shouldBe ""
+    fun requireOriginalTextInRow(row: Int, text: String) = requireTextInRow(DIFF_VIEWER_ORIGINAL, row, text)
+    fun requireChangedTextInRow(row: Int, text: String) = requireTextInRow(DIFF_VIEWER_CHANGED, row, text)
+
+    fun numberOfRows(): Int {
+        val table = driver.findElement(By.id(DIFF_VIEWER_TABLE))
+        return table.findElements(By.tagName("tr")).size
+    }
+
+    fun requireAddedText(text: String) {
+        var found = false
+        0.until(numberOfRows()).forEach { row ->
+            try {
+                requireOriginalTextInRow(row, "")
+                requireAddedTextInRow(row, text)
+                found = true
+            } catch (e: AssertionError) {
+                // Ignore
+            }
+        }
+        if (!found) {
+            throw AssertionError("Could not find added text '$text'")
+        }
+    }
+
+    fun requireDeletedText(text: String) {
+        var found = false
+        0.until(numberOfRows()).forEach { row ->
+            try {
+                requireOriginalTextInRow(row, text)
+                requireChangedTextInRow(row, "")
+                found = true
+            } catch (e: AssertionError) {
+                // Ignore
+            }
+        }
+        if (!found) {
+            throw AssertionError("Could not find deleted text '$text'")
+        }
+    }
+
+    fun requireReplacedText(replaced: String, replacement: String) {
+        var found = false
+        0.until(numberOfRows()).forEach { row ->
+            try {
+                requireOriginalTextInRow(row, replaced)
+                requireChangedTextInRow(row, replacement)
+                found = true
+            } catch (e: AssertionError) {
+                // Ignore
+            }
+        }
+        if (!found) {
+            throw AssertionError("Could not find replacement of '$replaced' with '$replacement'")
+        }
+    }
+
+    fun requireAddedTextInRow(row: Int, text: String) {
+        requireTextInRow(DIFF_VIEWER_ORIGINAL, row, "")
+        requireTextInRow(DIFF_VIEWER_CHANGED, row, text)
+        requireCheckBoxInRow(row)
+    }
+
+    fun requireCheckBoxInRow(row: Int): InterpretationViewPO {
+        driver.findElement(By.id("$DIFF_VIEWER_CHECKBOX$row")) shouldNotBe null
         return this
     }
+
+    fun requireNoCheckBoxInRow(row: Int): InterpretationViewPO {
+        driver.findElements(By.id("$DIFF_VIEWER_CHECKBOX$row")) shouldHaveSize 0
+        return this
+    }
+
+    private fun requireTextInRow(
+        id: String,
+        row: Int,
+        text: String
+    ): InterpretationViewPO {
+        val findElement = driver.findElement(By.id("$id$row"))
+        findElement.text shouldBe text
+        return this
+    }
+
+    fun deleteAllText(): InterpretationViewPO {
+        val textArea = driver.findElement(By.id(INTERPRETATION_TEXT_AREA))
+        textArea.selectAllText()
+        textArea.delete()
+        waitForDebouncePeriod()
+        return this
+    }
+
+    private fun waitForDebouncePeriod() {
+        pause(2 * DEBOUNCE_WAIT_PERIOD_MILLIS)
+    }
+
+    fun WebElement.selectAllText() = sendKeys(Keys.chord(Keys.CONTROL, "a"))
+
+
+    fun WebElement.delete() = sendKeys(Keys.DELETE)
 }

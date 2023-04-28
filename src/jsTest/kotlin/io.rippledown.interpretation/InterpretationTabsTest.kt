@@ -4,6 +4,7 @@ import Api
 import io.kotest.matchers.shouldBe
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL
+import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_AREA
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.diff.DiffList
@@ -54,7 +55,7 @@ class InterpretationTabsTest {
         }
         checkContainer(vfc) { container ->
             with(container) {
-                val originalPanel = findById(INTERPRETATION_TEXT_AREA_ID)
+                val originalPanel = findById(INTERPRETATION_TEXT_AREA)
                 originalPanel.textContent shouldBe text
             }
         }

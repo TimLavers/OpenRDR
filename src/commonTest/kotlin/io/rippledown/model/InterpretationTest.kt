@@ -3,6 +3,7 @@ package io.rippledown.model
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.condition.ContainsText
+import io.rippledown.model.condition.Is
 import io.rippledown.model.rule.Rule
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -17,7 +18,7 @@ internal class InterpretationTest {
     fun construction() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
         assertEquals(interpretation.caseId, caseId)
-        assertEquals(interpretation.text, "Whatever, blah.")
+        assertEquals(interpretation.verifiedText, "Whatever, blah.")
         assertEquals(interpretation.textGivenByRules(), "")
     }
 
@@ -146,7 +147,24 @@ internal class InterpretationTest {
 
     @Test
     fun jsonSerialisation() {
-        val interpretation = Interpretation(caseId, "Whatever, blah.")
+        val conclusion = Conclusion("First conc")
+        val conditions = setOf(
+            Is(Attribute("x"), "1"),
+        )
+        val rule = Rule("r0", null, conclusion, conditions)
+        val interpretation = Interpretation(caseId, "Verified text").apply { add(rule) }
+        val sd = serializeDeserialize(interpretation)
+        assertEquals(sd, interpretation)
+    }
+
+    @Test
+    fun jsonSerialisationWithNoVerifiedText() {
+        val conclusion = Conclusion("First conc")
+        val conditions = setOf(
+            Is(Attribute("x"), "1"),
+        )
+        val rule = Rule("r0", null, conclusion, conditions)
+        val interpretation = Interpretation(caseId).apply { add(rule) }
         val sd = serializeDeserialize(interpretation)
         assertEquals(sd, interpretation)
     }
@@ -184,6 +202,41 @@ internal class InterpretationTest {
             "Y contains \"text Y\"",
             "z contains \"text z\""
         )
+    }
+
+    @Test
+    fun resettingTheInterpretationShouldNotChangeTheVerifiedText() {
+        val verifiedText = "I can verify that is true."
+        val interpretation = Interpretation(caseId, verifiedText)
+        interpretation.reset()
+        interpretation.verifiedText shouldBe verifiedText
+    }
+
+    @Test
+    fun latestTextShouldBeTheVerifiedTextIfNotNull() {
+        val verifiedText = "I can verify that is true."
+        val conclusion = Conclusion("First conc")
+        val conditions = setOf(
+            Is(Attribute("x"), "1"),
+        )
+        val rule0 = Rule("r0", null, conclusion, conditions)
+        with(Interpretation(caseId, verifiedText)) {
+            add(rule0)
+            latestText() shouldBe verifiedText
+        }
+    }
+
+    @Test
+    fun latestTextShouldBeTheInterpretationIfNoVerifiedText() {
+        val conclusion = Conclusion("First conc")
+        val conditions = setOf(
+            Is(Attribute("x"), "1"),
+        )
+        val rule0 = Rule("r0", null, conclusion, conditions)
+        with(Interpretation(caseId)) {
+            add(rule0)
+            latestText() shouldBe conclusion.text
+        }
     }
 
     private fun serializeDeserialize(interpretation: Interpretation): Interpretation {

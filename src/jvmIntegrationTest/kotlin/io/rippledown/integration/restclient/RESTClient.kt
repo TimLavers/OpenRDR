@@ -105,6 +105,12 @@ class RESTClient {
         return result
     }
 
+    fun createRuleToAddText(caseName: String, text: String): OperationResult {
+        getCaseWithName(caseName)
+        startSessionToAddConclusionForCurrentCase(Conclusion(text))
+        return commitCurrentSession()
+    }
+
     fun resetKB(): OperationResult {
         var result = OperationResult("")
         runBlocking {

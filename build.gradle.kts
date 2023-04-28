@@ -7,7 +7,7 @@ val kotlinxDateTimeVersion = "0.4.0"
 val kotlinxCoroutinesTestVersion = "1.6.4"
 val ktor_version = "2.2.1"
 val logbackVersion = "1.4.5"
-val kotlinWrappersVersion = "1.0.0-pre.536"
+val kotlinWrappersVersion = "1.0.0-pre.540"
 val diffUtilsVersion = "4.12"
 val testingLibraryReactVersion = "14.0.0"
 val reactTestRendererVersion = "18.2.0"
@@ -87,16 +87,10 @@ kotlin {
                     dependsOn(sourceSets.getByName("jvmMain"))
                     dependsOn(sourceSets.getByName("jvmIntegrationTest"))
                 }
-                val requirement = if (!project.hasProperty("requirement")) {
-                    "single"
-                } else {
-                    project.property("requirement")
-                }
                 val pathToRequirements = "${projectDir.path}/src/jvmCucumberTest/resources/requirements"
-                val argsForCuke = listOf(
+                val argsForCuke = mutableListOf(
                     "--plugin", "junit:build/test-results/junit.xml",
                     "--plugin", "html:build/test-results-html",
-                    "--tags", "@$requirement",
                     "--glue", "steps",
                     pathToRequirements
                 )
@@ -107,6 +101,20 @@ kotlin {
                     mainClass.set("io.cucumber.core.cli.Main")
                     classpath = compileDependencyFiles + runtimeDependencyFiles + output.allOutputs
                     args = argsForCuke
+                    dependsOn(
+                        tasks.shadowJar,
+                        tasks.compileTestJava,
+                        tasks.processTestResources,
+                        tasks.getByName("jvmCucumberTestClasses")
+                    )
+                }
+
+                tasks.register<JavaExec>("cucumberSingleTest") {
+                    group = VERIFICATION_GROUP
+                    maxHeapSize = "32G"
+                    mainClass.set("io.cucumber.core.cli.Main")
+                    classpath = compileDependencyFiles + runtimeDependencyFiles + output.allOutputs
+                    args = argsForCuke.apply { add("--tags"); add("@single") }
                     dependsOn(
                         tasks.shadowJar,
                         tasks.compileTestJava,
@@ -183,6 +191,7 @@ kotlin {
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-emotion")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-mui")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-mui-icons")
+                implementation(npm("debounce", "1.2.1"))
             }
         }
         val jsTest by getting {

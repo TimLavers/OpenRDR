@@ -89,7 +89,7 @@ class FragmentGeneratorTest {
         every { case.interpretation } returns interpretation
         val sentence = "Go to Bondi Beach."
         every { interpretation.textGivenByRules() } returns sentence
-        every { interpretation.text } returns sentence
+        every { interpretation.verifiedText } returns sentence
 
         fragmentList(case).fragments shouldBe listOf(
             UnchangedFragment(sentence)
@@ -110,7 +110,7 @@ class FragmentGeneratorTest {
         val bondiText = "Go to Bondi Beach."
         val surfText = "Surf is great."
         every { interpretation.textGivenByRules() } returns bondiText
-        every { interpretation.text } returns "$bondiText $surfText"
+        every { interpretation.verifiedText } returns "$bondiText $surfText"
 
         fragmentList(case).fragments shouldBe listOf(
             UnchangedFragment(bondiText),
@@ -126,7 +126,7 @@ class FragmentGeneratorTest {
         val bondiText = "Go to Bondi Beach."
         val surfText = "Surf is great."
         every { interpretation.textGivenByRules() } returns "$bondiText $surfText"
-        every { interpretation.text } returns bondiText
+        every { interpretation.verifiedText } returns bondiText
 
         fragmentList(case).fragments shouldBe listOf(
             UnchangedFragment(bondiText),
@@ -142,7 +142,7 @@ class FragmentGeneratorTest {
         val bondiText = "Go to Bondi Beach."
         val surfText = "Surf is great."
         every { interpretation.textGivenByRules() } returns bondiText
-        every { interpretation.text } returns surfText
+        every { interpretation.verifiedText } returns surfText
 
         fragmentList(case).fragments shouldBe listOf(
             ReplacedFragment(bondiText, surfText)

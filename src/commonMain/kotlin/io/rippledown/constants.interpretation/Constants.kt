@@ -5,6 +5,9 @@ val INTERPRETATION_TAB_CHANGES = "interpretation_tab_changes"
 val INTERPRETATION_PANEL_ORIGINAL = "interpretation_panel_original"
 val INTERPRETATION_PANEL_CHANGES = "interpretation_panel_changes"
 
+val INTERPRETATION_TEXT_AREA = "interpretation_text_area"
+val DEBOUNCE_WAIT_PERIOD_MILLIS = 500L
+
 val DIFF_VIEWER_TABLE = "diff_viewer_table"
 val DIFF_VIEWER_ROW = "diff_viewer_row_"
 val DIFF_VIEWER_CHECKBOX = "diff_viewer_checkbox_"

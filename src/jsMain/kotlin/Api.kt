@@ -80,12 +80,18 @@ class Api(engine: HttpClientEngine = Js.create()) {
         }.body()
     }
 
+    suspend fun saveVerifiedInterpretation(verifiedInterpretation: Interpretation) {
+        jsonClient.post("$endpoint$VERIFIED_INTERPRETATION_SAVED") {
+            contentType(ContentType.Application.Json)
+            setBody(verifiedInterpretation)
+        }
+    }
+
     suspend fun moveAttributeJustBelowOther(moved: Attribute, target: Attribute): OperationResult {
         return jsonClient.post("$endpoint$MOVE_ATTRIBUTE_JUST_BELOW_OTHER") {
             contentType(ContentType.Application.Json)
             setBody(Pair(moved, target))
         }.body()
     }
-
 }
 

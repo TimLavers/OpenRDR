@@ -32,7 +32,8 @@ class LabProxy(tempDir: File) {
         val file = File(interpretationsDir, "$caseName.interpretation.json")
         val data = FileUtils.readFileToString(file, UTF_8)
         val interpretation: Interpretation = Json.decodeFromString(data)
-        return interpretation.text
+        val verifiedText = interpretation.verifiedText
+        return if (verifiedText != null) verifiedText else ""
     }
 
     fun inputCases(): Set<String> {
