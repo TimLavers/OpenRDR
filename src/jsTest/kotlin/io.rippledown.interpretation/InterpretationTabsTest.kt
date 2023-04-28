@@ -39,7 +39,6 @@ class InterpretationTabsTest {
                 originalTab.textContent shouldBe "Interpretation"
             }
         }
-
     }
 
     @Test

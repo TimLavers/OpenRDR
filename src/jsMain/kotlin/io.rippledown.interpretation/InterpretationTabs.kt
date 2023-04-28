@@ -8,6 +8,7 @@ import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL
 import io.rippledown.model.Interpretation
 import io.rippledown.model.diff.Diff
+import io.rippledown.model.diff.Unchanged
 import kotlinx.coroutines.launch
 import mui.lab.TabContext
 import mui.lab.TabPanel
@@ -52,7 +53,8 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
                 }
                 Tab {
                     id = INTERPRETATION_TAB_CHANGES
-                    label = "Changes".unsafeCast<ReactNode>()
+                    val size = numberOfDiffs(diffs)
+                    label = "Changes ($size)".unsafeCast<ReactNode>()
                     value = "1"
                 }
             }
@@ -82,4 +84,8 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
     }
 
 }
+
+fun numberOfDiffs(diffs: List<Diff>) = diffs.filter {
+    it !is Unchanged
+}.size
 

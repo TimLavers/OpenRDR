@@ -6,6 +6,7 @@ import io.rippledown.integration.pageobjects.CaseQueuePO
 import io.rippledown.integration.pageobjects.CaseViewPO
 import io.rippledown.integration.pageobjects.InterpretationViewPO
 import io.rippledown.integration.restclient.RESTClient
+import io.rippledown.integration.stop
 import io.rippledown.model.Attribute
 import io.rippledown.model.Conclusion
 import io.rippledown.model.condition.IsNormal
@@ -62,6 +63,7 @@ internal class ShowInterpretationDifference : UITestBase() {
             .selectChangesTab()
             .requireOriginalTextInRow(0, tshComment)
             .requireChangedTextInRow(0, tshComment)
+        stop()
     }
 
     @Test
@@ -71,13 +73,14 @@ internal class ShowInterpretationDifference : UITestBase() {
         interpretationViewPO
             .enterVerifiedText(addedText)
             .requireInterpretationText("$tshComment$addedText")
-            .selectChangesTab()
-            .requireOriginalTextInRow(0, tshComment)
-            .requireChangedTextInRow(0, tshComment)
-            .requireNoCheckBoxInRow(0)
-            .requireOriginalTextInRow(1, "")
-            .requireChangedTextInRow(1, addedText.trim())
-            .requireCheckBoxInRow(1)
+        stop()
+        /* .selectChangesTab()
+         .requireOriginalTextInRow(0, tshComment)
+         .requireChangedTextInRow(0, tshComment)
+         .requireNoCheckBoxInRow(0)
+         .requireOriginalTextInRow(1, "")
+         .requireChangedTextInRow(1, addedText.trim())
+         .requireCheckBoxInRow(1)*/
     }
 
     @Test

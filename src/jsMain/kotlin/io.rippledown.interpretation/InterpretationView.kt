@@ -4,6 +4,7 @@ import ConclusionsDialog
 import Handler
 import csstype.FontFamily
 import csstype.FontWeight
+import debug
 import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_AREA
 import io.rippledown.model.Interpretation
@@ -20,6 +21,7 @@ import xs
 
 external interface InterpretationViewHandler : Handler {
     var interpretation: Interpretation
+    fun numberOfDiffs(): Int
 }
 
 const val SEND_INTERPRETATION_BUTTON_ID = "send_interpretation_button"
@@ -36,6 +38,7 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
                 latestText = changed
                 interp.verifiedText = changed
                 handler.api.saveVerifiedInterpretation(interp)
+                debug("Saved verified text interpretation: $changed")
             }
         }
     }
