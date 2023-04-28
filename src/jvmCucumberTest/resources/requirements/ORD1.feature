@@ -1,4 +1,3 @@
-@requirement
 Feature: Show a list of cases
 
   Scenario: Should show the list of cases that have been stored by the server
@@ -27,7 +26,7 @@ Feature: Show a list of cases
       | Case1 |
       | Case2 |
     When a new case with the name "Case3" is stored on the server
-    Then I should see the following cases in the case list:Luna62625
+    Then I should see the following cases in the case list:
       | Case1 |
       | Case2 |
       | Case3 |

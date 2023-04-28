@@ -1,4 +1,3 @@
-@requirement
 Feature: Reviewing the interpretation of a case
 
   Scenario: The changes to an interpretation should be saved

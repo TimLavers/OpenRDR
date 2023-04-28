@@ -87,16 +87,10 @@ kotlin {
                     dependsOn(sourceSets.getByName("jvmMain"))
                     dependsOn(sourceSets.getByName("jvmIntegrationTest"))
                 }
-                val requirement = if (project.hasProperty("requirement")) {
-                    project.property("requirement")
-                } else {
-                    "single"
-                }
                 val pathToRequirements = "${projectDir.path}/src/jvmCucumberTest/resources/requirements"
-                val argsForCuke = listOf(
+                val argsForCuke = mutableListOf(
                     "--plugin", "junit:build/test-results/junit.xml",
                     "--plugin", "html:build/test-results-html",
-                    "--tags", "@$requirement",
                     "--glue", "steps",
                     pathToRequirements
                 )
@@ -107,6 +101,20 @@ kotlin {
                     mainClass.set("io.cucumber.core.cli.Main")
                     classpath = compileDependencyFiles + runtimeDependencyFiles + output.allOutputs
                     args = argsForCuke
+                    dependsOn(
+                        tasks.shadowJar,
+                        tasks.compileTestJava,
+                        tasks.processTestResources,
+                        tasks.getByName("jvmCucumberTestClasses")
+                    )
+                }
+
+                tasks.register<JavaExec>("cucumberSingleTest") {
+                    group = VERIFICATION_GROUP
+                    maxHeapSize = "32G"
+                    mainClass.set("io.cucumber.core.cli.Main")
+                    classpath = compileDependencyFiles + runtimeDependencyFiles + output.allOutputs
+                    args = argsForCuke.apply { add("--tags"); add("@single") }
                     dependsOn(
                         tasks.shadowJar,
                         tasks.compileTestJava,
