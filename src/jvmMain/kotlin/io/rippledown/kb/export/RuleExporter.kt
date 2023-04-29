@@ -10,11 +10,11 @@ class RuleExporter(private val destination: File, private val ruleTree: RuleTree
 
     fun export() {
         val rules = ruleTree.rules()
-        val ruleIds = rules.map { it.id }.toSet()
+        val ruleIds = rules.map { it.id.toString() }.toSet()
         val ruleIdToFilename = FilenameMaker(ruleIds).makeUniqueNames()
 
         rules.forEach{
-            val filename = ruleIdToFilename[it.id]!!
+            val filename = ruleIdToFilename[it.id.toString()]!!
             val file = File(destination, filename)
             ExportedRule(it).export(file)
         }

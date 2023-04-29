@@ -41,7 +41,7 @@ internal class ShowCaseInterpretation : UITestBase() {
         val conclusion = conclusionFactory.create(comment)
         restClient.startSessionToAddConclusionForCurrentCase(conclusion)
         val tsh = attributeFactory.create("TSH")
-        val condition = IsNormal(tsh)
+        val condition = IsNormal(null, tsh)
         restClient.addConditionForCurrentSession(condition)
         restClient.commitCurrentSession()
     }

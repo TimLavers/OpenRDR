@@ -34,7 +34,7 @@ data class Interpretation(val caseId: CaseId = CaseId(), val text: String = "") 
             .sortedWith(String.CASE_INSENSITIVE_ORDER)
     }
 
-    fun idsOfRulesGivingConclusion(conclusion: Conclusion): Set<String> {
+    fun idsOfRulesGivingConclusion(conclusion: Conclusion): Set<Int> {
         return ruleSummaries.filter { conclusion == it.conclusion }.map { it.id }.toSet()
     }
 

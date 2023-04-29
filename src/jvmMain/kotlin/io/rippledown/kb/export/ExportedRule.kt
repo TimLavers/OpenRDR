@@ -11,8 +11,8 @@ import java.io.File
 
 @Serializable
 data class ExportedRule(
-    val id: String,
-    val parentId: String? = null,
+    val id: Int,
+    val parentId: Int? = null,
     val conclusion: Conclusion? = null,
     val conditions: Set<Condition> = mutableSetOf()
 ) {

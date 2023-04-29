@@ -12,7 +12,7 @@ import kotlin.test.Test
 
 internal class RuleSummaryTest: ConditionTestBase() {
     private val conclusion = Conclusion( 1, "Capricious behaviour normal at that age.")
-    private val empty = RuleSummary("r1",null, emptySet())
+    private val empty = RuleSummary(8,null, emptySet())
     private val rs2: RuleSummary
     private val rs3: RuleSummary
 
@@ -20,13 +20,13 @@ internal class RuleSummaryTest: ConditionTestBase() {
         val conditions2 = mutableSetOf<Condition>()
         conditions2.add(SlightlyLow(2000, glucose, 10))
         conditions2.add(IsNormal(2001, tsh))
-        rs2 = RuleSummary("r2",null, conditions2)
+        rs2 = RuleSummary(12,null, conditions2)
 
         val conditions3 = mutableSetOf<Condition>()
         conditions3.add(IsNormal(3000, glucose))
         conditions3.add(IsNormal(3001, tsh))
         conditions3.add(ContainsText(3002, clinicalNotes, "goats"))
-        rs3 = RuleSummary("r3",conclusion, conditions3)
+        rs3 = RuleSummary(13,conclusion, conditions3)
     }
 
     @Test

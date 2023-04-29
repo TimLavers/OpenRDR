@@ -17,8 +17,8 @@ class RuleImporter(private val source: File) {
 
     fun import(): RuleTree {
         val format = Json { allowStructuredMapKeys = true }
-        val idToPrototype = mutableMapOf<String, ExportedRule>()
-        val idToRule = mutableMapOf<String, Rule>()
+        val idToPrototype = mutableMapOf<Int, ExportedRule>()
+        val idToRule = mutableMapOf<Int, Rule>()
         source.listFiles()?.forEach {
             val data = FileUtils.readFileToString(it, Charsets.UTF_8)
             val prototype = format.decodeFromString<ExportedRule>(data)

@@ -31,6 +31,7 @@ val logger: Logger = LoggerFactory.getLogger("rdr")
 fun main() {
     val application = ServerApplication()
 
+    @Suppress("ExtractKtorModule")
     server = embeddedServer(Netty, 9090) {
         install(ContentNegotiation) {
             json()
@@ -71,6 +72,7 @@ fun main() {
         caseManagement(application)
         attributeManagement(application)
         conclusionManagement(application)
+        conditionManagement(application)
         ruleSession(application)
     }
     logger.info(STARTING_SERVER)

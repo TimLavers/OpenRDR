@@ -6,7 +6,7 @@ import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
 
 open class Rule(
-    val id: String,
+    val id: Int,
     var parent: Rule? = null,
     val conclusion: Conclusion? = null,
     val conditions: Set<Condition> = mutableSetOf(),

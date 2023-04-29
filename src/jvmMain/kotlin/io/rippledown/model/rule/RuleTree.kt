@@ -4,10 +4,10 @@ import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
-import java.util.*
+import kotlin.random.Random
 
 fun rootRule(): Rule {
-    return Rule("root")
+    return Rule(0)
 }
 
 open class RuleTree(val root: Rule = rootRule()) {
@@ -64,6 +64,6 @@ open class RuleTree(val root: Rule = rootRule()) {
     }
 
     open fun rule(conclusion: Conclusion?, conditions: Set<Condition>): Rule {
-        return Rule(UUID.randomUUID().toString(), null, conclusion, conditions)
+        return Rule(Random.Default.nextInt(), null, conclusion, conditions)
     }
 }

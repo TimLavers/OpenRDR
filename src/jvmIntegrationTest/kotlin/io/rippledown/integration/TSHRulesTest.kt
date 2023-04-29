@@ -82,20 +82,20 @@ internal class TSHRulesTest : TSHTest() {
         val tpo = attributeFactory.create("TPO Antibodies")
         val clinicalNotes = attributeFactory.create("Clinical Notes")
 
-        val tshLow = IsLow(tsh)
-        val tshNormal = IsNormal(tsh)
-        val tshModeratelyIncreased = GreaterThanOrEqualTo(tsh, 10.0)
-        val tshHigh = IsHigh(tsh)
-        val tshVeryHigh = GreaterThanOrEqualTo(tsh, 40.0) // What should this be?
-        val ft4VeryLow = Is(freeT4, "<5")
-        val t4SlightlyLow = SlightlyLow(freeT4, 20)
-        val ft3High = IsHigh(ft3)
-        val freeT4Normal = IsNormal(freeT4)
-        val tpoHigh = IsHigh(tpo)
-        val elderly = GreaterThanOrEqualTo(attributeFactory.create("Age"), 70.0)
-        val notesShowsTrimester1 = ContainsText(clinicalNotes, "12/40 weeks")
-        val notesShowsTryingForBaby = ContainsText(clinicalNotes, "Trying for a baby")
-        val tiredness = ContainsText(clinicalNotes, "very tired")
+        val tshLow = conditionFactory.create(IsLow(null, tsh))
+        val tshNormal = conditionFactory.create(IsNormal(null, tsh))
+        val tshModeratelyIncreased = conditionFactory.create(GreaterThanOrEqualTo(null, tsh, 10.0))
+        val tshHigh = conditionFactory.create(IsHigh(null, tsh))
+        val tshVeryHigh = conditionFactory.create(GreaterThanOrEqualTo(null, tsh, 40.0)) // What should this be?
+        val ft4VeryLow = conditionFactory.create(Is(null, freeT4, "<5"))
+        val t4SlightlyLow = conditionFactory.create(SlightlyLow(null, freeT4, 20))
+        val ft3High = conditionFactory.create(IsHigh(null, ft3))
+        val freeT4Normal = conditionFactory.create(IsNormal(null, freeT4))
+        val tpoHigh = conditionFactory.create(IsHigh(null, tpo))
+        val elderly = conditionFactory.create(GreaterThanOrEqualTo(null, attributeFactory.create("Age"), 70.0))
+        val notesShowsTrimester1 = conditionFactory.create(ContainsText(null, clinicalNotes, "12/40 weeks"))
+        val notesShowsTryingForBaby = conditionFactory.create(ContainsText(null, clinicalNotes, "Trying for a baby"))
+        val tiredness = conditionFactory.create(ContainsText(null, clinicalNotes, "very tired"))
 
         val report1 = "Normal T4 and TSH are consistent with a euthyroid state."
         val report1b = "Normal TSH is consistent with a euthyroid state."

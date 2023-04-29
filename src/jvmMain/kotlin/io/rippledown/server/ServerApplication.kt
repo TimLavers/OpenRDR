@@ -107,7 +107,11 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         return kb.attributeManager.getOrCreate(name)
     }
 
-    fun getOrCreateConclusion(name: String): Attribute {
+    fun getOrCreateConclusion(name: String): Conclusion {
+        TODO()
+    }
+
+    fun getOrCreateCondition(condition: Condition): Condition {
         TODO()
     }
 

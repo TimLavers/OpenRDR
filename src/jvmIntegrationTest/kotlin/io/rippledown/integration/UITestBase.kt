@@ -16,6 +16,7 @@ open class UITestBase {
     val restClient = RESTClient()
     val attributeFactory = RestClientAttributeFactory(restClient)
     val conclusionFactory = RestClientConclusionFactory(restClient)
+    val conditionFactory = RestClientConditionFactory(restClient)
     val labProxy = LabProxy(serverProxy.tempDir(), RestClientAttributeFactory(restClient))
     private val dirProxy = DirProxy()
     lateinit var driver: WebDriver

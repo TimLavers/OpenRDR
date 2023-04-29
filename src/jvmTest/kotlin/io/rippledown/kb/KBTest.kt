@@ -4,8 +4,10 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.rippledown.model.*
 import io.rippledown.model.condition.GreaterThanOrEqualTo
+import io.rippledown.model.condition.IsNormal
 import io.rippledown.model.condition.LessThanOrEqualTo
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.persistence.InMemoryKB
@@ -24,6 +26,23 @@ class KBTest {
     @Test
     fun attributeManager() {
         kb.attributeManager.all() shouldBe emptySet()
+    }
+
+    @Test
+    fun conclusionManager() {
+        kb.conclusionManager.all() shouldBe  emptySet()
+
+        val created = kb.conclusionManager.getOrCreate("Whatever")
+        kb.conclusionManager.getById(created.id) shouldBeSameInstanceAs created
+    }
+
+    @Test
+    fun conditionManager() {
+        kb.conditionManager.all() shouldBe emptySet()
+        val glucose = kb.attributeManager.getOrCreate("Glucose")
+        val template = IsNormal(null, glucose)
+        val created = kb.conditionManager.getOrCreate(template)
+        kb.conditionManager.getById(created.id!!) shouldBeSameInstanceAs created
     }
 
     @Test

@@ -7,4 +7,5 @@ interface PersistentKB {
     fun attributeStore(): AttributeStore
     fun attributeOrderStore(): AttributeOrderStore
     fun conclusionStore(): ConclusionStore
+    fun conditionStore(): ConditionStore
 }
