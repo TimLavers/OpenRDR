@@ -52,21 +52,21 @@ class RuleExporterTest: ExporterTestBase() {
     fun `each rule is in its own file`() {
         tree = ruleTree {
             child {
-                id = "c1"
+                id = 34
                 conclusion { "ConclusionA" }
                 condition {
                     attribute = clinicalNotes
                     constant = "a"
                 }
                 child {
-                    id = "c11"
+                    id = 134
                     conclusion { "ConclusionA" }
                     condition {
                         attribute = clinicalNotes
                         constant = "b"
                     }
                     child {
-                        id = "c111"
+                        id = 111
                         conclusion { "ConclusionB" }
                         condition {
                             attribute = clinicalNotes
@@ -75,7 +75,7 @@ class RuleExporterTest: ExporterTestBase() {
                     }
                 }
                 child {
-                    id = "c12"
+                    id = 12
                     conclusion { "ConclusionD" }
                     condition {
                         attribute = clinicalNotes

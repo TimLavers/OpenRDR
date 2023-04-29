@@ -228,21 +228,21 @@ internal class RuleTreeTest : RuleTestBase() {
     fun rules() {
         tree = ruleTree {
             child {
-                id = "c1"
+                id = 1
                 conclusion { "ConcA" }
                 condition {
                     attribute = clinicalNotes
                     constant = "a"
                 }
                 child {
-                    id = "c11"
+                    id = 11
                     conclusion { "ConcA" }
                     condition {
                         attribute = clinicalNotes
                         constant = "b"
                     }
                     child {
-                        id = "c111"
+                        id = 111
                         conclusion { "ConcB" }
                         condition {
                             attribute = clinicalNotes
@@ -251,7 +251,7 @@ internal class RuleTreeTest : RuleTestBase() {
                     }
                 }
                 child {
-                    id = "c12"
+                    id = 12
                     conclusion { "ConcD" }
                     condition {
                         attribute = clinicalNotes
@@ -269,7 +269,7 @@ internal class RuleTreeTest : RuleTestBase() {
     fun rulesWithConclusionTest() {
         tree = ruleTree {
             child {
-                id = "c1"
+                id = 1
                 conclusion { "ConcA" }
                 condition {
                     attribute = clinicalNotes
@@ -317,14 +317,14 @@ internal class RuleTreeTest : RuleTestBase() {
     fun add_child_under_child_under_root() {
         tree = ruleTree {
             child {
-                id = "c1"
+                id = 1
                 conclusion { "ConcA" }
                 condition {
                     attribute = clinicalNotes
                     constant = "a"
                 }
                 child {
-                    id = "c2"
+                    id = 2
                     conclusion { "ConcB" }
                     condition {
                         attribute = clinicalNotes

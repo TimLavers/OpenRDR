@@ -6,7 +6,7 @@ import io.rippledown.integration.pageobjects.CaseViewPO
 import io.rippledown.integration.pageobjects.ConclusionsDialogPO
 import io.rippledown.integration.restclient.RESTClient
 import io.rippledown.model.Attribute
-import io.rippledown.model.Conclusion
+import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.GreaterThanOrEqualTo
 import io.rippledown.model.condition.IsNormal
 import io.rippledown.model.condition.LessThanOrEqualTo
@@ -26,10 +26,10 @@ internal class ShowRuleCondition : UITestBase() {
     private val abcComment = "Unusual ABC value"
     private lateinit var tsh : Attribute
     private lateinit var abc : Attribute
-    private lateinit var condition1: IsNormal
-    private lateinit var condition2 : LessThanOrEqualTo
-    private lateinit var condition3 : GreaterThanOrEqualTo
-    private lateinit var condition4 : LessThanOrEqualTo
+    private lateinit var condition1: Condition
+    private lateinit var condition2 : Condition
+    private lateinit var condition3 : Condition
+    private lateinit var condition4 : Condition
 
     @BeforeTest
     fun setup() {
@@ -37,10 +37,10 @@ internal class ShowRuleCondition : UITestBase() {
         resetKB()
         tsh = attributeFactory.create("TSH")
         abc = attributeFactory.create("ABC")
-        condition1 = IsNormal(tsh)
-        condition2 = LessThanOrEqualTo(tsh, 0.7)
-        condition3 = GreaterThanOrEqualTo(abc, 6.1)
-        condition4 = LessThanOrEqualTo(abc, 7.1)
+        condition1 = conditionFactory.create(IsNormal(null, tsh))
+        condition2 = conditionFactory.create(LessThanOrEqualTo(null, tsh, 0.7))
+        condition3 = conditionFactory.create(GreaterThanOrEqualTo(null, abc, 6.1))
+        condition4 = conditionFactory.create(LessThanOrEqualTo(null, abc, 7.1))
         setupCase()
         buildRuleForTSH()
         buildRuleForABC()

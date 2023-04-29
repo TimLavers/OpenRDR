@@ -2,10 +2,12 @@ package io.rippledown.server
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.rippledown.CaseTestUtils
 import io.rippledown.model.*
 import io.rippledown.model.condition.GreaterThanOrEqualTo
+import io.rippledown.model.condition.Is
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
@@ -132,6 +134,27 @@ internal class ServerApplicationTest {
         app.kb.attributeManager.all() shouldBe emptySet()
         val attribute = app.getOrCreateAttribute("stuff")
         app.kb.attributeManager.all() shouldBe setOf(attribute)
+    }
+
+    @Test
+    fun getOrCreateConclusion() {
+        val app = ServerApplication()
+        app.kb.conclusionManager.all() shouldBe emptySet()
+        val text = "It is rainy."
+        val conclusion = app.getOrCreateConclusion(text)
+        conclusion.text shouldBe text
+        app.kb.conclusionManager.all() shouldBe setOf(conclusion)
+    }
+
+    @Test
+    fun getOrCreateCondition() {
+        val app = ServerApplication()
+        app.kb.conditionManager.all() shouldBe emptySet()
+        val attribute = app.getOrCreateAttribute("stuff")
+        val prototype = Is(null, attribute, "Whatever")
+        val created = app.getOrCreateCondition(prototype)
+        created should beSameAs(prototype)
+        app.kb.conditionManager.all() shouldBe setOf(created)
     }
 
     @Test

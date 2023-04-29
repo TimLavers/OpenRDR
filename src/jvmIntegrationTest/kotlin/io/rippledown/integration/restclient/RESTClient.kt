@@ -65,6 +65,12 @@ class RESTClient {
         }.body()
     }
 
+    fun getOrCreateCondition(prototype: Condition): Condition = runBlocking {
+        jsonClient.post(endpoint + GET_OR_CREATE_CONDITION) {
+            setBody(prototype)
+        }.body()
+    }
+
     fun startSessionToAddConclusionForCurrentCase(conclusion: Conclusion): OperationResult {
         require(currentCase != null)
         var result = OperationResult("")

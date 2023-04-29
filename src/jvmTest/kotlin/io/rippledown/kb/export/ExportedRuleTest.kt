@@ -15,8 +15,8 @@ import kotlin.test.Test
 import kotlin.text.Charsets.UTF_8
 
 class ExportedRuleTest: ExporterTestBase() {
-    private val id123 = "r123"
-    private val id0 = "r0"
+    private val id123 = 10123
+    private val id0 = 100
     private val conclusion1 = Conclusion(1, "A trip to the beach is advised.")
     private val ft3 = Attribute("FT3", 300)
     private val tshHigh = IsHigh(100, tsh)
@@ -116,8 +116,8 @@ class ExportedRuleTest: ExporterTestBase() {
     fun constructFromRule5() {
         val root = Rule(id0, null, null, setOf())
         val conditions = setOf(tshHigh, ft3GT2)
-        val child1 = Rule("id345", null, conclusion1, setOf(tshHigh))
-        val child2 = Rule("id456", null, null, setOf(ft3GT2))
+        val child1 = Rule(345, null, conclusion1, setOf(tshHigh))
+        val child2 = Rule(456, null, null, setOf(ft3GT2))
         val childRules = mutableSetOf(child1, child2)
         val rule = Rule(id123, root, conclusion1, conditions, childRules)
         val er = ExportedRule(rule)

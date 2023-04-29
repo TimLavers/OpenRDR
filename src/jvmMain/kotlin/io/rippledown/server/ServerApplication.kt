@@ -103,17 +103,11 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         kb.caseViewManager.moveJustBelow(moved, target)
     }
 
-    fun getOrCreateAttribute(name: String): Attribute {
-        return kb.attributeManager.getOrCreate(name)
-    }
+    fun getOrCreateAttribute(name: String) = kb.attributeManager.getOrCreate(name)
 
-    fun getOrCreateConclusion(name: String): Conclusion {
-        TODO()
-    }
+    fun getOrCreateConclusion(text: String) = kb.conclusionManager.getOrCreate(text)
 
-    fun getOrCreateCondition(condition: Condition): Condition {
-        TODO()
-    }
+    fun getOrCreateCondition(condition: Condition) = kb.conditionManager.getOrCreate(condition)
 
     fun saveInterpretation(interpretation: Interpretation): OperationResult {
         val fileName = "${interpretation.caseId.id}.interpretation.json"

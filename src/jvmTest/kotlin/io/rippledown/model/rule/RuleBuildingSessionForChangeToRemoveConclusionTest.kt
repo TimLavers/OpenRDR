@@ -24,11 +24,11 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
         val tree = RuleTree()
         val conclusionA = conc("A", tree.root)
         val removeAction = ChangeTreeToRemoveConclusion(conclusionA)
-        val ruleGivingA = Rule("ra",null, conclusionA)
+        val ruleGivingA = Rule(5,null, conclusionA)
         tree.root.addChild(ruleGivingA)
-        val ruleGivingB = Rule("rb",null, conc("B", tree.root))
+        val ruleGivingB = Rule(6,null, conc("B", tree.root))
         tree.root.addChild(ruleGivingB)
-        val ruleGivingC = Rule("rc",null ,conc("C", tree.root))
+        val ruleGivingC = Rule(7,null ,conc("C", tree.root))
         tree.root.addChild(ruleGivingC)
 
         val session = RuleBuildingSession(tree, sessionCase,  removeAction, cornerstones)
@@ -40,11 +40,11 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
     @Test
     fun a_session_for_a_remove_action_should_only_present_those_cornerstones_whose_interpretations_would_change() {
         val tree = RuleTree()
-        val ruleGivingA = Rule("ra", null, conc("A", tree.root))
+        val ruleGivingA = Rule(7, null, conc("A", tree.root))
         tree.root.addChild(ruleGivingA)
-        val ruleGivingB = Rule("rb", null,conc("B", tree.root))
+        val ruleGivingB = Rule(8, null,conc("B", tree.root))
         tree.root.addChild(ruleGivingB)
-        val ruleGivingC = Rule("rc", null,conc("C", tree.root))
+        val ruleGivingC = Rule(8, null,conc("C", tree.root))
         tree.root.addChild(ruleGivingC)
 
         val removeAction = ChangeTreeToRemoveConclusion(conc("A", tree.root))

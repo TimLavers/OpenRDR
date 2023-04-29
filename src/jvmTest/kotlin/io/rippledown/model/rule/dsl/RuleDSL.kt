@@ -6,7 +6,7 @@ import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ContainsText
 import io.rippledown.model.rule.Rule
 import io.rippledown.model.rule.RuleTree
-import io.rippledown.util.randomString
+import kotlin.random.Random
 
 fun ruleTree(init: ABSTRACT_RULE_TEMPLATE.() -> Unit) : ROOT_TEMPLATE {
     val n = ROOT_TEMPLATE()
@@ -17,7 +17,7 @@ fun ruleTree(init: ABSTRACT_RULE_TEMPLATE.() -> Unit) : ROOT_TEMPLATE {
 open class ABSTRACT_RULE_TEMPLATE {
     private val conclusionTextToId = mapOf("ROOT" to 999, "A" to 1000, "B" to 1001, "C" to 1002, "ConcA" to 1003, "ConcB" to 1004, "ConcC" to 1005, "ConcD" to 1006)
     protected lateinit var conclusionText: String
-    var id = randomString(5)
+    var id = Random.nextInt()
     protected var isStopping: Boolean = false
     protected val conditions = mutableSetOf<Condition>()
     protected val childRules = mutableListOf<RULE_TEMPLATE>()
@@ -54,7 +54,7 @@ class ROOT_TEMPLATE : ABSTRACT_RULE_TEMPLATE() {
     }
 
     override fun rule(): Rule {
-        val result = Rule(randomString(5),null, createConclusion(), conditions)
+        val result = Rule(Random.nextInt(),null, createConclusion(), conditions)
         childRules.forEach { result.addChild(it.rule()) }
         return result
     }

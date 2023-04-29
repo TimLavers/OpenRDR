@@ -29,7 +29,7 @@ class RuleImporterTest: ExporterTestBase() {
     fun `import size 2 tree`() {
         tree = ruleTree {
             child {
-                id = "c1"
+                id = 51
                 conclusion { "ConclusionA" }
                 condition {
                     attribute = clinicalNotes
@@ -46,21 +46,21 @@ class RuleImporterTest: ExporterTestBase() {
     fun `import complex tree`() {
         tree = ruleTree {
             child {
-                id = "c1"
+                id = 51
                 conclusion { "ConclusionA" }
                 condition {
                     attribute = clinicalNotes
                     constant = "a"
                 }
                 child {
-                    id = "c11"
+                    id = 456
                     conclusion { "ConclusionA" }
                     condition {
                         attribute = clinicalNotes
                         constant = "b"
                     }
                     child {
-                        id = "c111"
+                        id = 457
                         conclusion { "ConclusionB" }
                         condition {
                             attribute = clinicalNotes
@@ -69,7 +69,7 @@ class RuleImporterTest: ExporterTestBase() {
                     }
                 }
                 child {
-                    id = "c12"
+                    id = 458
                     conclusion { "ConclusionD" }
                     condition {
                         attribute = clinicalNotes
