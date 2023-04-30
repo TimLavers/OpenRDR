@@ -3,7 +3,8 @@
 Two `KBInfo`s are equal if they have equal ids.
 If a `KB` is to be persisted as a database, the intention is to use the id as the database name,
 so that the `KB` name can be changed without problems. To keep things simple, the allowed characters
-for an id will be such as to make the id url-safe. In practice, ids will usually be UUIDs.
+for an id will be such as to make the id url-safe. In practice, ids will usually be a lower-case
+alphanumeric version of the KB name, followed by an underscore and a sequence of random digits.
 
 | Requirement                      | Description                                                  | Validation |
 |----------------------------------|--------------------------------------------------------------|------------|

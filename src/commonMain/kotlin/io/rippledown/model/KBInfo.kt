@@ -1,10 +1,17 @@
 package io.rippledown.model
 
 import kotlinx.serialization.Serializable
+import kotlin.random.Random
+
+fun convertNameToId(name: String): String {
+    val stripped = name.lowercase().filter { it.isLetterOrDigit() }
+    val randomPart = Random.nextInt(10_000_000)
+    return "${stripped}_$randomPart"
+}
 
 @Serializable
 class KBInfo(val id: String, val name: String) {
-    constructor(name: String): this(name, name)
+    constructor(name: String): this(convertNameToId(name), name)
 
     init {
         require(id.length < 128) {
@@ -13,8 +20,8 @@ class KBInfo(val id: String, val name: String) {
         require(id.isNotEmpty()) {
             "KBInfo id cannot be blank."
         }
-        require("[a-zA-Z0-9_]+".toRegex().matches(id)) {
-            "KBInfo id should consist of letters, numbers, and _ only."
+        require("[a-z0-9_]+".toRegex().matches(id)) {
+            "KBInfo id should consist of letters, numbers, and _ only, but got $id."
         }
         require(name.isNotEmpty()) {
             "KBInfo name cannot be blank."

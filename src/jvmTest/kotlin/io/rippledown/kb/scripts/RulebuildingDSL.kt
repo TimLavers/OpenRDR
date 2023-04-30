@@ -44,7 +44,7 @@ class BuildTemplate {
     fun requireInterpretation(caseName: String, vararg expectedConclusions: String) {
         val case = kb.getCaseByName(caseName)
         kb.interpret(case)
-        case.interpretation.conclusions().map { it.text } shouldBe expectedConclusions.toSet()
+        case.interpretation.conclusions().map { it.text }.toSet() shouldBe expectedConclusions.toSet()
     }
 }
 

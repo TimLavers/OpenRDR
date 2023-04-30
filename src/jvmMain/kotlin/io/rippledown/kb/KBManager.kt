@@ -1,10 +1,8 @@
 package io.rippledown.kb
 
 import io.rippledown.model.KBInfo
-import io.rippledown.model.rule.RuleTree
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.util.EntityRetrieval
-import java.util.*
 
 class KBManager(private val persistenceProvider: PersistenceProvider) {
     private val kbInfos = mutableSetOf<KBInfo>()
@@ -22,8 +20,7 @@ class KBManager(private val persistenceProvider: PersistenceProvider) {
     }
 
     fun createKB(name: String): KBInfo {
-        val id = UUID.randomUUID().toString()
-        val result = KBInfo(id, name)
+        val result = KBInfo(name)
         persistenceProvider.createKBPersistence(result)
         kbInfos.add(result)
         return result

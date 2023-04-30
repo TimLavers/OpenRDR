@@ -1,8 +1,10 @@
 package io.rippledown.kb
 
 import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.startWith
 import io.rippledown.persistence.InMemoryPersistenceProvider
 import io.rippledown.util.EntityRetrieval
 import java.util.UUID
@@ -29,8 +31,8 @@ class KBManagerTest {
         val name = "Snarky Puppy"
         val info = kbManager.createKB(name)
         info.name shouldBe name
-        // Check that the id is a UUID //KBM-3
-        UUID.fromString(info.id) shouldNotBe null
+        // Check that the id is valid //KBM-3
+        info.id should startWith("snarkypuppy_")
         kbManager.all() shouldContain info
         // Check that the kb can be retrieved.
         val retrievedKB = (kbManager.openKB(info.id) as EntityRetrieval.Success).entity

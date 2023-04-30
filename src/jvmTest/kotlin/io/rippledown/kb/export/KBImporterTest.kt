@@ -72,8 +72,8 @@ class KBImporterTest : ExporterTestBase() {
         // Export and import.
         // Rebuild the persistence provider so that we're not attempting to have
         // two copies of the same KB.
-        persistenceProvider = InMemoryPersistenceProvider()
         KBExporter(tempDir, kb).export()
+        persistenceProvider = InMemoryPersistenceProvider()
         val rebuilt = KBImporter(tempDir, persistenceProvider).import()
         rebuilt.kbInfo shouldBe kb.kbInfo
         rebuilt.allCases().size shouldBe 3

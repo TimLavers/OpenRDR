@@ -15,7 +15,19 @@ fun ruleTree(init: ABSTRACT_RULE_TEMPLATE.() -> Unit) : ROOT_TEMPLATE {
 }
 
 open class ABSTRACT_RULE_TEMPLATE {
-    private val conclusionTextToId = mapOf("ROOT" to 999, "A" to 1000, "B" to 1001, "C" to 1002, "ConcA" to 1003, "ConcB" to 1004, "ConcC" to 1005, "ConcD" to 1006)
+    private val conclusionTextToId = mapOf("ROOT" to 999,
+        "A" to 1000,
+        "B" to 1001,
+        "C" to 1002,
+        "ConcA" to 1003,
+        "ConcB" to 1004,
+        "ConcC" to 1005,
+        "ConcD" to 1006,
+        "ConclusionA" to 1010,
+        "ConclusionB" to 10011,
+        "ConclusionC" to 1012,
+        "ConclusionD" to 1013,
+        )
     protected lateinit var conclusionText: String
     var id = Random.nextInt()
     protected var isStopping: Boolean = false

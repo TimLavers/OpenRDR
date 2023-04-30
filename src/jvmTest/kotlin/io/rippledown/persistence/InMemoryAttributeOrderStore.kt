@@ -12,7 +12,7 @@ class InMemoryAttributeOrderStore: AttributeOrderStore {
     }
 
     override fun load(idToIndex: Map<Int, Int>) {
-        require(idToIndex.isEmpty()) {
+        require(this.idToIndex.isEmpty()) {
             "Cannot load data into a non-empty attribute order store."
         }
         this.idToIndex.putAll(idToIndex)

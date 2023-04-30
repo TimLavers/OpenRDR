@@ -12,7 +12,7 @@ class KBInfoExporterTest : ExporterTestBase() {
     fun export() {
         val textFile = File(tempDir,"KBInfo.txt")
         val exportFile = ExportFile(textFile, "Whatever")
-        val id = "abc 123"
+        val id = "abc123"
         val name = "Stuff"
         KBInfoExporter(exportFile, KBInfo(id, name)).export()
         textFile.exists() shouldBe true

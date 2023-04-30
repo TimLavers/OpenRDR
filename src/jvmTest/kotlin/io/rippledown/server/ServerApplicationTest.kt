@@ -9,6 +9,7 @@ import io.rippledown.model.*
 import io.rippledown.model.condition.GreaterThanOrEqualTo
 import io.rippledown.model.condition.Is
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
+import io.rippledown.persistence.InMemoryPersistenceProvider
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.apache.commons.io.FileUtils
@@ -25,30 +26,28 @@ fun RDRCase.getLatest(attributeName: String): TestResult? {
 }
 internal class ServerApplicationTest {
 
+    private lateinit var app: ServerApplication
     @BeforeTest
     fun setup() {
-        val app = ServerApplication()
+        app = ServerApplication(InMemoryPersistenceProvider())
         FileUtils.cleanDirectory(app.casesDir)
         FileUtils.cleanDirectory(app.interpretationsDir)
     }
 
     @Test
     fun casesDir() {
-        val app = ServerApplication()
         assertEquals(app.casesDir, File("cases"))
         assertTrue(app.casesDir.exists())
     }
 
     @Test
     fun interpretationsDir() {
-        val app = ServerApplication()
         assertEquals(app.interpretationsDir, File("interpretations"))
         assertTrue(app.interpretationsDir.exists())
     }
 
     @Test
     fun saveInterpretationDeletesCase() {
-        val app = ServerApplication()
         val caseId = CaseId("Case1", "Case1")
         setUpCaseFromFile("Case1", app)
         val case1File = File(app.casesDir, "Case1.json")
@@ -60,7 +59,6 @@ internal class ServerApplicationTest {
 
     @Test
     fun saveInterpretation() {
-        val app = ServerApplication()
         setUpCaseFromFile("Case1", app)
         val caseId = CaseId("Case1", "Case 1")
         val interpretation = Interpretation(caseId, "Whatever, blah.")
@@ -89,7 +87,6 @@ internal class ServerApplicationTest {
 
     @Test
     fun case() {
-        val app = ServerApplication()
         setUpCaseFromFile("Case1", app)
         val retrieved = app.case("Case1")
         assertEquals(retrieved.name, "Case1")
@@ -110,7 +107,6 @@ internal class ServerApplicationTest {
 
     @Test
     fun viewableCase() {
-        val app = ServerApplication()
         setUpCaseFromFile("Case1", app)
         val retrieved = app.viewableCase("Case1")
         assertEquals(retrieved.name, "Case1")
@@ -130,7 +126,6 @@ internal class ServerApplicationTest {
 
     @Test
     fun getOrCreateAttribute() {
-        val app = ServerApplication()
         app.kb.attributeManager.all() shouldBe emptySet()
         val attribute = app.getOrCreateAttribute("stuff")
         app.kb.attributeManager.all() shouldBe setOf(attribute)
@@ -138,7 +133,6 @@ internal class ServerApplicationTest {
 
     @Test
     fun getOrCreateConclusion() {
-        val app = ServerApplication()
         app.kb.conclusionManager.all() shouldBe emptySet()
         val text = "It is rainy."
         val conclusion = app.getOrCreateConclusion(text)
@@ -148,7 +142,6 @@ internal class ServerApplicationTest {
 
     @Test
     fun getOrCreateCondition() {
-        val app = ServerApplication()
         app.kb.conditionManager.all() shouldBe emptySet()
         val attribute = app.getOrCreateAttribute("stuff")
         val prototype = Is(null, attribute, "Whatever")
@@ -159,7 +152,6 @@ internal class ServerApplicationTest {
 
     @Test
     fun moveAttributeJustBelow() {
-        val app = ServerApplication()
         setUpCaseFromFile("Case1", app)
         val retrieved = app.viewableCase("Case1")
         val attributesBefore = retrieved.attributes()
@@ -173,7 +165,6 @@ internal class ServerApplicationTest {
 
     @Test
     fun waitingCasesInfo() {
-        val app = ServerApplication()
         FileUtils.cleanDirectory(app.casesDir)
         assertEquals(app.waitingCasesInfo().resourcePath, File("cases").absolutePath)
         assertEquals(app.waitingCasesInfo().count, 0)
@@ -193,7 +184,6 @@ internal class ServerApplicationTest {
 
     @Test
     fun createKB() {
-        val app = ServerApplication()
         app.kb.kbInfo.name shouldBe "Thyroids"
         app.kb.containsCaseWithName("Case1") shouldBe false //sanity
         app.kb.addCase(createCase("Case1"))
@@ -206,12 +196,11 @@ internal class ServerApplicationTest {
 
     @Test
     fun kbName() {
-        ServerApplication().kbName() shouldBe KBInfo("Thyroids")
+        app.kbName().name shouldBe "Thyroids"
     }
 
     @Test
     fun startRuleSessionToAddConclusion() {
-        val app = ServerApplication()
         val id = "Case1"
         setUpCaseFromFile(id, app)
         app.kb.addCase(createCase(id))
@@ -223,7 +212,6 @@ internal class ServerApplicationTest {
 
     @Test
     fun exportKBToZip() {
-        val app = ServerApplication()
         // Add a case and a rule to the KB.
         val id = "Case1"
         setUpCaseFromFile(id, app)
@@ -252,7 +240,6 @@ internal class ServerApplicationTest {
     @Test
     fun importKBFromZip() {
         val zipFile = File("src/jvmTest/resources/export/KBExported.zip").toPath()
-        val app = ServerApplication()
         app.kb.kbInfo.id shouldBe ""
         app.kb.kbInfo.name shouldBe "Thyroids"
         app.kb.allCases().size shouldBe 0
@@ -270,7 +257,6 @@ internal class ServerApplicationTest {
     @Test
     fun `handle zip in bad format`() {
         val zipFile = File("src/jvmTest/resources/export/NoRootDir.zip").toPath()
-        val app = ServerApplication()
         shouldThrow<IllegalArgumentException>{
             app.importKBFromZip(Files.readAllBytes(zipFile))
         }.message shouldBe "Invalid zip for KB import."
@@ -280,7 +266,7 @@ internal class ServerApplicationTest {
     fun `handle empty zip`() {
         val zipFile = File("src/jvmTest/resources/export/Empty.zip").toPath()
         shouldThrow<IllegalArgumentException>{
-            ServerApplication().importKBFromZip(Files.readAllBytes(zipFile))
+            app.importKBFromZip(Files.readAllBytes(zipFile))
         }.message shouldBe "Invalid zip for KB import."
     }
 
@@ -290,7 +276,6 @@ internal class ServerApplicationTest {
 
     @Test
     fun startSessionToReplaceConclusion() {
-        val app = ServerApplication()
         val id = "Case1"
         setUpCaseFromFile(id, app)
         app.kb.addCase(createCase(id))

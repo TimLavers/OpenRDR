@@ -26,7 +26,7 @@ class PostgresConditionStore(private val dbName: String): ConditionStore {
         Database.connect({ ConnectionProvider.connection(dbName) })
         transaction {
             addLogger(StdOutSqlLogger)
-            SchemaUtils.create(PGConclusions)
+            SchemaUtils.create(PGConditions)
         }
     }
 

@@ -9,7 +9,7 @@ class KBInfoImporterTest : ExporterTestBase() {
 
     @Test
     fun exportImport() {
-        val id = "abc 123"
+        val id = "abc123"
         val name = "Stuff"
         val kbInfo = KBInfo(id, name)
         // Export and import.
@@ -22,9 +22,8 @@ class KBInfoImporterTest : ExporterTestBase() {
 
     @Test
     fun exportImportWithBlankId() {
-        val id = ""
         val name = "Stuff"
-        val kbInfo = KBInfo(id, name)
+        val kbInfo = KBInfo(name)
         // Export and import.
         val textFile = File(tempDir,"Stuff.txt")
         KBInfoExporter(ExportFile(textFile, "KBInfo"), kbInfo).export()

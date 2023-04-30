@@ -7,13 +7,15 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.rippledown.model.condition.Condition
 import io.rippledown.server.ServerApplication
+import kotlinx.serialization.json.Json
 
 const val GET_OR_CREATE_CONDITION = "/api/condition/getOrCreate"
 
 fun Application.conditionManagement(application: ServerApplication) {
     routing {
         post(GET_OR_CREATE_CONDITION) {
-            val prototype = call.receive<Condition>()
+            val str = call.receiveText()
+            val prototype = Json.decodeFromString(Condition.serializer(), str)
             val result = application.getOrCreateCondition(prototype)
             call.respond(HttpStatusCode.OK, result)
         }

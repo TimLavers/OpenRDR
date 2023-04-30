@@ -262,7 +262,7 @@ internal class RuleTreeTest : RuleTestBase() {
         }.build()
         tree.rules().size shouldBe 5
         tree.rules().contains(tree.root) shouldBe true
-        tree.rules().map { rule -> rule.id } shouldContainAll listOf(tree.root.id, "c1", "c11", "c111", "c12")
+        tree.rules().map { rule -> rule.id } shouldContainAll listOf(tree.root.id, 1, 11, 111, 12)
     }
 
     @Test
@@ -336,7 +336,7 @@ internal class RuleTreeTest : RuleTestBase() {
         tree.size() shouldBe 3L
         tree.rules().contains(tree.root) shouldBe true
 
-        tree.rules().map { rule -> rule.id } shouldBe setOf(tree.root.id, "c1", "c2")
+        tree.rules().map { rule -> rule.id } shouldBe setOf(tree.root.id, 1, 2)
     }
 
     @Test

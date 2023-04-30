@@ -212,7 +212,7 @@ class KBTest {
 
         shouldThrow<IllegalStateException> {
             kb.startRuleSession(otherCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
-        }.message shouldBe "Action ChangeTreeToAddConclusion(toBeAdded=Conclusion(text=Whatever.)) is not applicable to case Case1"
+        }.message shouldBe "Action ChangeTreeToAddConclusion(toBeAdded=Conclusion(id=1, text=Whatever.)) is not applicable to case Case1"
     }
 
     @Test

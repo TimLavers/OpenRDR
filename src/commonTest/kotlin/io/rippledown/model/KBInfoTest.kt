@@ -1,8 +1,10 @@
 package io.rippledown.model
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.startWith
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -10,11 +12,25 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 internal class KBInfoTest {
+    private val idMatcher = Regex("[a-z0-9_]+_[0-9]{1,7}")
+
+    @Test
+    fun convertNameToIdTest() { //KBM-3
+        idMatcher.matches(convertNameToId("Snarky Puppy")) shouldBe true
+        convertNameToId("Snarky Puppy") should startWith("snarkypuppy")
+        idMatcher.matches(convertNameToId("Glucose")) shouldBe true
+        idMatcher.matches(convertNameToId("Glucose1")) shouldBe true
+        idMatcher.matches(convertNameToId("General-Chemistry")) shouldBe true
+        idMatcher.matches(convertNameToId("Stuff***123")) shouldBe true
+        idMatcher.matches(convertNameToId("Whatever--()33")) shouldBe true
+    }
 
     @Test
     fun construction() {
         val info = KBInfo("Thyroids")
         assertEquals(info.name, "Thyroids")
+        idMatcher.matches(info.id) shouldBe true
+        info.id.startsWith("thyroids_") shouldBe true
     }
 
     @Test
@@ -58,7 +74,7 @@ internal class KBInfoTest {
     @Test //KBId-5
     fun idMustBeLessThan128CharactersInLength() {
         repeat(127) {
-            KBInfo(randomString(it + 1), "name")
+            KBInfo(randomString(it + 1).lowercase(), "name")
         }
         shouldThrow<IllegalArgumentException> {
             KBInfo(randomString(128), "name")
@@ -71,7 +87,7 @@ internal class KBInfoTest {
         bad.forEach {
             shouldThrow<IllegalArgumentException> {
                 KBInfo(it,"Name")
-            }.message shouldBe "KBInfo id should consist of letters, numbers, and _ only."
+            }.message shouldBe "KBInfo id should consist of letters, numbers, and _ only, but got $it."
         }
         val good = listOf("a")
         good.forEach {
@@ -85,7 +101,7 @@ internal class KBInfoTest {
         KBInfo("1", "Glucose") shouldNotBe KBInfo("123", "Thyroid")
         KBInfo("1", "Glucose") shouldNotBe KBInfo("123", "Glucose")
         KBInfo("123", "Glucose") shouldBe KBInfo("123", "Thyroid")
-        KBInfo("123abc", "Glucose") shouldNotBe KBInfo("123ABC", "Thyroid")
+        KBInfo("123abc", "Glucose") shouldNotBe KBInfo("123ab", "Thyroid")
     }
 
     @Test

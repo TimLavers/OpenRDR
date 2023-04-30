@@ -4,6 +4,7 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.model.Conclusion
+import io.rippledown.util.shouldContainSameAs
 import kotlin.test.Test
 
 internal class FurtherRuleTests : RuleTestBase() {
@@ -133,14 +134,14 @@ internal class FurtherRuleTests : RuleTestBase() {
         val rule1 = Rule(1, null, null, conditions)
         rule1.summary().conclusion shouldBe null
         rule1.summary().conditions.size shouldBe 2
-        rule1.summary().conditions shouldContain cond("a")
-        rule1.summary().conditions shouldContain cond("b")
+        rule1.summary().conditions shouldContainSameAs cond("a")
+        rule1.summary().conditions shouldContainSameAs  cond("b")
 
         val rule2 = Rule(2, null, conclusion1, conditions)
         rule2.summary().conclusion shouldBe conclusion1
         rule1.summary().conditions.size shouldBe 2
-        rule1.summary().conditions shouldContain cond("a")
-        rule1.summary().conditions shouldContain cond("b")
+        rule1.summary().conditions shouldContainSameAs  cond("a")
+        rule1.summary().conditions shouldContainSameAs  cond("b")
     }
 
     @Test

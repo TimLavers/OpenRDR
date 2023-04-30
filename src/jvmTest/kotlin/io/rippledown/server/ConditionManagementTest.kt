@@ -23,6 +23,7 @@ class ConditionManagementTest: OpenRDRServerTestBase() {
         val template = IsLow(null, glucose)
         every { serverApplicationMock.getOrCreateCondition(template) } returns toReturn
         val result = httpClient.post(GET_OR_CREATE_CONDITION) {
+            contentType(ContentType.Application.Json)
             setBody(template)
         }
         result.status shouldBe HttpStatusCode.OK

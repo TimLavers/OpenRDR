@@ -61,7 +61,7 @@ internal class RuleTest : RuleTestBase() {
     @Test
     fun should_not_be_structurally_equal_to_a_root_rule() {
         val root = Rule(0,null, null, setOf())
-        val rule = Rule(0, root, conclusion1, setOf(cond("a")))
+        val rule = Rule(1, root, conclusion1, setOf(cond("a")))
         root shouldNotBe rule
         rule.structurallyEqual(root) shouldBe false
         rule shouldNotBe root
@@ -129,18 +129,20 @@ internal class RuleTest : RuleTestBase() {
 
     @Test
     fun summary() {
-        val conditions = setOf(cond("a"), cond("b"))
+        val condA = cond("a")
+        val condB = cond("b")
+        val conditions = setOf(condA, condB)
         val rule1 = Rule(1, null, null, conditions)
         rule1.summary().conclusion shouldBe null
         rule1.summary().conditions.size shouldBe 2
-        rule1.summary().conditions shouldContain cond("a")
-        rule1.summary().conditions shouldContain cond("b")
+        rule1.summary().conditions shouldContain condA
+        rule1.summary().conditions shouldContain condB
 
         val rule2 = Rule(2, null, conclusion1, conditions)
         rule2.summary().conclusion shouldBe conclusion1
         rule1.summary().conditions.size shouldBe 2
-        rule1.summary().conditions shouldContain cond("a")
-        rule1.summary().conditions shouldContain cond("b")
+        rule1.summary().conditions shouldContain condA
+        rule1.summary().conditions shouldContain condB
     }
 
     @Test
