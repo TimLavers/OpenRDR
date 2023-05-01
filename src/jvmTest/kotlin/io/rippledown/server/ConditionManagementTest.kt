@@ -12,6 +12,7 @@ import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.IsHigh
 import io.rippledown.model.condition.IsLow
 import io.rippledown.server.routes.GET_OR_CREATE_CONDITION
+import kotlinx.serialization.json.Json
 import kotlin.test.Test
 
 class ConditionManagementTest: OpenRDRServerTestBase() {
@@ -22,9 +23,10 @@ class ConditionManagementTest: OpenRDRServerTestBase() {
         val toReturn = IsHigh(54, glucose)
         val template = IsLow(null, glucose)
         every { serverApplicationMock.getOrCreateCondition(template) } returns toReturn
+        val data = Json.encodeToJsonElement(Condition.serializer(), template)
         val result = httpClient.post(GET_OR_CREATE_CONDITION) {
             contentType(ContentType.Application.Json)
-            setBody(template)
+            setBody(data)
         }
         result.status shouldBe HttpStatusCode.OK
         result.body<Condition>() shouldBe toReturn

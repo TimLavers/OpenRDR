@@ -7,6 +7,7 @@ import io.ktor.server.application.*
 import io.ktor.server.testing.*
 import io.mockk.mockkClass
 import io.mockk.spyk
+import io.rippledown.persistence.InMemoryPersistenceProvider
 import io.rippledown.server.routes.*
 
 open class OpenRDRServerTestBase {
@@ -24,7 +25,7 @@ open class OpenRDRServerTestBase {
     }
 
     private fun ApplicationTestBuilder.setup(useSpy: Boolean = true) {
-        serverApplication = ServerApplication()
+        serverApplication = ServerApplication(InMemoryPersistenceProvider())
         serverApplicationSpy = spyk(serverApplication)
         serverApplicationMock = mockkClass(ServerApplication::class)
         httpClient = createClient {

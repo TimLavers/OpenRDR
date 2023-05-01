@@ -91,6 +91,14 @@ internal class IsHighTest: ConditionTestBase() {
     }
 
     @Test
+    fun jsonSerialisationWithNullId() {
+        val nullIdCondition = IsHigh(null, glucose)
+        val copiedViaJSON = serializeDeserialize(nullIdCondition)
+        copiedViaJSON should beSameAs(nullIdCondition)
+        copiedViaJSON.id shouldBe null
+    }
+
+    @Test
     fun asText() {
         condition.asText() shouldBe "TSH is high"
     }
