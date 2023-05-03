@@ -31,5 +31,5 @@ class ConditionManager(private val attributeManager: AttributeManager, private v
 
     fun all() = idToCondition.values.toSet()
 
-    fun attributeForId(id: Int) = attributeManager.getById(id)
+    private fun attributeForId(id: Int) = attributeManager.getById(id)
 }
