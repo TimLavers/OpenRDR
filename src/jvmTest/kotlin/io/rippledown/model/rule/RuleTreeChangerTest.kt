@@ -50,7 +50,7 @@ internal class RuleTreeChangerTest : RuleTestBase() {
 
         tree.root.childRules().size shouldBe 2 //sanity
         val rulesBefore = tree.rules()
-        val addAction = AddConclusionRuleTreeChanger(tree, ruleMaker, conc(A, tree.root))
+        val addAction = AddConclusionRuleTreeChanger(tree, ruleMaker, findOrCreateConclusion(A, tree.root))
         addAction.updateRuleTree(glucoseOnlyCase(), emptySet())
         tree.root.childRules().size shouldBe 3
         val rulesAdded = tree.rules().minus(rulesBefore)
@@ -84,7 +84,7 @@ internal class RuleTreeChangerTest : RuleTestBase() {
         tree.root.childRules().size shouldBe 2 //sanity
         val rulesBefore = tree.rules()
 
-        val removeAction = RemoveConclusionRuleTreeChanger(tree, ruleMaker, conc(A, tree.root))
+        val removeAction = RemoveConclusionRuleTreeChanger(tree, ruleMaker, findOrCreateConclusion(A, tree.root))
         removeAction.updateRuleTree(clinicalNotesCase("a"), emptySet())
 
         tree.root.childRules().size shouldBe 2
@@ -126,7 +126,7 @@ internal class RuleTreeChangerTest : RuleTestBase() {
         tree.root.childRules().size shouldBe 3 //sanity
         val rulesBefore = tree.rules()
 
-        val removeAction = RemoveConclusionRuleTreeChanger(tree, ruleMaker, conc(A, tree.root))
+        val removeAction = RemoveConclusionRuleTreeChanger(tree, ruleMaker, findOrCreateConclusion(A, tree.root))
         removeAction.updateRuleTree(clinicalNotesCase("ab"), emptySet())
 
         tree.root.childRules().size shouldBe 3
@@ -169,7 +169,7 @@ internal class RuleTreeChangerTest : RuleTestBase() {
         tree.root.childRules().size shouldBe 3 //sanity
         val rulesBefore = tree.rules()
 
-        val removeAction = RemoveConclusionRuleTreeChanger(tree, ruleMaker, conc(A, tree.root))
+        val removeAction = RemoveConclusionRuleTreeChanger(tree, ruleMaker, findOrCreateConclusion(A, tree.root))
         removeAction.updateRuleTree(clinicalNotesCase("b"), )
 
         tree.root.childRules().size shouldBe 3
@@ -205,7 +205,7 @@ internal class RuleTreeChangerTest : RuleTestBase() {
         tree.root.childRules().size shouldBe 2 //sanity
         val rulesBefore = tree.rules()
 
-        val replaceAction = ReplaceConclusionRuleTreeChanger(tree, ruleMaker, conc(A, tree.root), conc(C, tree.root))
+        val replaceAction = ReplaceConclusionRuleTreeChanger(tree, ruleMaker, findOrCreateConclusion(A, tree.root), findOrCreateConclusion(C, tree.root))
         replaceAction.updateRuleTree(clinicalNotesCase("a"), emptySet())
 
         tree.root.childRules().size shouldBe 2
@@ -248,7 +248,7 @@ internal class RuleTreeChangerTest : RuleTestBase() {
         tree.root.childRules().size shouldBe 3 //sanity
         val rulesBefore = tree.rules()
 
-        val replaceAction = ReplaceConclusionRuleTreeChanger(tree, ruleMaker, conc(A, tree.root), conc(C, tree.root))
+        val replaceAction = ReplaceConclusionRuleTreeChanger(tree, ruleMaker, findOrCreateConclusion(A, tree.root), findOrCreateConclusion(C, tree.root))
         replaceAction.updateRuleTree(clinicalNotesCase("ab"), emptySet())
 
         tree.root.childRules().size shouldBe 3

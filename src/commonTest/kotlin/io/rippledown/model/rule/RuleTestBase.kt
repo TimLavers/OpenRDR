@@ -15,7 +15,7 @@ open class RuleTestBase: ConditionTestBase() {
     private val caseId = CaseId("Case1", "Case1")
     val interpretation = Interpretation(caseId, "")
 
-    fun conc(text: String, root: Rule): Conclusion {
+    fun findOrCreateConclusion(text: String, root: Rule): Conclusion {
         var conclusionWithText: Conclusion? = null
         root.visit {
             if (it.conclusion?.text == text) {
@@ -25,7 +25,7 @@ open class RuleTestBase: ConditionTestBase() {
         return if (conclusionWithText != null) conclusionWithText!! else  Conclusion(conclusionId++, text)
     }
 
-    fun cond(text: String): Condition {
+    fun createCondition(text: String): Condition {
         return ContainsText(conditionId++, clinicalNotes, text)
     }
 

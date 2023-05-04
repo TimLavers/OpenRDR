@@ -7,12 +7,13 @@ import io.rippledown.model.condition.Condition
 
 abstract class RuleTreeChanger(val ruleTree: RuleTree, val ruleFactory: RuleFactory, val conclusionToAdd: Conclusion?) {
     abstract fun isApplicable(case: RDRCase): Boolean
+
     abstract fun updateRuleTree(case: RDRCase, conditions: Set<Condition> = setOf()): Set<Rule>
+
     fun createRule(parent: Rule, conclusionToAdd: Conclusion?, conditions: Set<Condition>): Rule {
-        // Create rule with null id.
-        // Store rule.
-        // Add it to the children of the parent.
-        TODO()
+        val newRule = ruleFactory.create(parent, conclusionToAdd, conditions)
+        parent.addChild(newRule)
+        return newRule
     }
 }
 

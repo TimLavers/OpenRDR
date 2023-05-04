@@ -3,10 +3,19 @@ package io.rippledown.model.rule
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.CaseId
+import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
+import io.rippledown.model.RuleFactory
+import io.rippledown.model.condition.Condition
 import io.rippledown.model.rule.dsl.ruleTree
 import kotlin.test.BeforeTest
 import kotlin.test.Test
+
+class DummyRuleFactory: RuleFactory {
+    override fun create(parent: Rule, conclusion: Conclusion?, conditions: Set<Condition>): Rule {
+        return Rule(0, parent, conclusion, conditions)
+    }
+}
 
 internal class RuleTreeTest : RuleTestBase() {
     private lateinit var tree: RuleTree

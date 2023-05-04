@@ -12,7 +12,7 @@ class KB(persistentKB: PersistentKB) {
     val attributeManager: AttributeManager = AttributeManager(persistentKB.attributeStore())
     val conclusionManager: ConclusionManager = ConclusionManager(persistentKB.conclusionStore())
     val conditionManager: ConditionManager = ConditionManager(attributeManager, persistentKB.conditionStore())
-    private val ruleManager: RuleManager = RuleManager(attributeManager, conditionManager)
+    private val ruleManager: RuleManager = RuleManager(attributeManager, conclusionManager, conditionManager)
     val ruleTree: RuleTree = ruleManager.ruleTree()
     private val cornerstones = mutableSetOf<RDRCase>()
     private var ruleSession: RuleBuildingSession? = null
@@ -38,7 +38,7 @@ class KB(persistentKB: PersistentKB) {
     fun startRuleSession(case: RDRCase, action: RuleTreeChange) {
         check(ruleSession == null) { "Session already in progress." }
         check(action.isApplicable(ruleTree, case)) {"Action $action is not applicable to case ${case.name}"}
-        ruleSession =  RuleBuildingSession(ruleTree, case, action, cornerstones)
+        ruleSession =  RuleBuildingSession(ruleManager, ruleTree, case, action, cornerstones)
     }
 
     fun conflictingCasesInCurrentRuleSession(): Set<RDRCase> {

@@ -1,6 +1,5 @@
 package io.rippledown.model.rule
 
-import io.rippledown.kb.RuleManager
 import io.rippledown.model.Conclusion
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RuleFactory
@@ -8,7 +7,7 @@ import io.rippledown.model.condition.Condition
 import kotlin.random.Random
 
 class RuleBuildingSession(
-    private val ruleManager: RuleManager,
+    private val ruleFactory: RuleFactory,
     private val tree: RuleTree,
     val case: RDRCase,
     private val action: RuleTreeChange,
@@ -71,6 +70,6 @@ class RuleBuildingSession(
     }
 
     fun commit(): Set<Rule> {
-        return action.createChanger(tree, ruleManager).updateRuleTree(case, conditions)
+        return action.createChanger(tree, ruleFactory).updateRuleTree(case, conditions)
     }
 }

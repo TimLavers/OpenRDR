@@ -52,7 +52,7 @@ internal class RuleTest : RuleTestBase() {
 
     @Test
     fun should_not_be_structurally_equal_if_different_conditions() {
-        val rule1 = Rule(1,null, conclusion1, setOf(cond("a")))
+        val rule1 = Rule(1,null, conclusion1, setOf(createCondition("a")))
         val rule2 = Rule(1,null, conclusion1, setOf())
         rule1.structurallyEqual(rule2) shouldBe false
         rule2.structurallyEqual(rule1) shouldBe false
@@ -61,7 +61,7 @@ internal class RuleTest : RuleTestBase() {
     @Test
     fun should_not_be_structurally_equal_to_a_root_rule() {
         val root = Rule(0,null, null, setOf())
-        val rule = Rule(1, root, conclusion1, setOf(cond("a")))
+        val rule = Rule(1, root, conclusion1, setOf(createCondition("a")))
         root shouldNotBe rule
         rule.structurallyEqual(root) shouldBe false
         rule shouldNotBe root
@@ -98,19 +98,19 @@ internal class RuleTest : RuleTestBase() {
 
     @Test
     fun single_condition_which_is_true_for_case() {
-        val rule = Rule(1, null, conclusion1, setOf(cond("vark")))
+        val rule = Rule(1, null, conclusion1, setOf(createCondition("vark")))
         rule.conditionsSatisfied(clinicalNotesCase("aardvark")) shouldBe true
     }
 
     @Test
     fun single_condition_which_is_false_for_case() {
-        val rule = Rule(1, null, conclusion1, setOf(cond("vark")))
+        val rule = Rule(1, null, conclusion1, setOf(createCondition("vark")))
         rule.conditionsSatisfied(clinicalNotesCase("aardwolf")) shouldBe false
     }
 
     @Test
     fun any_condition_false_means_rule_does_not_apply() {
-        val conditions = setOf(cond("a"), cond("b"), cond("c"), cond("d"))
+        val conditions = setOf(createCondition("a"), createCondition("b"), createCondition("c"), createCondition("d"))
         val rule = Rule(1, null, conclusion1, conditions)
         rule.conditionsSatisfied(clinicalNotesCase("abc")) shouldBe false
         rule.conditionsSatisfied(clinicalNotesCase("abd")) shouldBe false
@@ -120,7 +120,7 @@ internal class RuleTest : RuleTestBase() {
 
     @Test
     fun rule_applies_if_all_true() {
-        val conditions = setOf(cond("a"), cond("b"), cond("c"), cond("d"))
+        val conditions = setOf(createCondition("a"), createCondition("b"), createCondition("c"), createCondition("d"))
         val rule = Rule(1, null, conclusion1, conditions)
         rule.conditionsSatisfied(clinicalNotesCase("abcd")) shouldBe true
         rule.conditionsSatisfied(clinicalNotesCase("bcda")) shouldBe true
@@ -129,8 +129,8 @@ internal class RuleTest : RuleTestBase() {
 
     @Test
     fun summary() {
-        val condA = cond("a")
-        val condB = cond("b")
+        val condA = createCondition("a")
+        val condB = createCondition("b")
         val conditions = setOf(condA, condB)
         val rule1 = Rule(1, null, null, conditions)
         rule1.summary().conclusion shouldBe null
@@ -147,7 +147,7 @@ internal class RuleTest : RuleTestBase() {
 
     @Test
     fun rule_with_no_children_that_applies_to_case() {
-        val conditions = setOf(cond("a"))
+        val conditions = setOf(createCondition("a"))
         val rule = Rule(1, null, conclusion1, conditions)
         val kase = clinicalNotesCase("ab")
 
@@ -158,7 +158,7 @@ internal class RuleTest : RuleTestBase() {
 
     @Test
     fun rule_that_does_not_apply_to_case_and_has_no_children() {
-        val conditions = setOf(cond("a"))
+        val conditions = setOf(createCondition("a"))
         val rule = Rule(1, null, conclusion1, conditions)
 
         val result = rule.apply(clinicalNotesCase("bc"), interpretation)
@@ -176,9 +176,9 @@ internal class RuleTest : RuleTestBase() {
 
     @Test
     fun rule_applies_to_case_and_so_does_child() {
-        val conditions = setOf(cond("a"))
+        val conditions = setOf(createCondition("a"))
         val rule = Rule(1, null, conclusion1, conditions)
-        val childConditions = setOf(cond("b"))
+        val childConditions = setOf(createCondition("b"))
         val childRule = Rule(3, null, conclusion2, childConditions)
         rule.addChild(childRule)
 
@@ -231,14 +231,14 @@ internal class RuleTest : RuleTestBase() {
 
     @Test
     fun addRuleTest() {
-        val grandChildConditions = setOf(cond("a"), cond("c"))
+        val grandChildConditions = setOf(createCondition("a"), createCondition("c"))
         val grandChild = Rule(12, null, conclusion3, grandChildConditions)
-        val childConditions = setOf(cond("b"))
+        val childConditions = setOf(createCondition("b"))
         val childRule = Rule(13, null, conclusion2, childConditions)
         childRule.addChild(grandChild)
         childRule.conditions shouldBe  childRule.conditions
         childRule.conclusion shouldBe childRule.conclusion
-        val rootConditions = setOf(cond("a"), cond("b"))
+        val rootConditions = setOf(createCondition("a"), createCondition("b"))
         val root = Rule(45, null, conclusion1, rootConditions)
         root.addChild(childRule)
         root.conclusion shouldBe root.conclusion
@@ -251,7 +251,7 @@ internal class RuleTest : RuleTestBase() {
 
     @Test
     fun visitTest() {
-        val conditions = setOf(cond("a"))
+        val conditions = setOf(createCondition("a"))
         val rule = Rule(1, null, conclusion1, conditions)
         val visited = mutableSetOf<Rule>()
         val action: ((Rule) -> (Unit)) = {
@@ -277,7 +277,7 @@ internal class RuleTest : RuleTestBase() {
     @Test
     fun visit_deep() {
         val rule = setupRuleWithOneChild()
-        val grandChildConditions = setOf(cond("a"), cond("c"))
+        val grandChildConditions = setOf(createCondition("a"), createCondition("c"))
         val grandChild = Rule(1, null, conclusion3, grandChildConditions)
         rule.childRules().first().addChild(grandChild)
 
@@ -344,15 +344,15 @@ internal class RuleTest : RuleTestBase() {
 
     private fun setupRuleWithTwoChildren(): Rule {
         val rule = setupRuleWithOneChild()
-        val childConditions = setOf(cond("c"))
+        val childConditions = setOf(createCondition("c"))
         val childRule = Rule(12, null, conclusion3, childConditions)
         rule.addChild(childRule)
         return rule
     }
 
     private fun setupRuleWithOneChild(): Rule {
-        val rule = Rule(100, null, conclusion1, setOf(cond("a")))
-        val childRule = Rule(200, null, conclusion2, setOf(cond("b")))
+        val rule = Rule(100, null, conclusion1, setOf(createCondition("a")))
+        val childRule = Rule(200, null, conclusion2, setOf(createCondition("b")))
         rule.addChild(childRule)
         return rule
     }
