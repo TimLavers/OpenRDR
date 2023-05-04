@@ -5,9 +5,10 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.rippledown.constants.api.*
+import io.rippledown.constants.api.CASE
+import io.rippledown.constants.api.MOVE_ATTRIBUTE_JUST_BELOW_OTHER
+import io.rippledown.constants.api.WAITING_CASES
 import io.rippledown.model.Attribute
-import io.rippledown.model.Interpretation
 import io.rippledown.model.OperationResult
 import io.rippledown.server.ServerApplication
 
@@ -29,16 +30,6 @@ fun Application.caseManagement(application: ServerApplication) {
             val attributePair = call.receive<Pair<Attribute, Attribute>>()
             application.moveAttributeJustBelow(attributePair.first, attributePair.second)
             call.respond(HttpStatusCode.OK, OperationResult("Attribute moved"))
-        }
-        post(INTERPRETATION_SUBMITTED) {
-            val interpretation = call.receive<Interpretation>()
-            val result = application.saveInterpretationAndDeleteCase(interpretation)
-            call.respond(HttpStatusCode.OK, result)
-        }
-        post(VERIFIED_INTERPRETATION_SAVED) {
-            val interpretation = call.receive<Interpretation>()
-            application.saveInterpretation(interpretation)
-            call.respond(HttpStatusCode.OK)
         }
     }
 }

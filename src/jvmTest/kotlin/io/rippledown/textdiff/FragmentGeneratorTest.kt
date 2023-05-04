@@ -4,7 +4,6 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.rippledown.model.Interpretation
-import io.rippledown.model.RDRCase
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Removal
 import io.rippledown.model.diff.Replacement
@@ -85,15 +84,23 @@ class FragmentGeneratorTest {
     @Test
     fun `should generate an unchanged fragment if the original text is the same as the changed text`() {
         val interpretation = mockk<Interpretation>()
-        val case = mockk<RDRCase>()
-        every { case.interpretation } returns interpretation
         val sentence = "Go to Bondi Beach."
         every { interpretation.textGivenByRules() } returns sentence
         every { interpretation.verifiedText } returns sentence
 
-        fragmentList(case).fragments shouldBe listOf(
+        fragmentList(interpretation).fragments shouldBe listOf(
             UnchangedFragment(sentence)
         )
+    }
+
+    @Test
+    fun `should generate no fragments if the original text and changed text are blank`() {
+        val interpretation = mockk<Interpretation>()
+        val sentence = ""
+        every { interpretation.textGivenByRules() } returns sentence
+        every { interpretation.verifiedText } returns sentence
+
+        fragmentList(interpretation).fragments shouldBe emptyList()
     }
 
     @Test
@@ -103,32 +110,38 @@ class FragmentGeneratorTest {
     }
 
     @Test
+    fun `should not split an empty paragraph into sentences`() {
+        "".splitIntoSentences() shouldBe emptyList()
+    }
+
+    @Test
+    fun `should not split a paragraph that just has spaces into sentences`() {
+        "    ".splitIntoSentences() shouldBe emptyList()
+    }
+
+    @Test
     fun `should generate an added fragment if the changed text has added a comment`() {
         val interpretation = mockk<Interpretation>()
-        val case = mockk<RDRCase>()
-        every { case.interpretation } returns interpretation
         val bondiText = "Go to Bondi Beach."
         val surfText = "Surf is great."
         every { interpretation.textGivenByRules() } returns bondiText
         every { interpretation.verifiedText } returns "$bondiText $surfText"
 
-        fragmentList(case).fragments shouldBe listOf(
+        fragmentList(interpretation).fragments shouldBe listOf(
             UnchangedFragment(bondiText),
             AddedFragment(surfText)
         )
     }
 
     @Test
-    fun `should generate an removed fragment if the changed text has removed a comment`() {
+    fun `should generate a removed fragment if the changed text has removed a comment`() {
         val interpretation = mockk<Interpretation>()
-        val case = mockk<RDRCase>()
-        every { case.interpretation } returns interpretation
         val bondiText = "Go to Bondi Beach."
         val surfText = "Surf is great."
         every { interpretation.textGivenByRules() } returns "$bondiText $surfText"
         every { interpretation.verifiedText } returns bondiText
 
-        fragmentList(case).fragments shouldBe listOf(
+        fragmentList(interpretation).fragments shouldBe listOf(
             UnchangedFragment(bondiText),
             RemovedFragment(surfText)
         )
@@ -137,14 +150,12 @@ class FragmentGeneratorTest {
     @Test
     fun `should generate a replaced fragment if the changed text has replaced a comment`() {
         val interpretation = mockk<Interpretation>()
-        val case = mockk<RDRCase>()
-        every { case.interpretation } returns interpretation
         val bondiText = "Go to Bondi Beach."
         val surfText = "Surf is great."
         every { interpretation.textGivenByRules() } returns bondiText
         every { interpretation.verifiedText } returns surfText
 
-        fragmentList(case).fragments shouldBe listOf(
+        fragmentList(interpretation).fragments shouldBe listOf(
             ReplacedFragment(bondiText, surfText)
         )
     }

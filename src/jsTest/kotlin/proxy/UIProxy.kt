@@ -5,6 +5,7 @@ import CASE_ID_PREFIX
 import NUMBER_OF_CASES_WAITING_ID
 import POLL_PERIOD
 import io.kotest.matchers.shouldBe
+import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_AREA
 import io.rippledown.interpretation.SEND_INTERPRETATION_BUTTON_ID
@@ -44,6 +45,12 @@ fun HTMLElement.requireNamesToBeShowingOnCaseList(vararg caseNames: String) {
 suspend fun waitForEvents(timeout: Long = 150) {
     withContext(Default) {
         delay(timeout) // Dispatchers.Default doesn't know about TestCoroutineScheduler
+    }
+}
+
+suspend fun waitForDebounce() {
+    withContext(Default) {
+        delay(DEBOUNCE_WAIT_PERIOD_MILLIS * 2)
     }
 }
 
@@ -99,4 +106,8 @@ fun HTMLElement.selectCase(caseName: String) {
 fun HTMLElement.selectChangesTab() {
     val element = findById(INTERPRETATION_TAB_CHANGES)
     Simulate.click(element)
+}
+
+fun HTMLElement.requireChangesLabel(expected: String) {
+    findById(INTERPRETATION_TAB_CHANGES).textContent shouldBe expected
 }

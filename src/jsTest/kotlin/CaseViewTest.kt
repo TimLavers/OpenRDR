@@ -27,6 +27,8 @@ class CaseViewTest {
         val vfc = VFC {
             CaseView {
                 case = createCase(name)
+                scope = this@runTest
+                api = Api(mock(config {}))
             }
         }
         checkContainer(vfc) { container ->
@@ -44,6 +46,8 @@ class CaseViewTest {
         val vfc = VFC {
             CaseView {
                 case = rdrCase
+                scope = this@runTest
+                api = Api(mock(config {}))
             }
         }
         createRootFor(vfc).requireInterpretation(text)

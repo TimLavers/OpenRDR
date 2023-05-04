@@ -46,6 +46,7 @@ class ApiTest {
         Api(mock(config)).saveInterpretation(interpretation) shouldBe expectedResult
     }
 
+
     @Test
     fun moveAttributeJustBelowOther() = runTest {
         val expectedResult = OperationResult("Attribute moved.")
@@ -66,8 +67,8 @@ class ApiTest {
     }
 
     @Test
-    fun interpretationChanges() = runTest {
-        val expectedResult = DiffList(
+    fun theReturnedInterpretationShouldContainTheDiffList() = runTest {
+        val expectedDiffList = DiffList(
             listOf(
                 Addition("This comment was added."),
                 Removal("This comment was removed."),
@@ -75,10 +76,12 @@ class ApiTest {
                 Unchanged("This comment was left alone."),
             )
         )
+        val interpretation = Interpretation(CaseId("id1", "Case A"), "report proxy.text")
         val config = config {
-            returnDiffList = expectedResult
-            expectedCaseId = "42"
+            expectedInterpretation = interpretation
+            returnInterpretation = interpretation.copy(diffList = expectedDiffList)
         }
-        Api(mock(config)).interpretationChanges("42") shouldBe expectedResult
+        Api(mock(config)).saveVerifiedInterpretation(interpretation) shouldBe interpretation.copy(diffList = expectedDiffList)
     }
+
 }

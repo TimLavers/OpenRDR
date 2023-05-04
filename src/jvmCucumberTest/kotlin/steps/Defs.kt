@@ -200,5 +200,8 @@ class Defs : En {
         Then("I should see that the text {string} has been replaced by {string}") { replaced: String, replacement: String ->
             interpretationViewPO.requireReplacedText(replaced, replacement)
         }
+        And("the changes label should indicate that there is {int} change(s)") { numberOfChanges: Int ->
+            interpretationViewPO.requireChangesLabel("CHANGES ($numberOfChanges)")
+        }
     }
 }

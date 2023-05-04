@@ -9,7 +9,6 @@ import io.ktor.utils.io.*
 import io.rippledown.constants.api.*
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
-import io.rippledown.model.diff.DiffList
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -24,11 +23,11 @@ class EngineConfig {
     var returnCasesInfo: CasesInfo = CasesInfo(emptyList())
     var returnCase: ViewableCase = createCase("The Case")
     var returnOperationResult: OperationResult = OperationResult()
-    var returnDiffList: DiffList = DiffList()
+    var returnInterpretation: Interpretation = Interpretation()
 
     var expectedCaseId = ""
     var expectedInterpretation: Interpretation? = null
-    var expectedVerifiedInterpretation: Interpretation? = null
+
     var expectedMovedAttribute: Attribute? = null
     var expectedTargetAttribute: Attribute? = null
 
@@ -83,10 +82,17 @@ private class EngineBuilder(private val config: EngineConfig) {
             VERIFIED_INTERPRETATION_SAVED -> {
                 val body = request.body as TextContent
                 val bodyAsInterpretation = Json.decodeFromString(Interpretation.serializer(), body.text)
-                if (config.expectedVerifiedInterpretation != null) {
-                    bodyAsInterpretation shouldBe config.expectedVerifiedInterpretation
+
+                if (config.expectedInterpretation != null) {
+                    bodyAsInterpretation shouldBe config.expectedInterpretation
                 }
-                respondOk()
+                respond(
+                    content = ByteReadChannel(
+                        json.encodeToString(config.returnInterpretation)
+                    ),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
             }
 
             MOVE_ATTRIBUTE_JUST_BELOW_OTHER -> {
@@ -108,17 +114,6 @@ private class EngineBuilder(private val config: EngineConfig) {
                 respond(
                     content = ByteReadChannel(
                         json.encodeToString(config.returnKBInfo)
-                    ),
-                    status = HttpStatusCode.OK,
-                    headers = headersOf(HttpHeaders.ContentType, "application/json")
-                )
-            }
-
-            io.rippledown.constants.api.DIFF -> {
-                if (config.expectedCaseId.isNotBlank()) request.url.parameters[io.rippledown.constants.api.CASE_NAME] shouldBe config.expectedCaseId
-                respond(
-                    content = ByteReadChannel(
-                        json.encodeToString(config.returnDiffList)
                     ),
                     status = HttpStatusCode.OK,
                     headers = headersOf(HttpHeaders.ContentType, "application/json")

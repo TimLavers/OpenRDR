@@ -1,4 +1,4 @@
-package io.rippledown.integration.interp.diff
+package io.rippledown.integration.interp
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.UITestBase
@@ -6,7 +6,6 @@ import io.rippledown.integration.pageobjects.CaseQueuePO
 import io.rippledown.integration.pageobjects.CaseViewPO
 import io.rippledown.integration.pageobjects.InterpretationViewPO
 import io.rippledown.integration.restclient.RESTClient
-import io.rippledown.integration.stop
 import io.rippledown.model.Attribute
 import io.rippledown.model.Conclusion
 import io.rippledown.model.condition.IsNormal
@@ -32,7 +31,7 @@ internal class ShowInterpretationDifference : UITestBase() {
         serverProxy.start()
         resetKB()
         setupCase()
-        buildRuleForTSH()
+        buildRuleForTSHComment()
         setupWebDriver()
         caseQueuePO = CaseQueuePO(driver).apply { waitForNumberWaitingToBe(1) }
         caseViewPO = CaseViewPO(driver)
@@ -45,7 +44,7 @@ internal class ShowInterpretationDifference : UITestBase() {
         serverProxy.shutdown()
     }
 
-    private fun buildRuleForTSH() {
+    private fun buildRuleForTSHComment() {
         with(RESTClient()) {
             getCaseWithName(caseName)
             startSessionToAddConclusionForCurrentCase(Conclusion(tshComment))
@@ -56,31 +55,19 @@ internal class ShowInterpretationDifference : UITestBase() {
     }
 
     @Test
-    fun shouldShowNoChangesIfTheUserHasNotChangedTheInterpretation() {
-        caseViewPO.nameShown() shouldBe caseName
-        interpretationViewPO
-            .requireInterpretationText(tshComment)
-            .selectChangesTab()
-            .requireOriginalTextInRow(0, tshComment)
-            .requireChangedTextInRow(0, tshComment)
-        stop()
-    }
-
-    @Test
     fun shouldShowTheChangeWhenASentenceIsAdded() {
         caseViewPO.nameShown() shouldBe caseName
         val addedText = " This is a new sentence."
         interpretationViewPO
             .enterVerifiedText(addedText)
             .requireInterpretationText("$tshComment$addedText")
-        stop()
-        /* .selectChangesTab()
-         .requireOriginalTextInRow(0, tshComment)
-         .requireChangedTextInRow(0, tshComment)
-         .requireNoCheckBoxInRow(0)
-         .requireOriginalTextInRow(1, "")
-         .requireChangedTextInRow(1, addedText.trim())
-         .requireCheckBoxInRow(1)*/
+            .selectChangesTab()
+            .requireOriginalTextInRow(0, tshComment)
+            .requireChangedTextInRow(0, tshComment)
+            .requireNoCheckBoxInRow(0)
+            .requireOriginalTextInRow(1, "")
+            .requireChangedTextInRow(1, addedText.trim())
+            .requireCheckBoxInRow(1)
     }
 
     @Test
@@ -109,7 +96,30 @@ internal class ShowInterpretationDifference : UITestBase() {
             .requireCheckBoxInRow(0)
     }
 
-    private fun setupCase() {
-        labProxy.copyCase(caseName)
+    @Test
+    fun `should update the change count whenever verified text is entered`() {
+        caseViewPO.nameShown() shouldBe caseName
+        interpretationViewPO
+            .requireInterpretationText(tshComment)
+            .requireChangesLabel("CHANGES")
+            .enterVerifiedText(" Go to Bondi. Bring your flippers.") //two additions
+            .requireChangesLabel("CHANGES (2)")
+            .deleteAllText()
+            .requireChangesLabel("CHANGES (1)") //one removal
+            .enterVerifiedText(tshComment)
+            .requireChangesLabel("CHANGES") //back to the original
     }
+
+    @Test
+    fun `should show one Unchanged sentence if the user has not changed a non-blank interpretation`() {
+        caseViewPO.nameShown() shouldBe caseName
+        interpretationViewPO
+            .requireInterpretationText(tshComment)
+            .selectChangesTab()
+            .requireOriginalTextInRow(0, tshComment)
+            .requireChangedTextInRow(0, tshComment)
+    }
+
+    private fun setupCase() = labProxy.copyCase(caseName)
+
 }

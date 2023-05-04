@@ -13,7 +13,6 @@ Feature: Knowledge Base management
     Then the displayed KB name is now Whatever
     And stop the client application
 
-  @single
   Scenario: A Knowledge Base can be exported
     Given I start the client application
     And the displayed KB name is Thyroids

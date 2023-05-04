@@ -2,21 +2,17 @@ package io.rippledown.interpretation
 
 import Api
 import io.kotest.matchers.shouldBe
-import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_AREA
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
-import io.rippledown.model.diff.DiffList
-import io.rippledown.model.diff.Unchanged
+import io.rippledown.model.diff.*
 import io.rippledown.model.rule.RuleSummary
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
-import proxy.findById
-import proxy.selectChangesTab
-import proxy.waitForEvents
+import proxy.*
 import react.VFC
 import react.dom.checkContainer
 import react.dom.createRootFor
@@ -31,6 +27,7 @@ class InterpretationTabsTest {
         val vfc = VFC {
             InterpretationTabs {
                 interpretation = Interpretation()
+                scope = this@runTest
             }
         }
         checkContainer(vfc) { container ->
@@ -50,6 +47,7 @@ class InterpretationTabsTest {
         val vfc = VFC {
             InterpretationTabs {
                 interpretation = originalInterp
+                scope = this@runTest
             }
         }
         checkContainer(vfc) { container ->
@@ -62,11 +60,10 @@ class InterpretationTabsTest {
     }
 
     @Test
-    fun shouldBeAbleToSelectTheDiffTab() = runTest {
+    fun shouldBeAbleToSelectTheChangesTab() = runTest {
         val vfc = VFC {
             InterpretationTabs {
                 scope = this@runTest
-                api = Api(mock(config {}))
                 interpretation = Interpretation()
             }
         }
@@ -75,17 +72,15 @@ class InterpretationTabsTest {
             act {
                 selectChangesTab()
             }
-            val changesTab = findById(INTERPRETATION_TAB_CHANGES)
-            changesTab.textContent shouldBe "Changes"
+            requireChangesLabel("Changes")
         }
     }
 
     @Test
-    fun DiffPanelShouldShowNoChangesByDefault() = runTest {
+    fun diffPanelShouldShowNoChangesForAnEmptyDiff() = runTest {
         val vfc = VFC {
             InterpretationTabs {
                 scope = this@runTest
-                api = Api(mock(config {}))
                 interpretation = Interpretation()
             }
         }
@@ -100,12 +95,95 @@ class InterpretationTabsTest {
     }
 
     @Test
-    fun shouldRefreshTheDiffsWhenTheChangesTabIsSelected() = runTest {
-        val text = "Go to Bondi now!"
-        val config = config {
-            returnDiffList = DiffList(listOf(Unchanged(text)))
-        }
+    fun diffPanelShouldShowTheInterpretationDifferences() = runTest {
+        val unchangedText = "Go to Bondi now!"
+        val addedText = "Bring your flippers!"
+        val removedText = "Sun is shining."
+        val replacedText = "Surf's up!"
+        val replacementText = "Surf's really up!"
+        val diffListToReturn = DiffList(
+            listOf(
+                Unchanged(unchangedText),
+                Addition(addedText),
+                Removal(removedText),
+                Replacement(replacedText, replacementText)
+            )
+        )
+        val interpretationWithDiffs = Interpretation(diffList = diffListToReturn)
+
         val vfc = VFC {
+            InterpretationTabs {
+                scope = this@runTest
+                api = Api(mock(config {}))
+                interpretation = interpretationWithDiffs
+            }
+        }
+        val container = createRootFor(vfc)
+        with(container) {
+            act {
+                selectChangesTab()
+            }
+            waitForEvents()
+            requireNumberOfRows(4)
+            requireOriginalTextInRow(0, unchangedText)
+            requireChangedTextInRow(0, unchangedText)
+            requireNoCheckBoxForRow(0) //Unchanged
+
+            requireOriginalTextInRow(1, "")
+            requireChangedTextInRow(1, addedText)
+            requireCheckBoxForRow(1)
+
+            requireOriginalTextInRow(2, removedText)
+            requireChangedTextInRow(2, "")
+            requireCheckBoxForRow(2)
+
+            requireOriginalTextInRow(3, replacedText)
+            requireChangedTextInRow(3, replacementText)
+            requireCheckBoxForRow(3)
+        }
+    }
+
+
+    @Test
+    fun changesTabLabelShouldIndicateTheInitialNumberOfChanges() = runTest {
+        val diffListToReturn = DiffList(
+            listOf(
+                Unchanged(),
+                Addition(),
+                Removal(),
+                Replacement()
+            )
+        )
+        val interpretationWithDiffs = Interpretation(diffList = diffListToReturn)
+        val vfc = VFC {
+            InterpretationTabs {
+                scope = this@runTest
+                api = Api(mock(config {}))
+                interpretation = interpretationWithDiffs
+            }
+        }
+        val container = createRootFor(vfc)
+        with(container) {
+            waitForEvents()
+            requireChangesLabel("Changes (3)") //Unchanged does not count
+        }
+    }
+
+    @Test
+    fun changesTabLabelShouldUpdateIfChangesAreMade() = runTest {
+        val diffListToReturn = DiffList(
+            listOf(
+                Unchanged(),
+                Addition(),
+                Removal(),
+                Replacement()
+            )
+        )
+        val interpretationWithDiffs = Interpretation(diffList = diffListToReturn)
+        val vfc = VFC {
+            val config = config {
+                returnInterpretation = interpretationWithDiffs
+            }
             InterpretationTabs {
                 scope = this@runTest
                 api = Api(mock(config))
@@ -114,10 +192,9 @@ class InterpretationTabsTest {
         }
         val container = createRootFor(vfc)
         with(container) {
-            selectChangesTab()
-            waitForEvents()
-            requireOriginalTextInRow(0, text)
-            requireChangedTextInRow(0, text)
+            enterInterpretation("Go to Bondi now!")
+            waitForDebounce()
+            requireChangesLabel("Changes (3)") //Unchanged does not count
         }
     }
 }

@@ -16,7 +16,7 @@ class InterpretationViewPO(private val driver: WebDriver) {
     fun enterVerifiedText(text: String): InterpretationViewPO {
         val textArea = interpretationArea()
         textArea.sendKeys(text)
-        waitForDebouncePeriod()
+        waitForDebounce()
         return this
     }
 
@@ -53,6 +53,8 @@ class InterpretationViewPO(private val driver: WebDriver) {
         val table = driver.findElement(By.id(DIFF_VIEWER_TABLE))
         return table.findElements(By.tagName("tr")).size
     }
+
+    fun requireNoRowsInDiffTable() = numberOfRows() shouldBe 0
 
     fun requireAddedText(text: String) {
         var found = false
@@ -132,16 +134,20 @@ class InterpretationViewPO(private val driver: WebDriver) {
         val textArea = driver.findElement(By.id(INTERPRETATION_TEXT_AREA))
         textArea.selectAllText()
         textArea.delete()
-        waitForDebouncePeriod()
+        waitForDebounce()
         return this
     }
 
-    private fun waitForDebouncePeriod() {
+    private fun waitForDebounce() {
         pause(2 * DEBOUNCE_WAIT_PERIOD_MILLIS)
     }
 
     fun WebElement.selectAllText() = sendKeys(Keys.chord(Keys.CONTROL, "a"))
 
+    fun requireChangesLabel(expected: String): InterpretationViewPO {
+        driver.findElement(By.id(INTERPRETATION_TAB_CHANGES)).text shouldBe expected
+        return this
+    }
 
     fun WebElement.delete() = sendKeys(Keys.DELETE)
 }

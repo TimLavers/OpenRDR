@@ -1,5 +1,3 @@
-import csstype.FontFamily
-import csstype.TextAlign
 import emotion.react.css
 import io.rippledown.kb.KBInfoPane
 import kotlinx.coroutines.CoroutineScope
@@ -7,6 +5,8 @@ import react.FC
 import react.Props
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.h1
+import web.cssom.FontFamily
+import web.cssom.TextAlign
 
 external interface Handler : Props {
     var scope: CoroutineScope
