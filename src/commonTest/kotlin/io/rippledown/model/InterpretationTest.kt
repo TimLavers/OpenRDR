@@ -4,6 +4,7 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.condition.ContainsText
 import io.rippledown.model.condition.Is
+import io.rippledown.model.diff.*
 import io.rippledown.model.rule.Rule
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -151,14 +152,27 @@ internal class InterpretationTest {
         val conditions = setOf(
             Is(Attribute("x"), "1"),
         )
+        val verifiedText = "I can verify that is true."
+        val diffList = DiffList(
+            listOf(
+                Addition("I can verify that is true."),
+                Removal("I can verify that is false."),
+                Replacement("I can verify that is false.", "I can verify that is true."),
+                Unchanged("I can verify that is true or false.")
+            )
+        )
         val rule = Rule("r0", null, conclusion, conditions)
-        val interpretation = Interpretation(caseId, "Verified text").apply { add(rule) }
+        val interpretation = Interpretation(
+            caseId,
+            verifiedText,
+            diffList
+        ).apply { add(rule) }
         val sd = serializeDeserialize(interpretation)
         assertEquals(sd, interpretation)
     }
 
     @Test
-    fun jsonSerialisationWithNoVerifiedText() {
+    fun jsonSerialisationWithNoVerifiedTextOrDiffList() {
         val conclusion = Conclusion("First conc")
         val conditions = setOf(
             Is(Attribute("x"), "1"),
@@ -210,6 +224,22 @@ internal class InterpretationTest {
         val interpretation = Interpretation(caseId, verifiedText)
         interpretation.reset()
         interpretation.verifiedText shouldBe verifiedText
+    }
+
+    @Test
+    fun resettingTheInterpretationShouldNotChangeTheDiffList() {
+        val verifiedText = "I can verify that is true."
+        val diffList = DiffList(
+            listOf(
+                Addition("I can verify that is true."),
+                Removal("I can verify that is false."),
+                Replacement("I can verify that is false.", "I can verify that is true."),
+                Unchanged("I can verify that is true or false.")
+            )
+        )
+        val interpretation = Interpretation(caseId, verifiedText, diffList)
+        interpretation.reset()
+        interpretation.diffList shouldBe diffList
     }
 
     @Test

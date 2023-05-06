@@ -12,6 +12,36 @@ Feature: Reviewing the interpretation of a case
     Then the interpretation field should contain the text "Go to Bondi."
     And stop the client application
 
+  Scenario: The label indicating the number of changes to an interpretation should be saved
+    Given a list of cases with the following names is stored on the server:
+      | Case1 |
+      | Case2 |
+    And I start the client application
+    And I should see the case Case1 as the current case
+    When I enter the text "Go to Bondi." in the interpretation field
+    And the changes label should indicate that there is 1 change
+    And select the case Case2
+    And select the case Case1
+    Then the changes label should indicate that there is 1 change
+    And stop the client application
+
+  Scenario: The label indicating the number of changes to an interpretation should be saved for two cases
+    Given a new case with the name "Case1" is stored on the server
+    And  a new case with the name "Case2" is stored on the server
+    And the interpretation by the project of the case "Case1" is "Go to Bondi."
+    And I start the client application
+    And I should see the case Case1 as the current case
+    And the interpretation field should contain the text "Go to Bondi."
+    And I enter the text " And bring your flippers." in the interpretation field
+    And the changes label should indicate that there is 1 change
+    And select the case Case2
+    And I delete all the text in the interpretation field
+    And I enter the text "Go to Manly. And bring your sunscreen" in the interpretation field
+    And the changes label should indicate that there are 2 changes
+    When select the case Case1
+    Then the changes label should indicate that there is 1 change
+    And stop the client application
+
   Scenario: A new comment that is entered by the user should show as a addition in the changes panel
     Given a new case with the name "Case1" is stored on the server
     And the interpretation by the project of the case "Case1" is "Go to Bondi."

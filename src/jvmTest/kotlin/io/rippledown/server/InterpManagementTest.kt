@@ -7,18 +7,20 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.verify
-import io.rippledown.constants.api.CASE_NAME
-import io.rippledown.constants.api.DIFF
+import io.rippledown.constants.api.VERIFIED_INTERPRETATION_SAVED
+import io.rippledown.model.Interpretation
+import io.rippledown.model.RDRCase
+import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.diff.*
 import kotlin.test.Test
 
 class InterpManagementTest : OpenRDRServerTestBase() {
 
     @Test
-    fun `should delegate diff list to the server application`() = testApplication {
+    fun `should delegate saving an Interpretation to server application`() = testApplication {
         setup()
-        val case = "Case A"
-        val diffList = DiffList(
+        val rdrCase = RDRCase("Case1")
+        val diffListToReturn = DiffList(
             listOf(
                 Unchanged("Go to Bondi Beach."),
                 Addition("Bring your handboard."),
@@ -26,13 +28,21 @@ class InterpManagementTest : OpenRDRServerTestBase() {
                 Replacement("And have fun.", "And have lots of fun.")
             )
         )
-        every { serverApplication.diffListForCase(case) } returns diffList
-
-        val result = httpClient.get(DIFF) {
-            parameter(CASE_NAME, case)
+        val viewableCase = ViewableCase(rdrCase)
+        val interpretationToSave = viewableCase.interpretation.apply {
+            verifiedText = "Verified Text"
         }
-        verify { serverApplication.diffListForCase(case) }
+        val interpretationToReturn = interpretationToSave.apply {
+            diffList = diffListToReturn
+        }
+        every { serverApplication.saveInterpretation(interpretationToSave) } returns interpretationToReturn
+
+        val result = httpClient.post(VERIFIED_INTERPRETATION_SAVED) {
+            contentType(ContentType.Application.Json)
+            setBody(interpretationToSave)
+        }
         result.status shouldBe HttpStatusCode.OK
-        result.body<DiffList>() shouldBe diffList
+        result.body<Interpretation>() shouldBe interpretationToReturn
+        verify { serverApplication.saveInterpretation(interpretationToSave) }
     }
 }

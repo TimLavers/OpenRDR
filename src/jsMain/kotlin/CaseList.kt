@@ -1,6 +1,3 @@
-import csstype.Cursor.Companion.pointer
-import csstype.Overflow.Companion.scroll
-import csstype.px
 import io.rippledown.model.CaseId
 import io.rippledown.model.caseview.ViewableCase
 import kotlinx.coroutines.launch
@@ -12,6 +9,9 @@ import mui.system.sx
 import react.FC
 import react.useEffect
 import react.useState
+import web.cssom.Cursor.Companion.pointer
+import web.cssom.Overflow
+import web.cssom.px
 
 const val CASELIST_ID = "case_list_container"
 const val CASE_ID_PREFIX = "case_list_item_"
@@ -46,7 +46,7 @@ val CaseList = FC<CaseListHandler> { handler ->
                 sx {
                     cursor = pointer
                     width = 200.px
-                    overflowY = scroll
+                    overflowY = Overflow.scroll
                     maxHeight = 500.px
                 }
                 dense = true

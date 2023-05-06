@@ -23,7 +23,7 @@ import kotlin.io.path.createTempDirectory
 class ServerApplication {
     val casesDir = File("cases").apply { mkdirs() }
     val interpretationsDir = File("interpretations").apply { mkdirs() }
-    val idToCase = mutableMapOf<String, RDRCase>()
+    private val idToCase = mutableMapOf<String, RDRCase>()
 
     var kb = KB("Thyroids")
 
@@ -86,7 +86,10 @@ class ServerApplication {
     }
 
     fun viewableCase(id: String): ViewableCase {
-        return kb.viewableInterpretedCase(uninterpretedCase(id))
+        return kb.viewableInterpretedCase(uninterpretedCase(id)).apply {
+            //reset the case's diff list
+            interpretation.diffList = diffList(interpretation)
+        }
     }
 
     fun moveAttributeJustBelow(moved: Attribute, target: Attribute) {
@@ -98,19 +101,32 @@ class ServerApplication {
 
         // Now delete the corresponding case file.
         val caseFile = File(casesDir, "${interpretation.caseId.id}.json")
-        val deleted = FileUtils.delete(caseFile)
-        println("${LocalDateTime.now()} case deleted ${deleted}")
-
+        FileUtils.delete(caseFile)
         return OperationResult("Interpretation submitted")
     }
 
-    fun saveInterpretation(interpretation: Interpretation) {
-        val id = interpretation.caseId.id
-        val case = case(id)
-        case.interpretation.verifiedText = interpretation.verifiedText
-        idToCase[id] = case
+    /**
+     * Save the verified text.
+     *
+     * @return an Interpretation with the list of Diffs corresponding to the changes made to the current interpretation by the verified text
+     */
+    fun saveInterpretation(interpretation: Interpretation): Interpretation {
+        val caseId = interpretation.caseId.id
+        val case = case(caseId)
 
-        writeInterpretationToFile(id, interpretation)
+        //reset the case's verified text
+        case.interpretation.verifiedText = interpretation.verifiedText
+
+        //reset the case's diff list
+        case.interpretation.diffList = diffList(interpretation)
+
+        //put the updated case back into the map
+        idToCase[caseId] = case
+
+        writeInterpretationToFile(caseId, interpretation)
+
+        //return the updated interpretation
+        return case.interpretation
     }
 
     private fun writeInterpretationToFile(id: String, interpretation: Interpretation) {
@@ -119,12 +135,9 @@ class ServerApplication {
         val file = File(interpretationsDir, fileName)
         if (file.exists()) {
             file.delete()
-            println("${LocalDateTime.now()}  file deleted")
         }
         FileUtils.writeStringToFile(file, Json.encodeToString(interpretation), UTF_8)
     }
-
-    fun diffListForCase(caseId: String) = diffList(case(caseId))
 
     private fun getCaseFromFile(file: File): RDRCase {
         val format = Json { allowStructuredMapKeys = true }

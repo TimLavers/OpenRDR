@@ -37,17 +37,31 @@ class DiffViewerTest {
         checkContainer(vfc) { container ->
             with(container) {
                 requireNumberOfRows(0)
-
             }
         }
 
     }
 
     @Test
-    fun shouldShowARowForEachDiff() = runTest {
+    fun shouldShowARowForEachUnchangedDiff() = runTest {
         val vfc = VFC {
             DiffViewer {
                 changes = listOf(Unchanged(), Unchanged(), Unchanged())
+            }
+        }
+        checkContainer(vfc) { container ->
+            with(container) {
+                requireNumberOfRows(3)
+            }
+        }
+
+    }
+
+    @Test
+    fun shouldShowARowForEachChangedDiff() = runTest {
+        val vfc = VFC {
+            DiffViewer {
+                changes = listOf(Addition(), Removal(), Replacement())
             }
         }
         checkContainer(vfc) { container ->

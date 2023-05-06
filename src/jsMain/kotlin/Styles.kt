@@ -1,5 +1,5 @@
-import csstype.px
-import csstype.rgb
+import web.cssom.px
+import web.cssom.rgb
 
 val px0 = 0.px
 val px4 = 4.px

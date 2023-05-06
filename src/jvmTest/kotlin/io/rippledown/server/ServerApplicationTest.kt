@@ -7,6 +7,9 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.rippledown.CaseTestUtils
 import io.rippledown.model.*
 import io.rippledown.model.condition.GreaterThanOrEqualTo
+import io.rippledown.model.diff.Addition
+import io.rippledown.model.diff.DiffList
+import io.rippledown.model.diff.Unchanged
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
@@ -50,7 +53,7 @@ internal class ServerApplicationTest {
     }
 
     @Test
-    fun saveInterpretation() {
+    fun `should save an interpretation and delete the corresponding case`() {
         setUpCaseFromFile("Case1", app)
         val caseId = CaseId("Case1", "Case 1")
         val interpretation = Interpretation(caseId, "Whatever, blah.")
@@ -106,18 +109,49 @@ internal class ServerApplicationTest {
     }
 
     @Test
-    fun `should update a case's verified interpretation`() {
+    fun `should set the interpretation's DiffList to be empty when retrieving a case with a blank interpretation`() {
+        val id = "Case1"
+        setUpCaseFromFile(id, app)
+
+        val case = app.case(id)
+        case.interpretation.verifiedText shouldBe null
+        case.interpretation.textGivenByRules() shouldBe ""
+        case.interpretation.diffList shouldBe DiffList(emptyList())
+    }
+
+    @Test
+    fun `the DiffList should have an unchanged fragment when retrieving a case with a non-blank interpretation`() {
+        val id = "Case1"
+        setUpCaseFromFile(id, app)
+
+        val case = app.case(id)
+        val text = "ABC ok."
+        val conclusion = Conclusion(text)
+        app.kb.startRuleSession(case, ChangeTreeToAddConclusion(conclusion))
+        app.kb.commitCurrentRuleSession()
+
+        with(app.viewableCase(id)) {
+            interpretation.verifiedText shouldBe null
+            interpretation.textGivenByRules() shouldBe text
+            interpretation.diffList shouldBe DiffList(listOf(Unchanged(text)))
+        }
+    }
+
+    @Test
+    fun `should update a case's verified interpretation and return an interpretation containing a DiffList`() {
         val id = "Case1"
         val caseId = CaseId(id, id)
         setUpCaseFromFile(id, app)
 
         val original = app.case(id)
         original.interpretation.verifiedText shouldBe null
+        original.interpretation.textGivenByRules() shouldBe ""
 
         val verifiedInterpretation = Interpretation(caseId, "Verified.")
-        app.saveInterpretation(verifiedInterpretation)
+        val returnedInterpretation = app.saveInterpretation(verifiedInterpretation)
         val updated = app.case(id)
-        updated.interpretation shouldBe verifiedInterpretation
+        updated.interpretation shouldBe returnedInterpretation
+        returnedInterpretation.diffList shouldBe DiffList(listOf(Addition("Verified.")))
     }
 
     @Test
@@ -274,6 +308,32 @@ internal class ServerApplicationTest {
         app.startRuleSessionToReplaceConclusion(id, conclusion1, conclusion2)
         app.commitCurrentRuleSession()
         app.case(id).interpretation.textGivenByRules() shouldBe conclusion2.text
+    }
+
+    @Test
+    fun `when saving an interpretation, an interpretation with diffs should be returned`() {
+        val id = "Case1"
+        setUpCaseFromFile(id, app)
+        val conclusion = Conclusion("Go to Bondi.")
+        with(app) {
+            kb.addCase(createCase(id))
+            startRuleSessionToAddConclusion(id, conclusion)
+            commitCurrentRuleSession()
+            val case = case(id)
+            case.interpretation.latestText() shouldBe conclusion.text
+
+            val verifiedInterpretation = case.interpretation.apply {
+                verifiedText = "Go to Bondi. Bring 2 sets of flippers. And bring sunscreen."
+            }
+            val interpReturned = app.saveInterpretation(verifiedInterpretation)
+            interpReturned.diffList shouldBe DiffList(
+                listOf(
+                    Unchanged("Go to Bondi."),
+                    Addition("Bring 2 sets of flippers."),
+                    Addition("And bring sunscreen."),
+                )
+            )
+        }
     }
 
     private fun createCase(caseName: String) = CaseTestUtils.createCase(caseName)

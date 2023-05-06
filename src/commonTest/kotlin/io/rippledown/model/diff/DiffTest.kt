@@ -21,4 +21,18 @@ class DiffTest {
         val deserialized = Json.decodeFromString<DiffList>(serialized)
         deserialized shouldBe diffList
     }
+
+    @Test
+    fun shouldNotIncludeUnchangedInTheListOfChanges() {
+        val diffList = DiffList(
+            listOf(
+                Unchanged("Go to Bondi Beach."),
+                Addition("Bring your handboard."),
+                Removal("Don't forget your towel."),
+                Replacement("And have fun.", "And have lots of fun.")
+            )
+        )
+        diffList.numberOfChanges() shouldBe 3
+
+    }
 }

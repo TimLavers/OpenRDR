@@ -1,4 +1,4 @@
-package io.rippledown.integration.interp.diff
+package io.rippledown.integration.interp
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.UITestBase
@@ -31,7 +31,7 @@ internal class ShowInterpretationDifference : UITestBase() {
         serverProxy.start()
         resetKB()
         setupCase()
-        buildRuleForTSH()
+        buildRuleForTSHComment()
         setupWebDriver()
         caseQueuePO = CaseQueuePO(driver).apply { waitForNumberWaitingToBe(1) }
         caseViewPO = CaseViewPO(driver)
@@ -44,7 +44,7 @@ internal class ShowInterpretationDifference : UITestBase() {
         serverProxy.shutdown()
     }
 
-    private fun buildRuleForTSH() {
+    private fun buildRuleForTSHComment() {
         with(RESTClient()) {
             getCaseWithName(caseName)
             startSessionToAddConclusionForCurrentCase(Conclusion(tshComment))
@@ -52,16 +52,6 @@ internal class ShowInterpretationDifference : UITestBase() {
             addConditionForCurrentSession(condition2)
             commitCurrentSession()
         }
-    }
-
-    @Test
-    fun shouldShowNoChangesIfTheUserHasNotChangedTheInterpretation() {
-        caseViewPO.nameShown() shouldBe caseName
-        interpretationViewPO
-            .requireInterpretationText(tshComment)
-            .selectChangesTab()
-            .requireOriginalTextInRow(0, tshComment)
-            .requireChangedTextInRow(0, tshComment)
     }
 
     @Test
@@ -106,7 +96,30 @@ internal class ShowInterpretationDifference : UITestBase() {
             .requireCheckBoxInRow(0)
     }
 
-    private fun setupCase() {
-        labProxy.copyCase(caseName)
+    @Test
+    fun `should update the change count whenever verified text is entered`() {
+        caseViewPO.nameShown() shouldBe caseName
+        interpretationViewPO
+            .requireInterpretationText(tshComment)
+            .requireChangesLabel("CHANGES")
+            .enterVerifiedText(" Go to Bondi. Bring your flippers.") //two additions
+            .requireChangesLabel("CHANGES (2)")
+            .deleteAllText()
+            .requireChangesLabel("CHANGES (1)") //one removal
+            .enterVerifiedText(tshComment)
+            .requireChangesLabel("CHANGES") //back to the original
     }
+
+    @Test
+    fun `should show one Unchanged sentence if the user has not changed a non-blank interpretation`() {
+        caseViewPO.nameShown() shouldBe caseName
+        interpretationViewPO
+            .requireInterpretationText(tshComment)
+            .selectChangesTab()
+            .requireOriginalTextInRow(0, tshComment)
+            .requireChangedTextInRow(0, tshComment)
+    }
+
+    private fun setupCase() = labProxy.copyCase(caseName)
+
 }

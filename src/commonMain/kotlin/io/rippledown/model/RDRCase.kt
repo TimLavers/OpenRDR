@@ -142,8 +142,4 @@ data class RDRCase(val name: String = "", val data: Map<TestEvent, TestResult> =
     private fun createInterpretation(): Interpretation {
         return Interpretation(CaseId(name, name))
     }
-
-    fun setVerifiedText(text: String) {
-        interpretation.verifiedText = text
-    }
 }

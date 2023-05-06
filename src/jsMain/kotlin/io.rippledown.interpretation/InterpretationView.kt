@@ -2,8 +2,6 @@ package io.rippledown.interpretation
 
 import ConclusionsDialog
 import Handler
-import csstype.FontFamily
-import csstype.FontWeight
 import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_AREA
 import io.rippledown.model.Interpretation
@@ -15,11 +13,14 @@ import npm.debounce
 import react.FC
 import react.dom.onChange
 import react.useState
+import web.cssom.FontFamily
+import web.cssom.FontWeight
 import web.html.HTMLDivElement
 import xs
 
 external interface InterpretationViewHandler : Handler {
     var interpretation: Interpretation
+    var onInterpretationEdited: (interp: Interpretation) -> Unit
 }
 
 const val SEND_INTERPRETATION_BUTTON_ID = "send_interpretation_button"
@@ -35,7 +36,8 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
                 val changed = it.target.asDynamic().value
                 latestText = changed
                 interp.verifiedText = changed
-                handler.api.saveVerifiedInterpretation(interp)
+                val updatedInterpretation = handler.api.saveVerifiedInterpretation(interp)
+                handler.onInterpretationEdited(updatedInterpretation)
             }
         }
     }

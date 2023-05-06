@@ -1,5 +1,8 @@
+package io.rippledown.interpretation
+
+import Api
+import io.kotest.matchers.shouldBe
 import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
-import io.rippledown.interpretation.InterpretationView
 import io.rippledown.model.CaseId
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
@@ -8,7 +11,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
-
 import proxy.clickSubmitButton
 import proxy.enterInterpretation
 import proxy.requireInterpretation
@@ -67,6 +69,7 @@ class InterpretationViewTest {
                 scope = this@runTest
                 api = Api(mock(config {}))
                 interpretation = Interpretation()
+                onInterpretationEdited = { (_) -> }
             }
         }
         with(createRootFor(vfc)) {
@@ -87,12 +90,37 @@ class InterpretationViewTest {
                 scope = this@runTest
                 api = Api(mock(config))
                 interpretation = Interpretation()
+                onInterpretationEdited = { (_) -> }
             }
         }
         with(createRootFor(vfc)) {
             enterInterpretation(verifiedText)
             //assertion is in the mocked API call
         }
+    }
+
+    @Test
+    fun shouldCallOnInterpretationEdited() = runTest {
+        val verifiedText = "And bring your flippers"
+        val config = config {
+            expectedInterpretation = Interpretation(verifiedText = verifiedText)
+        }
+        var called = false
+        val vfc = VFC {
+            InterpretationView {
+                scope = this@runTest
+                api = Api(mock(config))
+                interpretation = Interpretation()
+                onInterpretationEdited = {
+                    called = true
+                }
+            }
+        }
+        with(createRootFor(vfc)) {
+            enterInterpretation(verifiedText)
+            waitForEvents(timeout = 2 * DEBOUNCE_WAIT_PERIOD_MILLIS) //get past the debounce period
+        }
+        called shouldBe true
     }
 
     @Test
@@ -111,6 +139,9 @@ class InterpretationViewTest {
                 scope = this@runTest
                 api = Api(mock(config))
                 interpretation = defaultInterpretation
+                onInterpretationEdited = {
+                    println("Interpretation edited")
+                }
             }
         }
         with(createRootFor(vfc)) {
@@ -132,6 +163,7 @@ class InterpretationViewTest {
                 scope = this@runTest
                 api = Api(mock(config))
                 interpretation = Interpretation(caseId = caseId)
+                onInterpretationEdited = { (_) -> }
             }
         }
         with(createRootFor(vfc)) {

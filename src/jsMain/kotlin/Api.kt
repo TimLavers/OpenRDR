@@ -9,7 +9,6 @@ import io.ktor.serialization.kotlinx.json.*
 import io.rippledown.constants.api.*
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
-import io.rippledown.model.diff.DiffList
 import kotlinx.browser.window
 import kotlinx.serialization.json.Json
 import web.file.File
@@ -68,9 +67,6 @@ class Api(engine: HttpClientEngine = Js.create()) {
 
     suspend fun getCase(id: String): ViewableCase = jsonClient.get("$endpoint$CASE?id=$id").body()
 
-    suspend fun interpretationChanges(caseName: String): DiffList =
-        jsonClient.get("$endpoint$DIFF?$CASE_NAME=$caseName").body()
-
     suspend fun waitingCasesInfo(): CasesInfo = jsonClient.get("$endpoint$WAITING_CASES").body()
 
     suspend fun saveInterpretation(interpretation: Interpretation): OperationResult {
@@ -80,11 +76,14 @@ class Api(engine: HttpClientEngine = Js.create()) {
         }.body()
     }
 
-    suspend fun saveVerifiedInterpretation(verifiedInterpretation: Interpretation) {
-        jsonClient.post("$endpoint$VERIFIED_INTERPRETATION_SAVED") {
+    /**
+     * @return the interpretation containing the DiffList of the original and verified interpretation
+     */
+    suspend fun saveVerifiedInterpretation(verifiedInterpretation: Interpretation): Interpretation {
+        return jsonClient.post("$endpoint$VERIFIED_INTERPRETATION_SAVED") {
             contentType(ContentType.Application.Json)
             setBody(verifiedInterpretation)
-        }
+        }.body()
     }
 
     suspend fun moveAttributeJustBelowOther(moved: Attribute, target: Attribute): OperationResult {

@@ -1,4 +1,4 @@
-package io.rippledown.integration.interp.diff
+package io.rippledown.integration.interp
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.UITestBase

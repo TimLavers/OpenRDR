@@ -1,6 +1,5 @@
 package io.rippledown.constants.api
 
-const val DIFF = "/api/interp/diff"
 const val CASE_NAME = "casename"
 const val WAITING_CASES = "/api/waitingCasesInfo"
 const val CASE = "/api/case"

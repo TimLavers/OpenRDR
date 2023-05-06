@@ -1,8 +1,6 @@
 package io.rippledown.interpretation
 
 import Handler
-import csstype.Color
-import csstype.px
 import green
 import io.rippledown.constants.interpretation.*
 import io.rippledown.model.diff.Diff
@@ -12,6 +10,8 @@ import mui.material.styles.TypographyVariant
 import mui.system.sx
 import react.FC
 import red
+import web.cssom.Color
+import web.cssom.px
 
 
 external interface DiffViewerHandler : Handler {
@@ -49,7 +49,7 @@ val DiffViewer = FC<DiffViewerHandler> { handler ->
                     }
                     TableCell {
                         Typography {
-                            +"Changed"
+                            +"Final"
                             variant = TypographyVariant.subtitle2
                         }
                     }

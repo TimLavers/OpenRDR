@@ -9,7 +9,6 @@ import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.verify
 import io.rippledown.constants.api.CASE
-import io.rippledown.constants.api.VERIFIED_INTERPRETATION_SAVED
 import io.rippledown.constants.api.WAITING_CASES
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
@@ -62,21 +61,4 @@ class CaseManagementTest: OpenRDRServerTestBase() {
         result.status shouldBe HttpStatusCode.BadRequest
     }
 
-    @Test
-    fun saveInterpretation() = testApplication {
-        setup()
-        val rdrCase = RDRCase("Case1")
-        val viewableCase = ViewableCase(rdrCase)
-        val interpretation = viewableCase.interpretation.apply {
-            verifiedText = "Verified Text"
-        }
-        every { serverApplication.saveInterpretation(interpretation) } returns Unit
-
-        val result = httpClient.post(VERIFIED_INTERPRETATION_SAVED) {
-            contentType(ContentType.Application.Json)
-            setBody(interpretation)
-        }
-        result.status shouldBe HttpStatusCode.OK
-        verify { serverApplication.saveInterpretation(interpretation) }
-    }
 }

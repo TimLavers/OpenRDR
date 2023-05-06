@@ -1,15 +1,13 @@
 package io.rippledown.textdiff
 
-import io.rippledown.model.RDRCase
+import io.rippledown.model.Interpretation
 import io.rippledown.model.diff.*
 
 private val REGEX = "(?<=\\.\\s)".toRegex()
 
-fun diffList(case: RDRCase) = fragmentList(case).toDiffList()
+fun diffList(interpretation: Interpretation) = fragmentList(interpretation).toDiffList()
 
-
-internal fun fragmentList(case: RDRCase): FragmentList {
-    val interpretation = case.interpretation
+internal fun fragmentList(interpretation: Interpretation): FragmentList {
     val original = interpretation.textGivenByRules()
     val originalSentences = original.splitIntoSentences()
     val changed = interpretation.verifiedText
@@ -23,7 +21,7 @@ internal fun fragmentList(case: RDRCase): FragmentList {
     }
 }
 
-internal fun String.splitIntoSentences() = split(REGEX).map { it.trim() }
+internal fun String.splitIntoSentences() = if (isBlank()) emptyList() else split(REGEX).map { it.trim() }
 
 internal fun generateDifferences(
     originalTexts: List<String>,

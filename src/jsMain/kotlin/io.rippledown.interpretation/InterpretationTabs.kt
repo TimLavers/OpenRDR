@@ -1,14 +1,11 @@
 package io.rippledown.interpretation
 
 import Handler
-import csstype.pc
 import io.rippledown.constants.interpretation.INTERPRETATION_PANEL_CHANGES
 import io.rippledown.constants.interpretation.INTERPRETATION_PANEL_ORIGINAL
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL
 import io.rippledown.model.Interpretation
-import io.rippledown.model.diff.Diff
-import kotlinx.coroutines.launch
 import mui.lab.TabContext
 import mui.lab.TabPanel
 import mui.material.Box
@@ -18,6 +15,7 @@ import mui.system.sx
 import react.FC
 import react.ReactNode
 import react.useState
+import web.cssom.pc
 
 external interface InterpretationTabsHandler : Handler {
     var interpretation: Interpretation
@@ -25,7 +23,7 @@ external interface InterpretationTabsHandler : Handler {
 
 val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
     var selectedTab by useState("0")
-    var diffs by useState(listOf<Diff>())
+    var interp by useState(handler.interpretation)
 
     Box {
         sx {
@@ -39,10 +37,6 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
                 value = selectedTab
                 onChange = { _, value ->
                     selectedTab = value
-                    handler.scope.launch {
-                        val diffList = handler.api.interpretationChanges(handler.interpretation.caseId.name)
-                        diffs = diffList.diffs
-                    }
                 }
 
                 Tab {
@@ -52,7 +46,9 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
                 }
                 Tab {
                     id = INTERPRETATION_TAB_CHANGES
-                    label = "Changes".unsafeCast<ReactNode>()
+                    val changes = interp.numberOfChanges()
+                    val badge = if (changes > 0) " ($changes)" else ""
+                    label = "Changes$badge".unsafeCast<ReactNode>()
                     value = "1"
                 }
             }
@@ -64,8 +60,10 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
                     api = handler.api
                     scope = handler.scope
                     interpretation = handler.interpretation
+                    onInterpretationEdited = { editedInterp ->
+                        interp = editedInterp
+                    }
                 }
-
             }
 
             TabPanel {
@@ -74,12 +72,13 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
                 DiffViewer {
                     api = handler.api
                     scope = handler.scope
-                    changes = diffs
+                    changes = interp.diffList.diffs
                 }
             }
-
         }
     }
-
 }
+
+
+
 

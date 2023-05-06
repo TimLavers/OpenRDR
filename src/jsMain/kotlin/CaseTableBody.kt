@@ -1,8 +1,8 @@
-import csstype.rgb
 import emotion.react.css
 import io.rippledown.model.caseview.ViewableCase
 import react.FC
 import react.dom.html.ReactHTML
+import web.cssom.rgb
 
 external interface CaseTableBodyHandler: Handler {
     var case: ViewableCase
