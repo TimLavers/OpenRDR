@@ -13,3 +13,6 @@ val DIFF_VIEWER_ROW = "diff_viewer_row_"
 val DIFF_VIEWER_CHECKBOX = "diff_viewer_checkbox_"
 val DIFF_VIEWER_ORIGINAL = "diff_viewer_original_"
 val DIFF_VIEWER_CHANGED = "diff_viewer_changed_"
+
+val BADGE_CLASS = "MuiBadge-badge"
+val BADGE_INVISIBLE_CLASS = "MuiBadge-invisible"

@@ -11,11 +11,16 @@ import mui.lab.TabPanel
 import mui.material.Box
 import mui.material.Tab
 import mui.material.Tabs
+import mui.material.Typography
 import mui.system.sx
+import npm.BadgeWithChild
+import npm.BadgeWithChildProps
 import react.FC
-import react.ReactNode
+import react.Props
+import react.create
 import react.useState
 import web.cssom.pc
+import web.cssom.px
 
 external interface InterpretationTabsHandler : Handler {
     var interpretation: Interpretation
@@ -41,14 +46,18 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
 
                 Tab {
                     id = INTERPRETATION_TAB_ORIGINAL
-                    label = "Interpretation".unsafeCast<ReactNode>()
+                    label = interpretationLabel
                     value = "0"
                 }
+
                 Tab {
                     id = INTERPRETATION_TAB_CHANGES
-                    val changes = interp.numberOfChanges()
-                    val badge = if (changes > 0) " ($changes)" else ""
-                    label = "Changes$badge".unsafeCast<ReactNode>()
+                    label = FC<BadgeWithChildProps> {
+                        BadgeWithChild {
+                            count = interp.numberOfChanges()
+                            childNode = changesLabel
+                        }
+                    }.create()
                     value = "1"
                 }
             }
@@ -79,6 +88,24 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
     }
 }
 
+val interpretationLabel = FC<Props> {
+    Typography {
+        sx {
+            fontSize = 14.px
+        }
+        +"Interpretation"
+    }
+}.create()
+
+val changesLabel = FC<Props> {
+    Typography {
+        sx {
+            fontSize = 14.px
+            padding = 10.px //space for the badge
+        }
+        +"Changes"
+    }
+}.create()
 
 
 

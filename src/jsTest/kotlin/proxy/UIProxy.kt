@@ -24,7 +24,6 @@ suspend fun HTMLElement.clickSubmitButton() {
     act {
         Simulate.click(element)
     }
-    debug("clicked submit button")
 }
 
 
@@ -65,7 +64,7 @@ fun debug(msg: String) {
     println("\n\n${Date().toISOString()} $msg")
 }
 
-fun HTMLElement.findById(id: String): Element {
+fun HTMLElement.findById(id: String): HTMLElement {
     val found = findAllById(id)
     if (found.length == 0) {
         throw Error("Element containing id \"$id\" not found")
@@ -73,7 +72,7 @@ fun HTMLElement.findById(id: String): Element {
     if (found.length > 1) {
         throw Error("More than one element containing id \"$id\" found")
     }
-    return found[0]
+    return found[0] as HTMLElement
 }
 
 fun HTMLElement.findAllById(id: String): NodeListOf<Element> = querySelectorAll("[id*='$id']")

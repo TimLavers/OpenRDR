@@ -101,13 +101,13 @@ internal class ShowInterpretationDifference : UITestBase() {
         caseViewPO.nameShown() shouldBe caseName
         interpretationViewPO
             .requireInterpretationText(tshComment)
-            .requireChangesLabel("CHANGES")
+            .requireNoBadge()
             .enterVerifiedText(" Go to Bondi. Bring your flippers.") //two additions
-            .requireChangesLabel("CHANGES (2)")
+            .requireBadgeCount(2)
             .deleteAllText()
-            .requireChangesLabel("CHANGES (1)") //one removal
+            .requireBadgeCount(1)
             .enterVerifiedText(tshComment)
-            .requireChangesLabel("CHANGES") //back to the original
+            .requireNoBadge() //back to the original
     }
 
     @Test

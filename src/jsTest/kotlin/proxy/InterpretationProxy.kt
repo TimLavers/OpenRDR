@@ -2,9 +2,7 @@ package proxy
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
-import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
-import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_AREA
+import io.rippledown.constants.interpretation.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -42,13 +40,13 @@ suspend fun waitForDebounce() {
 }
 
 fun HTMLElement.requireBadgeCount(expected: Int) {
-    querySelectorAll(".MuiBadge-badge")[0].let {
+    querySelectorAll(".$BADGE_CLASS")[0].let {
         it.textContent!!.toInt() shouldBe expected
     }
 
 }
 
 fun HTMLElement.requireNoBadge() {
-    querySelectorAll(".MuiBadge-invisible") shouldNotBe emptyList<HTMLElement>()
+    querySelectorAll(".$BADGE_INVISIBLE_CLASS") shouldNotBe emptyList<HTMLElement>()
 }
 

@@ -4,48 +4,25 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
-import mui.base.BadgeUnstyledProps
-import mui.material.Badge
-import mui.material.BadgeColor
 import mui.material.Button
 import mui.material.ButtonProps
-import mui.system.sx
 import proxy.findById
 import proxy.requireBadgeCount
 import proxy.requireNoBadge
 import react.FC
-import react.ReactNode
 import react.VFC
 import react.create
 import react.dom.createRootFor
-import web.cssom.px
 import kotlin.test.Test
 
-external interface TestBadgeHandler : BadgeUnstyledProps {
-    var count: Int
-    var childNode: ReactNode
-}
-
-val TestBadge = FC<TestBadgeHandler> { handler ->
-    Badge {
-        badgeContent = handler.count.unsafeCast<ReactNode>()
-        color = BadgeColor.primary
-        showZero = false
-        sx {
-            marginTop = 10.px
-        }
-        child(handler.childNode)
-    }
-}
-
 @OptIn(ExperimentalCoroutinesApi::class)
-class BadgeTest {
+class BadgeWithChildTest {
 
     @Test
     fun shouldReadBadgeContent(): TestResult {
         return runTest {
             val vfc = VFC {
-                TestBadge {
+                BadgeWithChild {
                     count = 42
                 }
             }
@@ -59,7 +36,7 @@ class BadgeTest {
     fun shouldHideBadgeIfContentIsZero(): TestResult {
         return runTest {
             val vfc = VFC {
-                TestBadge {
+                BadgeWithChild {
                     count = 0
                 }
             }
@@ -71,22 +48,30 @@ class BadgeTest {
 
     @Test
     fun shouldRenderChildContent(): TestResult {
+        var numberOfClicks = 0
         val button = FC<ButtonProps> {
             Button {
                 id = "button_id"
                 +"Go to Bondi"
+                onClick = {
+                    ++numberOfClicks
+                }
             }
         }.create()
 
         return runTest {
             val vfc = VFC {
-                TestBadge {
+                BadgeWithChild {
                     count = 42
                     childNode = button
                 }
             }
             with(createRootFor(vfc)) {
-                findById("button_id").textContent shouldBe "Go to Bondi"
+                val buttonElement = findById("button_id")
+                buttonElement.textContent shouldBe "Go to Bondi"
+                numberOfClicks shouldBe 0
+                buttonElement.click()
+                numberOfClicks shouldBe 1
             }
         }
     }
