@@ -1,8 +1,7 @@
 package io.rippledown.persistence.postgres
 
-import io.kotest.matchers.collections.haveSize
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
-import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.persistence.PersistentRule
@@ -92,6 +91,38 @@ class PostgresRuleStoreTest: PostgresStoreTest() {
         store.all().size shouldBe 3
     }
 
-    private fun pr(parentId: Int, conclusionId: Int, vararg conditionIds: Int)  = PersistentRule(null, parentId, conclusionId, conditionIds.toSet())
+    @Test
+    fun all() {
+        val rulesCreated = mutableSetOf<PersistentRule>()
+        repeat(100) {
+            rulesCreated.add(store.create(pr(it, 10, 100, 200)))
+            store.all() shouldBe rulesCreated
+        }
 
+        store = PostgresRuleStore(dbName)
+        store.all() shouldBe rulesCreated
+    }
+
+    @Test
+    fun `cannot load if not empty`() {
+        store.create(pr(1, 2, 3))
+        shouldThrow<IllegalArgumentException> {
+            store.load(emptySet())
+        }.message shouldBe "Cannot load persistent rules if there are some stored already."
+    }
+
+    @Test
+    fun load() {
+        val pr1 = PersistentRule( 1,0, 10, setOf(200, 201))
+        val pr2 = PersistentRule(2, 1, 11, setOf(200, 201))
+        val pr3 = PersistentRule(3, 2, 11, setOf(201, 202))
+        val toLoad = setOf(pr1, pr2, pr3)
+        store.load(toLoad)
+
+        store.all() shouldBe toLoad
+        store = PostgresRuleStore(dbName)
+        store.all() shouldBe toLoad
+    }
+
+    private fun pr(parentId: Int, conclusionId: Int, vararg conditionIds: Int)  = PersistentRule(null, parentId, conclusionId, conditionIds.toSet())
 }

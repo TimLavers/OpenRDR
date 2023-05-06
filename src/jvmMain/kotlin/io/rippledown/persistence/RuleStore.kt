@@ -1,11 +1,10 @@
 package io.rippledown.persistence
 
-import io.rippledown.model.Conclusion
-import io.rippledown.model.condition.Condition
-import io.rippledown.model.rule.Rule
-
-fun idsSetToString(idsSet: Set<Int>) = idsSet.joinToString { it.toString() }
-fun idsStringToIdsSet(idsString: String) = idsString.split(',').map { it.trim()}.filter { it.isNotEmpty() }.map { it.toInt() }.toSet()
+// The ids are ordered so that two PersistentRules created with the same
+// set of ids will have the same ids string. Without this, we may get
+// two PersistentRules created with exactly the same data not being equal.
+internal fun idsSetToString(idsSet: Set<Int>) = idsSet.toSortedSet().joinToString(",")
+internal fun idsStringToIdsSet(idsString: String) = idsString.split(',').filter { it.isNotEmpty() }.map { it.toInt() }.toSet()
 
 /**
  * Persistent peer of a non-root rule.

@@ -25,12 +25,8 @@ class PostgresConclusionStore(private val dbName: String): ConclusionStore {
     }
 
     override fun all() = transaction {
-            val result = mutableSetOf<Conclusion>()
-            PGConclusion.all().forEach {
-                result.add(Conclusion(it.id.value, it.conclusionText))
-            }
-            return@transaction result
-        }
+            return@transaction PGConclusion.all().map {Conclusion(it.id.value, it.conclusionText)}.toSet()
+    }
 
     override fun create(text: String): Conclusion {
         val isNew = all().count { it.text == text } == 0
