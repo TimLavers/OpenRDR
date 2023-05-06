@@ -92,6 +92,7 @@ val interpretationLabel = FC<Props> {
     Typography {
         sx {
             fontSize = 14.px
+            paddingTop = 10.px //space for the badge
         }
         +"Interpretation"
     }
@@ -101,7 +102,8 @@ val changesLabel = FC<Props> {
     Typography {
         sx {
             fontSize = 14.px
-            padding = 10.px //space for the badge
+            paddingTop = 10.px //space for the badge
+            paddingRight = 10.px
         }
         +"Changes"
     }
