@@ -18,4 +18,8 @@ class InMemoryKB(val kbInfo: KBInfo): PersistentKB {
     override fun conclusionStore() = conclusionStore
 
     override fun conditionStore() = conditionStore
+
+    override fun ruleStore(): RuleStore {
+        TODO("Not yet implemented")
+    }
 }

@@ -12,7 +12,8 @@ class KB(persistentKB: PersistentKB) {
     val attributeManager: AttributeManager = AttributeManager(persistentKB.attributeStore())
     val conclusionManager: ConclusionManager = ConclusionManager(persistentKB.conclusionStore())
     val conditionManager: ConditionManager = ConditionManager(attributeManager, persistentKB.conditionStore())
-    private val ruleManager: RuleManager = RuleManager(attributeManager, conclusionManager, conditionManager)
+
+    private val ruleManager: RuleManager = RuleManager(attributeManager, conclusionManager, conditionManager, persistentKB.ruleStore())
     val ruleTree: RuleTree = ruleManager.ruleTree()
     private val cornerstones = mutableSetOf<RDRCase>()
     private var ruleSession: RuleBuildingSession? = null

@@ -37,7 +37,7 @@ class PostgresAttributeStore(private val dbName: String) : AttributeStore {
         }
     }
 
-    override fun all() = transaction {
+    override fun all() = transaction {// todo shorten as in rule store
         val result = mutableSetOf<Attribute>()
         PGAttribute.all().forEach {
             result.add(Attribute(it.attributeName, it.id.value))
