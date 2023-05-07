@@ -3,6 +3,7 @@ package io.rippledown.integration.pageobjects
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
 import io.rippledown.constants.interpretation.*
 import io.rippledown.integration.pause
 import org.openqa.selenium.By
@@ -144,7 +145,7 @@ class InterpretationViewPO(private val driver: WebDriver) {
 
     fun requireBadgeCount(expected: Int): InterpretationViewPO {
         waitForDebounce()
-        driver.findElement(By.className(BADGE_CLASS)).text.toInt() shouldBe expected
+        driver.findElement(By.id(INTERPRETATION_CHANGES_BADGE)).text shouldContain expected.toString()
         return this
     }
 

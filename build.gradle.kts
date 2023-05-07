@@ -12,11 +12,11 @@ val diffUtilsVersion = "4.12"
 val testingLibraryReactVersion = "14.0.0"
 val kotestVersion = "5.5.5"
 val webDriverVersion = "5.3.2"
+val seleniumJavaVersion = "4.9.0"
 val awaitilityVersion = "4.2.0"
 val cucumberVersion = "7.11.2"
 val commonsIoVersion = "2.11.0"
 val commonsTextVersion = "1.10.0"
-val seleniumJavaVersion = "4.2.2"
 val mockkVersion = "1.13.4"
 
 plugins {

@@ -1,10 +1,7 @@
 package io.rippledown.interpretation
 
 import Handler
-import io.rippledown.constants.interpretation.INTERPRETATION_PANEL_CHANGES
-import io.rippledown.constants.interpretation.INTERPRETATION_PANEL_ORIGINAL
-import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
-import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL
+import io.rippledown.constants.interpretation.*
 import io.rippledown.model.Interpretation
 import mui.base.BadgeUnstyledProps
 import mui.lab.TabContext
@@ -48,6 +45,7 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
                     id = INTERPRETATION_TAB_CHANGES
                     label = FC<BadgeUnstyledProps> {
                         Badge {
+                            id = INTERPRETATION_CHANGES_BADGE
                             color = primary
                             showZero = false
                             badgeContent = interp.numberOfChanges().unsafeCast<ReactNode>()

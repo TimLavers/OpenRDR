@@ -165,6 +165,7 @@ class InterpretationTabsTest {
         val container = createRootFor(vfc)
         with(container) {
             waitForEvents()
+            findById("interpretation_changes_badge").textContent shouldBe "Changes3"
             requireBadgeCount(3) //Unchanged does not count
         }
     }

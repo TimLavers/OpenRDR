@@ -36,18 +36,6 @@ class ApiTest {
     }
 
     @Test
-    fun saveInterpretationShouldReturnOperationResultTest() = runTest {
-        val expectedResult = OperationResult("saved interpretation for case A")
-        val interpretation = Interpretation(CaseId("id1", "Case A"), "report proxy.text")
-        val config = config {
-            expectedInterpretation = interpretation
-            returnOperationResult = expectedResult
-        }
-        Api(mock(config)).saveInterpretation(interpretation) shouldBe expectedResult
-    }
-
-
-    @Test
     fun moveAttributeJustBelowOther() = runTest {
         val expectedResult = OperationResult("Attribute moved.")
         val moved =Attribute("A")

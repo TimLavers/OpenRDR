@@ -96,15 +96,6 @@ class ServerApplication {
         kb.caseViewManager.moveJustBelow(moved, target)
     }
 
-    fun saveInterpretationAndDeleteCase(interpretation: Interpretation): OperationResult {
-        saveInterpretation(interpretation)
-
-        // Now delete the corresponding case file.
-        val caseFile = File(casesDir, "${interpretation.caseId.id}.json")
-        FileUtils.delete(caseFile)
-        return OperationResult("Interpretation submitted")
-    }
-
     /**
      * Save the verified text.
      *
