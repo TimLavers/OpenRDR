@@ -26,7 +26,6 @@ suspend fun HTMLElement.clickSubmitButton() {
     }
 }
 
-
 fun HTMLElement.requireCaseToBeSelected(caseName: String) {
     findById(CASEVIEW_CASE_NAME_ID).textContent shouldBe caseName
 }

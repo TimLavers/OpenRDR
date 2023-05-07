@@ -143,6 +143,7 @@ class InterpretationViewPO(private val driver: WebDriver) {
     }
 
     fun requireBadgeCount(expected: Int): InterpretationViewPO {
+        waitForDebounce()
         driver.findElement(By.className(BADGE_CLASS)).text.toInt() shouldBe expected
         return this
     }

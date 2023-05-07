@@ -6,19 +6,13 @@ import io.rippledown.constants.interpretation.INTERPRETATION_PANEL_ORIGINAL
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL
 import io.rippledown.model.Interpretation
+import mui.base.BadgeUnstyledProps
 import mui.lab.TabContext
 import mui.lab.TabPanel
-import mui.material.Box
-import mui.material.Tab
-import mui.material.Tabs
-import mui.material.Typography
+import mui.material.*
+import mui.material.BadgeColor.Companion.primary
 import mui.system.sx
-import npm.BadgeWithChild
-import npm.BadgeWithChildProps
-import react.FC
-import react.Props
-import react.create
-import react.useState
+import react.*
 import web.cssom.pc
 import web.cssom.px
 
@@ -52,10 +46,12 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
 
                 Tab {
                     id = INTERPRETATION_TAB_CHANGES
-                    label = FC<BadgeWithChildProps> {
-                        BadgeWithChild {
-                            count = interp.numberOfChanges()
-                            childNode = changesLabel
+                    label = FC<BadgeUnstyledProps> {
+                        Badge {
+                            color = primary
+                            showZero = false
+                            badgeContent = interp.numberOfChanges().unsafeCast<ReactNode>()
+                            +changesLabel
                         }
                     }.create()
                     value = "1"
@@ -92,7 +88,7 @@ val interpretationLabel = FC<Props> {
     Typography {
         sx {
             fontSize = 14.px
-            paddingTop = 10.px //space for the badge
+            paddingTop = 10.px //align with the other tab
         }
         +"Interpretation"
     }

@@ -86,7 +86,6 @@ class RESTClient {
     fun addConditionForCurrentSession(condition: Condition): OperationResult {
         var result = OperationResult("")
         val data = Json.encodeToJsonElement(Condition.serializer(), condition)
-        println("data: $data")
         runBlocking {
             result = jsonClient.post(endpoint + ADD_CONDITION) {
                 contentType(ContentType.Application.Json)

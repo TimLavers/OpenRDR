@@ -4,12 +4,14 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
+import mui.material.Badge
 import mui.material.Button
 import mui.material.ButtonProps
 import proxy.findById
 import proxy.requireBadgeCount
 import proxy.requireNoBadge
 import react.FC
+import react.ReactNode
 import react.VFC
 import react.create
 import react.dom.createRootFor
@@ -22,8 +24,8 @@ class BadgeWithChildTest {
     fun shouldReadBadgeContent(): TestResult {
         return runTest {
             val vfc = VFC {
-                BadgeWithChild {
-                    count = 42
+                Badge {
+                    badgeContent = 42.unsafeCast<ReactNode>()
                 }
             }
             with(createRootFor(vfc)) {
@@ -36,8 +38,8 @@ class BadgeWithChildTest {
     fun shouldHideBadgeIfContentIsZero(): TestResult {
         return runTest {
             val vfc = VFC {
-                BadgeWithChild {
-                    count = 0
+                Badge {
+                    badgeContent = 0.unsafeCast<ReactNode>()
                 }
             }
             with(createRootFor(vfc)) {
@@ -61,9 +63,9 @@ class BadgeWithChildTest {
 
         return runTest {
             val vfc = VFC {
-                BadgeWithChild {
-                    count = 42
-                    childNode = button
+                Badge {
+                    badgeContent = 42.unsafeCast<ReactNode>()
+                    +button
                 }
             }
             with(createRootFor(vfc)) {
