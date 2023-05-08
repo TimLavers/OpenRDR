@@ -145,7 +145,7 @@ class InterpretationTabsTest {
 
 
     @Test
-    fun changesTabLabelShouldIndicateTheInitialNumberOfChanges() = runTest {
+    fun changesBadgeShouldIndicateTheNumberOfChanges() = runTest {
         val diffListToReturn = DiffList(
             listOf(
                 Unchanged(),
@@ -165,36 +165,22 @@ class InterpretationTabsTest {
         val container = createRootFor(vfc)
         with(container) {
             waitForEvents()
-            requireChangesLabel("Changes (3)") //Unchanged does not count
+            requireBadgeCount(3) //Unchanged does not count
         }
     }
 
     @Test
-    fun changesTabLabelShouldUpdateIfChangesAreMade() = runTest {
-        val diffListToReturn = DiffList(
-            listOf(
-                Unchanged(),
-                Addition(),
-                Removal(),
-                Replacement()
-            )
-        )
-        val interpretationWithDiffs = Interpretation(diffList = diffListToReturn)
+    fun changesBadgeShouldNotShowIfNoChanges() = runTest {
         val vfc = VFC {
-            val config = config {
-                returnInterpretation = interpretationWithDiffs
-            }
             InterpretationTabs {
                 scope = this@runTest
-                api = Api(mock(config))
+                api = Api(mock(config {}))
                 interpretation = Interpretation()
             }
         }
         val container = createRootFor(vfc)
         with(container) {
-            enterInterpretation("Go to Bondi now!")
-            waitForDebounce()
-            requireChangesLabel("Changes (3)") //Unchanged does not count
+            requireNoBadge()
         }
     }
 }

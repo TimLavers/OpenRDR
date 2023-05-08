@@ -1,4 +1,4 @@
-package react.dom
+ package react.dom
 
 import js.core.globalThis
 import react.VFC

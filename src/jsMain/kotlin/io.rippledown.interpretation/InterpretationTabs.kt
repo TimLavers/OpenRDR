@@ -6,16 +6,15 @@ import io.rippledown.constants.interpretation.INTERPRETATION_PANEL_ORIGINAL
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL
 import io.rippledown.model.Interpretation
+import mui.base.BadgeUnstyledProps
 import mui.lab.TabContext
 import mui.lab.TabPanel
-import mui.material.Box
-import mui.material.Tab
-import mui.material.Tabs
+import mui.material.*
+import mui.material.BadgeColor.Companion.primary
 import mui.system.sx
-import react.FC
-import react.ReactNode
-import react.useState
+import react.*
 import web.cssom.pc
+import web.cssom.px
 
 external interface InterpretationTabsHandler : Handler {
     var interpretation: Interpretation
@@ -41,14 +40,20 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
 
                 Tab {
                     id = INTERPRETATION_TAB_ORIGINAL
-                    label = "Interpretation".unsafeCast<ReactNode>()
+                    label = interpretationLabel
                     value = "0"
                 }
+
                 Tab {
                     id = INTERPRETATION_TAB_CHANGES
-                    val changes = interp.numberOfChanges()
-                    val badge = if (changes > 0) " ($changes)" else ""
-                    label = "Changes$badge".unsafeCast<ReactNode>()
+                    label = FC<BadgeUnstyledProps> {
+                        Badge {
+                            color = primary
+                            showZero = false
+                            badgeContent = interp.numberOfChanges().unsafeCast<ReactNode>()
+                            +changesLabel
+                        }
+                    }.create()
                     value = "1"
                 }
             }
@@ -79,6 +84,26 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
     }
 }
 
+val interpretationLabel = FC<Props> {
+    Typography {
+        sx {
+            fontSize = 14.px
+            paddingTop = 10.px //align with the other tab
+        }
+        +"Interpretation"
+    }
+}.create()
+
+val changesLabel = FC<Props> {
+    Typography {
+        sx {
+            fontSize = 14.px
+            paddingTop = 10.px //space for the badge
+            paddingRight = 10.px
+        }
+        +"Changes"
+    }
+}.create()
 
 
 

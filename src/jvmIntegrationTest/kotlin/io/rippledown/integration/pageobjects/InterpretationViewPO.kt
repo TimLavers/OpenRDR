@@ -20,13 +20,6 @@ class InterpretationViewPO(private val driver: WebDriver) {
         return this
     }
 
-    fun setInterpretationTextAndSubmit(text: String): InterpretationViewPO {
-        enterVerifiedText(text)
-        val sendButton = driver.findElement(By.id("send_interpretation_button"))
-        sendButton.click()
-        return this
-    }
-
     fun interpretationText() = interpretationArea().getAttribute("value")
 
     fun requireInterpretationText(expected: String): InterpretationViewPO {
@@ -146,6 +139,17 @@ class InterpretationViewPO(private val driver: WebDriver) {
 
     fun requireChangesLabel(expected: String): InterpretationViewPO {
         driver.findElement(By.id(INTERPRETATION_TAB_CHANGES)).text shouldBe expected
+        return this
+    }
+
+    fun requireBadgeCount(expected: Int): InterpretationViewPO {
+        waitForDebounce()
+        driver.findElement(By.className(BADGE_CLASS)).text.toInt() shouldBe expected
+        return this
+    }
+
+    fun requireNoBadge(): InterpretationViewPO {
+        driver.findElement(By.className(BADGE_INVISIBLE_CLASS)) shouldNotBe null
         return this
     }
 
