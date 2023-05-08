@@ -110,7 +110,7 @@ internal class ShowInterpretationDifference : UITestBase() {
             .requireNoBadge() //back to the original
     }
 
-    @Test
+   @Test
     fun `should show one Unchanged sentence if the user has not changed a non-blank interpretation`() {
         caseViewPO.nameShown() shouldBe caseName
         interpretationViewPO

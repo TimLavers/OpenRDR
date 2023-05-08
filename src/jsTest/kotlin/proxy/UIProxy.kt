@@ -5,26 +5,16 @@ import CASE_ID_PREFIX
 import NUMBER_OF_CASES_WAITING_ID
 import POLL_PERIOD
 import io.kotest.matchers.shouldBe
-import io.rippledown.interpretation.SEND_INTERPRETATION_BUTTON_ID
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import react.dom.test.Simulate
-import react.dom.test.act
 import web.dom.Element
 import web.dom.NodeListOf
 import web.html.HTMLElement
 import kotlin.js.Date
 import kotlin.js.JSON.stringify
 import kotlin.time.Duration.Companion.milliseconds
-
-
-suspend fun HTMLElement.clickSubmitButton() {
-    val element = findById(SEND_INTERPRETATION_BUTTON_ID)
-    act {
-        Simulate.click(element)
-    }
-}
 
 fun HTMLElement.requireCaseToBeSelected(caseName: String) {
     findById(CASEVIEW_CASE_NAME_ID).textContent shouldBe caseName

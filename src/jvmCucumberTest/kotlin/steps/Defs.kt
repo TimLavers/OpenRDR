@@ -97,10 +97,10 @@ class Defs : En {
             caseListPO.select("Case3")
         }
 
-        Given("I import the configured zipped Knowledge Base {word}") { exported: String ->
+        Given("I import the configured zipped Knowledge Base {word}") { toImport: String ->
             val kbInfoPO = KBInfoPO(driver)
-            kbInfoPO.importKB(exported)
-            kbInfoPO.waitForKBToBeLoaded(exported)
+            kbInfoPO.importKB(toImport)
+            kbInfoPO.waitForKBToBeLoaded(toImport)
         }
 
         And("I export the current Knowledge Base") {
@@ -108,9 +108,9 @@ class Defs : En {
             kbInfoPO.exportKB()
         }
 
-        Then("there is a file called Thyroids.zip in my downloads directory") {
+        Then("there is a file called {word} in my downloads directory") { fileName: String ->
             Awaitility.await().atMost(Duration.ofSeconds(5)).until {
-                File(uiTestBase.downloadsDir(), "Thyroids.zip").exists()
+                File(uiTestBase.downloadsDir(), fileName).exists()
             }
         }
 

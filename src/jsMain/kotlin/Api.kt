@@ -69,13 +69,6 @@ class Api(engine: HttpClientEngine = Js.create()) {
 
     suspend fun waitingCasesInfo(): CasesInfo = jsonClient.get("$endpoint$WAITING_CASES").body()
 
-    suspend fun saveInterpretation(interpretation: Interpretation): OperationResult {
-        return jsonClient.post("$endpoint$INTERPRETATION_SUBMITTED") {
-            contentType(ContentType.Application.Json)
-            setBody(interpretation)
-        }.body()
-    }
-
     /**
      * @return the interpretation containing the DiffList of the original and verified interpretation
      */

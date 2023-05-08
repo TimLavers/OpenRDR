@@ -6,7 +6,9 @@ import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_AREA
 import io.rippledown.model.Interpretation
 import kotlinx.coroutines.launch
-import mui.material.*
+import mui.material.Grid
+import mui.material.GridDirection
+import mui.material.TextField
 import mui.system.responsive
 import mui.system.sx
 import npm.debounce
@@ -70,24 +72,6 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
                 this.interpretation = handler.interpretation
             }
 
-        }
-        Grid {
-            item = true
-            Button {
-                +"Send interpretation"
-                id = SEND_INTERPRETATION_BUTTON_ID
-                variant = ButtonVariant.contained
-                color = ButtonColor.primary
-                size = Size.small
-                onClick = {
-                    val caseId = handler.interpretation.caseId
-                    val verifiedInterpretation = Interpretation(caseId = caseId, verifiedText = latestText)
-                    handler.scope.launch {
-                        handler.api.saveInterpretation(verifiedInterpretation)
-                    }
-                    latestText = ""
-                }
-            }
         }
     }
 }

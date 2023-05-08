@@ -11,13 +11,13 @@ import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.diff.Unchanged
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
 import org.apache.commons.io.FileUtils
 import java.io.File
-import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.Files
-import kotlin.test.*
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 internal class ServerApplicationTest {
     private lateinit var app: ServerApplication
@@ -39,45 +39,6 @@ internal class ServerApplicationTest {
     fun interpretationsDir() {
         assertEquals(app.interpretationsDir, File("interpretations"))
         assertTrue(app.interpretationsDir.exists())
-    }
-
-    @Test
-    fun saveInterpretationDeletesCase() {
-        val caseId = CaseId("Case1", "Case1")
-        setUpCaseFromFile("Case1", app)
-        val case1File = File(app.casesDir, "Case1.json")
-        assertTrue(case1File.exists())
-        val interpretation = Interpretation(caseId, "Whatever, blah.")
-        app.saveInterpretationAndDeleteCase(interpretation)
-        assertFalse(case1File.exists())
-    }
-
-    @Test
-    fun `should save an interpretation and delete the corresponding case`() {
-        setUpCaseFromFile("Case1", app)
-        val caseId = CaseId("Case1", "Case 1")
-        val interpretation = Interpretation(caseId, "Whatever, blah.")
-
-        assertEquals(app.interpretationsDir.listFiles()!!.size, 0)
-
-        app.saveInterpretationAndDeleteCase(interpretation)
-        assertEquals(app.interpretationsDir.listFiles()!!.size, 1)
-        val interpretationFile = File(app.interpretationsDir, "Case1.interpretation.json")
-        val data = FileUtils.readFileToString(interpretationFile, UTF_8)
-        val deserialized = Json.decodeFromString<Interpretation>(data)
-        assertEquals(deserialized.verifiedText, "Whatever, blah.")
-        assertEquals(deserialized.caseId, caseId)
-
-        // Save it again, with a different comment.
-        setUpCaseFromFile("Case1", app)
-        val interpretation2 = Interpretation(caseId, "Sure.")
-        app.saveInterpretationAndDeleteCase(interpretation2)
-        assertEquals(app.interpretationsDir.listFiles()!!.size, 1)
-        val interpretationFile2 = File(app.interpretationsDir, "Case1.interpretation.json")
-        val data2 = FileUtils.readFileToString(interpretationFile2, UTF_8)
-        val deserialized2 = Json.decodeFromString<Interpretation>(data2)
-        assertEquals(deserialized2.verifiedText, "Sure.")
-        assertEquals(deserialized2.caseId, caseId)
     }
 
     @Test
