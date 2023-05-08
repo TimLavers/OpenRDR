@@ -6,7 +6,7 @@ import kotlin.test.Test
 class PersistentRuleTest {
 
     @Test
-    fun primaryConstructor() {
+    fun `secondary constructor`() {
         val pr = PersistentRule(1, 0, 10, "100,101")
         pr.id shouldBe 1
         pr.parentId shouldBe 0
@@ -15,13 +15,21 @@ class PersistentRuleTest {
     }
 
     @Test
-    fun primaryConstructorNullId() {
+    fun `null id`() {
         val pr = PersistentRule(null, 0, 10, "100,101")
         pr.id shouldBe null
     }
 
     @Test
-    fun primaryConstructorNoConditions() {
+    fun `root rule constructor`() {
+        val pr = PersistentRule()
+        pr.id shouldBe null
+        pr.parentId shouldBe null
+        pr.conditionIds shouldBe emptySet()
+    }
+
+    @Test
+    fun `no conditions`() {
         val pr = PersistentRule(null, 0, 10, "")
         pr.id shouldBe null
         pr.parentId shouldBe 0
@@ -30,7 +38,7 @@ class PersistentRuleTest {
     }
 
     @Test
-    fun primaryConstructorNoConclusion() {
+    fun `no conclusion`() {
         val pr = PersistentRule(null, 0, null, "")
         pr.id shouldBe null
         pr.parentId shouldBe 0
@@ -39,7 +47,7 @@ class PersistentRuleTest {
     }
 
     @Test
-    fun secondaryConstructor() {
+    fun primaryConstructor() {
         val conditionIdsSet = setOf(100, 101, 102)
         val pr = PersistentRule(null, 0, 10, conditionIdsSet)
         pr.id shouldBe null

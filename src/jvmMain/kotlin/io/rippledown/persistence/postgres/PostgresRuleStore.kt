@@ -58,7 +58,7 @@ class PostgresRuleStore(private val dbName: String): RuleStore {
     private fun persistentRule(pgRule: PGRule) = PersistentRule(pgRule.id.value, pgRule.parentId, pgRule.conclusionId, pgRule.conditionIds)
 }
 object PGRules: IntIdTable(name = RULES_TABLE) {
-    val parentId = integer("parent")
+    val parentId = integer("parent").nullable()
     val conclusionId = integer("conclusion").nullable()
     val conditionIds = varchar("conditions", 1024)
 }

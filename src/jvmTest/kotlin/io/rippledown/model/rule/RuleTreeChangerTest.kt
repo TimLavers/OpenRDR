@@ -18,7 +18,7 @@ internal class RuleTreeChangerTest : RuleTestBase() {
     lateinit var ruleMaker: RuleMaker
 
     class RuleMaker(var id: Int): RuleFactory {
-        override fun create(parent: Rule, conclusion: Conclusion?, conditions: Set<Condition>): Rule {
+        override fun createRuleAndAddToParent(parent: Rule, conclusion: Conclusion?, conditions: Set<Condition>): Rule {
             return Rule(id++, parent, conclusion, conditions)
         }
     }

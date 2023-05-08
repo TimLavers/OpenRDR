@@ -16,7 +16,7 @@ class RuleBuildingSession(
     private val cornerstonesNotExempted = mutableSetOf<RDRCase>()
 
     class TemporaryRuleFactory: RuleFactory {
-        override fun create(parent: Rule, conclusion: Conclusion?, conditions: Set<Condition>) = Rule(Random.nextInt(), parent, conclusion, conditions)
+        override fun createRuleAndAddToParent(parent: Rule, conclusion: Conclusion?, conditions: Set<Condition>) = Rule(Random.nextInt(), parent, conclusion, conditions)
     }
 
     init {

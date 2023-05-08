@@ -25,6 +25,19 @@ class PostgresRuleStoreTest: PostgresStoreTest() {
     }
 
     @Test
+    fun `store root rule`() {
+        val storedRoot = store.create(PersistentRule())
+        storedRoot.id shouldNotBe null
+        storedRoot.parentId shouldBe null
+        storedRoot.conclusionId shouldBe null
+        storedRoot.conditionIds shouldBe emptySet()
+        // Rebuild and check it's there.
+        store = PostgresRuleStore(dbName)
+
+        store.all() shouldContain storedRoot
+    }
+
+    @Test
     fun create() {
         val pr1 = store.create(pr(0, 1, 1, 2, 3))
         store.all() shouldContain pr1

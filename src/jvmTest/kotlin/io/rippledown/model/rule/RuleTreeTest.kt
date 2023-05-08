@@ -12,7 +12,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class DummyRuleFactory: RuleFactory {
-    override fun create(parent: Rule, conclusion: Conclusion?, conditions: Set<Condition>): Rule {
+    override fun createRuleAndAddToParent(parent: Rule, conclusion: Conclusion?, conditions: Set<Condition>): Rule {
         return Rule(0, parent, conclusion, conditions)
     }
 }

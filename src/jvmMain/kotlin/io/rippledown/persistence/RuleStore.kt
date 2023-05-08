@@ -6,19 +6,15 @@ package io.rippledown.persistence
 internal fun idsSetToString(idsSet: Set<Int>) = idsSet.toSortedSet().joinToString(",")
 internal fun idsStringToIdsSet(idsString: String) = idsString.split(',').filter { it.isNotEmpty() }.map { it.toInt() }.toSet()
 
-/**
- * Persistent peer of a non-root rule.
- */
-data class PersistentRule(val id: Int?, val parentId: Int, val conclusionId: Int?, val conditionIds: Set<Int>) {
+data class PersistentRule(val id: Int?, val parentId: Int?, val conclusionId: Int?, val conditionIds: Set<Int>) {
 
-    constructor(id: Int?, parentId: Int, conclusionId: Int?, conditionIdsString: String): this(id, parentId, conclusionId, idsStringToIdsSet(conditionIdsString) )
+    constructor(id: Int?, parentId: Int?, conclusionId: Int?, conditionIdsString: String): this(id, parentId, conclusionId, idsStringToIdsSet(conditionIdsString) )
+
+    constructor(): this(null, null, null, emptySet() )
 
     fun conditionIdsString() = idsSetToString(conditionIds)
 }
 
-/**
- * Persists the non-root rules.
- */
 interface RuleStore {
     fun all(): Set<PersistentRule>
     fun create(prototype: PersistentRule):PersistentRule
