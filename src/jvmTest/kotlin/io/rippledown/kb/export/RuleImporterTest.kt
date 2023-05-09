@@ -4,6 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.rule.RuleTree
 import io.rippledown.model.rule.dsl.ruleTree
+import io.rippledown.persistence.PersistentRule
 import org.junit.Before
 import java.io.File
 import kotlin.test.Test
@@ -21,8 +22,8 @@ class RuleImporterTest: ExporterTestBase() {
     @Test
     fun `import size 1 tree`() {
         val rebuilt = exportImport()
-        rebuilt.size() shouldBe 1
-        rebuilt.root.structurallyEqual(tree.root) shouldBe true
+        rebuilt.size shouldBe 1
+        rebuilt.single() shouldBe  PersistentRule(tree.root)
     }
 
     @Test
@@ -38,8 +39,9 @@ class RuleImporterTest: ExporterTestBase() {
             }
         }.build()
         val rebuilt = exportImport()
-        rebuilt.size() shouldBe 2
-        rebuilt.root.structurallyEqual(tree.root) shouldBe true
+        rebuilt.size shouldBe 2
+        val expected = tree.rules().map { PersistentRule(it) }.toSet()
+        rebuilt shouldBe expected
     }
 
     @Test
@@ -79,13 +81,9 @@ class RuleImporterTest: ExporterTestBase() {
             }
         }.build()
         val rebuilt = exportImport()
-        rebuilt.size() shouldBe 5
-        tree.rules().forEach {
-            val rebuiltRule = rebuilt.rulesMatching { x ->
-                x.id == it.id
-            }.first()
-            rebuiltRule.structurallyEqual(it) shouldBe true
-        }
+        rebuilt.size shouldBe 5
+        val expected = tree.rules().map {PersistentRule(it)}.toSet()
+        rebuilt shouldBe expected
     }
 
     @Test
@@ -111,7 +109,7 @@ class RuleImporterTest: ExporterTestBase() {
         }.message shouldBe "Rule export destination is not an existing directory."
     }
 
-    private fun exportImport(): RuleTree {
+    private fun exportImport(): Set<PersistentRule> {
         RuleExporter(tempDir, tree).export()
         return RuleImporter(tempDir).import()
     }

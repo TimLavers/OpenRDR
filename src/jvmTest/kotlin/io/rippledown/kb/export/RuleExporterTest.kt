@@ -86,14 +86,14 @@ class RuleExporterTest: ExporterTestBase() {
         }.build()
         tree.rules().size shouldBe 5
         RuleExporter(tempDir, tree).export()
-        tree.rules().forEach {
+        tree.rules().forEach { it ->
             val file = File(tempDir, "${it.id}.json")
             val data = FileUtils.readFileToString(file, UTF_8)
             val exportedRule: ExportedRule = Json.decodeFromString(data)
-            exportedRule.id shouldBe it.id
-            exportedRule.parentId shouldBe it.parent?.id
-            exportedRule.conclusion shouldBe it.conclusion
-            exportedRule.conditions shouldBe  it.conditions
+            exportedRule.persistentRule.id shouldBe it.id
+            exportedRule.persistentRule.parentId shouldBe it.parent?.id
+            exportedRule.persistentRule.conclusionId shouldBe it.conclusion?.id
+            exportedRule.persistentRule.conditionIds shouldBe  it.conditions.map { it.id!! }.toSet()
         }
     }
 }

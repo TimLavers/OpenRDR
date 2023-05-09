@@ -1,6 +1,5 @@
 package io.rippledown.kb.export
 
-import io.rippledown.kb.AttributeManager
 import io.rippledown.kb.KB
 import io.rippledown.persistence.PersistenceProvider
 import java.io.File
@@ -26,11 +25,11 @@ class KBImporter(source: File, private val persistenceProvider: PersistenceProvi
         persistentKB.attributeOrderStore().load(attributeIdToIndex)
 
         // Extract the rule tree.
-        val ruleTree = RuleImporter(rulesDirectory).import()
+        val ruleStore = persistentKB.ruleStore()
+        ruleStore.load(RuleImporter(rulesDirectory).import())
 
         // Create the result KB.
         val result = KB(persistentKB)
-//        result.ruleTree = ruleTree
 
         // Add the cases.
         CaseImporter(casesDirectory).import().forEach { result.addCase(it) }

@@ -1,6 +1,10 @@
 package io.rippledown.persistence
 
 import io.kotest.matchers.shouldBe
+import io.rippledown.model.Attribute
+import io.rippledown.model.Conclusion
+import io.rippledown.model.condition.IsNormal
+import io.rippledown.model.rule.Rule
 import kotlin.test.Test
 
 class PersistentRuleTest {
@@ -62,5 +66,29 @@ class PersistentRuleTest {
         val pr = PersistentRule(null, 0, 10, conditionIdsSet)
         // This order is necessary, as explained in the code.
         pr.conditionIdsString() shouldBe "100,101,102"
+    }
+
+    @Test
+    fun `constructor from rule`() {
+        val parent = Rule(12, null, null, emptySet())
+        val parentPR = PersistentRule(parent)
+        parentPR.id shouldBe 12
+        parentPR.parentId shouldBe null
+        parentPR.conclusionId shouldBe null
+        parentPR.conditionIds shouldBe emptySet()
+        parentPR.conditionIdsString() shouldBe ""
+        val glucose = Attribute("Glucose", 233)
+        val condition = IsNormal(33, glucose)
+        val child = Rule(13, parent, Conclusion(99, "Blah"), setOf(condition))
+        val childPR = PersistentRule(child)
+        childPR.id shouldBe 13
+        childPR.parentId shouldBe 12
+        childPR.conclusionId shouldBe 99
+        childPR.conditionIds shouldBe setOf(33)
+    }
+
+    @Test
+    fun serialization() {
+        TODO()
     }
 }
