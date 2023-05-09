@@ -85,5 +85,12 @@ class Api(engine: HttpClientEngine = Js.create()) {
             setBody(Pair(moved, target))
         }.body()
     }
+
+    suspend fun buildRule(interpretation: Interpretation): Interpretation {
+        return jsonClient.post("$endpoint$BUILD_RULE") {
+            contentType(ContentType.Application.Json)
+            setBody(interpretation)
+        }.body()
+    }
 }
 

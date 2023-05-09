@@ -24,6 +24,7 @@ data class Interpretation(
     }
 
     fun numberOfChanges() = diffList.numberOfChanges()
+    fun selectedChange() = diffList.selectedChange()
 
     fun add(ruleSummary: RuleSummary) {
         ruleSummaries.add(ruleSummary)

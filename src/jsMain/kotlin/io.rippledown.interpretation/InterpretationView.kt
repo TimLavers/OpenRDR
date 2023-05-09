@@ -25,7 +25,6 @@ external interface InterpretationViewHandler : Handler {
     var onInterpretationEdited: (interp: Interpretation) -> Unit
 }
 
-const val SEND_INTERPRETATION_BUTTON_ID = "send_interpretation_button"
 typealias FormEventAlias = (react.dom.events.FormEvent<HTMLDivElement>) -> Unit
 
 val InterpretationView = FC<InterpretationViewHandler> { handler ->

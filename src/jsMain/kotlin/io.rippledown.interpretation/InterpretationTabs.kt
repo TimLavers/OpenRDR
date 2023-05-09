@@ -75,7 +75,10 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
                 DiffViewer {
                     api = handler.api
                     scope = handler.scope
-                    changes = interp.diffList.diffs
+                    interpretation = interp
+                    onRuleBuilt = { newInterpretation ->
+                        interp = newInterpretation
+                    }
                 }
             }
         }

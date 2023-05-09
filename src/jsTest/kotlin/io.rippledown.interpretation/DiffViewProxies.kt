@@ -3,35 +3,38 @@ package io.rippledown.interpretation
 import io.kotest.assertions.fail
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.rippledown.constants.interpretation.DIFF_VIEWER_BUILD_ICON
 import io.rippledown.constants.interpretation.DIFF_VIEWER_CHANGED
-import io.rippledown.constants.interpretation.DIFF_VIEWER_CHECKBOX
 import io.rippledown.constants.interpretation.DIFF_VIEWER_ORIGINAL
 import io.rippledown.constants.interpretation.DIFF_VIEWER_ROW
 import kotlinx.browser.window
 import org.w3c.dom.Element
 import proxy.findAllById
 import proxy.findById
+import react.dom.test.Simulate
 import web.html.HTMLElement
-
-fun HTMLElement.requireTitle(expected: String) {
-    querySelector("[title=$expected]") shouldNotBe null
-}
 
 fun HTMLElement.requireNumberOfRows(expected: Int) {
     findAllById(DIFF_VIEWER_ROW).length shouldBe expected
 }
 
-fun HTMLElement.requireNoCheckBoxForRow(row: Int) {
+fun HTMLElement.moveMouseOverRow(row: Int) {
+    val tableRow = findById("$DIFF_VIEWER_ROW$row")
+    Simulate.mouseOver(tableRow)
+}
+
+fun HTMLElement.requireNoBuildIconForRow(row: Int) {
     try {
-        findById("$DIFF_VIEWER_CHECKBOX$row")
-        fail("Expected no checkbox for row $row")
+        val tableRow = findById("$DIFF_VIEWER_ROW$row")
+        tableRow.findById("$DIFF_VIEWER_BUILD_ICON$row")
+        fail("Expected no build icon for row $row")
     } catch (e: Error) {
         //expected
     }
 }
 
-fun HTMLElement.requireCheckBoxForRow(row: Int) {
-    findById("$DIFF_VIEWER_CHECKBOX$row") shouldNotBe null
+fun HTMLElement.requireBuildIconForRow(row: Int) {
+    findById("$DIFF_VIEWER_BUILD_ICON$row") shouldNotBe null
 }
 
 fun HTMLElement.requireNoOriginalTextInRow(row: Int) {

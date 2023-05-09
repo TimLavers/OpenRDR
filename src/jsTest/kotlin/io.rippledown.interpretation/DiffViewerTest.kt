@@ -1,37 +1,21 @@
 package io.rippledown.interpretation
 
-import io.rippledown.model.diff.Addition
-import io.rippledown.model.diff.Removal
-import io.rippledown.model.diff.Replacement
-import io.rippledown.model.diff.Unchanged
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import io.rippledown.model.Interpretation
+import io.rippledown.model.diff.*
 import kotlinx.coroutines.test.runTest
 import react.VFC
 import react.dom.checkContainer
+import react.dom.createRootFor
+import react.dom.test.act
 import kotlin.test.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class DiffViewerTest {
-
-    @Test
-    fun shouldShowTheTitle() = runTest {
-        val vfc = VFC {
-            DiffViewer {
-                changes = listOf()
-            }
-        }
-        checkContainer(vfc) { container ->
-            with(container) {
-                requireTitle("Changes")
-            }
-        }
-    }
 
     @Test
     fun shouldNotShowAnyRowsIfNoChanges() = runTest {
         val vfc = VFC {
             DiffViewer {
-                changes = listOf()
+                interpretation = Interpretation()
             }
         }
         checkContainer(vfc) { container ->
@@ -39,14 +23,15 @@ class DiffViewerTest {
                 requireNumberOfRows(0)
             }
         }
-
     }
 
     @Test
     fun shouldShowARowForEachUnchangedDiff() = runTest {
         val vfc = VFC {
             DiffViewer {
-                changes = listOf(Unchanged(), Unchanged(), Unchanged())
+                interpretation = Interpretation(
+                    diffList = DiffList(listOf(Unchanged(), Unchanged(), Unchanged()))
+                )
             }
         }
         checkContainer(vfc) { container ->
@@ -61,7 +46,9 @@ class DiffViewerTest {
     fun shouldShowARowForEachChangedDiff() = runTest {
         val vfc = VFC {
             DiffViewer {
-                changes = listOf(Addition(), Removal(), Replacement())
+                interpretation = Interpretation(
+                    diffList = DiffList(listOf(Addition(), Removal(), Replacement()))
+                )
             }
         }
         checkContainer(vfc) { container ->
@@ -73,104 +60,159 @@ class DiffViewerTest {
     }
 
     @Test
-    fun shouldShowACheckboxForAllDiffsExceptUnchanged() = runTest {
+    fun shouldShowABuildIconByDefaultForFirstUnchangedDiff() = runTest {
         val vfc = VFC {
             DiffViewer {
-                changes = listOf(
-                    Unchanged(),
-                    Addition(),
-                    Replacement(),
-                    Removal(),
-                    Unchanged()
+                interpretation = Interpretation(
+                    diffList = DiffList(
+                        listOf(
+                            Unchanged(),
+                            Unchanged(),
+                            Unchanged(),
+                            Addition(),
+                            Unchanged()
+                        )
+                    )
                 )
             }
         }
-        checkContainer(vfc) { container ->
-            with(container) {
-                requireNoCheckBoxForRow(0)
-                requireCheckBoxForRow(1)
-                requireCheckBoxForRow(2)
-                requireCheckBoxForRow(3)
-                requireNoCheckBoxForRow(4)
-            }
+        val container = createRootFor(vfc)
+        with(container) {
+            requireBuildIconForRow(3)
         }
     }
 
     @Test
-    fun shouldShowAnUnchangedTextInOriginalAndChangedColumns() = runTest {
-        val text = "Go to Bondi now!"
+    fun shouldShowABuildIconWhenMouseIsOverChangedDiff() = runTest {
         val vfc = VFC {
             DiffViewer {
-                changes = listOf(
-                    Unchanged(text),
+                interpretation = Interpretation(
+                    diffList = DiffList(
+                        listOf(
+                            Addition(),
+                            Unchanged(),
+                            Removal(),
+                            Unchanged()
+                        )
+                    )
                 )
             }
         }
-        checkContainer(vfc) { container ->
-            with(container) {
-                requireOriginalTextInRow(0, text)
-                requireChangedTextInRow(0, text)
-            }
+        val container = createRootFor(vfc)
+        with(container) {
+            act { moveMouseOverRow(2) }
+            requireBuildIconForRow(2)
         }
     }
 
     @Test
-    fun shouldShowAnAddedTextInGreenInChangedColumnOnly() = runTest {
-        val text = "Go to Bondi now!"
+    fun shouldNotShowABuildIconWhenMouseIsOverUnchangedDiff() = runTest {
         val vfc = VFC {
             DiffViewer {
-                changes = listOf(
-                    Addition(text),
+                interpretation = Interpretation(
+                    diffList = DiffList(
+                        listOf(
+                            Addition(),
+                            Unchanged(),
+                            Removal(),
+                            Unchanged()
+                        )
+                    )
                 )
             }
         }
-        checkContainer(vfc) { container ->
-            with(container) {
-                requireNoOriginalTextInRow(0)
-                requireChangedTextInRow(0, text)
-                requireGreenBackgroundInChangedColumnInRow(0)
-            }
+        val container = createRootFor(vfc)
+        with(container) {
+            act { moveMouseOverRow(1) }
+            requireNoBuildIconForRow(1)
         }
     }
+}
 
-    @Test
-    fun shouldShowARemovedTextInRedInOriginalColumnOnly() = runTest {
-        val text = "Go to Bondi now!"
-        val vfc = VFC {
-            DiffViewer {
-                changes = listOf(
-                    Removal(text),
+@Test
+fun shouldShowAnUnchangedTextInOriginalAndChangedColumns() = runTest {
+    val text = "Go to Bondi now!"
+    val vfc = VFC {
+        DiffViewer {
+            interpretation = Interpretation(
+                diffList = DiffList(
+                    listOf(
+                        Unchanged(text),
+                    )
                 )
-            }
-        }
-        checkContainer(vfc) { container ->
-            with(container) {
-                requireOriginalTextInRow(0, text)
-                requireNoChangedTextInRow(0)
-                requireRedBackgroundInOriginalColumnInRow(0)
-            }
+            )
         }
     }
-
-
-    @Test
-    fun shouldShowAReplacedAndReplacementTextsInTheirRespectiveColumnsWithCorrespondingColours() = runTest {
-        val replaced = "Go to Bondi"
-        val replacement = "Go to Bondi now!"
-        val vfc = VFC {
-            DiffViewer {
-                changes = listOf(
-                    Replacement(replaced, replacement),
-                )
-            }
+    checkContainer(vfc) { container ->
+        with(container) {
+            requireOriginalTextInRow(0, text)
+            requireChangedTextInRow(0, text)
         }
-        checkContainer(vfc) { container ->
-            with(container) {
-                requireOriginalTextInRow(0, replaced)
-                requireChangedTextInRow(0, replacement)
-                requireRedBackgroundInOriginalColumnInRow(0)
-                requireGreenBackgroundInChangedColumnInRow(0)
-            }
+    }
+}
+
+@Test
+fun shouldShowAnAddedTextInGreenInChangedColumnOnly() = runTest {
+    val text = "Go to Bondi now!"
+    val vfc = VFC {
+        DiffViewer {
+            interpretation = Interpretation(diffList = DiffList(diffs = listOf(Addition(text))))
+        }
+    }
+    checkContainer(vfc) { container ->
+        with(container) {
+            requireNoOriginalTextInRow(0)
+            requireChangedTextInRow(0, text)
+            requireGreenBackgroundInChangedColumnInRow(0)
+        }
+    }
+}
+
+@Test
+fun shouldShowARemovedTextInRedInOriginalColumnOnly() = runTest {
+    val text = "Go to Bondi now!"
+    val vfc = VFC {
+        DiffViewer {
+            interpretation = Interpretation(
+                diffList = DiffList(
+                    listOf(
+                        Removal(text),
+                    )
+                )
+            )
+        }
+    }
+    checkContainer(vfc) { container ->
+        with(container) {
+            requireOriginalTextInRow(0, text)
+            requireNoChangedTextInRow(0)
+            requireRedBackgroundInOriginalColumnInRow(0)
+        }
+    }
+}
+
+
+@Test
+fun shouldShowAReplacedAndReplacementTextsInTheirRespectiveColumnsWithCorrespondingColours() = runTest {
+    val replaced = "Go to Bondi"
+    val replacement = "Go to Bondi now!"
+    val vfc = VFC {
+        DiffViewer {
+            interpretation = Interpretation(
+                diffList = DiffList(
+                    listOf(
+                        Replacement(replaced, replacement),
+                    )
+                )
+            )
+        }
+    }
+    checkContainer(vfc) { container ->
+        with(container) {
+            requireOriginalTextInRow(0, replaced)
+            requireChangedTextInRow(0, replacement)
+            requireRedBackgroundInOriginalColumnInRow(0)
+            requireGreenBackgroundInChangedColumnInRow(0)
         }
     }
 }

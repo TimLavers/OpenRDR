@@ -123,23 +123,18 @@ class InterpretationTabsTest {
             act {
                 selectChangesTab()
             }
-            waitForEvents()
             requireNumberOfRows(4)
             requireOriginalTextInRow(0, unchangedText)
             requireChangedTextInRow(0, unchangedText)
-            requireNoCheckBoxForRow(0) //Unchanged
 
             requireOriginalTextInRow(1, "")
             requireChangedTextInRow(1, addedText)
-            requireCheckBoxForRow(1)
 
             requireOriginalTextInRow(2, removedText)
             requireChangedTextInRow(2, "")
-            requireCheckBoxForRow(2)
 
             requireOriginalTextInRow(3, replacedText)
             requireChangedTextInRow(3, replacementText)
-            requireCheckBoxForRow(3)
         }
     }
 

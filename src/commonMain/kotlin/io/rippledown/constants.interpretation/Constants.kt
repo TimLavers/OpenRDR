@@ -10,7 +10,7 @@ val DEBOUNCE_WAIT_PERIOD_MILLIS = 500L
 
 val DIFF_VIEWER_TABLE = "diff_viewer_table"
 val DIFF_VIEWER_ROW = "diff_viewer_row_"
-val DIFF_VIEWER_CHECKBOX = "diff_viewer_checkbox_"
+val DIFF_VIEWER_BUILD_ICON = "diff_viewer_build_icon_"
 val DIFF_VIEWER_ORIGINAL = "diff_viewer_original_"
 val DIFF_VIEWER_CHANGED = "diff_viewer_changed_"
 

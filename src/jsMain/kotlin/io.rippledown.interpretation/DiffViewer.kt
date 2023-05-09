@@ -1,44 +1,45 @@
 package io.rippledown.interpretation
 
 import Handler
+import debug
 import green
 import io.rippledown.constants.interpretation.*
-import io.rippledown.model.diff.Diff
+import io.rippledown.model.Interpretation
 import io.rippledown.model.diff.Unchanged
+import kotlinx.coroutines.launch
+import mui.icons.material.Build
 import mui.material.*
 import mui.material.styles.TypographyVariant
 import mui.system.sx
 import react.FC
+import react.ReactNode
+import react.useState
 import red
-import web.cssom.Color
+import web.cssom.Cursor
 import web.cssom.px
 
 
 external interface DiffViewerHandler : Handler {
-    var changes: List<Diff>
+    var interpretation: Interpretation
+    var onRuleBuilt: (interp: Interpretation) -> Unit
 }
 
 val DiffViewer = FC<DiffViewerHandler> { handler ->
+    val diffList = handler.interpretation.diffList
+    var cursorOnRow by useState(diffList.indexOfFirstChange())
+
     TableContainer {
-        title = "Changes"
         component = Paper
         Table {
             sx {
                 minWidth = 400.px
-
+                cursor = Cursor.pointer
             }
             TableHead {
                 TableRow {
                     sx {
-                        paddingTop = 5.px
-                        paddingBottom = 5.px
+                        padding = 5.px
                         height = 30.px
-                    }
-                    TableCell {
-                        Typography {
-                            +"Select rule action"
-                            variant = TypographyVariant.subtitle2
-                        }
                     }
 
                     TableCell {
@@ -53,32 +54,25 @@ val DiffViewer = FC<DiffViewerHandler> { handler ->
                             variant = TypographyVariant.subtitle2
                         }
                     }
+                    TableCell {
+                    }
+
                 }
             }
             TableBody {
                 id = DIFF_VIEWER_TABLE
-                handler.changes.forEachIndexed() { index, change ->
+                diffList.diffs.forEachIndexed() { index, change ->
+                    debug("***index $index change $change")
                     TableRow {
                         id = "$DIFF_VIEWER_ROW$index"
                         sx {
                             padding = 5.px
                             height = 10.px
                         }
-                        TableCell {
-                            sx {
-                                padding = 5.px
-                                height = 10.px
-                            }
-                            if (change !is Unchanged) {
-                                Checkbox {
-                                    id = "$DIFF_VIEWER_CHECKBOX$index"
-                                    sx {
-                                        color = Color("primary.main")
-                                    }
-
-                                }
-                            }
+                        onMouseOver = {
+                            cursorOnRow = index
                         }
+
                         TableCell {
                             sx {
                                 padding = 5.px
@@ -109,10 +103,43 @@ val DiffViewer = FC<DiffViewerHandler> { handler ->
                                 }
                             }
                         }
+                        TableCell {
+                            sx {
+                                padding = 5.px
+                                height = 10.px
+                                minWidth = 50.px
+                            }
+                            if (change !is Unchanged && cursorOnRow == index) {
+                                Tooltip {
+                                    title = "Build a rule for this change".unsafeCast<ReactNode>()
+                                    IconButton {
+                                        sx {
+                                            padding = 5.px
+                                            height = 10.px
+                                        }
+                                        Build {
+                                        }
+                                        id = "$DIFF_VIEWER_BUILD_ICON$index"
+                                        onClick = {
+                                            handler.scope.launch {
+                                                diffList.selected = index //identify the change
+                                                val interp = handler.api.buildRule(handler.interpretation)
+                                                handler.onRuleBuilt(interp)
+                                                debug("built a rule for $index")
+                                                debug("difflist returned ${interp.diffList}")
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
 
         }
     }
+
 }
+
+

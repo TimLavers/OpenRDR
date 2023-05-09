@@ -120,6 +120,26 @@ class ServerApplication {
         return case.interpretation
     }
 
+    fun buildRule(interpretation: Interpretation): Interpretation {
+        val caseId = interpretation.caseId.id
+        val case = case(caseId)
+
+        val diff = interpretation.selectedChange()
+        startRuleSessionToAddConclusion(caseId, Conclusion(diff.right()))
+        commitCurrentRuleSession()
+
+        kb.interpret(case)
+
+        //reset the case's diff list
+        case.interpretation.diffList = diffList(interpretation)
+
+        //put the updated case back into the map
+        idToCase[caseId] = case
+
+        //return the updated interpretation
+        return case.interpretation
+    }
+
     private fun writeInterpretationToFile(id: String, interpretation: Interpretation) {
         val fileName = "$id.interpretation.json"
         println("${LocalDateTime.now()}  saving interp = $fileName")
