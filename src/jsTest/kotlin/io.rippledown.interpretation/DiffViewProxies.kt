@@ -37,6 +37,11 @@ fun HTMLElement.requireBuildIconForRow(row: Int) {
     findById("$DIFF_VIEWER_BUILD_ICON$row") shouldNotBe null
 }
 
+fun HTMLElement.clickBuildIconForRow(row: Int) {
+    val icon = findById("$DIFF_VIEWER_BUILD_ICON$row")
+    Simulate.click(icon)
+}
+
 fun HTMLElement.requireNoOriginalTextInRow(row: Int) {
     try {
         findById("$DIFF_VIEWER_ORIGINAL$row")
