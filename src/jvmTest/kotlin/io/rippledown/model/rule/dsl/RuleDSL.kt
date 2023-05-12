@@ -2,32 +2,21 @@ package io.rippledown.model.rule.dsl
 
 import io.rippledown.model.Attribute
 import io.rippledown.model.Conclusion
+import io.rippledown.model.ConclusionFactory
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ContainsText
 import io.rippledown.model.rule.Rule
 import io.rippledown.model.rule.RuleTree
 import kotlin.random.Random
 
-fun ruleTree(init: ABSTRACT_RULE_TEMPLATE.() -> Unit) : ROOT_TEMPLATE {
-    val n = ROOT_TEMPLATE()
+fun ruleTree(conclusionFactory: ConclusionFactory,init: ABSTRACT_RULE_TEMPLATE.() -> Unit) : ROOT_TEMPLATE {
+    val n = ROOT_TEMPLATE(conclusionFactory)
     n.init()
     return n
 }
 
-open class ABSTRACT_RULE_TEMPLATE {
-    private val conclusionTextToId = mapOf("ROOT" to 999,
-        "A" to 1000,
-        "B" to 1001,
-        "C" to 1002,
-        "ConcA" to 1003,
-        "ConcB" to 1004,
-        "ConcC" to 1005,
-        "ConcD" to 1006,
-        "ConclusionA" to 1010,
-        "ConclusionB" to 10011,
-        "ConclusionC" to 1012,
-        "ConclusionD" to 1013,
-        )
+open class ABSTRACT_RULE_TEMPLATE(val conclusionFactory: ConclusionFactory) {
+
     protected lateinit var conclusionText: String
     var id = Random.nextInt()
     protected var isStopping: Boolean = false
@@ -35,7 +24,7 @@ open class ABSTRACT_RULE_TEMPLATE {
     protected val childRules = mutableListOf<RULE_TEMPLATE>()
 
     open fun child(init: RULE_TEMPLATE.() -> RULE_TEMPLATE) = apply {
-        val r = RULE_TEMPLATE()
+        val r = RULE_TEMPLATE(conclusionFactory)
         r.init()
         childRules.add(r)
     }
@@ -46,17 +35,12 @@ open class ABSTRACT_RULE_TEMPLATE {
         return result
     }
 
-    fun createConclusion(): Conclusion {
-        if (conclusionTextToId.containsKey(conclusionText)) {
-            return Conclusion(conclusionTextToId[conclusionText]!!, conclusionText)
-        }
-        throw IllegalStateException("Unknown conclusion text: $conclusionText")
-    }
+    fun createConclusion() = conclusionFactory.getOrCreate(conclusionText)
 }
 
-class ROOT_TEMPLATE : ABSTRACT_RULE_TEMPLATE() {
+class ROOT_TEMPLATE(conclusionFactory: ConclusionFactory) : ABSTRACT_RULE_TEMPLATE(conclusionFactory) {
     override fun child(init: RULE_TEMPLATE.() -> RULE_TEMPLATE) = apply {
-        val r = RULE_TEMPLATE()
+        val r = RULE_TEMPLATE(conclusionFactory)
         r.init()
         childRules.add(r)
     }
@@ -76,9 +60,9 @@ class ROOT_TEMPLATE : ABSTRACT_RULE_TEMPLATE() {
     }
 }
 
-class RULE_TEMPLATE : ABSTRACT_RULE_TEMPLATE() {
+class RULE_TEMPLATE(conclusionFactory: ConclusionFactory) : ABSTRACT_RULE_TEMPLATE(conclusionFactory) {
     override fun child(init: RULE_TEMPLATE.() -> RULE_TEMPLATE) = apply {
-        val r = RULE_TEMPLATE()
+        val r = RULE_TEMPLATE(conclusionFactory)
         r.init()
         childRules.add(r)
     }

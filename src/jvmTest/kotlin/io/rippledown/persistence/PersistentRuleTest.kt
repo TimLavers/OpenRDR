@@ -5,6 +5,9 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.Conclusion
 import io.rippledown.model.condition.IsNormal
 import io.rippledown.model.rule.Rule
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import kotlin.test.Test
 
 class PersistentRuleTest {
@@ -89,6 +92,16 @@ class PersistentRuleTest {
 
     @Test
     fun serialization() {
-        TODO()
+        val conditionIdsSet = setOf(100, 101, 102)
+        val pr = PersistentRule(null, 0, 10, conditionIdsSet)
+        pr shouldBe serializeDeserialize(pr)
+
+        val pr2 = PersistentRule(900, 34, 12, emptySet())
+        pr2 shouldBe serializeDeserialize(pr2)
+    }
+
+    private fun serializeDeserialize(persistentRule: PersistentRule): PersistentRule {
+        val serialized = Json.encodeToString(persistentRule)
+        return Json.decodeFromString(serialized)
     }
 }

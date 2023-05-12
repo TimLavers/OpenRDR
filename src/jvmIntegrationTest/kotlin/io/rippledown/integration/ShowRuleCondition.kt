@@ -59,7 +59,7 @@ internal class ShowRuleCondition : UITestBase() {
     private fun buildRuleForTSH() {
         with(RESTClient()) {
             getCaseWithName(caseName)
-            val tshComment = conclusionFactory.create(tshComment)
+            val tshComment = conclusionFactory.getOrCreate(tshComment)
             startSessionToAddConclusionForCurrentCase(tshComment)
             addConditionForCurrentSession(condition1)
             addConditionForCurrentSession(condition2)
@@ -70,7 +70,7 @@ internal class ShowRuleCondition : UITestBase() {
     private fun buildRuleForABC() {
         with(RESTClient()) {
             getCaseWithName(caseName)
-            val abcConclusion = conclusionFactory.create(abcComment)
+            val abcConclusion = conclusionFactory.getOrCreate(abcComment)
             startSessionToAddConclusionForCurrentCase(abcConclusion)
             addConditionForCurrentSession(condition3)
             addConditionForCurrentSession(condition4)

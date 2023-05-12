@@ -2,6 +2,7 @@ package io.rippledown.kb.export
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.rippledown.model.DummyConclusionFactory
 import io.rippledown.model.rule.RuleTree
 import io.rippledown.model.rule.dsl.ruleTree
 import kotlinx.serialization.decodeFromString
@@ -14,10 +15,12 @@ import kotlin.text.Charsets.UTF_8
 
 class RuleExporterTest: ExporterTestBase() {
     private lateinit var tree: RuleTree
+    private lateinit var conclusionFactory: DummyConclusionFactory
 
     @Before
     override fun init() {
         super.init()
+        conclusionFactory = DummyConclusionFactory()
         tempDir.mkdirs()
         tree = RuleTree()
     }
@@ -50,7 +53,7 @@ class RuleExporterTest: ExporterTestBase() {
 
     @Test
     fun `each rule is in its own file`() {
-        tree = ruleTree {
+        tree = ruleTree(conclusionFactory) {
             child {
                 id = 34
                 conclusion { "ConclusionA" }

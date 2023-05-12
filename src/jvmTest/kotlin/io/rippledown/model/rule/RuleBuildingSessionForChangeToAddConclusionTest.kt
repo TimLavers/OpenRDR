@@ -2,9 +2,11 @@ package io.rippledown.model.rule
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Conclusion
+import io.rippledown.model.DummyConclusionFactory
 import io.rippledown.model.condition.ContainsText
 import io.rippledown.model.rule.dsl.ruleTree
 import io.rippledown.util.shouldBeEqualUsingSameAs
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() {
@@ -12,7 +14,13 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
     private val cc1 = clinicalNotesCase("CC1")
     private val cc2 = clinicalNotesCase("CC2")
     private val cornerstoneMap = mutableSetOf(cc1, cc2)
+    private lateinit var conclusionFactory: DummyConclusionFactory
     private val ruleFactory = DummyRuleFactory()
+
+    @BeforeTest
+    fun setup() {
+        conclusionFactory = DummyConclusionFactory()
+    }
 
     @Test
     fun toStringTest() {
@@ -67,7 +75,7 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
 
     @Test
     fun updating_the_rule_tree_for_an_add_action_should_add_the_rule_under_the_root() {
-        val tree = ruleTree {
+        val tree = ruleTree(conclusionFactory) {
             child {
                 +"A"
                 condition {
@@ -87,7 +95,7 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
         tree.root.childRules().size shouldBe 2 //sanity
         val rulesBefore = tree.rules()
 
-        val addAction = ChangeTreeToAddConclusion(findOrCreateConclusion("A", tree.root))
+        val addAction = ChangeTreeToAddConclusion(conclusionFactory.getOrCreate("A"))
         val session = RuleBuildingSession(ruleFactory, tree, sessionCase, addAction, setOf())
         session
             .addCondition(ContainsText(null, clinicalNotes, "3"))
@@ -100,13 +108,13 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
         val ruleAdded = rulesAdded.random()
         ruleAdded.childRules() shouldBe emptySet()
         ruleAdded.conditions shouldBeEqualUsingSameAs setOf(ContainsText(null, clinicalNotes, "3"), ContainsText(null, clinicalNotes, "1"))
-        ruleAdded.conclusion shouldBe findOrCreateConclusion( "A", tree.root)
+        ruleAdded.conclusion shouldBe conclusionFactory.getOrCreate("A")
         ruleAdded.parent!!.parent shouldBe null
     }
 
     @Test
     fun isApplicable() {
-        val tree = ruleTree {
+        val tree = ruleTree(conclusionFactory) {
             child {
                 +"A"
                 condition {
@@ -116,7 +124,7 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
             }
         }.build()
 
-        val addAction = ChangeTreeToAddConclusion(findOrCreateConclusion("A", tree.root))
+        val addAction = ChangeTreeToAddConclusion(conclusionFactory.getOrCreate("A"))
 
         val hasConclusionAlready = clinicalNotesCase("1")
         addAction.isApplicable(tree, hasConclusionAlready) shouldBe false

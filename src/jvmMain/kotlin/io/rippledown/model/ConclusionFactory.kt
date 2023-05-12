@@ -1,5 +1,6 @@
 package io.rippledown.model
 
 interface ConclusionFactory {
-    fun create(text: String): Conclusion
+    fun getOrCreate(text: String): Conclusion
+    fun getById(id: Int): Conclusion?
 }

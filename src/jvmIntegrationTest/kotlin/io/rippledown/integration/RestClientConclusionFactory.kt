@@ -5,7 +5,11 @@ import io.rippledown.model.Conclusion
 import io.rippledown.model.ConclusionFactory
 
 class RestClientConclusionFactory(private val restClient: RESTClient): ConclusionFactory {
-    override fun create(text: String): Conclusion {
+    override fun getOrCreate(text: String): Conclusion {
         return restClient.getOrCreateConclusion(text)
+    }
+
+    override fun getById(id: Int): Conclusion? {
+        TODO("Not yet implemented")
     }
 }

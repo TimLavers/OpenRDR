@@ -137,7 +137,7 @@ internal class TSHRulesTest : TSHTest() {
     private fun addCommentForCase(caseName: String, comment: String, vararg conditions: Condition) {
         val restClient = RESTClient()
         restClient.getCaseWithName(caseName)
-        val conclusion = conclusionFactory.create(comment)
+        val conclusion = conclusionFactory.getOrCreate(comment)
         restClient.startSessionToAddConclusionForCurrentCase(conclusion)
         conditions.forEach {
             restClient.addConditionForCurrentSession(it)
@@ -153,8 +153,8 @@ internal class TSHRulesTest : TSHTest() {
     ) {
         val restClient = RESTClient()
         restClient.getCaseWithName(caseName)
-        val conclusionToGo = conclusionFactory.create(toGo)
-        val replacementConclusion = conclusionFactory.create(replacement)
+        val conclusionToGo = conclusionFactory.getOrCreate(toGo)
+        val replacementConclusion = conclusionFactory.getOrCreate(replacement)
         restClient.startSessionToReplaceConclusionForCurrentCase(conclusionToGo, replacementConclusion)
         conditions.forEach {
             restClient.addConditionForCurrentSession(it)

@@ -2,6 +2,7 @@ package io.rippledown.kb.export
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.rippledown.model.DummyConclusionFactory
 import io.rippledown.model.rule.RuleTree
 import io.rippledown.model.rule.dsl.ruleTree
 import io.rippledown.persistence.PersistentRule
@@ -10,11 +11,13 @@ import java.io.File
 import kotlin.test.Test
 
 class RuleImporterTest: ExporterTestBase() {
+    private lateinit var conclusionFactory: DummyConclusionFactory
     private lateinit var tree: RuleTree
 
     @Before
     override fun init() {
         super.init()
+        conclusionFactory = DummyConclusionFactory()
         tempDir.mkdirs()
         tree = RuleTree()
     }
@@ -28,7 +31,7 @@ class RuleImporterTest: ExporterTestBase() {
 
     @Test
     fun `import size 2 tree`() {
-        tree = ruleTree {
+        tree = ruleTree(conclusionFactory) {
             child {
                 id = 51
                 conclusion { "ConclusionA" }
@@ -46,7 +49,7 @@ class RuleImporterTest: ExporterTestBase() {
 
     @Test
     fun `import complex tree`() {
-        tree = ruleTree {
+        tree = ruleTree(conclusionFactory) {
             child {
                 id = 51
                 conclusion { "ConclusionA" }

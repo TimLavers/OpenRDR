@@ -38,7 +38,7 @@ internal class ShowCaseInterpretation : UITestBase() {
     private fun buildRule() {
         val restClient = RESTClient()
         restClient.getCaseWithName("Case2")
-        val conclusion = conclusionFactory.create(comment)
+        val conclusion = conclusionFactory.getOrCreate(comment)
         restClient.startSessionToAddConclusionForCurrentCase(conclusion)
         val tsh = attributeFactory.create("TSH")
         val condition = IsNormal(null, tsh)

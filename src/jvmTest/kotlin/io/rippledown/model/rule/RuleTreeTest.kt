@@ -2,16 +2,14 @@ package io.rippledown.model.rule
 
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.CaseId
-import io.rippledown.model.Conclusion
-import io.rippledown.model.Interpretation
-import io.rippledown.model.RuleFactory
+import io.rippledown.model.*
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.rule.dsl.ruleTree
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-class DummyRuleFactory: RuleFactory {
+class
+DummyRuleFactory: RuleFactory {
     override fun createRuleAndAddToParent(parent: Rule, conclusion: Conclusion?, conditions: Set<Condition>): Rule {
         return Rule(0, parent, conclusion, conditions)
     }
@@ -22,6 +20,13 @@ internal class RuleTreeTest : RuleTestBase() {
     private val A = "A"
     private val B = "B"
     private val kase = clinicalNotesCase("abc")
+    private lateinit var conclusionFactory: DummyConclusionFactory
+
+    @BeforeTest
+    fun init() {
+        tree = RuleTree()
+        conclusionFactory = DummyConclusionFactory()
+    }
 
     @Test
     fun size_of_a_tree_with_root_only() {
@@ -47,7 +52,7 @@ internal class RuleTreeTest : RuleTestBase() {
 
     @Test
     fun add_to_empty_root() {
-        tree = ruleTree {
+        tree = ruleTree(conclusionFactory) {
             child {
                 +A
                 condition {
@@ -64,7 +69,7 @@ internal class RuleTreeTest : RuleTestBase() {
 
     @Test
     fun add_to_root_that_has_one_child() {
-        tree = ruleTree {
+        tree = ruleTree(conclusionFactory) {
             child {
                 +A
                 condition {
@@ -88,7 +93,7 @@ internal class RuleTreeTest : RuleTestBase() {
 
     @Test
     fun add_to_two_leaf_rules() {
-        tree = ruleTree {
+        tree = ruleTree(conclusionFactory) {
             child {
                 + "ConcA"
                 condition {
@@ -127,7 +132,7 @@ internal class RuleTreeTest : RuleTestBase() {
 
     @Test
     fun add_to_root_with_two_children() {
-        tree = ruleTree {
+        tree = ruleTree(conclusionFactory) {
             child {
                 conclusion { "ConcA" }
                 condition {
@@ -165,7 +170,7 @@ internal class RuleTreeTest : RuleTestBase() {
 
     @Test
     fun size_with_one_child() {
-        tree = ruleTree {
+        tree = ruleTree(conclusionFactory) {
             child {
                 conclusion { "ConcA" }
                 condition {
@@ -179,7 +184,7 @@ internal class RuleTreeTest : RuleTestBase() {
 
     @Test
     fun size_with_two_children_of_root() {
-        tree = ruleTree {
+        tree = ruleTree(conclusionFactory) {
             child {
                 conclusion { "ConcA" }
                 condition {
@@ -200,7 +205,7 @@ internal class RuleTreeTest : RuleTestBase() {
 
     @Test
     fun size_with_depth_four() {
-        tree = ruleTree {
+        tree = ruleTree(conclusionFactory) {
             child {
                 conclusion { "ConcA" }
                 condition {
@@ -235,7 +240,7 @@ internal class RuleTreeTest : RuleTestBase() {
 
     @Test
     fun rules() {
-        tree = ruleTree {
+        tree = ruleTree(conclusionFactory) {
             child {
                 id = 1
                 conclusion { "ConcA" }
@@ -276,7 +281,7 @@ internal class RuleTreeTest : RuleTestBase() {
 
     @Test
     fun rulesWithConclusionTest() {
-        tree = ruleTree {
+        tree = ruleTree(conclusionFactory) {
             child {
                 id = 1
                 conclusion { "ConcA" }
@@ -324,7 +329,7 @@ internal class RuleTreeTest : RuleTestBase() {
 
     @Test
     fun add_child_under_child_under_root() {
-        tree = ruleTree {
+        tree = ruleTree(conclusionFactory) {
             child {
                 id = 1
                 conclusion { "ConcA" }
@@ -356,7 +361,7 @@ internal class RuleTreeTest : RuleTestBase() {
 
     @Test
     fun copy_root() {
-        tree = ruleTree {
+        tree = ruleTree(conclusionFactory) {
         }.build()
         tree.copy() shouldBe tree
         (tree.copy() !== tree) shouldBe true
@@ -364,7 +369,7 @@ internal class RuleTreeTest : RuleTestBase() {
 
     @Test
     fun copy_tree_with_1_child() {
-        tree = ruleTree {
+        tree = ruleTree(conclusionFactory) {
             child {
                 conclusion { "ConcA" }
                 condition {
@@ -379,7 +384,7 @@ internal class RuleTreeTest : RuleTestBase() {
 
     @Test
     fun copy_tree_with_2_children() {
-        tree = ruleTree {
+        tree = ruleTree(conclusionFactory) {
             child {
                 + "ConcA"
                 condition {
@@ -397,11 +402,6 @@ internal class RuleTreeTest : RuleTestBase() {
         }.build()
         tree.copy() shouldBe tree
         (tree.copy() !== tree) shouldBe true
-    }
-
-    @BeforeTest
-    fun init() {
-        tree = RuleTree()
     }
 
     private fun checkInterpretationForCase(text: String, vararg conclusions: String) {

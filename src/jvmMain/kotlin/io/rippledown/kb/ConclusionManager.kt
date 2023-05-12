@@ -1,9 +1,10 @@
 package io.rippledown.kb
 
 import io.rippledown.model.Conclusion
+import io.rippledown.model.ConclusionFactory
 import io.rippledown.persistence.ConclusionStore
 
-class ConclusionManager(private val conclusionStore: ConclusionStore) {
+class ConclusionManager(private val conclusionStore: ConclusionStore): ConclusionFactory {
     private val textToConclusion = mutableMapOf<String, Conclusion>()
 
     init {
@@ -12,7 +13,7 @@ class ConclusionManager(private val conclusionStore: ConclusionStore) {
         }
     }
 
-    fun getOrCreate(text: String) : Conclusion {
+    override fun getOrCreate(text: String) : Conclusion {
         return textToConclusion.computeIfAbsent(text) {
             conclusionStore.create(text)
         }
@@ -22,7 +23,7 @@ class ConclusionManager(private val conclusionStore: ConclusionStore) {
         return textToConclusion.values.toSet()
     }
 
-    fun getById(id: Int): Conclusion {
-        return textToConclusion.values.first { it.id == id }
+    override fun getById(id: Int): Conclusion? {
+        return textToConclusion.values.firstOrNull { it.id == id }
     }
 }

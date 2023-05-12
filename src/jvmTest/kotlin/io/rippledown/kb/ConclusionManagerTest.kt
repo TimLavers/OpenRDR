@@ -1,6 +1,5 @@
 package io.rippledown.kb
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Conclusion
 import io.rippledown.persistence.ConclusionStore
@@ -58,7 +57,7 @@ class ConclusionManagerTest {
             val text = "Conclusion $it"
             val conclusion = conclusionManager.getOrCreate(text)
             conclusionManager.getById(conclusion.id) shouldBe conclusion
-            conclusionManager.getById(conclusion.id).text shouldBe text
+            conclusionManager.getById(conclusion.id)!!.text shouldBe text
         }
     }
 
@@ -66,9 +65,7 @@ class ConclusionManagerTest {
     fun `get by id when id is unknown`() {
         conclusionManager.getOrCreate("Blah")
         conclusionManager.getOrCreate("Whatever")
-        shouldThrow<NoSuchElementException> {
-            conclusionManager.getById(87654)
-        }
+        conclusionManager.getById(87654) shouldBe null
     }
 
     @Test

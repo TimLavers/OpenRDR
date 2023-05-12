@@ -5,19 +5,25 @@ import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.beInstanceOf
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.rippledown.model.Conclusion
+import io.rippledown.model.DummyConclusionFactory
+import io.rippledown.model.RuleFactory
 import io.rippledown.model.rule.dsl.ruleTree
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 open class RuleTreeChangeTest : RuleTestBase() {
     lateinit var tree: RuleTree
-    val ruleFactory = DummyRuleFactory()
+    lateinit var ruleFactory: RuleFactory
+    lateinit var conclusionFactory: DummyConclusionFactory
     val A = "A"
     val B = "B"
-    val newConclusion = Conclusion(34, "It is very windy.")
+    lateinit var newConclusion: Conclusion
 
     open fun setup() {
-        tree = ruleTree {
+        conclusionFactory = DummyConclusionFactory()
+        ruleFactory = DummyRuleFactory()
+        newConclusion = conclusionFactory.getOrCreate("It is very windy!")
+        tree = ruleTree(conclusionFactory) {
             child {
                 +A
                 condition {

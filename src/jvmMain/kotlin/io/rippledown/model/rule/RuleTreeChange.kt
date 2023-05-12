@@ -1,15 +1,21 @@
 package io.rippledown.model.rule
 
 import io.rippledown.model.Conclusion
+import io.rippledown.model.ConclusionFactory
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RuleFactory
 
 abstract class RuleTreeChange {
+    abstract fun alignWith(conclusionFactory: ConclusionFactory): RuleTreeChange
     abstract fun isApplicable(tree: RuleTree, case: RDRCase): Boolean
     abstract fun createChanger(tree: RuleTree, ruleFactory: RuleFactory): RuleTreeChanger
 }
 
 class ChangeTreeToAddConclusion(private val toBeAdded: Conclusion) : RuleTreeChange() {
+    override fun alignWith(conclusionFactory: ConclusionFactory): RuleTreeChange {
+        TODO("Not yet implemented")
+    }
+
     override fun isApplicable(tree: RuleTree, case: RDRCase) = !tree.apply(case).conclusions().contains(toBeAdded)
 
     override fun createChanger(tree: RuleTree, ruleFactory: RuleFactory) = AddConclusionRuleTreeChanger(tree, ruleFactory, toBeAdded)
@@ -18,6 +24,10 @@ class ChangeTreeToAddConclusion(private val toBeAdded: Conclusion) : RuleTreeCha
 }
 
 open class ChangeTreeToRemoveConclusion(private val toBeRemoved: Conclusion) : RuleTreeChange() {
+    override fun alignWith(conclusionFactory: ConclusionFactory): RuleTreeChange {
+        TODO("Not yet implemented")
+    }
+
     override fun isApplicable(tree: RuleTree, case: RDRCase) = tree.apply(case).conclusions().contains(toBeRemoved)
 
     override fun createChanger(tree: RuleTree, ruleFactory: RuleFactory) = RemoveConclusionRuleTreeChanger(tree, ruleFactory, toBeRemoved)
@@ -26,6 +36,10 @@ open class ChangeTreeToRemoveConclusion(private val toBeRemoved: Conclusion) : R
 }
 
 class ChangeTreeToReplaceConclusion(private val toBeReplaced: Conclusion, private val replacement: Conclusion) : RuleTreeChange() {
+    override fun alignWith(conclusionFactory: ConclusionFactory): RuleTreeChange {
+        TODO("Not yet implemented")
+    }
+
     override fun isApplicable(tree: RuleTree, case: RDRCase) = tree.apply(case).conclusions().contains(toBeReplaced)
 
     override fun createChanger(tree: RuleTree, ruleFactory: RuleFactory) = ReplaceConclusionRuleTreeChanger(tree, ruleFactory, toBeReplaced, replacement)
