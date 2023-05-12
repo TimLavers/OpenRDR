@@ -154,5 +154,10 @@ class InterpretationViewPO(private val driver: WebDriver) {
         return this
     }
 
-    fun WebElement.delete() = sendKeys(Keys.DELETE)
+    fun WebElement.delete() = sendKeys(Keys.DELETE, Keys.BACK_SPACE)
+
+    fun buildRule(row: Int): InterpretationViewPO {
+        driver.findElement(By.id("$DIFF_VIEWER_BUILD_ICON$row")).click()
+        return this
+    }
 }

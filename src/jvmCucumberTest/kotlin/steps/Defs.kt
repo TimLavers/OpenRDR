@@ -182,12 +182,18 @@ class Defs : En {
         Then("the interpretation field should contain the text {string}") { text: String ->
             interpretationViewPO.interpretationText() shouldBe text
         }
+        Then("the interpretation field should be empty") {
+            interpretationViewPO.interpretationText() shouldBe ""
+        }
 
         And("the interpretation by the project of the case {string} is {string}") { caseName: String, text: String ->
             RESTClient().createRuleToAddText(caseName, text)
         }
         And("I select the changes tab") {
             interpretationViewPO.selectChangesTab()
+        }
+        And("I select the interpretation tab") {
+            interpretationViewPO.selectOriginalTab()
         }
         Then("I should see that the text {string} has been added") { text: String ->
             interpretationViewPO.requireAddedText(text)
@@ -200,8 +206,14 @@ class Defs : En {
         Then("I should see that the text {string} has been replaced by {string}") { replaced: String, replacement: String ->
             interpretationViewPO.requireReplacedText(replaced, replacement)
         }
-        And("the changes badge should indicate that there is/are {int} change(s)") { numberOfChanges: Int ->
+        And("the changes badge indicates that there is/are {int} change(s)") { numberOfChanges: Int ->
             interpretationViewPO.requireBadgeCount(numberOfChanges)
+        }
+        And("the changes badge indicates that there is no change") {
+            interpretationViewPO.requireNoBadge()
+        }
+        When("I build a rule for the change on row {int}") { row: Int ->
+            interpretationViewPO.buildRule(row)
         }
     }
 }

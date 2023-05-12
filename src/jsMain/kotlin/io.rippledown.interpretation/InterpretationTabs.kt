@@ -15,6 +15,7 @@ import web.cssom.px
 
 external interface InterpretationTabsHandler : Handler {
     var interpretation: Interpretation
+    var refreshCase: () -> Unit
 }
 
 val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
@@ -64,7 +65,8 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
                     scope = handler.scope
                     interpretation = handler.interpretation
                     onInterpretationEdited = { editedInterp ->
-                        interp = editedInterp
+                        interp = editedInterp //update the badge count
+                        handler.refreshCase()
                     }
                 }
             }

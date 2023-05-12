@@ -57,6 +57,7 @@ val CaseView = FC<CaseViewHandler> { handler ->
             scope = handler.scope
             api = handler.api
             interpretation = handler.case.interpretation
+            refreshCase = handler.onCaseEdited
         }
     }
 }

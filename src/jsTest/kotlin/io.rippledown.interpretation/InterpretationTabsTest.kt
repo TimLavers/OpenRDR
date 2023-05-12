@@ -8,7 +8,6 @@ import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.diff.*
 import io.rippledown.model.rule.RuleSummary
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
@@ -19,7 +18,6 @@ import react.dom.createRootFor
 import react.dom.test.act
 import kotlin.test.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class InterpretationTabsTest {
 
     @Test
@@ -162,6 +160,62 @@ class InterpretationTabsTest {
             waitForEvents()
             findById("interpretation_changes_badge").textContent shouldBe "Changes3"
             requireBadgeCount(3) //Unchanged does not count
+        }
+    }
+
+    @Test
+    fun changesBadgeShouldUpdateInterpIfInterpretationIsEdited() = runTest {
+        val addedText = "Go to Bondi now!"
+        val interpToReturn = Interpretation(
+            diffList = DiffList(
+                listOf(
+                    Addition(addedText)
+                )
+            )
+        )
+        val config = config {
+            returnInterpretation = interpToReturn
+        }
+
+        val vfc = VFC {
+            InterpretationTabs {
+                scope = this@runTest
+                api = Api(mock(config))
+                interpretation = Interpretation()
+                refreshCase = {}
+
+            }
+        }
+        val container = createRootFor(vfc)
+        with(container) {
+            requireNoBadge() // sanity check
+            enterInterpretation(addedText)
+            waitForDebounce()
+            requireBadgeCount(1)
+        }
+    }
+
+    @Test
+    fun caseShouldBeRefreshedIfInterpretationIsEdited() = runTest {
+        var refreshCaseCalled = false
+
+        val vfc = VFC {
+            InterpretationTabs {
+                scope = this@runTest
+                api = Api(mock(config {}))
+                interpretation = Interpretation()
+                refreshCase = {
+                    refreshCaseCalled = true
+                }
+
+            }
+        }
+        val container = createRootFor(vfc)
+        with(container) {
+            refreshCaseCalled shouldBe false
+            enterInterpretation("Go to Bondi now!")
+            waitForDebounce()
+            refreshCaseCalled shouldBe true
         }
     }
 

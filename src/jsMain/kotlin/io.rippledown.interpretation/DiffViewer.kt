@@ -1,7 +1,6 @@
 package io.rippledown.interpretation
 
 import Handler
-import debug
 import green
 import io.rippledown.constants.interpretation.*
 import io.rippledown.model.Interpretation
@@ -62,7 +61,6 @@ val DiffViewer = FC<DiffViewerHandler> { handler ->
             TableBody {
                 id = DIFF_VIEWER_TABLE
                 diffList.diffs.forEachIndexed() { index, change ->
-                    debug("***index $index change $change")
                     TableRow {
                         id = "$DIFF_VIEWER_ROW$index"
                         sx {
@@ -125,8 +123,6 @@ val DiffViewer = FC<DiffViewerHandler> { handler ->
                                                 diffList.selected = index //identify the change
                                                 val interp = handler.api.buildRule(handler.interpretation)
                                                 handler.onRuleBuilt(interp)
-                                                debug("built a rule for $index")
-                                                debug("difflist returned ${interp.diffList}")
                                             }
                                         }
                                     }
