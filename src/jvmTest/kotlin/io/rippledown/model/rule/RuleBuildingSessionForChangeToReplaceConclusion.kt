@@ -3,6 +3,7 @@ package io.rippledown.model.rule
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Conclusion
 import io.rippledown.model.DummyConclusionFactory
+import io.rippledown.model.DummyConditionFactory
 import io.rippledown.model.condition.ContainsText
 import io.rippledown.model.rule.dsl.ruleTree
 import io.rippledown.util.shouldBeEqualUsingSameAs
@@ -16,10 +17,12 @@ internal class RuleBuildingSessionForChangeToReplaceConclusion : RuleTestBase() 
     private val cornerstones = mutableSetOf(cc1,cc2)
     private val ruleFactory = DummyRuleFactory()
     private lateinit var conclusionFactory: DummyConclusionFactory
+    private lateinit var conditionFactory: DummyConditionFactory
 
     @BeforeTest
     fun setup() {
         conclusionFactory = DummyConclusionFactory()
+        conditionFactory = DummyConditionFactory()
     }
 
     @Test
@@ -66,14 +69,14 @@ internal class RuleBuildingSessionForChangeToReplaceConclusion : RuleTestBase() 
         val tree = ruleTree(conclusionFactory) {
             child {
                 +"A"
-                condition {
+                condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "a"
                 }
             }
             child {
                 +"B"
-                condition {
+                condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "b"
                 }
@@ -104,14 +107,14 @@ internal class RuleBuildingSessionForChangeToReplaceConclusion : RuleTestBase() 
         val tree = ruleTree(conclusionFactory) {
             child {
                 +"A"
-                condition {
+                condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "a"
                 }
             }
             child {
                 +"B"
-                condition {
+                condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "b"
                 }

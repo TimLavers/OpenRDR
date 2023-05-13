@@ -38,7 +38,8 @@ class KB(persistentKB: PersistentKB) {
     fun startRuleSession(case: RDRCase, action: RuleTreeChange) {
         check(ruleSession == null) { "Session already in progress." }
         check(action.isApplicable(ruleTree, case)) {"Action $action is not applicable to case ${case.name}"}
-        ruleSession =  RuleBuildingSession(ruleManager, ruleTree, case, action, cornerstones)
+        val alignedAction = action.alignWith(conclusionManager)
+        ruleSession =  RuleBuildingSession(ruleManager, ruleTree, case, alignedAction, cornerstones)
     }
 
     fun conflictingCasesInCurrentRuleSession(): Set<RDRCase> {
@@ -48,7 +49,20 @@ class KB(persistentKB: PersistentKB) {
 
     fun addConditionToCurrentRuleSession(condition: Condition){
         checkSession()
-        ruleSession!!.addCondition(condition)
+        // Align the provided condition with that in the condition manager.
+        val conditionToUse = if (condition.id == null) {
+            conditionManager.getOrCreate(condition)
+        } else {
+            val existing = conditionManager.getById(condition.id!!)
+            // Check that there's no confusion between the condition provided
+            // and the one that already exists (here we're defending against test code
+            // that might have mixed things up).
+            require( existing!!.sameAs(condition)) {
+                "Condition provided does not match that in the condition manager."
+            }
+            existing
+        }
+        ruleSession!!.addCondition(conditionToUse)
     }
 
     fun commitCurrentRuleSession() {

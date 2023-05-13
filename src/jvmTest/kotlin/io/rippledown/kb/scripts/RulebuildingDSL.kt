@@ -7,9 +7,9 @@ import io.rippledown.model.rule.*
 import io.rippledown.model.condition.*
 import io.rippledown.persistence.InMemoryKB
 
-const val addedConditionBeforeSessionStarted = "Session not started yet. Please define the case and action before adding a condition"
-val textAttribute = Attribute("Text", 100)
-val numberAttribute = Attribute("Value", 200)
+const val addedConditionBeforeSessionStarted = "Rule session not started."
+val text = "Text"
+val value = "Value"
 
 fun build(f: BuildTemplate.() -> Unit): BuildTemplate {
     val template = BuildTemplate()
@@ -23,6 +23,7 @@ class BuildTemplate {
 
     fun case(name: String, data: String) {
         val caseBuilder = RDRCaseBuilder()
+        val textAttribute = kb.attributeManager.getOrCreate(text)
         caseBuilder.addResult(textAttribute, defaultDate, TestResult(data))
         val case = caseBuilder.build(name)
         kb.addCase(case)
@@ -30,6 +31,7 @@ class BuildTemplate {
 
     fun case(i: Int) {
         val caseBuilder = RDRCaseBuilder()
+        val numberAttribute = kb.attributeManager.getOrCreate(value)
         caseBuilder.addResult(numberAttribute, defaultDate, TestResult("$i"))
         val case = caseBuilder.build("$i")
         kb.addCase(case)
@@ -61,20 +63,14 @@ class SessionTemplate( val kb: KB) {
     }
 
     fun condition(c: String) {
-        try {
-            val condition = ContainsText(null, textAttribute, c)
-            kb.addConditionToCurrentRuleSession(condition)
-        } catch (e: Exception) {
-            throw Exception(addedConditionBeforeSessionStarted)
-        }
+        val textAttribute = kb.attributeManager.getOrCreate(text)
+        val condition = ContainsText(null, textAttribute, c)
+        kb.addConditionToCurrentRuleSession(condition)
     }
 
     fun condition(i: Int) {
-        try {
-            kb.addConditionToCurrentRuleSession(GreaterThanOrEqualTo(attribute = numberAttribute, d = i.toDouble()))
-        } catch (e: Exception) {
-            throw Exception(addedConditionBeforeSessionStarted)
-        }
+        val numberAttribute = kb.attributeManager.getOrCreate(value)
+        kb.addConditionToCurrentRuleSession(GreaterThanOrEqualTo(attribute = numberAttribute, d = i.toDouble()))
     }
 
     fun requireCornerstones(vararg expectedCornerstones: String) {

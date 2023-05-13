@@ -1,9 +1,11 @@
 package io.rippledown.kb
 
+import io.rippledown.model.ConditionFactory
 import io.rippledown.model.condition.Condition
 import io.rippledown.persistence.ConditionStore
 
-class ConditionManager(private val attributeManager: AttributeManager, private val conditionStore: ConditionStore) {
+class ConditionManager(private val attributeManager: AttributeManager,
+                       private val conditionStore: ConditionStore): ConditionFactory {
     private val idToCondition = mutableMapOf<Int, Condition>()
 
     init {
@@ -12,7 +14,7 @@ class ConditionManager(private val attributeManager: AttributeManager, private v
         }
     }
 
-    fun getOrCreate(condition: Condition): Condition {
+    override fun getOrCreate(condition: Condition): Condition {
         require(condition.id == null) {
             "Cannot store a condition that has a non-null id."
         }

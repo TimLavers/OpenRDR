@@ -5,15 +5,24 @@ import io.rippledown.model.ConclusionFactory
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RuleFactory
 
-abstract class RuleTreeChange {
+internal fun ConclusionFactory.getAlignedConclusion(provided: Conclusion): Conclusion {
+    val conclusionInFactory = getOrCreate(provided.text)
+    require(conclusionInFactory.id == provided.id) {
+        "Conclusion in factory is $conclusionInFactory, conclusion provided is $provided, which do not match."
+    }
+    return conclusionInFactory
+}
+
+ abstract class RuleTreeChange {
     abstract fun alignWith(conclusionFactory: ConclusionFactory): RuleTreeChange
     abstract fun isApplicable(tree: RuleTree, case: RDRCase): Boolean
     abstract fun createChanger(tree: RuleTree, ruleFactory: RuleFactory): RuleTreeChanger
 }
 
-class ChangeTreeToAddConclusion(private val toBeAdded: Conclusion) : RuleTreeChange() {
-    override fun alignWith(conclusionFactory: ConclusionFactory): RuleTreeChange {
-        TODO("Not yet implemented")
+class ChangeTreeToAddConclusion(val toBeAdded: Conclusion) : RuleTreeChange() {
+    override fun alignWith(conclusionFactory: ConclusionFactory): ChangeTreeToAddConclusion {
+        val conclusionInFactory = conclusionFactory.getAlignedConclusion(toBeAdded)
+        return ChangeTreeToAddConclusion(conclusionInFactory)
     }
 
     override fun isApplicable(tree: RuleTree, case: RDRCase) = !tree.apply(case).conclusions().contains(toBeAdded)
@@ -23,9 +32,10 @@ class ChangeTreeToAddConclusion(private val toBeAdded: Conclusion) : RuleTreeCha
     override fun toString() = "ChangeTreeToAddConclusion(toBeAdded=$toBeAdded)"
 }
 
-open class ChangeTreeToRemoveConclusion(private val toBeRemoved: Conclusion) : RuleTreeChange() {
-    override fun alignWith(conclusionFactory: ConclusionFactory): RuleTreeChange {
-        TODO("Not yet implemented")
+open class ChangeTreeToRemoveConclusion(val toBeRemoved: Conclusion) : RuleTreeChange() {
+    override fun alignWith(conclusionFactory: ConclusionFactory): ChangeTreeToRemoveConclusion {
+        val conclusionInFactory = conclusionFactory.getAlignedConclusion(toBeRemoved)
+        return ChangeTreeToRemoveConclusion(conclusionInFactory)
     }
 
     override fun isApplicable(tree: RuleTree, case: RDRCase) = tree.apply(case).conclusions().contains(toBeRemoved)
@@ -35,9 +45,11 @@ open class ChangeTreeToRemoveConclusion(private val toBeRemoved: Conclusion) : R
     override fun toString() = "ChangeTreeToRemoveConclusion(toBeRemoved=$toBeRemoved)"
 }
 
-class ChangeTreeToReplaceConclusion(private val toBeReplaced: Conclusion, private val replacement: Conclusion) : RuleTreeChange() {
-    override fun alignWith(conclusionFactory: ConclusionFactory): RuleTreeChange {
-        TODO("Not yet implemented")
+class ChangeTreeToReplaceConclusion(val toBeReplaced: Conclusion, val replacement: Conclusion) : RuleTreeChange() {
+    override fun alignWith(conclusionFactory: ConclusionFactory): ChangeTreeToReplaceConclusion {
+        val toBeReplacedFactoryInstance = conclusionFactory.getAlignedConclusion(toBeReplaced)
+        val replacementFactoryInstance = conclusionFactory.getAlignedConclusion(replacement)
+        return ChangeTreeToReplaceConclusion(toBeReplacedFactoryInstance, replacementFactoryInstance)
     }
 
     override fun isApplicable(tree: RuleTree, case: RDRCase) = tree.apply(case).conclusions().contains(toBeReplaced)

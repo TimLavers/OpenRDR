@@ -8,7 +8,6 @@ import io.rippledown.model.condition.IsHigh
 import io.rippledown.model.rule.Rule
 import io.rippledown.persistence.PersistentRule
 import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.apache.commons.io.FileUtils
 import java.io.File

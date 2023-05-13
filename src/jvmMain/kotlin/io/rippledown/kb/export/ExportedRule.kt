@@ -9,7 +9,7 @@ import java.io.File
 
 data class ExportedRule(val persistentRule: PersistentRule) {
 
-    constructor(rule: Rule) : this(PersistentRule(rule.id, rule.parent?.id, rule.conclusion?.id, emptySet()))
+    constructor(rule: Rule) : this(PersistentRule(rule))
 
     fun export(destinationFile: File) {
         val format = Json { allowStructuredMapKeys = true }

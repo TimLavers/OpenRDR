@@ -58,9 +58,10 @@ class RuleBuildingSession(
     }
 
     fun addCondition(condition: Condition): RuleBuildingSession {
-        if (condition.holds(case))
-            conditions.add(condition)
-        else throw Exception("Condition $condition was not true for the case ${case.name}")
+        require (condition.holds(case)) {
+            "Condition $condition was not true for the case ${case.name}"
+        }
+        conditions.add(condition)
         return this
     }
 

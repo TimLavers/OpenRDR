@@ -145,6 +145,6 @@ class RuleManagerTest {
 
         shouldThrow<IllegalArgumentException> {
             RuleManager(conclusionManager, conditionManager, ruleStore)
-        }.message shouldBe "\"Rule tree could not be rebuilt as more than one rule lacks a parent."
+        }.message shouldBe "Rule tree could not be rebuilt as more than one rule lacks a parent."
     }
 }

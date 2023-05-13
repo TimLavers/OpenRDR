@@ -3,6 +3,7 @@ package io.rippledown.model.rule
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Conclusion
 import io.rippledown.model.DummyConclusionFactory
+import io.rippledown.model.DummyConditionFactory
 import io.rippledown.model.condition.ContainsText
 import io.rippledown.model.rule.dsl.ruleTree
 import io.rippledown.util.shouldBeEqualUsingSameAs
@@ -15,11 +16,13 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
     private val cc2 = clinicalNotesCase("CC2")
     private val cornerstoneMap = mutableSetOf(cc1, cc2)
     private lateinit var conclusionFactory: DummyConclusionFactory
+    private lateinit var conditionFactory: DummyConditionFactory
     private val ruleFactory = DummyRuleFactory()
 
     @BeforeTest
     fun setup() {
         conclusionFactory = DummyConclusionFactory()
+        conditionFactory = DummyConditionFactory()
     }
 
     @Test
@@ -78,14 +81,14 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
         val tree = ruleTree(conclusionFactory) {
             child {
                 +"A"
-                condition {
+                condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "1"
                 }
             }
             child {
                 +"B"
-                condition {
+                condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "3"
                 }
@@ -117,7 +120,7 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
         val tree = ruleTree(conclusionFactory) {
             child {
                 +"A"
-                condition {
+                condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "1"
                 }

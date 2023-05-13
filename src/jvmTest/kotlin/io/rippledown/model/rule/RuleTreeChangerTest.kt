@@ -3,6 +3,7 @@ package io.rippledown.model.rule
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Conclusion
 import io.rippledown.model.DummyConclusionFactory
+import io.rippledown.model.DummyConditionFactory
 import io.rippledown.model.RuleFactory
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ContainsText
@@ -18,7 +19,7 @@ internal class RuleTreeChangerTest : RuleTestBase() {
     var newRuleId = 1_000_000
     lateinit var ruleMaker: RuleMaker
     private lateinit var conclusionFactory: DummyConclusionFactory
-
+    private lateinit var conditionFactory: DummyConditionFactory
 
     class RuleMaker(var id: Int): RuleFactory {
         override fun createRuleAndAddToParent(parent: Rule, conclusion: Conclusion?, conditions: Set<Condition>): Rule {
@@ -31,6 +32,7 @@ internal class RuleTreeChangerTest : RuleTestBase() {
         newRuleId = 1_000_000
         ruleMaker = RuleMaker(newRuleId)
         conclusionFactory = DummyConclusionFactory()
+        conditionFactory = DummyConditionFactory()
     }
 
     @Test
@@ -38,14 +40,14 @@ internal class RuleTreeChangerTest : RuleTestBase() {
         val tree = ruleTree(conclusionFactory) {
             child {
                 +A
-                condition {
+                condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "a"
                 }
             }
             child {
                 +B
-                condition {
+                condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "b"
                 }
@@ -71,14 +73,14 @@ internal class RuleTreeChangerTest : RuleTestBase() {
         val tree = ruleTree(conclusionFactory) {
             child {
                 +A
-                condition {
+                condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "a"
                 }
             }
             child {
                 +B
-                condition {
+                condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "b"
                 }
@@ -106,21 +108,21 @@ internal class RuleTreeChangerTest : RuleTestBase() {
         val tree = ruleTree(conclusionFactory) {
             child {
                 +A
-                condition {
+                condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "a"
                 }
             }
             child {
                 +A
-                condition {
+                condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "b"
                 }
             }
             child {
                 +C
-                condition {
+                condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "a"
                 }
@@ -149,21 +151,21 @@ internal class RuleTreeChangerTest : RuleTestBase() {
         val tree = ruleTree(conclusionFactory) {
             child {
                 +A
-                condition {
+                condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "a"
                 }
             }
             child {
                 +A
-                condition {
+                condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "b"
                 }
             }
             child {
                 +C
-                condition {
+                condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "a"
                 }
@@ -192,14 +194,14 @@ internal class RuleTreeChangerTest : RuleTestBase() {
         val tree = ruleTree(conclusionFactory) {
             child {
                 +A
-                condition {
+                condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "a"
                 }
             }
             child {
                 +B
-                condition {
+                condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "b"
                 }
@@ -228,21 +230,21 @@ internal class RuleTreeChangerTest : RuleTestBase() {
         val tree = ruleTree(conclusionFactory) {
             child {
                 +A
-                condition {
+                condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "a"
                 }
             }
             child {
                 +A
-                condition {
+                condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "b"
                 }
             }
             child {
                 +B
-                condition {
+                condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "b"
                 }

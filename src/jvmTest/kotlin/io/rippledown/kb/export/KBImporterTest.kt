@@ -62,7 +62,7 @@ class KBImporterTest : ExporterTestBase() {
 
         // Add a rule.
         val sessionCase = kb.getCaseByName(case1.name)
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion(33, "Glucose ok.")))
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Glucose ok.")))
         kb.addConditionToCurrentRuleSession(LessThanOrEqualTo(null, glucose, 4.1))
         kb.commitCurrentRuleSession()
 

@@ -2,9 +2,12 @@ package io.rippledown.kb.export
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.rippledown.model.ConditionFactory
 import io.rippledown.model.DummyConclusionFactory
+import io.rippledown.model.DummyConditionFactory
 import io.rippledown.model.rule.RuleTree
 import io.rippledown.model.rule.dsl.ruleTree
+import io.rippledown.persistence.PersistentRule
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.apache.commons.io.FileUtils
@@ -16,11 +19,13 @@ import kotlin.text.Charsets.UTF_8
 class RuleExporterTest: ExporterTestBase() {
     private lateinit var tree: RuleTree
     private lateinit var conclusionFactory: DummyConclusionFactory
+    private lateinit var conditionFactory: ConditionFactory
 
     @Before
     override fun init() {
         super.init()
         conclusionFactory = DummyConclusionFactory()
+        conditionFactory = DummyConditionFactory()
         tempDir.mkdirs()
         tree = RuleTree()
     }
@@ -57,21 +62,21 @@ class RuleExporterTest: ExporterTestBase() {
             child {
                 id = 34
                 conclusion { "ConclusionA" }
-                condition {
+                condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "a"
                 }
                 child {
                     id = 134
                     conclusion { "ConclusionA" }
-                    condition {
+                    condition(conditionFactory) {
                         attribute = clinicalNotes
                         constant = "b"
                     }
                     child {
                         id = 111
                         conclusion { "ConclusionB" }
-                        condition {
+                        condition(conditionFactory) {
                             attribute = clinicalNotes
                             constant = "c"
                         }
@@ -80,7 +85,7 @@ class RuleExporterTest: ExporterTestBase() {
                 child {
                     id = 12
                     conclusion { "ConclusionD" }
-                    condition {
+                    condition(conditionFactory) {
                         attribute = clinicalNotes
                         constant = "d"
                     }
@@ -92,11 +97,11 @@ class RuleExporterTest: ExporterTestBase() {
         tree.rules().forEach { it ->
             val file = File(tempDir, "${it.id}.json")
             val data = FileUtils.readFileToString(file, UTF_8)
-            val exportedRule: ExportedRule = Json.decodeFromString(data)
-            exportedRule.persistentRule.id shouldBe it.id
-            exportedRule.persistentRule.parentId shouldBe it.parent?.id
-            exportedRule.persistentRule.conclusionId shouldBe it.conclusion?.id
-            exportedRule.persistentRule.conditionIds shouldBe  it.conditions.map { it.id!! }.toSet()
+            val persistentRule: PersistentRule = Json.decodeFromString(data)
+            persistentRule.id shouldBe it.id
+            persistentRule.parentId shouldBe it.parent?.id
+            persistentRule.conclusionId shouldBe it.conclusion?.id
+            persistentRule.conditionIds shouldBe  it.conditions.map { it.id!! }.toSet()
         }
     }
 }

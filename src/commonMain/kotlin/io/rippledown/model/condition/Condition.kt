@@ -5,7 +5,7 @@ import io.rippledown.model.RDRCase
 
 // ORD1
 @kotlinx.serialization.Serializable
-sealed class Condition() {
+sealed class Condition {
     abstract val id: Int?
     abstract fun holds(case: RDRCase): Boolean
     abstract fun asText(): String

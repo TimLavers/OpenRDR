@@ -243,7 +243,7 @@ class KBTest {
         kb.addCase(createCase("Case2", "2.0"))
         val sessionCase = kb.getCaseByName("Case1")
         sessionCase.interpretation.textGivenByRules() shouldBe ""
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion(1, "Whatever.")))
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate( "Whatever.")))
         kb.addConditionToCurrentRuleSession(LessThanOrEqualTo(null, glucose(), 1.2))
         kb.conflictingCasesInCurrentRuleSession().size shouldBe 0
     }
@@ -255,7 +255,7 @@ class KBTest {
         val sessionCase = kb.getCaseByName("Case1")
         val otherCase = kb.getCaseByName("Case2")
         sessionCase.interpretation.textGivenByRules() shouldBe ""
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion(1, "Whatever.")))
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate( "Whatever.")))
         kb.interpret(otherCase)
         // Rule not yet added...
         otherCase.interpretation.textGivenByRules() shouldBe ""
@@ -263,6 +263,18 @@ class KBTest {
         // Rule now added...
         kb.interpret(otherCase)
         otherCase.interpretation.textGivenByRules() shouldBe "Whatever."
+    }
+
+    @Test // Conc-4
+    fun `conclusions are aligned when building rules`() {
+        val conclusionToAdd = kb.conclusionManager.getOrCreate("Whatever")
+        val copyOfConclusion = conclusionToAdd.copy()
+        kb.addCase(createCase("Case1", "1.0"))
+        val sessionCase = kb.getCaseByName("Case1")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(copyOfConclusion))
+        kb.commitCurrentRuleSession()
+        kb.interpret(sessionCase)
+        sessionCase.interpretation.conclusions().single() shouldBeSameInstanceAs  conclusionToAdd
     }
 
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")

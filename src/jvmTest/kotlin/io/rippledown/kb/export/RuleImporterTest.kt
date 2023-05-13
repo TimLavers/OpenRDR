@@ -3,6 +3,7 @@ package io.rippledown.kb.export
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.DummyConclusionFactory
+import io.rippledown.model.DummyConditionFactory
 import io.rippledown.model.rule.RuleTree
 import io.rippledown.model.rule.dsl.ruleTree
 import io.rippledown.persistence.PersistentRule
@@ -12,12 +13,14 @@ import kotlin.test.Test
 
 class RuleImporterTest: ExporterTestBase() {
     private lateinit var conclusionFactory: DummyConclusionFactory
+    private lateinit var conditionFactory: DummyConditionFactory
     private lateinit var tree: RuleTree
 
     @Before
     override fun init() {
         super.init()
         conclusionFactory = DummyConclusionFactory()
+        conditionFactory = DummyConditionFactory()
         tempDir.mkdirs()
         tree = RuleTree()
     }
@@ -35,7 +38,7 @@ class RuleImporterTest: ExporterTestBase() {
             child {
                 id = 51
                 conclusion { "ConclusionA" }
-                condition {
+                condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "a"
                 }
@@ -53,21 +56,21 @@ class RuleImporterTest: ExporterTestBase() {
             child {
                 id = 51
                 conclusion { "ConclusionA" }
-                condition {
+                condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "a"
                 }
                 child {
                     id = 456
                     conclusion { "ConclusionA" }
-                    condition {
+                    condition(conditionFactory) {
                         attribute = clinicalNotes
                         constant = "b"
                     }
                     child {
                         id = 457
                         conclusion { "ConclusionB" }
-                        condition {
+                        condition(conditionFactory) {
                             attribute = clinicalNotes
                             constant = "c"
                         }
@@ -76,7 +79,7 @@ class RuleImporterTest: ExporterTestBase() {
                 child {
                     id = 458
                     conclusion { "ConclusionD" }
-                    condition {
+                    condition(conditionFactory) {
                         attribute = clinicalNotes
                         constant = "d"
                     }

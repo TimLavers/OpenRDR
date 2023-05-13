@@ -83,20 +83,20 @@ internal class TSHRulesTest : TSHTest() {
         val tpo = attributeFactory.create("TPO Antibodies")
         val clinicalNotes = attributeFactory.create("Clinical Notes")
 
-        val tshLow = conditionFactory.create(IsLow(null, tsh))
-        val tshNormal = conditionFactory.create(IsNormal(null, tsh))
-        val tshModeratelyIncreased = conditionFactory.create(GreaterThanOrEqualTo(null, tsh, 10.0))
-        val tshHigh = conditionFactory.create(IsHigh(null, tsh))
-        val tshVeryHigh = conditionFactory.create(GreaterThanOrEqualTo(null, tsh, 40.0)) // What should this be?
-        val ft4VeryLow = conditionFactory.create(Is(null, freeT4, "<5"))
-        val t4SlightlyLow = conditionFactory.create(SlightlyLow(null, freeT4, 20))
-        val ft3High = conditionFactory.create(IsHigh(null, ft3))
-        val freeT4Normal = conditionFactory.create(IsNormal(null, freeT4))
-        val tpoHigh = conditionFactory.create(IsHigh(null, tpo))
-        val elderly = conditionFactory.create(GreaterThanOrEqualTo(null, attributeFactory.create("Age"), 70.0))
-        val notesShowsTrimester1 = conditionFactory.create(ContainsText(null, clinicalNotes, "12/40 weeks"))
-        val notesShowsTryingForBaby = conditionFactory.create(ContainsText(null, clinicalNotes, "Trying for a baby"))
-        val tiredness = conditionFactory.create(ContainsText(null, clinicalNotes, "very tired"))
+        val tshLow = conditionFactory.getOrCreate(IsLow(null, tsh))
+        val tshNormal = conditionFactory.getOrCreate(IsNormal(null, tsh))
+        val tshModeratelyIncreased = conditionFactory.getOrCreate(GreaterThanOrEqualTo(null, tsh, 10.0))
+        val tshHigh = conditionFactory.getOrCreate(IsHigh(null, tsh))
+        val tshVeryHigh = conditionFactory.getOrCreate(GreaterThanOrEqualTo(null, tsh, 40.0)) // What should this be?
+        val ft4VeryLow = conditionFactory.getOrCreate(Is(null, freeT4, "<5"))
+        val t4SlightlyLow = conditionFactory.getOrCreate(SlightlyLow(null, freeT4, 20))
+        val ft3High = conditionFactory.getOrCreate(IsHigh(null, ft3))
+        val freeT4Normal = conditionFactory.getOrCreate(IsNormal(null, freeT4))
+        val tpoHigh = conditionFactory.getOrCreate(IsHigh(null, tpo))
+        val elderly = conditionFactory.getOrCreate(GreaterThanOrEqualTo(null, attributeFactory.create("Age"), 70.0))
+        val notesShowsTrimester1 = conditionFactory.getOrCreate(ContainsText(null, clinicalNotes, "12/40 weeks"))
+        val notesShowsTryingForBaby = conditionFactory.getOrCreate(ContainsText(null, clinicalNotes, "Trying for a baby"))
+        val tiredness = conditionFactory.getOrCreate(ContainsText(null, clinicalNotes, "very tired"))
 
         val report1 = "Normal T4 and TSH are consistent with a euthyroid state."
         val report1b = "Normal TSH is consistent with a euthyroid state."
