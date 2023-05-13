@@ -8,7 +8,6 @@ import io.rippledown.model.rule.RuleTree
 import io.rippledown.model.rule.dsl.ruleTree
 import io.rippledown.persistence.PersistentRule
 import org.junit.Before
-import java.io.File
 import kotlin.test.Test
 
 class RuleImporterTest: ExporterTestBase() {
@@ -107,16 +106,8 @@ class RuleImporterTest: ExporterTestBase() {
         }.message shouldBe "$tempDir is empty."
     }
 
-    @Test
-    fun `destination should be exist`() {
-        val directory = File(tempDir, "exportDir")
-        shouldThrow<IllegalArgumentException>{
-            RuleExporter(directory, tree)
-        }.message shouldBe "Rule export destination is not an existing directory."
-    }
-
     private fun exportImport(): Set<PersistentRule> {
-        RuleExporter(tempDir, tree).export()
+        IdentifiedObjectExporter(tempDir, RuleSource(tree)).export()
         return RuleImporter(tempDir).import()
     }
 }

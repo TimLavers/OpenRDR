@@ -31,6 +31,6 @@ class KBExporter(destination: File, val kb: KB): KBExportImport(destination) {
 
         // Rules.
         rulesDirectory.mkdirs()
-        RuleExporter(rulesDirectory, kb.ruleTree).export()
+        IdentifiedObjectExporter(rulesDirectory, RuleSource(kb.ruleTree)).export()
     }
 }

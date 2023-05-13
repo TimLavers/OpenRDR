@@ -1,22 +1,22 @@
 package io.rippledown.kb.export
 
+import io.rippledown.model.rule.Rule
 import io.rippledown.model.rule.RuleTree
-import java.io.File
+import io.rippledown.persistence.PersistentRule
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
-class RuleExporter(private val destination: File, private val ruleTree: RuleTree) {
-    init {
-        checkDirectoryIsSuitableForExport(destination, "Rule")
-    }
+class RuleExporter: Exporter<Rule> {
+    private val json = Json { allowStructuredMapKeys = true }
 
-    fun export() {
-        val rules = ruleTree.rules()
-        val ruleIds = rules.map { it.id.toString() }.toSet()
-        val ruleIdToFilename = FilenameMaker(ruleIds).makeUniqueNames()
+    override fun serializeAsString(t: Rule) = json.encodeToString(PersistentRule(t))
+}
+class RuleSource(val ruleTree: RuleTree): IdentifiedObjectSource<Rule> {
+    override fun all() = ruleTree.rules()
 
-        rules.forEach{
-            val filename = ruleIdToFilename[it.id.toString()]!!
-            val file = File(destination, filename)
-            ExportedRule(it).export(file)
-        }
-    }
+    override fun idFor(t: Rule) = t.id
+
+    override fun exporter() = RuleExporter()
+
+    override fun exportType() = "Rule"
 }

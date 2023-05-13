@@ -1,50 +1,22 @@
 package io.rippledown.kb.export
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
-import io.rippledown.model.Attribute
 import io.rippledown.model.ConditionFactory
 import io.rippledown.model.DummyConclusionFactory
 import io.rippledown.model.DummyConditionFactory
-import io.rippledown.model.condition.IsHigh
-import io.rippledown.model.condition.IsNormal
-import io.rippledown.model.rule.Rule
 import io.rippledown.model.rule.RuleTree
 import io.rippledown.model.rule.dsl.ruleTree
 import io.rippledown.persistence.PersistentRule
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import org.apache.commons.io.FileUtils
 import org.junit.Before
+import java.io.File
 import kotlin.test.Test
+import kotlin.text.Charsets.UTF_8
 
-class RuleExporterTest: ExporterTestBase() {
-    private lateinit var conclusionFactory: DummyConclusionFactory
-    private lateinit var conditionFactory: ConditionFactory
-
-    @Before
-    override fun init() {
-        super.init()
-        conclusionFactory = DummyConclusionFactory()
-        conditionFactory = DummyConditionFactory()
-    }
-
-    @Suppress("JSON_FORMAT_REDUNDANT")
-    @Test
-    fun serializeAsString() {
-        val conclusion = conclusionFactory.getOrCreate("More coffee needed.")
-        val glucose = Attribute("Glucose", 9)
-        val tsh = Attribute("TSH", 10)
-        val glucoseHigh = conditionFactory.getOrCreate(IsHigh(null, glucose))
-        val tshNormal = conditionFactory.getOrCreate(IsNormal(null, tsh))
-        val parent = Rule(0, null, null, emptySet())
-        val rule = Rule(8, parent, conclusion, setOf(glucoseHigh,tshNormal))
-
-        val serialized = RuleExporter().serializeAsString(rule)
-        val deserialized = Json { allowStructuredMapKeys = true }.decodeFromString<PersistentRule>(serialized)
-        deserialized shouldBe PersistentRule(rule)
-    }
-}
-class RuleSourceTest: ExporterTestBase() {
+class IdentifiedObjectExporterTest: ExporterTestBase() {
     private lateinit var tree: RuleTree
     private lateinit var conclusionFactory: DummyConclusionFactory
     private lateinit var conditionFactory: ConditionFactory
@@ -54,10 +26,38 @@ class RuleSourceTest: ExporterTestBase() {
         super.init()
         conclusionFactory = DummyConclusionFactory()
         conditionFactory = DummyConditionFactory()
+        tempDir.mkdirs()
+        tree = RuleTree()
     }
 
     @Test
-    fun all() {
+    fun `destination should be a directory`() {
+        val textFile = writeFileInDirectory(tempDir)
+        shouldThrow<IllegalArgumentException>{
+            IdentifiedObjectExporter(textFile, RuleSource(tree))
+        }.message shouldBe "Rule export destination is not a directory."
+    }
+
+    @Test
+    fun `destination should be empty`() {
+        val directory = File(tempDir, "exportDir")
+        directory.mkdirs()
+        writeFileInDirectory(directory)
+        shouldThrow<IllegalArgumentException>{
+            IdentifiedObjectExporter(directory, RuleSource(tree))
+        }.message shouldBe "Rule export directory is not empty."
+    }
+
+    @Test
+    fun `destination should be exist`() {
+        val directory = File(tempDir, "exportDir")
+        shouldThrow<IllegalArgumentException>{
+            IdentifiedObjectExporter(directory, RuleSource(tree))
+        }.message shouldBe "Rule export destination is not an existing directory."
+    }
+
+    @Test
+    fun `each rule is in its own file`() {
         tree = ruleTree(conclusionFactory) {
             child {
                 id = 34
@@ -92,26 +92,16 @@ class RuleSourceTest: ExporterTestBase() {
                 }
             }
         }.build()
-        val ruleSource = RuleSource(tree)
-        ruleSource.all() shouldBe tree.rules()
-    }
-
-    @Test
-    fun exportType() {
-        tree = RuleTree()
-        RuleSource(tree).exportType() shouldBe "Rule"
-    }
-
-    @Test
-    fun exporter() {
-        tree = RuleTree()
-        RuleSource(tree).exporter().shouldBeInstanceOf<RuleExporter>()
-    }
-
-    @Test
-    fun idFor() {
-        tree = RuleTree()
-        val rule = Rule(99, tree.root, null, emptySet())
-        RuleSource(tree).idFor(rule) shouldBe rule.id
+        tree.rules().size shouldBe 5
+        IdentifiedObjectExporter(tempDir, RuleSource(tree)).export()
+        tree.rules().forEach { it ->
+            val file = File(tempDir, "${it.id}.json")
+            val data = FileUtils.readFileToString(file, UTF_8)
+            val persistentRule: PersistentRule = Json.decodeFromString(data)
+            persistentRule.id shouldBe it.id
+            persistentRule.parentId shouldBe it.parent?.id
+            persistentRule.conclusionId shouldBe it.conclusion?.id
+            persistentRule.conditionIds shouldBe  it.conditions.map { it.id!! }.toSet()
+        }
     }
 }
