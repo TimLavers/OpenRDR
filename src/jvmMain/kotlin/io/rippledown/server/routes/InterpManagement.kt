@@ -5,6 +5,7 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.rippledown.constants.api.BUILD_RULE
 import io.rippledown.constants.api.VERIFIED_INTERPRETATION_SAVED
 import io.rippledown.model.Interpretation
 import io.rippledown.server.ServerApplication
@@ -15,6 +16,12 @@ fun Application.interpManagement(application: ServerApplication) {
         post(VERIFIED_INTERPRETATION_SAVED) {
             val interpretation = call.receive<Interpretation>()
             val interpretationWithDiffs = application.saveInterpretation(interpretation)
+            call.respond(HttpStatusCode.OK, interpretationWithDiffs)
+        }
+
+        post(BUILD_RULE) {
+            val interpretation = call.receive<Interpretation>()
+            val interpretationWithDiffs = application.buildRule(interpretation)
             call.respond(HttpStatusCode.OK, interpretationWithDiffs)
         }
 

@@ -105,12 +105,12 @@ class InterpretationViewPO(private val driver: WebDriver) {
     }
 
     fun requireCheckBoxInRow(row: Int): InterpretationViewPO {
-        driver.findElement(By.id("$DIFF_VIEWER_CHECKBOX$row")) shouldNotBe null
+        driver.findElement(By.id("$DIFF_VIEWER_BUILD_ICON$row")) shouldNotBe null
         return this
     }
 
     fun requireNoCheckBoxInRow(row: Int): InterpretationViewPO {
-        driver.findElements(By.id("$DIFF_VIEWER_CHECKBOX$row")) shouldHaveSize 0
+        driver.findElements(By.id("$DIFF_VIEWER_BUILD_ICON$row")) shouldHaveSize 0
         return this
     }
 
@@ -154,5 +154,10 @@ class InterpretationViewPO(private val driver: WebDriver) {
         return this
     }
 
-    fun WebElement.delete() = sendKeys(Keys.DELETE)
+    fun WebElement.delete() = sendKeys(Keys.DELETE, Keys.BACK_SPACE)
+
+    fun buildRule(row: Int): InterpretationViewPO {
+        driver.findElement(By.id("$DIFF_VIEWER_BUILD_ICON$row")).click()
+        return this
+    }
 }

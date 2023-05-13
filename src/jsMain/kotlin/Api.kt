@@ -79,11 +79,25 @@ class Api(engine: HttpClientEngine = Js.create()) {
         }.body()
     }
 
+    /**
+     * Build a rule for the selected Diff in the interpretation
+     *
+     * @param interpretation the updated interpretation once the rule has been built
+     */
+    suspend fun buildRule(interpretation: Interpretation): Interpretation {
+        return jsonClient.post("$endpoint$BUILD_RULE") {
+            contentType(ContentType.Application.Json)
+            setBody(interpretation)
+        }.body()
+    }
+
     suspend fun moveAttributeJustBelowOther(moved: Attribute, target: Attribute): OperationResult {
         return jsonClient.post("$endpoint$MOVE_ATTRIBUTE_JUST_BELOW_OTHER") {
             contentType(ContentType.Application.Json)
             setBody(Pair(moved, target))
         }.body()
     }
+
+
 }
 

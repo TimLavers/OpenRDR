@@ -63,23 +63,7 @@ private class EngineBuilder(private val config: EngineConfig) {
                 )
             }
 
-            INTERPRETATION_SUBMITTED -> {
-                val body = request.body as TextContent
-                val bodyAsInterpretation = Json.decodeFromString(Interpretation.serializer(), body.text)
-                if (config.expectedInterpretation != null) {
-                    bodyAsInterpretation shouldBe config.expectedInterpretation
-                }
-
-                respond(
-                    content = ByteReadChannel(
-                        json.encodeToString(config.returnOperationResult)
-                    ),
-                    status = HttpStatusCode.OK,
-                    headers = headersOf(HttpHeaders.ContentType, "application/json")
-                )
-            }
-
-            VERIFIED_INTERPRETATION_SAVED -> {
+            VERIFIED_INTERPRETATION_SAVED, BUILD_RULE -> {
                 val body = request.body as TextContent
                 val bodyAsInterpretation = Json.decodeFromString(Interpretation.serializer(), body.text)
 

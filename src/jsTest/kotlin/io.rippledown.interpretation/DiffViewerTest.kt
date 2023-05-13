@@ -1,37 +1,25 @@
 package io.rippledown.interpretation
 
-import io.rippledown.model.diff.Addition
-import io.rippledown.model.diff.Removal
-import io.rippledown.model.diff.Replacement
-import io.rippledown.model.diff.Unchanged
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import Api
+import io.kotest.matchers.shouldBe
+import io.rippledown.model.Interpretation
+import io.rippledown.model.diff.*
 import kotlinx.coroutines.test.runTest
+import mocks.config
+import mocks.mock
 import react.VFC
 import react.dom.checkContainer
+import react.dom.createRootFor
+import react.dom.test.act
 import kotlin.test.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class DiffViewerTest {
-
-    @Test
-    fun shouldShowTheTitle() = runTest {
-        val vfc = VFC {
-            DiffViewer {
-                changes = listOf()
-            }
-        }
-        checkContainer(vfc) { container ->
-            with(container) {
-                requireTitle("Changes")
-            }
-        }
-    }
 
     @Test
     fun shouldNotShowAnyRowsIfNoChanges() = runTest {
         val vfc = VFC {
             DiffViewer {
-                changes = listOf()
+                interpretation = Interpretation()
             }
         }
         checkContainer(vfc) { container ->
@@ -39,14 +27,15 @@ class DiffViewerTest {
                 requireNumberOfRows(0)
             }
         }
-
     }
 
     @Test
     fun shouldShowARowForEachUnchangedDiff() = runTest {
         val vfc = VFC {
             DiffViewer {
-                changes = listOf(Unchanged(), Unchanged(), Unchanged())
+                interpretation = Interpretation(
+                    diffList = DiffList(listOf(Unchanged(), Unchanged(), Unchanged()))
+                )
             }
         }
         checkContainer(vfc) { container ->
@@ -61,7 +50,9 @@ class DiffViewerTest {
     fun shouldShowARowForEachChangedDiff() = runTest {
         val vfc = VFC {
             DiffViewer {
-                changes = listOf(Addition(), Removal(), Replacement())
+                interpretation = Interpretation(
+                    diffList = DiffList(listOf(Addition(), Removal(), Replacement()))
+                )
             }
         }
         checkContainer(vfc) { container ->
@@ -73,26 +64,71 @@ class DiffViewerTest {
     }
 
     @Test
-    fun shouldShowACheckboxForAllDiffsExceptUnchanged() = runTest {
+    fun shouldShowABuildIconByDefaultForFirstUnchangedDiff() = runTest {
         val vfc = VFC {
             DiffViewer {
-                changes = listOf(
-                    Unchanged(),
-                    Addition(),
-                    Replacement(),
-                    Removal(),
-                    Unchanged()
+                interpretation = Interpretation(
+                    diffList = DiffList(
+                        listOf(
+                            Unchanged(),
+                            Unchanged(),
+                            Unchanged(),
+                            Addition(),
+                            Unchanged()
+                        )
+                    )
                 )
             }
         }
-        checkContainer(vfc) { container ->
-            with(container) {
-                requireNoCheckBoxForRow(0)
-                requireCheckBoxForRow(1)
-                requireCheckBoxForRow(2)
-                requireCheckBoxForRow(3)
-                requireNoCheckBoxForRow(4)
+        val container = createRootFor(vfc)
+        with(container) {
+            requireBuildIconForRow(3)
+        }
+    }
+
+    @Test
+    fun shouldShowABuildIconWhenMouseIsOverChangedDiff() = runTest {
+        val vfc = VFC {
+            DiffViewer {
+                interpretation = Interpretation(
+                    diffList = DiffList(
+                        listOf(
+                            Addition(),
+                            Unchanged(),
+                            Removal(),
+                            Unchanged()
+                        )
+                    )
+                )
             }
+        }
+        val container = createRootFor(vfc)
+        with(container) {
+            act { moveMouseOverRow(2) }
+            requireBuildIconForRow(2)
+        }
+    }
+
+    @Test
+    fun shouldNotShowABuildIconWhenMouseIsOverUnchangedDiff() = runTest {
+        val vfc = VFC {
+            DiffViewer {
+                interpretation = Interpretation(
+                    diffList = DiffList(
+                        listOf(
+                            Addition(),
+                            Unchanged(),
+                            Removal(),
+                            Unchanged()
+                        )
+                    )
+                )
+            }
+        }
+        val container = createRootFor(vfc)
+        with(container) {
+            act { moveMouseOverRow(1) }
+            requireNoBuildIconForRow(1)
         }
     }
 
@@ -101,8 +137,12 @@ class DiffViewerTest {
         val text = "Go to Bondi now!"
         val vfc = VFC {
             DiffViewer {
-                changes = listOf(
-                    Unchanged(text),
+                interpretation = Interpretation(
+                    diffList = DiffList(
+                        listOf(
+                            Unchanged(text),
+                        )
+                    )
                 )
             }
         }
@@ -119,9 +159,7 @@ class DiffViewerTest {
         val text = "Go to Bondi now!"
         val vfc = VFC {
             DiffViewer {
-                changes = listOf(
-                    Addition(text),
-                )
+                interpretation = Interpretation(diffList = DiffList(diffs = listOf(Addition(text))))
             }
         }
         checkContainer(vfc) { container ->
@@ -138,8 +176,12 @@ class DiffViewerTest {
         val text = "Go to Bondi now!"
         val vfc = VFC {
             DiffViewer {
-                changes = listOf(
-                    Removal(text),
+                interpretation = Interpretation(
+                    diffList = DiffList(
+                        listOf(
+                            Removal(text),
+                        )
+                    )
                 )
             }
         }
@@ -152,15 +194,18 @@ class DiffViewerTest {
         }
     }
 
-
     @Test
     fun shouldShowAReplacedAndReplacementTextsInTheirRespectiveColumnsWithCorrespondingColours() = runTest {
         val replaced = "Go to Bondi"
         val replacement = "Go to Bondi now!"
         val vfc = VFC {
             DiffViewer {
-                changes = listOf(
-                    Replacement(replaced, replacement),
+                interpretation = Interpretation(
+                    diffList = DiffList(
+                        listOf(
+                            Replacement(replaced, replacement),
+                        )
+                    )
                 )
             }
         }
@@ -171,6 +216,77 @@ class DiffViewerTest {
                 requireRedBackgroundInOriginalColumnInRow(0)
                 requireGreenBackgroundInChangedColumnInRow(0)
             }
+        }
+    }
+
+    @Test
+    fun shouldCallOnRuleBuiltWhenTheBuildIconIsClicked() = runTest {
+        var ruleBuilt = false
+        val vfc = VFC {
+            DiffViewer {
+                scope = this@runTest
+                api = Api(mock(config {}))
+                interpretation = Interpretation(
+                    diffList = DiffList(
+                        listOf(
+                            Addition("Go to Bondi now!"),
+                            Unchanged(),
+                            Removal(),
+                        )
+                    )
+                )
+                onRuleBuilt = {
+                    ruleBuilt = true
+                }
+            }
+        }
+        val container = createRootFor(vfc)
+        with(container) {
+            ruleBuilt shouldBe false
+            requireBuildIconForRow(0)
+            act { clickBuildIconForRow(0) }
+            ruleBuilt shouldBe true
+        }
+    }
+
+    @Test
+    fun shouldCallApiWhenTheBuildIconIsClicked() = runTest {
+        val interpToSend = Interpretation(
+            diffList = DiffList(
+                listOf(
+                    Addition("Go to Bondi now!"),
+                    Unchanged(),
+                    Removal(),
+                )
+            )
+        )
+        val interpToReturn = Interpretation(
+            diffList = DiffList(
+                listOf(
+                    Unchanged(),
+                    Removal(),
+                )
+            )
+        )
+        val vfc = VFC {
+            val config = config {
+                expectedInterpretation = interpToSend
+                returnInterpretation = interpToReturn
+            }
+            DiffViewer {
+                scope = this@runTest
+                api = Api(mock(config))
+                interpretation = interpToSend
+                onRuleBuilt = { interpretation ->
+                    interpretation shouldBe interpToReturn
+                }
+            }
+        }
+        val container = createRootFor(vfc)
+        with(container) {
+            requireBuildIconForRow(0)
+            act { clickBuildIconForRow(0) }
+            //assertion is in the config and onRuleBuilt
         }
     }
 }

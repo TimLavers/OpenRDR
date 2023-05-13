@@ -8,7 +8,9 @@ import io.rippledown.kb.export.util.Zipper
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.diff.*
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
+import io.rippledown.model.rule.ChangeTreeToRemoveConclusion
 import io.rippledown.model.rule.ChangeTreeToReplaceConclusion
 import io.rippledown.textdiff.diffList
 import kotlinx.serialization.decodeFromString
@@ -55,8 +57,26 @@ class ServerApplication {
         kb = KBImporter(rootDir).import()
     }
 
+    fun startRuleSessionForDifference(caseId: String, diff: Diff) {
+        when (diff) {
+            is Addition -> startRuleSessionToAddConclusion(caseId, Conclusion(diff.right()))
+            is Removal -> startRuleSessionToRemoveConclusion(caseId, Conclusion(diff.left()))
+            is Replacement -> startRuleSessionToReplaceConclusion(
+                caseId,
+                Conclusion(diff.left()),
+                Conclusion(diff.right())
+            )
+
+            is Unchanged -> {}
+        }
+    }
+
     fun startRuleSessionToAddConclusion(caseId: String, conclusion: Conclusion) {
         kb.startRuleSession(case(caseId), ChangeTreeToAddConclusion(conclusion))
+    }
+
+    fun startRuleSessionToRemoveConclusion(caseId: String, conclusion: Conclusion) {
+        kb.startRuleSession(case(caseId), ChangeTreeToRemoveConclusion(conclusion))
     }
 
     fun startRuleSessionToReplaceConclusion(caseId: String, toGo: Conclusion, replacement: Conclusion) {
@@ -115,6 +135,31 @@ class ServerApplication {
         idToCase[caseId] = case
 
         writeInterpretationToFile(caseId, interpretation)
+
+        //return the updated interpretation
+        return case.interpretation
+    }
+
+    fun buildRule(interpretation: Interpretation): Interpretation {
+        val caseId = interpretation.caseId.id
+        val case = case(caseId)
+        val diff = interpretation.selectedChange()
+
+        startRuleSessionForDifference(caseId, diff)
+        //TODO add conditions before commit
+        commitCurrentRuleSession()
+
+        kb.interpret(case)
+
+        //set the verified text of the new interpretation so the diff list can be recalculated
+        val updatedInterpretation = case.interpretation
+        updatedInterpretation.verifiedText = interpretation.verifiedText
+
+        //reset the case's diff list to account of the updated interpretation
+        case.interpretation.diffList = diffList(updatedInterpretation)
+
+        //put the updated case back into the map
+        idToCase[caseId] = case
 
         //return the updated interpretation
         return case.interpretation

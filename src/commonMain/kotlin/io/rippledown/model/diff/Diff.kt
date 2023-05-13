@@ -41,10 +41,19 @@ data class Removal(val removedText: String = "") : Diff {
 }
 
 @Serializable
-data class DiffList(val diffs: List<Diff> = listOf()) {
+data class DiffList(val diffs: List<Diff> = listOf(), var selected: Int = -1) {
     fun numberOfChanges() = diffs.filter { diff ->
         diff !is Unchanged
     }.size
+
+    fun indexOfFirstChange() = diffs.indexOfFirst { diff ->
+        diff !is Unchanged
+    }
+
+    fun selectedChange() = diffs[selected]
+
+    operator fun get(index: Int) = diffs[index]
+
 }
 
 

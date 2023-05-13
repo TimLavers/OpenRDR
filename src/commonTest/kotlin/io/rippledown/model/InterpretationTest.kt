@@ -70,7 +70,7 @@ internal class InterpretationTest {
         interpretation.add(rule0)
         interpretation.add(rule1)
         interpretation.add(rule2)
-        interpretation.textGivenByRules() shouldBe "A\nB\nC"
+        interpretation.textGivenByRules() shouldBe "A B C"
     }
 
     @Test
