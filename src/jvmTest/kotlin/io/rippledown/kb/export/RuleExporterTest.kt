@@ -20,27 +20,35 @@ import kotlin.test.Test
 class RuleExporterTest: ExporterTestBase() {
     private lateinit var conclusionFactory: DummyConclusionFactory
     private lateinit var conditionFactory: ConditionFactory
+    private lateinit var rule: Rule
 
     @Before
     override fun init() {
         super.init()
         conclusionFactory = DummyConclusionFactory()
         conditionFactory = DummyConditionFactory()
-    }
-
-    @Suppress("JSON_FORMAT_REDUNDANT")
-    @Test
-    fun serializeAsString() {
         val conclusion = conclusionFactory.getOrCreate("More coffee needed.")
         val glucose = Attribute("Glucose", 9)
         val tsh = Attribute("TSH", 10)
         val glucoseHigh = conditionFactory.getOrCreate(IsHigh(null, glucose))
         val tshNormal = conditionFactory.getOrCreate(IsNormal(null, tsh))
         val parent = Rule(0, null, null, emptySet())
-        val rule = Rule(8, parent, conclusion, setOf(glucoseHigh,tshNormal))
+        rule = Rule(8, parent, conclusion, setOf(glucoseHigh,tshNormal))
+    }
 
-        val serialized = RuleExporter().serializeAsString(rule)
+    @Suppress("JSON_FORMAT_REDUNDANT")
+    @Test
+    fun exportToString() {
+        val serialized = RuleExporter().exportToString(rule)
         val deserialized = Json { allowStructuredMapKeys = true }.decodeFromString<PersistentRule>(serialized)
+        deserialized shouldBe PersistentRule(rule)
+    }
+
+    @Suppress("JSON_FORMAT_REDUNDANT")
+    @Test
+    fun importFromString() {
+        val serialized = RuleExporter().exportToString(rule)
+        val deserialized = RuleExporter().importFromString(serialized)
         deserialized shouldBe PersistentRule(rule)
     }
 }

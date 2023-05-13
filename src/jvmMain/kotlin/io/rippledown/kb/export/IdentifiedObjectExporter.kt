@@ -4,7 +4,7 @@ import org.apache.commons.io.FileUtils
 import java.io.File
 
 interface Exporter<T> {
-    fun serializeAsString(t: T): String
+    fun exportToString(t: T): String
 }
 
 interface IdentifiedObjectSource<T> {
@@ -26,7 +26,7 @@ class IdentifiedObjectExporter<T>(private val destination: File, private val obj
         rules.forEach{
             val filename = ruleIdToFilename[objectSource.idFor(it).toString()]!!
             val destinationFile = File(destination, filename)
-            val serialized = objectSource.exporter().serializeAsString(it)
+            val serialized = objectSource.exporter().exportToString(it)
             FileUtils.writeStringToFile(destinationFile, serialized, Charsets.UTF_8)
         }
     }

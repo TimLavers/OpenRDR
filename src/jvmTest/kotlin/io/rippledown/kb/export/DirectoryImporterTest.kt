@@ -10,7 +10,7 @@ import io.rippledown.persistence.PersistentRule
 import org.junit.Before
 import kotlin.test.Test
 
-class RuleImporterTest: ExporterTestBase() {
+class DirectoryImporterTest: ExporterTestBase() {
     private lateinit var conclusionFactory: DummyConclusionFactory
     private lateinit var conditionFactory: DummyConditionFactory
     private lateinit var tree: RuleTree
@@ -95,19 +95,19 @@ class RuleImporterTest: ExporterTestBase() {
     fun `source should be an existing directory`() {
         val textFile = writeFileInDirectory(tempDir)
         shouldThrow<IllegalArgumentException>{
-            RuleImporter(textFile)
+            DirectoryImporter(textFile, RuleExporter())
         }.message shouldBe "$textFile is not an existing directory."
     }
 
     @Test
     fun `empty directory`() {
         shouldThrow<IllegalArgumentException>{
-            RuleImporter(tempDir)
+            DirectoryImporter(tempDir, RuleExporter())
         }.message shouldBe "$tempDir is empty."
     }
 
     private fun exportImport(): Set<PersistentRule> {
         IdentifiedObjectExporter(tempDir, RuleSource(tree)).export()
-        return RuleImporter(tempDir).import()
+        return DirectoryImporter(tempDir, RuleExporter()).import()
     }
 }

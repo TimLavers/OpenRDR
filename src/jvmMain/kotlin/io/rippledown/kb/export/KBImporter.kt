@@ -24,9 +24,13 @@ class KBImporter(source: File, private val persistenceProvider: PersistenceProvi
         attributesInOrder.forEachIndexed { index, attribute -> attributeIdToIndex[attribute.id] = index}
         persistentKB.attributeOrderStore().load(attributeIdToIndex)
 
+        // Extract the conclusions and store them.
+        val conclusions = DirectoryImporter(conclusionsDirectory, ConclusionExporter()).import()
+        persistentKB.conclusionStore().load(conclusions)
+
         // Extract the rule tree.
         val ruleStore = persistentKB.ruleStore()
-        ruleStore.load(RuleImporter(rulesDirectory).import())
+        ruleStore.load(DirectoryImporter(rulesDirectory, RuleExporter()).import())
 
         // Create the result KB.
         val result = KB(persistentKB)

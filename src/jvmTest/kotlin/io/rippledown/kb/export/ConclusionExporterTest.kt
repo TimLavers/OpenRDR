@@ -1,6 +1,7 @@
 package io.rippledown.kb.export
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.rippledown.kb.ConclusionManager
 import io.rippledown.model.Conclusion
@@ -11,10 +12,20 @@ import kotlin.test.Test
 class ConclusionExporterTest {
 
     @Test
-    fun serializeAsString() {
+    fun exportToString() {
         val conclusion = Conclusion(65, "More coffee needed.")
 
-        ConclusionExporter().serializeAsString(conclusion) shouldBe conclusion.text
+        ConclusionExporter().exportToString(conclusion) shouldContain conclusion.id.toString()
+        ConclusionExporter().exportToString(conclusion) shouldContain conclusion.text
+    }
+
+    @Test
+    fun importFromString() {
+        val conclusion = Conclusion(65, "More coffee needed.")
+
+        val exported = ConclusionExporter().exportToString(conclusion)
+        val imported = ConclusionExporter().importFromString(exported)
+        exported shouldBe imported
     }
 }
 class ConclusionSourceTest {

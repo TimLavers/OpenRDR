@@ -8,6 +8,7 @@ open class KBExportImport(val destination: File) {
     val attributesFile = File(destination, "Attributes.txt")
     val caseViewFile = File(destination, "CaseView.txt")
     val casesDirectory = File(destination, "Cases")
+    val conclusionsDirectory = File(destination, "Conclusions")
     val rulesDirectory = File(destination, "Rules")
 }
 class KBExporter(destination: File, val kb: KB): KBExportImport(destination) {
