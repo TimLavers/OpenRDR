@@ -83,7 +83,6 @@ val CaseList = FC<CaseListHandler> { handler ->
                         scope.launch {
                             val id = currentCase!!.name
                             currentCase = api.getCase(id)
-                            case = currentCase!!
                         }
                     }
                 }
