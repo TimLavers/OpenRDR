@@ -25,11 +25,11 @@ class KBImporter(source: File, private val persistenceProvider: PersistenceProvi
         persistentKB.attributeOrderStore().load(attributeIdToIndex)
 
         // Extract the conclusions and store them.
-        val conclusions = DirectoryImporter(conclusionsDirectory, ConclusionExporter()).import()
+        val conclusions = DirectoryImporter(conclusionsDirectory, ConclusionExporter(), true).import()
         persistentKB.conclusionStore().load(conclusions)
 
         // Extract the conditions and store them.
-        val conditions = DirectoryImporter(conditionsDirectory, ConditionExporter()).import()
+        val conditions = DirectoryImporter(conditionsDirectory, ConditionExporter(), true).import()
         persistentKB.conditionStore().load(conditions)
 
         // Extract the rule tree.

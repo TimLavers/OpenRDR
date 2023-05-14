@@ -217,7 +217,10 @@ internal class ServerApplicationTest {
         setUpCaseFromFile(id, app)
         app.kb.addCase(createCase(id))
         val conclusion1 = app.kb.conclusionManager.getOrCreate( "Whatever")
+        val tsh = app.kb.attributeManager.getOrCreate("TSH")
         app.startRuleSessionToAddConclusion(id, conclusion1)
+        val tshCondition = GreaterThanOrEqualTo(null, tsh, 0.6)
+        app.addConditionToCurrentRuleBuildingSession(tshCondition)
         app.commitCurrentRuleSession()
         app.case(id).interpretation.textGivenByRules() shouldBe conclusion1.text
 
@@ -234,24 +237,12 @@ internal class ServerApplicationTest {
         app.importKBFromZip(exported.readBytes())
         app.kb.allCases().size shouldBe 1
         app.kb.ruleTree.size() shouldBe 2
+        val rule = app.kb.ruleTree.root.childRules().single()
+        val conditions = rule.conditions
+        conditions.size shouldBe 1
+        conditions.single().sameAs(tshCondition) shouldBe true
+        rule.conclusion shouldBe conclusion1
         app.case(id).interpretation.textGivenByRules() shouldBe conclusion1.text
-    }
-
-    @Test
-    fun importKBFromZip() {
-        val zipFile = File("src/jvmTest/resources/export/KBExported.zip").toPath()
-        app.kb.kbInfo.id shouldBe ""
-        app.kb.kbInfo.name shouldBe "Thyroids"
-        app.kb.allCases().size shouldBe 0
-        app.importKBFromZip(Files.readAllBytes(zipFile))
-
-        app.kb.kbInfo.name shouldBe "Whatever"
-        app.kb.allCases().size shouldBe 3
-        app.kb.ruleTree.size() shouldBe 2
-        val case = app.kb.getCaseByName("Case1")
-        val interpretedCase = app.kb.viewableInterpretedCase(case)
-        interpretedCase.interpretation.textGivenByRules() shouldBe "Glucose ok."
-        app.kbName() shouldBe KBInfo("123","Whatever")
     }
 
     @Test

@@ -6,10 +6,10 @@ import java.io.File
 interface Importer<T> {
     fun importFromString(data: String): T
 }
-class DirectoryImporter<T>(private val source: File, private val importer: Importer<T>) {
+class DirectoryImporter<T>(private val source: File, private val importer: Importer<T>, allowEmpty: Boolean = false) {
     init {
         checkIsDirectory(source)
-        require(source.listFiles()!!.isNotEmpty()) {
+        require(allowEmpty || source.listFiles()!!.isNotEmpty()) {
             "$source is empty."
         }
     }

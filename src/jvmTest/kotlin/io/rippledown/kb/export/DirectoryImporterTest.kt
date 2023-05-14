@@ -1,5 +1,6 @@
 package io.rippledown.kb.export
 
+import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.DummyConclusionFactory
@@ -100,7 +101,14 @@ class DirectoryImporterTest: ExporterTestBase() {
     }
 
     @Test
-    fun `empty directory`() {
+    fun `empty directory if that is allowed`() {
+        shouldNotThrow<IllegalArgumentException>{
+            DirectoryImporter(tempDir, RuleExporter(), true)
+        }
+    }
+
+    @Test
+    fun `empty directory if that is not allowed`() {
         shouldThrow<IllegalArgumentException>{
             DirectoryImporter(tempDir, RuleExporter())
         }.message shouldBe "$tempDir is empty."
