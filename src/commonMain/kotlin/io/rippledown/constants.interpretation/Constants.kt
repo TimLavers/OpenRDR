@@ -17,3 +17,8 @@ val DIFF_VIEWER_CHANGED = "diff_viewer_changed_"
 val BADGE_CLASS = "MuiBadge-badge"
 val BADGE_INVISIBLE_CLASS = "MuiBadge-invisible"
 val INTERPRETATION_CHANGES_BADGE = "interpretation_changes_badge"
+
+val CONDITION_SELECTOR_ROW = "condition_picker_row"
+val CONDITION_SELECTOR_DONE_BUTTON = "condition_picker_done_button"
+val CONDITION_SELECTOR_CANCEL_BUTTON = "condition_picker_cancel_button"
+

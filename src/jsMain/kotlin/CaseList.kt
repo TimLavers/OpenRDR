@@ -29,8 +29,7 @@ val CaseList = FC<CaseListHandler> { handler ->
         if (currentCaseNullOrNotAvailable && names.isNotEmpty()) {
             val firstCaseId = handler.caseIds[0]
             handler.scope.launch {
-                val rdrCase = handler.api.getCase(firstCaseId.id)
-                currentCase = rdrCase
+                currentCase = handler.api.getCase(firstCaseId.id)
             }
         }
     }
