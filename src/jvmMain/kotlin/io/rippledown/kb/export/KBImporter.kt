@@ -28,6 +28,10 @@ class KBImporter(source: File, private val persistenceProvider: PersistenceProvi
         val conclusions = DirectoryImporter(conclusionsDirectory, ConclusionExporter()).import()
         persistentKB.conclusionStore().load(conclusions)
 
+        // Extract the conditions and store them.
+        val conditions = DirectoryImporter(conditionsDirectory, ConditionExporter()).import()
+        persistentKB.conditionStore().load(conditions)
+
         // Extract the rule tree.
         val ruleStore = persistentKB.ruleStore()
         ruleStore.load(DirectoryImporter(rulesDirectory, RuleExporter()).import())

@@ -25,7 +25,7 @@ class ConclusionExporterTest {
 
         val exported = ConclusionExporter().exportToString(conclusion)
         val imported = ConclusionExporter().importFromString(exported)
-        exported shouldBe imported
+        conclusion shouldBe imported
     }
 }
 class ConclusionSourceTest {

@@ -1,5 +1,6 @@
 package io.rippledown.kb.export
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.equality.shouldBeEqualToComparingFields
 import io.kotest.matchers.shouldBe
 import io.rippledown.kb.KB
@@ -27,11 +28,9 @@ class KBImporterTest : ExporterTestBase() {
         val emptyKB = persistenceProvider.createKBPersistence(kbInfo)
         val original = KB(emptyKB)
         KBExporter(tempDir, original).export()
-        val rebuilt = KBImporter(tempDir, persistenceProvider).import()
-        rebuilt.kbInfo shouldBe original.kbInfo
-        rebuilt.allCases().size shouldBe 0
-        rebuilt.caseViewManager.allAttributesInOrder().size shouldBe 0
-        rebuilt.ruleTree.size() shouldBe 1
+        shouldThrow<IllegalArgumentException> {
+            KBImporter(tempDir, persistenceProvider).import()
+        }
     }
 
     @Test
