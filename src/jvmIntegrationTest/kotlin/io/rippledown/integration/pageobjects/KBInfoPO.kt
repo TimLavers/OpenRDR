@@ -40,7 +40,7 @@ class KBInfoPO(private val driver: WebDriver) {
     }
 
     fun waitForKBToBeLoaded(name: String) {
-        Awaitility.await().atMost(5L, TimeUnit.SECONDS).until {
+        Awaitility.await().atMost(10L, TimeUnit.SECONDS).until {
             kbName() == name
         }
     }

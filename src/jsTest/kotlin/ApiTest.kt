@@ -1,5 +1,6 @@
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
+import io.rippledown.model.diff.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mocks.config
@@ -35,17 +36,6 @@ class ApiTest {
     }
 
     @Test
-    fun saveInterpretationShouldReturnOperationResultTest() = runTest {
-        val expectedResult = OperationResult("saved interpretation for case A")
-        val interpretation = Interpretation(CaseId("id1", "Case A"), "report proxy.text")
-        val config = config {
-            expectedInterpretation = interpretation
-            returnOperationResult = expectedResult
-        }
-        Api(mock(config)).saveInterpretation(interpretation) shouldBe expectedResult
-    }
-
-    @Test
     fun moveAttributeJustBelowOther() = runTest {
         val expectedResult = OperationResult("Attribute moved.")
         val moved = Attribute("A", 123)
@@ -61,6 +51,25 @@ class ApiTest {
     @Test
     fun kbInfo() = runTest {
         val expectedResult = KBInfo("Glucose")
-        Api(mock(config{})).kbInfo() shouldBe expectedResult
+        Api(mock(config {})).kbInfo() shouldBe expectedResult
     }
+
+    @Test
+    fun theReturnedInterpretationShouldContainTheDiffList() = runTest {
+        val expectedDiffList = DiffList(
+            listOf(
+                Addition("This comment was added."),
+                Removal("This comment was removed."),
+                Replacement("This comment was replaced.", "This is the new comment."),
+                Unchanged("This comment was left alone."),
+            )
+        )
+        val interpretation = Interpretation(CaseId("id1", "Case A"), "report proxy.text")
+        val config = config {
+            expectedInterpretation = interpretation
+            returnInterpretation = interpretation.copy(diffList = expectedDiffList)
+        }
+        Api(mock(config)).saveVerifiedInterpretation(interpretation) shouldBe interpretation.copy(diffList = expectedDiffList)
+    }
+
 }

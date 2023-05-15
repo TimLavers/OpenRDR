@@ -9,11 +9,14 @@ import io.rippledown.kb.export.util.Zipper
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.diff.*
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
+import io.rippledown.model.rule.ChangeTreeToRemoveConclusion
 import io.rippledown.model.rule.ChangeTreeToReplaceConclusion
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.postgres.PostgresPersistenceProvider
 import io.rippledown.util.EntityRetrieval
+import io.rippledown.textdiff.diffList
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -33,6 +36,9 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
     init {
         createKB()
     }
+    private val idToCase = mutableMapOf<String, RDRCase>()
+
+    var kb = KB("Thyroids")
 
     fun createKB() {
         val kbInfo = kbManager.createKB("Thyroids")
@@ -63,8 +69,26 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         kb = KBImporter(rootDir, persistenceProvider).import()
     }
 
+    fun startRuleSessionForDifference(caseId: String, diff: Diff) {
+        when (diff) {
+            is Addition -> startRuleSessionToAddConclusion(caseId, Conclusion(diff.right()))
+            is Removal -> startRuleSessionToRemoveConclusion(caseId, Conclusion(diff.left()))
+            is Replacement -> startRuleSessionToReplaceConclusion(
+                caseId,
+                Conclusion(diff.left()),
+                Conclusion(diff.right())
+            )
+
+            is Unchanged -> {}
+        }
+    }
+
     fun startRuleSessionToAddConclusion(caseId: String, conclusion: Conclusion) {
         kb.startRuleSession(case(caseId), ChangeTreeToAddConclusion(conclusion))
+    }
+
+    fun startRuleSessionToRemoveConclusion(caseId: String, conclusion: Conclusion) {
+        kb.startRuleSession(case(caseId), ChangeTreeToRemoveConclusion(conclusion))
     }
 
     fun startRuleSessionToReplaceConclusion(caseId: String, toGo: Conclusion, replacement: Conclusion) {
@@ -94,7 +118,10 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
     }
 
     fun viewableCase(id: String): ViewableCase {
-        return kb.viewableInterpretedCase(uninterpretedCase(id))
+        return kb.viewableInterpretedCase(uninterpretedCase(id)).apply {
+            //reset the case's diff list
+            interpretation.diffList = diffList(interpretation)
+        }
     }
 
     fun moveAttributeJustBelow(movedId: Int, targetId: Int) {
@@ -111,11 +138,61 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
 
     fun saveInterpretation(interpretation: Interpretation): OperationResult {
         val fileName = "${interpretation.caseId.id}.interpretation.json"
+    /**
+     * Save the verified text.
+     *
+     * @return an Interpretation with the list of Diffs corresponding to the changes made to the current interpretation by the verified text
+     */
+    fun saveInterpretation(interpretation: Interpretation): Interpretation {
+        val caseId = interpretation.caseId.id
+        val case = case(caseId)
+
+        //reset the case's verified text
+        case.interpretation.verifiedText = interpretation.verifiedText
+
+        //reset the case's diff list
+        case.interpretation.diffList = diffList(interpretation)
+
+        //put the updated case back into the map
+        idToCase[caseId] = case
+
+        writeInterpretationToFile(caseId, interpretation)
+
+        //return the updated interpretation
+        return case.interpretation
+    }
+
+    fun buildRule(interpretation: Interpretation): Interpretation {
+        val caseId = interpretation.caseId.id
+        val case = case(caseId)
+        val diff = interpretation.selectedChange()
+
+        startRuleSessionForDifference(caseId, diff)
+        //TODO add conditions before commit
+        commitCurrentRuleSession()
+
+        kb.interpret(case)
+
+        //set the verified text of the new interpretation so the diff list can be recalculated
+        val updatedInterpretation = case.interpretation
+        updatedInterpretation.verifiedText = interpretation.verifiedText
+
+        //reset the case's diff list to account of the updated interpretation
+        case.interpretation.diffList = diffList(updatedInterpretation)
+
+        //put the updated case back into the map
+        idToCase[caseId] = case
+
+        //return the updated interpretation
+        return case.interpretation
+    }
+
+    private fun writeInterpretationToFile(id: String, interpretation: Interpretation) {
+        val fileName = "$id.interpretation.json"
         println("${LocalDateTime.now()}  saving interp = $fileName")
         val file = File(interpretationsDir, fileName)
         if (file.exists()) {
             file.delete()
-            println("${LocalDateTime.now()}  file deleted")
         }
         FileUtils.writeStringToFile(file, Json.encodeToString(interpretation), UTF_8)
 
@@ -147,5 +224,11 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         return RDRCase(caseWithDummyAttributes.name, dataMap)
     }
 
-    private fun uninterpretedCase(id: String) = getCaseFromFile(File(casesDir, "$id.json"))
+    internal fun uninterpretedCase(id: String): RDRCase {
+        if (!idToCase.containsKey(id)) {
+            idToCase[id] = getCaseFromFile(File(casesDir, "$id.json"))
+        }
+        return idToCase.get(id)!!
+    }
 }
+

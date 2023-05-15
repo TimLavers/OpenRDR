@@ -6,6 +6,7 @@ import io.ktor.client.engine.mock.*
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.utils.io.*
+import io.rippledown.constants.api.*
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import kotlinx.serialization.decodeFromString
@@ -16,19 +17,17 @@ fun mock(config: EngineConfig) = EngineBuilder(config).build()
 
 val defaultMock = mock(EngineConfig())
 
-fun config(block: EngineConfig.() -> Unit): EngineConfig {
-    val config = EngineConfig()
-    config.block()
-    return config
-}
+fun config(block: EngineConfig.() -> Unit) = EngineConfig().apply(block)
 
 class EngineConfig {
     var returnCasesInfo: CasesInfo = CasesInfo(emptyList())
     var returnCase: ViewableCase = createCase("The Case")
     var returnOperationResult: OperationResult = OperationResult()
+    var returnInterpretation: Interpretation = Interpretation()
 
     var expectedCaseId = ""
     var expectedInterpretation: Interpretation? = null
+
     var expectedMovedAttributeId: Int? = null
     var expectedTargetAttributeId: Int? = null
 
@@ -43,7 +42,7 @@ private class EngineBuilder(private val config: EngineConfig) {
 
     fun build() = MockEngine { request ->
         when (request.url.encodedPath) {
-            "/api/waitingCasesInfo" -> {
+            WAITING_CASES -> {
                 respond(
                     content = ByteReadChannel(
                         json.encodeToString(config.returnCasesInfo)
@@ -53,7 +52,7 @@ private class EngineBuilder(private val config: EngineConfig) {
                 )
             }
 
-            "/api/case" -> {
+            CASE -> {
                 if (config.expectedCaseId.isNotBlank()) request.url.parameters["id"] shouldBe config.expectedCaseId
                 respond(
                     content = ByteReadChannel(
@@ -64,22 +63,23 @@ private class EngineBuilder(private val config: EngineConfig) {
                 )
             }
 
-            "/api/interpretationSubmitted" -> {
+            VERIFIED_INTERPRETATION_SAVED, BUILD_RULE -> {
                 val body = request.body as TextContent
                 val bodyAsInterpretation = Json.decodeFromString(Interpretation.serializer(), body.text)
+
                 if (config.expectedInterpretation != null) {
                     bodyAsInterpretation shouldBe config.expectedInterpretation
                 }
-
                 respond(
                     content = ByteReadChannel(
-                        json.encodeToString(config.returnOperationResult)
+                        json.encodeToString(config.returnInterpretation)
                     ),
                     status = HttpStatusCode.OK,
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
                 )
             }
-            "/api/moveAttributeJustBelowOther" -> {
+
+            MOVE_ATTRIBUTE_JUST_BELOW_OTHER -> {
                 val body = request.body as TextContent
                 val data = Json.decodeFromString<Pair<Int, Int>>(body.text)
                 data.first shouldBe config.expectedMovedAttributeId
@@ -93,7 +93,8 @@ private class EngineBuilder(private val config: EngineConfig) {
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
                 )
             }
-            "/api/kbInfo" -> {
+
+            KB_INFO -> {
                 respond(
                     content = ByteReadChannel(
                         json.encodeToString(config.returnKBInfo)

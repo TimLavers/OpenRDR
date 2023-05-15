@@ -4,14 +4,18 @@ import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.caseview.CaseViewProperties
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.defaultDate
-import mysticfall.ReactTestSupport
-import proxy.text
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
+import proxy.findAllById
+import react.VFC
+import react.dom.createRootFor
 import kotlin.test.Test
 
-class CaseTableBodyTest : ReactTestSupport {
+@OptIn(ExperimentalCoroutinesApi::class)
+class CaseTableBodyTest {
 
     @Test
-    fun attributeOrdering() {
+    fun attributeOrdering() = runTest {
         val builder1 = RDRCaseBuilder()
         val tsh = Attribute("TSH", 1)
         val ft4 = Attribute("FT4", 2)
@@ -25,22 +29,24 @@ class CaseTableBodyTest : ReactTestSupport {
         val properties = CaseViewProperties(listOf(tsh, ft4, abc, xyz))
         val viewableCase = ViewableCase(case1, properties)
 
-        val renderer = render {
+        val vfc = VFC {
             CaseTableBody {
                 case = viewableCase
             }
         }
-        val rows = renderer.root.findAllByType("tr")
-        rows.size shouldBe 4
+        with(createRootFor(vfc)) {
+            val rows = findAllById("case_table_row_")
+            rows.length shouldBe 4
+            rows[0].children[0].textContent shouldBe tsh.name
+            rows[1].children[0].textContent shouldBe ft4.name
+            rows[2].children[0].textContent shouldBe abc.name
+            rows[3].children[0].textContent shouldBe xyz.name
 
-        val attributeCells = renderer.root.findAll{
-            val id = it.props.asDynamic()["id"]
-            id != null && (id as String).startsWith("attribute_name_cell_")
+            rows[0].children[1].textContent shouldBe "2.37"
+            rows[1].children[1].textContent shouldBe "12.8"
+            rows[2].children[1].textContent shouldBe "12.9"
+            rows[3].children[1].textContent shouldBe "1.9"
         }
-        attributeCells[0].text() shouldBe tsh.name
-        attributeCells[1].text() shouldBe ft4.name
-        attributeCells[2].text() shouldBe abc.name
-        attributeCells[3].text() shouldBe xyz.name
     }
 }
 

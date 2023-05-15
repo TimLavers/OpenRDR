@@ -13,5 +13,3 @@ fun main() {
         createRoot(container.unsafeCast<Element>()).render(ui)
     }
 }
-
-

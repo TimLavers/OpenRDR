@@ -11,6 +11,12 @@ import io.rippledown.server.ServerApplication
 const val WAITING_CASES = "/api/waitingCasesInfo"
 const val CASE = "/api/case"
 const val INTERPRETATION_SUBMITTED = "/api/interpretationSubmitted"
+import io.rippledown.constants.api.CASE
+import io.rippledown.constants.api.MOVE_ATTRIBUTE_JUST_BELOW_OTHER
+import io.rippledown.constants.api.WAITING_CASES
+import io.rippledown.model.Attribute
+import io.rippledown.model.OperationResult
+import io.rippledown.server.ServerApplication
 
 fun Application.caseManagement(application: ServerApplication) {
     routing {
@@ -30,6 +36,11 @@ fun Application.caseManagement(application: ServerApplication) {
             val interpretation = call.receive<Interpretation>()
             val result = application.saveInterpretation(interpretation)
             call.respond(HttpStatusCode.OK, result)
+        }
+        post(MOVE_ATTRIBUTE_JUST_BELOW_OTHER) {
+            val attributePair = call.receive<Pair<Attribute, Attribute>>()
+            application.moveAttributeJustBelow(attributePair.first, attributePair.second)
+            call.respond(HttpStatusCode.OK, OperationResult("Attribute moved"))
         }
     }
 }

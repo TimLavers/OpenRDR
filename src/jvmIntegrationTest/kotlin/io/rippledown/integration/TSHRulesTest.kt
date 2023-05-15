@@ -63,12 +63,15 @@ internal class TSHRulesTest : TSHTest() {
     }
 
     private fun checkInterpretation(comment: String) {
-        caseViewPO.interpretationText() shouldBe comment
+        interpretationViewPO.interpretationText() shouldBe comment
     }
 
     @Suppress("SameParameterValue")
     private fun checkInterpretationIgnoringWhitespace(comment: String) {
-        caseViewPO.interpretationText().replace("\\s".toRegex(), "") shouldBe comment.replace("\\s".toRegex(), "")
+        interpretationViewPO.interpretationText().replace("\\s".toRegex(), "") shouldBe comment.replace(
+            "\\s".toRegex(),
+            ""
+        )
     }
 
     override fun setupCases() {

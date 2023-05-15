@@ -14,7 +14,8 @@ class RDRCaseBuilder {
     private val caseData: MutableMap<TestEvent, TestResult> = mutableMapOf()
 
     fun addValue(attribute: Attribute, date: Long, value: String) {
-        addResult(attribute, date, TestResult(value))
+        val result = TestResult(value)
+        addResult(attribute, date, result)
     }
 
     fun addResult(attribute: Attribute, date: Long, result: TestResult) {

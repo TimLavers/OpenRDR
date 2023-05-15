@@ -1,8 +1,8 @@
-import csstype.rgb
 import emotion.react.css
 import io.rippledown.model.caseview.ViewableCase
 import react.FC
 import react.dom.html.ReactHTML
+import web.cssom.rgb
 
 external interface CaseTableBodyHandler: Handler {
     var case: ViewableCase
@@ -13,6 +13,7 @@ val CaseTableBody = FC<CaseTableBodyHandler> {
         it.case.attributes().forEach { a ->
             val results = it.case.rdrCase.resultsFor(a)!!
             ReactHTML.tr {
+                id = "case_table_row_${a.name}"
                 css {
                     nthChild("even") {
                         backgroundColor = rgb(224, 224, 224)

@@ -1,30 +1,29 @@
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.toInstant
-import mysticfall.ReactTestSupport
-import react.dom.html.ReactHTML
+import proxy.findById
+import react.VFC
+import react.dom.createRootFor
 import kotlin.test.Test
 
-class EpisodeDateCellTest : ReactTestSupport {
-    val date0 = 1659752689505L
+class EpisodeDateCellTest {
+    private val date0 = 1659752689505L
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun creation() {
-        val renderer = render {
+    fun creation() = runTest {
+        val vfc = VFC {
             EpisodeDateCell {
                 index = 3
                 date = date0
             }
         }
-        val cells = renderer.root.findAllByType(EpisodeDateCell)
-        cells[0].props.index shouldBe 3
-        cells[0].props.date shouldBe date0
-
-        val byId = renderer.root.findAllByType(ReactHTML.th.toString())
-            .first {
-                it.props.asDynamic()["id"] == "episode_date_cell_3"
-            }
-        byId shouldNotBe null
+        with(createRootFor(vfc)) {
+            val cell = findById("episode_date_cell_3")
+            cell.textContent shouldBe "2022-08-06 02:25"
+            cell.textContent shouldBe formatDate(date0)
+        }
     }
 
     @Test

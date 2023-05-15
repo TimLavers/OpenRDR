@@ -6,7 +6,9 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.integration.UITestBase
 import io.rippledown.integration.pageobjects.CaseListPO
 import io.rippledown.integration.pageobjects.CaseViewPO
+import io.rippledown.integration.pageobjects.InterpretationViewPO
 import io.rippledown.integration.pageobjects.KBInfoPO
+import io.rippledown.integration.restclient.RESTClient
 import org.awaitility.Awaitility
 import org.openqa.selenium.WebDriver
 import java.io.File
@@ -20,19 +22,30 @@ class Defs : En {
 
     private lateinit var caseListPO: CaseListPO
     private lateinit var caseViewPO: CaseViewPO
+    private lateinit var interpretationViewPO: InterpretationViewPO
     private lateinit var driver: WebDriver
 
     init {
         Before { scenario ->
             println("Before scenario '${scenario.name}'")
             serverProxy.start()
-            driver = uiTestBase.setupWebDriver()
         }
 
         After { scenario ->
             println("After scenario '${scenario.name}'")
             uiTestBase.driverClose()
             serverProxy.shutdown()
+        }
+
+        When("I start the client application") {
+            driver = uiTestBase.setupWebDriver()
+            caseListPO = CaseListPO(driver)
+            caseViewPO = CaseViewPO(driver)
+            interpretationViewPO = InterpretationViewPO(driver)
+        }
+
+        When("stop the client application") {
+            //client application is stopped in the After hook
         }
 
         Given("a list of cases with the following names is stored on the server:") { dataTable: DataTable ->
@@ -84,10 +97,10 @@ class Defs : En {
             caseListPO.select("Case3")
         }
 
-        Given("I import the configured zipped Knowledge Base {word}") { exported: String ->
+        Given("I import the configured zipped Knowledge Base {word}") { toImport: String ->
             val kbInfoPO = KBInfoPO(driver)
-            kbInfoPO.importKB(exported)
-            kbInfoPO.waitForKBToBeLoaded(exported)
+            kbInfoPO.importKB(toImport)
+            kbInfoPO.waitForKBToBeLoaded(toImport)
         }
 
         And("I export the current Knowledge Base") {
@@ -95,9 +108,9 @@ class Defs : En {
             kbInfoPO.exportKB()
         }
 
-        Then("there is a file called Thyroids.zip in my downloads directory") {
+        Then("there is a file called {word} in my downloads directory") { fileName: String ->
             Awaitility.await().atMost(Duration.ofSeconds(5)).until {
-                File(uiTestBase.downloadsDir(), "Thyroids.zip").exists()
+                File(uiTestBase.downloadsDir(), fileName).exists()
             }
         }
 
@@ -122,15 +135,6 @@ class Defs : En {
             KBInfoPO(driver).headingText() shouldBe kbName
         }
 
-        When("I start the client application") {
-            //client application is started in the Before hook
-            caseListPO = CaseListPO(driver)
-            caseViewPO = CaseViewPO(driver)
-        }
-
-        When("stop the client application") {
-            //client application is stopped in the After hook
-        }
 
         And("pause for {long} seconds") { seconds: Long ->
             Thread.sleep(TimeUnit.SECONDS.toMillis(seconds))
@@ -157,6 +161,59 @@ class Defs : En {
 
         Then("I should see the case {word} as the current case") { caseName: String ->
             caseViewPO.nameShown() shouldBe caseName
+        }
+
+        And("select the case {word}") { caseName: String ->
+            caseListPO.select(caseName)
+        }
+
+        When("I delete all the text in the interpretation field") {
+            interpretationViewPO.deleteAllText()
+        }
+
+        And("I enter the text {string} in the interpretation field") { text: String ->
+            interpretationViewPO.enterVerifiedText(text)
+        }
+
+        When("I replace the text in the interpretation field with {string}") { text: String ->
+            interpretationViewPO.deleteAllText()
+            interpretationViewPO.enterVerifiedText(text)
+        }
+        Then("the interpretation field should contain the text {string}") { text: String ->
+            interpretationViewPO.interpretationText() shouldBe text
+        }
+        Then("the interpretation field should be empty") {
+            interpretationViewPO.interpretationText() shouldBe ""
+        }
+
+        And("the interpretation by the project of the case {string} is {string}") { caseName: String, text: String ->
+            RESTClient().createRuleToAddText(caseName, text)
+        }
+        And("I select the changes tab") {
+            interpretationViewPO.selectChangesTab()
+        }
+        And("I select the interpretation tab") {
+            interpretationViewPO.selectOriginalTab()
+        }
+        Then("I should see that the text {string} has been added") { text: String ->
+            interpretationViewPO.requireAddedText(text)
+        }
+
+        Then("I should see that the text {string} has been deleted") { text: String ->
+            interpretationViewPO.requireDeletedText(text)
+        }
+
+        Then("I should see that the text {string} has been replaced by {string}") { replaced: String, replacement: String ->
+            interpretationViewPO.requireReplacedText(replaced, replacement)
+        }
+        And("the changes badge indicates that there is/are {int} change(s)") { numberOfChanges: Int ->
+            interpretationViewPO.requireBadgeCount(numberOfChanges)
+        }
+        And("the changes badge indicates that there is no change") {
+            interpretationViewPO.requireNoBadge()
+        }
+        When("I build a rule for the change on row {int}") { row: Int ->
+            interpretationViewPO.buildRule(row)
         }
     }
 }

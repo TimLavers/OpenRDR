@@ -4,6 +4,7 @@ import io.rippledown.integration.pageobjects.CaseListPO
 import io.rippledown.integration.pageobjects.CaseQueuePO
 import io.rippledown.integration.pageobjects.CaseViewPO
 import io.rippledown.examples.vltsh.TSHCases
+import io.rippledown.integration.pageobjects.InterpretationViewPO
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.assertEquals
@@ -13,6 +14,7 @@ internal open class TSHTest: UITestBase() {
     private lateinit var caseQueuePO: CaseQueuePO
     private lateinit var caseListPO: CaseListPO
     lateinit var caseViewPO: CaseViewPO
+    lateinit var interpretationViewPO: InterpretationViewPO
     lateinit var dataShown: Map<String, List<String>>
 
     @BeforeTest
@@ -22,6 +24,7 @@ internal open class TSHTest: UITestBase() {
         setupCases()
         setupWebDriver()
         caseQueuePO = CaseQueuePO(driver)
+        interpretationViewPO = InterpretationViewPO(driver)
         pause()//todo use Awaitility
         caseListPO = CaseListPO(driver)
     }

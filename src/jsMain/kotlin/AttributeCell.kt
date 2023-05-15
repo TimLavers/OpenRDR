@@ -1,10 +1,10 @@
-import csstype.Cursor
 import emotion.react.css
 import io.rippledown.model.Attribute
 import kotlinx.coroutines.launch
 import react.FC
 import react.dom.events.DragEvent
 import react.dom.html.ReactHTML
+import web.cssom.Cursor
 import web.html.HTMLTableCellElement
 
 external interface AttributeCellHandler : Handler {

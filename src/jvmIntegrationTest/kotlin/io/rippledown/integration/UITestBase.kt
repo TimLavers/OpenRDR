@@ -34,16 +34,19 @@ open class UITestBase {
     fun downloadsDir() = dirProxy.downloadsDir()
 
     private fun getChromeDriver(): WebDriver {
-        ChromeDriverManager.getInstance(CHROME).setup()
+        ChromeDriverManager.getInstance(CHROME)
+            .clearResolutionCache()
+            .setup()
         val options = ChromeOptions()
         with(options) {
+            addArguments("--remote-allow-origins=*")
             addArguments("--disable-extensions")
             addArguments("--disable-application-cache")
             addArguments("--disable-web-security")
             addArguments("--remote-allow-origins=*")
             val prefsMap = mutableMapOf<String, Any>()
             prefsMap["download.default_directory"] = downloadsDir().absolutePath
-            options.setExperimentalOption("prefs", prefsMap )
+            options.setExperimentalOption("prefs", prefsMap)
         }
         return ChromeDriver(options)
     }

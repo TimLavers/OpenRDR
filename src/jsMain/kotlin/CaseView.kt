@@ -1,10 +1,14 @@
-import csstype.*
 import emotion.react.css
+import io.rippledown.interpretation.InterpretationTabs
 import io.rippledown.model.caseview.ViewableCase
 import mui.material.Box
 import mui.material.Typography
 import react.FC
 import react.dom.html.ReactHTML.table
+import web.cssom.LineStyle.Companion.solid
+import web.cssom.pct
+import web.cssom.px
+import web.cssom.rgb
 
 const val CASEVIEW_CASE_NAME_ID = "case_view_case_name"
 
@@ -18,41 +22,42 @@ external interface CaseViewHandler : Handler {
  *
  *  ORD2
  */
-val CaseView = FC<CaseViewHandler> { props ->
+val CaseView = FC<CaseViewHandler> { handler ->
     Box {
-        key = props.case.name
+        key = handler.case.name
         id = "case_view_container"
         css {
-            float = Float.left
+            float = web.cssom.Float.left
             width = 70.pct
             padding = px12
         }
 
         Typography {
-            +props.case.name
+            +handler.case.name
             id = CASEVIEW_CASE_NAME_ID
         }
         table {
             css {
                 border = 1.px
                 borderColor = rgb(128, 128, 128)
-                borderStyle = LineStyle.solid
+                borderStyle = solid
                 marginBottom = px12
             }
             CaseTableHeader {
-                dates = props.case.dates
+                dates = handler.case.dates
             }
             CaseTableBody {
-                case = props.case
-                api = props.api
-                scope = props.scope
-                onCaseEdited = props.onCaseEdited
+                case = handler.case
+                api = handler.api
+                scope = handler.scope
+                onCaseEdited = handler.onCaseEdited
             }
         }
-        InterpretationView {
-            scope = props.scope
-            api = props.api
-            interpretation = props.case.interpretation
+        InterpretationTabs {
+            scope = handler.scope
+            api = handler.api
+            interpretation = handler.case.interpretation
+            refreshCase = handler.onCaseEdited
         }
     }
 }

@@ -4,19 +4,25 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.rippledown.CaseTestUtils
 import io.rippledown.model.*
 import io.rippledown.model.condition.GreaterThanOrEqualTo
 import io.rippledown.model.condition.Is
+import io.rippledown.model.diff.Addition
+import io.rippledown.model.diff.DiffList
+import io.rippledown.model.diff.Unchanged
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.persistence.InMemoryPersistenceProvider
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.apache.commons.io.FileUtils
 import java.io.File
-import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.Files
-import kotlin.test.*
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 fun RDRCase.getAttribute(attributeName: String): Attribute {
     return attributes.first { attribute -> attribute.name == attributeName }
@@ -25,6 +31,7 @@ fun RDRCase.getLatest(attributeName: String): TestResult? {
     return getLatest(getAttribute(attributeName))
 }
 internal class ServerApplicationTest {
+    private lateinit var app: ServerApplication
 
     private lateinit var app: ServerApplication
     @BeforeTest
@@ -47,45 +54,6 @@ internal class ServerApplicationTest {
     }
 
     @Test
-    fun saveInterpretationDeletesCase() {
-        val caseId = CaseId("Case1", "Case1")
-        setUpCaseFromFile("Case1", app)
-        val case1File = File(app.casesDir, "Case1.json")
-        assertTrue(case1File.exists())
-        val interpretation = Interpretation(caseId, "Whatever, blah.")
-        app.saveInterpretation(interpretation)
-        assertFalse(case1File.exists())
-    }
-
-    @Test
-    fun saveInterpretation() {
-        setUpCaseFromFile("Case1", app)
-        val caseId = CaseId("Case1", "Case 1")
-        val interpretation = Interpretation(caseId, "Whatever, blah.")
-
-        assertEquals(app.interpretationsDir.listFiles()!!.size, 0)
-
-        app.saveInterpretation(interpretation)
-        assertEquals(app.interpretationsDir.listFiles()!!.size, 1)
-        val interpretationFile = File(app.interpretationsDir, "Case1.interpretation.json")
-        val data = FileUtils.readFileToString(interpretationFile, UTF_8)
-        val deserialized = Json.decodeFromString<Interpretation>(data)
-        assertEquals(deserialized.text, "Whatever, blah.")
-        assertEquals(deserialized.caseId, caseId)
-
-        // Save it again, with a different comment.
-        setUpCaseFromFile("Case1", app)
-        val interpretation2 = Interpretation(caseId, "Sure.")
-        app.saveInterpretation(interpretation2)
-        assertEquals(app.interpretationsDir.listFiles()!!.size, 1)
-        val interpretationFile2 = File(app.interpretationsDir, "Case1.interpretation.json")
-        val data2 = FileUtils.readFileToString(interpretationFile2, UTF_8)
-        val deserialized2 = Json.decodeFromString<Interpretation>(data2)
-        assertEquals(deserialized2.text, "Sure.")
-        assertEquals(deserialized2.caseId, caseId)
-    }
-
-    @Test
     fun case() {
         setUpCaseFromFile("Case1", app)
         val retrieved = app.case("Case1")
@@ -103,6 +71,61 @@ internal class ServerApplicationTest {
         app.kb.commitCurrentRuleSession()
         val retrievedAgain = app.case("Case1")
         retrievedAgain.interpretation.conclusions() shouldContainExactly setOf(conclusion)
+    }
+
+    @Test
+    fun `should retrieve cached case`() {
+        val id = "Case1"
+        setUpCaseFromFile(id, app)
+        val retrieved = app.case(id)
+        val retrievedAgain = app.case(id)
+        retrievedAgain shouldBeSameInstanceAs retrieved
+    }
+
+    @Test
+    fun `should set the interpretation's DiffList to be empty when retrieving a case with a blank interpretation`() {
+        val id = "Case1"
+        setUpCaseFromFile(id, app)
+
+        val case = app.case(id)
+        case.interpretation.verifiedText shouldBe null
+        case.interpretation.textGivenByRules() shouldBe ""
+        case.interpretation.diffList shouldBe DiffList(emptyList())
+    }
+
+    @Test
+    fun `the DiffList should have an unchanged fragment when retrieving a case with a non-blank interpretation`() {
+        val id = "Case1"
+        setUpCaseFromFile(id, app)
+
+        val case = app.case(id)
+        val text = "ABC ok."
+        val conclusion = Conclusion(text)
+        app.kb.startRuleSession(case, ChangeTreeToAddConclusion(conclusion))
+        app.kb.commitCurrentRuleSession()
+
+        with(app.viewableCase(id)) {
+            interpretation.verifiedText shouldBe null
+            interpretation.textGivenByRules() shouldBe text
+            interpretation.diffList shouldBe DiffList(listOf(Unchanged(text)))
+        }
+    }
+
+    @Test
+    fun `should update a case's verified interpretation and return an interpretation containing a DiffList`() {
+        val id = "Case1"
+        val caseId = CaseId(id, id)
+        setUpCaseFromFile(id, app)
+
+        val original = app.case(id)
+        original.interpretation.verifiedText shouldBe null
+        original.interpretation.textGivenByRules() shouldBe ""
+
+        val verifiedInterpretation = Interpretation(caseId, "Verified.")
+        val returnedInterpretation = app.saveInterpretation(verifiedInterpretation)
+        val updated = app.case(id)
+        updated.interpretation shouldBe returnedInterpretation
+        returnedInterpretation.diffList shouldBe DiffList(listOf(Addition("Verified.")))
     }
 
     @Test
@@ -248,7 +271,7 @@ internal class ServerApplicationTest {
     @Test
     fun `handle zip in bad format`() {
         val zipFile = File("src/jvmTest/resources/export/NoRootDir.zip").toPath()
-        shouldThrow<IllegalArgumentException>{
+        shouldThrow<IllegalArgumentException> {
             app.importKBFromZip(Files.readAllBytes(zipFile))
         }.message shouldBe "Invalid zip for KB import."
     }
@@ -256,7 +279,7 @@ internal class ServerApplicationTest {
     @Test
     fun `handle empty zip`() {
         val zipFile = File("src/jvmTest/resources/export/Empty.zip").toPath()
-        shouldThrow<IllegalArgumentException>{
+        shouldThrow<IllegalArgumentException> {
             app.importKBFromZip(Files.readAllBytes(zipFile))
         }.message shouldBe "Invalid zip for KB import."
     }
@@ -278,6 +301,32 @@ internal class ServerApplicationTest {
         app.startRuleSessionToReplaceConclusion(id, conclusion1, conclusion2)
         app.commitCurrentRuleSession()
         app.case(id).interpretation.textGivenByRules() shouldBe conclusion2.text
+    }
+
+    @Test
+    fun `when saving an interpretation, an interpretation with diffs should be returned`() {
+        val id = "Case1"
+        setUpCaseFromFile(id, app)
+        val conclusion = Conclusion("Go to Bondi.")
+        with(app) {
+            kb.addCase(createCase(id))
+            startRuleSessionToAddConclusion(id, conclusion)
+            commitCurrentRuleSession()
+            val case = case(id)
+            case.interpretation.latestText() shouldBe conclusion.text
+
+            val verifiedInterpretation = case.interpretation.apply {
+                verifiedText = "Go to Bondi. Bring 2 sets of flippers. And bring sunscreen."
+            }
+            val interpReturned = app.saveInterpretation(verifiedInterpretation)
+            interpReturned.diffList shouldBe DiffList(
+                listOf(
+                    Unchanged("Go to Bondi."),
+                    Addition("Bring 2 sets of flippers."),
+                    Addition("And bring sunscreen."),
+                )
+            )
+        }
     }
 
     private fun createCase(caseName: String) = CaseTestUtils.createCase(caseName)

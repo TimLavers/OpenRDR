@@ -6,17 +6,17 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.rippledown.constants.api.CREATE_KB
+import io.rippledown.constants.api.EXPORT_KB
+import io.rippledown.constants.api.IMPORT_KB
+import io.rippledown.constants.api.KB_INFO
 import io.rippledown.model.OperationResult
-import io.rippledown.server.*
+import io.rippledown.server.ServerApplication
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedOutputStream
 import java.io.ByteArrayOutputStream
 
-const val KB_INFO = "/api/kbInfo"
-const val CREATE_KB = "/api/createKB"
-const val IMPORT_KB = "/api/importKB"
-const val EXPORT_KB = "/api/exportKB"
 
 fun Application.kbManagement(application: ServerApplication) {
     routing {

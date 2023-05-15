@@ -89,16 +89,5 @@ class CaseViewPO(private val driver: WebDriver) {
         return attributeValueCell!!.text
     }
 
-    fun setInterpretationText(text: String) {
-        val textArea = interpretationArea()
-        textArea.sendKeys(text)
-        val sendButton = containerElement().findElement(By.id("send_interpretation_button"))
-        sendButton.click()
-    }
 
-    fun interpretationText(): String {
-        return interpretationArea().getAttribute("value")
-    }
-
-    fun interpretationArea() = containerElement().findElement(By.id("interpretation_text_area"))!!
 }

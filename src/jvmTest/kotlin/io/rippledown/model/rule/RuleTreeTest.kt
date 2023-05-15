@@ -2,6 +2,9 @@ package io.rippledown.model.rule
 
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
+import io.rippledown.model.CaseId
+import io.rippledown.model.Interpretation
+import io.rippledown.model.RDRCase
 import io.rippledown.model.*
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.rule.dsl.ruleTree
@@ -404,6 +407,20 @@ internal class RuleTreeTest : RuleTestBase() {
         }.build()
         tree.copy() shouldBe tree
         (tree.copy() !== tree) shouldBe true
+    }
+
+    @Test
+    fun `interpreting a case should not overwrite the verified text`() {
+        val verifiedText = "Go to Bondi"
+        val case = RDRCase()
+        case.interpretation.verifiedText = verifiedText
+        tree.apply(case)
+        case.interpretation.verifiedText shouldBe verifiedText
+    }
+
+    @BeforeTest
+    fun init() {
+        tree = RuleTree()
     }
 
     private fun checkInterpretationForCase(text: String, vararg conclusions: String) {

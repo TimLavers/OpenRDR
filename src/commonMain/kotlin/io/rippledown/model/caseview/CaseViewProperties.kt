@@ -1,7 +1,7 @@
 package io.rippledown.model.caseview
 
-import kotlinx.serialization.Serializable
 import io.rippledown.model.Attribute
+import kotlinx.serialization.Serializable
 
 @Serializable
-data class CaseViewProperties(val attributes: List<Attribute>)
+data class CaseViewProperties(val attributes: List<Attribute> = emptyList())

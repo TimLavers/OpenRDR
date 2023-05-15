@@ -8,45 +8,45 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.verify
-import io.rippledown.CaseTestUtils
+import io.rippledown.constants.api.CASE
+import io.rippledown.constants.api.WAITING_CASES
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
+import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
-import io.rippledown.server.routes.CASE
-import io.rippledown.server.routes.WAITING_CASES
-import org.apache.commons.io.FileUtils
-import java.lang.IllegalStateException
 import kotlin.test.Test
 
 class CaseManagementTest: OpenRDRServerTestBase() {
+
     @Test
     fun waitingCases() = testApplication {
-        setupWithMock()
+        setup()
         val casesInfo = CasesInfo(listOf(CaseId("Tea"), CaseId("Coffee")))
-        every { serverApplicationMock.waitingCasesInfo() } returns casesInfo
+        every { serverApplication.waitingCasesInfo() } returns casesInfo
         val result = httpClient.get(WAITING_CASES)
         result.status shouldBe HttpStatusCode.OK
         result.body<CasesInfo>() shouldBe casesInfo
-        verify { serverApplicationMock.waitingCasesInfo() }
+        verify { serverApplication.waitingCasesInfo() }
     }
 
     @Test
     fun viewableCase() = testApplication {
-        setupWithSpy()
+        setup()
+        val rdrCase = RDRCase("Case1")
+        val viewableCase = ViewableCase(rdrCase)
         val caseId = "Case1"
-        FileUtils.copyFileToDirectory(CaseTestUtils.caseFile(caseId), serverApplication.casesDir)
+        every { serverApplication.viewableCase(caseId) } returns viewableCase
 
         val result = httpClient.get(CASE) {
             parameter("id", caseId)
         }
         result.status shouldBe HttpStatusCode.OK
-        result.body<ViewableCase>().name shouldBe caseId
-        verify { serverApplicationSpy.viewableCase(caseId) }
+        result.body<ViewableCase>() shouldBe viewableCase
     }
 
     @Test
     fun viewableCaseNoId() = testApplication {
-        setupWithSpy()
+        setup()
         shouldThrow<IllegalStateException> {
             httpClient.get(CASE)
         }
@@ -54,10 +54,11 @@ class CaseManagementTest: OpenRDRServerTestBase() {
 
     @Test
     fun viewableCaseBadId() = testApplication {
-        setupWithSpy()
+        setup()
         val result = httpClient.get(CASE) {
             parameter("id", "Case123")
         }
         result.status shouldBe HttpStatusCode.BadRequest
     }
- }
+
+}

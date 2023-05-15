@@ -6,11 +6,12 @@ import react.FC
 import react.Props
 import react.dom.html.ReactHTML
 
-external interface ValueCellHandler: Props {
+external interface ValueCellHandler : Props {
     var index: Int
     var value: TestResult
     var attribute: Attribute
 }
+
 val ValueCell = FC<ValueCellHandler> {
     ReactHTML.td {
         +resultText(it.value)
@@ -20,10 +21,16 @@ val ValueCell = FC<ValueCellHandler> {
         }
     }
 }
-fun resultText(result: TestResult): String {
-    val unit = result.units ?: ""
-    return "${result.value.text} $unit"
+
+internal fun resultText(result: TestResult): String {
+    val value = result.value.text
+    return if (result.units == null) {
+        value
+    } else {
+        "$value ${result.units}"
+    }
 }
+
 
 val ReferenceRangeCell = FC<ValueCellHandler> {
     ReactHTML.td {
@@ -34,6 +41,7 @@ val ReferenceRangeCell = FC<ValueCellHandler> {
         }
     }
 }
+
 fun rangeText(referenceRange: ReferenceRange?) =
     with(referenceRange) {
         when {
