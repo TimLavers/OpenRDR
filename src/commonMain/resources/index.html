@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Open Rippledown</title>
+    <link rel="shortcut icon" href="water-wave-icon.png">
 </head>
 <body>
 <div id="root"></div>
@@ -15,7 +16,7 @@
         console.log('doZipUpload, url: ', urlString)
         let formData = new FormData();
         formData.append("file", file);
-        let resp = fetch(urlString, {
+        fetch(urlString, {
             method: "POST",
             body: formData
         }).then(() => {
