@@ -1,7 +1,6 @@
 package npm
 
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import mui.material.Badge
@@ -17,7 +16,6 @@ import react.create
 import react.dom.createRootFor
 import kotlin.test.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class BadgeWithChildTest {
 
     @Test

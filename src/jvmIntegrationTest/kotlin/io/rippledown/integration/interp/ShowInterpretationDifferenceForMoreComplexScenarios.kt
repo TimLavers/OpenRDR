@@ -59,7 +59,7 @@ internal class ShowInterpretationDifferenceForMoreComplexScenarios : UITestBase(
     fun `should show no changes if the user has not changed an empty interpretation`() {
         val caseName = "case1"
         labProxy.writeNewCaseFile(caseName)
-        caseQueuePO.waitForNumberWaitingToBe(1)
+        caseQueuePO.waitForNumberOfCasesToBe(1)
         caseViewPO.nameShown() shouldBe caseName
         interpretationViewPO
             .requireChangesLabel("CHANGES")

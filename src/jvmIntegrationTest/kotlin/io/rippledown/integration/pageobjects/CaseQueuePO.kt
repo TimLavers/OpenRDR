@@ -1,5 +1,7 @@
 package io.rippledown.integration.pageobjects
 
+import io.rippledown.constants.caseview.CASES
+import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import org.awaitility.Awaitility.await
 import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver
@@ -7,15 +9,15 @@ import java.util.concurrent.TimeUnit
 
 class CaseQueuePO(private val driver: WebDriver) {
 
-    fun waitForNumberWaitingToBe(count: Int): CaseQueuePO {
+    fun waitForNumberOfCasesToBe(count: Int): CaseQueuePO {
         await().atMost(5, TimeUnit.SECONDS).until {
-            numberWaiting() == count
+            numberOfCases() == count
         }
         return this
     }
 
-    fun numberWaiting() = driver.findElement(By.id("number_of_cases_waiting_value"))
+    fun numberOfCases() = driver.findElement(By.id(NUMBER_OF_CASES_ID))
         .text
-        .substringAfter("Cases waiting: ")
+        .substringAfter(CASES).trim()
         .toInt()
 }

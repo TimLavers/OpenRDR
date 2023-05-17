@@ -20,7 +20,7 @@ import web.cssom.px
 
 external interface DiffViewerHandler : Handler {
     var interpretation: Interpretation
-    var onRuleBuilt: (interp: Interpretation) -> Unit
+    var onStartRule: (interp: Interpretation) -> Unit
 }
 
 val DiffViewer = FC<DiffViewerHandler> { handler ->
@@ -120,9 +120,8 @@ val DiffViewer = FC<DiffViewerHandler> { handler ->
                                         id = "$DIFF_VIEWER_BUILD_ICON$index"
                                         onClick = {
                                             handler.scope.launch {
-                                                diffList.selected = index //identify the change
-                                                val interp = handler.api.buildRule(handler.interpretation)
-                                                handler.onRuleBuilt(interp)
+                                                diffList.selected = index //identify the change in the interpretation
+                                                handler.onStartRule(handler.interpretation) //show the condition selector
                                             }
                                         }
                                     }

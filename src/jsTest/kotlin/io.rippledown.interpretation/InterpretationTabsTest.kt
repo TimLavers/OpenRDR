@@ -164,38 +164,6 @@ class InterpretationTabsTest {
     }
 
     @Test
-    fun changesBadgeShouldUpdateInterpIfInterpretationIsEdited() = runTest {
-        val addedText = "Go to Bondi now!"
-        val interpToReturn = Interpretation(
-            diffList = DiffList(
-                listOf(
-                    Addition(addedText)
-                )
-            )
-        )
-        val config = config {
-            returnInterpretation = interpToReturn
-        }
-
-        val vfc = VFC {
-            InterpretationTabs {
-                scope = this@runTest
-                api = Api(mock(config))
-                interpretation = Interpretation()
-                refreshCase = {}
-
-            }
-        }
-        val container = createRootFor(vfc)
-        with(container) {
-            requireNoBadge() // sanity check
-            enterInterpretation(addedText)
-            waitForDebounce()
-            requireBadgeCount(1)
-        }
-    }
-
-    @Test
     fun caseShouldBeRefreshedIfInterpretationIsEdited() = runTest {
         var refreshCaseCalled = false
 

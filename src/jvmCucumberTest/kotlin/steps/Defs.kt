@@ -214,6 +214,8 @@ class Defs : En {
         }
         When("I build a rule for the change on row {int}") { row: Int ->
             interpretationViewPO.buildRule(row)
+            interpretationViewPO.clickDone()
+
         }
     }
 }

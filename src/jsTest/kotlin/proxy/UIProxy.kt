@@ -2,9 +2,10 @@ package proxy
 
 import CASEVIEW_CASE_NAME_ID
 import CASE_ID_PREFIX
-import NUMBER_OF_CASES_WAITING_ID
 import POLL_PERIOD
 import io.kotest.matchers.shouldBe
+import io.rippledown.constants.caseview.CASES
+import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -40,9 +41,9 @@ fun HTMLElement.requireNumberOfCasesWaiting(expected: Int) {
     numberOfCasesWaiting() shouldBe expected
 }
 
-fun HTMLElement.numberOfCasesWaiting() = findById(NUMBER_OF_CASES_WAITING_ID)
+fun HTMLElement.numberOfCasesWaiting() = findById(NUMBER_OF_CASES_ID)
     .textContent!!
-    .substringAfter("Cases waiting: ")
+    .substringAfter("$CASES ")
     .toInt()
 
 

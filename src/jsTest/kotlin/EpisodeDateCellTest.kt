@@ -1,5 +1,4 @@
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.toInstant
 import proxy.findById
@@ -10,8 +9,7 @@ import kotlin.test.Test
 class EpisodeDateCellTest {
     private val date0 = 1659752689505L
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    @Test
+        @Test
     fun creation() = runTest {
         val vfc = VFC {
             EpisodeDateCell {

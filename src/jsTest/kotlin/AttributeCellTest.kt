@@ -1,16 +1,13 @@
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import proxy.findById
 import react.VFC
 import react.dom.createRootFor
-
 import kotlin.test.Test
 
 fun attributeCellId(attribute: Attribute) = "attribute_name_cell_${attribute.name}"
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class AttributeCellTest {
 
     @Test

@@ -11,7 +11,7 @@ import react.ReactNode
 import react.create
 import react.useState
 import web.cssom.Display
-import web.cssom.JustifyContent.Companion.flexEnd
+import web.cssom.JustifyContent.Companion.flexStart
 
 
 external interface ConditionSelectorHandler : Handler {
@@ -47,14 +47,7 @@ val ConditionSelector = FC<ConditionSelectorHandler> { handler ->
     Box {
         sx {
             display = Display.flex
-            justifyContent = flexEnd
-        }
-        Button {
-            id = "condition_picker_cancel_button"
-            onClick = {
-                handler.onCancel()
-            }
-            +"Cancel"
+            justifyContent = flexStart
         }
         Button {
             id = "condition_picker_done_button"
@@ -65,26 +58,12 @@ val ConditionSelector = FC<ConditionSelectorHandler> { handler ->
             }
             +"Done"
         }
+        Button {
+            id = "condition_picker_cancel_button"
+            onClick = {
+                handler.onCancel()
+            }
+            +"Cancel"
+        }
     }
 }
-
-/*
-fun main() {
-    document.getElementById("root")?.let { container ->
-        val ui = ConditionSelector.create {
-            api = Api()
-            scope = MainScope()
-
-            val x = Attribute("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-            conditionHints = listOf(
-                IsNormal(x),
-                IsHigh(x),
-                IsLow(x)
-            )
-            onDone = { selectedConditions ->
-                debug("Selected conditions: $selectedConditions")
-            }
-        }
-        createRoot(container.unsafeCast<Element>()).render(ui)
-    }
-}*/

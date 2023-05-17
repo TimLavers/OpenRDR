@@ -1,8 +1,8 @@
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Conclusion
+import io.rippledown.model.Interpretation
 import io.rippledown.model.ReferenceRange
 import io.rippledown.model.rule.RuleSummary
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
@@ -15,7 +15,6 @@ import react.dom.checkContainer
 import react.dom.createRootFor
 import kotlin.test.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class CaseViewTest {
 
     @Test
@@ -36,7 +35,7 @@ class CaseViewTest {
     }
 
     @Test
-    fun shouldCallRefreshCaseWhenInterpretationIsEdited() = runTest {
+    fun shouldCallOnCaseEditedWhenInterpretationIsEdited() = runTest {
         val name = "case a "
         var caseEdited = false
         val vfc = VFC {
@@ -56,6 +55,30 @@ class CaseViewTest {
             waitForDebounce()
             requireInterpretation(text)
             caseEdited shouldBe true
+        }
+    }
+
+    @Test
+    fun shouldCallOnStartRuleWhenARuleIsStarted() = runTest {
+        val name = "case a "
+        var editedInterpretation: Interpretation? = null
+        val vfc = VFC {
+            CaseView {
+                case = createCase(name)
+                scope = this@runTest
+                api = Api(mock(config {}))
+                onStartRule = { interpretation ->
+                    editedInterpretation = interpretation
+                }
+            }
+        }
+        val container = createRootFor(vfc)
+        with(container) {
+            val text = "Go to Bondi now!"
+            enterInterpretation(text)
+            waitForDebounce()
+            requireInterpretation(text)
+            //todo
         }
     }
 }
