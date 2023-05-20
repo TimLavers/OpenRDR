@@ -150,9 +150,9 @@ internal class InterpretationTest {
 
     @Test
     fun jsonSerialisation() {
-        val conclusion = Conclusion("First conc")
+        val conclusion = Conclusion(1, "First conc")
         val conditions = setOf(
-            Is(Attribute("x"), "1"),
+            Is(1, Attribute("x", 1), "1"),
         )
         val verifiedText = "I can verify that is true."
         val diffList = DiffList(
@@ -163,7 +163,7 @@ internal class InterpretationTest {
                 Unchanged("I can verify that is true or false.")
             )
         )
-        val rule = Rule("r0", null, conclusion, conditions)
+        val rule = Rule(1, null, conclusion, conditions)
         val interpretation = Interpretation(
             caseId,
             verifiedText,
@@ -175,11 +175,11 @@ internal class InterpretationTest {
 
     @Test
     fun jsonSerialisationWithNoVerifiedTextOrDiffList() {
-        val conclusion = Conclusion("First conc")
+        val conclusion = Conclusion(1, "First conc")
         val conditions = setOf(
-            Is(Attribute("x"), "1"),
+            Is(1, Attribute("x", 1), "1"),
         )
-        val rule = Rule("r0", null, conclusion, conditions)
+        val rule = Rule(10, null, conclusion, conditions)
         val interpretation = Interpretation(caseId).apply { add(rule) }
         val sd = serializeDeserialize(interpretation)
         assertEquals(sd, interpretation)
@@ -247,11 +247,11 @@ internal class InterpretationTest {
     @Test
     fun latestTextShouldBeTheVerifiedTextIfNotNull() {
         val verifiedText = "I can verify that is true."
-        val conclusion = Conclusion("First conc")
+        val conclusion = Conclusion(1, "First conc")
         val conditions = setOf(
-            Is(Attribute("x"), "1"),
+            Is(1, Attribute("x", 1), "1"),
         )
-        val rule0 = Rule("r0", null, conclusion, conditions)
+        val rule0 = Rule(10, null, conclusion, conditions)
         with(Interpretation(caseId, verifiedText)) {
             add(rule0)
             latestText() shouldBe verifiedText
@@ -260,11 +260,11 @@ internal class InterpretationTest {
 
     @Test
     fun latestTextShouldBeTheInterpretationIfNoVerifiedText() {
-        val conclusion = Conclusion("First conc")
+        val conclusion = Conclusion( 1,"First conc")
         val conditions = setOf(
-            Is(Attribute("x"), "1"),
+            Is(1, Attribute("x", 1), "1"),
         )
-        val rule0 = Rule("r0", null, conclusion, conditions)
+        val rule0 = Rule(10, null, conclusion, conditions)
         with(Interpretation(caseId)) {
             add(rule0)
             latestText() shouldBe conclusion.text

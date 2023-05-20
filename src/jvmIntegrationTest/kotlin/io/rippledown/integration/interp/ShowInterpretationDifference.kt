@@ -22,9 +22,9 @@ internal class ShowInterpretationDifference : UITestBase() {
     private lateinit var interpretationViewPO: InterpretationViewPO
     private val caseName = "Case1"
     private val tshComment = "Your patient has a normal TSH."
-    private val tsh = Attribute("TSH")
-    private val condition1 = IsNormal(tsh)
-    private val condition2 = LessThanOrEqualTo(tsh, 0.7)
+    private val tsh = Attribute("TSH", 1)
+    private val condition1 = IsNormal(12, tsh)
+    private val condition2 = LessThanOrEqualTo(13, tsh, 0.7)
 
     @BeforeTest
     fun setup() {
@@ -47,7 +47,7 @@ internal class ShowInterpretationDifference : UITestBase() {
     private fun buildRuleForTSHComment() {
         with(RESTClient()) {
             getCaseWithName(caseName)
-            startSessionToAddConclusionForCurrentCase(Conclusion(tshComment))
+            startSessionToAddConclusionForCurrentCase(Conclusion(34, tshComment))
             addConditionForCurrentSession(condition1)
             addConditionForCurrentSession(condition2)
             commitCurrentSession()

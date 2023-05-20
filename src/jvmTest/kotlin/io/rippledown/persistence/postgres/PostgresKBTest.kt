@@ -1,9 +1,11 @@
 package io.rippledown.persistence.postgres
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.rippledown.model.KBInfo
 import io.rippledown.model.condition.IsLow
 import io.rippledown.persistence.PersistentKB
+import io.rippledown.persistence.PersistentRule
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
@@ -79,5 +81,23 @@ class PostgresKBTest {
 
         glucoseKB = PostgresKB(glucoseInfo.id)
         glucoseKB.conditionStore().all() shouldBe setOf(createdCondition)
+    }
+
+    @Test
+    fun ruleStore() {
+        glucoseKB.ruleStore().all() shouldBe emptySet()
+        val glucose = glucoseKB.attributeStore().create("Glucose")
+        val templateCondition = IsLow(null, glucose)
+        val createdCondition = glucoseKB.conditionStore().create(templateCondition)
+        val conclusion = glucoseKB.conclusionStore().create("Glucose conclusion.")
+        val persistentRule = PersistentRule(null, 0, conclusion.id, setOf(createdCondition.id!!))
+        val created = glucoseKB.ruleStore().create(persistentRule)
+        created.id shouldNotBe null
+        created.parentId shouldBe 0
+        created.conclusionId shouldBe conclusion.id
+        created.conditionIds shouldBe setOf(createdCondition.id!!)
+
+        glucoseKB = PostgresKB(glucoseInfo.id)
+        glucoseKB.ruleStore().all() shouldBe setOf(created)
     }
 }

@@ -6,10 +6,7 @@ import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.testing.*
 import io.mockk.mockk
-import io.rippledown.server.routes.caseManagement
-import io.rippledown.server.routes.interpManagement
-import io.rippledown.server.routes.kbManagement
-import io.rippledown.server.routes.serverManagement
+import io.rippledown.server.routes.*
 
 open class OpenRDRServerTestBase {
     lateinit var serverApplication: ServerApplication
@@ -30,9 +27,9 @@ open class OpenRDRServerTestBase {
             kbManagement(serverApplication)
             caseManagement(serverApplication)
             interpManagement(serverApplication)
-            attributeManagement(applicationToUse)
-            conclusionManagement(applicationToUse)
-            conditionManagement(applicationToUse)
+            attributeManagement(serverApplication)
+            conclusionManagement(serverApplication)
+            conditionManagement(serverApplication)
         }
     }
 }

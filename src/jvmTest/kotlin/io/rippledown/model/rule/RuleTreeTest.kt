@@ -418,11 +418,6 @@ internal class RuleTreeTest : RuleTestBase() {
         case.interpretation.verifiedText shouldBe verifiedText
     }
 
-    @BeforeTest
-    fun init() {
-        tree = RuleTree()
-    }
-
     private fun checkInterpretationForCase(text: String, vararg conclusions: String) {
         val case = clinicalNotesCase(text)
         tree.apply(case)

@@ -5,7 +5,6 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.CaseTestUtils
 import io.rippledown.model.COMMENT_SEPARATOR
 import io.rippledown.model.CaseId
-import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.diff.*
 import org.apache.commons.io.FileUtils
@@ -61,11 +60,10 @@ internal class RuleBuildingFromDiffListTest {
         setUpCaseFromFile(id, app)
         val comment1 = "Bondi or bust."
         val comment2 = "Bring your flippers."
-        val comment3 = "Bring your snorkel."
         with(app) {
-            startRuleSessionToAddConclusion(id, Conclusion(comment1))
+            startRuleSessionToAddConclusion(id, app.getOrCreateConclusion(comment1))
             commitCurrentRuleSession()
-            startRuleSessionToAddConclusion(id, Conclusion(comment2))
+            startRuleSessionToAddConclusion(id, app.getOrCreateConclusion(comment2))
             commitCurrentRuleSession()
             case(id).interpretation.latestText() shouldBe "$comment1${COMMENT_SEPARATOR}$comment2" //sanity check
         }
@@ -104,9 +102,9 @@ internal class RuleBuildingFromDiffListTest {
         val comment2 = "Bring your flippers."
         val comment3 = "Bring your snorkel."
         with(app) {
-            startRuleSessionToAddConclusion(id, Conclusion(comment1))
+            startRuleSessionToAddConclusion(id, app.getOrCreateConclusion(comment1))
             commitCurrentRuleSession()
-            startRuleSessionToAddConclusion(id, Conclusion(comment2))
+            startRuleSessionToAddConclusion(id, app.getOrCreateConclusion(comment2))
             commitCurrentRuleSession()
             case(id).interpretation.latestText() shouldBe "$comment1${COMMENT_SEPARATOR}$comment2" //sanity check
         }

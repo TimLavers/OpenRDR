@@ -13,7 +13,7 @@ internal fun ConclusionFactory.getAlignedConclusion(provided: Conclusion): Concl
     return conclusionInFactory
 }
 
- abstract class RuleTreeChange {
+abstract class RuleTreeChange {
     abstract fun alignWith(conclusionFactory: ConclusionFactory): RuleTreeChange
     abstract fun isApplicable(tree: RuleTree, case: RDRCase): Boolean
     abstract fun createChanger(tree: RuleTree, ruleFactory: RuleFactory): RuleTreeChanger

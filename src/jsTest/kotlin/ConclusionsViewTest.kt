@@ -24,7 +24,7 @@ class ConclusionsViewTest {
                     add(
                         RuleSummary(
                             conclusion = Conclusion(1, comment),
-                            conditions = setOf(ContainsText(sun, "shining $index"))
+                            conditions = setOf(ContainsText(2, sun, "shining $index"))
                         )
                     )
                 }

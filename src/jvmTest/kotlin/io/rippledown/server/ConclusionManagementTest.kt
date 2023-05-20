@@ -14,15 +14,15 @@ import kotlin.test.Test
 class ConclusionManagementTest: OpenRDRServerTestBase() {
     @Test
     fun getOrCreateConclusion() = testApplication {
-        setupWithMock()
+        setup()
         val text = "Glucose is high."
         val conclusion = Conclusion(8, text)
-        every { serverApplicationMock.getOrCreateConclusion(text) } returns conclusion
+        every { serverApplication.getOrCreateConclusion(text) } returns conclusion
         val result = httpClient.post(GET_OR_CREATE_CONCLUSION) {
             setBody(text)
         }
         result.status shouldBe HttpStatusCode.OK
         result.body<Conclusion>() shouldBe conclusion
-        verify { serverApplicationMock.getOrCreateConclusion(text) }
+        verify { serverApplication.getOrCreateConclusion(text) }
     }
  }

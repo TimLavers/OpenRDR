@@ -40,7 +40,7 @@ class InterpretationTabsTest {
     fun originalInterpretationShouldBeShowingByDefault() = runTest {
         val text = "Go to Bondi now!"
         val originalInterp = Interpretation().apply {
-            add(RuleSummary(conclusion = Conclusion(text)))
+            add(RuleSummary(conclusion = Conclusion(1, text)))
         }
         val vfc = VFC {
             InterpretationTabs {

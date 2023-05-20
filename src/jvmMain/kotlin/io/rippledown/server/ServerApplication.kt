@@ -29,6 +29,7 @@ import kotlin.io.path.createTempDirectory
 class ServerApplication(private val persistenceProvider: PersistenceProvider = PostgresPersistenceProvider()) {
     val casesDir = File("cases").apply { mkdirs() }
     val interpretationsDir = File("interpretations").apply { mkdirs() }
+    private val idToCase = mutableMapOf<String, RDRCase>()
     private val kbManager = KBManager(persistenceProvider)
 
     lateinit var kb: KB
@@ -36,9 +37,6 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
     init {
         createKB()
     }
-    private val idToCase = mutableMapOf<String, RDRCase>()
-
-    var kb = KB("Thyroids")
 
     fun createKB() {
         val kbInfo = kbManager.createKB("Thyroids")
@@ -69,14 +67,14 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         kb = KBImporter(rootDir, persistenceProvider).import()
     }
 
-    fun startRuleSessionForDifference(caseId: String, diff: Diff) {
+    private fun startRuleSessionForDifference(caseId: String, diff: Diff) {
         when (diff) {
-            is Addition -> startRuleSessionToAddConclusion(caseId, Conclusion(diff.right()))
-            is Removal -> startRuleSessionToRemoveConclusion(caseId, Conclusion(diff.left()))
+            is Addition -> startRuleSessionToAddConclusion(caseId, kb.conclusionManager.getOrCreate(diff.right()))
+            is Removal -> startRuleSessionToRemoveConclusion(caseId, kb.conclusionManager.getOrCreate(diff.left()))
             is Replacement -> startRuleSessionToReplaceConclusion(
                 caseId,
-                Conclusion(diff.left()),
-                Conclusion(diff.right())
+                kb.conclusionManager.getOrCreate(diff.left()),
+                kb.conclusionManager.getOrCreate(diff.right())
             )
 
             is Unchanged -> {}
@@ -87,7 +85,7 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         kb.startRuleSession(case(caseId), ChangeTreeToAddConclusion(conclusion))
     }
 
-    fun startRuleSessionToRemoveConclusion(caseId: String, conclusion: Conclusion) {
+    private fun startRuleSessionToRemoveConclusion(caseId: String, conclusion: Conclusion) {
         kb.startRuleSession(case(caseId), ChangeTreeToRemoveConclusion(conclusion))
     }
 
@@ -136,8 +134,6 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
 
     fun getOrCreateCondition(condition: Condition) = kb.conditionManager.getOrCreate(condition)
 
-    fun saveInterpretation(interpretation: Interpretation): OperationResult {
-        val fileName = "${interpretation.caseId.id}.interpretation.json"
     /**
      * Save the verified text.
      *
@@ -195,12 +191,6 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
             file.delete()
         }
         FileUtils.writeStringToFile(file, Json.encodeToString(interpretation), UTF_8)
-
-        // Now delete the corresponding case file.
-        val caseFile = File(casesDir, "${interpretation.caseId.id}.json")
-        val deleted = FileUtils.delete(caseFile)
-        println("${LocalDateTime.now()} case deleted $deleted")
-        return OperationResult("Interpretation submitted")
     }
 
     private fun getCaseFromFile(file: File): RDRCase {
@@ -224,11 +214,10 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         return RDRCase(caseWithDummyAttributes.name, dataMap)
     }
 
-    internal fun uninterpretedCase(id: String): RDRCase {
+    private fun uninterpretedCase(id: String): RDRCase {
         if (!idToCase.containsKey(id)) {
             idToCase[id] = getCaseFromFile(File(casesDir, "$id.json"))
         }
-        return idToCase.get(id)!!
+        return idToCase[id]!!
     }
 }
-

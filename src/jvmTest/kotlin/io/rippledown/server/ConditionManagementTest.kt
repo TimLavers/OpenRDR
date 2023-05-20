@@ -18,11 +18,11 @@ import kotlin.test.Test
 class ConditionManagementTest: OpenRDRServerTestBase() {
     @Test
     fun getOrCreateCondition() = testApplication {
-        setupWithMock()
+        setup()
         val glucose = Attribute("Glucose", 33)
         val toReturn = IsHigh(54, glucose)
         val template = IsLow(null, glucose)
-        every { serverApplicationMock.getOrCreateCondition(template) } returns toReturn
+        every { serverApplication.getOrCreateCondition(template) } returns toReturn
         val data = Json.encodeToJsonElement(Condition.serializer(), template)
         val result = httpClient.post(GET_OR_CREATE_CONDITION) {
             contentType(ContentType.Application.Json)
@@ -30,6 +30,6 @@ class ConditionManagementTest: OpenRDRServerTestBase() {
         }
         result.status shouldBe HttpStatusCode.OK
         result.body<Condition>() shouldBe toReturn
-        verify { serverApplicationMock.getOrCreateCondition(template) }
+        verify { serverApplication.getOrCreateCondition(template) }
     }
  }

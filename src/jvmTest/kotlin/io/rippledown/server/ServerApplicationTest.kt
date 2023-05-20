@@ -14,8 +14,6 @@ import io.rippledown.model.diff.DiffList
 import io.rippledown.model.diff.Unchanged
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.persistence.InMemoryPersistenceProvider
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
 import org.apache.commons.io.FileUtils
 import java.io.File
 import java.nio.file.Files
@@ -31,7 +29,6 @@ fun RDRCase.getLatest(attributeName: String): TestResult? {
     return getLatest(getAttribute(attributeName))
 }
 internal class ServerApplicationTest {
-    private lateinit var app: ServerApplication
 
     private lateinit var app: ServerApplication
     @BeforeTest
@@ -100,7 +97,7 @@ internal class ServerApplicationTest {
 
         val case = app.case(id)
         val text = "ABC ok."
-        val conclusion = Conclusion(text)
+        val conclusion = app.kb.conclusionManager.getOrCreate(text)
         app.kb.startRuleSession(case, ChangeTreeToAddConclusion(conclusion))
         app.kb.commitCurrentRuleSession()
 
@@ -307,7 +304,7 @@ internal class ServerApplicationTest {
     fun `when saving an interpretation, an interpretation with diffs should be returned`() {
         val id = "Case1"
         setUpCaseFromFile(id, app)
-        val conclusion = Conclusion("Go to Bondi.")
+        val conclusion = app.kb.conclusionManager.getOrCreate("Go to Bondi.")
         with(app) {
             kb.addCase(createCase(id))
             startRuleSessionToAddConclusion(id, conclusion)

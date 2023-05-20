@@ -16,12 +16,8 @@ import io.rippledown.model.Conclusion
 import io.rippledown.model.OperationResult
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
-import io.rippledown.server.PING
-import io.rippledown.server.SHUTDOWN
-import io.rippledown.server.routes.ADD_CONDITION
-import io.rippledown.server.routes.COMMIT_SESSION
-import io.rippledown.server.routes.START_SESSION_TO_ADD_CONCLUSION
-import io.rippledown.server.routes.START_SESSION_TO_REPLACE_CONCLUSION
+import io.rippledown.server.*
+import io.rippledown.server.routes.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 
@@ -125,7 +121,8 @@ class RESTClient {
 
     fun createRuleToAddText(caseName: String, text: String): OperationResult {
         getCaseWithName(caseName)
-        startSessionToAddConclusionForCurrentCase(Conclusion(text))
+        val conclusion = getOrCreateConclusion(text)
+        startSessionToAddConclusionForCurrentCase(conclusion)
         return commitCurrentSession()
     }
 

@@ -24,8 +24,5 @@ fun Application.interpManagement(application: ServerApplication) {
             val interpretationWithDiffs = application.buildRule(interpretation)
             call.respond(HttpStatusCode.OK, interpretationWithDiffs)
         }
-
     }
-
-
 }

@@ -2,7 +2,6 @@ package io.rippledown.persistence.postgres
 
 import io.rippledown.model.KBInfo
 import io.rippledown.persistence.PersistentKB
-import io.rippledown.persistence.RuleStore
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -37,6 +36,7 @@ class PostgresKB internal constructor(private val dbName: String): PersistentKB 
     private val attributeOrderStore = PostgresAttributeOrderStore(dbName)
     private val conclusionStore = PostgresConclusionStore(dbName)
     private val conditionStore = PostgresConditionStore(dbName)
+    private val ruleStore = PostgresRuleStore(dbName)
 
     init {
         Database.connect({ConnectionProvider.connection(dbName)})
@@ -67,9 +67,7 @@ class PostgresKB internal constructor(private val dbName: String): PersistentKB 
 
     override fun conditionStore() = conditionStore
 
-    override fun ruleStore(): RuleStore {
-        TODO("Not yet implemented")
-    }
+    override fun ruleStore() = ruleStore
 }
 object PKBInfos: LongIdTable(name = KB_INFO_TABLE) {
     val kbId = varchar("kb_id", 128)

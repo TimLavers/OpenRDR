@@ -14,15 +14,15 @@ import kotlin.test.Test
 class AttributeManagementTest: OpenRDRServerTestBase() {
     @Test
     fun getOrCreateAttribute() = testApplication {
-        setupWithMock()
+        setup()
         val glucose = "Glucose"
         val attribute = Attribute(glucose, 4000)
-        every { serverApplicationMock.getOrCreateAttribute(glucose) } returns attribute
+        every { serverApplication.getOrCreateAttribute(glucose) } returns attribute
         val result = httpClient.post(GET_OR_CREATE_ATTRIBUTE) {
             setBody(glucose)
         }
         result.status shouldBe HttpStatusCode.OK
         result.body<Attribute>() shouldBe attribute
-        verify { serverApplicationMock.getOrCreateAttribute(glucose) }
+        verify { serverApplication.getOrCreateAttribute(glucose) }
     }
  }
