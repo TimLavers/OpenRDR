@@ -18,6 +18,10 @@ class CaseViewPO(private val driver: WebDriver) {
         return containerElement().findElement(By.id("case_view_case_name")).text
     }
 
+    fun noNameShowing(): Boolean {
+        return driver.findElements(By.id("case_view_container")).size == 0
+    }
+
     fun datesShown(): List<String> {
         val result = mutableListOf<String>()
 

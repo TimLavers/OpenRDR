@@ -1,5 +1,6 @@
 package proxy
 
+import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.constants.interpretation.*
@@ -11,9 +12,11 @@ import react.dom.test.act
 import web.events.EventInit
 import web.html.HTMLElement
 
-fun HTMLElement.selectChangesTab() {
+suspend fun HTMLElement.selectChangesTab() {
     val element = findById(INTERPRETATION_TAB_CHANGES)
-    Simulate.click(element)
+    act {
+        Simulate.click(element)
+    }
 }
 
 fun HTMLElement.requireChangesLabel(expected: String) {
@@ -33,6 +36,7 @@ suspend fun HTMLElement.enterInterpretation(text: String) {
     }
 }
 
+//TODO should be wrapped in act{}
 suspend fun waitForDebounce() {
     withContext(Dispatchers.Default) {
         delay(DEBOUNCE_WAIT_PERIOD_MILLIS * 2)
@@ -41,9 +45,12 @@ suspend fun waitForDebounce() {
 
 fun HTMLElement.requireBadgeCount(expected: Int) {
     querySelectorAll(".$BADGE_CLASS")[0].let {
-        it.textContent!!.toInt() shouldBe expected
+        val text = it.textContent!!
+        withClue("Expected badge count to be $expected but was blank") {
+            text shouldNotBe ""
+        }
+        text.toInt() shouldBe expected
     }
-
 }
 
 fun HTMLElement.requireNoBadge() {

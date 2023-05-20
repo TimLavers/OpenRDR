@@ -1,15 +1,15 @@
+import io.kotest.assertions.asClue
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.Conclusion
-import io.rippledown.model.Interpretation
-import io.rippledown.model.ReferenceRange
+import io.rippledown.interpretation.clickBuildIconForRow
+import io.rippledown.interpretation.moveMouseOverRow
+import io.rippledown.interpretation.requireNumberOfRows
+import io.rippledown.model.*
+import io.rippledown.model.diff.*
 import io.rippledown.model.rule.RuleSummary
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
-import proxy.enterInterpretation
-import proxy.requireCaseToBeSelected
-import proxy.requireInterpretation
-import proxy.waitForDebounce
+import proxy.*
 import react.VFC
 import react.dom.checkContainer
 import react.dom.createRootFor
@@ -59,26 +59,54 @@ class CaseViewTest {
     }
 
     @Test
-    fun shouldCallOnStartRuleWhenARuleIsStarted() = runTest {
-        val name = "case a "
-        var editedInterpretation: Interpretation? = null
+    fun shouldCallOnStartRuleWithExpectedInterpretation() = runTest {
+        val bondiComment = "Go to Bondi now!"
+        val manlyComment = "Go to Manly now!"
+        val beachComment = "Enjoy the beach!"
+        val diffList = DiffList(
+            listOf(
+                Unchanged(beachComment),
+                Removal(manlyComment),
+                Addition(bondiComment),
+                Replacement(manlyComment, bondiComment)
+            )
+        )
+        val caseWithInterp = createCaseWithInterpretation(
+            conclusionTexts = listOf(beachComment, manlyComment, bondiComment),
+            diffs = diffList
+        )
+
+        val config = config {
+            returnInterpretation = Interpretation(
+                diffList = diffList,
+            )
+        }
+        lateinit var interpToBuildRuleOn: Interpretation
         val vfc = VFC {
             CaseView {
-                case = createCase(name)
+                case = caseWithInterp
                 scope = this@runTest
-                api = Api(mock(config {}))
+                api = Api(mock(config))
+                onCaseEdited = {}
                 onStartRule = { interpretation ->
-                    editedInterpretation = interpretation
+                    interpToBuildRuleOn = interpretation
                 }
             }
         }
         val container = createRootFor(vfc)
         with(container) {
-            val text = "Go to Bondi now!"
-            enterInterpretation(text)
-            waitForDebounce()
-            requireInterpretation(text)
-            //todo
+            { "sanity check" }.asClue {
+                requireBadgeCount(3)
+            }
+
+            //start to build a rule for the Addition
+            selectChangesTab()
+            waitForEvents()
+            requireNumberOfRows(4)
+            moveMouseOverRow(2)
+            waitForEvents()
+            clickBuildIconForRow(2)
+            interpToBuildRuleOn.diffList.selected shouldBe 2
         }
     }
 }

@@ -1,6 +1,8 @@
 package io.rippledown.interpretation
 
 import Handler
+import io.rippledown.constants.interpretation.CONDITION_SELECTOR_CANCEL_BUTTON
+import io.rippledown.constants.interpretation.CONDITION_SELECTOR_DONE_BUTTON
 import io.rippledown.constants.interpretation.CONDITION_SELECTOR_ROW
 import io.rippledown.model.condition.Condition
 import mui.material.*
@@ -45,12 +47,13 @@ val ConditionSelector = FC<ConditionSelectorHandler> { handler ->
         }
     }
     Box {
+        id = "condition_selector_buttons"
         sx {
             display = Display.flex
             justifyContent = flexStart
         }
         Button {
-            id = "condition_picker_done_button"
+            id = CONDITION_SELECTOR_DONE_BUTTON
             title = "Complete the rule with the selected conditions"
             variant = contained
             onClick = {
@@ -59,7 +62,7 @@ val ConditionSelector = FC<ConditionSelectorHandler> { handler ->
             +"Done"
         }
         Button {
-            id = "condition_picker_cancel_button"
+            id = CONDITION_SELECTOR_CANCEL_BUTTON
             onClick = {
                 handler.onCancel()
             }

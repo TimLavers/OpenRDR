@@ -12,7 +12,6 @@ import mui.material.ListItemText
 import mui.system.sx
 import react.FC
 import react.memo
-import react.useEffect
 import react.useState
 import web.cssom.Cursor.Companion.pointer
 import web.cssom.Overflow
@@ -31,11 +30,12 @@ val CaseList = FC<CaseListHandler> { handler ->
 
     fun updateCurrentCase(id: String) {
         handler.scope.launch {
-            currentCase = handler.api.getCase(id)
+            val returned = handler.api.getCase(id)
+            currentCase = returned
         }
     }
 
-    useEffect {
+    fun selectFirstCase() {
         val names = handler.caseIds.map { it.name }
         val currentCaseNullOrNotAvailable = currentCase == null || !names.contains(currentCase?.name)
         if (currentCaseNullOrNotAvailable && names.isNotEmpty()) {
@@ -43,6 +43,7 @@ val CaseList = FC<CaseListHandler> { handler ->
             updateCurrentCase(firstCaseId.name)
         }
     }
+    selectFirstCase()
 
     Grid {
         container = true
@@ -102,7 +103,7 @@ val CaseList = FC<CaseListHandler> { handler ->
                 ConditionSelector {
                     scope = handler.scope
                     api = handler.api
-                    conditionHints = conditions()
+                    conditionHints = dummyConditions()
                     onCancel = {
                         newInterpretation = null
                     }
@@ -129,7 +130,7 @@ val CaseListMemo = memo(
     }
 )
 
-fun conditions(): List<Condition> {
+fun dummyConditions(): List<Condition> {
     val tsh = Attribute("TSH")
     val ft4 = Attribute("FT4")
     return listOf(

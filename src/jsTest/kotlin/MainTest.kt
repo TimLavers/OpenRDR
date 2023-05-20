@@ -29,7 +29,7 @@ class MainTest {
     }
 
     @Test
-    fun caseViewShouldBeInitialisedWithTheWaitingCases() = runTest {
+    fun caseViewShouldBeInitialisedWithTheCasesFromTheServer() = runTest {
         val config = config {
             returnCasesInfo = CasesInfo(
                 listOf(

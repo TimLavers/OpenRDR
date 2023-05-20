@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 data class ViewableCase(val rdrCase: RDRCase, val viewProperties: CaseViewProperties = CaseViewProperties()) {
     val name = rdrCase.name
     val dates = rdrCase.dates
-    val interpretation = rdrCase.interpretation
+    var interpretation = rdrCase.interpretation
 
     init {
         check(rdrCase.attributes == viewProperties.attributes.toSet()) {

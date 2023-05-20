@@ -5,7 +5,6 @@ import green
 import io.rippledown.constants.interpretation.*
 import io.rippledown.model.Interpretation
 import io.rippledown.model.diff.Unchanged
-import kotlinx.coroutines.launch
 import mui.icons.material.Build
 import mui.material.*
 import mui.material.styles.TypographyVariant
@@ -119,10 +118,8 @@ val DiffViewer = FC<DiffViewerHandler> { handler ->
                                         }
                                         id = "$DIFF_VIEWER_BUILD_ICON$index"
                                         onClick = {
-                                            handler.scope.launch {
-                                                diffList.selected = index //identify the change in the interpretation
-                                                handler.onStartRule(handler.interpretation) //show the condition selector
-                                            }
+                                            diffList.selected = index //identify the change in the interpretation
+                                            handler.onStartRule(handler.interpretation) //show the condition selector
                                         }
                                     }
                                 }

@@ -33,11 +33,10 @@ suspend fun waitForEvents(timeout: Long = 150) {
     }
 }
 
-
 suspend fun waitForNextPoll() =
     waitForEvents(POLL_PERIOD.plus(250.milliseconds).inWholeMilliseconds)//longer than the delay for the 1st poll
 
-fun HTMLElement.requireNumberOfCasesWaiting(expected: Int) {
+fun HTMLElement.requireNumberOfCases(expected: Int) {
     numberOfCasesWaiting() shouldBe expected
 }
 
@@ -45,7 +44,6 @@ fun HTMLElement.numberOfCasesWaiting() = findById(NUMBER_OF_CASES_ID)
     .textContent!!
     .substringAfter("$CASES ")
     .toInt()
-
 
 
 fun HTMLElement.printJSON() = debug("${stringify(outerHTML, null, space = 2)})}")

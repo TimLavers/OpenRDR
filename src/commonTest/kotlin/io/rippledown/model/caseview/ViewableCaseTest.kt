@@ -1,7 +1,10 @@
 package io.rippledown.model.caseview
 
+import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
+import io.rippledown.model.diff.Addition
+import io.rippledown.model.diff.DiffList
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -54,6 +57,26 @@ class ViewableCaseTest {
         val serialized = format.encodeToString(viewableCase)
         val deserialized = format.decodeFromString<ViewableCase>(serialized)
         deserialized shouldBe viewableCase
+    }
+
+    @Test
+    fun serializationWithInterpretation() {
+        val surfComment = "Surf's up."
+        val diffList = DiffList(listOf(Addition("Go to Bondi")), selected = 0)
+        val viewableCase = createCaseWithInterpretation("Case1", listOf(surfComment), diffList)
+        withClue("sanity check") {
+            viewableCase.interpretation.latestText() shouldBe surfComment
+            viewableCase.interpretation.diffList shouldBe diffList
+        }
+        val format = Json { allowStructuredMapKeys = true }
+        val serialized = format.encodeToString(viewableCase)
+
+        val deserialized = format.decodeFromString<ViewableCase>(serialized)
+        deserialized shouldBe viewableCase
+        deserialized.interpretation.latestText() shouldBe surfComment
+        deserialized.interpretation.diffList shouldBe diffList
+        deserialized.interpretation.diffList.selected shouldBe 0
+
     }
 
     private fun caseViewProperties() = CaseViewProperties(listOf(abc, tsh, xyz))

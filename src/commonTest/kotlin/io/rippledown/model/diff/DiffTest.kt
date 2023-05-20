@@ -17,8 +17,9 @@ class DiffTest {
                 Replacement("And have fun.", "And have lots of fun.")
             )
         )
-        val serialized = Json.encodeToString(diffList)
-        val deserialized = Json.decodeFromString<DiffList>(serialized)
+        val format = Json { allowStructuredMapKeys = true }
+        val serialized = format.encodeToString(diffList)
+        val deserialized = format.decodeFromString<DiffList>(serialized)
         deserialized shouldBe diffList
     }
 

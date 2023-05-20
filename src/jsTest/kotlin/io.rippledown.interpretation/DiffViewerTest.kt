@@ -245,7 +245,7 @@ class DiffViewerTest {
         with(container) {
             ruleStarted shouldBe false
             requireBuildIconForRow(0)
-            act { clickBuildIconForRow(0) }
+            clickBuildIconForRow(0)
             ruleStarted shouldBe true
         }
     }
@@ -274,7 +274,7 @@ class DiffViewerTest {
         with(container) {
             act { moveMouseOverRow(2) }
             waitForEvents()
-            act { clickBuildIconForRow(2) }
+            clickBuildIconForRow(2)
             //assertion is in onStartRule
         }
     }
