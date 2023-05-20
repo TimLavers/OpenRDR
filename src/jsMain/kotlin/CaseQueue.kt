@@ -1,3 +1,5 @@
+import io.rippledown.constants.caseview.CASES
+import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import io.rippledown.model.CasesInfo
 import kotlinx.coroutines.launch
 import mui.material.Typography
@@ -7,32 +9,31 @@ import react.useState
 import web.timers.setInterval
 import kotlin.time.Duration.Companion.seconds
 
-const val NUMBER_OF_CASES_WAITING_ID = "number_of_cases_waiting_value"
 val POLL_PERIOD = 0.5.seconds
 
 external interface CaseQueueHandler : Handler
 
 val CaseQueue = FC<CaseQueueHandler> { handler ->
-    var waitingCasesInfo by useState(CasesInfo(emptyList(), ""))
+    var casesInfo by useState(CasesInfo(emptyList(), ""))
 
     useEffectOnce {
         setInterval(delay = POLL_PERIOD) {
             handler.scope.launch {
-                waitingCasesInfo = handler.api.waitingCasesInfo()
+                casesInfo = handler.api.waitingCasesInfo()
             }
         }
     }
 
     Typography {
-        +"Cases waiting: ${waitingCasesInfo.count}"
-        id = NUMBER_OF_CASES_WAITING_ID
+        +"$CASES ${casesInfo.count}"
+        id = NUMBER_OF_CASES_ID
     }
 
-    if (waitingCasesInfo.count > 0) {
-        CaseList {
+    if (casesInfo.count > 0) {
+        CaseListMemo {
             scope = handler.scope
             api = handler.api
-            caseIds = waitingCasesInfo.caseIds
+            caseIds = casesInfo.caseIds
         }
     }
 }

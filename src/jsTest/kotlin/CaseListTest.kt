@@ -1,16 +1,19 @@
 import io.kotest.matchers.shouldBe
+import io.rippledown.interpretation.*
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import io.rippledown.model.createCase
+import io.rippledown.model.createCaseWithInterpretation
+import io.rippledown.model.diff.*
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
 import proxy.*
 import react.VFC
 import react.dom.checkContainer
+import react.dom.createRootFor
 import kotlin.test.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class CaseListTest {
 
     @Test
@@ -125,6 +128,105 @@ class CaseListTest {
                 requireCaseToBeSelected("case 100")
 
             }
+        }
+    }
+
+    @Test
+    fun shouldShowConditionSelector() = runTest {
+        val caseName = "Bondi"
+        val caseIdList = listOf(CaseId(caseName))
+        val bondiComment = "Go to Bondi now!"
+        val manlyComment = "Go to Manly now!"
+        val beachComment = "Enjoy the beach!"
+        val diffList = DiffList(
+            listOf(
+                Unchanged(beachComment),
+                Removal(manlyComment),
+                Addition(bondiComment),
+                Replacement(manlyComment, bondiComment)
+            )
+        )
+        val caseWithInterp = createCaseWithInterpretation(
+            name = caseName,
+            conclusionTexts = listOf(beachComment, manlyComment, bondiComment),
+            diffs = diffList
+        )
+        val config = config {
+            expectedCaseId = caseName
+            returnCasesInfo = CasesInfo(caseIdList)
+            returnCase = caseWithInterp
+        }
+
+        val vfc = VFC {
+            CaseList {
+                caseIds = caseIdList
+                api = Api(mock(config))
+                scope = this@runTest
+            }
+        }
+        with(createRootFor(vfc)) {
+            waitForEvents()
+            requireCaseToBeSelected(caseName)
+            //start to build a rule for the Addition
+            selectChangesTab()
+            waitForEvents()
+            requireNumberOfRows(4)
+            moveMouseOverRow(2)
+            waitForEvents()
+            requireDoneButtonNotShowing()
+            clickBuildIconForRow(2)
+            requireDoneButtonShowing()
+        }
+    }
+
+    @Test
+    fun shouldCancelConditionSelector() = runTest {
+        val caseName = "Bondi"
+        val caseIdList = listOf(CaseId(caseName))
+        val bondiComment = "Go to Bondi now!"
+        val manlyComment = "Go to Manly now!"
+        val beachComment = "Enjoy the beach!"
+        val diffList = DiffList(
+            listOf(
+                Unchanged(beachComment),
+                Removal(manlyComment),
+                Addition(bondiComment),
+                Replacement(manlyComment, bondiComment)
+            )
+        )
+        val caseWithInterp = createCaseWithInterpretation(
+            name = caseName,
+            conclusionTexts = listOf(beachComment, manlyComment, bondiComment),
+            diffs = diffList
+        )
+        val config = config {
+            expectedCaseId = caseName
+            returnCasesInfo = CasesInfo(caseIdList)
+            returnCase = caseWithInterp
+        }
+
+        val vfc = VFC {
+            CaseList {
+                caseIds = caseIdList
+                api = Api(mock(config))
+                scope = this@runTest
+            }
+        }
+        with(createRootFor(vfc)) {
+            waitForEvents()
+            requireCaseToBeSelected(caseName)
+            //start to build a rule for the Addition
+            selectChangesTab()
+            waitForEvents()
+            requireNumberOfRows(4)
+            moveMouseOverRow(2)
+            waitForEvents()
+            clickBuildIconForRow(2)
+            requireCancelButtonShowing()
+            //cancel the condition selector
+            clickCancelButton()
+            waitForEvents()
+            requireDoneButtonNotShowing()
         }
     }
 }

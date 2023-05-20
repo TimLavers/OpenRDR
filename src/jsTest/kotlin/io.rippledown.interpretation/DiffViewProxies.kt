@@ -12,6 +12,7 @@ import org.w3c.dom.Element
 import proxy.findAllById
 import proxy.findById
 import react.dom.test.Simulate
+import react.dom.test.act
 import web.html.HTMLElement
 
 fun HTMLElement.requireNumberOfRows(expected: Int) {
@@ -37,9 +38,11 @@ fun HTMLElement.requireBuildIconForRow(row: Int) {
     findById("$DIFF_VIEWER_BUILD_ICON$row") shouldNotBe null
 }
 
-fun HTMLElement.clickBuildIconForRow(row: Int) {
+suspend fun HTMLElement.clickBuildIconForRow(row: Int) {
     val icon = findById("$DIFF_VIEWER_BUILD_ICON$row")
-    Simulate.click(icon)
+    act {
+        Simulate.click(icon)
+    }
 }
 
 fun HTMLElement.requireNoOriginalTextInRow(row: Int) {
@@ -80,10 +83,4 @@ fun HTMLElement.requireGreenBackgroundInChangedColumnInRow(row: Int) {
     window.getComputedStyle(changed.unsafeCast<Element>()).backgroundColor shouldBe "rgb(200, 240, 200)"
 }
 
-fun HTMLElement.requireNoColorBackgroundInChangedColumnInRow(row: Int) {
-    val changed = findById("$DIFF_VIEWER_CHANGED$row")
-    //TODO compare with a Color, not with a string
-    window.getComputedStyle(changed.unsafeCast<Element>()).backgroundColor shouldBe "rgb(255, 255, 0)"
-
-}
 

@@ -60,6 +60,21 @@ Feature: Show a list of cases
     Then I should see no cases in the case list
     And stop the client application
 
+  Scenario: The current case should not be visible when all cases are deleted on the server
+    Given a list of cases with the following names is stored on the server:
+      | Case1 |
+      | Case2 |
+    And I start the client application
+    And I see the following cases in the case list:
+      | Case1 |
+      | Case2 |
+    When the following cases are deleted on the server:
+      | Case1 |
+      | Case2 |
+    And pause for 1 second
+    Then I should not see any current case
+    And stop the client application
+
   Scenario: Should select the first case on the list by default
     Given a list of cases with the following names is stored on the server:
       | Case1 |

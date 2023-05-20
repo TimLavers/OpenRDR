@@ -2,7 +2,6 @@ package io.rippledown.kb
 
 import Api
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
 import mocks.config
 import mocks.mock
@@ -12,7 +11,6 @@ import web.html.HTML.button
 import web.html.HTML.dialog
 import kotlin.test.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class KBImportDialogTest {
 
     var testApi: Api = Api(mock(config {  }))
@@ -23,8 +21,7 @@ class KBImportDialogTest {
         }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    @Test
+        @Test
     fun initial(): TestResult = runReactTest(wrapper) { container ->
         val buttons = container.getElementsByTagName(button)
         buttons.length shouldBe 1
@@ -37,8 +34,7 @@ class KBImportDialogTest {
         dialogs.length shouldBe 0 //It is not showing.
     }
 
-//    @OptIn(ExperimentalCoroutinesApi::class)
-//    @Test
+//    //    @Test
 //    fun showDialog(): TestResult = runReactTest(wrapper) { container ->
 //        val buttons = container.getElementsByTagName(button)
 //        val importButton = buttons[0]

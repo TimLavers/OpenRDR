@@ -2,7 +2,6 @@ package io.rippledown.kb
 
 import Api
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import mocks.config
@@ -12,7 +11,6 @@ import react.dom.checkContainer
 import web.html.HTML.button
 import kotlin.test.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class KBInfoPaneTest {
 
     var testApi: Api = Api(mock(config { }))

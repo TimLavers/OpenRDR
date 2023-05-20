@@ -12,7 +12,7 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class InterpretationTest {
+class InterpretationTest {
     private val caseId = CaseId("1234", "Case 1")
 
     @Test
@@ -147,12 +147,40 @@ internal class InterpretationTest {
     }
 
     @Test
-    fun jsonSerialisation() {
+    fun serialisationWithVerifiedText() {
+        val verified = "I can verify that is true."
+        val interpretation = Interpretation().apply { verifiedText = verified }
+        val restored = serializeDeserialize(interpretation)
+        restored.verifiedText shouldBe verified
+    }
+
+    @Test
+    fun serialisationWithRule() {
         val conclusion = Conclusion("First conc")
         val conditions = setOf(
             Is(Attribute("x"), "1"),
         )
-        val verifiedText = "I can verify that is true."
+        val rule = Rule("r0", null, conclusion, conditions)
+        val interpretation = Interpretation(caseId).apply { add(rule) }
+        val restored = serializeDeserialize(interpretation)
+        restored.conclusions() shouldBe setOf(conclusion)
+    }
+
+    @Test
+    fun serialisationWithRuleSummary() {
+        val conclusion = Conclusion("First conc")
+        val conditions = setOf(
+            Is(Attribute("x"), "1"),
+        )
+        val rule = Rule("r0", null, conclusion, conditions)
+        val ruleSummary = rule.summary()
+        val interpretation = Interpretation(caseId).apply { add(ruleSummary) }
+        val restored = serializeDeserialize(interpretation)
+        restored.conclusions() shouldBe setOf(conclusion)
+    }
+
+    @Test
+    fun serialisationWithDiffList() {
         val diffList = DiffList(
             listOf(
                 Addition("I can verify that is true."),
@@ -161,26 +189,27 @@ internal class InterpretationTest {
                 Unchanged("I can verify that is true or false.")
             )
         )
-        val rule = Rule("r0", null, conclusion, conditions)
         val interpretation = Interpretation(
-            caseId,
-            verifiedText,
-            diffList
-        ).apply { add(rule) }
-        val sd = serializeDeserialize(interpretation)
-        assertEquals(sd, interpretation)
+            diffList = diffList
+        )
+        val restored = serializeDeserialize(interpretation)
+        restored.diffList shouldBe diffList
     }
 
     @Test
-    fun jsonSerialisationWithNoVerifiedTextOrDiffList() {
-        val conclusion = Conclusion("First conc")
-        val conditions = setOf(
-            Is(Attribute("x"), "1"),
+    fun serialisationWithDiffListModifiedAfterInterpretionIsConstructed() {
+        val diffList = DiffList(
+            listOf(
+                Addition("I can verify that is true."),
+                Removal("I can verify that is false."),
+                Replacement("I can verify that is false.", "I can verify that is true."),
+                Unchanged("I can verify that is true or false.")
+            )
         )
-        val rule = Rule("r0", null, conclusion, conditions)
-        val interpretation = Interpretation(caseId).apply { add(rule) }
-        val sd = serializeDeserialize(interpretation)
-        assertEquals(sd, interpretation)
+        val interpretation = Interpretation()
+        interpretation.diffList = diffList
+        val restored = serializeDeserialize(interpretation)
+        restored.diffList shouldBe diffList
     }
 
     @Test
@@ -270,8 +299,12 @@ internal class InterpretationTest {
     }
 
     private fun serializeDeserialize(interpretation: Interpretation): Interpretation {
-        val serialized = Json.encodeToString(interpretation)
-        return Json.decodeFromString(serialized)
+        val format = Json {
+            allowStructuredMapKeys = true
+            prettyPrint = true
+        }
+        val serialized = format.encodeToString(interpretation)
+        return format.decodeFromString(serialized)
     }
 
     private fun checkSingleConclusion(interpretation: Interpretation, conclusion: Conclusion) {

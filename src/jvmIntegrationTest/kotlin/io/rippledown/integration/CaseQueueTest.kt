@@ -32,7 +32,7 @@ internal class CaseQueueTest: UITestBase() {
     fun showCaseList() {
         labProxy.copyCase("Case2")
         labProxy.copyCase("Case1")
-        caseQueuePO.waitForNumberWaitingToBe(2)
+        caseQueuePO.waitForNumberOfCasesToBe(2)
 
         val casesListed = caseListPO.casesListed()
         assertEquals(casesListed[0], "Case1")
@@ -42,14 +42,14 @@ internal class CaseQueueTest: UITestBase() {
     @Test
     fun numberOfWaitingCasesIsShown() {
         // No cases at start.
-        caseQueuePO.numberWaiting() shouldBe 0
+        caseQueuePO.numberOfCases() shouldBe 0
 
         // Copy a case.
         labProxy.copyCase("Case2")
-        caseQueuePO.waitForNumberWaitingToBe(1)
+        caseQueuePO.waitForNumberOfCasesToBe(1)
 
         // Copy another case.
         labProxy.copyCase("Case1")
-        caseQueuePO.waitForNumberWaitingToBe(2)
+        caseQueuePO.waitForNumberOfCasesToBe(2)
     }
 }

@@ -15,7 +15,6 @@ import proxy.*
 import react.VFC
 import react.dom.checkContainer
 import react.dom.createRootFor
-import react.dom.test.act
 import kotlin.test.Test
 
 class InterpretationTabsTest {
@@ -67,9 +66,7 @@ class InterpretationTabsTest {
         }
         val container = createRootFor(vfc)
         with(container) {
-            act {
-                selectChangesTab()
-            }
+            selectChangesTab()
             requireChangesLabel("Changes")
         }
     }
@@ -84,9 +81,7 @@ class InterpretationTabsTest {
         }
         val container = createRootFor(vfc)
         with(container) {
-            act {
                 selectChangesTab()
-            }
             waitForEvents()
             requireNumberOfRows(0)
         }
@@ -118,9 +113,7 @@ class InterpretationTabsTest {
         }
         val container = createRootFor(vfc)
         with(container) {
-            act {
                 selectChangesTab()
-            }
             requireNumberOfRows(4)
             requireOriginalTextInRow(0, unchangedText)
             requireChangedTextInRow(0, unchangedText)
@@ -160,38 +153,6 @@ class InterpretationTabsTest {
             waitForEvents()
             findById("interpretation_changes_badge").textContent shouldBe "Changes3"
             requireBadgeCount(3) //Unchanged does not count
-        }
-    }
-
-    @Test
-    fun changesBadgeShouldUpdateInterpIfInterpretationIsEdited() = runTest {
-        val addedText = "Go to Bondi now!"
-        val interpToReturn = Interpretation(
-            diffList = DiffList(
-                listOf(
-                    Addition(addedText)
-                )
-            )
-        )
-        val config = config {
-            returnInterpretation = interpToReturn
-        }
-
-        val vfc = VFC {
-            InterpretationTabs {
-                scope = this@runTest
-                api = Api(mock(config))
-                interpretation = Interpretation()
-                refreshCase = {}
-
-            }
-        }
-        val container = createRootFor(vfc)
-        with(container) {
-            requireNoBadge() // sanity check
-            enterInterpretation(addedText)
-            waitForDebounce()
-            requireBadgeCount(1)
         }
     }
 

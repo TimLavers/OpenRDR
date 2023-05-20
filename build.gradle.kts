@@ -2,12 +2,12 @@ import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
 val kotlinVersion = "1.8.21"
-val serializationVersion = "1.4.1"
+val serializationVersion = "1.5.1"
 val kotlinxDateTimeVersion = "0.4.0"
 val kotlinxCoroutinesTestVersion = "1.6.4"
-val ktor_version = "2.2.1"
+val ktor_version = "2.3.0"
 val logbackVersion = "1.4.5"
-val kotlinWrappersVersion = "1.0.0-pre.548"
+val kotlinWrappersVersion = "1.0.0-pre.550"
 val diffUtilsVersion = "4.12"
 val testingLibraryReactVersion = "14.0.0"
 val kotestVersion = "5.5.5"
@@ -47,11 +47,12 @@ kotlin {
                         implementation(kotlin("test-annotations-common"))
                         implementation(kotlin("test-junit"))
                         implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
-                        implementation("io.ktor:ktor-client-core:$ktor_version")
-                        implementation("io.ktor:ktor-client-cio:$ktor_version")
-                        implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
-                        implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
-                        implementation("io.ktor:ktor-client-cio:$ktor_version")
+                        implementation(enforcedPlatform("io.ktor:ktor-bom:$ktor_version"))
+                        implementation("io.ktor:ktor-client-core")
+                        implementation("io.ktor:ktor-client-cio")
+                        implementation("io.ktor:ktor-client-content-negotiation")
+                        implementation("io.ktor:ktor-serialization-kotlinx-json")
+                        implementation("io.ktor:ktor-client-cio")
                         implementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
                         implementation("org.seleniumhq.selenium:selenium-java:$seleniumJavaVersion")
                         implementation("io.github.bonigarcia:webdrivermanager:$webDriverVersion")
@@ -135,8 +136,9 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
-                implementation("io.ktor:ktor-client-core:$ktor_version")
+                implementation(enforcedPlatform("io.ktor:ktor-bom:$ktor_version"))
+                implementation("io.ktor:ktor-client-core")
+                implementation("io.ktor:ktor-serialization-kotlinx-json")
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:$kotlinxDateTimeVersion")
 
             }
@@ -149,14 +151,16 @@ kotlin {
         }
         val jvmMain by getting {
             dependencies {
-                implementation("io.ktor:ktor-serialization:$ktor_version")
-                implementation("io.ktor:ktor-server-content-negotiation:$ktor_version")
-                implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
-                implementation("io.ktor:ktor-server-cors:$ktor_version")
-                implementation("io.ktor:ktor-server-compression:$ktor_version")
-                implementation("io.ktor:ktor-server-core-jvm:$ktor_version")
-                implementation("io.ktor:ktor-server-call-logging:$ktor_version")
-                implementation("io.ktor:ktor-server-netty:$ktor_version")
+
+                implementation(enforcedPlatform("io.ktor:ktor-bom:$ktor_version"))
+                implementation("io.ktor:ktor-serialization")
+                implementation("io.ktor:ktor-server-content-negotiation")
+                implementation("io.ktor:ktor-serialization-kotlinx-json")
+                implementation("io.ktor:ktor-server-cors")
+                implementation("io.ktor:ktor-server-compression")
+                implementation("io.ktor:ktor-server-core-jvm")
+                implementation("io.ktor:ktor-server-call-logging")
+                implementation("io.ktor:ktor-server-netty")
                 implementation("ch.qos.logback:logback-classic:$logbackVersion")
                 implementation("commons-io:commons-io:$commonsIoVersion")
                 implementation("io.github.java-diff-utils:java-diff-utils:$diffUtilsVersion")
@@ -165,13 +169,14 @@ kotlin {
         }
         val jvmTest by getting {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
-                implementation("io.ktor:ktor-client-core:$ktor_version")
-                implementation("io.ktor:ktor-client-cio:$ktor_version")
-                implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
-                implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
-                implementation("io.ktor:ktor-client-cio:$ktor_version")
-                implementation("io.ktor:ktor-server-test-host:$ktor_version")
+                implementation(enforcedPlatform("io.ktor:ktor-bom:$ktor_version"))
+                implementation("io.ktor:ktor-serialization-kotlinx-json")
+                implementation("io.ktor:ktor-client-core:")
+                implementation("io.ktor:ktor-client-cio")
+                implementation("io.ktor:ktor-client-content-negotiation")
+                implementation("io.ktor:ktor-client-cio")
+                implementation("io.ktor:ktor-server-test-host")
+
                 implementation(kotlin("test"))
                 implementation("org.seleniumhq.selenium:selenium-java:$seleniumJavaVersion")
                 implementation("io.github.bonigarcia:webdrivermanager:$webDriverVersion")
@@ -181,9 +186,10 @@ kotlin {
         }
         val jsMain by getting {
             dependencies {
-                implementation("io.ktor:ktor-client-js:$ktor_version")
-                implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
-                implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
+                implementation(enforcedPlatform("io.ktor:ktor-bom:$ktor_version"))
+                implementation("io.ktor:ktor-client-js")
+                implementation("io.ktor:ktor-client-content-negotiation")
+                implementation("io.ktor:ktor-serialization-kotlinx-json")
                 implementation(enforcedPlatform("org.jetbrains.kotlin-wrappers:kotlin-wrappers-bom:$kotlinWrappersVersion"))
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom")

@@ -16,11 +16,11 @@ import web.cssom.px
 external interface InterpretationTabsHandler : Handler {
     var interpretation: Interpretation
     var refreshCase: () -> Unit
+    var onStartRule: (interp: Interpretation) -> Unit
 }
 
 val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
     var selectedTab by useState("0")
-    var interp by useState(handler.interpretation)
 
     Box {
         sx {
@@ -49,7 +49,7 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
                             id = INTERPRETATION_CHANGES_BADGE
                             color = primary
                             showZero = false
-                            badgeContent = interp.numberOfChanges().unsafeCast<ReactNode>()
+                            badgeContent = handler.interpretation.numberOfChanges().unsafeCast<ReactNode>()
                             +changesLabel
                         }
                     }.create()
@@ -64,8 +64,7 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
                     api = handler.api
                     scope = handler.scope
                     interpretation = handler.interpretation
-                    onInterpretationEdited = { editedInterp ->
-                        interp = editedInterp //update the badge count
+                    onInterpretationEdited = {
                         handler.refreshCase()
                     }
                 }
@@ -77,9 +76,9 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
                 DiffViewer {
                     api = handler.api
                     scope = handler.scope
-                    interpretation = interp
-                    onRuleBuilt = { newInterpretation ->
-                        interp = newInterpretation
+                    interpretation = handler.interpretation
+                    onStartRule = { newInterpretation ->
+                        handler.onStartRule(newInterpretation)
                     }
                 }
             }

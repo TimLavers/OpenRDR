@@ -82,11 +82,14 @@ object RDRCaseSerializer : KSerializer<RDRCase> {
  * there was no TestEvent for an Attribute.
  */
 @Serializable(RDRCaseSerializer::class)
-data class RDRCase(val name: String = "", val data: Map<TestEvent, TestResult> = emptyMap()) {
+data class RDRCase(
+    val name: String = "",
+    val data: Map<TestEvent, TestResult> = emptyMap(),
+    var interpretation: Interpretation = Interpretation(CaseId(name))
+) {
     val dates: List<Long>
     val attributes: Set<Attribute>
     private val dateToEpisode: Map<Long, Map<Attribute, TestResult>>
-    val interpretation = createInterpretation()
 
     init {
         val uniqueDates = mutableSetOf<Long>()
@@ -139,7 +142,4 @@ data class RDRCase(val name: String = "", val data: Map<TestEvent, TestResult> =
         interpretation.reset()
     }
 
-    private fun createInterpretation(): Interpretation {
-        return Interpretation(CaseId(name, name))
-    }
 }
