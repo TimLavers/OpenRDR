@@ -24,7 +24,6 @@ class CaseViewManagerTest {
 
     @BeforeTest
     fun setup() {
-        println("setup")
         manager = CaseViewManager()
     }
 

@@ -112,6 +112,8 @@ class ServerApplication {
         }
     }
 
+    fun conditionHintsForCase(id: String) = kb.conditionHintsForCase(viewableCase(id))
+
     fun moveAttributeJustBelow(moved: Attribute, target: Attribute) {
         kb.caseViewManager.moveJustBelow(moved, target)
     }
