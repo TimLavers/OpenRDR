@@ -1,6 +1,6 @@
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import io.rippledown.model.createCase
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
@@ -9,7 +9,6 @@ import react.VFC
 import react.dom.createRootFor
 import kotlin.test.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class CaseQueueTest {
 
     @Test
@@ -25,12 +24,12 @@ class CaseQueueTest {
         }
         with(createRootFor(vfc)) {
             waitForNextPoll()
-            requireNumberOfCasesWaiting(0)
+            requireNumberOfCases(0)
         }
     }
 
     @Test
-    fun shouldGetNumberOfWaitingCases() = runTest {
+    fun shouldGetNumberOfCases() = runTest {
         val config = config {
             returnCasesInfo = CasesInfo(
                 listOf(
@@ -51,7 +50,7 @@ class CaseQueueTest {
 
         with(createRootFor(vfc)) {
             waitForNextPoll()
-            requireNumberOfCasesWaiting(3)
+            requireNumberOfCases(3)
         }
     }
 
@@ -77,10 +76,10 @@ class CaseQueueTest {
 
         with(createRootFor(vfc)) {
             waitForNextPoll()
-            requireNumberOfCasesWaiting(3)
+            requireNumberOfCases(3)
             config.returnCasesInfo = CasesInfo(emptyList())
             waitForNextPoll()
-            requireNumberOfCasesWaiting(0)
+            requireNumberOfCases(0)
         }
     }
 
@@ -106,7 +105,7 @@ class CaseQueueTest {
         }
         with(createRootFor(vfc)) {
             waitForNextPoll()
-            requireNumberOfCasesWaiting(2)
+            requireNumberOfCases(2)
             requireNamesToBeShowingOnCaseList(case1, case2)
             requireCaseToBeSelected(case1)
         }
@@ -166,7 +165,7 @@ class CaseQueueTest {
 
             config.returnCasesInfo = CasesInfo(emptyList())
             waitForNextPoll()
-            requireNumberOfCasesWaiting(0)
+            requireNumberOfCases(0)
         }
     }
 

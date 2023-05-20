@@ -1,7 +1,8 @@
 import io.kotest.matchers.shouldBe
+import io.rippledown.constants.caseview.CASES
+import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.defaultMock
@@ -12,7 +13,6 @@ import react.VFC
 import react.dom.createRootFor
 import kotlin.test.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class MainTest {
 
     @Test
@@ -24,12 +24,12 @@ class MainTest {
             }
         }
         with(createRootFor(vfc)) {
-            findById(NUMBER_OF_CASES_WAITING_ID).textContent shouldBe "Cases waiting: 0"
+            findById(NUMBER_OF_CASES_ID).textContent shouldBe "$CASES 0"
         }
     }
 
     @Test
-    fun caseViewShouldBeInitialisedWithTheWaitingCases() = runTest {
+    fun caseViewShouldBeInitialisedWithTheCasesFromTheServer() = runTest {
         val config = config {
             returnCasesInfo = CasesInfo(
                 listOf(
@@ -47,7 +47,7 @@ class MainTest {
         }
         with(createRootFor(vfc)) {
             waitForNextPoll()
-            findById(NUMBER_OF_CASES_WAITING_ID).textContent shouldBe "Cases waiting: 3"
+            findById(NUMBER_OF_CASES_ID).textContent shouldBe "$CASES 3"
         }
     }
 }

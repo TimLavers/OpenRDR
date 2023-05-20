@@ -7,6 +7,7 @@ import io.rippledown.model.diff.*
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
+import proxy.waitForEvents
 import react.VFC
 import react.dom.checkContainer
 import react.dom.createRootFor
@@ -220,8 +221,8 @@ class DiffViewerTest {
     }
 
     @Test
-    fun shouldCallOnRuleBuiltWhenTheBuildIconIsClicked() = runTest {
-        var ruleBuilt = false
+    fun shouldCallOnStartRuleWhenTheBuildIconIsClicked() = runTest {
+        var ruleStarted = false
         val vfc = VFC {
             DiffViewer {
                 scope = this@runTest
@@ -235,58 +236,46 @@ class DiffViewerTest {
                         )
                     )
                 )
-                onRuleBuilt = {
-                    ruleBuilt = true
+                onStartRule = {
+                    ruleStarted = true
                 }
             }
         }
         val container = createRootFor(vfc)
         with(container) {
-            ruleBuilt shouldBe false
+            ruleStarted shouldBe false
             requireBuildIconForRow(0)
-            act { clickBuildIconForRow(0) }
-            ruleBuilt shouldBe true
+            clickBuildIconForRow(0)
+            ruleStarted shouldBe true
         }
     }
 
     @Test
-    fun shouldCallApiWhenTheBuildIconIsClicked() = runTest {
-        val interpToSend = Interpretation(
+    fun onStartRuleShouldIdentifyTheSelectedDiff() = runTest {
+        val interp = Interpretation(
             diffList = DiffList(
                 listOf(
                     Addition("Go to Bondi now!"),
-                    Unchanged(),
-                    Removal(),
-                )
-            )
-        )
-        val interpToReturn = Interpretation(
-            diffList = DiffList(
-                listOf(
-                    Unchanged(),
-                    Removal(),
+                    Unchanged("Enjoy the beach!"),
+                    Removal("Go to Manly now!"),
                 )
             )
         )
         val vfc = VFC {
-            val config = config {
-                expectedInterpretation = interpToSend
-                returnInterpretation = interpToReturn
-            }
             DiffViewer {
                 scope = this@runTest
-                api = Api(mock(config))
-                interpretation = interpToSend
-                onRuleBuilt = { interpretation ->
-                    interpretation shouldBe interpToReturn
+                interpretation = interp
+                onStartRule = { interpretation ->
+                    interpretation.diffList.selected shouldBe 2
                 }
             }
         }
         val container = createRootFor(vfc)
         with(container) {
-            requireBuildIconForRow(0)
-            act { clickBuildIconForRow(0) }
-            //assertion is in the config and onRuleBuilt
+            act { moveMouseOverRow(2) }
+            waitForEvents()
+            clickBuildIconForRow(2)
+            //assertion is in onStartRule
         }
     }
 }

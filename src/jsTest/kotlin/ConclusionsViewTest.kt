@@ -4,14 +4,12 @@ import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.condition.ContainsText
 import io.rippledown.model.rule.RuleSummary
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import react.VFC
 import react.dom.checkContainer
 import kotlin.test.Test
 
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class ConclusionsViewTest {
     private val comment1 = "Go to Bondi now!"
     private val comment2 = "Go to Bronte now!"

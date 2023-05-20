@@ -1,16 +1,20 @@
 package io.rippledown.model
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.rippledown.model.condition.ContainsText
+import io.rippledown.model.diff.Addition
+import io.rippledown.model.diff.DiffList
 import io.rippledown.model.rule.Rule
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-internal class RDRCaseTest {
+class RDRCaseTest {
     private val tsh = Attribute("TSH", 1)
     private val tshRange = ReferenceRange("0.5", "4.0")
     private val ft4 = Attribute("FT4", 2)
@@ -216,7 +220,7 @@ internal class RDRCaseTest {
 
     @Test
     fun getName() {
-        val case1 = RDRCase("Case1", emptyMap())
+        val case1 = RDRCase("Case1")
         assertEquals(case1.name, "Case1")
     }
 
@@ -238,22 +242,49 @@ internal class RDRCaseTest {
         case.interpretation.caseId.name shouldBe case.name
         case.interpretation.caseId.id shouldBe case.name
         case.interpretation.conclusions().size shouldBe 0
-
-        (case.interpretation === originalInterpretation) shouldBe true
+        case.interpretation shouldBeSameInstanceAs originalInterpretation
     }
 
     @Test
     fun serializedWithInterpretation() {
-        val case = basicCase()
         val conclusion = Conclusion(9, "Tea is good.")
         val root = Rule(0, null, null, emptySet(), mutableSetOf())
         val conditions = setOf(ContainsText(100, tsh, "0.667"))
         val rule = Rule(1, root, conclusion, conditions, mutableSetOf())
+        val case = RDRCase()
         case.interpretation.add(rule)
+        case.interpretation.conclusions().first() shouldBe conclusion
 
         val sd = serializeDeserialize(case)
+        sd shouldBe case
         sd.interpretation shouldBe case.interpretation
         sd.interpretation.conclusions().first() shouldBe conclusion
+    }
+
+    @Test
+    fun serializedWithInterpretation1() {
+        val conclusion = Conclusion("Tea is good.")
+        val root = Rule("root", null, null, emptySet(), mutableSetOf())
+        val conditions = setOf(ContainsText(tsh, "0.667"))
+        val rule = Rule("r", root, conclusion, conditions, mutableSetOf())
+        val case = RDRCase()
+        case.interpretation = Interpretation(CaseId()).apply { add(rule) }
+
+        val sd = serializeDeserialize(case)
+        sd shouldBe case
+        sd.interpretation.conclusions().first() shouldBe conclusion
+    }
+
+    @Test
+    @Ignore //TODO: fix
+    fun serializedWithDiffList() {
+        val case = basicCase()
+        val diffList = DiffList(listOf(Addition("Coffee is very good")))
+        case.interpretation.diffList = diffList
+
+        val sd = serializeDeserialize(case)
+        sd shouldBe case
+        sd.interpretation.diffList shouldBe diffList
     }
 
     @Test
@@ -283,23 +314,105 @@ internal class RDRCaseTest {
         assertEquals(sd3, case3)
     }
 
-    private fun basicCase(): RDRCase {
-        val builder1 = RDRCaseBuilder()
-        builder1.addValue(tsh, defaultDate,"0.667")
-        return builder1.build("Case1")
+    @Test
+    @Ignore //TODO: fix
+    fun serializedWithVerifiedText() {
+        val case = basicCase()
+        val text = "Coffee is very good"
+        case.interpretation.verifiedText = text
+
+        val builder3 = RDRCaseBuilder()
+        builder3.addValue(age, defaultDate, "52")
+        val sd = serializeDeserialize(case)
+        sd shouldBe case
+        sd.interpretation.verifiedText shouldBe text
     }
 
-    private fun serializeDeserialize(rdrCase: RDRCase): RDRCase {
-        val format = Json { allowStructuredMapKeys = true }
-        val serialized = format.encodeToString(rdrCase)
-        return format.decodeFromString(serialized)
+    @Test
+    fun serialisation() {
+        val case = RDRCase("Case")
+        val sd = serializeDeserialize(case)
+        sd shouldBe case
     }
 
-    private fun checkValues(case: RDRCase, attribute: Attribute, vararg expectedValues: String) {
-        val inCase = case.values(attribute)!!
-        assertEquals(expectedValues.size, inCase.size)
-        inCase.zip(expectedValues).forEach {
-            assertEquals(it.first.value.text, it.second)
+    @Test
+    fun serialisationWithAttribute() {
+        val builder = RDRCaseBuilder()
+        builder.addValue("TSH", defaultDate, "0.667")
+        builder.addValue("ABC", defaultDate, "6.7")
+        val case = builder.build("Case")
+        val sd = serializeDeserialize(case)
+        sd shouldBe case
+        sd.get("TSH")!!.value.text shouldBe "0.667"
+        sd.get("ABC")!!.value.text shouldBe "6.7"
+    }
+
+
+    @Test
+    fun serialisationWithReferenceRange() {
+        val tshResult = TestResult(Value("0.67"), ReferenceRange("0.5", "4.0"), "mU/L")
+        builder3.addResult(tsh, defaultDate, tshResult)
+        val abcResult = TestResult(Value("0.67"), null, "mU/L")
+        builder3.addResult(abc, defaultDate, abcResult)
+        val defResult = TestResult(Value("100"), ReferenceRange("90", "400"),null )
+        builder3.addResult(def, defaultDate, defResult)
+        val case3 = builder3.build("Case3")
+        val sd3 = serializeDeserialize(case3)
+        assertEquals(sd3, case3)
+        val abcResult = TestResult(Value("0.87"), null, "mg/dl")
+        val defResult = TestResult(Value("100"), ReferenceRange("90", "400"), null)
+        val case = with(RDRCaseBuilder()) {
+            addValue("Age", defaultDate, "52")
+            addResult("TSH", defaultDate, tshResult)
+            addResult("ABC", defaultDate, abcResult)
+            addResult("DEF", defaultDate, defResult)
+            build("Case")
+        }
+        val sd = serializeDeserialize(case)
+        sd shouldBe case
+        with(sd) {
+            get("Age")!!.value.text shouldBe "52"
+            with(get("TSH")!!) {
+                value.text shouldBe "0.67"
+                referenceRange!!.lower shouldBe "0.5".toFloat()
+                referenceRange!!.upper shouldBe "4.0".toFloat()
+                units shouldBe "mU/L"
+            }
+            with(get("ABC")!!) {
+                value.text shouldBe "0.87"
+                referenceRange shouldBe null
+                units shouldBe "mg/dl"
+            }
+            with(get("DEF")!!) {
+                value.text shouldBe "100"
+                referenceRange!!.lower shouldBe "90".toFloat()
+                referenceRange!!.upper shouldBe "400".toFloat()
+                units shouldBe null
+            }
         }
     }
 }
+
+private fun basicCase(): RDRCase {
+    val builder1 = RDRCaseBuilder()
+    builder1.addValue(tsh, defaultDate, "0.667")
+    return builder1.build("Case1")
+}
+
+private fun serializeDeserialize(rdrCase: RDRCase): RDRCase {
+    val format = Json {
+        prettyPrint = true
+        allowStructuredMapKeys = true
+    }
+    val serialized = format.encodeToString(rdrCase)
+    return format.decodeFromString(serialized)
+}
+
+    private fun checkValues(case: RDRCase, attribute: Attribute, vararg expectedValues: String) {
+        val inCase = case.values(attribute)!!
+    assertEquals(expectedValues.size, inCase.size)
+    inCase.zip(expectedValues).forEach {
+        assertEquals(it.first.value.text, it.second)
+    }
+}
+

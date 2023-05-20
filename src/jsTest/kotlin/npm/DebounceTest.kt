@@ -1,7 +1,6 @@
 package npm
 
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import mui.material.Button
@@ -22,7 +21,6 @@ import web.html.HTMLDivElement
 import web.html.HTMLElement
 import kotlin.test.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class DebounceTest {
     val waitMillis = 100L
 

@@ -6,7 +6,6 @@ import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.rule.RuleSummary
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
@@ -17,7 +16,6 @@ import react.VFC
 import react.dom.createRootFor
 import kotlin.test.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class InterpretationViewTest {
 
     @Test

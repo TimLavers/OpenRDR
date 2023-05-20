@@ -1,6 +1,3 @@
-import io.rippledown.model.*
-import io.rippledown.model.caseview.CaseViewProperties
-import io.rippledown.model.caseview.ViewableCase
 
 fun createCase(name: String): ViewableCase {
     val attribute = Attribute("Glucose", 1000)

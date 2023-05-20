@@ -127,7 +127,7 @@ class Defs : En {
             labProxy.writeCaseWithDataToInputDir(caseName, attributeNameToValue)
         }
 
-        Then("^the case (should show|shows) the attributes in order:$") { ignoredOption: String, dataTable: DataTable ->
+        Then("^the case (should show|shows) the attributes in order:$") { _: String, dataTable: DataTable ->
             caseViewPO.attributes() shouldBe dataTable.asList()
         }
 
@@ -136,7 +136,7 @@ class Defs : En {
         }
 
 
-        And("pause for {long} seconds") { seconds: Long ->
+        And("pause for {long} second(s)") { seconds: Long ->
             Thread.sleep(TimeUnit.SECONDS.toMillis(seconds))
         }
 
@@ -161,6 +161,9 @@ class Defs : En {
 
         Then("I should see the case {word} as the current case") { caseName: String ->
             caseViewPO.nameShown() shouldBe caseName
+        }
+        Then("I should not see any current case") {
+            caseViewPO.noNameShowing() shouldBe true
         }
 
         And("select the case {word}") { caseName: String ->
@@ -214,6 +217,8 @@ class Defs : En {
         }
         When("I build a rule for the change on row {int}") { row: Int ->
             interpretationViewPO.buildRule(row)
+            interpretationViewPO.clickDone()
+
         }
     }
 }

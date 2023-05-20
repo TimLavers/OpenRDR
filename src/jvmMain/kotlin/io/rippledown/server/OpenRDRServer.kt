@@ -68,9 +68,7 @@ fun Application.applicationModule() {
                 ContentType.Text.Html
             )
         }
-        static("/") {
-            resources("")
-        }
+        staticResources(remotePath = "/", basePackage = "")
     }
     val application = ServerApplication()
     serverManagement()

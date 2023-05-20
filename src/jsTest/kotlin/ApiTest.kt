@@ -1,13 +1,11 @@
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
 import io.rippledown.model.diff.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
 import kotlin.test.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class ApiTest {
 
     @Test

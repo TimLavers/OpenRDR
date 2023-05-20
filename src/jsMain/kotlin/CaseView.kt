@@ -1,5 +1,6 @@
 import emotion.react.css
 import io.rippledown.interpretation.InterpretationTabs
+import io.rippledown.model.Interpretation
 import io.rippledown.model.caseview.ViewableCase
 import mui.material.Box
 import mui.material.Typography
@@ -15,6 +16,7 @@ const val CASEVIEW_CASE_NAME_ID = "case_view_case_name"
 external interface CaseViewHandler : Handler {
     var case: ViewableCase
     var onCaseEdited: () -> Unit
+    var onStartRule: (interpretation: Interpretation) -> Unit
 }
 
 /**
@@ -58,6 +60,9 @@ val CaseView = FC<CaseViewHandler> { handler ->
             api = handler.api
             interpretation = handler.case.interpretation
             refreshCase = handler.onCaseEdited
+            onStartRule = { newInterpretation ->
+                handler.onStartRule(newInterpretation)
+            }
         }
     }
 }
