@@ -8,6 +8,7 @@ import io.ktor.utils.io.*
 import io.rippledown.constants.api.*
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.condition.ConditionList
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -23,6 +24,7 @@ class EngineConfig {
     var returnCase: ViewableCase = createCase("The Case")
     var returnOperationResult: OperationResult = OperationResult()
     var returnInterpretation: Interpretation = Interpretation()
+    var returnConditionList: ConditionList = ConditionList()
 
     var expectedCaseId = ""
     var expectedInterpretation: Interpretation? = null
@@ -102,6 +104,18 @@ private class EngineBuilder(private val config: EngineConfig) {
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
                 )
             }
+
+            CONDITION_HINTS -> {
+                if (config.expectedCaseId.isNotBlank()) request.url.parameters["id"] shouldBe config.expectedCaseId
+                respond(
+                    content = ByteReadChannel(
+                        json.encodeToString(config.returnConditionList)
+                    ),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+            }
+
 
             else -> {
                 error("Unhandled ${request.url.fullPath}")

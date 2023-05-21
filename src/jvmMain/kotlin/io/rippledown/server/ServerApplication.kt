@@ -8,6 +8,7 @@ import io.rippledown.kb.export.util.Zipper
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.diff.*
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.model.rule.ChangeTreeToRemoveConclusion
@@ -112,7 +113,7 @@ class ServerApplication {
         }
     }
 
-    fun conditionHintsForCase(id: String) = kb.conditionHintsForCase(viewableCase(id))
+    fun conditionHintsForCase(id: String): ConditionList = kb.conditionHintsForCase(case(id))
 
     fun moveAttributeJustBelow(moved: Attribute, target: Attribute) {
         kb.caseViewManager.moveJustBelow(moved, target)

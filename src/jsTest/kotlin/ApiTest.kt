@@ -1,5 +1,7 @@
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
+import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.condition.HasCurrentValue
 import io.rippledown.model.diff.*
 import kotlinx.coroutines.test.runTest
 import mocks.config
@@ -68,6 +70,20 @@ class ApiTest {
             returnInterpretation = interpretation.copy(diffList = expectedDiffList)
         }
         Api(mock(config)).saveVerifiedInterpretation(interpretation) shouldBe interpretation.copy(diffList = expectedDiffList)
+    }
+
+    @Test
+    fun conditionHints() = runTest {
+        val conditionList = ConditionList(
+            listOf(
+                HasCurrentValue(Attribute("A")),
+                HasCurrentValue(Attribute("B"))
+            )
+        )
+        val config = config {
+            returnConditionList = conditionList
+        }
+        Api(mock(config)).conditionHints("any") shouldBe conditionList
     }
 
 }

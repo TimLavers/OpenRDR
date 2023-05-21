@@ -9,6 +9,7 @@ import io.ktor.serialization.kotlinx.json.*
 import io.rippledown.constants.api.*
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.condition.ConditionList
 import kotlinx.browser.window
 import kotlinx.serialization.json.Json
 import web.file.File
@@ -90,6 +91,12 @@ class Api(engine: HttpClientEngine = Js.create()) {
             setBody(interpretation)
         }.body()
     }
+
+    /**
+     * @return the conditions that are suggested for building a rule for the selected Diff in the case's interpretation
+     */
+    suspend fun conditionHints(caseId: String): ConditionList =
+        jsonClient.get("$endpoint$CONDITION_HINTS?id=$caseId").body()
 
     suspend fun moveAttributeJustBelowOther(moved: Attribute, target: Attribute): OperationResult {
         return jsonClient.post("$endpoint$MOVE_ATTRIBUTE_JUST_BELOW_OTHER") {

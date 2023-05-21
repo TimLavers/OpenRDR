@@ -19,6 +19,7 @@ const val BADGE_INVISIBLE_CLASS = "MuiBadge-invisible"
 const val INTERPRETATION_CHANGES_BADGE = "interpretation_changes_badge"
 
 const val CONDITION_SELECTOR_ROW = "condition_picker_row"
+const val CONDITION_SELECTOR_BUTTONS = "condition_selector_buttons"
 const val CONDITION_SELECTOR_DONE_BUTTON = "condition_selector_done_button"
 const val CONDITION_SELECTOR_CANCEL_BUTTON = "condition_selector_cancel_button"
 

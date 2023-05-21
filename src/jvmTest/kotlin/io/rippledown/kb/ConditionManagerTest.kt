@@ -22,12 +22,14 @@ class ConditionManagerTest {
     }
 
     @Test
-    fun `should return IsAvailable for every attribute that is available in the case`() {
-        val case1Attributes = listOf(a1)
-        val viewableCase = createCase(case1Attributes)
+    fun `should return HasCurrentValue for every attribute that is in the current episodee`() {
+        val caseAttributes = listOf(a1, a2)
+        val viewableCase = createCase(caseAttributes)
         val conditionHints = manager.conditionHintsForCase(viewableCase)
-        conditionHints.conditionList.size shouldBe 3
-        conditionHints.conditionList[0] shouldBe HasCurrentValue(a1)
+        conditionHints.conditions shouldBe listOf(
+            HasCurrentValue(a1),
+            HasCurrentValue(a2),
+        )
     }
 
 
