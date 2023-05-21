@@ -11,15 +11,13 @@ data class HasCurrentValue(override val id: Int? = null, val attribute: Attribut
         return latest.value.text.isNotBlank()
     }
 
-    override fun asText(): String {
-        return "${attribute.name} has a current value"
-    }
+    override fun asText() = "${attribute.name} has a current value"
 
-    override fun alignAttributes(idToAttribute: (Int) -> Attribute): Condition {
-        TODO("Not yet implemented")
-    }
+    override fun alignAttributes(idToAttribute: (Int) -> Attribute) = HasCurrentValue(id, idToAttribute(attribute.id))
 
     override fun sameAs(other: Condition): Boolean {
-        TODO("Not yet implemented")
+        return if (other is HasCurrentValue) {
+            other.attribute == attribute
+        } else false
     }
 }
