@@ -158,11 +158,11 @@ class InterpretationTest {
 
     @Test
     fun serialisationWithRule() {
-        val conclusion = Conclusion("First conc")
+        val conclusion = Conclusion(1, "First conc")
         val conditions = setOf(
             Is(1, Attribute("x", 1), "1"),
         )
-        val rule = Rule("r0", null, conclusion, conditions)
+        val rule = Rule(0, null, conclusion, conditions)
         val interpretation = Interpretation(caseId).apply { add(rule) }
         val restored = serializeDeserialize(interpretation)
         restored.conclusions() shouldBe setOf(conclusion)
@@ -170,11 +170,11 @@ class InterpretationTest {
 
     @Test
     fun serialisationWithRuleSummary() {
-        val conclusion = Conclusion("First conc")
+        val conclusion = Conclusion(1,"First conc")
         val conditions = setOf(
-            Is(Attribute("x"), "1"),
+            Is(1, Attribute("x", 1), "1"),
         )
-        val rule = Rule("r0", null, conclusion, conditions)
+        val rule = Rule(0, null, conclusion, conditions)
         val ruleSummary = rule.summary()
         val interpretation = Interpretation(caseId).apply { add(ruleSummary) }
         val restored = serializeDeserialize(interpretation)
@@ -191,7 +191,6 @@ class InterpretationTest {
                 Unchanged("I can verify that is true or false.")
             )
         )
-        val rule = Rule(1, null, conclusion, conditions)
         val interpretation = Interpretation(
             diffList = diffList
         )
@@ -200,7 +199,7 @@ class InterpretationTest {
     }
 
     @Test
-    fun serialisationWithDiffListModifiedAfterInterpretionIsConstructed() {
+    fun serialisationWithDiffListModifiedAfterInterpretationIsConstructed() {
         val diffList = DiffList(
             listOf(
                 Addition("I can verify that is true."),

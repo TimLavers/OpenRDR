@@ -47,5 +47,4 @@ internal class ShowInterpretationDifferenceForMoreComplexScenarios : UITestBase(
             .selectChangesTab()
             .requireNoRowsInDiffTable()
     }
-
 }

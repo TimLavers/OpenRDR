@@ -12,11 +12,14 @@ import react.dom.checkContainer
 import kotlin.test.Test
 
 class ConditionSelectorTest {
+    val attribute = Attribute("x", 1)
+    val isHigh = IsHigh(0, attribute)
+    val isLow = IsLow(1, attribute)
+    val isNormal = IsNormal(2, attribute)
+    val conditions = listOf(isHigh, isLow, isNormal)
 
     @Test
     fun shouldListConditionsThatAreHinted() = runTest {
-        val attribute = Attribute("x")
-        val conditions = listOf(IsHigh(attribute), IsLow(attribute), IsNormal(attribute))
         val vfc = VFC {
             ConditionSelector {
                 conditionHints = conditions
@@ -31,8 +34,6 @@ class ConditionSelectorTest {
 
     @Test
     fun shouldBeAbleToSelectConditions() = runTest {
-        val attribute = Attribute("x")
-        val conditions = listOf(IsHigh(attribute), IsLow(attribute), IsNormal(attribute))
         val conditionsThatWereSelected = mutableListOf<Condition>()
         val vfc = VFC {
             ConditionSelector {
@@ -47,15 +48,13 @@ class ConditionSelectorTest {
                 clickConditionWithIndex(0)
                 clickConditionWithIndex(2)
                 clickDoneButton()
-                conditionsThatWereSelected shouldBe listOf(IsHigh(attribute), IsNormal(attribute))
+                conditionsThatWereSelected shouldBe listOf(isHigh, isNormal)
             }
         }
     }
 
     @Test
     fun shouldBeAbleToDeselectACondition() = runTest {
-        val attribute = Attribute("x")
-        val conditions = listOf(IsHigh(attribute), IsLow(attribute), IsNormal(attribute))
         val conditionsThatWereSelected = mutableListOf<Condition>()
         val vfc = VFC {
             ConditionSelector {
@@ -72,7 +71,7 @@ class ConditionSelectorTest {
                 clickConditionWithIndex(2)
                 clickConditionWithIndex(0) //de-select
                 clickDoneButton()
-                conditionsThatWereSelected shouldBe listOf(IsNormal(attribute))
+                conditionsThatWereSelected shouldBe listOf(isNormal)
             }
         }
     }
@@ -80,8 +79,6 @@ class ConditionSelectorTest {
     @Test
     fun shouldBeAbleToCancelTheRule() = runTest {
         var cancelClicked = false
-        val attribute = Attribute("x")
-        val conditions = listOf(IsHigh(attribute), IsLow(attribute), IsNormal(attribute))
         val vfc = VFC {
             ConditionSelector {
                 conditionHints = conditions

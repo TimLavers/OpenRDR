@@ -11,7 +11,7 @@ import java.sql.ResultSet
 const val SYSTEM_DB_NAME = "open_rdr"
 
 class PostgresPersistenceProvider: PersistenceProvider {
-    val logger: Logger = LoggerFactory.getLogger("rdr")
+    private val logger: Logger = LoggerFactory.getLogger("rdr")
     private val idStore: PostgresKBIds
 
     init {

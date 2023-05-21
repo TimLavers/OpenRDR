@@ -131,13 +131,13 @@ val CaseListMemo = memo(
 )
 
 fun dummyConditions(): List<Condition> {
-    val tsh = Attribute("TSH")
-    val ft4 = Attribute("FT4")
+    val tsh = Attribute("TSH", 1)
+    val ft4 = Attribute("FT4", 2)
     return listOf(
-        IsNormal(tsh),
-        HasCurrentValue(tsh),
-        Is(tsh, "0.667"),
-        HasNoCurrentValue(ft4)
+        IsNormal(0, tsh),
+        HasCurrentValue(1, tsh),
+        Is(2, tsh, "0.667"),
+        HasNoCurrentValue(3, ft4)
     )
 }
 

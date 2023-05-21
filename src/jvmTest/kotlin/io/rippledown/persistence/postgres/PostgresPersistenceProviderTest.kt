@@ -17,6 +17,23 @@ class PostgresPersistenceProviderTest {
         dropDB(SYSTEM_DB_NAME)
     }
 
+//    @Test
+//    fun cleanupAllDBs() {
+//        val ppp = PostgresPersistenceProvider()
+//        val allDBs = ppp.allDatabasesInSystem()
+//        println("allDBs BEFORE = ${allDBs}")
+//        allDBs.forEach {
+//            println("cleanup of :$it")
+//            try {
+//                dropDB(it)
+//            } catch (e: Exception) {
+//                println("Could not delete: $it")
+//            }
+//        }
+//        val allDBsAfter = ppp.allDatabasesInSystem()
+//        println("allDBs AFTER = ${allDBsAfter}")
+//    }
+
     @Test
     fun idStore() {
         val ppp = PostgresPersistenceProvider()
