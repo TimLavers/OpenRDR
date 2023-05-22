@@ -7,6 +7,7 @@ import io.rippledown.model.COMMENT_SEPARATOR
 import io.rippledown.model.CaseId
 import io.rippledown.model.Interpretation
 import io.rippledown.model.diff.*
+import io.rippledown.persistence.InMemoryPersistenceProvider
 import org.apache.commons.io.FileUtils
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -16,7 +17,7 @@ internal class RuleBuildingFromDiffListTest {
 
     @BeforeTest
     fun setup() {
-        app = ServerApplication()
+        app = ServerApplication(InMemoryPersistenceProvider())
         FileUtils.cleanDirectory(app.casesDir)
     }
 

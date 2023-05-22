@@ -48,8 +48,7 @@ class ApiTest {
 
     @Test
     fun kbInfo() = runTest {
-        val expectedResult = KBInfo("Glucose")
-        Api(mock(config {})).kbInfo() shouldBe expectedResult
+        Api(mock(config {})).kbInfo().name shouldBe "Glucose"
     }
 
     @Test
