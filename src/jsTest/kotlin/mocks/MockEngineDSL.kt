@@ -12,6 +12,7 @@ import io.rippledown.model.condition.ConditionList
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import proxy.debug
 
 fun mock(config: EngineConfig) = EngineBuilder(config).build()
 
@@ -106,6 +107,7 @@ private class EngineBuilder(private val config: EngineConfig) {
             }
 
             CONDITION_HINTS -> {
+                debug("CONDITION_HINTS will return ${config.returnConditionList}")
                 if (config.expectedCaseId.isNotBlank()) request.url.parameters["id"] shouldBe config.expectedCaseId
                 respond(
                     content = ByteReadChannel(

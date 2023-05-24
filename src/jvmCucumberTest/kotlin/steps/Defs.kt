@@ -4,10 +4,7 @@ import io.cucumber.datatable.DataTable
 import io.cucumber.java8.En
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.UITestBase
-import io.rippledown.integration.pageobjects.CaseListPO
-import io.rippledown.integration.pageobjects.CaseViewPO
-import io.rippledown.integration.pageobjects.InterpretationViewPO
-import io.rippledown.integration.pageobjects.KBInfoPO
+import io.rippledown.integration.pageobjects.*
 import io.rippledown.integration.restclient.RESTClient
 import org.awaitility.Awaitility
 import org.openqa.selenium.WebDriver
@@ -23,6 +20,8 @@ class Defs : En {
     private lateinit var caseListPO: CaseListPO
     private lateinit var caseViewPO: CaseViewPO
     private lateinit var interpretationViewPO: InterpretationViewPO
+    private lateinit var conditionSelectorPO: ConditionSelectorPO
+    private lateinit var conclusionsDialogPO: ConclusionsDialogPO
     private lateinit var driver: WebDriver
 
     init {
@@ -42,6 +41,8 @@ class Defs : En {
             caseListPO = CaseListPO(driver)
             caseViewPO = CaseViewPO(driver)
             interpretationViewPO = InterpretationViewPO(driver)
+            conditionSelectorPO = ConditionSelectorPO(driver)
+            conclusionsDialogPO = ConclusionsDialogPO(driver)
         }
 
         When("stop the client application") {
@@ -217,8 +218,42 @@ class Defs : En {
         }
         When("I build a rule for the change on row {int}") { row: Int ->
             interpretationViewPO.buildRule(row)
-            interpretationViewPO.clickDone()
+            conditionSelectorPO.clickDone()
+        }
+        When("I complete the rule") {
+            conditionSelectorPO.clickDone()
+        }
 
+        When("I start to build a rule for the change on row {int}") { row: Int ->
+            interpretationViewPO.buildRule(row)
+        }
+        When("I select the condition in position {int}") { index: Int ->
+            conditionSelectorPO.clickConditionWithIndex(index)
+        }
+        When("I select the first condition") {
+            conditionSelectorPO.clickConditionWithIndex(0)
+        }
+        Then("the conditions showing should be:") { dataTable: DataTable ->
+            val expectedConditions = dataTable.asList()
+            conditionSelectorPO.requireConditionsShowing(expectedConditions)
+        }
+
+        And("I open the conclusions dialog") {
+            conclusionsDialogPO.clickOpen()
+            conclusionsDialogPO.waitForDialogToOpen()
+        }
+
+        And("close the conclusions dialog") {
+            conclusionsDialogPO.clickClose()
+        }
+
+        And("click the comment {string}") { comment: String ->
+            conclusionsDialogPO.clickComment(comment)
+        }
+
+        Then("the conditions showing are:") { dataTable: DataTable ->
+            val expectedConditions = dataTable.asList()
+            conclusionsDialogPO.requireConditionsToBeShown(*expectedConditions.toTypedArray())
         }
     }
 }

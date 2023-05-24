@@ -10,6 +10,7 @@ import io.rippledown.constants.api.*
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.diff.RuleRequest
 import kotlinx.browser.window
 import kotlinx.serialization.json.Json
 import web.file.File
@@ -83,12 +84,13 @@ class Api(engine: HttpClientEngine = Js.create()) {
     /**
      * Build a rule for the selected Diff in the interpretation
      *
-     * @param interpretation the updated interpretation once the rule has been built
+     * @param ruleRequest the information needed to build the rule
+     * @return the updated interpretation
      */
-    suspend fun buildRule(interpretation: Interpretation): Interpretation {
+    suspend fun buildRule(ruleRequest: RuleRequest): Interpretation {
         return jsonClient.post("$endpoint$BUILD_RULE") {
             contentType(ContentType.Application.Json)
-            setBody(interpretation)
+            setBody(ruleRequest)
         }.body()
     }
 

@@ -102,7 +102,7 @@ val CaseList = FC<CaseListHandler> { handler ->
         Grid {
             item = true
             xs = 4
-            if (newInterpretation != null) {
+            if (newInterpretation != null && conditionHints != null) {
                 ConditionSelector {
                     scope = handler.scope
                     api = handler.api

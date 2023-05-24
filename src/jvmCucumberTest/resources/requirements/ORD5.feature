@@ -74,3 +74,40 @@ Feature: Building rules
     And select the case Case2
     And  the interpretation field should contain the text "Go to Maroubra."
     And stop the client application
+
+
+  Scenario: When the user starts to build a rule, condition hints should be shown
+    Given I start the client application
+    And case Bondi is provided having data:
+      | Wave | excellent |
+      | Sun  | hot       |
+    And I enter the text "Let's surf" in the interpretation field
+    And the changes badge indicates that there is 1 change
+    And I select the changes tab
+    When I start to build a rule for the change on row 0
+    Then the conditions showing should be:
+      | Wave has a current value |
+      | Sun has a current value  |
+    And stop the client application
+
+  Scenario: The user should be able to build a rule with a condition they have selected
+    Given I start the client application
+    And case Bondi is provided having data:
+      | Wave | excellent |
+      | Sun  | hot       |
+    And I enter the text "Go to the beach" in the interpretation field
+    And the changes badge indicates that there is 1 change
+    And I select the changes tab
+    When I start to build a rule for the change on row 0
+    And the conditions showing should be:
+      | Wave has a current value |
+      | Sun has a current value  |
+    When I select the first condition
+    And I complete the rule
+    And I select the interpretation tab
+    And I open the conclusions dialog
+    And click the comment "Go to the beach"
+    Then the conditions showing are:
+      | Wave has a current value |
+    And close the conclusions dialog
+    And stop the client application
