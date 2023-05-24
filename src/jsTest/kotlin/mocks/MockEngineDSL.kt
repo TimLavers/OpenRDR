@@ -9,6 +9,7 @@ import io.rippledown.constants.api.*
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.diff.RuleRequest
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -29,6 +30,7 @@ class EngineConfig {
 
     var expectedCaseId = ""
     var expectedInterpretation: Interpretation? = null
+    var expectedRuleRequest: RuleRequest? = null
 
     var expectedMovedAttribute: Attribute? = null
     var expectedTargetAttribute: Attribute? = null
@@ -65,12 +67,28 @@ private class EngineBuilder(private val config: EngineConfig) {
                 )
             }
 
-            VERIFIED_INTERPRETATION_SAVED, BUILD_RULE -> {
+            VERIFIED_INTERPRETATION_SAVED -> {
                 val body = request.body as TextContent
                 val bodyAsInterpretation = Json.decodeFromString(Interpretation.serializer(), body.text)
 
                 if (config.expectedInterpretation != null) {
                     bodyAsInterpretation shouldBe config.expectedInterpretation
+                }
+                respond(
+                    content = ByteReadChannel(
+                        json.encodeToString(config.returnInterpretation)
+                    ),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+            }
+
+            BUILD_RULE -> {
+                val body = request.body as TextContent
+                val bodyAsRuleRequest = Json.decodeFromString(RuleRequest.serializer(), body.text)
+
+                if (config.expectedRuleRequest != null) {
+                    bodyAsRuleRequest shouldBe config.expectedRuleRequest
                 }
                 respond(
                     content = ByteReadChannel(

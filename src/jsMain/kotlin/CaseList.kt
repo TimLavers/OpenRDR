@@ -3,6 +3,7 @@ import io.rippledown.model.CaseId
 import io.rippledown.model.Interpretation
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.diff.RuleRequest
 import kotlinx.coroutines.launch
 import mui.material.Grid
 import mui.material.List
@@ -110,9 +111,14 @@ val CaseList = FC<CaseListHandler> { handler ->
                     onCancel = {
                         newInterpretation = null
                     }
-                    onDone = {
+                    onDone = { conditionList ->
                         handler.scope.launch {
-                            handler.api.buildRule(newInterpretation!!)
+                            val ruleRequest = RuleRequest(
+                                caseId = currentCase!!.name,
+                                diffList = newInterpretation!!.diffList,
+                                conditionList = ConditionList(conditions = conditionList)
+                            )
+                            handler.api.buildRule(ruleRequest)
                             newInterpretation = null
                             updateCurrentCase(currentCase!!.name)
                         }

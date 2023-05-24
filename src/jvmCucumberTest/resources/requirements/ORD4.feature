@@ -25,9 +25,9 @@ Feature: Reviewing the interpretation of a case
     And stop the client application
 
   Scenario: The label indicating the number of changes to an interpretation should be saved for two cases
-    Given a new case with the name "Case1" is stored on the server
-    And  a new case with the name "Case2" is stored on the server
-    And the interpretation by the project of the case "Case1" is "Go to Bondi."
+    Given a new case with the name Case1 is stored on the server
+    And  a new case with the name Case2 is stored on the server
+    And the interpretation by the project of the case Case1 is "Go to Bondi."
     And I start the client application
     And I should see the case Case1 as the current case
     And the interpretation field should contain the text "Go to Bondi."
@@ -42,8 +42,8 @@ Feature: Reviewing the interpretation of a case
     And stop the client application
 
   Scenario: A new comment that is entered by the user should show as a addition in the changes panel
-    Given a new case with the name "Case1" is stored on the server
-    And the interpretation by the project of the case "Case1" is "Go to Bondi."
+    Given a new case with the name Case1 is stored on the server
+    And the interpretation by the project of the case Case1 is "Go to Bondi."
     And I start the client application
     And I should see the case Case1 as the current case
     And the interpretation field should contain the text "Go to Bondi."
@@ -54,8 +54,8 @@ Feature: Reviewing the interpretation of a case
     And stop the client application
 
   Scenario: A comment that is deleted by the user should show as a removal in the changes panel
-    Given a new case with the name "Case1" is stored on the server
-    And the interpretation by the project of the case "Case1" is "Go to Bondi."
+    Given a new case with the name Case1 is stored on the server
+    And the interpretation by the project of the case Case1 is "Go to Bondi."
     And I start the client application
     And I should see the case Case1 as the current case
     And the interpretation field should contain the text "Go to Bondi."
@@ -65,8 +65,8 @@ Feature: Reviewing the interpretation of a case
     And stop the client application
 
   Scenario: A comment that is replaced by the user should show as a replacement in the changes panel
-    Given a new case with the name "Case1" is stored on the server
-    And the interpretation by the project of the case "Case1" is "Go to Bondi."
+    Given a new case with the name Case1 is stored on the server
+    And the interpretation by the project of the case Case1 is "Go to Bondi."
     And I start the client application
     And I should see the case Case1 as the current case
     And the interpretation field should contain the text "Go to Bondi."

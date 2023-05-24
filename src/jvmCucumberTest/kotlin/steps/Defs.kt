@@ -65,7 +65,7 @@ class Defs : En {
             caseViewPO = caseListPO.select("CaseABC")
         }
 
-        When("a new case with the name {string} is stored on the server") { caseName: String ->
+        When("a new case with the name {word} is stored on the server") { caseName: String ->
             labProxy.copyCase(caseName)
         }
 
@@ -190,7 +190,7 @@ class Defs : En {
             interpretationViewPO.interpretationText() shouldBe ""
         }
 
-        And("the interpretation by the project of the case {string} is {string}") { caseName: String, text: String ->
+        And("the interpretation by the project of the case {word} is {string}") { caseName: String, text: String ->
             RESTClient().createRuleToAddText(caseName, text)
         }
         And("I select the changes tab") {
@@ -230,8 +230,12 @@ class Defs : En {
         When("I select the condition in position {int}") { index: Int ->
             conditionSelectorPO.clickConditionWithIndex(index)
         }
-        When("I select the first condition") {
-            conditionSelectorPO.clickConditionWithIndex(0)
+        When("I select the {word} condition") { position: String ->
+            when (position) {
+                "first" -> conditionSelectorPO.clickConditionWithIndex(0)
+                "second" -> conditionSelectorPO.clickConditionWithIndex(1)
+                "third" -> conditionSelectorPO.clickConditionWithIndex(2)
+            }
         }
         Then("the conditions showing should be:") { dataTable: DataTable ->
             val expectedConditions = dataTable.asList()

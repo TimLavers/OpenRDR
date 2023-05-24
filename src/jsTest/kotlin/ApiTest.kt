@@ -86,4 +86,34 @@ class ApiTest {
         Api(mock(config)).conditionHints("any") shouldBe conditionList
     }
 
+    @Test
+    fun shouldBuildRule() = runTest {
+        val expectedDiffList = DiffList(
+            diffs = listOf(
+                Addition("This comment was added."),
+                Removal("This comment was removed."),
+                Replacement("This comment was replaced.", "This is the new comment."),
+                Unchanged("This comment was left alone."),
+            ),
+            selected = 1
+        )
+        val id = "caseId"
+        val ruleRequest = RuleRequest(
+            caseId = id,
+            diffList = expectedDiffList,
+            conditionList = ConditionList(
+                listOf(
+                    HasCurrentValue(Attribute("A")),
+                    HasCurrentValue(Attribute("B"))
+                )
+            )
+        )
+        val interpretation = Interpretation(CaseId(id), "report proxy.text")
+        val config = config {
+            expectedRuleRequest = ruleRequest
+            returnInterpretation = interpretation
+        }
+        Api(mock(config)).buildRule(ruleRequest) shouldBe interpretation
+    }
+
 }
