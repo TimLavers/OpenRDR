@@ -1,13 +1,16 @@
 package io.rippledown.kb
 
-import io.rippledown.model.*
+import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
-import io.rippledown.model.rule.*
+import io.rippledown.model.rule.RuleBuildingSession
+import io.rippledown.model.rule.RuleTree
+import io.rippledown.model.rule.RuleTreeChange
 
 class KB(val name: String, val ruleTree: RuleTree = RuleTree()) {
     private val cornerstones = mutableSetOf<RDRCase>()
     private var ruleSession: RuleBuildingSession? = null
+    private val conditionManager = ConditionManager()
     val caseViewManager = CaseViewManager()
 
     fun containsCaseWithName(caseName: String): Boolean {
@@ -76,4 +79,6 @@ class KB(val name: String, val ruleTree: RuleTree = RuleTree()) {
     override fun hashCode(): Int {
         return name.hashCode()
     }
+
+    fun conditionHintsForCase(case: RDRCase) = conditionManager.conditionHintsForCase(case)
 }

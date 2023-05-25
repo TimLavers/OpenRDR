@@ -6,10 +6,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class HasCurrentValue(val attribute: Attribute) : Condition() {
-    override fun holds(case: RDRCase): Boolean {
-        val latest = case.getLatest(attribute) ?: return false
-        return latest.value.text.isNotBlank()
-    }
+    override fun holds(case: RDRCase) = HasNoCurrentValue(attribute).holds(case).not()
 
     override fun asText(): String {
         return "${attribute.name} has a current value"

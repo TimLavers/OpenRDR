@@ -19,7 +19,7 @@ class ConditionSelectorTest {
         val conditions = listOf(IsHigh(attribute), IsLow(attribute), IsNormal(attribute))
         val vfc = VFC {
             ConditionSelector {
-                conditionHints = conditions
+                this.conditions = conditions
             }
         }
         checkContainer(vfc) { container ->
@@ -36,7 +36,7 @@ class ConditionSelectorTest {
         val conditionsThatWereSelected = mutableListOf<Condition>()
         val vfc = VFC {
             ConditionSelector {
-                conditionHints = conditions
+                this.conditions = conditions
                 onDone = { selectedConditions ->
                     conditionsThatWereSelected.addAll(selectedConditions)
                 }
@@ -59,7 +59,7 @@ class ConditionSelectorTest {
         val conditionsThatWereSelected = mutableListOf<Condition>()
         val vfc = VFC {
             ConditionSelector {
-                conditionHints = conditions
+                this.conditions = conditions
                 onDone = { selectedConditions ->
                     conditionsThatWereSelected.addAll(selectedConditions)
                 }
@@ -84,7 +84,7 @@ class ConditionSelectorTest {
         val conditions = listOf(IsHigh(attribute), IsLow(attribute), IsNormal(attribute))
         val vfc = VFC {
             ConditionSelector {
-                conditionHints = conditions
+                this.conditions = conditions
                 onCancel = {
                     cancelClicked = true
                 }

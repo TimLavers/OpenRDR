@@ -21,7 +21,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
     fun `should delegate saving an Interpretation to server application`() = testApplication {
         setup()
         val rdrCase = RDRCase("Case1")
-        val diffListToReturn = DiffList(
+        val diffs = DiffList(
             listOf(
                 Unchanged("Go to Bondi Beach."),
                 Addition("Bring your handboard."),
@@ -29,6 +29,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
                 Replacement("And have fun.", "And have lots of fun.")
             )
         )
+        val diffListToReturn = diffs
         val viewableCase = ViewableCase(rdrCase)
         val interpretationToSave = viewableCase.interpretation.apply {
             verifiedText = "Verified Text"
@@ -50,30 +51,26 @@ class InterpManagementTest : OpenRDRServerTestBase() {
     @Test
     fun `should delegate building a rule to server application`() = testApplication {
         setup()
-        val rdrCase = RDRCase("Case1")
-        val diffListToReturn = DiffList(
-            listOf(
+        val diffList = DiffList(
+            diffs = listOf(
                 Unchanged("Go to Bondi Beach."),
                 Addition("Bring your handboard."),
                 Removal("Don't forget your towel."),
                 Replacement("And have fun.", "And have lots of fun.")
-            )
+            ),
+            selected = 2
         )
-        val viewableCase = ViewableCase(rdrCase)
-        val interpretationToUseForRule = viewableCase.interpretation.apply {
-            verifiedText = "Verified Text"
-        }
-        val interpretationToReturn = interpretationToUseForRule.apply {
-            diffList = diffListToReturn
-        }
-        every { serverApplication.buildRule(interpretationToUseForRule) } returns interpretationToReturn
+
+        val ruleRequest = RuleRequest(diffList = diffList)
+        val interp = Interpretation()
+        every { serverApplication.buildRule(ruleRequest) } returns interp
 
         val result = httpClient.post(BUILD_RULE) {
             contentType(ContentType.Application.Json)
-            setBody(interpretationToUseForRule)
+            setBody(ruleRequest)
         }
         result.status shouldBe HttpStatusCode.OK
-        result.body<Interpretation>() shouldBe interpretationToReturn
-        verify { serverApplication.buildRule(interpretationToUseForRule) }
+        result.body<Interpretation>() shouldBe interp
+        verify { serverApplication.buildRule(ruleRequest) }
     }
 }

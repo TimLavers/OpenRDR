@@ -25,7 +25,7 @@ Feature: Show a list of cases
     And I see the following cases in the case list:
       | Case1 |
       | Case2 |
-    When a new case with the name "Case3" is stored on the server
+    When a new case with the name Case3 is stored on the server
     Then I should see the following cases in the case list:
       | Case1 |
       | Case2 |

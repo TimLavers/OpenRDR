@@ -5,7 +5,9 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
+import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.GreaterThanOrEqualTo
+import io.rippledown.model.condition.HasCurrentValue
 import io.rippledown.model.condition.LessThanOrEqualTo
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import kotlin.test.Test
@@ -21,7 +23,7 @@ class KBTest {
         val builder = RDRCaseBuilder()
         builder.addValue("ABC", defaultDate, "10")
         builder.addValue("DEF", defaultDate, "20")
-        val case =  builder.build("Case2")
+        val case = builder.build("Case2")
 
         case.interpretation.textGivenByRules() shouldBe ""
         // Check that it has been interpreted.
@@ -99,11 +101,11 @@ class KBTest {
     fun allCases() {
         val kb = KB("Blah")
         kb.allCases() shouldBe emptySet()
-        for (i in  1..10) {
+        for (i in 1..10) {
             kb.addCase(createCase("Case$i"))
         }
         kb.allCases() shouldHaveSize 10
-        for (i in  1..10) {
+        for (i in 1..10) {
             val retrieved = kb.getCaseByName("Case$i")
             kb.allCases() shouldContain retrieved
         }
@@ -112,10 +114,10 @@ class KBTest {
     @Test
     fun addCase() {
         val kb = KB("Blah")
-        for (i in  1..10) {
+        for (i in 1..10) {
             kb.addCase(createCase("Case$i"))
         }
-        for (i in  1..10) {
+        for (i in 1..10) {
             val retrieved = kb.getCaseByName("Case$i")
             retrieved.name shouldBe "Case$i"
         }
@@ -124,7 +126,7 @@ class KBTest {
     @Test
     fun containsCaseWithName() {
         val kb = KB("Blah")
-        for (i in  1..10) {
+        for (i in 1..10) {
             val caseName = "Case$i"
             kb.containsCaseWithName(caseName) shouldBe false
             kb.addCase(createCase(caseName))
@@ -137,7 +139,7 @@ class KBTest {
         val kb = KB("Blah")
         kb.addCase(createCase("Blah"))
         kb.addCase(createCase("Whatever"))
-        shouldThrow<IllegalArgumentException>{
+        shouldThrow<IllegalArgumentException> {
             kb.addCase(createCase("Blah"))
         }.message shouldBe "There is already a case with name Blah in the KB."
     }
@@ -146,15 +148,15 @@ class KBTest {
     fun `rule session must be started for rule session operations`() {
         val kb = KB("Blah")
         val noSessionMessage = "Rule session not started."
-        shouldThrow<IllegalStateException>{
+        shouldThrow<IllegalStateException> {
             kb.addConditionToCurrentRuleSession(createCondition())
         }.message shouldBe noSessionMessage
 
-        shouldThrow<IllegalStateException>{
+        shouldThrow<IllegalStateException> {
             kb.conflictingCasesInCurrentRuleSession()
         }.message shouldBe noSessionMessage
 
-        shouldThrow<IllegalStateException>{
+        shouldThrow<IllegalStateException> {
             kb.commitCurrentRuleSession()
         }.message shouldBe noSessionMessage
     }
@@ -239,6 +241,14 @@ class KBTest {
         // Rule now added...
         kb.interpret(otherCase)
         otherCase.interpretation.textGivenByRules() shouldBe "Whatever."
+    }
+
+    @Test
+    fun `should return condition hints for case`() {
+        val kb = KB("Diabetes")
+        val caseWithGlucoseAttribute = createCase("A", "1.0")
+        val expectedCondition = HasCurrentValue(Attribute("Glucose"))
+        kb.conditionHintsForCase(caseWithGlucoseAttribute) shouldBe ConditionList(listOf(expectedCondition))
     }
 
     private fun createCondition(): GreaterThanOrEqualTo {

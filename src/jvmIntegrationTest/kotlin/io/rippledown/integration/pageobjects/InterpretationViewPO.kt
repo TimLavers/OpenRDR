@@ -160,9 +160,4 @@ class InterpretationViewPO(private val driver: WebDriver) {
         driver.findElement(By.id("$DIFF_VIEWER_BUILD_ICON$row")).click()
         return this
     }
-
-    fun clickDone(): InterpretationViewPO {
-        driver.findElement(By.id(CONDITION_SELECTOR_DONE_BUTTON)).click()
-        return this
-    }
 }

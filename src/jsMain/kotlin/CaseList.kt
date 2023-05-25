@@ -1,9 +1,9 @@
 import io.rippledown.interpretation.ConditionSelector
-import io.rippledown.model.Attribute
 import io.rippledown.model.CaseId
 import io.rippledown.model.Interpretation
 import io.rippledown.model.caseview.ViewableCase
-import io.rippledown.model.condition.*
+import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.diff.RuleRequest
 import kotlinx.coroutines.launch
 import mui.material.Grid
 import mui.material.List
@@ -27,6 +27,7 @@ external interface CaseListHandler : Handler {
 val CaseList = FC<CaseListHandler> { handler ->
     var currentCase: ViewableCase? by useState(null)
     var newInterpretation: Interpretation? by useState(null)
+    var conditionHints: ConditionList? by useState(null)
 
     fun updateCurrentCase(id: String) {
         handler.scope.launch {
@@ -91,6 +92,9 @@ val CaseList = FC<CaseListHandler> { handler ->
                     }
                     onStartRule = { newInterp ->
                         newInterpretation = newInterp
+                        handler.scope.launch {
+                            conditionHints = handler.api.conditionHints(currentCase!!.name)
+                        }
                     }
                 }
             }
@@ -99,17 +103,22 @@ val CaseList = FC<CaseListHandler> { handler ->
         Grid {
             item = true
             xs = 4
-            if (newInterpretation != null) {
+            if (newInterpretation != null && conditionHints != null) {
                 ConditionSelector {
                     scope = handler.scope
                     api = handler.api
-                    conditionHints = dummyConditions()
+                    conditions = conditionHints!!.conditions
                     onCancel = {
                         newInterpretation = null
                     }
-                    onDone = {
+                    onDone = { conditionList ->
                         handler.scope.launch {
-                            handler.api.buildRule(newInterpretation!!)
+                            val ruleRequest = RuleRequest(
+                                caseId = currentCase!!.name,
+                                diffList = newInterpretation!!.diffList,
+                                conditionList = ConditionList(conditions = conditionList)
+                            )
+                            handler.api.buildRule(ruleRequest)
                             newInterpretation = null
                             updateCurrentCase(currentCase!!.name)
                         }
@@ -129,15 +138,3 @@ val CaseListMemo = memo(
         prevProps.caseIds == nextProps.caseIds
     }
 )
-
-fun dummyConditions(): List<Condition> {
-    val tsh = Attribute("TSH")
-    val ft4 = Attribute("FT4")
-    return listOf(
-        IsNormal(tsh),
-        HasCurrentValue(tsh),
-        Is(tsh, "0.667"),
-        HasNoCurrentValue(ft4)
-    )
-}
-

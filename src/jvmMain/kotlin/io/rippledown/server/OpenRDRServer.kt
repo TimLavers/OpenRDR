@@ -73,4 +73,5 @@ fun Application.applicationModule() {
     caseManagement(application)
     interpManagement(application)
     ruleSession(application)
+    conditionManagement(application)
 }

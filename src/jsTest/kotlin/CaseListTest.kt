@@ -1,9 +1,8 @@
 import io.kotest.matchers.shouldBe
 import io.rippledown.interpretation.*
-import io.rippledown.model.CaseId
-import io.rippledown.model.CasesInfo
-import io.rippledown.model.createCase
-import io.rippledown.model.createCaseWithInterpretation
+import io.rippledown.model.*
+import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.condition.HasCurrentValue
 import io.rippledown.model.diff.*
 import kotlinx.coroutines.test.runTest
 import mocks.config
@@ -176,6 +175,54 @@ class CaseListTest {
             requireDoneButtonNotShowing()
             clickBuildIconForRow(2)
             requireDoneButtonShowing()
+        }
+    }
+
+    @Test
+    fun shouldUpdateConditionHintsWhenRuleIsStarted() = runTest {
+        val caseName = "Bondi"
+        val caseIdList = listOf(CaseId(caseName))
+        val beachComment = "Enjoy the beach!"
+        val bondiComment = "Go to Bondi now!"
+        val diffList = DiffList(
+            listOf(
+                Unchanged(beachComment),
+                Addition(bondiComment),
+            )
+        )
+        val caseWithInterp = createCaseWithInterpretation(
+            name = caseName,
+            conclusionTexts = listOf(beachComment, bondiComment),
+            diffs = diffList
+        )
+        val condition = HasCurrentValue(Attribute("surf"))
+        val config = config {
+            expectedCaseId = caseName
+            returnCasesInfo = CasesInfo(caseIdList)
+            returnCase = caseWithInterp
+            returnConditionList = ConditionList(listOf(condition))
+        }
+
+        val vfc = VFC {
+            CaseList {
+                caseIds = caseIdList
+                api = Api(mock(config))
+                scope = this@runTest
+            }
+        }
+        with(createRootFor(vfc)) {
+            waitForEvents()
+            requireCaseToBeSelected(caseName)
+            //start to build a rule for the Addition
+            selectChangesTab()
+            waitForEvents()
+            requireNumberOfRows(2)
+            moveMouseOverRow(1)
+            waitForEvents()
+            requireDoneButtonNotShowing()
+            clickBuildIconForRow(1)
+            requireDoneButtonShowing()
+            requireConditions(listOf(condition.asText()))
         }
     }
 
