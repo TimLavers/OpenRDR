@@ -4,19 +4,25 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
+import io.rippledown.persistence.AttributeStore
 import kotlin.IllegalArgumentException
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class PostgresAttributeStoreTest: PostgresStoreTest() {
-    private lateinit var store: PostgresAttributeStore
+    private lateinit var store: AttributeStore
 
     override fun tableName() = ATTRIBUTES_TABLE
+
+    override fun reload() {
+        super.reload()
+        store = postgresKB.attributeStore()
+    }
 
     @BeforeTest
     fun setup() {
         dropTable()
-        store = PostgresAttributeStore(dbName)
+        store = postgresKB.attributeStore()
     }
 
     @Test
@@ -31,7 +37,7 @@ class PostgresAttributeStoreTest: PostgresStoreTest() {
         a1.name shouldBe "A1"
 
         // Rebuild and check it's there.
-        store = PostgresAttributeStore(dbName)
+        reload()
 
         store.all() shouldContain a1
         store.all().size shouldBe 1
@@ -58,7 +64,7 @@ class PostgresAttributeStoreTest: PostgresStoreTest() {
         store.all().map { it.id } shouldBe setOf(a2.id, updated.id)
 
         // Rebuild and check again.
-        store = PostgresAttributeStore(dbName)
+        reload()
         store.all().map { it.name } shouldBe setOf(a2.name, updated.name)
         store.all().map { it.id } shouldBe setOf(a2.id, updated.id)
     }
@@ -72,7 +78,7 @@ class PostgresAttributeStoreTest: PostgresStoreTest() {
         }
 
         // Rebuild and check again.
-        store = PostgresAttributeStore(dbName)
+        reload()
         store.all().size shouldBe  100
     }
 
@@ -85,7 +91,7 @@ class PostgresAttributeStoreTest: PostgresStoreTest() {
         store.all() shouldBe setOf(a1, a2, a3)
 
         // Rebuild and check again.
-        store = PostgresAttributeStore(dbName)
+        reload()
         store.all() shouldBe setOf(a1, a2, a3)
     }
 

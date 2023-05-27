@@ -14,11 +14,10 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 const val ATTRIBUTES_TABLE = "attributes"
 
-class PostgresAttributeStore(private val dbName: String) : AttributeStore {
+class PostgresAttributeStore(private val db: Database) : AttributeStore {
 
     init {
-        Database.connect({ ConnectionProvider.connection(dbName) })
-        transaction {
+        transaction(db) {
             addLogger(StdOutSqlLogger)
             SchemaUtils.create(PGAttributes)
         }
@@ -29,7 +28,7 @@ class PostgresAttributeStore(private val dbName: String) : AttributeStore {
         require(isNew) {
             "An attribute with name $name already exists."
         }
-        return transaction {
+        return transaction(db) {
             val pgAttribute = PGAttribute.new {
                 attributeName = name
             }
@@ -37,11 +36,11 @@ class PostgresAttributeStore(private val dbName: String) : AttributeStore {
         }
     }
 
-    override fun all() = transaction {
+    override fun all() = transaction(db) {
         return@transaction PGAttribute.all().map { Attribute(it.attributeName, it.id.value) }.toSet()
     }
 
-    override fun store(attribute: Attribute) = transaction {
+    override fun store(attribute: Attribute) = transaction(db) {
             PGAttribute[attribute.id].attributeName = attribute.name
         }
 
@@ -49,7 +48,7 @@ class PostgresAttributeStore(private val dbName: String) : AttributeStore {
         require(all().isEmpty()) {
             "Cannot load attributes if there are are some stored already."
         }
-        transaction {
+        transaction(db) {
             attributes.forEach {
                 PGAttribute.new(it.id) {
                     attributeName = it.name

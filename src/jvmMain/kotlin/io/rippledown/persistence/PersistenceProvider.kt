@@ -6,4 +6,5 @@ interface PersistenceProvider {
     fun idStore(): PersistentKBIds
     fun kbPersistence(id: String): PersistentKB
     fun createKBPersistence(kbInfo: KBInfo): PersistentKB
+    fun destroyKBPersistence(kbInfo: KBInfo)
 }

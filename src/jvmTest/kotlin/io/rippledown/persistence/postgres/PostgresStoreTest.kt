@@ -1,24 +1,23 @@
 package io.rippledown.persistence.postgres
 
-import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.collections.shouldContain
-import io.kotest.matchers.shouldBe
-import io.rippledown.model.Attribute
-import kotlin.IllegalArgumentException
-import kotlin.test.BeforeTest
-import kotlin.test.Test
+import io.rippledown.model.KBInfo
+import io.rippledown.persistence.PersistentKB
+import org.jetbrains.exposed.sql.Database
 
 abstract class PostgresStoreTest {
     val dbName = "rdr_test"
-    private lateinit var store: PostgresAttributeStore
+    private val kbInfo = KBInfo(dbName, dbName)
+    private val postgresPersistenceProvider = PostgresPersistenceProvider()
+    var postgresKB: PersistentKB
+    lateinit var db: Database
 
     init {
-        ConnectionProvider.systemConnection().use {
-            it.createStatement().executeUpdate("DROP DATABASE IF EXISTS $dbName")
-        }
-        ConnectionProvider.systemConnection().use {
-            it.createStatement().executeUpdate("CREATE DATABASE $dbName")
-        }
+        postgresPersistenceProvider.destroyKBPersistence(kbInfo)
+        postgresKB = postgresPersistenceProvider.createKBPersistence(kbInfo)
+    }
+
+    open fun reload() {
+        postgresKB = postgresPersistenceProvider.kbPersistence(kbInfo.id)
     }
 
     fun dropTable() {

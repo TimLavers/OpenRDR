@@ -13,11 +13,10 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 const val ATTRIBUTE_INDEXES_TABLE = "attribute_indexes"
 
-class PostgresAttributeOrderStore(private val dbName: String): AttributeOrderStore {
+class PostgresAttributeOrderStore(private val db: Database): AttributeOrderStore {
 
     init {
-        Database.connect({ ConnectionProvider.connection(dbName) })
-        transaction {
+        transaction(db) {
             addLogger(StdOutSqlLogger)
             SchemaUtils.create(PGAttributeIndexes)
         }
@@ -25,7 +24,7 @@ class PostgresAttributeOrderStore(private val dbName: String): AttributeOrderSto
 
     override fun idToIndex(): Map<Int, Int> {
         val result = mutableMapOf<Int, Int>()
-        transaction {
+        transaction(db) {
             PGAttributeIndex.all().forEach{
                 result[it.id.value] = it.attributeIndex
             }
@@ -34,7 +33,7 @@ class PostgresAttributeOrderStore(private val dbName: String): AttributeOrderSto
     }
 
     override fun store(id: Int, index: Int) {
-        transaction {
+        transaction(db) {
             PGAttributeIndex.new(id) {
                 attributeIndex = index
             }
@@ -45,7 +44,7 @@ class PostgresAttributeOrderStore(private val dbName: String): AttributeOrderSto
         require(idToIndex().isEmpty()) {
             "Cannot load attribute order store if it is non-empty."
         }
-        transaction {
+        transaction(db) {
             idToIndex.forEach {
                 PGAttributeIndex.new(it.key) {
                     attributeIndex = it.value

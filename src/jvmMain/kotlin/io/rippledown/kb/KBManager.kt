@@ -19,11 +19,22 @@ class KBManager(private val persistenceProvider: PersistenceProvider) {
         return kbInfos.toSet()
     }
 
-    fun createKB(name: String): KBInfo {
+    fun createKB(name: String, force: Boolean = false): KBInfo {
+        if (!force) {
+            val existingKBInfo = kbInfos.firstOrNull { it.name.equals(name, true) }
+            if (existingKBInfo != null) {
+                throw IllegalArgumentException("A KB with name ${existingKBInfo.name} already exists. Use force=true to create a KB with the same name, ignoring case, as an existing KB.")
+            }
+        }
         val result = KBInfo(name)
         persistenceProvider.createKBPersistence(result)
         kbInfos.add(result)
         return result
+    }
+
+    fun deleteKB(kbInfo: KBInfo) {
+        val matchingId = kbInfos.firstOrNull{ it.id == kbInfo.id} ?: throw IllegalArgumentException("No KB with id $kbInfo was found.")
+//        persistenceProvider.
     }
 
     fun openKB(id: String): EntityRetrieval<KB> {

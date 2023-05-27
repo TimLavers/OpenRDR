@@ -18,4 +18,9 @@ class InMemoryPersistenceProvider: PersistenceProvider {
     override fun kbPersistence(id: String): PersistentKB {
         return kbStore[id]!!
     }
+
+    override fun destroyKBPersistence(kbInfo: KBInfo) {
+        kbStore.remove(kbInfo.id)
+        idStore.remove(kbInfo.id)
+    }
 }

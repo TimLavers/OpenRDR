@@ -1,10 +1,12 @@
 package io.rippledown.kb
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.startWith
+import io.rippledown.model.KBInfo
 import io.rippledown.persistence.InMemoryPersistenceProvider
 import io.rippledown.util.EntityRetrieval
 import java.util.UUID
@@ -49,13 +51,76 @@ class KBManagerTest {
     @Test //KBM-2
     fun `create two KBs with the same name`() {
         val name = "Snarky Puppy"
-        val info1 = kbManager.createKB(name)
-        val info2 = kbManager.createKB(name)
+        val info1 = kbManager.createKB(name, true)
+        val info2 = kbManager.createKB(name, true)
         info1.name shouldBe name
         info2.name shouldBe name
         info1.id shouldNotBe info2.id
         kbManager.all() shouldContain info1
         kbManager.all() shouldContain info2
+    }
+
+    @Test //KBM-2
+    fun `create two KBs with the same name, modulo case, requires force field`() {
+        val name = "Snarky Puppy"
+        val info1 = kbManager.createKB(name)
+        shouldThrow<IllegalArgumentException> {
+            kbManager.createKB(name.lowercase())
+        }.message shouldBe "A KB with name Snarky Puppy already exists. Use force=true to create a KB with the same name, ignoring case, as an existing KB."
+        kbManager.all() shouldContain info1
+        kbManager.all().size shouldBe 1
+    }
+
+    @Test //KBM-5
+    fun deleteKB() {
+        val info1 = kbManager.createKB("Thyroids",)
+        val info2 = kbManager.createKB("Glucose",)
+        val info3 = kbManager.createKB("Lipids",)
+
+        kbManager.all() shouldBe setOf(info1, info2, info3)
+        kbManager.deleteKB(info2)
+        kbManager.all() shouldBe setOf(info1, info3)
+        kbManager.deleteKB(info3)
+        kbManager.all() shouldBe setOf(info1)
+        kbManager.deleteKB(info1)
+        kbManager.all() shouldBe setOf()
+    }
+
+    @Test //KBM-5
+    fun `delete non-existent KB`() {
+        shouldThrow<IllegalArgumentException> {
+            kbManager.deleteKB(KBInfo("Unknown"))
+        }.message shouldBe "The KB \'Unknown\' does not exist."
+    }
+
+    @Test //KBM-5
+    fun `delete a KB that has the same name as another KB`() {
+        val name = "Snarky Puppy"
+        val info1 = kbManager.createKB(name, true)
+        val info2 = kbManager.createKB(name, true)
+        kbManager.all() shouldBe setOf(info1, info2) // sanity
+        kbManager.deleteKB(info2)
+        kbManager.all() shouldBe setOf(info1)
+    }
+
+    @Test //KBM-5
+    fun `delete a KB and then re-create it`() {
+        val name = "Snarky Puppy"
+        val info1 = kbManager.createKB(name,)
+        kbManager.all() shouldBe setOf(info1)
+        kbManager.deleteKB(info1)
+        kbManager.all() shouldBe setOf()
+        val info2 = kbManager.createKB(name)
+        kbManager.all() shouldBe setOf(info2)
+    }
+
+    @Test //KBM-5
+    fun `delete a KB that has the same id as another KB`() {
+        val info1 = kbManager.createKB("Thyroids",)
+        val info2 = kbManager.createKB("Glucose",)
+        kbManager.all() shouldBe setOf(info1, info2) // sanity
+        kbManager.deleteKB(KBInfo(info2.id, info1.name)) // Should never happen, but anyway...
+        kbManager.all() shouldBe setOf(info1)
     }
 
     @Test //KBM-4

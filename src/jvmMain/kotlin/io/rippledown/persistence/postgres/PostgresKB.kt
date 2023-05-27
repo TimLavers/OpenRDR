@@ -11,44 +11,44 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 const val KB_INFO_TABLE = "kb_info"
+val logger: Logger = LoggerFactory.getLogger("rdr")
+
 
 fun createPostgresKB(kbInfo: KBInfo): PostgresKB {
+    logger.info("Creating PostgresKB with KBInfo: $kbInfo")
     ConnectionProvider.systemConnection().use {
         it.createStatement().executeUpdate("CREATE DATABASE ${kbInfo.id}")
     }
-    Database.connect({ConnectionProvider.connection(kbInfo.id)})
-    transaction {
+    logger.info("Database created. About to connect.")
+    val db = Database.connect({ConnectionProvider.connection(kbInfo.id)})
+    transaction(db) {
         addLogger(StdOutSqlLogger)
         SchemaUtils.create(PKBInfos)
+        logger.info("KBInfos table created.")
         PKBInfo.new{
             kbId = kbInfo.id
             name = kbInfo.name
         }
-        commit()
+        logger.info("KBInfo stored.")
     }
     return PostgresKB(kbInfo.id)
 }
 
 class PostgresKB internal constructor(private val dbName: String): PersistentKB {
-    private val attributeStore = PostgresAttributeStore(dbName)
-    private val attributeOrderStore = PostgresAttributeOrderStore(dbName)
+    private val db: Database = Database.connect({ConnectionProvider.connection(dbName)})
+    private val attributeStore = PostgresAttributeStore(db)
+    private val attributeOrderStore = PostgresAttributeOrderStore(db)
     private val conclusionStore = PostgresConclusionStore(dbName)
     private val conditionStore = PostgresConditionStore(dbName)
     private val ruleStore = PostgresRuleStore(dbName)
 
-    init {
-        Database.connect({ConnectionProvider.connection(dbName)})
-        transaction {
-            addLogger(StdOutSqlLogger)
-            SchemaUtils.create(PKBInfos)
-        }
-    }
-
     override fun kbInfo(): KBInfo {
         val resultList = mutableListOf<KBInfo>()
-        transaction {
+        transaction(db) {
             PKBInfo.all().forEach {
                 resultList.add(KBInfo(it.kbId, it.name))
             }

@@ -6,14 +6,15 @@ import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 
 const val KB_IDS_TABLE = "kb_ids"
 
 class PostgresKBIds(private val dbName: String): PersistentKBIds {
-
+    private val db: Database
     init {
-        Database.connect({ConnectionProvider.connection(dbName)})
+        db = Database.connect({ConnectionProvider.connection(dbName)})
         transaction {
             addLogger(StdOutSqlLogger)
             SchemaUtils.create(KBIds)
@@ -22,17 +23,28 @@ class PostgresKBIds(private val dbName: String): PersistentKBIds {
 
     override fun data(): Map<String, Boolean> {
         val result = mutableMapOf<String, Boolean>()
-        transaction {
+        transaction(db) {
+            println("==== data, connection: ${this.connection}")
+            println("==== data, connection: ${this.connection.schema}")
+            println("==== data, connection: ${this.db.url}")
             KBId.all().forEach { result[it.kbId] = it.deleted }
         }
         return result
     }
 
     override fun add(key: String, value: Boolean) {
-        transaction {
+        transaction(db) {
             KBIds.insert {
                 it[kbId] = key
                 it[deleted] = value
+            }
+        }
+    }
+
+    override fun remove(key: String) {
+        transaction(db) {
+            KBIds.deleteWhere {
+                kbId eq key
             }
         }
     }

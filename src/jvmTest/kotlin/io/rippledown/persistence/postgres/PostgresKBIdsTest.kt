@@ -46,4 +46,42 @@ class PostgresKBIdsTest {
         postgresKBIds = PostgresKBIds(dbName)
         postgresKBIds.data() shouldBe mapOf(k1 to true, k2 to false, k3 to true)
     }
+
+    @Test
+    fun remove() {
+        postgresKBIds.add(k1, true)
+        postgresKBIds.add(k2, false)
+        postgresKBIds.add(k3, true)
+
+        postgresKBIds.remove(k2)
+        postgresKBIds.data() shouldBe mapOf(k1 to true, k3 to true)
+
+        // Rebuild.
+        postgresKBIds = PostgresKBIds(dbName)
+        postgresKBIds.data() shouldBe mapOf(k1 to true, k3 to true)
+    }
+
+    @Test
+    fun `remove and re-add`() {
+        postgresKBIds.add(k1, false)
+        postgresKBIds.add(k2, true)
+        postgresKBIds.add(k3, true)
+
+        postgresKBIds.remove(k2)
+        postgresKBIds.data() shouldBe mapOf(k1 to false, k3 to true)
+        postgresKBIds.add(k2, true)
+        postgresKBIds.data() shouldBe mapOf(k1 to false, k2 to true, k3 to true)
+
+        // Rebuild.
+        postgresKBIds = PostgresKBIds(dbName)
+        postgresKBIds.data() shouldBe mapOf(k1 to false, k2 to true, k3 to true)
+    }
+
+    @Test
+    fun `attempt to remove unknown value`() {
+        postgresKBIds.add(k1, false)
+        postgresKBIds.add(k2, true)
+        postgresKBIds.remove(k3)
+        postgresKBIds.data() shouldBe mapOf(k1 to false, k2 to true)
+    }
 }

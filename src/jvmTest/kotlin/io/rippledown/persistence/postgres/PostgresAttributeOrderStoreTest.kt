@@ -2,18 +2,30 @@ package io.rippledown.persistence.postgres
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.rippledown.persistence.AttributeOrderStore
+import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class PostgresAttributeOrderStoreTest: PostgresStoreTest() {
-    private lateinit var store: PostgresAttributeOrderStore
+    private lateinit var store: AttributeOrderStore
 
     override fun tableName() = ATTRIBUTE_INDEXES_TABLE
 
     @BeforeTest
     fun setup() {
         dropTable()
-        store = PostgresAttributeOrderStore(dbName)
+        store = postgresKB.attributeOrderStore()
+    }
+
+    @AfterTest
+    fun cleanup() {
+        dropDB(dbName)
+    }
+
+    override fun reload() {
+        super.reload()
+        store = postgresKB.attributeOrderStore()
     }
 
     @Test
@@ -30,7 +42,7 @@ class PostgresAttributeOrderStoreTest: PostgresStoreTest() {
         store.idToIndex() shouldBe mapOf(1 to 10, 2 to 11, 3 to 12)
 
         // Rebuild and check.
-        store = PostgresAttributeOrderStore(dbName)
+        reload()
         store.idToIndex() shouldBe mapOf(1 to 10, 2 to 11, 3 to 12)
     }
 
@@ -50,7 +62,7 @@ class PostgresAttributeOrderStoreTest: PostgresStoreTest() {
         store.idToIndex() shouldBe loaded
 
         // Rebuild and check.
-        store = PostgresAttributeOrderStore(dbName)
+        reload()
         store.idToIndex() shouldBe loaded
     }
 }

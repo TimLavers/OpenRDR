@@ -2,13 +2,36 @@ package io.rippledown.persistence.postgres
 
 import io.rippledown.model.KBInfo
 import io.rippledown.persistence.PersistenceProvider
-import io.rippledown.persistence.PersistentKBIds
 import io.rippledown.persistence.PersistentKB
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.sql.ResultSet
 
 const val SYSTEM_DB_NAME = "open_rdr"
+
+fun allDatabasesInSystem(): Set<String> {
+    fun isSpecialPostgresDBName(name: String): Boolean {
+        return when(name) {
+            "postgres" -> true
+            "template0" -> true
+            "template1" -> true
+            else -> false
+        }
+    }
+    val result = mutableSetOf<String>()
+    ConnectionProvider.systemConnection().use {
+        it.createStatement().use { stmt ->
+            val rs: ResultSet = stmt.executeQuery("SELECT datname FROM pg_database")
+            while (rs.next()) {
+                val dbName = rs.getString(1)
+                if (!isSpecialPostgresDBName(dbName)) {
+                    result.add(dbName)
+                }
+            }
+        }
+    }
+    return result
+}
 
 class PostgresPersistenceProvider: PersistenceProvider {
     private val logger: Logger = LoggerFactory.getLogger("rdr")
@@ -22,13 +45,14 @@ class PostgresPersistenceProvider: PersistenceProvider {
             logger.info("System DB already exists.")
         } else {
             createSystemDB()
+            logger.info("System DB created.")
         }
+        logger.info("About to create PostgresKBIds...")
         idStore = PostgresKBIds(SYSTEM_DB_NAME)
+        logger.info("PostgresKBIds created.")
     }
 
-    override fun idStore(): PersistentKBIds {
-        return idStore
-    }
+    override fun idStore() = idStore
 
     override fun kbPersistence(id: String): PersistentKB {
         return PostgresKB(id)
@@ -39,17 +63,11 @@ class PostgresPersistenceProvider: PersistenceProvider {
         return createPostgresKB(kbInfo)
     }
 
-    private fun allDatabasesInSystem(): Set<String> {
-        val result = mutableSetOf<String>()
+    override fun destroyKBPersistence(kbInfo: KBInfo) {
         ConnectionProvider.systemConnection().use {
-            it.createStatement().use { stmt ->
-                val rs: ResultSet = stmt.executeQuery("SELECT datname FROM pg_database")
-                while (rs.next()) {
-                    result.add(rs.getString(1))
-                }
-            }
+            it.createStatement().executeUpdate("DROP DATABASE IF EXISTS ${kbInfo.id}")
         }
-        return result
+        idStore.remove(kbInfo.id)
     }
 
     private fun createSystemDB() {
