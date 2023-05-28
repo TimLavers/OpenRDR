@@ -29,4 +29,9 @@ class ConditionSelectorPO(private val driver: WebDriver) {
         return this
     }
 
+    fun clickConditionWithText(condition: String): ConditionSelectorPO {
+        driver.findElement(By.xpath("//*[contains(text(), '$condition')]")).click()
+        return this
+    }
+
 }

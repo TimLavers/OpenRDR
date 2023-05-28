@@ -7,8 +7,8 @@ import mui.material.Badge
 import mui.material.Button
 import mui.material.ButtonProps
 import proxy.findById
-import proxy.requireBadgeCount
-import proxy.requireNoBadge
+import io.rippledown.interpretation.requireBadgeCount
+import io.rippledown.interpretation.requireNoBadge
 import react.FC
 import react.ReactNode
 import react.VFC

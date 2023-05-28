@@ -3,7 +3,7 @@ package io.rippledown.integration
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.pageobjects.CaseQueuePO
 import io.rippledown.integration.pageobjects.CaseViewPO
-import io.rippledown.integration.pageobjects.ConclusionsDialogPO
+import io.rippledown.integration.pageobjects.ConclusionsViewPO
 import io.rippledown.integration.restclient.RESTClient
 import io.rippledown.model.Attribute
 import io.rippledown.model.Conclusion
@@ -20,7 +20,7 @@ internal class ShowRuleCondition : UITestBase() {
 
     private lateinit var caseQueuePO: CaseQueuePO
     private lateinit var caseViewPO: CaseViewPO
-    private lateinit var conclusionsDialogPO: ConclusionsDialogPO
+    private lateinit var conclusionsViewPO: ConclusionsViewPO
     private val caseName = "Case1"
     private val tshComment = "Normal TSH"
     private val abcComment = "Unusual ABC value"
@@ -41,7 +41,7 @@ internal class ShowRuleCondition : UITestBase() {
         setupWebDriver()
         caseQueuePO = CaseQueuePO(driver).apply { waitForNumberOfCasesToBe(1) }
         caseViewPO = CaseViewPO(driver)
-        conclusionsDialogPO = ConclusionsDialogPO(driver)
+        conclusionsViewPO = ConclusionsViewPO(driver)
     }
 
     @AfterTest
@@ -71,22 +71,10 @@ internal class ShowRuleCondition : UITestBase() {
     }
 
     @Test
-    fun shouldOpenAndCloseConclusionsDialog() {
-        caseViewPO.nameShown() shouldBe caseName //sanity check
-        with(conclusionsDialogPO) {
-            clickOpen()
-            waitForDialogToOpen()
-            clickClose()
-            waitForDialogToClose()
-        }
-    }
-
-    @Test
     fun shouldShowConditionsForEachConclusion() {
         caseViewPO.nameShown() shouldBe caseName //sanity check
-        with(conclusionsDialogPO) {
-            clickOpen()
-            waitForDialogToOpen()
+        with(conclusionsViewPO) {
+            selectConclusionsTab()
             clickComment(tshComment)
             requireConditionsToBeShown(
                 condition1.asText(),
@@ -97,7 +85,6 @@ internal class ShowRuleCondition : UITestBase() {
                 condition3.asText(),
                 condition4.asText()
             )
-            clickClose()
         }
     }
 

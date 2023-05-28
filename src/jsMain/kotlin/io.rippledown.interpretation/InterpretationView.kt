@@ -1,6 +1,5 @@
 package io.rippledown.interpretation
 
-import ConclusionsDialog
 import Handler
 import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_AREA
@@ -66,11 +65,6 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
                 onChange = debounceFunction()
                 defaultValue = latestText
             }
-
-            ConclusionsDialog {
-                this.interpretation = handler.interpretation
-            }
-
         }
     }
 }

@@ -4,8 +4,6 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.model.Conclusion
-import io.rippledown.model.rule.Rule
-import io.rippledown.model.rule.RuleTestBase
 import kotlin.test.Test
 
 internal class RuleTest : RuleTestBase() {
@@ -15,23 +13,23 @@ internal class RuleTest : RuleTestBase() {
 
     @Test
     fun adding_a_child_in_the_constructor_should_set_the_parent() {
-        val child = Rule("c",null, conclusion2, setOf())
-        val rule = Rule("r",null, conclusion1, setOf(), mutableSetOf(child))
+        val child = Rule("c", null, conclusion2, setOf())
+        val rule = Rule("r", null, conclusion1, setOf(), mutableSetOf(child))
         child.parent shouldBe rule
     }
 
     @Test
     fun adding_a_child_should_set_the_parent() {
-        val child = Rule("c",null, conclusion2, setOf())
-        val rule = Rule("r",null, conclusion1, setOf())
+        val child = Rule("c", null, conclusion2, setOf())
+        val rule = Rule("r", null, conclusion1, setOf())
         rule.addChild(child)
         child.parent shouldBe rule
     }
 
     @Test
     fun should_be_structurally_equal_if_same_conditions_conclusion_and_parent_even_if_different_children() {
-        val child1 = Rule("c1",null, conclusion2, setOf())
-        val child2 = Rule("c2",null, conclusion2, setOf())
+        val child1 = Rule("c1", null, conclusion2, setOf())
+        val child2 = Rule("c2", null, conclusion2, setOf())
         val rule1 = Rule("r1", null, conclusion1, setOf(), mutableSetOf(child1))
         val rule2 = Rule("r2", null, conclusion1, setOf(), mutableSetOf(child2))
         rule1 shouldNotBe rule2
@@ -40,29 +38,29 @@ internal class RuleTest : RuleTestBase() {
 
     @Test
     fun should_be_structurally_equal_if_identical() {
-        val rule1 = Rule("r",null, conclusion1, setOf())
+        val rule1 = Rule("r", null, conclusion1, setOf())
         rule1 shouldBe rule1
         rule1.structurallyEqual(rule1) shouldBe true
     }
 
     @Test
     fun should_be_structurally_equal_if_identical_and_null_conclusion() {
-        val rule1 = Rule("r",null, null, setOf())
+        val rule1 = Rule("r", null, null, setOf())
         rule1 shouldBe rule1
         rule1.structurallyEqual(rule1) shouldBe true
     }
 
     @Test
     fun should_not_be_structurally_equal_if_different_conditions() {
-        val rule1 = Rule("r",null, conclusion1, setOf(cond("a")))
-        val rule2 = Rule("r",null, conclusion1, setOf())
+        val rule1 = Rule("r", null, conclusion1, setOf(cond("a")))
+        val rule2 = Rule("r", null, conclusion1, setOf())
         rule1.structurallyEqual(rule2) shouldBe false
         rule2.structurallyEqual(rule1) shouldBe false
     }
 
     @Test
     fun should_not_be_structurally_equal_to_a_root_rule() {
-        val root = Rule("root",null, null, setOf())
+        val root = Rule("root", null, null, setOf())
         val rule = Rule("rule", root, conclusion1, setOf(cond("a")))
         root shouldNotBe rule
         rule.structurallyEqual(root) shouldBe false
@@ -72,8 +70,8 @@ internal class RuleTest : RuleTestBase() {
 
     @Test
     fun should_not_be_structurally_equal_if_different_conclusion() {
-        val rule1 = Rule("r1",null, conclusion1)
-        val rule2 = Rule("r2",null, conclusion2)
+        val rule1 = Rule("r1", null, conclusion1)
+        val rule2 = Rule("r2", null, conclusion2)
         rule1 shouldNotBe rule2
         rule1.structurallyEqual(rule2) shouldBe false
         rule2.structurallyEqual(rule1) shouldBe false
@@ -143,6 +141,24 @@ internal class RuleTest : RuleTestBase() {
         rule1.summary().conditions.size shouldBe 2
         rule1.summary().conditions shouldContain cond("a")
         rule1.summary().conditions shouldContain cond("b")
+    }
+
+    @Test
+    fun summary_should_contain_conditions_from_root() {
+        val conditions1 = setOf(cond("a"), cond("b"))
+        val rule1 = Rule("r1", null, null, conditions1)
+        rule1.summary().conditionTextsFromRoot shouldBe listOf(cond("a"), cond("b")).map { it.asText() }
+
+        val conditions2 = setOf(cond("x"), cond("y"))
+        val rule2 = Rule("r2", rule1, conclusion2, conditions2)
+        rule2.summary().conditionTextsFromRoot shouldBe listOf(
+            cond("a"),
+            cond("b"),
+            cond("x"),
+            cond("y")
+        ).map {
+            it.asText()
+        }
     }
 
     @Test
@@ -236,14 +252,14 @@ internal class RuleTest : RuleTestBase() {
         val childConditions = setOf(cond("b"))
         val childRule = Rule("cr", null, conclusion2, childConditions)
         childRule.addChild(grandChild)
-        childRule.conditions shouldBe  childRule.conditions
+        childRule.conditions shouldBe childRule.conditions
         childRule.conclusion shouldBe childRule.conclusion
         val rootConditions = setOf(cond("a"), cond("b"))
         val root = Rule("rr", null, conclusion1, rootConditions)
         root.addChild(childRule)
         root.conclusion shouldBe root.conclusion
         root.conditions shouldBe root.conditions
-        root.childRules() shouldContain(childRule)
+        root.childRules() shouldContain (childRule)
         val result = root.apply(clinicalNotesCase("abc"), interpretation)
         result shouldBe true
         checkInterpretation(conclusion3)
@@ -323,7 +339,7 @@ internal class RuleTest : RuleTestBase() {
         copy.childRules() shouldBe rule.childRules()
     }
 
-     @Test
+    @Test
     fun child_rules_should_be_copied() {
         val rule = setupRuleWithOneChild()
         val copy = rule.copy()
@@ -340,6 +356,27 @@ internal class RuleTest : RuleTestBase() {
         val copyCondition = copy.conditions.iterator().next()
         val ruleCondition = rule.conditions.iterator().next()
         copyCondition shouldBe ruleCondition
+    }
+
+    @Test
+    fun should_list_conditions_for_rule_with_null_parent() {
+        val child = Rule("c", null, conclusion1, setOf(cond("a"), cond("b")))
+        child.conditionTextsFromRoot() shouldBe listOf(cond("a"), cond("b")).map { it.asText() }
+    }
+
+    @Test
+    fun should_list_conditions_for_rule_with_not_null_parent() {
+        val parent = Rule("r", null, conclusion1, setOf(cond("x"), cond("y"), cond("z")))
+        val child = Rule("c", parent, conclusion2, setOf(cond("a"), cond("b"), cond("c")))
+        child.conditionTextsFromRoot() shouldBe listOf(
+            cond("x"),
+            cond("y"),
+            cond("z"),
+            cond("a"),
+            cond("b"),
+            cond("c")
+        ).map { it.asText() }
+
     }
 
     private fun setupRuleWithTwoChildren(): Rule {

@@ -23,4 +23,4 @@ running from the jar, however they are a start. To run these:
 
 ## Acknowledgements
 
-[water-wave-icon](https://uxwing.com/water-wave-icon) made by [uxwing](https://www.uxwing.com)  
+[water wave icon](https://uxwing.com/water-wave-icon) made by [uxwing](https://www.uxwing.com)

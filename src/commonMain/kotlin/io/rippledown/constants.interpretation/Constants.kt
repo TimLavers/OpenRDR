@@ -1,8 +1,10 @@
 package io.rippledown.constants.interpretation
 
 const val INTERPRETATION_TAB_ORIGINAL = "interpretation_tab_original"
+const val INTERPRETATION_TAB_CONCLUSIONS = "interpretation_tab_conclusions"
 const val INTERPRETATION_TAB_CHANGES = "interpretation_tab_changes"
 const val INTERPRETATION_PANEL_ORIGINAL = "interpretation_panel_original"
+const val INTERPRETATION_PANEL_CONCLUSIONS = "interpretation_panel_conclusions"
 const val INTERPRETATION_PANEL_CHANGES = "interpretation_panel_changes"
 
 const val INTERPRETATION_TEXT_AREA = "interpretation_text_area"

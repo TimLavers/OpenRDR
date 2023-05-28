@@ -41,6 +41,11 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
                     label = interpretationLabel
                     value = "0"
                 }
+                Tab {
+                    id = INTERPRETATION_TAB_CONCLUSIONS
+                    label = conclusionsLabel
+                    value = "1"
+                }
 
                 Tab {
                     id = INTERPRETATION_TAB_CHANGES
@@ -53,7 +58,7 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
                             +changesLabel
                         }
                     }.create()
-                    value = "1"
+                    value = "2"
                 }
             }
 
@@ -72,6 +77,14 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
 
             TabPanel {
                 value = "1"
+                id = INTERPRETATION_PANEL_CONCLUSIONS
+                ConclusionsView {
+                    interpretation = handler.interpretation
+                }
+            }
+
+            TabPanel {
+                value = "2"
                 id = INTERPRETATION_PANEL_CHANGES
                 DiffViewer {
                     api = handler.api
@@ -93,6 +106,16 @@ val interpretationLabel = FC<Props> {
             paddingTop = 10.px //align with the other tab
         }
         +"Interpretation"
+    }
+}.create()
+
+val conclusionsLabel = FC<Props> {
+    Typography {
+        sx {
+            fontSize = 14.px
+            paddingTop = 10.px //align with the other tab
+        }
+        +"Conclusions"
     }
 }.create()
 
