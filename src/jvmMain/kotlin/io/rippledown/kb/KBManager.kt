@@ -33,8 +33,9 @@ class KBManager(private val persistenceProvider: PersistenceProvider) {
     }
 
     fun deleteKB(kbInfo: KBInfo) {
-        val matchingId = kbInfos.firstOrNull{ it.id == kbInfo.id} ?: throw IllegalArgumentException("No KB with id $kbInfo was found.")
-//        persistenceProvider.
+        val idOfKBToBeDeleted = kbInfos.firstOrNull{ it.id == kbInfo.id} ?: throw IllegalArgumentException("No KB with id $kbInfo was found.")
+        persistenceProvider.destroyKBPersistence(idOfKBToBeDeleted)
+        kbInfos.remove(idOfKBToBeDeleted)
     }
 
     fun openKB(id: String): EntityRetrieval<KB> {

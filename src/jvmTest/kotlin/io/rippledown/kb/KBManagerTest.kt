@@ -88,9 +88,10 @@ class KBManagerTest {
 
     @Test //KBM-5
     fun `delete non-existent KB`() {
+        val info = KBInfo("Unknown")
         shouldThrow<IllegalArgumentException> {
-            kbManager.deleteKB(KBInfo("Unknown"))
-        }.message shouldBe "The KB \'Unknown\' does not exist."
+            kbManager.deleteKB(info)
+        }.message shouldBe "No KB with id $info was found."
     }
 
     @Test //KBM-5

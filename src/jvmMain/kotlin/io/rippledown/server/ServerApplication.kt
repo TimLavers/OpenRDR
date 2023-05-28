@@ -39,7 +39,7 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
     }
 
     fun createKB() {
-        val kbInfo = kbManager.createKB("Thyroids")
+        val kbInfo = kbManager.createKB("Thyroids", true)
         kb = (kbManager.openKB(kbInfo.id) as EntityRetrieval.Success<KB>).entity
     }
 
