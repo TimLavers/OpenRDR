@@ -1,11 +1,13 @@
 package io.rippledown.persistence.postgres
 
 import io.kotest.matchers.shouldBe
+import org.jetbrains.exposed.sql.Database
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class PostgresKBIdsTest {
     private val dbName = "rdr_test"
+    private val db: Database
     private lateinit var postgresKBIds: PostgresKBIds
     private val k1 = "key1"
     private val k2 = "key2"
@@ -18,6 +20,7 @@ class PostgresKBIdsTest {
         ConnectionProvider.systemConnection().use {
             it.createStatement().executeUpdate("CREATE DATABASE $dbName")
         }
+        db = Database.connect({ConnectionProvider.connection(dbName)})
     }
 
     @BeforeTest
@@ -26,7 +29,7 @@ class PostgresKBIdsTest {
         ConnectionProvider.systemConnection().use {
             it.createStatement().executeUpdate("DROP TABLE IF EXISTS $KB_IDS_TABLE")
         }
-        postgresKBIds = PostgresKBIds(dbName)
+        postgresKBIds = PostgresKBIds(db)
     }
 
     @Test
@@ -43,7 +46,7 @@ class PostgresKBIdsTest {
         postgresKBIds.data() shouldBe mapOf(k1 to true, k2 to false, k3 to true)
 
         // Rebuild.
-        postgresKBIds = PostgresKBIds(dbName)
+        postgresKBIds = PostgresKBIds(db)
         postgresKBIds.data() shouldBe mapOf(k1 to true, k2 to false, k3 to true)
     }
 
@@ -57,7 +60,7 @@ class PostgresKBIdsTest {
         postgresKBIds.data() shouldBe mapOf(k1 to true, k3 to true)
 
         // Rebuild.
-        postgresKBIds = PostgresKBIds(dbName)
+        postgresKBIds = PostgresKBIds(db)
         postgresKBIds.data() shouldBe mapOf(k1 to true, k3 to true)
     }
 
@@ -73,7 +76,7 @@ class PostgresKBIdsTest {
         postgresKBIds.data() shouldBe mapOf(k1 to false, k2 to true, k3 to true)
 
         // Rebuild.
-        postgresKBIds = PostgresKBIds(dbName)
+        postgresKBIds = PostgresKBIds(db)
         postgresKBIds.data() shouldBe mapOf(k1 to false, k2 to true, k3 to true)
     }
 

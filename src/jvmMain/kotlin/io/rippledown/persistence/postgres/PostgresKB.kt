@@ -20,9 +20,7 @@ val logger: Logger = LoggerFactory.getLogger("rdr")
 
 fun createPostgresKB(kbInfo: KBInfo): PostgresKB {
     logger.info("Creating PostgresKB with KBInfo: $kbInfo")
-    ConnectionProvider.systemConnection().use {
-        it.createStatement().executeUpdate("CREATE DATABASE ${kbInfo.id}")
-    }
+    createDatabase(kbInfo.id)
     logger.info("Database created. About to connect.")
     val db = Database.connect({ConnectionProvider.connection(kbInfo.id)})
     transaction(db) {
@@ -42,9 +40,9 @@ class PostgresKB internal constructor(private val dbName: String): PersistentKB 
     private val db: Database = Database.connect({ConnectionProvider.connection(dbName)})
     private val attributeStore = PostgresAttributeStore(db)
     private val attributeOrderStore = PostgresAttributeOrderStore(db)
-    private val conclusionStore = PostgresConclusionStore(dbName)
-    private val conditionStore = PostgresConditionStore(dbName)
-    private val ruleStore = PostgresRuleStore(dbName)
+    private val conclusionStore = PostgresConclusionStore(db)
+    private val conditionStore = PostgresConditionStore(db)
+    private val ruleStore = PostgresRuleStore(db)
 
     override fun kbInfo(): KBInfo {
         val resultList = mutableListOf<KBInfo>()

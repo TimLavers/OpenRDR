@@ -8,6 +8,7 @@ import io.kotest.matchers.shouldNotBe
 import io.rippledown.model.Attribute
 import io.rippledown.model.beSameAs
 import io.rippledown.model.condition.*
+import io.rippledown.persistence.ConditionStore
 import io.rippledown.util.shouldBeEqualUsingSameAs
 import io.rippledown.util.shouldContainSameAs
 import kotlin.test.BeforeTest
@@ -18,14 +19,19 @@ class PostgresConditionStoreTest: PostgresStoreTest() {
     private val glucose = Attribute("Glucose", 1000)
     private val tsh = Attribute("TSH", 1001)
     private val notes = Attribute("Notes", 1002)
-    private lateinit var store: PostgresConditionStore
+    private lateinit var store: ConditionStore
 
     override fun tableName() = CONDITIONS_TABLE
 
     @BeforeTest
     fun setup() {
         dropTable()
-        store = PostgresConditionStore(dbName)
+        store = postgresKB.conditionStore()
+    }
+
+    override fun reload() {
+        super.reload()
+        store = postgresKB.conditionStore()
     }
 
     @Test
@@ -48,7 +54,7 @@ class PostgresConditionStoreTest: PostgresStoreTest() {
         store.all().size shouldBe 3
 
         // Rebuild and check.
-        store = PostgresConditionStore(dbName)
+        reload()
         store.all() shouldContainSameAs inputGlucoseHigh
         store.all() shouldContainSameAs inputTSHBorderlineLow
         store.all() shouldContainSameAs inputNotesSaysDiabetic
@@ -69,7 +75,7 @@ class PostgresConditionStoreTest: PostgresStoreTest() {
         store.all() shouldBeEqualUsingSameAs toLoad
 
         // Rebuild and check.
-        store = PostgresConditionStore(dbName)
+        reload()
         store.all() shouldBeEqualUsingSameAs toLoad
     }
 

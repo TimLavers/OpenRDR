@@ -5,18 +5,24 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.persistence.PersistentRule
+import io.rippledown.persistence.RuleStore
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class PostgresRuleStoreTest: PostgresStoreTest() {
-    private lateinit var store: PostgresRuleStore
+    private lateinit var store: RuleStore
 
     override fun tableName() = RULES_TABLE
 
     @BeforeTest
     fun setup() {
         dropTable()
-        store = PostgresRuleStore(dbName)
+        store = postgresKB.ruleStore()
+    }
+
+    override fun reload() {
+        super.reload()
+        store = postgresKB.ruleStore()
     }
 
     @Test
@@ -31,9 +37,9 @@ class PostgresRuleStoreTest: PostgresStoreTest() {
         storedRoot.parentId shouldBe null
         storedRoot.conclusionId shouldBe null
         storedRoot.conditionIds shouldBe emptySet()
-        // Rebuild and check it's there.
-        store = PostgresRuleStore(dbName)
 
+        // Rebuild and check it's there.
+        reload()
         store.all() shouldContain storedRoot
     }
 
@@ -46,7 +52,7 @@ class PostgresRuleStoreTest: PostgresStoreTest() {
         pr1.conditionIds shouldBe setOf(1, 2, 3)
 
         // Rebuild and check it's there.
-        store = PostgresRuleStore(dbName)
+        reload()
 
         store.all() shouldContain pr1
         store.all().size shouldBe 1
@@ -62,7 +68,7 @@ class PostgresRuleStoreTest: PostgresStoreTest() {
         created.conditionIds shouldBe setOf(23, 24)
 
         // Rebuild and check it's there.
-        store = PostgresRuleStore(dbName)
+        reload()
 
         store.all() shouldContain created
         store.all().size shouldBe 1
@@ -79,7 +85,7 @@ class PostgresRuleStoreTest: PostgresStoreTest() {
         created.conditionIds shouldBe setOf()
 
         // Rebuild and check it's there.
-        store = PostgresRuleStore(dbName)
+        reload()
 
         store.all() shouldContain created
         store.all().size shouldBe 1
@@ -96,7 +102,7 @@ class PostgresRuleStoreTest: PostgresStoreTest() {
         store.all().size shouldBe 3
 
         // Rebuild and check it's there.
-        store = PostgresRuleStore(dbName)
+        reload()
 
         store.all() shouldContain pr1
         store.all() shouldContain pr2
@@ -112,7 +118,7 @@ class PostgresRuleStoreTest: PostgresStoreTest() {
             store.all() shouldBe rulesCreated
         }
 
-        store = PostgresRuleStore(dbName)
+        reload()
         store.all() shouldBe rulesCreated
     }
 
@@ -133,7 +139,7 @@ class PostgresRuleStoreTest: PostgresStoreTest() {
         store.load(toLoad)
 
         store.all() shouldBe toLoad
-        store = PostgresRuleStore(dbName)
+        reload()
         store.all() shouldBe toLoad
     }
 

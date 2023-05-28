@@ -20,17 +20,16 @@ import kotlin.reflect.full.instanceParameter
 
 const val CONDITIONS_TABLE = "conditions"
 
-class PostgresConditionStore(private val dbName: String): ConditionStore {
+class PostgresConditionStore(private val db: Database): ConditionStore {
 
     init {
-        Database.connect({ ConnectionProvider.connection(dbName) })
-        transaction {
+        transaction(db) {
             addLogger(StdOutSqlLogger)
             SchemaUtils.create(PGConditions)
         }
     }
 
-    override fun all()= transaction {
+    override fun all() = transaction(db) {
         val result = mutableSetOf<Condition>()
         PGCondition.all().forEach {
             result.add(convertJSONToConditionAndInsertId(it.conditionJSON, it.id.value))
@@ -40,7 +39,7 @@ class PostgresConditionStore(private val dbName: String): ConditionStore {
 
     override fun create(condition: Condition): Condition {
         val json = Json.encodeToString(condition)
-        return transaction {
+        return transaction(db) {
             val pgCondition = PGCondition.new {
                 conditionJSON = json
             }
@@ -52,7 +51,7 @@ class PostgresConditionStore(private val dbName: String): ConditionStore {
         require(all().isEmpty()) {
             "Cannot load conditions if there are are some stored already."
         }
-        transaction {
+        transaction(db) {
             conditions.forEach {
                 PGCondition.new(it.id) {
                     conditionJSON = Json.encodeToString(it)

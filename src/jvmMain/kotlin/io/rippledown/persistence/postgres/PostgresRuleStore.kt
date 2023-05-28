@@ -14,22 +14,21 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 const val RULES_TABLE = "rules"
 
-class PostgresRuleStore(private val dbName: String): RuleStore {
+class PostgresRuleStore(private val db: Database): RuleStore {
 
     init {
-        Database.connect({ ConnectionProvider.connection(dbName) })
-        transaction {
+        transaction(db) {
             addLogger(StdOutSqlLogger)
             SchemaUtils.create(PGRules)
         }
     }
 
-    override fun all() = transaction {
+    override fun all() = transaction(db) {
         return@transaction PGRule.all().map{ persistentRule(it) }.toSet()
     }
 
     override fun create(prototype: PersistentRule): PersistentRule {
-        return transaction {
+        return transaction(db) {
             val pgRule = PGRule.new {
                 parentId = prototype.parentId
                 conclusionId = prototype.conclusionId
@@ -44,7 +43,7 @@ class PostgresRuleStore(private val dbName: String): RuleStore {
         require(all().isEmpty()) {
             "Cannot load persistent rules if there are some stored already."
         }
-        transaction {
+        transaction(db) {
             persistentRules.forEach {
                 PGRule.new(it.id) {
                     parentId = it.parentId

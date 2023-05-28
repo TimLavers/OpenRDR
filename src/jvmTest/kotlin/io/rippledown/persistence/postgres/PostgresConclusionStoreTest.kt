@@ -2,6 +2,7 @@ package io.rippledown.persistence.postgres
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.rippledown.persistence.ConclusionStore
 import io.rippledown.model.Conclusion
 import org.apache.commons.lang3.RandomStringUtils
 import kotlin.test.BeforeTest
@@ -12,14 +13,19 @@ class PostgresConclusionStoreTest: PostgresStoreTest() {
     private val coffeeComment = "Time for a revivifying cup of coffee!"
     private val wineComment = "Time for a strengthening glass of cab sav!"
 
-    private lateinit var store: PostgresConclusionStore
+    private lateinit var store: ConclusionStore
 
-    override fun tableName() = ATTRIBUTE_INDEXES_TABLE
+    override fun tableName() = CONCLUSIONS_TABLE
 
     @BeforeTest
     fun setup() {
         dropTable()
-        store = PostgresConclusionStore(dbName)
+        store = postgresKB.conclusionStore()
+    }
+
+    override fun reload() {
+        super.reload()
+        store = postgresKB.conclusionStore()
     }
 
     @Test
@@ -33,7 +39,7 @@ class PostgresConclusionStoreTest: PostgresStoreTest() {
             store.all() shouldBe conclusionsCreated
         }
         // Rebuild and check.
-        store = PostgresConclusionStore(dbName)
+        reload()
         store.all() shouldBe conclusionsCreated
     }
 
@@ -45,7 +51,7 @@ class PostgresConclusionStoreTest: PostgresStoreTest() {
         store.all() shouldBe setOf(created)
 
         // Rebuild and check.
-        store = PostgresConclusionStore(dbName)
+        reload()
         store.all() shouldBe setOf(created)
     }
 
@@ -60,7 +66,7 @@ class PostgresConclusionStoreTest: PostgresStoreTest() {
         store.all() shouldBe setOf(teaConclusion, coffeeConclusion)
 
         // Rebuild and check.
-        store = PostgresConclusionStore(dbName)
+        reload()
         store.all() shouldBe setOf(teaConclusion, coffeeConclusion)
     }
 
@@ -89,7 +95,7 @@ class PostgresConclusionStoreTest: PostgresStoreTest() {
         getById(teaConclusion.id).text shouldBe wineComment
 
         // Rebuild and check.
-        store = PostgresConclusionStore(dbName)
+        reload()
         getById(teaConclusion.id).text shouldBe wineComment
     }
 
@@ -112,7 +118,7 @@ class PostgresConclusionStoreTest: PostgresStoreTest() {
         store.all() shouldBe toLoad
 
         // Rebuild and check.
-        store = PostgresConclusionStore(dbName)
+        reload()
         store.all() shouldBe toLoad
     }
 

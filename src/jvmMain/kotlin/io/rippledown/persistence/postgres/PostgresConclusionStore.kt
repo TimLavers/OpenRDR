@@ -14,17 +14,16 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 const val CONCLUSIONS_TABLE = "conclusions"
 
-class PostgresConclusionStore(private val dbName: String): ConclusionStore {
+class PostgresConclusionStore(private val db: Database): ConclusionStore {
 
     init {
-        Database.connect({ ConnectionProvider.connection(dbName) })
-        transaction {
+        transaction(db) {
             addLogger(StdOutSqlLogger)
             SchemaUtils.create(PGConclusions)
         }
     }
 
-    override fun all() = transaction {
+    override fun all() = transaction(db) {
             return@transaction PGConclusion.all().map {Conclusion(it.id.value, it.conclusionText)}.toSet()
     }
 
@@ -34,7 +33,7 @@ class PostgresConclusionStore(private val dbName: String): ConclusionStore {
             "A conclusion with the given text already exists."
         }
         var pgConclusion: PGConclusion? = null
-        transaction {
+        transaction(db) {
             pgConclusion = PGConclusion.new {
                 conclusionText = text
             }
@@ -43,7 +42,7 @@ class PostgresConclusionStore(private val dbName: String): ConclusionStore {
     }
 
     override fun store(conclusion: Conclusion) =
-        transaction {
+        transaction(db) {
             PGConclusion[conclusion.id].conclusionText = conclusion.text
         }
 
@@ -51,7 +50,7 @@ class PostgresConclusionStore(private val dbName: String): ConclusionStore {
         require(all().isEmpty()) {
             "Cannot load conclusions if there are are some stored already."
         }
-        transaction {
+        transaction(db) {
             conclusions.forEach{
                 PGConclusion.new(it.id) {
                     conclusionText = it.text

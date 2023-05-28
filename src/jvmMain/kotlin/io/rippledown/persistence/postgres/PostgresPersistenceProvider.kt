@@ -3,6 +3,7 @@ package io.rippledown.persistence.postgres
 import io.rippledown.model.KBInfo
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.PersistentKB
+import org.jetbrains.exposed.sql.Database
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.sql.ResultSet
@@ -33,8 +34,15 @@ fun allDatabasesInSystem(): Set<String> {
     return result
 }
 
+fun createDatabase(name: String) {
+    ConnectionProvider.systemConnection().use {
+        it.createStatement().executeUpdate("CREATE DATABASE $name")
+    }
+}
+
 class PostgresPersistenceProvider: PersistenceProvider {
     private val logger: Logger = LoggerFactory.getLogger("rdr")
+    private val systemDB: Database
     private val idStore: PostgresKBIds
 
     init {
@@ -47,8 +55,9 @@ class PostgresPersistenceProvider: PersistenceProvider {
             createSystemDB()
             logger.info("System DB created.")
         }
+        systemDB = Database.connect({ConnectionProvider.connection(SYSTEM_DB_NAME)})
         logger.info("About to create PostgresKBIds...")
-        idStore = PostgresKBIds(SYSTEM_DB_NAME)
+        idStore = PostgresKBIds(systemDB)
         logger.info("PostgresKBIds created.")
     }
 
@@ -70,10 +79,5 @@ class PostgresPersistenceProvider: PersistenceProvider {
         idStore.remove(kbInfo.id)
     }
 
-    private fun createSystemDB() {
-        ConnectionProvider.systemConnection().use {
-            val statement = ConnectionProvider.systemConnection().createStatement()
-            statement.executeUpdate("CREATE DATABASE $SYSTEM_DB_NAME")
-        }
-    }
+    private fun createSystemDB()= createDatabase(SYSTEM_DB_NAME)
 }
