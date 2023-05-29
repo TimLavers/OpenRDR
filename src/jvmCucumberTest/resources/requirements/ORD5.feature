@@ -103,12 +103,10 @@ Feature: Building rules
       | Sun has a current value  |
     When I select the first condition
     And I complete the rule
-    And I select the interpretation tab
-    And I open the conclusions dialog
+    And I select the conclusions tab
     And click the comment "Go to the beach."
     Then the conditions showing are:
       | Wave has a current value |
-    And close the conclusions dialog
     And stop the client application
 
   Scenario: The user should be able to build a rule to remove a comment with a condition they have selected
@@ -161,6 +159,21 @@ Feature: Building rules
     Then  the interpretation field should contain the text "Go to Manly."
     And I select case Bondi
     And  the interpretation field should contain the text "Go to Bondi."
+    And stop the client application
+
+  Scenario: The conditions shown for a comment that is a replacement should include the conditions for the comment that has been replaced
+    Given case Bondi is provided having data:
+      | Wave | poor    |
+      | Sun  | too hot |
+    And I start the client application
+    And I build a rule to add the comment "Go to Bondi." with the condition "Wave has a current value"
+    And  the interpretation field should contain the text "Go to Bondi."
+    And I build a rule to replace the interpretation by "Go to Manly." with the condition "Sun has a current value"
+    When I select the conclusions tab
+    And click the comment "Go to Manly."
+    Then the conditions showing are:
+      | Wave has a current value |
+      | Sun has a current value  |
     And stop the client application
 
   Scenario: A new rule should apply to any case satisfying its conditions

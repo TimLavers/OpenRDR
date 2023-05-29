@@ -35,6 +35,11 @@ class InterpretationViewPO(private val driver: WebDriver) {
         return this
     }
 
+    fun selectConclusionsTab(): InterpretationViewPO {
+        driver.findElement(By.id(INTERPRETATION_TAB_CONCLUSIONS)).click()
+        return this
+    }
+
     fun selectOriginalTab(): InterpretationViewPO {
         driver.findElement(By.id(INTERPRETATION_TAB_ORIGINAL)).click()
         return this

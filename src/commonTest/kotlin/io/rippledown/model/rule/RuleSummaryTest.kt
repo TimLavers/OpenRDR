@@ -20,13 +20,15 @@ internal class RuleSummaryTest: ConditionTestBase() {
         val conditions2 = mutableSetOf<Condition>()
         conditions2.add(SlightlyLow(glucose, 10))
         conditions2.add(IsNormal(tsh))
-        rs2 = RuleSummary("r2",null, conditions2)
+        val conditionsFromRoot2 = mutableListOf<Condition>(IsHigh(glucose), IsHigh(tsh)).apply { addAll(conditions2) }
+        rs2 = RuleSummary("r2", null, conditions2, conditionsFromRoot2.map { it.asText() })
 
         val conditions3 = mutableSetOf<Condition>()
         conditions3.add(IsNormal(glucose))
         conditions3.add(IsNormal(tsh))
         conditions3.add(ContainsText(clinicalNotes, "goats"))
-        rs3 = RuleSummary("r3",conclusion, conditions3)
+        val conditionsFromRoot3 = mutableListOf<Condition>(IsHigh(glucose), IsHigh(tsh)).apply { addAll(conditions3) }
+        rs3 = RuleSummary("r3", conclusion, conditions3, conditionsFromRoot3.map { it.asText() })
     }
 
     @Test
@@ -43,6 +45,24 @@ internal class RuleSummaryTest: ConditionTestBase() {
         rs3.conditions shouldContain IsNormal(tsh)
         rs3.conditions shouldContain ContainsText(clinicalNotes, "goats")
         rs3.conditions.size shouldBe 3
+    }
+
+    @Test
+    fun conditionsFromRoot() {
+        empty.conditionTextsFromRoot shouldBe emptyList()
+        rs2.conditionTextsFromRoot shouldBe listOf(
+            IsHigh(glucose),
+            IsHigh(tsh),
+            SlightlyLow(glucose, 10),
+            IsNormal(tsh)
+        ).map { it.asText() }
+        rs3.conditionTextsFromRoot shouldBe listOf(
+            IsHigh(glucose),
+            IsHigh(tsh),
+            IsNormal(glucose),
+            IsNormal(tsh),
+            ContainsText(clinicalNotes, "goats")
+        ).map { it.asText() }
     }
 
     @Test

@@ -228,7 +228,7 @@ class InterpretationTest {
     }
 
     @Test
-    fun conditionsForConclusionShouldBeInAlphaOrder() {
+    fun conditionsForConclusionShouldBeInAlphaOrderForTheLeafRule() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
         val conclusion = Conclusion("First conc")
         val conditions = setOf(
@@ -244,6 +244,38 @@ class InterpretationTest {
             "b contains \"text b\"",
             "Y contains \"text Y\"",
             "z contains \"text z\""
+        )
+    }
+
+    @Test
+    fun conditionsForConclusionShouldListConditionsOfParentRulesFirst() {
+        val interpretation = Interpretation(caseId, "Whatever, blah.")
+        val conclusion0 = Conclusion("First conc")
+        val conclusion1 = Conclusion("Second conc")
+        val conditions0 = setOf(
+            ContainsText(Attribute("z"), "text z"),
+            ContainsText(Attribute("A"), "text A"),
+            ContainsText(Attribute("Y"), "text Y"),
+            ContainsText(Attribute("b"), "text b"),
+        )
+        val conditions1 = setOf(
+            ContainsText(Attribute("r"), "text r"),
+            ContainsText(Attribute("s"), "text s"),
+            ContainsText(Attribute("p"), "text p"),
+            ContainsText(Attribute("q"), "text q"),
+        )
+        val rule0 = Rule("r0", null, conclusion0, conditions0)
+        val rule1 = Rule("r1", rule0, conclusion1, conditions1)
+        interpretation.add(rule1)
+        interpretation.conditionsForConclusion(conclusion1) shouldBe listOf(
+            "A contains \"text A\"",
+            "b contains \"text b\"",
+            "Y contains \"text Y\"",
+            "z contains \"text z\"",
+            "p contains \"text p\"",
+            "q contains \"text q\"",
+            "r contains \"text r\"",
+            "s contains \"text s\""
         )
     }
 

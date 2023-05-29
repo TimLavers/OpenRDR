@@ -17,7 +17,21 @@ open class Rule(
     }
 
     fun summary(): RuleSummary {
-        return RuleSummary(id, conclusion, conditions)
+        return RuleSummary(id, conclusion, conditions, conditionTextsFromRoot())
+    }
+
+    fun conditionTextsFromRoot(): List<String> {
+        val result = mutableListOf<String>()
+        var rule: Rule? = this
+        while (rule != null) {
+            val sortedConditions = rule.conditions.map {
+                it.asText()
+            }.sortedWith(String.CASE_INSENSITIVE_ORDER)
+                .asReversed()//conditions for each rule are sorted for testing only
+            result.addAll(sortedConditions)
+            rule = rule.parent
+        }
+        return result.reversed() //list the parent conditions first
     }
 
     fun conditionsSatisfied(case: RDRCase): Boolean {
@@ -56,7 +70,7 @@ open class Rule(
     fun copy(): Rule {
         val copyChildRules = mutableSetOf<Rule>()
         childRules().forEach { r -> copyChildRules.add(r.copy()) }
-        val rule = Rule(id,null, conclusion?.copy(), conditions.toSet(), copyChildRules)
+        val rule = Rule(id, null, conclusion?.copy(), conditions.toSet(), copyChildRules)
         rule.parent = parent
         return rule
     }

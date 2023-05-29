@@ -21,7 +21,7 @@ class Defs : En {
     private lateinit var caseViewPO: CaseViewPO
     private lateinit var interpretationViewPO: InterpretationViewPO
     private lateinit var conditionSelectorPO: ConditionSelectorPO
-    private lateinit var conclusionsDialogPO: ConclusionsDialogPO
+    private lateinit var conclusionsViewPO: ConclusionsViewPO
     private lateinit var driver: WebDriver
 
     init {
@@ -42,7 +42,7 @@ class Defs : En {
             caseViewPO = CaseViewPO(driver)
             interpretationViewPO = InterpretationViewPO(driver)
             conditionSelectorPO = ConditionSelectorPO(driver)
-            conclusionsDialogPO = ConclusionsDialogPO(driver)
+            conclusionsViewPO = ConclusionsViewPO(driver)
         }
 
         When("stop the client application") {
@@ -184,6 +184,7 @@ class Defs : En {
             interpretationViewPO.enterVerifiedText(text)
         }
         Then("the interpretation field should contain the text {string}") { text: String ->
+            interpretationViewPO.selectOriginalTab()
             interpretationViewPO.interpretationText() shouldBe text
         }
         Then("the interpretation field should be empty") {
@@ -193,12 +194,16 @@ class Defs : En {
         And("the interpretation by the project of the case {word} is {string}") { caseName: String, text: String ->
             RESTClient().createRuleToAddText(caseName, text)
         }
-        And("I select the changes tab") {
-            interpretationViewPO.selectChangesTab()
+
+        And("I select the {word} tab") { tabName: String ->
+            when (tabName) {
+                "interpretation" -> interpretationViewPO.selectOriginalTab()
+                "conclusions" -> interpretationViewPO.selectConclusionsTab()
+                "changes" -> interpretationViewPO.selectChangesTab()
+                else -> throw IllegalArgumentException("Unknown tab name: $tabName")
+            }
         }
-        And("I select the interpretation tab") {
-            interpretationViewPO.selectOriginalTab()
-        }
+
         Then("I should see that the text {string} has been added") { text: String ->
             interpretationViewPO.requireAddedText(text)
         }
@@ -242,22 +247,38 @@ class Defs : En {
             conditionSelectorPO.requireConditionsShowing(expectedConditions)
         }
 
-        And("I open the conclusions dialog") {
-            conclusionsDialogPO.clickOpen()
-            conclusionsDialogPO.waitForDialogToOpen()
+        And("I build a rule to add the comment {string} with the condition {string}") { comment: String, condition: String ->
+            with(interpretationViewPO) {
+                enterVerifiedText(comment)
+                selectChangesTab()
+                buildRule(0)
+            }
+            with(conditionSelectorPO) {
+                clickConditionWithText(condition)
+                clickDone()
+            }
         }
 
-        And("close the conclusions dialog") {
-            conclusionsDialogPO.clickClose()
+        And("I build a rule to replace the interpretation by {string} with the condition {string}") { replacement: String, condition: String ->
+            with(interpretationViewPO) {
+                deleteAllText()
+                enterVerifiedText(replacement)
+                selectChangesTab()
+                buildRule(0)
+            }
+            with(conditionSelectorPO) {
+                clickConditionWithText(condition)
+                clickDone()
+            }
         }
 
         And("click the comment {string}") { comment: String ->
-            conclusionsDialogPO.clickComment(comment)
+            conclusionsViewPO.clickComment(comment)
         }
 
         Then("the conditions showing are:") { dataTable: DataTable ->
             val expectedConditions = dataTable.asList()
-            conclusionsDialogPO.requireConditionsToBeShown(*expectedConditions.toTypedArray())
+            conclusionsViewPO.requireConditionsToBeShown(*expectedConditions.toTypedArray())
         }
     }
 }
