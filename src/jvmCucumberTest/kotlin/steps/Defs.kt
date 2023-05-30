@@ -4,10 +4,7 @@ import io.cucumber.datatable.DataTable
 import io.cucumber.java8.En
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.UITestBase
-import io.rippledown.integration.pageobjects.CaseListPO
-import io.rippledown.integration.pageobjects.CaseViewPO
-import io.rippledown.integration.pageobjects.InterpretationViewPO
-import io.rippledown.integration.pageobjects.KBInfoPO
+import io.rippledown.integration.pageobjects.*
 import io.rippledown.integration.restclient.RESTClient
 import org.awaitility.Awaitility
 import org.openqa.selenium.WebDriver
@@ -23,6 +20,8 @@ class Defs : En {
     private lateinit var caseListPO: CaseListPO
     private lateinit var caseViewPO: CaseViewPO
     private lateinit var interpretationViewPO: InterpretationViewPO
+    private lateinit var conditionSelectorPO: ConditionSelectorPO
+    private lateinit var conclusionsViewPO: ConclusionsViewPO
     private lateinit var driver: WebDriver
 
     init {
@@ -42,6 +41,8 @@ class Defs : En {
             caseListPO = CaseListPO(driver)
             caseViewPO = CaseViewPO(driver)
             interpretationViewPO = InterpretationViewPO(driver)
+            conditionSelectorPO = ConditionSelectorPO(driver)
+            conclusionsViewPO = ConclusionsViewPO(driver)
         }
 
         When("stop the client application") {
@@ -64,7 +65,7 @@ class Defs : En {
             caseViewPO = caseListPO.select("CaseABC")
         }
 
-        When("a new case with the name {string} is stored on the server") { caseName: String ->
+        When("a new case with the name {word} is stored on the server") { caseName: String ->
             labProxy.copyCase(caseName)
         }
 
@@ -183,21 +184,26 @@ class Defs : En {
             interpretationViewPO.enterVerifiedText(text)
         }
         Then("the interpretation field should contain the text {string}") { text: String ->
+            interpretationViewPO.selectOriginalTab()
             interpretationViewPO.interpretationText() shouldBe text
         }
         Then("the interpretation field should be empty") {
             interpretationViewPO.interpretationText() shouldBe ""
         }
 
-        And("the interpretation by the project of the case {string} is {string}") { caseName: String, text: String ->
+        And("the interpretation by the project of the case {word} is {string}") { caseName: String, text: String ->
             RESTClient().createRuleToAddText(caseName, text)
         }
-        And("I select the changes tab") {
-            interpretationViewPO.selectChangesTab()
+
+        And("I select the {word} tab") { tabName: String ->
+            when (tabName) {
+                "interpretation" -> interpretationViewPO.selectOriginalTab()
+                "conclusions" -> interpretationViewPO.selectConclusionsTab()
+                "changes" -> interpretationViewPO.selectChangesTab()
+                else -> throw IllegalArgumentException("Unknown tab name: $tabName")
+            }
         }
-        And("I select the interpretation tab") {
-            interpretationViewPO.selectOriginalTab()
-        }
+
         Then("I should see that the text {string} has been added") { text: String ->
             interpretationViewPO.requireAddedText(text)
         }
@@ -217,8 +223,62 @@ class Defs : En {
         }
         When("I build a rule for the change on row {int}") { row: Int ->
             interpretationViewPO.buildRule(row)
-            interpretationViewPO.clickDone()
+            conditionSelectorPO.clickDone()
+        }
+        When("I complete the rule") {
+            conditionSelectorPO.clickDone()
+        }
 
+        When("I start to build a rule for the change on row {int}") { row: Int ->
+            interpretationViewPO.buildRule(row)
+        }
+        When("I select the condition in position {int}") { index: Int ->
+            conditionSelectorPO.clickConditionWithIndex(index)
+        }
+        When("I select the {word} condition") { position: String ->
+            when (position) {
+                "first" -> conditionSelectorPO.clickConditionWithIndex(0)
+                "second" -> conditionSelectorPO.clickConditionWithIndex(1)
+                "third" -> conditionSelectorPO.clickConditionWithIndex(2)
+            }
+        }
+        Then("the conditions showing should be:") { dataTable: DataTable ->
+            val expectedConditions = dataTable.asList()
+            conditionSelectorPO.requireConditionsShowing(expectedConditions)
+        }
+
+        And("I build a rule to add the comment {string} with the condition {string}") { comment: String, condition: String ->
+            with(interpretationViewPO) {
+                enterVerifiedText(comment)
+                selectChangesTab()
+                buildRule(0)
+            }
+            with(conditionSelectorPO) {
+                clickConditionWithText(condition)
+                clickDone()
+            }
+        }
+
+        And("I build a rule to replace the interpretation by {string} with the condition {string}") { replacement: String, condition: String ->
+            with(interpretationViewPO) {
+                deleteAllText()
+                enterVerifiedText(replacement)
+                selectChangesTab()
+                buildRule(0)
+            }
+            with(conditionSelectorPO) {
+                clickConditionWithText(condition)
+                clickDone()
+            }
+        }
+
+        And("click the comment {string}") { comment: String ->
+            conclusionsViewPO.clickComment(comment)
+        }
+
+        Then("the conditions showing are:") { dataTable: DataTable ->
+            val expectedConditions = dataTable.asList()
+            conclusionsViewPO.requireConditionsToBeShown(*expectedConditions.toTypedArray())
         }
     }
 }

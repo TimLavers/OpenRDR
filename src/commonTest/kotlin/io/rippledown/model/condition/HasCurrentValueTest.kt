@@ -42,6 +42,19 @@ internal class HasCurrentValueTest: ConditionTestBase() {
     }
 
     @Test
+    fun holds() {
+        val hasCurrentValue = HasCurrentValue(clinicalNotes)
+        hasCurrentValue.holds(createCase("sheep")) shouldBe true
+        hasCurrentValue.holds(createCase("")) shouldBe false
+    }
+
+    @Test
+    fun nonAscii() {
+        val hasCurrentValue = HasCurrentValue(clinicalNotes)
+        hasCurrentValue.holds(createCase("<5 pmol/L")) shouldBe true
+    }
+
+    @Test
     fun currentValueBlank() {
         condition.holds(twoEpisodeCaseWithCurrentTSHValueBlank()) shouldBe false
     }

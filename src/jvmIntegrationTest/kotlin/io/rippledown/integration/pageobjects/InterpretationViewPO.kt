@@ -35,6 +35,11 @@ class InterpretationViewPO(private val driver: WebDriver) {
         return this
     }
 
+    fun selectConclusionsTab(): InterpretationViewPO {
+        driver.findElement(By.id(INTERPRETATION_TAB_CONCLUSIONS)).click()
+        return this
+    }
+
     fun selectOriginalTab(): InterpretationViewPO {
         driver.findElement(By.id(INTERPRETATION_TAB_ORIGINAL)).click()
         return this
@@ -158,11 +163,6 @@ class InterpretationViewPO(private val driver: WebDriver) {
 
     fun buildRule(row: Int): InterpretationViewPO {
         driver.findElement(By.id("$DIFF_VIEWER_BUILD_ICON$row")).click()
-        return this
-    }
-
-    fun clickDone(): InterpretationViewPO {
-        driver.findElement(By.id(CONDITION_SELECTOR_DONE_BUTTON)).click()
         return this
     }
 }

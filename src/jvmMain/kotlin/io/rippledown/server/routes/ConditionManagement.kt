@@ -12,7 +12,16 @@ import kotlinx.serialization.json.Json
 const val GET_OR_CREATE_CONDITION = "/api/condition/getOrCreate"
 
 fun Application.conditionManagement(application: ServerApplication) {
-    routing {
+        get(CONDITION_HINTS) {
+            val id = call.parameters["id"] ?: error("Invalid case id.")
+            val conditionHints = try {
+                application.conditionHintsForCase(id)
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.BadRequest)
+            }
+            call.respond(conditionHints)
+        }
+
         post(GET_OR_CREATE_CONDITION) {
             val str = call.receiveText()
             val prototype = Json.decodeFromString(Condition.serializer(), str)

@@ -26,7 +26,6 @@ data class Interpretation(
     }
 
     fun numberOfChanges() = diffList.numberOfChanges()
-    fun selectedChange() = diffList.selectedChange()
 
     fun add(ruleSummary: RuleSummary) {
         ruleSummaries.add(ruleSummary)
@@ -41,9 +40,9 @@ data class Interpretation(
     }
 
     fun conditionsForConclusion(conclusion: Conclusion): List<String> {
-        return ruleSummaries.first { ruleSummary -> conclusion == ruleSummary.conclusion }
-            .conditions.map { condition -> condition.asText() }
-            .sortedWith(String.CASE_INSENSITIVE_ORDER)
+        return ruleSummaries
+            .first { ruleSummary -> conclusion == ruleSummary.conclusion }
+            .conditionTextsFromRoot
     }
 
     fun idsOfRulesGivingConclusion(conclusion: Conclusion): Set<Int> {

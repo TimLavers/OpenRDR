@@ -9,6 +9,7 @@ import io.rippledown.kb.export.util.Zipper
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.diff.*
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.model.rule.ChangeTreeToRemoveConclusion
@@ -122,6 +123,8 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         }
     }
 
+    fun conditionHintsForCase(id: String): ConditionList = kb.conditionHintsForCase(case(id))
+
     fun moveAttributeJustBelow(movedId: Int, targetId: Int) {
         val moved = kb.attributeManager.getById(movedId)
         val target = kb.attributeManager.getById(targetId)
@@ -158,22 +161,23 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         return case.interpretation
     }
 
-    fun buildRule(interpretation: Interpretation): Interpretation {
-        val caseId = interpretation.caseId.id
+    fun buildRule(ruleRequest: RuleRequest): Interpretation {
+        val caseId = ruleRequest.caseId
         val case = case(caseId)
-        val diff = interpretation.selectedChange()
+        val diff = ruleRequest.diffList.selectedChange()
 
+        //build the rule
         startRuleSessionForDifference(caseId, diff)
-        //TODO add conditions before commit
+        ruleRequest.conditionList.conditions.forEach { condition ->
+            addConditionToCurrentRuleBuildingSession(condition)
+        }
         commitCurrentRuleSession()
 
+        //re-interpret the case
         kb.interpret(case)
 
-        //set the verified text of the new interpretation so the diff list can be recalculated
-        val updatedInterpretation = case.interpretation
-        updatedInterpretation.verifiedText = interpretation.verifiedText
-
         //reset the case's diff list to account of the updated interpretation
+        val updatedInterpretation = case.interpretation
         case.interpretation.diffList = diffList(updatedInterpretation)
 
         //put the updated case back into the map

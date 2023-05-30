@@ -57,6 +57,37 @@ class InterpretationTabsTest {
     }
 
     @Test
+    fun conclusionsTabShouldBeShowing() = runTest {
+        val vfc = VFC {
+            InterpretationTabs {
+                scope = this@runTest
+                interpretation = Interpretation()
+            }
+        }
+        val container = createRootFor(vfc)
+        with(container) {
+            requireConclusionsLabel("Conclusions")
+        }
+    }
+
+    @Test
+    fun conclusionsTabCanBeSelected() = runTest {
+        val text = "Go to Bondi."
+        val vfc = VFC {
+            InterpretationTabs {
+                interpretation = Interpretation().apply {
+                    add(RuleSummary(conclusion = Conclusion(text)))
+                }
+            }
+        }
+        val container = createRootFor(vfc)
+        with(container) {
+            selectConclusionsTab()
+            requireTreeItems(text)
+        }
+    }
+
+    @Test
     fun shouldBeAbleToSelectTheChangesTab() = runTest {
         val vfc = VFC {
             InterpretationTabs {

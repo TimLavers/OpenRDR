@@ -1,4 +1,4 @@
-package proxy
+package io.rippledown.interpretation
 
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
@@ -7,10 +7,22 @@ import io.rippledown.constants.interpretation.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import proxy.findById
 import react.dom.test.Simulate
 import react.dom.test.act
 import web.events.EventInit
 import web.html.HTMLElement
+
+suspend fun HTMLElement.selectConclusionsTab() {
+    val element = findById(INTERPRETATION_TAB_CONCLUSIONS)
+    act {
+        Simulate.click(element)
+    }
+}
+
+fun HTMLElement.requireConclusionsLabel(expected: String) {
+    findById(INTERPRETATION_TAB_CONCLUSIONS).textContent shouldBe expected
+}
 
 suspend fun HTMLElement.selectChangesTab() {
     val element = findById(INTERPRETATION_TAB_CHANGES)

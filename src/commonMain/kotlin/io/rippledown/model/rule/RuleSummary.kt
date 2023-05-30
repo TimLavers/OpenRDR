@@ -8,5 +8,6 @@ import kotlinx.serialization.Serializable
 data class RuleSummary(
     val id: Int = 0,
     val conclusion: Conclusion? = null,
-    val conditions: Set<Condition> = setOf()
+    val conditions: Set<Condition> = setOf(),
+    val conditionTextsFromRoot: List<String> = listOf()
 )

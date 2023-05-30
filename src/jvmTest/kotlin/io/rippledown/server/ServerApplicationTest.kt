@@ -7,7 +7,9 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.rippledown.CaseTestUtils
 import io.rippledown.model.*
+import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.GreaterThanOrEqualTo
+import io.rippledown.model.condition.HasCurrentValue
 import io.rippledown.model.condition.Is
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
@@ -123,6 +125,20 @@ internal class ServerApplicationTest {
         val updated = app.case(id)
         updated.interpretation shouldBe returnedInterpretation
         returnedInterpretation.diffList shouldBe DiffList(listOf(Addition("Verified.")))
+    }
+
+    @Test
+    fun `should return condition hints for a case`() {
+        val id = "Case1"
+        setUpCaseFromFile(id, app)
+        val case = app.case(id)
+        val expectedConditions = case.attributes
+            .filter { attribute ->
+                case.getLatest(attribute) != null
+            }.map { attribute ->
+                HasCurrentValue(attribute)
+            }
+        app.conditionHintsForCase(id) shouldBe ConditionList(expectedConditions)
     }
 
     @Test

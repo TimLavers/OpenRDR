@@ -1,6 +1,7 @@
 package io.rippledown.interpretation
 
 import Handler
+import io.rippledown.constants.interpretation.CONDITION_SELECTOR_BUTTONS
 import io.rippledown.constants.interpretation.CONDITION_SELECTOR_CANCEL_BUTTON
 import io.rippledown.constants.interpretation.CONDITION_SELECTOR_DONE_BUTTON
 import io.rippledown.constants.interpretation.CONDITION_SELECTOR_ROW
@@ -17,7 +18,7 @@ import web.cssom.JustifyContent.Companion.flexStart
 
 
 external interface ConditionSelectorHandler : Handler {
-    var conditionHints: List<Condition>
+    var conditions: List<Condition>
     var onDone: (conditionsPicked: List<Condition>) -> Unit
     var onCancel: () -> Unit
 }
@@ -29,16 +30,16 @@ val ConditionSelector = FC<ConditionSelectorHandler> { handler ->
         Checkbox {
             onChange = { _, checked ->
                 if (checked) {
-                    selectedConditions.add(handler.conditionHints[index])
+                    selectedConditions.add(handler.conditions[index])
                 } else {
-                    selectedConditions.remove(handler.conditionHints[index])
+                    selectedConditions.remove(handler.conditions[index])
                 }
             }
         }
     }.create()
 
     FormGroup {
-        handler.conditionHints.forEachIndexed { index, condition ->
+        handler.conditions.forEachIndexed { index, condition ->
             FormControlLabel {
                 id = "$CONDITION_SELECTOR_ROW$index"
                 control = CheckBoxControl(index)
@@ -47,7 +48,7 @@ val ConditionSelector = FC<ConditionSelectorHandler> { handler ->
         }
     }
     Box {
-        id = "condition_selector_buttons"
+        id = CONDITION_SELECTOR_BUTTONS
         sx {
             display = Display.flex
             justifyContent = flexStart

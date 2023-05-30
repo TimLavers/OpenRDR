@@ -2,6 +2,7 @@ package io.rippledown.interpretation
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.rippledown.constants.interpretation.CONDITION_SELECTOR_BUTTONS
 import io.rippledown.constants.interpretation.CONDITION_SELECTOR_CANCEL_BUTTON
 import io.rippledown.constants.interpretation.CONDITION_SELECTOR_DONE_BUTTON
 import io.rippledown.constants.interpretation.CONDITION_SELECTOR_ROW
@@ -24,7 +25,7 @@ fun HTMLElement.requireNumberOfConditions(count: Int) {
 
 fun HTMLElement.clickConditionWithIndex(index: Int) = findById("$CONDITION_SELECTOR_ROW$index").click()
 
-fun HTMLElement.conditionSelectorButtons() = findById("condition_selector_buttons")
+fun HTMLElement.conditionSelectorButtons() = findById(CONDITION_SELECTOR_BUTTONS)
 fun HTMLElement.clickDoneButton() = conditionSelectorButtons().findById(CONDITION_SELECTOR_DONE_BUTTON).click()
 fun HTMLElement.requireDoneButtonShowing() =
     conditionSelectorButtons().findById(CONDITION_SELECTOR_DONE_BUTTON) shouldNotBe null

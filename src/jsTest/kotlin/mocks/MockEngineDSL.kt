@@ -8,9 +8,12 @@ import io.ktor.utils.io.*
 import io.rippledown.constants.api.*
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.diff.RuleRequest
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import proxy.debug
 
 fun mock(config: EngineConfig) = EngineBuilder(config).build()
 
@@ -23,9 +26,11 @@ class EngineConfig {
     var returnCase: ViewableCase = createCase("The Case")
     var returnOperationResult: OperationResult = OperationResult()
     var returnInterpretation: Interpretation = Interpretation()
+    var returnConditionList: ConditionList = ConditionList()
 
     var expectedCaseId = ""
     var expectedInterpretation: Interpretation? = null
+    var expectedRuleRequest: RuleRequest? = null
 
     var expectedMovedAttributeId: Int? = null
     var expectedTargetAttributeId: Int? = null
@@ -62,12 +67,28 @@ private class EngineBuilder(private val config: EngineConfig) {
                 )
             }
 
-            VERIFIED_INTERPRETATION_SAVED, BUILD_RULE -> {
+            VERIFIED_INTERPRETATION_SAVED -> {
                 val body = request.body as TextContent
                 val bodyAsInterpretation = Json.decodeFromString(Interpretation.serializer(), body.text)
 
                 if (config.expectedInterpretation != null) {
                     bodyAsInterpretation shouldBe config.expectedInterpretation
+                }
+                respond(
+                    content = ByteReadChannel(
+                        json.encodeToString(config.returnInterpretation)
+                    ),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+            }
+
+            BUILD_RULE -> {
+                val body = request.body as TextContent
+                val bodyAsRuleRequest = Json.decodeFromString(RuleRequest.serializer(), body.text)
+
+                if (config.expectedRuleRequest != null) {
+                    bodyAsRuleRequest shouldBe config.expectedRuleRequest
                 }
                 respond(
                     content = ByteReadChannel(
@@ -102,6 +123,19 @@ private class EngineBuilder(private val config: EngineConfig) {
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
                 )
             }
+
+            CONDITION_HINTS -> {
+                debug("CONDITION_HINTS will return ${config.returnConditionList}")
+                if (config.expectedCaseId.isNotBlank()) request.url.parameters["id"] shouldBe config.expectedCaseId
+                respond(
+                    content = ByteReadChannel(
+                        json.encodeToString(config.returnConditionList)
+                    ),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+            }
+
 
             else -> {
                 error("Unhandled ${request.url.fullPath}")

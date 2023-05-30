@@ -22,7 +22,7 @@ class ConditionSelectorTest {
     fun shouldListConditionsThatAreHinted() = runTest {
         val vfc = VFC {
             ConditionSelector {
-                conditionHints = conditions
+                this.conditions = conditions
             }
         }
         checkContainer(vfc) { container ->
@@ -37,7 +37,7 @@ class ConditionSelectorTest {
         val conditionsThatWereSelected = mutableListOf<Condition>()
         val vfc = VFC {
             ConditionSelector {
-                conditionHints = conditions
+                this.conditions = conditions
                 onDone = { selectedConditions ->
                     conditionsThatWereSelected.addAll(selectedConditions)
                 }
@@ -58,7 +58,7 @@ class ConditionSelectorTest {
         val conditionsThatWereSelected = mutableListOf<Condition>()
         val vfc = VFC {
             ConditionSelector {
-                conditionHints = conditions
+                this.conditions = conditions
                 onDone = { selectedConditions ->
                     conditionsThatWereSelected.addAll(selectedConditions)
                 }
@@ -81,7 +81,7 @@ class ConditionSelectorTest {
         var cancelClicked = false
         val vfc = VFC {
             ConditionSelector {
-                conditionHints = conditions
+                this.conditions = conditions
                 onCancel = {
                     cancelClicked = true
                 }

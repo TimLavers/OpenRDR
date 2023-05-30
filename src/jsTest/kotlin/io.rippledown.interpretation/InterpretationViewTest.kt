@@ -9,8 +9,6 @@ import io.rippledown.model.rule.RuleSummary
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
-import proxy.enterInterpretation
-import proxy.requireInterpretation
 import proxy.waitForEvents
 import react.VFC
 import react.dom.createRootFor
