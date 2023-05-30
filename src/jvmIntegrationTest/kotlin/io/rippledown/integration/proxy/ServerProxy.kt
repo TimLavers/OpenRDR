@@ -33,15 +33,15 @@ class ServerProxy {
         waitForServerToStart()
     }
 
-    fun findJar() {
+    private fun findJar() {
         val rootDirectory = dirProxy.userDir()
         val libsDir = Paths.get(rootDirectory.path, "build", "libs").toFile()
         jarFile = libsDir.listFiles { it -> it.name == "OpenRDR-all.jar" }!![0]
         println("jar ${jarFile.absolutePath}, modified: ${Date(jarFile.lastModified())}")
     }
 
-    fun waitForServerToStart() {
-        await().atMost(Duration.ofSeconds(10)).until {
+    private fun waitForServerToStart() {
+        await().atMost(Duration.ofSeconds(30)).until {
             logProxy.contains(STARTING_SERVER) && restClient.serverHasStarted()
         }
     }

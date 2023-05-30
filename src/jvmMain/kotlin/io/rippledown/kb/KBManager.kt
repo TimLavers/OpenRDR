@@ -3,15 +3,23 @@ package io.rippledown.kb
 import io.rippledown.model.KBInfo
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.util.EntityRetrieval
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 class KBManager(private val persistenceProvider: PersistenceProvider) {
     private val kbInfos = mutableSetOf<KBInfo>()
+    private val logger: Logger = LoggerFactory.getLogger("rdr")
 
     init {
         persistenceProvider.idStore().data().forEach{
             val id = it.key
-            val kbInfo = persistenceProvider.kbPersistence(id).kbInfo()
-            kbInfos.add(kbInfo)
+            try {
+                val kbInfo = persistenceProvider.kbPersistence(id).kbInfo()
+                kbInfos.add(kbInfo)
+            } catch (e: Exception) {
+                // todo test for this
+                logger.warn("Could not open KB for $it, as shown.", e)
+            }
         }
     }
 

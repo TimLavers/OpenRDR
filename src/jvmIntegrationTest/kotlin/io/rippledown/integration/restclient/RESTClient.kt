@@ -70,6 +70,7 @@ class RESTClient {
 
     fun getOrCreateCondition(prototype: Condition): Condition = runBlocking {
         jsonClient.post(endpoint + GET_OR_CREATE_CONDITION) {
+            contentType(ContentType.Application.Json)
             setBody(prototype)
         }.body()
     }
