@@ -21,7 +21,7 @@ class PostgresPersistenceProviderTest {
         ppp = PostgresPersistenceProvider()
     }
 
-//    @Test
+    @Test
     fun cleanupAllDBs() {
         val allDBs = allDatabasesInSystem()
         println("allDBs BEFORE = ${allDBs}")

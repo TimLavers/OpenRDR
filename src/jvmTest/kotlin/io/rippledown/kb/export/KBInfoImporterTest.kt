@@ -1,6 +1,7 @@
 package io.rippledown.kb.export
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.rippledown.model.KBInfo
 import java.io.File
 import kotlin.test.Test
@@ -16,7 +17,7 @@ class KBInfoImporterTest : ExporterTestBase() {
         val textFile = File(tempDir,"Stuff.txt")
         KBInfoExporter(ExportFile(textFile, "KBInfo"), kbInfo).export()
         val rebuilt = KBInfoImporter(textFile).import()
-        rebuilt.id shouldBe kbInfo.id
+        rebuilt.id shouldNotBe kbInfo.id
         rebuilt.name shouldBe kbInfo.name
     }
 
@@ -28,7 +29,7 @@ class KBInfoImporterTest : ExporterTestBase() {
         val textFile = File(tempDir,"Stuff.txt")
         KBInfoExporter(ExportFile(textFile, "KBInfo"), kbInfo).export()
         val rebuilt = KBInfoImporter(textFile).import()
-        rebuilt.id shouldBe kbInfo.id
+        rebuilt.id shouldNotBe kbInfo.id
         rebuilt.name shouldBe kbInfo.name
     }
 }

@@ -8,8 +8,8 @@ class KBInfoImporter(private val kbDetailsFile: File) {
 
     fun import(): KBInfo {
         val lines = Files.readAllLines(kbDetailsFile.toPath())
-        val id = lines[0].trim()
         val name = lines[1].trim()
-        return KBInfo(id, name)
+        // The id is used to identify the db, so we need a new id.
+        return KBInfo(name)
     }
 }

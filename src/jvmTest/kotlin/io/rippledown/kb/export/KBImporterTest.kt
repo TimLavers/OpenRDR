@@ -1,6 +1,7 @@
 package io.rippledown.kb.export
 
 import io.kotest.matchers.equality.shouldBeEqualToComparingFields
+import io.kotest.matchers.maps.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.rippledown.kb.KB
 import io.rippledown.model.*
@@ -28,7 +29,7 @@ class KBImporterTest : ExporterTestBase() {
         val original = KB(emptyKB)
         KBExporter(tempDir, original).export()
         val rebuilt = KBImporter(tempDir, persistenceProvider).import()
-        rebuilt.kbInfo shouldBe original.kbInfo
+        rebuilt.kbInfo.name shouldBe original.kbInfo.name
         rebuilt.allCases().size shouldBe 0
         rebuilt.caseViewManager.allAttributesInOrder().size shouldBe 0
         rebuilt.ruleTree.size() shouldBe 1
@@ -70,12 +71,9 @@ class KBImporterTest : ExporterTestBase() {
         kb.caseViewManager.setAttributes(listOf(hdl, ldl, glucose))
 
         // Export and import.
-        // Rebuild the persistence provider so that we're not attempting to have
-        // two copies of the same KB.
         KBExporter(tempDir, kb).export()
-        persistenceProvider = InMemoryPersistenceProvider()
         val rebuilt = KBImporter(tempDir, persistenceProvider).import()
-        rebuilt.kbInfo shouldBe kb.kbInfo
+        rebuilt.kbInfo.name shouldBe kb.kbInfo.name
         rebuilt.allCases().size shouldBe 3
         rebuilt.getCaseByName(case1.name) shouldBeEqualToComparingFields kb.getCaseByName(case1.name)
 
@@ -83,5 +81,7 @@ class KBImporterTest : ExporterTestBase() {
 
         rebuilt.ruleTree.size() shouldBe 2
         rebuilt.ruleTree.root.childRules().first().structurallyEqual(kb.ruleTree.root.childRules().first()) shouldBe true
+
+        persistenceProvider.idStore().data() shouldHaveSize 2
     }
 }
