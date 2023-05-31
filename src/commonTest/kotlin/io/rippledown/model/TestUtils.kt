@@ -7,7 +7,8 @@ import io.rippledown.model.rule.RuleSummary
 
 import io.kotest.matchers.Matcher
 import io.kotest.matchers.MatcherResult
-//import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.Condition
+
 
 fun daysAgo(n: Int): Long {
     return defaultDate - n * 24 * 60 * 60 * 1000
@@ -48,6 +49,7 @@ fun createCaseWithInterpretation(
     case.interpretation = interp
     return case
 }
+
 fun beSameAs(other: Condition) = Matcher<Condition> { value ->
     MatcherResult(
         value.sameAs(other),

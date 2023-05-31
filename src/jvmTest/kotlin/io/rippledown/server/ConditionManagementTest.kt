@@ -7,11 +7,9 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.verify
+import io.rippledown.constants.api.CONDITION_HINTS
 import io.rippledown.model.Attribute
-import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.IsHigh
-import io.rippledown.model.condition.IsLow
-import io.rippledown.model.condition.IsNormal
+import io.rippledown.model.condition.*
 import io.rippledown.server.routes.GET_OR_CREATE_CONDITION
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
