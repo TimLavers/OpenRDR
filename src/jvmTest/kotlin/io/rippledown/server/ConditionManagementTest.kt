@@ -40,8 +40,8 @@ class ConditionManagementTest: OpenRDRServerTestBase() {
         val caseId = "Bronte"
         val conditionList = ConditionList(
             listOf(
-                IsNormal(Attribute("WaveHeight")),
-                IsLow(Attribute("SeaTemp"))
+                IsNormal(1, Attribute("WaveHeight", 1)),
+                IsLow(2, Attribute("SeaTemp", 2))
             )
         )
         every { serverApplication.conditionHintsForCase(caseId) } returns conditionList

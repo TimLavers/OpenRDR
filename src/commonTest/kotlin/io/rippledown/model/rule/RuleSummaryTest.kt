@@ -20,14 +20,14 @@ internal class RuleSummaryTest: ConditionTestBase() {
         val conditions2 = mutableSetOf<Condition>()
         conditions2.add(SlightlyLow(2000, glucose, 10))
         conditions2.add(IsNormal(2001, tsh))
-        val conditionsFromRoot2 = mutableListOf<Condition>(IsHigh(glucose), IsHigh(tsh)).apply { addAll(conditions2) }
+        val conditionsFromRoot2 = mutableListOf<Condition>(IsHigh(1, glucose), IsHigh(2, tsh)).apply { addAll(conditions2) }
         rs2 = RuleSummary(12, null, conditions2, conditionsFromRoot2.map { it.asText() })
 
         val conditions3 = mutableSetOf<Condition>()
         conditions3.add(IsNormal(3000, glucose))
         conditions3.add(IsNormal(3001, tsh))
         conditions3.add(ContainsText(3002, clinicalNotes, "goats"))
-        val conditionsFromRoot3 = mutableListOf<Condition>(IsHigh(glucose), IsHigh(tsh)).apply { addAll(conditions3) }
+        val conditionsFromRoot3 = mutableListOf<Condition>(IsHigh(1, glucose), IsHigh(2, tsh)).apply { addAll(conditions3) }
         rs3 = RuleSummary(13, conclusion, conditions3, conditionsFromRoot3.map { it.asText() })
     }
 
@@ -51,17 +51,17 @@ internal class RuleSummaryTest: ConditionTestBase() {
     fun conditionsFromRoot() {
         empty.conditionTextsFromRoot shouldBe emptyList()
         rs2.conditionTextsFromRoot shouldBe listOf(
-            IsHigh(glucose),
-            IsHigh(tsh),
-            SlightlyLow(glucose, 10),
-            IsNormal(tsh)
+            IsHigh(1, glucose),
+            IsHigh(2, tsh),
+            SlightlyLow(3, glucose, 10),
+            IsNormal(4, tsh)
         ).map { it.asText() }
         rs3.conditionTextsFromRoot shouldBe listOf(
-            IsHigh(glucose),
-            IsHigh(tsh),
-            IsNormal(glucose),
-            IsNormal(tsh),
-            ContainsText(clinicalNotes, "goats")
+            IsHigh(1, glucose),
+            IsHigh(2, tsh),
+            IsNormal(3, glucose),
+            IsNormal(4, tsh),
+            ContainsText(5, clinicalNotes, "goats")
         ).map { it.asText() }
     }
 

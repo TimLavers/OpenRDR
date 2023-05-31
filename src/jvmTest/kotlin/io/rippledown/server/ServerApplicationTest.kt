@@ -136,7 +136,7 @@ internal class ServerApplicationTest {
             .filter { attribute ->
                 case.getLatest(attribute) != null
             }.map { attribute ->
-                HasCurrentValue(attribute)
+                HasCurrentValue(1, attribute)
             }
         app.conditionHintsForCase(id) shouldBe ConditionList(expectedConditions)
     }

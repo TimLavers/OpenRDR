@@ -252,22 +252,22 @@ class InterpretationTest {
     @Test
     fun conditionsForConclusionShouldListConditionsOfParentRulesFirst() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val conclusion0 = Conclusion("First conc")
-        val conclusion1 = Conclusion("Second conc")
+        val conclusion0 = Conclusion(1, "First conc")
+        val conclusion1 = Conclusion(2, "Second conc")
         val conditions0 = setOf(
-            ContainsText(Attribute("z"), "text z"),
-            ContainsText(Attribute("A"), "text A"),
-            ContainsText(Attribute("Y"), "text Y"),
-            ContainsText(Attribute("b"), "text b"),
+            ContainsText(1, Attribute("z", 26), "text z"),
+            ContainsText(2, Attribute("A", 1), "text A"),
+            ContainsText(3, Attribute("Y", 25), "text Y"),
+            ContainsText(4, Attribute("b", 2), "text b"),
         )
         val conditions1 = setOf(
-            ContainsText(Attribute("r"), "text r"),
-            ContainsText(Attribute("s"), "text s"),
-            ContainsText(Attribute("p"), "text p"),
-            ContainsText(Attribute("q"), "text q"),
+            ContainsText(5, Attribute("r", 18), "text r"),
+            ContainsText(6, Attribute("s", 19), "text s"),
+            ContainsText(7, Attribute("p", 16), "text p"),
+            ContainsText(8, Attribute("q", 17), "text q"),
         )
-        val rule0 = Rule("r0", null, conclusion0, conditions0)
-        val rule1 = Rule("r1", rule0, conclusion1, conditions1)
+        val rule0 = Rule(0, null, conclusion0, conditions0)
+        val rule1 = Rule(1, rule0, conclusion1, conditions1)
         interpretation.add(rule1)
         interpretation.conditionsForConclusion(conclusion1) shouldBe listOf(
             "A contains \"text A\"",

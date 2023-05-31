@@ -147,17 +147,17 @@ internal class RuleTest : RuleTestBase() {
 
     @Test
     fun summary_should_contain_conditions_from_root() {
-        val conditions1 = setOf(cond("a"), cond("b"))
-        val rule1 = Rule("r1", null, null, conditions1)
-        rule1.summary().conditionTextsFromRoot shouldBe listOf(cond("a"), cond("b")).map { it.asText() }
+        val conditions1 = setOf(createCondition("a"), createCondition("b"))
+        val rule1 = Rule(1, null, null, conditions1)
+        rule1.summary().conditionTextsFromRoot shouldBe listOf(createCondition("a"), createCondition("b")).map { it.asText() }
 
-        val conditions2 = setOf(cond("x"), cond("y"))
-        val rule2 = Rule("r2", rule1, conclusion2, conditions2)
+        val conditions2 = setOf(createCondition("x"), createCondition("y"))
+        val rule2 = Rule(2, rule1, conclusion2, conditions2)
         rule2.summary().conditionTextsFromRoot shouldBe listOf(
-            cond("a"),
-            cond("b"),
-            cond("x"),
-            cond("y")
+            createCondition("a"),
+            createCondition("b"),
+            createCondition("x"),
+            createCondition("y")
         ).map {
             it.asText()
         }
@@ -362,21 +362,21 @@ internal class RuleTest : RuleTestBase() {
 
     @Test
     fun should_list_conditions_for_rule_with_null_parent() {
-        val child = Rule("c", null, conclusion1, setOf(cond("a"), cond("b")))
-        child.conditionTextsFromRoot() shouldBe listOf(cond("a"), cond("b")).map { it.asText() }
+        val child = Rule(99, null, conclusion1, setOf(createCondition("a"), createCondition("b")))
+        child.conditionTextsFromRoot() shouldBe listOf(createCondition("a"), createCondition("b")).map { it.asText() }
     }
 
     @Test
     fun should_list_conditions_for_rule_with_not_null_parent() {
-        val parent = Rule("r", null, conclusion1, setOf(cond("x"), cond("y"), cond("z")))
-        val child = Rule("c", parent, conclusion2, setOf(cond("a"), cond("b"), cond("c")))
+        val parent = Rule(23, null, conclusion1, setOf(createCondition("x"), createCondition("y"), createCondition("z")))
+        val child = Rule(24, parent, conclusion2, setOf(createCondition("a"), createCondition("b"), createCondition("c")))
         child.conditionTextsFromRoot() shouldBe listOf(
-            cond("x"),
-            cond("y"),
-            cond("z"),
-            cond("a"),
-            cond("b"),
-            cond("c")
+            createCondition("x"),
+            createCondition("y"),
+            createCondition("z"),
+            createCondition("a"),
+            createCondition("b"),
+            createCondition("c")
         ).map { it.asText() }
 
     }

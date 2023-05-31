@@ -269,9 +269,8 @@ class KBTest {
 
     @Test
     fun `should return condition hints for case`() {
-        val kb = KB("Diabetes")
         val caseWithGlucoseAttribute = createCase("A", "1.0")
-        val expectedCondition = HasCurrentValue(Attribute("Glucose"))
+        val expectedCondition = kb.conditionManager.getOrCreate(HasCurrentValue(null, glucose()))
         kb.conditionHintsForCase(caseWithGlucoseAttribute) shouldBe ConditionList(listOf(expectedCondition))
     }
 
