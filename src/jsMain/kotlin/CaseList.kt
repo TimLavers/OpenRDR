@@ -52,30 +52,11 @@ val CaseList = FC<CaseListHandler> { handler ->
             item = true
             id = CASELIST_ID
             xs = 2
-            List {
-                sx {
-                    cursor = pointer
-                    width = 200.px
-                    overflowY = Overflow.scroll
-                    maxHeight = 500.px
-                }
-                dense = true
-
-                for (caseId in handler.caseIds) {
-                    ListItemButton {
-                        ListItemText {
-                            +caseId.name
-                        }
-                        selected = currentCase?.name == caseId.name
-                        id = "$CASE_ID_PREFIX${caseId.name}"
-                        onClick = {
-                            updateCurrentCase(caseId.name)
-                        }
-                        sx {
-                            paddingTop = 0.px
-                            paddingBottom = 0.px
-                        }
-                    }
+            CaseSelector{
+                caseIds = handler.caseIds
+                case = currentCase
+                selectCase = { id ->
+                    updateCurrentCase(id)
                 }
             }
         }

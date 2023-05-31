@@ -9,7 +9,7 @@ import react.VFC
 import react.dom.createRootFor
 import kotlin.test.Test
 
-class CaseQueueTest {
+class CasePollerTest {
 
     @Test
     fun shouldNotShowCaseListIfThereAreNoCases() = runTest {
@@ -17,7 +17,7 @@ class CaseQueueTest {
             returnCasesInfo = CasesInfo(emptyList())
         }
         val vfc = VFC {
-            CaseQueue {
+            CasePoller {
                 scope = this@runTest
                 api = Api(mock(config))
             }
@@ -42,7 +42,7 @@ class CaseQueueTest {
         }
 
         val vfc = VFC {
-            CaseQueue {
+            CasePoller {
                 api = Api(mock(config))
                 scope = this@runTest
             }
@@ -68,7 +68,7 @@ class CaseQueueTest {
         }
 
         val vfc = VFC {
-            CaseQueue {
+            CasePoller {
                 api = Api(mock(config))
                 scope = this@runTest
             }
@@ -98,7 +98,7 @@ class CaseQueueTest {
             returnCase = createCase(case1)
         }
         val vfc = VFC {
-            CaseQueue {
+            CasePoller {
                 api = Api(mock(config))
                 scope = this@runTest
             }
@@ -125,7 +125,7 @@ class CaseQueueTest {
         }
 
         val vfc = VFC {
-            CaseQueue {
+            CasePoller {
                 api = Api(mock(config))
                 scope = this@runTest
             }
@@ -154,7 +154,7 @@ class CaseQueueTest {
         }
 
         val vfc = VFC {
-            CaseQueue {
+            CasePoller {
                 api = Api(mock(config))
                 scope = this@runTest
             }
@@ -186,7 +186,7 @@ class CaseQueueTest {
             returnCase = createCase(caseName2)
         }
         val vfc = VFC {
-            CaseQueue {
+            CasePoller {
                 api = Api(mock(config))
                 scope = this@runTest
             }
@@ -225,7 +225,7 @@ class CaseQueueTest {
             returnCase = createCase(case1)
         }
         val vfc = VFC {
-            CaseQueue {
+            CasePoller {
                 api = Api(mock(config))
                 scope = this@runTest
             }
