@@ -1,3 +1,6 @@
+package io.rippledown.caselist
+
+import Api
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.createCase

@@ -1,4 +1,8 @@
+package io.rippledown.caseview
+
 import io.kotest.matchers.shouldBe
+import io.rippledown.caseview.EpisodeDateCell
+import io.rippledown.caseview.formatDate
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.toInstant
 import proxy.findById

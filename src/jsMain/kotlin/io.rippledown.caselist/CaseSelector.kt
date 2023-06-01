@@ -1,5 +1,8 @@
+package io.rippledown.caselist
+
+import Handler
+import debug
 import io.rippledown.model.CaseId
-import io.rippledown.model.caseview.ViewableCase
 import mui.material.List
 import mui.material.ListItemButton
 import mui.material.ListItemText
@@ -11,7 +14,7 @@ import web.cssom.px
 
 external interface CaseSelectorHandler : Handler {
     var caseIds: List<CaseId>
-    var case: ViewableCase?
+    var selectedCaseName: String?
     var selectCase: (id: String) -> Unit
 }
 
@@ -30,7 +33,8 @@ val CaseSelector = FC<CaseSelectorHandler> { handler ->
                 ListItemText {
                     +caseId.name
                 }
-                selected = handler.case?.name == caseId.name
+                selected = handler.selectedCaseName == caseId.name
+                debug("item ${caseId.name} selected: $selected")
                 id = "$CASE_ID_PREFIX${caseId.name}"
                 onClick = {
                     handler.selectCase(caseId.name)

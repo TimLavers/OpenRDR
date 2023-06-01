@@ -1,3 +1,6 @@
+package io.rippledown.caseview
+
+import Api
 import io.kotest.assertions.asClue
 import io.kotest.matchers.shouldBe
 import io.rippledown.interpretation.*

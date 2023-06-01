@@ -1,3 +1,7 @@
+package io.rippledown.caselist
+
+import io.rippledown.caseview.CaseView
+import Handler
 import io.rippledown.interpretation.ConditionSelector
 import io.rippledown.model.CaseId
 import io.rippledown.model.Interpretation
@@ -6,16 +10,10 @@ import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.diff.RuleRequest
 import kotlinx.coroutines.launch
 import mui.material.Grid
-import mui.material.List
-import mui.material.ListItemButton
-import mui.material.ListItemText
-import mui.system.sx
 import react.FC
 import react.memo
 import react.useState
-import web.cssom.Cursor.Companion.pointer
-import web.cssom.Overflow
-import web.cssom.px
+import xs
 
 const val CASELIST_ID = "case_list_container"
 const val CASE_ID_PREFIX = "case_list_item_"
@@ -54,7 +52,7 @@ val CaseList = FC<CaseListHandler> { handler ->
             xs = 2
             CaseSelector{
                 caseIds = handler.caseIds
-                case = currentCase
+                selectedCaseName = currentCase?.name
                 selectCase = { id ->
                     updateCurrentCase(id)
                 }
