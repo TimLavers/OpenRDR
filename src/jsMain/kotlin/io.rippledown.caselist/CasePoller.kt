@@ -1,3 +1,6 @@
+package io.rippledown.caselist
+
+import Handler
 import io.rippledown.constants.caseview.CASES
 import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import io.rippledown.model.CasesInfo
@@ -11,9 +14,9 @@ import kotlin.time.Duration.Companion.seconds
 
 val POLL_PERIOD = 0.5.seconds
 
-external interface CaseQueueHandler : Handler
+external interface CasePollerHandler : Handler
 
-val CaseQueue = FC<CaseQueueHandler> { handler ->
+val CasePoller = FC<CasePollerHandler> { handler ->
     var casesInfo by useState(CasesInfo(emptyList(), ""))
 
     useEffectOnce {

@@ -1,4 +1,7 @@
+package io.rippledown.caseview
+
 import io.kotest.matchers.shouldBe
+import io.rippledown.caseview.CaseTableBody
 import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.caseview.CaseViewProperties

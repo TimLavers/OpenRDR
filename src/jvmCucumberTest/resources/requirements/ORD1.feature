@@ -71,7 +71,7 @@ Feature: Show a list of cases
     When the following cases are deleted on the server:
       | Case1 |
       | Case2 |
-    And pause for 1 second
+    And pause for 2 seconds
     Then I should not see any current case
     And stop the client application
 

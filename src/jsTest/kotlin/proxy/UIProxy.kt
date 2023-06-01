@@ -1,8 +1,8 @@
 package proxy
 
-import CASEVIEW_CASE_NAME_ID
-import CASE_ID_PREFIX
-import POLL_PERIOD
+import io.rippledown.caseview.CASEVIEW_CASE_NAME_ID
+import io.rippledown.caselist.CASE_ID_PREFIX
+import io.rippledown.caselist.POLL_PERIOD
 import io.kotest.matchers.shouldBe
 import io.rippledown.constants.caseview.CASES
 import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
@@ -21,11 +21,7 @@ fun HTMLElement.requireCaseToBeSelected(caseName: String) {
     findById(CASEVIEW_CASE_NAME_ID).textContent shouldBe caseName
 }
 
-fun HTMLElement.requireNamesToBeShowingOnCaseList(vararg caseNames: String) {
-    caseNames.forEach {
-        findById("$CASE_ID_PREFIX$it").textContent shouldBe it
-    }
-}
+
 
 suspend fun waitForEvents(timeout: Long = 150) {
     withContext(Default) {
