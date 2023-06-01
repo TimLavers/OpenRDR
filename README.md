@@ -9,6 +9,15 @@ documentation is [OpenRDR](./documentation/openrdr.md).
 ## Setup
 Install Java 17 and Gradle.
 
+OpenRDR uses Postgres as its persistence provider. The following environment variables are required in order to
+allow connection to the Postgres server:
+- `OPEN_RDR_DB_URL`: the url of the Postgres server
+- `OPEN_RDR_DB_USER`: name of a user with database creation, modification and deletion privileges
+- `OPEN_RDR_DB_PASSWORD`: password for the user above.
+
+The default values for the Postgres parameters are `jdbc:postgresql://localhost:5432/postgres`, `postgres` and `postgres`.
+
+## Development
 Import the Gradle project into IntelliJ.
 
 ## Running the tests
