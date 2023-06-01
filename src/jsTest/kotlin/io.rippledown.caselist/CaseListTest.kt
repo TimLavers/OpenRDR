@@ -1,3 +1,6 @@
+package io.rippledown.caselist
+
+import Api
 import io.kotest.matchers.shouldBe
 import io.rippledown.interpretation.*
 import io.rippledown.model.*
@@ -38,8 +41,8 @@ class CaseListTest {
         checkContainer(vfc) { container ->
             with(container) {
                 findAllById(CASE_ID_PREFIX).length shouldBe 2
-                val elementA = findById("${CASE_ID_PREFIX}$caseA")
-                val elementB = findById("${CASE_ID_PREFIX}$caseB")
+                val elementA = findById("$CASE_ID_PREFIX$caseA")
+                val elementB = findById("$CASE_ID_PREFIX$caseB")
                 elementA.textContent shouldBe caseA
                 elementB.textContent shouldBe caseB
                 printJSON()

@@ -1,4 +1,5 @@
 import emotion.react.css
+import io.rippledown.caselist.CasePoller
 import io.rippledown.kb.KBInfoPane
 import kotlinx.coroutines.CoroutineScope
 import react.FC
@@ -29,7 +30,7 @@ val OpenRDRUI = FC<Handler> { handler ->
         KBInfoPane{
             api = handler.api
         }
-        CaseQueue {
+        CasePoller {
             scope = handler.scope
             api = handler.api
         }

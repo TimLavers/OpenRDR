@@ -1,3 +1,6 @@
+package io.rippledown.caselist
+
+import Api
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.createCase
@@ -9,7 +12,7 @@ import react.VFC
 import react.dom.createRootFor
 import kotlin.test.Test
 
-class CaseQueueTest {
+class CasePollerTest {
 
     @Test
     fun shouldNotShowCaseListIfThereAreNoCases() = runTest {
@@ -17,7 +20,7 @@ class CaseQueueTest {
             returnCasesInfo = CasesInfo(emptyList())
         }
         val vfc = VFC {
-            CaseQueue {
+            CasePoller {
                 scope = this@runTest
                 api = Api(mock(config))
             }
@@ -42,7 +45,7 @@ class CaseQueueTest {
         }
 
         val vfc = VFC {
-            CaseQueue {
+            CasePoller {
                 api = Api(mock(config))
                 scope = this@runTest
             }
@@ -68,7 +71,7 @@ class CaseQueueTest {
         }
 
         val vfc = VFC {
-            CaseQueue {
+            CasePoller {
                 api = Api(mock(config))
                 scope = this@runTest
             }
@@ -98,7 +101,7 @@ class CaseQueueTest {
             returnCase = createCase(case1)
         }
         val vfc = VFC {
-            CaseQueue {
+            CasePoller {
                 api = Api(mock(config))
                 scope = this@runTest
             }
@@ -125,7 +128,7 @@ class CaseQueueTest {
         }
 
         val vfc = VFC {
-            CaseQueue {
+            CasePoller {
                 api = Api(mock(config))
                 scope = this@runTest
             }
@@ -154,7 +157,7 @@ class CaseQueueTest {
         }
 
         val vfc = VFC {
-            CaseQueue {
+            CasePoller {
                 api = Api(mock(config))
                 scope = this@runTest
             }
@@ -186,7 +189,7 @@ class CaseQueueTest {
             returnCase = createCase(caseName2)
         }
         val vfc = VFC {
-            CaseQueue {
+            CasePoller {
                 api = Api(mock(config))
                 scope = this@runTest
             }
@@ -225,7 +228,7 @@ class CaseQueueTest {
             returnCase = createCase(case1)
         }
         val vfc = VFC {
-            CaseQueue {
+            CasePoller {
                 api = Api(mock(config))
                 scope = this@runTest
             }

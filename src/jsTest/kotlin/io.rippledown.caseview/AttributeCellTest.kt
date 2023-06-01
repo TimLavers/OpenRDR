@@ -1,3 +1,5 @@
+package io.rippledown.caseview
+
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
 import kotlinx.coroutines.test.runTest
