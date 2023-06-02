@@ -12,22 +12,22 @@ import react.dom.checkContainer
 import kotlin.test.Test
 
 class ConditionSelectorTest {
-    val attribute = Attribute("x", 1)
-    val isHigh = IsHigh(0, attribute)
-    val isLow = IsLow(1, attribute)
-    val isNormal = IsNormal(2, attribute)
-    val conditions = listOf(isHigh, isLow, isNormal)
+    private val attribute = Attribute("x", 1)
+    private val isHigh = IsHigh(0, attribute)
+    private val isLow = IsLow(1, attribute)
+    private val isNormal = IsNormal(2, attribute)
+    private val threeConditions = listOf(isHigh, isLow, isNormal)
 
     @Test
     fun shouldListConditionsThatAreHinted() = runTest {
         val vfc = VFC {
             ConditionSelector {
-                this.conditions = conditions
+                this.conditions = threeConditions
             }
         }
         checkContainer(vfc) { container ->
             with(container) {
-                requireConditions(conditions.map { it.asText() })
+                requireConditions(threeConditions.map { it.asText() })
             }
         }
     }
@@ -37,7 +37,7 @@ class ConditionSelectorTest {
         val conditionsThatWereSelected = mutableListOf<Condition>()
         val vfc = VFC {
             ConditionSelector {
-                this.conditions = conditions
+                this.conditions = threeConditions
                 onDone = { selectedConditions ->
                     conditionsThatWereSelected.addAll(selectedConditions)
                 }
@@ -58,7 +58,7 @@ class ConditionSelectorTest {
         val conditionsThatWereSelected = mutableListOf<Condition>()
         val vfc = VFC {
             ConditionSelector {
-                this.conditions = conditions
+                this.conditions = threeConditions
                 onDone = { selectedConditions ->
                     conditionsThatWereSelected.addAll(selectedConditions)
                 }
@@ -81,7 +81,7 @@ class ConditionSelectorTest {
         var cancelClicked = false
         val vfc = VFC {
             ConditionSelector {
-                this.conditions = conditions
+                this.conditions = threeConditions
                 onCancel = {
                     cancelClicked = true
                 }

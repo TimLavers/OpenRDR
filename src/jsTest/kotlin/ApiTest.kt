@@ -75,8 +75,8 @@ class ApiTest {
     fun conditionHints() = runTest {
         val conditionList = ConditionList(
             listOf(
-                HasCurrentValue(Attribute("A")),
-                HasCurrentValue(Attribute("B"))
+                HasCurrentValue(1, Attribute("A", 1)),
+                HasCurrentValue(2, Attribute("B", 2))
             )
         )
         val config = config {
@@ -102,8 +102,8 @@ class ApiTest {
             diffList = expectedDiffList,
             conditionList = ConditionList(
                 listOf(
-                    HasCurrentValue(Attribute("A")),
-                    HasCurrentValue(Attribute("B"))
+                    HasCurrentValue(1, Attribute("A", 1)),
+                    HasCurrentValue(2, Attribute("B", 2))
                 )
             )
         )

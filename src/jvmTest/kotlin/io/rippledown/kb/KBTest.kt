@@ -3,10 +3,10 @@ package io.rippledown.kb
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.rippledown.model.*
-import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.GreaterThanOrEqualTo
 import io.rippledown.model.condition.IsNormal
 import io.rippledown.model.condition.HasCurrentValue
@@ -271,7 +271,9 @@ class KBTest {
     fun `should return condition hints for case`() {
         val caseWithGlucoseAttribute = createCase("A", "1.0")
         val expectedCondition = kb.conditionManager.getOrCreate(HasCurrentValue(null, glucose()))
-        kb.conditionHintsForCase(caseWithGlucoseAttribute) shouldBe ConditionList(listOf(expectedCondition))
+        val conditionList = kb.conditionHintsForCase(caseWithGlucoseAttribute)
+        conditionList.conditions.size shouldBe 1
+        conditionList.conditions[0] should beSameAs(expectedCondition)
     }
 
     @Test // Conc-4

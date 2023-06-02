@@ -7,15 +7,13 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.rippledown.CaseTestUtils
 import io.rippledown.model.*
-import io.rippledown.model.condition.ConditionList
-import io.rippledown.model.condition.GreaterThanOrEqualTo
-import io.rippledown.model.condition.HasCurrentValue
-import io.rippledown.model.condition.Is
+import io.rippledown.model.condition.*
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.diff.Unchanged
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.persistence.InMemoryPersistenceProvider
+import io.rippledown.util.shouldContainSameAs
 import org.apache.commons.io.FileUtils
 import java.io.File
 import java.nio.file.Files
@@ -132,13 +130,17 @@ internal class ServerApplicationTest {
         val id = "Case1"
         setUpCaseFromFile(id, app)
         val case = app.case(id)
-        val expectedConditions = case.attributes
+        val expectedConditions: List<Condition> = case.attributes
             .filter { attribute ->
                 case.getLatest(attribute) != null
             }.map { attribute ->
                 HasCurrentValue(1, attribute)
             }
-        app.conditionHintsForCase(id) shouldBe ConditionList(expectedConditions)
+        val hintConditions = app.conditionHintsForCase(id).conditions.toSet()
+        hintConditions.size shouldBe expectedConditions.size
+        expectedConditions.forEach{
+            hintConditions shouldContainSameAs it
+        }
     }
 
     @Test

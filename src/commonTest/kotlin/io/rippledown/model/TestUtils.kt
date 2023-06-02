@@ -7,7 +7,7 @@ import io.rippledown.model.rule.RuleSummary
 
 import io.kotest.matchers.Matcher
 import io.kotest.matchers.MatcherResult
-//import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.Condition
 
 fun daysAgo(n: Int): Long {
     return defaultDate - n * 24 * 60 * 60 * 1000
@@ -39,7 +39,7 @@ fun createCaseWithInterpretation(
     diffs: DiffList = DiffList()
 ): ViewableCase {
     val case = createCase(name)
-    var conclusionId = 10;
+    var conclusionId = 10
     val interp = Interpretation(diffList = diffs).apply {
         conclusionTexts.forEach { text ->
             add(RuleSummary(conclusion = Conclusion(conclusionId++, text)))

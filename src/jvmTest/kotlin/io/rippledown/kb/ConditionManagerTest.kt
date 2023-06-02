@@ -6,14 +6,11 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.kotest.matchers.types.shouldNotBeSameInstanceAs
-import io.rippledown.model.Attribute
-import io.rippledown.model.beSameAs
-import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.ContainsText
-import io.rippledown.model.condition.IsHigh
-import io.rippledown.model.condition.IsNormal
+import io.rippledown.model.*
+import io.rippledown.model.condition.*
 import io.rippledown.persistence.*
 import io.rippledown.util.shouldContainSameAs
+import java.time.Instant
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
@@ -151,8 +148,31 @@ class ConditionManagerTest {
         // Rebuild.
         conditionManager = ConditionManager(attributeManager, conditionStore)
         conditionManager.all().size shouldBe 100
-        toLoad.forEach{
+        toLoad.forEach {
             conditionManager.all() shouldContainSameAs it
         }
+    }
+
+    @Test
+    fun `should return HasCurrentValue for every attribute that is in the current episodee`() {
+        val a1 = attributeManager.getOrCreate("A1")
+        val a2 = attributeManager.getOrCreate("A2")
+
+        val caseAttributes = listOf(a1, a2)
+        val viewableCase = createCase(caseAttributes)
+        val conditionHints = conditionManager.conditionHintsForCase(viewableCase)
+        conditionHints.conditions shouldBe listOf(
+            HasCurrentValue(null, a1),
+            HasCurrentValue(null, a2),
+        )
+    }
+
+    private fun createCase(attributes: List<Attribute>): RDRCase {
+        val date = Instant.now()
+        val builder = RDRCaseBuilder()
+        attributes.forEach {
+            builder.addResult(it, date.toEpochMilli(), TestResult(it.name + " value"))
+        }
+        return builder.build("")
     }
 }

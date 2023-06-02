@@ -66,6 +66,12 @@ open class ConditionTestBase {
         return builder1.build("TSHNormal")
     }
 
+    fun singleEpisodeCaseWithTSHAsGiven(value: String): RDRCase {
+        val builder1 = RDRCaseBuilder()
+        builder1.addResult(tsh, defaultDate , TestResult(value))
+        return builder1.build("TSHCase")
+    }
+
     fun twoEpisodeCaseWithBothTSHValuesNormal(): RDRCase {
         val builder = RDRCaseBuilder()
         val tshResult1 = TestResult(Value("0.67"), range, "mU/L")

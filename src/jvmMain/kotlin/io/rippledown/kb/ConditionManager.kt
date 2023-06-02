@@ -1,7 +1,10 @@
 package io.rippledown.kb
 
 import io.rippledown.model.ConditionFactory
+import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.condition.HasCurrentValue
 import io.rippledown.persistence.ConditionStore
 
 class ConditionManager(private val attributeManager: AttributeManager,
@@ -32,6 +35,15 @@ class ConditionManager(private val attributeManager: AttributeManager,
     fun getById(id: Int): Condition? = idToCondition[id]
 
     fun all() = idToCondition.values.toSet()
+
+    fun conditionHintsForCase(case: RDRCase): ConditionList {
+        val conditions = case.attributes.map { attribute ->
+            HasCurrentValue(null, attribute)
+        }.filter {
+            it.holds(case)
+        }
+        return ConditionList(conditions)
+    }
 
     private fun attributeForId(id: Int) = attributeManager.getById(id)
 }

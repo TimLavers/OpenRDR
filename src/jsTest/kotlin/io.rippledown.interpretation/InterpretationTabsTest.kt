@@ -76,7 +76,7 @@ class InterpretationTabsTest {
         val vfc = VFC {
             InterpretationTabs {
                 interpretation = Interpretation().apply {
-                    add(RuleSummary(conclusion = Conclusion(text)))
+                    add(RuleSummary(conclusion = Conclusion(1, text)))
                 }
             }
         }
