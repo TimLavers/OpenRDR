@@ -2,9 +2,10 @@ package io.rippledown.model.condition
 
 import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCase
+import kotlinx.serialization.Serializable
 
 // ORD1
-@kotlinx.serialization.Serializable
+@Serializable
 sealed class Condition {
     abstract val id: Int?
     abstract fun holds(case: RDRCase): Boolean
