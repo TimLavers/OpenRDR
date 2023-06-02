@@ -4,11 +4,8 @@ import io.rippledown.model.caseview.CaseViewProperties
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.rule.RuleSummary
-
 import io.kotest.matchers.Matcher
 import io.kotest.matchers.MatcherResult
-import io.rippledown.model.condition.Condition
-
 import io.rippledown.model.condition.Condition
 
 fun daysAgo(n: Int): Long {
