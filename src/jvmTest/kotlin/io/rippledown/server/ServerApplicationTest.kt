@@ -30,10 +30,12 @@ fun RDRCase.getLatest(attributeName: String): TestResult? {
 }
 internal class ServerApplicationTest {
 
+    private val persistenceProvider = InMemoryPersistenceProvider()
     private lateinit var app: ServerApplication
+
     @BeforeTest
     fun setup() {
-        app = ServerApplication(InMemoryPersistenceProvider())
+        app = ServerApplication(persistenceProvider)
         FileUtils.cleanDirectory(app.casesDir)
         FileUtils.cleanDirectory(app.interpretationsDir)
     }
@@ -223,6 +225,7 @@ internal class ServerApplicationTest {
     @Test
     fun createKB() {
         app.kb.kbInfo.name shouldBe "Thyroids"
+        val kbIdsBefore = persistenceProvider.idStore().data().keys
         app.kb.containsCaseWithName("Case1") shouldBe false //sanity
         app.kb.addCase(createCase("Case1"))
         app.kb.containsCaseWithName("Case1") shouldBe true
@@ -230,6 +233,23 @@ internal class ServerApplicationTest {
         app.createKB()
         app.kb.kbInfo.name shouldBe "Thyroids"
         app.kb.containsCaseWithName("Case1") shouldBe false //kb rebuilt
+        // Check that all of the other KBs are still there.
+        persistenceProvider.idStore().data().keys shouldBe setOf(app.kbName().id).union(kbIdsBefore) }
+
+    @Test
+    fun reCreateKB() {
+        app.kb.kbInfo.name shouldBe "Thyroids"
+        val kbIdsBefore = persistenceProvider.idStore().data().keys
+        val oldKBId = app.kbName().id
+        app.kb.addCase(createCase("Case1"))
+        app.kb.containsCaseWithName("Case1") shouldBe true
+
+        app.reCreateKB()
+        app.kb.kbInfo.name shouldBe "Thyroids"
+        app.kb.containsCaseWithName("Case1") shouldBe false //kb rebuilt
+        // Check that the old KB has been deleted.
+        val expectedKBIdsAfter = kbIdsBefore.minus(oldKBId).plus(app.kbName().id)
+        persistenceProvider.idStore().data().keys shouldBe expectedKBIdsAfter
     }
 
     @Test

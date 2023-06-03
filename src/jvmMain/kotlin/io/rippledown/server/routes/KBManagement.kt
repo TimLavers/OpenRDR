@@ -21,7 +21,7 @@ import java.io.ByteArrayOutputStream
 fun Application.kbManagement(application: ServerApplication) {
     routing {
         post(CREATE_KB) {
-            application.createKB()
+            application.reCreateKB()
             call.respond(HttpStatusCode.OK, OperationResult("KB created"))
         }
         post(IMPORT_KB) {
