@@ -32,12 +32,12 @@ class PostgresAttributeStore(private val db: Database) : AttributeStore {
             val pgAttribute = PGAttribute.new {
                 attributeName = name
             }
-            return@transaction Attribute(pgAttribute.attributeName, pgAttribute.id.value)
+            return@transaction Attribute(pgAttribute.id.value, pgAttribute.attributeName)
         }
     }
 
     override fun all() = transaction(db) {
-        return@transaction PGAttribute.all().map { Attribute(it.attributeName, it.id.value) }.toSet()
+        return@transaction PGAttribute.all().map { Attribute(it.id.value, it.attributeName) }.toSet()
     }
 
     override fun store(attribute: Attribute) = transaction(db) {

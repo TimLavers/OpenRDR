@@ -11,7 +11,7 @@ const val defaultTestDate = 1659752689505L
 
 // ORD1
 internal class TestEventTest {
-    val tsh = Attribute("TSH", 3)
+    val tsh = Attribute(3, "TSH")
 
     @Test
     fun construction() {

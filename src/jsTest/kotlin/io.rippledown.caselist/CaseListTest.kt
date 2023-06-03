@@ -198,7 +198,7 @@ class CaseListTest {
             conclusionTexts = listOf(beachComment, bondiComment),
             diffs = diffList
         )
-        val condition = HasCurrentValue(1, Attribute("surf", 2))
+        val condition = HasCurrentValue(1, Attribute(2, "surf"))
         val config = config {
             expectedCaseId = caseName
             returnCasesInfo = CasesInfo(caseIdList)

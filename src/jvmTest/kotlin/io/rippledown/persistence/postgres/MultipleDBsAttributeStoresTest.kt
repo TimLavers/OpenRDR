@@ -46,12 +46,12 @@ class MultipleDBsAttributeStoresTest: MultipleDBsTest() {
 
     @Test
     fun load() {
-        val a1 = Attribute("A", 1)
-        val a2 = Attribute("B", 2)
-        val a3 = Attribute("C", 3)
-        val b1 = Attribute("A", 10)
-        val b2 = Attribute("X", 20)
-        val b3 = Attribute("C", 30)
+        val a1 = Attribute(1, "A")
+        val a2 = Attribute(2, "B")
+        val a3 = Attribute(3, "C")
+        val b1 = Attribute(10, "A")
+        val b2 = Attribute(20, "X")
+        val b3 = Attribute(30, "C")
         store1.load(setOf(a1, a2, a3))
         store2.load(setOf(b1, b2, b3))
 

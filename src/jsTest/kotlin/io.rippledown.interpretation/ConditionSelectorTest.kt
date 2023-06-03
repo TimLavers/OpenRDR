@@ -12,7 +12,7 @@ import react.dom.checkContainer
 import kotlin.test.Test
 
 class ConditionSelectorTest {
-    private val attribute = Attribute("x", 1)
+    private val attribute = Attribute(1, "x")
     private val isHigh = IsHigh(0, attribute)
     private val isLow = IsLow(1, attribute)
     private val isNormal = IsNormal(2, attribute)

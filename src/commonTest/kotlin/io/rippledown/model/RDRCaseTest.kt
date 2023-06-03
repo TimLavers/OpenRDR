@@ -15,13 +15,13 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class RDRCaseTest {
-    private val tsh = Attribute("TSH", 1)
+    private val tsh = Attribute(1, "TSH")
     private val tshRange = ReferenceRange("0.5", "4.0")
-    private val ft4 = Attribute("FT4", 2)
+    private val ft4 = Attribute(2, "FT4")
     private val ft4Range = ReferenceRange("0.25", "2.90")
-    private val age = Attribute("Age", 3)
-    private val abc = Attribute("ABC", 4)
-    private val def = Attribute("DEF", 5)
+    private val age = Attribute(3, "Age")
+    private val abc = Attribute(4, "ABC")
+    private val def = Attribute(5, "DEF")
 
     @Test
     fun getCaseData() {
@@ -175,9 +175,9 @@ class RDRCaseTest {
         val d0 = daysAgo(3)
         val d1 = daysAgo(2)
         val d2 = daysAgo(1)
-        val a = Attribute("A", 1)
-        val b = Attribute("B", 2)
-        val c = Attribute("C", 3)
+        val a = Attribute(1, "A")
+        val b = Attribute(2, "B")
+        val c = Attribute(3, "C")
         val builder = RDRCaseBuilder()
         builder.addValue(a, d1, "A2")
         builder.addValue(a, d2, "A3")

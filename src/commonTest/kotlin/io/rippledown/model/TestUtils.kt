@@ -25,7 +25,7 @@ val lastWeek = daysAgo(7)
 
 
 fun createCase(name: String = ""): ViewableCase {
-    val attribute = Attribute("Glucose", 1)
+    val attribute = Attribute(1, "Glucose")
     val builder = RDRCaseBuilder()
     builder.addResult(attribute, 99994322, TestResult("5.1"))
     val rdrCase = builder.build(name)

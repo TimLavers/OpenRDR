@@ -14,7 +14,7 @@ class AttributeCellTest {
 
     @Test
     fun creation() = runTest {
-        val tsh = Attribute("TSH", 1)
+        val tsh = Attribute(1, "TSH")
         val vfc = VFC {
             AttributeCell {
                 attribute = tsh

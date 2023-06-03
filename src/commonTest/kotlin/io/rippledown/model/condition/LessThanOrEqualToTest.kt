@@ -48,7 +48,7 @@ internal class LessThanOrEqualToTest: ConditionTestBase() {
 
     @Test
     fun holds() {
-        val height = Attribute("Height", 100)
+        val height = Attribute(100, "Height")
         val lte2 = LessThanOrEqualTo(98, height, 1.8)
         lte2.holds(twoEpisodeCase(height, "1.78", "1.2")) shouldBe true
         lte2.holds(twoEpisodeCase(height, "1.78", "1.799")) shouldBe true

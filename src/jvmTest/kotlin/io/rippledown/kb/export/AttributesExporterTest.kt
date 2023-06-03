@@ -33,9 +33,9 @@ class AttributesExporterTest : ExporterTestBase() {
 
     @Test
     fun exportMultiple() {
-        val tsh = Attribute("TSH", 100)
-        val ft3 = Attribute("FT3", 200)
-        val ft4 = Attribute("FT4", 300)
+        val tsh = Attribute(100, "TSH")
+        val ft3 = Attribute(200, "FT3")
+        val ft4 = Attribute(300, "FT4")
         val attributes = setOf(tsh, ft4, ft3)
         val textFile = File(tempDir,"Attributes.txt")
         AttributesExporter(textFile, attributes).export()

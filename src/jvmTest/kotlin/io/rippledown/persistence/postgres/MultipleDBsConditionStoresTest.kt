@@ -11,10 +11,10 @@ import kotlin.test.Test
 class MultipleDBsConditionStoresTest: MultipleDBsTest() {
     private lateinit var store1: ConditionStore
     private lateinit var store2: ConditionStore
-    private val glucose1 = Attribute("Glucose", 1)
-    private val tsh1 = Attribute("TSH", 2)
-    private val glucose2 = Attribute("Glucose", 10)
-    private val tsh2 = Attribute("TSH", 20)
+    private val glucose1 = Attribute(1, "Glucose")
+    private val tsh1 = Attribute(2, "TSH")
+    private val glucose2 = Attribute(10, "Glucose")
+    private val tsh2 = Attribute(20, "TSH")
 
     @BeforeTest
     override fun setup() {

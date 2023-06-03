@@ -69,7 +69,7 @@ class AttributeManagerTest {
     fun `construct with set of attributes`() {
         val initial = mutableSetOf<Attribute>()
         repeat(100) {
-            initial.add(Attribute(randomString(12), it))
+            initial.add(Attribute(it, randomString(12)))
         }
         attributeStore = InMemoryAttributeStore(initial)
         attributeManager = AttributeManager(attributeStore)
