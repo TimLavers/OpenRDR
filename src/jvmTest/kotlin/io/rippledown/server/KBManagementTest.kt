@@ -33,11 +33,11 @@ class KBManagementTest: OpenRDRServerTestBase() {
     @Test
     fun createKB() = testApplication {
         setup()
-        every { serverApplication.createKB() } returns Unit
+        every { serverApplication.reCreateKB() } returns Unit
         val result = httpClient.post(CREATE_KB)
         result.status shouldBe HttpStatusCode.OK
         result.body<OperationResult>().message shouldBe "KB created"
-        verify { serverApplication.createKB() }
+        verify { serverApplication.reCreateKB() }
     }
 
     @Test
