@@ -2,17 +2,18 @@ package io.rippledown.server
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.rippledown.CaseTestUtils
 import io.rippledown.model.*
-import io.rippledown.model.condition.ConditionList
-import io.rippledown.model.condition.GreaterThanOrEqualTo
-import io.rippledown.model.condition.HasCurrentValue
+import io.rippledown.model.condition.*
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.diff.Unchanged
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
+import io.rippledown.persistence.InMemoryPersistenceProvider
+import io.rippledown.util.shouldContainSameAs
 import org.apache.commons.io.FileUtils
 import java.io.File
 import java.nio.file.Files
@@ -21,12 +22,20 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
+fun RDRCase.getAttribute(attributeName: String): Attribute {
+    return attributes.first { attribute -> attribute.name == attributeName }
+}
+fun RDRCase.getLatest(attributeName: String): TestResult? {
+    return getLatest(getAttribute(attributeName))
+}
 internal class ServerApplicationTest {
+
+    private val persistenceProvider = InMemoryPersistenceProvider()
     private lateinit var app: ServerApplication
 
     @BeforeTest
     fun setup() {
-        app = ServerApplication()
+        app = ServerApplication(persistenceProvider)
         FileUtils.cleanDirectory(app.casesDir)
         FileUtils.cleanDirectory(app.interpretationsDir)
     }
@@ -48,15 +57,16 @@ internal class ServerApplicationTest {
         setUpCaseFromFile("Case1", app)
         val retrieved = app.case("Case1")
         assertEquals(retrieved.name, "Case1")
-        assertEquals(retrieved.get("TSH")!!.value.text, "0.667")
-        assertEquals(retrieved.get("ABC")!!.value.text, "6.7")
+        assertEquals(retrieved.getLatest("TSH")!!.value.text, "0.667")
+        assertEquals(retrieved.getLatest("ABC")!!.value.text, "6.7")
         assertEquals(2, retrieved.data.size)
         // No rules added.
         retrieved.interpretation.conclusions().size shouldBe 0
         // Add a rule.
-        val conclusion = Conclusion("ABC ok.")
+        val conclusion = app.kb.conclusionManager.getOrCreate("ABC ok.")
         app.kb.startRuleSession(retrieved, ChangeTreeToAddConclusion(conclusion))
-        app.kb.addConditionToCurrentRuleSession(GreaterThanOrEqualTo(Attribute("ABC"), 5.0))
+        val abc = retrieved.getAttribute("ABC")
+        app.kb.addConditionToCurrentRuleSession(GreaterThanOrEqualTo(null, abc, 5.0))
         app.kb.commitCurrentRuleSession()
         val retrievedAgain = app.case("Case1")
         retrievedAgain.interpretation.conclusions() shouldContainExactly setOf(conclusion)
@@ -89,7 +99,7 @@ internal class ServerApplicationTest {
 
         val case = app.case(id)
         val text = "ABC ok."
-        val conclusion = Conclusion(text)
+        val conclusion = app.kb.conclusionManager.getOrCreate(text)
         app.kb.startRuleSession(case, ChangeTreeToAddConclusion(conclusion))
         app.kb.commitCurrentRuleSession()
 
@@ -122,13 +132,17 @@ internal class ServerApplicationTest {
         val id = "Case1"
         setUpCaseFromFile(id, app)
         val case = app.case(id)
-        val expectedConditions = case.attributes
+        val expectedConditions: List<Condition> = case.attributes
             .filter { attribute ->
                 case.getLatest(attribute) != null
             }.map { attribute ->
-                HasCurrentValue(attribute)
+                HasCurrentValue(1, attribute)
             }
-        app.conditionHintsForCase(id) shouldBe ConditionList(expectedConditions)
+        val hintConditions = app.conditionHintsForCase(id).conditions.toSet()
+        hintConditions.size shouldBe expectedConditions.size
+        expectedConditions.forEach{
+            hintConditions shouldContainSameAs it
+        }
     }
 
     @Test
@@ -136,17 +150,44 @@ internal class ServerApplicationTest {
         setUpCaseFromFile("Case1", app)
         val retrieved = app.viewableCase("Case1")
         assertEquals(retrieved.name, "Case1")
-        assertEquals(retrieved.rdrCase.get("ABC")!!.value.text, "6.7")
+        assertEquals(retrieved.rdrCase.getLatest("ABC")!!.value.text, "6.7")
         assertEquals(2, retrieved.attributes().size)
         // No rules added.
         retrieved.interpretation.conclusions().size shouldBe 0
         // Add a rule.
-        val conclusion = Conclusion("ABC ok.")
+        val conclusion = app.kb.conclusionManager.getOrCreate( "ABC ok.")
         app.kb.startRuleSession(retrieved.rdrCase, ChangeTreeToAddConclusion(conclusion))
-        app.kb.addConditionToCurrentRuleSession(GreaterThanOrEqualTo(Attribute("ABC"), 5.0))
+        val abc = retrieved.rdrCase.getAttribute("ABC")
+        app.kb.addConditionToCurrentRuleSession(GreaterThanOrEqualTo(null, abc, 5.0))
         app.kb.commitCurrentRuleSession()
         val retrievedAgain = app.viewableCase("Case1")
         retrievedAgain.interpretation.conclusions() shouldContainExactly setOf(conclusion)
+    }
+
+    @Test
+    fun getOrCreateAttribute() {
+        app.kb.attributeManager.all() shouldBe emptySet()
+        val attribute = app.getOrCreateAttribute("stuff")
+        app.kb.attributeManager.all() shouldBe setOf(attribute)
+    }
+
+    @Test
+    fun getOrCreateConclusion() {
+        app.kb.conclusionManager.all() shouldBe emptySet()
+        val text = "It is rainy."
+        val conclusion = app.getOrCreateConclusion(text)
+        conclusion.text shouldBe text
+        app.kb.conclusionManager.all() shouldBe setOf(conclusion)
+    }
+
+    @Test
+    fun getOrCreateCondition() {
+        app.kb.conditionManager.all() shouldBe emptySet()
+        val attribute = app.getOrCreateAttribute("stuff")
+        val prototype = Is(null, attribute, "Whatever")
+        val created = app.getOrCreateCondition(prototype)
+        created should beSameAs(prototype)
+        app.kb.conditionManager.all() shouldBe setOf(created)
     }
 
     @Test
@@ -155,7 +196,7 @@ internal class ServerApplicationTest {
         val retrieved = app.viewableCase("Case1")
         val attributesBefore = retrieved.attributes()
         attributesBefore.size shouldBe 2 // sanity
-        app.moveAttributeJustBelow(attributesBefore[0], attributesBefore[1])
+        app.moveAttributeJustBelow(attributesBefore[0].id, attributesBefore[1].id)
         // Get the case again and check that the order has been applied.
         val retrievedAfter = app.viewableCase("Case1")
         retrievedAfter.attributes()[0] shouldBe attributesBefore[1]
@@ -183,19 +224,37 @@ internal class ServerApplicationTest {
 
     @Test
     fun createKB() {
-        app.kb.name shouldBe "Thyroids"
+        app.kb.kbInfo.name shouldBe "Thyroids"
+        val kbIdsBefore = persistenceProvider.idStore().data().keys
         app.kb.containsCaseWithName("Case1") shouldBe false //sanity
         app.kb.addCase(createCase("Case1"))
         app.kb.containsCaseWithName("Case1") shouldBe true
 
         app.createKB()
-        app.kb.name shouldBe "Thyroids"
+        app.kb.kbInfo.name shouldBe "Thyroids"
         app.kb.containsCaseWithName("Case1") shouldBe false //kb rebuilt
+        // Check that all of the other KBs are still there.
+        persistenceProvider.idStore().data().keys shouldBe setOf(app.kbName().id).union(kbIdsBefore) }
+
+    @Test
+    fun reCreateKB() {
+        app.kb.kbInfo.name shouldBe "Thyroids"
+        val kbIdsBefore = persistenceProvider.idStore().data().keys
+        val oldKBId = app.kbName().id
+        app.kb.addCase(createCase("Case1"))
+        app.kb.containsCaseWithName("Case1") shouldBe true
+
+        app.reCreateKB()
+        app.kb.kbInfo.name shouldBe "Thyroids"
+        app.kb.containsCaseWithName("Case1") shouldBe false //kb rebuilt
+        // Check that the old KB has been deleted.
+        val expectedKBIdsAfter = kbIdsBefore.minus(oldKBId).plus(app.kbName().id)
+        persistenceProvider.idStore().data().keys shouldBe expectedKBIdsAfter
     }
 
     @Test
     fun kbName() {
-        app.kbName() shouldBe KBInfo("Thyroids")
+        app.kbName().name shouldBe "Thyroids"
     }
 
     @Test
@@ -204,7 +263,7 @@ internal class ServerApplicationTest {
         setUpCaseFromFile(id, app)
         app.kb.addCase(createCase(id))
         app.case(id).interpretation.conclusions() shouldBe emptySet()
-        app.startRuleSessionToAddConclusion(id, Conclusion("Whatever"))
+        app.startRuleSessionToAddConclusion(id, app.kb.conclusionManager.getOrCreate("Whatever"))
         app.commitCurrentRuleSession()
         app.case(id).interpretation.textGivenByRules() shouldBe "Whatever"
     }
@@ -215,14 +274,17 @@ internal class ServerApplicationTest {
         val id = "Case1"
         setUpCaseFromFile(id, app)
         app.kb.addCase(createCase(id))
-        val conclusion1 = Conclusion("Whatever")
+        val conclusion1 = app.kb.conclusionManager.getOrCreate( "Whatever")
+        val tsh = app.kb.attributeManager.getOrCreate("TSH")
         app.startRuleSessionToAddConclusion(id, conclusion1)
+        val tshCondition = GreaterThanOrEqualTo(null, tsh, 0.6)
+        app.addConditionToCurrentRuleBuildingSession(tshCondition)
         app.commitCurrentRuleSession()
         app.case(id).interpretation.textGivenByRules() shouldBe conclusion1.text
 
         // Get the exported KB.
         val exported = app.exportKBToZip()
-        exported.name shouldBe "${app.kb.name}.zip"
+        exported.name shouldBe "${app.kb.kbInfo}.zip"
 
         // Clear the KB
         app.createKB()
@@ -233,23 +295,12 @@ internal class ServerApplicationTest {
         app.importKBFromZip(exported.readBytes())
         app.kb.allCases().size shouldBe 1
         app.kb.ruleTree.size() shouldBe 2
+        val rule = app.kb.ruleTree.root.childRules().single()
+        val conditions = rule.conditions
+        conditions.size shouldBe 1
+        conditions.single().sameAs(tshCondition) shouldBe true
+        rule.conclusion shouldBe conclusion1
         app.case(id).interpretation.textGivenByRules() shouldBe conclusion1.text
-    }
-
-    @Test
-    fun importKBFromZip() {
-        val zipFile = File("src/jvmTest/resources/export/KBExported.zip").toPath()
-        app.kb.name shouldBe "Thyroids"
-        app.kb.allCases().size shouldBe 0
-        app.importKBFromZip(Files.readAllBytes(zipFile))
-
-        app.kb.name shouldBe "Whatever"
-        app.kb.allCases().size shouldBe 3
-        app.kb.ruleTree.size() shouldBe 2
-        val case = app.kb.getCaseByName("Case1")
-        val interpretedCase = app.kb.viewableInterpretedCase(case)
-        interpretedCase.interpretation.textGivenByRules() shouldBe "Glucose ok."
-        app.kbName() shouldBe KBInfo("Whatever")
     }
 
     @Test
@@ -264,7 +315,7 @@ internal class ServerApplicationTest {
     fun `handle empty zip`() {
         val zipFile = File("src/jvmTest/resources/export/Empty.zip").toPath()
         shouldThrow<IllegalArgumentException> {
-            ServerApplication().importKBFromZip(Files.readAllBytes(zipFile))
+            app.importKBFromZip(Files.readAllBytes(zipFile))
         }.message shouldBe "Invalid zip for KB import."
     }
 
@@ -277,11 +328,11 @@ internal class ServerApplicationTest {
         val id = "Case1"
         setUpCaseFromFile(id, app)
         app.kb.addCase(createCase(id))
-        val conclusion1 = Conclusion("Whatever")
+        val conclusion1 = app.kb.conclusionManager.getOrCreate( "Whatever")
         app.startRuleSessionToAddConclusion(id, conclusion1)
         app.commitCurrentRuleSession()
         app.case(id).interpretation.textGivenByRules() shouldBe conclusion1.text
-        val conclusion2 = Conclusion("Blah")
+        val conclusion2 = app.kb.conclusionManager.getOrCreate("Blah")
         app.startRuleSessionToReplaceConclusion(id, conclusion1, conclusion2)
         app.commitCurrentRuleSession()
         app.case(id).interpretation.textGivenByRules() shouldBe conclusion2.text
@@ -291,7 +342,7 @@ internal class ServerApplicationTest {
     fun `when saving an interpretation, an interpretation with diffs should be returned`() {
         val id = "Case1"
         setUpCaseFromFile(id, app)
-        val conclusion = Conclusion("Go to Bondi.")
+        val conclusion = app.kb.conclusionManager.getOrCreate("Go to Bondi.")
         with(app) {
             kb.addCase(createCase(id))
             startRuleSessionToAddConclusion(id, conclusion)

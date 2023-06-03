@@ -8,9 +8,9 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 
 class CaseViewPropertiesTest {
-    val abc = Attribute("ABC")
-    val tsh = Attribute("TSH")
-    private val xyz = Attribute("XYZ")
+    val abc = Attribute("ABC",1)
+    val tsh = Attribute("TSH", 2)
+    private val xyz = Attribute("XYZ", 3)
 
     @Test
     fun construction() {

@@ -1,12 +1,40 @@
 package io.rippledown.model.condition
 
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNot
+import io.kotest.matchers.types.shouldBeSameInstanceAs
+import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.rippledown.model.*
 import kotlin.test.Test
 
 internal class IsLowTest: ConditionTestBase() {
 
-    private val condition = IsLow(tsh)
+    private val condition = IsLow(1000, tsh)
+
+    @Test
+    fun id() {
+        condition.id shouldBe 1000
+    }
+
+    @Test
+    fun alignAttributes() {
+        val conditionCopy = serializeDeserialize(condition) as IsLow
+        conditionCopy.attribute shouldNotBeSameInstanceAs condition.attribute
+        val alignedCopy = conditionCopy.alignAttributes(::attributeForId)
+        alignedCopy.attribute shouldBeSameInstanceAs condition.attribute
+    }
+
+    @Test
+    fun sameAs() {
+        condition should beSameAs(condition)
+        condition should beSameAs(IsLow(100, condition.attribute))
+        condition should beSameAs(IsLow(null, condition.attribute))
+
+        condition shouldNot beSameAs(IsHigh(null, condition.attribute))
+        condition shouldNot beSameAs(IsLow(null, glucose))
+        condition shouldNot beSameAs(IsLow(condition.id, glucose))
+    }
 
     @Test
     fun attributeNotInCase() {

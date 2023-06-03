@@ -10,15 +10,23 @@ import io.rippledown.model.condition.ConditionTestBase
 import io.rippledown.model.condition.ContainsText
 
 open class RuleTestBase: ConditionTestBase() {
-    val caseId = CaseId("Case1", "Case1")
+    private var conclusionId = 0
+    private var conditionId = 0
+    private val caseId = CaseId("Case1", "Case1")
     val interpretation = Interpretation(caseId, "")
 
-    fun conc(text: String): Conclusion {
-        return Conclusion(text)
+    fun findOrCreateConclusion(text: String, root: Rule): Conclusion {
+        var conclusionWithText: Conclusion? = null
+        root.visit {
+            if (it.conclusion?.text == text) {
+                conclusionWithText = it.conclusion
+            }
+        }
+        return if (conclusionWithText != null) conclusionWithText!! else  Conclusion(conclusionId++, text)
     }
 
-    fun cond(text: String): Condition {
-        return ContainsText(clinicalNotes, text)
+    fun createCondition(text: String): Condition {
+        return ContainsText(conditionId++, clinicalNotes, text)
     }
 
     fun checkInterpretation(interpretation: Interpretation, vararg conclusions: Conclusion) {

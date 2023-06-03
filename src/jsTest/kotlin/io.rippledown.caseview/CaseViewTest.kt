@@ -116,7 +116,7 @@ class CaseViewTest {
 fun shouldShowInterpretation() = runTest {
     val text = "Go to Bondi now!"
     val rdrCase = createCase("case a ")
-    rdrCase.interpretation.add(RuleSummary(conclusion = Conclusion(text)))
+    rdrCase.interpretation.add(RuleSummary(conclusion = Conclusion(1, text)))
     val vfc = VFC {
         CaseView {
             case = rdrCase

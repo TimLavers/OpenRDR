@@ -1,22 +1,35 @@
 package io.rippledown.kb.export
 
 import io.kotest.matchers.equality.shouldBeEqualToComparingFields
+import io.kotest.matchers.maps.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.rippledown.kb.KB
 import io.rippledown.model.*
 import io.rippledown.model.condition.LessThanOrEqualTo
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
+import io.rippledown.persistence.InMemoryPersistenceProvider
+import io.rippledown.persistence.PersistenceProvider
 import java.time.Instant
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class KBImporterTest : ExporterTestBase() {
 
+    private lateinit var persistenceProvider: PersistenceProvider
+
+    @BeforeTest
+    fun setup() {
+        persistenceProvider = InMemoryPersistenceProvider()
+    }
+
     @Test
     fun exportImportEmpty() {
-        val original = KB("Empty")
+        val kbInfo = KBInfo("Empty")
+        val emptyKB = persistenceProvider.createKBPersistence(kbInfo)
+        val original = KB(emptyKB)
         KBExporter(tempDir, original).export()
-        val rebuilt = KBImporter(tempDir).import()
-        rebuilt.name shouldBe original.name
+        val rebuilt = KBImporter(tempDir, persistenceProvider).import()
+        rebuilt.kbInfo.name shouldBe original.kbInfo.name
         rebuilt.allCases().size shouldBe 0
         rebuilt.caseViewManager.allAttributesInOrder().size shouldBe 0
         rebuilt.ruleTree.size() shouldBe 1
@@ -25,11 +38,13 @@ class KBImporterTest : ExporterTestBase() {
     @Test
     fun exportImport() {
         // Create a simple KB.
-        val kb = KB("Whatever")
+        val kbInfo = KBInfo("Whatever")
+        val pKB = persistenceProvider.createKBPersistence(kbInfo)
+        val kb = KB(pKB)
         // Attributes.
-        val glucose = Attribute("Glucose")
-        val ldl = Attribute("LDL")
-        val hdl = Attribute("HDL")
+        val glucose = kb.attributeManager.getOrCreate("Glucose")
+        val ldl = kb.attributeManager.getOrCreate("LDL")
+        val hdl = kb.attributeManager.getOrCreate("HDL")
         // Build some cases.
         val episodeDate = Instant.now().toEpochMilli()
         fun buildCase(name: String, glucoseValue: String, ldlValue: String, hdlValue: String): RDRCase {
@@ -48,8 +63,8 @@ class KBImporterTest : ExporterTestBase() {
 
         // Add a rule.
         val sessionCase = kb.getCaseByName(case1.name)
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion("Glucose ok.")))
-        kb.addConditionToCurrentRuleSession(LessThanOrEqualTo(glucose, 4.1))
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Glucose ok.")))
+        kb.addConditionToCurrentRuleSession(LessThanOrEqualTo(null, glucose, 4.1))
         kb.commitCurrentRuleSession()
 
         // Set up the case view.
@@ -57,8 +72,8 @@ class KBImporterTest : ExporterTestBase() {
 
         // Export and import.
         KBExporter(tempDir, kb).export()
-        val rebuilt = KBImporter(tempDir).import()
-        rebuilt.name shouldBe kb.name
+        val rebuilt = KBImporter(tempDir, persistenceProvider).import()
+        rebuilt.kbInfo.name shouldBe kb.kbInfo.name
         rebuilt.allCases().size shouldBe 3
         rebuilt.getCaseByName(case1.name) shouldBeEqualToComparingFields kb.getCaseByName(case1.name)
 
@@ -66,5 +81,7 @@ class KBImporterTest : ExporterTestBase() {
 
         rebuilt.ruleTree.size() shouldBe 2
         rebuilt.ruleTree.root.childRules().first().structurallyEqual(kb.ruleTree.root.childRules().first()) shouldBe true
+
+        persistenceProvider.idStore().data() shouldHaveSize 2
     }
 }

@@ -41,6 +41,7 @@ Feature: Show a list of cases
       | Case1 |
       | Case2 |
     When the case with the name Case1 is deleted on the server
+    And pause for 2 seconds
     Then I should see the following cases in the case list:
       | Case2 |
     And I should see the case Case2 as the current case

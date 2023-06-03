@@ -15,10 +15,13 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class RDRCaseTest {
-    private val tsh = Attribute("TSH")
+    private val tsh = Attribute("TSH", 1)
     private val tshRange = ReferenceRange("0.5", "4.0")
-    private val ft4 = Attribute("FT4")
+    private val ft4 = Attribute("FT4", 2)
     private val ft4Range = ReferenceRange("0.25", "2.90")
+    private val age = Attribute("Age", 3)
+    private val abc = Attribute("ABC", 4)
+    private val def = Attribute("DEF", 5)
 
     @Test
     fun getCaseData() {
@@ -30,39 +33,39 @@ class RDRCaseTest {
     @Test
     fun addValue() {
         val builder1 = RDRCaseBuilder()
-        builder1.addValue("TSH", defaultDate, "0.667")
+        builder1.addValue(tsh, defaultDate, "0.667")
         val case1 = builder1.build("Case1")
         assertEquals(1, case1.dates.size)
-        assertEquals("0.667", case1.get("TSH")!!.value.text)
+        assertEquals("0.667", case1.getLatest(tsh)!!.value.text)
     }
 
     @Test
     fun addValueTwice() {
         val builder1 = RDRCaseBuilder()
-        builder1.addValue("TSH", defaultDate, "0.67")
-        builder1.addValue("TSH", defaultDate, "0.68")
+        builder1.addValue(tsh, defaultDate, "0.67")
+        builder1.addValue(tsh, defaultDate, "0.68")
         val case1 = builder1.build("Case1")
         assertEquals(case1.dates.size, 1)
-        assertEquals("0.68", case1.get("TSH")!!.value.text)
+        assertEquals("0.68", case1.getLatest(tsh)!!.value.text)
     }
 
     @Test
     fun addResult() {
         val builder1 = RDRCaseBuilder()
         val tshResult = TestResult(Value("0.67"), ReferenceRange("0.5", "4.0"), "mU/L")
-        builder1.addResult("TSH", defaultDate, tshResult)
+        builder1.addResult(tsh, defaultDate, tshResult)
         val freeT4Result = TestResult(Value("16"), ReferenceRange("10", "20.0"), "pmol/L")
-        builder1.addResult("Free T4", defaultDate, freeT4Result)
+        builder1.addResult(ft4, defaultDate, freeT4Result)
 
         val case1 = builder1.build("Case1")
         assertEquals(2, case1.data.size)
-        val tshInCase = case1.get("TSH")!!
+        val tshInCase = case1.getLatest(tsh)!!
         assertEquals(tshInCase.value.text, "0.67")
         assertEquals(tshInCase.units, "mU/L")
         assertEquals(tshInCase.referenceRange!!.lower, 0.5F)
         assertEquals(tshInCase.referenceRange!!.upper, 4.0F)
 
-        val freeT4InCase = case1.get("Free T4")!!
+        val freeT4InCase = case1.getLatest(ft4)!!
         assertEquals(freeT4InCase.value.text, "16")
         assertEquals(freeT4InCase.units, "pmol/L")
         assertEquals(freeT4InCase.referenceRange!!.lower, 10F)
@@ -74,11 +77,11 @@ class RDRCaseTest {
         val builder = RDRCaseBuilder()
         val range1 = ReferenceRange("0.5", "4.0")
         val tshResult1 = TestResult(Value("0.67"), range1, "mU/L")
-        builder.addResult(tsh.name, defaultDate, tshResult1)
+        builder.addResult(tsh, defaultDate, tshResult1)
         val range0 = ReferenceRange("0.25", "2.90")
         val tshResult0 = TestResult(Value("0.08"), range0, "mU/L")
         val yesterday = daysAgo(1)
-        builder.addResult(tsh.name, yesterday, tshResult0)
+        builder.addResult(tsh, yesterday, tshResult0)
         val case = builder.build("Case1")
         assertEquals(2, case.dates.size)
         assertEquals(yesterday, case.dates[0])
@@ -141,9 +144,9 @@ class RDRCaseTest {
         val ft4Result = TestResult(Value("0.08"), ft4Range, "mU/L")
 
         val builder = RDRCaseBuilder()
-        builder.addResult(tsh.name, defaultDate, tshResult)
+        builder.addResult(tsh, defaultDate, tshResult)
         val yesterday = daysAgo(1)
-        builder.addResult(ft4.name, yesterday, ft4Result)
+        builder.addResult(ft4, yesterday, ft4Result)
 
         val case = builder.build("Case1")
         val datesInCase = case.dates
@@ -172,16 +175,19 @@ class RDRCaseTest {
         val d0 = daysAgo(3)
         val d1 = daysAgo(2)
         val d2 = daysAgo(1)
+        val a = Attribute("A", 1)
+        val b = Attribute("B", 2)
+        val c = Attribute("C", 3)
         val builder = RDRCaseBuilder()
-        builder.addValue("A", d0, "A1")
-        builder.addValue("A", d1, "A2")
-        builder.addValue("A", d2, "A3")
-        builder.addValue("B", d0, "B1")
-        builder.addValue("B", d1, "B2")
-        builder.addValue("B", d2, "B3")
-        builder.addValue("C", d0, "C1")
-        builder.addValue("C", d1, "C2")
-        builder.addValue("C", d2, "C3")
+        builder.addValue(a, d1, "A2")
+        builder.addValue(a, d2, "A3")
+        builder.addValue(a, d0, "A1")
+        builder.addValue(b, d0, "B1")
+        builder.addValue(b, d1, "B2")
+        builder.addValue(b, d2, "B3")
+        builder.addValue(c, d0, "C1")
+        builder.addValue(c, d1, "C2")
+        builder.addValue(c, d2, "C3")
 
         val case = builder.build("Case1")
         val datesInCase = case.dates
@@ -190,9 +196,9 @@ class RDRCaseTest {
         assertEquals(datesInCase[1], d1)
         assertEquals(datesInCase[2], d2)
 
-        checkValues(case, "A", "A1", "A2", "A3")
-        checkValues(case, "B", "B1", "B2", "B3")
-        checkValues(case, "C", "C1", "C2", "C3")
+        checkValues(case, a, "A1", "A2", "A3")
+        checkValues(case, b, "B1", "B2", "B3")
+        checkValues(case, c, "C1", "C2", "C3")
 
         // Check serialisation.
         val sd = serializeDeserialize(case)
@@ -203,12 +209,12 @@ class RDRCaseTest {
     fun addResultTwice() {
         val builder1 = RDRCaseBuilder()
         val tshResult = TestResult(Value("0.67"), ReferenceRange("0.5", "4.0"), "mU/L")
-        builder1.addResult("TSH", defaultDate, tshResult)
+        builder1.addResult(tsh, defaultDate, tshResult)
         val tshResult2 = TestResult(Value("0.68"), ReferenceRange("0.5", "4.0"), "mU/L")
-        builder1.addResult("TSH", defaultDate, tshResult2)
+        builder1.addResult(tsh, defaultDate, tshResult2)
         val case1 = builder1.build("Case1")
         assertEquals(1, case1.dates.size)
-        val tshInCase = case1.get("TSH")!!
+        val tshInCase = case1.getLatest(tsh)!!
         assertEquals(tshInCase.value.text, "0.68")
     }
 
@@ -241,10 +247,10 @@ class RDRCaseTest {
 
     @Test
     fun serializedWithInterpretation() {
-        val conclusion = Conclusion("Tea is good.")
-        val root = Rule("root", null, null, emptySet(), mutableSetOf())
-        val conditions = setOf(ContainsText(tsh, "0.667"))
-        val rule = Rule("r", root, conclusion, conditions, mutableSetOf())
+        val conclusion = Conclusion(9, "Tea is good.")
+        val root = Rule(0, null, null, emptySet(), mutableSetOf())
+        val conditions = setOf(ContainsText(100, tsh, "0.667"))
+        val rule = Rule(1, root, conclusion, conditions, mutableSetOf())
         val case = RDRCase()
         case.interpretation.add(rule)
         case.interpretation.conclusions().first() shouldBe conclusion
@@ -257,10 +263,10 @@ class RDRCaseTest {
 
     @Test
     fun serializedWithInterpretation1() {
-        val conclusion = Conclusion("Tea is good.")
-        val root = Rule("root", null, null, emptySet(), mutableSetOf())
-        val conditions = setOf(ContainsText(tsh, "0.667"))
-        val rule = Rule("r", root, conclusion, conditions, mutableSetOf())
+        val conclusion = Conclusion(1, "Tea is good.")
+        val root = Rule(0, null, null, emptySet(), mutableSetOf())
+        val conditions = setOf(ContainsText(1, tsh, "0.667"))
+        val rule = Rule(1, root, conclusion, conditions, mutableSetOf())
         val case = RDRCase()
         case.interpretation = Interpretation(CaseId()).apply { add(rule) }
 
@@ -282,12 +288,41 @@ class RDRCaseTest {
     }
 
     @Test
+    fun jsonSerialisation() {
+        val case1 = RDRCase("Case1", emptyMap())
+        val sd1 = serializeDeserialize(case1)
+        assertEquals(sd1, case1)
+
+        val builder2 = RDRCaseBuilder()
+        builder2.addValue(tsh, defaultDate, "0.667")
+        builder2.addValue(abc, defaultDate, "6.7")
+        val case2 = builder2.build("Case2")
+        val sd2 = serializeDeserialize(case2)
+        assertEquals(sd2, case2)
+        assertEquals(sd2.getLatest(tsh)!!.value.text, "0.667")
+
+        val builder3 = RDRCaseBuilder()
+        builder3.addValue(age, defaultDate, "52")
+        val tshResult = TestResult(Value("0.67"), ReferenceRange("0.5", "4.0"), "mU/L")
+        builder3.addResult(tsh, defaultDate, tshResult)
+        val abcResult = TestResult(Value("0.67"), null, "mU/L")
+        builder3.addResult(abc, defaultDate, abcResult)
+        val defResult = TestResult(Value("100"), ReferenceRange("90", "400"), null)
+        builder3.addResult(def, defaultDate, defResult)
+        val case3 = builder3.build("Case3")
+        val sd3 = serializeDeserialize(case3)
+        assertEquals(sd3, case3)
+    }
+
+    @Test
     @Ignore //TODO: fix
     fun serializedWithVerifiedText() {
         val case = basicCase()
         val text = "Coffee is very good"
         case.interpretation.verifiedText = text
 
+        val builder3 = RDRCaseBuilder()
+        builder3.addValue(age, defaultDate, "52")
         val sd = serializeDeserialize(case)
         sd shouldBe case
         sd.interpretation.verifiedText shouldBe text
@@ -303,15 +338,14 @@ class RDRCaseTest {
     @Test
     fun serialisationWithAttribute() {
         val builder = RDRCaseBuilder()
-        builder.addValue("TSH", defaultDate, "0.667")
-        builder.addValue("ABC", defaultDate, "6.7")
+        builder.addValue(tsh, defaultDate, "0.667")
+        builder.addValue(abc, defaultDate, "6.7")
         val case = builder.build("Case")
         val sd = serializeDeserialize(case)
         sd shouldBe case
-        sd.get("TSH")!!.value.text shouldBe "0.667"
-        sd.get("ABC")!!.value.text shouldBe "6.7"
+        sd.getLatest(tsh)!!.value.text shouldBe "0.667"
+        sd.getLatest(abc)!!.value.text shouldBe "6.7"
     }
-
 
     @Test
     fun serialisationWithReferenceRange() {
@@ -319,28 +353,28 @@ class RDRCaseTest {
         val abcResult = TestResult(Value("0.87"), null, "mg/dl")
         val defResult = TestResult(Value("100"), ReferenceRange("90", "400"), null)
         val case = with(RDRCaseBuilder()) {
-            addValue("Age", defaultDate, "52")
-            addResult("TSH", defaultDate, tshResult)
-            addResult("ABC", defaultDate, abcResult)
-            addResult("DEF", defaultDate, defResult)
+            addValue(age, defaultDate, "52")
+            addResult(tsh, defaultDate, tshResult)
+            addResult(abc, defaultDate, abcResult)
+            addResult(def, defaultDate, defResult)
             build("Case")
         }
         val sd = serializeDeserialize(case)
         sd shouldBe case
         with(sd) {
-            get("Age")!!.value.text shouldBe "52"
-            with(get("TSH")!!) {
+            getLatest(age)!!.value.text shouldBe "52"
+            with(getLatest(tsh)!!) {
                 value.text shouldBe "0.67"
                 referenceRange!!.lower shouldBe "0.5".toFloat()
                 referenceRange!!.upper shouldBe "4.0".toFloat()
                 units shouldBe "mU/L"
             }
-            with(get("ABC")!!) {
+            with(getLatest(abc)!!) {
                 value.text shouldBe "0.87"
                 referenceRange shouldBe null
                 units shouldBe "mg/dl"
             }
-            with(get("DEF")!!) {
+            with(getLatest(def)!!) {
                 value.text shouldBe "100"
                 referenceRange!!.lower shouldBe "90".toFloat()
                 referenceRange!!.upper shouldBe "400".toFloat()
@@ -348,32 +382,27 @@ class RDRCaseTest {
             }
         }
     }
-}
 
-private fun basicCase(): RDRCase {
-    val builder1 = RDRCaseBuilder()
-    builder1.addValue("TSH", defaultDate, "0.667")
-    return builder1.build("Case1")
-}
-
-private fun serializeDeserialize(rdrCase: RDRCase): RDRCase {
-    val format = Json {
-        prettyPrint = true
-        allowStructuredMapKeys = true
+    private fun basicCase(): RDRCase {
+        val builder1 = RDRCaseBuilder()
+        builder1.addValue(tsh, defaultDate, "0.667")
+        return builder1.build("Case1")
     }
-    val serialized = format.encodeToString(rdrCase)
-    return format.decodeFromString(serialized)
-}
 
-private fun checkValues(case: RDRCase, attribute: Attribute, vararg expectedValues: String) {
-    checkValues(case, attribute.name, expectedValues = expectedValues)
-}
+    private fun serializeDeserialize(rdrCase: RDRCase): RDRCase {
+        val format = Json {
+            prettyPrint = true
+            allowStructuredMapKeys = true
+        }
+        val serialized = format.encodeToString(rdrCase)
+        return format.decodeFromString(serialized)
+    }
 
-private fun checkValues(case: RDRCase, attributeName: String, vararg expectedValues: String) {
-    val inCase = case.values(attributeName)!!
-    assertEquals(expectedValues.size, inCase.size)
-    inCase.zip(expectedValues).forEach {
-        assertEquals(it.first.value.text, it.second)
+    private fun checkValues(case: RDRCase, attribute: Attribute, vararg expectedValues: String) {
+        val inCase = case.values(attribute)!!
+        assertEquals(expectedValues.size, inCase.size)
+        inCase.zip(expectedValues).forEach {
+            assertEquals(it.first.value.text, it.second)
+        }
     }
 }
-

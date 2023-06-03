@@ -14,6 +14,8 @@ import kotlin.test.assertEquals
 
 class InterpretationTest {
     private val caseId = CaseId("1234", "Case 1")
+    private var attributeId = 0
+    private var conditionId = 0
 
     @Test
     fun construction() {
@@ -33,8 +35,8 @@ class InterpretationTest {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
         interpretation.textGivenByRules() shouldBe ""
 
-        val conclusion = Conclusion("First conclusion")
-        val rule = Rule("r", null, conclusion, emptySet())
+        val conclusion = Conclusion(1, "First conclusion")
+        val rule = Rule(0, null, conclusion, emptySet())
         interpretation.add(rule)
         interpretation.textGivenByRules() shouldBe conclusion.text
     }
@@ -42,9 +44,9 @@ class InterpretationTest {
     @Test
     fun textGivenByRulesWithDuplicateConclusion() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val conclusion = Conclusion("First conclusion")
-        val rule0 = Rule("r0", null, conclusion, emptySet())
-        val rule1 = Rule("r1", null, conclusion, emptySet())
+        val conclusion = Conclusion(1, "First conclusion")
+        val rule0 = Rule(0, null, conclusion, emptySet())
+        val rule1 = Rule(1, null, conclusion, emptySet())
         interpretation.add(rule0)
         interpretation.add(rule1)
         interpretation.textGivenByRules() shouldBe conclusion.text
@@ -53,9 +55,9 @@ class InterpretationTest {
     @Test
     fun textGivenByRulesWithNullRuleConclusion() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val conclusion = Conclusion("First conclusion")
-        val rule0 = Rule("r0", null, conclusion, emptySet())
-        val rule1 = Rule("r1", null, null, emptySet())
+        val conclusion = Conclusion(1, "First conclusion")
+        val rule0 = Rule(0, null, conclusion, emptySet())
+        val rule1 = Rule(1, null, null, emptySet())
         interpretation.add(rule0)
         interpretation.add(rule1)
         interpretation.textGivenByRules() shouldBe conclusion.text
@@ -64,9 +66,9 @@ class InterpretationTest {
     @Test
     fun textGivenByRulesHasConclusionsInABOrder() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val rule0 = Rule("r0", null, Conclusion("C"), emptySet())
-        val rule1 = Rule("r1", null, Conclusion("A"), emptySet())
-        val rule2 = Rule("r2", null, Conclusion("B"), emptySet())
+        val rule0 = Rule(0, null, Conclusion(1, "C"), emptySet())
+        val rule1 = Rule(1, null, Conclusion(2, "A"), emptySet())
+        val rule2 = Rule(1, null, Conclusion(3, "B"), emptySet())
         interpretation.add(rule0)
         interpretation.add(rule1)
         interpretation.add(rule2)
@@ -76,8 +78,8 @@ class InterpretationTest {
     @Test
     fun singleRule() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val conclusion = Conclusion("First conclusion")
-        val rule = Rule("r", null, conclusion, emptySet())
+        val conclusion = Conclusion(2, "First conclusion")
+        val rule = Rule(0, null, conclusion, emptySet())
         interpretation.add(rule)
         checkSingleConclusion(interpretation, conclusion)
     }
@@ -85,9 +87,9 @@ class InterpretationTest {
     @Test
     fun twoRulesWithSameConclusion() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val conclusion = Conclusion("First conclusion")
-        val rule0 = Rule("r0", null, conclusion, emptySet())
-        val rule1 = Rule("r1", null, conclusion, emptySet())
+        val conclusion = Conclusion(1, "First conclusion")
+        val rule0 = Rule(0, null, conclusion, emptySet())
+        val rule1 = Rule(1, null, conclusion, emptySet())
         interpretation.add(rule0)
         interpretation.add(rule1)
         checkSingleConclusion(interpretation, conclusion)
@@ -96,12 +98,12 @@ class InterpretationTest {
     @Test
     fun multipleRules() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val c0 = Conclusion("First conclusion")
-        val rule0 = Rule("r0", null, c0, emptySet())
-        val c1 = Conclusion("Second conclusion")
-        val rule1 = Rule("r1", null, c1, emptySet())
-        val c2 = Conclusion("Third conclusion")
-        val rule2 = Rule("r2", null, c2, emptySet())
+        val c0 = Conclusion(1, "First conclusion")
+        val rule0 = Rule(0, null, c0, emptySet())
+        val c1 = Conclusion(2, "Second conclusion")
+        val rule1 = Rule(1, null, c1, emptySet())
+        val c2 = Conclusion(3, "Third conclusion")
+        val rule2 = Rule(2, null, c2, emptySet())
         interpretation.add(rule0)
         interpretation.add(rule1)
         interpretation.add(rule2)
@@ -114,11 +116,11 @@ class InterpretationTest {
     @Test
     fun idsOfRulesGivingConclusion() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val concA = Conclusion("A")
-        val concB = Conclusion("B")
-        val rule0 = Rule("r0", null, concA, emptySet())
-        val rule1 = Rule("r1", null, concA, emptySet())
-        val rule2 = Rule("r2", null, concB, emptySet())
+        val concA = Conclusion(1, "A")
+        val concB = Conclusion(2, "B")
+        val rule0 = Rule(0, null, concA, emptySet())
+        val rule1 = Rule(1, null, concA, emptySet())
+        val rule2 = Rule(2, null, concB, emptySet())
         interpretation.idsOfRulesGivingConclusion(concA) shouldBe setOf()
 
         interpretation.add(rule0)
@@ -131,12 +133,12 @@ class InterpretationTest {
     @Test
     fun addRuleSummary() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val c0 = Conclusion("First conc")
-        val rule0 = Rule("r0", null, c0, emptySet())
-        val c1 = Conclusion("Second conc")
-        val rule1 = Rule("r1", null, c1, emptySet())
-        val c2 = Conclusion("Third conc")
-        val rule2 = Rule("r2", null, c2, emptySet())
+        val c0 = Conclusion(1, "First conc")
+        val rule0 = Rule(0, null, c0, emptySet())
+        val c1 = Conclusion(2, "Second conc")
+        val rule1 = Rule(1, null, c1, emptySet())
+        val c2 = Conclusion( 3, "Third conc")
+        val rule2 = Rule(2, null, c2, emptySet())
         interpretation.add(rule0.summary())
         interpretation.add(rule1.summary())
         interpretation.add(rule2.summary())
@@ -156,11 +158,11 @@ class InterpretationTest {
 
     @Test
     fun serialisationWithRule() {
-        val conclusion = Conclusion("First conc")
+        val conclusion = Conclusion(1, "First conc")
         val conditions = setOf(
-            Is(Attribute("x"), "1"),
+            Is(1, Attribute("x", 1), "1"),
         )
-        val rule = Rule("r0", null, conclusion, conditions)
+        val rule = Rule(0, null, conclusion, conditions)
         val interpretation = Interpretation(caseId).apply { add(rule) }
         val restored = serializeDeserialize(interpretation)
         restored.conclusions() shouldBe setOf(conclusion)
@@ -168,11 +170,11 @@ class InterpretationTest {
 
     @Test
     fun serialisationWithRuleSummary() {
-        val conclusion = Conclusion("First conc")
+        val conclusion = Conclusion(1,"First conc")
         val conditions = setOf(
-            Is(Attribute("x"), "1"),
+            Is(1, Attribute("x", 1), "1"),
         )
-        val rule = Rule("r0", null, conclusion, conditions)
+        val rule = Rule(0, null, conclusion, conditions)
         val ruleSummary = rule.summary()
         val interpretation = Interpretation(caseId).apply { add(ruleSummary) }
         val restored = serializeDeserialize(interpretation)
@@ -197,7 +199,7 @@ class InterpretationTest {
     }
 
     @Test
-    fun serialisationWithDiffListModifiedAfterInterpretionIsConstructed() {
+    fun serialisationWithDiffListModifiedAfterInterpretationIsConstructed() {
         val diffList = DiffList(
             listOf(
                 Addition("I can verify that is true."),
@@ -215,12 +217,12 @@ class InterpretationTest {
     @Test
     fun shouldReturnConditionsForConclusion() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val c0 = Conclusion("First conc")
-        val conditions0 = setOf(ContainsText(Attribute("A"), "text A"), ContainsText(Attribute("B"), "text B"))
-        val rule0 = Rule("r0", null, c0, conditions0)
-        val c1 = Conclusion("Second conc")
-        val conditions1 = setOf(ContainsText(Attribute("C"), "text C"), ContainsText(Attribute("D"), "text D"))
-        val rule1 = Rule("r1", null, c1, conditions1)
+        val c0 = Conclusion(1, "First conc")
+        val conditions0 = setOf(containsText(Attribute("A", attributeId++), "text A"), containsText(Attribute("B", attributeId++), "text B"))
+        val rule0 = Rule(0, null, c0, conditions0)
+        val c1 = Conclusion(2, "Second conc")
+        val conditions1 = setOf(containsText(Attribute("C", attributeId++), "text C"), containsText(Attribute("D", attributeId++), "text D"))
+        val rule1 = Rule(1, null, c1, conditions1)
         interpretation.add(rule0)
         interpretation.add(rule1)
         interpretation.conditionsForConclusion(c0) shouldBe listOf("A contains \"text A\"", "B contains \"text B\"")
@@ -230,14 +232,14 @@ class InterpretationTest {
     @Test
     fun conditionsForConclusionShouldBeInAlphaOrderForTheLeafRule() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val conclusion = Conclusion("First conc")
+        val conclusion = Conclusion(1, "First conc")
         val conditions = setOf(
-            ContainsText(Attribute("z"), "text z"),
-            ContainsText(Attribute("A"), "text A"),
-            ContainsText(Attribute("Y"), "text Y"),
-            ContainsText(Attribute("b"), "text b"),
+            containsText(Attribute("z", attributeId++), "text z"),
+            containsText(Attribute("A", attributeId++), "text A"),
+            containsText(Attribute("Y", attributeId++), "text Y"),
+            containsText(Attribute("b", attributeId++), "text b"),
         )
-        val rule0 = Rule("r0", null, conclusion, conditions)
+        val rule0 = Rule(0, null, conclusion, conditions)
         interpretation.add(rule0)
         interpretation.conditionsForConclusion(conclusion) shouldBe listOf(
             "A contains \"text A\"",
@@ -250,22 +252,22 @@ class InterpretationTest {
     @Test
     fun conditionsForConclusionShouldListConditionsOfParentRulesFirst() {
         val interpretation = Interpretation(caseId, "Whatever, blah.")
-        val conclusion0 = Conclusion("First conc")
-        val conclusion1 = Conclusion("Second conc")
+        val conclusion0 = Conclusion(1, "First conc")
+        val conclusion1 = Conclusion(2, "Second conc")
         val conditions0 = setOf(
-            ContainsText(Attribute("z"), "text z"),
-            ContainsText(Attribute("A"), "text A"),
-            ContainsText(Attribute("Y"), "text Y"),
-            ContainsText(Attribute("b"), "text b"),
+            ContainsText(1, Attribute("z", 26), "text z"),
+            ContainsText(2, Attribute("A", 1), "text A"),
+            ContainsText(3, Attribute("Y", 25), "text Y"),
+            ContainsText(4, Attribute("b", 2), "text b"),
         )
         val conditions1 = setOf(
-            ContainsText(Attribute("r"), "text r"),
-            ContainsText(Attribute("s"), "text s"),
-            ContainsText(Attribute("p"), "text p"),
-            ContainsText(Attribute("q"), "text q"),
+            ContainsText(5, Attribute("r", 18), "text r"),
+            ContainsText(6, Attribute("s", 19), "text s"),
+            ContainsText(7, Attribute("p", 16), "text p"),
+            ContainsText(8, Attribute("q", 17), "text q"),
         )
-        val rule0 = Rule("r0", null, conclusion0, conditions0)
-        val rule1 = Rule("r1", rule0, conclusion1, conditions1)
+        val rule0 = Rule(0, null, conclusion0, conditions0)
+        val rule1 = Rule(1, rule0, conclusion1, conditions1)
         interpretation.add(rule1)
         interpretation.conditionsForConclusion(conclusion1) shouldBe listOf(
             "A contains \"text A\"",
@@ -306,11 +308,11 @@ class InterpretationTest {
     @Test
     fun latestTextShouldBeTheVerifiedTextIfNotNull() {
         val verifiedText = "I can verify that is true."
-        val conclusion = Conclusion("First conc")
+        val conclusion = Conclusion(1, "First conc")
         val conditions = setOf(
-            Is(Attribute("x"), "1"),
+            Is(1, Attribute("x", 1), "1"),
         )
-        val rule0 = Rule("r0", null, conclusion, conditions)
+        val rule0 = Rule(10, null, conclusion, conditions)
         with(Interpretation(caseId, verifiedText)) {
             add(rule0)
             latestText() shouldBe verifiedText
@@ -319,15 +321,19 @@ class InterpretationTest {
 
     @Test
     fun latestTextShouldBeTheInterpretationIfNoVerifiedText() {
-        val conclusion = Conclusion("First conc")
+        val conclusion = Conclusion( 1,"First conc")
         val conditions = setOf(
-            Is(Attribute("x"), "1"),
+            Is(1, Attribute("x", 1), "1"),
         )
-        val rule0 = Rule("r0", null, conclusion, conditions)
+        val rule0 = Rule(10, null, conclusion, conditions)
         with(Interpretation(caseId)) {
             add(rule0)
             latestText() shouldBe conclusion.text
         }
+    }
+
+    private fun containsText(attribute: Attribute, match: String): ContainsText {
+        return ContainsText(conditionId++, attribute, match)
     }
 
     private fun serializeDeserialize(interpretation: Interpretation): Interpretation {

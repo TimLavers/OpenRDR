@@ -6,8 +6,6 @@ import io.rippledown.integration.pageobjects.CaseListPO
 import io.rippledown.integration.pageobjects.CaseQueuePO
 import io.rippledown.integration.pageobjects.InterpretationViewPO
 import io.rippledown.integration.restclient.RESTClient
-import io.rippledown.model.Attribute
-import io.rippledown.model.Conclusion
 import io.rippledown.model.condition.IsNormal
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -44,8 +42,10 @@ internal class ShowCaseInterpretation : UITestBase() {
     private fun buildRule() {
         val restClient = RESTClient()
         restClient.getCaseWithName("Case2")
-        restClient.startSessionToAddConclusionForCurrentCase(Conclusion(comment))
-        val condition = IsNormal(Attribute("TSH"))
+        val conclusion = conclusionFactory.getOrCreate(comment)
+        restClient.startSessionToAddConclusionForCurrentCase(conclusion)
+        val tsh = attributeFactory.create("TSH")
+        val condition = IsNormal(null, tsh)
         restClient.addConditionForCurrentSession(condition)
         restClient.commitCurrentSession()
     }

@@ -20,7 +20,9 @@ const val ID_KB_INFO_HEADING = "kb_info_heading"
 val mainScope = MainScope()
 
 val KBInfoPane = FC<KBHandler> { handler ->
-    var kbInfo by useState(KBInfo(""))
+    var kbInfo: KBInfo? by useState(null)
+
+    fun kbName() = if (kbInfo != null) kbInfo!!.name else ""
 
     useEffectOnce {
         mainScope.launch {
@@ -28,15 +30,15 @@ val KBInfoPane = FC<KBHandler> { handler ->
         }
     }
     Grid {
-        key = kbInfo.name
+        key = kbName()
         container = true
         direction = responsive(GridDirection.row)
         spacing = responsive(2)
         Grid {
             item = true
-            key = kbInfo.name
+            key = kbName()
             Typography {
-                +kbInfo.name
+                +kbName()
                 id = ID_KB_INFO_HEADING
                 variant = TypographyVariant.h6
                 align = TypographyAlign.left

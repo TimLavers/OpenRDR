@@ -5,7 +5,7 @@ import io.rippledown.model.RDRCase
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Is(val attribute: Attribute, val toFind: String) : Condition() {
+data class Is(override val id: Int? = null, val attribute: Attribute, val toFind: String) : Condition() {
     override fun holds(case: RDRCase): Boolean {
         val latest = case.getLatest(attribute) ?: return false
         return latest.value.text == toFind
@@ -14,4 +14,13 @@ data class Is(val attribute: Attribute, val toFind: String) : Condition() {
     override fun asText(): String {
         return "${attribute.name} is \"$toFind\""
     }
+
+    override fun sameAs(other: Condition): Boolean {
+        return if (other is Is) {
+            other.attribute == attribute
+        } else false
+    }
+
+    override fun alignAttributes(idToAttribute: (Int) -> Attribute) = Is(id, idToAttribute(attribute.id), toFind)
+
 }

@@ -45,7 +45,7 @@ data class Interpretation(
             .conditionTextsFromRoot
     }
 
-    fun idsOfRulesGivingConclusion(conclusion: Conclusion): Set<String> {
+    fun idsOfRulesGivingConclusion(conclusion: Conclusion): Set<Int> {
         return ruleSummaries.filter { conclusion == it.conclusion }.map { it.id }.toSet()
     }
 

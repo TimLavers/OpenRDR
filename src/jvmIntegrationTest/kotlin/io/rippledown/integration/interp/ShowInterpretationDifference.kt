@@ -6,8 +6,6 @@ import io.rippledown.integration.pageobjects.CaseQueuePO
 import io.rippledown.integration.pageobjects.CaseViewPO
 import io.rippledown.integration.pageobjects.InterpretationViewPO
 import io.rippledown.integration.restclient.RESTClient
-import io.rippledown.model.Attribute
-import io.rippledown.model.Conclusion
 import io.rippledown.model.condition.IsNormal
 import io.rippledown.model.condition.LessThanOrEqualTo
 import kotlin.test.AfterTest
@@ -22,9 +20,6 @@ internal class ShowInterpretationDifference : UITestBase() {
     private lateinit var interpretationViewPO: InterpretationViewPO
     private val caseName = "Case1"
     private val tshComment = "Your patient has a normal TSH."
-    private val tsh = Attribute("TSH")
-    private val condition1 = IsNormal(tsh)
-    private val condition2 = LessThanOrEqualTo(tsh, 0.7)
 
     @BeforeTest
     fun setup() {
@@ -47,9 +42,11 @@ internal class ShowInterpretationDifference : UITestBase() {
     private fun buildRuleForTSHComment() {
         with(RESTClient()) {
             getCaseWithName(caseName)
-            startSessionToAddConclusionForCurrentCase(Conclusion(tshComment))
-            addConditionForCurrentSession(condition1)
-            addConditionForCurrentSession(condition2)
+            val tsh = getOrCreateAttribute("TSH")
+            val conclusion = getOrCreateConclusion(tshComment)
+            startSessionToAddConclusionForCurrentCase(conclusion)
+            addConditionForCurrentSession(IsNormal(null, tsh))
+            addConditionForCurrentSession(LessThanOrEqualTo(null, tsh, 0.7))
             commitCurrentSession()
         }
     }

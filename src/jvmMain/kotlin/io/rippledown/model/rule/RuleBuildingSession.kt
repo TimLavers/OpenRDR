@@ -1,9 +1,13 @@
 package io.rippledown.model.rule
 
+import io.rippledown.model.Conclusion
 import io.rippledown.model.RDRCase
+import io.rippledown.model.RuleFactory
 import io.rippledown.model.condition.Condition
+import kotlin.random.Random
 
 class RuleBuildingSession(
+    private val ruleFactory: RuleFactory,
     private val tree: RuleTree,
     val case: RDRCase,
     private val action: RuleTreeChange,
@@ -11,12 +15,16 @@ class RuleBuildingSession(
     var conditions = mutableSetOf<Condition>()
     private val cornerstonesNotExempted = mutableSetOf<RDRCase>()
 
+    class TemporaryRuleFactory: RuleFactory {
+        override fun createRuleAndAddToParent(parent: Rule, conclusion: Conclusion?, conditions: Set<Condition>) = Rule(Random.nextInt(), parent, conclusion, conditions)
+    }
+
     init {
         // Get a copy of the rule tree.
         val copyOfTree = tree.copy()
         // Make the change to the copied tree.
         copyOfTree.apply(case)
-        action.updateRuleTree(copyOfTree, case, emptySet())
+        action.createChanger(copyOfTree, TemporaryRuleFactory()).updateRuleTree(case, emptySet())
 
         // Interpret each cornerstone against the modified tree
         // and also the original. Those cases for which these interpretations
@@ -50,9 +58,10 @@ class RuleBuildingSession(
     }
 
     fun addCondition(condition: Condition): RuleBuildingSession {
-        if (condition.holds(case))
-            conditions.add(condition)
-        else throw Exception("Condition $condition was not true for the case ${case.name}")
+        require (condition.holds(case)) {
+            "Condition $condition was not true for the case ${case.name}"
+        }
+        conditions.add(condition)
         return this
     }
 
@@ -62,6 +71,6 @@ class RuleBuildingSession(
     }
 
     fun commit(): Set<Rule> {
-        return action.updateRuleTree(tree, case, conditions)
+        return action.createChanger(tree, ruleFactory).updateRuleTree(case, conditions)
     }
 }

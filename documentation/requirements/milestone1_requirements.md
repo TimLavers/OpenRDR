@@ -10,6 +10,7 @@ The basic data structures needed for Milestone 1 are given below.
 **Attribute:**
 A well-defined concept understood by experts and used by them to make classifications. For example, age, sex,
 a clinical test such as TSH or LDL Cholesterol.
+See [Attribute Requirements](attributes.md)
 
 **TestEvent:**
 An `Attribute` and a point in time, representing a specific measurement for a patient.

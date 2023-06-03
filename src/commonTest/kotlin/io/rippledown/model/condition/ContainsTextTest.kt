@@ -1,12 +1,40 @@
 package io.rippledown.model.condition
 
-import io.kotest.matchers.shouldBe
+import io.kotest.matchers.*
+import io.kotest.matchers.types.shouldBeSameInstanceAs
+import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.rippledown.model.*
 import kotlin.test.Test
 
 internal class ContainsTextTest: ConditionTestBase() {
 
-    private val condition = ContainsText(tsh, "goat")
+    private val condition = ContainsText(88, tsh, "goat")
+
+    @Test //Cond-2
+    fun alignAttributes() {
+        val conditionCopy = serializeDeserialize(condition) as ContainsText
+        conditionCopy.attribute shouldNotBeSameInstanceAs condition.attribute
+        val alignedCopy = conditionCopy.alignAttributes(::attributeForId)
+        alignedCopy.attribute shouldBeSameInstanceAs condition.attribute
+        alignedCopy.toFind shouldBe condition.toFind
+    }
+
+    @Test //Cond-1
+    fun id() {
+        condition.id shouldBe 88
+    }
+
+    @Test
+    fun sameAs() {
+        condition should beSameAs(condition)
+        condition should beSameAs(ContainsText(100, condition.attribute, condition.toFind))
+        condition should beSameAs(ContainsText(null, condition.attribute, condition.toFind))
+
+        condition shouldNot beSameAs(Is(null, condition.attribute, "horse"))
+        condition shouldNot beSameAs(ContainsText(null, condition.attribute, "horse"))
+        condition shouldNot beSameAs(ContainsText(condition.id, condition.attribute, "horse"))
+        condition shouldNot beSameAs(ContainsText(null, glucose, condition.toFind))
+    }
 
     @Test
     fun attributeNotInCase() {
@@ -30,7 +58,7 @@ internal class ContainsTextTest: ConditionTestBase() {
 
     @Test
     fun holds() {
-        val containsText = ContainsText(clinicalNotes, "goat")
+        val containsText = ContainsText(90, clinicalNotes, "goat")
         containsText.holds(createCase("")) shouldBe false
         containsText.holds(createCase("sheep")) shouldBe false
         containsText.holds(createCase("goat")) shouldBe true

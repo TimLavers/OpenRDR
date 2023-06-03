@@ -1,77 +1,60 @@
 package io.rippledown.model.rule
 
 import io.rippledown.model.Conclusion
+import io.rippledown.model.ConclusionFactory
 import io.rippledown.model.RDRCase
-import io.rippledown.model.condition.Condition
+import io.rippledown.model.RuleFactory
+
+internal fun ConclusionFactory.getAlignedConclusion(provided: Conclusion): Conclusion {
+    val conclusionInFactory = getOrCreate(provided.text)
+    require(conclusionInFactory.id == provided.id) {
+        "Conclusion in factory is $conclusionInFactory, conclusion provided is $provided, which do not match."
+    }
+    return conclusionInFactory
+}
 
 abstract class RuleTreeChange {
+    abstract fun alignWith(conclusionFactory: ConclusionFactory): RuleTreeChange
     abstract fun isApplicable(tree: RuleTree, case: RDRCase): Boolean
-    abstract fun updateRuleTree(tree: RuleTree, case: RDRCase, conditions: Set<Condition> = setOf()): Set<Rule>
+    abstract fun createChanger(tree: RuleTree, ruleFactory: RuleFactory): RuleTreeChanger
 }
 
-class NoChange : RuleTreeChange() {
-    override fun isApplicable(tree: RuleTree, case: RDRCase): Boolean {
-        return false
+class ChangeTreeToAddConclusion(val toBeAdded: Conclusion) : RuleTreeChange() {
+    override fun alignWith(conclusionFactory: ConclusionFactory): ChangeTreeToAddConclusion {
+        val conclusionInFactory = conclusionFactory.getAlignedConclusion(toBeAdded)
+        return ChangeTreeToAddConclusion(conclusionInFactory)
     }
 
-    override fun updateRuleTree(tree: RuleTree, case: RDRCase, conditions: Set<Condition>): Set<Rule> {
-        return setOf()
-    }
+    override fun isApplicable(tree: RuleTree, case: RDRCase) = !tree.apply(case).conclusions().contains(toBeAdded)
+
+    override fun createChanger(tree: RuleTree, ruleFactory: RuleFactory) = AddConclusionRuleTreeChanger(tree, ruleFactory, toBeAdded)
+
+    override fun toString() = "ChangeTreeToAddConclusion(toBeAdded=$toBeAdded)"
 }
 
-class ChangeTreeToAddConclusion(private val toBeAdded: Conclusion) : RuleTreeChange() {
-    override fun isApplicable(tree: RuleTree, case: RDRCase): Boolean {
-        return !tree.apply(case).conclusions().contains(toBeAdded)
+open class ChangeTreeToRemoveConclusion(val toBeRemoved: Conclusion) : RuleTreeChange() {
+    override fun alignWith(conclusionFactory: ConclusionFactory): ChangeTreeToRemoveConclusion {
+        val conclusionInFactory = conclusionFactory.getAlignedConclusion(toBeRemoved)
+        return ChangeTreeToRemoveConclusion(conclusionInFactory)
     }
 
-    override fun updateRuleTree(tree: RuleTree, case: RDRCase, conditions: Set<Condition>): Set<Rule> {
-        val rule = tree.rule(toBeAdded, conditions)
-        tree.root.addChild(rule)
-        return setOf(rule)
-    }
+    override fun isApplicable(tree: RuleTree, case: RDRCase) = tree.apply(case).conclusions().contains(toBeRemoved)
 
-    override fun toString(): String {
-        return "ChangeTreeToAddConclusion(toBeAdded=$toBeAdded)"
-    }
+    override fun createChanger(tree: RuleTree, ruleFactory: RuleFactory) = RemoveConclusionRuleTreeChanger(tree, ruleFactory, toBeRemoved)
+
+    override fun toString() = "ChangeTreeToRemoveConclusion(toBeRemoved=$toBeRemoved)"
 }
 
-open class ChangeTreeToRemoveConclusion(internal val toBeRemoved: Conclusion) : RuleTreeChange() {
-
-    override fun isApplicable(tree: RuleTree, case: RDRCase): Boolean {
-        return tree.apply(case).conclusions().contains(toBeRemoved)
+class ChangeTreeToReplaceConclusion(val toBeReplaced: Conclusion, val replacement: Conclusion) : RuleTreeChange() {
+    override fun alignWith(conclusionFactory: ConclusionFactory): ChangeTreeToReplaceConclusion {
+        val toBeReplacedFactoryInstance = conclusionFactory.getAlignedConclusion(toBeReplaced)
+        val replacementFactoryInstance = conclusionFactory.getAlignedConclusion(replacement)
+        return ChangeTreeToReplaceConclusion(toBeReplacedFactoryInstance, replacementFactoryInstance)
     }
 
-    override fun updateRuleTree(tree: RuleTree, case: RDRCase, conditions: Set<Condition>): Set<Rule> {
-        tree.apply(case)
-        val interpretation = case.interpretation
-        val rulesChanged = mutableSetOf<Rule>()
-        val ruleIds = interpretation.idsOfRulesGivingConclusion(toBeRemoved)
-        val rulesGivingConclusion = tree.rules().filter { rule -> ruleIds.contains(rule.id)  }
-        rulesGivingConclusion.forEach {
-                    val newChild = createRule(tree, conditions)
-                    it.addChild(newChild)
-                    rulesChanged.add(newChild)
-                }
-        return rulesChanged
-    }
+    override fun isApplicable(tree: RuleTree, case: RDRCase) = tree.apply(case).conclusions().contains(toBeReplaced)
 
-    open fun createRule(tree: RuleTree, conditions: Set<Condition>): Rule {
-        return tree.rule(null, conditions)
-    }
+    override fun createChanger(tree: RuleTree, ruleFactory: RuleFactory) = ReplaceConclusionRuleTreeChanger(tree, ruleFactory, toBeReplaced, replacement)
 
-    override fun toString(): String {
-        return "ChangeTreeToRemoveConclusion(toBeRemoved=$toBeRemoved)"
-    }
-}
-
-class ChangeTreeToReplaceConclusion(toBeReplaced: Conclusion, private val replacement: Conclusion) : ChangeTreeToRemoveConclusion(toBeReplaced) {
-    override fun createRule(tree: RuleTree, conditions: Set<Condition>): Rule {
-        return tree.rule(replacement, conditions)
-    }
-
-    override fun toString(): String {
-        return "ChangeTreeToReplaceConclusion(toBeReplaced=$toBeRemoved replacement=$replacement)"
-    }
-
-
+    override fun toString() = "ChangeTreeToReplaceConclusion(toBeReplaced=$toBeReplaced replacement=$replacement)"
 }

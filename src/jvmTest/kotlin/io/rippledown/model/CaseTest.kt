@@ -15,7 +15,7 @@ internal class CaseTest {
         val deserialized = format.decodeFromString<RDRCase>(caseString)
         assertEquals(2, deserialized.data.size)
         assertEquals(deserialized.name, "Case1")
-        assertEquals(deserialized.get("TSH")!!.value.text, "0.667")
-        assertEquals(deserialized.get("ABC")!!.value.text, "6.7")
+        assertEquals(deserialized.getLatest(Attribute("TSH", 1))!!.value.text, "0.667")
+        assertEquals(deserialized.getLatest(Attribute("ABC", 2))!!.value.text, "6.7")
     }
 }

@@ -1,42 +1,46 @@
 package io.rippledown.model.rule.dsl
 
 import io.rippledown.model.Attribute
-import io.rippledown.model.Conclusion
+import io.rippledown.model.ConclusionFactory
+import io.rippledown.model.ConditionFactory
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ContainsText
 import io.rippledown.model.rule.Rule
 import io.rippledown.model.rule.RuleTree
-import io.rippledown.util.randomString
+import kotlin.random.Random
 
-fun ruleTree(init: ABSTRACT_RULE_TEMPLATE.() -> Unit) : ROOT_TEMPLATE {
-    val n = ROOT_TEMPLATE()
+fun ruleTree(conclusionFactory: ConclusionFactory,init: AbstractRuleTemplate.() -> Unit) : RootTemplate {
+    val n = RootTemplate(conclusionFactory)
     n.init()
     return n
 }
 
-open class ABSTRACT_RULE_TEMPLATE {
-    protected lateinit var conclusionDesc: String
-    var id = randomString(5)
+open class AbstractRuleTemplate(val conclusionFactory: ConclusionFactory) {
+
+    protected lateinit var conclusionText: String
+    var id = Random.nextInt()
     protected var isStopping: Boolean = false
     protected val conditions = mutableSetOf<Condition>()
-    protected val childRules = mutableListOf<RULE_TEMPLATE>()
+    protected val childRules = mutableListOf<RuleTemplate>()
 
-    open fun child(init: RULE_TEMPLATE.() -> RULE_TEMPLATE) = apply {
-        val r = RULE_TEMPLATE()
+    open fun child(init: RuleTemplate.() -> RuleTemplate) = apply {
+        val r = RuleTemplate(conclusionFactory)
         r.init()
         childRules.add(r)
     }
 
     open fun rule(): Rule {
-        val result = if (isStopping) Rule(id, null, null, conditions) else Rule(id, null, Conclusion(conclusionDesc), conditions)
+        val result = if (isStopping) Rule(id, null, null, conditions) else Rule(id, null, createConclusion(), conditions)
         childRules.forEach { result.addChild(it.rule()) }
         return result
     }
+
+    fun createConclusion() = conclusionFactory.getOrCreate(conclusionText)
 }
 
-class ROOT_TEMPLATE : ABSTRACT_RULE_TEMPLATE() {
-    override fun child(init: RULE_TEMPLATE.() -> RULE_TEMPLATE) = apply {
-        val r = RULE_TEMPLATE()
+class RootTemplate(conclusionFactory: ConclusionFactory) : AbstractRuleTemplate(conclusionFactory) {
+    override fun child(init: RuleTemplate.() -> RuleTemplate) = apply {
+        val r = RuleTemplate(conclusionFactory)
         r.init()
         childRules.add(r)
     }
@@ -46,46 +50,46 @@ class ROOT_TEMPLATE : ABSTRACT_RULE_TEMPLATE() {
     }
 
     override fun rule(): Rule {
-        val result = Rule(randomString(5),null, Conclusion(conclusionDesc), conditions)
+        val result = Rule(Random.nextInt(),null, createConclusion(), conditions)
         childRules.forEach { result.addChild(it.rule()) }
         return result
     }
 
     init {
-        conclusionDesc = "ROOT"
+        conclusionText = "ROOT"
     }
 }
 
-class RULE_TEMPLATE : ABSTRACT_RULE_TEMPLATE() {
-    override fun child(init: RULE_TEMPLATE.() -> RULE_TEMPLATE) = apply {
-        val r = RULE_TEMPLATE()
+class RuleTemplate(conclusionFactory: ConclusionFactory) : AbstractRuleTemplate(conclusionFactory) {
+    override fun child(init: RuleTemplate.() -> RuleTemplate) = apply {
+        val r = RuleTemplate(conclusionFactory)
         r.init()
         childRules.add(r)
     }
 
-    fun conclusion(init: RULE_TEMPLATE.() -> String) = apply {
-        conclusionDesc = init()
+    fun conclusion(init: RuleTemplate.() -> String) = apply {
+        conclusionText = init()
     }
 
     operator fun String.unaryPlus() {
-        conclusionDesc = this
+        conclusionText = this
     }
 
     fun stop() = apply {
         isStopping = true
     }
 
-    fun condition(init: CONDITION_TEMPLATE.() -> Unit) = apply {
-        val r = CONDITION_TEMPLATE()
+    fun condition(conditionFactory: ConditionFactory, init: CONDITION_TEMPLATE.() -> Unit) = apply {
+        val r = CONDITION_TEMPLATE(conditionFactory)
         r.init()
         conditions.add(r.condition())
     }
 }
-class CONDITION_TEMPLATE {
-    lateinit var attributeName: String
+class CONDITION_TEMPLATE(private val conditionFactory: ConditionFactory) {
+    lateinit var attribute: Attribute
     lateinit var constant: String
 
     fun condition(): Condition {
-        return ContainsText(Attribute(attributeName), constant)
+        return conditionFactory.getOrCreate(ContainsText(null, attribute, constant))
     }
 }

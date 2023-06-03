@@ -1,12 +1,32 @@
 package io.rippledown.model.condition
 
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNot
+import io.kotest.matchers.types.shouldBeSameInstanceAs
+import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.rippledown.model.*
 import kotlin.test.Test
 
 internal class IsNormalTest: ConditionTestBase() {
 
-    private val condition = IsNormal(tsh)
+    private val condition = IsNormal(1000, tsh)
+
+    @Test
+    fun id() {
+        condition.id shouldBe 1000
+    }
+
+    @Test
+    fun sameAs() {
+        condition should beSameAs(condition)
+        condition should beSameAs(IsNormal(100, condition.attribute))
+        condition should beSameAs(IsNormal(null, condition.attribute))
+
+        condition shouldNot beSameAs(IsLow(null, condition.attribute))
+        condition shouldNot beSameAs(IsNormal(null, glucose))
+        condition shouldNot beSameAs(IsNormal(condition.id, glucose))
+    }
 
     @Test
     fun attributeNotInCase() {
@@ -51,11 +71,11 @@ internal class IsNormalTest: ConditionTestBase() {
     fun currentValueNotNormal() {
         val builder = RDRCaseBuilder()
         val tshResult1 = TestResult(Value("8.67"), range, "mU/L")
-        builder.addResult(tsh.name, defaultDate, tshResult1)
+        builder.addResult(tsh, defaultDate, tshResult1)
         val range0 = ReferenceRange("0.25", "2.90")
         val tshResult0 = TestResult(Value("0.80"), range0, "mU/L")
         val yesterday = daysAgo(1)
-        builder.addResult(tsh.name, yesterday, tshResult0)
+        builder.addResult(tsh, yesterday, tshResult0)
         val case = builder.build("Case1")
 
         condition.holds(case) shouldBe false
@@ -65,11 +85,11 @@ internal class IsNormalTest: ConditionTestBase() {
     fun noValueNormal() {
         val builder = RDRCaseBuilder()
         val tshResult1 = TestResult(Value("8.67"), range, "mU/L")
-        builder.addResult(tsh.name, defaultDate, tshResult1)
+        builder.addResult(tsh, defaultDate, tshResult1)
         val range0 = ReferenceRange("0.25", "2.90")
         val tshResult0 = TestResult(Value("0.08"), range0, "mU/L")
         val yesterday = daysAgo(1)
-        builder.addResult(tsh.name, yesterday, tshResult0)
+        builder.addResult(tsh, yesterday, tshResult0)
         val case = builder.build("Case1")
 
         condition.holds(case) shouldBe false
@@ -86,8 +106,16 @@ internal class IsNormalTest: ConditionTestBase() {
     }
 
     @Test
+    fun alignAttributes() {
+        val conditionCopy = serializeDeserialize(condition) as IsNormal
+        conditionCopy.attribute shouldNotBeSameInstanceAs condition.attribute
+        val alignedCopy = conditionCopy.alignAttributes(::attributeForId)
+        alignedCopy.attribute shouldBeSameInstanceAs condition.attribute
+    }
+
+    @Test
     fun asText() {
         condition.asText() shouldBe "TSH is normal"
-        IsNormal(Attribute("Blah !@#@#  Blah is normal")).asText() shouldBe "Blah !@#@#  Blah is normal is normal"
+        IsNormal(8888, Attribute("Blah !@#@#  Blah is normal", 100)).asText() shouldBe "Blah !@#@#  Blah is normal is normal"
     }
 }

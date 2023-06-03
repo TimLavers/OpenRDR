@@ -6,7 +6,7 @@ import io.rippledown.integration.pageobjects.CaseViewPO
 import io.rippledown.integration.pageobjects.ConclusionsViewPO
 import io.rippledown.integration.restclient.RESTClient
 import io.rippledown.model.Attribute
-import io.rippledown.model.Conclusion
+import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.GreaterThanOrEqualTo
 import io.rippledown.model.condition.IsNormal
 import io.rippledown.model.condition.LessThanOrEqualTo
@@ -24,17 +24,23 @@ internal class ShowRuleCondition : UITestBase() {
     private val caseName = "Case1"
     private val tshComment = "Normal TSH"
     private val abcComment = "Unusual ABC value"
-    private val tsh = Attribute("TSH")
-    private val abc = Attribute("ABC")
-    private val condition1 = IsNormal(tsh)
-    private val condition2 = LessThanOrEqualTo(tsh, 0.7)
-    private val condition3 = GreaterThanOrEqualTo(abc, 6.1)
-    private val condition4 = LessThanOrEqualTo(abc, 7.1)
+    private lateinit var tsh : Attribute
+    private lateinit var abc : Attribute
+    private lateinit var condition1: Condition
+    private lateinit var condition2 : Condition
+    private lateinit var condition3 : Condition
+    private lateinit var condition4 : Condition
 
     @BeforeTest
     fun setup() {
         serverProxy.start()
         resetKB()
+        tsh = attributeFactory.create("TSH")
+        abc = attributeFactory.create("ABC")
+        condition1 = conditionFactory.getOrCreate(IsNormal(null, tsh))
+        condition2 = conditionFactory.getOrCreate(LessThanOrEqualTo(null, tsh, 0.7))
+        condition3 = conditionFactory.getOrCreate(GreaterThanOrEqualTo(null, abc, 6.1))
+        condition4 = conditionFactory.getOrCreate(LessThanOrEqualTo(null, abc, 7.1))
         setupCase()
         buildRuleForTSH()
         buildRuleForABC()
@@ -53,7 +59,8 @@ internal class ShowRuleCondition : UITestBase() {
     private fun buildRuleForTSH() {
         with(RESTClient()) {
             getCaseWithName(caseName)
-            startSessionToAddConclusionForCurrentCase(Conclusion(tshComment))
+            val tshComment = conclusionFactory.getOrCreate(tshComment)
+            startSessionToAddConclusionForCurrentCase(tshComment)
             addConditionForCurrentSession(condition1)
             addConditionForCurrentSession(condition2)
             commitCurrentSession()
@@ -63,7 +70,8 @@ internal class ShowRuleCondition : UITestBase() {
     private fun buildRuleForABC() {
         with(RESTClient()) {
             getCaseWithName(caseName)
-            startSessionToAddConclusionForCurrentCase(Conclusion(abcComment))
+            val abcConclusion = conclusionFactory.getOrCreate(abcComment)
+            startSessionToAddConclusionForCurrentCase(abcConclusion)
             addConditionForCurrentSession(condition3)
             addConditionForCurrentSession(condition4)
             commitCurrentSession()

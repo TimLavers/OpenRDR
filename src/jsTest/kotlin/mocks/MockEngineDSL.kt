@@ -32,8 +32,8 @@ class EngineConfig {
     var expectedInterpretation: Interpretation? = null
     var expectedRuleRequest: RuleRequest? = null
 
-    var expectedMovedAttribute: Attribute? = null
-    var expectedTargetAttribute: Attribute? = null
+    var expectedMovedAttributeId: Int? = null
+    var expectedTargetAttributeId: Int? = null
 
     val returnKBInfo = KBInfo("Glucose")
 
@@ -101,9 +101,9 @@ private class EngineBuilder(private val config: EngineConfig) {
 
             MOVE_ATTRIBUTE_JUST_BELOW_OTHER -> {
                 val body = request.body as TextContent
-                val data = Json.decodeFromString<Pair<Attribute, Attribute>>(body.text)
-                data.first shouldBe config.expectedMovedAttribute
-                data.second shouldBe config.expectedTargetAttribute
+                val data = Json.decodeFromString<Pair<Int, Int>>(body.text)
+                data.first shouldBe config.expectedMovedAttributeId
+                data.second shouldBe config.expectedTargetAttributeId
 
                 respond(
                     content = ByteReadChannel(

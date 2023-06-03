@@ -1,6 +1,7 @@
 package io.rippledown.server
 
 import io.rippledown.kb.KB
+import io.rippledown.kb.KBManager
 import io.rippledown.kb.export.KBExporter
 import io.rippledown.kb.export.KBImporter
 import io.rippledown.kb.export.util.Unzipper
@@ -13,6 +14,9 @@ import io.rippledown.model.diff.*
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.model.rule.ChangeTreeToRemoveConclusion
 import io.rippledown.model.rule.ChangeTreeToReplaceConclusion
+import io.rippledown.persistence.PersistenceProvider
+import io.rippledown.persistence.postgres.PostgresPersistenceProvider
+import io.rippledown.util.EntityRetrieval
 import io.rippledown.textdiff.diffList
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -23,26 +27,38 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.time.LocalDateTime
 import kotlin.io.path.createTempDirectory
 
-class ServerApplication {
+class ServerApplication(private val persistenceProvider: PersistenceProvider = PostgresPersistenceProvider()) {
     val casesDir = File("cases").apply { mkdirs() }
     val interpretationsDir = File("interpretations").apply { mkdirs() }
     private val idToCase = mutableMapOf<String, RDRCase>()
+    private val kbManager = KBManager(persistenceProvider)
 
-    var kb = KB("Thyroids")
+    lateinit var kb: KB
+
+    init {
+        createKB()
+    }
+
+    fun reCreateKB() {
+        val oldKBInfo = kbName()
+        createKB()
+        kbManager.deleteKB(oldKBInfo)
+    }
 
     fun createKB() {
-        kb = KB("Thyroids")
+        val kbInfo = kbManager.createKB("Thyroids", true)
+        kb = (kbManager.openKB(kbInfo.id) as EntityRetrieval.Success<KB>).entity
     }
 
     fun kbName(): KBInfo {
-        return KBInfo(kb.name)
+        return kb.kbInfo
     }
 
     fun exportKBToZip(): File {
         val tempDir: File = createTempDirectory().toFile()
         KBExporter(tempDir, kb).export()
         val bytes = Zipper(tempDir).zip()
-        val file = File(tempDir, "${kb.name}.zip")
+        val file = File(tempDir, "${kb.kbInfo}.zip")
         file.writeBytes(bytes)
         return file
     }
@@ -55,17 +71,17 @@ class ServerApplication {
             "Invalid zip for KB import."
         }
         val rootDir = subDirectories[0]
-        kb = KBImporter(rootDir).import()
+        kb = KBImporter(rootDir, persistenceProvider).import()
     }
 
-    fun startRuleSessionForDifference(caseId: String, diff: Diff) {
+    private fun startRuleSessionForDifference(caseId: String, diff: Diff) {
         when (diff) {
-            is Addition -> startRuleSessionToAddConclusion(caseId, Conclusion(diff.right()))
-            is Removal -> startRuleSessionToRemoveConclusion(caseId, Conclusion(diff.left()))
+            is Addition -> startRuleSessionToAddConclusion(caseId, kb.conclusionManager.getOrCreate(diff.right()))
+            is Removal -> startRuleSessionToRemoveConclusion(caseId, kb.conclusionManager.getOrCreate(diff.left()))
             is Replacement -> startRuleSessionToReplaceConclusion(
                 caseId,
-                Conclusion(diff.left()),
-                Conclusion(diff.right())
+                kb.conclusionManager.getOrCreate(diff.left()),
+                kb.conclusionManager.getOrCreate(diff.right())
             )
 
             is Unchanged -> {}
@@ -76,7 +92,7 @@ class ServerApplication {
         kb.startRuleSession(case(caseId), ChangeTreeToAddConclusion(conclusion))
     }
 
-    fun startRuleSessionToRemoveConclusion(caseId: String, conclusion: Conclusion) {
+    private fun startRuleSessionToRemoveConclusion(caseId: String, conclusion: Conclusion) {
         kb.startRuleSession(case(caseId), ChangeTreeToRemoveConclusion(conclusion))
     }
 
@@ -115,9 +131,17 @@ class ServerApplication {
 
     fun conditionHintsForCase(id: String): ConditionList = kb.conditionHintsForCase(case(id))
 
-    fun moveAttributeJustBelow(moved: Attribute, target: Attribute) {
+    fun moveAttributeJustBelow(movedId: Int, targetId: Int) {
+        val moved = kb.attributeManager.getById(movedId)
+        val target = kb.attributeManager.getById(targetId)
         kb.caseViewManager.moveJustBelow(moved, target)
     }
+
+    fun getOrCreateAttribute(name: String) = kb.attributeManager.getOrCreate(name)
+
+    fun getOrCreateConclusion(text: String) = kb.conclusionManager.getOrCreate(text)
+
+    fun getOrCreateCondition(condition: Condition) = kb.conditionManager.getOrCreate(condition)
 
     /**
      * Save the verified text.
@@ -180,16 +204,30 @@ class ServerApplication {
     }
 
     private fun getCaseFromFile(file: File): RDRCase {
+        // The json in the file has attributes with
+        // dummy ids. We parse the json into a case
+        // and then switch the attributes in it with
+        // ones in the KB. When we have a proper
+        // external case format, we can do something
+        // less confusing.
         val format = Json { allowStructuredMapKeys = true }
         val data = FileUtils.readFileToString(file, UTF_8)
-        return format.decodeFromString(data)
+        val caseWithDummyAttributes: RDRCase = format.decodeFromString(data)
+        val dataMap = mutableMapOf<TestEvent, TestResult>()
+        caseWithDummyAttributes.data.map {
+            val originalTestEvent = it.key
+            val originalAttribute = originalTestEvent.attribute
+            val newAttribute = kb.attributeManager.getOrCreate(originalAttribute.name)
+            val newTestEvent = TestEvent(newAttribute, originalTestEvent.date)
+            dataMap[newTestEvent] = it.value
+        }
+        return RDRCase(caseWithDummyAttributes.name, dataMap)
     }
 
-    internal fun uninterpretedCase(id: String): RDRCase {
+    private fun uninterpretedCase(id: String): RDRCase {
         if (!idToCase.containsKey(id)) {
             idToCase[id] = getCaseFromFile(File(casesDir, "$id.json"))
         }
-        return idToCase.get(id)!!
+        return idToCase[id]!!
     }
 }
-

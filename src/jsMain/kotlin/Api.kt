@@ -100,7 +100,7 @@ class Api(engine: HttpClientEngine = Js.create()) {
     suspend fun conditionHints(caseId: String): ConditionList =
         jsonClient.get("$endpoint$CONDITION_HINTS?id=$caseId").body()
 
-    suspend fun moveAttributeJustBelowOther(moved: Attribute, target: Attribute): OperationResult {
+    suspend fun moveAttributeJustBelowOther(moved: Int, target: Int): OperationResult {
         return jsonClient.post("$endpoint$MOVE_ATTRIBUTE_JUST_BELOW_OTHER") {
             contentType(ContentType.Application.Json)
             setBody(Pair(moved, target))

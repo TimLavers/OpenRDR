@@ -25,17 +25,17 @@ val AttributeCell = FC<AttributeCellHandler> {
         }
         draggable = true
         onDragStart = { event ->
-            event.dataTransfer.setData("text", it.attribute.name)
+            event.dataTransfer.setData("text", "${it.attribute.id}")
         }
         onDragOver = { event: DragEvent<HTMLTableCellElement> ->
             event.preventDefault()
         }
         onDrop = { event: DragEvent<HTMLTableCellElement> ->
             event.preventDefault()
-            val targetName = it.attribute.name
-            val movedName = event.dataTransfer.getData("text")
+            val targetId = it.attribute.id
+            val movedId = event.dataTransfer.getData("text").toInt()
             it.scope.launch {
-                it.api.moveAttributeJustBelowOther(Attribute(movedName), Attribute(targetName))
+                it.api.moveAttributeJustBelowOther(movedId, targetId)
                 it.onCaseEdited()
             }
         }

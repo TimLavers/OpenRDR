@@ -3,26 +3,58 @@ package io.rippledown.kb
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.rippledown.model.*
-import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.GreaterThanOrEqualTo
+import io.rippledown.model.condition.IsNormal
 import io.rippledown.model.condition.HasCurrentValue
 import io.rippledown.model.condition.LessThanOrEqualTo
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
+import io.rippledown.persistence.InMemoryKB
+import org.junit.Before
 import kotlin.test.Test
 
 class KBTest {
+    private lateinit var kb : KB
+
+    @Before
+    fun setup() {
+        val kbInfo = KBInfo("id123", "Blah")
+        kb = createKB(kbInfo)
+    }
+
+    @Test
+    fun attributeManager() {
+        kb.attributeManager.all() shouldBe emptySet()
+    }
+
+    @Test
+    fun conclusionManager() {
+        kb.conclusionManager.all() shouldBe  emptySet()
+
+        val created = kb.conclusionManager.getOrCreate("Whatever")
+        kb.conclusionManager.getById(created.id) shouldBeSameInstanceAs created
+    }
+
+    @Test
+    fun conditionManager() {
+        kb.conditionManager.all() shouldBe emptySet()
+        val glucose = kb.attributeManager.getOrCreate("Glucose")
+        val template = IsNormal(null, glucose)
+        val created = kb.conditionManager.getOrCreate(template)
+        kb.conditionManager.getById(created.id!!) shouldBeSameInstanceAs created
+    }
 
     @Test
     fun viewableInterpretedCase() {
-        val kb = KB("Blah")
         val comment = "Coffee time!"
         buildRuleToAddAComment(kb, comment)
 
         val builder = RDRCaseBuilder()
-        builder.addValue("ABC", defaultDate, "10")
-        builder.addValue("DEF", defaultDate, "20")
+        builder.addValue(Attribute("ABC", 300), defaultDate, "10")
+        builder.addValue(Attribute("DEF", 400), defaultDate, "20")
         val case = builder.build("Case2")
 
         case.interpretation.textGivenByRules() shouldBe ""
@@ -41,7 +73,6 @@ class KBTest {
 
     @Test
     fun interpretCase() {
-        val kb = KB("Blah")
         val comment = "Whatever."
         buildRuleToAddAComment(kb, comment)
         val case = createCase("Case1", "1.0")
@@ -53,53 +84,55 @@ class KBTest {
     private fun buildRuleToAddAComment(kb: KB, comment: String) {
         kb.addCase(createCase("Case1", "1.0"))
         val sessionCase = kb.getCaseByName("Case1")
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion(comment)))
+        val conclusion = kb.conclusionManager.getOrCreate(comment)
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(conclusion))
         kb.commitCurrentRuleSession()
     }
 
     @Test
     fun equalsTest() {
-        val kb1 = KB("Thyroids")
-        val kb2 = KB("Glucose")
-        val kb3 = KB("thyroids")
-        val kb4 = KB("Thyroids")
+        val kb1 = createKB(KBInfo("1","Thyroids"))
+        val kb2 = createKB(KBInfo("2","Glucose"))
+        val kb3 = createKB(KBInfo("4","Glucose"))
+        val kb4 = createKB(KBInfo("4","Thyroids"))
         (kb1 == kb2) shouldBe false
         (kb1 == kb3) shouldBe false
-        (kb1 == kb4) shouldBe true
+        (kb3 == kb4) shouldBe true
     }
 
     @Test
     fun hashCodeTest() {
-        val kb1 = KB("Thyroids")
-        val kb2 = KB("Thyroids")
+        val kb1 = createKB(KBInfo("id123","Thyroids"))
+        val kb2 = createKB(KBInfo("id123","Thyroids"))
         (kb1.hashCode() == kb2.hashCode()) shouldBe true
     }
 
-    @Test(expected = NoSuchElementException::class)
+    @Test
     fun getCaseByNameWhenNoCases() {
-        KB("Blah").getCaseByName("Whatever")
+        shouldThrow<NoSuchElementException> {
+            kb.getCaseByName("Whatever")
+        }
     }
 
-    @Test(expected = NoSuchElementException::class)
+    @Test
     fun getCaseByNameUnknownCase() {
-        val kb = KB("Blah")
         kb.addCase(createCase("Case1"))
-        kb.getCaseByName("Whatever")
+        shouldThrow<NoSuchElementException> {
+            kb.getCaseByName("Whatever")
+        }
     }
 
     @Test
     fun getCase() {
-        val kb = KB("Blah")
         kb.addCase(createCase("Case1", "1.2"))
         kb.addCase(createCase("Case2"))
         val retrieved = kb.getCaseByName("Case1")
         retrieved.name shouldBe "Case1"
-        retrieved.get("Glucose")!!.value.text shouldBe "1.2"
+        retrieved.getLatest(glucose())!!.value.text shouldBe "1.2"
     }
 
     @Test
     fun allCases() {
-        val kb = KB("Blah")
         kb.allCases() shouldBe emptySet()
         for (i in 1..10) {
             kb.addCase(createCase("Case$i"))
@@ -113,7 +146,6 @@ class KBTest {
 
     @Test
     fun addCase() {
-        val kb = KB("Blah")
         for (i in 1..10) {
             kb.addCase(createCase("Case$i"))
         }
@@ -125,7 +157,6 @@ class KBTest {
 
     @Test
     fun containsCaseWithName() {
-        val kb = KB("Blah")
         for (i in 1..10) {
             val caseName = "Case$i"
             kb.containsCaseWithName(caseName) shouldBe false
@@ -136,7 +167,6 @@ class KBTest {
 
     @Test
     fun cannotAddCaseWithSameNameAsExistingCase() {
-        val kb = KB("Blah")
         kb.addCase(createCase("Blah"))
         kb.addCase(createCase("Whatever"))
         shouldThrow<IllegalArgumentException> {
@@ -146,7 +176,6 @@ class KBTest {
 
     @Test
     fun `rule session must be started for rule session operations`() {
-        val kb = KB("Blah")
         val noSessionMessage = "Rule session not started."
         shouldThrow<IllegalStateException> {
             kb.addConditionToCurrentRuleSession(createCondition())
@@ -163,40 +192,38 @@ class KBTest {
 
     @Test
     fun `cannot start a rule session if one is already started`() {
-        val kb = KB("Blah")
         kb.addCase(createCase("Case1"))
         val sessionCase = kb.getCaseByName("Case1")
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion("Whatever.")))
+        val conclusion = kb.conclusionManager.getOrCreate("Whatever.")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(conclusion))
         shouldThrow<IllegalStateException> {
-            kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion("Stuff.")))
+            kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Stuff.")))
         }.message shouldBe "Session already in progress."
     }
 
     @Test
     fun `cannot start a rule session if action is not applicable to session case`() {
-        val kb = KB("Blah")
         kb.addCase(createCase("Case1", "1.0"))
         kb.addCase(createCase("Case2", "1.0"))
         val sessionCase = kb.getCaseByName("Case1")
         val otherCase = kb.getCaseByName("Case1")
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion("Whatever.")))
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
         kb.commitCurrentRuleSession()
         kb.interpret(otherCase)
         otherCase.interpretation.textGivenByRules() shouldBe "Whatever." // sanity
 
         shouldThrow<IllegalStateException> {
-            kb.startRuleSession(otherCase, ChangeTreeToAddConclusion(Conclusion("Whatever.")))
-        }.message shouldBe "Action ChangeTreeToAddConclusion(toBeAdded=Conclusion(text=Whatever.)) is not applicable to case Case1"
+            kb.startRuleSession(otherCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
+        }.message shouldBe "Action ChangeTreeToAddConclusion(toBeAdded=Conclusion(id=1, text=Whatever.)) is not applicable to case Case1"
     }
 
     @Test
     fun startRuleSession() {
-        val kb = KB("Blah")
         kb.addCase(createCase("Case1"))
         val sessionCase = kb.getCaseByName("Case1")
         kb.interpret(sessionCase)
         sessionCase.interpretation.textGivenByRules() shouldBe ""
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion("Whatever.")))
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
         kb.commitCurrentRuleSession()
         kb.interpret(sessionCase)
         sessionCase.interpretation.textGivenByRules() shouldBe "Whatever."
@@ -204,36 +231,33 @@ class KBTest {
 
     @Test
     fun conflictingCases() {
-        val kb = KB("Blah")
         kb.addCase(createCase("Case1", "1.0"))
         kb.addCase(createCase("Case2", "2.0"))
         val sessionCase = kb.getCaseByName("Case1")
         sessionCase.interpretation.textGivenByRules() shouldBe ""
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion("Whatever.")))
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
         kb.conflictingCasesInCurrentRuleSession().map { rdrCase -> rdrCase.name }.toSet() shouldBe setOf("Case2")
     }
 
     @Test
     fun addCondition() {
-        val kb = KB("Blah")
         kb.addCase(createCase("Case1", "1.0"))
         kb.addCase(createCase("Case2", "2.0"))
         val sessionCase = kb.getCaseByName("Case1")
         sessionCase.interpretation.textGivenByRules() shouldBe ""
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion("Whatever.")))
-        kb.addConditionToCurrentRuleSession(LessThanOrEqualTo(Attribute("Glucose"), 1.2))
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate( "Whatever.")))
+        kb.addConditionToCurrentRuleSession(LessThanOrEqualTo(null, glucose(), 1.2))
         kb.conflictingCasesInCurrentRuleSession().size shouldBe 0
     }
 
     @Test
     fun commitSession() {
-        val kb = KB("Blah")
         kb.addCase(createCase("Case1", "1.0"))
         kb.addCase(createCase("Case2", "2.0"))
         val sessionCase = kb.getCaseByName("Case1")
         val otherCase = kb.getCaseByName("Case2")
         sessionCase.interpretation.textGivenByRules() shouldBe ""
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(Conclusion("Whatever.")))
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate( "Whatever.")))
         kb.interpret(otherCase)
         // Rule not yet added...
         otherCase.interpretation.textGivenByRules() shouldBe ""
@@ -245,19 +269,36 @@ class KBTest {
 
     @Test
     fun `should return condition hints for case`() {
-        val kb = KB("Diabetes")
         val caseWithGlucoseAttribute = createCase("A", "1.0")
-        val expectedCondition = HasCurrentValue(Attribute("Glucose"))
-        kb.conditionHintsForCase(caseWithGlucoseAttribute) shouldBe ConditionList(listOf(expectedCondition))
+        val expectedCondition = kb.conditionManager.getOrCreate(HasCurrentValue(null, glucose()))
+        val conditionList = kb.conditionHintsForCase(caseWithGlucoseAttribute)
+        conditionList.conditions.size shouldBe 1
+        conditionList.conditions[0] should beSameAs(expectedCondition)
     }
 
+    @Test // Conc-4
+    fun `conclusions are aligned when building rules`() {
+        val conclusionToAdd = kb.conclusionManager.getOrCreate("Whatever")
+        val copyOfConclusion = conclusionToAdd.copy()
+        kb.addCase(createCase("Case1", "1.0"))
+        val sessionCase = kb.getCaseByName("Case1")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(copyOfConclusion))
+        kb.commitCurrentRuleSession()
+        kb.interpret(sessionCase)
+        sessionCase.interpretation.conclusions().single() shouldBeSameInstanceAs  conclusionToAdd
+    }
+
+    private fun glucose() = kb.attributeManager.getOrCreate("Glucose")
+
     private fun createCondition(): GreaterThanOrEqualTo {
-        return GreaterThanOrEqualTo(Attribute("ABC"), 5.0)
+        return GreaterThanOrEqualTo(null, Attribute("ABC", 4567), 5.0)
     }
 
     private fun createCase(caseName: String, glucoseValue: String = "0.667"): RDRCase {
         val builder1 = RDRCaseBuilder()
-        builder1.addValue("Glucose", defaultDate, glucoseValue)
+        builder1.addValue(glucose(), defaultDate, glucoseValue)
         return builder1.build(caseName)
     }
+
+    private fun createKB(kbInfo: KBInfo) = KB(InMemoryKB(kbInfo))
 }

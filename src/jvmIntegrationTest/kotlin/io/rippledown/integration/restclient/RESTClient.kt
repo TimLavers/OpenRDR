@@ -7,6 +7,7 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import io.rippledown.model.Attribute
 import io.rippledown.constants.api.CASE
 import io.rippledown.constants.api.CREATE_KB
 import io.rippledown.constants.api.WAITING_CASES
@@ -15,19 +16,15 @@ import io.rippledown.model.Conclusion
 import io.rippledown.model.OperationResult
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
-import io.rippledown.server.PING
-import io.rippledown.server.SHUTDOWN
-import io.rippledown.server.routes.ADD_CONDITION
-import io.rippledown.server.routes.COMMIT_SESSION
-import io.rippledown.server.routes.START_SESSION_TO_ADD_CONCLUSION
-import io.rippledown.server.routes.START_SESSION_TO_REPLACE_CONCLUSION
+import io.rippledown.server.*
+import io.rippledown.server.routes.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 
 class RESTClient {
     private val endpoint = "http://localhost:9090"
 
-    private val jsonClient =  HttpClient(CIO) {
+    private val jsonClient = HttpClient(CIO) {
         install(ContentNegotiation) {
             json(Json {
                 prettyPrint = true
@@ -57,6 +54,25 @@ class RESTClient {
             currentCase = jsonClient.get(endpoint + CASE + "?id=${caseId.id}").body()
         }
         return currentCase
+    }
+
+    fun getOrCreateAttribute(name: String): Attribute = runBlocking {
+        jsonClient.post(endpoint + GET_OR_CREATE_ATTRIBUTE) {
+            setBody(name)
+        }.body()
+    }
+
+    fun getOrCreateConclusion(text: String): Conclusion = runBlocking {
+        jsonClient.post(endpoint + GET_OR_CREATE_CONCLUSION) {
+            setBody(text)
+        }.body()
+    }
+
+    fun getOrCreateCondition(prototype: Condition): Condition = runBlocking {
+        jsonClient.post(endpoint + GET_OR_CREATE_CONDITION) {
+            contentType(ContentType.Application.Json)
+            setBody(prototype)
+        }.body()
     }
 
     fun startSessionToAddConclusionForCurrentCase(conclusion: Conclusion): OperationResult {
@@ -106,7 +122,8 @@ class RESTClient {
 
     fun createRuleToAddText(caseName: String, text: String): OperationResult {
         getCaseWithName(caseName)
-        startSessionToAddConclusionForCurrentCase(Conclusion(text))
+        val conclusion = getOrCreateConclusion(text)
+        startSessionToAddConclusionForCurrentCase(conclusion)
         return commitCurrentSession()
     }
 

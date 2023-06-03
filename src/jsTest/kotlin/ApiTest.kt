@@ -38,20 +38,19 @@ class ApiTest {
     @Test
     fun moveAttributeJustBelowOther() = runTest {
         val expectedResult = OperationResult("Attribute moved.")
-        val moved =Attribute("A")
-        val target =Attribute("B")
+        val moved = Attribute("A", 123)
+        val target = Attribute("B", 456)
         val config = config {
             returnOperationResult = expectedResult
-            expectedMovedAttribute = moved
-            expectedTargetAttribute = target
+            expectedMovedAttributeId = moved.id
+            expectedTargetAttributeId = target.id
         }
-        Api(mock(config)).moveAttributeJustBelowOther(moved, target) shouldBe expectedResult
+        Api(mock(config)).moveAttributeJustBelowOther(moved.id, target.id) shouldBe expectedResult
     }
 
     @Test
     fun kbInfo() = runTest {
-        val expectedResult = KBInfo("Glucose")
-        Api(mock(config {})).kbInfo() shouldBe expectedResult
+        Api(mock(config {})).kbInfo().name shouldBe "Glucose"
     }
 
     @Test
@@ -76,8 +75,8 @@ class ApiTest {
     fun conditionHints() = runTest {
         val conditionList = ConditionList(
             listOf(
-                HasCurrentValue(Attribute("A")),
-                HasCurrentValue(Attribute("B"))
+                HasCurrentValue(1, Attribute("A", 1)),
+                HasCurrentValue(2, Attribute("B", 2))
             )
         )
         val config = config {
@@ -103,8 +102,8 @@ class ApiTest {
             diffList = expectedDiffList,
             conditionList = ConditionList(
                 listOf(
-                    HasCurrentValue(Attribute("A")),
-                    HasCurrentValue(Attribute("B"))
+                    HasCurrentValue(1, Attribute("A", 1)),
+                    HasCurrentValue(2, Attribute("B", 2))
                 )
             )
         )

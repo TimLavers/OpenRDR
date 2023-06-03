@@ -6,7 +6,7 @@ import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
 
 open class Rule(
-    val id: String,
+    val id: Int,
     var parent: Rule? = null,
     val conclusion: Conclusion? = null,
     val conditions: Set<Condition> = mutableSetOf(),
@@ -60,9 +60,9 @@ open class Rule(
     fun apply(kase: RDRCase, interpretation: Interpretation): Boolean {
         if (!conditionsSatisfied(kase)) return false
         var childRuleApplied = false
-        childRules().forEach({
+        childRules().forEach {
             childRuleApplied = it.apply(kase, interpretation) || childRuleApplied
-        })
+        }
         if (!childRuleApplied) interpretation.add(this)
         return true
     }
@@ -89,8 +89,7 @@ open class Rule(
     fun structurallyEqual(other: Rule): Boolean {
         if (conclusion != other.conclusion) return false
         if (conditions != other.conditions) return false
-        if (parent != other.parent) return false
-        return true
+        return parent == other.parent
     }
 
     override fun equals(other: Any?): Boolean {
@@ -99,9 +98,7 @@ open class Rule(
 
         other as Rule
 
-        if (id != other.id) return false
-
-        return true
+        return id == other.id
     }
 
     override fun hashCode(): Int {

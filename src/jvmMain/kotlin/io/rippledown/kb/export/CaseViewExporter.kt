@@ -20,7 +20,7 @@ class CaseViewExporter(private val destination: File, val attributes: List<Attri
     fun export() {
         val outputWriter = BufferedWriter(FileWriter(destination))
         attributes.forEach{
-            outputWriter.write(it.name)
+            outputWriter.write("${it.id}")
             outputWriter.newLine()
         }
         outputWriter.close()

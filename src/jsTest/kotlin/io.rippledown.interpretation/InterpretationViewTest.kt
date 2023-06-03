@@ -20,7 +20,7 @@ class InterpretationViewTest {
     fun shouldShowInitialInterpretationIfVerifiedTextIsNull() = runTest {
         val text = "Go to Bondi now!"
         val interpretation = Interpretation().apply {
-            add(RuleSummary(conclusion = Conclusion(text)))
+            add(RuleSummary(conclusion = Conclusion(1, text)))
         }
         val vfc = VFC {
             InterpretationView {
@@ -35,7 +35,7 @@ class InterpretationViewTest {
         val text = "Go to Bondi."
         val verifiedText = "Go to Bondi now!"
         val interpretation = Interpretation(verifiedText = verifiedText).apply {
-            add(RuleSummary(conclusion = Conclusion(text)))
+            add(RuleSummary(conclusion = Conclusion(1, text)))
         }
         val vfc = VFC {
             InterpretationView {

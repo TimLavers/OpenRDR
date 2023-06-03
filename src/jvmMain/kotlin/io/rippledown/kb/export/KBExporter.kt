@@ -1,14 +1,15 @@
 package io.rippledown.kb.export
 
 import io.rippledown.kb.KB
-import java.io.BufferedWriter
 import java.io.File
-import java.io.FileWriter
 
 open class KBExportImport(val destination: File) {
     val kbDetailsFile = File(destination, "Details.txt")
+    val attributesFile = File(destination, "Attributes.txt")
     val caseViewFile = File(destination, "CaseView.txt")
     val casesDirectory = File(destination, "Cases")
+    val conclusionsDirectory = File(destination, "Conclusions")
+    val conditionsDirectory = File(destination, "Conditions")
     val rulesDirectory = File(destination, "Rules")
 }
 class KBExporter(destination: File, val kb: KB): KBExportImport(destination) {
@@ -18,13 +19,21 @@ class KBExporter(destination: File, val kb: KB): KBExportImport(destination) {
 
     fun export() {
         // Details of the KB.
-        val writer = BufferedWriter(FileWriter(kbDetailsFile))
-        writer.write(kb.name)
-        writer.newLine()
-        writer.close()
+        KBInfoExporter(ExportFile(kbDetailsFile, "KBInfo"), kb.kbInfo).export()
+
+        // Attributes.
+        AttributesExporter(attributesFile, kb.attributeManager.all()).export()
 
         // Case view.
         CaseViewExporter(caseViewFile, kb.caseViewManager.allAttributesInOrder()).export()
+
+        // Conclusions.
+        conclusionsDirectory.mkdirs()
+        IdentifiedObjectExporter(conclusionsDirectory, ConclusionSource(kb.conclusionManager)).export()
+
+        // Conditions.
+        conditionsDirectory.mkdirs()
+        IdentifiedObjectExporter(conditionsDirectory, ConditionSource(kb.conditionManager)).export()
 
         // Cases.
         casesDirectory.mkdirs()
@@ -32,6 +41,6 @@ class KBExporter(destination: File, val kb: KB): KBExportImport(destination) {
 
         // Rules.
         rulesDirectory.mkdirs()
-        RuleExporter(rulesDirectory, kb.ruleTree).export()
+        IdentifiedObjectExporter(rulesDirectory, RuleSource(kb.ruleTree)).export()
     }
 }

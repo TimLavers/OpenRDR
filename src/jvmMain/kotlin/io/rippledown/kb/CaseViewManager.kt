@@ -4,9 +4,16 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.CaseViewProperties
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.persistence.AttributeOrderStore
 
-class CaseViewManager {
+class CaseViewManager(private val attributeOrderStore: AttributeOrderStore, attributeManager: AttributeManager) {
     private val attributeToIndex = mutableMapOf<Attribute, Int>()
+
+    init {
+        attributeOrderStore.idToIndex().forEach{
+            attributeToIndex[attributeManager.getById(it.key)] = it.value
+        }
+    }
 
     fun allAttributesInOrder(): List<Attribute> {
         val orderSet = mutableListOf<IndexedAttribute>()

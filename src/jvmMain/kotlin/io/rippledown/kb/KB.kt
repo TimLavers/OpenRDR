@@ -1,17 +1,22 @@
 package io.rippledown.kb
 
-import io.rippledown.model.RDRCase
+import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
-import io.rippledown.model.rule.RuleBuildingSession
-import io.rippledown.model.rule.RuleTree
-import io.rippledown.model.rule.RuleTreeChange
+import io.rippledown.model.rule.*
+import io.rippledown.persistence.PersistentKB
 
-class KB(val name: String, val ruleTree: RuleTree = RuleTree()) {
+class KB(persistentKB: PersistentKB) {
+
+    val kbInfo: KBInfo = persistentKB.kbInfo()
+    val attributeManager: AttributeManager = AttributeManager(persistentKB.attributeStore())
+    val conclusionManager: ConclusionManager = ConclusionManager(persistentKB.conclusionStore())
+    val conditionManager: ConditionManager = ConditionManager(attributeManager, persistentKB.conditionStore())
+    private val ruleManager: RuleManager = RuleManager(conclusionManager, conditionManager, persistentKB.ruleStore())
+    val ruleTree: RuleTree = ruleManager.ruleTree()
     private val cornerstones = mutableSetOf<RDRCase>()
     private var ruleSession: RuleBuildingSession? = null
-    private val conditionManager = ConditionManager()
-    val caseViewManager = CaseViewManager()
+    val caseViewManager: CaseViewManager = CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
 
     fun containsCaseWithName(caseName: String): Boolean {
         return cornerstones.find { rdrCase -> rdrCase.name == caseName } != null
@@ -33,7 +38,8 @@ class KB(val name: String, val ruleTree: RuleTree = RuleTree()) {
     fun startRuleSession(case: RDRCase, action: RuleTreeChange) {
         check(ruleSession == null) { "Session already in progress." }
         check(action.isApplicable(ruleTree, case)) {"Action $action is not applicable to case ${case.name}"}
-        ruleSession =  RuleBuildingSession(ruleTree, case, action, cornerstones)
+        val alignedAction = action.alignWith(conclusionManager)
+        ruleSession =  RuleBuildingSession(ruleManager, ruleTree, case, alignedAction, cornerstones)
     }
 
     fun conflictingCasesInCurrentRuleSession(): Set<RDRCase> {
@@ -43,7 +49,20 @@ class KB(val name: String, val ruleTree: RuleTree = RuleTree()) {
 
     fun addConditionToCurrentRuleSession(condition: Condition){
         checkSession()
-        ruleSession!!.addCondition(condition)
+        // Align the provided condition with that in the condition manager.
+        val conditionToUse = if (condition.id == null) {
+            conditionManager.getOrCreate(condition)
+        } else {
+            val existing = conditionManager.getById(condition.id!!)
+            // Check that there's no confusion between the condition provided
+            // and the one that already exists (here we're defending against test code
+            // that might have mixed things up).
+            require( existing!!.sameAs(condition)) {
+                "Condition provided does not match that in the condition manager."
+            }
+            existing
+        }
+        ruleSession!!.addCondition(conditionToUse)
     }
 
     fun commitCurrentRuleSession() {
@@ -71,13 +90,11 @@ class KB(val name: String, val ruleTree: RuleTree = RuleTree()) {
 
         other as KB
 
-        if (name != other.name) return false
-
-        return true
+        return kbInfo == other.kbInfo
     }
 
     override fun hashCode(): Int {
-        return name.hashCode()
+        return kbInfo.hashCode()
     }
 
     fun conditionHintsForCase(case: RDRCase) = conditionManager.conditionHintsForCase(case)

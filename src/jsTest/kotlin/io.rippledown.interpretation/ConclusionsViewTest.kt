@@ -16,12 +16,12 @@ import kotlin.test.Test
 class ConclusionsViewTest {
     private val comment1 = "Go to Bondi now!"
     private val comment2 = "Go to Bronte now!"
-    private val sun = Attribute("Sun")
-    private val surf = Attribute("Surf")
+    private val sun = Attribute("Sun", 1)
+    private val surf = Attribute("Surf", 2)
 
     private fun conditionsForConclusion(index: Int) = listOf(
-        ContainsText(sun, "is shining $index"),
-        ContainsText(surf, "is great $index")
+        ContainsText(1, sun, "is shining $index"),
+        ContainsText(2, surf, "is great $index")
     ).map { it.asText() }
 
     private fun wrapper(vararg comments: String) = VFC {
@@ -30,7 +30,7 @@ class ConclusionsViewTest {
             interp.apply {
                 add(
                     RuleSummary(
-                        conclusion = Conclusion(comment),
+                        conclusion = Conclusion(index, comment),
                         conditionTextsFromRoot = conditionsForConclusion(index)
                     )
                 )

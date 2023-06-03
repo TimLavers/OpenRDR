@@ -14,6 +14,8 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.rippledown.server.routes.*
+import org.slf4j.Logger
+import io.rippledown.server.routes.*
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 
@@ -25,10 +27,11 @@ const val STOPPING_SERVER = "Stopping server"
 
 lateinit var server: NettyApplicationEngine
 
-val logger = LoggerFactory.getLogger("rdr")
+val logger: Logger = LoggerFactory.getLogger("rdr")
 
 fun main() {
 
+    @Suppress("ExtractKtorModule")
     server = embeddedServer(Netty, 9090, module = Application::applicationModule)
     logger.info(STARTING_SERVER)
     server.start(wait = true)
@@ -71,6 +74,9 @@ fun Application.applicationModule() {
     serverManagement()
     kbManagement(application)
     caseManagement(application)
+        attributeManagement(application)
+        conclusionManagement(application)
+        conditionManagement(application)
     interpManagement(application)
     ruleSession(application)
     conditionManagement(application)
