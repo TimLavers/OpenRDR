@@ -25,9 +25,9 @@ class RuleRequestTest {
         )
         val conditionList = ConditionList(
             listOf(
-                HasCurrentValue(1, Attribute("a", 1)),
-                HasNoCurrentValue(2, Attribute("b", 2)),
-                IsLow(3, Attribute("c", 3))
+                HasCurrentValue(1, Attribute(1, "a")),
+                HasNoCurrentValue(2, Attribute(2, "b")),
+                IsLow(3, Attribute(3, "c"))
             )
         )
         val ruleRequest = RuleRequest(

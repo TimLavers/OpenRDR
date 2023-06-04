@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets
 
 internal object CaseTestUtils {
 
-    private val glucose = Attribute("Glucose", -200)
+    private val glucose = Attribute(-200, "Glucose")
 
     fun caseFile(caseName: String): File {
         return File("src/jvmTest/resources/cases/$caseName.json")

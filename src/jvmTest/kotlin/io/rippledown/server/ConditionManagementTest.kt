@@ -18,7 +18,7 @@ class ConditionManagementTest: OpenRDRServerTestBase() {
     @Test
     fun getOrCreateCondition() = testApplication {
         setup()
-        val glucose = Attribute("Glucose", 33)
+        val glucose = Attribute(33, "Glucose")
         val toReturn = IsHigh(54, glucose)
         val template = IsLow(null, glucose)
         every { serverApplication.getOrCreateCondition(template) } returns toReturn
@@ -38,8 +38,8 @@ class ConditionManagementTest: OpenRDRServerTestBase() {
         val caseId = "Bronte"
         val conditionList = ConditionList(
             listOf(
-                IsNormal(1, Attribute("WaveHeight", 1)),
-                IsLow(2, Attribute("SeaTemp", 2))
+                IsNormal(1, Attribute(1, "WaveHeight")),
+                IsLow(2, Attribute(2, "SeaTemp"))
             )
         )
         every { serverApplication.conditionHintsForCase(caseId) } returns conditionList

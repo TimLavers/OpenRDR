@@ -10,7 +10,7 @@ class AttributesImporter(private val source: File) {
         source.readLines().forEach{
             val parts = it.split(' ')
             val id = parts[0].toInt()
-            result[id] = Attribute(parts[1], id)
+            result[id] = Attribute(id, parts[1])
         }
         return result
     }

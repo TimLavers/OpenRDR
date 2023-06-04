@@ -21,7 +21,7 @@ class InMemoryAttributeStore(attributes: Set<Attribute>): AttributeStore {
     override fun create(name: String): Attribute {
         val maxById = attributeSet.maxByOrNull { it.id }
         val maxId = maxById?.id ?: 0
-        val newAttribute = Attribute(name, maxId + 1)
+        val newAttribute = Attribute(maxId + 1, name)
         attributeSet.add(newAttribute)
         return newAttribute
     }

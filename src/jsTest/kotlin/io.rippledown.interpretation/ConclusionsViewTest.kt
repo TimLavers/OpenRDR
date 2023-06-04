@@ -16,8 +16,8 @@ import kotlin.test.Test
 class ConclusionsViewTest {
     private val comment1 = "Go to Bondi now!"
     private val comment2 = "Go to Bronte now!"
-    private val sun = Attribute("Sun", 1)
-    private val surf = Attribute("Surf", 2)
+    private val sun = Attribute(1, "Sun")
+    private val surf = Attribute(2, "Surf")
 
     private fun conditionsForConclusion(index: Int) = listOf(
         ContainsText(1, sun, "is shining $index"),

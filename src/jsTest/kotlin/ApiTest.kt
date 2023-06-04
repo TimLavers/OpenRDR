@@ -38,8 +38,8 @@ class ApiTest {
     @Test
     fun moveAttributeJustBelowOther() = runTest {
         val expectedResult = OperationResult("Attribute moved.")
-        val moved = Attribute("A", 123)
-        val target = Attribute("B", 456)
+        val moved = Attribute(123, "A")
+        val target = Attribute(456, "B")
         val config = config {
             returnOperationResult = expectedResult
             expectedMovedAttributeId = moved.id
@@ -75,8 +75,8 @@ class ApiTest {
     fun conditionHints() = runTest {
         val conditionList = ConditionList(
             listOf(
-                HasCurrentValue(1, Attribute("A", 1)),
-                HasCurrentValue(2, Attribute("B", 2))
+                HasCurrentValue(1, Attribute(1, "A")),
+                HasCurrentValue(2, Attribute(2, "B"))
             )
         )
         val config = config {
@@ -102,8 +102,8 @@ class ApiTest {
             diffList = expectedDiffList,
             conditionList = ConditionList(
                 listOf(
-                    HasCurrentValue(1, Attribute("A", 1)),
-                    HasCurrentValue(2, Attribute("B", 2))
+                    HasCurrentValue(1, Attribute(1, "A")),
+                    HasCurrentValue(2, Attribute(2, "B"))
                 )
             )
         )

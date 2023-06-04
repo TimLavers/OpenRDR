@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 // ORD1
 @Serializable
-data class Attribute(val name: String, val id: Int) {
+data class Attribute(val id: Int, val name: String) {
     init {
         check(name.isNotEmpty()) {
             "Attribute names cannot be blank."
@@ -22,9 +22,7 @@ data class Attribute(val name: String, val id: Int) {
 
         other as Attribute
 
-        if (id != other.id) return false
-
-        return true
+        return id == other.id
     }
 
     override fun hashCode(): Int {

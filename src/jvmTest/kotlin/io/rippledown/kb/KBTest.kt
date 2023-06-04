@@ -53,8 +53,8 @@ class KBTest {
         buildRuleToAddAComment(kb, comment)
 
         val builder = RDRCaseBuilder()
-        builder.addValue(Attribute("ABC", 300), defaultDate, "10")
-        builder.addValue(Attribute("DEF", 400), defaultDate, "20")
+        builder.addValue(Attribute(300, "ABC"), defaultDate, "10")
+        builder.addValue(Attribute(400, "DEF"), defaultDate, "20")
         val case = builder.build("Case2")
 
         case.interpretation.textGivenByRules() shouldBe ""
@@ -291,7 +291,7 @@ class KBTest {
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")
 
     private fun createCondition(): GreaterThanOrEqualTo {
-        return GreaterThanOrEqualTo(null, Attribute("ABC", 4567), 5.0)
+        return GreaterThanOrEqualTo(null, Attribute(4567, "ABC"), 5.0)
     }
 
     private fun createCase(caseName: String, glucoseValue: String = "0.667"): RDRCase {

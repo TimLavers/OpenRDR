@@ -57,7 +57,7 @@ class PostgresAttributeStoreTest: PostgresStoreTest() {
         val a1 = store.create("A1")
         val a2 = store.create("A2")
 
-        val updated = Attribute("Updated", a1.id)
+        val updated = Attribute(a1.id, "Updated")
         store.store(updated)
 
         store.all().map { it.name } shouldBe setOf(a2.name, updated.name)
@@ -84,9 +84,9 @@ class PostgresAttributeStoreTest: PostgresStoreTest() {
 
     @Test
     fun load() {
-        val a1 = Attribute("Glucose", 1)
-        val a2 = Attribute("LDL", 2)
-        val a3 = Attribute("HDL", 3)
+        val a1 = Attribute(1, "Glucose")
+        val a2 = Attribute(2, "LDL")
+        val a3 = Attribute(3, "HDL")
         store.load(setOf(a1, a2, a3))
         store.all() shouldBe setOf(a1, a2, a3)
 
