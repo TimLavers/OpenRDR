@@ -16,9 +16,9 @@ import kotlin.test.Test
 
 class PostgresConditionStoreTest: PostgresStoreTest() {
 
-    private val glucose = Attribute("Glucose", 1000)
-    private val tsh = Attribute("TSH", 1001)
-    private val notes = Attribute("Notes", 1002)
+    private val glucose = Attribute(1000, "Glucose")
+    private val tsh = Attribute(1001, "TSH")
+    private val notes = Attribute(1002, "Notes")
     private lateinit var store: ConditionStore
 
     override fun tableName() = CONDITIONS_TABLE

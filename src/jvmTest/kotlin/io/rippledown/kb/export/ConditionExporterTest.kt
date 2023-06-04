@@ -16,8 +16,8 @@ import org.junit.Before
 import kotlin.test.Test
 
 class ConditionExporterTest {
-    private val glucose = Attribute("Glucose", 100)
-    private val ft4 = Attribute("FT4", 101)
+    private val glucose = Attribute(100, "Glucose")
+    private val ft4 = Attribute(101, "FT4")
 
     @Test
     fun exportToString() {

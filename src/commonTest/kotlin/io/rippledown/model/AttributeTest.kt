@@ -13,14 +13,14 @@ internal class AttributeTest {
 
     @Test //Attr-1
     fun construction() {
-        val tsh = Attribute("TSH", 0)
+        val tsh = Attribute(0, "TSH")
         assertEquals(tsh.name, "TSH")
         assertEquals(tsh.id, 0)
     }
 
     @Test
     fun jsonSerialisation() {
-        val tsh = Attribute("TSH", 99)
+        val tsh = Attribute(99, "TSH")
         val sd = serializeDeserialize(tsh)
         assertEquals(sd.id, tsh.id)
         assertEquals(sd.name, tsh.name)
@@ -28,38 +28,38 @@ internal class AttributeTest {
 
     @Test
     fun isEquivalent() {
-        Attribute("Stuff", 1).isEquivalent(Attribute("Nonsense", 3)) shouldBe false
-        Attribute("Stuff", 1).isEquivalent(Attribute("Nonsense", 1)) shouldBe false
-        Attribute("Stuff", 1).isEquivalent(Attribute("Stuff", 3)) shouldBe true
-        Attribute("Stuff", 1).isEquivalent(Attribute("Stuff", 1)) shouldBe true
-        Attribute("Stuff", 1).isEquivalent(Attribute("stuff", 1)) shouldBe false
+        Attribute(1, "Stuff").isEquivalent(Attribute(3, "Nonsense")) shouldBe false
+        Attribute(1, "Stuff").isEquivalent(Attribute(1, "Nonsense")) shouldBe false
+        Attribute(1, "Stuff").isEquivalent(Attribute(3, "Stuff")) shouldBe true
+        Attribute(1, "Stuff").isEquivalent(Attribute(1, "Stuff")) shouldBe true
+        Attribute(1, "Stuff").isEquivalent(Attribute(1, "stuff")) shouldBe false
     }
 
     @Test
     fun equalsTest() {
-        (Attribute("Stuff", 1) == Attribute("Nonsense", 3)) shouldBe false
-        (Attribute("Stuff", 1) == Attribute("Nonsense", 1)) shouldBe true
+        (Attribute(1, "Stuff") == Attribute(3, "Nonsense")) shouldBe false
+        (Attribute(1, "Stuff") == Attribute(1, "Nonsense")) shouldBe true
     }
 
     @Test
     fun hashCodeTest() {
-        (Attribute("Stuff", 1).hashCode() == Attribute("Nonsense", 1).hashCode()) shouldBe true
+        (Attribute(1, "Stuff").hashCode() == Attribute(1, "Nonsense").hashCode()) shouldBe true
     }
 
     @Test //Attr-2
     fun nameNotBlank() {
         shouldThrow<IllegalStateException> {
-            Attribute("", 53)
+            Attribute(53, "")
         }.message shouldBe "Attribute names cannot be blank."
     }
 
     @Test //Attr-3
     fun nameMustBeLessThan256CharactersInLength() {
         repeat(254) {
-            Attribute(randomString(it + 1), it)
+            Attribute(it, randomString(it + 1))
         }
         shouldThrow<IllegalStateException> {
-            Attribute(randomString(256), 256)
+            Attribute(256, randomString(256))
         }.message shouldBe "Attribute names cannot have length more than 255."
     }
 

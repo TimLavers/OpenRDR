@@ -77,6 +77,6 @@ internal class HasCurrentValueTest: ConditionTestBase() {
     @Test
     fun asText() {
         condition.asText() shouldBe "TSH has a current value"
-        HasCurrentValue(100, Attribute("Blah !@#@#", 100)).asText() shouldBe "Blah !@#@# has a current value"
+        HasCurrentValue(100, Attribute(100, "Blah !@#@#")).asText() shouldBe "Blah !@#@# has a current value"
     }
 }

@@ -116,6 +116,6 @@ internal class IsNormalTest: ConditionTestBase() {
     @Test
     fun asText() {
         condition.asText() shouldBe "TSH is normal"
-        IsNormal(8888, Attribute("Blah !@#@#  Blah is normal", 100)).asText() shouldBe "Blah !@#@#  Blah is normal is normal"
+        IsNormal(8888, Attribute(100, "Blah !@#@#  Blah is normal")).asText() shouldBe "Blah !@#@#  Blah is normal is normal"
     }
 }

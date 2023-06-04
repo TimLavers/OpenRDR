@@ -7,9 +7,9 @@ import kotlinx.serialization.json.Json
 
 open class ConditionTestBase {
 
-    val tsh = Attribute("TSH", 0)
-    val glucose = Attribute("Glucose", 1)
-    val clinicalNotes = Attribute("Clinical Notes", 2)
+    val tsh = Attribute(0, "TSH")
+    val glucose = Attribute(1, "Glucose")
+    val clinicalNotes = Attribute(2, "Clinical Notes")
     val range = ReferenceRange("0.50", "4.00")
     private val attributesById = mapOf(tsh.id to tsh, glucose.id to glucose, clinicalNotes.id to clinicalNotes)
 

@@ -1,7 +1,6 @@
 package io.rippledown.caseview
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.caseview.CaseTableBody
 import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.caseview.CaseViewProperties
@@ -18,10 +17,10 @@ class CaseTableBodyTest {
     @Test
     fun attributeOrdering() = runTest {
         val builder1 = RDRCaseBuilder()
-        val tsh = Attribute("TSH", 1)
-        val ft4 = Attribute("FT4", 2)
-        val abc = Attribute("ABC", 3)
-        val xyz = Attribute("XYZ", 4)
+        val tsh = Attribute(1, "TSH")
+        val ft4 = Attribute(2, "FT4")
+        val abc = Attribute(3, "ABC")
+        val xyz = Attribute(4, "XYZ")
         builder1.addValue(ft4, defaultDate, "12.8")
         builder1.addValue(abc, defaultDate, "12.9")
         builder1.addValue(xyz, defaultDate, "1.9")

@@ -13,8 +13,8 @@ class ConditionListTest {
     fun check_serialization() {
         val conditionList = ConditionList(
             listOf(
-                HasCurrentValue(1,Attribute("x", 1)),
-                IsHigh(2, Attribute("y", 2))
+                HasCurrentValue(1,Attribute(1, "x")),
+                IsHigh(2, Attribute(2, "y"))
             )
         )
         serializeDeserialize(conditionList) shouldBe conditionList

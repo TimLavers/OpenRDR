@@ -80,7 +80,7 @@ class PersistentRuleTest {
         parentPR.conclusionId shouldBe null
         parentPR.conditionIds shouldBe emptySet()
         parentPR.conditionIdsString() shouldBe ""
-        val glucose = Attribute("Glucose", 233)
+        val glucose = Attribute(233, "Glucose")
         val condition = IsNormal(33, glucose)
         val child = Rule(13, parent, Conclusion(99, "Blah"), setOf(condition))
         val childPR = PersistentRule(child)

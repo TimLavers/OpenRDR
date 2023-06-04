@@ -16,7 +16,7 @@ class AttributeManagementTest: OpenRDRServerTestBase() {
     fun getOrCreateAttribute() = testApplication {
         setup()
         val glucose = "Glucose"
-        val attribute = Attribute(glucose, 4000)
+        val attribute = Attribute(4000, glucose)
         every { serverApplication.getOrCreateAttribute(glucose) } returns attribute
         val result = httpClient.post(GET_OR_CREATE_ATTRIBUTE) {
             setBody(glucose)
