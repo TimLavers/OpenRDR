@@ -11,6 +11,8 @@ import io.rippledown.model.condition.GreaterThanOrEqualTo
 import io.rippledown.model.condition.IsNormal
 import io.rippledown.model.condition.HasCurrentValue
 import io.rippledown.model.condition.LessThanOrEqualTo
+import io.rippledown.model.external.ExternalCase
+import io.rippledown.model.external.MeasurementEvent
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.persistence.InMemoryKB
 import org.junit.Before
@@ -23,6 +25,49 @@ class KBTest {
     fun setup() {
         val kbInfo = KBInfo("id123", "Blah")
         kb = createKB(kbInfo)
+    }
+
+    @Test
+    fun createCase() {
+        kb.attributeManager.all() shouldBe emptySet()
+        val date1 = defaultTestDate
+        val date2 = date1 - 60_000
+        val date3 = date2 - 60_000
+        val eventABC1 = MeasurementEvent("ABC", date1)
+        val eventABC2 = MeasurementEvent("ABC", date2)
+        val eventXY1 = MeasurementEvent("XY", date1)
+        val eventXY2 = MeasurementEvent("XY", date2)
+        val eventXY3 = MeasurementEvent("XY", date3)
+        val result1 = TestResult("1.0")
+        val result2 = TestResult("2.0")
+        val result3 = TestResult("3.0")
+        val result4 = TestResult("4.0")
+        val result5 = TestResult("5.0")
+        val data = mapOf(eventABC1 to result1, eventABC2 to result2, eventXY1 to result3, eventXY2 to result4, eventXY3 to result5)
+        val externalCase = ExternalCase("ExternalCase", data)
+
+        val rdrCase = kb.createRDRCase(externalCase)
+
+        // There should be two attributes now.
+        kb.attributeManager.all().size shouldBe 2
+        val abc = kb.attributeManager.getOrCreate("ABC")
+        val xy = kb.attributeManager.getOrCreate("XY")
+        kb.attributeManager.all().size shouldBe 2 // The two calls to getOrCreate got.
+
+        rdrCase.name shouldBe externalCase.name
+        rdrCase.attributes shouldBe setOf(abc, xy)
+        val abcValues = rdrCase.values(abc)!!
+        abcValues.size shouldBe 3
+        abcValues[0] shouldBe TestResult("")
+        abcValues[1].value shouldBe result2.value
+        abcValues[2].value shouldBe result1.value
+        val xyValues = rdrCase.values(xy)!!
+        xyValues.size shouldBe 3
+        xyValues[0].value shouldBe result5.value
+        xyValues[1].value shouldBe result4.value
+        xyValues[2].value shouldBe result3.value
+
+        rdrCase.dates shouldBe listOf(date3, date2, date1)
     }
 
     @Test

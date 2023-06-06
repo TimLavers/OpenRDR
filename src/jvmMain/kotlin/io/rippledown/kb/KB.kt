@@ -3,6 +3,7 @@ package io.rippledown.kb
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistentKB
 
@@ -33,6 +34,15 @@ class KB(persistentKB: PersistentKB) {
 
     fun allCases(): Set<RDRCase> {
         return cornerstones.toSet()
+    }
+
+    fun createRDRCase(case: ExternalCase): RDRCase {
+        val builder = RDRCaseBuilder()
+        case.data.forEach {
+            val attribute = attributeManager.getOrCreate(it.key.testName)
+            builder.addResult(attribute, it.key.testTime, it.value)
+        }
+        return builder.build(case.name)
     }
 
     fun startRuleSession(case: RDRCase, action: RuleTreeChange) {

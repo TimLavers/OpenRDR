@@ -11,6 +11,7 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.diff.*
+import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.model.rule.ChangeTreeToRemoveConclusion
 import io.rippledown.model.rule.ChangeTreeToReplaceConclusion
@@ -204,24 +205,10 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
     }
 
     private fun getCaseFromFile(file: File): RDRCase {
-        // The json in the file has attributes with
-        // dummy ids. We parse the json into a case
-        // and then switch the attributes in it with
-        // ones in the KB. When we have a proper
-        // external case format, we can do something
-        // less confusing.
         val format = Json { allowStructuredMapKeys = true }
         val data = FileUtils.readFileToString(file, UTF_8)
-        val caseWithDummyAttributes: RDRCase = format.decodeFromString(data)
-        val dataMap = mutableMapOf<TestEvent, TestResult>()
-        caseWithDummyAttributes.data.map {
-            val originalTestEvent = it.key
-            val originalAttribute = originalTestEvent.attribute
-            val newAttribute = kb.attributeManager.getOrCreate(originalAttribute.name)
-            val newTestEvent = TestEvent(newAttribute, originalTestEvent.date)
-            dataMap[newTestEvent] = it.value
-        }
-        return RDRCase(caseWithDummyAttributes.name, dataMap)
+        val externalCase: ExternalCase = format.decodeFromString(data)
+        return kb.createRDRCase(externalCase)
     }
 
     private fun uninterpretedCase(id: String): RDRCase {

@@ -133,5 +133,4 @@ data class RDRCase(
     fun resetInterpretation() {
         interpretation.reset()
     }
-
 }
