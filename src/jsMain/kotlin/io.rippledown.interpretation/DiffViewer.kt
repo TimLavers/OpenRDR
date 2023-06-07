@@ -48,7 +48,7 @@ val DiffViewer = FC<DiffViewerHandler> { handler ->
                     }
                     TableCell {
                         Typography {
-                            +"Final"
+                            +"Current"
                             variant = TypographyVariant.subtitle2
                         }
                     }

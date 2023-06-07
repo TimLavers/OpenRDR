@@ -4,10 +4,10 @@ import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.rippledown.CaseTestUtils
 import io.rippledown.model.COMMENT_SEPARATOR
-import io.rippledown.model.Conclusion
-import io.rippledown.model.CaseId
-import io.rippledown.model.Interpretation
 import io.rippledown.model.diff.*
+import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.model.rule.RuleRequest
+import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.persistence.InMemoryPersistenceProvider
 import org.apache.commons.io.FileUtils
 import kotlin.test.BeforeTest
@@ -20,6 +20,31 @@ internal class RuleBuildingFromDiffListTest {
     fun setup() {
         app = ServerApplication(InMemoryPersistenceProvider())
         FileUtils.cleanDirectory(app.casesDir)
+    }
+
+    @Test
+    fun `should return empty CornerstoneStatus when a rule session is started and there are no cornerstones`() {
+        val id = "Case1"
+        setUpCaseFromFile(id, app)
+        val diff = Addition("Go to Bondi")
+        val cornerstoneStatus = app.startRuleSession(SessionStartRequest(id, diff))
+        cornerstoneStatus shouldBe CornerstoneStatus()
+    }
+
+    @Test
+    fun `should return the first cornerstone when a rule session is started and there are cornerstones`() {
+        val id1 = "Case1"
+        val id2 = "Case2"
+        setUpCaseFromFile(id1, app)
+        setUpCaseFromFile(id2, app)
+        val case1 = app.case(id1)
+        val case2 = app.case(id2)
+        app.kb.addCase(case1)
+        app.kb.addCase(case2)
+        val viewableCase = app.viewableCase(id1)
+        val diff = Addition("Go to Bondi")
+        val cornerstoneStatus = app.startRuleSession(SessionStartRequest(id2, diff))
+        cornerstoneStatus shouldBe CornerstoneStatus(viewableCase, 0, 1)
     }
 
     @Test

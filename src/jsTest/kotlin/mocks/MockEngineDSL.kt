@@ -9,7 +9,9 @@ import io.rippledown.constants.api.*
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
-import io.rippledown.model.diff.RuleRequest
+import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.model.rule.RuleRequest
+import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -26,11 +28,13 @@ class EngineConfig {
     var returnCase: ViewableCase = createCase("The Case")
     var returnOperationResult: OperationResult = OperationResult()
     var returnInterpretation: Interpretation = Interpretation()
+    var returnCornerstoneStatus: CornerstoneStatus = CornerstoneStatus()
     var returnConditionList: ConditionList = ConditionList()
 
     var expectedCaseId = ""
     var expectedInterpretation: Interpretation? = null
     var expectedRuleRequest: RuleRequest? = null
+    var expectedSessionStartRequest: SessionStartRequest? = null
 
     var expectedMovedAttributeId: Int? = null
     var expectedTargetAttributeId: Int? = null
@@ -93,6 +97,22 @@ private class EngineBuilder(private val config: EngineConfig) {
                 respond(
                     content = ByteReadChannel(
                         json.encodeToString(config.returnInterpretation)
+                    ),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+            }
+
+            START_RULE_SESSION -> {
+                val body = request.body as TextContent
+                val bodyAsSessionStartRequest = Json.decodeFromString(SessionStartRequest.serializer(), body.text)
+
+                if (config.expectedSessionStartRequest != null) {
+                    bodyAsSessionStartRequest shouldBe config.expectedSessionStartRequest
+                }
+                respond(
+                    content = ByteReadChannel(
+                        json.encodeToString(config.returnCornerstoneStatus)
                     ),
                     status = HttpStatusCode.OK,
                     headers = headersOf(HttpHeaders.ContentType, "application/json")

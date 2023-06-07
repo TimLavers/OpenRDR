@@ -17,6 +17,7 @@ external interface InterpretationTabsHandler : Handler {
     var interpretation: Interpretation
     var refreshCase: () -> Unit
     var onStartRule: (interp: Interpretation) -> Unit
+    var readOnly : Boolean
 }
 
 val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->

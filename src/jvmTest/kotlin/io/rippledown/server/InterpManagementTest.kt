@@ -8,11 +8,15 @@ import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.verify
 import io.rippledown.constants.api.BUILD_RULE
+import io.rippledown.constants.api.START_RULE_SESSION
 import io.rippledown.constants.api.VERIFIED_INTERPRETATION_SAVED
 import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.diff.*
+import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.model.rule.RuleRequest
+import io.rippledown.model.rule.SessionStartRequest
 import kotlin.test.Test
 
 class InterpManagementTest : OpenRDRServerTestBase() {
@@ -46,6 +50,25 @@ class InterpManagementTest : OpenRDRServerTestBase() {
         result.status shouldBe HttpStatusCode.OK
         result.body<Interpretation>() shouldBe interpretationToReturn
         verify { serverApplication.saveInterpretation(interpretationToSave) }
+    }
+
+    @Test
+    fun `should delegate starting a rule session to server application`() = testApplication {
+        setup()
+        val diff = Addition("Bring your handboard.")
+
+        val caseId = "case A"
+        val sessionStartRequest = SessionStartRequest(caseId, diff)
+        val cornerstoneStatus = CornerstoneStatus()
+        every { serverApplication.startRuleSession(sessionStartRequest) } returns cornerstoneStatus
+
+        val result = httpClient.post(START_RULE_SESSION) {
+            contentType(ContentType.Application.Json)
+            setBody(sessionStartRequest)
+        }
+        result.status shouldBe HttpStatusCode.OK
+        result.body<CornerstoneStatus>() shouldBe cornerstoneStatus
+        verify { serverApplication.startRuleSession(sessionStartRequest) }
     }
 
     @Test

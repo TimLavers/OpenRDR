@@ -1,8 +1,12 @@
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
+import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.HasCurrentValue
 import io.rippledown.model.diff.*
+import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.model.rule.RuleRequest
+import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
@@ -113,6 +117,21 @@ class ApiTest {
             returnInterpretation = interpretation
         }
         Api(mock(config)).buildRule(ruleRequest) shouldBe interpretation
+    }
+
+    @Test
+    fun shouldStartRuleSession() = runTest {
+        val id = "caseId"
+        val sessionStartRequest = SessionStartRequest(
+            caseId = id,
+            diff = Addition("This comment was added.")
+        )
+
+        val config = config {
+            expectedSessionStartRequest = sessionStartRequest
+            returnCornerstoneStatus = CornerstoneStatus()
+        }
+        Api(mock(config)).startRuleSession(sessionStartRequest) shouldBe config.returnCornerstoneStatus
     }
 
 }

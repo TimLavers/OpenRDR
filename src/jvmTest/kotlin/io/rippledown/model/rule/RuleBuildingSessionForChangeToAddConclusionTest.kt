@@ -53,7 +53,7 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
         val session = RuleBuildingSession(ruleFactory, RuleTree(), sessionCase, addAction, cornerstoneMap)
         val condition = ContainsText(null, clinicalNotes, "3")
         session.addCondition(condition)
-        session.cornerstoneCases() shouldBe emptySet()
+        session.cornerstoneCases() shouldBe emptyList()
     }
 
     @Test
@@ -63,7 +63,7 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
         session.cornerstoneCases() shouldBe cornerstoneMap
         val condition = ContainsText(null, clinicalNotes, "3")
         session.addCondition(condition)
-        session.cornerstoneCases() shouldBe emptySet()
+        session.cornerstoneCases() shouldBe emptyList()
         session.removeCondition(condition)
         session.cornerstoneCases() shouldBe cornerstoneMap
     }

@@ -7,10 +7,15 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.rippledown.constants.api.*
-import io.rippledown.model.*
+import io.rippledown.model.CasesInfo
+import io.rippledown.model.Interpretation
+import io.rippledown.model.KBInfo
+import io.rippledown.model.OperationResult
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
-import io.rippledown.model.diff.RuleRequest
+import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.model.rule.RuleRequest
+import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.browser.window
 import kotlinx.serialization.json.Json
 import web.file.File
@@ -33,9 +38,9 @@ class Api(engine: HttpClientEngine = Js.create()) {
     fun importKBFromZip(file: File) {
         val code: dynamic = js("window.doZipUpload")
         val zipImportURL = "$endpoint$IMPORT_KB"
-            println("++++++++++++++++ about to call zip import")
-            code(zipImportURL,file)
-            println("++++++++++++++++ zip import done")
+        println("++++++++++++++++ about to call zip import")
+        code(zipImportURL, file)
+        println("++++++++++++++++ zip import done")
     }
 
     fun exportURL(): String {
@@ -43,7 +48,7 @@ class Api(engine: HttpClientEngine = Js.create()) {
     }
 
     suspend fun exportKBToZip() {
-            println("++++++++++++++++ about to call zip export")
+        println("++++++++++++++++ about to call zip export")
         val response = jsonClient.get("$endpoint$EXPORT_KB")
         console.log("got response: ", response)
         console.log("got heraders: ", response.headers)
@@ -86,11 +91,25 @@ class Api(engine: HttpClientEngine = Js.create()) {
      *
      * @param ruleRequest the information needed to build the rule
      * @return the updated interpretation
+     * @deprecated use [startRuleSession] instead
      */
     suspend fun buildRule(ruleRequest: RuleRequest): Interpretation {
         return jsonClient.post("$endpoint$BUILD_RULE") {
             contentType(ContentType.Application.Json)
             setBody(ruleRequest)
+        }.body()
+    }
+
+    /**
+     * Starts a rule session for the specified Diff
+     *
+     * @param sessionStartRequest the information needed to start the rule session
+     * @return the first cornerstone, its index and the total number of cornerstones
+     */
+    suspend fun startRuleSession(sessionStartRequest: SessionStartRequest): CornerstoneStatus {
+        return jsonClient.post("$endpoint$START_RULE_SESSION") {
+            contentType(ContentType.Application.Json)
+            setBody(sessionStartRequest)
         }.body()
     }
 

@@ -11,9 +11,7 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.diff.*
-import io.rippledown.model.rule.ChangeTreeToAddConclusion
-import io.rippledown.model.rule.ChangeTreeToRemoveConclusion
-import io.rippledown.model.rule.ChangeTreeToReplaceConclusion
+import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.postgres.PostgresPersistenceProvider
 import io.rippledown.util.EntityRetrieval
@@ -167,6 +165,7 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         return case.interpretation
     }
 
+    @Deprecated("Use startSession instead")
     fun buildRule(ruleRequest: RuleRequest): Interpretation {
         val caseId = ruleRequest.caseId
         val case = case(caseId)
@@ -191,6 +190,28 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
 
         //return the updated interpretation
         return case.interpretation
+    }
+
+
+    /**
+     * Start a rule session for the given case and difference.
+     *
+     * @return a CornerstoneStatus providing the first cornerstone and the number of cornerstones that will be affected by the diff
+     */
+    fun startRuleSession(sessionStartRequest: SessionStartRequest): CornerstoneStatus {
+        val caseId = sessionStartRequest.caseId
+        val diff = sessionStartRequest.diff
+
+        startRuleSessionForDifference(caseId, diff)
+        val cornerstones = kb.conflictingCasesInCurrentRuleSession()
+
+        return if (cornerstones.isNotEmpty()){
+            val cornerstone = cornerstones.first()
+            val viewableCornerstone = kb.viewableInterpretedCase(cornerstone)
+            CornerstoneStatus(viewableCornerstone, 0, cornerstones.size)
+        } else {
+            CornerstoneStatus()
+        }
     }
 
     private fun writeInterpretationToFile(id: String, interpretation: Interpretation) {

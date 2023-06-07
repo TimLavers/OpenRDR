@@ -7,7 +7,9 @@ import io.rippledown.model.CaseId
 import io.rippledown.model.Interpretation
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
-import io.rippledown.model.diff.RuleRequest
+import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.model.rule.RuleRequest
+import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.coroutines.launch
 import mui.material.Grid
 import react.FC
@@ -24,6 +26,7 @@ external interface CaseListHandler : Handler {
 
 val CaseList = FC<CaseListHandler> { handler ->
     var currentCase: ViewableCase? by useState(null)
+    var cornerstoneCase: ViewableCase? by useState(null)
     var newInterpretation: Interpretation? by useState(null)
     var conditionHints: ConditionList? by useState(null)
 
@@ -66,6 +69,28 @@ val CaseList = FC<CaseListHandler> { handler ->
                     scope = handler.scope
                     api = handler.api
                     case = currentCase!!
+                    onCaseEdited = {
+                        updateCurrentCase(currentCase!!.name)
+                    }
+                    onStartRule = { newInterp ->
+                        newInterpretation = newInterp
+                        handler.scope.launch {
+                            conditionHints = handler.api.conditionHints(currentCase!!.name)
+                            val cornerstoneStatus = handler.api.startRuleSession(SessionStartRequest(case.name, newInterp.diffList.selectedChange()))
+                            cornerstoneCase = cornerstoneStatus.cornerstoneToReview
+                        }
+                    }
+                }
+            }
+        }
+        Grid {
+            item = true
+            xs = 6
+            if (cornerstoneCase != null) {
+                CaseView {
+                    scope = handler.scope
+                    api = handler.api
+                    case = cornerstoneCase!!
                     onCaseEdited = {
                         updateCurrentCase(currentCase!!.name)
                     }

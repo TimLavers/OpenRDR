@@ -1,11 +1,12 @@
 Feature: Building rules
-
+@single
   Scenario: The user should be able to build a rule to add a comment
     Given a list of cases with the following names is stored on the server:
       | Case1 |
       | Case2 |
     And I start the client application
     And I should see the case Case1 as the current case
+    And pause
     And I enter the text "Go to Bondi." in the interpretation field
     And the changes badge indicates that there is 1 change
     And I select the changes tab

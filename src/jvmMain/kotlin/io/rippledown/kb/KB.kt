@@ -42,7 +42,7 @@ class KB(persistentKB: PersistentKB) {
         ruleSession =  RuleBuildingSession(ruleManager, ruleTree, case, alignedAction, cornerstones)
     }
 
-    fun conflictingCasesInCurrentRuleSession(): Set<RDRCase> {
+    fun conflictingCasesInCurrentRuleSession(): List<RDRCase> {
         checkSession()
         return ruleSession!!.cornerstoneCases()
     }
