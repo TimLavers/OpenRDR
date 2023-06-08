@@ -23,5 +23,8 @@ object ConnectionProvider {
 
     private fun dbPassword() = System.getenv(OPEN_RDR_DB_PASSWORD) ?: "postgres"
 
-    private fun connectionString(dbName: String) = System.getenv(OPEN_RDR_DB_URL) ?: "jdbc:postgresql://localhost:5432/$dbName"
+    private fun connectionString(dbName: String): String {
+        val url = System.getenv(OPEN_RDR_DB_URL)
+        return if (url != null) "$url$dbName" else "jdbc:postgresql://localhost:5432/$dbName"
+    }
 }
