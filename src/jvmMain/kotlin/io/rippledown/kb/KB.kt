@@ -15,12 +15,12 @@ class KB(persistentKB: PersistentKB) {
     val conditionManager: ConditionManager = ConditionManager(attributeManager, persistentKB.conditionStore())
     private val ruleManager: RuleManager = RuleManager(conclusionManager, conditionManager, persistentKB.ruleStore())
     val ruleTree: RuleTree = ruleManager.ruleTree()
-    private val cornerstones = mutableSetOf<RDRCase>()
+    private val cornerstones = CaseManager()
     private var ruleSession: RuleBuildingSession? = null
     val caseViewManager: CaseViewManager = CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
 
     fun containsCaseWithName(caseName: String): Boolean {
-        return cornerstones.find { rdrCase -> rdrCase.name == caseName } != null
+        return cornerstones.all().find { rdrCase -> rdrCase.name == caseName } != null
     }
 
     fun addCase(case: RDRCase) {
@@ -29,11 +29,11 @@ class KB(persistentKB: PersistentKB) {
     }
 
     fun getCaseByName(caseName: String): RDRCase {
-        return cornerstones.first { caseName == it.name }
+        return cornerstones.all().first { caseName == it.name }
     }
 
     fun allCases(): Set<RDRCase> {
-        return cornerstones.toSet()
+        return cornerstones.all()
     }
 
     fun createRDRCase(case: ExternalCase): RDRCase {
@@ -49,7 +49,7 @@ class KB(persistentKB: PersistentKB) {
         check(ruleSession == null) { "Session already in progress." }
         check(action.isApplicable(ruleTree, case)) {"Action $action is not applicable to case ${case.name}"}
         val alignedAction = action.alignWith(conclusionManager)
-        ruleSession =  RuleBuildingSession(ruleManager, ruleTree, case, alignedAction, cornerstones)
+        ruleSession =  RuleBuildingSession(ruleManager, ruleTree, case, alignedAction, cornerstones.all())
     }
 
     fun conflictingCasesInCurrentRuleSession(): Set<RDRCase> {
