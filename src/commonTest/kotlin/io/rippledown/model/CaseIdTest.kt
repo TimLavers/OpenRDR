@@ -10,14 +10,28 @@ internal class CaseIdTest {
 
     @Test
     fun construction() {
-        val caseId = CaseId("1234", "Case 1")
-        assertEquals(caseId.id, "1234")
+        val caseId = CaseId(1234, "Case 1")
+        assertEquals(caseId.id, 1234)
+        assertEquals(caseId.name, "Case 1")
+    }
+
+    @Test
+    fun secondaryConstructor() {
+        val caseId = CaseId("Case 1")
+        assertEquals(caseId.id, null)
         assertEquals(caseId.name, "Case 1")
     }
 
     @Test
     fun jsonSerialisation() {
-        val caseId = CaseId("1234", "Case 1")
+        val caseId = CaseId(1234, "Case 1")
+        val sd = serializeDeserialize(caseId)
+        assertEquals(sd, caseId)
+    }
+
+    @Test
+    fun jsonSerialisationNullId() {
+        val caseId = CaseId(null, "Case 1")
         val sd = serializeDeserialize(caseId)
         assertEquals(sd, caseId)
     }

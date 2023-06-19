@@ -15,7 +15,7 @@ class CaseSelectorTest {
         val caseA = "case a"
         val caseB = "case b"
         val twoCaseIds = listOf(
-            CaseId(id = "1", name = caseA), CaseId(id = "2", name = caseB)
+            CaseId(id = 1, name = caseA), CaseId(id = 2, name = caseB)
         )
 
         val vfc = VFC {
@@ -36,9 +36,9 @@ class CaseSelectorTest {
         val caseA = "case A"
         val caseB = "case B"
         val caseC = "case C"
-        val caseId1 = CaseId(id = "1", name = caseA)
-        val caseId2 = CaseId(id = "2", name = caseB)
-        val caseId3 = CaseId(id = "3", name = caseC)
+        val caseId1 = CaseId(id = 1, name = caseA)
+        val caseId2 = CaseId(id = 2, name = caseB)
+        val caseId3 = CaseId(id = 3, name = caseC)
         val threeCaseIds = listOf(caseId1, caseId2, caseId3)
         lateinit var selectedCase: String
         val vfc = VFC {
@@ -62,9 +62,9 @@ class CaseSelectorTest {
         val caseA = "case A"
         val caseB = "case B"
         val caseC = "case C"
-        val caseId1 = CaseId(id = "1", name = caseA)
-        val caseId2 = CaseId(id = "2", name = caseB)
-        val caseId3 = CaseId(id = "3", name = caseC)
+        val caseId1 = CaseId(id = 1, name = caseA)
+        val caseId2 = CaseId(id = 2, name = caseB)
+        val caseId3 = CaseId(id = 3, name = caseC)
         val threeCaseIds = listOf(caseId1, caseId2, caseId3)
         val vfc = VFC {
             CaseSelector {

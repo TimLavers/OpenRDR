@@ -93,7 +93,7 @@ val CaseList = FC<CaseListHandler> { handler ->
                     onDone = { conditionList ->
                         handler.scope.launch {
                             val ruleRequest = RuleRequest(
-                                caseId = currentCase!!.name,
+                                caseId = currentCase!!.rdrCase.caseId.id!!,
                                 diffList = newInterpretation!!.diffList,
                                 conditionList = ConditionList(conditions = conditionList)
                             )

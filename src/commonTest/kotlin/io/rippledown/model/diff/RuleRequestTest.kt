@@ -31,7 +31,7 @@ class RuleRequestTest {
             )
         )
         val ruleRequest = RuleRequest(
-            caseId = "caseId",
+            caseId = 1,
             diffList = diffList,
             conditionList = conditionList
         )

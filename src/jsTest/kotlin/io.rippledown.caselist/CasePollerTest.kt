@@ -36,9 +36,9 @@ class CasePollerTest {
         val config = config {
             returnCasesInfo = CasesInfo(
                 listOf(
-                    CaseId("1", "case 1"),
-                    CaseId("2", "case 2"),
-                    CaseId("3", "case 3")
+                    CaseId(1, "case 1"),
+                    CaseId(2, "case 2"),
+                    CaseId(3, "case 3")
                 )
             )
             returnCase = createCase("case 1")
@@ -62,9 +62,9 @@ class CasePollerTest {
         val config = config {
             returnCasesInfo = CasesInfo(
                 listOf(
-                    CaseId("1", "case 1"),
-                    CaseId("2", "case 2"),
-                    CaseId("3", "case 3")
+                    CaseId(1, "case 1"),
+                    CaseId(2, "case 2"),
+                    CaseId(3, "case 3")
                 )
             )
             returnCase = createCase("case 1")
@@ -91,8 +91,8 @@ class CasePollerTest {
         val case1 = "case 1"
         val case2 = "case 2"
         val caseIds = listOf(
-            CaseId("1", case1),
-            CaseId("2", case2),
+            CaseId(1, case1),
+            CaseId(2, case2),
         )
         val config = config {
             returnCasesInfo = CasesInfo(
@@ -119,8 +119,8 @@ class CasePollerTest {
         val caseName1 = "case 1"
         val caseName2 = "case 2"
         val caseIds = listOf(
-            CaseId("1", caseName1),
-            CaseId("2", caseName2),
+            CaseId(1, caseName1),
+            CaseId(2, caseName2),
         )
         val config = config {
             returnCasesInfo = CasesInfo(caseIds)
@@ -149,7 +149,7 @@ class CasePollerTest {
     fun shouldShowNoCasesWhenThereAreNoMoreCases() = runTest {
         val caseName = "case 1"
         val caseIds = listOf(
-            CaseId("1", caseName)
+            CaseId(1, caseName)
         )
         val config = config {
             returnCasesInfo = CasesInfo(caseIds)
@@ -181,9 +181,9 @@ class CasePollerTest {
         val config = config {
             returnCasesInfo = CasesInfo(
                 listOf(
-                    CaseId("1", caseName1),
-                    CaseId("2", caseName2),
-                    CaseId("3", caseName3),
+                    CaseId(1, caseName1),
+                    CaseId(2, caseName2),
+                    CaseId(3, caseName3),
                 )
             )
             returnCase = createCase(caseName2)
@@ -202,8 +202,8 @@ class CasePollerTest {
             //set the mock to return the other two cases
             config.returnCasesInfo = CasesInfo(
                 listOf(
-                    CaseId("1", caseName1),
-                    CaseId("3", caseName3)
+                    CaseId(1, caseName1),
+                    CaseId(3, caseName3)
                 )
             )
             config.returnCase = createCase(caseName1)
@@ -218,8 +218,8 @@ class CasePollerTest {
         val case1 = "case 1"
         val case2 = "case 2"
         val caseIds = listOf(
-            CaseId("1", case1),
-            CaseId("2", case2),
+            CaseId(1, case1),
+            CaseId(2, case2),
         )
         val config = config {
             returnCasesInfo = CasesInfo(

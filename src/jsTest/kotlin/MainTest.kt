@@ -33,9 +33,9 @@ class MainTest {
         val config = config {
             returnCasesInfo = CasesInfo(
                 listOf(
-                    CaseId("1", "case 1"),
-                    CaseId("2", "case 2"),
-                    CaseId("3", "case 3")
+                    CaseId(1, "case 1"),
+                    CaseId(2, "case 2"),
+                    CaseId(3, "case 3")
                 )
             )
         }

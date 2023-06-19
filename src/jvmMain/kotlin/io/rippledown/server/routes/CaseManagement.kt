@@ -15,8 +15,9 @@ fun Application.caseManagement(application: ServerApplication) {
         }
         get(CASE) {
             val id = call.parameters["id"] ?: error("Invalid case id.")
+            val idLong = id.toLongOrNull() ?: error("Case id should be a long.") // todo test
             val viewableCase = try {
-                application.viewableCase(id)
+                application.viewableCase(idLong)
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.BadRequest)
             }

@@ -32,9 +32,9 @@ class CaseManagementTest: OpenRDRServerTestBase() {
     @Test
     fun viewableCase() = testApplication {
         setup()
-        val rdrCase = RDRCase("Case1")
+        val rdrCase = RDRCase(CaseId(1, "Case1"))
         val viewableCase = ViewableCase(rdrCase)
-        val caseId = "Case1"
+        val caseId = 1L
         every { serverApplication.viewableCase(caseId) } returns viewableCase
 
         val result = httpClient.get(CASE) {
@@ -56,7 +56,7 @@ class CaseManagementTest: OpenRDRServerTestBase() {
     fun viewableCaseBadId() = testApplication {
         setup()
         val result = httpClient.get(CASE) {
-            parameter("id", "Case123")
+            parameter("id", 666)
         }
         result.status shouldBe HttpStatusCode.BadRequest
     }

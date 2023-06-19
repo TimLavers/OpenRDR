@@ -30,7 +30,7 @@ class KBImporterTest : ExporterTestBase() {
         KBExporter(tempDir, original).export()
         val rebuilt = KBImporter(tempDir, persistenceProvider).import()
         rebuilt.kbInfo.name shouldBe original.kbInfo.name
-        rebuilt.allCases().size shouldBe 0
+        rebuilt.allCornerstoneCases().size shouldBe 0
         rebuilt.caseViewManager.allAttributesInOrder().size shouldBe 0
         rebuilt.ruleTree.size() shouldBe 1
     }
@@ -57,9 +57,9 @@ class KBImporterTest : ExporterTestBase() {
         val case1 = buildCase("Case1", "4.0", "2.5", "1.8")
         val case2 = buildCase("Case2", "4.1", "2.4", "1.6")
         val case3 = buildCase("Case3", "4.2", "2.3", "1.4")
-        kb.addCase(case1)
-        kb.addCase(case2)
-        kb.addCase(case3)
+        kb.addCornerstoneCase(case1)
+        kb.addCornerstoneCase(case2)
+        kb.addCornerstoneCase(case3)
 
         // Add a rule.
         val sessionCase = kb.getCaseByName(case1.name)
@@ -74,7 +74,7 @@ class KBImporterTest : ExporterTestBase() {
         KBExporter(tempDir, kb).export()
         val rebuilt = KBImporter(tempDir, persistenceProvider).import()
         rebuilt.kbInfo.name shouldBe kb.kbInfo.name
-        rebuilt.allCases().size shouldBe 3
+        rebuilt.allCornerstoneCases().size shouldBe 3
         rebuilt.getCaseByName(case1.name) shouldBeEqualToComparingFields kb.getCaseByName(case1.name)
 
         rebuilt.caseViewManager.allAttributesInOrder() shouldBe kb.caseViewManager.allAttributesInOrder()

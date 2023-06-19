@@ -16,6 +16,7 @@ class KB(persistentKB: PersistentKB) {
     private val ruleManager: RuleManager = RuleManager(conclusionManager, conditionManager, persistentKB.ruleStore())
     val ruleTree: RuleTree = ruleManager.ruleTree()
     private val cornerstones = CaseManager()
+    private val processedCases = CaseManager()
     private var ruleSession: RuleBuildingSession? = null
     val caseViewManager: CaseViewManager = CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
 
@@ -23,7 +24,9 @@ class KB(persistentKB: PersistentKB) {
         return cornerstones.all().find { rdrCase -> rdrCase.name == caseName } != null
     }
 
-    fun addCase(case: RDRCase) {
+    fun loadCornerstones(data: List<RDRCase>) = cornerstones.load(data) // todo test
+
+    fun addCornerstoneCase(case: RDRCase) {
         require(!containsCaseWithName(case.name)) { "There is already a case with name ${case.name} in the KB."}
         cornerstones.add(case)
     }
@@ -32,8 +35,21 @@ class KB(persistentKB: PersistentKB) {
         return cornerstones.all().first { caseName == it.name }
     }
 
-    fun allCases(): Set<RDRCase> {
+    fun allCornerstoneCases(): List<RDRCase> {
         return cornerstones.all()
+    }
+
+    fun allProcessedCases(): List<RDRCase> {
+        return processedCases.all()
+    }
+
+    fun getProcessedCase(id: Long): RDRCase? = processedCases.getCase(id)
+
+    fun processCase(externalCase: ExternalCase): RDRCase {
+        val case = createRDRCase(externalCase)
+        val stored = processedCases.add(case)
+        interpret(stored)
+        return stored
     }
 
     fun createRDRCase(case: ExternalCase): RDRCase {
