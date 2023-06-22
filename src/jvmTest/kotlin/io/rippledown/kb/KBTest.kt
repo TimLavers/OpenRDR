@@ -76,10 +76,20 @@ class KBTest {
     fun allProcessedCases() {
         kb.allProcessedCases() shouldBe emptyList()
 
-        kb.processCase(createExternalCase("A", "g1")).caseId
-        kb.processCase(createExternalCase("B", "g1")).caseId
-        kb.processCase(createExternalCase("C", "g1")).caseId
+        kb.processCase(createExternalCase("A", "g1"))
+        kb.processCase(createExternalCase("B", "g1"))
+        kb.processCase(createExternalCase("C", "g1"))
         kb.allProcessedCases().map { it.name } shouldBe listOf("A", "B", "C")
+    }
+
+    @Test
+    fun processedCaseIds() {
+        kb.processedCaseIds() shouldBe emptyList()
+
+        val idA= kb.processCase(createExternalCase("A", "g1")).caseId
+        val idB = kb.processCase(createExternalCase("B", "g1")).caseId
+        val idC = kb.processCase(createExternalCase("C", "g1")).caseId
+        kb.processedCaseIds() shouldBe listOf(idA, idB, idC)
     }
 
     @Test
@@ -245,7 +255,17 @@ class KBTest {
     }
 
     @Test
-    fun addCase() {
+    fun getCornerstoneCase() {
+        kb.getCornerstoneCase(9099999) shouldBe null
+
+        val id1 = kb.addCornerstoneCase(createCase("Case1", "1.2")).caseId.id!!
+        kb.addCornerstoneCase(createCase("Case2"))
+
+        kb.getCornerstoneCase(id1)!!.name shouldBe "Case1"
+    }
+
+    @Test
+    fun addCornerstoneCase() {
         for (i in 1..10) {
             kb.addCornerstoneCase(createCase("Case$i"))
         }
@@ -254,6 +274,23 @@ class KBTest {
             retrieved.name shouldBe "Case$i"
         }
     }
+
+   @Test
+    fun loadCornerstones() {
+        kb.allCornerstoneCases() shouldBe emptyList()
+
+        for (i in 1..10) {
+            kb.addCornerstoneCase(createCase("Case$i"))
+        }
+       val allCCs = kb.allCornerstoneCases()
+
+       val kbInfo = KBInfo("refreshed", "Blah")
+       kb = createKB(kbInfo)
+       kb.allCornerstoneCases() shouldBe emptyList()
+
+       kb.loadCornerstones(allCCs)
+       kb.allCornerstoneCases() shouldBe allCCs
+   }
 
     @Test
     fun containsCaseWithName() {

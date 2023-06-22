@@ -5,7 +5,7 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.model.COMMENT_SEPARATOR
 import io.rippledown.model.diff.*
 import io.rippledown.persistence.InMemoryPersistenceProvider
-import io.rippledown.setUpCaseFromFile
+import io.rippledown.supplyCaseFromFile
 import org.apache.commons.io.FileUtils
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -21,7 +21,7 @@ internal class RuleBuildingFromDiffListTest {
 
     @Test
     fun `should build a rule and return an interpretation containing an updated DiffList when a comment is added`() {
-        val caseId = setUpCaseFromFile("Case1", app).caseId
+        val caseId = supplyCaseFromFile("Case1", app).caseId
 
         val interp = app.case(caseId.id!!).interpretation
         val v1 = "Verified 1."
@@ -57,7 +57,7 @@ internal class RuleBuildingFromDiffListTest {
 
     @Test
     fun `should build a rule and return an interpretation containing an updated DiffList when a comment is removed`() {
-        val caseId = setUpCaseFromFile("Case1", app).caseId
+        val caseId = supplyCaseFromFile("Case1", app).caseId
         val comment1 = "Bondi or bust."
         val comment2 = "Bring your flippers."
         with(app) {
@@ -92,7 +92,7 @@ internal class RuleBuildingFromDiffListTest {
 
     @Test
     fun `should build a rule and return an interpretation containing an updated DiffList when a comment is replaced`() {
-        val caseId = setUpCaseFromFile("Case1", app).caseId
+        val caseId = supplyCaseFromFile("Case1", app).caseId
         val id = caseId.id!!
         val comment1 = "Bondi or bust."
         val comment2 = "Bring your flippers."

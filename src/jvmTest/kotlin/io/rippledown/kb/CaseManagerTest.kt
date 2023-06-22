@@ -48,6 +48,19 @@ class CaseManagerTest {
     }
 
     @Test
+    fun ids() {
+        caseManager.ids() shouldBe emptyList()
+
+        val caseA = makeCase("Case A", "4.1", "nil")
+        val idA = caseManager.add(caseA).caseId
+        caseManager.ids() shouldBe listOf(idA)
+
+        val caseB = makeCase("Case B", "4.0", "nil")
+        val idB = caseManager.add(caseB).caseId
+        caseManager.ids() shouldBe listOf(idA, idB)
+    }
+
+    @Test
     fun `cannot add a case that already has an id`() {
         val case = makeCase("A")
         val withId = RDRCase(CaseId(89, "A"), case.data)

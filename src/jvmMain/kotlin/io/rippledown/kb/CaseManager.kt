@@ -10,6 +10,8 @@ class CaseManager {
         return cases.firstOrNull { it.caseId.id == id }
     }
 
+    fun ids() = all().map { it.caseId }
+
     fun all(): List<RDRCase> {
         return cases
     }

@@ -9,7 +9,7 @@ import org.apache.commons.io.FileUtils
 import java.io.File
 import java.nio.charset.StandardCharsets
 
-fun setUpCaseFromFile(caseName: String, app: ServerApplication): RDRCase {
+fun supplyCaseFromFile(caseName: String, app: ServerApplication): RDRCase {
     val externalCase = CaseTestUtils.getCase(caseName)
     return app.supplyCase(externalCase)
 }

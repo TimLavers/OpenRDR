@@ -24,11 +24,11 @@ class KB(persistentKB: PersistentKB) {
         return cornerstones.all().find { rdrCase -> rdrCase.name == caseName } != null
     }
 
-    fun loadCornerstones(data: List<RDRCase>) = cornerstones.load(data) // todo test
+    fun loadCornerstones(data: List<RDRCase>) = cornerstones.load(data)
 
-    fun addCornerstoneCase(case: RDRCase) {
+    fun addCornerstoneCase(case: RDRCase): RDRCase {
         require(!containsCaseWithName(case.name)) { "There is already a case with name ${case.name} in the KB."}
-        cornerstones.add(case)
+        return cornerstones.add(case)
     }
 
     fun getCaseByName(caseName: String): RDRCase {
@@ -39,11 +39,15 @@ class KB(persistentKB: PersistentKB) {
         return cornerstones.all()
     }
 
+    fun processedCaseIds() = processedCases.ids()
+
     fun allProcessedCases(): List<RDRCase> {
         return processedCases.all()
     }
 
     fun getProcessedCase(id: Long): RDRCase? = processedCases.getCase(id)
+
+    fun getCornerstoneCase(id: Long): RDRCase? = cornerstones.getCase(id) // todo test
 
     fun processCase(externalCase: ExternalCase): RDRCase {
         val case = createRDRCase(externalCase)

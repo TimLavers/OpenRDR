@@ -51,7 +51,7 @@ class Defs : En {
 
         Given("a list of cases with the following names is stored on the server:") { dataTable: DataTable ->
             dataTable.asList().forEach { caseName ->
-                labProxy.copyCase(caseName)
+                labProxy.provideCase(caseName)
             }
         }
         Given("a list of {long} cases is stored on the server") { numberOfCases: Long ->
@@ -66,7 +66,7 @@ class Defs : En {
         }
 
         When("a new case with the name {word} is stored on the server") { caseName: String ->
-            labProxy.copyCase(caseName)
+            labProxy.provideCase(caseName)
         }
 
         Given("the following cases are deleted on the server:") { dataTable: DataTable ->
@@ -89,9 +89,9 @@ class Defs : En {
         }
 
         Given("the initial Attribute order is A, B, C") {
-            labProxy.writeCaseWithDataToInputDir("Case1", mapOf("A" to "a"))
-            labProxy.writeCaseWithDataToInputDir("Case2", mapOf("A" to "a", "B" to "b"))
-            labProxy.writeCaseWithDataToInputDir("Case3", mapOf("A" to "a", "B" to "b", "C" to "c"))
+            labProxy.provideCase("Case1", mapOf("A" to "a"))
+            labProxy.provideCase("Case2", mapOf("A" to "a", "B" to "b"))
+            labProxy.provideCase("Case3", mapOf("A" to "a", "B" to "b", "C" to "c"))
             // The attributes are created when the cases are parsed, so select them in the right order.
             caseListPO.select("Case1")
             caseListPO.select("Case2")
@@ -125,7 +125,7 @@ class Defs : En {
         Given("case {word} is provided having data:") { caseName: String, dataTable: DataTable ->
             val attributeNameToValue = mutableMapOf<String, String>()
             dataTable.asMap().forEach { (t, u) -> attributeNameToValue[t] = u }
-            labProxy.writeCaseWithDataToInputDir(caseName, attributeNameToValue)
+            labProxy.provideCase(caseName, attributeNameToValue)
         }
 
         Then("^the case (should show|shows) the attributes in order:$") { _: String, dataTable: DataTable ->

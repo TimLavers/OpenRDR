@@ -50,6 +50,6 @@ internal class MultiEpisodeCase: UITestBase() {
 
     private fun setupCases() {
         labProxy.cleanCasesDir()
-        labProxy.copyCase("Case4")
+        labProxy.provideCase("Case4")
     }
 }

@@ -19,7 +19,6 @@ import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.postgres.PostgresPersistenceProvider
 import io.rippledown.util.EntityRetrieval
 import io.rippledown.textdiff.diffList
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.apache.commons.io.FileUtils
@@ -107,11 +106,7 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
 
     fun commitCurrentRuleSession() = kb.commitCurrentRuleSession()
 
-    fun waitingCasesInfo(): CasesInfo {
-        val caseFiles = casesDir.listFiles()
-        val idsList = caseFiles?.map { file -> getCaseFromFile(file).caseId } ?: emptyList()
-        return CasesInfo(idsList, casesDir.absolutePath)
-    }
+    fun waitingCasesInfo() = CasesInfo(kb.processedCaseIds(), kb.kbInfo.name)
 
     fun case(id: Long): RDRCase {
         val case = uninterpretedCase(id)
@@ -200,13 +195,6 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
             file.delete()
         }
         FileUtils.writeStringToFile(file, Json.encodeToString(interpretation), UTF_8)
-    }
-
-    private fun getCaseFromFile(file: File): RDRCase {
-        val format = Json { allowStructuredMapKeys = true }
-        val data = FileUtils.readFileToString(file, UTF_8)
-        val externalCase: ExternalCase = format.decodeFromString(data)
-        return kb.createRDRCase(externalCase)
     }
 
     private fun uninterpretedCase(id: Long) = kb.getProcessedCase(id)!!

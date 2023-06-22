@@ -21,7 +21,7 @@ class KBInfo(val id: String, val name: String) {
             "KBInfo id cannot be blank."
         }
         require("[a-z0-9_]+".toRegex().matches(id)) {
-            "KBInfo id should consist of letters, numbers, and _ only, but got $id."
+            "KBInfo id should consist of lower case letters, numbers, and _ only, but got $id."
         }
         require(name.isNotEmpty()) {
             "KBInfo name cannot be blank."

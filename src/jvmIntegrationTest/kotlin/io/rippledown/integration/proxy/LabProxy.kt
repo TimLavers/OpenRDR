@@ -1,12 +1,11 @@
 package io.rippledown.integration.proxy
 
-import io.rippledown.model.AttributeFactory
+import io.rippledown.integration.restclient.RESTClient
 import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
-import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.TestResult
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
+import io.rippledown.model.external.ExternalCase
+import io.rippledown.model.external.MeasurementEvent
 import kotlinx.serialization.json.Json
 import org.apache.commons.io.FileUtils
 import org.awaitility.Awaitility.await
@@ -15,7 +14,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 
-class LabProxy(tempDir: File, private val attributeFactory: AttributeFactory) {
+class LabProxy(tempDir: File, private val restProxy: RESTClient) {
     private val inputDir = File(tempDir, "cases")
     private val interpretationsDir = File(tempDir, "interpretations")
 
@@ -33,12 +32,7 @@ class LabProxy(tempDir: File, private val attributeFactory: AttributeFactory) {
         val file = File(interpretationsDir, "$caseName.interpretation.json")
         val data = FileUtils.readFileToString(file, UTF_8)
         val interpretation: Interpretation = Json.decodeFromString(data)
-        val verifiedText = interpretation.verifiedText
-        return if (verifiedText != null) verifiedText else ""
-    }
-
-    fun inputCases(): Set<String> {
-        return inputDir.list()!!.map { s -> s.dropLast(5) }.toCollection(mutableSetOf())
+        return interpretation.verifiedText ?: ""
     }
 
     fun cleanCasesDir() {
@@ -48,8 +42,12 @@ class LabProxy(tempDir: File, private val attributeFactory: AttributeFactory) {
         FileUtils.cleanDirectory(inputDir)
     }
 
-    fun copyCase(caseName: String) {
-        FileUtils.copyFileToDirectory(ConfiguredTestData.caseFile(caseName), inputDir)
+    fun provideCase(caseName: String) {
+        val file = ConfiguredTestData.caseFile(caseName)
+        val data = file.readText()
+        val jsonBuilder = Json {allowStructuredMapKeys = true}
+        val case: ExternalCase = jsonBuilder.decodeFromString(data)
+        restProxy.provideCase(case)
     }
 
     fun writeNewCaseFile(caseName: String) = CaseTestUtils.writeNewCaseFileToDirectory(caseName, inputDir)
@@ -61,18 +59,19 @@ class LabProxy(tempDir: File, private val attributeFactory: AttributeFactory) {
         }
     }
 
-    fun writeCaseToInputDir(rdrCase: RDRCase) {
-        val file = File(inputDir, "${rdrCase.name}.json")
-        val format = Json { allowStructuredMapKeys = true }
-        val serialized = format.encodeToString(rdrCase)
-        FileUtils.writeStringToFile(file, serialized, UTF_8)
+    fun provideCase(rdrCase: RDRCase) {
+        // For now we convert the RDRCase into an ExternalCase
+        // and provide that. TODO change this - make the parameter an ExternalCase
+        val data = mutableMapOf<MeasurementEvent, TestResult>()
+        rdrCase.data.forEach { data[MeasurementEvent(it.key.attribute.name, it.key.date)] = it.value }
+        restProxy.provideCase(ExternalCase(rdrCase.name, data))
     }
 
-    fun writeCaseWithDataToInputDir(name: String, attributeNameToValue: Map<String, String>) {
-        val builder = RDRCaseBuilder()
+    fun provideCase(name: String, attributeNameToValue: Map<String, String>) {
         val now = Instant.now().toEpochMilli()
-        attributeNameToValue.forEach { (a, v) -> builder.addResult(attributeFactory.create(a), now, TestResult(v)) }
-        val case = builder.build(name)
-        writeCaseToInputDir(case)
+        val data = mutableMapOf<MeasurementEvent, TestResult>()
+        attributeNameToValue.forEach{  data[MeasurementEvent(it.key, now)] =  TestResult(it.value) }
+        val case = ExternalCase(name, data)
+        restProxy.provideCase(case)
     }
 }

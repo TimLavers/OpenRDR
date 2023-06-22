@@ -7,15 +7,13 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import io.rippledown.model.Attribute
 import io.rippledown.constants.api.CASE
 import io.rippledown.constants.api.CREATE_KB
 import io.rippledown.constants.api.WAITING_CASES
-import io.rippledown.model.CasesInfo
-import io.rippledown.model.Conclusion
-import io.rippledown.model.OperationResult
+import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.external.ExternalCase
 import io.rippledown.server.*
 import io.rippledown.server.routes.*
 import kotlinx.coroutines.runBlocking
@@ -73,6 +71,14 @@ class RESTClient {
             contentType(ContentType.Application.Json)
             setBody(prototype)
         }.body()
+    }
+
+    fun provideCase(externalCase: ExternalCase): RDRCase = runBlocking {
+        jsonClient.post(endpoint + GET_OR_CREATE_CONDITION) {
+            contentType(ContentType.Application.Json)
+            setBody(externalCase)
+        }.body()
+
     }
 
     fun startSessionToAddConclusionForCurrentCase(conclusion: Conclusion): OperationResult {

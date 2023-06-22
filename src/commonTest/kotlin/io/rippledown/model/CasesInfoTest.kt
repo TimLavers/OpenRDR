@@ -18,7 +18,7 @@ internal class CasesInfoTest {
         assertEquals(info.caseIds[1].id, 234)
         assertEquals(info.caseIds[1].name, "Case 2")
         assertEquals(info.caseIds.size, 2)
-        assertEquals(info.resourcePath, "whatever/blah")
+        assertEquals(info.kbName, "whatever/blah")
     }
 
     @Test
