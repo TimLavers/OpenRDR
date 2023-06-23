@@ -25,7 +25,7 @@ fun config(block: EngineConfig.() -> Unit) = EngineConfig().apply(block)
 
 class EngineConfig {
     var returnCasesInfo: CasesInfo = CasesInfo(emptyList())
-    var returnCase: ViewableCase = createCase("The Case")
+    var returnCase: ViewableCase = createCase("", "The Case")
     var returnOperationResult: OperationResult = OperationResult()
     var returnInterpretation: Interpretation = Interpretation()
     var returnCornerstoneStatus: CornerstoneStatus = CornerstoneStatus()

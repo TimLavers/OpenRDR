@@ -7,6 +7,7 @@ import io.ktor.server.routing.*
 import io.rippledown.constants.api.CASE
 import io.rippledown.constants.api.WAITING_CASES
 import io.rippledown.server.ServerApplication
+import io.rippledown.server.logger
 
 fun Application.caseManagement(application: ServerApplication) {
     routing {

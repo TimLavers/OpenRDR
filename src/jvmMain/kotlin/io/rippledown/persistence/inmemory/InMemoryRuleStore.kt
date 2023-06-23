@@ -1,4 +1,7 @@
-package io.rippledown.persistence
+package io.rippledown.persistence.inmemory
+
+import io.rippledown.persistence.PersistentRule
+import io.rippledown.persistence.RuleStore
 
 class InMemoryRuleStore: RuleStore {
     private val rules = mutableSetOf<PersistentRule>()

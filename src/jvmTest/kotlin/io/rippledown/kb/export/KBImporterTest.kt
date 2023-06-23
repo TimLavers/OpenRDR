@@ -7,7 +7,7 @@ import io.rippledown.kb.KB
 import io.rippledown.model.*
 import io.rippledown.model.condition.LessThanOrEqualTo
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
-import io.rippledown.persistence.InMemoryPersistenceProvider
+import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.persistence.PersistenceProvider
 import java.time.Instant
 import kotlin.test.BeforeTest
@@ -52,14 +52,14 @@ class KBImporterTest : ExporterTestBase() {
             rdrCaseBuilder.addResult(glucose, episodeDate, TestResult(glucoseValue))
             rdrCaseBuilder.addResult(ldl, episodeDate, TestResult(ldlValue))
             rdrCaseBuilder.addResult(hdl, episodeDate, TestResult(hdlValue))
-            return rdrCaseBuilder.build(name)
+            return rdrCaseBuilder.build(name, name)
         }
         val case1 = buildCase("Case1", "4.0", "2.5", "1.8")
         val case2 = buildCase("Case2", "4.1", "2.4", "1.6")
         val case3 = buildCase("Case3", "4.2", "2.3", "1.4")
-        kb.addCase(case1)
-        kb.addCase(case2)
-        kb.addCase(case3)
+        kb.putCase(case1)
+        kb.putCase(case2)
+        kb.putCase(case3)
 
         // Add a rule.
         val sessionCase = kb.getCaseByName(case1.name)

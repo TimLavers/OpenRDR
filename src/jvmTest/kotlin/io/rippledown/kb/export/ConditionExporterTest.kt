@@ -10,8 +10,8 @@ import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.GreaterThanOrEqualTo
 import io.rippledown.model.condition.IsHigh
 import io.rippledown.model.condition.IsLow
-import io.rippledown.persistence.InMemoryAttributeStore
-import io.rippledown.persistence.InMemoryConditionStore
+import io.rippledown.persistence.inmemory.InMemoryAttributeStore
+import io.rippledown.persistence.inmemory.InMemoryConditionStore
 import org.junit.Before
 import kotlin.test.Test
 

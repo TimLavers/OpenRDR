@@ -3,7 +3,6 @@ package io.rippledown.interpretation
 import Handler
 import io.rippledown.constants.interpretation.*
 import io.rippledown.model.Interpretation
-import mui.base.BadgeUnstyledProps
 import mui.lab.TabContext
 import mui.lab.TabPanel
 import mui.material.*
@@ -17,7 +16,7 @@ external interface InterpretationTabsHandler : Handler {
     var interpretation: Interpretation
     var refreshCase: () -> Unit
     var onStartRule: (interp: Interpretation) -> Unit
-    var readOnly : Boolean
+    var isCornerstone: Boolean
 }
 
 val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
@@ -25,7 +24,7 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
 
     Box {
         sx {
-            width = 50.pc
+            width = 30.pc
         }
         id = "interpretation_tabs"
         TabContext {
@@ -50,7 +49,7 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
 
                 Tab {
                     id = INTERPRETATION_TAB_CHANGES
-                    label = FC<BadgeUnstyledProps> {
+                    label = FC<BadgeProps> {
                         Badge {
                             id = INTERPRETATION_CHANGES_BADGE
                             color = primary
@@ -73,6 +72,7 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
                     onInterpretationEdited = {
                         handler.refreshCase()
                     }
+                    isCornerstone = handler.isCornerstone
                 }
             }
 

@@ -1,4 +1,6 @@
-package io.rippledown.persistence
+package io.rippledown.persistence.inmemory
+
+import io.rippledown.persistence.AttributeOrderStore
 
 class InMemoryAttributeOrderStore: AttributeOrderStore {
     private val idToIndex = mutableMapOf<Int, Int>()

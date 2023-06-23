@@ -4,6 +4,9 @@ import emotion.react.css
 import io.rippledown.model.Attribute
 import io.rippledown.model.ReferenceRange
 import io.rippledown.model.TestResult
+import mui.material.TableCell
+import mui.system.sx
+import px4
 import px8
 import react.FC
 import react.Props
@@ -16,11 +19,11 @@ external interface ValueCellHandler : Props {
 }
 
 val ValueCell = FC<ValueCellHandler> {
-    ReactHTML.td {
+    TableCell {
         +resultText(it.value)
         id = "attribute_value_cell_${it.attribute.name}_${it.index}"
-        css {
-            padding = px8
+        sx {
+            padding = px4
         }
     }
 }
@@ -36,11 +39,11 @@ internal fun resultText(result: TestResult): String {
 
 
 val ReferenceRangeCell = FC<ValueCellHandler> {
-    ReactHTML.td {
+    TableCell {
         +rangeText(it.value.referenceRange)
         id = "reference_range_cell_${it.attribute.name}"
-        css {
-            padding = px8
+        sx {
+            padding = px4
         }
     }
 }
@@ -50,8 +53,8 @@ fun rangeText(referenceRange: ReferenceRange?) =
         when {
             this == null -> ""
             lowerString == null && upperString == null -> ""
-            lowerString == null -> "(< $upperString)"
-            upperString == null -> "(> $lowerString)"
-            else -> "($lowerString - $upperString)"
+            lowerString == null -> "< $upperString"
+            upperString == null -> "> $lowerString"
+            else -> "$lowerString - $upperString"
         }
     }

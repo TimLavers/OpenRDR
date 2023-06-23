@@ -1,7 +1,9 @@
 package io.rippledown.caselist
 
-import io.rippledown.caseview.CaseView
 import Handler
+import debug
+import io.rippledown.caseview.CaseView
+import io.rippledown.cornerstoneview.CornerstoneView
 import io.rippledown.interpretation.ConditionSelector
 import io.rippledown.model.CaseId
 import io.rippledown.model.Interpretation
@@ -26,14 +28,16 @@ external interface CaseListHandler : Handler {
 
 val CaseList = FC<CaseListHandler> { handler ->
     var currentCase: ViewableCase? by useState(null)
-    var cornerstoneCase: ViewableCase? by useState(null)
+    var ccStatus: CornerstoneStatus? by useState(null)
     var newInterpretation: Interpretation? by useState(null)
     var conditionHints: ConditionList? by useState(null)
 
     fun updateCurrentCase(id: String) {
         handler.scope.launch {
-            val returned = handler.api.getCase(id)
-            currentCase = returned
+            debug("about to update current case with id $id")
+            val current = handler.api.getCase(id)
+            debug("updated current case with id $id. Interp was ${current.interpretation} latest text was ${current.interpretation.latestText()}")
+            currentCase = current
         }
     }
 
@@ -42,42 +46,52 @@ val CaseList = FC<CaseListHandler> { handler ->
         val currentCaseNullOrNotAvailable = currentCase == null || !names.contains(currentCase?.name)
         if (currentCaseNullOrNotAvailable && names.isNotEmpty()) {
             val firstCaseId = handler.caseIds[0]
-            updateCurrentCase(firstCaseId.name)
+            debug("about to get first case with id ${firstCaseId.id}")
+            updateCurrentCase(firstCaseId.id)
+            debug("got first case with case id ${firstCaseId.id}")
         }
     }
     selectFirstCase()
 
     Grid {
         container = true
-        Grid {
-            item = true
-            id = CASELIST_ID
-            xs = 2
-            CaseSelector{
-                caseIds = handler.caseIds
-                selectedCaseName = currentCase?.name
-                selectCase = { id ->
-                    updateCurrentCase(id)
+        if (ccStatus == null) {
+            Grid {
+                item = true
+                id = CASELIST_ID
+                xs = 2
+                CaseSelector {
+                    caseIds = handler.caseIds
+                    selectedCaseName = currentCase?.name
+                    selectCase = { id ->
+                        debug("caselist selected case with id $id")
+                        updateCurrentCase(id)
+                    }
                 }
             }
         }
         Grid {
             item = true
-            xs = 6
+            xs = 4
             if (currentCase != null) {
+                val id = currentCase!!.id
                 CaseView {
                     scope = handler.scope
                     api = handler.api
+                    debug("caseview with id $id and interp ${currentCase!!.interpretation.latestText()}")
                     case = currentCase!!
                     onCaseEdited = {
-                        updateCurrentCase(currentCase!!.name)
+                        updateCurrentCase(id)
                     }
                     onStartRule = { newInterp ->
                         newInterpretation = newInterp
                         handler.scope.launch {
-                            conditionHints = handler.api.conditionHints(currentCase!!.name)
-                            val cornerstoneStatus = handler.api.startRuleSession(SessionStartRequest(case.name, newInterp.diffList.selectedChange()))
-                            cornerstoneCase = cornerstoneStatus.cornerstoneToReview
+                            conditionHints = handler.api.conditionHints(id)
+                            val sessionStartRequest = SessionStartRequest(id, newInterp.diffList.selectedChange())
+                            debug("$sessionStartRequest")
+                            val cc = handler.api.startRuleSession(sessionStartRequest)
+                            debug("cc status: $cc")
+                            ccStatus = cc
                         }
                     }
                 }
@@ -85,28 +99,20 @@ val CaseList = FC<CaseListHandler> { handler ->
         }
         Grid {
             item = true
-            xs = 6
-            if (cornerstoneCase != null) {
-                CaseView {
+            xs = 4
+            if (ccStatus != null ) {
+                debug("showing cornerstone view")
+                CornerstoneView {
                     scope = handler.scope
                     api = handler.api
-                    case = cornerstoneCase!!
-                    onCaseEdited = {
-                        updateCurrentCase(currentCase!!.name)
-                    }
-                    onStartRule = { newInterp ->
-                        newInterpretation = newInterp
-                        handler.scope.launch {
-                            conditionHints = handler.api.conditionHints(currentCase!!.name)
-                        }
-                    }
+                    cornerstoneStatus = ccStatus!!
                 }
             }
         }
 
         Grid {
             item = true
-            xs = 4
+            xs = 2
             if (newInterpretation != null && conditionHints != null) {
                 ConditionSelector {
                     scope = handler.scope
@@ -118,13 +124,14 @@ val CaseList = FC<CaseListHandler> { handler ->
                     onDone = { conditionList ->
                         handler.scope.launch {
                             val ruleRequest = RuleRequest(
-                                caseId = currentCase!!.name,
+                                caseId = currentCase!!.id,
                                 diffList = newInterpretation!!.diffList,
                                 conditionList = ConditionList(conditions = conditionList)
                             )
                             handler.api.buildRule(ruleRequest)
                             newInterpretation = null
-                            updateCurrentCase(currentCase!!.name)
+                            ccStatus = null
+                            updateCurrentCase(currentCase!!.id)
                         }
                     }
                 }

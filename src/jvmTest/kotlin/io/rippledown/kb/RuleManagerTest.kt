@@ -10,6 +10,10 @@ import io.rippledown.model.condition.IsLow
 import io.rippledown.model.condition.IsNormal
 import io.rippledown.model.rule.Rule
 import io.rippledown.persistence.*
+import io.rippledown.persistence.inmemory.InMemoryAttributeStore
+import io.rippledown.persistence.inmemory.InMemoryConclusionStore
+import io.rippledown.persistence.inmemory.InMemoryConditionStore
+import io.rippledown.persistence.inmemory.InMemoryRuleStore
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 

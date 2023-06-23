@@ -9,8 +9,8 @@ import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.TestResult
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.persistence.AttributeOrderStore
-import io.rippledown.persistence.InMemoryAttributeOrderStore
-import io.rippledown.persistence.InMemoryAttributeStore
+import io.rippledown.persistence.inmemory.InMemoryAttributeOrderStore
+import io.rippledown.persistence.inmemory.InMemoryAttributeStore
 import java.time.Instant
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -211,6 +211,6 @@ class CaseViewManagerTest {
         attributes.forEach{
             builder.addResult(it, date.toEpochMilli(), TestResult(it.name + " value") )
         }
-        return builder.build(name)
+        return builder.build( name)
     }
 }

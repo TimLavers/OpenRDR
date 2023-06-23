@@ -1,5 +1,10 @@
 package io.rippledown.integration.pageobjects
 
+import io.kotest.matchers.shouldBe
+import io.rippledown.constants.caseview.CASEVIEW_CORNERSTONE_CASE_NAME_ID
+import io.rippledown.constants.interpretation.CASE_VIEW_CONTAINER
+import io.rippledown.constants.interpretation.CORNERSTONE_VIEW_CONTAINER
+import io.rippledown.constants.interpretation.EMPTY_CORNERSTONE_VIEW_CONTAINER
 import io.rippledown.integration.pause
 import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver
@@ -12,20 +17,20 @@ class CaseViewPO(private val driver: WebDriver) {
         pause()//Need to wait for the case to render else we get a stale element. todo use a better mechanism
     }
 
-    private fun containerElement() = driver.findElement(By.id("case_view_container"))
+    private fun caseContainerElement() = driver.findElement(By.id(CASE_VIEW_CONTAINER))
 
     fun nameShown(): String {
-        return containerElement().findElement(By.id("case_view_case_name")).text
+        return caseContainerElement().findElement(By.id("case_view_case_name")).text
     }
 
     fun noNameShowing(): Boolean {
-        return driver.findElements(By.id("case_view_container")).size == 0
+        return driver.findElements(By.id(CASE_VIEW_CONTAINER)).size == 0
     }
 
     fun datesShown(): List<String> {
         val result = mutableListOf<String>()
 
-        val containerElement = containerElement()
+        val containerElement = caseContainerElement()
         // Get the case header.
         val headerElement = containerElement.findElement(By.tagName("thead"))
         // Get all cells in the head.
@@ -43,7 +48,7 @@ class CaseViewPO(private val driver: WebDriver) {
 
     fun attributes(): List<String> {
         val result = mutableListOf<String>()
-        val containerElement = containerElement()
+        val containerElement = caseContainerElement()
         val caseBodyElement = containerElement.findElement(By.tagName("tbody"))
         caseBodyElement.findElements(By.tagName("tr")).forEach { rowElement ->
             val rowCells = rowElement.findElements(By.tagName("td"))
@@ -55,7 +60,7 @@ class CaseViewPO(private val driver: WebDriver) {
     fun valuesShown(): Map<String, List<String>> {
         val result = mutableMapOf<String, List<String>>()
 
-        val containerElement = containerElement()
+        val containerElement = caseContainerElement()
         // Get the case body.
         val caseBodyElement = containerElement.findElement(By.tagName("tbody"))
         // For each row...
@@ -87,7 +92,7 @@ class CaseViewPO(private val driver: WebDriver) {
     }
 
     fun referenceRange(attribute: String): String {
-        val containerElement = containerElement()
+        val containerElement = caseContainerElement()
         val idOfRangeCellForAttribute = "reference_range_cell_$attribute"
         val attributeValueCell = containerElement.findElement(By.id(idOfRangeCellForAttribute))
         return attributeValueCell!!.text

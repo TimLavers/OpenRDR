@@ -105,7 +105,7 @@ class DiffViewerTest {
         }
         val container = createRootFor(vfc)
         with(container) {
-            act { moveMouseOverRow(2) }
+            moveMouseOverRow(2)
             requireBuildIconForRow(2)
         }
     }
@@ -128,7 +128,7 @@ class DiffViewerTest {
         }
         val container = createRootFor(vfc)
         with(container) {
-            act { moveMouseOverRow(1) }
+            moveMouseOverRow(1)
             requireNoBuildIconForRow(1)
         }
     }
@@ -272,7 +272,7 @@ class DiffViewerTest {
         }
         val container = createRootFor(vfc)
         with(container) {
-            act { moveMouseOverRow(2) }
+            moveMouseOverRow(2)
             waitForEvents()
             clickBuildIconForRow(2)
             //assertion is in onStartRule

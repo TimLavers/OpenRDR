@@ -63,7 +63,7 @@ class ViewableCaseTest {
     fun serializationWithInterpretation() {
         val surfComment = "Surf's up."
         val diffList = DiffList(listOf(Addition("Go to Bondi")), selected = 0)
-        val viewableCase = createCaseWithInterpretation("Case1", listOf(surfComment), diffList)
+        val viewableCase = createCaseWithInterpretation("", "Case1", listOf(surfComment), diffList)
         withClue("sanity check") {
             viewableCase.interpretation.latestText() shouldBe surfComment
             viewableCase.interpretation.diffList shouldBe diffList

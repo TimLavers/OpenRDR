@@ -8,7 +8,7 @@ import io.rippledown.model.diff.*
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
-import io.rippledown.persistence.InMemoryPersistenceProvider
+import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import org.apache.commons.io.FileUtils
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -39,8 +39,8 @@ internal class RuleBuildingFromDiffListTest {
         setUpCaseFromFile(id2, app)
         val case1 = app.case(id1)
         val case2 = app.case(id2)
-        app.kb.addCase(case1)
-        app.kb.addCase(case2)
+        app.kb.addCornerstoneCase(case1)
+        app.kb.addCornerstoneCase(case2)
         val viewableCase = app.viewableCase(id1)
         val diff = Addition("Go to Bondi")
         val cornerstoneStatus = app.startRuleSession(SessionStartRequest(id2, diff))
@@ -66,8 +66,9 @@ internal class RuleBuildingFromDiffListTest {
             selected = 0 // The first addition is what we want the rule to be built from.
         )
 
+        app.startRuleSession(SessionStartRequest(id, diffList.selectedChange()))
         val ruleRequest = RuleRequest(id, diffList)
-        app.buildRule(ruleRequest)
+        app.commitRuleSession(ruleRequest)
 
         withClue("the latest text should be unchanged as the verified text is still null.") {
             interp.latestText() shouldBe "$v1 $v2"
@@ -106,8 +107,9 @@ internal class RuleBuildingFromDiffListTest {
             selected = 1 // We want the rule to be built for the removal
         )
 
+        app.startRuleSession(SessionStartRequest(id, diffList.selectedChange()))
         val ruleRequest = RuleRequest(id, diffList)
-        app.buildRule(ruleRequest)
+        app.commitRuleSession(ruleRequest)
         val updatedInterpretation = app.case(id).interpretation
 
         withClue("The returned DiffList should be updated to reflect the new rule.") {
@@ -142,8 +144,9 @@ internal class RuleBuildingFromDiffListTest {
             ),
             selected = 1 // We want the rule to be built for the removal
         )
+        app.startRuleSession(SessionStartRequest(id, diffList.selectedChange()))
         val ruleRequest = RuleRequest(id, diffList)
-        app.buildRule(ruleRequest)
+        app.commitRuleSession(ruleRequest)
         val updatedInterpretation = app.case(id).interpretation
 
         withClue("The returned DiffList should be updated to reflect the new rule.") {

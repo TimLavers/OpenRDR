@@ -1,6 +1,7 @@
 package io.rippledown.caselist
 
 import Api
+import io.rippledown.caseview.requireCaseToBeShowing
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.createCase
@@ -41,7 +42,7 @@ class CasePollerTest {
                     CaseId("3", "case 3")
                 )
             )
-            returnCase = createCase("case 1")
+            returnCase = createCase("1", "case 1")
         }
 
         val vfc = VFC {
@@ -67,7 +68,7 @@ class CasePollerTest {
                     CaseId("3", "case 3")
                 )
             )
-            returnCase = createCase("case 1")
+            returnCase = createCase("1", "case 1")
         }
 
         val vfc = VFC {
@@ -98,7 +99,7 @@ class CasePollerTest {
             returnCasesInfo = CasesInfo(
                 caseIds
             )
-            returnCase = createCase(case1)
+            returnCase = createCase("1", case1)
         }
         val vfc = VFC {
             CasePoller {
@@ -110,21 +111,23 @@ class CasePollerTest {
             waitForNextPoll()
             requireNumberOfCases(2)
             requireNamesToBeShowingOnCaseList(case1, case2)
-            requireCaseToBeSelected(case1)
+            requireCaseToBeShowing(case1)
         }
     }
 
     @Test
     fun shouldShowCaseViewWhenACaseIsSelected() = runTest {
+        val caseId1 = "1"
+        val caseId2 = "2"
         val caseName1 = "case 1"
         val caseName2 = "case 2"
         val caseIds = listOf(
-            CaseId("1", caseName1),
-            CaseId("2", caseName2),
+            CaseId(caseId1, caseName1),
+            CaseId(caseId2, caseName2),
         )
         val config = config {
             returnCasesInfo = CasesInfo(caseIds)
-            returnCase = createCase(caseName1)
+            returnCase = createCase(caseId1, caseName1)
         }
 
         val vfc = VFC {
@@ -136,12 +139,12 @@ class CasePollerTest {
         with(createRootFor(vfc)) {
             waitForNextPoll()
             requireNamesToBeShowingOnCaseList(caseName1, caseName2)
-            requireCaseToBeSelected(caseName1)
+            requireCaseToBeShowing(caseName1)
 
-            config.returnCase = createCase(caseName2)
-            selectCase(caseName2)
+            config.returnCase = createCase(caseId2, caseName2)
+            selectCaseById(caseId2)
             waitForEvents()
-            requireCaseToBeSelected(caseName2)
+            requireCaseToBeShowing(caseName2)
         }
     }
 
@@ -153,7 +156,7 @@ class CasePollerTest {
         )
         val config = config {
             returnCasesInfo = CasesInfo(caseIds)
-            returnCase = createCase(caseName)
+            returnCase = createCase("1", caseName)
         }
 
         val vfc = VFC {
@@ -175,18 +178,21 @@ class CasePollerTest {
 
     @Test
     fun shouldSelectTheFirstCaseWhenTheSelectedCaseHasBeenDeleted() = runTest {
+        val id1 = "1"
+        val id2 = "2"
+        val id3 = "3"
         val caseName1 = "case 1"
         val caseName2 = "case 2"
         val caseName3 = "case 3"
         val config = config {
             returnCasesInfo = CasesInfo(
                 listOf(
-                    CaseId("1", caseName1),
-                    CaseId("2", caseName2),
-                    CaseId("3", caseName3),
+                    CaseId(id1, caseName1),
+                    CaseId(id2, caseName2),
+                    CaseId(id3, caseName3),
                 )
             )
-            returnCase = createCase(caseName2)
+            returnCase = createCase(id2, caseName2)
         }
         val vfc = VFC {
             CasePoller {
@@ -196,19 +202,19 @@ class CasePollerTest {
         }
         with(createRootFor(vfc)) {
             waitForNextPoll()
-            selectCase(caseName2)
-            requireCaseToBeSelected(caseName2)
+            selectCaseById(id2)
+            requireCaseToBeShowing(caseName2)
 
             //set the mock to return the other two cases
             config.returnCasesInfo = CasesInfo(
                 listOf(
-                    CaseId("1", caseName1),
-                    CaseId("3", caseName3)
+                    CaseId(id1, caseName1),
+                    CaseId(id3, caseName3)
                 )
             )
-            config.returnCase = createCase(caseName1)
+            config.returnCase = createCase(id1, caseName1)
             waitForNextPoll()
-            requireCaseToBeSelected(caseName1)
+            requireCaseToBeShowing(caseName1)
             requireNamesToBeShowingOnCaseList(caseName1, caseName3)
         }
     }
@@ -225,7 +231,7 @@ class CasePollerTest {
             returnCasesInfo = CasesInfo(
                 caseIds
             )
-            returnCase = createCase(case1)
+            returnCase = createCase("1", case1)
         }
         val vfc = VFC {
             CasePoller {
@@ -235,7 +241,7 @@ class CasePollerTest {
         }
         with(createRootFor(vfc)) {
             waitForNextPoll()
-            requireCaseToBeSelected(case1)
+            requireCaseToBeShowing(case1)
         }
     }
 }

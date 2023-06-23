@@ -11,6 +11,8 @@ import io.rippledown.model.Attribute
 import io.rippledown.constants.api.CASE
 import io.rippledown.constants.api.CREATE_KB
 import io.rippledown.constants.api.WAITING_CASES
+import io.rippledown.constants.server.PING
+import io.rippledown.constants.server.SHUTDOWN
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.Conclusion
 import io.rippledown.model.OperationResult
@@ -39,7 +41,7 @@ class RESTClient {
     fun serverHasStarted(): Boolean {
         return runBlocking {
             try {
-                jsonClient.get(endpoint + PING)
+                jsonClient.get("$endpoint$PING")
                 true
             } catch (e: Exception) {
                 false
@@ -138,7 +140,7 @@ class RESTClient {
 
     fun shutdown(): Unit = runBlocking {
         try {
-            jsonClient.post(endpoint + SHUTDOWN)
+            jsonClient.post("$endpoint$SHUTDOWN")
         } catch (e: Exception) {
             //expected
         }

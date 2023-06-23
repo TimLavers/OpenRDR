@@ -23,14 +23,14 @@ class CaseViewTest {
         val name = "case a "
         val vfc = VFC {
             CaseView {
-                case = createCase(name)
+                case = createCase("", name)
                 scope = this@runTest
                 api = Api(mock(config {}))
             }
         }
         checkContainer(vfc) { container ->
             with(container) {
-                requireCaseToBeSelected(name)
+                requireCaseToBeShowing(name)
             }
         }
     }
@@ -41,7 +41,7 @@ class CaseViewTest {
         var caseEdited = false
         val vfc = VFC {
             CaseView {
-                case = createCase(name)
+                case = createCase("", name)
                 scope = this@runTest
                 api = Api(mock(config {}))
                 onCaseEdited = {
@@ -73,6 +73,7 @@ class CaseViewTest {
             )
         )
         val caseWithInterp = createCaseWithInterpretation(
+            id = "",
             conclusionTexts = listOf(beachComment, manlyComment, bondiComment),
             diffs = diffList
         )
@@ -115,7 +116,7 @@ class CaseViewTest {
 @Test
 fun shouldShowInterpretation() = runTest {
     val text = "Go to Bondi now!"
-    val rdrCase = createCase("case a ")
+    val rdrCase = createCase("", "case a ")
     rdrCase.interpretation.add(RuleSummary(conclusion = Conclusion(1, text)))
     val vfc = VFC {
         CaseView {

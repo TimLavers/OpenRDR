@@ -1,7 +1,7 @@
 package io.rippledown.model
 
 import io.rippledown.model.condition.Condition
-import io.rippledown.util.copyByReflection
+import io.rippledown.persistence.inmemory.copyByReflection
 
 class DummyConditionFactory: ConditionFactory {
     private val idToCondition = mutableMapOf<Int, Condition>()

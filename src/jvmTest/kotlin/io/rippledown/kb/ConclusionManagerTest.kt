@@ -3,7 +3,7 @@ package io.rippledown.kb
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Conclusion
 import io.rippledown.persistence.ConclusionStore
-import io.rippledown.persistence.InMemoryConclusionStore
+import io.rippledown.persistence.inmemory.InMemoryConclusionStore
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 

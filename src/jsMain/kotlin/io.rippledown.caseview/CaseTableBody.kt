@@ -1,10 +1,11 @@
 package io.rippledown.caseview
 
 import Handler
-import emotion.react.css
 import io.rippledown.model.caseview.ViewableCase
+import mui.material.TableBody
+import mui.material.TableRow
+import mui.system.sx
 import react.FC
-import react.dom.html.ReactHTML
 import web.cssom.rgb
 
 external interface CaseTableBodyHandler: Handler {
@@ -12,12 +13,12 @@ external interface CaseTableBodyHandler: Handler {
     var onCaseEdited: () -> Unit
 }
 val CaseTableBody = FC<CaseTableBodyHandler> {
-    ReactHTML.tbody {
+    TableBody {
         it.case.attributes().forEach { a ->
             val results = it.case.rdrCase.resultsFor(a)!!
-            ReactHTML.tr {
+            TableRow {
                 id = "case_table_row_${a.name}"
-                css {
+                sx {
                     nthChild("even") {
                         backgroundColor = rgb(224, 224, 224)
                     }

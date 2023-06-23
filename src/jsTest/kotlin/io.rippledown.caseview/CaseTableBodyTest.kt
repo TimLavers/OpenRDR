@@ -25,7 +25,7 @@ class CaseTableBodyTest {
         builder1.addValue(abc, defaultDate, "12.9")
         builder1.addValue(xyz, defaultDate, "1.9")
         builder1.addValue(tsh, defaultDate, "2.37")
-        val case1 = builder1.build("Case1")
+        val case1 = builder1.build( "Case1")
         val properties = CaseViewProperties(listOf(tsh, ft4, abc, xyz))
         val viewableCase = ViewableCase(case1, properties)
 

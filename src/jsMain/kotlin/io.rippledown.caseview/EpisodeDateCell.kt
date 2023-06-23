@@ -5,6 +5,7 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import mui.material.TableCell
+import mui.system.sx
 import px8
 import react.FC
 import react.Props
@@ -20,11 +21,9 @@ external interface EpisodeDateCellHandler: Props {
 val EpisodeDateCell = FC<EpisodeDateCellHandler> {
     TableCell {
         +formatDate(it.date)
-        css {
+        sx {
             padding = px8
             fontWeight = FontWeight.normal
-            fontStyle = FontStyle.italic
-            fontSize = FontSize.small
             whiteSpace = WhiteSpace.breakSpaces
         }
         id = "episode_date_cell_${it.index}"

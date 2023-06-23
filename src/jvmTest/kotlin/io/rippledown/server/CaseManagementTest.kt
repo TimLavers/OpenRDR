@@ -32,7 +32,7 @@ class CaseManagementTest: OpenRDRServerTestBase() {
     @Test
     fun viewableCase() = testApplication {
         setup()
-        val rdrCase = RDRCase("Case1")
+        val rdrCase = RDRCase("", "Case1")
         val viewableCase = ViewableCase(rdrCase)
         val caseId = "Case1"
         every { serverApplication.viewableCase(caseId) } returns viewableCase

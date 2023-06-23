@@ -2,6 +2,7 @@ package io.rippledown.server
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
@@ -12,9 +13,7 @@ import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.diff.Unchanged
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
-import io.rippledown.model.rule.CornerstoneStatus
-import io.rippledown.model.rule.SessionStartRequest
-import io.rippledown.persistence.InMemoryPersistenceProvider
+import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.util.shouldContainSameAs
 import org.apache.commons.io.FileUtils
 import java.io.File
@@ -230,13 +229,13 @@ internal class ServerApplicationTest {
     fun createKB() {
         app.kb.kbInfo.name shouldBe "Thyroids"
         val kbIdsBefore = persistenceProvider.idStore().data().keys
-        app.kb.containsCaseWithName("Case1") shouldBe false //sanity
-        app.kb.addCase(createCase("Case1"))
-        app.kb.containsCaseWithName("Case1") shouldBe true
+        app.kb.containsCornerstoneCaseWithName("Case1") shouldBe false //sanity
+        app.kb.addCornerstoneCase(createCase("Case1"))
+        app.kb.containsCornerstoneCaseWithName("Case1") shouldBe true
 
         app.createKB()
         app.kb.kbInfo.name shouldBe "Thyroids"
-        app.kb.containsCaseWithName("Case1") shouldBe false //kb rebuilt
+        app.kb.containsCornerstoneCaseWithName("Case1") shouldBe false //kb rebuilt
         // Check that all of the other KBs are still there.
         persistenceProvider.idStore().data().keys shouldBe setOf(app.kbName().id).union(kbIdsBefore) }
 
@@ -245,12 +244,12 @@ internal class ServerApplicationTest {
         app.kb.kbInfo.name shouldBe "Thyroids"
         val kbIdsBefore = persistenceProvider.idStore().data().keys
         val oldKBId = app.kbName().id
-        app.kb.addCase(createCase("Case1"))
-        app.kb.containsCaseWithName("Case1") shouldBe true
+        app.kb.addCornerstoneCase(createCase("Case1"))
+        app.kb.containsCornerstoneCaseWithName("Case1") shouldBe true
 
         app.reCreateKB()
         app.kb.kbInfo.name shouldBe "Thyroids"
-        app.kb.containsCaseWithName("Case1") shouldBe false //kb rebuilt
+        app.kb.containsCornerstoneCaseWithName("Case1") shouldBe false //kb rebuilt
         // Check that the old KB has been deleted.
         val expectedKBIdsAfter = kbIdsBefore.minus(oldKBId).plus(app.kbName().id)
         persistenceProvider.idStore().data().keys shouldBe expectedKBIdsAfter
@@ -265,7 +264,7 @@ internal class ServerApplicationTest {
     fun startRuleSessionToAddConclusion() {
         val id = "Case1"
         setUpCaseFromFile(id, app)
-        app.kb.addCase(createCase(id))
+        app.kb.addCornerstoneCase(createCase(id))
         app.case(id).interpretation.conclusions() shouldBe emptySet()
         app.startRuleSessionToAddConclusion(id, app.kb.conclusionManager.getOrCreate("Whatever"))
         app.commitCurrentRuleSession()
@@ -277,7 +276,7 @@ internal class ServerApplicationTest {
         // Add a case and a rule to the KB.
         val id = "Case1"
         setUpCaseFromFile(id, app)
-        app.kb.addCase(createCase(id))
+        app.kb.putCase(createCase(id))
         val conclusion1 = app.kb.conclusionManager.getOrCreate( "Whatever")
         val tsh = app.kb.attributeManager.getOrCreate("TSH")
         app.startRuleSessionToAddConclusion(id, conclusion1)
@@ -331,7 +330,6 @@ internal class ServerApplicationTest {
     fun startSessionToReplaceConclusion() {
         val id = "Case1"
         setUpCaseFromFile(id, app)
-        app.kb.addCase(createCase(id))
         val conclusion1 = app.kb.conclusionManager.getOrCreate( "Whatever")
         app.startRuleSessionToAddConclusion(id, conclusion1)
         app.commitCurrentRuleSession()
@@ -348,7 +346,6 @@ internal class ServerApplicationTest {
         setUpCaseFromFile(id, app)
         val conclusion = app.kb.conclusionManager.getOrCreate("Go to Bondi.")
         with(app) {
-            kb.addCase(createCase(id))
             startRuleSessionToAddConclusion(id, conclusion)
             commitCurrentRuleSession()
             val case = case(id)
@@ -366,6 +363,16 @@ internal class ServerApplicationTest {
                 )
             )
         }
+    }
+    @Test
+    fun `After committing a rule the session case should be a cornerstone`() {
+        val id = "Case1"
+        setUpCaseFromFile(id, app)
+        val conclusion = app.kb.conclusionManager.getOrCreate( "Whatever")
+        app.kb.allCornerstoneCases() shouldHaveSize  0
+        app.startRuleSessionToAddConclusion(id, conclusion)
+        app.commitCurrentRuleSession()
+        app.kb.allCornerstoneCases() shouldHaveSize  1
     }
 
     private fun createCase(caseName: String) = CaseTestUtils.createCase(caseName)

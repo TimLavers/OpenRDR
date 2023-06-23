@@ -4,6 +4,9 @@ import Handler
 import emotion.react.css
 import io.rippledown.model.Attribute
 import kotlinx.coroutines.launch
+import mui.material.TableCell
+import mui.system.sx
+import px4
 import px8
 import react.FC
 import react.dom.events.DragEvent
@@ -16,11 +19,11 @@ external interface AttributeCellHandler : Handler {
     var onCaseEdited: () -> Unit
 }
 val AttributeCell = FC<AttributeCellHandler> {
-    ReactHTML.td {
+    TableCell {
         +it.attribute.name
         id = "attribute_name_cell_${it.attribute.name}"
-        css {
-            padding = px8
+        sx {
+            padding = px4
             cursor = Cursor.move
         }
         draggable = true

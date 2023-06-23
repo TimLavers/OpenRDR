@@ -7,7 +7,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.startWith
 import io.rippledown.model.KBInfo
-import io.rippledown.persistence.InMemoryPersistenceProvider
+import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.util.EntityRetrieval
 import java.util.UUID
 import kotlin.test.BeforeTest

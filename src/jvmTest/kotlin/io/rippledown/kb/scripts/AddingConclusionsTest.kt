@@ -46,7 +46,11 @@ class AddingConclusionsTest {
     @Test
     fun all_cornerstones_should_be_presented_when_adding_a_conclusion() {
         build {
-            case("1", "a")
+            cornerstoneCase("1", "a")
+            cornerstoneCase("2", "b")
+            cornerstoneCase("3", "c")
+            cornerstoneCase("4", "abc")
+            case("1","a")
             case("2", "b")
             case("3", "c")
             case("4", "abc")

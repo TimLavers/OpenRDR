@@ -24,7 +24,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
     @Test
     fun `should delegate saving an Interpretation to server application`() = testApplication {
         setup()
-        val rdrCase = RDRCase("Case1")
+        val rdrCase = RDRCase("", "Case1")
         val diffs = DiffList(
             listOf(
                 Unchanged("Go to Bondi Beach."),
@@ -86,7 +86,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
 
         val ruleRequest = RuleRequest(diffList = diffList)
         val interp = Interpretation()
-        every { serverApplication.buildRule(ruleRequest) } returns interp
+        every { serverApplication.commitRuleSession(ruleRequest) } returns interp
 
         val result = httpClient.post(BUILD_RULE) {
             contentType(ContentType.Application.Json)
@@ -94,6 +94,6 @@ class InterpManagementTest : OpenRDRServerTestBase() {
         }
         result.status shouldBe HttpStatusCode.OK
         result.body<Interpretation>() shouldBe interp
-        verify { serverApplication.buildRule(ruleRequest) }
+        verify { serverApplication.commitRuleSession(ruleRequest) }
     }
 }

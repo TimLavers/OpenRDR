@@ -6,6 +6,7 @@ import kotlinx.coroutines.test.runTest
 import proxy.*
 import react.VFC
 import react.dom.checkContainer
+import react.dom.createRootFor
 import kotlin.test.Test
 
 class CaseSelectorTest {
@@ -32,7 +33,7 @@ class CaseSelectorTest {
     }
 
     @Test
-    fun shouldCallSelectedCaseWhenCaseNameIsSelected() = runTest {
+    fun shouldCallSelectedCaseWhenCaseIsSelectedById() = runTest {
         val caseA = "case A"
         val caseB = "case B"
         val caseC = "case C"
@@ -40,20 +41,42 @@ class CaseSelectorTest {
         val caseId2 = CaseId(id = "2", name = caseB)
         val caseId3 = CaseId(id = "3", name = caseC)
         val threeCaseIds = listOf(caseId1, caseId2, caseId3)
-        lateinit var selectedCase: String
+        lateinit var selectedCaseId: String
         val vfc = VFC {
             CaseSelector {
                 caseIds = threeCaseIds
-                selectCase = { caseName ->
-                    selectedCase = caseName
+                selectCase = { caseId ->
+                    selectedCaseId = caseId
                 }
             }
         }
-        checkContainer(vfc) { container ->
-            with(container) {
-                selectCase(caseB)
-                selectedCase shouldBe caseB
+        with(createRootFor(vfc)) {
+            selectCaseById(caseId2.id)
+            selectedCaseId shouldBe caseId2.id
+        }
+    }
+
+    @Test
+    fun shouldCallSelectedCaseWhenCaseIsSelectedByName() = runTest {
+        val caseA = "case A"
+        val caseB = "case B"
+        val caseC = "case C"
+        val caseId1 = CaseId(id = "1", name = caseA)
+        val caseId2 = CaseId(id = "2", name = caseB)
+        val caseId3 = CaseId(id = "3", name = caseC)
+        val threeCaseIds = listOf(caseId1, caseId2, caseId3)
+        lateinit var selectedCaseId: String
+        val vfc = VFC {
+            CaseSelector {
+                caseIds = threeCaseIds
+                selectCase = { caseId ->
+                    selectedCaseId = caseId
+                }
             }
+        }
+        with(createRootFor(vfc)) {
+            selectCaseByName(caseId2.name)
+            selectedCaseId shouldBe caseId2.id
         }
     }
 
@@ -78,5 +101,4 @@ class CaseSelectorTest {
             }
         }
     }
-
 }

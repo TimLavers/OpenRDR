@@ -5,7 +5,7 @@ import io.rippledown.kb.KB
 import io.rippledown.model.*
 import io.rippledown.model.rule.*
 import io.rippledown.model.condition.*
-import io.rippledown.persistence.InMemoryKB
+import io.rippledown.persistence.inmemory.InMemoryKB
 
 const val addedConditionBeforeSessionStarted = "Rule session not started."
 val text = "Text"
@@ -21,20 +21,36 @@ class BuildTemplate {
     private val defaultDate = 1659752689505
     private val kb = KB(InMemoryKB(KBInfo("TestKB")))
 
+    fun cornerstoneCase(name: String, data: String) {
+        val caseBuilder = RDRCaseBuilder()
+        val textAttribute = kb.attributeManager.getOrCreate(text)
+        caseBuilder.addResult(textAttribute, defaultDate, TestResult(data))
+        val case = caseBuilder.build(name, name)
+        kb.addCornerstoneCase(case)
+    }
+
     fun case(name: String, data: String) {
         val caseBuilder = RDRCaseBuilder()
         val textAttribute = kb.attributeManager.getOrCreate(text)
         caseBuilder.addResult(textAttribute, defaultDate, TestResult(data))
-        val case = caseBuilder.build(name)
-        kb.addCase(case)
+        val case = caseBuilder.build(name, name)
+        kb.putCase(case)
     }
 
     fun case(i: Int) {
         val caseBuilder = RDRCaseBuilder()
         val numberAttribute = kb.attributeManager.getOrCreate(value)
         caseBuilder.addResult(numberAttribute, defaultDate, TestResult("$i"))
-        val case = caseBuilder.build("$i")
-        kb.addCase(case)
+        val case = caseBuilder.build("$i", "$i")
+        kb.putCase(case)
+    }
+
+    fun cornerstoneCase(i: Int) {
+        val caseBuilder = RDRCaseBuilder()
+        val numberAttribute = kb.attributeManager.getOrCreate(value)
+        caseBuilder.addResult(numberAttribute, defaultDate, TestResult("$i"))
+        val case = caseBuilder.build("$i", "$i")
+        kb.addCornerstoneCase(case)
     }
 
     fun session(s: SessionTemplate.() -> Unit): SessionTemplate {

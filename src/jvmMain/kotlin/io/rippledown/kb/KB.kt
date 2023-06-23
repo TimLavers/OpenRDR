@@ -1,9 +1,12 @@
 package io.rippledown.kb
 
-import io.rippledown.model.*
+import io.rippledown.model.KBInfo
+import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
-import io.rippledown.model.rule.*
+import io.rippledown.model.rule.RuleBuildingSession
+import io.rippledown.model.rule.RuleTree
+import io.rippledown.model.rule.RuleTreeChange
 import io.rippledown.persistence.PersistentKB
 
 class KB(persistentKB: PersistentKB) {
@@ -14,32 +17,34 @@ class KB(persistentKB: PersistentKB) {
     val conditionManager: ConditionManager = ConditionManager(attributeManager, persistentKB.conditionStore())
     private val ruleManager: RuleManager = RuleManager(conclusionManager, conditionManager, persistentKB.ruleStore())
     val ruleTree: RuleTree = ruleManager.ruleTree()
-    private val cornerstones = mutableSetOf<RDRCase>()
     private var ruleSession: RuleBuildingSession? = null
     val caseViewManager: CaseViewManager = CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
+    private val cornerstones = mutableSetOf<RDRCase>()
+    private val idToCase = mutableMapOf<String, RDRCase>() //"processed" cases
 
-    fun containsCaseWithName(caseName: String): Boolean {
+
+    fun allCornerstoneCases()= cornerstones.toSet()
+
+    fun containsCornerstoneCaseWithName(caseName: String): Boolean {
         return cornerstones.find { rdrCase -> rdrCase.name == caseName } != null
     }
 
-    fun addCase(case: RDRCase) {
-        require(!containsCaseWithName(case.name)) { "There is already a case with name ${case.name} in the KB."}
-        cornerstones.add(case)
+    fun addCornerstoneCase(case: RDRCase) {
+        if (!containsCornerstoneCaseWithName(case.name)) cornerstones.add(case)
     }
+
+
+    fun allCases()= idToCase.values.toSet()
 
     fun getCaseByName(caseName: String): RDRCase {
-        return cornerstones.first { caseName == it.name }
-    }
-
-    fun allCases(): Set<RDRCase> {
-        return cornerstones.toSet()
+        return idToCase.values.first { caseName == it.name }
     }
 
     fun startRuleSession(case: RDRCase, action: RuleTreeChange) {
         check(ruleSession == null) { "Session already in progress." }
-        check(action.isApplicable(ruleTree, case)) {"Action $action is not applicable to case ${case.name}"}
+        check(action.isApplicable(ruleTree, case)) { "Action $action is not applicable to case ${case.name}" }
         val alignedAction = action.alignWith(conclusionManager)
-        ruleSession =  RuleBuildingSession(ruleManager, ruleTree, case, alignedAction, cornerstones)
+        ruleSession = RuleBuildingSession(ruleManager, ruleTree, case, alignedAction, cornerstones)
     }
 
     fun conflictingCasesInCurrentRuleSession(): List<RDRCase> {
@@ -47,7 +52,7 @@ class KB(persistentKB: PersistentKB) {
         return ruleSession!!.cornerstoneCases()
     }
 
-    fun addConditionToCurrentRuleSession(condition: Condition){
+    fun addConditionToCurrentRuleSession(condition: Condition) {
         checkSession()
         // Align the provided condition with that in the condition manager.
         val conditionToUse = if (condition.id == null) {
@@ -57,7 +62,7 @@ class KB(persistentKB: PersistentKB) {
             // Check that there's no confusion between the condition provided
             // and the one that already exists (here we're defending against test code
             // that might have mixed things up).
-            require( existing!!.sameAs(condition)) {
+            require(existing!!.sameAs(condition)) {
                 "Condition provided does not match that in the condition manager."
             }
             existing
@@ -67,6 +72,10 @@ class KB(persistentKB: PersistentKB) {
 
     fun commitCurrentRuleSession() {
         checkSession()
+
+        //The case for which the user is building a rule becomes a cornerstone.
+        addCornerstoneCase(ruleSession!!.case)
+
         ruleSession!!.commit()
         ruleSession = null
     }
@@ -93,9 +102,19 @@ class KB(persistentKB: PersistentKB) {
         return kbInfo == other.kbInfo
     }
 
-    override fun hashCode(): Int {
-        return kbInfo.hashCode()
-    }
+    override fun hashCode()=kbInfo.hashCode()
 
     fun conditionHintsForCase(case: RDRCase) = conditionManager.conditionHintsForCase(case)
+
+
+
+    //TODO: refactor the following methods using a proper case repository
+
+    fun putCase(case: RDRCase) {
+        idToCase.put(case.id,  case)
+    }
+
+    fun containsCaseWithId(id: String) = idToCase.containsKey(id)
+
+    fun caseForId(id: String) = idToCase[id]!!
 }

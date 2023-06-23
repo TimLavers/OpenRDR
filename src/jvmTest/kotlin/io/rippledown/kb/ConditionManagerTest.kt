@@ -9,6 +9,8 @@ import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.rippledown.model.*
 import io.rippledown.model.condition.*
 import io.rippledown.persistence.*
+import io.rippledown.persistence.inmemory.InMemoryAttributeStore
+import io.rippledown.persistence.inmemory.InMemoryConditionStore
 import io.rippledown.util.shouldContainSameAs
 import java.time.Instant
 import kotlin.test.BeforeTest
@@ -173,6 +175,6 @@ class ConditionManagerTest {
         attributes.forEach {
             builder.addResult(it, date.toEpochMilli(), TestResult(it.name + " value"))
         }
-        return builder.build("")
+        return builder.build( "")
     }
 }

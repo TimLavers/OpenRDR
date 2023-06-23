@@ -28,7 +28,6 @@ import kotlin.io.path.createTempDirectory
 class ServerApplication(private val persistenceProvider: PersistenceProvider = PostgresPersistenceProvider()) {
     val casesDir = File("cases").apply { mkdirs() }
     val interpretationsDir = File("interpretations").apply { mkdirs() }
-    private val idToCase = mutableMapOf<String, RDRCase>()
     private val kbManager = KBManager(persistenceProvider)
 
     lateinit var kb: KB
@@ -45,7 +44,9 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
 
     fun createKB() {
         val kbInfo = kbManager.createKB("Thyroids", true)
+        logger.info("Created KB: $kbInfo")
         kb = (kbManager.openKB(kbInfo.id) as EntityRetrieval.Success<KB>).entity
+        logger.info("Opened KB:  $kb")
     }
 
     fun kbName(): KBInfo {
@@ -104,9 +105,12 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
 
     fun commitCurrentRuleSession() = kb.commitCurrentRuleSession()
 
-    fun waitingCasesInfo(): CasesInfo {
+     fun waitingCasesInfo(): CasesInfo {
         fun readCaseDetails(file: File): CaseId {
-            return CaseId(getCaseFromFile(file).name, getCaseFromFile(file).name)
+            synchronized(this) {
+                val caseFromFile = getCaseFromFile(file)
+                return CaseId(file.nameWithoutExtension, caseFromFile.name)
+            }
         }
 
         val caseFiles = casesDir.listFiles()
@@ -156,23 +160,41 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         //reset the case's diff list
         case.interpretation.diffList = diffList(interpretation)
 
-        //put the updated case back into the map
-        idToCase[caseId] = case
-
-        writeInterpretationToFile(caseId, interpretation)
+        //update the case in the KB
+        kb.putCase(case)
 
         //return the updated interpretation
         return case.interpretation
     }
 
-    @Deprecated("Use startSession instead")
-    fun buildRule(ruleRequest: RuleRequest): Interpretation {
+    /**
+     * Start a rule session for the given case and difference.
+     *
+     * @return a CornerstoneStatus providing the first cornerstone and the number of cornerstones that will be affected by the diff
+     */
+    fun startRuleSession(sessionStartRequest: SessionStartRequest): CornerstoneStatus {
+        val caseId = sessionStartRequest.caseId
+        val diff = sessionStartRequest.diff
+
+        startRuleSessionForDifference(caseId, diff)
+       val cornerstones = kb.conflictingCasesInCurrentRuleSession()
+
+        logger.info("cornerstones = ${cornerstones.size}")
+
+        return if (cornerstones.isNotEmpty()){
+            val cornerstone = cornerstones.first()
+            val viewableCornerstone = kb.viewableInterpretedCase(cornerstone)
+            CornerstoneStatus(viewableCornerstone, 0, cornerstones.size)
+        } else {
+            CornerstoneStatus()
+        }
+    }
+
+
+    fun commitRuleSession(ruleRequest: RuleRequest): Interpretation {
         val caseId = ruleRequest.caseId
         val case = case(caseId)
-        val diff = ruleRequest.diffList.selectedChange()
 
-        //build the rule
-        startRuleSessionForDifference(caseId, diff)
         ruleRequest.conditionList.conditions.forEach { condition ->
             addConditionToCurrentRuleBuildingSession(condition)
         }
@@ -185,33 +207,11 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         val updatedInterpretation = case.interpretation
         case.interpretation.diffList = diffList(updatedInterpretation)
 
-        //put the updated case back into the map
-        idToCase[caseId] = case
+        //put the updated case back into the KB
+        kb.putCase(case)
 
         //return the updated interpretation
         return case.interpretation
-    }
-
-
-    /**
-     * Start a rule session for the given case and difference.
-     *
-     * @return a CornerstoneStatus providing the first cornerstone and the number of cornerstones that will be affected by the diff
-     */
-    fun startRuleSession(sessionStartRequest: SessionStartRequest): CornerstoneStatus {
-        val caseId = sessionStartRequest.caseId
-        val diff = sessionStartRequest.diff
-
-        startRuleSessionForDifference(caseId, diff)
-        val cornerstones = kb.conflictingCasesInCurrentRuleSession()
-
-        return if (cornerstones.isNotEmpty()){
-            val cornerstone = cornerstones.first()
-            val viewableCornerstone = kb.viewableInterpretedCase(cornerstone)
-            CornerstoneStatus(viewableCornerstone, 0, cornerstones.size)
-        } else {
-            CornerstoneStatus()
-        }
     }
 
     private fun writeInterpretationToFile(id: String, interpretation: Interpretation) {
@@ -232,7 +232,7 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         // external case format, we can do something
         // less confusing.
         val format = Json { allowStructuredMapKeys = true }
-        val data = FileUtils.readFileToString(file, UTF_8)
+        val data = file.readText()
         val caseWithDummyAttributes: RDRCase = format.decodeFromString(data)
         val dataMap = mutableMapOf<TestEvent, TestResult>()
         caseWithDummyAttributes.data.map {
@@ -242,13 +242,17 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
             val newTestEvent = TestEvent(newAttribute, originalTestEvent.date)
             dataMap[newTestEvent] = it.value
         }
-        return RDRCase(caseWithDummyAttributes.name, dataMap)
+        return RDRCase(id = caseWithDummyAttributes.id,  name = caseWithDummyAttributes.name, data = dataMap)
     }
 
     private fun uninterpretedCase(id: String): RDRCase {
-        if (!idToCase.containsKey(id)) {
-            idToCase[id] = getCaseFromFile(File(casesDir, "$id.json"))
+        synchronized(this) {
+            if (!kb.containsCaseWithId(id)) {
+                //TODO. We assume for now that the id of the case is the same as the name of the file
+                val case = getCaseFromFile(File(casesDir, "$id.json"))
+                kb.putCase(case)
+            }
+            return kb.caseForId(id)
         }
-        return idToCase[id]!!
     }
 }

@@ -5,7 +5,7 @@ import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.rippledown.kb.ConclusionManager
 import io.rippledown.model.Conclusion
-import io.rippledown.persistence.InMemoryConclusionStore
+import io.rippledown.persistence.inmemory.InMemoryConclusionStore
 import org.junit.Before
 import kotlin.test.Test
 

@@ -2,6 +2,7 @@ package io.rippledown.caselist
 
 import Handler
 import debug
+import io.rippledown.constants.caseview.CASE_SELECTOR_ID
 import io.rippledown.model.CaseId
 import mui.material.List
 import mui.material.ListItemButton
@@ -9,7 +10,9 @@ import mui.material.ListItemText
 import mui.system.sx
 import react.FC
 import web.cssom.Cursor
+import web.cssom.Cursor.Companion.pointer
 import web.cssom.Overflow
+import web.cssom.Overflow.Companion.scroll
 import web.cssom.px
 
 external interface CaseSelectorHandler : Handler {
@@ -20,10 +23,11 @@ external interface CaseSelectorHandler : Handler {
 
 val CaseSelector = FC<CaseSelectorHandler> { handler ->
     List {
+        id = CASE_SELECTOR_ID
         sx {
-            cursor = Cursor.pointer
+            cursor = pointer
+            overflowY = scroll
             width = 200.px
-            overflowY = Overflow.scroll
             maxHeight = 500.px
         }
         dense = true
@@ -34,10 +38,9 @@ val CaseSelector = FC<CaseSelectorHandler> { handler ->
                     +caseId.name
                 }
                 selected = handler.selectedCaseName == caseId.name
-                debug("item ${caseId.name} selected: $selected")
-                id = "$CASE_ID_PREFIX${caseId.name}"
+                id = "$CASE_ID_PREFIX${caseId.id}"
                 onClick = {
-                    handler.selectCase(caseId.name)
+                    handler.selectCase(caseId.id)
                 }
                 sx {
                     paddingTop = 0.px

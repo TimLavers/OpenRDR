@@ -1,4 +1,6 @@
-package io.rippledown.persistence
+package io.rippledown.persistence.inmemory
+
+import io.rippledown.persistence.PersistentKBIds
 
 class InMemoryKBIds: PersistentKBIds {
     private val idToFlag = mutableMapOf<String,Boolean>()

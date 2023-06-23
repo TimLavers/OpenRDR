@@ -19,9 +19,9 @@ fun HTMLElement.requireNumberOfRows(expected: Int) {
     findAllById(DIFF_VIEWER_ROW).length shouldBe expected
 }
 
-fun HTMLElement.moveMouseOverRow(row: Int) {
+suspend fun HTMLElement.moveMouseOverRow(row: Int) {
     val tableRow = findById("$DIFF_VIEWER_ROW$row")
-    Simulate.mouseOver(tableRow)
+   act{ Simulate.mouseOver(tableRow)}
 }
 
 fun HTMLElement.requireNoBuildIconForRow(row: Int) {

@@ -24,7 +24,7 @@ fun Application.interpManagement(application: ServerApplication) {
 
         post(BUILD_RULE) {
             val ruleRequest = call.receive<RuleRequest>()
-            val interpretationWithDiffs = application.buildRule(ruleRequest)
+            val interpretationWithDiffs = application.commitRuleSession(ruleRequest)
             call.respond(HttpStatusCode.OK, interpretationWithDiffs)
         }
 

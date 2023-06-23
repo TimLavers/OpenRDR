@@ -5,6 +5,7 @@ import io.cucumber.java8.En
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.UITestBase
 import io.rippledown.integration.pageobjects.*
+import io.rippledown.integration.pause
 import io.rippledown.integration.restclient.RESTClient
 import org.awaitility.Awaitility
 import org.openqa.selenium.WebDriver
@@ -19,6 +20,7 @@ class Defs : En {
 
     private lateinit var caseListPO: CaseListPO
     private lateinit var caseViewPO: CaseViewPO
+    private lateinit var cornerstoneViewPO: CornerstoneCaseViewPO
     private lateinit var interpretationViewPO: InterpretationViewPO
     private lateinit var conditionSelectorPO: ConditionSelectorPO
     private lateinit var conclusionsViewPO: ConclusionsViewPO
@@ -40,6 +42,7 @@ class Defs : En {
             driver = uiTestBase.setupWebDriver()
             caseListPO = CaseListPO(driver)
             caseViewPO = CaseViewPO(driver)
+            cornerstoneViewPO = CornerstoneCaseViewPO(driver)
             interpretationViewPO = InterpretationViewPO(driver)
             conditionSelectorPO = ConditionSelectorPO(driver)
             conclusionsViewPO = ConclusionsViewPO(driver)
@@ -160,14 +163,14 @@ class Defs : En {
             caseListPO.waitForNoCases()
         }
 
-        Then("I should see the case {word} as the current case") { caseName: String ->
+        Then("I (should )see the case {word} as the current case") { caseName: String ->
             caseViewPO.nameShown() shouldBe caseName
         }
         Then("I should not see any current case") {
             caseViewPO.noNameShowing() shouldBe true
         }
 
-        And("select the case {word}") { caseName: String ->
+        And("(I )select the case {word}") { caseName: String ->
             caseListPO.select(caseName)
         }
 
@@ -279,6 +282,18 @@ class Defs : En {
         Then("the conditions showing are:") { dataTable: DataTable ->
             val expectedConditions = dataTable.asList()
             conclusionsViewPO.requireConditionsToBeShown(*expectedConditions.toTypedArray())
+        }
+
+        Then("The message {string} should be shown") { message: String ->
+            cornerstoneViewPO.requireMessageForNoCornerstones(message)
+        }
+
+        Then("The case {word} should be shown as the cornerstone case") { ccName : String ->
+            cornerstoneViewPO.requireCornerstoneCase(ccName)
+        }
+
+        Then("The number of cornerstone cases should be shown as {int}") { numberOfCornerstoneCases: Int ->
+            TODO("Not yet implemented")
         }
     }
 }

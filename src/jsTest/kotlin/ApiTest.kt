@@ -1,6 +1,5 @@
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
-import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.HasCurrentValue
 import io.rippledown.model.diff.*
@@ -16,7 +15,7 @@ class ApiTest {
 
     @Test
     fun getCaseTest() = runTest {
-        val case = createCase("A")
+        val case = createCase("1", "A")
         val config = config {
             returnCase = case
             expectedCaseId = "1"

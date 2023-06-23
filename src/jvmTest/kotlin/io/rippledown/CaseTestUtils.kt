@@ -23,6 +23,6 @@ internal object CaseTestUtils {
     fun createCase(caseName: String, glucoseValue: String = "0.667"): RDRCase {
         val builder1 = RDRCaseBuilder()
         builder1.addValue(glucose, defaultDate, glucoseValue)
-        return builder1.build(caseName)
+        return builder1.build( caseName)
     }
 }

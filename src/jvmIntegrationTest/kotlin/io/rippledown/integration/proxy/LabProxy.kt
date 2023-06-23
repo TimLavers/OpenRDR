@@ -5,7 +5,6 @@ import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.TestResult
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.apache.commons.io.FileUtils
@@ -69,10 +68,11 @@ class LabProxy(tempDir: File, private val attributeFactory: AttributeFactory) {
     }
 
     fun writeCaseWithDataToInputDir(name: String, attributeNameToValue: Map<String, String>) {
-        val builder = RDRCaseBuilder()
-        val now = Instant.now().toEpochMilli()
-        attributeNameToValue.forEach { (a, v) -> builder.addResult(attributeFactory.create(a), now, TestResult(v)) }
-        val case = builder.build(name)
-        writeCaseToInputDir(case)
+        with (RDRCaseBuilder()) {
+            val now = Instant.now().toEpochMilli()
+            attributeNameToValue.forEach { (a, v) -> addResult(attributeFactory.create(a), now, TestResult(v)) }
+            val case = build(name, name)
+            writeCaseToInputDir(case)
+        }
     }
 }

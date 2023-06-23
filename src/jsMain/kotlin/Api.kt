@@ -7,6 +7,7 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.rippledown.constants.api.*
+import io.rippledown.constants.server.SHUTDOWN
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.Interpretation
 import io.rippledown.model.KBInfo
