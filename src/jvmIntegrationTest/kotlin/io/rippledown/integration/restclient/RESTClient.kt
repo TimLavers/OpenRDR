@@ -9,6 +9,7 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.rippledown.constants.api.CASE
 import io.rippledown.constants.api.CREATE_KB
+import io.rippledown.constants.api.PROVIDE_CASE
 import io.rippledown.constants.api.WAITING_CASES
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
@@ -74,7 +75,7 @@ class RESTClient {
     }
 
     fun provideCase(externalCase: ExternalCase): RDRCase = runBlocking {
-        jsonClient.post(endpoint + GET_OR_CREATE_CONDITION) {
+        jsonClient.put(endpoint + PROVIDE_CASE) {
             contentType(ContentType.Application.Json)
             setBody(externalCase)
         }.body()

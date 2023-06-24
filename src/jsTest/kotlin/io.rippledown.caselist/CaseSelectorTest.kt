@@ -40,19 +40,19 @@ class CaseSelectorTest {
         val caseId2 = CaseId(id = 2, name = caseB)
         val caseId3 = CaseId(id = 3, name = caseC)
         val threeCaseIds = listOf(caseId1, caseId2, caseId3)
-        lateinit var selectedCase: String
+        var selectedCase: Long = 0
         val vfc = VFC {
             CaseSelector {
                 caseIds = threeCaseIds
-                selectCase = { caseName ->
-                    selectedCase = caseName
+                selectCase = { id ->
+                    selectedCase = id
                 }
             }
         }
         checkContainer(vfc) { container ->
             with(container) {
                 selectCase(caseB)
-                selectedCase shouldBe caseB
+                selectedCase shouldBe caseId2.id
             }
         }
     }

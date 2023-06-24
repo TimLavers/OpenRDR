@@ -143,12 +143,12 @@ internal class ServerApplicationTest {
     fun supplyCase() {
         app.kb.allProcessedCases() shouldBe emptyList()
         val externalCase1 = CaseTestUtils.getCase("Case1")
-        val case1 = app.supplyCase(externalCase1)
+        val case1 = app.provideCase(externalCase1)
         case1.name shouldBe externalCase1.name
         val retrieved1 = app.kb.getProcessedCase(case1.caseId.id!!)!!
         retrieved1.caseId shouldBe case1.caseId
         // Supply it again.
-        val case2 = app.supplyCase(externalCase1)
+        val case2 = app.provideCase(externalCase1)
         val retrieved2 = app.kb.getProcessedCase(case2.caseId.id!!)!!
         app.kb.allProcessedCases() shouldBe listOf(retrieved1, retrieved2)
     }
@@ -222,7 +222,7 @@ internal class ServerApplicationTest {
         supplyCaseFromFile("Case2", app)
         val ci1 = app.waitingCasesInfo()
         assertEquals(ci1.count, 1)
-        assertEquals(ci1.caseIds[0].name, "Case3")
+        assertEquals(ci1.caseIds[0].name, "Case2")
 
         supplyCaseFromFile("Case3", app)
         val ci2 = app.waitingCasesInfo()

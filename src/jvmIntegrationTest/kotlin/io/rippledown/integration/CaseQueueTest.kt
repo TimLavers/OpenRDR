@@ -35,8 +35,8 @@ internal class CaseQueueTest: UITestBase() {
         caseQueuePO.waitForNumberOfCasesToBe(2)
 
         val casesListed = caseListPO.casesListed()
-        assertEquals(casesListed[0], "Case1")
-        assertEquals(casesListed[1], "Case2")
+        assertEquals(casesListed[0], "Case2")
+        assertEquals(casesListed[1], "Case1")
     }
 
     @Test

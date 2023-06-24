@@ -8,12 +8,16 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.verify
+import io.rippledown.CaseTestUtils
 import io.rippledown.constants.api.CASE
+import io.rippledown.constants.api.PROVIDE_CASE
 import io.rippledown.constants.api.WAITING_CASES
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.createCase
+import io.rippledown.model.external.serialize
 import kotlin.test.Test
 
 class CaseManagementTest: OpenRDRServerTestBase() {
@@ -61,4 +65,19 @@ class CaseManagementTest: OpenRDRServerTestBase() {
         result.status shouldBe HttpStatusCode.BadRequest
     }
 
+    @Test
+    fun provideCase() = testApplication {
+        setup()
+        val case = CaseTestUtils.getCase("Case2")
+        val caseData = case.serialize()
+        val returnCase = createCase("Case2").rdrCase
+        every { serverApplication.provideCase(case) } returns returnCase
+        val result = httpClient.put(PROVIDE_CASE) {
+            contentType(ContentType.Application.Json)
+            setBody(caseData)
+        }
+        result.status shouldBe HttpStatusCode.Accepted
+        result.body<RDRCase>() shouldBe returnCase
+        verify { serverApplication.provideCase(case) }
+    }
 }

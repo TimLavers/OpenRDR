@@ -40,6 +40,15 @@ class RDRCaseTest {
     }
 
     @Test
+    fun buildWithId() {
+        val builder1 = RDRCaseBuilder()
+        builder1.addValue(tsh, defaultDate, "0.667")
+        val case1 = builder1.build("Case12", 12)
+        assertEquals(12, case1.caseId.id)
+        assertEquals("Case12", case1.caseId.name)
+    }
+
+    @Test
     fun addValueTwice() {
         val builder1 = RDRCaseBuilder()
         builder1.addValue(tsh, defaultDate, "0.67")

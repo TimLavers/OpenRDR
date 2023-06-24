@@ -136,7 +136,8 @@ class CaseListTest {
     @Test
     fun shouldShowConditionSelector() = runTest {
         val caseName = "Bondi"
-        val caseIdList = listOf(CaseId(caseName))
+        val caseId = 45L
+        val caseIdList = listOf(CaseId(caseId, caseName))
         val bondiComment = "Go to Bondi now!"
         val manlyComment = "Go to Manly now!"
         val beachComment = "Enjoy the beach!"
@@ -150,11 +151,12 @@ class CaseListTest {
         )
         val caseWithInterp = createCaseWithInterpretation(
             name = caseName,
+            id = caseId,
             conclusionTexts = listOf(beachComment, manlyComment, bondiComment),
             diffs = diffList
         )
         val config = config {
-            expectedCaseId = caseName
+            expectedCaseId = caseId
             returnCasesInfo = CasesInfo(caseIdList)
             returnCase = caseWithInterp
         }
@@ -183,8 +185,9 @@ class CaseListTest {
 
     @Test
     fun shouldUpdateConditionHintsWhenRuleIsStarted() = runTest {
+        val caseId = 45L
         val caseName = "Bondi"
-        val caseIdList = listOf(CaseId(caseName))
+        val caseIdList = listOf(CaseId(caseId, caseName))
         val beachComment = "Enjoy the beach!"
         val bondiComment = "Go to Bondi now!"
         val diffList = DiffList(
@@ -195,12 +198,13 @@ class CaseListTest {
         )
         val caseWithInterp = createCaseWithInterpretation(
             name = caseName,
+            id = caseId,
             conclusionTexts = listOf(beachComment, bondiComment),
             diffs = diffList
         )
         val condition = HasCurrentValue(1, Attribute(2, "surf"))
         val config = config {
-            expectedCaseId = caseName
+            expectedCaseId = caseId
             returnCasesInfo = CasesInfo(caseIdList)
             returnCase = caseWithInterp
             returnConditionList = ConditionList(listOf(condition))
@@ -232,7 +236,8 @@ class CaseListTest {
     @Test
     fun shouldCancelConditionSelector() = runTest {
         val caseName = "Bondi"
-        val caseIdList = listOf(CaseId(caseName))
+        val caseId = 45L
+        val caseIdList = listOf(CaseId(caseId, caseName))
         val bondiComment = "Go to Bondi now!"
         val manlyComment = "Go to Manly now!"
         val beachComment = "Enjoy the beach!"
@@ -246,11 +251,12 @@ class CaseListTest {
         )
         val caseWithInterp = createCaseWithInterpretation(
             name = caseName,
+            id = caseId,
             conclusionTexts = listOf(beachComment, manlyComment, bondiComment),
             diffs = diffList
         )
         val config = config {
-            expectedCaseId = caseName
+            expectedCaseId = caseId
             returnCasesInfo = CasesInfo(caseIdList)
             returnCase = caseWithInterp
         }

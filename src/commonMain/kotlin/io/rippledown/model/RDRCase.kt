@@ -24,8 +24,8 @@ class RDRCaseBuilder {
         caseData[testEvent] = result
     }
 
-    fun build(name: String): RDRCase {
-        return RDRCase(CaseId(name), caseData)
+    fun build(name: String, id: Long? = null): RDRCase {
+        return RDRCase(CaseId(id, name), caseData)
     }
 }
 

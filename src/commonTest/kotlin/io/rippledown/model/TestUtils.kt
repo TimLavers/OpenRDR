@@ -24,20 +24,21 @@ val yesterday = daysAgo(1)
 val lastWeek = daysAgo(7)
 
 
-fun createCase(name: String = ""): ViewableCase {
+fun createCase(name: String = "", id: Long? = null): ViewableCase {
     val attribute = Attribute(1, "Glucose")
     val builder = RDRCaseBuilder()
     builder.addResult(attribute, 99994322, TestResult("5.1"))
-    val rdrCase = builder.build(name)
+    val rdrCase = builder.build(name, id)
     return ViewableCase(rdrCase, CaseViewProperties(listOf(attribute)))
 }
 
 fun createCaseWithInterpretation(
     name: String = "",
+    id: Long? = null,
     conclusionTexts: List<String> = listOf(),
     diffs: DiffList = DiffList()
 ): ViewableCase {
-    val case = createCase(name)
+    val case = createCase(name, id)
     var conclusionId = 10
     val interp = Interpretation(diffList = diffs).apply {
         conclusionTexts.forEach { text ->

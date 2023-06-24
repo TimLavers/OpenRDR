@@ -27,7 +27,7 @@ val CaseList = FC<CaseListHandler> { handler ->
     var newInterpretation: Interpretation? by useState(null)
     var conditionHints: ConditionList? by useState(null)
 
-    fun updateCurrentCase(id: String) {
+    fun updateCurrentCase(id: Long) {
         handler.scope.launch {
             val returned = handler.api.getCase(id)
             currentCase = returned
@@ -39,7 +39,7 @@ val CaseList = FC<CaseListHandler> { handler ->
         val currentCaseNullOrNotAvailable = currentCase == null || !names.contains(currentCase?.name)
         if (currentCaseNullOrNotAvailable && names.isNotEmpty()) {
             val firstCaseId = handler.caseIds[0]
-            updateCurrentCase(firstCaseId.name)
+            updateCurrentCase(firstCaseId.id!!)
         }
     }
     selectFirstCase()
@@ -67,12 +67,12 @@ val CaseList = FC<CaseListHandler> { handler ->
                     api = handler.api
                     case = currentCase!!
                     onCaseEdited = {
-                        updateCurrentCase(currentCase!!.name)
+                        updateCurrentCase(currentCase!!.rdrCase.caseId.id!!)
                     }
                     onStartRule = { newInterp ->
                         newInterpretation = newInterp
                         handler.scope.launch {
-                            conditionHints = handler.api.conditionHints(currentCase!!.name)
+                            conditionHints = handler.api.conditionHints(currentCase!!.id!!)
                         }
                     }
                 }
@@ -99,7 +99,7 @@ val CaseList = FC<CaseListHandler> { handler ->
                             )
                             handler.api.buildRule(ruleRequest)
                             newInterpretation = null
-                            updateCurrentCase(currentCase!!.name)
+                            updateCurrentCase(currentCase!!.rdrCase.caseId.id!!)
                         }
                     }
                 }

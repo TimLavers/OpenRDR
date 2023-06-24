@@ -9,6 +9,13 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 
+private val jsonPretty = Json {
+    prettyPrint = true
+    allowStructuredMapKeys = true
+}
+
+fun ExternalCase.serialize() = jsonPretty.encodeToString(this)
+
 internal class ExternalCaseTest {
     private val date1 = defaultTestDate
     private val date2 = date1 - 100_034
@@ -47,11 +54,6 @@ internal class ExternalCaseTest {
     }
 
     private fun serializeDeserialize(event: ExternalCase): ExternalCase {
-        val jsonBuilder = Json {
-            prettyPrint = true
-            allowStructuredMapKeys = true
-        }
-        val serialized = jsonBuilder.encodeToString(event)
-        return jsonBuilder.decodeFromString(serialized)
+        return jsonPretty.decodeFromString(event.serialize())
     }
 }

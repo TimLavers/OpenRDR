@@ -12,12 +12,12 @@ class ApiTest {
 
     @Test
     fun getCaseTest() = runTest {
-        val case = createCase("A")
+        val case = createCase("A", 1)
         val config = config {
             returnCase = case
-            expectedCaseId = "1"
+            expectedCaseId = 1
         }
-        Api(mock(config)).getCase("1") shouldBe case
+        Api(mock(config)).getCase(1) shouldBe case
     }
 
     @Test
@@ -82,7 +82,7 @@ class ApiTest {
         val config = config {
             returnConditionList = conditionList
         }
-        Api(mock(config)).conditionHints("any") shouldBe conditionList
+        Api(mock(config)).conditionHints(6) shouldBe conditionList
     }
 
     @Test
