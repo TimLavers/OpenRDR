@@ -24,6 +24,13 @@ class RDRCaseTest {
     private val def = Attribute(5, "DEF")
 
     @Test
+    fun idAndName() {
+        val case = RDRCase(CaseId(1234, "Tea"))
+        case.name shouldBe "Tea"
+        case.id shouldBe 1234
+    }
+
+    @Test
     fun getCaseData() {
         val case1 = RDRCase(CaseId(1, "Case1"), emptyMap())
         assertTrue(case1.dates.isEmpty())

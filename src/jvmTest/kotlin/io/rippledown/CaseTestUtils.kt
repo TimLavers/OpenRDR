@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets
 
 fun supplyCaseFromFile(caseName: String, app: ServerApplication): RDRCase {
     val externalCase = CaseTestUtils.getCase(caseName)
-    return app.provideCase(externalCase)
+    return app.processCase(externalCase)
 }
 
 internal object CaseTestUtils {

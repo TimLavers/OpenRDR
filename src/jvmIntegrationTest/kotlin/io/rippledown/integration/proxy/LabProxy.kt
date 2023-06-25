@@ -14,7 +14,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 
-class LabProxy(tempDir: File, private val restProxy: RESTClient) {
+class LabProxy(tempDir: File, val restProxy: RESTClient) {
     private val inputDir = File(tempDir, "cases")
     private val interpretationsDir = File(tempDir, "interpretations")
 
@@ -59,13 +59,6 @@ class LabProxy(tempDir: File, private val restProxy: RESTClient) {
         val data = readCaseData("Case1")
         val toSend = data.replace("Case1", caseName)
         provideCaseFromString(toSend)
-    }
-
-    fun deleteCase(caseName: String) {
-        val deleted = File(inputDir, "${caseName}.json").delete()
-        if (!deleted) {
-            throw IllegalStateException("Could not delete case $caseName")
-        }
     }
 
     fun provideCase(rdrCase: RDRCase) {

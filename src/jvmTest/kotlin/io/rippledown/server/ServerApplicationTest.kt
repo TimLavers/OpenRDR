@@ -140,17 +140,28 @@ internal class ServerApplicationTest {
     }
 
     @Test
-    fun supplyCase() {
+    fun processCase() {
         app.kb.allProcessedCases() shouldBe emptyList()
         val externalCase1 = CaseTestUtils.getCase("Case1")
-        val case1 = app.provideCase(externalCase1)
+        val case1 = app.processCase(externalCase1)
         case1.name shouldBe externalCase1.name
         val retrieved1 = app.kb.getProcessedCase(case1.caseId.id!!)!!
         retrieved1.caseId shouldBe case1.caseId
         // Supply it again.
-        val case2 = app.provideCase(externalCase1)
+        val case2 = app.processCase(externalCase1)
         val retrieved2 = app.kb.getProcessedCase(case2.caseId.id!!)!!
         app.kb.allProcessedCases() shouldBe listOf(retrieved1, retrieved2)
+    }
+
+    @Test
+    fun deleteProcessedCase() {
+        val externalCase1 = CaseTestUtils.getCase("Case1")
+        val case1 = app.processCase(externalCase1)
+        val externalCase2 = CaseTestUtils.getCase("Case2")
+        val case2 = app.processCase(externalCase2)
+        app.kb.allProcessedCases() shouldBe listOf(case1, case2)
+        app.deleteProcessedCase(case2.name)
+        app.kb.allProcessedCases() shouldBe listOf(case1)
     }
 
     @Test

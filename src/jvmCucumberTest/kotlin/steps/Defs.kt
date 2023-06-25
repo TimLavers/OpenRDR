@@ -71,12 +71,12 @@ class Defs : En {
 
         Given("the following cases are deleted on the server:") { dataTable: DataTable ->
             dataTable.asList().forEach { caseName ->
-                labProxy.deleteCase(caseName)
+                labProxy.restProxy.deleteProcessedCaseWithName(caseName)
             }
         }
 
         When("the case with the name {word} is deleted on the server") { caseName: String ->
-            labProxy.deleteCase(caseName)
+            labProxy.restProxy.deleteProcessedCaseWithName(caseName)
         }
 
         And("I select case {word}") { caseName: String ->

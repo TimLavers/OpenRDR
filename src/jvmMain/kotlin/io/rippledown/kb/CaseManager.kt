@@ -16,6 +16,10 @@ class CaseManager {
         return cases
     }
 
+    fun delete(id: Long) {
+        cases.removeIf{it.id == id}
+    }
+
     fun add(case: RDRCase): RDRCase {
         require(case.caseId.id == null) {"Cannot add a case that already has an id."}
         val newId = if (cases.isEmpty()) 1  else cases.maxOfOrNull { it.caseId.id!! }!! + 1

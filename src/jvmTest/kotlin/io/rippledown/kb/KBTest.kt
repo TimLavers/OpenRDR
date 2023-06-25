@@ -73,6 +73,39 @@ class KBTest {
     }
 
     @Test
+    fun deleteProcessedCaseWithName() {
+        val externalCase1 = createExternalCase("Case1", "g1")
+        kb.processCase(externalCase1)
+        kb.deletedProcessedCaseWithName(externalCase1.name)
+        kb.allProcessedCases() shouldBe emptyList()
+    }
+
+    @Test
+    fun `only first processed case with name gets deleted`() {
+        val externalCase1 = createExternalCase("Case1", "g1")
+        val case1 = kb.processCase(externalCase1)
+        val externalCase2 = createExternalCase("Case2", "g2")
+        kb.processCase(externalCase2)
+        val externalCase3 = createExternalCase("Case1", "g3")
+        val case3 = kb.processCase(externalCase3)
+        val externalCase4 = createExternalCase("Case1", "g4")
+        kb.processCase(externalCase4)
+        kb.deletedProcessedCaseWithName(externalCase1.name)
+
+        kb.allProcessedCases().size shouldBe 3
+        kb.getProcessedCase(case1.caseId.id!!) shouldBe null
+        kb.getProcessedCase(case3.caseId.id!!)!!.name shouldBe case3.name
+    }
+
+    @Test
+    fun `deleted processed case with unknown name does nothing`() {
+        val externalCase1 = createExternalCase("Case1", "g1")
+        kb.processCase(externalCase1)
+        kb.deletedProcessedCaseWithName("Unknown")
+        kb.allProcessedCases().size shouldBe 1
+    }
+
+    @Test
     fun allProcessedCases() {
         kb.allProcessedCases() shouldBe emptyList()
 

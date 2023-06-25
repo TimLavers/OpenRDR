@@ -123,7 +123,9 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
 
     fun conditionHintsForCase(id: Long): ConditionList = kb.conditionHintsForCase(case(id))
 
-    fun provideCase(externalCase: ExternalCase) = kb.processCase(externalCase)
+    fun processCase(externalCase: ExternalCase) = kb.processCase(externalCase)
+
+    fun deleteProcessedCase(name: String) = kb.deletedProcessedCaseWithName(name)
 
     fun moveAttributeJustBelow(movedId: Int, targetId: Int) {
         val moved = kb.attributeManager.getById(movedId)

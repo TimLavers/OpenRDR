@@ -45,6 +45,13 @@ class KB(persistentKB: PersistentKB) {
         return processedCases.all()
     }
 
+    fun deletedProcessedCaseWithName(name: String) {
+        val toGo = processedCases.all().firstOrNull { it.name == name }
+        if (toGo != null) {
+            processedCases.delete(toGo.id!!)
+        }
+    }
+
     fun getProcessedCase(id: Long): RDRCase? = processedCases.getCase(id)
 
     fun getCornerstoneCase(id: Long): RDRCase? = cornerstones.getCase(id) // todo test

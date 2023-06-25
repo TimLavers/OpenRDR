@@ -75,6 +75,25 @@ class CaseManagerTest {
         caseManager.getCase(77) shouldBe null
     }
 
+    @Test
+    fun `delete a case with an unknown id does nothing`() {
+        caseManager.delete(9)
+    }
+
+    @Test
+    fun delete() {
+        val caseA = makeCase("Case A", "4.1", "nil")
+        val idA = caseManager.add(caseA).caseId
+        val caseB = makeCase("Case B", "4.0", "nil")
+        val idB = caseManager.add(caseB).caseId
+        caseManager.ids() shouldBe listOf(idA, idB) // sanity
+
+        caseManager.delete(idA.id!!)
+        caseManager.ids() shouldBe listOf(idB)
+        caseManager.getCase(idB.id!!)!!.name shouldBe idB.name
+        caseManager.getCase(idA.id!!) shouldBe null
+    }
+
     private fun makeCase(name: String, glucoseValue: String = "3.2", ft4Value: String = "1.2"): RDRCase {
         val builder = RDRCaseBuilder()
         builder.addResult(glucose, defaultTestDate, TestResult(glucoseValue))

@@ -7,10 +7,7 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import io.rippledown.constants.api.CASE
-import io.rippledown.constants.api.CREATE_KB
-import io.rippledown.constants.api.PROVIDE_CASE
-import io.rippledown.constants.api.WAITING_CASES
+import io.rippledown.constants.api.*
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
@@ -55,6 +52,15 @@ class RESTClient {
         return currentCase
     }
 
+    fun deleteProcessedCaseWithName(name: String) {
+        runBlocking {
+            jsonClient.delete(endpoint + DELETE_PROCESSED_CASE_WITH_NAME) {
+                contentType(ContentType.Application.Json)
+                setBody(CaseName(name))
+            }
+        }
+    }
+
     fun getOrCreateAttribute(name: String): Attribute = runBlocking {
         jsonClient.post(endpoint + GET_OR_CREATE_ATTRIBUTE) {
             setBody(name)
@@ -75,7 +81,7 @@ class RESTClient {
     }
 
     fun provideCase(externalCase: ExternalCase): RDRCase = runBlocking {
-        jsonClient.put(endpoint + PROVIDE_CASE) {
+        jsonClient.put(endpoint + PROCESS_CASE) {
             contentType(ContentType.Application.Json)
             setBody(externalCase)
         }.body()

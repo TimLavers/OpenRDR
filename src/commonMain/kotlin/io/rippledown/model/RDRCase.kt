@@ -86,7 +86,8 @@ data class RDRCase(
     val data: Map<TestEvent, TestResult> = emptyMap(),
     var interpretation: Interpretation = Interpretation(caseId)
 ) {
-    val name: String = caseId.name
+    val name = caseId.name
+    val id = caseId.id
     val dates: List<Long>
     val attributes: Set<Attribute>
     private val dateToEpisode: Map<Long, Map<Attribute, TestResult>>

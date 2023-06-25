@@ -10,13 +10,11 @@ import io.mockk.every
 import io.mockk.verify
 import io.rippledown.CaseTestUtils
 import io.rippledown.constants.api.CASE
-import io.rippledown.constants.api.PROVIDE_CASE
+import io.rippledown.constants.api.DELETE_PROCESSED_CASE_WITH_NAME
+import io.rippledown.constants.api.PROCESS_CASE
 import io.rippledown.constants.api.WAITING_CASES
-import io.rippledown.model.CaseId
-import io.rippledown.model.CasesInfo
-import io.rippledown.model.RDRCase
+import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
-import io.rippledown.model.createCase
 import io.rippledown.model.external.serialize
 import kotlin.test.Test
 
@@ -71,13 +69,26 @@ class CaseManagementTest: OpenRDRServerTestBase() {
         val case = CaseTestUtils.getCase("Case2")
         val caseData = case.serialize()
         val returnCase = createCase("Case2").rdrCase
-        every { serverApplication.provideCase(case) } returns returnCase
-        val result = httpClient.put(PROVIDE_CASE) {
+        every { serverApplication.processCase(case) } returns returnCase
+        val result = httpClient.put(PROCESS_CASE) {
             contentType(ContentType.Application.Json)
             setBody(caseData)
         }
         result.status shouldBe HttpStatusCode.Accepted
         result.body<RDRCase>() shouldBe returnCase
-        verify { serverApplication.provideCase(case) }
+        verify { serverApplication.processCase(case) }
+    }
+
+    @Test
+    fun deleteProcessedCaseWithName() = testApplication {
+        setup()
+        val caseName = "The Case"
+        every { serverApplication.deleteProcessedCase(caseName) } returns Unit
+        val result = httpClient.delete(DELETE_PROCESSED_CASE_WITH_NAME) {
+            contentType(ContentType.Application.Json)
+            setBody(CaseName(caseName))
+        }
+        result.status shouldBe HttpStatusCode.OK
+        verify { serverApplication.deleteProcessedCase(caseName) }
     }
 }
