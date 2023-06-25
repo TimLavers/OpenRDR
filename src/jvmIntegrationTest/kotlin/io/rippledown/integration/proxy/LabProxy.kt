@@ -43,14 +43,23 @@ class LabProxy(tempDir: File, private val restProxy: RESTClient) {
     }
 
     fun provideCase(caseName: String) {
-        val file = ConfiguredTestData.caseFile(caseName)
-        val data = file.readText()
-        val jsonBuilder = Json {allowStructuredMapKeys = true}
+        val data = readCaseData(caseName)
+        provideCaseFromString(data)
+    }
+
+    private fun readCaseData(caseName: String) = ConfiguredTestData.caseFile(caseName).readText()
+
+    private fun provideCaseFromString(data: String) {
+        val jsonBuilder = Json { allowStructuredMapKeys = true }
         val case: ExternalCase = jsonBuilder.decodeFromString(data)
         restProxy.provideCase(case)
     }
 
-    fun writeNewCaseFile(caseName: String) = CaseTestUtils.writeNewCaseFileToDirectory(caseName, inputDir)
+    fun provideCaseWithName(caseName: String) {
+        val data = readCaseData("Case1")
+        val toSend = data.replace("Case1", caseName)
+        provideCaseFromString(toSend)
+    }
 
     fun deleteCase(caseName: String) {
         val deleted = File(inputDir, "${caseName}.json").delete()

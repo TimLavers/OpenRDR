@@ -86,7 +86,7 @@ class RESTClient {
         require(currentCase != null)
         var result = OperationResult("")
         runBlocking {
-            result = jsonClient.post(endpoint + START_SESSION_TO_ADD_CONCLUSION + "?id=${currentCase!!.name}") {
+            result = jsonClient.post(endpoint + START_SESSION_TO_ADD_CONCLUSION + "?id=${currentCase!!.id}") {
                 contentType(ContentType.Application.Json)
                 setBody(conclusion)
             }.body()
@@ -98,7 +98,7 @@ class RESTClient {
         require(currentCase != null)
         var result = OperationResult("")
         runBlocking {
-            result = jsonClient.post(endpoint + START_SESSION_TO_REPLACE_CONCLUSION + "?id=${currentCase!!.name}") {
+            result = jsonClient.post(endpoint + START_SESSION_TO_REPLACE_CONCLUSION + "?id=${currentCase!!.id}") {
                 contentType(ContentType.Application.Json)
                 setBody(listOf(toGo, replacement))
             }.body()

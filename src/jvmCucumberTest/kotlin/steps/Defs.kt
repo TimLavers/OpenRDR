@@ -57,7 +57,7 @@ class Defs : En {
         Given("a list of {long} cases is stored on the server") { numberOfCases: Long ->
             (1..numberOfCases).forEach { i ->
                 val padded = i.toString().padStart(3, '0')
-                labProxy.writeNewCaseFile("Case_$padded")
+                labProxy.provideCaseWithName("Case_$padded")
             }
         }
 

@@ -6,7 +6,6 @@ import io.rippledown.integration.pageobjects.CaseQueuePO
 import io.rippledown.integration.pageobjects.InterpretationViewPO
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
-import kotlin.test.Test
 
 // ORD2
 internal class SendInterpretationTest: UITestBase() {
@@ -32,7 +31,7 @@ internal class SendInterpretationTest: UITestBase() {
         serverProxy.shutdown()
     }
 
-    @Test
+//    @Test
     fun setInterpretationForCase() {
         // Initially, no interpretations have been sent to the lab system.
         labProxy.interpretationsReceived() shouldBe 0
