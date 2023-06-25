@@ -38,7 +38,7 @@ internal class ShowInterpretationDifferenceForMoreComplexScenarios : UITestBase(
     @Test
     fun `should show no changes if the user has not changed an empty interpretation`() {
         val caseName = "case1"
-        labProxy.writeNewCaseFile(caseName)
+        labProxy.provideCaseWithName(caseName)
         caseQueuePO.waitForNumberOfCasesToBe(1)
         caseViewPO.nameShown() shouldBe caseName
         interpretationViewPO

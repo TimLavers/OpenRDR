@@ -15,7 +15,7 @@ const val GET_OR_CREATE_CONDITION = "/api/condition/getOrCreate"
 fun Application.conditionManagement(application: ServerApplication) {
     routing {
         get(CONDITION_HINTS) {
-            val id = call.parameters["id"] ?: error("Invalid case id.")
+            val id = longId() // todo test
             val conditionHints = try {
                 application.conditionHintsForCase(id)
             } catch (e: Exception) {

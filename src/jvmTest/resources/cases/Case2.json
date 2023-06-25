@@ -2,11 +2,8 @@
   "name": "Case2",
   "data": [
     {
-      "attribute": {
-        "name": "TSH",
-        "id": 1
-      },
-      "date": 1659752689505
+      "testName": "TSH",
+      "testTime": 1659752689505
     },
     {
       "value": {
@@ -19,11 +16,8 @@
       "units": "mU/L"
     },
     {
-      "attribute": {
-        "name": "CDE",
-        "id": 3
-      },
-      "date": 1659752689505
+      "testName": "CDE",
+      "testTime": 1659752689505
     },
     {
       "value": {

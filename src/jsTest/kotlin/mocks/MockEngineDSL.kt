@@ -28,7 +28,7 @@ class EngineConfig {
     var returnInterpretation: Interpretation = Interpretation()
     var returnConditionList: ConditionList = ConditionList()
 
-    var expectedCaseId = ""
+    var expectedCaseId: Long? = null
     var expectedInterpretation: Interpretation? = null
     var expectedRuleRequest: RuleRequest? = null
 
@@ -57,7 +57,7 @@ private class EngineBuilder(private val config: EngineConfig) {
             }
 
             CASE -> {
-                if (config.expectedCaseId.isNotBlank()) request.url.parameters["id"] shouldBe config.expectedCaseId
+                if (config.expectedCaseId != null) request.url.parameters["id"] shouldBe config.expectedCaseId.toString()
                 respond(
                     content = ByteReadChannel(
                         json.encodeToString(config.returnCase)
@@ -126,7 +126,7 @@ private class EngineBuilder(private val config: EngineConfig) {
 
             CONDITION_HINTS -> {
                 debug("CONDITION_HINTS will return ${config.returnConditionList}")
-                if (config.expectedCaseId.isNotBlank()) request.url.parameters["id"] shouldBe config.expectedCaseId
+                if (config.expectedCaseId != null) request.url.parameters["id"] shouldBe config.expectedCaseId.toString()
                 respond(
                     content = ByteReadChannel(
                         json.encodeToString(config.returnConditionList)

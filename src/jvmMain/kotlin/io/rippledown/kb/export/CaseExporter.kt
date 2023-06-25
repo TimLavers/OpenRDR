@@ -7,7 +7,7 @@ import org.apache.commons.io.FileUtils
 import java.io.File
 import kotlin.text.Charsets.UTF_8
 
-class CaseExporter(private val destination: File, val cases: Set<RDRCase>) {
+class CaseExporter(private val destination: File, val cases: List<RDRCase>) {
     init {
         checkDirectoryIsSuitableForExport(destination, "Case")
     }

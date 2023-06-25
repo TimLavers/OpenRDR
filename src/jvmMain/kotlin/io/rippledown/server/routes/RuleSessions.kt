@@ -19,15 +19,14 @@ const val COMMIT_SESSION = "/api/commitSession"
 fun Application.ruleSession(application: ServerApplication) {
     routing {
         post(START_SESSION_TO_ADD_CONCLUSION) {
-            val id = call.parameters["id"] ?: error("Invalid case id.")
+            val id = longId()
             val conclusion = call.receive<Conclusion>()
             application.startRuleSessionToAddConclusion(id, conclusion)
             call.respond(HttpStatusCode.OK, OperationResult("Session started"))
         }
         post(START_SESSION_TO_REPLACE_CONCLUSION) {
-            val id = call.parameters["id"] ?: error("Invalid case id.")
             val conclusionPair = call.receive<List<Conclusion>>()
-            application.startRuleSessionToReplaceConclusion(id, conclusionPair[0], conclusionPair[1])
+            application.startRuleSessionToReplaceConclusion(longId(), conclusionPair[0], conclusionPair[1])
             call.respond(HttpStatusCode.OK, OperationResult("Session started"))
         }
         post(ADD_CONDITION) {

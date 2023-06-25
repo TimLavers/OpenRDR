@@ -15,7 +15,7 @@ import web.cssom.px
 external interface CaseSelectorHandler : Handler {
     var caseIds: List<CaseId>
     var selectedCaseName: String?
-    var selectCase: (id: String) -> Unit
+    var selectCase: (id: Long) -> Unit
 }
 
 val CaseSelector = FC<CaseSelectorHandler> { handler ->
@@ -37,7 +37,7 @@ val CaseSelector = FC<CaseSelectorHandler> { handler ->
                 debug("item ${caseId.name} selected: $selected")
                 id = "$CASE_ID_PREFIX${caseId.name}"
                 onClick = {
-                    handler.selectCase(caseId.name)
+                    handler.selectCase(caseId.id!!)
                 }
                 sx {
                     paddingTop = 0.px

@@ -12,20 +12,20 @@ class ApiTest {
 
     @Test
     fun getCaseTest() = runTest {
-        val case = createCase("A")
+        val case = createCase("A", 1)
         val config = config {
             returnCase = case
-            expectedCaseId = "1"
+            expectedCaseId = 1
         }
-        Api(mock(config)).getCase("1") shouldBe case
+        Api(mock(config)).getCase(1) shouldBe case
     }
 
     @Test
     fun waitingForCasesInfoTest() = runTest {
         val expected = CasesInfo(
             listOf(
-                CaseId("1", "case 1"),
-                CaseId("2", "case 2"),
+                CaseId(1, "case 1"),
+                CaseId(2, "case 2"),
             )
         )
         val config = config {
@@ -63,7 +63,7 @@ class ApiTest {
                 Unchanged("This comment was left alone."),
             )
         )
-        val interpretation = Interpretation(CaseId("id1", "Case A"), "report proxy.text")
+        val interpretation = Interpretation(CaseId(1, "Case A"), "report proxy.text")
         val config = config {
             expectedInterpretation = interpretation
             returnInterpretation = interpretation.copy(diffList = expectedDiffList)
@@ -82,7 +82,7 @@ class ApiTest {
         val config = config {
             returnConditionList = conditionList
         }
-        Api(mock(config)).conditionHints("any") shouldBe conditionList
+        Api(mock(config)).conditionHints(6) shouldBe conditionList
     }
 
     @Test
@@ -96,7 +96,7 @@ class ApiTest {
             ),
             selected = 1
         )
-        val id = "caseId"
+        val id = 1L
         val ruleRequest = RuleRequest(
             caseId = id,
             diffList = expectedDiffList,
@@ -107,7 +107,7 @@ class ApiTest {
                 )
             )
         )
-        val interpretation = Interpretation(CaseId(id), "report proxy.text")
+        val interpretation = Interpretation(CaseId(id, "The Case"), "report proxy.text")
         val config = config {
             expectedRuleRequest = ruleRequest
             returnInterpretation = interpretation

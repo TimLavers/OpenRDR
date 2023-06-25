@@ -52,7 +52,7 @@ internal class RuleTreeTest : RuleTestBase() {
     @Test
     fun root_rule_should_not_apply_to_a_case() {
         tree.apply(kase)
-        kase.interpretation shouldBe Interpretation(CaseId(kase.name, kase.name))
+        kase.interpretation shouldBe Interpretation(CaseId(null, kase.name))
     }
 
     @Test
@@ -412,7 +412,7 @@ internal class RuleTreeTest : RuleTestBase() {
     @Test
     fun `interpreting a case should not overwrite the verified text`() {
         val verifiedText = "Go to Bondi"
-        val case = RDRCase()
+        val case = RDRCase(CaseId(99, "Blah"))
         case.interpretation.verifiedText = verifiedText
         tree.apply(case)
         case.interpretation.verifiedText shouldBe verifiedText

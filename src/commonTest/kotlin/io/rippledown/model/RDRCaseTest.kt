@@ -24,8 +24,15 @@ class RDRCaseTest {
     private val def = Attribute(5, "DEF")
 
     @Test
+    fun idAndName() {
+        val case = RDRCase(CaseId(1234, "Tea"))
+        case.name shouldBe "Tea"
+        case.id shouldBe 1234
+    }
+
+    @Test
     fun getCaseData() {
-        val case1 = RDRCase("Case1", emptyMap())
+        val case1 = RDRCase(CaseId(1, "Case1"), emptyMap())
         assertTrue(case1.dates.isEmpty())
         assertTrue(case1.data.isEmpty())
     }
@@ -37,6 +44,15 @@ class RDRCaseTest {
         val case1 = builder1.build("Case1")
         assertEquals(1, case1.dates.size)
         assertEquals("0.667", case1.getLatest(tsh)!!.value.text)
+    }
+
+    @Test
+    fun buildWithId() {
+        val builder1 = RDRCaseBuilder()
+        builder1.addValue(tsh, defaultDate, "0.667")
+        val case1 = builder1.build("Case12", 12)
+        assertEquals(12, case1.caseId.id)
+        assertEquals("Case12", case1.caseId.name)
     }
 
     @Test
@@ -95,7 +111,7 @@ class RDRCaseTest {
 
     @Test
     fun dates() {
-        assertEquals(0, RDRCase("Empty", emptyMap()).dates.size)
+        assertEquals(0, RDRCase(CaseId( 8, "Empty"), emptyMap()).dates.size)
 
         val builder1 = RDRCaseBuilder()
         builder1.addResult(tsh, yesterday, TestResult("9.4"))
@@ -115,7 +131,7 @@ class RDRCaseTest {
 
     @Test
     fun attributes() {
-        assertEquals(0, RDRCase("Empty", emptyMap()).attributes.size)
+        assertEquals(0, RDRCase(CaseId(77, "Empty"), emptyMap()).attributes.size)
 
         val builder1 = RDRCaseBuilder()
         builder1.addResult(tsh, yesterday, TestResult("9.4"))
@@ -220,7 +236,7 @@ class RDRCaseTest {
 
     @Test
     fun getName() {
-        val case1 = RDRCase("Case1")
+        val case1 = RDRCase(CaseId( 6, "Case1"))
         assertEquals(case1.name, "Case1")
     }
 
@@ -228,7 +244,7 @@ class RDRCaseTest {
     fun interpretation() {
         val case = basicCase()
         case.interpretation.caseId.name shouldBe case.name
-        case.interpretation.caseId.id shouldBe case.name
+        case.interpretation.caseId.id shouldBe null
 
         case.interpretation.conclusions().size shouldBe 0
     }
@@ -240,7 +256,7 @@ class RDRCaseTest {
 
         case.resetInterpretation()
         case.interpretation.caseId.name shouldBe case.name
-        case.interpretation.caseId.id shouldBe case.name
+        case.interpretation.caseId.id shouldBe null
         case.interpretation.conclusions().size shouldBe 0
         case.interpretation shouldBeSameInstanceAs originalInterpretation
     }
@@ -251,7 +267,7 @@ class RDRCaseTest {
         val root = Rule(0, null, null, emptySet(), mutableSetOf())
         val conditions = setOf(ContainsText(100, tsh, "0.667"))
         val rule = Rule(1, root, conclusion, conditions, mutableSetOf())
-        val case = RDRCase()
+        val case = RDRCase(CaseId("1234"))
         case.interpretation.add(rule)
         case.interpretation.conclusions().first() shouldBe conclusion
 
@@ -267,8 +283,8 @@ class RDRCaseTest {
         val root = Rule(0, null, null, emptySet(), mutableSetOf())
         val conditions = setOf(ContainsText(1, tsh, "0.667"))
         val rule = Rule(1, root, conclusion, conditions, mutableSetOf())
-        val case = RDRCase()
-        case.interpretation = Interpretation(CaseId()).apply { add(rule) }
+        val case = RDRCase(CaseId(12,"Case"))
+        case.interpretation = Interpretation(case.caseId).apply { add(rule) }
 
         val sd = serializeDeserialize(case)
         sd shouldBe case
@@ -289,7 +305,7 @@ class RDRCaseTest {
 
     @Test
     fun jsonSerialisation() {
-        val case1 = RDRCase("Case1", emptyMap())
+        val case1 = RDRCase(CaseId(99, "Big Case"), emptyMap())
         val sd1 = serializeDeserialize(case1)
         assertEquals(sd1, case1)
 
@@ -330,7 +346,7 @@ class RDRCaseTest {
 
     @Test
     fun serialisation() {
-        val case = RDRCase("Case")
+        val case = RDRCase(CaseId(88, "Whatever"))
         val sd = serializeDeserialize(case)
         sd shouldBe case
     }

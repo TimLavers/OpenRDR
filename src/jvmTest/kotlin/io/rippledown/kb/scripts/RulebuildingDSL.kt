@@ -26,7 +26,7 @@ class BuildTemplate {
         val textAttribute = kb.attributeManager.getOrCreate(text)
         caseBuilder.addResult(textAttribute, defaultDate, TestResult(data))
         val case = caseBuilder.build(name)
-        kb.addCase(case)
+        kb.addCornerstoneCase(case)
     }
 
     fun case(i: Int) {
@@ -34,7 +34,7 @@ class BuildTemplate {
         val numberAttribute = kb.attributeManager.getOrCreate(value)
         caseBuilder.addResult(numberAttribute, defaultDate, TestResult("$i"))
         val case = caseBuilder.build("$i")
-        kb.addCase(case)
+        kb.addCornerstoneCase(case)
     }
 
     fun session(s: SessionTemplate.() -> Unit): SessionTemplate {

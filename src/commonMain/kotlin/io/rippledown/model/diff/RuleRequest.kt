@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class RuleRequest(
-    val caseId: String = "",
+    val caseId: Long,
     val diffList: DiffList = DiffList(),
     val conditionList: ConditionList = ConditionList()
 ) {

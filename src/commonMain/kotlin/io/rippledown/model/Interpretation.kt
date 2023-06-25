@@ -9,7 +9,7 @@ const val COMMENT_SEPARATOR = " "
 
 @Serializable
 data class Interpretation(
-    val caseId: CaseId = CaseId(),
+    val caseId: CaseId = CaseId(""), // todo fix
     var verifiedText: String? = null,
     var diffList: DiffList = DiffList()
 ) {

@@ -61,8 +61,8 @@ internal class ShowCaseInterpretation : UITestBase() {
     }
 
     private fun setupCases() {
-        labProxy.copyCase("Case1")
-        labProxy.copyCase("Case2")
-        labProxy.copyCase("Case3")
+        labProxy.provideCase("Case1")
+        labProxy.provideCase("Case2")
+        labProxy.provideCase("Case3")
     }
 }

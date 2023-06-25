@@ -11,6 +11,7 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.diff.*
+import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.model.rule.ChangeTreeToRemoveConclusion
 import io.rippledown.model.rule.ChangeTreeToReplaceConclusion
@@ -18,7 +19,6 @@ import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.postgres.PostgresPersistenceProvider
 import io.rippledown.util.EntityRetrieval
 import io.rippledown.textdiff.diffList
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.apache.commons.io.FileUtils
@@ -30,7 +30,7 @@ import kotlin.io.path.createTempDirectory
 class ServerApplication(private val persistenceProvider: PersistenceProvider = PostgresPersistenceProvider()) {
     val casesDir = File("cases").apply { mkdirs() }
     val interpretationsDir = File("interpretations").apply { mkdirs() }
-    private val idToCase = mutableMapOf<String, RDRCase>()
+    private val idToCase = mutableMapOf<Long, RDRCase>()
     private val kbManager = KBManager(persistenceProvider)
 
     lateinit var kb: KB
@@ -74,7 +74,7 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         kb = KBImporter(rootDir, persistenceProvider).import()
     }
 
-    private fun startRuleSessionForDifference(caseId: String, diff: Diff) {
+    private fun startRuleSessionForDifference(caseId: Long, diff: Diff) {
         when (diff) {
             is Addition -> startRuleSessionToAddConclusion(caseId, kb.conclusionManager.getOrCreate(diff.right()))
             is Removal -> startRuleSessionToRemoveConclusion(caseId, kb.conclusionManager.getOrCreate(diff.left()))
@@ -88,15 +88,15 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         }
     }
 
-    fun startRuleSessionToAddConclusion(caseId: String, conclusion: Conclusion) {
+    fun startRuleSessionToAddConclusion(caseId: Long, conclusion: Conclusion) {
         kb.startRuleSession(case(caseId), ChangeTreeToAddConclusion(conclusion))
     }
 
-    private fun startRuleSessionToRemoveConclusion(caseId: String, conclusion: Conclusion) {
+    private fun startRuleSessionToRemoveConclusion(caseId: Long, conclusion: Conclusion) {
         kb.startRuleSession(case(caseId), ChangeTreeToRemoveConclusion(conclusion))
     }
 
-    fun startRuleSessionToReplaceConclusion(caseId: String, toGo: Conclusion, replacement: Conclusion) {
+    fun startRuleSessionToReplaceConclusion(caseId: Long, toGo: Conclusion, replacement: Conclusion) {
         kb.startRuleSession(case(caseId), ChangeTreeToReplaceConclusion(toGo, replacement))
     }
 
@@ -106,30 +106,26 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
 
     fun commitCurrentRuleSession() = kb.commitCurrentRuleSession()
 
-    fun waitingCasesInfo(): CasesInfo {
-        fun readCaseDetails(file: File): CaseId {
-            return CaseId(getCaseFromFile(file).name, getCaseFromFile(file).name)
-        }
+    fun waitingCasesInfo() = CasesInfo(kb.processedCaseIds(), kb.kbInfo.name)
 
-        val caseFiles = casesDir.listFiles()
-        val idsList = caseFiles?.map { file -> readCaseDetails(file) } ?: emptyList()
-        return CasesInfo(idsList, casesDir.absolutePath)
-    }
-
-    fun case(id: String): RDRCase {
+    fun case(id: Long): RDRCase {
         val case = uninterpretedCase(id)
         kb.interpret(case)
         return case
     }
 
-    fun viewableCase(id: String): ViewableCase {
+    fun viewableCase(id: Long): ViewableCase {
         return kb.viewableInterpretedCase(uninterpretedCase(id)).apply {
             //reset the case's diff list
             interpretation.diffList = diffList(interpretation)
         }
     }
 
-    fun conditionHintsForCase(id: String): ConditionList = kb.conditionHintsForCase(case(id))
+    fun conditionHintsForCase(id: Long): ConditionList = kb.conditionHintsForCase(case(id))
+
+    fun processCase(externalCase: ExternalCase) = kb.processCase(externalCase)
+
+    fun deleteProcessedCase(name: String) = kb.deletedProcessedCaseWithName(name)
 
     fun moveAttributeJustBelow(movedId: Int, targetId: Int) {
         val moved = kb.attributeManager.getById(movedId)
@@ -149,7 +145,7 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
      * @return an Interpretation with the list of Diffs corresponding to the changes made to the current interpretation by the verified text
      */
     fun saveInterpretation(interpretation: Interpretation): Interpretation {
-        val caseId = interpretation.caseId.id
+        val caseId = interpretation.caseId.id!!
         val case = case(caseId)
 
         //reset the case's verified text
@@ -193,9 +189,9 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         return case.interpretation
     }
 
-    private fun writeInterpretationToFile(id: String, interpretation: Interpretation) {
+    private fun writeInterpretationToFile(id: Long, interpretation: Interpretation) {
         val fileName = "$id.interpretation.json"
-        println("${LocalDateTime.now()}  saving interp = $fileName")
+        println("${LocalDateTime.now()}  saving interpretation = $fileName")
         val file = File(interpretationsDir, fileName)
         if (file.exists()) {
             file.delete()
@@ -203,31 +199,5 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         FileUtils.writeStringToFile(file, Json.encodeToString(interpretation), UTF_8)
     }
 
-    private fun getCaseFromFile(file: File): RDRCase {
-        // The json in the file has attributes with
-        // dummy ids. We parse the json into a case
-        // and then switch the attributes in it with
-        // ones in the KB. When we have a proper
-        // external case format, we can do something
-        // less confusing.
-        val format = Json { allowStructuredMapKeys = true }
-        val data = FileUtils.readFileToString(file, UTF_8)
-        val caseWithDummyAttributes: RDRCase = format.decodeFromString(data)
-        val dataMap = mutableMapOf<TestEvent, TestResult>()
-        caseWithDummyAttributes.data.map {
-            val originalTestEvent = it.key
-            val originalAttribute = originalTestEvent.attribute
-            val newAttribute = kb.attributeManager.getOrCreate(originalAttribute.name)
-            val newTestEvent = TestEvent(newAttribute, originalTestEvent.date)
-            dataMap[newTestEvent] = it.value
-        }
-        return RDRCase(caseWithDummyAttributes.name, dataMap)
-    }
-
-    private fun uninterpretedCase(id: String): RDRCase {
-        if (!idToCase.containsKey(id)) {
-            idToCase[id] = getCaseFromFile(File(casesDir, "$id.json"))
-        }
-        return idToCase[id]!!
-    }
+    private fun uninterpretedCase(id: Long) = kb.getProcessedCase(id)!!
 }
