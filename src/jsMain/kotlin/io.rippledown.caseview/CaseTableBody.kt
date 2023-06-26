@@ -12,12 +12,13 @@ external interface CaseTableBodyHandler: Handler {
     var case: ViewableCase
     var onCaseEdited: () -> Unit
 }
-val CaseTableBody = FC<CaseTableBodyHandler> {
+val CaseTableBody = FC<CaseTableBodyHandler> { handler ->
     TableBody {
-        it.case.attributes().forEach { a ->
-            val results = it.case.rdrCase.resultsFor(a)!!
+        handler.case.attributes().forEach { a ->
+            val results = handler.case.rdrCase.resultsFor(a)!!
             TableRow {
                 id = "case_table_row_${a.name}"
+                hover = true
                 sx {
                     nthChild("even") {
                         backgroundColor = rgb(224, 224, 224)
@@ -25,9 +26,9 @@ val CaseTableBody = FC<CaseTableBodyHandler> {
                 }
                 AttributeCell {
                     attribute = a
-                    api = it.api
-                    scope = it.scope
-                    onCaseEdited = it.onCaseEdited
+                    api = handler.api
+                    scope = handler.scope
+                    onCaseEdited = handler.onCaseEdited
                 }
                 results.forEachIndexed { i, result ->
                     ValueCell {

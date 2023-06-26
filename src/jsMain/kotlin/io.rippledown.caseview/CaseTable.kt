@@ -6,7 +6,6 @@ import mui.material.Table
 import mui.system.sx
 import px12
 import react.FC
-import web.cssom.LineStyle
 import web.cssom.LineStyle.Companion.solid
 import web.cssom.px
 import web.cssom.rgb
@@ -31,6 +30,7 @@ val CaseTable = FC<CaseTableHandler> { handler ->
             case = handler.case
             api = handler.api
             scope = handler.scope
+            onCaseEdited = handler.onCaseEdited //todo test this
         }
     }
 }
