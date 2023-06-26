@@ -1,7 +1,10 @@
 package io.rippledown.interpretation
 
 import Handler
-import io.rippledown.constants.interpretation.*
+import io.rippledown.constants.interpretation.INTERPRETATION_CHANGES_BADGE
+import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
+import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CONCLUSIONS
+import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL
 import io.rippledown.model.Interpretation
 import mui.lab.TabContext
 import mui.lab.TabPanel
@@ -64,7 +67,11 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
 
             TabPanel {
                 value = "0"
-                id = INTERPRETATION_PANEL_ORIGINAL
+
+                //Force a re-render of the underlying TextField when the interpretation changes
+                //See https://jaketrent.com/post/rerender-defaultvalue-value-change/
+                key = handler.interpretation.latestText()
+
                 InterpretationView {
                     api = handler.api
                     scope = handler.scope
@@ -78,7 +85,6 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
 
             TabPanel {
                 value = "1"
-                id = INTERPRETATION_PANEL_CONCLUSIONS
                 ConclusionsView {
                     interpretation = handler.interpretation
                 }
@@ -86,7 +92,6 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
 
             TabPanel {
                 value = "2"
-                id = INTERPRETATION_PANEL_CHANGES
                 DiffViewer {
                     api = handler.api
                     scope = handler.scope

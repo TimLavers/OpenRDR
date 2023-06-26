@@ -10,7 +10,7 @@ import io.rippledown.model.rule.RuleSummary
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
-import proxy.*
+import proxy.waitForEvents
 import react.VFC
 import react.dom.checkContainer
 import react.dom.createRootFor
@@ -54,7 +54,6 @@ class CaseViewTest {
             val text = "Go to Bondi now!"
             enterInterpretation(text)
             waitForDebounce()
-            requireInterpretation(text)
             caseEdited shouldBe true
         }
     }

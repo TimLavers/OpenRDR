@@ -4,6 +4,8 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCase
 import kotlinx.serialization.Serializable
 
+const val HAS_CURRENT_VALUE = "has a current value"
+
 @Serializable
 data class HasCurrentValue(override val id: Int? = null, val attribute: Attribute) : Condition() {
     override fun holds(case: RDRCase): Boolean {
@@ -11,7 +13,7 @@ data class HasCurrentValue(override val id: Int? = null, val attribute: Attribut
         return latest.value.text.isNotBlank()
     }
 
-    override fun asText() = "${attribute.name} has a current value"
+    override fun asText() = "${attribute.name} $HAS_CURRENT_VALUE"
 
     override fun alignAttributes(idToAttribute: (Int) -> Attribute) = HasCurrentValue(id, idToAttribute(attribute.id))
 

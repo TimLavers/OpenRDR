@@ -2,7 +2,6 @@ package io.rippledown.cornerstoneview
 
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
-import proxy.debug
 import proxy.waitForEvents
 import react.VFC
 import react.dom.checkContainer
@@ -45,7 +44,6 @@ class CornerstoneSelectorTest {
                 total = 42
                 onSelect = { index ->
                     selectedIndex = index
-                    debug("handler received index $index")
                 }
             }
         }

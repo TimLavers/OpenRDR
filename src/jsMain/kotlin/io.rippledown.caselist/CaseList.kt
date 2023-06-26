@@ -1,7 +1,6 @@
 package io.rippledown.caselist
 
 import Handler
-import debug
 import io.rippledown.caseview.CaseView
 import io.rippledown.cornerstoneview.CornerstoneView
 import io.rippledown.interpretation.ConditionSelector
@@ -34,9 +33,7 @@ val CaseList = FC<CaseListHandler> { handler ->
 
     fun updateCurrentCase(id: String) {
         handler.scope.launch {
-            debug("about to update current case with id $id")
             val current = handler.api.getCase(id)
-            debug("updated current case with id $id. Interp was ${current.interpretation} latest text was ${current.interpretation.latestText()}")
             currentCase = current
         }
     }
@@ -46,9 +43,7 @@ val CaseList = FC<CaseListHandler> { handler ->
         val currentCaseNullOrNotAvailable = currentCase == null || !names.contains(currentCase?.name)
         if (currentCaseNullOrNotAvailable && names.isNotEmpty()) {
             val firstCaseId = handler.caseIds[0]
-            debug("about to get first case with id ${firstCaseId.id}")
             updateCurrentCase(firstCaseId.id)
-            debug("got first case with case id ${firstCaseId.id}")
         }
     }
     selectFirstCase()
@@ -64,7 +59,6 @@ val CaseList = FC<CaseListHandler> { handler ->
                     caseIds = handler.caseIds
                     selectedCaseName = currentCase?.name
                     selectCase = { id ->
-                        debug("caselist selected case with id $id")
                         updateCurrentCase(id)
                     }
                 }
@@ -78,7 +72,6 @@ val CaseList = FC<CaseListHandler> { handler ->
                 CaseView {
                     scope = handler.scope
                     api = handler.api
-                    debug("caseview with id $id and interp ${currentCase!!.interpretation.latestText()}")
                     case = currentCase!!
                     onCaseEdited = {
                         updateCurrentCase(id)
@@ -88,9 +81,7 @@ val CaseList = FC<CaseListHandler> { handler ->
                         handler.scope.launch {
                             conditionHints = handler.api.conditionHints(id)
                             val sessionStartRequest = SessionStartRequest(id, newInterp.diffList.selectedChange())
-                            debug("$sessionStartRequest")
                             val cc = handler.api.startRuleSession(sessionStartRequest)
-                            debug("cc status: $cc")
                             ccStatus = cc
                         }
                     }
@@ -101,7 +92,6 @@ val CaseList = FC<CaseListHandler> { handler ->
             item = true
             xs = 4
             if (ccStatus != null ) {
-                debug("showing cornerstone view")
                 CornerstoneView {
                     scope = handler.scope
                     api = handler.api

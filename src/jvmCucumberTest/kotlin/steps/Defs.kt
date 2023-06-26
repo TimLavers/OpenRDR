@@ -5,7 +5,6 @@ import io.cucumber.java8.En
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.UITestBase
 import io.rippledown.integration.pageobjects.*
-import io.rippledown.integration.pause
 import io.rippledown.integration.restclient.RESTClient
 import org.awaitility.Awaitility
 import org.openqa.selenium.WebDriver
@@ -194,8 +193,12 @@ class Defs : En {
             interpretationViewPO.interpretationText() shouldBe ""
         }
 
-        And("the interpretation by the project of the case {word} is {string}") { caseName: String, text: String ->
+        And("the interpretation of the case {word} is {string}") { caseName: String, text: String ->
             RESTClient().createRuleToAddText(caseName, text)
+        }
+
+        And("the interpretation of the case {word} is {string} because of condition {string}") { caseName: String, text: String, conditionText: String ->
+            RESTClient().createRuleToAddText(caseName, text, conditionText)
         }
 
         And("I select the {word} tab") { tabName: String ->

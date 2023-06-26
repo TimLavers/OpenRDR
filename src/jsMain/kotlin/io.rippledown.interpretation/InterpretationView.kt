@@ -1,7 +1,6 @@
 package io.rippledown.interpretation
 
 import Handler
-import debug
 import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_AREA
 import io.rippledown.model.Interpretation
@@ -11,7 +10,6 @@ import mui.system.sx
 import npm.debounce
 import react.FC
 import react.dom.onChange
-import react.useState
 import web.cssom.FontFamily
 import web.cssom.FontWeight
 import web.html.HTMLDivElement
@@ -25,17 +23,16 @@ external interface InterpretationViewHandler : Handler {
 typealias FormEventAlias = (react.dom.events.FormEvent<HTMLDivElement>) -> Unit
 
 val InterpretationView = FC<InterpretationViewHandler> { handler ->
-
     val interp = handler.interpretation
-    debug("InterpretationView called with '${interp.latestText()}'")
 
     fun handleFormEvent(): FormEventAlias {
         return {
             handler.scope.launch {
                 val changed = it.target.asDynamic().value
-                debug("handleFormEvent called with $changed")
-                handler.interpretation.verifiedText = changed
-                val updatedInterpretation = handler.api.saveVerifiedInterpretation(handler.interpretation)
+                interp.verifiedText = changed
+                val updatedInterpretation = handler.api.saveVerifiedInterpretation(interp)
+
+                //this will cause a re-render of the component, so no need to update the text field directly
                 handler.onInterpretationEdited(updatedInterpretation)
             }
         }
@@ -55,9 +52,7 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
         }
         rows = 10
         onChange = debounceFunction()
-        debug("set default value in text area with '${handler.interpretation.latestText()}' for interpretation ${handler.interpretation.caseId}")
-        defaultValue = handler.interpretation.latestText()
-
+        defaultValue = interp.latestText()
     }
 }
 

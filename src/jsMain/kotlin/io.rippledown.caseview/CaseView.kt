@@ -1,21 +1,17 @@
 package io.rippledown.caseview
 
 import Handler
-import debug
-import emotion.react.css
 import io.rippledown.constants.caseview.CASEVIEW_CASE_NAME_ID
 import io.rippledown.constants.interpretation.CASE_VIEW_CONTAINER
 import io.rippledown.interpretation.InterpretationTabs
 import io.rippledown.model.Interpretation
 import io.rippledown.model.caseview.ViewableCase
-import mui.material.Box
 import mui.material.Stack
 import mui.material.Typography
 import mui.system.sx
 import px12
 import px8
 import react.FC
-import web.cssom.AlignItems
 import web.cssom.pct
 
 
@@ -57,7 +53,6 @@ val CaseView = FC<CaseViewHandler> { handler ->
         InterpretationTabs {
             scope = handler.scope
             api = handler.api
-            debug("calling InterpretationTabs for case: ${handler.case.id} interpretation: ${handler.case.interpretation.latestText()}")
             interpretation = handler.case.interpretation
             refreshCase = handler.onCaseEdited
             onStartRule = { newInterpretation ->

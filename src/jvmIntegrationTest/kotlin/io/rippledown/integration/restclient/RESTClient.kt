@@ -7,18 +7,19 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import io.rippledown.model.Attribute
 import io.rippledown.constants.api.CASE
 import io.rippledown.constants.api.CREATE_KB
 import io.rippledown.constants.api.WAITING_CASES
 import io.rippledown.constants.server.PING
 import io.rippledown.constants.server.SHUTDOWN
+import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.Conclusion
 import io.rippledown.model.OperationResult
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
-import io.rippledown.server.*
+import io.rippledown.model.condition.HAS_CURRENT_VALUE
+import io.rippledown.model.condition.HasCurrentValue
 import io.rippledown.server.routes.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -122,11 +123,27 @@ class RESTClient {
         return result
     }
 
-    fun createRuleToAddText(caseName: String, text: String): OperationResult {
+    fun createRuleToAddText(caseName: String, text: String, conditionText: String = ""): OperationResult {
         getCaseWithName(caseName)
         val conclusion = getOrCreateConclusion(text)
         startSessionToAddConclusionForCurrentCase(conclusion)
+
+        if (conditionText.isNotBlank()) {
+            addConditionForCurrentSession(
+                getOrCreateCondition(parseToCondition(conditionText))
+            )
+        }
         return commitCurrentSession()
+    }
+
+    private fun parseToCondition(conditionText: String): Condition {
+        val firstWord = conditionText.split(" ")[0]
+        val attribute = getOrCreateAttribute(firstWord)
+        val remainderOfExpression = conditionText.substring(firstWord.length + 1)
+        if (remainderOfExpression != HAS_CURRENT_VALUE) {
+            throw IllegalArgumentException("Only '$HAS_CURRENT_VALUE' is supported")
+        }
+        return HasCurrentValue(null, attribute)
     }
 
     fun resetKB(): OperationResult {

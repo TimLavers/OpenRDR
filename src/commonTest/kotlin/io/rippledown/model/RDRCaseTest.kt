@@ -220,9 +220,13 @@ class RDRCaseTest {
     }
 
     @Test
-    fun getName() {
-        val case1 = RDRCase("Case1")
-        assertEquals(case1.name, "Case1")
+    fun name() {
+        RDRCase(name = "Case1").name shouldBe "Case1"
+    }
+
+    @Test
+    fun id() {
+        RDRCase(id = "1").id shouldBe "1"
     }
 
     @Test

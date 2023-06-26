@@ -2,7 +2,6 @@ package io.rippledown.cornerstoneview
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.constants.caseview.CASEVIEW_CORNERSTONE_CASE_NAME_ID
-import proxy.debug
 import proxy.findAllById
 import proxy.findById
 import react.dom.test.Simulate
@@ -30,7 +29,6 @@ suspend fun HTMLElement.selectNextCornerstone() {
     act {
         Simulate.click(nextButton!!)
     }
-    debug("Clicked next button")
 }
 
 suspend fun HTMLElement.selectPreviousCornerstone() {
@@ -38,5 +36,4 @@ suspend fun HTMLElement.selectPreviousCornerstone() {
     act {
         Simulate.click(previousButton!!)
     }
-    debug("Clicked previous button")
 }
