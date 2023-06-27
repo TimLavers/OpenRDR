@@ -8,7 +8,10 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.rippledown.CaseTestUtils
 import io.rippledown.model.*
-import io.rippledown.model.condition.*
+import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.GreaterThanOrEqualTo
+import io.rippledown.model.condition.HasCurrentValue
+import io.rippledown.model.condition.Is
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.diff.Unchanged
@@ -276,8 +279,11 @@ internal class ServerApplicationTest {
         // Add a case and a rule to the KB.
         val id = "Case1"
         setUpCaseFromFile(id, app)
-        app.kb.putCase(createCase(id))
-        val conclusion1 = app.kb.conclusionManager.getOrCreate( "Whatever")
+        val retrieved = app.case("Case1")
+        assertEquals(retrieved.name, "Case1")
+        assertEquals(retrieved.getLatest("TSH")!!.value.text, "0.667")
+        app.kb.putCase(retrieved)
+        val conclusion1 = app.kb.conclusionManager.getOrCreate("Whatever")
         val tsh = app.kb.attributeManager.getOrCreate("TSH")
         app.startRuleSessionToAddConclusion(id, conclusion1)
         val tshCondition = GreaterThanOrEqualTo(null, tsh, 0.6)
