@@ -11,7 +11,7 @@ class RuleBuildingSession(
     private val tree: RuleTree,
     val case: RDRCase,
     private val action: RuleTreeChange,
-    cornerstones: Set<RDRCase>
+    cornerstones: List<RDRCase>
 ) {
     var conditions = mutableSetOf<Condition>()
     private val cornerstonesNotExempted = mutableSetOf<RDRCase>()

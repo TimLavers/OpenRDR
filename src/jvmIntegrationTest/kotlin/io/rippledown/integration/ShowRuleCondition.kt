@@ -97,6 +97,6 @@ internal class ShowRuleCondition : UITestBase() {
     }
 
     private fun setupCase() {
-        labProxy.copyCase(caseName)
+        labProxy.provideCase(caseName)
     }
 }

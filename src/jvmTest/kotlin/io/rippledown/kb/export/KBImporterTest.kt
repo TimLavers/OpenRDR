@@ -4,11 +4,14 @@ import io.kotest.matchers.equality.shouldBeEqualToComparingFields
 import io.kotest.matchers.maps.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.rippledown.kb.KB
-import io.rippledown.model.*
+import io.rippledown.model.KBInfo
+import io.rippledown.model.RDRCase
+import io.rippledown.model.RDRCaseBuilder
+import io.rippledown.model.TestResult
 import io.rippledown.model.condition.LessThanOrEqualTo
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
-import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.persistence.PersistenceProvider
+import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import java.time.Instant
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -30,7 +33,7 @@ class KBImporterTest : ExporterTestBase() {
         KBExporter(tempDir, original).export()
         val rebuilt = KBImporter(tempDir, persistenceProvider).import()
         rebuilt.kbInfo.name shouldBe original.kbInfo.name
-        rebuilt.allCases().size shouldBe 0
+        rebuilt.allCornerstoneCases().size shouldBe 0
         rebuilt.caseViewManager.allAttributesInOrder().size shouldBe 0
         rebuilt.ruleTree.size() shouldBe 1
     }
@@ -52,14 +55,15 @@ class KBImporterTest : ExporterTestBase() {
             rdrCaseBuilder.addResult(glucose, episodeDate, TestResult(glucoseValue))
             rdrCaseBuilder.addResult(ldl, episodeDate, TestResult(ldlValue))
             rdrCaseBuilder.addResult(hdl, episodeDate, TestResult(hdlValue))
-            return rdrCaseBuilder.build(name, name)
+            return rdrCaseBuilder.build(name)
         }
+
         val case1 = buildCase("Case1", "4.0", "2.5", "1.8")
         val case2 = buildCase("Case2", "4.1", "2.4", "1.6")
         val case3 = buildCase("Case3", "4.2", "2.3", "1.4")
-        kb.putCase(case1)
-        kb.putCase(case2)
-        kb.putCase(case3)
+        kb.addCornerstoneCase(case1)
+        kb.addCornerstoneCase(case2)
+        kb.addCornerstoneCase(case3)
 
         // Add a rule.
         val sessionCase = kb.getCaseByName(case1.name)
@@ -74,7 +78,7 @@ class KBImporterTest : ExporterTestBase() {
         KBExporter(tempDir, kb).export()
         val rebuilt = KBImporter(tempDir, persistenceProvider).import()
         rebuilt.kbInfo.name shouldBe kb.kbInfo.name
-        rebuilt.allCases().size shouldBe 3
+        rebuilt.allCornerstoneCases().size shouldBe 3
         rebuilt.getCaseByName(case1.name) shouldBeEqualToComparingFields kb.getCaseByName(case1.name)
 
         rebuilt.caseViewManager.allAttributesInOrder() shouldBe kb.caseViewManager.allAttributesInOrder()

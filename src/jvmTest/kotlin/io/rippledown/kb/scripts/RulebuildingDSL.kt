@@ -2,9 +2,15 @@ package io.rippledown.kb.scripts
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.kb.KB
-import io.rippledown.model.*
-import io.rippledown.model.rule.*
-import io.rippledown.model.condition.*
+import io.rippledown.model.KBInfo
+import io.rippledown.model.RDRCase
+import io.rippledown.model.RDRCaseBuilder
+import io.rippledown.model.TestResult
+import io.rippledown.model.condition.ContainsText
+import io.rippledown.model.condition.GreaterThanOrEqualTo
+import io.rippledown.model.rule.ChangeTreeToAddConclusion
+import io.rippledown.model.rule.ChangeTreeToRemoveConclusion
+import io.rippledown.model.rule.ChangeTreeToReplaceConclusion
 import io.rippledown.persistence.inmemory.InMemoryKB
 
 const val addedConditionBeforeSessionStarted = "Rule session not started."
@@ -25,7 +31,7 @@ class BuildTemplate {
         val caseBuilder = RDRCaseBuilder()
         val textAttribute = kb.attributeManager.getOrCreate(text)
         caseBuilder.addResult(textAttribute, defaultDate, TestResult(data))
-        val case = caseBuilder.build(name, name)
+        val case = caseBuilder.build(name)
         kb.addCornerstoneCase(case)
     }
 
@@ -33,23 +39,15 @@ class BuildTemplate {
         val caseBuilder = RDRCaseBuilder()
         val textAttribute = kb.attributeManager.getOrCreate(text)
         caseBuilder.addResult(textAttribute, defaultDate, TestResult(data))
-        val case = caseBuilder.build(name, name)
-        kb.putCase(case)
+        val case = caseBuilder.build(name)
+        kb.addCornerstoneCase(case)
     }
 
     fun case(i: Int) {
         val caseBuilder = RDRCaseBuilder()
         val numberAttribute = kb.attributeManager.getOrCreate(value)
         caseBuilder.addResult(numberAttribute, defaultDate, TestResult("$i"))
-        val case = caseBuilder.build("$i", "$i")
-        kb.putCase(case)
-    }
-
-    fun cornerstoneCase(i: Int) {
-        val caseBuilder = RDRCaseBuilder()
-        val numberAttribute = kb.attributeManager.getOrCreate(value)
-        caseBuilder.addResult(numberAttribute, defaultDate, TestResult("$i"))
-        val case = caseBuilder.build("$i", "$i")
+        val case = caseBuilder.build("$i")
         kb.addCornerstoneCase(case)
     }
 

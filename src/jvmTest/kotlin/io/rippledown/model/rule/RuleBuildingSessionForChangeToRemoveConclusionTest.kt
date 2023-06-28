@@ -14,7 +14,7 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
     private val sessionCase = clinicalNotesCase("123")
     private val cc1 = clinicalNotesCase("CC1")
     private val cc2 = clinicalNotesCase("CC2")
-    private val cornerstones = mutableSetOf(cc1, cc2)
+    private val cornerstones = mutableListOf(cc1, cc2)
     private val ruleFactory = DummyRuleFactory()
     private lateinit var conclusionFactory: DummyConclusionFactory
     private lateinit var conditionFactory: DummyConditionFactory
@@ -88,7 +88,7 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
 
         val removeAction = ChangeTreeToRemoveConclusion(conclusionFactory.getOrCreate("A"))
         val case = clinicalNotesCase("a")
-        RuleBuildingSession(ruleFactory, tree, case,  removeAction, setOf())
+        RuleBuildingSession(ruleFactory, tree, case, removeAction, listOf())
             .addCondition(ContainsText(null, clinicalNotes, "a"))
             .commit()
 

@@ -17,13 +17,13 @@ class CaseListUpdateTest {
 
     @Test
     fun shouldUpdateInterpretationWhenAnotherCaseNameIsClicked() = runTest {
-        val caseIdA = CaseId(id = "1", name = "case A")
-        val caseIdB = CaseId(id = "2", name = "case B")
+        val caseIdA = CaseId(id = 1, name = "case A")
+        val caseIdB = CaseId(id = 2, name = "case B")
         val caseAConclusion = "text for case A"
         val caseBConclusion = "text for case B"
         val twoCaseIds = listOf(caseIdA, caseIdB)
-        val caseA = createCaseWithInterpretation(caseIdA.id, caseIdA.name, listOf(caseAConclusion))
-        val caseB = createCaseWithInterpretation(caseIdB.id, caseIdB.name, listOf(caseBConclusion))
+        val caseA = createCaseWithInterpretation(caseIdA.name, caseIdA.id, listOf(caseAConclusion))
+        val caseB = createCaseWithInterpretation(caseIdB.name, caseIdB.id, listOf(caseBConclusion))
         val config = config {
             returnCasesInfo = CasesInfo(twoCaseIds)
             returnCase = caseA
@@ -38,7 +38,7 @@ class CaseListUpdateTest {
         with(createRootFor(vfc)) {
             requireInterpretation(caseAConclusion)
             config.returnCase = caseB
-            selectCaseById(caseIdB.id)
+            selectCaseById(2)
             waitForEvents()
             requireInterpretation(caseBConclusion)
         }

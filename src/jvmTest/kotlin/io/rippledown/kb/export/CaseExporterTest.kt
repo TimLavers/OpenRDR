@@ -3,7 +3,7 @@ package io.rippledown.kb.export
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.rippledown.CaseTestUtils
-import io.rippledown.model.*
+import io.rippledown.model.RDRCase
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.apache.commons.io.FileUtils
@@ -17,7 +17,7 @@ class CaseExporterTest : ExporterTestBase() {
     fun `destination should be a directory`() {
         val textFile = writeFileInDirectory(tempDir)
         shouldThrow<IllegalArgumentException>{
-            CaseExporter(textFile, emptySet())
+            CaseExporter(textFile, emptyList())
         }.message shouldBe "Case export destination is not a directory."
     }
 
@@ -27,7 +27,7 @@ class CaseExporterTest : ExporterTestBase() {
         directory.mkdirs()
         writeFileInDirectory(directory)
         shouldThrow<IllegalArgumentException>{
-            CaseExporter(directory, emptySet())
+            CaseExporter(directory, emptyList())
         }.message shouldBe "Case export directory is not empty."
     }
 
@@ -35,7 +35,7 @@ class CaseExporterTest : ExporterTestBase() {
     fun `destination should exist`() {
         val directory = File(tempDir, "exportDir")
         shouldThrow<IllegalArgumentException>{
-            CaseExporter(directory, emptySet())
+            CaseExporter(directory, emptyList())
         }.message shouldBe "Case export destination is not an existing directory."
     }
 
@@ -44,7 +44,7 @@ class CaseExporterTest : ExporterTestBase() {
         val case1 = CaseTestUtils.createCase("Case1")
         val case2 = CaseTestUtils.createCase("Case2")
         val case3 = CaseTestUtils.createCase("Case3")
-        CaseExporter(tempDir, setOf(case1, case2, case3)).export()
+        CaseExporter(tempDir, listOf(case1, case2, case3)).export()
         checkNamedFileContainsDataForCase("Case1", case1)
         checkNamedFileContainsDataForCase("Case2", case2)
         checkNamedFileContainsDataForCase("Case3", case3)
@@ -54,7 +54,7 @@ class CaseExporterTest : ExporterTestBase() {
     fun `cases with names that would be illegal as file names can be exported`() {
         val case1 = CaseTestUtils.createCase(">>Cat<<")
         val case2 = CaseTestUtils.createCase(">>CAT<<")
-        CaseExporter(tempDir, setOf(case1, case2)).export()
+        CaseExporter(tempDir, listOf(case1, case2)).export()
         val filesInDir = tempDir.listFiles()!!
         val fileCat = if (filesInDir[0].name.startsWith("__Cat")) filesInDir[0] else filesInDir[1]
         val fileCAT = if (filesInDir[0].name.startsWith("__CAT")) filesInDir[0] else filesInDir[1]

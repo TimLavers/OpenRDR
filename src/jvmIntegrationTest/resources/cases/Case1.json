@@ -2,10 +2,8 @@
   "name": "Case1",
   "data": [
     {
-      "attribute": {
-        "name": "TSH"
-      },
-      "date": 1659752689505
+      "testName": "TSH",
+      "testTime": 1659752689505
     },
     {
       "value": {
@@ -18,10 +16,8 @@
       "units": "mU/L"
     },
     {
-      "attribute": {
-        "name": "ABC"
-      },
-      "date": 1659752689505
+      "testName": "ABC",
+      "testTime": 1659752689505
     },
     {
       "value": {

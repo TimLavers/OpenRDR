@@ -35,7 +35,7 @@ class ConditionManagementTest: OpenRDRServerTestBase() {
     @Test
     fun `should delegate generating condition hints to server application`() = testApplication {
         setup()
-        val caseId = "Bronte"
+        val caseId = 2L
         val conditionList = ConditionList(
             listOf(
                 IsNormal(1, Attribute(1, "WaveHeight")),

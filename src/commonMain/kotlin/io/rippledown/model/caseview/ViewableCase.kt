@@ -6,8 +6,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ViewableCase(val rdrCase: RDRCase, val viewProperties: CaseViewProperties = CaseViewProperties()) {
-    val id = rdrCase.id
-    val name = rdrCase.name
+    val name = rdrCase.caseId.name
+    val id = rdrCase.caseId.id
     val dates = rdrCase.dates
     var interpretation = rdrCase.interpretation
 

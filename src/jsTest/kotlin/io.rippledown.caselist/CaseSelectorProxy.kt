@@ -12,7 +12,7 @@ import react.dom.test.Simulate
 import react.dom.test.act
 import web.html.HTMLElement
 
-suspend fun HTMLElement.selectCaseById(caseId: String) {
+suspend fun HTMLElement.selectCaseById(caseId: Long) {
     val element = findById("$CASE_ID_PREFIX$caseId")
     act {
         Simulate.click(element)

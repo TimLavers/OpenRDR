@@ -7,7 +7,7 @@ import org.apache.commons.io.FileUtils
 import java.io.File
 import kotlin.text.Charsets.UTF_8
 
-class CaseExporter(private val destination: File, val cases: Set<RDRCase>) {
+class CaseExporter(private val destination: File, val cases: List<RDRCase>) {
     init {
         checkDirectoryIsSuitableForExport(destination, "Case")
     }
@@ -17,7 +17,7 @@ class CaseExporter(private val destination: File, val cases: Set<RDRCase>) {
         val caseNameToFilename = FilenameMaker(caseNames).makeUniqueNames()
         val format = Json { allowStructuredMapKeys = true }
 
-        cases.forEach{
+        cases.forEach {
             val serialized = format.encodeToString(it)
             val filename = caseNameToFilename[it.name]!!
             val file = File(destination, filename)

@@ -12,7 +12,7 @@ class CornerstoneViewTest {
     @Test
     fun shouldTruncateLongNames() = runTest {
         val name = "Long name that should be truncated"
-        val case = createCase("", name)
+        val case = createCase(name)
         val ccStatus =
             CornerstoneStatus(cornerstoneToReview = case, indexOfCornerstoneToReview = 0, numberOfCornerstones = 42)
         val vfc = VFC {

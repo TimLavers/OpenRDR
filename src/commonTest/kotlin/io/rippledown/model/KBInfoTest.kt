@@ -86,8 +86,8 @@ internal class KBInfoTest {
         val bad = listOf("!a", "@b", "a%c", "s-d")
         bad.forEach {
             shouldThrow<IllegalArgumentException> {
-                KBInfo(it,"Name")
-            }.message shouldBe "KBInfo id should consist of letters, numbers, and _ only, but got $it."
+                KBInfo(it, "Name")
+            }.message shouldBe "KBInfo id should consist of lower case letters, numbers, and _ only, but got $it."
         }
         val good = listOf("a")
         good.forEach {

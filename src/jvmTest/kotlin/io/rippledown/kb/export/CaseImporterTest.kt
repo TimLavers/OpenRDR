@@ -33,7 +33,7 @@ class CaseImporterTest: ExporterTestBase() {
         val case1 = CaseTestUtils.createCase("Case1")
         val case2 = CaseTestUtils.createCase("Case2")
         val case3 = CaseTestUtils.createCase("Case3")
-        CaseExporter(tempDir, setOf(case1, case2, case3)).export()
+        CaseExporter(tempDir, listOf(case1, case2, case3)).export()
         val imported = CaseImporter(tempDir).import()
         imported shouldBe setOf(case1, case2, case3)
     }

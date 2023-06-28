@@ -31,10 +31,10 @@ val CaseList = FC<CaseListHandler> { handler ->
     var newInterpretation: Interpretation? by useState(null)
     var conditionHints: ConditionList? by useState(null)
 
-    fun updateCurrentCase(id: String) {
+    fun updateCurrentCase(id: Long) {
         handler.scope.launch {
-            val current = handler.api.getCase(id)
-            currentCase = current
+            val returned = handler.api.getCase(id)
+            currentCase = returned
         }
     }
 
@@ -43,7 +43,7 @@ val CaseList = FC<CaseListHandler> { handler ->
         val currentCaseNullOrNotAvailable = currentCase == null || !names.contains(currentCase?.name)
         if (currentCaseNullOrNotAvailable && names.isNotEmpty()) {
             val firstCaseId = handler.caseIds[0]
-            updateCurrentCase(firstCaseId.id)
+            updateCurrentCase(firstCaseId.id!!)
         }
     }
     selectFirstCase()
@@ -68,7 +68,7 @@ val CaseList = FC<CaseListHandler> { handler ->
             item = true
             xs = 4
             if (currentCase != null) {
-                val id = currentCase!!.id
+                val id = currentCase!!.id!!
                 CaseView {
                     scope = handler.scope
                     api = handler.api
@@ -88,6 +88,7 @@ val CaseList = FC<CaseListHandler> { handler ->
                 }
             }
         }
+
         Grid {
             item = true
             xs = 4
@@ -114,14 +115,13 @@ val CaseList = FC<CaseListHandler> { handler ->
                     onDone = { conditionList ->
                         handler.scope.launch {
                             val ruleRequest = RuleRequest(
-                                caseId = currentCase!!.id,
+                                caseId = currentCase!!.rdrCase.caseId.id!!,
                                 diffList = newInterpretation!!.diffList,
                                 conditionList = ConditionList(conditions = conditionList)
                             )
                             handler.api.buildRule(ruleRequest)
                             newInterpretation = null
-                            ccStatus = null
-                            updateCurrentCase(currentCase!!.id)
+                            updateCurrentCase(currentCase!!.rdrCase.caseId.id!!)
                         }
                     }
                 }

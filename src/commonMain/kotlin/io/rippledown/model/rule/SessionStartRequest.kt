@@ -8,6 +8,6 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class SessionStartRequest(
-    val caseId: String = "",
+    val caseId: Long,
     val diff: Diff
 )

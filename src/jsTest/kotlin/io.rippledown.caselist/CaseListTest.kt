@@ -28,12 +28,14 @@ class CaseListTest {
     fun shouldListCaseNames() = runTest {
         val caseA = "case a"
         val caseB = "case b"
-        val caseId1 = CaseId(id = "1", name = caseA)
-        val caseId2 = CaseId(id = "2", name = caseB)
-        val twoCaseIds = listOf(caseId1, caseId2)
+        val caseId1 = CaseId(id = 1, name = caseA)
+        val caseId2 = CaseId(id = 2, name = caseB)
+        val twoCaseIds = listOf(
+            caseId1, caseId2
+        )
         val config = config {
             returnCasesInfo = CasesInfo(twoCaseIds)
-            returnCase = createCase("1", caseA)
+            returnCase = createCase(caseA)
         }
 
         val vfc = VFC {
@@ -60,13 +62,13 @@ class CaseListTest {
         val caseA = "case A"
         val caseB = "case B"
         val caseC = "case C"
-        val caseId1 = CaseId(id = "1", name = caseA)
-        val caseId2 = CaseId(id = "2", name = caseB)
-        val caseId3 = CaseId(id = "3", name = caseC)
+        val caseId1 = CaseId(id = 1, name = caseA)
+        val caseId2 = CaseId(id = 2, name = caseB)
+        val caseId3 = CaseId(id = 3, name = caseC)
         val threeCaseIds = listOf(caseId1, caseId2, caseId3)
         val config = config {
             returnCasesInfo = CasesInfo(threeCaseIds)
-            returnCase = createCase("", caseA)
+            returnCase = createCase(caseA)
         }
         val vfc = VFC {
             CaseList {
@@ -75,10 +77,10 @@ class CaseListTest {
                 scope = this@runTest
             }
         }
-        config.returnCase = createCase("", caseB)
+        config.returnCase = createCase(caseB, 2)
         val container = createRootFor(vfc)
         with(container) {
-            selectCaseById(caseId2.id)
+            selectCaseById(2)
             requireCaseToBeShowing(caseB)
         }
     }
@@ -88,11 +90,11 @@ class CaseListTest {
         val caseName1 = "case 1"
         val caseName2 = "case 2"
         val twoCaseIds = listOf(
-            CaseId("1", caseName1), CaseId("2", caseName2)
+            CaseId(1, caseName1), CaseId(2, caseName2)
         )
         val config = config {
             returnCasesInfo = CasesInfo(twoCaseIds)
-            returnCase = createCase("", caseName1)
+            returnCase = createCase(caseName1)
         }
 
         val vfc = VFC {
@@ -113,12 +115,12 @@ class CaseListTest {
     fun shouldShowCaseListForManyCases() = runTest {
 
         val caseIds = (1..100).map { i ->
-            CaseId(id = i.toString(), name = "case $i")
+            CaseId(id = i.toLong(), name = "case $i")
         }
 
         val config = config {
             returnCasesInfo = CasesInfo(caseIds)
-            returnCase = createCase("100", "case 100")
+            returnCase = createCase("case 100")
         }
 
         val vfc = VFC {
@@ -129,7 +131,7 @@ class CaseListTest {
             }
         }
         with(createRootFor(vfc)) {
-            selectCaseById("100")
+            selectCaseById(100)
             requireCaseToBeShowing("case 100")
 
         }
@@ -137,9 +139,9 @@ class CaseListTest {
 
     @Test
     fun shouldShowConditionSelector() = runTest {
-        val id = "1"
         val caseName = "Bondi"
-        val caseIdList = listOf(CaseId(id, caseName))
+        val caseId = 45L
+        val caseIdList = listOf(CaseId(caseId, caseName))
         val bondiComment = "Go to Bondi now!"
         val manlyComment = "Go to Manly now!"
         val beachComment = "Enjoy the beach!"
@@ -152,13 +154,13 @@ class CaseListTest {
             )
         )
         val caseWithInterp = createCaseWithInterpretation(
-            id = id,
             name = caseName,
+            id = caseId,
             conclusionTexts = listOf(beachComment, manlyComment, bondiComment),
             diffs = diffList
         )
         val config = config {
-            expectedCaseId = id
+            expectedCaseId = caseId
             returnCasesInfo = CasesInfo(caseIdList)
             returnCase = caseWithInterp
         }
@@ -188,7 +190,7 @@ class CaseListTest {
 
     @Test
     fun shouldNotShowCornerstoneViewIfNoCornerstone() = runTest {
-        val id = "1"
+        val id = 1L
         val caseName = "Bondi"
         val caseIdList = listOf(CaseId(id, caseName))
         val bondiComment = "Go to Bondi now!"
@@ -232,9 +234,9 @@ class CaseListTest {
 
     @Test
     fun shouldUpdateConditionHintsWhenRuleIsStarted() = runTest {
-        val id = "1"
+        val caseId = 45L
         val caseName = "Bondi"
-        val caseIdList = listOf(CaseId(id, caseName))
+        val caseIdList = listOf(CaseId(caseId, caseName))
         val beachComment = "Enjoy the beach!"
         val bondiComment = "Go to Bondi now!"
         val diffList = DiffList(
@@ -244,14 +246,14 @@ class CaseListTest {
             )
         )
         val caseWithInterp = createCaseWithInterpretation(
-            id = id,
             name = caseName,
+            id = caseId,
             conclusionTexts = listOf(beachComment, bondiComment),
             diffs = diffList
         )
         val condition = HasCurrentValue(1, Attribute(2, "surf"))
         val config = config {
-            expectedCaseId = id
+            expectedCaseId = caseId
             returnCasesInfo = CasesInfo(caseIdList)
             returnCase = caseWithInterp
             returnConditionList = ConditionList(listOf(condition))
@@ -282,9 +284,9 @@ class CaseListTest {
 
     @Test
     fun shouldCancelConditionSelector() = runTest {
-        val id = "1"
         val caseName = "Bondi"
-        val caseIdList = listOf(CaseId(id, caseName))
+        val caseId = 45L
+        val caseIdList = listOf(CaseId(caseId, caseName))
         val bondiComment = "Go to Bondi now!"
         val manlyComment = "Go to Manly now!"
         val beachComment = "Enjoy the beach!"
@@ -297,13 +299,13 @@ class CaseListTest {
             )
         )
         val caseWithInterp = createCaseWithInterpretation(
-            id = id,
             name = caseName,
+            id = caseId,
             conclusionTexts = listOf(beachComment, manlyComment, bondiComment),
             diffs = diffList
         )
         val config = config {
-            expectedCaseId = id
+            expectedCaseId = caseId
             returnCasesInfo = CasesInfo(caseIdList)
             returnCase = caseWithInterp
         }
@@ -335,8 +337,8 @@ class CaseListTest {
 
     @Test
     fun shouldShowCornerstoneWhenBuildingARule() = runTest {
-        val caseId = "1"
-        val cornerstoneId = "2"
+        val caseId = 1L
+        val cornerstoneId = 2L
         val caseName = "Manly"
         val cornerstoneCaseName = "Bondi"
         val caseIdList = listOf(CaseId(caseId, caseName))
@@ -385,8 +387,8 @@ class CaseListTest {
 
     @Test
     fun shouldNotShowCaseSelectorWhenBuildingARule() = runTest {
-        val caseId = "1"
-        val cornerstoneId = "2"
+        val caseId = 1L
+        val cornerstoneId = 2L
         val caseName = "Manly"
         val cornerstoneCaseName = "Bondi"
         val caseIdList = listOf(CaseId(caseId, caseName))

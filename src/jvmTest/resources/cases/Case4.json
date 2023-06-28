@@ -3,11 +3,8 @@
   "name": "Case4",
   "data": [
     {
-      "attribute": {
-        "name": "TSH",
-        "id": 1
-      },
-      "date": 1659752689505
+      "testName": "TSH",
+      "testTime": 1659752689505
     },
     {
       "value": {
@@ -18,12 +15,10 @@
         "upperString": "4.0"
       },
       "units": "mU/L"
-    },{
-      "attribute": {
-        "name": "TSH",
-        "id": 1
-      },
-      "date": 1659702689505
+    },
+    {
+      "testName": "TSH",
+      "testTime": 1659702689505
     },
     {
       "value": {
@@ -36,11 +31,8 @@
       "units": "mU/L"
     },
     {
-      "attribute": {
-        "name": "Stuff",
-        "id": 4
-      },
-      "date": 1659752689505
+      "testName": "Stuff",
+      "testTime": 1659752689505
     },
     {
       "value": {
@@ -50,11 +42,8 @@
       "units": "mU/L"
     },
     {
-      "attribute": {
-        "name": "Stuff",
-        "id": 4
-      },
-      "date": 1659702689505
+      "testName": "Stuff",
+      "testTime": 1659702689505
     },
     {
       "value": {

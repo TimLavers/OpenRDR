@@ -2,9 +2,6 @@ package io.rippledown.model.rule
 
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.CaseId
-import io.rippledown.model.Interpretation
-import io.rippledown.model.RDRCase
 import io.rippledown.model.*
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.rule.dsl.ruleTree
@@ -52,7 +49,7 @@ internal class RuleTreeTest : RuleTestBase() {
     @Test
     fun root_rule_should_not_apply_to_a_case() {
         tree.apply(kase)
-        kase.interpretation shouldBe Interpretation(CaseId(kase.id, kase.name))
+        kase.interpretation shouldBe Interpretation(CaseId(null, kase.name))
     }
 
     @Test
@@ -412,7 +409,7 @@ internal class RuleTreeTest : RuleTestBase() {
     @Test
     fun `interpreting a case should not overwrite the verified text`() {
         val verifiedText = "Go to Bondi"
-        val case = RDRCase("")
+        val case = RDRCase(CaseId(99, "Blah"))
         case.interpretation.verifiedText = verifiedText
         tree.apply(case)
         case.interpretation.verifiedText shouldBe verifiedText

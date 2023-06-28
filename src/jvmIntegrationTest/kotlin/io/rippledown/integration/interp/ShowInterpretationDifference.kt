@@ -117,6 +117,6 @@ internal class ShowInterpretationDifference : UITestBase() {
             .requireChangedTextInRow(0, tshComment)
     }
 
-    private fun setupCase() = labProxy.copyCase(caseName)
+    private fun setupCase() = labProxy.provideCase(caseName)
 
 }

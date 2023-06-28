@@ -12,8 +12,8 @@ class CaseImporter(private val source: File) {
         checkIsDirectory(source)
     }
 
-    fun import(): Set<RDRCase> {
-        val result = mutableSetOf<RDRCase>()
+    fun import(): List<RDRCase> {
+        val result = mutableListOf<RDRCase>()
         val format = Json { allowStructuredMapKeys = true }
         source.listFiles()?.forEach {
             val data = FileUtils.readFileToString(it, UTF_8)

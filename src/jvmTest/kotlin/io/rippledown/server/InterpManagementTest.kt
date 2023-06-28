@@ -10,6 +10,7 @@ import io.mockk.verify
 import io.rippledown.constants.api.BUILD_RULE
 import io.rippledown.constants.api.START_RULE_SESSION
 import io.rippledown.constants.api.VERIFIED_INTERPRETATION_SAVED
+import io.rippledown.model.CaseId
 import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
@@ -24,7 +25,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
     @Test
     fun `should delegate saving an Interpretation to server application`() = testApplication {
         setup()
-        val rdrCase = RDRCase("", "Case1")
+        val rdrCase = RDRCase(CaseId(100, "Case1"))
         val diffs = DiffList(
             listOf(
                 Unchanged("Go to Bondi Beach."),
@@ -84,7 +85,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
             selected = 2
         )
 
-        val ruleRequest = RuleRequest(diffList = diffList)
+        val ruleRequest = RuleRequest(1, diffList = diffList)
         val interp = Interpretation()
         every { serverApplication.commitRuleSession(ruleRequest) } returns interp
 

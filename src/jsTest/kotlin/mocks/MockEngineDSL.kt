@@ -15,6 +15,7 @@ import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import proxy.debug
 
 fun mock(config: EngineConfig) = EngineBuilder(config).build()
 
@@ -24,13 +25,13 @@ fun config(block: EngineConfig.() -> Unit) = EngineConfig().apply(block)
 
 class EngineConfig {
     var returnCasesInfo: CasesInfo = CasesInfo(emptyList())
-    var returnCase: ViewableCase = createCase("", "The Case")
+    var returnCase: ViewableCase = createCase("The Case")
     var returnOperationResult: OperationResult = OperationResult()
     var returnInterpretation: Interpretation = Interpretation()
     var returnCornerstoneStatus: CornerstoneStatus = CornerstoneStatus()
     var returnConditionList: ConditionList = ConditionList()
 
-    var expectedCaseId = ""
+    var expectedCaseId: Long? = null
     var expectedInterpretation: Interpretation? = null
     var expectedRuleRequest: RuleRequest? = null
     var expectedSessionStartRequest: SessionStartRequest? = null
@@ -60,7 +61,7 @@ private class EngineBuilder(private val config: EngineConfig) {
             }
 
             CASE -> {
-                if (config.expectedCaseId.isNotBlank()) request.url.parameters["id"] shouldBe config.expectedCaseId
+                if (config.expectedCaseId != null) request.url.parameters["id"] shouldBe config.expectedCaseId.toString()
                 respond(
                     content = ByteReadChannel(
                         json.encodeToString(config.returnCase)
@@ -144,7 +145,9 @@ private class EngineBuilder(private val config: EngineConfig) {
             }
 
             CONDITION_HINTS -> {
-                if (config.expectedCaseId.isNotBlank()) request.url.parameters["id"] shouldBe config.expectedCaseId
+                if (config.expectedCaseId != null) request.url.parameters["id"] shouldBe config.expectedCaseId
+                debug("CONDITION_HINTS will return ${config.returnConditionList}")
+                if (config.expectedCaseId != null) request.url.parameters["id"] shouldBe config.expectedCaseId.toString()
                 respond(
                     content = ByteReadChannel(
                         json.encodeToString(config.returnConditionList)

@@ -37,7 +37,7 @@ class KBExporter(destination: File, val kb: KB): KBExportImport(destination) {
 
         // Cases.
         casesDirectory.mkdirs()
-        CaseExporter(casesDirectory, kb.allCases()).export()
+        CaseExporter(casesDirectory, kb.allCornerstoneCases()).export()
 
         // Rules.
         rulesDirectory.mkdirs()

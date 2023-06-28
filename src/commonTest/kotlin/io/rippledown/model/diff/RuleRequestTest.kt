@@ -6,7 +6,6 @@ import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.HasCurrentValue
 import io.rippledown.model.condition.HasNoCurrentValue
 import io.rippledown.model.condition.IsLow
-import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -33,7 +32,7 @@ class RuleRequestTest {
             )
         )
         val ruleRequest = RuleRequest(
-            caseId = "caseId",
+            caseId = 1,
             diffList = diffList,
             conditionList = conditionList
         )

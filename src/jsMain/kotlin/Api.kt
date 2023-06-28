@@ -7,7 +7,6 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.rippledown.constants.api.*
-import io.rippledown.constants.server.SHUTDOWN
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.Interpretation
 import io.rippledown.model.KBInfo
@@ -73,7 +72,7 @@ class Api(engine: HttpClientEngine = Js.create()) {
         return inProgressFlagRaw.unsafeCast<Boolean>()
     }
 
-    suspend fun getCase(id: String): ViewableCase = jsonClient.get("$endpoint$CASE?id=$id").body()
+    suspend fun getCase(id: Long): ViewableCase = jsonClient.get("$endpoint$CASE?id=$id").body()
 
     suspend fun waitingCasesInfo(): CasesInfo = jsonClient.get("$endpoint$WAITING_CASES").body()
 
@@ -117,7 +116,7 @@ class Api(engine: HttpClientEngine = Js.create()) {
     /**
      * @return the conditions that are suggested for building a rule for the selected Diff in the case's interpretation
      */
-    suspend fun conditionHints(caseId: String): ConditionList =
+    suspend fun conditionHints(caseId: Long): ConditionList =
         jsonClient.get("$endpoint$CONDITION_HINTS?id=$caseId").body()
 
     suspend fun moveAttributeJustBelowOther(moved: Int, target: Int): OperationResult {

@@ -13,7 +13,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class InterpretationTest {
-    private val caseId = CaseId("1234", "Case 1")
+    private val caseId = CaseId(1234, "Case 1")
     private var attributeId = 0
     private var conditionId = 0
 

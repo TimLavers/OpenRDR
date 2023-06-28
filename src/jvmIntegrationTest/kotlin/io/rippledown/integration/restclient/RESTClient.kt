@@ -7,19 +7,15 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import io.rippledown.constants.api.CASE
-import io.rippledown.constants.api.CREATE_KB
-import io.rippledown.constants.api.WAITING_CASES
+import io.rippledown.constants.api.*
 import io.rippledown.constants.server.PING
 import io.rippledown.constants.server.SHUTDOWN
-import io.rippledown.model.Attribute
-import io.rippledown.model.CasesInfo
-import io.rippledown.model.Conclusion
-import io.rippledown.model.OperationResult
+import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.HAS_CURRENT_VALUE
 import io.rippledown.model.condition.HasCurrentValue
+import io.rippledown.model.external.ExternalCase
 import io.rippledown.server.routes.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -59,6 +55,15 @@ class RESTClient {
         return currentCase
     }
 
+    fun deleteProcessedCaseWithName(name: String) {
+        runBlocking {
+            jsonClient.delete(endpoint + DELETE_PROCESSED_CASE_WITH_NAME) {
+                contentType(ContentType.Application.Json)
+                setBody(CaseName(name))
+            }
+        }
+    }
+
     fun getOrCreateAttribute(name: String): Attribute = runBlocking {
         jsonClient.post(endpoint + GET_OR_CREATE_ATTRIBUTE) {
             setBody(name)
@@ -78,11 +83,19 @@ class RESTClient {
         }.body()
     }
 
+    fun provideCase(externalCase: ExternalCase): RDRCase = runBlocking {
+        jsonClient.put(endpoint + PROCESS_CASE) {
+            contentType(ContentType.Application.Json)
+            setBody(externalCase)
+        }.body()
+
+    }
+
     fun startSessionToAddConclusionForCurrentCase(conclusion: Conclusion): OperationResult {
         require(currentCase != null)
         var result = OperationResult("")
         runBlocking {
-            result = jsonClient.post(endpoint + START_SESSION_TO_ADD_CONCLUSION + "?id=${currentCase!!.name}") {
+            result = jsonClient.post(endpoint + START_SESSION_TO_ADD_CONCLUSION + "?id=${currentCase!!.id}") {
                 contentType(ContentType.Application.Json)
                 setBody(conclusion)
             }.body()
@@ -94,7 +107,7 @@ class RESTClient {
         require(currentCase != null)
         var result = OperationResult("")
         runBlocking {
-            result = jsonClient.post(endpoint + START_SESSION_TO_REPLACE_CONCLUSION + "?id=${currentCase!!.name}") {
+            result = jsonClient.post(endpoint + START_SESSION_TO_REPLACE_CONCLUSION + "?id=${currentCase!!.id}") {
                 contentType(ContentType.Application.Json)
                 setBody(listOf(toGo, replacement))
             }.body()
