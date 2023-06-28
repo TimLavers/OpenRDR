@@ -1,6 +1,7 @@
 package io.rippledown.persistence.postgres
 
 import io.rippledown.model.KBInfo
+import io.rippledown.persistence.CaseStore
 import io.rippledown.persistence.PersistentKB
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
@@ -43,6 +44,7 @@ class PostgresKB internal constructor(private val dbName: String): PersistentKB 
     private val conclusionStore = PostgresConclusionStore(db)
     private val conditionStore = PostgresConditionStore(db)
     private val ruleStore = PostgresRuleStore(db)
+    private val caseStore = PostgresCaseStore(db)
 
     override fun kbInfo(): KBInfo {
         val resultList = mutableListOf<KBInfo>()
@@ -66,6 +68,8 @@ class PostgresKB internal constructor(private val dbName: String): PersistentKB 
     override fun conditionStore() = conditionStore
 
     override fun ruleStore() = ruleStore
+
+    override fun caseStore() = caseStore
 }
 object PKBInfos: LongIdTable(name = KB_INFO_TABLE) {
     val kbId = varchar("kb_id", 128)

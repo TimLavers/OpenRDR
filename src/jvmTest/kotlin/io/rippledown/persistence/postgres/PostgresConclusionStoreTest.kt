@@ -15,7 +15,7 @@ class PostgresConclusionStoreTest: PostgresStoreTest() {
 
     private lateinit var store: ConclusionStore
 
-    override fun tableName() = CONCLUSIONS_TABLE
+    override fun tablesInDropOrder() = listOf(CONCLUSIONS_TABLE)
 
     @BeforeTest
     fun setup() {

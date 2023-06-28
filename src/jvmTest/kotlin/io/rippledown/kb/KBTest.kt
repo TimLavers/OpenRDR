@@ -329,9 +329,9 @@ class KBTest {
     fun containsCaseWithName() {
         for (i in 1..10) {
             val caseName = "Case$i"
-            kb.containsCaseWithName(caseName) shouldBe false
+            kb.containsCornerstoneCaseWithName(caseName) shouldBe false
             kb.addCornerstoneCase(createCase(caseName))
-            kb.containsCaseWithName(caseName) shouldBe true
+            kb.containsCornerstoneCaseWithName(caseName) shouldBe true
         }
     }
 

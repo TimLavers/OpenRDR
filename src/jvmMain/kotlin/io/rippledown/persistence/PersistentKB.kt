@@ -9,4 +9,5 @@ interface PersistentKB {
     fun conclusionStore(): ConclusionStore
     fun conditionStore(): ConditionStore
     fun ruleStore(): RuleStore
+    fun caseStore(): CaseStore
 }

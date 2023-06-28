@@ -12,7 +12,7 @@ import kotlin.test.Test
 class PostgresRuleStoreTest: PostgresStoreTest() {
     private lateinit var store: RuleStore
 
-    override fun tableName() = RULES_TABLE
+    override fun tablesInDropOrder() = listOf(RULES_TABLE)
 
     @BeforeTest
     fun setup() {

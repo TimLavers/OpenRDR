@@ -10,7 +10,7 @@ import kotlin.test.Test
 class PostgresAttributeOrderStoreTest: PostgresStoreTest() {
     private lateinit var store: AttributeOrderStore
 
-    override fun tableName() = ATTRIBUTE_INDEXES_TABLE
+    override fun tablesInDropOrder() = listOf(ATTRIBUTE_INDEXES_TABLE)
 
     @BeforeTest
     fun setup() {
