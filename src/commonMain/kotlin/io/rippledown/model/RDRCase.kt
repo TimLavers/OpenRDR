@@ -141,4 +141,6 @@ data class RDRCase(
     fun resetInterpretation() {
         interpretation.reset()
     }
+
+    fun copyWithoutId(): RDRCase = RDRCase(caseId.copy(null, name), data, interpretation.copy())
 }

@@ -24,19 +24,21 @@ class KB(persistentKB: PersistentKB) {
     private var ruleSession: RuleBuildingSession? = null
     val caseViewManager: CaseViewManager = CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
 
-    fun containsCaseWithName(caseName: String): Boolean {
-        return cornerstones.all().find { rdrCase -> rdrCase.name == caseName } != null
-    }
+    fun containsCornerstoneCaseWithName(caseName: String) = !cornerstones.containsCaseWithName(caseName)
 
-    fun loadCornerstones(data: List<RDRCase>) = cornerstones.load(data)
+    fun loadCornerstoneCases(data: List<RDRCase>) = cornerstones.load(data)
+    fun loadProcessedCases(data: List<RDRCase>) = processedCases.load(data)
 
-    fun addCornerstoneCase(case: RDRCase): RDRCase {
-        require(!containsCaseWithName(case.name)) { "There is already a case with name ${case.name} in the KB." }
-        return cornerstones.add(case)
+    fun addCornerstoneCase(case: RDRCase) = cornerstones.add(case)
+
+    fun addCase(case: RDRCase): RDRCase = processedCases.add(case)
+
+    fun getCornerstoneCaseByName(caseName: String): RDRCase {
+        return cornerstones.all().first { caseName == it.name }
     }
 
     fun getCaseByName(caseName: String): RDRCase {
-        return cornerstones.all().first { caseName == it.name }
+        return processedCases.all().first { caseName == it.name }
     }
 
     fun allCornerstoneCases(): List<RDRCase> {
@@ -80,7 +82,8 @@ class KB(persistentKB: PersistentKB) {
         check(ruleSession == null) { "Session already in progress." }
         check(action.isApplicable(ruleTree, case)) { "Action $action is not applicable to case ${case.name}" }
         val alignedAction = action.alignWith(conclusionManager)
-        ruleSession = RuleBuildingSession(ruleManager, ruleTree, case, alignedAction, cornerstones.all())
+        val sessionCase = case.copyWithoutId()
+        ruleSession = RuleBuildingSession(ruleManager, ruleTree, sessionCase, alignedAction, cornerstones.all())
     }
 
     fun conflictingCasesInCurrentRuleSession(): List<RDRCase> {
@@ -109,6 +112,7 @@ class KB(persistentKB: PersistentKB) {
     fun commitCurrentRuleSession() {
         checkSession()
         ruleSession!!.commit()
+        cornerstones.add(ruleSession!!.case)
         ruleSession = null
     }
 
@@ -134,7 +138,7 @@ class KB(persistentKB: PersistentKB) {
         return kbInfo == other.kbInfo
     }
 
-    override fun hashCode()=kbInfo.hashCode()
+    override fun hashCode() = kbInfo.hashCode()
 
     fun conditionHintsForCase(case: RDRCase) = conditionManager.conditionHintsForCase(case)
 }

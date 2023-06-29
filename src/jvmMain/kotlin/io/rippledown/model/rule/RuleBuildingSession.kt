@@ -42,6 +42,7 @@ class RuleBuildingSession(
                     cornerstonesNotExempted.add(it)
                 }
             }
+        case.copyWithoutId()
     }
 
     fun cornerstoneCases(): List<RDRCase> {

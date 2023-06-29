@@ -251,13 +251,13 @@ internal class ServerApplicationTest {
     fun createKB() {
         app.kb.kbInfo.name shouldBe "Thyroids"
         val kbIdsBefore = persistenceProvider.idStore().data().keys
-        app.kb.containsCaseWithName("Case1") shouldBe false //sanity
+        app.kb.containsCornerstoneCaseWithName("Case1") shouldBe false //sanity
         app.kb.addCornerstoneCase(createCase("Case1"))
-        app.kb.containsCaseWithName("Case1") shouldBe true
+        app.kb.containsCornerstoneCaseWithName("Case1") shouldBe true
 
         app.createKB()
         app.kb.kbInfo.name shouldBe "Thyroids"
-        app.kb.containsCaseWithName("Case1") shouldBe false //kb rebuilt
+        app.kb.containsCornerstoneCaseWithName("Case1") shouldBe false //kb rebuilt
         // Check that all of the other KBs are still there.
         persistenceProvider.idStore().data().keys shouldBe setOf(app.kbName().id).union(kbIdsBefore)
     }
@@ -268,11 +268,11 @@ internal class ServerApplicationTest {
         val kbIdsBefore = persistenceProvider.idStore().data().keys
         val oldKBId = app.kbName().id
         app.kb.addCornerstoneCase(createCase("Case1"))
-        app.kb.containsCaseWithName("Case1") shouldBe true
+        app.kb.containsCornerstoneCaseWithName("Case1") shouldBe true
 
         app.reCreateKB()
         app.kb.kbInfo.name shouldBe "Thyroids"
-        app.kb.containsCaseWithName("Case1") shouldBe false //kb rebuilt
+        app.kb.containsCornerstoneCaseWithName("Case1") shouldBe false //kb rebuilt
         // Check that the old KB has been deleted.
         val expectedKBIdsAfter = kbIdsBefore.minus(oldKBId).plus(app.kbName().id)
         persistenceProvider.idStore().data().keys shouldBe expectedKBIdsAfter

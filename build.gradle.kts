@@ -1,14 +1,14 @@
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
-val kotlinVersion = "1.8.21"
+val kotlinVersion = "1.8.22"
 val serializationVersion = "1.5.1"
 val kotlinxDateTimeVersion = "0.4.0"
 val kotlinxCoroutinesTestVersion = "1.6.4"
 val ktor_version = "2.3.0"
 val exposedVersion="0.40.1"
 val logbackVersion = "1.4.5"
-val kotlinWrappersVersion = "1.0.0-pre.571"
+val kotlinWrappersVersion = "1.0.0-pre.579"
 val diffUtilsVersion = "4.12"
 val testingLibraryReactVersion = "14.0.0"
 val kotestVersion = "5.5.5"
@@ -47,7 +47,6 @@ kotlin {
                         implementation(kotlin("test-common"))
                         implementation(kotlin("test-annotations-common"))
                         implementation(kotlin("test-junit"))
-                        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
                         implementation(enforcedPlatform("io.ktor:ktor-bom:$ktor_version"))
                         implementation("io.ktor:ktor-client-core")
                         implementation("io.ktor:ktor-client-cio")

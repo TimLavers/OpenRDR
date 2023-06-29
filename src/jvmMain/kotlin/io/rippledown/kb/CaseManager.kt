@@ -18,6 +18,10 @@ class CaseManager {
         cases.removeIf { it.id == id }
     }
 
+    fun casesWithName(caseName: String) = cases.filter { rdrCase -> rdrCase.name == caseName }// todo test
+
+    fun containsCaseWithName(caseName: String) = casesWithName(caseName).isEmpty() // todo test
+
     fun add(case: RDRCase): RDRCase {
         require(case.caseId.id == null) { "Cannot add a case that already has an id." }
         val newId = if (cases.isEmpty()) 1 else cases.maxOfOrNull { it.caseId.id!! }!! + 1

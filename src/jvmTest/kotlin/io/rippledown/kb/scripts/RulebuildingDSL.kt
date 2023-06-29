@@ -34,16 +34,23 @@ class BuildTemplate {
         val case = caseBuilder.build(name)
         kb.addCornerstoneCase(case)
     }
-
     fun case(name: String, data: String) {
         val caseBuilder = RDRCaseBuilder()
         val textAttribute = kb.attributeManager.getOrCreate(text)
         caseBuilder.addResult(textAttribute, defaultDate, TestResult(data))
         val case = caseBuilder.build(name)
-        kb.addCornerstoneCase(case)
+        kb.addCase(case)
     }
 
     fun case(i: Int) {
+        val caseBuilder = RDRCaseBuilder()
+        val numberAttribute = kb.attributeManager.getOrCreate(value)
+        caseBuilder.addResult(numberAttribute, defaultDate, TestResult("$i"))
+        val case = caseBuilder.build("$i")
+        kb.addCase(case)
+    }
+
+    fun cornerstoneCase(i: Int) {
         val caseBuilder = RDRCaseBuilder()
         val numberAttribute = kb.attributeManager.getOrCreate(value)
         caseBuilder.addResult(numberAttribute, defaultDate, TestResult("$i"))

@@ -58,7 +58,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
         setup()
         val diff = Addition("Bring your handboard.")
 
-        val caseId = "case A"
+        val caseId = 1L
         val sessionStartRequest = SessionStartRequest(caseId, diff)
         val cornerstoneStatus = CornerstoneStatus()
         every { serverApplication.startRuleSession(sessionStartRequest) } returns cornerstoneStatus
