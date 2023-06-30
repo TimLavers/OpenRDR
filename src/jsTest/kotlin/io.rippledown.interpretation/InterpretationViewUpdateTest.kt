@@ -42,17 +42,6 @@ class InterpretationViewUpdateTest {
                 }
             }
 
-//            IV{
-//                interpretation = interp
-//            }
-            /*
-                        TextField {
-                            id = INTERPRETATION_TEXT_AREA
-                            multiline = true
-                            defaultValue = interp.latestText()
-                        }
-            */
-
             InterpretationView {
                 interpretation = interp
             }

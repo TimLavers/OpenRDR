@@ -296,10 +296,6 @@ internal class ServerApplicationTest {
     fun exportKBToZip() {
         // Add a case and a rule to the KB.
         val id = supplyCaseFromFile("Case1", app).caseId.id!!
-        // Copy it to the cornerstones manager.
-        val retrieved = app.kb.getProcessedCase(id)!!
-        val copiedWithNullId = retrieved.copy(caseId = CaseId(null, "CC1"))
-        app.kb.addCornerstoneCase(copiedWithNullId).caseId.id!!
         val conclusion1 = app.kb.conclusionManager.getOrCreate("Whatever")
         val tsh = app.kb.attributeManager.getOrCreate("TSH")
         app.startRuleSessionToAddConclusion(id, conclusion1)

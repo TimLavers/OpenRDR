@@ -30,26 +30,18 @@ class KB(persistentKB: PersistentKB) {
     fun loadProcessedCases(data: List<RDRCase>) = processedCases.load(data)
 
     fun addCornerstoneCase(case: RDRCase) = cornerstones.add(case)
+    fun addProcessedCase(case: RDRCase): RDRCase = processedCases.add(case)
 
-    fun addCase(case: RDRCase): RDRCase = processedCases.add(case)
+    fun getCornerstoneCaseByName(caseName: String) = cornerstones.firstCaseWithName(caseName)!!
+    fun getProcessedCaseByName(caseName: String) = processedCases.firstCaseWithName(caseName)!!
 
-    fun getCornerstoneCaseByName(caseName: String): RDRCase {
-        return cornerstones.all().first { caseName == it.name }
-    }
-
-    fun getCaseByName(caseName: String): RDRCase {
-        return processedCases.all().first { caseName == it.name }
-    }
-
-    fun allCornerstoneCases(): List<RDRCase> {
-        return cornerstones.all()
-    }
+    fun allCornerstoneCases() = cornerstones.all()
+    fun allProcessedCases() = processedCases.all()
 
     fun processedCaseIds() = processedCases.ids()
 
-    fun allProcessedCases(): List<RDRCase> {
-        return processedCases.all()
-    }
+    fun getProcessedCase(id: Long): RDRCase? = processedCases.getCase(id)
+    fun getCornerstoneCase(id: Long): RDRCase? = cornerstones.getCase(id) // todo test
 
     fun deletedProcessedCaseWithName(name: String) {
         val toGo = processedCases.all().firstOrNull { it.name == name }
@@ -57,10 +49,6 @@ class KB(persistentKB: PersistentKB) {
             processedCases.delete(toGo.id!!)
         }
     }
-
-    fun getProcessedCase(id: Long): RDRCase? = processedCases.getCase(id)
-
-    fun getCornerstoneCase(id: Long): RDRCase? = cornerstones.getCase(id) // todo test
 
     fun processCase(externalCase: ExternalCase): RDRCase {
         val case = createRDRCase(externalCase)

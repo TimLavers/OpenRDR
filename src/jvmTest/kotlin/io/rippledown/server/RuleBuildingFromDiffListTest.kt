@@ -36,8 +36,8 @@ internal class RuleBuildingFromDiffListTest {
         val id2 = supplyCaseFromFile("Case2", app).caseId.id!!
         val case1 = app.case(id1)
         val case2 = app.case(id2)
-        app.kb.addCornerstoneCase(case1)
-        app.kb.addCornerstoneCase(case2)
+        app.kb.addCornerstoneCase(case1.copyWithoutId())
+        app.kb.addCornerstoneCase(case2.copyWithoutId())
         val viewableCase = app.viewableCase(id1)
         val diff = Addition("Go to Bondi")
         val cornerstoneStatus = app.startRuleSession(SessionStartRequest(id2, diff))

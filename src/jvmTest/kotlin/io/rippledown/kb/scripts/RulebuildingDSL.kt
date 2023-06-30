@@ -39,7 +39,7 @@ class BuildTemplate {
         val textAttribute = kb.attributeManager.getOrCreate(text)
         caseBuilder.addResult(textAttribute, defaultDate, TestResult(data))
         val case = caseBuilder.build(name)
-        kb.addCase(case)
+        kb.addProcessedCase(case)
     }
 
     fun case(i: Int) {
@@ -47,7 +47,7 @@ class BuildTemplate {
         val numberAttribute = kb.attributeManager.getOrCreate(value)
         caseBuilder.addResult(numberAttribute, defaultDate, TestResult("$i"))
         val case = caseBuilder.build("$i")
-        kb.addCase(case)
+        kb.addProcessedCase(case)
     }
 
     fun cornerstoneCase(i: Int) {
@@ -65,7 +65,7 @@ class BuildTemplate {
     }
 
     fun requireInterpretation(caseName: String, vararg expectedConclusions: String) {
-        val case = kb.getCaseByName(caseName)
+        val case = kb.getProcessedCaseByName(caseName)
         kb.interpret(case)
         case.interpretation.conclusions().map { it.text }.toSet() shouldBe expectedConclusions.toSet()
     }
@@ -75,7 +75,7 @@ class SessionTemplate( val kb: KB) {
     lateinit var case: RDRCase
 
     fun selectCase(name: String) {
-        case = kb.getCaseByName(name)
+        case = kb.getProcessedCaseByName(name)
         kb.interpret(case)
     }
 

@@ -19,6 +19,7 @@ class CaseManager {
     }
 
     fun casesWithName(caseName: String) = cases.filter { rdrCase -> rdrCase.name == caseName }// todo test
+    fun firstCaseWithName(caseName: String) = casesWithName(caseName).firstOrNull() // todo test
 
     fun containsCaseWithName(caseName: String) = casesWithName(caseName).isEmpty() // todo test
 

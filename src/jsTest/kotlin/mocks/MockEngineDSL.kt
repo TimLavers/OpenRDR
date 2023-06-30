@@ -15,7 +15,6 @@ import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import proxy.debug
 
 fun mock(config: EngineConfig) = EngineBuilder(config).build()
 
@@ -145,8 +144,6 @@ private class EngineBuilder(private val config: EngineConfig) {
             }
 
             CONDITION_HINTS -> {
-                if (config.expectedCaseId != null) request.url.parameters["id"] shouldBe config.expectedCaseId
-                debug("CONDITION_HINTS will return ${config.returnConditionList}")
                 if (config.expectedCaseId != null) request.url.parameters["id"] shouldBe config.expectedCaseId.toString()
                 respond(
                     content = ByteReadChannel(

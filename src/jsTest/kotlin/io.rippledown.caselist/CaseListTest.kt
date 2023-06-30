@@ -35,7 +35,7 @@ class CaseListTest {
         )
         val config = config {
             returnCasesInfo = CasesInfo(twoCaseIds)
-            returnCase = createCase(caseA)
+            returnCase = createCase(caseId1)
         }
 
         val vfc = VFC {
@@ -68,7 +68,7 @@ class CaseListTest {
         val threeCaseIds = listOf(caseId1, caseId2, caseId3)
         val config = config {
             returnCasesInfo = CasesInfo(threeCaseIds)
-            returnCase = createCase(caseA)
+            returnCase = createCase(caseId1)
         }
         val vfc = VFC {
             CaseList {
@@ -89,12 +89,14 @@ class CaseListTest {
     fun shouldShowCaseViewForTheFirstCase() = runTest {
         val caseName1 = "case 1"
         val caseName2 = "case 2"
+        val caseId1 = CaseId(1, caseName1)
+        val caseId2 = CaseId(2, caseName2)
         val twoCaseIds = listOf(
-            CaseId(1, caseName1), CaseId(2, caseName2)
+            caseId1, caseId2
         )
         val config = config {
             returnCasesInfo = CasesInfo(twoCaseIds)
-            returnCase = createCase(caseName1)
+            returnCase = createCase(caseId1)
         }
 
         val vfc = VFC {
@@ -120,7 +122,7 @@ class CaseListTest {
 
         val config = config {
             returnCasesInfo = CasesInfo(caseIds)
-            returnCase = createCase("case 100")
+            returnCase = createCase(CaseId(100, "case 100"))
         }
 
         val vfc = VFC {

@@ -23,6 +23,7 @@ const val today = defaultDate
 val yesterday = daysAgo(1)
 val lastWeek = daysAgo(7)
 
+fun createCase(caseId: CaseId) = createCase(caseId.name, caseId.id)
 
 fun createCase(name: String = "", id: Long? = null): ViewableCase {
     val attribute = Attribute(1, "Glucose")

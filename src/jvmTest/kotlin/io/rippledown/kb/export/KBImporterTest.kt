@@ -61,8 +61,8 @@ class KBImporterTest : ExporterTestBase() {
         val case1 = buildCase("Case1", "4.0", "2.5", "1.8")
         val case2 = buildCase("Case2", "4.1", "2.4", "1.6")
         val case3 = buildCase("Case3", "4.2", "2.3", "1.4")
-        kb.addCase(case2)
-        kb.addCase(case3)
+        kb.addProcessedCase(case2)
+        kb.addProcessedCase(case3)
 
         // Add a rule.
         kb.startRuleSession(case1, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Glucose ok.")))
@@ -81,8 +81,8 @@ class KBImporterTest : ExporterTestBase() {
         rebuilt.getCornerstoneCaseByName(case1.name) shouldBeEqualToComparingFields kb.getCornerstoneCaseByName(case1.name)
 
         rebuilt.allProcessedCases().size shouldBe 2
-        rebuilt.getCaseByName(case2.name) shouldBeEqualToComparingFields kb.getCaseByName(case2.name)
-        rebuilt.getCaseByName(case3.name) shouldBeEqualToComparingFields kb.getCaseByName(case3.name)
+        rebuilt.getProcessedCaseByName(case2.name) shouldBeEqualToComparingFields kb.getProcessedCaseByName(case2.name)
+        rebuilt.getProcessedCaseByName(case3.name) shouldBeEqualToComparingFields kb.getProcessedCaseByName(case3.name)
 
         rebuilt.caseViewManager.allAttributesInOrder() shouldBe kb.caseViewManager.allAttributesInOrder()
 

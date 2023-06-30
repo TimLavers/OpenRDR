@@ -258,16 +258,16 @@ class KBTest {
 
     @Test
     fun getCaseByNameWhenNoCases() {
-        shouldThrow<NoSuchElementException> {
+        shouldThrow<NullPointerException> {
             kb.getCornerstoneCaseByName("Whatever")
         }
     }
 
     @Test
     fun getCaseByNameUnknownCase() {
-        kb.addCornerstoneCase(createCase("Case1"))
-        shouldThrow<NoSuchElementException> {
-            kb.getCornerstoneCaseByName("Whatever")
+        kb.addProcessedCase(createCase("Case1"))
+        shouldThrow<NullPointerException> {
+            kb.getProcessedCaseByName("Whatever")
         }
     }
 
@@ -378,7 +378,7 @@ class KBTest {
 
     @Test
     fun `cannot start a rule session if one is already started`() {
-        val sessionCase = kb.addCase(createCase("Case1"))
+        val sessionCase = kb.addProcessedCase(createCase("Case1"))
         val conclusion = kb.conclusionManager.getOrCreate("Whatever.")
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(conclusion))
         shouldThrow<IllegalStateException> {
