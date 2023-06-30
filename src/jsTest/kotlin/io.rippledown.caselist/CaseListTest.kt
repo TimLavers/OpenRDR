@@ -3,6 +3,7 @@ package io.rippledown.caselist
 import Api
 import io.kotest.matchers.shouldBe
 import io.rippledown.caseview.requireCaseToBeShowing
+import io.rippledown.constants.caseview.CASE_NAME_PREFIX
 import io.rippledown.cornerstoneview.requireCornerstoneCaseNotToBeShowing
 import io.rippledown.cornerstoneview.requireCornerstoneCaseToBeShowing
 import io.rippledown.interpretation.*
@@ -48,9 +49,9 @@ class CaseListTest {
 
         checkContainer(vfc) { container ->
             with(container) {
-                findAllById(CASE_ID_PREFIX).length shouldBe 2
-                val elementA = findById("$CASE_ID_PREFIX${caseId1.id}")
-                val elementB = findById("$CASE_ID_PREFIX${caseId2.id}")
+                findAllById(CASE_NAME_PREFIX).length shouldBe 2
+                val elementA = findById("$CASE_NAME_PREFIX${caseId1.name}")
+                val elementB = findById("$CASE_NAME_PREFIX${caseId2.name}")
                 elementA.textContent shouldBe caseA
                 elementB.textContent shouldBe caseB
             }
@@ -80,7 +81,7 @@ class CaseListTest {
         config.returnCase = createCase(caseB, 2)
         val container = createRootFor(vfc)
         with(container) {
-            selectCaseById(2)
+            selectCaseByName(caseB)
             requireCaseToBeShowing(caseB)
         }
     }
@@ -120,9 +121,10 @@ class CaseListTest {
             CaseId(id = i.toLong(), name = "case $i")
         }
 
+        val caseName100 = "case 100"
         val config = config {
             returnCasesInfo = CasesInfo(caseIds)
-            returnCase = createCase(CaseId(100, "case 100"))
+            returnCase = createCase(CaseId(100, caseName100))
         }
 
         val vfc = VFC {
@@ -133,8 +135,8 @@ class CaseListTest {
             }
         }
         with(createRootFor(vfc)) {
-            selectCaseById(100)
-            requireCaseToBeShowing("case 100")
+            selectCaseByName(caseName100)
+            requireCaseToBeShowing(caseName100)
 
         }
     }

@@ -146,7 +146,7 @@ class CasePollerTest {
             requireCaseToBeShowing(caseName1)
 
             config.returnCase = createCase(caseId2)
-            selectCaseById(2)
+            selectCaseByName(caseName2)
             waitForEvents()
             requireCaseToBeShowing(caseName2)
         }
@@ -201,7 +201,7 @@ class CasePollerTest {
         }
         with(createRootFor(vfc)) {
             waitForNextPoll()
-            selectCaseById(2)
+            selectCaseByName(caseName2)
             requireCaseToBeShowing(caseName2)
 
             //set the mock to return the other two cases

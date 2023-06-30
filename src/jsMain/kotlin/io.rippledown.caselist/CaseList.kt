@@ -2,6 +2,7 @@ package io.rippledown.caselist
 
 import Handler
 import io.rippledown.caseview.CaseView
+import io.rippledown.constants.caseview.CASELIST_ID
 import io.rippledown.cornerstoneview.CornerstoneView
 import io.rippledown.interpretation.ConditionSelector
 import io.rippledown.model.CaseId
@@ -18,8 +19,6 @@ import react.memo
 import react.useState
 import xs
 
-const val CASELIST_ID = "case_list_container"
-const val CASE_ID_PREFIX = "case_list_item_"
 
 external interface CaseListHandler : Handler {
     var caseIds: List<CaseId>

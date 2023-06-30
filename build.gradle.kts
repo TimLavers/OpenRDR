@@ -47,6 +47,7 @@ kotlin {
                         implementation(kotlin("test-common"))
                         implementation(kotlin("test-annotations-common"))
                         implementation(kotlin("test-junit"))
+                        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
                         implementation(enforcedPlatform("io.ktor:ktor-bom:$ktor_version"))
                         implementation("io.ktor:ktor-client-core")
                         implementation("io.ktor:ktor-client-cio")

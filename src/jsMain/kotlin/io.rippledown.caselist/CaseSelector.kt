@@ -1,6 +1,7 @@
 package io.rippledown.caselist
 
 import Handler
+import io.rippledown.constants.caseview.CASE_NAME_PREFIX
 import io.rippledown.constants.caseview.CASE_SELECTOR_ID
 import io.rippledown.model.CaseId
 import mui.material.List
@@ -35,7 +36,7 @@ val CaseSelector = FC<CaseSelectorHandler> { handler ->
                     +caseId.name
                 }
                 selected = handler.selectedCaseName == caseId.name
-                id = "$CASE_ID_PREFIX${caseId.id}"
+                id = "$CASE_NAME_PREFIX${caseId.name}"
                 onClick = {
                     handler.selectCase(caseId.id!!)
                 }

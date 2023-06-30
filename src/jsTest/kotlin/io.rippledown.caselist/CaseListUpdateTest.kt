@@ -38,7 +38,7 @@ class CaseListUpdateTest {
         with(createRootFor(vfc)) {
             requireInterpretation(caseAConclusion)
             config.returnCase = caseB
-            selectCaseById(2)
+            selectCaseByName(caseIdB.name)
             waitForEvents()
             requireInterpretation(caseBConclusion)
         }

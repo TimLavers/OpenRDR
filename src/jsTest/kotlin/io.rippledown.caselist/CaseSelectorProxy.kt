@@ -3,6 +3,7 @@ package io.rippledown.caselist
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
+import io.rippledown.constants.caseview.CASE_NAME_PREFIX
 import io.rippledown.constants.caseview.CASE_SELECTOR_ID
 import proxy.findAllById
 import proxy.findById
@@ -12,13 +13,14 @@ import react.dom.test.Simulate
 import react.dom.test.act
 import web.html.HTMLElement
 
-suspend fun HTMLElement.selectCaseById(caseId: Long) {
-    val element = findById("$CASE_ID_PREFIX$caseId")
+suspend fun HTMLElement.selectCaseByName(caseName: String) {
+    val element = findById("$CASE_NAME_PREFIX$caseName")
     act {
         Simulate.click(element)
     }
 }
 
+/*
 suspend fun HTMLElement.selectCaseByName(caseName: String) {
     val container = findById(CASE_SELECTOR_ID)
     val element = container.findByTextContent(caseName)
@@ -26,6 +28,7 @@ suspend fun HTMLElement.selectCaseByName(caseName: String) {
         Simulate.click(element)
     }
 }
+*/
 
 fun HTMLElement.requireCaseSelectorToBeShowing() {
     findById(CASE_SELECTOR_ID) shouldNotBe null
