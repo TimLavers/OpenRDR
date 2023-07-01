@@ -1,6 +1,7 @@
 package io.rippledown.caselist
 
 import Handler
+import debug
 import io.rippledown.caseview.CaseView
 import io.rippledown.constants.caseview.CASELIST_ID
 import io.rippledown.cornerstoneview.CornerstoneView
@@ -120,7 +121,9 @@ val CaseList = FC<CaseListHandler> { handler ->
                             )
                             handler.api.buildRule(ruleRequest)
                             newInterpretation = null
+                            ccStatus = null
                             updateCurrentCase(currentCase!!.rdrCase.caseId.id!!)
+                            debug("Rule built")
                         }
                     }
                 }

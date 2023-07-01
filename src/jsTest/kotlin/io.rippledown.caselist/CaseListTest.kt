@@ -390,6 +390,64 @@ class CaseListTest {
     }
 
     @Test
+    fun shouldNotShowCornerstoneAfterBuildingARule() = runTest {
+        val caseId = 1L
+        val cornerstoneId = 2L
+        val caseName = "Manly"
+        val cornerstoneCaseName = "Bondi"
+        val caseIdList = listOf(CaseId(caseId, caseName))
+        val bondiComment = "Go to Bondi now!"
+        val beachComment = "Enjoy the beach!"
+        val diffList = DiffList(listOf(Addition(bondiComment)))
+        val caseWithInterp = createCaseWithInterpretation(
+            id = caseId,
+            name = caseName,
+            conclusionTexts = listOf(beachComment),
+            diffs = diffList
+        )
+        val cornerstoneCase = createCaseWithInterpretation(
+            id = cornerstoneId,
+            name = cornerstoneCaseName,
+            conclusionTexts = listOf(beachComment),
+            diffs = diffList
+        )
+        val config = config {
+            expectedCaseId = caseId
+            returnCasesInfo = CasesInfo(caseIdList)
+            returnCase = caseWithInterp
+            returnCornerstoneStatus = CornerstoneStatus(cornerstoneCase, 42, 84)
+        }
+
+        val vfc = VFC {
+            CaseList {
+                caseIds = caseIdList
+                api = Api(mock(config))
+                scope = this@runTest
+            }
+        }
+        with(createRootFor(vfc)) {
+            //Given
+            waitForEvents()
+            requireCaseToBeShowing(caseName)
+            //start to build a rule for the Addition
+            selectChangesTab()
+            waitForEvents()
+            requireNumberOfRows(1)
+            moveMouseOverRow(0)
+            waitForEvents()
+            clickBuildIconForRow(0)
+            requireCornerstoneCaseToBeShowing(cornerstoneCaseName)
+
+            //When
+            clickDoneButton()
+            waitForEvents()
+
+            //Then
+            requireCornerstoneCaseNotToBeShowing()
+        }
+    }
+
+    @Test
     fun shouldNotShowCaseSelectorWhenBuildingARule() = runTest {
         val caseId = 1L
         val cornerstoneId = 2L
