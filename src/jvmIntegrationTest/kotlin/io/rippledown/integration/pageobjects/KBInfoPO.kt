@@ -1,5 +1,7 @@
 package io.rippledown.integration.pageobjects
 
+import io.rippledown.constants.kb.KB_EXPORT_BUTTON_ID
+import io.rippledown.constants.kb.KB_IMPORT_BUTTON_ID
 import io.rippledown.integration.proxy.ConfiguredTestData
 import org.awaitility.Awaitility
 import org.openqa.selenium.By
@@ -28,13 +30,13 @@ class KBInfoPO(private val driver: WebDriver) {
     }
 
     fun exportKB() {
-        val exportButton = driver.findElement(By.id("export_to_zip"))
+        val exportButton = driver.findElement(By.id(KB_EXPORT_BUTTON_ID))
         exportButton.click()
         KBExportPO(driver).doExport()
     }
 
     private fun activateImportKB(): KBImportPO {
-        val importButton = driver.findElement(By.id("import_from_zip"))
+        val importButton = driver.findElement(By.id(KB_IMPORT_BUTTON_ID))
         importButton.click()
         return KBImportPO(driver)
     }

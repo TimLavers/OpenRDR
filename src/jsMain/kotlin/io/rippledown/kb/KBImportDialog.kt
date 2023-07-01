@@ -1,5 +1,8 @@
 package io.rippledown.kb
 
+import Handler
+import debug
+import io.rippledown.constants.kb.*
 import mui.material.*
 import react.FC
 import react.dom.html.ReactHTML.input
@@ -10,20 +13,21 @@ import web.timers.Timeout
 import web.timers.clearInterval
 import web.timers.setInterval
 
-external interface KBImportDialogHandler: KBHandler {
+external interface KBImportDialogHandler : Handler {
     var reloadKB: () -> Unit
 }
 
-val KBImportDialog = FC<KBImportDialogHandler> {kbHandler ->
+val KBImportDialog = FC<KBImportDialogHandler> { handler ->
     var isOpen by useState(false)
     var canSubmit by useState(false)
     var selectedFile: File? by useState()
     var timerId: Timeout? = null
+
     fun waitForImportToFinish() {
-        timerId = setInterval(   {
-            val inProgress = kbHandler.api.importInProgress()
+        timerId = setInterval({
+            val inProgress = handler.api.importInProgress()
             if (!inProgress) {
-                kbHandler.reloadKB()
+                handler.reloadKB()
                 clearInterval(timerId!!)
             }
         }, 100)
@@ -31,21 +35,23 @@ val KBImportDialog = FC<KBImportDialogHandler> {kbHandler ->
 
     Button {
         +"Import"
-        id = "import_from_zip"
+        id = KB_IMPORT_BUTTON_ID
         variant = ButtonVariant.outlined
         size = Size.small
         onClick = {
             isOpen = true
         }
     }
+
     Dialog {
-        id = "kb_import_dialog"
+        id = KB_IMPORT_DIALOG
         open = isOpen
+        debug("Import dialog open: $isOpen")
         DialogTitle {
             +"Import KB from zip file"
         }
         DialogContent {
-            id = "import_kb_dialog_content"
+            id = KB_IMPORT_DIALOG_CONTENT
             DialogContentText {
                 +"Select a zip file containing an exported Open RippleDown KB"
             }
@@ -69,16 +75,17 @@ val KBImportDialog = FC<KBImportDialogHandler> {kbHandler ->
             Button {
                 onClick = { isOpen = false }
                 +"Cancel"
-                id = "cancel_zip_import"
+                id = CANCEL_IMPORT_BUTTON_ID
             }
+            debug("rendering import button")
             Button {
                 onClick = {
                     isOpen = false
-                    kbHandler.api.importKBFromZip(selectedFile!!)
+                    handler.api.importKBFromZip(selectedFile!!)
                     waitForImportToFinish()
                 }
                 +"Import"
-                id = "confirm_zip_import"
+                id = CONFIRM_IMPORT_BUTTON_ID
                 disabled = !canSubmit
             }
         }

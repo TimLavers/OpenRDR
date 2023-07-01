@@ -1,31 +1,27 @@
 package io.rippledown.kb
 
-import Api
+import Handler
+import io.rippledown.constants.kb.KB_INFO_HEADING_ID
 import io.rippledown.model.KBInfo
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import mui.material.*
+import mui.material.Grid
+import mui.material.GridDirection
+import mui.material.Typography
+import mui.material.TypographyAlign
 import mui.material.styles.TypographyVariant
 import mui.system.responsive
 import react.FC
-import react.Props
 import react.useEffectOnce
 import react.useState
 
-external interface KBHandler: Props {
-    var api: Api
-}
 
-const val ID_KB_INFO_HEADING = "kb_info_heading"
-val mainScope = MainScope()
-
-val KBInfoPane = FC<KBHandler> { handler ->
+val KBInfoPane = FC<Handler> { handler ->
     var kbInfo: KBInfo? by useState(null)
 
     fun kbName() = if (kbInfo != null) kbInfo!!.name else ""
 
     useEffectOnce {
-        mainScope.launch {
+        handler.scope.launch {
             kbInfo = handler.api.kbInfo()
         }
     }
@@ -39,7 +35,7 @@ val KBInfoPane = FC<KBHandler> { handler ->
             key = kbName()
             Typography {
                 +kbName()
-                id = ID_KB_INFO_HEADING
+                id = KB_INFO_HEADING_ID
                 variant = TypographyVariant.h6
                 align = TypographyAlign.left
             }
@@ -48,8 +44,9 @@ val KBInfoPane = FC<KBHandler> { handler ->
             item = true
             KBImportDialog {
                 api = handler.api
-                reloadKB =  {
-                    mainScope.launch {
+                scope = handler.scope
+                reloadKB = {
+                    handler.scope.launch {
                         kbInfo = handler.api.kbInfo()
                     }
                 }
@@ -59,6 +56,7 @@ val KBInfoPane = FC<KBHandler> { handler ->
             item = true
             KBExportDialog {
                 api = handler.api
+                scope = handler.scope
             }
         }
     }

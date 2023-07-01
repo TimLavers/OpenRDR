@@ -74,6 +74,7 @@ class KBImporterTest : ExporterTestBase() {
 
         // Export and import.
         KBExporter(tempDir, kb).export()
+
         val rebuilt = KBImporter(tempDir, persistenceProvider).import()
         rebuilt.kbInfo.name shouldBe kb.kbInfo.name
 

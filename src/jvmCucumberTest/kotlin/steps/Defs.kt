@@ -23,6 +23,8 @@ class Defs : En {
     private lateinit var interpretationViewPO: InterpretationViewPO
     private lateinit var conditionSelectorPO: ConditionSelectorPO
     private lateinit var conclusionsViewPO: ConclusionsViewPO
+    private lateinit var kbInfoPO: KBInfoPO
+
     private lateinit var driver: WebDriver
 
     init {
@@ -45,6 +47,7 @@ class Defs : En {
             interpretationViewPO = InterpretationViewPO(driver)
             conditionSelectorPO = ConditionSelectorPO(driver)
             conclusionsViewPO = ConclusionsViewPO(driver)
+            kbInfoPO = KBInfoPO(driver)
         }
 
         When("stop the client application") {
@@ -101,13 +104,11 @@ class Defs : En {
         }
 
         Given("I import the configured zipped Knowledge Base {word}") { toImport: String ->
-            val kbInfoPO = KBInfoPO(driver)
             kbInfoPO.importKB(toImport)
             kbInfoPO.waitForKBToBeLoaded(toImport)
         }
 
         And("I export the current Knowledge Base") {
-            val kbInfoPO = KBInfoPO(driver)
             kbInfoPO.exportKB()
         }
 

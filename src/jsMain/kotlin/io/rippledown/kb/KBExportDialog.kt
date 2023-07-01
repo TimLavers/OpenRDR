@@ -1,15 +1,19 @@
 package io.rippledown.kb
 
+import Handler
+import io.rippledown.constants.kb.CANCEL_EXPORT_BUTTON_ID
+import io.rippledown.constants.kb.CONFIRM_EXPORT_BUTTON_ID
+import io.rippledown.constants.kb.KB_EXPORT_BUTTON_ID
 import mui.material.*
 import react.FC
 import react.useState
 
-val KBExportDialog = FC<KBHandler> { kbHandler ->
+val KBExportDialog = FC<Handler> { handler ->
     var isOpen by useState(false)
 
     Button {
         +"Export"
-        id = "export_to_zip"
+        id = KB_EXPORT_BUTTON_ID
         variant = ButtonVariant.outlined
         size = Size.small
         onClick = {
@@ -31,15 +35,15 @@ val KBExportDialog = FC<KBHandler> { kbHandler ->
         DialogActions {
             Button {
                 +"Cancel"
-                id = "cancel_zip_export"
+                id = CANCEL_EXPORT_BUTTON_ID
                 onClick = { isOpen = false }
             }
             Link {
                 + "Export"
-                id = "confirm_zip_export"
+                id = CONFIRM_EXPORT_BUTTON_ID
                 component = Button
                 underline = LinkUnderline.none
-                href = kbHandler.api.exportURL()
+                href = handler.api.exportURL()
                 onClick = { isOpen = false }
             }
         }
