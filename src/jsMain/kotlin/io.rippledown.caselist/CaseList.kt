@@ -111,6 +111,7 @@ val CaseList = FC<CaseListHandler> { handler ->
                     conditions = conditionHints!!.conditions
                     onCancel = {
                         newInterpretation = null
+                        ccStatus = null
                     }
                     onDone = { conditionList ->
                         handler.scope.launch {
