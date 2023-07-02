@@ -19,6 +19,8 @@ val cucumberVersion = "7.11.2"
 val commonsIoVersion = "2.11.0"
 val commonsTextVersion = "1.10.0"
 val mockkVersion = "1.13.4"
+val hikariCpVersion = "5.0.1"
+
 
 plugins {
     kotlin("multiplatform") version "1.8.22"
@@ -169,7 +171,7 @@ kotlin {
                 implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
                 implementation("org.postgresql:postgresql:42.5.4")
                 implementation("io.github.java-diff-utils:java-diff-utils:$diffUtilsVersion")
-
+                implementation("com.zaxxer:HikariCP:$hikariCpVersion")
             }
         }
         val jvmTest by getting {

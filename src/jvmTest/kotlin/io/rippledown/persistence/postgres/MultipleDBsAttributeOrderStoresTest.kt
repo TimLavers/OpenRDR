@@ -12,7 +12,7 @@ class MultipleDBsAttributeOrderStoresTest: MultipleDBsTest() {
 
     @BeforeTest
     override fun setup() {
-        cleanup()
+        cleanupAllDBs()
         super.setup()
         store1 = kb1.attributeOrderStore()
         store2 = kb2.attributeOrderStore()

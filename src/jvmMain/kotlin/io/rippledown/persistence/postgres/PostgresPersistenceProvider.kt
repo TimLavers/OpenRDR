@@ -3,6 +3,8 @@ package io.rippledown.persistence.postgres
 import io.rippledown.model.KBInfo
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.PersistentKB
+import io.rippledown.persistence.postgres.ConnectionProvider.closeConnection
+import io.rippledown.persistence.postgres.ConnectionProvider.systemConnection
 import org.jetbrains.exposed.sql.Database
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -20,7 +22,7 @@ fun allDatabasesInSystem(): Set<String> {
         }
     }
     val result = mutableSetOf<String>()
-    ConnectionProvider.systemConnection().use {
+    systemConnection().use {
         it.createStatement().use { stmt ->
             val rs: ResultSet = stmt.executeQuery("SELECT datname FROM pg_database")
             while (rs.next()) {
@@ -35,12 +37,35 @@ fun allDatabasesInSystem(): Set<String> {
 }
 
 fun createDatabase(name: String) {
-    ConnectionProvider.systemConnection().use {
+    systemConnection().use {
         it.createStatement().executeUpdate("CREATE DATABASE $name")
     }
 }
 
-class PostgresPersistenceProvider: PersistenceProvider {
+fun dropDB(dbName: String) {
+    logger.info("Dropping DB: $dbName")
+    systemConnection().use {
+        it.createStatement().executeUpdate("DROP DATABASE IF EXISTS $dbName")
+    }
+    closeConnection(dbName)
+}
+
+fun cleanupAllDBs() {
+    val allDBs = allDatabasesInSystem()
+    println("allDBs BEFORE = ${allDBs}")
+    allDBs.forEach {
+        println("cleanup of :$it")
+        try {
+            dropDB(it)
+        } catch (e: Exception) {
+            println("Could not delete: $it")
+        }
+    }
+    val allDBsAfter = allDatabasesInSystem()
+    println("allDBs AFTER = $allDBsAfter")
+}
+
+class PostgresPersistenceProvider : PersistenceProvider {
     private val logger: Logger = LoggerFactory.getLogger("rdr")
     private val systemDB: Database
     private val idStore: PostgresKBIds
@@ -73,9 +98,7 @@ class PostgresPersistenceProvider: PersistenceProvider {
     }
 
     override fun destroyKBPersistence(kbInfo: KBInfo) {
-        ConnectionProvider.systemConnection().use {
-            it.createStatement().executeUpdate("DROP DATABASE IF EXISTS ${kbInfo.id}")
-        }
+        dropDB(kbInfo.id)
         idStore.remove(kbInfo.id)
     }
 
