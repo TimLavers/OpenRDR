@@ -26,7 +26,7 @@ external interface ConditionSelectorHandler : Handler {
 val ConditionSelector = FC<ConditionSelectorHandler> { handler ->
     val selectedConditions by useState<MutableList<Condition>>(mutableListOf())
 
-    fun CheckBoxControl(index: Int) = FC<CheckboxProps> { lprops ->
+    fun CheckBoxControl(index: Int) = FC<CheckboxProps> { _ ->
         Checkbox {
             onChange = { _, checked ->
                 if (checked) {

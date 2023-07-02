@@ -13,23 +13,32 @@ import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.rippledown.persistence.PersistenceProvider
+import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
+import io.rippledown.persistence.postgres.PostgresPersistenceProvider
 import io.rippledown.server.routes.*
 import org.slf4j.Logger
-import io.rippledown.server.routes.*
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 
-const val SHUTDOWN = "/api/shutdown"
-const val PING = "/api/ping"
 
 const val STARTING_SERVER = "Starting server"
 const val STOPPING_SERVER = "Stopping server"
+const val IN_MEMORY = "InMemory"
 
 lateinit var server: NettyApplicationEngine
 
+private lateinit var persistenceProvider: PersistenceProvider
+
 val logger: Logger = LoggerFactory.getLogger("rdr")
 
-fun main() {
+fun main(args: Array<String>) {
+    logger.info("Starting server with args: ${args.joinToString(", ")}")
+    persistenceProvider = if (args.size > 0 && args[0] == IN_MEMORY) {
+        InMemoryPersistenceProvider()
+    } else {
+        PostgresPersistenceProvider()
+    }
 
     @Suppress("ExtractKtorModule")
     server = embeddedServer(Netty, 9090, module = Application::applicationModule)
@@ -70,7 +79,7 @@ fun Application.applicationModule() {
         }
         staticResources(remotePath = "/", basePackage = "")
     }
-    val application = ServerApplication()
+    val application = ServerApplication(persistenceProvider)
     serverManagement()
     kbManagement(application)
     caseManagement(application)

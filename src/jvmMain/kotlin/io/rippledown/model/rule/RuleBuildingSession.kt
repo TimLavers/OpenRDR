@@ -11,12 +11,14 @@ class RuleBuildingSession(
     private val tree: RuleTree,
     val case: RDRCase,
     private val action: RuleTreeChange,
-    cornerstones: List<RDRCase>) {
+    cornerstones: List<RDRCase>
+) {
     var conditions = mutableSetOf<Condition>()
     private val cornerstonesNotExempted = mutableSetOf<RDRCase>()
 
-    class TemporaryRuleFactory: RuleFactory {
-        override fun createRuleAndAddToParent(parent: Rule, conclusion: Conclusion?, conditions: Set<Condition>) = Rule(Random.nextInt(), parent, conclusion, conditions)
+    class TemporaryRuleFactory : RuleFactory {
+        override fun createRuleAndAddToParent(parent: Rule, conclusion: Conclusion?, conditions: Set<Condition>) =
+            Rule(Random.nextInt(), parent, conclusion, conditions)
     }
 
     init {
@@ -32,20 +34,21 @@ class RuleBuildingSession(
         cornerstones
             .filter { case.name != it.name }
             .forEach {
-            copyOfTree.apply(it)
-            val conclusionsGivenByModifiedTree =  it.interpretation.conclusions()
-            tree.apply(it)
-            val conclusionsGivenByOriginalTree = it.interpretation.conclusions()
-            if (conclusionsGivenByModifiedTree != conclusionsGivenByOriginalTree) {
-                cornerstonesNotExempted.add(it)
+                copyOfTree.apply(it)
+                val conclusionsGivenByModifiedTree = it.interpretation.conclusions()
+                tree.apply(it)
+                val conclusionsGivenByOriginalTree = it.interpretation.conclusions()
+                if (conclusionsGivenByModifiedTree != conclusionsGivenByOriginalTree) {
+                    cornerstonesNotExempted.add(it)
+                }
             }
-        }
+        case.copyWithoutId()
     }
 
-    fun cornerstoneCases(): Set<RDRCase> {
+    fun cornerstoneCases(): List<RDRCase> {
         return cornerstonesNotExempted
-                .filter(this::caseSatisfiesConditions)
-                .toSet()
+            .filter(this::caseSatisfiesConditions)
+            .sortedBy { it.name } //we want a predictable order
     }
 
     fun exemptCornerstone(cornerstone: RDRCase): RuleBuildingSession {
@@ -58,7 +61,7 @@ class RuleBuildingSession(
     }
 
     fun addCondition(condition: Condition): RuleBuildingSession {
-        require (condition.holds(case)) {
+        require(condition.holds(case)) {
             "Condition $condition was not true for the case ${case.name}"
         }
         conditions.add(condition)

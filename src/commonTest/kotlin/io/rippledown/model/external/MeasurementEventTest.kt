@@ -14,7 +14,7 @@ internal class MeasurementEventTest {
         val event = MeasurementEvent("Glucose", defaultTestDate)
         event.testName shouldBe "Glucose"
         event.testTime shouldBe defaultTestDate
-     }
+    }
 
     @Test
     fun jsonSerialisation() {

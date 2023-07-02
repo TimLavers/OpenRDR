@@ -40,7 +40,7 @@ data class CaseTemplate(var name: String = "", var tsh: String = "", var freeT4:
         extraResults.forEach {
             result.addResult(attributeFactory.create(it.key), defaultTestDate, it.value)
         }
-        return result.build(name)
+        return result.build( name)
     }
 
     fun testValue(lambda: TestResultTemplate.() -> Unit): TestResultTemplate {
@@ -90,7 +90,7 @@ data class MultiEpisodeCaseTemplate(val attributeFactory: AttributeFactory, var 
             }
             builder.addResult(attributeFactory.create("Sex"), date,TestResult( sex))
         }
-        return builder.build(name)
+        return builder.build( name)
     }
 
     fun dates(lambda: DatesTemplate.() -> Unit): DatesTemplate {

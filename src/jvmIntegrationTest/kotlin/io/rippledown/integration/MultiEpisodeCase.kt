@@ -37,7 +37,7 @@ internal class MultiEpisodeCase: UITestBase() {
         assertEquals(dataShown.size, 2)
         assertEquals(dataShown["TSH"]!![0], "0.67 mU/L")
         assertEquals(dataShown["TSH"]!![1], "2.75 mU/L")
-        assertEquals(caseViewPO.referenceRange("TSH"), "(0.50 - 4.0)")
+        assertEquals(caseViewPO.referenceRange("TSH"), "0.50 - 4.0")
         assertEquals(dataShown["Stuff"]!![0], "12.4 mU/L")
         assertEquals(dataShown["Stuff"]!![1], "6.7 mU/L")
         assertEquals(caseViewPO.referenceRange("Stuff"), "")

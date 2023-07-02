@@ -111,7 +111,7 @@ class RDRCaseTest {
 
     @Test
     fun dates() {
-        assertEquals(0, RDRCase(CaseId( 8, "Empty"), emptyMap()).dates.size)
+        assertEquals(0, RDRCase(CaseId(8, "Empty"), emptyMap()).dates.size)
 
         val builder1 = RDRCaseBuilder()
         builder1.addResult(tsh, yesterday, TestResult("9.4"))
@@ -236,7 +236,7 @@ class RDRCaseTest {
 
     @Test
     fun getName() {
-        val case1 = RDRCase(CaseId( 6, "Case1"))
+        val case1 = RDRCase(CaseId(6, "Case1"))
         assertEquals(case1.name, "Case1")
     }
 
@@ -283,7 +283,7 @@ class RDRCaseTest {
         val root = Rule(0, null, null, emptySet(), mutableSetOf())
         val conditions = setOf(ContainsText(1, tsh, "0.667"))
         val rule = Rule(1, root, conclusion, conditions, mutableSetOf())
-        val case = RDRCase(CaseId(12,"Case"))
+        val case = RDRCase(CaseId(12, "Case"))
         case.interpretation = Interpretation(case.caseId).apply { add(rule) }
 
         val sd = serializeDeserialize(case)

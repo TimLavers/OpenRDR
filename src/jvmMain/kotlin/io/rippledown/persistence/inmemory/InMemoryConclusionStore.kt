@@ -1,6 +1,7 @@
-package io.rippledown.persistence
+package io.rippledown.persistence.inmemory
 
 import io.rippledown.model.Conclusion
+import io.rippledown.persistence.ConclusionStore
 
 class InMemoryConclusionStore: ConclusionStore {
     private val conclusionSet = mutableSetOf<Conclusion>()

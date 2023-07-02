@@ -19,9 +19,12 @@ class Defs : En {
 
     private lateinit var caseListPO: CaseListPO
     private lateinit var caseViewPO: CaseViewPO
+    private lateinit var cornerstoneViewPO: CornerstoneCaseViewPO
     private lateinit var interpretationViewPO: InterpretationViewPO
     private lateinit var conditionSelectorPO: ConditionSelectorPO
     private lateinit var conclusionsViewPO: ConclusionsViewPO
+    private lateinit var kbInfoPO: KBInfoPO
+
     private lateinit var driver: WebDriver
 
     init {
@@ -40,9 +43,11 @@ class Defs : En {
             driver = uiTestBase.setupWebDriver()
             caseListPO = CaseListPO(driver)
             caseViewPO = CaseViewPO(driver)
+            cornerstoneViewPO = CornerstoneCaseViewPO(driver)
             interpretationViewPO = InterpretationViewPO(driver)
             conditionSelectorPO = ConditionSelectorPO(driver)
             conclusionsViewPO = ConclusionsViewPO(driver)
+            kbInfoPO = KBInfoPO(driver)
         }
 
         When("stop the client application") {
@@ -99,13 +104,11 @@ class Defs : En {
         }
 
         Given("I import the configured zipped Knowledge Base {word}") { toImport: String ->
-            val kbInfoPO = KBInfoPO(driver)
             kbInfoPO.importKB(toImport)
             kbInfoPO.waitForKBToBeLoaded(toImport)
         }
 
         And("I export the current Knowledge Base") {
-            val kbInfoPO = KBInfoPO(driver)
             kbInfoPO.exportKB()
         }
 
@@ -160,14 +163,14 @@ class Defs : En {
             caseListPO.waitForNoCases()
         }
 
-        Then("I should see the case {word} as the current case") { caseName: String ->
+        Then("I (should )see the case {word} as the current case") { caseName: String ->
             caseViewPO.nameShown() shouldBe caseName
         }
         Then("I should not see any current case") {
             caseViewPO.noNameShowing() shouldBe true
         }
 
-        And("select the case {word}") { caseName: String ->
+        And("(I )select the case {word}") { caseName: String ->
             caseListPO.select(caseName)
         }
 
@@ -191,8 +194,12 @@ class Defs : En {
             interpretationViewPO.interpretationText() shouldBe ""
         }
 
-        And("the interpretation by the project of the case {word} is {string}") { caseName: String, text: String ->
+        And("the interpretation of the case {word} is {string}") { caseName: String, text: String ->
             RESTClient().createRuleToAddText(caseName, text)
+        }
+
+        And("the interpretation of the case {word} is {string} because of condition {string}") { caseName: String, text: String, conditionText: String ->
+            RESTClient().createRuleToAddText(caseName, text, conditionText)
         }
 
         And("I select the {word} tab") { tabName: String ->
@@ -279,6 +286,18 @@ class Defs : En {
         Then("the conditions showing are:") { dataTable: DataTable ->
             val expectedConditions = dataTable.asList()
             conclusionsViewPO.requireConditionsToBeShown(*expectedConditions.toTypedArray())
+        }
+
+        Then("The message {string} should be shown") { message: String ->
+            cornerstoneViewPO.requireMessageForNoCornerstones(message)
+        }
+
+        Then("The case {word} should be shown as the cornerstone case") { ccName : String ->
+            cornerstoneViewPO.requireCornerstoneCase(ccName)
+        }
+
+        Then("The number of cornerstone cases should be shown as {int}") { numberOfCornerstoneCases: Int ->
+            TODO("Not yet implemented")
         }
     }
 }

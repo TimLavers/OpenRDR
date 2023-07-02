@@ -1,9 +1,9 @@
 package io.rippledown.integration
 
+import io.rippledown.examples.vltsh.TSHCases
 import io.rippledown.integration.pageobjects.CaseListPO
 import io.rippledown.integration.pageobjects.CaseQueuePO
 import io.rippledown.integration.pageobjects.CaseViewPO
-import io.rippledown.examples.vltsh.TSHCases
 import io.rippledown.integration.pageobjects.InterpretationViewPO
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest

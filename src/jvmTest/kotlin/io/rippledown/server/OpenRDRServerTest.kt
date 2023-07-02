@@ -5,6 +5,7 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import io.rippledown.constants.server.PING
 
 class OpenRDRServerTest: OpenRDRServerTestBase() {
 

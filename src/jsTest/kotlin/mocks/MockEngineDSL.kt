@@ -9,11 +9,12 @@ import io.rippledown.constants.api.*
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
-import io.rippledown.model.diff.RuleRequest
+import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.model.rule.RuleRequest
+import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import proxy.debug
 
 fun mock(config: EngineConfig) = EngineBuilder(config).build()
 
@@ -26,11 +27,13 @@ class EngineConfig {
     var returnCase: ViewableCase = createCase("The Case")
     var returnOperationResult: OperationResult = OperationResult()
     var returnInterpretation: Interpretation = Interpretation()
+    var returnCornerstoneStatus: CornerstoneStatus = CornerstoneStatus()
     var returnConditionList: ConditionList = ConditionList()
 
     var expectedCaseId: Long? = null
     var expectedInterpretation: Interpretation? = null
     var expectedRuleRequest: RuleRequest? = null
+    var expectedSessionStartRequest: SessionStartRequest? = null
 
     var expectedMovedAttributeId: Int? = null
     var expectedTargetAttributeId: Int? = null
@@ -99,6 +102,22 @@ private class EngineBuilder(private val config: EngineConfig) {
                 )
             }
 
+            START_RULE_SESSION -> {
+                val body = request.body as TextContent
+                val bodyAsSessionStartRequest = Json.decodeFromString(SessionStartRequest.serializer(), body.text)
+
+                if (config.expectedSessionStartRequest != null) {
+                    bodyAsSessionStartRequest shouldBe config.expectedSessionStartRequest
+                }
+                respond(
+                    content = ByteReadChannel(
+                        json.encodeToString(config.returnCornerstoneStatus)
+                    ),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+            }
+
             MOVE_ATTRIBUTE_JUST_BELOW_OTHER -> {
                 val body = request.body as TextContent
                 val data = Json.decodeFromString<Pair<Int, Int>>(body.text)
@@ -125,7 +144,6 @@ private class EngineBuilder(private val config: EngineConfig) {
             }
 
             CONDITION_HINTS -> {
-                debug("CONDITION_HINTS will return ${config.returnConditionList}")
                 if (config.expectedCaseId != null) request.url.parameters["id"] shouldBe config.expectedCaseId.toString()
                 respond(
                     content = ByteReadChannel(

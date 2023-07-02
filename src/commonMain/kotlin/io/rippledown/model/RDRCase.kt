@@ -10,7 +10,6 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.*
 
-//data class CaseId(val id: Long?, val name: String)
 class RDRCaseBuilder {
     private val caseData: MutableMap<TestEvent, TestResult> = mutableMapOf()
 
@@ -44,7 +43,12 @@ object RDRCaseSerializer : KSerializer<RDRCase> {
         encoder.encodeStructure(descriptor) {
             encodeSerializableElement(descriptor, 0, idSerializer, value.caseId)
             encodeSerializableElement(descriptor, 1, mapSerializer, value.data)
-            encodeSerializableElement(descriptor, 2, interpretationRulesSerializer, value.interpretation.ruleSummaries())
+            encodeSerializableElement(
+                descriptor,
+                2,
+                interpretationRulesSerializer,
+                value.interpretation.ruleSummaries()
+            )
         }
     }
 
@@ -137,4 +141,6 @@ data class RDRCase(
     fun resetInterpretation() {
         interpretation.reset()
     }
+
+    fun copyWithoutId(): RDRCase = RDRCase(caseId.copy(null, name), data, interpretation.copy())
 }

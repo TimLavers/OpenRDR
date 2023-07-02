@@ -41,7 +41,7 @@ Feature: Building rules
     Given a list of cases with the following names is stored on the server:
       | Case1 |
       | Case2 |
-    And the interpretation by the project of the case Case1 is "Go to Bondi."
+    And the interpretation of the case Case1 is "Go to Bondi."
     And I start the client application
     And I should see the case Case1 as the current case
     And  the interpretation field should contain the text "Go to Bondi."
@@ -60,7 +60,7 @@ Feature: Building rules
     Given a list of cases with the following names is stored on the server:
       | Case1 |
       | Case2 |
-    And the interpretation by the project of the case Case1 is "Go to Bondi."
+    And the interpretation of the case Case1 is "Go to Bondi."
     And I start the client application
     And I should see the case Case1 as the current case
     And  the interpretation field should contain the text "Go to Bondi."
@@ -116,7 +116,7 @@ Feature: Building rules
     And case Manly is provided having data:
       | Swimming | pleasant |
       | Sun      | hot      |
-    And the interpretation by the project of the case Bondi is "Go to Bondi."
+    And the interpretation of the case Bondi is "Go to Bondi."
     And I start the client application
     And I select case Bondi
     And  the interpretation field should contain the text "Go to Bondi."
@@ -128,11 +128,8 @@ Feature: Building rules
       | Wave has a current value |
       | Sun has a current value  |
     And I select the first condition
-    And pause for 1 seconds
     When I complete the rule
-    And pause for 1 seconds
     And I select the interpretation tab
-    And pause for 1 seconds
     Then  the interpretation field should be empty
     And I select case Manly
     And  the interpretation field should contain the text "Go to Bondi."
@@ -145,7 +142,7 @@ Feature: Building rules
     And case Manly is provided having data:
       | Swimming | pleasant |
       | Sun      | hot      |
-    And the interpretation by the project of the case Bondi is "Go to Bondi."
+    And the interpretation of the case Bondi is "Go to Bondi."
     And I start the client application
     And I select case Manly
     And  the interpretation field should contain the text "Go to Bondi."
@@ -157,11 +154,8 @@ Feature: Building rules
       | Swimming has a current value |
       | Sun has a current value      |
     And I select the first condition
-    And pause for 1 seconds
     When I complete the rule
-    And pause for 1 seconds
     And I select the interpretation tab
-    And pause for 1 seconds
     Then  the interpretation field should contain the text "Go to Manly."
     And I select case Bondi
     And  the interpretation field should contain the text "Go to Bondi."

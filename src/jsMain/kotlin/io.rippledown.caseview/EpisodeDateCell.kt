@@ -4,10 +4,11 @@ import emotion.react.css
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import mui.material.TableCell
+import mui.system.sx
 import px8
 import react.FC
 import react.Props
-import react.dom.html.ReactHTML
 import web.cssom.FontSize
 import web.cssom.FontStyle
 import web.cssom.FontWeight
@@ -18,13 +19,11 @@ external interface EpisodeDateCellHandler: Props {
     var date: Long
 }
 val EpisodeDateCell = FC<EpisodeDateCellHandler> {
-    ReactHTML.th {
+    TableCell {
         +formatDate(it.date)
-        css {
+        sx {
             padding = px8
             fontWeight = FontWeight.normal
-            fontStyle = FontStyle.italic
-            fontSize = FontSize.small
             whiteSpace = WhiteSpace.breakSpaces
         }
         id = "episode_date_cell_${it.index}"

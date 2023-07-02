@@ -1,5 +1,6 @@
 package io.rippledown.integration.pageobjects
 
+import io.rippledown.constants.kb.KB_IMPORT_BUTTON_ID
 import io.rippledown.integration.utils.Cyborg
 import org.awaitility.Awaitility
 import org.openqa.selenium.WebDriver
@@ -36,6 +37,6 @@ class KBImportPO(private val driver: WebDriver) {
     }
 
     private fun importButton(): WebElement {
-        return driver.waitForElementWithId("import_from_zip")
+        return driver.waitForElementWithId(KB_IMPORT_BUTTON_ID)
     }
 }

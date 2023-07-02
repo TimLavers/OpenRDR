@@ -2,10 +2,16 @@ package io.rippledown.kb.scripts
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.kb.KB
-import io.rippledown.model.*
-import io.rippledown.model.rule.*
-import io.rippledown.model.condition.*
-import io.rippledown.persistence.InMemoryKB
+import io.rippledown.model.KBInfo
+import io.rippledown.model.RDRCase
+import io.rippledown.model.RDRCaseBuilder
+import io.rippledown.model.TestResult
+import io.rippledown.model.condition.ContainsText
+import io.rippledown.model.condition.GreaterThanOrEqualTo
+import io.rippledown.model.rule.ChangeTreeToAddConclusion
+import io.rippledown.model.rule.ChangeTreeToRemoveConclusion
+import io.rippledown.model.rule.ChangeTreeToReplaceConclusion
+import io.rippledown.persistence.inmemory.InMemoryKB
 
 const val addedConditionBeforeSessionStarted = "Rule session not started."
 val text = "Text"
@@ -21,15 +27,30 @@ class BuildTemplate {
     private val defaultDate = 1659752689505
     private val kb = KB(InMemoryKB(KBInfo("TestKB")))
 
-    fun case(name: String, data: String) {
+    fun cornerstoneCase(name: String, data: String) {
         val caseBuilder = RDRCaseBuilder()
         val textAttribute = kb.attributeManager.getOrCreate(text)
         caseBuilder.addResult(textAttribute, defaultDate, TestResult(data))
         val case = caseBuilder.build(name)
         kb.addCornerstoneCase(case)
     }
+    fun case(name: String, data: String) {
+        val caseBuilder = RDRCaseBuilder()
+        val textAttribute = kb.attributeManager.getOrCreate(text)
+        caseBuilder.addResult(textAttribute, defaultDate, TestResult(data))
+        val case = caseBuilder.build(name)
+        kb.addProcessedCase(case)
+    }
 
     fun case(i: Int) {
+        val caseBuilder = RDRCaseBuilder()
+        val numberAttribute = kb.attributeManager.getOrCreate(value)
+        caseBuilder.addResult(numberAttribute, defaultDate, TestResult("$i"))
+        val case = caseBuilder.build("$i")
+        kb.addProcessedCase(case)
+    }
+
+    fun cornerstoneCase(i: Int) {
         val caseBuilder = RDRCaseBuilder()
         val numberAttribute = kb.attributeManager.getOrCreate(value)
         caseBuilder.addResult(numberAttribute, defaultDate, TestResult("$i"))
@@ -44,7 +65,7 @@ class BuildTemplate {
     }
 
     fun requireInterpretation(caseName: String, vararg expectedConclusions: String) {
-        val case = kb.getCaseByName(caseName)
+        val case = kb.getProcessedCaseByName(caseName)
         kb.interpret(case)
         case.interpretation.conclusions().map { it.text }.toSet() shouldBe expectedConclusions.toSet()
     }
@@ -54,7 +75,7 @@ class SessionTemplate( val kb: KB) {
     lateinit var case: RDRCase
 
     fun selectCase(name: String) {
-        case = kb.getCaseByName(name)
+        case = kb.getProcessedCaseByName(name)
         kb.interpret(case)
     }
 

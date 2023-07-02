@@ -4,7 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.model.*
-import io.rippledown.persistence.InMemoryAttributeStore
+import io.rippledown.persistence.inmemory.InMemoryAttributeStore
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 

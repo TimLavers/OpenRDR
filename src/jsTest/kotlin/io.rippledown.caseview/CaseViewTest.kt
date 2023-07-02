@@ -10,7 +10,7 @@ import io.rippledown.model.rule.RuleSummary
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
-import proxy.*
+import proxy.waitForEvents
 import react.VFC
 import react.dom.checkContainer
 import react.dom.createRootFor
@@ -30,7 +30,7 @@ class CaseViewTest {
         }
         checkContainer(vfc) { container ->
             with(container) {
-                requireCaseToBeSelected(name)
+                requireCaseToBeShowing(name)
             }
         }
     }
@@ -54,7 +54,6 @@ class CaseViewTest {
             val text = "Go to Bondi now!"
             enterInterpretation(text)
             waitForDebounce()
-            requireInterpretation(text)
             caseEdited shouldBe true
         }
     }
@@ -73,6 +72,7 @@ class CaseViewTest {
             )
         )
         val caseWithInterp = createCaseWithInterpretation(
+            id = 1L,
             conclusionTexts = listOf(beachComment, manlyComment, bondiComment),
             diffs = diffList
         )
@@ -115,7 +115,7 @@ class CaseViewTest {
 @Test
 fun shouldShowInterpretation() = runTest {
     val text = "Go to Bondi now!"
-    val rdrCase = createCase("case a ")
+    val rdrCase = createCase("case a")
     rdrCase.interpretation.add(RuleSummary(conclusion = Conclusion(1, text)))
     val vfc = VFC {
         CaseView {

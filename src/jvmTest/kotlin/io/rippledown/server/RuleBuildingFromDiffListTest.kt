@@ -4,7 +4,10 @@ import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.COMMENT_SEPARATOR
 import io.rippledown.model.diff.*
-import io.rippledown.persistence.InMemoryPersistenceProvider
+import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.model.rule.RuleRequest
+import io.rippledown.model.rule.SessionStartRequest
+import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.supplyCaseFromFile
 import org.apache.commons.io.FileUtils
 import kotlin.test.BeforeTest
@@ -20,10 +23,31 @@ internal class RuleBuildingFromDiffListTest {
     }
 
     @Test
-    fun `should build a rule and return an interpretation containing an updated DiffList when a comment is added`() {
-        val caseId = supplyCaseFromFile("Case1", app).caseId
+    fun `should return empty CornerstoneStatus when a rule session is started and there are no cornerstones`() {
+        val id = supplyCaseFromFile("Case1", app).caseId.id!!
+        val diff = Addition("Go to Bondi")
+        val cornerstoneStatus = app.startRuleSession(SessionStartRequest(id, diff))
+        cornerstoneStatus shouldBe CornerstoneStatus()
+    }
 
-        val interp = app.case(caseId.id!!).interpretation
+    @Test
+    fun `should return the first cornerstone when a rule session is started and there are cornerstones`() {
+        val id1 = supplyCaseFromFile("Case1", app).caseId.id!!
+        val id2 = supplyCaseFromFile("Case2", app).caseId.id!!
+        val case1 = app.case(id1)
+        val case2 = app.case(id2)
+        app.kb.addCornerstoneCase(case1.copyWithoutId())
+        app.kb.addCornerstoneCase(case2.copyWithoutId())
+        val viewableCase = app.viewableCase(id1)
+        val diff = Addition("Go to Bondi")
+        val cornerstoneStatus = app.startRuleSession(SessionStartRequest(id2, diff))
+        cornerstoneStatus shouldBe CornerstoneStatus(viewableCase, 0, 1)
+    }
+
+    @Test
+    fun `should build a rule and return an interpretation containing an updated DiffList when a comment is added`() {
+        val id = supplyCaseFromFile("Case1", app).caseId.id!!
+        val interp = app.case(id).interpretation
         val v1 = "Verified 1."
         val v2 = "Verified 2."
         interp.verifiedText = "$v1 $v2"
@@ -37,8 +61,9 @@ internal class RuleBuildingFromDiffListTest {
             selected = 0 // The first addition is what we want the rule to be built from.
         )
 
-        val ruleRequest = RuleRequest(caseId.id!!, diffList)
-        app.buildRule(ruleRequest)
+        app.startRuleSession(SessionStartRequest(id, diffList.selectedChange()))
+        val ruleRequest = RuleRequest(id, diffList)
+        app.commitRuleSession(ruleRequest)
 
         withClue("the latest text should be unchanged as the verified text is still null.") {
             interp.latestText() shouldBe "$v1 $v2"
@@ -57,15 +82,15 @@ internal class RuleBuildingFromDiffListTest {
 
     @Test
     fun `should build a rule and return an interpretation containing an updated DiffList when a comment is removed`() {
-        val caseId = supplyCaseFromFile("Case1", app).caseId
+        val id = supplyCaseFromFile("Case1", app).caseId.id!!
         val comment1 = "Bondi or bust."
         val comment2 = "Bring your flippers."
         with(app) {
-            startRuleSessionToAddConclusion(caseId.id!!, app.getOrCreateConclusion(comment1))
+            startRuleSessionToAddConclusion(id, app.getOrCreateConclusion(comment1))
             commitCurrentRuleSession()
-            startRuleSessionToAddConclusion(caseId.id!!, app.getOrCreateConclusion(comment2))
+            startRuleSessionToAddConclusion(id, app.getOrCreateConclusion(comment2))
             commitCurrentRuleSession()
-            case(caseId.id!!).interpretation.latestText() shouldBe "$comment1${COMMENT_SEPARATOR}$comment2" //sanity check
+            case(id).interpretation.latestText() shouldBe "$comment1${COMMENT_SEPARATOR}$comment2" //sanity check
         }
 
         val diffList = DiffList(
@@ -76,9 +101,10 @@ internal class RuleBuildingFromDiffListTest {
             selected = 1 // We want the rule to be built for the removal
         )
 
-        val ruleRequest = RuleRequest(caseId.id!!, diffList)
-        app.buildRule(ruleRequest)
-        val updatedInterpretation = app.case(caseId.id!!).interpretation
+        app.startRuleSession(SessionStartRequest(id, diffList.selectedChange()))
+        val ruleRequest = RuleRequest(id, diffList)
+        app.commitRuleSession(ruleRequest)
+        val updatedInterpretation = app.case(id).interpretation
 
         withClue("The returned DiffList should be updated to reflect the new rule.") {
             updatedInterpretation.diffList shouldBe DiffList(
@@ -112,8 +138,9 @@ internal class RuleBuildingFromDiffListTest {
             ),
             selected = 1 // We want the rule to be built for the removal
         )
+        app.startRuleSession(SessionStartRequest(id, diffList.selectedChange()))
         val ruleRequest = RuleRequest(id, diffList)
-        app.buildRule(ruleRequest)
+        app.commitRuleSession(ruleRequest)
         val updatedInterpretation = app.case(id).interpretation
 
         withClue("The returned DiffList should be updated to reflect the new rule.") {

@@ -40,7 +40,7 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
 
     @Test
     fun a_session_for_an_add_action_should_present_those_cornerstones_which_satisfy_the_conditions() {
-        val addAction = ChangeTreeToAddConclusion(Conclusion(1,"A"))
+        val addAction = ChangeTreeToAddConclusion(Conclusion(1, "A"))
         val session = RuleBuildingSession(ruleFactory, RuleTree(), sessionCase, addAction, cornerstonesList)
         val condition = ContainsText(null, clinicalNotes, "1")
         session.addCondition(condition)
@@ -53,7 +53,7 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
         val session = RuleBuildingSession(ruleFactory, RuleTree(), sessionCase, addAction, cornerstonesList)
         val condition = ContainsText(null, clinicalNotes, "3")
         session.addCondition(condition)
-        session.cornerstoneCases() shouldBe emptySet()
+        session.cornerstoneCases() shouldBe emptyList()
     }
 
     @Test
@@ -63,7 +63,7 @@ internal class RuleBuildingSessionForChangeToAddConclusionTest : RuleTestBase() 
         session.cornerstoneCases() shouldBe cornerstonesList
         val condition = ContainsText(null, clinicalNotes, "3")
         session.addCondition(condition)
-        session.cornerstoneCases() shouldBe emptySet()
+        session.cornerstoneCases() shouldBe emptyList()
         session.removeCondition(condition)
         session.cornerstoneCases() shouldBe cornerstonesList
     }

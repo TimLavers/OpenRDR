@@ -38,20 +38,3 @@ infix fun Set<Condition>.shouldBeEqualUsingSameAs(value: Set<Condition>) {
     }
 }
 
-// https://xa1.at/copy-data-class-reflection/
-fun copyByReflection(instance: Any, newValues: Map<String, Any?>): Any {
-    val instanceKClass = instance::class
-    require(instanceKClass.isData) { "instance must be data class" }
-
-    val copyFunction = instanceKClass.functions.single { function -> function.name == "copy" }
-
-    val valueArgs = copyFunction.parameters
-        .filter { parameter -> parameter.kind == KParameter.Kind.VALUE }
-        .mapNotNull { parameter ->
-            newValues[parameter.name]?.let { value -> parameter to value }
-         }
-
-    return copyFunction.callBy(
-        mapOf(copyFunction.instanceParameter!! to instance) + valueArgs
-    ) ?: error("copy didn't return a new instance")
-}
