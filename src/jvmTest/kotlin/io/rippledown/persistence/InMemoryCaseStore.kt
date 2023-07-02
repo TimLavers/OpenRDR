@@ -1,5 +1,6 @@
 package io.rippledown.persistence
 
+import io.rippledown.kb.AttributeProvider
 import io.rippledown.model.CaseId
 import io.rippledown.model.RDRCase
 
@@ -20,17 +21,6 @@ class InMemoryCaseStore: CaseStore {
         return caseToStore
     }
 
-    override fun update(case: RDRCase) {
-        require (case.id != null) {
-            "The case has no id, please use create instead."
-        }
-        val index = data.indexOfFirst { it.id == case.id }
-        require (index >= 0) {
-            "No matching case."
-        }
-        data[index] = case
-    }
-
     override fun load(cases: List<RDRCase>) {
         cases.forEach {
             requireNotNull(it.caseId.id) {
@@ -43,7 +33,7 @@ class InMemoryCaseStore: CaseStore {
         data.addAll(data)
     }
 
-    override fun get(id: Long) = data.firstOrNull { id == it.id }
+    override fun get(id: Long, attributeProvider: AttributeProvider) = data.firstOrNull { id == it.id }
 
     override fun delete(id: Long) = data.removeIf{it.id == id}
 }

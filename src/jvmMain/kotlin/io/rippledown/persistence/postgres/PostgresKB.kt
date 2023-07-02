@@ -1,7 +1,6 @@
 package io.rippledown.persistence.postgres
 
 import io.rippledown.model.KBInfo
-import io.rippledown.persistence.CaseStore
 import io.rippledown.persistence.PersistentKB
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
@@ -17,7 +16,6 @@ import org.slf4j.LoggerFactory
 
 const val KB_INFO_TABLE = "kb_info"
 val logger: Logger = LoggerFactory.getLogger("rdr")
-
 
 fun createPostgresKB(kbInfo: KBInfo): PostgresKB {
     logger.info("Creating PostgresKB with KBInfo: $kbInfo")

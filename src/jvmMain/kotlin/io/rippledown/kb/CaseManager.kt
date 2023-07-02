@@ -4,9 +4,9 @@ import io.rippledown.model.CaseType
 import io.rippledown.model.RDRCase
 import io.rippledown.persistence.CaseStore
 
-class CaseManager(private val caseStore: CaseStore) {
+class CaseManager(private val caseStore: CaseStore, private val attributeManager: AttributeManager) {
 
-    fun getCase(id: Long) = caseStore.get(id)
+    fun getCase(id: Long) = caseStore.get(id, attributeManager)
 
     fun ids() = all().map { it.caseId }
     fun ids(type: CaseType) = ids().filter { it.type == type }
