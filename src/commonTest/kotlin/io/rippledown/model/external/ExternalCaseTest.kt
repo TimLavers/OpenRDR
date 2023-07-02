@@ -35,7 +35,7 @@ internal class ExternalCaseTest {
     fun dataNotEmpty() {
         shouldThrow<IllegalArgumentException> {
             ExternalCase("Blah", mapOf())
-        }.message shouldBe  "Data map should not be empty."
+        }.message shouldBe "Data map should not be empty."
     }
 
     @Test
@@ -45,7 +45,7 @@ internal class ExternalCaseTest {
         val case = ExternalCase("Stuff", data)
         case.name shouldBe "Stuff"
         case.data shouldBe data
-     }
+    }
 
     @Test
     fun jsonSerialisation() {

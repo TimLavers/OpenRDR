@@ -1,6 +1,7 @@
-package io.rippledown.persistence
+package io.rippledown.persistence.inmemory
 
 import io.rippledown.model.Attribute
+import io.rippledown.persistence.AttributeStore
 
 class InMemoryAttributeStore(attributes: Set<Attribute>): AttributeStore {
     constructor(): this(emptySet())

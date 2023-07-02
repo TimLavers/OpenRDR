@@ -8,11 +8,14 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.rippledown.constants.api.*
+import io.rippledown.constants.server.PING
+import io.rippledown.constants.server.SHUTDOWN
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.HAS_CURRENT_VALUE
+import io.rippledown.model.condition.HasCurrentValue
 import io.rippledown.model.external.ExternalCase
-import io.rippledown.server.*
 import io.rippledown.server.routes.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -35,7 +38,7 @@ class RESTClient {
     fun serverHasStarted(): Boolean {
         return runBlocking {
             try {
-                jsonClient.get(endpoint + PING)
+                jsonClient.get("$endpoint$PING")
                 true
             } catch (e: Exception) {
                 false
@@ -133,11 +136,27 @@ class RESTClient {
         return result
     }
 
-    fun createRuleToAddText(caseName: String, text: String): OperationResult {
+    fun createRuleToAddText(caseName: String, text: String, conditionText: String = ""): OperationResult {
         getCaseWithName(caseName)
         val conclusion = getOrCreateConclusion(text)
         startSessionToAddConclusionForCurrentCase(conclusion)
+
+        if (conditionText.isNotBlank()) {
+            addConditionForCurrentSession(
+                getOrCreateCondition(parseToCondition(conditionText))
+            )
+        }
         return commitCurrentSession()
+    }
+
+    private fun parseToCondition(conditionText: String): Condition {
+        val firstWord = conditionText.split(" ")[0]
+        val attribute = getOrCreateAttribute(firstWord)
+        val remainderOfExpression = conditionText.substring(firstWord.length + 1)
+        if (remainderOfExpression != HAS_CURRENT_VALUE) {
+            throw IllegalArgumentException("Only '$HAS_CURRENT_VALUE' is supported")
+        }
+        return HasCurrentValue(null, attribute)
     }
 
     fun resetKB(): OperationResult {
@@ -151,7 +170,7 @@ class RESTClient {
 
     fun shutdown(): Unit = runBlocking {
         try {
-            jsonClient.post(endpoint + SHUTDOWN)
+            jsonClient.post("$endpoint$SHUTDOWN")
         } catch (e: Exception) {
             //expected
         }

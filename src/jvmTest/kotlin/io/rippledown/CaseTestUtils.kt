@@ -1,6 +1,9 @@
 package io.rippledown
 
-import io.rippledown.model.*
+import io.rippledown.model.Attribute
+import io.rippledown.model.RDRCase
+import io.rippledown.model.RDRCaseBuilder
+import io.rippledown.model.defaultDate
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.server.ServerApplication
 import kotlinx.serialization.decodeFromString
@@ -34,6 +37,6 @@ internal object CaseTestUtils {
     fun createCase(caseName: String, glucoseValue: String = "0.667"): RDRCase {
         val builder1 = RDRCaseBuilder()
         builder1.addValue(glucose, defaultDate, glucoseValue)
-        return builder1.build(caseName)
+        return builder1.build( caseName)
     }
 }

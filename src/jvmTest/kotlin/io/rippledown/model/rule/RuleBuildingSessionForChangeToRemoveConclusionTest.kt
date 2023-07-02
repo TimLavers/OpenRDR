@@ -88,7 +88,7 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
 
         val removeAction = ChangeTreeToRemoveConclusion(conclusionFactory.getOrCreate("A"))
         val case = clinicalNotesCase("a")
-        RuleBuildingSession(ruleFactory, tree, case,  removeAction, listOf())
+        RuleBuildingSession(ruleFactory, tree, case, removeAction, listOf())
             .addCondition(ContainsText(null, clinicalNotes, "a"))
             .commit()
 

@@ -69,7 +69,7 @@ internal class TSHExamplesTest: TSHTest() {
         checkFreeT4("13")
         checkNotes( "Trying for a baby.")
         assertEquals(dataShown["TPO Antibodies"]!![0], "33 kU/L")
-        assertEquals(caseViewPO.referenceRange("TPO Antibodies"), "(< 6)")
+        assertEquals(caseViewPO.referenceRange("TPO Antibodies"), "< 6")
 
         selectCaseAndCheckName("1.4.10")
         assertEquals(dataShown.size, 7)
@@ -84,8 +84,8 @@ internal class TSHExamplesTest: TSHTest() {
         checkTSH("0.02")
         checkFreeT4("18")
         assertEquals(dataShown["Free T3"]!![0], "6.1 pmol/L")
-        assertEquals(caseViewPO.referenceRange("Free T3"), "(3.0 - 5.5)")
-        checkNotes( "Hyperthyroid?")
+        assertEquals(caseViewPO.referenceRange("Free T3"), "3.0 - 5.5")
+        checkNotes("Hyperthyroid?")
 
         selectCaseAndCheckName("1.4.12")
         assertEquals(dataShown.size, 7)
@@ -106,10 +106,10 @@ internal class TSHExamplesTest: TSHTest() {
         assertEquals(dataShown["Sex"]!![1], "M")
         assertEquals(dataShown["TSH"]!![0], "59 mU/L")
         assertEquals(dataShown["TSH"]!![1], "40 mU/L")
-        assertEquals(caseViewPO.referenceRange("TSH"), "(0.50 - 4.0)")
+        assertEquals(caseViewPO.referenceRange("TSH"), "0.50 - 4.0")
         assertEquals(dataShown["Free T4"]!![0], "<5 pmol/L")
         assertEquals(dataShown["Free T4"]!![1], "8 pmol/L")
-        assertEquals(caseViewPO.referenceRange("Free T4"), "(10 - 20)")
+        assertEquals(caseViewPO.referenceRange("Free T4"), "10 - 20")
         assertEquals(dataShown["Patient Location"]!![0], "General Practice.")
         assertEquals(dataShown["Patient Location"]!![1], "General Practice.")
         assertEquals(dataShown["Tests"]!![0], "TFTs")
@@ -160,12 +160,12 @@ internal class TSHExamplesTest: TSHTest() {
 
     private fun checkTSH(value: String) {
         assertEquals(dataShown["TSH"]!![0], "$value mU/L")
-        assertEquals(caseViewPO.referenceRange("TSH"), "(0.50 - 4.0)")
+        assertEquals(caseViewPO.referenceRange("TSH"), "0.50 - 4.0")
     }
 
     private fun checkFreeT4(value: String) {
         val dataShown = caseViewPO.valuesShown()
         assertEquals(dataShown["Free T4"]!![0], "$value pmol/L")
-        assertEquals(caseViewPO.referenceRange("Free T4"), "(10 - 20)")
+        assertEquals(caseViewPO.referenceRange("Free T4"), "10 - 20")
     }
 }

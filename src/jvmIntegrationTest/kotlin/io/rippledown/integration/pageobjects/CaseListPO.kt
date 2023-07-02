@@ -1,5 +1,6 @@
 package io.rippledown.integration.pageobjects
 
+import io.rippledown.constants.caseview.CASE_NAME_PREFIX
 import org.awaitility.Awaitility.await
 import org.awaitility.kotlin.withPollInterval
 import org.openqa.selenium.By
@@ -34,7 +35,7 @@ class CaseListPO(private val driver: WebDriver) {
     private fun listItems() = containerElement().findElements(By.className("MuiTypography-root"))
 
     fun select(caseName: String): CaseViewPO {
-        val id = "case_list_item_$caseName"
+        val id = "$CASE_NAME_PREFIX$caseName"
         driver.findElement(By.id(id)).click()
         return CaseViewPO(driver)
     }

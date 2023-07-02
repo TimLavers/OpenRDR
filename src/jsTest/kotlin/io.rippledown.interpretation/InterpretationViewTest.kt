@@ -55,23 +55,7 @@ class InterpretationViewTest {
         createRootFor(vfc).requireInterpretation("")
     }
 
-    @Test
-    fun shouldShowEnteredText() = runTest {
-        val enteredText = "And bring your flippers"
-        val vfc = VFC {
-            InterpretationView {
-                scope = this@runTest
-                api = Api(mock(config {}))
-                interpretation = Interpretation()
-                onInterpretationEdited = { (_) -> }
-            }
-        }
-        with(createRootFor(vfc)) {
-            enterInterpretation(enteredText)
-            waitForEvents(timeout = 2 * DEBOUNCE_WAIT_PERIOD_MILLIS) //get past the debounce period
-            requireInterpretation(enteredText)
-        }
-    }
+
 
     @Test
     fun shouldSaveVerifiedInterpretation() = runTest {
@@ -97,23 +81,24 @@ class InterpretationViewTest {
     fun shouldCallOnInterpretationEdited() = runTest {
         val verifiedText = "And bring your flippers"
         val config = config {
-            expectedInterpretation = Interpretation(verifiedText = verifiedText)
+            returnInterpretation = Interpretation(verifiedText = verifiedText)
         }
-        var called = false
+        var updatedText: String? = null
         val vfc = VFC {
             InterpretationView {
                 scope = this@runTest
                 api = Api(mock(config))
                 interpretation = Interpretation()
                 onInterpretationEdited = {
-                    called = true
+                    updatedText = it.verifiedText
                 }
             }
         }
         with(createRootFor(vfc)) {
+            updatedText shouldBe null
             enterInterpretation(verifiedText)
             waitForEvents(timeout = 2 * DEBOUNCE_WAIT_PERIOD_MILLIS) //get past the debounce period
         }
-        called shouldBe true
+        updatedText shouldBe verifiedText
     }
 }

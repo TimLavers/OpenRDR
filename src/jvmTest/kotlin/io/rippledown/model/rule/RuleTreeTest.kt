@@ -2,9 +2,6 @@ package io.rippledown.model.rule
 
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.CaseId
-import io.rippledown.model.Interpretation
-import io.rippledown.model.RDRCase
 import io.rippledown.model.*
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.rule.dsl.ruleTree

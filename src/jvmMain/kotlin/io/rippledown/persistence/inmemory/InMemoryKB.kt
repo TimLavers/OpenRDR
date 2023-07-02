@@ -1,6 +1,7 @@
-package io.rippledown.persistence
+package io.rippledown.persistence.inmemory
 
 import io.rippledown.model.KBInfo
+import io.rippledown.persistence.PersistentKB
 
 class InMemoryKB(val kbInfo: KBInfo): PersistentKB {
 

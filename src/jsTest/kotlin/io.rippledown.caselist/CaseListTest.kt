@@ -2,15 +2,22 @@ package io.rippledown.caselist
 
 import Api
 import io.kotest.matchers.shouldBe
+import io.rippledown.caseview.requireCaseToBeShowing
+import io.rippledown.constants.caseview.CASE_NAME_PREFIX
+import io.rippledown.cornerstoneview.requireCornerstoneCaseNotToBeShowing
+import io.rippledown.cornerstoneview.requireCornerstoneCaseToBeShowing
 import io.rippledown.interpretation.*
 import io.rippledown.model.*
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.HasCurrentValue
 import io.rippledown.model.diff.*
+import io.rippledown.model.rule.CornerstoneStatus
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
-import proxy.*
+import proxy.findAllById
+import proxy.findById
+import proxy.waitForEvents
 import react.VFC
 import react.dom.checkContainer
 import react.dom.createRootFor
@@ -22,12 +29,14 @@ class CaseListTest {
     fun shouldListCaseNames() = runTest {
         val caseA = "case a"
         val caseB = "case b"
+        val caseId1 = CaseId(id = 1, name = caseA)
+        val caseId2 = CaseId(id = 2, name = caseB)
         val twoCaseIds = listOf(
-            CaseId(id = 1, name = caseA), CaseId(id = 2, name = caseB)
+            caseId1, caseId2
         )
         val config = config {
             returnCasesInfo = CasesInfo(twoCaseIds)
-            returnCase = createCase(caseA)
+            returnCase = createCase(caseId1)
         }
 
         val vfc = VFC {
@@ -40,12 +49,11 @@ class CaseListTest {
 
         checkContainer(vfc) { container ->
             with(container) {
-                findAllById(CASE_ID_PREFIX).length shouldBe 2
-                val elementA = findById("$CASE_ID_PREFIX$caseA")
-                val elementB = findById("$CASE_ID_PREFIX$caseB")
+                findAllById(CASE_NAME_PREFIX).length shouldBe 2
+                val elementA = findById("$CASE_NAME_PREFIX${caseId1.name}")
+                val elementB = findById("$CASE_NAME_PREFIX${caseId2.name}")
                 elementA.textContent shouldBe caseA
                 elementB.textContent shouldBe caseB
-                printJSON()
             }
         }
     }
@@ -61,7 +69,7 @@ class CaseListTest {
         val threeCaseIds = listOf(caseId1, caseId2, caseId3)
         val config = config {
             returnCasesInfo = CasesInfo(threeCaseIds)
-            returnCase = createCase(caseA)
+            returnCase = createCase(caseId1)
         }
         val vfc = VFC {
             CaseList {
@@ -70,12 +78,11 @@ class CaseListTest {
                 scope = this@runTest
             }
         }
-        config.returnCase = createCase(caseB)
-        checkContainer(vfc) { container ->
-            with(container) {
-                selectCase(caseB)
-                requireCaseToBeSelected(caseB)
-            }
+        config.returnCase = createCase(caseB, 2)
+        val container = createRootFor(vfc)
+        with(container) {
+            selectCaseByName(caseB)
+            requireCaseToBeShowing(caseB)
         }
     }
 
@@ -83,12 +90,14 @@ class CaseListTest {
     fun shouldShowCaseViewForTheFirstCase() = runTest {
         val caseName1 = "case 1"
         val caseName2 = "case 2"
+        val caseId1 = CaseId(1, caseName1)
+        val caseId2 = CaseId(2, caseName2)
         val twoCaseIds = listOf(
-            CaseId(1, caseName1), CaseId(2, caseName2)
+            caseId1, caseId2
         )
         val config = config {
             returnCasesInfo = CasesInfo(twoCaseIds)
-            returnCase = createCase(caseName1)
+            returnCase = createCase(caseId1)
         }
 
         val vfc = VFC {
@@ -100,7 +109,7 @@ class CaseListTest {
         }
         checkContainer(vfc) { container ->
             with(container) {
-                requireCaseToBeSelected(caseName1)
+                requireCaseToBeShowing(caseName1)
             }
         }
     }
@@ -112,9 +121,10 @@ class CaseListTest {
             CaseId(id = i.toLong(), name = "case $i")
         }
 
+        val caseName100 = "case 100"
         val config = config {
             returnCasesInfo = CasesInfo(caseIds)
-            returnCase = createCase("case 100")
+            returnCase = createCase(CaseId(100, caseName100))
         }
 
         val vfc = VFC {
@@ -124,12 +134,10 @@ class CaseListTest {
                 scope = this@runTest
             }
         }
-        checkContainer(vfc) { container ->
-            with(container) {
-                selectCase("case 100")
-                requireCaseToBeSelected("case 100")
+        with(createRootFor(vfc)) {
+            selectCaseByName(caseName100)
+            requireCaseToBeShowing(caseName100)
 
-            }
         }
     }
 
@@ -170,7 +178,8 @@ class CaseListTest {
         }
         with(createRootFor(vfc)) {
             waitForEvents()
-            requireCaseToBeSelected(caseName)
+            requireCaseToBeShowing(caseName)
+
             //start to build a rule for the Addition
             selectChangesTab()
             waitForEvents()
@@ -180,6 +189,50 @@ class CaseListTest {
             requireDoneButtonNotShowing()
             clickBuildIconForRow(2)
             requireDoneButtonShowing()
+        }
+    }
+
+    @Test
+    fun shouldNotShowCornerstoneViewIfNoCornerstone() = runTest {
+        val id = 1L
+        val caseName = "Bondi"
+        val caseIdList = listOf(CaseId(id, caseName))
+        val bondiComment = "Go to Bondi now!"
+        val diffList = DiffList(
+            listOf(
+                Addition(bondiComment),
+            )
+        )
+        val caseWithInterp = createCaseWithInterpretation(
+            id = id,
+            name = caseName,
+            diffs = diffList
+        )
+        val config = config {
+            expectedCaseId = id
+            returnCasesInfo = CasesInfo(caseIdList)
+            returnCase = caseWithInterp
+        }
+
+        val vfc = VFC {
+            CaseList {
+                caseIds = caseIdList
+                api = Api(mock(config))
+                scope = this@runTest
+            }
+        }
+        with(createRootFor(vfc)) {
+            waitForEvents()
+            requireCaseToBeShowing(caseName)
+
+            //start to build a rule for the Addition
+            selectChangesTab()
+            waitForEvents()
+            requireNumberOfRows(1)
+            moveMouseOverRow(0)
+            waitForEvents()
+            clickBuildIconForRow(0)
+            requireCornerstoneCaseNotToBeShowing()
         }
     }
 
@@ -219,7 +272,7 @@ class CaseListTest {
         }
         with(createRootFor(vfc)) {
             waitForEvents()
-            requireCaseToBeSelected(caseName)
+            requireCaseToBeShowing(caseName)
             //start to build a rule for the Addition
             selectChangesTab()
             waitForEvents()
@@ -270,7 +323,7 @@ class CaseListTest {
         }
         with(createRootFor(vfc)) {
             waitForEvents()
-            requireCaseToBeSelected(caseName)
+            requireCaseToBeShowing(caseName)
             //start to build a rule for the Addition
             selectChangesTab()
             waitForEvents()
@@ -283,6 +336,224 @@ class CaseListTest {
             clickCancelButton()
             waitForEvents()
             requireDoneButtonNotShowing()
+        }
+    }
+
+    @Test
+    fun shouldShowCornerstoneWhenBuildingARule() = runTest {
+        val caseId = 1L
+        val cornerstoneId = 2L
+        val caseName = "Manly"
+        val cornerstoneCaseName = "Bondi"
+        val caseIdList = listOf(CaseId(caseId, caseName))
+        val bondiComment = "Go to Bondi now!"
+        val beachComment = "Enjoy the beach!"
+        val diffList = DiffList(listOf(Addition(bondiComment)))
+        val caseWithInterp = createCaseWithInterpretation(
+            id = caseId,
+            name = caseName,
+            conclusionTexts = listOf(beachComment),
+            diffs = diffList
+        )
+        val cornerstoneCase = createCaseWithInterpretation(
+            id = cornerstoneId,
+            name = cornerstoneCaseName,
+            conclusionTexts = listOf(beachComment),
+            diffs = diffList
+        )
+        val config = config {
+            expectedCaseId = caseId
+            returnCasesInfo = CasesInfo(caseIdList)
+            returnCase = caseWithInterp
+            returnCornerstoneStatus = CornerstoneStatus(cornerstoneCase, 42, 84)
+        }
+
+        val vfc = VFC {
+            CaseList {
+                caseIds = caseIdList
+                api = Api(mock(config))
+                scope = this@runTest
+            }
+        }
+        with(createRootFor(vfc)) {
+            waitForEvents()
+            requireCaseToBeShowing(caseName)
+            //start to build a rule for the Addition
+            selectChangesTab()
+            waitForEvents()
+            requireNumberOfRows(1)
+            moveMouseOverRow(0)
+            waitForEvents()
+            clickBuildIconForRow(0)
+            requireCornerstoneCaseToBeShowing(cornerstoneCaseName)
+        }
+    }
+
+    @Test
+    fun shouldNotShowCornerstoneAfterBuildingARule() = runTest {
+        val caseId = 1L
+        val cornerstoneId = 2L
+        val caseName = "Manly"
+        val cornerstoneCaseName = "Bondi"
+        val caseIdList = listOf(CaseId(caseId, caseName))
+        val bondiComment = "Go to Bondi now!"
+        val beachComment = "Enjoy the beach!"
+        val diffList = DiffList(listOf(Addition(bondiComment)))
+        val caseWithInterp = createCaseWithInterpretation(
+            id = caseId,
+            name = caseName,
+            conclusionTexts = listOf(beachComment),
+            diffs = diffList
+        )
+        val cornerstoneCase = createCaseWithInterpretation(
+            id = cornerstoneId,
+            name = cornerstoneCaseName,
+            conclusionTexts = listOf(beachComment),
+            diffs = diffList
+        )
+        val config = config {
+            expectedCaseId = caseId
+            returnCasesInfo = CasesInfo(caseIdList)
+            returnCase = caseWithInterp
+            returnCornerstoneStatus = CornerstoneStatus(cornerstoneCase, 42, 84)
+        }
+
+        val vfc = VFC {
+            CaseList {
+                caseIds = caseIdList
+                api = Api(mock(config))
+                scope = this@runTest
+            }
+        }
+        with(createRootFor(vfc)) {
+            //Given
+            waitForEvents()
+            requireCaseToBeShowing(caseName)
+            //start to build a rule for the Addition
+            selectChangesTab()
+            waitForEvents()
+            requireNumberOfRows(1)
+            moveMouseOverRow(0)
+            waitForEvents()
+            clickBuildIconForRow(0)
+            requireCornerstoneCaseToBeShowing(cornerstoneCaseName)
+
+            //When
+            clickDoneButton()
+            waitForEvents()
+
+            //Then
+            requireCornerstoneCaseNotToBeShowing()
+        }
+    }
+
+    @Test
+    fun shouldNotShowCornerstoneAfterCancellingARuleBuildingSession() = runTest {
+        val caseId = 1L
+        val cornerstoneId = 2L
+        val caseName = "Manly"
+        val cornerstoneCaseName = "Bondi"
+        val caseIdList = listOf(CaseId(caseId, caseName))
+        val bondiComment = "Go to Bondi now!"
+        val beachComment = "Enjoy the beach!"
+        val diffList = DiffList(listOf(Addition(bondiComment)))
+        val caseWithInterp = createCaseWithInterpretation(
+            id = caseId,
+            name = caseName,
+            conclusionTexts = listOf(beachComment),
+            diffs = diffList
+        )
+        val cornerstoneCase = createCaseWithInterpretation(
+            id = cornerstoneId,
+            name = cornerstoneCaseName,
+            conclusionTexts = listOf(beachComment),
+            diffs = diffList
+        )
+        val config = config {
+            expectedCaseId = caseId
+            returnCasesInfo = CasesInfo(caseIdList)
+            returnCase = caseWithInterp
+            returnCornerstoneStatus = CornerstoneStatus(cornerstoneCase, 42, 84)
+        }
+
+        val vfc = VFC {
+            CaseList {
+                caseIds = caseIdList
+                api = Api(mock(config))
+                scope = this@runTest
+            }
+        }
+        with(createRootFor(vfc)) {
+            //Given
+            waitForEvents()
+            requireCaseToBeShowing(caseName)
+            //start to build a rule for the Addition
+            selectChangesTab()
+            waitForEvents()
+            requireNumberOfRows(1)
+            moveMouseOverRow(0)
+            waitForEvents()
+            clickBuildIconForRow(0)
+            requireCornerstoneCaseToBeShowing(cornerstoneCaseName)
+
+            //When
+            clickCancelButton()
+            waitForEvents()
+
+            //Then
+            requireCornerstoneCaseNotToBeShowing()
+        }
+    }
+
+    @Test
+    fun shouldNotShowCaseSelectorWhenBuildingARule() = runTest {
+        val caseId = 1L
+        val cornerstoneId = 2L
+        val caseName = "Manly"
+        val cornerstoneCaseName = "Bondi"
+        val caseIdList = listOf(CaseId(caseId, caseName))
+        val bondiComment = "Go to Bondi now!"
+        val beachComment = "Enjoy the beach!"
+        val diffList = DiffList(listOf(Addition(bondiComment)))
+        val caseWithInterp = createCaseWithInterpretation(
+            id = caseId,
+            name = caseName,
+            conclusionTexts = listOf(beachComment),
+            diffs = diffList
+        )
+        val cornerstoneCase = createCaseWithInterpretation(
+            id = cornerstoneId,
+            name = cornerstoneCaseName,
+            conclusionTexts = listOf(beachComment),
+            diffs = diffList
+        )
+        val config = config {
+            expectedCaseId = caseId
+            returnCasesInfo = CasesInfo(caseIdList)
+            returnCase = caseWithInterp
+            returnCornerstoneStatus = CornerstoneStatus(cornerstoneCase, 42, 84)
+        }
+
+        val vfc = VFC {
+            CaseList {
+                caseIds = caseIdList
+                api = Api(mock(config))
+                scope = this@runTest
+            }
+        }
+        with(createRootFor(vfc)) {
+            waitForEvents()
+            requireCaseSelectorToBeShowing()
+            requireCaseToBeShowing(caseName)
+            //start to build a rule for the Addition
+            selectChangesTab()
+            waitForEvents()
+            requireNumberOfRows(1)
+            moveMouseOverRow(0)
+            waitForEvents()
+            clickBuildIconForRow(0)
+            waitForEvents()
+            requireCaseSelectorNotToBeShowing()
         }
     }
 }

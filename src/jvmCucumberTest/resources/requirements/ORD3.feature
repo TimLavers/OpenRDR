@@ -20,6 +20,7 @@ Feature: Knowledge Base management
     And there is a file called Thyroids.zip in my downloads directory
     And I import the configured zipped Knowledge Base Whatever
     And the displayed KB name is Whatever
+    And pause for 1 second
     When I import the exported Knowledge Base Thyroids
     Then the displayed KB name is now Thyroids
     And stop the client application

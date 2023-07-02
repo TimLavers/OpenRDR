@@ -18,6 +18,11 @@ class CaseManager(private val caseStore: CaseStore, private val attributeManager
         caseStore.delete(id)
     }
 
+    fun casesWithName(caseName: String) = cases.filter { rdrCase -> rdrCase.name == caseName }// todo test
+    fun firstCaseWithName(caseName: String) = casesWithName(caseName).firstOrNull() // todo test
+
+    fun containsCaseWithName(caseName: String) = casesWithName(caseName).isEmpty() // todo test
+
     fun add(case: RDRCase): RDRCase {
         require(case.caseId.id == null) {"Cannot add a case that already has an id."}
         return caseStore.create(case)

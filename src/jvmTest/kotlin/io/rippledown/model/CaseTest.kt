@@ -17,7 +17,7 @@ internal class CaseTest {
         val deserialized = format.decodeFromString<ExternalCase>(caseString)
         assertEquals(2, deserialized.data.size)
         assertEquals(deserialized.name, "Case1")
-        assertEquals(deserialized.data[MeasurementEvent( "TSH", defaultTestDate)]!!.value.text, "0.667")
+        assertEquals(deserialized.data[MeasurementEvent("TSH", defaultTestDate)]!!.value.text, "0.667")
         assertEquals(deserialized.data[MeasurementEvent("ABC", defaultTestDate)]!!.value.text, "6.7")
     }
 }

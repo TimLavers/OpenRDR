@@ -1,11 +1,11 @@
 package io.rippledown.caselist
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.*
+import io.rippledown.model.CaseId
 import kotlinx.coroutines.test.runTest
-import proxy.*
 import react.VFC
 import react.dom.checkContainer
+import react.dom.createRootFor
 import kotlin.test.Test
 
 class CaseSelectorTest {
@@ -32,7 +32,7 @@ class CaseSelectorTest {
     }
 
     @Test
-    fun shouldCallSelectedCaseWhenCaseNameIsSelected() = runTest {
+    fun shouldCallSelectedCaseWhenCaseIsSelectedById() = runTest {
         val caseA = "case A"
         val caseB = "case B"
         val caseC = "case C"
@@ -40,20 +40,18 @@ class CaseSelectorTest {
         val caseId2 = CaseId(id = 2, name = caseB)
         val caseId3 = CaseId(id = 3, name = caseC)
         val threeCaseIds = listOf(caseId1, caseId2, caseId3)
-        var selectedCase: Long = 0
+        var selectedCaseId: Long = 0
         val vfc = VFC {
             CaseSelector {
                 caseIds = threeCaseIds
                 selectCase = { id ->
-                    selectedCase = id
+                    selectedCaseId = id
                 }
             }
         }
-        checkContainer(vfc) { container ->
-            with(container) {
-                selectCase(caseB)
-                selectedCase shouldBe caseId2.id
-            }
+        with(createRootFor(vfc)) {
+            selectCaseByName(caseId2.name)
+            selectedCaseId shouldBe caseId2.id
         }
     }
 
@@ -78,5 +76,4 @@ class CaseSelectorTest {
             }
         }
     }
-
 }

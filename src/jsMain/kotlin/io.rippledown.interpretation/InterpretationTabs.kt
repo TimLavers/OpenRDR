@@ -1,9 +1,11 @@
 package io.rippledown.interpretation
 
 import Handler
-import io.rippledown.constants.interpretation.*
+import io.rippledown.constants.interpretation.INTERPRETATION_CHANGES_BADGE
+import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
+import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CONCLUSIONS
+import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL
 import io.rippledown.model.Interpretation
-import mui.base.BadgeUnstyledProps
 import mui.lab.TabContext
 import mui.lab.TabPanel
 import mui.material.*
@@ -17,6 +19,7 @@ external interface InterpretationTabsHandler : Handler {
     var interpretation: Interpretation
     var refreshCase: () -> Unit
     var onStartRule: (interp: Interpretation) -> Unit
+    var isCornerstone: Boolean
 }
 
 val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
@@ -24,7 +27,7 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
 
     Box {
         sx {
-            width = 50.pc
+            width = 30.pc
         }
         id = "interpretation_tabs"
         TabContext {
@@ -49,7 +52,7 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
 
                 Tab {
                     id = INTERPRETATION_TAB_CHANGES
-                    label = FC<BadgeUnstyledProps> {
+                    label = FC<BadgeProps> {
                         Badge {
                             id = INTERPRETATION_CHANGES_BADGE
                             color = primary
@@ -64,7 +67,11 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
 
             TabPanel {
                 value = "0"
-                id = INTERPRETATION_PANEL_ORIGINAL
+
+                //Force a re-render of the underlying TextField when the interpretation changes
+                //See https://jaketrent.com/post/rerender-defaultvalue-value-change/
+                key = handler.interpretation.latestText()
+
                 InterpretationView {
                     api = handler.api
                     scope = handler.scope
@@ -72,12 +79,12 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
                     onInterpretationEdited = {
                         handler.refreshCase()
                     }
+                    isCornerstone = handler.isCornerstone
                 }
             }
 
             TabPanel {
                 value = "1"
-                id = INTERPRETATION_PANEL_CONCLUSIONS
                 ConclusionsView {
                     interpretation = handler.interpretation
                 }
@@ -85,7 +92,6 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
 
             TabPanel {
                 value = "2"
-                id = INTERPRETATION_PANEL_CHANGES
                 DiffViewer {
                     api = handler.api
                     scope = handler.scope

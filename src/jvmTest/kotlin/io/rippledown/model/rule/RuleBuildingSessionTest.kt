@@ -11,14 +11,14 @@ internal class RuleBuildingSessionTest : RuleTestBase() {
 
     @Test
     fun a_session_should_present_no_cornerstones_if_there_are_none() {
-        val session = RuleBuildingSession(ruleFactory, RuleTree(), caseA,  addAction, listOf())
-        session.cornerstoneCases() shouldBe emptySet()
+        val session = RuleBuildingSession(ruleFactory, RuleTree(), caseA, addAction, listOf())
+        session.cornerstoneCases() shouldBe emptyList()
     }
 
     @Test
     fun a_session_should_not_present_the_current_case_as_a_cornerstone() {
         val cornerstones = mutableListOf(caseA)
-        val session = RuleBuildingSession(ruleFactory, RuleTree(), caseA,  addAction, cornerstones)
-        session.cornerstoneCases() shouldBe emptySet()
+        val session = RuleBuildingSession(ruleFactory, RuleTree(), caseA, addAction, cornerstones)
+        session.cornerstoneCases() shouldBe emptyList()
     }
 }

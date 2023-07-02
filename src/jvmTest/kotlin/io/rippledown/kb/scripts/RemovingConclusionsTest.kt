@@ -32,6 +32,10 @@ class RemovingConclusionsTest {
             case("2", "b")
             case("3", "ab")
 
+            cornerstoneCase("1", "a")
+            cornerstoneCase("2", "b")
+            cornerstoneCase("3", "ab")
+
             requireInterpretation("1")
             requireInterpretation("2")
             requireInterpretation("3")
@@ -79,6 +83,7 @@ class RemovingConclusionsTest {
         build {
             (1..4).forEach {
                 case(it)
+                cornerstoneCase(it)
                 requireInterpretation(it.toString())
             }
 
@@ -134,6 +139,10 @@ class RemovingConclusionsTest {
             case("1", "a")
             case("2", "b")
             case("3", "ab")
+
+            cornerstoneCase("1", "a")
+            cornerstoneCase("2", "b")
+            cornerstoneCase("3", "ab")
 
             requireInterpretation("1")
             requireInterpretation("2")

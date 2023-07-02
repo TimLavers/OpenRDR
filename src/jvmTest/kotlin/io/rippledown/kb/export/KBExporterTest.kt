@@ -4,7 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.rippledown.kb.KB
 import io.rippledown.model.KBInfo
-import io.rippledown.persistence.InMemoryKB
+import io.rippledown.persistence.inmemory.InMemoryKB
 import org.junit.Before
 import java.io.File
 import kotlin.test.Test

@@ -3,7 +3,7 @@ package io.rippledown.kb.export
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.rippledown.CaseTestUtils
-import io.rippledown.model.*
+import io.rippledown.model.RDRCase
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.apache.commons.io.FileUtils

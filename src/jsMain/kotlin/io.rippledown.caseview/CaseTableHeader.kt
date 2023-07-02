@@ -1,6 +1,11 @@
 package io.rippledown.caseview
 
 import emotion.react.css
+import mui.material.TableCell
+import mui.material.TableHead
+import mui.material.TableRow
+import mui.system.sx
+import px4
 import px8
 import react.FC
 import react.Props
@@ -13,12 +18,12 @@ external interface HeaderHandler: Props {
     var dates: List<Long>
 }
 val CaseTableHeader = FC<HeaderHandler> {
-    thead {
-        tr {
-            th {
+    TableHead {
+        TableRow {
+            TableCell {
                 +"Attribute"
-                css {
-                    padding = px8
+                sx {
+                    padding = px4
                 }
                 id = "case_table_header_attribute"
             }
@@ -28,10 +33,10 @@ val CaseTableHeader = FC<HeaderHandler> {
                     date = d
                 }
             }
-            ReactHTML.th {
+            TableCell {
                 +"Reference Range"
-                css {
-                    padding = px8
+                sx {
+                    padding = px4
                 }
                 id = "case_table_header_reference_range"
             }

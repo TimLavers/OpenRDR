@@ -3,6 +3,7 @@ import io.rippledown.constants.caseview.CASES
 import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
+import io.rippledown.model.createCase
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.defaultMock
@@ -31,13 +32,17 @@ class MainTest {
     @Test
     fun caseViewShouldBeInitialisedWithTheCasesFromTheServer() = runTest {
         val config = config {
+            val caseId1 = CaseId(1, "case 1")
+            val caseId2 = CaseId(2, "case 2")
+            val caseId3 = CaseId(3, "case 3")
             returnCasesInfo = CasesInfo(
                 listOf(
-                    CaseId(1, "case 1"),
-                    CaseId(2, "case 2"),
-                    CaseId(3, "case 3")
+                    caseId1,
+                    caseId2,
+                    caseId3
                 )
             )
+            returnCase = createCase(caseId1)
         }
         val vfc = VFC {
             OpenRDRUI {

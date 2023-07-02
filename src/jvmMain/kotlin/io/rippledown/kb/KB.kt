@@ -1,10 +1,14 @@
 package io.rippledown.kb
 
-import io.rippledown.model.*
+import io.rippledown.model.KBInfo
+import io.rippledown.model.RDRCase
+import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.external.ExternalCase
-import io.rippledown.model.rule.*
+import io.rippledown.model.rule.RuleBuildingSession
+import io.rippledown.model.rule.RuleTree
+import io.rippledown.model.rule.RuleTreeChange
 import io.rippledown.persistence.PersistentKB
 
 class KB(persistentKB: PersistentKB) {
@@ -70,17 +74,17 @@ class KB(persistentKB: PersistentKB) {
 
     fun startRuleSession(case: RDRCase, action: RuleTreeChange) {
         check(ruleSession == null) { "Session already in progress." }
-        check(action.isApplicable(ruleTree, case)) {"Action $action is not applicable to case ${case.name}"}
+        check(action.isApplicable(ruleTree, case)) { "Action $action is not applicable to case ${case.name}" }
         val alignedAction = action.alignWith(conclusionManager)
         ruleSession =  RuleBuildingSession(ruleManager, ruleTree, case, alignedAction, caseManager.all())
     }
 
-    fun conflictingCasesInCurrentRuleSession(): Set<RDRCase> {
+    fun conflictingCasesInCurrentRuleSession(): List<RDRCase> {
         checkSession()
         return ruleSession!!.cornerstoneCases()
     }
 
-    fun addConditionToCurrentRuleSession(condition: Condition){
+    fun addConditionToCurrentRuleSession(condition: Condition) {
         checkSession()
         // Align the provided condition with that in the condition manager.
         val conditionToUse = if (condition.id == null) {
@@ -90,7 +94,7 @@ class KB(persistentKB: PersistentKB) {
             // Check that there's no confusion between the condition provided
             // and the one that already exists (here we're defending against test code
             // that might have mixed things up).
-            require( existing!!.sameAs(condition)) {
+            require(existing!!.sameAs(condition)) {
                 "Condition provided does not match that in the condition manager."
             }
             existing
@@ -101,6 +105,7 @@ class KB(persistentKB: PersistentKB) {
     fun commitCurrentRuleSession() {
         checkSession()
         ruleSession!!.commit()
+        cornerstones.add(ruleSession!!.case)
         ruleSession = null
     }
 
@@ -126,9 +131,7 @@ class KB(persistentKB: PersistentKB) {
         return kbInfo == other.kbInfo
     }
 
-    override fun hashCode(): Int {
-        return kbInfo.hashCode()
-    }
+    override fun hashCode() = kbInfo.hashCode()
 
     fun conditionHintsForCase(case: RDRCase) = conditionManager.conditionHintsForCase(case)
 }

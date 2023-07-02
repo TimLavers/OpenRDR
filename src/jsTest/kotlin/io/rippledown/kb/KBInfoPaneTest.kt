@@ -2,6 +2,7 @@ package io.rippledown.kb
 
 import Api
 import io.kotest.matchers.shouldBe
+import io.rippledown.constants.kb.KB_INFO_HEADING_ID
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import mocks.config
@@ -15,16 +16,16 @@ class KBInfoPaneTest {
 
     var testApi: Api = Api(mock(config { }))
 
-    val KBInfoPaneWrapper = VFC {
-        KBInfoPane {
-            api = testApi
-        }
-    }
-
     @Test
     fun initial(): TestResult = runTest {
-        checkContainer(KBInfoPaneWrapper) { container ->
-            val headingById = container.querySelectorAll("[id='$ID_KB_INFO_HEADING']")[0]
+        val vfc = VFC {
+            KBInfoPane {
+                api = testApi
+                scope = this@runTest
+            }
+        }
+        checkContainer(vfc) { container ->
+            val headingById = container.querySelectorAll("[id='$KB_INFO_HEADING_ID']")[0]
             headingById.textContent shouldBe "Glucose"
 
             val allButtons = container.getElementsByTagName(button)

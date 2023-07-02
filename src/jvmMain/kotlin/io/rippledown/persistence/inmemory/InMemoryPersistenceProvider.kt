@@ -1,10 +1,17 @@
-package io.rippledown.persistence
+package io.rippledown.persistence.inmemory
 
 import io.rippledown.model.KBInfo
+import io.rippledown.persistence.PersistenceProvider
+import io.rippledown.persistence.PersistentKB
+import io.rippledown.persistence.PersistentKBIds
+import io.rippledown.server.logger
 
 class InMemoryPersistenceProvider: PersistenceProvider {
     private val idStore = InMemoryKBIds()
-    private val kbStore = mutableMapOf<String,InMemoryKB>()
+    private val kbStore = mutableMapOf<String, InMemoryKB>()
+    init {
+        logger.info("InMemoryPersistenceProvider created.")
+    }
 
     override fun idStore(): PersistentKBIds = idStore
 

@@ -2,17 +2,21 @@ package io.rippledown.server
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.rippledown.CaseTestUtils
 import io.rippledown.model.*
-import io.rippledown.model.condition.*
+import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.GreaterThanOrEqualTo
+import io.rippledown.model.condition.HasCurrentValue
+import io.rippledown.model.condition.Is
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.diff.Unchanged
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
-import io.rippledown.persistence.InMemoryPersistenceProvider
+import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.supplyCaseFromFile
 import io.rippledown.util.shouldContainSameAs
 import org.apache.commons.io.FileUtils
@@ -134,10 +138,11 @@ internal class ServerApplicationTest {
             }
         val hintConditions = app.conditionHintsForCase(id).conditions.toSet()
         hintConditions.size shouldBe expectedConditions.size
-        expectedConditions.forEach{
+        expectedConditions.forEach {
             hintConditions shouldContainSameAs it
         }
     }
+
 
     @Test
     fun processCase() {
@@ -175,7 +180,7 @@ internal class ServerApplicationTest {
         // No rules added.
         retrieved.interpretation.conclusions().size shouldBe 0
         // Add a rule.
-        val conclusion = app.kb.conclusionManager.getOrCreate( "ABC ok.")
+        val conclusion = app.kb.conclusionManager.getOrCreate("ABC ok.")
         app.kb.startRuleSession(retrieved.rdrCase, ChangeTreeToAddConclusion(conclusion))
         val abc = retrieved.rdrCase.getAttribute("ABC")
         app.kb.addConditionToCurrentRuleSession(GreaterThanOrEqualTo(null, abc, 5.0))
@@ -254,7 +259,8 @@ internal class ServerApplicationTest {
         app.kb.kbInfo.name shouldBe "Thyroids"
         app.kb.containsCornerstoneCaseWithName("Case1") shouldBe false //kb rebuilt
         // Check that all of the other KBs are still there.
-        persistenceProvider.idStore().data().keys shouldBe setOf(app.kbName().id).union(kbIdsBefore) }
+        persistenceProvider.idStore().data().keys shouldBe setOf(app.kbName().id).union(kbIdsBefore)
+    }
 
     @Test
     fun reCreateKB() {
@@ -290,11 +296,7 @@ internal class ServerApplicationTest {
     fun exportKBToZip() {
         // Add a case and a rule to the KB.
         val id = supplyCaseFromFile("Case1", app).caseId.id!!
-        // Copy it to the cornerstones manager.
-        val retrieved = app.kb.getProcessedCase(id)!!
-        val copiedWithNullId = retrieved.copy(caseId = CaseId(null, "CC1"))
-        app.kb.addCornerstoneCase(copiedWithNullId).caseId.id!!
-        val conclusion1 = app.kb.conclusionManager.getOrCreate( "Whatever")
+        val conclusion1 = app.kb.conclusionManager.getOrCreate("Whatever")
         val tsh = app.kb.attributeManager.getOrCreate("TSH")
         app.startRuleSessionToAddConclusion(id, conclusion1)
         val tshCondition = GreaterThanOrEqualTo(null, tsh, 0.6)
@@ -342,7 +344,7 @@ internal class ServerApplicationTest {
     fun startSessionToReplaceConclusion() {
         val caseId = supplyCaseFromFile("Case1", app).caseId
         val id = caseId.id!!
-        val conclusion1 = app.kb.conclusionManager.getOrCreate( "Whatever")
+        val conclusion1 = app.kb.conclusionManager.getOrCreate("Whatever")
         app.startRuleSessionToAddConclusion(id, conclusion1)
         app.commitCurrentRuleSession()
         app.case(id).interpretation.textGivenByRules() shouldBe conclusion1.text
@@ -374,6 +376,15 @@ internal class ServerApplicationTest {
                 )
             )
         }
+    }
+    @Test
+    fun `After committing a rule the session case should be a cornerstone`() {
+        val id = supplyCaseFromFile("Case1", app).caseId.id!!
+        val conclusion = app.kb.conclusionManager.getOrCreate("Whatever")
+        app.kb.allCornerstoneCases() shouldHaveSize  0
+        app.startRuleSessionToAddConclusion(id, conclusion)
+        app.commitCurrentRuleSession()
+        app.kb.allCornerstoneCases() shouldHaveSize  1
     }
 
     private fun createCase(caseName: String) = CaseTestUtils.createCase(caseName)

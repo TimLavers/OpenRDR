@@ -12,25 +12,17 @@ import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.diff.*
 import io.rippledown.model.external.ExternalCase
-import io.rippledown.model.rule.ChangeTreeToAddConclusion
-import io.rippledown.model.rule.ChangeTreeToRemoveConclusion
-import io.rippledown.model.rule.ChangeTreeToReplaceConclusion
+import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.postgres.PostgresPersistenceProvider
-import io.rippledown.util.EntityRetrieval
 import io.rippledown.textdiff.diffList
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import org.apache.commons.io.FileUtils
+import io.rippledown.util.EntityRetrieval
 import java.io.File
-import java.nio.charset.StandardCharsets.UTF_8
-import java.time.LocalDateTime
 import kotlin.io.path.createTempDirectory
 
 class ServerApplication(private val persistenceProvider: PersistenceProvider = PostgresPersistenceProvider()) {
     val casesDir = File("cases").apply { mkdirs() }
     val interpretationsDir = File("interpretations").apply { mkdirs() }
-    private val idToCase = mutableMapOf<Long, RDRCase>()
     private val kbManager = KBManager(persistenceProvider)
 
     lateinit var kb: KB
@@ -154,22 +146,41 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         //reset the case's diff list
         case.interpretation.diffList = diffList(interpretation)
 
-        //put the updated case back into the map
-        idToCase[caseId] = case
-
-        writeInterpretationToFile(caseId, interpretation)
+        //update the case in the KB
+        //kb.putCase(case) todo
 
         //return the updated interpretation
         return case.interpretation
     }
 
-    fun buildRule(ruleRequest: RuleRequest): Interpretation {
+    /**
+     * Start a rule session for the given case and difference.
+     *
+     * @return a CornerstoneStatus providing the first cornerstone and the number of cornerstones that will be affected by the diff
+     */
+    fun startRuleSession(sessionStartRequest: SessionStartRequest): CornerstoneStatus {
+        val caseId = sessionStartRequest.caseId
+        val diff = sessionStartRequest.diff
+
+        startRuleSessionForDifference(caseId, diff)
+       val cornerstones = kb.conflictingCasesInCurrentRuleSession()
+
+        logger.info("cornerstones = ${cornerstones.size}")
+
+        return if (cornerstones.isNotEmpty()){
+            val cornerstone = cornerstones.first()
+            val viewableCornerstone = kb.viewableInterpretedCase(cornerstone)
+            CornerstoneStatus(viewableCornerstone, 0, cornerstones.size)
+        } else {
+            CornerstoneStatus()
+        }
+    }
+
+
+    fun commitRuleSession(ruleRequest: RuleRequest): Interpretation {
         val caseId = ruleRequest.caseId
         val case = case(caseId)
-        val diff = ruleRequest.diffList.selectedChange()
 
-        //build the rule
-        startRuleSessionForDifference(caseId, diff)
         ruleRequest.conditionList.conditions.forEach { condition ->
             addConditionToCurrentRuleBuildingSession(condition)
         }
@@ -182,21 +193,11 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         val updatedInterpretation = case.interpretation
         case.interpretation.diffList = diffList(updatedInterpretation)
 
-        //put the updated case back into the map
-        idToCase[caseId] = case
+        //put the updated case back into the KB
+//        kb.putCase(case) todo
 
         //return the updated interpretation
         return case.interpretation
-    }
-
-    private fun writeInterpretationToFile(id: Long, interpretation: Interpretation) {
-        val fileName = "$id.interpretation.json"
-        println("${LocalDateTime.now()}  saving interpretation = $fileName")
-        val file = File(interpretationsDir, fileName)
-        if (file.exists()) {
-            file.delete()
-        }
-        FileUtils.writeStringToFile(file, Json.encodeToString(interpretation), UTF_8)
     }
 
     private fun uninterpretedCase(id: Long) = kb.getProcessedCase(id)!!

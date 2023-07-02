@@ -31,7 +31,7 @@ class KBManagementTest: OpenRDRServerTestBase() {
     }
 
     @Test
-    fun createKB() = testApplication {
+    fun reCreateKB() = testApplication {
         setup()
         every { serverApplication.reCreateKB() } returns Unit
         val result = httpClient.post(CREATE_KB)
