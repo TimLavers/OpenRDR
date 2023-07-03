@@ -40,8 +40,7 @@ class KBImporter(source: File, private val persistenceProvider: PersistenceProvi
         val result = KB(persistentKB)
 
         // Add the cases.
-        result.loadCornerstoneCases(CaseImporter(cornerstoneCasesDirectory).import())
-        result.loadProcessedCases(CaseImporter(processedCasesDirectory).import())
+        result.loadCases(CaseImporter(casesDirectory).import() +  CaseImporter(processedCasesDirectory).import())
 
         return result
     }

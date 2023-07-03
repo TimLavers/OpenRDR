@@ -1,8 +1,9 @@
-package io.rippledown.persistence
+package io.rippledown.persistence.inmemory
 
 import io.rippledown.kb.AttributeProvider
 import io.rippledown.model.CaseId
 import io.rippledown.model.RDRCase
+import io.rippledown.persistence.CaseStore
 
 class InMemoryCaseStore: CaseStore {
     private val data = mutableListOf<RDRCase>()

@@ -315,7 +315,7 @@ class KBTest {
     }
 
     @Test
-    fun loadCornerstones() {
+    fun loadCases() {
         kb.allCornerstoneCases() shouldBe emptyList()
 
         for (i in 1..10) {
@@ -327,7 +327,7 @@ class KBTest {
         kb = createKB(kbInfo)
         kb.allCornerstoneCases() shouldBe emptyList()
 
-        kb.loadCornerstoneCases(allCCs)
+        kb.loadCases(allCCs)
         kb.allCornerstoneCases() shouldBe allCCs
     }
 

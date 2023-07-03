@@ -67,7 +67,7 @@ class PostgresCaseStore(private val db: Database): CaseStore {
             val data = PGCaseValue.find {
                 PGCaseValues.caseId eq id
             }.associateBy ({TestEvent(attributeProvider.forId(it.attributeId), it.date)},{ testResult(it) })
-            return@transaction RDRCase(CaseId(pgCaseId.id.value, pgCaseId.name!!, CaseType.Cornerstone), data)
+            return@transaction RDRCase(caseId(pgCaseId), data)
         }
 
     override fun delete(id: Long): Boolean {
@@ -80,6 +80,11 @@ class PostgresCaseStore(private val db: Database): CaseStore {
      */
     fun dataPointsCount() = transaction(db) {
         return@transaction PGCaseValue.count()
+    }
+
+    private fun caseId(pgCaseId: PGCaseId): CaseId {
+        val type = CaseType.values()[pgCaseId.type!!]
+        return CaseId(pgCaseId.id.value, pgCaseId.name!!, type)
     }
 
     private fun testResult(pgCaseValue: PGCaseValue): TestResult {

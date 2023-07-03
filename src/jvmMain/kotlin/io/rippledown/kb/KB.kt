@@ -1,5 +1,6 @@
 package io.rippledown.kb
 
+import io.rippledown.model.CaseType
 import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
@@ -19,7 +20,7 @@ class KB(persistentKB: PersistentKB) {
     val conditionManager: ConditionManager = ConditionManager(attributeManager, persistentKB.conditionStore())
     private val ruleManager: RuleManager = RuleManager(conclusionManager, conditionManager, persistentKB.ruleStore())
     val ruleTree: RuleTree = ruleManager.ruleTree()
-    private val caseManager = CaseManager(persistentKB.caseStore())
+    private val caseManager = CaseManager(persistentKB.caseStore(), attributeManager)
     private var ruleSession: RuleBuildingSession? = null
     val caseViewManager: CaseViewManager = CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
 
@@ -27,7 +28,7 @@ class KB(persistentKB: PersistentKB) {
         return caseManager.ids(CaseType.Cornerstone).find { rdrCase -> rdrCase.name == caseName } != null
     }
 
-    fun loadCornerstones(data: List<RDRCase>) = caseManager.load(data)
+    fun loadCases(data: List<RDRCase>) = caseManager.load(data)
 
     fun addCornerstoneCase(case: RDRCase): RDRCase {
         require(!containsCornerstoneCaseWithName(case.name)) { "There is already a cornerstone case with name ${case.name} in the KB."}
@@ -35,9 +36,16 @@ class KB(persistentKB: PersistentKB) {
         return caseManager.add(case)
     }
 
+    fun addProcessedCase(case: RDRCase): RDRCase {
+        return caseManager.add(case)
+    }
+
     fun getCaseByName(caseName: String): RDRCase {
         return caseManager.all().first { caseName == it.name }
     }
+
+    fun getCornerstoneCaseByName(caseName: String) = allCornerstoneCases().first { caseName == it.name } // todo test
+    fun getProcessedCaseByName(caseName: String) = allProcessedCases().first { caseName == it.name } // todo test
 
     fun allCornerstoneCases() = caseManager.all(CaseType.Cornerstone)
 
@@ -105,7 +113,7 @@ class KB(persistentKB: PersistentKB) {
     fun commitCurrentRuleSession() {
         checkSession()
         ruleSession!!.commit()
-        cornerstones.add(ruleSession!!.case)
+//        cornerstones.add(ruleSession!!.case) todo fix
         ruleSession = null
     }
 
