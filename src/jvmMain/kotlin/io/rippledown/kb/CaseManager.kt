@@ -25,7 +25,7 @@ class CaseManager(private val caseStore: CaseStore, private val attributeManager
 
     fun add(case: RDRCase): RDRCase {
         require(case.caseId.id == null) {"Cannot add a case that already has an id."}
-        return caseStore.create(case)
+        return caseStore.put(case)
     }
 
     fun load(data: List<RDRCase>) = caseStore.load(data)

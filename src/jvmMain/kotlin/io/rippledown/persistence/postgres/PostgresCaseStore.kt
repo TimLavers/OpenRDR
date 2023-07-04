@@ -7,10 +7,8 @@ import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.addLogger
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class PostgresCaseStore(private val db: Database): CaseStore {
@@ -30,7 +28,7 @@ class PostgresCaseStore(private val db: Database): CaseStore {
         TODO("Not yet implemented")
     }
 
-    override fun create(case: RDRCase): RDRCase {
+    override fun put(case: RDRCase): RDRCase {
         require (case.id == null) {
             "Case has an id already, please use update instead."
         }
@@ -70,13 +68,19 @@ class PostgresCaseStore(private val db: Database): CaseStore {
             return@transaction RDRCase(caseId(pgCaseId), data)
         }
 
-    override fun delete(id: Long): Boolean {
-        TODO("Not yet implemented")
+    override fun delete(id: Long) {
+        transaction(db) {
+            val pgCaseId = PGCaseId.findById(id) ?: return@transaction
+            PGCaseValues.deleteWhere {
+                caseId eq pgCaseId.id.value
+            }
+            pgCaseId.delete()
+        }
     }
 
     /**
      * The number of stored case data items (TestEvent, TestResult) pairs.
-     * Mainly provided for testin.
+     * Mainly provided for testing.
      */
     fun dataPointsCount() = transaction(db) {
         return@transaction PGCaseValue.count()

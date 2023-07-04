@@ -12,7 +12,7 @@ class InMemoryCaseStore: CaseStore {
 
     override fun allCaseIds() = all().map { it.caseId }
 
-    override fun create(case: RDRCase): RDRCase {
+    override fun put(case: RDRCase): RDRCase {
         require (case.id == null) {
             "The case has an id already, please use update instead."
         }
@@ -36,5 +36,7 @@ class InMemoryCaseStore: CaseStore {
 
     override fun get(id: Long, attributeProvider: AttributeProvider) = data.firstOrNull { id == it.id }
 
-    override fun delete(id: Long) = data.removeIf{it.id == id}
+    override fun delete(id: Long) {
+        data.removeIf{it.id == id}
+    }
 }
