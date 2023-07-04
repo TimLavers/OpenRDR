@@ -12,8 +12,7 @@ class MultipleDBsAttributeOrderStoresTest: MultipleDBsTest() {
 
     @BeforeTest
     override fun setup() {
-//        super.cleanup()
-//        cleanupAllDBs()
+        cleanup()
         super.setup()
         store1 = kb1.attributeOrderStore()
         store2 = kb2.attributeOrderStore()
@@ -28,6 +27,19 @@ class MultipleDBsAttributeOrderStoresTest: MultipleDBsTest() {
         super.reload()
         store1 = kb1.attributeOrderStore()
         store2 = kb2.attributeOrderStore()
+    }
+
+    @Test
+    fun load() {
+        store1.load(mapOf(1 to 1, 3 to 3))
+        store2.load(mapOf(2 to 1, 1 to 2))
+
+        store1.idToIndex() shouldBe mapOf(1 to 1, 3 to 3)
+        store2.idToIndex() shouldBe mapOf(2 to 1, 1 to 2)
+
+        reload()
+        store1.idToIndex() shouldBe mapOf(1 to 1, 3 to 3)
+        store2.idToIndex() shouldBe mapOf(2 to 1, 1 to 2)
     }
 
     @Test
@@ -51,18 +63,5 @@ class MultipleDBsAttributeOrderStoresTest: MultipleDBsTest() {
         reload()
         store1.idToIndex() shouldBe mapOf(1 to 1, 3 to 3)
         store2.idToIndex() shouldBe mapOf(2 to 2, 4 to 4)
-    }
-
-    @Test
-    fun load() {
-        store1.load(mapOf(1 to 1, 3 to 3))
-        store2.load(mapOf(2 to 1, 1 to 2))
-
-        store1.idToIndex() shouldBe mapOf(1 to 1, 3 to 3)
-        store2.idToIndex() shouldBe mapOf(2 to 1, 1 to 2)
-
-        reload()
-        store1.idToIndex() shouldBe mapOf(1 to 1, 3 to 3)
-        store2.idToIndex() shouldBe mapOf(2 to 1, 1 to 2)
     }
 }

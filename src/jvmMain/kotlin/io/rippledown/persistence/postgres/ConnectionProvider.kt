@@ -2,6 +2,7 @@ package io.rippledown.persistence.postgres
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import org.jetbrains.exposed.sql.Database
 import java.sql.Connection
 
 const val OPEN_RDR_DB_URL = "OPEN_RDR_DB_URL"
@@ -12,26 +13,11 @@ object ConnectionProvider {
 
     fun systemConnection(): Connection = connection("postgres")
 
-    /*
-        fun connection(dbName: String): Connection = DriverManager.getConnection(connectionString(dbName), dbUser(), dbPassword())
 
-        fun database(dbName: String) = Database.connect(connectionString(dbName),
-            driver = "org.postgresql.Driver",
-            password = dbUser(),
-            user = dbPassword())
-    */
+    fun database(dbName: String) = Database.connect(dataSource(dbName))
 
-    private val dbNameToDataSource = mutableMapOf<String, HikariDataSource>()
 
-    fun dataSource(dbName: String): HikariDataSource {
-        if (!dbNameToDataSource.containsKey(dbName)) {
-            logger.info("Creating connection to $dbName")
-            createDataSource(dbName)
-        }
-        return dbNameToDataSource[dbName]!!
-    }
-
-    private fun createDataSource(dbName: String) {
+    private fun dataSource(dbName: String): HikariDataSource {
         val config = HikariConfig().apply {
             driverClassName = "org.postgresql.Driver"
             jdbcUrl = connectionString(dbName)
@@ -42,7 +28,7 @@ object ConnectionProvider {
             transactionIsolation = "TRANSACTION_REPEATABLE_READ"
             validate()
         }
-        dbNameToDataSource.put(dbName, HikariDataSource(config))
+        return HikariDataSource(config)
     }
 
     fun connection(dbName: String) = dataSource(dbName).getConnection()
@@ -54,13 +40,5 @@ object ConnectionProvider {
     fun connectionString(dbName: String): String {
         val url = System.getenv(OPEN_RDR_DB_URL)
         return if (url != null) "$url$dbName" else "jdbc:postgresql://localhost:5432/$dbName"
-    }
-
-    fun closeConnection(dbName: String) {
-//        if (dbNameToDataSource.containsKey(dbName)) {
-//            logger.info("Closing connection to $dbName")
-//            dbNameToDataSource[dbName]!!.close()
-//            dbNameToDataSource.remove(dbName)
-//        }
     }
 }
