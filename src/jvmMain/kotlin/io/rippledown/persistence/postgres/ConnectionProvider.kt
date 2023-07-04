@@ -32,13 +32,16 @@ object ConnectionProvider {
     }
 
     private fun createDataSource(dbName: String) {
-        val config = HikariConfig()
-        config.jdbcUrl = connectionString(dbName)
-        config.username = dbUser()
-        config.password = dbPassword()
-        config.addDataSourceProperty("cachePrepStmts", "true")
-        config.addDataSourceProperty("prepStmtCacheSize", "250")
-        config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048")
+        val config = HikariConfig().apply {
+            driverClassName = "org.postgresql.Driver"
+            jdbcUrl = connectionString(dbName)
+            username = dbUser()
+            password = dbPassword()
+            maximumPoolSize = 10
+            isAutoCommit = true
+            transactionIsolation = "TRANSACTION_REPEATABLE_READ"
+            validate()
+        }
         dbNameToDataSource.put(dbName, HikariDataSource(config))
     }
 
@@ -54,10 +57,10 @@ object ConnectionProvider {
     }
 
     fun closeConnection(dbName: String) {
-        if (dbNameToDataSource.containsKey(dbName)) {
-            logger.info("Closing connection to $dbName")
-            dbNameToDataSource[dbName]!!.close()
-            dbNameToDataSource.remove(dbName)
-        }
+//        if (dbNameToDataSource.containsKey(dbName)) {
+//            logger.info("Closing connection to $dbName")
+//            dbNameToDataSource[dbName]!!.close()
+//            dbNameToDataSource.remove(dbName)
+//        }
     }
 }
