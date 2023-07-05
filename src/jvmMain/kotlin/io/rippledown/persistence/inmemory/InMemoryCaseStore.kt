@@ -8,9 +8,9 @@ import io.rippledown.persistence.CaseStore
 class InMemoryCaseStore: CaseStore {
     private val data = mutableListOf<RDRCase>()
 
-    override fun all() = data.toList()
+    override fun all(attributeProvider: AttributeProvider) = data.toList()
 
-    override fun allCaseIds() = all().map { it.caseId }
+    override fun allCaseIds() = data.map { it.caseId }
 
     override fun put(case: RDRCase): RDRCase {
         require (case.id == null) {

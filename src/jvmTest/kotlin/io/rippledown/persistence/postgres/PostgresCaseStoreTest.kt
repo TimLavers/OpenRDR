@@ -1,5 +1,6 @@
 package io.rippledown.persistence.postgres
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldNotBeSameInstanceAs
@@ -65,7 +66,30 @@ class PostgresCaseStoreTest: PostgresStoreTest() {
         retrieved0 shouldBe stored0
         retrieved0.data shouldBe stored0.data
 
-        TODO("put more in and check return order, also check after restore")
+        val stored1 = store.put(case0)
+        stored1.caseId.id shouldNotBe null
+        stored1 shouldNotBeSameInstanceAs case0
+        stored1.data shouldBe case0.data
+
+        val retrieved1 = store.get(stored1.id!!, attributeProvider)!!
+        retrieved1 shouldBe stored1
+        retrieved1.data shouldBe stored1.data
+
+        val stored2 = store.put(case0)
+        stored2.caseId.id shouldNotBe null
+        stored2 shouldNotBeSameInstanceAs case0
+        stored2.data shouldBe case0.data
+
+        val retrieved2 = store.get(stored2.id!!, attributeProvider)!!
+        retrieved2 shouldBe stored2
+        retrieved2.data shouldBe stored2.data
+
+        store.allCaseIds().shouldBe(listOf(retrieved0.caseId, retrieved1.caseId, retrieved2.caseId))
+        store.all(attributeProvider).shouldBe(listOf(retrieved0, retrieved1, retrieved2))
+
+        reload()
+        store.allCaseIds().shouldBe(listOf(retrieved0.caseId, retrieved1.caseId, retrieved2.caseId))
+        store.all(attributeProvider).shouldBe(listOf(retrieved0, retrieved1, retrieved2))
     }
 
     @Test
@@ -149,10 +173,33 @@ class PostgresCaseStoreTest: PostgresStoreTest() {
         val caseX = createCase("X", mapOf(a to "1", b to "1"), 10)
         val caseY = createCase("Y", mapOf(a to "2", b to "3"), 100)
         val caseZ = createCase("Z", mapOf(a to "5", b to "8", c to "88"), 1000)
-        val caseList = listOf(caseX, caseY, caseZ)
+        val caseList = listOf(caseX, caseZ, caseY) // Not the expected return order.
         store.load(caseList)
 
-        TODO("check, also test load with some there, load with null ids, also order after load, also restore")
+        store.allCaseIds() shouldBe listOf(caseX.caseId, caseY.caseId, caseZ.caseId)
+        store.all(attributeProvider) shouldBe listOf(caseX, caseY, caseZ)
+
+        reload()
+        store.allCaseIds() shouldBe listOf(caseX.caseId, caseY.caseId, caseZ.caseId)
+        store.all(attributeProvider) shouldBe listOf(caseX, caseY, caseZ)
+    }
+
+    @Test
+    fun `cannot load if not empty`() {
+        val stored0 = store.put(case0)
+        val caseX = createCase("X", mapOf(a to "1", b to "1"), 10)
+        shouldThrow<IllegalArgumentException> {
+            store.load(listOf(caseX))
+        }.message shouldBe  "Cannot load cases if there are already some present."
+        store.all(attributeProvider) shouldBe listOf(stored0)
+    }
+
+    @Test
+    fun `cannot load cases with non-null ids`() {
+        shouldThrow<IllegalArgumentException> {
+            store.load(listOf(case0))
+        }.message shouldBe  "Cannot load cases unless they already have their ids set."
+        store.all(attributeProvider) shouldBe emptyList()
     }
 
     private fun createCase(name: String, attributeToValue: Map<Attribute, String>, id: Long? = null): RDRCase {

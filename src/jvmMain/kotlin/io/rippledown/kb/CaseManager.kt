@@ -11,7 +11,7 @@ class CaseManager(private val caseStore: CaseStore, private val attributeManager
     fun ids() = all().map { it.caseId }
     fun ids(type: CaseType) = ids().filter { it.type == type }
 
-    fun all() = caseStore.all()
+    fun all() = caseStore.all(attributeManager)
     fun all(type: CaseType) = all().filter { it.caseId.type == type }
 
     fun delete(id: Long) {
