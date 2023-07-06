@@ -3,7 +3,6 @@ package io.rippledown.persistence.postgres
 import io.rippledown.model.KBInfo
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.PersistentKB
-import io.rippledown.persistence.postgres.ConnectionProvider.closeConnection
 import io.rippledown.persistence.postgres.ConnectionProvider.systemConnection
 import org.jetbrains.exposed.sql.Database
 import org.slf4j.Logger
@@ -14,13 +13,14 @@ const val SYSTEM_DB_NAME = "open_rdr"
 
 fun allDatabasesInSystem(): Set<String> {
     fun isSpecialPostgresDBName(name: String): Boolean {
-        return when(name) {
+        return when (name) {
             "postgres" -> true
             "template0" -> true
             "template1" -> true
             else -> false
         }
     }
+
     val result = mutableSetOf<String>()
     systemConnection().use {
         it.createStatement().use { stmt ->
@@ -40,6 +40,7 @@ fun createDatabase(name: String) {
     systemConnection().use {
         it.createStatement().executeUpdate("CREATE DATABASE $name")
     }
+    maxConnections()
 }
 
 fun dropDB(dbName: String) {
@@ -47,7 +48,18 @@ fun dropDB(dbName: String) {
     systemConnection().use {
         it.createStatement().executeUpdate("DROP DATABASE IF EXISTS $dbName")
     }
-    closeConnection(dbName)
+}
+
+fun maxConnections() {
+    println("*****maxConnections")
+    systemConnection().use {
+        it.createStatement().use { stmt ->
+            val rs: ResultSet = stmt.executeQuery("SHOW max_connections")
+            while (rs.next()) {
+                println("rs.getInt(1) = ${rs.getInt(1)}")
+            }
+        }
+    }
 }
 
 fun cleanupAllDBs() {
@@ -80,7 +92,7 @@ class PostgresPersistenceProvider : PersistenceProvider {
             createSystemDB()
             logger.info("System DB created.")
         }
-        systemDB = Database.connect({ConnectionProvider.connection(SYSTEM_DB_NAME)})
+        systemDB = Database.connect({ ConnectionProvider.connection(SYSTEM_DB_NAME) })
         logger.info("About to create PostgresKBIds...")
         idStore = PostgresKBIds(systemDB)
         logger.info("PostgresKBIds created.")
@@ -102,5 +114,5 @@ class PostgresPersistenceProvider : PersistenceProvider {
         idStore.remove(kbInfo.id)
     }
 
-    private fun createSystemDB()= createDatabase(SYSTEM_DB_NAME)
+    private fun createSystemDB() = createDatabase(SYSTEM_DB_NAME)
 }
