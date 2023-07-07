@@ -20,9 +20,10 @@ object ConnectionProvider {
             jdbcUrl = connectionString(dbName)
             username = dbUser()
             password = dbPassword()
-            maximumPoolSize = 1_000
+            maximumPoolSize = 10
             isAutoCommit = true
             transactionIsolation = "TRANSACTION_REPEATABLE_READ"
+            connectionTimeout = 10000
             validate()
         }
         println("********dbToDataSourcefor  = $dbName")
