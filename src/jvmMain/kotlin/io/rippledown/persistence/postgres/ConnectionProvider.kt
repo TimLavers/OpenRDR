@@ -23,7 +23,7 @@ object ConnectionProvider {
             maximumPoolSize = 10
             isAutoCommit = true
             transactionIsolation = "TRANSACTION_REPEATABLE_READ"
-            connectionTimeout = 10000
+            connectionTimeout = 1000
             validate()
         }
         println("********dbToDataSourcefor  = $dbName")
