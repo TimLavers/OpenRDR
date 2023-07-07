@@ -142,5 +142,5 @@ data class RDRCase(
         interpretation.reset()
     }
 
-    fun copyWithoutId(): RDRCase = RDRCase(caseId.copy(null, name), data, interpretation.copy())
+    fun copyWithoutId(type: CaseType = CaseType.Processed): RDRCase = RDRCase(caseId.copy(id = null, name = name, type = type), data, interpretation.copy())
 }

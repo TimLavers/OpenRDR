@@ -31,9 +31,8 @@ class KB(persistentKB: PersistentKB) {
     fun loadCases(data: List<RDRCase>) = caseManager.load(data)
 
     fun addCornerstoneCase(case: RDRCase): RDRCase {
-        require(!containsCornerstoneCaseWithName(case.name)) { "There is already a cornerstone case with name ${case.name} in the KB."}
-        // todo change type , test
-        return caseManager.add(case)
+//        require(!containsCornerstoneCaseWithName(case.name)) { "There is already a cornerstone case with name ${case.name} in the KB."}
+        return caseManager.add(case.copyWithoutId(CaseType.Cornerstone))
     }
 
     fun addProcessedCase(case: RDRCase): RDRCase {
@@ -62,7 +61,7 @@ class KB(persistentKB: PersistentKB) {
 
     fun getProcessedCase(id: Long): RDRCase? = caseManager.getCase(id)
 
-    fun getCornerstoneCase(id: Long): RDRCase? = caseManager.getCase(id) // todo test
+    fun getCase(id: Long): RDRCase? = caseManager.getCase(id) // todo test
 
     fun processCase(externalCase: ExternalCase): RDRCase {
         val case = createRDRCase(externalCase)
@@ -84,7 +83,7 @@ class KB(persistentKB: PersistentKB) {
         check(ruleSession == null) { "Session already in progress." }
         check(action.isApplicable(ruleTree, case)) { "Action $action is not applicable to case ${case.name}" }
         val alignedAction = action.alignWith(conclusionManager)
-        ruleSession =  RuleBuildingSession(ruleManager, ruleTree, case, alignedAction, caseManager.all())
+        ruleSession =  RuleBuildingSession(ruleManager, ruleTree, case, alignedAction, allCornerstoneCases())
     }
 
     fun conflictingCasesInCurrentRuleSession(): List<RDRCase> {
@@ -113,7 +112,7 @@ class KB(persistentKB: PersistentKB) {
     fun commitCurrentRuleSession() {
         checkSession()
         ruleSession!!.commit()
-//        cornerstones.add(ruleSession!!.case) todo fix
+        addCornerstoneCase(ruleSession!!.case)
         ruleSession = null
     }
 

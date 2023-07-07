@@ -47,6 +47,21 @@ class PostgresCaseStoreTest: PostgresStoreTest() {
     }
 
     @Test
+    fun caseTypes() {
+        val caseId0 = store.put(case0.copyWithoutId(CaseType.Cornerstone)).caseId
+        val caseId1 = store.put(case1).caseId
+        val caseId2 = store.put(case2.copyWithoutId(CaseType.Cornerstone)).caseId
+
+        store.allCaseIds() shouldBe listOf(caseId0, caseId1, caseId2)
+        caseId0.type shouldBe CaseType.Cornerstone
+        caseId1.type shouldBe CaseType.Processed
+        caseId2.type shouldBe CaseType.Cornerstone
+
+        reload()
+        store.allCaseIds() shouldBe listOf(caseId0, caseId1, caseId2)
+    }
+
+    @Test
     fun dataPointsCount() {
         store.dataPointsCount() shouldBe 0
         store.put(case0)

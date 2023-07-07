@@ -75,7 +75,6 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
                 kb.conclusionManager.getOrCreate(diff.left()),
                 kb.conclusionManager.getOrCreate(diff.right())
             )
-
             is Unchanged -> {}
         }
     }
@@ -175,7 +174,6 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
             CornerstoneStatus()
         }
     }
-
 
     fun commitRuleSession(ruleRequest: RuleRequest): Interpretation {
         val caseId = ruleRequest.caseId

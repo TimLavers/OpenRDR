@@ -17,7 +17,7 @@ class InMemoryCaseStore: CaseStore {
             "The case has an id already, please use update instead."
         }
         val newId = if (data.isEmpty()) 1  else data.maxOfOrNull { it.caseId.id!! }!! + 1
-        val caseToStore = RDRCase(CaseId(newId, case.name), case.data)
+        val caseToStore = RDRCase(case.caseId.copy(id = newId), case.data)
         data.add(caseToStore)
         return caseToStore
     }
@@ -31,7 +31,7 @@ class InMemoryCaseStore: CaseStore {
         require(data.isEmpty()) {
             "Cannot load if there are already cases."
         }
-        data.addAll(data)
+        data.addAll(cases)
     }
 
     override fun get(id: Long, attributeProvider: AttributeProvider) = data.firstOrNull { id == it.id }
