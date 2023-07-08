@@ -198,7 +198,7 @@ class Defs : En {
             RESTClient().createRuleToAddText(caseName, text)
         }
 
-        And("the interpretation of the case {word} is {string} because of condition {string}") { caseName: String, text: String, conditionText: String ->
+        And("the interpretation of the case {word} includes {string} because of condition {string}") { caseName: String, text: String, conditionText: String ->
             RESTClient().createRuleToAddText(caseName, text, conditionText)
         }
 
@@ -292,12 +292,15 @@ class Defs : En {
             cornerstoneViewPO.requireMessageForNoCornerstones(message)
         }
 
-        Then("The case {word} should be shown as the cornerstone case") { ccName : String ->
+        Then("The case {word} should be shown as the cornerstone case") { ccName: String ->
             cornerstoneViewPO.requireCornerstoneCase(ccName)
         }
 
         Then("The number of cornerstone cases should be shown as {int}") { numberOfCornerstoneCases: Int ->
-            TODO("Not yet implemented")
+            cornerstoneViewPO.requireNumberOfCornerstones(numberOfCornerstoneCases)
+        }
+        When("I click the next cornerstone case button") {
+            cornerstoneViewPO.selectNextCornerstoneCase()
         }
     }
 }

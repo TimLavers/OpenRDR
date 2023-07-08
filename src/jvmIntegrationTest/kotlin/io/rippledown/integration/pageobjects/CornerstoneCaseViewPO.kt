@@ -2,13 +2,10 @@ package io.rippledown.integration.pageobjects
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.constants.caseview.CASEVIEW_CORNERSTONE_CASE_NAME_ID
-import io.rippledown.constants.interpretation.CASE_VIEW_CONTAINER
 import io.rippledown.constants.interpretation.CORNERSTONE_VIEW_CONTAINER
 import io.rippledown.constants.interpretation.EMPTY_CORNERSTONE_VIEW_CONTAINER
-import io.rippledown.integration.pause
 import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver
-import kotlin.test.assertEquals
 
 // ORD2
 class CornerstoneCaseViewPO(private val driver: WebDriver) {
@@ -21,5 +18,22 @@ class CornerstoneCaseViewPO(private val driver: WebDriver) {
 
     fun requireCornerstoneCase(expectedCaseName: String) {
         cornerstoneContainerElement().findElement(By.id(CASEVIEW_CORNERSTONE_CASE_NAME_ID)).text shouldBe expectedCaseName
+    }
+
+    fun selectNextCornerstoneCase() {
+        cornerstoneContainerElement()
+            .findElement(By.cssSelector("[aria-label='Go to next page']")).click()
+    }
+
+    fun selectPreviousCornerstoneCase() {
+        cornerstoneContainerElement()
+            .findElement(By.cssSelector("[aria-label='Go to previous page']")).click()
+    }
+
+    fun requireNumberOfCornerstones(expectedNumberOfCornerstones: Int) {
+        val listElements = cornerstoneContainerElement().findElements(By.tagName("li"))
+
+        //first and last list elements are the navigation buttons
+        listElements.size - 2 shouldBe expectedNumberOfCornerstones
     }
 }

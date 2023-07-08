@@ -154,4 +154,28 @@ internal class RuleBuildingFromDiffListTest {
         }
     }
 
+    @Test
+    fun `should return the specified cornerstone when the user selects its index`() {
+        val id1 = supplyCaseFromFile("Case1", app).caseId.id!!
+        val id2 = supplyCaseFromFile("Case2", app).caseId.id!!
+        val id3 = supplyCaseFromFile("Case3", app).caseId.id!!
+        val id4 = supplyCaseFromFile("Case4", app).caseId.id!!
+        val case1 = app.case(id1)
+        val case2 = app.case(id2)
+        val case3 = app.case(id3)
+        val case4 = app.case(id4)
+        app.kb.addCornerstoneCase(case1.copyWithoutId())
+        app.kb.addCornerstoneCase(case2.copyWithoutId())
+        app.kb.addCornerstoneCase(case3.copyWithoutId())
+        app.kb.addCornerstoneCase(case4.copyWithoutId())
+        val ccStatus = app.startRuleSession(SessionStartRequest(id1, Addition("Go to Bondi")))
+        withClue("sanity check. The session case is not a cornerstone") {
+            ccStatus.numberOfCornerstones shouldBe 3
+        }
+        val viewableCase = app.viewableCase(id3)
+        withClue("There are 3 cornerstones showing, so index 1 0-based corresponds to case3") {
+        }
+        val cornerstoneStatus = app.cornerstoneStatusForIndex(1) //0-based index
+        cornerstoneStatus shouldBe CornerstoneStatus(viewableCase, 1, 3)
+    }
 }

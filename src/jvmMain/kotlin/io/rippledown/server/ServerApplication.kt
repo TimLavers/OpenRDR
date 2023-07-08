@@ -162,11 +162,12 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         val diff = sessionStartRequest.diff
 
         startRuleSessionForDifference(caseId, diff)
-       val cornerstones = kb.conflictingCasesInCurrentRuleSession()
+        val cornerstones = kb.conflictingCasesInCurrentRuleSession()
 
-        logger.info("cornerstones = ${cornerstones.size}")
+        val names = cornerstones.map { it.name }.joinToString { ", " }
+        logger.info("# cornerstones: ${cornerstones.size}, names: $names")
 
-        return if (cornerstones.isNotEmpty()){
+        return if (cornerstones.isNotEmpty()) {
             val cornerstone = cornerstones.first()
             val viewableCornerstone = kb.viewableInterpretedCase(cornerstone)
             CornerstoneStatus(viewableCornerstone, 0, cornerstones.size)
@@ -191,12 +192,19 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         val updatedInterpretation = case.interpretation
         case.interpretation.diffList = diffList(updatedInterpretation)
 
-        //put the updated case back into the KB
-//        kb.putCase(case) todo
-
         //return the updated interpretation
         return case.interpretation
     }
 
     private fun uninterpretedCase(id: Long) = kb.getProcessedCase(id)!!
+
+    /**
+     * @param cornerstoneIndex the 0-based index of the cornerstone to return
+     */
+    fun cornerstoneStatusForIndex(cornerstoneIndex: Int): CornerstoneStatus {
+        val cornerstones = kb.conflictingCasesInCurrentRuleSession()
+        val cornerstone = cornerstones[cornerstoneIndex]
+        val viewableCornerstone = kb.viewableInterpretedCase(cornerstone)
+        return CornerstoneStatus(viewableCornerstone, cornerstoneIndex, cornerstones.size)
+    }
 }
