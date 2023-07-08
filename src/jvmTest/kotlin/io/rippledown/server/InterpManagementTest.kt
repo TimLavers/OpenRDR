@@ -7,13 +7,12 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.verify
-import io.rippledown.constants.api.BUILD_RULE
-import io.rippledown.constants.api.START_RULE_SESSION
-import io.rippledown.constants.api.VERIFIED_INTERPRETATION_SAVED
+import io.rippledown.constants.api.*
 import io.rippledown.model.CaseId
 import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.createCase
 import io.rippledown.model.diff.*
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
@@ -96,5 +95,24 @@ class InterpManagementTest : OpenRDRServerTestBase() {
         result.status shouldBe HttpStatusCode.OK
         result.body<Interpretation>() shouldBe interp
         verify { serverApplication.commitRuleSession(ruleRequest) }
+    }
+
+    @Test
+    fun `should delegate selecting a cornerstone case to server application`() = testApplication {
+        setup()
+
+        val index = 42
+        val cc = createCase("bondi");
+        val cornerstoneStatus =
+            CornerstoneStatus(cornerstoneToReview = cc, indexOfCornerstoneToReview = index, numberOfCornerstones = 52)
+        every { serverApplication.cornerstoneStatusForIndex(index) } returns cornerstoneStatus
+
+        val result = httpClient.get(SELECT_CORNERSTONE) {
+            parameter(INDEX_PARAMETER, index)
+        }
+        result.status shouldBe HttpStatusCode.OK
+        result.body<CornerstoneStatus>() shouldBe cornerstoneStatus
+        result.status shouldBe HttpStatusCode.OK
+        verify { serverApplication.cornerstoneStatusForIndex(index) }
     }
 }

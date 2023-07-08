@@ -34,6 +34,7 @@ class EngineConfig {
     var expectedInterpretation: Interpretation? = null
     var expectedRuleRequest: RuleRequest? = null
     var expectedSessionStartRequest: SessionStartRequest? = null
+    var expectedCornerstoneSelection: Int? = -1
 
     var expectedMovedAttributeId: Int? = null
     var expectedTargetAttributeId: Int? = null
@@ -109,6 +110,17 @@ private class EngineBuilder(private val config: EngineConfig) {
                 if (config.expectedSessionStartRequest != null) {
                     bodyAsSessionStartRequest shouldBe config.expectedSessionStartRequest
                 }
+                respond(
+                    content = ByteReadChannel(
+                        json.encodeToString(config.returnCornerstoneStatus)
+                    ),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+            }
+
+            SELECT_CORNERSTONE -> {
+                if (config.expectedCornerstoneSelection != -1) request.url.parameters[INDEX_PARAMETER] shouldBe config.expectedCornerstoneSelection.toString()
                 respond(
                     content = ByteReadChannel(
                         json.encodeToString(config.returnCornerstoneStatus)

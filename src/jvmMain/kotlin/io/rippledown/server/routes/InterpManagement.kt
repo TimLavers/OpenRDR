@@ -5,9 +5,7 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.rippledown.constants.api.BUILD_RULE
-import io.rippledown.constants.api.START_RULE_SESSION
-import io.rippledown.constants.api.VERIFIED_INTERPRETATION_SAVED
+import io.rippledown.constants.api.*
 import io.rippledown.model.Interpretation
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
@@ -32,6 +30,12 @@ fun Application.interpManagement(application: ServerApplication) {
             val sessionStartRequest = call.receive<SessionStartRequest>()
             val cornerstoneStatus = application.startRuleSession(sessionStartRequest)
             call.respond(HttpStatusCode.OK, cornerstoneStatus)
+        }
+
+        get(SELECT_CORNERSTONE) {
+            val cornerstoneIndex = call.parameters[INDEX_PARAMETER]?.toInt() ?: error("Invalid cornerstone index.")
+            val cornerstoneStatus = application.cornerstoneStatusForIndex(cornerstoneIndex)
+            call.respond(cornerstoneStatus)
         }
     }
 }

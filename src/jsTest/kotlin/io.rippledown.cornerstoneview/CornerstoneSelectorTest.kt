@@ -18,32 +18,19 @@ class CornerstoneSelectorTest {
         }
         checkContainer(vfc) { container ->
             with(container) {
-                requireSelectedCornerstoneIndex(1)
-            }
-        }
-    }
- @Test
-    fun shouldTruncateLongNames() = runTest {
-        val vfc = VFC {
-            CornerstoneSelector {
-                total = 42
-            }
-        }
-        checkContainer(vfc) { container ->
-            with(container) {
-                requireSelectedCornerstoneIndex(1)
+                requireSelectedCornerstoneOneBasedIndex(1)
             }
         }
     }
 
     @Test
     fun shouldBeAbleToSelectTheNextCornerstoneIndex() = runTest {
-        var selectedIndex = -1
+        var selectedZeroBasedIndex = -1
         val vfc = VFC {
             CornerstoneSelector {
                 total = 42
                 onSelect = { index ->
-                    selectedIndex = index
+                    selectedZeroBasedIndex = index
                 }
             }
         }
@@ -51,42 +38,42 @@ class CornerstoneSelectorTest {
         with(container) {
             selectNextCornerstone()
             waitForEvents()
-            requireSelectedCornerstoneIndex(2)
+            requireSelectedCornerstoneOneBasedIndex(2)
             selectNextCornerstone()
             waitForEvents()
-            requireSelectedCornerstoneIndex(3)
+            requireSelectedCornerstoneOneBasedIndex(3)
             selectNextCornerstone()
             waitForEvents()
-            requireSelectedCornerstoneIndex(4)
-                selectedIndex shouldBe 4
+            requireSelectedCornerstoneOneBasedIndex(4)
+            selectedZeroBasedIndex shouldBe 3
         }
     }
 
 
-@Test
-fun shouldBeAbleToSelectThePreviousCornerstoneIndex() = runTest {
-    var selectedIndex = -1
-    val vfc = VFC {
-        CornerstoneSelector {
-            total = 42
-            onSelect = { index ->
-                selectedIndex = index
+    @Test
+    fun shouldBeAbleToSelectThePreviousCornerstoneIndex() = runTest {
+        var selectedZeroBasedIndex = -1
+        val vfc = VFC {
+            CornerstoneSelector {
+                total = 42
+                onSelect = { index ->
+                    selectedZeroBasedIndex = index
+                }
             }
         }
-    }
-    val container = createRootFor(vfc)
+        val container = createRootFor(vfc)
         with(container) {
             selectNextCornerstone()
             selectNextCornerstone()
             selectNextCornerstone()
             waitForEvents()
-            requireSelectedCornerstoneIndex(4)
+            requireSelectedCornerstoneOneBasedIndex(4)
             selectPreviousCornerstone()
             selectPreviousCornerstone()
             selectPreviousCornerstone()
             waitForEvents()
-            requireSelectedCornerstoneIndex(1)
-            selectedIndex shouldBe 1
+            requireSelectedCornerstoneOneBasedIndex(1)
+            selectedZeroBasedIndex shouldBe 0
         }
     }
 

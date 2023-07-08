@@ -16,6 +16,7 @@ import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.diff.Unchanged
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
+import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.supplyCaseFromFile
 import io.rippledown.util.shouldContainSameAs
@@ -30,9 +31,11 @@ import kotlin.test.assertTrue
 fun RDRCase.getAttribute(attributeName: String): Attribute {
     return attributes.first { attribute -> attribute.name == attributeName }
 }
+
 fun RDRCase.getLatest(attributeName: String): TestResult? {
     return getLatest(getAttribute(attributeName))
 }
+
 internal class ServerApplicationTest {
 
     private val persistenceProvider = InMemoryPersistenceProvider()
@@ -377,14 +380,42 @@ internal class ServerApplicationTest {
             )
         }
     }
+
     @Test
     fun `After committing a rule the session case should be a cornerstone`() {
         val id = supplyCaseFromFile("Case1", app).caseId.id!!
         val conclusion = app.kb.conclusionManager.getOrCreate("Whatever")
-        app.kb.allCornerstoneCases() shouldHaveSize  0
+        app.kb.allCornerstoneCases() shouldHaveSize 0
         app.startRuleSessionToAddConclusion(id, conclusion)
         app.commitCurrentRuleSession()
-        app.kb.allCornerstoneCases() shouldHaveSize  1
+        app.kb.allCornerstoneCases() shouldHaveSize 1
+    }
+
+    @Test
+    fun `Should select a cornerstone by its index`() {
+        val id1 = supplyCaseFromFile("Case1", app).caseId.id!!
+        val id2 = supplyCaseFromFile("Case2", app).caseId.id!!
+        val id3 = supplyCaseFromFile("Case3", app).caseId.id!!
+        val viewableCase1 = app.viewableCase(id1)
+        val viewableCase2 = app.viewableCase(id2)
+        val viewableCase3 = app.viewableCase(id3)
+        val conclusion1 = app.kb.conclusionManager.getOrCreate("Whatever 1")
+        val conclusion2 = app.kb.conclusionManager.getOrCreate("Whatever 2")
+        val conclusion3 = app.kb.conclusionManager.getOrCreate("Whatever 3")
+        with(app) {
+            kb.allCornerstoneCases() shouldHaveSize 0
+            startRuleSessionToAddConclusion(id1, conclusion1)
+            commitCurrentRuleSession()
+            kb.allCornerstoneCases() shouldHaveSize 1
+
+            startRuleSessionToAddConclusion(id2, conclusion2)
+            cornerstoneStatusForIndex(0) shouldBe CornerstoneStatus(viewableCase1, 0, 1)
+            commitCurrentRuleSession()
+            kb.allCornerstoneCases() shouldHaveSize 2
+
+            startRuleSessionToAddConclusion(id3, conclusion3)
+            cornerstoneStatusForIndex(1) shouldBe CornerstoneStatus(viewableCase2, 1, 2)
+        }
     }
 
     private fun createCase(caseName: String) = CaseTestUtils.createCase(caseName)

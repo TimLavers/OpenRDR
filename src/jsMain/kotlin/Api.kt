@@ -76,6 +76,13 @@ class Api(engine: HttpClientEngine = Js.create()) {
 
     suspend fun waitingCasesInfo(): CasesInfo = jsonClient.get("$endpoint$WAITING_CASES").body()
 
+    suspend fun moveAttributeJustBelowOther(moved: Int, target: Int): OperationResult {
+        return jsonClient.post("$endpoint$MOVE_ATTRIBUTE_JUST_BELOW_OTHER") {
+            contentType(ContentType.Application.Json)
+            setBody(Pair(moved, target))
+        }.body()
+    }
+
     /**
      * @return the interpretation containing the DiffList of the original and verified interpretation
      */
@@ -119,11 +126,15 @@ class Api(engine: HttpClientEngine = Js.create()) {
     suspend fun conditionHints(caseId: Long): ConditionList =
         jsonClient.get("$endpoint$CONDITION_HINTS?id=$caseId").body()
 
-    suspend fun moveAttributeJustBelowOther(moved: Int, target: Int): OperationResult {
-        return jsonClient.post("$endpoint$MOVE_ATTRIBUTE_JUST_BELOW_OTHER") {
-            contentType(ContentType.Application.Json)
-            setBody(Pair(moved, target))
-        }.body()
+
+    /**
+     * Retrieves the specified cornerstone for current the rule session
+     *
+     * @param index the 0-based index of the cornerstone to retrieve
+     * @return the cornerstone, its index and the total number of cornerstones
+     */
+    suspend fun selectCornerstone(index: Int): CornerstoneStatus {
+        return jsonClient.get("$endpoint$SELECT_CORNERSTONE?$INDEX_PARAMETER=$index").body()
     }
 
 

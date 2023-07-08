@@ -133,4 +133,15 @@ class ApiTest {
         Api(mock(config)).startRuleSession(sessionStartRequest) shouldBe config.returnCornerstoneStatus
     }
 
+    @Test
+    fun shouldSelectCornerstone() = runTest {
+        val selectedCornerstoneIndex = 42
+
+        val config = config {
+            expectedCornerstoneSelection = selectedCornerstoneIndex
+            returnCornerstoneStatus = CornerstoneStatus()
+        }
+        Api(mock(config)).selectCornerstone(selectedCornerstoneIndex) shouldBe config.returnCornerstoneStatus
+    }
+
 }

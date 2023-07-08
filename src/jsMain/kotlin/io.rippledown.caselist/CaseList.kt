@@ -81,8 +81,7 @@ val CaseList = FC<CaseListHandler> { handler ->
                         handler.scope.launch {
                             conditionHints = handler.api.conditionHints(id)
                             val sessionStartRequest = SessionStartRequest(id, newInterp.diffList.selectedChange())
-                            val cc = handler.api.startRuleSession(sessionStartRequest)
-                            ccStatus = cc
+                            ccStatus = handler.api.startRuleSession(sessionStartRequest)
                         }
                     }
                 }
@@ -97,6 +96,11 @@ val CaseList = FC<CaseListHandler> { handler ->
                     scope = handler.scope
                     api = handler.api
                     cornerstoneStatus = ccStatus!!
+                    selectCornerstone = { index ->
+                        handler.scope.launch {
+                            ccStatus = handler.api.selectCornerstone(index)
+                        }
+                    }
                 }
             }
         }

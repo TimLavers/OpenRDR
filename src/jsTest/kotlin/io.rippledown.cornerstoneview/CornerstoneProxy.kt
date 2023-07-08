@@ -8,7 +8,7 @@ import react.dom.test.Simulate
 import react.dom.test.act
 import web.html.HTMLElement
 
-fun HTMLElement.requireSelectedCornerstoneIndex(expectedIndex: Int) {
+fun HTMLElement.requireSelectedCornerstoneOneBasedIndex(expectedIndex: Int) {
     val selected = querySelectorAll(".MuiPaginationItem-root.Mui-selected")
     selected.length shouldBe 1
     val selectedIndex = selected[0].textContent?.toInt() ?: -1
