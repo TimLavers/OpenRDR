@@ -12,7 +12,7 @@ import kotlin.test.Test
 class PostgresAttributeStoreTest: PostgresStoreTest() {
     private lateinit var store: AttributeStore
 
-    override fun tableName() = ATTRIBUTES_TABLE
+    override fun tablesInDropOrder() = listOf(ATTRIBUTES_TABLE)
 
     override fun reload() {
         super.reload()

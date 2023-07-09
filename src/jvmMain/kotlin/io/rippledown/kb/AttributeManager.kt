@@ -3,13 +3,20 @@ package io.rippledown.kb
 import io.rippledown.model.Attribute
 import io.rippledown.persistence.AttributeStore
 
-class AttributeManager(private val attributeStore: AttributeStore) {
+fun interface AttributeProvider {
+    fun forId(id: Int): Attribute
+}
+class AttributeManager(private val attributeStore: AttributeStore): AttributeProvider {
     private val nameToAttribute = mutableMapOf<String, Attribute>()
 
     init {
         attributeStore.all().forEach {
             nameToAttribute[it.name] = it
         }
+    }
+
+    override fun forId(id: Int): Attribute {
+        TODO("Not yet implemented")
     }
 
     fun getOrCreate(name: String) : Attribute {

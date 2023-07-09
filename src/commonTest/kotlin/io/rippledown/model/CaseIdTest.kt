@@ -13,6 +13,13 @@ internal class CaseIdTest {
         val caseId = CaseId(1234, "Case 1")
         assertEquals(caseId.id, 1234)
         assertEquals(caseId.name, "Case 1")
+        assertEquals(caseId.type, CaseType.Processed)
+    }
+
+    @Test
+    fun constructionWithType() {
+        val caseId = CaseId(1234, "Case 1", CaseType.Cornerstone)
+        assertEquals(caseId.type, CaseType.Cornerstone)
     }
 
     @Test
@@ -24,7 +31,7 @@ internal class CaseIdTest {
 
     @Test
     fun jsonSerialisation() {
-        val caseId = CaseId(1234, "Case 1")
+        val caseId = CaseId(1234, "Case 1", CaseType.Cornerstone )
         val sd = serializeDeserialize(caseId)
         assertEquals(sd, caseId)
     }

@@ -1,5 +1,6 @@
 package io.rippledown.kb
 
+import io.rippledown.model.CaseType
 import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
@@ -19,40 +20,52 @@ class KB(persistentKB: PersistentKB) {
     val conditionManager: ConditionManager = ConditionManager(attributeManager, persistentKB.conditionStore())
     private val ruleManager: RuleManager = RuleManager(conclusionManager, conditionManager, persistentKB.ruleStore())
     val ruleTree: RuleTree = ruleManager.ruleTree()
-    private val cornerstones = CaseManager()
-    private val processedCases = CaseManager()
+    private val caseManager = CaseManager(persistentKB.caseStore(), attributeManager)
     private var ruleSession: RuleBuildingSession? = null
     val caseViewManager: CaseViewManager = CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
 
-    fun containsCornerstoneCaseWithName(caseName: String) = !cornerstones.containsCaseWithName(caseName)
+    fun containsCornerstoneCaseWithName(caseName: String): Boolean {
+        return caseManager.ids(CaseType.Cornerstone).find { rdrCase -> rdrCase.name == caseName } != null
+    }
 
-    fun loadCornerstoneCases(data: List<RDRCase>) = cornerstones.load(data)
-    fun loadProcessedCases(data: List<RDRCase>) = processedCases.load(data)
+    fun loadCases(data: List<RDRCase>) = caseManager.load(data)
 
-    fun addCornerstoneCase(case: RDRCase) = cornerstones.add(case)
-    fun addProcessedCase(case: RDRCase): RDRCase = processedCases.add(case)
+    fun addCornerstoneCase(case: RDRCase): RDRCase {
+//        require(!containsCornerstoneCaseWithName(case.name)) { "There is already a cornerstone case with name ${case.name} in the KB."}
+        return caseManager.add(case.copyWithoutId(CaseType.Cornerstone))
+    }
 
-    fun getCornerstoneCaseByName(caseName: String) = cornerstones.firstCaseWithName(caseName)!!
-    fun getProcessedCaseByName(caseName: String) = processedCases.firstCaseWithName(caseName)!!
+    fun addProcessedCase(case: RDRCase): RDRCase {
+        return caseManager.add(case)
+    }
 
-    fun allCornerstoneCases() = cornerstones.all()
-    fun allProcessedCases() = processedCases.all()
+    fun getCaseByName(caseName: String): RDRCase {
+        return caseManager.all().first { caseName == it.name }
+    }
 
-    fun processedCaseIds() = processedCases.ids()
+    fun getCornerstoneCaseByName(caseName: String) = allCornerstoneCases().first { caseName == it.name } // todo test
+    fun getProcessedCaseByName(caseName: String) = allProcessedCases().first { caseName == it.name } // todo test
 
-    fun getProcessedCase(id: Long): RDRCase? = processedCases.getCase(id)
-    fun getCornerstoneCase(id: Long): RDRCase? = cornerstones.getCase(id) // todo test
+    fun allCornerstoneCases() = caseManager.all(CaseType.Cornerstone)
+
+    fun processedCaseIds() = caseManager.ids(CaseType.Processed)
+
+    fun allProcessedCases() = caseManager.all(CaseType.Processed)
 
     fun deletedProcessedCaseWithName(name: String) {
-        val toGo = processedCases.all().firstOrNull { it.name == name }
+        val toGo = processedCaseIds().firstOrNull { it.name == name }
         if (toGo != null) {
-            processedCases.delete(toGo.id!!)
+            caseManager.delete(toGo.id!!)
         }
     }
 
+    fun getProcessedCase(id: Long): RDRCase? = caseManager.getCase(id)
+
+    fun getCase(id: Long): RDRCase? = caseManager.getCase(id) // todo test
+
     fun processCase(externalCase: ExternalCase): RDRCase {
         val case = createRDRCase(externalCase)
-        val stored = processedCases.add(case)
+        val stored = caseManager.add(case)
         interpret(stored)
         return stored
     }
@@ -70,8 +83,7 @@ class KB(persistentKB: PersistentKB) {
         check(ruleSession == null) { "Session already in progress." }
         check(action.isApplicable(ruleTree, case)) { "Action $action is not applicable to case ${case.name}" }
         val alignedAction = action.alignWith(conclusionManager)
-        val sessionCase = case.copyWithoutId()
-        ruleSession = RuleBuildingSession(ruleManager, ruleTree, sessionCase, alignedAction, cornerstones.all())
+        ruleSession =  RuleBuildingSession(ruleManager, ruleTree, case, alignedAction, allCornerstoneCases())
     }
 
     fun conflictingCasesInCurrentRuleSession(): List<RDRCase> {
@@ -100,7 +112,7 @@ class KB(persistentKB: PersistentKB) {
     fun commitCurrentRuleSession() {
         checkSession()
         ruleSession!!.commit()
-        cornerstones.add(ruleSession!!.case)
+        addCornerstoneCase(ruleSession!!.case)
         ruleSession = null
     }
 

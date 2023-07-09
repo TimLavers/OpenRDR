@@ -4,6 +4,8 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.model.*
+import io.rippledown.persistence.CaseStore
+import io.rippledown.persistence.inmemory.InMemoryCaseStore
 import io.rippledown.persistence.inmemory.InMemoryAttributeStore
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -12,6 +14,7 @@ class CaseManagerTest {
     private lateinit var attributeManager: AttributeManager
     private lateinit var glucose: Attribute
     private lateinit var ft4: Attribute
+    private lateinit var caseStore: CaseStore
     private lateinit var caseManager: CaseManager
 
     @BeforeTest
@@ -19,7 +22,21 @@ class CaseManagerTest {
         attributeManager = AttributeManager(InMemoryAttributeStore())
         glucose = attributeManager.getOrCreate("Glucose")
         ft4 = attributeManager.getOrCreate("FT4")
-        caseManager = CaseManager()
+        caseStore = InMemoryCaseStore()
+        caseManager = CaseManager(caseStore, attributeManager)
+    }
+
+    @Test
+    fun construction() {
+        val caseA = makeCase("Case A", "4.1", "nil")
+        val idA = caseManager.add(caseA).caseId
+        val caseB = makeCase("Case B", "4.0", "nil")
+        val idB = caseManager.add(caseB).caseId
+
+        val new = CaseManager(caseStore, attributeManager)
+        new.ids() shouldBe listOf(idA, idB)
+        new.getCase(idA.id!!)!!.caseId shouldBe idA
+        new.getCase(idB.id!!)!!.caseId shouldBe idB
     }
 
     @Test

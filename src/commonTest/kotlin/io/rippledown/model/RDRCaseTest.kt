@@ -31,6 +31,21 @@ class RDRCaseTest {
     }
 
     @Test
+    fun copyWithoutId() {
+        val case = RDRCase(CaseId(1234, "Tea"))
+        with (case.copyWithoutId()) {
+            name shouldBe "Tea"
+            id shouldBe null
+            caseId.type shouldBe CaseType.Processed
+        }
+        with (case.copyWithoutId(CaseType.Cornerstone)) {
+            name shouldBe "Tea"
+            id shouldBe null
+            caseId.type shouldBe CaseType.Cornerstone
+        }
+    }
+
+    @Test
     fun getCaseData() {
         val case1 = RDRCase(CaseId(1, "Case1"), emptyMap())
         assertTrue(case1.dates.isEmpty())

@@ -396,9 +396,6 @@ internal class ServerApplicationTest {
         val id1 = supplyCaseFromFile("Case1", app).caseId.id!!
         val id2 = supplyCaseFromFile("Case2", app).caseId.id!!
         val id3 = supplyCaseFromFile("Case3", app).caseId.id!!
-        val viewableCase1 = app.viewableCase(id1)
-        val viewableCase2 = app.viewableCase(id2)
-        val viewableCase3 = app.viewableCase(id3)
         val conclusion1 = app.kb.conclusionManager.getOrCreate("Whatever 1")
         val conclusion2 = app.kb.conclusionManager.getOrCreate("Whatever 2")
         val conclusion3 = app.kb.conclusionManager.getOrCreate("Whatever 3")
@@ -408,11 +405,13 @@ internal class ServerApplicationTest {
             commitCurrentRuleSession()
             kb.allCornerstoneCases() shouldHaveSize 1
 
+            val viewableCase1 = app.viewableCase(kb.allCornerstoneCases().first().id!!)
             startRuleSessionToAddConclusion(id2, conclusion2)
             cornerstoneStatusForIndex(0) shouldBe CornerstoneStatus(viewableCase1, 0, 1)
             commitCurrentRuleSession()
             kb.allCornerstoneCases() shouldHaveSize 2
 
+            val viewableCase2 = app.viewableCase(kb.allCornerstoneCases()[1].id!!)
             startRuleSessionToAddConclusion(id3, conclusion3)
             cornerstoneStatusForIndex(1) shouldBe CornerstoneStatus(viewableCase2, 1, 2)
         }

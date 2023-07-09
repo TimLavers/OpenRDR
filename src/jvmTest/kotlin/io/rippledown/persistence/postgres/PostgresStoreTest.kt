@@ -2,14 +2,12 @@ package io.rippledown.persistence.postgres
 
 import io.rippledown.model.KBInfo
 import io.rippledown.persistence.PersistentKB
-import org.jetbrains.exposed.sql.Database
 
 abstract class PostgresStoreTest {
     val dbName = "rdr_test"
     private val kbInfo = KBInfo(dbName, dbName)
     private val postgresPersistenceProvider = PostgresPersistenceProvider()
     var postgresKB: PersistentKB
-    lateinit var db: Database
 
     init {
         postgresPersistenceProvider.destroyKBPersistence(kbInfo)
@@ -21,10 +19,12 @@ abstract class PostgresStoreTest {
     }
 
     fun dropTable() {
-        ConnectionProvider.systemConnection().use {
-            it.createStatement().executeUpdate("DROP TABLE IF EXISTS ${tableName()}")
+        ConnectionProvider.systemConnection().use { connection ->
+            tablesInDropOrder().forEach { table ->
+                connection.createStatement().executeUpdate("DROP TABLE IF EXISTS $table")
+            }
         }
     }
 
-    abstract fun tableName(): String
+    abstract fun tablesInDropOrder(): List<String>
 }

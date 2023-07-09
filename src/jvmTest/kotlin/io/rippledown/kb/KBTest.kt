@@ -258,7 +258,7 @@ class KBTest {
 
     @Test
     fun getCaseByNameWhenNoCases() {
-        shouldThrow<NullPointerException> {
+        shouldThrow<NoSuchElementException> {
             kb.getCornerstoneCaseByName("Whatever")
         }
     }
@@ -266,7 +266,7 @@ class KBTest {
     @Test
     fun getCaseByNameUnknownCase() {
         kb.addProcessedCase(createCase("Case1"))
-        shouldThrow<NullPointerException> {
+        shouldThrow<NoSuchElementException> {
             kb.getProcessedCaseByName("Whatever")
         }
     }
@@ -294,17 +294,40 @@ class KBTest {
     }
 
     @Test
+    fun `add cornerstone case resets id`() {
+        val case1 = createCase("Case1", "1.2", 123)
+        val added = kb.addCornerstoneCase(case1)
+        added.id shouldNotBe case1.id
+        added.name shouldBe case1.name
+        added.data shouldBe case1.data
+
+        with(kb.getCase(added.id!!)!!) {
+            id shouldNotBe case1.id
+            name shouldBe case1.name
+            data shouldBe case1.data
+        }
+    }
+
+    @Test
+    fun `add cornerstone case resets type`() {
+        val case1 = createCase("Case1", "1.2").copy(caseId = CaseId(123, "Case1_CC", CaseType.Processed))
+        val added = kb.addCornerstoneCase(case1)
+        added.caseId.type shouldBe CaseType.Cornerstone
+        kb.getCase(added.id!!)!!.caseId.type shouldBe CaseType.Cornerstone
+    }
+
+    @Test
     fun getCornerstoneCase() {
-        kb.getCornerstoneCase(9099999) shouldBe null
+        kb.getCase(9099999) shouldBe null
 
         val id1 = kb.addCornerstoneCase(createCase("Case1", "1.2")).caseId.id!!
         kb.addCornerstoneCase(createCase("Case2"))
 
-        kb.getCornerstoneCase(id1)!!.name shouldBe "Case1"
+        kb.getCase(id1)!!.name shouldBe "Case1"
     }
 
     @Test
-    fun addCornerstoneCase() {
+    fun addCornerstoneCases() {
         for (i in 1..10) {
             kb.addCornerstoneCase(createCase("Case$i"))
         }
@@ -315,7 +338,7 @@ class KBTest {
     }
 
     @Test
-    fun loadCornerstones() {
+    fun loadCases() {
         kb.allCornerstoneCases() shouldBe emptyList()
 
         for (i in 1..10) {
@@ -327,7 +350,7 @@ class KBTest {
         kb = createKB(kbInfo)
         kb.allCornerstoneCases() shouldBe emptyList()
 
-        kb.loadCornerstoneCases(allCCs)
+        kb.loadCases(allCCs)
         kb.allCornerstoneCases() shouldBe allCCs
     }
 
@@ -490,10 +513,10 @@ class KBTest {
         return GreaterThanOrEqualTo(null, Attribute(4567, "ABC"), 5.0)
     }
 
-    private fun createCase(caseName: String, glucoseValue: String = "0.667"): RDRCase {
+    private fun createCase(caseName: String, glucoseValue: String = "0.667", id: Long? = null): RDRCase {
         with(RDRCaseBuilder()) {
             addValue(glucose(), defaultDate, glucoseValue)
-            return build(caseName)
+            return build(caseName, id)
         }
     }
 

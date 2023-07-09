@@ -75,7 +75,6 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
                 kb.conclusionManager.getOrCreate(diff.left()),
                 kb.conclusionManager.getOrCreate(diff.right())
             )
-
             is Unchanged -> {}
         }
     }

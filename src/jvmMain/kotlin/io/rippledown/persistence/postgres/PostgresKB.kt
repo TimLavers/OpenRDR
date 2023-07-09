@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory
 const val KB_INFO_TABLE = "kb_info"
 val logger: Logger = LoggerFactory.getLogger("rdr")
 
-
 fun createPostgresKB(kbInfo: KBInfo): PostgresKB {
     logger.info("Creating PostgresKB with KBInfo: $kbInfo")
     createDatabase(kbInfo.id)
@@ -43,6 +42,7 @@ class PostgresKB internal constructor(private val dbName: String): PersistentKB 
     private val conclusionStore = PostgresConclusionStore(db)
     private val conditionStore = PostgresConditionStore(db)
     private val ruleStore = PostgresRuleStore(db)
+    private val caseStore = PostgresCaseStore(db)
 
     override fun kbInfo(): KBInfo {
         val resultList = mutableListOf<KBInfo>()
@@ -66,6 +66,8 @@ class PostgresKB internal constructor(private val dbName: String): PersistentKB 
     override fun conditionStore() = conditionStore
 
     override fun ruleStore() = ruleStore
+
+    override fun caseStore() = caseStore
 }
 object PKBInfos: LongIdTable(name = KB_INFO_TABLE) {
     val kbId = varchar("kb_id", 128)
