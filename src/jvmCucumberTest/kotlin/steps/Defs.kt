@@ -242,6 +242,10 @@ class Defs : En {
         When("I select the condition in position {int}") { index: Int ->
             conditionSelectorPO.clickConditionWithIndex(index)
         }
+        When("I select the condition {string}") { text: String ->
+            conditionSelectorPO.clickConditionWithText(text)
+        }
+
         When("I select the {word} condition") { position: String ->
             when (position) {
                 "first" -> conditionSelectorPO.clickConditionWithIndex(0)
@@ -288,15 +292,15 @@ class Defs : En {
             conclusionsViewPO.requireConditionsToBeShown(*expectedConditions.toTypedArray())
         }
 
-        Then("The message {string} should be shown") { message: String ->
+        Then("the message {string} should be shown") { message: String ->
             cornerstoneViewPO.requireMessageForNoCornerstones(message)
         }
 
-        Then("The case {word} should be shown as the cornerstone case") { ccName: String ->
+        Then("the case {word} is shown as the cornerstone case") { ccName: String ->
             cornerstoneViewPO.requireCornerstoneCase(ccName)
         }
 
-        Then("The number of cornerstone cases should be shown as {int}") { numberOfCornerstoneCases: Int ->
+        Then("the number of cornerstone cases should be shown as {int}") { numberOfCornerstoneCases: Int ->
             cornerstoneViewPO.requireNumberOfCornerstones(numberOfCornerstoneCases)
         }
         When("I click the {word} cornerstone case button") { direction: String ->

@@ -7,7 +7,7 @@ import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
-import react.VFC
+import react.FC
 import react.dom.checkContainer
 import web.html.HTML.button
 import kotlin.test.Test
@@ -18,7 +18,7 @@ class KBInfoPaneTest {
 
     @Test
     fun initial(): TestResult = runTest {
-        val vfc = VFC {
+        val vfc = FC {
             KBInfoPane {
                 api = testApi
                 scope = this@runTest

@@ -2,7 +2,7 @@ package io.rippledown.kb
 
 import kotlinx.coroutines.test.runTest
 import proxy.waitForEvents
-import react.VFC
+import react.FC
 import react.dom.createRootFor
 import kotlin.test.Ignore
 import kotlin.test.Test
@@ -12,7 +12,7 @@ class KBImportDialogTest {
 
     @Test
     fun importDialogShouldNotBeShowingInitially() = runTest {
-        val vfc = VFC {
+        val vfc = FC {
             KBImportDialog {
             }
         }
@@ -24,7 +24,7 @@ class KBImportDialogTest {
 
     @Test
     fun shouldShowDialogWhenImportButtonClicked() = runTest {
-        val vfc = VFC {
+        val vfc = FC {
             KBImportDialog {
             }
         }

@@ -1,17 +1,17 @@
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
-val kotlinVersion = "1.8.22"
+val kotlinVersion = "1.9.0"
 val serializationVersion = "1.5.1"
 val kotlinxDateTimeVersion = "0.4.0"
 val kotlinxCoroutinesTestVersion = "1.6.4"
-val ktor_version = "2.3.0"
-val exposedVersion="0.40.1"
+val ktor_version = "2.3.2"
+val kotestVersion = "5.6.2"
+val exposedVersion = "0.40.1"
 val logbackVersion = "1.4.5"
-val kotlinWrappersVersion = "1.0.0-pre.579"
+val kotlinWrappersVersion = "1.0.0-pre.592"
 val diffUtilsVersion = "4.12"
 val testingLibraryReactVersion = "14.0.0"
-val kotestVersion = "5.5.5"
 val webDriverVersion = "5.3.2"
 val seleniumJavaVersion = "4.9.0"
 val awaitilityVersion = "4.2.0"
@@ -21,9 +21,9 @@ val commonsTextVersion = "1.10.0"
 val mockkVersion = "1.13.4"
 
 plugins {
-    kotlin("multiplatform") version "1.8.22"
-    kotlin("plugin.serialization") version "1.8.22"
-    id("io.ktor.plugin") version "2.2.3"
+    kotlin("multiplatform") version "1.9.0"
+    kotlin("plugin.serialization") version "1.9.0"
+    id("io.ktor.plugin") version "2.2.4"
     id("org.gretty") version "4.0.3"
     application
     jacoco

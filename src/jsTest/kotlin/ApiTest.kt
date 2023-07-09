@@ -6,6 +6,7 @@ import io.rippledown.model.diff.*
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
+import io.rippledown.model.rule.UpdateCornerstoneRequest
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
@@ -131,6 +132,26 @@ class ApiTest {
             returnCornerstoneStatus = CornerstoneStatus()
         }
         Api(mock(config)).startRuleSession(sessionStartRequest) shouldBe config.returnCornerstoneStatus
+    }
+
+    @Test
+    fun shouldUpdateCornerstones() = runTest {
+        val request = UpdateCornerstoneRequest(
+            cornerstoneStatus = CornerstoneStatus(),
+            conditionList = ConditionList(
+                listOf(
+                    HasCurrentValue(1, Attribute(1, "A")),
+                    HasCurrentValue(2, Attribute(2, "B"))
+                )
+            )
+        )
+
+        val newCornerstone = createCase("A", 1)
+        val config = config {
+            expectedUpdateCornerstoneRequest = request
+            returnCornerstoneStatus = CornerstoneStatus(newCornerstone, 0, 1)
+        }
+        Api(mock(config)).updateCornerstoneStatus(request) shouldBe config.returnCornerstoneStatus
     }
 
     @Test

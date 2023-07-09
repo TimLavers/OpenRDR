@@ -18,7 +18,7 @@ import mocks.mock
 import proxy.findAllById
 import proxy.findById
 import proxy.waitForEvents
-import react.VFC
+import react.FC
 import react.dom.checkContainer
 import react.dom.createRootFor
 import kotlin.test.Test
@@ -39,7 +39,7 @@ class CaseListTest {
             returnCase = createCase(caseId1)
         }
 
-        val vfc = VFC {
+        val vfc = FC {
             CaseList {
                 caseIds = twoCaseIds
                 api = Api(mock(config))
@@ -71,7 +71,7 @@ class CaseListTest {
             returnCasesInfo = CasesInfo(threeCaseIds)
             returnCase = createCase(caseId1)
         }
-        val vfc = VFC {
+        val vfc = FC {
             CaseList {
                 caseIds = threeCaseIds
                 api = Api(mock(config))
@@ -100,7 +100,7 @@ class CaseListTest {
             returnCase = createCase(caseId1)
         }
 
-        val vfc = VFC {
+        val vfc = FC {
             CaseList {
                 caseIds = twoCaseIds
                 api = Api(mock(config))
@@ -127,7 +127,7 @@ class CaseListTest {
             returnCase = createCase(CaseId(100, caseName100))
         }
 
-        val vfc = VFC {
+        val vfc = FC {
             CaseList {
                 this.caseIds = caseIds
                 api = Api(mock(config))
@@ -169,7 +169,7 @@ class CaseListTest {
             returnCase = caseWithInterp
         }
 
-        val vfc = VFC {
+        val vfc = FC {
             CaseList {
                 caseIds = caseIdList
                 api = Api(mock(config))
@@ -214,7 +214,7 @@ class CaseListTest {
             returnCase = caseWithInterp
         }
 
-        val vfc = VFC {
+        val vfc = FC {
             CaseList {
                 caseIds = caseIdList
                 api = Api(mock(config))
@@ -263,7 +263,7 @@ class CaseListTest {
             returnConditionList = ConditionList(listOf(condition))
         }
 
-        val vfc = VFC {
+        val vfc = FC {
             CaseList {
                 caseIds = caseIdList
                 api = Api(mock(config))
@@ -314,7 +314,7 @@ class CaseListTest {
             returnCase = caseWithInterp
         }
 
-        val vfc = VFC {
+        val vfc = FC {
             CaseList {
                 caseIds = caseIdList
                 api = Api(mock(config))
@@ -368,7 +368,7 @@ class CaseListTest {
             returnCornerstoneStatus = CornerstoneStatus(cornerstoneCase, 42, 84)
         }
 
-        val vfc = VFC {
+        val vfc = FC {
             CaseList {
                 caseIds = caseIdList
                 api = Api(mock(config))
@@ -418,7 +418,7 @@ class CaseListTest {
             returnCornerstoneStatus = CornerstoneStatus(cornerstoneCase, 42, 84)
         }
 
-        val vfc = VFC {
+        val vfc = FC {
             CaseList {
                 caseIds = caseIdList
                 api = Api(mock(config))
@@ -476,7 +476,7 @@ class CaseListTest {
             returnCornerstoneStatus = CornerstoneStatus(cornerstoneCase, 42, 84)
         }
 
-        val vfc = VFC {
+        val vfc = FC {
             CaseList {
                 caseIds = caseIdList
                 api = Api(mock(config))
@@ -534,7 +534,7 @@ class CaseListTest {
             returnCornerstoneStatus = CornerstoneStatus(cornerstoneCase, 42, 84)
         }
 
-        val vfc = VFC {
+        val vfc = FC {
             CaseList {
                 caseIds = caseIdList
                 api = Api(mock(config))

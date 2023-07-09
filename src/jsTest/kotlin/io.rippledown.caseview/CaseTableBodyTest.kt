@@ -8,7 +8,7 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.defaultDate
 import kotlinx.coroutines.test.runTest
 import proxy.findAllById
-import react.VFC
+import react.FC
 import react.dom.createRootFor
 import kotlin.test.Test
 
@@ -29,7 +29,7 @@ class CaseTableBodyTest {
         val properties = CaseViewProperties(listOf(tsh, ft4, abc, xyz))
         val viewableCase = ViewableCase(case1, properties)
 
-        val vfc = VFC {
+        val vfc = FC {
             CaseTableBody {
                 case = viewableCase
             }

@@ -11,7 +11,6 @@ import mui.material.TextField
 import proxy.findById
 import proxy.waitForEvents
 import react.FC
-import react.VFC
 import react.dom.createRootFor
 import react.dom.test.act
 import react.useState
@@ -32,7 +31,7 @@ class InterpretationViewUpdateTest {
             add(RuleSummary(conclusion = Conclusion(1, caseBConclusion)))
         }
 
-        val vfc = VFC {
+        val vfc = FC {
             var interp by useState(interpA)
 
             Button {

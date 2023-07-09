@@ -11,8 +11,9 @@ import io.rippledown.model.rule.RuleSummary
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
-import proxy.*
-import react.VFC
+import proxy.findById
+import proxy.waitForEvents
+import react.FC
 import react.dom.checkContainer
 import react.dom.createRootFor
 import kotlin.test.Test
@@ -21,7 +22,7 @@ class InterpretationTabsTest {
 
     @Test
     fun originalTabShouldBeSelectedByDefault() = runTest {
-        val vfc = VFC {
+        val vfc = FC {
             InterpretationTabs {
                 interpretation = Interpretation()
                 scope = this@runTest
@@ -41,7 +42,7 @@ class InterpretationTabsTest {
         val originalInterp = Interpretation().apply {
             add(RuleSummary(conclusion = Conclusion(1, text)))
         }
-        val vfc = VFC {
+        val vfc = FC {
             InterpretationTabs {
                 interpretation = originalInterp
                 scope = this@runTest
@@ -58,7 +59,7 @@ class InterpretationTabsTest {
 
     @Test
     fun conclusionsTabShouldBeShowing() = runTest {
-        val vfc = VFC {
+        val vfc = FC {
             InterpretationTabs {
                 scope = this@runTest
                 interpretation = Interpretation()
@@ -73,7 +74,7 @@ class InterpretationTabsTest {
     @Test
     fun conclusionsTabCanBeSelected() = runTest {
         val text = "Go to Bondi."
-        val vfc = VFC {
+        val vfc = FC {
             InterpretationTabs {
                 interpretation = Interpretation().apply {
                     add(RuleSummary(conclusion = Conclusion(1, text)))
@@ -89,7 +90,7 @@ class InterpretationTabsTest {
 
     @Test
     fun shouldBeAbleToSelectTheChangesTab() = runTest {
-        val vfc = VFC {
+        val vfc = FC {
             InterpretationTabs {
                 scope = this@runTest
                 interpretation = Interpretation()
@@ -104,7 +105,7 @@ class InterpretationTabsTest {
 
     @Test
     fun diffPanelShouldShowNoChangesForAnEmptyDiff() = runTest {
-        val vfc = VFC {
+        val vfc = FC {
             InterpretationTabs {
                 scope = this@runTest
                 interpretation = Interpretation()
@@ -135,7 +136,7 @@ class InterpretationTabsTest {
         )
         val interpretationWithDiffs = Interpretation(diffList = diffListToReturn)
 
-        val vfc = VFC {
+        val vfc = FC {
             InterpretationTabs {
                 scope = this@runTest
                 api = Api(mock(config {}))
@@ -172,7 +173,7 @@ class InterpretationTabsTest {
             )
         )
         val interpretationWithDiffs = Interpretation(diffList = diffListToReturn)
-        val vfc = VFC {
+        val vfc = FC {
             InterpretationTabs {
                 scope = this@runTest
                 api = Api(mock(config {}))
@@ -191,7 +192,7 @@ class InterpretationTabsTest {
     fun caseShouldBeRefreshedIfInterpretationIsEdited() = runTest {
         var refreshCaseCalled = false
 
-        val vfc = VFC {
+        val vfc = FC {
             InterpretationTabs {
                 scope = this@runTest
                 api = Api(mock(config {}))
@@ -213,7 +214,7 @@ class InterpretationTabsTest {
 
     @Test
     fun changesBadgeShouldNotShowIfNoChanges() = runTest {
-        val vfc = VFC {
+        val vfc = FC {
             InterpretationTabs {
                 scope = this@runTest
                 api = Api(mock(config {}))

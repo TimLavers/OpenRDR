@@ -1,17 +1,16 @@
 package npm
 
 import io.kotest.matchers.shouldBe
+import io.rippledown.interpretation.requireBadgeCount
+import io.rippledown.interpretation.requireNoBadge
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import mui.material.Badge
 import mui.material.Button
 import mui.material.ButtonProps
 import proxy.findById
-import io.rippledown.interpretation.requireBadgeCount
-import io.rippledown.interpretation.requireNoBadge
 import react.FC
 import react.ReactNode
-import react.VFC
 import react.create
 import react.dom.createRootFor
 import kotlin.test.Test
@@ -21,7 +20,7 @@ class BadgeWithChildTest {
     @Test
     fun shouldReadBadgeContent(): TestResult {
         return runTest {
-            val vfc = VFC {
+            val vfc = FC {
                 Badge {
                     badgeContent = 42.unsafeCast<ReactNode>()
                 }
@@ -35,7 +34,7 @@ class BadgeWithChildTest {
     @Test
     fun shouldHideBadgeIfContentIsZero(): TestResult {
         return runTest {
-            val vfc = VFC {
+            val vfc = FC {
                 Badge {
                     badgeContent = 0.unsafeCast<ReactNode>()
                 }
@@ -60,7 +59,7 @@ class BadgeWithChildTest {
         }.create()
 
         return runTest {
-            val vfc = VFC {
+            val vfc = FC {
                 Badge {
                     badgeContent = 42.unsafeCast<ReactNode>()
                     +button

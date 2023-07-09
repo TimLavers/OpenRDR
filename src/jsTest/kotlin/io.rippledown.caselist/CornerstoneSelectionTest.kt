@@ -19,7 +19,7 @@ import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
 import proxy.waitForEvents
-import react.VFC
+import react.FC
 import react.dom.createRootFor
 import kotlin.test.Test
 
@@ -56,7 +56,7 @@ class CornerstoneSelectionTest {
             returnCornerstoneStatus = CornerstoneStatus(cornerstones[0], 0, numberOfCornerstones)
         }
 
-        val vfc = VFC {
+        val vfc = FC {
             CaseList {
                 caseIds = caseIdList
                 api = Api(mock(config))

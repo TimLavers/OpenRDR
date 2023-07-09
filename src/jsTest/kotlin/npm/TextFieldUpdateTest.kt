@@ -5,7 +5,7 @@ import kotlinx.coroutines.test.runTest
 import mui.material.Button
 import mui.material.TextField
 import proxy.findById
-import react.VFC
+import react.FC
 import react.dom.createRootFor
 import react.dom.test.act
 import react.useState
@@ -19,7 +19,7 @@ class TextFieldUpdateTest {
         val manlyText = "Go to Manly"
         val buttonId = "button_id"
         val textFieldId = "text_field_id"
-        val vfc = VFC {
+        val vfc = FC {
             var latestText by useState(bondiText)
 
             Button {

@@ -3,7 +3,7 @@ package io.rippledown.caselist
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.CaseId
 import kotlinx.coroutines.test.runTest
-import react.VFC
+import react.FC
 import react.dom.checkContainer
 import react.dom.createRootFor
 import kotlin.test.Test
@@ -18,7 +18,7 @@ class CaseSelectorTest {
             CaseId(id = 1, name = caseA), CaseId(id = 2, name = caseB)
         )
 
-        val vfc = VFC {
+        val vfc = FC {
             CaseSelector {
                 caseIds = twoCaseIds
             }
@@ -41,7 +41,7 @@ class CaseSelectorTest {
         val caseId3 = CaseId(id = 3, name = caseC)
         val threeCaseIds = listOf(caseId1, caseId2, caseId3)
         var selectedCaseId: Long = 0
-        val vfc = VFC {
+        val vfc = FC {
             CaseSelector {
                 caseIds = threeCaseIds
                 selectCase = { id ->
@@ -64,7 +64,7 @@ class CaseSelectorTest {
         val caseId2 = CaseId(id = 2, name = caseB)
         val caseId3 = CaseId(id = 3, name = caseC)
         val threeCaseIds = listOf(caseId1, caseId2, caseId3)
-        val vfc = VFC {
+        val vfc = FC {
             CaseSelector {
                 caseIds = threeCaseIds
                 selectedCaseName = caseB

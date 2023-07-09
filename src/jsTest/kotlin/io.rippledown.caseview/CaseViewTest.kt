@@ -11,7 +11,7 @@ import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
 import proxy.waitForEvents
-import react.VFC
+import react.FC
 import react.dom.checkContainer
 import react.dom.createRootFor
 import kotlin.test.Test
@@ -21,7 +21,7 @@ class CaseViewTest {
     @Test
     fun shouldShowCaseName() = runTest {
         val name = "case a "
-        val vfc = VFC {
+        val vfc = FC {
             CaseView {
                 case = createCase(name)
                 scope = this@runTest
@@ -39,7 +39,7 @@ class CaseViewTest {
     fun shouldCallOnCaseEditedWhenInterpretationIsEdited() = runTest {
         val name = "case a "
         var caseEdited = false
-        val vfc = VFC {
+        val vfc = FC {
             CaseView {
                 case = createCase(name)
                 scope = this@runTest
@@ -83,7 +83,7 @@ class CaseViewTest {
             )
         }
         lateinit var interpToBuildRuleOn: Interpretation
-        val vfc = VFC {
+        val vfc = FC {
             CaseView {
                 case = caseWithInterp
                 scope = this@runTest
@@ -117,7 +117,7 @@ fun shouldShowInterpretation() = runTest {
     val text = "Go to Bondi now!"
     val rdrCase = createCase("case a")
     rdrCase.interpretation.add(RuleSummary(conclusion = Conclusion(1, text)))
-    val vfc = VFC {
+    val vfc = FC {
         CaseView {
             case = rdrCase
             scope = this@runTest

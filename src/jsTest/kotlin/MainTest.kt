@@ -10,7 +10,7 @@ import mocks.defaultMock
 import mocks.mock
 import proxy.findById
 import proxy.waitForNextPoll
-import react.VFC
+import react.FC
 import react.dom.createRootFor
 import kotlin.test.Test
 
@@ -18,7 +18,7 @@ class MainTest {
 
     @Test
     fun caseQueueShouldShowOnTheMainWindow() = runTest {
-        val vfc = VFC {
+        val vfc = FC {
             OpenRDRUI {
                 scope = this@runTest
                 api = Api(defaultMock)
@@ -44,7 +44,7 @@ class MainTest {
             )
             returnCase = createCase(caseId1)
         }
-        val vfc = VFC {
+        val vfc = FC {
             OpenRDRUI {
                 scope = this@runTest
                 api = Api(mock(config))

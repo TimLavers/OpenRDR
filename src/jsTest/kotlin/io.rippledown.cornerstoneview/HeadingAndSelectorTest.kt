@@ -2,7 +2,7 @@ package io.rippledown.cornerstoneview
 
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
-import react.VFC
+import react.FC
 import react.dom.checkContainer
 import react.dom.createRootFor
 import kotlin.test.Test
@@ -11,7 +11,7 @@ class HeadingAndSelectorTest {
     @Test
     fun shouldShowTheSpecifiedCornerstoneName() = runTest {
         val caseName = "Bondi"
-        val vfc = VFC {
+        val vfc = FC {
             HeadingAndSelector {
                 name = caseName
             }
@@ -27,7 +27,7 @@ class HeadingAndSelectorTest {
     fun shouldSelectTheNextCornerstoneIndex() = runTest {
         val caseName = "Bondi"
         var selectedIndex = -1
-        val vfc = VFC {
+        val vfc = FC {
             HeadingAndSelector {
                 name = caseName
                 numberOfCCs = 42
@@ -48,7 +48,7 @@ class HeadingAndSelectorTest {
     fun shouldSelectThePreviousCornerstoneIndex() = runTest {
         val caseName = "Bondi"
         var selectedIndex = -1
-        val vfc = VFC {
+        val vfc = FC {
             HeadingAndSelector {
                 name = caseName
                 numberOfCCs = 42

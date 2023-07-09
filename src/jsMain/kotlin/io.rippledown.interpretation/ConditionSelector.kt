@@ -20,6 +20,7 @@ import web.cssom.JustifyContent.Companion.flexStart
 external interface ConditionSelectorHandler : Handler {
     var conditions: List<Condition>
     var onDone: (conditionsPicked: List<Condition>) -> Unit
+    var changedConditions: (conditionsPicked: List<Condition>) -> Unit
     var onCancel: () -> Unit
 }
 
@@ -34,6 +35,7 @@ val ConditionSelector = FC<ConditionSelectorHandler> { handler ->
                 } else {
                     selectedConditions.remove(handler.conditions[index])
                 }
+                handler.changedConditions(selectedConditions)
             }
         }
     }.create()

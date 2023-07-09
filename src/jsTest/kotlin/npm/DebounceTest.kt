@@ -9,7 +9,6 @@ import proxy.findById
 import proxy.waitForEvents
 import react.FC
 import react.Props
-import react.VFC
 import react.dom.createRootFor
 import react.dom.onChange
 import react.dom.test.Simulate
@@ -48,7 +47,7 @@ class DebounceTest {
                     +"Clicked $clicks times"
                 }
             }
-            val vfc = VFC {
+            val vfc = FC {
                 DebouncedButton {
                 }
             }
@@ -96,7 +95,7 @@ class DebounceTest {
                     onChange = debounceFunction()
                 }
             }
-            val vfc = VFC {
+            val vfc = FC {
                 DebouncedTextField {
                 }
             }
