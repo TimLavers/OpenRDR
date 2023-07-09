@@ -299,8 +299,11 @@ class Defs : En {
         Then("The number of cornerstone cases should be shown as {int}") { numberOfCornerstoneCases: Int ->
             cornerstoneViewPO.requireNumberOfCornerstones(numberOfCornerstoneCases)
         }
-        When("I click the next cornerstone case button") {
-            cornerstoneViewPO.selectNextCornerstoneCase()
+        When("I click the {word} cornerstone case button") { direction: String ->
+            when (direction) {
+                "previous" -> cornerstoneViewPO.selectPreviousCornerstoneCase()
+                "next" -> cornerstoneViewPO.selectNextCornerstoneCase()
+            }
         }
     }
 }
