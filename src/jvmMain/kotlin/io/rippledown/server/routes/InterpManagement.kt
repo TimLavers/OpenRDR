@@ -9,6 +9,7 @@ import io.rippledown.constants.api.*
 import io.rippledown.model.Interpretation
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
+import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.server.ServerApplication
 
 fun Application.interpManagement(application: ServerApplication) {
@@ -29,6 +30,12 @@ fun Application.interpManagement(application: ServerApplication) {
         post(START_RULE_SESSION) {
             val sessionStartRequest = call.receive<SessionStartRequest>()
             val cornerstoneStatus = application.startRuleSession(sessionStartRequest)
+            call.respond(HttpStatusCode.OK, cornerstoneStatus)
+        }
+
+        post(UPDATE_CORNERSTONES) {
+            val request = call.receive<UpdateCornerstoneRequest>()
+            val cornerstoneStatus = application.updateCornerstone(request)
             call.respond(HttpStatusCode.OK, cornerstoneStatus)
         }
 

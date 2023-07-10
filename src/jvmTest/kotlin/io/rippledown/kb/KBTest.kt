@@ -1,6 +1,7 @@
 package io.rippledown.kb
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
@@ -8,13 +9,12 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.rippledown.model.*
-import io.rippledown.model.condition.GreaterThanOrEqualTo
-import io.rippledown.model.condition.HasCurrentValue
-import io.rippledown.model.condition.IsNormal
-import io.rippledown.model.condition.LessThanOrEqualTo
+import io.rippledown.model.condition.*
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.external.MeasurementEvent
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
+import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.persistence.inmemory.InMemoryKB
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -401,7 +401,7 @@ class KBTest {
 
     @Test
     fun `cannot start a rule session if one is already started`() {
-        val sessionCase = kb.addProcessedCase(createCase("Case1"))
+        val sessionCase = createCase("Case1")
         val conclusion = kb.conclusionManager.getOrCreate("Whatever.")
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(conclusion))
         shouldThrow<IllegalStateException> {
@@ -411,10 +411,8 @@ class KBTest {
 
     @Test
     fun `cannot start a rule session if action is not applicable to session case`() {
-        kb.addCornerstoneCase(createCase("Case1", "1.0"))
-        kb.addCornerstoneCase(createCase("Case2", "1.0"))
-        val sessionCase = kb.getCornerstoneCaseByName("Case1")
-        val otherCase = kb.getCornerstoneCaseByName("Case1")
+        val sessionCase = createCase("Case1", "1.0")
+        val otherCase = createCase("Case2", "1.0")
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
         kb.commitCurrentRuleSession()
         kb.interpret(otherCase)
@@ -422,13 +420,12 @@ class KBTest {
 
         shouldThrow<IllegalStateException> {
             kb.startRuleSession(otherCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
-        }.message shouldBe "Action ChangeTreeToAddConclusion(toBeAdded=Conclusion(id=1, text=Whatever.)) is not applicable to case Case1"
+        }.message shouldBe "Action ChangeTreeToAddConclusion(toBeAdded=Conclusion(id=1, text=Whatever.)) is not applicable to case Case2"
     }
 
     @Test
     fun startRuleSession() {
-        kb.addCornerstoneCase(createCase("Case1"))
-        val sessionCase = kb.getCornerstoneCaseByName("Case1")
+        val sessionCase = createCase("Case1")
         kb.interpret(sessionCase)
         sessionCase.interpretation.textGivenByRules() shouldBe ""
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
@@ -439,9 +436,8 @@ class KBTest {
 
     @Test
     fun conflictingCases() {
-        kb.addCornerstoneCase(createCase("Case1", "1.0"))
+        val sessionCase = createCase("Case1", "1.0")
         kb.addCornerstoneCase(createCase("Case2", "2.0"))
-        val sessionCase = kb.getCornerstoneCaseByName("Case1")
         sessionCase.interpretation.textGivenByRules() shouldBe ""
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
         kb.conflictingCasesInCurrentRuleSession().map { rdrCase -> rdrCase.name }.toSet() shouldBe setOf("Case2")
@@ -449,9 +445,8 @@ class KBTest {
 
     @Test
     fun addCondition() {
-        kb.addCornerstoneCase(createCase("Case1", "1.0"))
+        val sessionCase = createCase("Case1", "1.0")
         kb.addCornerstoneCase(createCase("Case2", "2.0"))
-        val sessionCase = kb.getCornerstoneCaseByName("Case1")
         sessionCase.interpretation.textGivenByRules() shouldBe ""
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
         kb.addConditionToCurrentRuleSession(LessThanOrEqualTo(null, glucose(), 1.2))
@@ -460,10 +455,8 @@ class KBTest {
 
     @Test
     fun commitSession() {
-        kb.addCornerstoneCase(createCase("Case1", "1.0"))
-        kb.addCornerstoneCase(createCase("Case2", "2.0"))
-        val sessionCase = kb.getCornerstoneCaseByName("Case1")
-        val otherCase = kb.getCornerstoneCaseByName("Case2")
+        val sessionCase = createCase("Case1", "1.0")
+        val otherCase = createCase("Case2", "2.0")
         sessionCase.interpretation.textGivenByRules() shouldBe ""
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
         kb.interpret(otherCase)
@@ -505,6 +498,144 @@ class KBTest {
         kb.commitCurrentRuleSession()
         kb.allCornerstoneCases() shouldHaveSize 1
         kb.containsCornerstoneCaseWithName("Case1") shouldBe true
+    }
+
+    @Test
+    fun `should update the cornerstone status when the conditions change`() {
+        val cc1 = kb.addCornerstoneCase(createCase("Case1", "1.0"))
+        val vcc1 = kb.viewableInterpretedCase(cc1)
+        val sessionCase = createCase("Case3", "3.0")
+
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        val currentCCStatus = CornerstoneStatus(vcc1, 0, 1)
+        withClue("sanity check") {
+            kb.cornerstoneStatus(vcc1) shouldBe currentCCStatus
+        }
+        val condition = LessThanOrEqualTo(null, glucose(), 0.5) //false for the cornerstone
+        val updateRequest = UpdateCornerstoneRequest(currentCCStatus, ConditionList(listOf(condition)))
+        kb.updateCornerstone(updateRequest) shouldBe CornerstoneStatus()
+    }
+
+    @Test
+    fun `should not update the cornerstone status if no cornerstones are removed by the condition change`() {
+        val cc1 = kb.addCornerstoneCase(createCase("Case1", "1.0"))
+        val vcc1 = kb.viewableInterpretedCase(cc1)
+        val sessionCase = createCase("Case3", "3.0")
+
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        val currentCCStatus = CornerstoneStatus(vcc1, 0, 1)
+        withClue("sanity check") {
+            kb.cornerstoneStatus(vcc1) shouldBe currentCCStatus
+        }
+        val condition = LessThanOrEqualTo(null, glucose(), 1.0) //true for the cornerstone
+        val updateRequest = UpdateCornerstoneRequest(currentCCStatus, ConditionList(listOf(condition)))
+        kb.updateCornerstone(updateRequest) shouldBe currentCCStatus
+    }
+
+    @Test
+    fun `should reset the first cornerstone caseif the current cornerstone has been removed by the condition change`() {
+        val cc1 = kb.addCornerstoneCase(createCase("Case1", "1.0"))
+        val cc2 = kb.addCornerstoneCase(createCase("Case2", "2.0"))
+        kb.addCornerstoneCase(createCase("Case3", "3.0"))
+        val vcc1 = kb.viewableInterpretedCase(cc1)
+        val vcc2 = kb.viewableInterpretedCase(cc2)
+        val sessionCase = createCase("Case4", "4.0")
+
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        val currentCCStatus = CornerstoneStatus(vcc1, 0, 3)
+        withClue("sanity check") {
+            kb.cornerstoneStatus(vcc1) shouldBe currentCCStatus
+        }
+        val condition = GreaterThanOrEqualTo(null, glucose(), 1.5) //false for the current cornerstone
+        val updateRequest = UpdateCornerstoneRequest(currentCCStatus, ConditionList(listOf(condition)))
+        val expected = CornerstoneStatus(vcc2, 0, 2)
+        kb.updateCornerstone(updateRequest) shouldBe expected
+    }
+
+    @Test
+    fun `should remain on the current cornerstone case if it has not been removed by the condition change`() {
+        val cc1 = kb.addCornerstoneCase(createCase("Case1", "1.0"))
+        val cc2 = kb.addCornerstoneCase(createCase("Case2", "2.0"))
+        kb.addCornerstoneCase(createCase("Case3", "3.0"))
+        val vcc1 = kb.viewableInterpretedCase(cc1)
+        kb.viewableInterpretedCase(cc2)
+        val sessionCase = createCase("Case4", "4.0")
+
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        val currentCCStatus = CornerstoneStatus(vcc1, 0, 3)
+        withClue("sanity check") {
+            kb.cornerstoneStatus(vcc1) shouldBe currentCCStatus
+        }
+        val condition = LessThanOrEqualTo(null, glucose(), 2.5) //true for the current cornerstone and cc2
+        val updateRequest = UpdateCornerstoneRequest(currentCCStatus, ConditionList(listOf(condition)))
+        val expected = CornerstoneStatus(vcc1, 0, 2)
+        kb.updateCornerstone(updateRequest) shouldBe expected
+    }
+
+    @Test
+    fun `should remain on the current cornerstone case if it has not been removed by the condition change and it is not the first one`() {
+        val cc1 = kb.addCornerstoneCase(createCase("Case1", "1.0"))
+        val cc2 = kb.addCornerstoneCase(createCase("Case2", "2.0"))
+        kb.addCornerstoneCase(createCase("Case3", "3.0"))
+        kb.viewableInterpretedCase(cc1)
+        val vcc2 = kb.viewableInterpretedCase(cc2)
+        val sessionCase = createCase("Case4", "4.0")
+
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        val currentCCStatus = CornerstoneStatus(vcc2, 1, 3) //the user has skipped to the 2nd cornerstone
+        withClue("sanity check") {
+            kb.cornerstoneStatus(vcc2) shouldBe currentCCStatus
+        }
+
+        val condition =
+            LessThanOrEqualTo(null, glucose(), 2.5) //true for cc1 and the current cornerstone. false for cc3
+        val updateRequest = UpdateCornerstoneRequest(currentCCStatus, ConditionList(listOf(condition)))
+        val expected = CornerstoneStatus(vcc2, 1, 2)
+        kb.updateCornerstone(updateRequest) shouldBe expected
+    }
+
+    @Test
+    fun `should return no cornerstones when the rule session has just started if there aren't any cornerstones`() {
+        val sessionCase = createCase("Case4", "4.0")
+        kb.startRuleSession(
+            sessionCase,
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
+        )
+        val ccStatus = kb.cornerstoneStatus(null)
+        ccStatus shouldBe CornerstoneStatus()
+    }
+
+    @Test
+    fun `should return all cornerstones when the rule session has just started and no cornerstone has been selected`() {
+        val cc1 = kb.addCornerstoneCase(createCase("Case1", "1.0"))
+        kb.addCornerstoneCase(createCase("Case2", "2.0"))
+        kb.addCornerstoneCase(createCase("Case3", "3.0"))
+        val vcc1 = kb.viewableInterpretedCase(cc1)
+
+        val sessionCase = createCase("Case4", "4.0")
+        kb.startRuleSession(
+            sessionCase,
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
+        )
+        val ccStatus = kb.cornerstoneStatus(null)
+        ccStatus shouldBe CornerstoneStatus(vcc1, 0, 3)
+    }
+
+    @Test
+    fun `should not change the index of the current cornerstone if it has not been removed`() {
+        val cc1 = kb.addCornerstoneCase(createCase("Case1", "1.0"))
+        val cc2 = kb.addCornerstoneCase(createCase("Case2", "2.0"))
+        kb.addCornerstoneCase(createCase("Case3", "3.0"))
+        kb.viewableInterpretedCase(cc1)
+        val vcc2 = kb.viewableInterpretedCase(cc2)
+
+        val sessionCase = createCase("Case4", "4.0")
+        kb.startRuleSession(
+            sessionCase,
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
+        )
+        val ccStatus = kb.cornerstoneStatus(vcc2)
+        ccStatus shouldBe CornerstoneStatus(vcc2, 1, 3)
     }
 
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")

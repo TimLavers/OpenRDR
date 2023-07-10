@@ -162,18 +162,8 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         val diff = sessionStartRequest.diff
 
         startRuleSessionForDifference(caseId, diff)
-        val cornerstones = kb.conflictingCasesInCurrentRuleSession()
+        return kb.cornerstoneStatus(null);
 
-        val names = cornerstones.map { it.name }.joinToString { ", " }
-        logger.info("# cornerstones: ${cornerstones.size}, names: $names")
-
-        return if (cornerstones.isNotEmpty()) {
-            val cornerstone = cornerstones.first()
-            val viewableCornerstone = kb.viewableInterpretedCase(cornerstone)
-            CornerstoneStatus(viewableCornerstone, 0, cornerstones.size)
-        } else {
-            CornerstoneStatus()
-        }
     }
 
     fun commitRuleSession(ruleRequest: RuleRequest): Interpretation {
@@ -207,4 +197,6 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         val viewableCornerstone = kb.viewableInterpretedCase(cornerstone)
         return CornerstoneStatus(viewableCornerstone, cornerstoneIndex, cornerstones.size)
     }
+
+    fun updateCornerstone(request: UpdateCornerstoneRequest) = kb.updateCornerstone(request)
 }
