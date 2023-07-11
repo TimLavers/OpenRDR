@@ -38,7 +38,8 @@ class ConditionManager(private val attributeManager: AttributeManager,
 
     fun conditionHintsForCase(case: RDRCase): ConditionList {
         val conditions = case.attributes.map { attribute ->
-            HasCurrentValue(null, attribute)
+            val condition = HasCurrentValue(null, attribute)
+            getOrCreate(condition)
         }.filter {
             it.holds(case)
         }

@@ -93,7 +93,7 @@ Feature: Reviewing cornerstone cases
       | x | 1 |
     And case Case3 is provided having data:
       | x | 1 |
-      | Y | 1 |
+      | y | 1 |
     And case Case4 is provided having data:
       | x | 1 |
     And the following rules have been defined:
@@ -106,7 +106,6 @@ Feature: Reviewing cornerstone cases
     And I see the case Case1 as the current case
     And I enter the text " Comment 5." in the interpretation field
     And I select the changes tab
-    And pause
     And I start to build a rule for the change on row 4
     And the case Case2 is shown as the cornerstone case
     And I click the next cornerstone case button

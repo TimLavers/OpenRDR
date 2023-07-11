@@ -1,14 +1,18 @@
 package io.rippledown.kb
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.rippledown.model.*
-import io.rippledown.model.condition.*
-import io.rippledown.persistence.*
+import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.ContainsText
+import io.rippledown.model.condition.IsHigh
+import io.rippledown.model.condition.IsNormal
+import io.rippledown.persistence.ConditionStore
 import io.rippledown.persistence.inmemory.InMemoryAttributeStore
 import io.rippledown.persistence.inmemory.InMemoryConditionStore
 import io.rippledown.util.shouldContainSameAs
@@ -156,17 +160,25 @@ class ConditionManagerTest {
     }
 
     @Test
-    fun `should return HasCurrentValue for every attribute that is in the current episodee`() {
+    fun `should return HasCurrentValue for every attribute that is in the current episode`() {
         val a1 = attributeManager.getOrCreate("A1")
         val a2 = attributeManager.getOrCreate("A2")
 
         val caseAttributes = listOf(a1, a2)
         val viewableCase = createCase(caseAttributes)
         val conditionHints = conditionManager.conditionHintsForCase(viewableCase)
-        conditionHints.conditions shouldBe listOf(
-            HasCurrentValue(null, a1),
-            HasCurrentValue(null, a2),
-        )
+        conditionHints.conditions shouldHaveSize 2
+        conditionHints.conditions[0].asText() shouldBe "A1 has a current value"
+        conditionHints.conditions[1].asText() shouldBe "A2 has a current value"
+    }
+
+    @Test
+    fun `every condition returned in the condition hints should have an id`() {
+        val a1 = attributeManager.getOrCreate("A1")
+        val caseAttributes = listOf(a1)
+        val viewableCase = createCase(caseAttributes)
+        val conditionHints = conditionManager.conditionHintsForCase(viewableCase)
+        conditionHints.conditions.forEach { condition -> condition.id shouldNotBe null }
     }
 
     private fun createCase(attributes: List<Attribute>): RDRCase {
@@ -175,6 +187,6 @@ class ConditionManagerTest {
         attributes.forEach {
             builder.addResult(it, date.toEpochMilli(), TestResult(it.name + " value"))
         }
-        return builder.build( "")
+        return builder.build("")
     }
 }

@@ -15,7 +15,6 @@ import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import proxy.debug
 
 fun mock(config: EngineConfig) = EngineBuilder(config).build()
 
@@ -125,13 +124,11 @@ private class EngineBuilder(private val config: EngineConfig) {
                 val body = request.body as TextContent
                 val bodyAsUpdateCornerstoneRequest =
                     json.decodeFromString(UpdateCornerstoneRequest.serializer(), body.text)
-                debug("update ccs with request: $bodyAsUpdateCornerstoneRequest")
 
                 if (config.expectedUpdateCornerstoneRequest != null) {
                     bodyAsUpdateCornerstoneRequest shouldBe config.expectedUpdateCornerstoneRequest
                 }
 
-                debug("returning: ${config.returnCornerstoneStatus}")
                 respond(
                     content = ByteReadChannel(
                         json.encodeToString(config.returnCornerstoneStatus)
