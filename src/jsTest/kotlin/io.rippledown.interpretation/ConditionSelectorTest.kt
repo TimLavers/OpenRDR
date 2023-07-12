@@ -33,7 +33,7 @@ class ConditionSelectorTest {
     }
 
     @Test
-    fun shouldBeAbleToSelectConditions() = runTest {
+    fun shouldBeAbleToIdentifyTheSelectConditionsWhenDoneIsClicked() = runTest {
         val conditionsThatWereSelected = mutableListOf<Condition>()
         val fc = FC {
             ConditionSelector {
@@ -56,7 +56,7 @@ class ConditionSelectorTest {
     }
 
     @Test
-    fun shouldBeAbleToDeselectACondition() = runTest {
+    fun shouldBeAbleToIdentifyDeselectedConditionsWhenDoneIsClicked() = runTest {
         val conditionsThatWereSelected = mutableListOf<Condition>()
         val fc = FC {
             ConditionSelector {
@@ -78,6 +78,37 @@ class ConditionSelectorTest {
             }
         }
     }
+
+    @Test
+    fun shouldBeAbleToSelectAndDeselectACondition() = runTest {
+        val fc = FC {
+            ConditionSelector {
+                conditions = threeConditions
+                onDone = { _ ->
+                }
+                changedConditions = { _ ->
+                }
+            }
+        }
+        checkContainer(fc) { container ->
+            with(container) {
+                requireConditionsToBeSelected(listOf())
+
+                clickConditionWithIndex(0)
+                requireConditionsToBeSelected(listOf(isHigh.asText()))
+
+                clickConditionWithIndex(2)
+                requireConditionsToBeSelected(listOf(isHigh.asText(), isNormal.asText()))
+
+                clickConditionWithIndex(2) //de-select
+                requireConditionsToBeSelected(listOf(isHigh.asText()))
+
+                clickConditionWithIndex(0) //de-select
+                requireConditionsToBeSelected(listOf())
+            }
+        }
+    }
+
 
     @Test
     fun shouldBeAbleToCancelTheRule() = runTest {

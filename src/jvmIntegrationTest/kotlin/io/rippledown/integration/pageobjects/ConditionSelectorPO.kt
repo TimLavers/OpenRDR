@@ -1,12 +1,14 @@
 package io.rippledown.integration.pageobjects
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.rippledown.constants.interpretation.CONDITION_SELECTOR_DONE_BUTTON
 import io.rippledown.constants.interpretation.CONDITION_SELECTOR_ROW
 import io.rippledown.integration.pause
 import org.awaitility.kotlin.await
 import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver
+import org.openqa.selenium.WebElement
 
 // ORD2
 class ConditionSelectorPO(private val driver: WebDriver) {
@@ -30,14 +32,26 @@ class ConditionSelectorPO(private val driver: WebDriver) {
         return this
     }
 
+    fun requireConditionsToBeSelected(expectedConditions: List<String>) {
+        expectedConditions.forEach { condition ->
+            val conditionElement = elementContainingText(condition)
+            conditionElement.getAttribute("class") shouldContain "Mui-checked"
+        }
+    }
+
+
     fun clickConditionWithIndex(index: Int): ConditionSelectorPO {
         driver.findElement(By.id("$CONDITION_SELECTOR_ROW$index")).click()
         return this
     }
 
     fun clickConditionWithText(condition: String): ConditionSelectorPO {
-        driver.findElement(By.xpath("//*[contains(text(), '$condition')]")).click()
+        elementContainingText(condition).click()
         return this
     }
+
+    private fun elementContainingText(condition: String): WebElement =
+        driver.findElement(By.xpath("//*[contains(text(), '$condition')]"))
+
 
 }

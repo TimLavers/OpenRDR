@@ -1,10 +1,7 @@
 package io.rippledown.interpretation
 
 import Handler
-import io.rippledown.constants.interpretation.CONDITION_SELECTOR_BUTTONS
-import io.rippledown.constants.interpretation.CONDITION_SELECTOR_CANCEL_BUTTON
-import io.rippledown.constants.interpretation.CONDITION_SELECTOR_DONE_BUTTON
-import io.rippledown.constants.interpretation.CONDITION_SELECTOR_ROW
+import io.rippledown.constants.interpretation.*
 import io.rippledown.model.condition.Condition
 import mui.material.*
 import mui.material.ButtonVariant.Companion.contained
@@ -29,6 +26,7 @@ val ConditionSelector = FC<ConditionSelectorHandler> { handler ->
 
     fun CheckBoxControl(index: Int) = FC<CheckboxProps> { _ ->
         Checkbox {
+            id = "$CONDITION_SELECTOR_CHECKBOX$index"
             onChange = { _, checked ->
                 if (checked) {
                     selectedConditions.add(handler.conditions[index])

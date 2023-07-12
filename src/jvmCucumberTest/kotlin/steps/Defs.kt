@@ -265,6 +265,11 @@ class Defs : En {
             conditionSelectorPO.requireConditionsShowing(expectedConditions)
         }
 
+        Then("the following conditions (are )(should be )selected:") { dataTable: DataTable ->
+            val expectedConditions = dataTable.asList()
+            conditionSelectorPO.requireConditionsToBeSelected(expectedConditions)
+        }
+
         And("I build a rule to add the comment {string} with the condition {string}") { comment: String, condition: String ->
             with(interpretationViewPO) {
                 enterVerifiedText(comment)
