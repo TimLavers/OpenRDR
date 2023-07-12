@@ -1,7 +1,6 @@
 package io.rippledown.kb
 
 import Handler
-import debug
 import io.rippledown.constants.kb.*
 import mui.material.*
 import react.FC
@@ -46,7 +45,6 @@ val KBImportDialog = FC<KBImportDialogHandler> { handler ->
     Dialog {
         id = KB_IMPORT_DIALOG
         open = isOpen
-        debug("Import dialog open: $isOpen")
         DialogTitle {
             +"Import KB from zip file"
         }
@@ -77,7 +75,6 @@ val KBImportDialog = FC<KBImportDialogHandler> { handler ->
                 +"Cancel"
                 id = CANCEL_IMPORT_BUTTON_ID
             }
-            debug("rendering import button")
             Button {
                 onClick = {
                     isOpen = false

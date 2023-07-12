@@ -11,7 +11,7 @@ import mocks.mock
 import mui.material.Button
 import proxy.findById
 import proxy.waitForEvents
-import react.VFC
+import react.FC
 import react.dom.createRootFor
 import react.dom.test.act
 import react.useState
@@ -33,7 +33,7 @@ class CaseViewUpdateTest {
         val config = config {
             returnCase = caseA
         }
-        val vfc = VFC {
+        val vfc = FC {
             var currentCase by useState<ViewableCase?>(caseA)
 
             Button {

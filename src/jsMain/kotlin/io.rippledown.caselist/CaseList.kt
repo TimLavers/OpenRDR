@@ -1,7 +1,6 @@
 package io.rippledown.caselist
 
 import Handler
-import debug
 import io.rippledown.caseview.CaseView
 import io.rippledown.constants.caseview.CASELIST_ID
 import io.rippledown.cornerstoneview.CornerstoneView
@@ -13,6 +12,7 @@ import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
+import io.rippledown.model.rule.UpdateCornerstoneRequest
 import kotlinx.coroutines.launch
 import mui.material.Grid
 import react.FC
@@ -91,7 +91,7 @@ val CaseList = FC<CaseListHandler> { handler ->
         Grid {
             item = true
             xs = 4
-            if (ccStatus != null ) {
+            if (ccStatus != null) {
                 CornerstoneView {
                     scope = handler.scope
                     api = handler.api
@@ -117,6 +117,15 @@ val CaseList = FC<CaseListHandler> { handler ->
                         newInterpretation = null
                         ccStatus = null
                     }
+                    changedConditions = { conditions ->
+                        handler.scope.launch {
+                            val updateCCRequest = UpdateCornerstoneRequest(
+                                ccStatus!!,
+                                ConditionList(conditions)
+                            )
+                            ccStatus = handler.api.updateCornerstoneStatus(updateCCRequest)
+                        }
+                    }
                     onDone = { conditionList ->
                         handler.scope.launch {
                             val ruleRequest = RuleRequest(
@@ -128,7 +137,6 @@ val CaseList = FC<CaseListHandler> { handler ->
                             newInterpretation = null
                             ccStatus = null
                             updateCurrentCase(currentCase!!.rdrCase.caseId.id!!)
-                            debug("Rule built")
                         }
                     }
                 }

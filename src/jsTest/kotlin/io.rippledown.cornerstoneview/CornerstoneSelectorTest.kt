@@ -3,7 +3,7 @@ package io.rippledown.cornerstoneview
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import proxy.waitForEvents
-import react.VFC
+import react.FC
 import react.dom.checkContainer
 import react.dom.createRootFor
 import kotlin.test.Test
@@ -11,7 +11,7 @@ import kotlin.test.Test
 class CornerstoneSelectorTest {
     @Test
     fun shouldDefaultToFirstCornerstoneIndex() = runTest {
-        val vfc = VFC {
+        val vfc = FC {
             CornerstoneSelector {
                 total = 42
             }
@@ -26,7 +26,7 @@ class CornerstoneSelectorTest {
     @Test
     fun shouldBeAbleToSelectTheNextCornerstoneIndex() = runTest {
         var selectedZeroBasedIndex = -1
-        val vfc = VFC {
+        val vfc = FC {
             CornerstoneSelector {
                 total = 42
                 onSelect = { index ->
@@ -53,7 +53,7 @@ class CornerstoneSelectorTest {
     @Test
     fun shouldBeAbleToSelectThePreviousCornerstoneIndex() = runTest {
         var selectedZeroBasedIndex = -1
-        val vfc = VFC {
+        val vfc = FC {
             CornerstoneSelector {
                 total = 42
                 onSelect = { index ->

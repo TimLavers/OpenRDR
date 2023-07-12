@@ -16,6 +16,7 @@ import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
+import io.rippledown.model.rule.UpdateCornerstoneRequest
 import kotlinx.browser.window
 import kotlinx.serialization.json.Json
 import web.file.File
@@ -121,11 +122,22 @@ class Api(engine: HttpClientEngine = Js.create()) {
     }
 
     /**
+     * Updates the CornerstoneStatus for the current rule session when the conditions are changed
+     *
+     * @return the updated CornerstoneStatus
+     */
+    suspend fun updateCornerstoneStatus(updateCornerstoneRequest: UpdateCornerstoneRequest): CornerstoneStatus {
+        return jsonClient.post("$endpoint$UPDATE_CORNERSTONES") {
+            contentType(ContentType.Application.Json)
+            setBody(updateCornerstoneRequest)
+        }.body()
+    }
+
+    /**
      * @return the conditions that are suggested for building a rule for the selected Diff in the case's interpretation
      */
     suspend fun conditionHints(caseId: Long): ConditionList =
         jsonClient.get("$endpoint$CONDITION_HINTS?id=$caseId").body()
-
 
     /**
      * Retrieves the specified cornerstone for current the rule session

@@ -7,7 +7,7 @@ import kotlinx.coroutines.test.runTest
 import mui.material.Button
 import proxy.findById
 import proxy.waitForEvents
-import react.VFC
+import react.FC
 import react.dom.createRootFor
 import react.dom.test.act
 import react.useState
@@ -26,7 +26,7 @@ class InterpretationTabsUpdateTest {
         val caseA = createCaseWithInterpretation(caseIdA.name, caseIdA.id, listOf(caseAConclusion))
         val caseB = createCaseWithInterpretation(caseIdB.name, caseIdB.id, listOf(caseBConclusion))
 
-        val vfc = VFC {
+        val vfc = FC {
             var currentCase by useState<ViewableCase?>(caseA)
 
             Button {

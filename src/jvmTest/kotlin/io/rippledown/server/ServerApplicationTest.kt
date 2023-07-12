@@ -5,6 +5,7 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.rippledown.CaseTestUtils
 import io.rippledown.model.*
@@ -140,9 +141,19 @@ internal class ServerApplicationTest {
                 HasCurrentValue(1, attribute)
             }
         val hintConditions = app.conditionHintsForCase(id).conditions.toSet()
+
         hintConditions.size shouldBe expectedConditions.size
         expectedConditions.forEach {
             hintConditions shouldContainSameAs it
+        }
+    }
+
+    @Test
+    fun `condition hints should all have an id`() {
+        val id = supplyCaseFromFile("Case1", app).caseId.id!!
+
+        app.conditionHintsForCase(id).conditions.toSet().forEach { condition ->
+            condition.id shouldNotBe null
         }
     }
 

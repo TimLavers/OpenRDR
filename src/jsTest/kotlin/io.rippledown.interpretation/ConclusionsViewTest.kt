@@ -7,7 +7,7 @@ import io.rippledown.model.condition.ContainsText
 import io.rippledown.model.rule.RuleSummary
 import kotlinx.coroutines.test.runTest
 import proxy.waitForEvents
-import react.VFC
+import react.FC
 import react.dom.checkContainer
 import react.dom.createRootFor
 import kotlin.test.Test
@@ -24,7 +24,7 @@ class ConclusionsViewTest {
         ContainsText(2, surf, "is great $index")
     ).map { it.asText() }
 
-    private fun wrapper(vararg comments: String) = VFC {
+    private fun wrapper(vararg comments: String) = FC {
         val interp = Interpretation()
         comments.forEachIndexed { index, comment ->
             interp.apply {

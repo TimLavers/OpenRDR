@@ -7,7 +7,7 @@ import io.rippledown.model.condition.IsHigh
 import io.rippledown.model.condition.IsLow
 import io.rippledown.model.condition.IsNormal
 import kotlinx.coroutines.test.runTest
-import react.VFC
+import react.FC
 import react.dom.checkContainer
 import kotlin.test.Test
 
@@ -20,12 +20,12 @@ class ConditionSelectorTest {
 
     @Test
     fun shouldListConditionsThatAreHinted() = runTest {
-        val vfc = VFC {
+        val fc = FC {
             ConditionSelector {
-                this.conditions = threeConditions
+                conditions = threeConditions
             }
         }
-        checkContainer(vfc) { container ->
+        checkContainer(fc) { container ->
             with(container) {
                 requireConditions(threeConditions.map { it.asText() })
             }
@@ -35,15 +35,17 @@ class ConditionSelectorTest {
     @Test
     fun shouldBeAbleToSelectConditions() = runTest {
         val conditionsThatWereSelected = mutableListOf<Condition>()
-        val vfc = VFC {
+        val fc = FC {
             ConditionSelector {
-                this.conditions = threeConditions
+                conditions = threeConditions
                 onDone = { selectedConditions ->
                     conditionsThatWereSelected.addAll(selectedConditions)
                 }
+                changedConditions = { _ ->
+                }
             }
         }
-        checkContainer(vfc) { container ->
+        checkContainer(fc) { container ->
             with(container) {
                 clickConditionWithIndex(0)
                 clickConditionWithIndex(2)
@@ -56,16 +58,17 @@ class ConditionSelectorTest {
     @Test
     fun shouldBeAbleToDeselectACondition() = runTest {
         val conditionsThatWereSelected = mutableListOf<Condition>()
-        val vfc = VFC {
+        val fc = FC {
             ConditionSelector {
-                this.conditions = threeConditions
+                conditions = threeConditions
                 onDone = { selectedConditions ->
                     conditionsThatWereSelected.addAll(selectedConditions)
                 }
-
+                changedConditions = { _ ->
+                }
             }
         }
-        checkContainer(vfc) { container ->
+        checkContainer(fc) { container ->
             with(container) {
                 clickConditionWithIndex(0)
                 clickConditionWithIndex(2)
@@ -79,20 +82,80 @@ class ConditionSelectorTest {
     @Test
     fun shouldBeAbleToCancelTheRule() = runTest {
         var cancelClicked = false
-        val vfc = VFC {
+        val fc = FC {
             ConditionSelector {
-                this.conditions = threeConditions
+                conditions = threeConditions
                 onCancel = {
                     cancelClicked = true
                 }
-
+                changedConditions = { _ ->
+                }
             }
         }
-        checkContainer(vfc) { container ->
+        checkContainer(fc) { container ->
             with(container) {
                 clickConditionWithIndex(0)
                 clickCancelButton()
                 cancelClicked shouldBe true
+            }
+        }
+    }
+
+    @Test
+    fun updateShouldBeCalledWhenAConditionIsSelected() = runTest {
+        var conditionsThatWereSelected = listOf<Condition>()
+        val fc = FC {
+            ConditionSelector {
+                conditions = threeConditions
+                changedConditions = { selectedConditions ->
+                    conditionsThatWereSelected = selectedConditions
+                }
+            }
+        }
+        checkContainer(fc) { container ->
+            with(container) {
+                clickConditionWithIndex(0)
+                conditionsThatWereSelected shouldBe listOf(isHigh)
+            }
+        }
+    }
+
+    @Test
+    fun updateShouldBeCalledWhenSeveralConditionsAreSelected() = runTest {
+        var conditionsThatWereSelected = listOf<Condition>()
+        val fc = FC {
+            ConditionSelector {
+                conditions = threeConditions
+                changedConditions = { selectedConditions ->
+                    conditionsThatWereSelected = selectedConditions
+                }
+            }
+        }
+        checkContainer(fc) { container ->
+            with(container) {
+                clickConditionWithIndex(0)
+                clickConditionWithIndex(2)
+                conditionsThatWereSelected shouldBe listOf(isHigh, isNormal)
+            }
+        }
+    }
+
+    @Test
+    fun updateShouldBeCalledWhenAConditionIsDeselected() = runTest {
+        var conditionsThatWereSelected = listOf<Condition>()
+        val fc = FC {
+            ConditionSelector {
+                this.conditions = threeConditions
+                changedConditions = { selectedConditions ->
+                    conditionsThatWereSelected = selectedConditions
+                }
+            }
+        }
+        checkContainer(fc) { container ->
+            with(container) {
+                clickConditionWithIndex(0)
+                clickConditionWithIndex(0) //deselect
+                conditionsThatWereSelected shouldBe emptyList()
             }
         }
     }

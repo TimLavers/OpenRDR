@@ -8,17 +8,16 @@ import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
 import proxy.waitForEvents
-import react.VFC
+import react.FC
 import react.dom.checkContainer
 import react.dom.createRootFor
-import react.dom.test.act
 import kotlin.test.Test
 
 class DiffViewerTest {
 
     @Test
     fun shouldNotShowAnyRowsIfNoChanges() = runTest {
-        val vfc = VFC {
+        val vfc = FC {
             DiffViewer {
                 interpretation = Interpretation()
             }
@@ -32,7 +31,7 @@ class DiffViewerTest {
 
     @Test
     fun shouldShowARowForEachUnchangedDiff() = runTest {
-        val vfc = VFC {
+        val vfc = FC {
             DiffViewer {
                 interpretation = Interpretation(
                     diffList = DiffList(listOf(Unchanged(), Unchanged(), Unchanged()))
@@ -49,7 +48,7 @@ class DiffViewerTest {
 
     @Test
     fun shouldShowARowForEachChangedDiff() = runTest {
-        val vfc = VFC {
+        val vfc = FC {
             DiffViewer {
                 interpretation = Interpretation(
                     diffList = DiffList(listOf(Addition(), Removal(), Replacement()))
@@ -66,7 +65,7 @@ class DiffViewerTest {
 
     @Test
     fun shouldShowABuildIconByDefaultForFirstUnchangedDiff() = runTest {
-        val vfc = VFC {
+        val vfc = FC {
             DiffViewer {
                 interpretation = Interpretation(
                     diffList = DiffList(
@@ -89,7 +88,7 @@ class DiffViewerTest {
 
     @Test
     fun shouldShowABuildIconWhenMouseIsOverChangedDiff() = runTest {
-        val vfc = VFC {
+        val vfc = FC {
             DiffViewer {
                 interpretation = Interpretation(
                     diffList = DiffList(
@@ -112,7 +111,7 @@ class DiffViewerTest {
 
     @Test
     fun shouldNotShowABuildIconWhenMouseIsOverUnchangedDiff() = runTest {
-        val vfc = VFC {
+        val vfc = FC {
             DiffViewer {
                 interpretation = Interpretation(
                     diffList = DiffList(
@@ -136,7 +135,7 @@ class DiffViewerTest {
     @Test
     fun shouldShowAnUnchangedTextInOriginalAndChangedColumns() = runTest {
         val text = "Go to Bondi now!"
-        val vfc = VFC {
+        val vfc = FC {
             DiffViewer {
                 interpretation = Interpretation(
                     diffList = DiffList(
@@ -158,7 +157,7 @@ class DiffViewerTest {
     @Test
     fun shouldShowAnAddedTextInGreenInChangedColumnOnly() = runTest {
         val text = "Go to Bondi now!"
-        val vfc = VFC {
+        val vfc = FC {
             DiffViewer {
                 interpretation = Interpretation(diffList = DiffList(diffs = listOf(Addition(text))))
             }
@@ -175,7 +174,7 @@ class DiffViewerTest {
     @Test
     fun shouldShowARemovedTextInRedInOriginalColumnOnly() = runTest {
         val text = "Go to Bondi now!"
-        val vfc = VFC {
+        val vfc = FC {
             DiffViewer {
                 interpretation = Interpretation(
                     diffList = DiffList(
@@ -199,7 +198,7 @@ class DiffViewerTest {
     fun shouldShowAReplacedAndReplacementTextsInTheirRespectiveColumnsWithCorrespondingColours() = runTest {
         val replaced = "Go to Bondi"
         val replacement = "Go to Bondi now!"
-        val vfc = VFC {
+        val vfc = FC {
             DiffViewer {
                 interpretation = Interpretation(
                     diffList = DiffList(
@@ -223,7 +222,7 @@ class DiffViewerTest {
     @Test
     fun shouldCallOnStartRuleWhenTheBuildIconIsClicked() = runTest {
         var ruleStarted = false
-        val vfc = VFC {
+        val vfc = FC {
             DiffViewer {
                 scope = this@runTest
                 api = Api(mock(config {}))
@@ -261,7 +260,7 @@ class DiffViewerTest {
                 )
             )
         )
-        val vfc = VFC {
+        val vfc = FC {
             DiffViewer {
                 scope = this@runTest
                 interpretation = interp

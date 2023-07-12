@@ -1,7 +1,7 @@
 package io.rippledown.kb
 
 import kotlinx.coroutines.test.runTest
-import react.VFC
+import react.FC
 import react.dom.createRootFor
 import kotlin.test.Ignore
 
@@ -9,7 +9,7 @@ import kotlin.test.Ignore
 class KBExportDialogTest {
 
     fun exportDialogShouldNotBeShowingInitially() = runTest {
-        val vfc = VFC {
+        val vfc = FC {
             KBImportDialog {
             }
         }

@@ -12,11 +12,13 @@ import io.rippledown.model.CaseId
 import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.createCase
 import io.rippledown.model.diff.*
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
+import io.rippledown.model.rule.UpdateCornerstoneRequest
 import kotlin.test.Test
 
 class InterpManagementTest : OpenRDRServerTestBase() {
@@ -69,6 +71,22 @@ class InterpManagementTest : OpenRDRServerTestBase() {
         result.status shouldBe HttpStatusCode.OK
         result.body<CornerstoneStatus>() shouldBe cornerstoneStatus
         verify { serverApplication.startRuleSession(sessionStartRequest) }
+    }
+
+    @Test
+    fun `should delegate updating the cornerstone status of a rule session to server application`() = testApplication {
+        setup()
+        val request = UpdateCornerstoneRequest(CornerstoneStatus(), ConditionList())
+        val cornerstoneStatus = CornerstoneStatus()
+        every { serverApplication.updateCornerstone(request) } returns cornerstoneStatus
+
+        val result = httpClient.post(UPDATE_CORNERSTONES) {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }
+        result.status shouldBe HttpStatusCode.OK
+        result.body<CornerstoneStatus>() shouldBe cornerstoneStatus
+        verify { serverApplication.updateCornerstone(request) }
     }
 
     @Test

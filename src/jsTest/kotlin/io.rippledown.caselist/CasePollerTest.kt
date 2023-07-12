@@ -11,7 +11,7 @@ import mocks.mock
 import proxy.requireNumberOfCases
 import proxy.waitForEvents
 import proxy.waitForNextPoll
-import react.VFC
+import react.FC
 import react.dom.createRootFor
 import kotlin.test.Test
 
@@ -22,7 +22,7 @@ class CasePollerTest {
         val config = config {
             returnCasesInfo = CasesInfo(emptyList())
         }
-        val vfc = VFC {
+        val vfc = FC {
             CasePoller {
                 scope = this@runTest
                 api = Api(mock(config))
@@ -47,7 +47,7 @@ class CasePollerTest {
             returnCase = createCase("case 1", 1)
         }
 
-        val vfc = VFC {
+        val vfc = FC {
             CasePoller {
                 api = Api(mock(config))
                 scope = this@runTest
@@ -76,7 +76,7 @@ class CasePollerTest {
             returnCase = createCase(caseId1)
         }
 
-        val vfc = VFC {
+        val vfc = FC {
             CasePoller {
                 api = Api(mock(config))
                 scope = this@runTest
@@ -105,7 +105,7 @@ class CasePollerTest {
             )
             returnCase = createCase(caseId1)
         }
-        val vfc = VFC {
+        val vfc = FC {
             CasePoller {
                 api = Api(mock(config))
                 scope = this@runTest
@@ -134,7 +134,7 @@ class CasePollerTest {
             returnCase = createCase(caseId1)
         }
 
-        val vfc = VFC {
+        val vfc = FC {
             CasePoller {
                 api = Api(mock(config))
                 scope = this@runTest
@@ -162,7 +162,7 @@ class CasePollerTest {
             returnCase = createCase(caseId)
         }
 
-        val vfc = VFC {
+        val vfc = FC {
             CasePoller {
                 api = Api(mock(config))
                 scope = this@runTest
@@ -193,7 +193,7 @@ class CasePollerTest {
             )
             returnCase = createCase(caseId2)
         }
-        val vfc = VFC {
+        val vfc = FC {
             CasePoller {
                 api = Api(mock(config))
                 scope = this@runTest
@@ -231,7 +231,7 @@ class CasePollerTest {
             )
             returnCase = createCase(caseId1)
         }
-        val vfc = VFC {
+        val vfc = FC {
             CasePoller {
                 api = Api(mock(config))
                 scope = this@runTest

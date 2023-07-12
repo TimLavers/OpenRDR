@@ -4,7 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
 import kotlinx.coroutines.test.runTest
 import proxy.findById
-import react.VFC
+import react.FC
 import react.dom.createRootFor
 import kotlin.test.Test
 
@@ -15,7 +15,7 @@ class AttributeCellTest {
     @Test
     fun creation() = runTest {
         val tsh = Attribute(1, "TSH")
-        val vfc = VFC {
+        val vfc = FC {
             AttributeCell {
                 attribute = tsh
             }

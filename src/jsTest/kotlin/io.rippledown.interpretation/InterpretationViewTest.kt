@@ -10,7 +10,7 @@ import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
 import proxy.waitForEvents
-import react.VFC
+import react.FC
 import react.dom.createRootFor
 import kotlin.test.Test
 
@@ -22,7 +22,7 @@ class InterpretationViewTest {
         val interpretation = Interpretation().apply {
             add(RuleSummary(conclusion = Conclusion(1, text)))
         }
-        val vfc = VFC {
+        val vfc = FC {
             InterpretationView {
                 this.interpretation = interpretation
             }
@@ -37,7 +37,7 @@ class InterpretationViewTest {
         val interpretation = Interpretation(verifiedText = verifiedText).apply {
             add(RuleSummary(conclusion = Conclusion(1, text)))
         }
-        val vfc = VFC {
+        val vfc = FC {
             InterpretationView {
                 this.interpretation = interpretation
             }
@@ -47,7 +47,7 @@ class InterpretationViewTest {
 
     @Test
     fun shouldShowBlankInterpretation() = runTest {
-        val vfc = VFC {
+        val vfc = FC {
             InterpretationView {
                 interpretation = Interpretation()
             }
@@ -63,7 +63,7 @@ class InterpretationViewTest {
         val config = config {
             expectedInterpretation = Interpretation(verifiedText = verifiedText)
         }
-        val vfc = VFC {
+        val vfc = FC {
             InterpretationView {
                 scope = this@runTest
                 api = Api(mock(config))
@@ -84,7 +84,7 @@ class InterpretationViewTest {
             returnInterpretation = Interpretation(verifiedText = verifiedText)
         }
         var updatedText: String? = null
-        val vfc = VFC {
+        val vfc = FC {
             InterpretationView {
                 scope = this@runTest
                 api = Api(mock(config))

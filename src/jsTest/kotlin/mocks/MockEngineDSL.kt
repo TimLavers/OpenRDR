@@ -12,7 +12,7 @@ import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
-import kotlinx.serialization.decodeFromString
+import io.rippledown.model.rule.UpdateCornerstoneRequest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -35,6 +35,7 @@ class EngineConfig {
     var expectedRuleRequest: RuleRequest? = null
     var expectedSessionStartRequest: SessionStartRequest? = null
     var expectedCornerstoneSelection: Int? = -1
+    var expectedUpdateCornerstoneRequest: UpdateCornerstoneRequest? = null
 
     var expectedMovedAttributeId: Int? = null
     var expectedTargetAttributeId: Int? = null
@@ -105,11 +106,29 @@ private class EngineBuilder(private val config: EngineConfig) {
 
             START_RULE_SESSION -> {
                 val body = request.body as TextContent
-                val bodyAsSessionStartRequest = Json.decodeFromString(SessionStartRequest.serializer(), body.text)
+                val bodyAsSessionStartRequest = json.decodeFromString(SessionStartRequest.serializer(), body.text)
 
                 if (config.expectedSessionStartRequest != null) {
                     bodyAsSessionStartRequest shouldBe config.expectedSessionStartRequest
                 }
+                respond(
+                    content = ByteReadChannel(
+                        json.encodeToString(config.returnCornerstoneStatus)
+                    ),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+            }
+
+            UPDATE_CORNERSTONES -> {
+                val body = request.body as TextContent
+                val bodyAsUpdateCornerstoneRequest =
+                    json.decodeFromString(UpdateCornerstoneRequest.serializer(), body.text)
+
+                if (config.expectedUpdateCornerstoneRequest != null) {
+                    bodyAsUpdateCornerstoneRequest shouldBe config.expectedUpdateCornerstoneRequest
+                }
+
                 respond(
                     content = ByteReadChannel(
                         json.encodeToString(config.returnCornerstoneStatus)
@@ -129,6 +148,7 @@ private class EngineBuilder(private val config: EngineConfig) {
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
                 )
             }
+
 
             MOVE_ATTRIBUTE_JUST_BELOW_OTHER -> {
                 val body = request.body as TextContent
