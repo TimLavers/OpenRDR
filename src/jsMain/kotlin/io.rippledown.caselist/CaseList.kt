@@ -117,7 +117,7 @@ val CaseList = FC<CaseListHandler> { handler ->
                         newInterpretation = null
                         ccStatus = null
                     }
-                    changedConditions = { conditions ->
+                    conditionSelected = { conditions ->
                         handler.scope.launch {
                             val updateCCRequest = UpdateCornerstoneRequest(
                                 ccStatus!!,

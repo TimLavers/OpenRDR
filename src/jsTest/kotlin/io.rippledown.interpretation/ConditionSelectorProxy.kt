@@ -19,12 +19,11 @@ fun HTMLElement.requireConditions(expected: List<String>) {
 }
 
 fun HTMLElement.requireConditionsToBeSelected(expected: List<String>) {
-    val allConditions = findAllById(CONDITION_SELECTOR_CHECKBOX)
-    allConditions.forEach { conditionElement ->
-        if (conditionElement.textContent in expected)
-            conditionElement.classList.value shouldContain "Mui-checked"
-        else
-            conditionElement.classList.value shouldNotContain "Mui-checked"
+    val allConditions = findAllById(CONDITION_SELECTOR_ROW)
+    allConditions.forEach { element ->
+        if (element.textContent in expected) {
+            element.children[0].classList.value shouldContain "Mui-checked"
+        }
     }
 }
 
@@ -32,7 +31,7 @@ fun HTMLElement.requireConditionsToBeNotSelected(expected: List<String>) {
     val allConditions = findAllById(CONDITION_SELECTOR_CHECKBOX)
     allConditions.forEach { conditionElement ->
         if (conditionElement.textContent in expected)
-            conditionElement.classList.value shouldNotContain "Mui-checked"
+            conditionElement.children[0].classList.value shouldNotContain "Mui-checked"
     }
 }
 

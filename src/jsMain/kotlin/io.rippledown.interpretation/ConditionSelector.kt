@@ -1,6 +1,7 @@
 package io.rippledown.interpretation
 
 import Handler
+import debug
 import io.rippledown.constants.interpretation.*
 import io.rippledown.model.condition.Condition
 import mui.material.*
@@ -16,25 +17,40 @@ import web.cssom.JustifyContent.Companion.flexStart
 
 external interface ConditionSelectorHandler : Handler {
     var conditions: List<Condition>
-    var onDone: (conditionsPicked: List<Condition>) -> Unit
-    var changedConditions: (conditionsPicked: List<Condition>) -> Unit
+    var conditionSelected: (selectedConditions: List<Condition>) -> Unit
+    var onDone: (selectedConditions: List<Condition>) -> Unit
     var onCancel: () -> Unit
 }
 
 val ConditionSelector = FC<ConditionSelectorHandler> { handler ->
-    val selectedConditions by useState<MutableList<Condition>>(mutableListOf())
+    var selected by useState(setOf<Condition>())
 
-    fun CheckBoxControl(index: Int) = FC<CheckboxProps> { _ ->
+    fun handleChange(condition: Condition, checked: Boolean) {
+        debug("Handle Change: ${condition.asText()} is checked: $checked")
+
+        //This is important. If you don't clone the set, the state won't change and the checkbox won't update
+        val selectedClone = selected.toMutableSet()
+        if (checked) {
+            selectedClone.add(condition)
+        } else {
+            selectedClone.remove(condition)
+        }
+        selected = selectedClone
+        handler.conditionSelected(selectedClone.toList())
+
+    }
+
+    fun CheckboxControl(index: Int) = FC<CheckboxProps> { _ ->
+        val condition = handler.conditions[index]
         Checkbox {
             id = "$CONDITION_SELECTOR_CHECKBOX$index"
-            onChange = { _, checked ->
-                if (checked) {
-                    selectedConditions.add(handler.conditions[index])
-                } else {
-                    selectedConditions.remove(handler.conditions[index])
-                }
-                handler.changedConditions(selectedConditions)
+            checked = selected.contains(condition)
+            debug("Init: ${condition.asText()} is selected: $checked")
+            onChange = { e, isChecked ->
+                debug("CB Change: ${e.target.checked} ${condition.asText()} is checked: $isChecked")
+                handleChange(condition, isChecked)
             }
+
         }
     }.create()
 
@@ -42,11 +58,16 @@ val ConditionSelector = FC<ConditionSelectorHandler> { handler ->
         handler.conditions.forEachIndexed { index, condition ->
             FormControlLabel {
                 id = "$CONDITION_SELECTOR_ROW$index"
-                control = CheckBoxControl(index)
+                control = CheckboxControl(index)
                 label = condition.asText().unsafeCast<ReactNode>()
             }
         }
     }
+
+    FormHelperText {
+        +"Select the reasons for making this change"
+    }
+
     Box {
         id = CONDITION_SELECTOR_BUTTONS
         sx {
@@ -58,7 +79,7 @@ val ConditionSelector = FC<ConditionSelectorHandler> { handler ->
             title = "Complete the rule with the selected conditions"
             variant = contained
             onClick = {
-                handler.onDone(selectedConditions)
+                handler.onDone(selected.toList())
             }
             +"Done"
         }

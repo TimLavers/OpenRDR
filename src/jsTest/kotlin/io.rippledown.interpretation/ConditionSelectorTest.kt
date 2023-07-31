@@ -9,6 +9,7 @@ import io.rippledown.model.condition.IsNormal
 import kotlinx.coroutines.test.runTest
 import react.FC
 import react.dom.checkContainer
+import react.dom.createRootFor
 import kotlin.test.Test
 
 class ConditionSelectorTest {
@@ -41,7 +42,7 @@ class ConditionSelectorTest {
                 onDone = { selectedConditions ->
                     conditionsThatWereSelected.addAll(selectedConditions)
                 }
-                changedConditions = { _ ->
+                conditionSelected = { _ ->
                 }
             }
         }
@@ -56,6 +57,30 @@ class ConditionSelectorTest {
     }
 
     @Test
+    fun shouldBeAbleToIdentifyADeselectedConditionWhenDoneIsClicked() = runTest {
+        val conditionsThatWereSelected = mutableListOf<Condition>()
+        val fc = FC {
+            ConditionSelector {
+                conditions = threeConditions
+                onDone = { selectedConditions ->
+                    conditionsThatWereSelected.addAll(selectedConditions)
+                }
+                conditionSelected = { _ ->
+                }
+            }
+        }
+        checkContainer(fc) { container ->
+            with(container) {
+                conditionsThatWereSelected shouldBe emptyList()
+                clickConditionWithIndex(0)
+                clickConditionWithIndex(0) //de-select
+                clickDoneButton()
+                conditionsThatWereSelected shouldBe emptyList()
+            }
+        }
+    }
+
+    @Test
     fun shouldBeAbleToIdentifyDeselectedConditionsWhenDoneIsClicked() = runTest {
         val conditionsThatWereSelected = mutableListOf<Condition>()
         val fc = FC {
@@ -64,7 +89,7 @@ class ConditionSelectorTest {
                 onDone = { selectedConditions ->
                     conditionsThatWereSelected.addAll(selectedConditions)
                 }
-                changedConditions = { _ ->
+                conditionSelected = { _ ->
                 }
             }
         }
@@ -86,32 +111,28 @@ class ConditionSelectorTest {
                 conditions = threeConditions
                 onDone = { _ ->
                 }
-                changedConditions = { _ ->
+                conditionSelected = { _ ->
                 }
             }
         }
-        checkContainer(fc) { container ->
-            with(container) {
-                requireConditionsToBeSelected(listOf())
+        with(createRootFor(fc)) {
+            requireConditionsToBeSelected(listOf())
+            clickConditionWithIndex(0)
+            requireConditionsToBeSelected(listOf(isHigh.asText()))
 
-                clickConditionWithIndex(0)
-                requireConditionsToBeSelected(listOf(isHigh.asText()))
+            clickConditionWithIndex(2)
+            requireConditionsToBeSelected(listOf(isHigh.asText(), isNormal.asText()))
 
-                clickConditionWithIndex(2)
-                requireConditionsToBeSelected(listOf(isHigh.asText(), isNormal.asText()))
+            clickConditionWithIndex(2) //de-select
+            requireConditionsToBeSelected(listOf(isHigh.asText()))
 
-                clickConditionWithIndex(2) //de-select
-                requireConditionsToBeSelected(listOf(isHigh.asText()))
-
-                clickConditionWithIndex(0) //de-select
-                requireConditionsToBeSelected(listOf())
-            }
+            clickConditionWithIndex(0) //de-select
+            requireConditionsToBeSelected(listOf())
         }
     }
 
-
     @Test
-    fun shouldBeAbleToCancelTheRule() = runTest {
+    fun shouldBeAbleToCancel() = runTest {
         var cancelClicked = false
         val fc = FC {
             ConditionSelector {
@@ -119,7 +140,7 @@ class ConditionSelectorTest {
                 onCancel = {
                     cancelClicked = true
                 }
-                changedConditions = { _ ->
+                conditionSelected = { _ ->
                 }
             }
         }
@@ -133,12 +154,12 @@ class ConditionSelectorTest {
     }
 
     @Test
-    fun updateShouldBeCalledWhenAConditionIsSelected() = runTest {
+    fun conditionSelectedShouldBeCalledWhenAConditionIsSelected() = runTest {
         var conditionsThatWereSelected = listOf<Condition>()
         val fc = FC {
             ConditionSelector {
                 conditions = threeConditions
-                changedConditions = { selectedConditions ->
+                conditionSelected = { selectedConditions ->
                     conditionsThatWereSelected = selectedConditions
                 }
             }
@@ -152,12 +173,12 @@ class ConditionSelectorTest {
     }
 
     @Test
-    fun updateShouldBeCalledWhenSeveralConditionsAreSelected() = runTest {
+    fun conditionSelectedShouldIdentifyAllSelectedConditions() = runTest {
         var conditionsThatWereSelected = listOf<Condition>()
         val fc = FC {
             ConditionSelector {
                 conditions = threeConditions
-                changedConditions = { selectedConditions ->
+                conditionSelected = { selectedConditions ->
                     conditionsThatWereSelected = selectedConditions
                 }
             }
@@ -172,12 +193,12 @@ class ConditionSelectorTest {
     }
 
     @Test
-    fun updateShouldBeCalledWhenAConditionIsDeselected() = runTest {
+    fun conditionSelectedShouldBeCalledWhenAConditionIsDeselected() = runTest {
         var conditionsThatWereSelected = listOf<Condition>()
         val fc = FC {
             ConditionSelector {
                 this.conditions = threeConditions
-                changedConditions = { selectedConditions ->
+                conditionSelected = { selectedConditions ->
                     conditionsThatWereSelected = selectedConditions
                 }
             }
@@ -190,5 +211,4 @@ class ConditionSelectorTest {
             }
         }
     }
-
 }
