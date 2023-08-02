@@ -1,7 +1,6 @@
 package io.rippledown.interpretation
 
 import Handler
-import debug
 import io.rippledown.constants.interpretation.*
 import io.rippledown.model.condition.Condition
 import mui.material.*
@@ -26,9 +25,8 @@ val ConditionSelector = FC<ConditionSelectorHandler> { handler ->
     var selected by useState(setOf<Condition>())
 
     fun handleChange(condition: Condition, checked: Boolean) {
-        debug("Handle Change: ${condition.asText()} is checked: $checked")
 
-        //This is important. If you don't clone the set, the state won't change and the checkbox won't update
+        //This is important! If you don't clone the set, the state won't change and the checkbox won't update
         val selectedClone = selected.toMutableSet()
         if (checked) {
             selectedClone.add(condition)
@@ -45,12 +43,9 @@ val ConditionSelector = FC<ConditionSelectorHandler> { handler ->
         Checkbox {
             id = "$CONDITION_SELECTOR_CHECKBOX$index"
             checked = selected.contains(condition)
-            debug("Init: ${condition.asText()} is selected: $checked")
-            onChange = { e, isChecked ->
-                debug("CB Change: ${e.target.checked} ${condition.asText()} is checked: $isChecked")
+            onChange = { _, isChecked ->
                 handleChange(condition, isChecked)
             }
-
         }
     }.create()
 

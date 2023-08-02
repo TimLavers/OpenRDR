@@ -18,7 +18,7 @@ val CornerstoneSelector = FC<CornerstoneSelectorHandler> { handler ->
         siblingCount = 1
         boundaryCount = 1
         color = secondary
-        onChange = { event, index ->
+        onChange = { _, index ->
             handler.onSelect(index.toInt() - 1)//switch to 0-based index
         }
     }

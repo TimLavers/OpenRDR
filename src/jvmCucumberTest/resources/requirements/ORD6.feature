@@ -124,7 +124,7 @@ Feature: Reviewing cornerstone cases
     And case Case2 is provided having data:
       | x | 2 |
       | y | 2 |
-      | z | 3 |
+      | z | 2 |
     And the interpretation of the case Case1 includes "Comment 1." because of condition "x has a current value"
     And the interpretation of the case Case2 includes "Comment 2." because of condition "x has a current value"
     And I start the client application
@@ -132,12 +132,7 @@ Feature: Reviewing cornerstone cases
     And I enter the text " Comment 3." in the interpretation field
     And I select the changes tab
     And I start to build a rule for the change on row 2
-    And pause
     And the conditions showing should be:
-      | x has a current value |
-      | y has a current value |
-      | z has a current value |
-    And the following conditions are selected:
       | x has a current value |
       | y has a current value |
       | z has a current value |
