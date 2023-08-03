@@ -2,11 +2,9 @@ package io.rippledown.model
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
 // ORD1
 internal class AttributeTest {
@@ -14,16 +12,16 @@ internal class AttributeTest {
     @Test //Attr-1
     fun construction() {
         val tsh = Attribute(0, "TSH")
-        assertEquals(tsh.name, "TSH")
-        assertEquals(tsh.id, 0)
+        tsh.name shouldBe "TSH"
+        tsh.id shouldBe 0
     }
 
     @Test
     fun jsonSerialisation() {
         val tsh = Attribute(99, "TSH")
         val sd = serializeDeserialize(tsh)
-        assertEquals(sd.id, tsh.id)
-        assertEquals(sd.name, tsh.name)
+        sd.id shouldBe tsh.id
+        sd.name shouldBe tsh.name
     }
 
     @Test

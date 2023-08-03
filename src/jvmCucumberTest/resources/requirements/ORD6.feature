@@ -115,3 +115,29 @@ Feature: Reviewing cornerstone cases
       | y has a current value |
     When I select the condition "y has a current value"
     Then the case Case3 is still shown as the cornerstone case
+
+  Scenario: The user should be able to add several conditions when building a rule
+    Given case Case1 is provided having data:
+      | x | 1 |
+      | y | 1 |
+      | z | 1 |
+    And case Case2 is provided having data:
+      | x | 2 |
+      | y | 2 |
+      | z | 2 |
+    And the interpretation of the case Case1 includes "Comment 1." because of condition "x has a current value"
+    And the interpretation of the case Case2 includes "Comment 2." because of condition "x has a current value"
+    And I start the client application
+    And I see the case Case1 as the current case
+    And I enter the text " Comment 3." in the interpretation field
+    And I select the changes tab
+    And I start to build a rule for the change on row 2
+    And the conditions showing should be:
+      | x has a current value |
+      | y has a current value |
+      | z has a current value |
+    When I select the condition "y has a current value"
+    And I select the condition "z has a current value"
+    Then the following conditions should be selected:
+      | y has a current value |
+      | z has a current value |

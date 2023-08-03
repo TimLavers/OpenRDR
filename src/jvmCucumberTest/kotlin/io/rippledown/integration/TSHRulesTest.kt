@@ -6,7 +6,7 @@ import io.rippledown.model.condition.*
 import kotlin.test.Test
 
 // ORD6
-internal class TSHRulesTest : TSHTest() {
+internal class TSHRulesTest : io.rippledown.integration.TSHTest() {
 
     @Test
     fun checkInterpretations() {

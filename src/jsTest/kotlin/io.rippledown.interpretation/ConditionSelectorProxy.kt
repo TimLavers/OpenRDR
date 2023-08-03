@@ -2,10 +2,9 @@ package io.rippledown.interpretation
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.rippledown.constants.interpretation.CONDITION_SELECTOR_BUTTONS
-import io.rippledown.constants.interpretation.CONDITION_SELECTOR_CANCEL_BUTTON
-import io.rippledown.constants.interpretation.CONDITION_SELECTOR_DONE_BUTTON
-import io.rippledown.constants.interpretation.CONDITION_SELECTOR_ROW
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
+import io.rippledown.constants.interpretation.*
 import proxy.findAllById
 import proxy.findById
 import web.html.HTMLElement
@@ -16,6 +15,23 @@ fun HTMLElement.requireConditions(expected: List<String>) {
     expected.forEachIndexed { index, condition ->
         val row = found[index]
         row.textContent shouldBe condition
+    }
+}
+
+fun HTMLElement.requireConditionsToBeSelected(expected: List<String>) {
+    val allConditions = findAllById(CONDITION_SELECTOR_ROW)
+    allConditions.forEach { element ->
+        if (element.textContent in expected) {
+            element.children[0].classList.value shouldContain "Mui-checked"
+        }
+    }
+}
+
+fun HTMLElement.requireConditionsToBeNotSelected(expected: List<String>) {
+    val allConditions = findAllById(CONDITION_SELECTOR_CHECKBOX)
+    allConditions.forEach { conditionElement ->
+        if (conditionElement.textContent in expected)
+            conditionElement.children[0].classList.value shouldNotContain "Mui-checked"
     }
 }
 

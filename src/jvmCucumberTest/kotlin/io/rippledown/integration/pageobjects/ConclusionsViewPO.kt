@@ -3,8 +3,6 @@ package io.rippledown.integration.pageobjects
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CONCLUSIONS
 import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver
-import org.openqa.selenium.support.ui.WebDriverWait
-import java.time.Duration
 
 class ConclusionsViewPO(private val driver: WebDriver) {
 
