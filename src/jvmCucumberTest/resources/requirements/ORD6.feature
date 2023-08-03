@@ -138,6 +138,7 @@ Feature: Reviewing cornerstone cases
       | z has a current value |
     When I select the condition "y has a current value"
     And I select the condition "z has a current value"
+#    And pause
     Then the following conditions should be selected:
       | y has a current value |
       | z has a current value |

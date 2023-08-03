@@ -8,7 +8,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 // ORD2
-internal class CaseViewTest: UITestBase() {
+internal class MultiEpisodeCase : io.rippledown.integration.UITestBase() {
 
     private lateinit var caseQueuePO: CaseQueuePO
     private lateinit var caseListPO: CaseListPO
@@ -19,7 +19,7 @@ internal class CaseViewTest: UITestBase() {
         setupCases()
         setupWebDriver()
         caseQueuePO = CaseQueuePO(driver)
-        caseQueuePO.waitForNumberOfCasesToBe(3)
+        caseQueuePO.waitForNumberOfCasesToBe(1)
         caseListPO = CaseListPO(driver)
     }
 
@@ -30,21 +30,26 @@ internal class CaseViewTest: UITestBase() {
     }
 
     @Test
-    fun selectCase() {
-        pause()
-        val caseViewPO = caseListPO.select("Case2")
-        assertEquals(caseViewPO.nameShown(), "Case2")
+    fun twoEpisodes() {
+        val caseViewPO = caseListPO.select("Case4")
+        assertEquals(caseViewPO.nameShown(), "Case4")
         val dataShown = caseViewPO.valuesShown()
         assertEquals(dataShown.size, 2)
-        assertEquals(dataShown["TSH"]!![0], "0.72 mU/L")
+        assertEquals(dataShown["TSH"]!![0], "0.67 mU/L")
+        assertEquals(dataShown["TSH"]!![1], "2.75 mU/L")
         assertEquals(caseViewPO.referenceRange("TSH"), "0.50 - 4.0")
-        assertEquals(dataShown["CDE"]!![0], "9.7")
-        assertEquals(caseViewPO.referenceRange("CDE"), "")
+        assertEquals(dataShown["Stuff"]!![0], "12.4 mU/L")
+        assertEquals(dataShown["Stuff"]!![1], "6.7 mU/L")
+        assertEquals(caseViewPO.referenceRange("Stuff"), "")
+
+        val datesShown = caseViewPO.datesShown()
+        assertEquals(2, datesShown.size)
+        assertEquals("2022-08-05 12:31", datesShown[0])
+        assertEquals("2022-08-06 02:25", datesShown[1])
     }
 
     private fun setupCases() {
-        labProxy.provideCase("Case1")
-        labProxy.provideCase("Case2")
-        labProxy.provideCase("Case3")
+        labProxy.cleanCasesDir()
+        labProxy.provideCase("Case4")
     }
 }

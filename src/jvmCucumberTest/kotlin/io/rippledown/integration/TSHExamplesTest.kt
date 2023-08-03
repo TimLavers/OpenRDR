@@ -4,7 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 // ORD4
-internal class TSHExamplesTest: TSHTest() {
+internal class TSHExamplesTest : io.rippledown.integration.TSHTest() {
 
     @Test
     fun tshCases() {

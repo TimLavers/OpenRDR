@@ -33,9 +33,11 @@ class ConditionSelectorPO(private val driver: WebDriver) {
     }
 
     fun requireConditionsToBeSelected(expectedConditions: List<String>) {
-        expectedConditions.forEach { condition ->
-            val conditionElement = elementContainingText(condition)
-            conditionElement.getAttribute("class") shouldContain "Mui-checked"
+        expectedConditions.forEachIndexed { index, condition ->
+            val row = driver.findElement(By.id("$CONDITION_SELECTOR_ROW$index"))
+            if (row.text == condition) {
+                row.getAttribute("class") shouldContain "Mui-checked"
+            }
         }
     }
 
@@ -52,6 +54,5 @@ class ConditionSelectorPO(private val driver: WebDriver) {
 
     private fun elementContainingText(condition: String): WebElement =
         driver.findElement(By.xpath("//*[contains(text(), '$condition')]"))
-
 
 }

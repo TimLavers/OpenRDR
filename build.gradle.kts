@@ -153,8 +153,6 @@ kotlin {
                         implementation("io.ktor:ktor-client-cio")
                         implementation("io.ktor:ktor-client-content-negotiation")
                         implementation("io.ktor:ktor-serialization-kotlinx-json")
-
-
                     }
                 }
 
@@ -170,6 +168,69 @@ kotlin {
                     testClassesDirs = output.classesDirs
                 }
 
+            }
+
+            val cucumberTest by compilations.creating {
+                defaultSourceSet {
+                    dependsOn(sourceSets.getByName("jvmMain"))
+//                    dependsOn(sourceSets.getByName("jvmIntegrationTest"))
+                    dependencies {
+                        implementation(enforcedPlatform("io.cucumber:cucumber-bom:$cucumberVersion"))
+                        implementation("io.cucumber:cucumber-java8")
+                        implementation("io.cucumber:cucumber-junit")
+                        implementation("io.cucumber:cucumber-picocontainer")
+                        implementation("io.kotest:kotest-assertions-core:$kotestVersion")
+                        implementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+//                                                implementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
+
+
+                        implementation(kotlin("test-junit"))
+//                        implementation("io.kotest:kotest-assertions-core:$kotestVersion")
+                        implementation("org.awaitility:awaitility-kotlin:$awaitilityVersion")
+                        implementation("org.seleniumhq.selenium:selenium-java:$seleniumJavaVersion")
+                        implementation("io.github.bonigarcia:webdrivermanager:$webDriverVersion")
+                        implementation(enforcedPlatform("io.ktor:ktor-bom:$ktor_version"))
+                        implementation("io.ktor:ktor-client-core")
+                        implementation("io.ktor:ktor-client-cio")
+                        implementation("io.ktor:ktor-client-content-negotiation")
+                        implementation("io.ktor:ktor-serialization-kotlinx-json")
+                    }
+                }
+                val pathToRequirements = "${projectDir.path}/src/jvmCucumberTest/resources/requirements"
+                val argsForCuke = mutableListOf(
+                    "--plugin", "junit:build/test-results/junit.xml",
+                    "--plugin", "html:build/test-results-html",
+                    "--glue", "steps",
+                    pathToRequirements
+                )
+
+                tasks.register<JavaExec>("cucumberTest") {
+                    group = VERIFICATION_GROUP
+                    maxHeapSize = "32G"
+                    mainClass.set("io.cucumber.core.cli.Main")
+                    classpath = compileDependencyFiles + runtimeDependencyFiles + output.allOutputs
+                    args = argsForCuke
+                    dependsOn(
+                        tasks.shadowJar,
+                        tasks.compileTestJava,
+                        tasks.processTestResources,
+                        tasks.getByName("jvmCucumberTestClasses")
+                    )
+                }
+
+                tasks.register<JavaExec>("cucumberSingleTest") {
+                    group = VERIFICATION_GROUP
+                    maxHeapSize = "32G"
+                    mainClass.set("io.cucumber.core.cli.Main")
+                    classpath = compileDependencyFiles + runtimeDependencyFiles + output.allOutputs
+                    args = argsForCuke.apply { add("--tags"); add("@single") }
+                    dependsOn(
+                        tasks.shadowJar,
+                        tasks.compileTestJava,
+                        tasks.processTestResources,
+                        tasks.getByName("jvmCucumberTestClasses")
+                    )
+                }
             }
         }
 
@@ -199,74 +260,10 @@ kotlin {
 
                     }
 
-                    // Create a test task to run the tests produced by this compilation:
-                    tasks.register<Test>("integrationTest") {
-                        dependsOn(tasks.shadowJar)
-                        group = VERIFICATION_GROUP
 
-                        // Run the tests with the classpath containing the compile dependencies (including 'main'),
-                        // runtime dependencies, and the outputs of this compilation:
-                        classpath = compileDependencyFiles + runtimeDependencyFiles + output.allOutputs
-
-                        // Run only the tests from this compilation's outputs:
-                        testClassesDirs = output.classesDirs
-                    }
-                }
 
     */
-    /*
-                val cucumberTest by compilations.creating {
-                    defaultSourceSet {
-                        dependencies {
-                            implementation(enforcedPlatform("io.cucumber:cucumber-bom:$cucumberVersion"))
-                            implementation("io.cucumber:cucumber-java8")
-                            implementation("io.cucumber:cucumber-junit")
-                            implementation("io.cucumber:cucumber-picocontainer")
-                        }
-                        dependsOn(sourceSets.getByName("jvmMain"))
-                        dependsOn(sourceSets.getByName("jvmIntegrationTest"))
-                    }
-                    val pathToRequirements = "${projectDir.path}/src/jvmCucumberTest/resources/requirements"
-                    val argsForCuke = mutableListOf(
-                        "--plugin", "junit:build/test-results/junit.xml",
-                        "--plugin", "html:build/test-results-html",
-                        "--glue", "steps",
-                        pathToRequirements
-                    )
 
-                    tasks.register<JavaExec>("cucumberTest") {
-                        group = VERIFICATION_GROUP
-                        maxHeapSize = "32G"
-                        mainClass.set("io.cucumber.core.cli.Main")
-                        classpath = compileDependencyFiles + runtimeDependencyFiles + output.allOutputs
-                        args = argsForCuke
-                        dependsOn(
-                            tasks.shadowJar,
-                            tasks.compileTestJava,
-                            tasks.processTestResources,
-                            tasks.getByName("jvmCucumberTestClasses")
-                        )
-                    }
-
-                    tasks.register<JavaExec>("cucumberSingleTest") {
-                        group = VERIFICATION_GROUP
-                        maxHeapSize = "32G"
-                        mainClass.set("io.cucumber.core.cli.Main")
-                        classpath = compileDependencyFiles + runtimeDependencyFiles + output.allOutputs
-                        args = argsForCuke.apply { add("--tags"); add("@single") }
-                        dependsOn(
-                            tasks.shadowJar,
-                            tasks.compileTestJava,
-                            tasks.processTestResources,
-                            tasks.getByName("jvmCucumberTestClasses")
-                        )
-                    }
-                }
-    *//*
-
-        }
-    }
-*/
 }
 
 application {

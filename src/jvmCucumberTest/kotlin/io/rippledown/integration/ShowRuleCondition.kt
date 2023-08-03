@@ -16,7 +16,7 @@ import kotlin.test.Test
 
 
 // ORD2
-internal class ShowRuleCondition : UITestBase() {
+internal class ShowRuleCondition : io.rippledown.integration.UITestBase() {
 
     private lateinit var caseQueuePO: CaseQueuePO
     private lateinit var caseViewPO: CaseViewPO

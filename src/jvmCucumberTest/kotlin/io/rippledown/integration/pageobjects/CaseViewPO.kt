@@ -1,10 +1,6 @@
 package io.rippledown.integration.pageobjects
 
-import io.kotest.matchers.shouldBe
-import io.rippledown.constants.caseview.CASEVIEW_CORNERSTONE_CASE_NAME_ID
 import io.rippledown.constants.interpretation.CASE_VIEW_CONTAINER
-import io.rippledown.constants.interpretation.CORNERSTONE_VIEW_CONTAINER
-import io.rippledown.constants.interpretation.EMPTY_CORNERSTONE_VIEW_CONTAINER
 import io.rippledown.integration.pause
 import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver

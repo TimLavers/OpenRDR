@@ -8,7 +8,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class CaseQueueTest: UITestBase() {
+internal class CaseQueueTest : io.rippledown.integration.UITestBase() {
 
     private lateinit var caseQueuePO: CaseQueuePO
     private lateinit var caseListPO: CaseListPO

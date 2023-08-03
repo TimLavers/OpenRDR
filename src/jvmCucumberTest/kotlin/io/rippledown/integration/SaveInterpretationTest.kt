@@ -8,7 +8,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 
 // ORD2
-internal class SaveInterpretationTest : UITestBase() {
+internal class SaveInterpretationTest : io.rippledown.integration.UITestBase() {
 
     private lateinit var caseQueuePO: CaseQueuePO
     private lateinit var caseListPO: CaseListPO
