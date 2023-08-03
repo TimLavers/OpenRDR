@@ -139,41 +139,9 @@ kotlin {
         }
 
         compilations {
-            val integrationTest by compilations.creating {
-                defaultSourceSet {
-                    dependsOn(sourceSets.getByName("jvmMain"))
-                    dependencies {
-                        implementation(kotlin("test-junit"))
-                        implementation("io.kotest:kotest-assertions-core:$kotestVersion")
-                        implementation("org.awaitility:awaitility-kotlin:$awaitilityVersion")
-                        implementation("org.seleniumhq.selenium:selenium-java:$seleniumJavaVersion")
-                        implementation("io.github.bonigarcia:webdrivermanager:$webDriverVersion")
-                        implementation(enforcedPlatform("io.ktor:ktor-bom:$ktor_version"))
-                        implementation("io.ktor:ktor-client-core")
-                        implementation("io.ktor:ktor-client-cio")
-                        implementation("io.ktor:ktor-client-content-negotiation")
-                        implementation("io.ktor:ktor-serialization-kotlinx-json")
-                    }
-                }
-
-                tasks.register<Test>("integrationTest") {
-                    dependsOn(tasks.shadowJar)
-                    group = VERIFICATION_GROUP
-
-                    // Run the tests with the classpath containing the compile dependencies (including 'main'),
-                    // runtime dependencies, and the outputs of this compilation:
-                    classpath = compileDependencyFiles + runtimeDependencyFiles + output.allOutputs
-
-                    // Run only the tests from this compilation's outputs:
-                    testClassesDirs = output.classesDirs
-                }
-
-            }
-
             val cucumberTest by compilations.creating {
                 defaultSourceSet {
                     dependsOn(sourceSets.getByName("jvmMain"))
-//                    dependsOn(sourceSets.getByName("jvmIntegrationTest"))
                     dependencies {
                         implementation(enforcedPlatform("io.cucumber:cucumber-bom:$cucumberVersion"))
                         implementation("io.cucumber:cucumber-java8")
@@ -181,11 +149,7 @@ kotlin {
                         implementation("io.cucumber:cucumber-picocontainer")
                         implementation("io.kotest:kotest-assertions-core:$kotestVersion")
                         implementation("io.kotest:kotest-runner-junit5:$kotestVersion")
-//                                                implementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
-
-
                         implementation(kotlin("test-junit"))
-//                        implementation("io.kotest:kotest-assertions-core:$kotestVersion")
                         implementation("org.awaitility:awaitility-kotlin:$awaitilityVersion")
                         implementation("org.seleniumhq.selenium:selenium-java:$seleniumJavaVersion")
                         implementation("io.github.bonigarcia:webdrivermanager:$webDriverVersion")
@@ -231,39 +195,21 @@ kotlin {
                         tasks.getByName("jvmCucumberTestClasses")
                     )
                 }
+
+                tasks.register<Test>("integrationTest") {
+                    dependsOn(tasks.shadowJar)
+                    group = VERIFICATION_GROUP
+
+                    // Run the tests with the classpath containing the compile dependencies (including 'main'),
+                    // runtime dependencies, and the outputs of this compilation:
+                    classpath = compileDependencyFiles + runtimeDependencyFiles + output.allOutputs
+
+                    // Run only the tests from this compilation's outputs:
+                    testClassesDirs = output.classesDirs
+                }
             }
         }
-
     }
-
-
-    /*
-                        dependencies {
-    //                        implementation(kotlin("test"))
-    //                        implementation(kotlin("test-common"))
-    //                        implementation(kotlin("test-annotations-common"))
-    //                        implementation(kotlin("test-junit"))
-                            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
-                            implementation(enforcedPlatform("io.ktor:ktor-bom:$ktor_version"))
-                            implementation("io.ktor:ktor-client-core")
-                            implementation("io.ktor:ktor-client-cio")
-                            implementation("io.ktor:ktor-client-content-negotiation")
-                            implementation("io.ktor:ktor-serialization-kotlinx-json")
-                            implementation("io.ktor:ktor-client-cio")
-    //                        implementation("io.kotest:kotest-assertions-core:$kotestVersion")
-    //                        implementation("io.kotest:kotest-runner-junit5:$kotestVersion")
-    //                        implementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
-                            implementation("org.seleniumhq.selenium:selenium-java:$seleniumJavaVersion")
-                        }
-
-
-
-                    }
-
-
-
-    */
-
 }
 
 application {
