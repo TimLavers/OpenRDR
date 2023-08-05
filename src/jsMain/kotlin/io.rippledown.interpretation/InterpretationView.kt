@@ -53,6 +53,7 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
         rows = 10
         onChange = debounceFunction()
         defaultValue = interp.latestText()
+        autoFocus = true
     }
 }
 

@@ -6,6 +6,7 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.integration.UITestBase
 import io.rippledown.integration.pageobjects.*
 import io.rippledown.integration.restclient.RESTClient
+import io.rippledown.integration.utils.Cyborg
 import org.awaitility.Awaitility
 import org.openqa.selenium.WebDriver
 import java.io.File
@@ -180,6 +181,12 @@ class Defs : En {
 
         And("I enter the text {string} in the interpretation field") { text: String ->
             interpretationViewPO.enterVerifiedText(text)
+        }
+
+        And("I slowly type the text {string} in the interpretation field") { text: String ->
+            with(Cyborg()) {
+                typeSlowly(text)
+            }
         }
 
         When("I replace the text in the interpretation field with {string}") { text: String ->

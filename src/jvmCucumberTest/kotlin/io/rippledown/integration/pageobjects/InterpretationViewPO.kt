@@ -5,7 +5,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import io.rippledown.constants.interpretation.*
-import io.rippledown.integration.pause
+import io.rippledown.integration.waitForDebounce
 import org.openqa.selenium.By
 import org.openqa.selenium.Keys
 import org.openqa.selenium.WebDriver
@@ -135,10 +135,6 @@ class InterpretationViewPO(private val driver: WebDriver) {
         textArea.delete()
         waitForDebounce()
         return this
-    }
-
-    private fun waitForDebounce() {
-        pause(2 * DEBOUNCE_WAIT_PERIOD_MILLIS)
     }
 
     fun WebElement.selectAllText() = sendKeys(Keys.chord(Keys.CONTROL, "a"))
