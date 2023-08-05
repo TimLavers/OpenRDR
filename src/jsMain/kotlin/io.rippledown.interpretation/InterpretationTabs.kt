@@ -75,8 +75,8 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
                 InterpretationView {
                     api = handler.api
                     scope = handler.scope
-                    interpretation = handler.interpretation
-                    onInterpretationEdited = {
+                    text = handler.interpretation.latestText()
+                    onEdited = {
                         handler.refreshCase()
                     }
                     isCornerstone = handler.isCornerstone
