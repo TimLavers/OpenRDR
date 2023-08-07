@@ -6,7 +6,7 @@ import io.rippledown.model.condition.*
 import kotlin.test.Test
 
 // ORD6
-internal class TSHRulesTest : io.rippledown.integration.TSHTest() {
+internal class TSHRulesTest : TSHTest() {
 
     @Test
     fun checkInterpretations() {
@@ -48,18 +48,24 @@ internal class TSHRulesTest : io.rippledown.integration.TSHTest() {
         checkInterpretation("The increased FT3 and suppressed TSH (with a normal FT4) are consistent with T3 toxicosis. Suggest measure TSH-receptor antibodies (TRAb).")
         selectCaseAndCheckName("1.4.12")
         checkInterpretation("The severely increased TSH with a very low FT4 is consistent with primary hypothyroidism. Suggest measure TPO antibodies.")
-        /*
 
-                        selectCaseAndCheckName("1.4.13")
+        selectCaseAndCheckName("1.4.13")
+        checkInterpretation("Suggest repeat TFT measurement at least 4–6 weeks after commencement of T4 replacement. ")
 
-                        selectCaseAndCheckName("1.4.14")
+        selectCaseAndCheckName("1.4.14")
+        checkInterpretation("The normal TSH and FT4 are consistent with adequate thyroid hormone replacement.")
 
-                        selectCaseAndCheckName("1.4.15")
+        selectCaseAndCheckName("1.4.15")
+        checkInterpretation("Increased TSH suggests inadequate thyroid hormone replacement if the dose has not been changed for at least 6 weeks and patient \n" +
+                "has been taking the medication regularly. \n" +
+                "Suggest review dose and repeat TFTs in 6 weeks.")
 
-                        selectCaseAndCheckName("1.4.16")
+        selectCaseAndCheckName("1.4.16")
+        checkInterpretation("Suppressed TSH is consistent with excessive thyroid hormone replacement.")
 
-                        selectCaseAndCheckName("1.4.17")
-                */
+        selectCaseAndCheckName("1.4.17")
+        checkInterpretation("Previous history of thyroid cancer noted. Low TSH may be appropriate depending on treatment targets for this patient.")
+
     }
 
     private fun checkInterpretation(comment: String) {
@@ -100,6 +106,11 @@ internal class TSHRulesTest : io.rippledown.integration.TSHTest() {
         val notesShowsTrimester1 = conditionFactory.getOrCreate(ContainsText(null, clinicalNotes, "12/40 weeks"))
         val notesShowsTryingForBaby = conditionFactory.getOrCreate(ContainsText(null, clinicalNotes, "Trying for a baby"))
         val tiredness = conditionFactory.getOrCreate(ContainsText(null, clinicalNotes, "very tired"))
+        val thyroxineReplacement1Week = conditionFactory.getOrCreate(ContainsText(null, clinicalNotes, "started T4 replacement 1 week ago"))
+        val t4Replacement = conditionFactory.getOrCreate(ContainsText(null, clinicalNotes, "On T4 replacement"))
+        val tshVeryLow = conditionFactory.getOrCreate(LessThanOrEqualTo(null, tsh, 0.1)) // What should this be?
+        val historyThyroidCancer = conditionFactory.getOrCreate(ContainsText(null, clinicalNotes, "thyroid cancer"))
+        val onThyroxine = conditionFactory.getOrCreate(ContainsText(null, clinicalNotes, "On thyroxine"))
 
         val report1 = "Normal T4 and TSH are consistent with a euthyroid state."
         val report1b = "Normal TSH is consistent with a euthyroid state."
@@ -121,6 +132,13 @@ internal class TSHRulesTest : io.rippledown.integration.TSHTest() {
         val report8b = "The increased FT3 and suppressed TSH (with a normal FT4) are consistent with T3 toxicosis. " +
                 "Suggest measure TSH-receptor antibodies (TRAb)."
         val report9 = "The severely increased TSH with a very low FT4 is consistent with primary hypothyroidism. Suggest measure TPO antibodies."
+        val report10 = "Suggest repeat TFT measurement at least 4–6 weeks after commencement of T4 replacement. "
+        val report11 = "The normal TSH and FT4 are consistent with adequate thyroid hormone replacement."
+        val report12 = "Increased TSH suggests inadequate thyroid hormone replacement if the dose has not been changed for at least 6 weeks and patient \n" +
+                "has been taking the medication regularly. \n" +
+                "Suggest review dose and repeat TFTs in 6 weeks."
+        val report13 = "Suppressed TSH is consistent with excessive thyroid hormone replacement."
+        val report14 = "Previous history of thyroid cancer noted. Low TSH may be appropriate depending on treatment targets for this patient."
 
         addCommentForCase("1.4.2", report1b, tshNormal)
         replaceCommentForCase("1.4.1", report1b, report1, freeT4Normal)
@@ -135,6 +153,12 @@ internal class TSHRulesTest : io.rippledown.integration.TSHTest() {
         addCommentForCase("1.4.10", report8, tshLow, freeT4Normal, tiredness) // tiredness needed to exclude 1.4.8
         addCommentForCase("1.4.11", report8b, ft3High, tshLow, freeT4Normal)
         replaceCommentForCase("1.4.12", report3, report9, tshVeryHigh, ft4VeryLow)
+        replaceCommentForCase("1.4.13", report3, report10, thyroxineReplacement1Week)
+        replaceCommentForCase("1.4.14", report1, report11, t4Replacement)
+        replaceCommentForCase("1.4.15", report3b, report12, t4Replacement)
+        addCommentForCase("1.4.16", report13, tshVeryLow, t4Replacement)
+        addCommentForCase("1.4.17", report14, tshLow, onThyroxine, historyThyroidCancer)
+
     }
 
     private fun addCommentForCase(caseName: String, comment: String, vararg conditions: Condition) {
