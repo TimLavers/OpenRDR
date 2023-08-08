@@ -180,7 +180,7 @@ class TSHCases(attributeFactory: AttributeFactory) {
     val TSH18 = multiEpisodeCase(attributeFactory) {
         name = "1.4.18"
         dates {
-            datesCSL = "2022-08-18T13:07:44.475Z, 2022-02-25T14:22:51.942Z"
+            datesCSL = "2022-02-25T13:07:44.475Z, 2022-08-18T14:22:51.942Z"
         }
         testValues {
             attribute = "TSH"
@@ -217,7 +217,6 @@ class TSHCases(attributeFactory: AttributeFactory) {
     }.build(attributeFactory)
     val TSH20 = tshCase {
         name = "1.4.20"
-        name = "1.4.19"
         tsh = "<0.01"
         freeT4 = "16"
         freeT3 = "5.5"

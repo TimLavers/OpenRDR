@@ -1,10 +1,11 @@
 package io.rippledown.integration
 
+import io.kotest.matchers.shouldBe
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 // ORD4
-internal class TSHExamplesTest : io.rippledown.integration.TSHTest() {
+internal class TSHExamplesTest : TSHTest() {
 
     @Test
     fun tshCases() {
@@ -145,6 +146,43 @@ internal class TSHExamplesTest : io.rippledown.integration.TSHTest() {
         checkFreeT4("19")
         checkNotes( "Previous total thyroidectomy for thyroid cancer. On thyroxine.")
 
+        selectCaseAndCheckName("1.4.18")
+        with (caseViewPO.datesShown()) {
+            size shouldBe 2
+            this[0] shouldBe "2022-02-25 13:08"
+            this[1] shouldBe "2022-08-18 14:23"
+        }
+        dataShown.size shouldBe 6
+        dataShown["Age"]!![0] shouldBe "56"
+        dataShown["Age"]!![1] shouldBe "56"
+        dataShown["Sex"]!![0] shouldBe "F"
+        dataShown["Sex"]!![1] shouldBe "F"
+        dataShown["TSH"]!![0] shouldBe "4.3 mU/L"
+        dataShown["TSH"]!![1] shouldBe "3.6 mU/L"
+        caseViewPO.referenceRange("TSH") shouldBe "0.50 - 4.0"
+        dataShown["Free T4"]!![0] shouldBe "13 pmol/L"
+        dataShown["Free T4"]!![1] shouldBe "12 pmol/L"
+        caseViewPO.referenceRange("Free T4") shouldBe "10 - 20"
+        dataShown["Tests"]!![0] shouldBe "TFTs"
+        dataShown["Tests"]!![1] shouldBe "TFTs"
+        dataShown["Clinical Notes"]!![0] shouldBe  ""
+        dataShown["Clinical Notes"]!![1] shouldBe  "Subclinical hypothyroidism, follow-up."
+
+        selectCaseAndCheckName("1.4.19")
+        assertEquals(dataShown.size, 7)
+        checkAgeSexTestsLocation(37, "F")
+        checkTSH("0.03")
+        checkFreeT4("20")
+        checkNotes( "Amenorrhea.")
+
+        selectCaseAndCheckName("1.4.20")
+        dataShown.size shouldBe 8
+        checkAgeSexTestsLocation(53, "F")
+        checkTSH("<0.01")
+        checkFreeT4("16")
+        checkFreeT3("5.5")
+        checkNotes( "Annual check.")
+
     }
 
     private fun checkAgeSexTestsLocation(age: Int, sex: String, tests: String = "TFTs", location: String = "General Practice.") {
@@ -167,5 +205,11 @@ internal class TSHExamplesTest : io.rippledown.integration.TSHTest() {
         val dataShown = caseViewPO.valuesShown()
         assertEquals(dataShown["Free T4"]!![0], "$value pmol/L")
         assertEquals(caseViewPO.referenceRange("Free T4"), "10 - 20")
+    }
+
+    private fun checkFreeT3(value: String) {
+        val dataShown = caseViewPO.valuesShown()
+        dataShown["Free T3"]!![0] shouldBe "$value pmol/L"
+        caseViewPO.referenceRange("Free T3") shouldBe  "3.0 - 5.5"
     }
 }
