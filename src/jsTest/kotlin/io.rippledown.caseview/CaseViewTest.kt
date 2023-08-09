@@ -14,6 +14,7 @@ import proxy.waitForEvents
 import react.FC
 import react.dom.checkContainer
 import react.dom.createRootFor
+import kotlin.test.Ignore
 import kotlin.test.Test
 
 class CaseViewTest {
@@ -36,6 +37,7 @@ class CaseViewTest {
     }
 
     @Test
+    @Ignore
     fun shouldCallOnCaseEditedWhenInterpretationIsEdited() = runTest {
         val name = "case a "
         var caseEdited = false

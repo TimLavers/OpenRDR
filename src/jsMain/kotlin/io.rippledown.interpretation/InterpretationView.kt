@@ -8,10 +8,11 @@ import mui.material.TextField
 import mui.system.sx
 import npm.debounce
 import react.FC
+import react.dom.events.FormEvent
 import react.dom.onChange
 import react.useState
-import web.cssom.FontFamily
-import web.cssom.FontWeight
+import web.cssom.FontFamily.Companion.monospace
+import web.cssom.FontWeight.Companion.normal
 import web.html.HTMLDivElement
 
 external interface InterpretationViewHandler : Handler {
@@ -20,39 +21,27 @@ external interface InterpretationViewHandler : Handler {
     var isCornerstone: Boolean
 }
 
-typealias FormEventAlias = (react.dom.events.FormEvent<HTMLDivElement>) -> Unit
-
 val InterpretationView = FC<InterpretationViewHandler> { handler ->
-    var text by useState(handler.text)
+    var currentText by useState(handler.text)
 
-    fun handleFormEvent(): FormEventAlias {
-        return {
-            val changed = it.target.asDynamic().value
-            text = changed
-            handler.onEdited(changed)
-        }
-    }
-
-    fun debounceFunction(): FormEventAlias {
-        return debounce(handleFormEvent(), DEBOUNCE_WAIT_PERIOD_MILLIS)
+    fun handleFormEvent(event: FormEvent<HTMLDivElement>) {
+        val changed = event.target.asDynamic().value
+        currentText = changed
+        handler.onEdited(changed)
     }
 
     TextField {
         id = INTERPRETATION_TEXT_AREA
         fullWidth = true
         multiline = true
+        autoFocus = true
         sx {
-            fontWeight = FontWeight.normal
-            fontFamily = FontFamily.monospace
+            fontWeight = normal
+            fontFamily = monospace
         }
         rows = 10
-        onChange = debounceFunction()
-        key = handler.text
-        value = text
-        debug("InterpretationView: text=$text")
+        onChange = debounce(func = ::handleFormEvent, wait = DEBOUNCE_WAIT_PERIOD_MILLIS)
+        defaultValue = currentText
+        debug("InterpretationView: text = $currentText")
     }
 }
-
-
-
-

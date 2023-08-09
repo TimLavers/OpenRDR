@@ -16,6 +16,7 @@ import proxy.waitForEvents
 import react.FC
 import react.dom.checkContainer
 import react.dom.createRootFor
+import kotlin.test.Ignore
 import kotlin.test.Test
 
 class InterpretationTabsTest {
@@ -113,7 +114,7 @@ class InterpretationTabsTest {
         }
         val container = createRootFor(vfc)
         with(container) {
-                selectChangesTab()
+            selectChangesTab()
             waitForEvents()
             requireNumberOfRows(0)
         }
@@ -145,7 +146,7 @@ class InterpretationTabsTest {
         }
         val container = createRootFor(vfc)
         with(container) {
-                selectChangesTab()
+            selectChangesTab()
             requireNumberOfRows(4)
             requireOriginalTextInRow(0, unchangedText)
             requireChangedTextInRow(0, unchangedText)
@@ -158,6 +159,36 @@ class InterpretationTabsTest {
 
             requireOriginalTextInRow(3, replacedText)
             requireChangedTextInRow(3, replacementText)
+        }
+    }
+
+    @Test
+    fun diffPanelShouldUpdateWhenTheInterpretatioIsEdited() = runTest {
+        val addedText = "Bring your flippers!"
+        val diffListToReturn = DiffList(
+            listOf(
+                Addition(addedText),
+            )
+        )
+        val interpretationWithDiffs = Interpretation(diffList = diffListToReturn)
+        val config = config {
+            returnInterpretation = interpretationWithDiffs
+        }
+
+        val vfc = FC {
+            InterpretationTabs {
+                scope = this@runTest
+                api = Api(mock(config))
+                interpretation = Interpretation()
+            }
+        }
+        with(createRootFor(vfc)) {
+            requireInterpretation("")
+            enterInterpretation(addedText)
+            waitForDebounce()
+            selectChangesTab()
+            requireNumberOfRows(1)
+            requireChangedTextInRow(0, addedText)
         }
     }
 
@@ -189,6 +220,7 @@ class InterpretationTabsTest {
     }
 
     @Test
+    @Ignore
     fun caseShouldBeRefreshedIfInterpretationIsEdited() = runTest {
         var refreshCaseCalled = false
 

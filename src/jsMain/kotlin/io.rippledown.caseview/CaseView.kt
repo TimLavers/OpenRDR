@@ -28,6 +28,7 @@ external interface CaseViewHandler : Handler {
  */
 val CaseView = FC<CaseViewHandler> { handler ->
     Stack {
+        key = handler.case.id?.toString() //Force re-render when the case changes
         id = CASE_VIEW_CONTAINER
         sx {
             float = web.cssom.Float.left

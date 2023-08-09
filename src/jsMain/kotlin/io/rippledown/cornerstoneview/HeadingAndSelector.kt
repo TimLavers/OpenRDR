@@ -11,7 +11,6 @@ import mui.system.sx
 import px8
 import react.FC
 import web.cssom.AlignItems.Companion.center
-import web.cssom.media.maxWidth
 import web.cssom.px
 
 external interface HeadingAndSelectorHandler : Handler {
@@ -38,7 +37,6 @@ val HeadingAndSelector = FC<HeadingAndSelectorHandler> { handler ->
             +handler.name
             id = CASEVIEW_CORNERSTONE_CASE_NAME_ID
             noWrap = true
-            maxWidth(10.px)
         }
 
         CornerstoneSelector {

@@ -17,8 +17,6 @@ class Cyborg {
 
     fun tab() = pressAndRelease(KeyEvent.VK_TAB)
 
-    fun end() = pressAndRelease(KeyEvent.VK_END)
-
     fun typeSlowly(text: String) = text.forEach {
         typeChar(it)
         waitForDebounce()

@@ -1,11 +1,13 @@
 package io.rippledown.interpretation
 
 import Handler
+import debug
 import io.rippledown.constants.interpretation.INTERPRETATION_CHANGES_BADGE
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CONCLUSIONS
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL
 import io.rippledown.model.Interpretation
+import kotlinx.coroutines.launch
 import mui.lab.TabContext
 import mui.lab.TabPanel
 import mui.material.*
@@ -24,6 +26,7 @@ external interface InterpretationTabsHandler : Handler {
 
 val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
     var selectedTab by useState("0")
+    var interp by useState(handler.interpretation)
 
     Box {
         sx {
@@ -52,32 +55,26 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
 
                 Tab {
                     id = INTERPRETATION_TAB_CHANGES
-                    label = FC<BadgeProps> {
-                        Badge {
-                            id = INTERPRETATION_CHANGES_BADGE
-                            color = primary
-                            showZero = false
-                            badgeContent = handler.interpretation.numberOfChanges().unsafeCast<ReactNode>()
-                            +changesLabel
-                        }
-                    }.create()
+                    label = badgeFor(interp.numberOfChanges())
                     value = "2"
                 }
             }
 
             TabPanel {
                 value = "0"
-
-                //Force a re-render of the underlying TextField when the interpretation changes
-                //See https://jaketrent.com/post/rerender-defaultvalue-value-change/
-                key = handler.interpretation.latestText()
-
                 InterpretationView {
                     api = handler.api
                     scope = handler.scope
-                    text = handler.interpretation.latestText()
-                    onEdited = {
-                        handler.refreshCase()
+                    debug("InterpretationTabs: latest text=${interp.latestText()}")
+                    text = interp.latestText()
+                    onEdited = { changedText ->
+                        debug("InterpretationTabs: onEdited $changedText")
+                        interp.verifiedText = changedText
+                        handler.scope.launch {
+                            val newInterp = handler.api.saveVerifiedInterpretation(interp)
+                            debug("---- newInterp diff=${newInterp.diffList}")
+                            interp = newInterp
+                        }
                     }
                     isCornerstone = handler.isCornerstone
                 }
@@ -86,24 +83,23 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
             TabPanel {
                 value = "1"
                 ConclusionsView {
-                    interpretation = handler.interpretation
+                    interpretation = interp
                 }
             }
 
             TabPanel {
                 value = "2"
                 DiffViewer {
-                    api = handler.api
-                    scope = handler.scope
-                    interpretation = handler.interpretation
-                    onStartRule = { newInterpretation ->
-                        handler.onStartRule(newInterpretation)
+                    interpretation = interp
+                    onStartRule = { interpWithSelectedDiff ->
+                        handler.onStartRule(interpWithSelectedDiff)
                     }
                 }
             }
         }
     }
 }
+
 
 val interpretationLabel = FC<Props> {
     Typography {
@@ -136,5 +132,13 @@ val changesLabel = FC<Props> {
     }
 }.create()
 
-
+private fun badgeFor(count: Int) = FC<BadgeProps> {
+    Badge {
+        id = INTERPRETATION_CHANGES_BADGE
+        color = primary
+        showZero = false
+        badgeContent = count.unsafeCast<ReactNode>()
+        +changesLabel
+    }
+}.create()
 

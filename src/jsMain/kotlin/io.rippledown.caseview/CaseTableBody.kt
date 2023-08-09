@@ -20,7 +20,7 @@ val CaseTableBody = FC<CaseTableBodyHandler> { handler ->
                 id = "case_table_row_${a.name}"
                 hover = true
                 sx {
-                    nthChild("even") {
+                    nthOfType("even") {
                         backgroundColor = rgb(224, 224, 224)
                     }
                 }
