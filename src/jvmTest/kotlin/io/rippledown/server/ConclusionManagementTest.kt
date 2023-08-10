@@ -7,8 +7,8 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.verify
+import io.rippledown.constants.api.GET_OR_CREATE_CONCLUSION
 import io.rippledown.model.Conclusion
-import io.rippledown.server.routes.GET_OR_CREATE_CONCLUSION
 import kotlin.test.Test
 
 class ConclusionManagementTest: OpenRDRServerTestBase() {

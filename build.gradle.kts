@@ -141,7 +141,7 @@ kotlin {
         compilations {
             val cucumberTest by compilations.creating {
                 defaultSourceSet {
-                    dependsOn(sourceSets.getByName("jvmMain"))
+                    dependsOn(sourceSets.getByName("commonMain"))
                     dependencies {
                         implementation(enforcedPlatform("io.cucumber:cucumber-bom:$cucumberVersion"))
                         implementation("io.cucumber:cucumber-java8")

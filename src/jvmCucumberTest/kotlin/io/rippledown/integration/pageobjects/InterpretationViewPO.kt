@@ -14,6 +14,13 @@ import org.openqa.selenium.WebElement
 // ORD2
 class InterpretationViewPO(private val driver: WebDriver) {
 
+    fun appendVerifiedText(text: String): InterpretationViewPO {
+        val textArea = interpretationArea()
+        textArea.sendKeys(Keys.END)
+        enterVerifiedText(text)
+        return this
+    }
+
     fun enterVerifiedText(text: String): InterpretationViewPO {
         val textArea = interpretationArea()
         textArea.sendKeys(text)
