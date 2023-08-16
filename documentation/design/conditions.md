@@ -57,7 +57,6 @@ Here are the main positional quantifiers:
 | At least n | True if and only if n or more are true   | F T F T  (n = 2) | F F F T (n = 2) |
 | At most n  | True if and only if n or fewer are true  | F F F T  (n = 2) | F F T T (n = 1) |
 
-
 Note that Positional Quantifier is a really bad name. It is trying to capture the
 fact that its evaluation depends on either the number of or the position of the
 true values in a sequence. Some alternatives: trace, signature, ...
@@ -68,9 +67,56 @@ A condition has three components:
 - a predicate (eg `is normal`)
 - a positional quantifier (eg `all`)
 
+### Evaluation
+Condition evaluation for a case has three steps:
+1. the sequence of test results for the attribute is extracted from the case
+2. the predicate is applied to each element of the test results sequence
+3. the positional quantifier is applied to the sequence of booleans calculated in 
 
-Evaluation
+For example, consider this case:
 
-Presentation to user
-- in the presence of 'all' 'is normal' writes itself as 'are normal'
-- Current writes itself as blank
+|                 | 2023-03-11 | 2023-05-01 | 2023-08-16 |
+|-----------------|------------|------------|------------|
+| TSH (0.5 - 4.0) | 0.03       | 0.09       | 1.2        |
+| FT3 (3.0 - 5.5) | 6.1        | 4.3        | 5.5        |
+| FT4 (10 - 20)   | 18.0       | 18.0       | 15.3       |
+| Sex             |            |            | M          |
+
+`all TSH are normal` evaluates as:
+
+`Case ==[TSH]==> (0.03, 0.09, 1.2) ==[normal]==> (false, false, true) ==[all]==> false`
+
+`Sex is "M"` evaluates as:
+
+`Case ==[Sex]==> (, , M) ==[is "M"]==> (false, false, true) ==[current]==> true`
+
+`no FT3 is low` evaluates as:
+
+`Case ==[FT3]==> ( 6.1, 4.3, 5.5) ==[low]==> (false, false, false) ==[no]==> true`
+
+### Presentation of conditions to users
+We can turn condition objects into natural language expressions
+by expressing the predicate in a form indicated by the positional quantifier. 
+For example, the `normal` predicate is written as `is normal` when combined
+with `current` but as `are normal` when combined with `all`. 
+So `(TSH, normal, all)` is written as `all TSH are normal` 
+whereas `(TSH, normal, none)` is written as `no TSH is normal`. 
+The predicate `current` is left unexpressed,
+so `(TSH, normal, current)` is written as `TSH is normal`.
+
+## Conditions that cannot be expressed in this format
+It's possible to think of assertions that might involve more than one
+attribute. For example, `mass/(height * height) > 28`.
+The conditions described above would not be able to express these kinds
+of calculations. However, some kind of case pre-processor could put the
+calculated values as a single attribute into cases, and this attribute
+could then be used in simple conditions.
+
+Assertions about the time between episodes in a case cannot be easily
+expressed either. One of the rules for the TSH KB adds a comment for
+cases where a pattern of nearly normal results occurs over 6 months.
+Some thought is needed here....
+
+## Restriction clauses
+Some assertions concern only certain episodes in a case, for example
+Glucose values where the patient is fasting. ...
