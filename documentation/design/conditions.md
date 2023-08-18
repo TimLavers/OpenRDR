@@ -107,8 +107,8 @@ so `(TSH, normal, current)` is written as `TSH is normal`.
 ## Conditions that cannot be expressed in this format
 It's possible to think of assertions that might involve more than one
 attribute. For example, `mass/(height * height) > 28`.
-The conditions described above would not be able to express these kinds
-of calculations. However, some kind of case pre-processor could put the
+These kinds of calculations won't be expressible as conditions like
+those we've defined above. However, some kind of case pre-processor could put the
 calculated values as a single attribute into cases, and this attribute
 could then be used in simple conditions.
 
@@ -119,4 +119,5 @@ Some thought is needed here....
 
 ## Restriction clauses
 Some assertions concern only certain episodes in a case, for example
-Glucose values where the patient is fasting. ...
+those where the patient is fasting, or those within the last few years.
+A "restriction clause" could be used to allow thi
