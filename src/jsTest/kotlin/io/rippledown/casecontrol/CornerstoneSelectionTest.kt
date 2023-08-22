@@ -1,4 +1,4 @@
-package io.rippledown.caselist
+package io.rippledown.casecontrol
 
 import Api
 import io.rippledown.caseview.requireCaseToBeShowing
@@ -56,14 +56,14 @@ class CornerstoneSelectionTest {
             returnCornerstoneStatus = CornerstoneStatus(cornerstones[0], 0, numberOfCornerstones)
         }
 
-        val vfc = FC {
-            CaseList {
+        val fc = FC {
+            CaseControl {
                 caseIds = caseIdList
                 api = Api(mock(config))
                 scope = this@runTest
             }
         }
-        with(createRootFor(vfc)) {
+        with(createRootFor(fc)) {
             waitForEvents()
             requireCaseToBeShowing(caseName)
             //start to build a rule for the Addition
@@ -84,6 +84,4 @@ class CornerstoneSelectionTest {
             requireCornerstoneCaseToBeShowing(cornerstones[0].name)
         }
     }
-
-
 }

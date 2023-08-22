@@ -44,13 +44,13 @@ class MainTest {
             )
             returnCase = createCase(caseId1)
         }
-        val vfc = FC {
+        val fc = FC {
             OpenRDRUI {
                 scope = this@runTest
                 api = Api(mock(config))
             }
         }
-        with(createRootFor(vfc)) {
+        with(createRootFor(fc)) {
             waitForNextPoll()
             findById(NUMBER_OF_CASES_ID).textContent shouldBe "$CASES 3"
         }

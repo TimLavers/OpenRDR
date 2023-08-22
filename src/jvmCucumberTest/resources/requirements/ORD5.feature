@@ -17,7 +17,6 @@ Feature: Building rules
     And  the interpretation field should contain the text "Go to Bondi."
     And stop the client application
 
-    @single
     Scenario: The user should be able to build rules to add several comments
       Given a list of cases with the following names is stored on the server:
         | Case1 |
@@ -26,7 +25,6 @@ Feature: Building rules
       And I should see the case Case1 as the current case
       And I enter the text "Go to Bondi." in the interpretation field
       And I select the changes tab
-      And pause
       And I build a rule for the change on row 0
       And I select the interpretation tab
       And I replace the text in the interpretation field with "Go to Bondi. Grow some trees."

@@ -1,7 +1,6 @@
 package io.rippledown.interpretation
 
 import Handler
-import debug
 import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_AREA
 import mui.material.TextField
@@ -34,14 +33,17 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
         id = INTERPRETATION_TEXT_AREA
         fullWidth = true
         multiline = true
-        autoFocus = true
         sx {
             fontWeight = normal
             fontFamily = monospace
         }
         rows = 10
+        autoFocus = true
         onChange = debounce(func = ::handleFormEvent, wait = DEBOUNCE_WAIT_PERIOD_MILLIS)
         defaultValue = currentText
-        debug("InterpretationView: text = $currentText")
+        onFocus = {
+            val length = it.currentTarget.asDynamic().value.length
+            it.currentTarget.asDynamic().setSelectionRange(length, length)
+        }
     }
 }

@@ -1,13 +1,13 @@
 import emotion.react.css
-import io.rippledown.caselist.CasePoller
+import io.rippledown.casecontrol.CasePoller
 import io.rippledown.kb.KBInfoPane
 import kotlinx.coroutines.CoroutineScope
 import react.FC
+import react.Fragment
 import react.Props
-import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.h1
-import web.cssom.FontFamily
-import web.cssom.TextAlign
+import web.cssom.FontFamily.Companion.sansSerif
+import web.cssom.TextAlign.Companion.center
 
 external interface Handler : Props {
     var scope: CoroutineScope
@@ -15,19 +15,17 @@ external interface Handler : Props {
 }
 
 val OpenRDRUI = FC<Handler> { handler ->
-    div {
-        css {
-            fontFamily = FontFamily.sansSerif
-        }
+    Fragment {
         h1 {
             +"Open RippleDown"
             css {
                 color = blue
-                textAlign = TextAlign.center
+                textAlign = center
+                fontFamily = sansSerif
             }
             id = "main_heading"
         }
-        KBInfoPane{
+        KBInfoPane {
             scope = handler.scope
             api = handler.api
         }

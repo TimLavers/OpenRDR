@@ -16,20 +16,19 @@ import proxy.waitForEvents
 import react.FC
 import react.dom.checkContainer
 import react.dom.createRootFor
-import kotlin.test.Ignore
 import kotlin.test.Test
 
 class InterpretationTabsTest {
 
     @Test
     fun originalTabShouldBeSelectedByDefault() = runTest {
-        val vfc = FC {
+        val fc = FC {
             InterpretationTabs {
                 interpretation = Interpretation()
                 scope = this@runTest
             }
         }
-        checkContainer(vfc) { container ->
+        checkContainer(fc) { container ->
             with(container) {
                 val originalTab = findById(INTERPRETATION_TAB_ORIGINAL)
                 originalTab.textContent shouldBe "Interpretation"
@@ -43,30 +42,29 @@ class InterpretationTabsTest {
         val originalInterp = Interpretation().apply {
             add(RuleSummary(conclusion = Conclusion(1, text)))
         }
-        val vfc = FC {
+        val fc = FC {
             InterpretationTabs {
                 interpretation = originalInterp
                 scope = this@runTest
             }
         }
-        checkContainer(vfc) { container ->
+        checkContainer(fc) { container ->
             with(container) {
                 val originalPanel = findById(INTERPRETATION_TEXT_AREA)
                 originalPanel.textContent shouldBe text
             }
         }
-
     }
 
     @Test
     fun conclusionsTabShouldBeShowing() = runTest {
-        val vfc = FC {
+        val fc = FC {
             InterpretationTabs {
                 scope = this@runTest
                 interpretation = Interpretation()
             }
         }
-        val container = createRootFor(vfc)
+        val container = createRootFor(fc)
         with(container) {
             requireConclusionsLabel("Conclusions")
         }
@@ -75,14 +73,14 @@ class InterpretationTabsTest {
     @Test
     fun conclusionsTabCanBeSelected() = runTest {
         val text = "Go to Bondi."
-        val vfc = FC {
+        val fc = FC {
             InterpretationTabs {
                 interpretation = Interpretation().apply {
                     add(RuleSummary(conclusion = Conclusion(1, text)))
                 }
             }
         }
-        val container = createRootFor(vfc)
+        val container = createRootFor(fc)
         with(container) {
             selectConclusionsTab()
             requireTreeItems(text)
@@ -91,13 +89,13 @@ class InterpretationTabsTest {
 
     @Test
     fun shouldBeAbleToSelectTheChangesTab() = runTest {
-        val vfc = FC {
+        val fc = FC {
             InterpretationTabs {
                 scope = this@runTest
                 interpretation = Interpretation()
             }
         }
-        val container = createRootFor(vfc)
+        val container = createRootFor(fc)
         with(container) {
             selectChangesTab()
             requireChangesLabel("Changes")
@@ -106,13 +104,13 @@ class InterpretationTabsTest {
 
     @Test
     fun diffPanelShouldShowNoChangesForAnEmptyDiff() = runTest {
-        val vfc = FC {
+        val fc = FC {
             InterpretationTabs {
                 scope = this@runTest
                 interpretation = Interpretation()
             }
         }
-        val container = createRootFor(vfc)
+        val container = createRootFor(fc)
         with(container) {
             selectChangesTab()
             waitForEvents()
@@ -137,14 +135,14 @@ class InterpretationTabsTest {
         )
         val interpretationWithDiffs = Interpretation(diffList = diffListToReturn)
 
-        val vfc = FC {
+        val fc = FC {
             InterpretationTabs {
                 scope = this@runTest
                 api = Api(mock(config {}))
                 interpretation = interpretationWithDiffs
             }
         }
-        val container = createRootFor(vfc)
+        val container = createRootFor(fc)
         with(container) {
             selectChangesTab()
             requireNumberOfRows(4)
@@ -163,7 +161,7 @@ class InterpretationTabsTest {
     }
 
     @Test
-    fun diffPanelShouldUpdateWhenTheInterpretatioIsEdited() = runTest {
+    fun diffPanelShouldUpdateWhenTheInterpretationIsEdited() = runTest {
         val addedText = "Bring your flippers!"
         val diffListToReturn = DiffList(
             listOf(
@@ -175,14 +173,14 @@ class InterpretationTabsTest {
             returnInterpretation = interpretationWithDiffs
         }
 
-        val vfc = FC {
+        val fc = FC {
             InterpretationTabs {
                 scope = this@runTest
                 api = Api(mock(config))
                 interpretation = Interpretation()
             }
         }
-        with(createRootFor(vfc)) {
+        with(createRootFor(fc)) {
             requireInterpretation("")
             enterInterpretation(addedText)
             waitForDebounce()
@@ -204,14 +202,14 @@ class InterpretationTabsTest {
             )
         )
         val interpretationWithDiffs = Interpretation(diffList = diffListToReturn)
-        val vfc = FC {
+        val fc = FC {
             InterpretationTabs {
                 scope = this@runTest
                 api = Api(mock(config {}))
                 interpretation = interpretationWithDiffs
             }
         }
-        val container = createRootFor(vfc)
+        val container = createRootFor(fc)
         with(container) {
             waitForEvents()
             findById("interpretation_changes_badge").textContent shouldBe "Changes3"
@@ -220,43 +218,56 @@ class InterpretationTabsTest {
     }
 
     @Test
-    @Ignore
-    fun caseShouldBeRefreshedIfInterpretationIsEdited() = runTest {
-        var refreshCaseCalled = false
-
-        val vfc = FC {
-            InterpretationTabs {
-                scope = this@runTest
-                api = Api(mock(config {}))
-                interpretation = Interpretation()
-                refreshCase = {
-                    refreshCaseCalled = true
-                }
-
-            }
-        }
-        val container = createRootFor(vfc)
-        with(container) {
-            refreshCaseCalled shouldBe false
-            enterInterpretation("Go to Bondi now!")
-            waitForDebounce()
-            refreshCaseCalled shouldBe true
-        }
-    }
-
-    @Test
     fun changesBadgeShouldNotShowIfNoChanges() = runTest {
-        val vfc = FC {
+        val fc = FC {
             InterpretationTabs {
                 scope = this@runTest
                 api = Api(mock(config {}))
                 interpretation = Interpretation()
             }
         }
-        val container = createRootFor(vfc)
+        val container = createRootFor(fc)
         with(container) {
             requireNoBadge()
         }
     }
+
+    @Test
+    fun onStartRuleShouldBeCalledWhenTheBuildIconIsClicked() = runTest {
+        val unchangedText = "Go to Bondi now!"
+        val addedText = "Bring your flippers!"
+        val removedText = "Sun is shining."
+        val replacedText = "Surf's up!"
+        val replacementText = "Surf's really up!"
+        val diffListToReturn = DiffList(
+            listOf(
+                Unchanged(unchangedText),
+                Addition(addedText),
+                Removal(removedText),
+                Replacement(replacedText, replacementText)
+            )
+        )
+        val interpretationWithDiffs = Interpretation(diffList = diffListToReturn)
+        var selectedDiff: Diff? = null
+
+        val fc = FC {
+            InterpretationTabs {
+                scope = this@runTest
+                api = Api(mock(config {}))
+                interpretation = interpretationWithDiffs
+                onStartRule = { diff ->
+                    selectedDiff = diff
+                }
+            }
+        }
+        with(createRootFor(fc)) {
+            selectChangesTab()
+            requireNumberOfRows(4)
+            moveMouseOverRow(2)
+            clickBuildIconForRow(2)
+            selectedDiff shouldBe diffListToReturn[2]
+        }
+    }
+
 }
 

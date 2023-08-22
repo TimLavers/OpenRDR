@@ -1,24 +1,26 @@
 package io.rippledown.caseview
 
 import Handler
+import debug
 import io.rippledown.constants.caseview.CASEVIEW_CASE_NAME_ID
 import io.rippledown.constants.interpretation.CASE_VIEW_CONTAINER
 import io.rippledown.interpretation.InterpretationTabs
-import io.rippledown.model.Interpretation
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.diff.Diff
 import mui.material.Stack
 import mui.material.Typography
 import mui.system.sx
 import px12
 import px8
 import react.FC
+import web.cssom.Float
 import web.cssom.pct
 
 
 external interface CaseViewHandler : Handler {
     var case: ViewableCase
     var onCaseEdited: () -> Unit
-    var onStartRule: (interpretation: Interpretation) -> Unit
+    var onStartRule: (selectedDiff: Diff) -> Unit
 }
 
 /**
@@ -28,10 +30,12 @@ external interface CaseViewHandler : Handler {
  */
 val CaseView = FC<CaseViewHandler> { handler ->
     Stack {
-        key = handler.case.id?.toString() //Force re-render when the case changes
+
+        key = handler.case.id?.toString() //Important! Force re-render when the case changes
+
         id = CASE_VIEW_CONTAINER
         sx {
-            float = web.cssom.Float.left
+            float = Float.left
             width = 70.pct
             padding = px12
         }
@@ -50,14 +54,13 @@ val CaseView = FC<CaseViewHandler> { handler ->
             scope = handler.scope
             onCaseEdited = handler.onCaseEdited
         }
-
+        debug("CaseView: InterpretationTabs for case ${handler.case.name} interp: ${handler.case.interpretation.latestText()}")
         InterpretationTabs {
             scope = handler.scope
             api = handler.api
             interpretation = handler.case.interpretation
-            refreshCase = handler.onCaseEdited
-            onStartRule = { newInterpretation ->
-                handler.onStartRule(newInterpretation)
+            onStartRule = { selectedDiff ->
+                handler.onStartRule(selectedDiff)
             }
             isCornerstone = false
         }

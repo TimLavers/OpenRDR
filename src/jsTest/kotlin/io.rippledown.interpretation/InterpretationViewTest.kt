@@ -13,29 +13,29 @@ class InterpretationViewTest {
     @Test
     fun shouldShowInitialInterpretationIfVerifiedTextIsNull() = runTest {
         val initialText = "Go to Bondi now!"
-        val vfc = FC {
+        val fc = FC {
             InterpretationView {
                 text = initialText
             }
         }
-        createRootFor(vfc).requireInterpretation(initialText)
+        createRootFor(fc).requireInterpretation(initialText)
     }
 
     @Test
     fun shouldShowBlankInterpretation() = runTest {
-        val vfc = FC {
+        val fc = FC {
             InterpretationView {
                 text = ""
             }
         }
-        createRootFor(vfc).requireInterpretation("")
+        createRootFor(fc).requireInterpretation("")
     }
 
     @Test
     fun shouldCallOnInterpretationEdited() = runTest {
         val enteredText = "And bring your flippers"
         var updatedText: String? = null
-        val vfc = FC {
+        val fc = FC {
             InterpretationView {
                 text = ""
                 onEdited = { updated ->
@@ -43,7 +43,7 @@ class InterpretationViewTest {
                 }
             }
         }
-        with(createRootFor(vfc)) {
+        with(createRootFor(fc)) {
             updatedText shouldBe null
             enterInterpretation(enteredText)
             waitForEvents(timeout = 2 * DEBOUNCE_WAIT_PERIOD_MILLIS) //get past the debounce period

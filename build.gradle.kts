@@ -2,14 +2,13 @@ import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
 val kotlinVersion = "1.9.0"
-val serializationVersion = "1.5.1"
+val kotlinWrappersVersion = "1.0.0-pre.606"
+val kotlinxCoroutinesTestVersion = "1.7.3"
 val kotlinxDateTimeVersion = "0.4.0"
-val kotlinxCoroutinesTestVersion = "1.6.4"
 val ktor_version = "2.3.2"
 val kotestVersion = "5.6.2"
-val exposedVersion = "0.40.1"
+val exposedVersion = "0.42.0"
 val logbackVersion = "1.4.5"
-val kotlinWrappersVersion = "1.0.0-pre.602"
 val diffUtilsVersion = "4.12"
 val testingLibraryReactVersion = "14.0.0"
 val webDriverVersion = "5.3.2"

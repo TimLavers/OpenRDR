@@ -3,7 +3,6 @@ package io.rippledown.interpretation
 import io.rippledown.model.Interpretation
 import kotlinx.coroutines.test.runTest
 import mui.material.Button
-import proxy.debug
 import proxy.findById
 import proxy.waitForEvents
 import react.FC
@@ -23,11 +22,9 @@ class InterpretationTabsUpdateTest {
         val interpA = Interpretation(verifiedText = caseAConclusion)
         val interpB = Interpretation(verifiedText = caseBConclusion)
 
-        debug("equals ${interpA == interpB}")
-
         val buttonId = "button_id"
 
-        val vfc = FC {
+        val fc = FC {
             var interp by useState(interpA)
 
             Button {
@@ -43,7 +40,7 @@ class InterpretationTabsUpdateTest {
                 }
             }
         }
-        with(createRootFor(vfc)) {
+        with(createRootFor(fc)) {
             requireInterpretation(caseAConclusion)
 
             //switch cases

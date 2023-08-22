@@ -2,7 +2,6 @@ package io.rippledown.interpretation
 
 import kotlinx.coroutines.test.runTest
 import mui.material.Button
-import proxy.debug
 import proxy.findById
 import proxy.waitForEvents
 import react.FC
@@ -20,14 +19,13 @@ class InterpretationViewUpdateTest {
         val textB = "text for case B"
         val buttonId = "button_id"
 
-        val vfc = FC {
+        val fc = FC {
             var currentText by useState(textA)
 
             Button {
                 id = buttonId
                 onClick = {
                     currentText = textB
-                    debug("button clicked: $textB")
                 }
             }
             div {
@@ -37,7 +35,7 @@ class InterpretationViewUpdateTest {
                 }
             }
         }
-        with(createRootFor(vfc)) {
+        with(createRootFor(fc)) {
             requireInterpretation(textA)
 
             //switch interpretations

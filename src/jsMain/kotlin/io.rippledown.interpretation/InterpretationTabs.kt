@@ -1,12 +1,12 @@
 package io.rippledown.interpretation
 
 import Handler
-import debug
 import io.rippledown.constants.interpretation.INTERPRETATION_CHANGES_BADGE
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CONCLUSIONS
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL
 import io.rippledown.model.Interpretation
+import io.rippledown.model.diff.Diff
 import kotlinx.coroutines.launch
 import mui.lab.TabContext
 import mui.lab.TabPanel
@@ -19,8 +19,7 @@ import web.cssom.px
 
 external interface InterpretationTabsHandler : Handler {
     var interpretation: Interpretation
-    var refreshCase: () -> Unit
-    var onStartRule: (interp: Interpretation) -> Unit
+    var onStartRule: (selectedDiff: Diff) -> Unit
     var isCornerstone: Boolean
 }
 
@@ -65,14 +64,11 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
                 InterpretationView {
                     api = handler.api
                     scope = handler.scope
-                    debug("InterpretationTabs: latest text=${interp.latestText()}")
                     text = interp.latestText()
                     onEdited = { changedText ->
-                        debug("InterpretationTabs: onEdited $changedText")
-                        interp.verifiedText = changedText
                         handler.scope.launch {
+                            interp.verifiedText = changedText
                             val newInterp = handler.api.saveVerifiedInterpretation(interp)
-                            debug("---- newInterp diff=${newInterp.diffList}")
                             interp = newInterp
                         }
                     }
@@ -90,16 +86,15 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
             TabPanel {
                 value = "2"
                 DiffViewer {
-                    interpretation = interp
-                    onStartRule = { interpWithSelectedDiff ->
-                        handler.onStartRule(interpWithSelectedDiff)
+                    diffList = interp.diffList
+                    onStartRule = { selectedDiff ->
+                        handler.onStartRule(diffList.diffs[selectedDiff])
                     }
                 }
             }
         }
     }
 }
-
 
 val interpretationLabel = FC<Props> {
     Typography {

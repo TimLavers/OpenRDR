@@ -15,12 +15,12 @@ class AttributeCellTest {
     @Test
     fun creation() = runTest {
         val tsh = Attribute(1, "TSH")
-        val vfc = FC {
+        val fc = FC {
             AttributeCell {
                 attribute = tsh
             }
         }
-        with(createRootFor(vfc)) {
+        with(createRootFor(fc)) {
             val cell = findById(attributeCellId(tsh))
             cell.textContent shouldBe tsh.name
             cell.getAttribute("draggable") shouldBe "true"

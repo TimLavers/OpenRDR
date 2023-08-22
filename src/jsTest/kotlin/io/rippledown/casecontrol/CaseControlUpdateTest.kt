@@ -1,4 +1,4 @@
-package io.rippledown.caselist
+package io.rippledown.casecontrol
 
 import Api
 import io.rippledown.interpretation.requireInterpretation
@@ -13,7 +13,7 @@ import react.FC
 import react.dom.createRootFor
 import kotlin.test.Test
 
-class CaseListUpdateTest {
+class CaseControlUpdateTest {
 
     @Test
     fun shouldUpdateInterpretationWhenAnotherCaseNameIsClicked() = runTest {
@@ -29,7 +29,7 @@ class CaseListUpdateTest {
             returnCase = caseA
         }
         val vfc = FC {
-            CaseList {
+            CaseControl {
                 caseIds = twoCaseIds
                 api = Api(mock(config))
                 scope = this@runTest

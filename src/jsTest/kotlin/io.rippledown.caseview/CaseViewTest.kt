@@ -14,7 +14,6 @@ import proxy.waitForEvents
 import react.FC
 import react.dom.checkContainer
 import react.dom.createRootFor
-import kotlin.test.Ignore
 import kotlin.test.Test
 
 class CaseViewTest {
@@ -22,41 +21,15 @@ class CaseViewTest {
     @Test
     fun shouldShowCaseName() = runTest {
         val name = "case a "
-        val vfc = FC {
+        val fc = FC {
             CaseView {
                 case = createCase(name)
-                scope = this@runTest
-                api = Api(mock(config {}))
             }
         }
-        checkContainer(vfc) { container ->
+        checkContainer(fc) { container ->
             with(container) {
                 requireCaseToBeShowing(name)
             }
-        }
-    }
-
-    @Test
-    @Ignore
-    fun shouldCallOnCaseEditedWhenInterpretationIsEdited() = runTest {
-        val name = "case a "
-        var caseEdited = false
-        val vfc = FC {
-            CaseView {
-                case = createCase(name)
-                scope = this@runTest
-                api = Api(mock(config {}))
-                onCaseEdited = {
-                    caseEdited = true
-                }
-            }
-        }
-        val container = createRootFor(vfc)
-        with(container) {
-            val text = "Go to Bondi now!"
-            enterInterpretation(text)
-            waitForDebounce()
-            caseEdited shouldBe true
         }
     }
 
@@ -84,20 +57,19 @@ class CaseViewTest {
                 diffList = diffList,
             )
         }
-        lateinit var interpToBuildRuleOn: Interpretation
-        val vfc = FC {
+        lateinit var diff: Diff
+        val fc = FC {
             CaseView {
                 case = caseWithInterp
                 scope = this@runTest
                 api = Api(mock(config))
                 onCaseEdited = {}
-                onStartRule = { interpretation ->
-                    interpToBuildRuleOn = interpretation
+                onStartRule = { selectedDiff ->
+                    diff = selectedDiff
                 }
             }
         }
-        val container = createRootFor(vfc)
-        with(container) {
+        with(createRootFor(fc)) {
             { "sanity check" }.asClue {
                 requireBadgeCount(3)
             }
@@ -109,7 +81,7 @@ class CaseViewTest {
             moveMouseOverRow(2)
             waitForEvents()
             clickBuildIconForRow(2)
-            interpToBuildRuleOn.diffList.selected shouldBe 2
+            diff shouldBe Addition(bondiComment)
         }
     }
 }
@@ -119,14 +91,14 @@ fun shouldShowInterpretation() = runTest {
     val text = "Go to Bondi now!"
     val rdrCase = createCase("case a")
     rdrCase.interpretation.add(RuleSummary(conclusion = Conclusion(1, text)))
-    val vfc = FC {
+    val fc = FC {
         CaseView {
             case = rdrCase
             scope = this@runTest
             api = Api(mock(config {}))
         }
     }
-    createRootFor(vfc).requireInterpretation(text)
+    createRootFor(fc).requireInterpretation(text)
 }
 
 @Test

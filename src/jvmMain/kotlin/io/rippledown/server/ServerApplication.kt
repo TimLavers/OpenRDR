@@ -146,7 +146,7 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         case.interpretation.diffList = diffList(interpretation)
 
         //update the case in the KB
-        //kb.putCase(case) todo
+        //kb.putCase(case) TODO test this for the case where we are using the Postgres persistence provider
 
         //return the updated interpretation
         return case.interpretation
@@ -183,6 +183,7 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         case.interpretation.diffList = diffList(updatedInterpretation)
 
         //return the updated interpretation
+        logger.info("Updated interpretation after committing the rule: $updatedInterpretation")
         return case.interpretation
     }
 

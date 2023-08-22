@@ -11,12 +11,12 @@ import kotlin.test.Test
 class CornerstoneSelectorTest {
     @Test
     fun shouldDefaultToFirstCornerstoneIndex() = runTest {
-        val vfc = FC {
+        val fc = FC {
             CornerstoneSelector {
                 total = 42
             }
         }
-        checkContainer(vfc) { container ->
+        checkContainer(fc) { container ->
             with(container) {
                 requireSelectedCornerstoneOneBasedIndex(1)
             }
@@ -26,7 +26,7 @@ class CornerstoneSelectorTest {
     @Test
     fun shouldBeAbleToSelectTheNextCornerstoneIndex() = runTest {
         var selectedZeroBasedIndex = -1
-        val vfc = FC {
+        val fc = FC {
             CornerstoneSelector {
                 total = 42
                 onSelect = { index ->
@@ -34,7 +34,7 @@ class CornerstoneSelectorTest {
                 }
             }
         }
-        val container = createRootFor(vfc)
+        val container = createRootFor(fc)
         with(container) {
             selectNextCornerstone()
             waitForEvents()
@@ -53,7 +53,7 @@ class CornerstoneSelectorTest {
     @Test
     fun shouldBeAbleToSelectThePreviousCornerstoneIndex() = runTest {
         var selectedZeroBasedIndex = -1
-        val vfc = FC {
+        val fc = FC {
             CornerstoneSelector {
                 total = 42
                 onSelect = { index ->
@@ -61,7 +61,7 @@ class CornerstoneSelectorTest {
                 }
             }
         }
-        val container = createRootFor(vfc)
+        val container = createRootFor(fc)
         with(container) {
             selectNextCornerstone()
             selectNextCornerstone()

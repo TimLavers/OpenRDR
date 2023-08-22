@@ -91,19 +91,9 @@ class ApiTest {
 
     @Test
     fun shouldBuildRule() = runTest {
-        val expectedDiffList = DiffList(
-            diffs = listOf(
-                Addition("This comment was added."),
-                Removal("This comment was removed."),
-                Replacement("This comment was replaced.", "This is the new comment."),
-                Unchanged("This comment was left alone."),
-            ),
-            selected = 1
-        )
         val id = 1L
         val ruleRequest = RuleRequest(
             caseId = id,
-            diffList = expectedDiffList,
             conditionList = ConditionList(
                 listOf(
                     HasCurrentValue(1, Attribute(1, "A")),

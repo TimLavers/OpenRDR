@@ -1,13 +1,11 @@
 package io.rippledown.caseview
 
-import Api
+import io.kotest.assertions.withClue
+import io.kotest.matchers.shouldBe
 import io.rippledown.interpretation.requireInterpretation
 import io.rippledown.model.CaseId
-import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.createCaseWithInterpretation
 import kotlinx.coroutines.test.runTest
-import mocks.config
-import mocks.mock
 import mui.material.Button
 import proxy.findById
 import proxy.waitForEvents
@@ -29,12 +27,13 @@ class CaseViewUpdateTest {
 
         val caseA = createCaseWithInterpretation(caseIdA.name, caseIdA.id, listOf(caseAConclusion))
         val caseB = createCaseWithInterpretation(caseIdB.name, caseIdB.id, listOf(caseBConclusion))
-
-        val config = config {
-            returnCase = caseA
+        withClue("sanity check") {
+            caseA.interpretation.latestText() shouldBe caseAConclusion
+            caseB.interpretation.latestText() shouldBe caseBConclusion
         }
-        val vfc = FC {
-            var currentCase by useState<ViewableCase?>(caseA)
+
+        val fc = FC {
+            var currentCase by useState(caseA)
 
             Button {
                 id = buttonId
@@ -44,14 +43,11 @@ class CaseViewUpdateTest {
             }
 
             CaseView {
-                case = currentCase!!
-                api = Api(mock(config))
-                scope = this@runTest
+                case = currentCase
             }
         }
-        with(createRootFor(vfc)) {
+        with(createRootFor(fc)) {
             requireInterpretation(caseAConclusion)
-            config.returnCase = caseB
 
             //switch cases
             act { findById(buttonId).click() }
