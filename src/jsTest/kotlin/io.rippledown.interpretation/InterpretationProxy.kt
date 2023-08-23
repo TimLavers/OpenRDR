@@ -31,6 +31,13 @@ suspend fun HTMLElement.selectChangesTab() {
     }
 }
 
+suspend fun HTMLElement.selectInterpretationTab() {
+    val element = findById(INTERPRETATION_TAB_ORIGINAL)
+    act {
+        Simulate.click(element)
+    }
+}
+
 fun HTMLElement.requireChangesLabel(expected: String) {
     findById(INTERPRETATION_TAB_CHANGES).textContent shouldBe expected
 }

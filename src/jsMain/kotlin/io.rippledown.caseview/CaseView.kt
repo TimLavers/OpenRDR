@@ -1,7 +1,6 @@
 package io.rippledown.caseview
 
 import Handler
-import debug
 import io.rippledown.constants.caseview.CASEVIEW_CASE_NAME_ID
 import io.rippledown.constants.interpretation.CASE_VIEW_CONTAINER
 import io.rippledown.interpretation.InterpretationTabs
@@ -36,7 +35,7 @@ val CaseView = FC<CaseViewHandler> { handler ->
         id = CASE_VIEW_CONTAINER
         sx {
             float = Float.left
-            width = 70.pct
+            width = 80.pct
             padding = px12
         }
 
@@ -48,21 +47,23 @@ val CaseView = FC<CaseViewHandler> { handler ->
             }
         }
 
-        CaseTable {
-            case = handler.case
-            api = handler.api
-            scope = handler.scope
-            onCaseEdited = handler.onCaseEdited
-        }
-        debug("CaseView: InterpretationTabs for case ${handler.case.name} interp: ${handler.case.interpretation.latestText()}")
-        InterpretationTabs {
-            scope = handler.scope
-            api = handler.api
-            interpretation = handler.case.interpretation
-            onStartRule = { selectedDiff ->
-                handler.onStartRule(selectedDiff)
+        Stack {
+            CaseTable {
+                case = handler.case
+                api = handler.api
+                scope = handler.scope
+                onCaseEdited = handler.onCaseEdited
             }
-            isCornerstone = false
+
+            InterpretationTabs {
+                scope = handler.scope
+                api = handler.api
+                interpretation = handler.case.interpretation
+                onStartRule = { selectedDiff ->
+                    handler.onStartRule(selectedDiff)
+                }
+                isCornerstone = false
+            }
         }
     }
 }

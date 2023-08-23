@@ -230,5 +230,46 @@ class CaseInspectionTest {
         }
     }
 
+    @Test
+    fun shouldUpdateTheCaseWhenTheRuleIsFinished() = runTest {
+        val diffList = DiffList(listOf(Addition("Go to Bondi now!")))
+        val currentCase = createCaseWithInterpretation(
+            name = "Bondi",
+            id = 45L,
+            diffs = diffList
+        )
+        val config = config {
+
+        }
+        var idOfCaseToBeUpdated = -1L
+
+        val fc = FC {
+            CaseInspection {
+                case = currentCase
+                ruleSessionInProgress = { _ -> }
+                updateCase = { id ->
+                    idOfCaseToBeUpdated = id
+                }
+                api = Api(mock(config {}))
+                scope = this@runTest
+            }
+        }
+        with(createRootFor(fc)) {
+            //Given
+            requireCaseToBeShowing("Bondi")
+            selectChangesTab()
+            requireNumberOfRows(1)
+            moveMouseOverRow(0)
+            clickBuildIconForRow(0)
+            requireDoneButtonShowing()
+
+            //When
+            clickDoneButton()
+
+            //Then
+            idOfCaseToBeUpdated shouldBe currentCase.id
+        }
+    }
+
 
 }

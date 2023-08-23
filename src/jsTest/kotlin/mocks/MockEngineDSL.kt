@@ -15,6 +15,7 @@ import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import proxy.debug
 
 fun mock(config: EngineConfig) = EngineBuilder(config).build()
 
@@ -89,8 +90,10 @@ private class EngineBuilder(private val config: EngineConfig) {
             }
 
             BUILD_RULE -> {
+                debug("MockEngineDSL: BUILD_RULE:")
                 val body = request.body as TextContent
                 val bodyAsRuleRequest = Json.decodeFromString(RuleRequest.serializer(), body.text)
+                debug("MockEngineDSL: BUILD_RULE: bodyAsRuleRequest=$bodyAsRuleRequest")
 
                 if (config.expectedRuleRequest != null) {
                     bodyAsRuleRequest shouldBe config.expectedRuleRequest

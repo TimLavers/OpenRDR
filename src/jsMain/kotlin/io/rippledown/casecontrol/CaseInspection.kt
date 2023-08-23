@@ -1,6 +1,7 @@
 package io.rippledown.casecontrol
 
 import Handler
+import debug
 import io.rippledown.caseview.CaseView
 import io.rippledown.cornerstoneview.CornerstoneView
 import io.rippledown.interpretation.ConditionSelector
@@ -93,15 +94,21 @@ val CaseInspection = FC<CaseInspectionHandler> { handler ->
                         }
                     }
                     onDone = { conditionList ->
+                        debug("CaseInspection: onDone1: caseid=${currentCase.rdrCase.caseId.id}")
                         val ruleRequest = RuleRequest(
                             caseId = currentCase.rdrCase.caseId.id!!,
                             conditionList = ConditionList(conditions = conditionList)
                         )
+                        debug("0 rulerquest=$ruleRequest")
                         handler.scope.launch {
+                            debug("1 rulerquest=$ruleRequest")
                             val retInterp = handler.api.buildRule(ruleRequest)
-                            handler.ruleSessionInProgress(false)
-                            handler.updateCase(currentCase.rdrCase.caseId.id)
-                            ccStatus = null
+                            debug("2")
+//                            handler.ruleSessionInProgress(false)
+//                            debug("3")
+//                            handler.updateCase(currentCase.rdrCase.caseId.id)
+//                            debug("CaseInspection: onDone2: caseid=${currentCase.rdrCase.caseId.id}")
+//                            ccStatus = null
                         }
                     }
                 }

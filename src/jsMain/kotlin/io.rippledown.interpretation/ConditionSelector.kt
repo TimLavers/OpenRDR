@@ -1,6 +1,7 @@
 package io.rippledown.interpretation
 
 import Handler
+import debug
 import io.rippledown.constants.interpretation.*
 import io.rippledown.model.condition.Condition
 import mui.material.*
@@ -75,6 +76,7 @@ val ConditionSelector = FC<ConditionSelectorHandler> { handler ->
             variant = contained
             onClick = {
                 handler.onDone(selected.toList())
+                debug("ConditionSelector: onDone")
             }
             +"Done"
         }

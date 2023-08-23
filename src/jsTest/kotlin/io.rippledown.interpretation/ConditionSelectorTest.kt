@@ -154,6 +154,48 @@ class ConditionSelectorTest {
     }
 
     @Test
+    fun shouldCallOnDoneWithNoConditions() = runTest {
+        var onDoneCalled = false
+        val fc = FC {
+            ConditionSelector {
+                conditions = threeConditions
+                onDone = {
+                    onDoneCalled = true
+                }
+            }
+        }
+        checkContainer(fc) { container ->
+            with(container) {
+                clickDoneButton()
+                onDoneCalled shouldBe true
+            }
+        }
+    }
+
+    @Test
+    fun shouldCallOnDoneWithTheSelectedConditions() = runTest {
+        var selectedConditionsWhenDone = listOf<Condition>()
+        val fc = FC {
+            ConditionSelector {
+                conditions = threeConditions
+                onDone = {
+                    selectedConditionsWhenDone = it
+                }
+                conditionSelected = { _ ->
+                }
+            }
+        }
+        checkContainer(fc) { container ->
+            with(container) {
+                clickConditionWithIndex(0)
+                clickConditionWithIndex(2)
+                clickDoneButton()
+                selectedConditionsWhenDone shouldBe listOf(isHigh, isNormal)
+            }
+        }
+    }
+
+    @Test
     fun conditionSelectedShouldBeCalledWhenAConditionIsSelected() = runTest {
         var conditionsThatWereSelected = listOf<Condition>()
         val fc = FC {
