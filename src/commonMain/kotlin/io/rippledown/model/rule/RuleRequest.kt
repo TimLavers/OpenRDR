@@ -10,5 +10,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class RuleRequest(
     val caseId: Long,
-    val conditionList: ConditionList = ConditionList()
+    val conditions: ConditionList = ConditionList()
 )

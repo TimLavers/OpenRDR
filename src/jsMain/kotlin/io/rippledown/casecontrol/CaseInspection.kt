@@ -1,10 +1,10 @@
 package io.rippledown.casecontrol
 
 import Handler
-import debug
-import io.rippledown.caseview.CaseView
+import io.rippledown.caseview.CaseViewMemo
 import io.rippledown.cornerstoneview.CornerstoneView
 import io.rippledown.interpretation.ConditionSelector
+import io.rippledown.model.Interpretation
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.rule.CornerstoneStatus
@@ -26,6 +26,7 @@ external interface CaseInspectionHandler : Handler {
 val CaseInspection = FC<CaseInspectionHandler> { handler ->
     var ccStatus: CornerstoneStatus? by useState(null)
     var conditionHints: ConditionList? by useState(null)
+    var updatedInterpretation: Interpretation by useState(handler.case.interpretation)
 
     val currentCase = handler.case
     val id: Long = currentCase.id!!
@@ -36,10 +37,11 @@ val CaseInspection = FC<CaseInspectionHandler> { handler ->
             item = true
             xs = 4
 
-            CaseView {
+            CaseViewMemo {
                 scope = handler.scope
                 api = handler.api
                 case = currentCase
+                currentInterpretation = updatedInterpretation
                 onCaseEdited = {
                     handler.updateCase(id)
                 }
@@ -65,8 +67,8 @@ val CaseInspection = FC<CaseInspectionHandler> { handler ->
                     api = handler.api
                     cornerstoneStatus = ccStatus!!
                     selectCornerstone = { index ->
-                        handler.scope.launch {
-                            ccStatus = handler.api.selectCornerstone(index)
+                        scope.launch {
+                            ccStatus = api.selectCornerstone(index)
                         }
                     }
                 }
@@ -94,21 +96,14 @@ val CaseInspection = FC<CaseInspectionHandler> { handler ->
                         }
                     }
                     onDone = { conditionList ->
-                        debug("CaseInspection: onDone1: caseid=${currentCase.rdrCase.caseId.id}")
-                        val ruleRequest = RuleRequest(
-                            caseId = currentCase.rdrCase.caseId.id!!,
-                            conditionList = ConditionList(conditions = conditionList)
-                        )
-                        debug("0 rulerquest=$ruleRequest")
-                        handler.scope.launch {
-                            debug("1 rulerquest=$ruleRequest")
-                            val retInterp = handler.api.buildRule(ruleRequest)
-                            debug("2")
-//                            handler.ruleSessionInProgress(false)
-//                            debug("3")
-//                            handler.updateCase(currentCase.rdrCase.caseId.id)
-//                            debug("CaseInspection: onDone2: caseid=${currentCase.rdrCase.caseId.id}")
-//                            ccStatus = null
+                        scope.launch {
+                            val ruleRequest = RuleRequest(
+                                caseId = currentCase.rdrCase.caseId.id!!,
+                                conditions = ConditionList(conditions = conditionList)
+                            )
+                            updatedInterpretation = api.buildRule(ruleRequest)
+                            handler.ruleSessionInProgress(false)
+                            ccStatus = null
                         }
                     }
                 }

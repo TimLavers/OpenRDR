@@ -94,7 +94,7 @@ class ApiTest {
         val id = 1L
         val ruleRequest = RuleRequest(
             caseId = id,
-            conditionList = ConditionList(
+            conditions = ConditionList(
                 listOf(
                     HasCurrentValue(1, Attribute(1, "A")),
                     HasCurrentValue(2, Attribute(2, "B"))

@@ -4,7 +4,10 @@ import Api
 import io.kotest.assertions.asClue
 import io.kotest.matchers.shouldBe
 import io.rippledown.interpretation.*
-import io.rippledown.model.*
+import io.rippledown.model.Conclusion
+import io.rippledown.model.Interpretation
+import io.rippledown.model.ReferenceRange
+import io.rippledown.model.createCase
 import io.rippledown.model.diff.*
 import io.rippledown.model.rule.RuleSummary
 import kotlinx.coroutines.test.runTest
@@ -24,6 +27,7 @@ class CaseViewTest {
         val fc = FC {
             CaseView {
                 case = createCase(name)
+                currentInterpretation = Interpretation()
             }
         }
         checkContainer(fc) { container ->
@@ -46,21 +50,23 @@ class CaseViewTest {
                 Replacement(manlyComment, bondiComment)
             )
         )
-        val caseWithInterp = createCaseWithInterpretation(
+        val caseA = createCase(
             id = 1L,
-            conclusionTexts = listOf(beachComment, manlyComment, bondiComment),
-            diffs = diffList
+            name = "Manly",
+        )
+
+        val interp = Interpretation(
+            diffList = diffList,
         )
 
         val config = config {
-            returnInterpretation = Interpretation(
-                diffList = diffList,
-            )
+            returnInterpretation = interp
         }
         lateinit var diff: Diff
         val fc = FC {
             CaseView {
-                case = caseWithInterp
+                case = caseA
+                currentInterpretation = interp
                 scope = this@runTest
                 api = Api(mock(config))
                 onCaseEdited = {}
@@ -70,6 +76,7 @@ class CaseViewTest {
             }
         }
         with(createRootFor(fc)) {
+            //Given
             { "sanity check" }.asClue {
                 requireBadgeCount(3)
             }
@@ -80,7 +87,11 @@ class CaseViewTest {
             requireNumberOfRows(4)
             moveMouseOverRow(2)
             waitForEvents()
+
+            //When
             clickBuildIconForRow(2)
+
+            //Then
             diff shouldBe Addition(bondiComment)
         }
     }

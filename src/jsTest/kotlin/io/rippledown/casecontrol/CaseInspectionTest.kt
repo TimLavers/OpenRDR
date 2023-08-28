@@ -3,19 +3,25 @@ package io.rippledown.casecontrol
 import Api
 import io.kotest.matchers.shouldBe
 import io.rippledown.caseview.requireCaseToBeShowing
+import io.rippledown.cornerstoneview.requireCornerstoneCaseNotToBeShowing
 import io.rippledown.cornerstoneview.requireCornerstoneCaseToBeShowing
 import io.rippledown.interpretation.*
+import io.rippledown.model.Attribute
 import io.rippledown.model.CaseId
+import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.condition.HasCurrentValue
 import io.rippledown.model.createCase
 import io.rippledown.model.createCaseWithInterpretation
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
+import proxy.waitForEvents
 import react.FC
 import react.dom.checkContainer
 import react.dom.createRootFor
@@ -231,26 +237,86 @@ class CaseInspectionTest {
     }
 
     @Test
-    fun shouldUpdateTheCaseWhenTheRuleIsFinished() = runTest {
+    fun shouldNotShowCornerstoneWhenRuleSessionIsFinished() = runTest {
+        val caseId = 1L
+        val cornerstoneId = 2L
+        val caseName = "Manly"
+        val cornerstoneCaseName = "Bondi"
+        val bondiComment = "Go to Bondi now!"
+        val beachComment = "Enjoy the beach!"
+        val diffList = DiffList(listOf(Addition(bondiComment)))
+        val currentCase = createCaseWithInterpretation(
+            id = caseId,
+            name = caseName,
+            conclusionTexts = listOf(beachComment),
+            diffs = diffList
+        )
+        val cornerstoneCase = createCaseWithInterpretation(
+            id = cornerstoneId,
+            name = cornerstoneCaseName,
+            conclusionTexts = listOf(beachComment),
+            diffs = diffList
+        )
+        val config = config {
+            expectedSessionStartRequest = SessionStartRequest(caseId, diffList.diffs[0])
+            returnCornerstoneStatus = CornerstoneStatus(cornerstoneCase, 42, 84)
+        }
+
+        val fc = FC {
+            CaseInspection {
+                case = currentCase
+                api = Api(mock(config))
+                scope = this@runTest
+                ruleSessionInProgress = { _ -> }
+                updateCase = { _ -> }
+            }
+        }
+        with(createRootFor(fc)) {
+            //Given
+            requireCaseToBeShowing(caseName)
+            selectChangesTab()
+            requireNumberOfRows(1)
+            moveMouseOverRow(0)
+            clickBuildIconForRow(0)
+            requireCornerstoneCaseToBeShowing(cornerstoneCaseName)
+
+            //When
+            clickDoneButton()
+            waitForEvents()
+
+            //Then
+            requireCornerstoneCaseNotToBeShowing()
+        }
+    }
+
+    @Test
+    fun shouldCallBuildRuleWhenDoneButtonIsClickedOnConditionSelector() = runTest {
         val diffList = DiffList(listOf(Addition("Go to Bondi now!")))
         val currentCase = createCaseWithInterpretation(
             name = "Bondi",
             id = 45L,
             diffs = diffList
         )
-        val config = config {
+        val conditionList = ConditionList(
+            listOf(
+                HasCurrentValue(1, Attribute(1, "sun")),
+                HasCurrentValue(2, Attribute(2, "surf"))
+            )
+        )
 
+        val config = config {
+            expectedRuleRequest = RuleRequest(
+                caseId = currentCase.id!!,
+                conditions = conditionList
+            )
+            returnConditionList = conditionList
         }
-        var idOfCaseToBeUpdated = -1L
 
         val fc = FC {
             CaseInspection {
                 case = currentCase
                 ruleSessionInProgress = { _ -> }
-                updateCase = { id ->
-                    idOfCaseToBeUpdated = id
-                }
-                api = Api(mock(config {}))
+                api = Api(mock(config))
                 scope = this@runTest
             }
         }
@@ -264,10 +330,13 @@ class CaseInspectionTest {
             requireDoneButtonShowing()
 
             //When
+            clickConditionWithIndex(0)
+            clickConditionWithIndex(1)
             clickDoneButton()
+            waitForEvents()
 
             //Then
-            idOfCaseToBeUpdated shouldBe currentCase.id
+            //Assertion for expected RuleRequest is in the mock config
         }
     }
 

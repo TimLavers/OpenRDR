@@ -1,10 +1,9 @@
 package io.rippledown.caseview
 
-import io.kotest.assertions.withClue
-import io.kotest.matchers.shouldBe
 import io.rippledown.interpretation.requireInterpretation
 import io.rippledown.model.CaseId
-import io.rippledown.model.createCaseWithInterpretation
+import io.rippledown.model.Interpretation
+import io.rippledown.model.createCase
 import kotlinx.coroutines.test.runTest
 import mui.material.Button
 import proxy.findById
@@ -25,25 +24,27 @@ class CaseViewUpdateTest {
         val caseBConclusion = "text for case B"
         val buttonId = "button_id"
 
-        val caseA = createCaseWithInterpretation(caseIdA.name, caseIdA.id, listOf(caseAConclusion))
-        val caseB = createCaseWithInterpretation(caseIdB.name, caseIdB.id, listOf(caseBConclusion))
-        withClue("sanity check") {
-            caseA.interpretation.latestText() shouldBe caseAConclusion
-            caseB.interpretation.latestText() shouldBe caseBConclusion
-        }
+        val caseA = createCase(caseIdA)
+        val caseB = createCase(caseIdB)
+        val interpA = Interpretation(verifiedText = caseAConclusion)
+        val interpB = Interpretation(verifiedText = caseBConclusion)
 
         val fc = FC {
             var currentCase by useState(caseA)
+            var currentInterp by useState(interpA)
 
             Button {
                 id = buttonId
                 onClick = {
                     currentCase = caseB
+                    currentInterp = interpB
                 }
             }
 
             CaseView {
                 case = currentCase
+                currentInterpretation = currentInterp
+
             }
         }
         with(createRootFor(fc)) {

@@ -170,7 +170,7 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         val caseId = ruleRequest.caseId
         val case = case(caseId)
 
-        ruleRequest.conditionList.conditions.forEach { condition ->
+        ruleRequest.conditions.conditions.forEach { condition ->
             addConditionToCurrentRuleBuildingSession(condition)
         }
         commitCurrentRuleSession()
