@@ -68,8 +68,7 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
                     onEdited = { changedText ->
                         handler.scope.launch {
                             interp.verifiedText = changedText
-                            val newInterp = handler.api.saveVerifiedInterpretation(interp)
-                            interp = newInterp
+                            interp = handler.api.saveVerifiedInterpretation(interp)
                         }
                     }
                     isCornerstone = handler.isCornerstone
@@ -84,6 +83,7 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
             }
 
             TabPanel {
+                key = "${interp.diffList.hashCode()}"
                 value = "2"
                 DiffViewer {
                     diffList = interp.diffList
