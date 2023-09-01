@@ -1,6 +1,7 @@
 package io.rippledown.interpretation
 
 import Handler
+import debug
 import io.rippledown.constants.interpretation.INTERPRETATION_CHANGES_BADGE
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CONCLUSIONS
@@ -26,6 +27,8 @@ external interface InterpretationTabsHandler : Handler {
 val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
     var selectedTab by useState("0")
     var interp by useState(handler.interpretation)
+
+    debug("InterpretationTabs: interp ${handler.interpretation}")
 
     Box {
         sx {
@@ -61,6 +64,7 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
 
             TabPanel {
                 value = "0"
+                key = interpretationViewKey(interp.latestText())
                 InterpretationView {
                     api = handler.api
                     scope = handler.scope
@@ -83,7 +87,6 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
             }
 
             TabPanel {
-                key = "${interp.diffList.hashCode()}"
                 value = "2"
                 DiffViewer {
                     diffList = interp.diffList
@@ -95,6 +98,8 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
         }
     }
 }
+
+fun interpretationViewKey(text: String) = text
 
 val interpretationLabel = FC<Props> {
     Typography {

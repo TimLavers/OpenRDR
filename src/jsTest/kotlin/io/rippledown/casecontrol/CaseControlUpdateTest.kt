@@ -8,7 +8,6 @@ import io.rippledown.model.createCaseWithInterpretation
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
-import proxy.waitForEvents
 import react.FC
 import react.dom.createRootFor
 import kotlin.test.Test
@@ -36,10 +35,14 @@ class CaseControlUpdateTest {
             }
         }
         with(createRootFor(vfc)) {
+            //Given
             requireInterpretation(caseAConclusion)
+
+            //When
             config.returnCase = caseB
             selectCaseByName(caseIdB.name)
-            waitForEvents()
+
+            //Then
             requireInterpretation(caseBConclusion)
         }
     }

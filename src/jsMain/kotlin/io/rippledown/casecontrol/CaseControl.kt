@@ -8,6 +8,7 @@ import io.rippledown.model.caseview.ViewableCase
 import kotlinx.coroutines.launch
 import mui.material.Grid
 import react.FC
+import react.memo
 import react.useState
 import xs
 
@@ -62,8 +63,7 @@ val CaseControl = FC<CaseControlHandler> { handler ->
                 item = true
                 xs = 8
                 key = currentCase!!.id.toString()
-
-                CaseInspection {
+                CaseInspectionMemo {
                     scope = handler.scope
                     api = handler.api
                     case = currentCase!!
@@ -79,3 +79,10 @@ val CaseControl = FC<CaseControlHandler> { handler ->
         }
     }
 }
+
+val CaseInspectionMemo = memo(
+    type = CaseInspection,
+    propsAreEqual = { oldProps, newProps ->
+        oldProps.case.id == newProps.case.id
+    }
+)

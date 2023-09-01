@@ -10,15 +10,15 @@ class CaseViewTest {
 
     @Test
     fun shouldShowCaseName() = runTest {
-        val name = "case a "
+        val caseName = "case a "
         val fc = FC {
             CaseView {
-                case = createCase(name)
+                case = createCase(id = 1L, name = caseName)
             }
         }
         checkContainer(fc) { container ->
             with(container) {
-                requireCaseToBeShowing(name)
+                requireCaseToBeShowing(caseName)
             }
         }
     }

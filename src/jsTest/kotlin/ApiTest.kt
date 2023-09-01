@@ -70,7 +70,7 @@ class ApiTest {
         val interpretation = Interpretation(CaseId(1, "Case A"), "report proxy.text")
         val config = config {
             expectedInterpretation = interpretation
-            returnInterpretation = interpretation.copy(diffList = expectedDiffList)
+            returnInterpretationAfterSavingInterpretation = interpretation.copy(diffList = expectedDiffList)
         }
         Api(mock(config)).saveVerifiedInterpretation(interpretation) shouldBe interpretation.copy(diffList = expectedDiffList)
     }
@@ -104,7 +104,7 @@ class ApiTest {
         val interpretation = Interpretation(CaseId(id, "The Case"), "report proxy.text")
         val config = config {
             expectedRuleRequest = ruleRequest
-            returnInterpretation = interpretation
+            returnInterpretationAfterBuildingRule = interpretation
         }
         Api(mock(config)).buildRule(ruleRequest) shouldBe interpretation
     }

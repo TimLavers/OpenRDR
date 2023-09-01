@@ -1,10 +1,12 @@
 package io.rippledown.casecontrol
 
 import Handler
+import debug
 import io.rippledown.caseview.CaseViewMemo
 import io.rippledown.cornerstoneview.CornerstoneView
 import io.rippledown.interpretation.ConditionSelector
 import io.rippledown.interpretation.InterpretationTabs
+import io.rippledown.interpretation.diffViewerKey
 import io.rippledown.model.Interpretation
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
@@ -31,6 +33,7 @@ val CaseInspection = FC<CaseInspectionHandler> { handler ->
     var updatedInterpretation: Interpretation by useState(handler.case.interpretation)
 
     val id = handler.case.id!!
+    debug("CaseInspection: case ${handler.case.id} interp $updatedInterpretation}}")
 
     Grid {
         container = true
@@ -39,6 +42,7 @@ val CaseInspection = FC<CaseInspectionHandler> { handler ->
             xs = 4
 
             Stack {
+                key = interpretationTabsKey(updatedInterpretation)
                 CaseViewMemo {
                     scope = handler.scope
                     api = handler.api
@@ -98,6 +102,7 @@ val CaseInspection = FC<CaseInspectionHandler> { handler ->
                                 ccStatus!!,
                                 ConditionList(conditions)
                             )
+                            debug("CaseInspection: updateCornerstoneRequest $updateCCRequest")
                             ccStatus = handler.api.updateCornerstoneStatus(updateCCRequest)
                         }
                     }
@@ -116,4 +121,11 @@ val CaseInspection = FC<CaseInspectionHandler> { handler ->
             }
         }
     }
+}
+
+/**
+ * Re-render when the Diff List changes
+ */
+fun interpretationTabsKey(interp: Interpretation) = with(interp) {
+    diffViewerKey(diffList)
 }

@@ -3,7 +3,6 @@ package io.rippledown.interpretation
 import kotlinx.coroutines.test.runTest
 import mui.material.Button
 import proxy.findById
-import proxy.waitForEvents
 import react.FC
 import react.dom.createRootFor
 import react.dom.html.ReactHTML.div
@@ -29,19 +28,20 @@ class InterpretationViewUpdateTest {
                 }
             }
             div {
-                key = currentText //This is important! Force re-render when the current text changes
+                key = interpretationViewKey(currentText) //Re-render when the current text changes
                 InterpretationView {
                     text = currentText
                 }
             }
         }
         with(createRootFor(fc)) {
+            //Given
             requireInterpretation(textA)
 
-            //switch interpretations
+            //When switch interpretations
             act { findById(buttonId).click() }
-            waitForEvents()
 
+            //Then
             requireInterpretation(textB)
         }
     }

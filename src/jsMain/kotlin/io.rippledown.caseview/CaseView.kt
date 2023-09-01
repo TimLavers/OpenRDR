@@ -27,8 +27,10 @@ external interface CaseViewHandler : Handler {
  */
 val CaseView = FC<CaseViewHandler> { handler ->
     Stack {
-        //Force re-render when the case changes
-        key = "${handler.case.id}"
+
+        //Re-render when the case changes
+        key = caseTableKey(handler.case.id!!)
+
         id = CASE_VIEW_CONTAINER
         sx {
             float = Float.left
@@ -52,6 +54,8 @@ val CaseView = FC<CaseViewHandler> { handler ->
         }
     }
 }
+
+fun caseTableKey(id: Long) = id.toString()
 
 val CaseViewMemo = memo(
     type = CaseView,

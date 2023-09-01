@@ -170,7 +170,7 @@ class InterpretationTabsTest {
         )
         val interpretationWithDiffs = Interpretation(diffList = diffListToReturn)
         val config = config {
-            returnInterpretation = interpretationWithDiffs
+            returnInterpretationAfterSavingInterpretation = interpretationWithDiffs
         }
 
         val fc = FC {

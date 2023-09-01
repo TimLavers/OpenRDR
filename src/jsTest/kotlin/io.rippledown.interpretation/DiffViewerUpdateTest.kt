@@ -14,7 +14,7 @@ import kotlin.test.Test
 class DiffViewerUpdateTest {
 
     @Test
-    fun shouldUpdateInterpretationWhenTheDiffListIsChanged() = runTest {
+    fun shouldUpdateDiffViewerWhenTheDiffListIsChanged() = runTest {
         val buttonId = "button_id"
         val diffListA = DiffList(listOf(Addition(), Removal()))
         val diffListB = DiffList(listOf(Unchanged(), Replacement(), Unchanged(), Addition()))
@@ -29,7 +29,7 @@ class DiffViewerUpdateTest {
                 }
             }
             div {
-                key = "${currentDiffList.hashCode()}" //Force re-render when the diff list changes
+                key = diffViewerKey(currentDiffList) //Re-render when the diff list changes
 
                 DiffViewer {
                     diffList = currentDiffList

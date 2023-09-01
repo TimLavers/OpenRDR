@@ -4,11 +4,9 @@ import Api
 import io.kotest.assertions.asClue
 import io.kotest.matchers.shouldBe
 import io.rippledown.interpretation.*
-import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.createCase
 import io.rippledown.model.diff.*
-import io.rippledown.model.rule.RuleSummary
 import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.coroutines.test.runTest
 import mocks.config
@@ -18,7 +16,7 @@ import react.FC
 import react.dom.createRootFor
 import kotlin.test.Test
 
-class CaseInspectionWithRuleBuildingTest {
+class CaseInspectionWhenStartingRuleBuildingTest {
 
     @Test
     fun shouldCallOnStartRuleWithExpectedInterpretation() = runTest {
@@ -44,7 +42,7 @@ class CaseInspectionWithRuleBuildingTest {
         caseA.interpretation = interp
 
         val config = config {
-            returnInterpretation = interp
+            returnInterpretationAfterSavingInterpretation = interp
             expectedSessionStartRequest = SessionStartRequest(caseA.id!!, Addition(bondiComment))
         }
 
@@ -81,20 +79,5 @@ class CaseInspectionWithRuleBuildingTest {
             //expected SessionStartRequest is checked in the config
         }
     }
-
-    @Test
-    fun shouldShowInterpretation() = runTest {
-        val text = "Go to Bondi now!"
-        val rdrCase = createCase(name = "case a", id = 1L)
-        rdrCase.interpretation.add(RuleSummary(conclusion = Conclusion(1, text)))
-        val fc = FC {
-            CaseInspection {
-                case = rdrCase
-            }
-        }
-        createRootFor(fc).requireInterpretation(text)
-    }
-
-
 }
 

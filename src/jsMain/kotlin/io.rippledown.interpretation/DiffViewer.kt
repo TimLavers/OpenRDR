@@ -1,6 +1,7 @@
 package io.rippledown.interpretation
 
 import Handler
+import debug
 import green
 import io.rippledown.constants.interpretation.*
 import io.rippledown.model.diff.DiffList
@@ -21,6 +22,8 @@ external interface DiffViewerHandler : Handler {
     var diffList: DiffList
     var onStartRule: (selectedDiff: Int) -> Unit
 }
+
+fun diffViewerKey(diffList: DiffList) = "${diffList.hashCode()}"
 
 val DiffViewer = FC<DiffViewerHandler> { handler ->
     val diffList = handler.diffList
@@ -59,6 +62,8 @@ val DiffViewer = FC<DiffViewerHandler> { handler ->
             }
             TableBody {
                 id = DIFF_VIEWER_TABLE
+                debug("DiffViewer: diffList $diffList")
+
                 diffList.diffs.forEachIndexed { index, change ->
                     TableRow {
                         id = "$DIFF_VIEWER_ROW$index"
@@ -127,7 +132,6 @@ val DiffViewer = FC<DiffViewerHandler> { handler ->
                     }
                 }
             }
-
         }
     }
 }

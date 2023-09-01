@@ -24,6 +24,7 @@ external interface ConditionSelectorHandler : Handler {
 
 val ConditionSelector = FC<ConditionSelectorHandler> { handler ->
     var selected by useState(setOf<Condition>())
+    debug("ConditionSelector: conditions selected ${selected}")
 
     fun handleChange(condition: Condition, checked: Boolean) {
 
@@ -36,7 +37,6 @@ val ConditionSelector = FC<ConditionSelectorHandler> { handler ->
         }
         selected = selectedClone
         handler.conditionSelected(selectedClone.toList())
-
     }
 
     fun CheckboxControl(index: Int) = FC<CheckboxProps> { _ ->
