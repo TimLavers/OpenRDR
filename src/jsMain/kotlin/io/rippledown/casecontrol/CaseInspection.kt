@@ -127,5 +127,5 @@ val CaseInspection = FC<CaseInspectionHandler> { handler ->
  * Re-render when the Diff List changes
  */
 fun interpretationTabsKey(interp: Interpretation) = with(interp) {
-    diffViewerKey(diffList)
+    "${diffViewerKey(diffList)}-${latestText()}"
 }
