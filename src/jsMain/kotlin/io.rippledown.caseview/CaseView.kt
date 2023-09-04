@@ -4,15 +4,12 @@ import Handler
 import io.rippledown.constants.caseview.CASEVIEW_CASE_NAME_ID
 import io.rippledown.constants.interpretation.CASE_VIEW_CONTAINER
 import io.rippledown.model.caseview.ViewableCase
-import mui.material.Stack
 import mui.material.Typography
 import mui.system.sx
-import px12
 import px8
 import react.FC
+import react.dom.html.ReactHTML.div
 import react.memo
-import web.cssom.Float
-import web.cssom.pct
 
 
 external interface CaseViewHandler : Handler {
@@ -26,17 +23,10 @@ external interface CaseViewHandler : Handler {
  *  ORD2
  */
 val CaseView = FC<CaseViewHandler> { handler ->
-    Stack {
-
+    div {
         //Re-render when the case changes
         key = caseTableKey(handler.case.id!!)
-
         id = CASE_VIEW_CONTAINER
-        sx {
-            float = Float.left
-            width = 80.pct
-            padding = px12
-        }
 
         Typography {
             +handler.case.name

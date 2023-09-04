@@ -15,8 +15,8 @@ import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import kotlinx.coroutines.launch
+import mui.material.Box
 import mui.material.Grid
-import mui.material.Stack
 import react.FC
 import react.useState
 import xs
@@ -41,7 +41,7 @@ val CaseInspection = FC<CaseInspectionHandler> { handler ->
             item = true
             xs = 4
 
-            Stack {
+            Box {
                 key = interpretationTabsKey(updatedInterpretation)
                 CaseViewMemo {
                     scope = handler.scope

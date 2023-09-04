@@ -65,6 +65,10 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
             TabPanel {
                 value = "0"
                 key = interpretationViewKey(interp.latestText())
+                sx {
+                    padding = 0.px
+                }
+
                 InterpretationView {
                     api = handler.api
                     scope = handler.scope
@@ -81,6 +85,9 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
 
             TabPanel {
                 value = "1"
+                sx {
+                    padding = 0.px
+                }
                 ConclusionsView {
                     interpretation = interp
                 }
@@ -88,6 +95,9 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
 
             TabPanel {
                 value = "2"
+                sx {
+                    padding = 0.px
+                }
                 DiffViewer {
                     diffList = interp.diffList
                     onStartRule = { selectedDiff ->

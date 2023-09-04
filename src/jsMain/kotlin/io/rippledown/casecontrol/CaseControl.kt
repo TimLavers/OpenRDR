@@ -61,7 +61,7 @@ val CaseControl = FC<CaseControlHandler> { handler ->
         if (currentCase != null) {
             Grid {
                 item = true
-                xs = 8
+                xs = 10
                 key = currentCase!!.id.toString()
                 CaseInspectionMemo {
                     scope = handler.scope

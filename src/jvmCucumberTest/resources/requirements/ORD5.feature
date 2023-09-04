@@ -1,4 +1,5 @@
 Feature: Building rules
+  @single
   Scenario: The user should be able to build a rule to add a comment
     Given a list of cases with the following names is stored on the server:
       | Case1 |
