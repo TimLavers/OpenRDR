@@ -13,6 +13,8 @@ import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.rippledown.constants.server.IN_MEMORY
+import io.rippledown.constants.server.STARTING_SERVER
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.persistence.postgres.PostgresPersistenceProvider
@@ -20,11 +22,6 @@ import io.rippledown.server.routes.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
-
-
-const val STARTING_SERVER = "Starting server"
-const val STOPPING_SERVER = "Stopping server"
-const val IN_MEMORY = "InMemory"
 
 lateinit var server: NettyApplicationEngine
 

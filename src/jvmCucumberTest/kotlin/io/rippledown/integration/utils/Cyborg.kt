@@ -1,5 +1,6 @@
 package io.rippledown.integration.utils
 
+import io.rippledown.integration.waitForDebounce
 import java.awt.Robot
 import java.awt.event.KeyEvent
 
@@ -12,18 +13,17 @@ class Cyborg {
         robot.autoDelay = 5
     }
 
-    fun enter() {
-        pressAndRelease(KeyEvent.VK_ENTER)
-    }
+    fun enter() = pressAndRelease(KeyEvent.VK_ENTER)
 
-    fun tab() {
-        pressAndRelease(KeyEvent.VK_TAB)
+    fun tab() = pressAndRelease(KeyEvent.VK_TAB)
+
+    fun typeSlowly(text: String) = text.forEach {
+        typeChar(it)
+        waitForDebounce()
     }
 
     private fun typeChar(key: Char) {
-        println("key = ${key}")
         val keyCode = KeyEvent.getExtendedKeyCodeForChar(key.code)
-        println("key code: $keyCode")
         if (keyCode == KeyEvent.VK_UNDEFINED) {
             typeSpecialChar(key)
         } else {
@@ -44,7 +44,7 @@ class Cyborg {
             '(' -> pressAndReleaseShiftedKey(KeyEvent.VK_9)
             ')' -> pressAndReleaseShiftedKey(KeyEvent.VK_0)
             '_' -> pressAndReleaseShiftedKey(KeyEvent.VK_MINUS)
-            '+' -> pressAndReleaseShiftedKey(KeyEvent.VK_EQUALS )
+            '+' -> pressAndReleaseShiftedKey(KeyEvent.VK_EQUALS)
             '{' -> pressAndReleaseShiftedKey(KeyEvent.VK_OPEN_BRACKET)
             '}' -> pressAndReleaseShiftedKey(KeyEvent.VK_CLOSE_BRACKET)
             '|' -> pressAndReleaseShiftedKey(KeyEvent.VK_BACK_SLASH)

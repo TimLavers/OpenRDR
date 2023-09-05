@@ -1,7 +1,7 @@
 package proxy
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.caselist.POLL_PERIOD
+import io.rippledown.casecontrol.POLL_PERIOD
 import io.rippledown.constants.caseview.CASES
 import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import js.core.asList

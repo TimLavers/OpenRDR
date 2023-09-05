@@ -72,27 +72,26 @@ class DebounceTest {
 
 
     @Test
-    fun shouldDebounceTextViewInput(): TestResult {
-        return runTest {
+    fun shouldDebounceTextViewInput() = runTest {
 
-            val DebouncedTextField = FC<Props> {
-                var text by useState("")
+        val DebouncedTextField = FC<Props> {
+            var text by useState("")
 
-                fun handleFormEvent(): FormEventAlias {
-                    return {
-                        text = it.target.asDynamic().value
-                    }
+            fun handleFormEvent(): FormEventAlias {
+                return {
+                    text = it.target.asDynamic().value
                 }
+            }
 
-                fun debounceFunction(): FormEventAlias {
-                    return debounce(handleFormEvent(), waitMillis)
-                }
+            fun debounceFunction(): FormEventAlias {
+                return debounce(handleFormEvent(), waitMillis)
+            }
 
-                TextField {
-                    id = "text-field"
-                    multiline = true
-                    defaultValue = text
-                    onChange = debounceFunction()
+            TextField {
+                id = "text-field"
+                multiline = true
+                defaultValue = text
+                onChange = debounceFunction()
                 }
             }
             val vfc = FC {
@@ -140,8 +139,6 @@ class DebounceTest {
             Simulate.change(element, jsEvent)
         }
     }
-
-}
 
 typealias MouseEventAlias = (react.dom.events.MouseEvent<HTMLButtonElement, *>) -> Unit
 typealias FormEventAlias = (react.dom.events.FormEvent<HTMLDivElement>) -> Unit

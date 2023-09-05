@@ -99,7 +99,6 @@ class Api(engine: HttpClientEngine = Js.create()) {
      *
      * @param ruleRequest the information needed to build the rule
      * @return the updated interpretation
-     * @deprecated use [startRuleSession] instead
      */
     suspend fun buildRule(ruleRequest: RuleRequest): Interpretation {
         return jsonClient.post("$endpoint$BUILD_RULE") {

@@ -1,4 +1,4 @@
-package io.rippledown.caselist
+package io.rippledown.casecontrol
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe

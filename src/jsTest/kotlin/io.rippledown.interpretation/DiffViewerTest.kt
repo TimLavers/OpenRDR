@@ -2,7 +2,6 @@ package io.rippledown.interpretation
 
 import Api
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.Interpretation
 import io.rippledown.model.diff.*
 import kotlinx.coroutines.test.runTest
 import mocks.config
@@ -17,12 +16,12 @@ class DiffViewerTest {
 
     @Test
     fun shouldNotShowAnyRowsIfNoChanges() = runTest {
-        val vfc = FC {
+        val fc = FC {
             DiffViewer {
-                interpretation = Interpretation()
+                diffList = DiffList()
             }
         }
-        checkContainer(vfc) { container ->
+        checkContainer(fc) { container ->
             with(container) {
                 requireNumberOfRows(0)
             }
@@ -31,14 +30,12 @@ class DiffViewerTest {
 
     @Test
     fun shouldShowARowForEachUnchangedDiff() = runTest {
-        val vfc = FC {
+        val fc = FC {
             DiffViewer {
-                interpretation = Interpretation(
-                    diffList = DiffList(listOf(Unchanged(), Unchanged(), Unchanged()))
-                )
+                diffList = DiffList(listOf(Unchanged(), Unchanged(), Unchanged()))
             }
         }
-        checkContainer(vfc) { container ->
+        checkContainer(fc) { container ->
             with(container) {
                 requireNumberOfRows(3)
             }
@@ -48,14 +45,12 @@ class DiffViewerTest {
 
     @Test
     fun shouldShowARowForEachChangedDiff() = runTest {
-        val vfc = FC {
+        val fc = FC {
             DiffViewer {
-                interpretation = Interpretation(
-                    diffList = DiffList(listOf(Addition(), Removal(), Replacement()))
-                )
+                diffList = DiffList(listOf(Addition(), Removal(), Replacement()))
             }
         }
-        checkContainer(vfc) { container ->
+        checkContainer(fc) { container ->
             with(container) {
                 requireNumberOfRows(3)
             }
@@ -65,45 +60,39 @@ class DiffViewerTest {
 
     @Test
     fun shouldShowABuildIconByDefaultForFirstUnchangedDiff() = runTest {
-        val vfc = FC {
+        val fc = FC {
             DiffViewer {
-                interpretation = Interpretation(
-                    diffList = DiffList(
-                        listOf(
-                            Unchanged(),
-                            Unchanged(),
-                            Unchanged(),
-                            Addition(),
-                            Unchanged()
-                        )
+                diffList = DiffList(
+                    listOf(
+                        Unchanged(),
+                        Unchanged(),
+                        Unchanged(),
+                        Addition(),
+                        Unchanged()
                     )
                 )
             }
         }
-        val container = createRootFor(vfc)
-        with(container) {
+        with(createRootFor(fc)) {
             requireBuildIconForRow(3)
         }
     }
 
     @Test
     fun shouldShowABuildIconWhenMouseIsOverChangedDiff() = runTest {
-        val vfc = FC {
+        val fc = FC {
             DiffViewer {
-                interpretation = Interpretation(
-                    diffList = DiffList(
-                        listOf(
-                            Addition(),
-                            Unchanged(),
-                            Removal(),
-                            Unchanged()
-                        )
+                diffList = DiffList(
+                    listOf(
+                        Addition(),
+                        Unchanged(),
+                        Removal(),
+                        Unchanged()
                     )
                 )
             }
         }
-        val container = createRootFor(vfc)
-        with(container) {
+        with(createRootFor(fc)) {
             moveMouseOverRow(2)
             requireBuildIconForRow(2)
         }
@@ -111,22 +100,19 @@ class DiffViewerTest {
 
     @Test
     fun shouldNotShowABuildIconWhenMouseIsOverUnchangedDiff() = runTest {
-        val vfc = FC {
+        val fc = FC {
             DiffViewer {
-                interpretation = Interpretation(
-                    diffList = DiffList(
-                        listOf(
-                            Addition(),
-                            Unchanged(),
-                            Removal(),
-                            Unchanged()
-                        )
+                diffList = DiffList(
+                    listOf(
+                        Addition(),
+                        Unchanged(),
+                        Removal(),
+                        Unchanged()
                     )
                 )
             }
         }
-        val container = createRootFor(vfc)
-        with(container) {
+        with(createRootFor(fc)) {
             moveMouseOverRow(1)
             requireNoBuildIconForRow(1)
         }
@@ -135,18 +121,16 @@ class DiffViewerTest {
     @Test
     fun shouldShowAnUnchangedTextInOriginalAndChangedColumns() = runTest {
         val text = "Go to Bondi now!"
-        val vfc = FC {
+        val fc = FC {
             DiffViewer {
-                interpretation = Interpretation(
-                    diffList = DiffList(
-                        listOf(
-                            Unchanged(text),
-                        )
+                diffList = DiffList(
+                    listOf(
+                        Unchanged(text),
                     )
                 )
             }
         }
-        checkContainer(vfc) { container ->
+        checkContainer(fc) { container ->
             with(container) {
                 requireOriginalTextInRow(0, text)
                 requireChangedTextInRow(0, text)
@@ -157,12 +141,12 @@ class DiffViewerTest {
     @Test
     fun shouldShowAnAddedTextInGreenInChangedColumnOnly() = runTest {
         val text = "Go to Bondi now!"
-        val vfc = FC {
+        val fc = FC {
             DiffViewer {
-                interpretation = Interpretation(diffList = DiffList(diffs = listOf(Addition(text))))
+                diffList = DiffList(diffs = listOf(Addition(text)))
             }
         }
-        checkContainer(vfc) { container ->
+        checkContainer(fc) { container ->
             with(container) {
                 requireNoOriginalTextInRow(0)
                 requireChangedTextInRow(0, text)
@@ -174,18 +158,16 @@ class DiffViewerTest {
     @Test
     fun shouldShowARemovedTextInRedInOriginalColumnOnly() = runTest {
         val text = "Go to Bondi now!"
-        val vfc = FC {
+        val fc = FC {
             DiffViewer {
-                interpretation = Interpretation(
-                    diffList = DiffList(
-                        listOf(
-                            Removal(text),
-                        )
+                diffList = DiffList(
+                    listOf(
+                        Removal(text),
                     )
                 )
             }
         }
-        checkContainer(vfc) { container ->
+        checkContainer(fc) { container ->
             with(container) {
                 requireOriginalTextInRow(0, text)
                 requireNoChangedTextInRow(0)
@@ -198,18 +180,16 @@ class DiffViewerTest {
     fun shouldShowAReplacedAndReplacementTextsInTheirRespectiveColumnsWithCorrespondingColours() = runTest {
         val replaced = "Go to Bondi"
         val replacement = "Go to Bondi now!"
-        val vfc = FC {
+        val fc = FC {
             DiffViewer {
-                interpretation = Interpretation(
-                    diffList = DiffList(
-                        listOf(
-                            Replacement(replaced, replacement),
-                        )
+                diffList = DiffList(
+                    listOf(
+                        Replacement(replaced, replacement),
                     )
                 )
             }
         }
-        checkContainer(vfc) { container ->
+        checkContainer(fc) { container ->
             with(container) {
                 requireOriginalTextInRow(0, replaced)
                 requireChangedTextInRow(0, replacement)
@@ -222,17 +202,15 @@ class DiffViewerTest {
     @Test
     fun shouldCallOnStartRuleWhenTheBuildIconIsClicked() = runTest {
         var ruleStarted = false
-        val vfc = FC {
+        val fc = FC {
             DiffViewer {
                 scope = this@runTest
                 api = Api(mock(config {}))
-                interpretation = Interpretation(
-                    diffList = DiffList(
-                        listOf(
-                            Addition("Go to Bondi now!"),
-                            Unchanged(),
-                            Removal(),
-                        )
+                diffList = DiffList(
+                    listOf(
+                        Addition("Go to Bondi now!"),
+                        Unchanged(),
+                        Removal(),
                     )
                 )
                 onStartRule = {
@@ -240,8 +218,7 @@ class DiffViewerTest {
                 }
             }
         }
-        val container = createRootFor(vfc)
-        with(container) {
+        with(createRootFor(fc)) {
             ruleStarted shouldBe false
             requireBuildIconForRow(0)
             clickBuildIconForRow(0)
@@ -251,26 +228,23 @@ class DiffViewerTest {
 
     @Test
     fun onStartRuleShouldIdentifyTheSelectedDiff() = runTest {
-        val interp = Interpretation(
-            diffList = DiffList(
-                listOf(
-                    Addition("Go to Bondi now!"),
-                    Unchanged("Enjoy the beach!"),
-                    Removal("Go to Manly now!"),
-                )
+        val differenceList = DiffList(
+            listOf(
+                Addition("Go to Bondi now!"),
+                Unchanged("Enjoy the beach!"),
+                Removal("Go to Manly now!"),
             )
         )
-        val vfc = FC {
+        val fc = FC {
             DiffViewer {
                 scope = this@runTest
-                interpretation = interp
-                onStartRule = { interpretation ->
-                    interpretation.diffList.selected shouldBe 2
+                diffList = differenceList
+                onStartRule = { selectedDiff ->
+                    selectedDiff shouldBe 2
                 }
             }
         }
-        val container = createRootFor(vfc)
-        with(container) {
+        with(createRootFor(fc)) {
             moveMouseOverRow(2)
             waitForEvents()
             clickBuildIconForRow(2)

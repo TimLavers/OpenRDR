@@ -8,9 +8,9 @@ import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.verify
 import io.rippledown.constants.api.CONDITION_HINTS
+import io.rippledown.constants.api.GET_OR_CREATE_CONDITION
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.*
-import io.rippledown.server.routes.GET_OR_CREATE_CONDITION
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 

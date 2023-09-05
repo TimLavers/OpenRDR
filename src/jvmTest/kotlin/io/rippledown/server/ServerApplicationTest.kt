@@ -82,7 +82,7 @@ internal class ServerApplicationTest {
     }
 
     @Test
-    fun `should retrieve cached case`() {
+    fun `should retrieve the cached case when using InMemoryPersistenceProvider`() {
         val id = supplyCaseFromFile("Case1", app).caseId.id!!
         val retrieved = app.case(id)
         val retrievedAgain = app.case(id)

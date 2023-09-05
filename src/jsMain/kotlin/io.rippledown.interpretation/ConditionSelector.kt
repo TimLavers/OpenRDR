@@ -35,7 +35,6 @@ val ConditionSelector = FC<ConditionSelectorHandler> { handler ->
         }
         selected = selectedClone
         handler.conditionSelected(selectedClone.toList())
-
     }
 
     fun CheckboxControl(index: Int) = FC<CheckboxProps> { _ ->

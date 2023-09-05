@@ -1,4 +1,3 @@
-
 Feature: Knowledge Base management
 
   Scenario: Name of current Knowledge Base should be displayed

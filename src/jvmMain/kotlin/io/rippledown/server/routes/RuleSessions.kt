@@ -5,16 +5,15 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.rippledown.constants.api.ADD_CONDITION
+import io.rippledown.constants.api.COMMIT_SESSION
+import io.rippledown.constants.api.START_SESSION_TO_ADD_CONCLUSION
+import io.rippledown.constants.api.START_SESSION_TO_REPLACE_CONCLUSION
 import io.rippledown.model.Conclusion
 import io.rippledown.model.OperationResult
 import io.rippledown.model.condition.Condition
 import io.rippledown.server.ServerApplication
 import kotlinx.serialization.json.Json
-
-const val START_SESSION_TO_ADD_CONCLUSION = "/api/startSessionToAddConclusion"
-const val START_SESSION_TO_REPLACE_CONCLUSION = "/api/startSessionToReplaceConclusion"
-const val ADD_CONDITION = "/api/addCondition"
-const val COMMIT_SESSION = "/api/commitSession"
 
 fun Application.ruleSession(application: ServerApplication) {
     routing {

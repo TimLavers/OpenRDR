@@ -9,7 +9,7 @@ import io.rippledown.model.rule.Rule
 import io.rippledown.model.rule.RuleTree
 import kotlin.random.Random
 
-fun ruleTree(conclusionFactory: ConclusionFactory,init: AbstractRuleTemplate.() -> Unit) : RootTemplate {
+fun ruleTree(conclusionFactory: ConclusionFactory, init: AbstractRuleTemplate.() -> Unit): RootTemplate {
     val n = RootTemplate(conclusionFactory)
     n.init()
     return n

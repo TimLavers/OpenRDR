@@ -5,11 +5,10 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.rippledown.constants.api.GET_OR_CREATE_ATTRIBUTE
+import io.rippledown.constants.api.MOVE_ATTRIBUTE_JUST_BELOW_OTHER
 import io.rippledown.model.OperationResult
 import io.rippledown.server.ServerApplication
-
-const val MOVE_ATTRIBUTE_JUST_BELOW_OTHER = "/api/moveAttributeJustBelowOther"
-const val GET_OR_CREATE_ATTRIBUTE = "/api/attribute/getOrCreate"
 
 fun Application.attributeManagement(application: ServerApplication) {
     routing {

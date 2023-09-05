@@ -1,14 +1,8 @@
 package io.rippledown.interpretation
 
-import Api
 import io.kotest.matchers.shouldBe
 import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
-import io.rippledown.model.Conclusion
-import io.rippledown.model.Interpretation
-import io.rippledown.model.rule.RuleSummary
 import kotlinx.coroutines.test.runTest
-import mocks.config
-import mocks.mock
 import proxy.waitForEvents
 import react.FC
 import react.dom.createRootFor
@@ -18,87 +12,42 @@ class InterpretationViewTest {
 
     @Test
     fun shouldShowInitialInterpretationIfVerifiedTextIsNull() = runTest {
-        val text = "Go to Bondi now!"
-        val interpretation = Interpretation().apply {
-            add(RuleSummary(conclusion = Conclusion(1, text)))
-        }
-        val vfc = FC {
+        val initialText = "Go to Bondi now!"
+        val fc = FC {
             InterpretationView {
-                this.interpretation = interpretation
+                text = initialText
             }
         }
-        createRootFor(vfc).requireInterpretation(text)
-    }
-
-    @Test
-    fun shouldShowVerifiedTextIfNotNull() = runTest {
-        val text = "Go to Bondi."
-        val verifiedText = "Go to Bondi now!"
-        val interpretation = Interpretation(verifiedText = verifiedText).apply {
-            add(RuleSummary(conclusion = Conclusion(1, text)))
-        }
-        val vfc = FC {
-            InterpretationView {
-                this.interpretation = interpretation
-            }
-        }
-        createRootFor(vfc).requireInterpretation(verifiedText)
+        createRootFor(fc).requireInterpretation(initialText)
     }
 
     @Test
     fun shouldShowBlankInterpretation() = runTest {
-        val vfc = FC {
+        val fc = FC {
             InterpretationView {
-                interpretation = Interpretation()
+                text = ""
             }
         }
-        createRootFor(vfc).requireInterpretation("")
-    }
-
-
-
-    @Test
-    fun shouldSaveVerifiedInterpretation() = runTest {
-        val verifiedText = "And bring your flippers"
-        val config = config {
-            expectedInterpretation = Interpretation(verifiedText = verifiedText)
-        }
-        val vfc = FC {
-            InterpretationView {
-                scope = this@runTest
-                api = Api(mock(config))
-                interpretation = Interpretation()
-                onInterpretationEdited = { (_) -> }
-            }
-        }
-        with(createRootFor(vfc)) {
-            enterInterpretation(verifiedText)
-            //assertion is in the mocked API call
-        }
+        createRootFor(fc).requireInterpretation("")
     }
 
     @Test
     fun shouldCallOnInterpretationEdited() = runTest {
-        val verifiedText = "And bring your flippers"
-        val config = config {
-            returnInterpretation = Interpretation(verifiedText = verifiedText)
-        }
+        val enteredText = "And bring your flippers"
         var updatedText: String? = null
-        val vfc = FC {
+        val fc = FC {
             InterpretationView {
-                scope = this@runTest
-                api = Api(mock(config))
-                interpretation = Interpretation()
-                onInterpretationEdited = {
-                    updatedText = it.verifiedText
+                text = ""
+                onEdited = { updated ->
+                    updatedText = updated
                 }
             }
         }
-        with(createRootFor(vfc)) {
+        with(createRootFor(fc)) {
             updatedText shouldBe null
-            enterInterpretation(verifiedText)
+            enterInterpretation(enteredText)
             waitForEvents(timeout = 2 * DEBOUNCE_WAIT_PERIOD_MILLIS) //get past the debounce period
+            updatedText shouldBe enteredText
         }
-        updatedText shouldBe verifiedText
     }
 }

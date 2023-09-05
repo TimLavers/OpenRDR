@@ -70,7 +70,7 @@ class ApiTest {
         val interpretation = Interpretation(CaseId(1, "Case A"), "report proxy.text")
         val config = config {
             expectedInterpretation = interpretation
-            returnInterpretation = interpretation.copy(diffList = expectedDiffList)
+            returnInterpretationAfterSavingInterpretation = interpretation.copy(diffList = expectedDiffList)
         }
         Api(mock(config)).saveVerifiedInterpretation(interpretation) shouldBe interpretation.copy(diffList = expectedDiffList)
     }
@@ -91,20 +91,10 @@ class ApiTest {
 
     @Test
     fun shouldBuildRule() = runTest {
-        val expectedDiffList = DiffList(
-            diffs = listOf(
-                Addition("This comment was added."),
-                Removal("This comment was removed."),
-                Replacement("This comment was replaced.", "This is the new comment."),
-                Unchanged("This comment was left alone."),
-            ),
-            selected = 1
-        )
         val id = 1L
         val ruleRequest = RuleRequest(
             caseId = id,
-            diffList = expectedDiffList,
-            conditionList = ConditionList(
+            conditions = ConditionList(
                 listOf(
                     HasCurrentValue(1, Attribute(1, "A")),
                     HasCurrentValue(2, Attribute(2, "B"))
@@ -114,7 +104,7 @@ class ApiTest {
         val interpretation = Interpretation(CaseId(id, "The Case"), "report proxy.text")
         val config = config {
             expectedRuleRequest = ruleRequest
-            returnInterpretation = interpretation
+            returnInterpretationAfterBuildingRule = interpretation
         }
         Api(mock(config)).buildRule(ruleRequest) shouldBe interpretation
     }

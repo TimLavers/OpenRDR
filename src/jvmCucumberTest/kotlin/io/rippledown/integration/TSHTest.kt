@@ -43,7 +43,7 @@ internal open class TSHTest: UITestBase() {
 
     open fun setupCases() {
         labProxy.cleanCasesDir()
-        val tshCases = TSHCases(io.rippledown.integration.RestClientAttributeFactory(restClient))
+        val tshCases = TSHCases(RestClientAttributeFactory(restClient))
         labProxy.provideCase(tshCases.TSH1)
         labProxy.provideCase(tshCases.TSH2)
         labProxy.provideCase(tshCases.TSH3)

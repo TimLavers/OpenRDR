@@ -1,5 +1,4 @@
 Feature: Building rules
-
   Scenario: The user should be able to build a rule to add a comment
     Given a list of cases with the following names is stored on the server:
       | Case1 |
@@ -199,4 +198,27 @@ Feature: Building rules
     Then the interpretation field should contain the text "Go for a surf."
     And I select case Malabar
     And the interpretation field should be empty
+    And stop the client application
+
+  Scenario: The user should be able to cancel the current rule being built
+    Given I start the client application
+    And case Bondi is provided having data:
+      | Wave | excellent |
+      | Sun  | hot       |
+    And case Manly is provided having data:
+      | Swimming | pleasant |
+      | Sun      | hot      |
+    And I enter the text "Let's surf" in the interpretation field
+    And the changes badge indicates that there is 1 change
+    And I select the changes tab
+    And I start to build a rule for the change on row 0
+    And the conditions showing should be:
+      | Wave has a current value |
+      | Sun has a current value  |
+    And I select the second condition
+    When I cancel the rule
+    Then the changes badge indicates that there is no change
+    And I should see the following cases in the case list:
+      | Bondi |
+      | Manly |
     And stop the client application

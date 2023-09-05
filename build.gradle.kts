@@ -2,20 +2,19 @@ import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
 val kotlinVersion = "1.9.0"
-val serializationVersion = "1.5.1"
+val kotlinWrappersVersion = "1.0.0-pre.606"
+val kotlinxCoroutinesTestVersion = "1.7.3"
 val kotlinxDateTimeVersion = "0.4.0"
-val kotlinxCoroutinesTestVersion = "1.6.4"
 val ktor_version = "2.3.2"
 val kotestVersion = "5.6.2"
-val exposedVersion = "0.40.1"
+val exposedVersion = "0.42.0"
 val logbackVersion = "1.4.5"
-val kotlinWrappersVersion = "1.0.0-pre.602"
 val diffUtilsVersion = "4.12"
 val testingLibraryReactVersion = "14.0.0"
-val webDriverVersion = "5.3.2"
-val seleniumJavaVersion = "4.9.0"
+val webDriverVersion = "5.4.1"
+val seleniumJavaVersion = "4.11.0"
 val awaitilityVersion = "4.2.0"
-val cucumberVersion = "7.11.2"
+val cucumberVersion = "7.13.0"
 val commonsIoVersion = "2.11.0"
 val commonsTextVersion = "1.10.0"
 val mockkVersion = "1.13.4"
@@ -141,7 +140,7 @@ kotlin {
         compilations {
             val cucumberTest by compilations.creating {
                 defaultSourceSet {
-                    dependsOn(sourceSets.getByName("jvmMain"))
+                    dependsOn(sourceSets.getByName("commonMain"))
                     dependencies {
                         implementation(enforcedPlatform("io.cucumber:cucumber-bom:$cucumberVersion"))
                         implementation("io.cucumber:cucumber-java8")

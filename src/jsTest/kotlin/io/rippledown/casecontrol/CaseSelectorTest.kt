@@ -1,4 +1,4 @@
-package io.rippledown.caselist
+package io.rippledown.casecontrol
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.CaseId
@@ -18,13 +18,13 @@ class CaseSelectorTest {
             CaseId(id = 1, name = caseA), CaseId(id = 2, name = caseB)
         )
 
-        val vfc = FC {
+        val fc = FC {
             CaseSelector {
                 caseIds = twoCaseIds
             }
         }
 
-        checkContainer(vfc) { container ->
+        checkContainer(fc) { container ->
             with(container) {
                 requireNamesToBeShowingOnCaseList(caseA, caseB)
             }
@@ -41,7 +41,7 @@ class CaseSelectorTest {
         val caseId3 = CaseId(id = 3, name = caseC)
         val threeCaseIds = listOf(caseId1, caseId2, caseId3)
         var selectedCaseId: Long = 0
-        val vfc = FC {
+        val fc = FC {
             CaseSelector {
                 caseIds = threeCaseIds
                 selectCase = { id ->
@@ -49,7 +49,7 @@ class CaseSelectorTest {
                 }
             }
         }
-        with(createRootFor(vfc)) {
+        with(createRootFor(fc)) {
             selectCaseByName(caseId2.name)
             selectedCaseId shouldBe caseId2.id
         }
@@ -64,13 +64,13 @@ class CaseSelectorTest {
         val caseId2 = CaseId(id = 2, name = caseB)
         val caseId3 = CaseId(id = 3, name = caseC)
         val threeCaseIds = listOf(caseId1, caseId2, caseId3)
-        val vfc = FC {
+        val fc = FC {
             CaseSelector {
                 caseIds = threeCaseIds
                 selectedCaseName = caseB
             }
         }
-        checkContainer(vfc) { container ->
+        checkContainer(fc) { container ->
             with(container) {
                 requireNameOnCaseListToBeSelected(caseB)
             }

@@ -3,29 +3,29 @@ package io.rippledown.interpretation
 import Handler
 import green
 import io.rippledown.constants.interpretation.*
-import io.rippledown.model.Interpretation
+import io.rippledown.model.diff.DiffList
 import io.rippledown.model.diff.Unchanged
 import mui.icons.material.Build
 import mui.material.*
-import mui.material.styles.TypographyVariant
 import mui.material.styles.TypographyVariant.Companion.subtitle2
 import mui.system.sx
 import react.FC
 import react.ReactNode
 import react.useState
 import red
-import web.cssom.Cursor
 import web.cssom.Cursor.Companion.pointer
 import web.cssom.px
 
 
 external interface DiffViewerHandler : Handler {
-    var interpretation: Interpretation
-    var onStartRule: (interp: Interpretation) -> Unit
+    var diffList: DiffList
+    var onStartRule: (selectedDiff: Int) -> Unit
 }
 
+fun diffViewerKey(diffList: DiffList) = "${diffList.hashCode()}"
+
 val DiffViewer = FC<DiffViewerHandler> { handler ->
-    val diffList = handler.interpretation.diffList
+    val diffList = handler.diffList
     var cursorOnRow by useState(diffList.indexOfFirstChange())
 
     TableContainer {
@@ -61,7 +61,8 @@ val DiffViewer = FC<DiffViewerHandler> { handler ->
             }
             TableBody {
                 id = DIFF_VIEWER_TABLE
-                diffList.diffs.forEachIndexed() { index, change ->
+
+                diffList.diffs.forEachIndexed { index, change ->
                     TableRow {
                         id = "$DIFF_VIEWER_ROW$index"
                         sx {
@@ -120,8 +121,7 @@ val DiffViewer = FC<DiffViewerHandler> { handler ->
                                         }
                                         id = "$DIFF_VIEWER_BUILD_ICON$index"
                                         onClick = {
-                                            diffList.selected = index //identify the change in the interpretation
-                                            handler.onStartRule(handler.interpretation) //show the condition selector
+                                            handler.onStartRule(index) //show the condition selector for the selected change
                                         }
                                     }
                                 }
@@ -130,10 +130,8 @@ val DiffViewer = FC<DiffViewerHandler> { handler ->
                     }
                 }
             }
-
         }
     }
-
 }
 
 

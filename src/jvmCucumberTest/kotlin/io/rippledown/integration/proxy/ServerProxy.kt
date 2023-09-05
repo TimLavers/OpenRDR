@@ -1,8 +1,8 @@
 package io.rippledown.integration.proxy
 
+import io.rippledown.constants.server.IN_MEMORY
+import io.rippledown.constants.server.STARTING_SERVER
 import io.rippledown.integration.restclient.RESTClient
-import io.rippledown.server.IN_MEMORY
-import io.rippledown.server.STARTING_SERVER
 import org.awaitility.Awaitility.await
 import java.io.File
 import java.nio.file.Paths
