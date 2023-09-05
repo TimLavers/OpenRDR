@@ -1,7 +1,6 @@
 package io.rippledown.casecontrol
 
 import Handler
-import debug
 import io.rippledown.caseview.CaseViewMemo
 import io.rippledown.cornerstoneview.CornerstoneView
 import io.rippledown.interpretation.ConditionSelector
@@ -33,7 +32,6 @@ val CaseInspection = FC<CaseInspectionHandler> { handler ->
     var updatedInterpretation: Interpretation by useState(handler.case.interpretation)
 
     val id = handler.case.id!!
-    debug("CaseInspection: case ${handler.case.id} interp $updatedInterpretation}}")
 
     Grid {
         container = true
@@ -103,7 +101,6 @@ val CaseInspection = FC<CaseInspectionHandler> { handler ->
                                 ccStatus!!,
                                 ConditionList(conditions)
                             )
-                            debug("CaseInspection: updateCornerstoneRequest $updateCCRequest")
                             ccStatus = handler.api.updateCornerstoneStatus(updateCCRequest)
                         }
                     }

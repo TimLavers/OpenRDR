@@ -1,7 +1,6 @@
 package io.rippledown.casecontrol
 
 import Handler
-import debug
 import io.rippledown.constants.caseview.CASELIST_ID
 import io.rippledown.model.CaseId
 import io.rippledown.model.caseview.ViewableCase
@@ -68,7 +67,6 @@ val CaseControl = FC<CaseControlHandler> { handler ->
                     api = handler.api
                     case = currentCase!!
                     updateCase = { id ->
-                        debug("Case control: updateCase($id)")
                         updateCurrentCase(id)
                     }
                     ruleSessionInProgress = { inProgress ->
