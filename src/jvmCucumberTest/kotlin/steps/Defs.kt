@@ -249,6 +249,9 @@ class Defs : En {
         When("I complete the rule") {
             conditionSelectorPO.clickDone()
         }
+        When("I cancel the rule") {
+            conditionSelectorPO.clickCancel()
+        }
 
         When("I start to build a rule for the change on row {int}") { row: Int ->
             interpretationViewPO.buildRule(row)

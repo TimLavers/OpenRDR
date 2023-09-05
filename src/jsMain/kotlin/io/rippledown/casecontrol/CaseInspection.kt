@@ -94,6 +94,7 @@ val CaseInspection = FC<CaseInspectionHandler> { handler ->
                     api = handler.api
                     conditions = conditionHints!!.conditions
                     onCancel = {
+                        handler.ruleSessionInProgress(false)
                         ccStatus = null
                     }
                     conditionSelected = { conditions ->
