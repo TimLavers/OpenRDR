@@ -6,8 +6,8 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 
-class LowTest {
-    private val low = Low()
+class LowTest: Base() {
+    private val low = Low
     private val range = ReferenceRange("1.0", "2.5")
     private val units = "g"
 
@@ -45,12 +45,12 @@ class LowTest {
 
     @Test
     fun equalsTest() {
-        low shouldBe Low()
+        low shouldBe Low
     }
 
     @Test
     fun hashCodeTest() {
-        low.hashCode() shouldBe Low().hashCode()
+        low.hashCode() shouldBe Low.hashCode()
     }
 
     @Test
@@ -62,10 +62,5 @@ class LowTest {
     fun description() {
         low.description(false) shouldBe "is low"
         low.description(true) shouldBe "are low"
-    }
-
-    fun serializeDeserialize(testResultPredicate: TestResultPredicate): TestResultPredicate {
-        val serialized = Json.encodeToString(testResultPredicate)
-        return Json.decodeFromString(serialized)
     }
 }

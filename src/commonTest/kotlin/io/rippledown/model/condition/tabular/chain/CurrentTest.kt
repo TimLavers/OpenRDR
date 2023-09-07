@@ -7,18 +7,13 @@ import kotlin.test.Test
 
 class CurrentTest {
 
-    private val current = Current(62)
+    private val current = Current
     private val t = listOf(true)
     private val f = listOf(false)
     private val tt = listOf(true, true)
     private val tf = listOf(true, false)
     private val ft = listOf(false, true)
     private val ff = listOf(false, false)
-
-    @Test
-    fun idTest() {
-        current.id shouldBe 62
-    }
 
     @Test
     fun evaluateEmptySequence() {

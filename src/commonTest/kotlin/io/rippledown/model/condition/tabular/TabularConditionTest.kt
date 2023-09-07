@@ -13,7 +13,7 @@ import kotlin.test.Test
 
 class TabularConditionTest: ConditionTestBase() {
 
-    private val tshLow = TabularCondition(123, tsh, Low(), Current())
+    private val tshLow = TabularCondition(123, tsh, Low, Current)
 
     @Test
     fun id() {
@@ -74,6 +74,6 @@ class TabularConditionTest: ConditionTestBase() {
     @Test
     fun sameAs() {
         tshLow.sameAs(tshLow) shouldBe true
-        tshLow.sameAs(TabularCondition(null, tsh, Low(), Current())) shouldBe true
+        tshLow.sameAs(TabularCondition(null, tsh, Low, Current)) shouldBe true
     }
 }
