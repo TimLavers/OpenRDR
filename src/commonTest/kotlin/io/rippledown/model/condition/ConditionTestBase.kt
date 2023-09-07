@@ -1,7 +1,7 @@
 package io.rippledown.model.condition
 
 import io.rippledown.model.*
-import kotlinx.serialization.decodeFromString
+import io.rippledown.model.condition.tabular.TabularCondition
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -171,6 +171,11 @@ open class ConditionTestBase {
     }
 
     fun serializeDeserialize(condition: Condition): Condition {
+        val serialized = Json.encodeToString(condition)
+        return Json.decodeFromString(serialized)
+    }
+
+    fun serializeDeserialize(condition: TabularCondition): TabularCondition {
         val serialized = Json.encodeToString(condition)
         return Json.decodeFromString(serialized)
     }

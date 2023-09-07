@@ -58,6 +58,12 @@ class LowTest {
         serializeDeserialize(low) shouldBe low
     }
 
+    @Test
+    fun description() {
+        low.description(false) shouldBe "is low"
+        low.description(true) shouldBe "are low"
+    }
+
     fun serializeDeserialize(testResultPredicate: TestResultPredicate): TestResultPredicate {
         val serialized = Json.encodeToString(testResultPredicate)
         return Json.decodeFromString(serialized)

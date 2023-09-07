@@ -51,6 +51,16 @@ class CurrentTest {
         serializeDeserialize(current) shouldBe current
     }
 
+    @Test
+    fun description() {
+        current.description() shouldBe ""
+    }
+
+    @Test
+    fun plurality() {
+        current.plurality() shouldBe false
+    }
+
     fun serializeDeserialize(chainPredicate: ChainPredicate): ChainPredicate {
         val serialized = Json.encodeToString(chainPredicate)
         return Json.decodeFromString(serialized)

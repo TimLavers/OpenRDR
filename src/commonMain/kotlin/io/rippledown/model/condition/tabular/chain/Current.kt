@@ -6,4 +6,6 @@ import kotlinx.serialization.Serializable
 data class Current(override val id: Int? = null): ChainPredicate {
 
     override fun matches(pattern: List<Boolean>) =  if (pattern.isEmpty()) false else pattern.last()
+
+    override fun description() = ""
 }

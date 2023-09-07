@@ -9,18 +9,19 @@ import kotlinx.serialization.Serializable
 
 // ORD1
 @Serializable
-class TabularCondition(override val id: Int? = null, val attribute: Attribute, val predicate: TestResultPredicate, val chainPredicate: ChainPredicate): RDCondition() {
+class TabularCondition(override val id: Int? = null,
+                       val attribute: Attribute,
+                       val predicate: TestResultPredicate,
+                       val chainPredicate: ChainPredicate): RDCondition() {
+
     override fun holds(case: RDRCase): Boolean {
-        TODO("Not yet implemented")
+        val values = case.values(attribute) ?: return false
+        return chainPredicate.matches(values.map { predicate.evaluate(it) })
     }
 
-    override fun asText(): String {
-        TODO("Not yet implemented")
-    }
+    override fun asText() = "${chainPredicate.description()} ${attribute.name} ${predicate.description(chainPredicate.plurality())}".trim()
 
-    override fun alignAttributes(idToAttribute: (Int) -> Attribute): RDCondition {
-        TODO("Not yet implemented")
-    }
+    override fun alignAttributes(idToAttribute: (Int) -> Attribute) = TabularCondition(id, idToAttribute(attribute.id), predicate, chainPredicate)
 
     override fun sameAs(other: RDCondition): Boolean {
         TODO("Not yet implemented")

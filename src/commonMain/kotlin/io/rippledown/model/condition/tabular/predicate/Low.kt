@@ -16,4 +16,6 @@ class Low: TestResultPredicate {
     override fun hashCode(): Int {
         return this::class.hashCode()
     }
+
+    override fun description(plural: Boolean) = if (plural) "are low" else "is low"
 }
