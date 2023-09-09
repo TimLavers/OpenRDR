@@ -1,19 +1,11 @@
 package io.rippledown.model.condition.tabular.chain
 
 import io.kotest.matchers.shouldBe
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import kotlin.test.Test
 
-class CurrentTest {
+class CurrentTest: ChainTestBase() {
 
     private val current = Current
-    private val t = listOf(true)
-    private val f = listOf(false)
-    private val tt = listOf(true, true)
-    private val tf = listOf(true, false)
-    private val ft = listOf(false, true)
-    private val ff = listOf(false, false)
 
     @Test
     fun evaluateEmptySequence() {
@@ -54,10 +46,5 @@ class CurrentTest {
     @Test
     fun plurality() {
         current.plurality() shouldBe false
-    }
-
-    fun serializeDeserialize(chainPredicate: ChainPredicate): ChainPredicate {
-        val serialized = Json.encodeToString(chainPredicate)
-        return Json.decodeFromString(serialized)
     }
 }

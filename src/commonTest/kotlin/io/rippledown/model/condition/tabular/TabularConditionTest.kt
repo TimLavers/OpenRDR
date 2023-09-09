@@ -6,7 +6,9 @@ import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.TestResult
 import io.rippledown.model.condition.ConditionTestBase
+import io.rippledown.model.condition.tabular.chain.All
 import io.rippledown.model.condition.tabular.chain.Current
+import io.rippledown.model.condition.tabular.predicate.Contains
 import io.rippledown.model.condition.tabular.predicate.Low
 import io.rippledown.model.defaultDate
 import kotlin.test.Test
@@ -51,6 +53,21 @@ class TabularConditionTest: ConditionTestBase() {
 
         // Current value is blank.
         tshLow.holds(twoEpisodeCaseWithCurrentTSHValueBlank()) shouldBe false
+    }
+
+    @Test
+    fun allLow() {
+        val allTshLow = TabularCondition(null, tsh, Low, All)
+        allTshLow.holds(threeEpisodeCaseWithEachTshLow()) shouldBe true
+        allTshLow.holds(twoEpisodeCaseWithFirstTSHLowSecondNormal()) shouldBe false
+        allTshLow.asText() shouldBe "all ${tsh.name} are low"
+    }
+
+    @Test
+    fun allContain() {
+        val allContain = TabularCondition(null, clinicalNotes, Contains("cat"), All)
+        allContain.holds(multiEpisodeClinicalNotesCase("dog", "cat", "horse")) shouldBe false
+        allContain.holds(multiEpisodeClinicalNotesCase("scatter", "cat", "cathartic")) shouldBe true
     }
 
     @Test

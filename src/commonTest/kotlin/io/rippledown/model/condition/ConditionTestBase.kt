@@ -29,6 +29,15 @@ open class ConditionTestBase {
         return builder1.build(notes)
     }
 
+    fun multiEpisodeClinicalNotesCase(vararg notes: String): RDRCase {
+        val builder1 = RDRCaseBuilder()
+        notes.withIndex().forEach {
+            val date = daysAfter(it.index)
+            builder1.addValue(clinicalNotes, date ,it.value)
+        }
+        return builder1.build("Notes Case")
+    }
+
     fun highTSHCase(): RDRCase {
         val builder1 = RDRCaseBuilder()
         builder1.addResult(tsh, defaultDate , TestResult("9.667", range, "pmol/L"))
@@ -111,6 +120,18 @@ open class ConditionTestBase {
         val range0 = ReferenceRange("0.25", "2.90")
         val tshResult0 = TestResult(Value("1.20"), range0, "mU/L")
         builder.addResult(tsh, yesterday, tshResult0)
+        return builder.build("Two Episodes")
+    }
+
+    fun threeEpisodeCaseWithEachTshLow(): RDRCase {
+        val builder = RDRCaseBuilder()
+        val tshResult2 = TestResult(Value("0.08"), range, "mU/L")
+        builder.addResult(tsh, today, tshResult2)
+        val tshResult1 = TestResult(Value("0.05"), range, "mU/L")
+        builder.addResult(tsh, yesterday, tshResult1)
+        val range0 = ReferenceRange("0.25", "2.90")
+        val tshResult0 = TestResult(Value("0.20"), range0, "mU/L")
+        builder.addResult(tsh, lastWeek, tshResult0)
         return builder.build("Two Episodes")
     }
 
