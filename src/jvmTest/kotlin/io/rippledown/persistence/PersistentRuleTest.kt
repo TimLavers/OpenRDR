@@ -3,9 +3,8 @@ package io.rippledown.persistence
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
 import io.rippledown.model.Conclusion
-import io.rippledown.model.condition.IsNormal
+import io.rippledown.model.condition.isNormal
 import io.rippledown.model.rule.Rule
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
@@ -81,7 +80,7 @@ class PersistentRuleTest {
         parentPR.conditionIds shouldBe emptySet()
         parentPR.conditionIdsString() shouldBe ""
         val glucose = Attribute(233, "Glucose")
-        val condition = IsNormal(33, glucose)
+        val condition = isNormal(33, glucose)
         val child = Rule(13, parent, Conclusion(99, "Blah"), setOf(condition))
         val childPR = PersistentRule(child)
         childPR.id shouldBe 13

@@ -73,9 +73,9 @@ class KBManagerTest {
 
     @Test //KBM-5
     fun deleteKB() {
-        val info1 = kbManager.createKB("Thyroids",)
-        val info2 = kbManager.createKB("Glucose",)
-        val info3 = kbManager.createKB("Lipids",)
+        val info1 = kbManager.createKB("Thyroids")
+        val info2 = kbManager.createKB("Glucose")
+        val info3 = kbManager.createKB("Lipids")
 
         kbManager.all() shouldBe setOf(info1, info2, info3)
         kbManager.deleteKB(info2)
@@ -107,7 +107,7 @@ class KBManagerTest {
     @Test //KBM-5
     fun `delete a KB and then re-create it`() {
         val name = "Snarky Puppy"
-        val info1 = kbManager.createKB(name,)
+        val info1 = kbManager.createKB(name)
         kbManager.all() shouldBe setOf(info1)
         kbManager.deleteKB(info1)
         kbManager.all() shouldBe setOf()
@@ -117,8 +117,8 @@ class KBManagerTest {
 
     @Test //KBM-5
     fun `delete a KB that has the same id as another KB`() {
-        val info1 = kbManager.createKB("Thyroids",)
-        val info2 = kbManager.createKB("Glucose",)
+        val info1 = kbManager.createKB("Thyroids")
+        val info2 = kbManager.createKB("Glucose")
         kbManager.all() shouldBe setOf(info1, info2) // sanity
         kbManager.deleteKB(KBInfo(info2.id, info1.name)) // Should never happen, but anyway...
         kbManager.all() shouldBe setOf(info1)

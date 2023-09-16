@@ -7,7 +7,7 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.condition.ConditionList
-import io.rippledown.model.condition.HasCurrentValue
+import io.rippledown.model.condition.hasCurrentValue
 import io.rippledown.model.createCaseWithInterpretation
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
@@ -39,8 +39,8 @@ class ConditionSelectionWhenShowingCornerstoneTest {
             id = 0L,
             name = "Bondi",
         )
-        val condition1 = HasCurrentValue(1, Attribute(1, "surf"))
-        val condition2 = HasCurrentValue(2, Attribute(2, "sand"))
+        val condition1 = hasCurrentValue(1, Attribute(1, "surf"))
+        val condition2 = hasCurrentValue(2, Attribute(2, "sand"))
 
         val config = config {
             returnCasesInfo = CasesInfo(caseIdList)

@@ -1,7 +1,6 @@
 package io.rippledown.caseview
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.caseview.resultText
 import io.rippledown.model.TestResult
 import kotlin.test.Test
 

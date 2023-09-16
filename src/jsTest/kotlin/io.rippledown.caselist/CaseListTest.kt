@@ -9,7 +9,7 @@ import io.rippledown.cornerstoneview.requireCornerstoneCaseToBeShowing
 import io.rippledown.interpretation.*
 import io.rippledown.model.*
 import io.rippledown.model.condition.ConditionList
-import io.rippledown.model.condition.HasCurrentValue
+import io.rippledown.model.condition.hasCurrentValue
 import io.rippledown.model.diff.*
 import io.rippledown.model.rule.CornerstoneStatus
 import kotlinx.coroutines.test.runTest
@@ -255,7 +255,7 @@ class CaseListTest {
             conclusionTexts = listOf(beachComment, bondiComment),
             diffs = diffList
         )
-        val condition = HasCurrentValue(1, Attribute(2, "surf"))
+        val condition = hasCurrentValue(1, Attribute(2, "surf"))
         val config = config {
             expectedCaseId = caseId
             returnCasesInfo = CasesInfo(caseIdList)

@@ -13,8 +13,9 @@ import io.rippledown.constants.server.SHUTDOWN
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.HAS_CURRENT_VALUE
-import io.rippledown.model.condition.HasCurrentValue
+import io.rippledown.model.condition.tabular.TabularCondition
+import io.rippledown.model.condition.tabular.chain.Current
+import io.rippledown.model.condition.tabular.predicate.IsNotBlank
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.server.routes.*
 import kotlinx.coroutines.runBlocking
@@ -153,10 +154,10 @@ class RESTClient {
         val firstWord = conditionText.split(" ")[0]
         val attribute = getOrCreateAttribute(firstWord)
         val remainderOfExpression = conditionText.substring(firstWord.length + 1)
-        if (remainderOfExpression != HAS_CURRENT_VALUE) {
-            throw IllegalArgumentException("Only '$HAS_CURRENT_VALUE' is supported")
+        if (remainderOfExpression != "id not blank") {
+            throw IllegalArgumentException("Only 'is not blank' is supported")
         }
-        return HasCurrentValue(null, attribute)
+        return TabularCondition(null, attribute, IsNotBlank, Current)
     }
 
     fun resetKB(): OperationResult {

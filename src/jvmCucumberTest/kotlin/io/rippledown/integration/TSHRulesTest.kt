@@ -2,7 +2,11 @@ package io.rippledown.integration
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.restclient.RESTClient
+import io.rippledown.model.Attribute
 import io.rippledown.model.condition.*
+import io.rippledown.model.condition.tabular.TabularCondition
+import io.rippledown.model.condition.tabular.chain.Current
+import io.rippledown.model.condition.tabular.predicate.*
 import kotlin.test.Test
 
 // ORD6
@@ -86,6 +90,15 @@ internal class TSHRulesTest : TSHTest() {
         buildRules()
     }
 
+    private fun isLow(attribute: Attribute) = TabularCondition(null, attribute, Low, Current)
+    private fun isNormal(attribute: Attribute) = TabularCondition(null, attribute, Normal, Current)
+    private fun isHigh(attribute: Attribute) = TabularCondition(null, attribute, High, Current)
+    private fun isCondition(attribute: Attribute, text: String) = TabularCondition(null, attribute, Is(text), Current)
+    private fun containsText(attribute: Attribute, text: String) = TabularCondition(null, attribute, Contains(text), Current)
+    private fun greaterThanOrEqualTo(attribute: Attribute, d: Double) = TabularCondition(null, attribute, GreaterThanOrEquals(d), Current)
+    private fun lessThanOrEqualTo(attribute: Attribute, d: Double) = TabularCondition(null, attribute, LessThanOrEquals(d), Current)
+    private fun slightlyLow(attribute: Attribute, cutoff: Int) =TabularCondition(null, attribute, AtMostPercentageLow(cutoff), Current)
+
     private fun buildRules() {
         val tsh = attributeFactory.create("TSH")
         val freeT4 = attributeFactory.create("Free T4")
@@ -93,25 +106,25 @@ internal class TSHRulesTest : TSHTest() {
         val tpo = attributeFactory.create("TPO Antibodies")
         val clinicalNotes = attributeFactory.create("Clinical Notes")
 
-        val tshLow = conditionFactory.getOrCreate(IsLow(null, tsh))
-        val tshNormal = conditionFactory.getOrCreate(IsNormal(null, tsh))
-        val tshModeratelyIncreased = conditionFactory.getOrCreate(GreaterThanOrEqualTo(null, tsh, 10.0))
-        val tshHigh = conditionFactory.getOrCreate(IsHigh(null, tsh))
-        val tshVeryHigh = conditionFactory.getOrCreate(GreaterThanOrEqualTo(null, tsh, 40.0)) // What should this be?
-        val ft4VeryLow = conditionFactory.getOrCreate(Is(null, freeT4, "<5"))
-        val t4SlightlyLow = conditionFactory.getOrCreate(SlightlyLow(null, freeT4, 20))
-        val ft3High = conditionFactory.getOrCreate(IsHigh(null, ft3))
-        val freeT4Normal = conditionFactory.getOrCreate(IsNormal(null, freeT4))
-        val tpoHigh = conditionFactory.getOrCreate(IsHigh(null, tpo))
-        val elderly = conditionFactory.getOrCreate(GreaterThanOrEqualTo(null, attributeFactory.create("Age"), 70.0))
-        val notesShowsTrimester1 = conditionFactory.getOrCreate(ContainsText(null, clinicalNotes, "12/40 weeks"))
-        val notesShowsTryingForBaby = conditionFactory.getOrCreate(ContainsText(null, clinicalNotes, "Trying for a baby"))
-        val tiredness = conditionFactory.getOrCreate(ContainsText(null, clinicalNotes, "very tired"))
-        val thyroxineReplacement1Week = conditionFactory.getOrCreate(ContainsText(null, clinicalNotes, "started T4 replacement 1 week ago"))
-        val t4Replacement = conditionFactory.getOrCreate(ContainsText(null, clinicalNotes, "On T4 replacement"))
-        val tshVeryLow = conditionFactory.getOrCreate(LessThanOrEqualTo(null, tsh, 0.1)) // What should this be?
-        val historyThyroidCancer = conditionFactory.getOrCreate(ContainsText(null, clinicalNotes, "thyroid cancer"))
-        val onThyroxine = conditionFactory.getOrCreate(ContainsText(null, clinicalNotes, "On thyroxine"))
+        val tshLow = conditionFactory.getOrCreate(isLow(tsh))
+        val tshNormal = conditionFactory.getOrCreate(isNormal(tsh))
+        val tshModeratelyIncreased = conditionFactory.getOrCreate(greaterThanOrEqualTo(tsh, 10.0))
+        val tshHigh = conditionFactory.getOrCreate(isHigh(tsh))
+        val tshVeryHigh = conditionFactory.getOrCreate(greaterThanOrEqualTo( tsh, 40.0)) // What should this be?
+        val ft4VeryLow = conditionFactory.getOrCreate(isCondition(freeT4, "<5"))
+        val t4SlightlyLow = conditionFactory.getOrCreate(slightlyLow(freeT4, 20))
+        val ft3High = conditionFactory.getOrCreate(isHigh(ft3))
+        val freeT4Normal = conditionFactory.getOrCreate(isNormal( freeT4))
+        val tpoHigh = conditionFactory.getOrCreate(isHigh(tpo))
+        val elderly = conditionFactory.getOrCreate(greaterThanOrEqualTo(attributeFactory.create("Age"), 70.0))
+        val notesShowsTrimester1 = conditionFactory.getOrCreate(containsText(clinicalNotes, "12/40 weeks"))
+        val notesShowsTryingForBaby = conditionFactory.getOrCreate(containsText( clinicalNotes, "Trying for a baby"))
+        val tiredness = conditionFactory.getOrCreate(containsText(clinicalNotes, "very tired"))
+        val thyroxineReplacement1Week = conditionFactory.getOrCreate(containsText(clinicalNotes, "started T4 replacement 1 week ago"))
+        val t4Replacement = conditionFactory.getOrCreate(containsText(clinicalNotes, "On T4 replacement"))
+        val tshVeryLow = conditionFactory.getOrCreate(lessThanOrEqualTo(tsh, 0.1)) // What should this be?
+        val historyThyroidCancer = conditionFactory.getOrCreate(containsText( clinicalNotes, "thyroid cancer"))
+        val onThyroxine = conditionFactory.getOrCreate(containsText(clinicalNotes, "On thyroxine"))
 
         val report1 = "Normal T4 and TSH are consistent with a euthyroid state."
         val report1b = "Normal TSH is consistent with a euthyroid state."

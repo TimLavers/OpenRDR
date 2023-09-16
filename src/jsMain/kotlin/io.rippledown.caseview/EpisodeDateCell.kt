@@ -1,6 +1,5 @@
 package io.rippledown.caseview
 
-import emotion.react.css
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -9,8 +8,6 @@ import mui.system.sx
 import px8
 import react.FC
 import react.Props
-import web.cssom.FontSize
-import web.cssom.FontStyle
 import web.cssom.FontWeight
 import web.cssom.WhiteSpace
 

@@ -2,7 +2,7 @@ package io.rippledown.model.condition.tabular
 
 import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCase
-import io.rippledown.model.condition.RDCondition
+import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.tabular.chain.ChainPredicate
 import io.rippledown.model.condition.tabular.predicate.TestResultPredicate
 import kotlinx.serialization.Serializable
@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
 class TabularCondition(override val id: Int? = null,
                        val attribute: Attribute,
                        val predicate: TestResultPredicate,
-                       val chainPredicate: ChainPredicate): RDCondition() {
+                       private val chainPredicate: ChainPredicate): Condition() {
 
     override fun holds(case: RDRCase): Boolean {
         val values = case.values(attribute) ?: return false
@@ -23,7 +23,7 @@ class TabularCondition(override val id: Int? = null,
 
     override fun alignAttributes(idToAttribute: (Int) -> Attribute) = TabularCondition(id, idToAttribute(attribute.id), predicate, chainPredicate)
 
-    override fun sameAs(other: RDCondition): Boolean {
+    override fun sameAs(other: Condition): Boolean {
         TODO("Not yet implemented")
     }
 }

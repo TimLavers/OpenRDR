@@ -1,12 +1,11 @@
 package io.rippledown.model
 
-import kotlinx.serialization.decodeFromString
+import io.kotest.matchers.shouldBe
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import io.kotest.matchers.shouldBe
 
 internal class TestResultTest {
 

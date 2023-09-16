@@ -2,7 +2,7 @@ package io.rippledown.persistence.postgres
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
-import io.rippledown.model.condition.IsHigh
+import io.rippledown.model.condition.isHigh
 import io.rippledown.persistence.ConditionStore
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -36,10 +36,10 @@ class MultipleDBsConditionStoresTest: MultipleDBsTest() {
 
     @Test
     fun create() {
-        val a11 = store1.create(IsHigh(null, glucose1))
-        val a21 = store2.create(IsHigh(null, glucose2))
-        val a12 = store1.create(IsHigh(null, tsh1))
-        val a22 = store2.create(IsHigh(null, tsh2))
+        val a11 = store1.create(isHigh(null, glucose1))
+        val a21 = store2.create(isHigh(null, glucose2))
+        val a12 = store1.create(isHigh(null, tsh1))
+        val a22 = store2.create(isHigh(null, tsh2))
 
         store1.all() shouldBe setOf(a11, a12)
         store2.all() shouldBe setOf(a21, a22)
@@ -50,10 +50,10 @@ class MultipleDBsConditionStoresTest: MultipleDBsTest() {
 
     @Test
     fun load() {
-        val a1 = IsHigh(1, glucose1)
-        val a2 = IsHigh(2, tsh1)
-        val b1 = IsHigh(1, glucose1)
-        val b2 = IsHigh(2, tsh1)
+        val a1 = isHigh(1, glucose1)
+        val a2 = isHigh(2, tsh1)
+        val b1 = isHigh(1, glucose1)
+        val b2 = isHigh(2, tsh1)
         store1.load(setOf(a1, a2))
         store2.load(setOf(b1, b2))
 

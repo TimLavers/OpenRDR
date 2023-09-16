@@ -2,7 +2,6 @@ package io.rippledown.model.condition
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
@@ -13,8 +12,8 @@ class ConditionListTest {
     fun check_serialization() {
         val conditionList = ConditionList(
             listOf(
-                HasCurrentValue(1,Attribute(1, "x")),
-                IsHigh(2, Attribute(2, "y"))
+                hasCurrentValue(1,Attribute(1, "x")),
+                isHigh(2, Attribute(2, "y"))
             )
         )
         serializeDeserialize(conditionList) shouldBe conditionList

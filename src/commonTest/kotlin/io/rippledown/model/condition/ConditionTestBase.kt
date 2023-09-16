@@ -2,8 +2,21 @@ package io.rippledown.model.condition
 
 import io.rippledown.model.*
 import io.rippledown.model.condition.tabular.TabularCondition
+import io.rippledown.model.condition.tabular.chain.Current
+import io.rippledown.model.condition.tabular.predicate.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+
+fun isLow(id: Int? = null,attribute: Attribute) = TabularCondition(id, attribute, Low, Current)
+fun isNormal(id: Int? = null,attribute: Attribute) = TabularCondition(id, attribute, Normal, Current)
+fun isHigh(id: Int? = null, attribute: Attribute) = TabularCondition(id, attribute, High, Current)
+fun isCondition(id: Int? = null,attribute: Attribute, text: String) = TabularCondition(id, attribute, Is(text), Current)
+fun containsText(id: Int? = null, attribute: Attribute, text: String) = TabularCondition(id, attribute, Contains(text), Current)
+fun hasCurrentValue(id: Int? = null, attribute: Attribute) = TabularCondition(id, attribute, IsNotBlank, Current)
+fun hasNoCurrentValue(id: Int? = null, attribute: Attribute) = TabularCondition(id, attribute, IsBlank, Current)
+fun greaterThanOrEqualTo(id: Int? = null,attribute: Attribute, d: Double) = TabularCondition(id, attribute, GreaterThanOrEquals(d), Current)
+fun lessThanOrEqualTo(id: Int? = null, attribute: Attribute, d: Double) = TabularCondition(id, attribute, LessThanOrEquals(d), Current)
+fun slightlyLow(id: Int? = null, attribute: Attribute, cutoff: Int) = TabularCondition(id, attribute, AtMostPercentageHigh(cutoff), Current)
 
 open class ConditionTestBase {
 

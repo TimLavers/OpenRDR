@@ -4,7 +4,7 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.ConclusionFactory
 import io.rippledown.model.ConditionFactory
 import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.ContainsText
+import io.rippledown.model.condition.containsText
 import io.rippledown.model.rule.Rule
 import io.rippledown.model.rule.RuleTree
 import kotlin.random.Random
@@ -90,6 +90,6 @@ class CONDITION_TEMPLATE(private val conditionFactory: ConditionFactory) {
     lateinit var constant: String
 
     fun condition(): Condition {
-        return conditionFactory.getOrCreate(ContainsText(null, attribute, constant))
+        return conditionFactory.getOrCreate(containsText(null, attribute, constant))
     }
 }

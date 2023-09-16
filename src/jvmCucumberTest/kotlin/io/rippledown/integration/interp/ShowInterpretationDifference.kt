@@ -6,12 +6,13 @@ import io.rippledown.integration.pageobjects.CaseQueuePO
 import io.rippledown.integration.pageobjects.CaseViewPO
 import io.rippledown.integration.pageobjects.InterpretationViewPO
 import io.rippledown.integration.restclient.RESTClient
-import io.rippledown.model.condition.IsNormal
-import io.rippledown.model.condition.LessThanOrEqualTo
+import io.rippledown.model.condition.tabular.TabularCondition
+import io.rippledown.model.condition.tabular.chain.Current
+import io.rippledown.model.condition.tabular.predicate.LessThanOrEquals
+import io.rippledown.model.condition.tabular.predicate.Normal
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
-
 
 internal class ShowInterpretationDifference : UITestBase() {
 
@@ -45,8 +46,8 @@ internal class ShowInterpretationDifference : UITestBase() {
             val tsh = getOrCreateAttribute("TSH")
             val conclusion = getOrCreateConclusion(tshComment)
             startSessionToAddConclusionForCurrentCase(conclusion)
-            addConditionForCurrentSession(IsNormal(null, tsh))
-            addConditionForCurrentSession(LessThanOrEqualTo(null, tsh, 0.7))
+            addConditionForCurrentSession(TabularCondition(null, tsh, Normal, Current))
+            addConditionForCurrentSession(TabularCondition(null, tsh, LessThanOrEquals(0.7), Current))
             commitCurrentSession()
         }
     }

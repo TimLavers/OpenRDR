@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 
 // ORD1
 @Serializable
-sealed class Condition {
+abstract class Condition {
     abstract val id: Int?
     abstract fun holds(case: RDRCase): Boolean
     abstract fun asText(): String

@@ -7,14 +7,12 @@ import io.rippledown.model.Interpretation
 import io.rippledown.model.diff.Unchanged
 import mui.icons.material.Build
 import mui.material.*
-import mui.material.styles.TypographyVariant
 import mui.material.styles.TypographyVariant.Companion.subtitle2
 import mui.system.sx
 import react.FC
 import react.ReactNode
 import react.useState
 import red
-import web.cssom.Cursor
 import web.cssom.Cursor.Companion.pointer
 import web.cssom.px
 

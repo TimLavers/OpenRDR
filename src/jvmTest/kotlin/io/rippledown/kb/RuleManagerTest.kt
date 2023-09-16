@@ -4,10 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
 import io.rippledown.model.Conclusion
-import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.IsHigh
-import io.rippledown.model.condition.IsLow
-import io.rippledown.model.condition.IsNormal
+import io.rippledown.model.condition.*
 import io.rippledown.model.rule.Rule
 import io.rippledown.persistence.*
 import io.rippledown.persistence.inmemory.InMemoryAttributeStore
@@ -48,9 +45,9 @@ class RuleManagerTest {
         coffeeConclusion = conclusionManager.getOrCreate(text1)
         teaConclusion = conclusionManager.getOrCreate(text2)
         champagneConclusion = conclusionManager.getOrCreate(text3)
-        normalGlucose = conditionManager.getOrCreate(IsNormal(null, glucose))
-        highTSH = conditionManager.getOrCreate(IsHigh(null, tsh))
-        lowTSH = conditionManager.getOrCreate(IsLow(null, tsh))
+        normalGlucose = conditionManager.getOrCreate(isNormal(null, glucose))
+        highTSH = conditionManager.getOrCreate(isHigh(null, tsh))
+        lowTSH = conditionManager.getOrCreate(isLow(null, tsh))
     }
 
     @Test

@@ -5,7 +5,6 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
 import io.rippledown.model.condition.*
 import io.rippledown.model.condition.ConditionTestBase
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
@@ -18,16 +17,16 @@ internal class RuleSummaryTest: ConditionTestBase() {
 
     init {
         val conditions2 = mutableSetOf<Condition>()
-        conditions2.add(SlightlyLow(2000, glucose, 10))
-        conditions2.add(IsNormal(2001, tsh))
-        val conditionsFromRoot2 = mutableListOf<Condition>(IsHigh(1, glucose), IsHigh(2, tsh)).apply { addAll(conditions2) }
+        conditions2.add(slightlyLow(2000, glucose, 10))
+        conditions2.add(isNormal(2001, tsh))
+        val conditionsFromRoot2 = mutableListOf<Condition>(isHigh(1, glucose), isHigh(2, tsh)).apply { addAll(conditions2) }
         rs2 = RuleSummary(12, null, conditions2, conditionsFromRoot2.map { it.asText() })
 
         val conditions3 = mutableSetOf<Condition>()
-        conditions3.add(IsNormal(3000, glucose))
-        conditions3.add(IsNormal(3001, tsh))
-        conditions3.add(ContainsText(3002, clinicalNotes, "goats"))
-        val conditionsFromRoot3 = mutableListOf<Condition>(IsHigh(1, glucose), IsHigh(2, tsh)).apply { addAll(conditions3) }
+        conditions3.add(isNormal(3000, glucose))
+        conditions3.add(isNormal(3001, tsh))
+        conditions3.add(containsText(3002, clinicalNotes, "goats"))
+        val conditionsFromRoot3 = mutableListOf<Condition>(isHigh(1, glucose), isHigh(2, tsh)).apply { addAll(conditions3) }
         rs3 = RuleSummary(13, conclusion, conditions3, conditionsFromRoot3.map { it.asText() })
     }
 
@@ -41,9 +40,9 @@ internal class RuleSummaryTest: ConditionTestBase() {
     fun conditions() {
         empty.conditions.size shouldBe 0
 
-        rs3.conditions shouldContain IsNormal(3000, glucose)
-        rs3.conditions shouldContain IsNormal(3001, tsh)
-        rs3.conditions shouldContain ContainsText(3002, clinicalNotes, "goats")
+        rs3.conditions shouldContain isNormal(3000, glucose)
+        rs3.conditions shouldContain isNormal(3001, tsh)
+        rs3.conditions shouldContain containsText(3002, clinicalNotes, "goats")
         rs3.conditions.size shouldBe 3
     }
 
@@ -51,17 +50,17 @@ internal class RuleSummaryTest: ConditionTestBase() {
     fun conditionsFromRoot() {
         empty.conditionTextsFromRoot shouldBe emptyList()
         rs2.conditionTextsFromRoot shouldBe listOf(
-            IsHigh(1, glucose),
-            IsHigh(2, tsh),
-            SlightlyLow(3, glucose, 10),
-            IsNormal(4, tsh)
+            isHigh(1, glucose),
+            isHigh(2, tsh),
+            slightlyLow(3, glucose, 10),
+            isNormal(4, tsh)
         ).map { it.asText() }
         rs3.conditionTextsFromRoot shouldBe listOf(
-            IsHigh(1, glucose),
-            IsHigh(2, tsh),
-            IsNormal(3, glucose),
-            IsNormal(4, tsh),
-            ContainsText(5, clinicalNotes, "goats")
+            isHigh(1, glucose),
+            isHigh(2, tsh),
+            isNormal(3, glucose),
+            isNormal(4, tsh),
+            containsText(5, clinicalNotes, "goats")
         ).map { it.asText() }
     }
 

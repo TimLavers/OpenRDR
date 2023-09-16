@@ -6,13 +6,12 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.ConditionFactory
 import io.rippledown.model.DummyConclusionFactory
 import io.rippledown.model.DummyConditionFactory
-import io.rippledown.model.condition.IsHigh
-import io.rippledown.model.condition.IsNormal
+import io.rippledown.model.condition.isHigh
+import io.rippledown.model.condition.isNormal
 import io.rippledown.model.rule.Rule
 import io.rippledown.model.rule.RuleTree
 import io.rippledown.model.rule.dsl.ruleTree
 import io.rippledown.persistence.PersistentRule
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.junit.Before
 import kotlin.test.Test
@@ -30,8 +29,8 @@ class RuleExporterTest: ExporterTestBase() {
         val conclusion = conclusionFactory.getOrCreate("More coffee needed.")
         val glucose = Attribute(9, "Glucose")
         val tsh = Attribute(10, "TSH")
-        val glucoseHigh = conditionFactory.getOrCreate(IsHigh(null, glucose))
-        val tshNormal = conditionFactory.getOrCreate(IsNormal(null, tsh))
+        val glucoseHigh = conditionFactory.getOrCreate(isHigh(null, glucose))
+        val tshNormal = conditionFactory.getOrCreate(isNormal(null, tsh))
         val parent = Rule(0, null, null, emptySet())
         rule = Rule(8, parent, conclusion, setOf(glucoseHigh,tshNormal))
     }

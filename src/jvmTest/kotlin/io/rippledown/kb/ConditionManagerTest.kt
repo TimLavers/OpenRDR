@@ -8,10 +8,8 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.rippledown.model.*
-import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.ContainsText
-import io.rippledown.model.condition.IsHigh
-import io.rippledown.model.condition.IsNormal
+import io.rippledown.model.condition.*
+import io.rippledown.model.condition.tabular.TabularCondition
 import io.rippledown.persistence.ConditionStore
 import io.rippledown.persistence.inmemory.InMemoryAttributeStore
 import io.rippledown.persistence.inmemory.InMemoryConditionStore
@@ -45,7 +43,7 @@ class ConditionManagerTest {
 
     @Test
     fun getOrCreate() {
-        val glucoseHigh = IsNormal(null, glucose)
+        val glucoseHigh = isNormal(null, glucose)
         val created = conditionManager.getOrCreate(glucoseHigh)
         created shouldNotBeSameInstanceAs glucoseHigh
         created.id shouldNotBe null
@@ -61,72 +59,72 @@ class ConditionManagerTest {
 
     @Test
     fun `get or create when an equivalent condition is in manager`() {
-        conditionManager.getOrCreate(IsHigh(null, tsh))
-        conditionManager.getOrCreate(ContainsText(null, notes, "Cat"))
-        val glucoseHigh = IsNormal(null, glucose)
-        val created = conditionManager.getOrCreate(glucoseHigh)
-        val createdAgain = conditionManager.getOrCreate(glucoseHigh)
+        conditionManager.getOrCreate(isHigh(null, tsh))
+        conditionManager.getOrCreate(containsText(null, notes, "Cat"))
+        val glucoseNormal = isNormal(null, glucose)
+        val created = conditionManager.getOrCreate(glucoseNormal)
+        val createdAgain = conditionManager.getOrCreate(glucoseNormal)
         createdAgain shouldBeSameInstanceAs created
 
         // Rebuild.
         conditionManager = ConditionManager(attributeManager, conditionStore)
         val retrieved = conditionManager.getById(created.id!!)
-        val createdYetAgain = conditionManager.getOrCreate(glucoseHigh)
+        val createdYetAgain = conditionManager.getOrCreate(glucoseNormal)
         createdYetAgain shouldBeSameInstanceAs retrieved
     }
 
     @Test
     fun `cannot get or create for a condition that has non-null id`() {
         shouldThrow<IllegalArgumentException> {
-            conditionManager.getOrCreate(IsHigh(88, glucose))
+            conditionManager.getOrCreate(isHigh(88, glucose))
         }.message shouldBe "Cannot store a condition that has a non-null id."
     }
 
     @Test
     fun getById() {
-        val glucoseNormal = conditionManager.getOrCreate(IsNormal(null, glucose))
-        val tshNormal = conditionManager.getOrCreate(IsNormal(null, tsh))
-        val notesIndicateFeline = conditionManager.getOrCreate(ContainsText(null, notes, "cat"))
+        val glucoseNormal = conditionManager.getOrCreate(isNormal(null, glucose))
+        val tshNormal = conditionManager.getOrCreate(isNormal(null, tsh))
+        val notesIndicateFeline = conditionManager.getOrCreate(containsText(null, notes, "cat"))
 
-        conditionManager.getById(glucoseNormal.id!!)!! should beSameAs(IsNormal(null, glucose))
-        conditionManager.getById(tshNormal.id!!)!! should beSameAs(IsNormal(null, tsh))
-        conditionManager.getById(notesIndicateFeline.id!!)!! should beSameAs(ContainsText(99, notes, "cat"))
+        conditionManager.getById(glucoseNormal.id!!)!! should beSameAs(isNormal(null, glucose))
+        conditionManager.getById(tshNormal.id!!)!! should beSameAs(isNormal(null, tsh))
+        conditionManager.getById(notesIndicateFeline.id!!)!! should beSameAs(containsText(99, notes, "cat"))
 
         // Rebuild.
         conditionManager = ConditionManager(attributeManager, conditionStore)
-        conditionManager.getById(glucoseNormal.id!!)!! should beSameAs(IsNormal(null, glucose))
-        conditionManager.getById(tshNormal.id!!)!! should beSameAs(IsNormal(null, tsh))
-        conditionManager.getById(notesIndicateFeline.id!!)!! should beSameAs(ContainsText(99, notes, "cat"))
+        conditionManager.getById(glucoseNormal.id!!)!! should beSameAs(isNormal(null, glucose))
+        conditionManager.getById(tshNormal.id!!)!! should beSameAs(isNormal(null, tsh))
+        conditionManager.getById(notesIndicateFeline.id!!)!! should beSameAs(containsText(99, notes, "cat"))
     }
 
     @Test
     fun `get by id with unknown id`() {
-        conditionManager.getOrCreate(IsNormal(null, glucose))
-        conditionManager.getOrCreate(IsNormal(null, tsh))
+        conditionManager.getOrCreate(isNormal(null, glucose))
+        conditionManager.getOrCreate(isNormal(null, tsh))
         conditionManager.getById(9999) shouldBe null
     }
 
     @Test //Cond-2
     fun `created conditions use attributes from attribute manager`() {
         val glucoseCopy = glucose.copy()
-        val templateCondition = IsHigh(null, glucoseCopy)
-        val createdCondition = conditionManager.getOrCreate(templateCondition) as IsHigh
+        val templateCondition = isHigh(null, glucoseCopy)
+        val createdCondition = conditionManager.getOrCreate(templateCondition) as TabularCondition
         createdCondition.attribute shouldBeSameInstanceAs glucose
 
         // Rebuild.
         conditionManager = ConditionManager(attributeManager, conditionStore)
-        val retrieved = conditionManager.getById(createdCondition.id!!) as IsHigh
+        val retrieved = conditionManager.getById(createdCondition.id!!) as TabularCondition
         retrieved.attribute shouldBeSameInstanceAs glucose
     }
 
     @Test //Cond-2
     fun `loaded conditions should use attributes from attribute manager`() {
         val glucoseCopy = glucose.copy()
-        val condition = IsHigh(900, glucoseCopy)
+        val condition = isHigh(900, glucoseCopy)
         conditionStore.load(setOf(condition))
 
         conditionManager = ConditionManager(attributeManager, conditionStore)
-        val loadedCondition = conditionManager.all().single() as IsHigh
+        val loadedCondition = conditionManager.all().single() as TabularCondition
         loadedCondition.attribute shouldBeSameInstanceAs glucose
     }
 
@@ -134,7 +132,7 @@ class ConditionManagerTest {
     fun all() {
         repeat(100) {
             conditionManager.all().size shouldBe it
-            val created = conditionManager.getOrCreate(ContainsText(null, notes, "Text_$it"))
+            val created = conditionManager.getOrCreate(containsText(null, notes, "Text_$it"))
             conditionManager.all() shouldContainSameAs created
         }
 
@@ -147,7 +145,7 @@ class ConditionManagerTest {
     fun `load from persistent store`() {
         val toLoad = mutableSetOf<Condition>()
         repeat(100) {
-            toLoad.add(ContainsText(it, notes, "Blah: $it"))
+            toLoad.add(containsText(it, notes, "Blah: $it"))
         }
         conditionStore.load(toLoad)
 

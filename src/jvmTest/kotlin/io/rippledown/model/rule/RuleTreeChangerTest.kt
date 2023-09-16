@@ -6,7 +6,7 @@ import io.rippledown.model.DummyConclusionFactory
 import io.rippledown.model.DummyConditionFactory
 import io.rippledown.model.RuleFactory
 import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.ContainsText
+import io.rippledown.model.condition.containsText
 import io.rippledown.model.rule.dsl.ruleTree
 import io.rippledown.util.shouldContainSameAs
 import kotlin.test.BeforeTest
@@ -186,7 +186,7 @@ internal class RuleTreeChangerTest : RuleTestBase() {
         ruleAdded.conditions shouldBe emptySet()
         ruleAdded.conclusion shouldBe null
         ruleAdded.parent!!.conclusion!!.text shouldBe A
-        ruleAdded.parent!!.conditions shouldContainSameAs( ContainsText(null, clinicalNotes, "b"))
+        ruleAdded.parent!!.conditions shouldContainSameAs( containsText(null, clinicalNotes, "b"))
     }
 
     @Test
@@ -222,7 +222,7 @@ internal class RuleTreeChangerTest : RuleTestBase() {
         ruleAdded.conditions shouldBe emptySet()
         ruleAdded.conclusion!!.text shouldBe C
         ruleAdded.parent!!.conclusion!!.text shouldBe A
-        ruleAdded.parent!!.conditions shouldContainSameAs ContainsText(null, clinicalNotes, "a")
+        ruleAdded.parent!!.conditions shouldContainSameAs containsText(null, clinicalNotes, "a")
     }
 
     @Test

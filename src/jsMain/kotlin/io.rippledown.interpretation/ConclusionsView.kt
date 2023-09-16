@@ -1,6 +1,5 @@
 package io.rippledown.interpretation
 
-import debug
 import io.rippledown.model.Interpretation
 import mui.icons.material.CheckBoxOutlined
 import mui.icons.material.ExpandLess
