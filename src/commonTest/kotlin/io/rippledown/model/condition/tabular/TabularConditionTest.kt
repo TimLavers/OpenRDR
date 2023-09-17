@@ -10,6 +10,7 @@ import io.rippledown.model.condition.tabular.chain.All
 import io.rippledown.model.condition.tabular.chain.Current
 import io.rippledown.model.condition.tabular.predicate.Contains
 import io.rippledown.model.condition.tabular.predicate.Low
+import io.rippledown.model.condition.tabular.predicate.Normal
 import io.rippledown.model.defaultDate
 import kotlin.test.Test
 
@@ -90,7 +91,22 @@ class TabularConditionTest: ConditionTestBase() {
 
     @Test
     fun sameAs() {
+        // Identical.
         tshLow.sameAs(tshLow) shouldBe true
+
+        // Same but for id.
         tshLow.sameAs(TabularCondition(null, tsh, Low, Current)) shouldBe true
+        tshLow.sameAs(TabularCondition(88, tsh, Low, Current)) shouldBe true
+        TabularCondition(88, tsh, Low, Current).sameAs(TabularCondition(88, tsh, Low, Current)) shouldBe true
+        TabularCondition(123, tsh, Low, Current).sameAs(TabularCondition(88, tsh, Low, Current)) shouldBe true
+
+        // Attribute different.
+        tshLow.sameAs(TabularCondition(null, clinicalNotes, Low, Current)) shouldBe false
+
+        // Predicate different.
+        tshLow.sameAs(TabularCondition(null, tsh, Normal, Current)) shouldBe false
+
+        // Chain different.
+        tshLow.sameAs(TabularCondition(null, tsh, Low, All)) shouldBe false
     }
 }
