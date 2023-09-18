@@ -3,7 +3,7 @@ package io.rippledown.model
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.condition.isCondition
-import io.rippledown.model.condition.tabular.TabularCondition
+import io.rippledown.model.condition.TabularCondition
 import io.rippledown.model.diff.*
 import io.rippledown.model.rule.Rule
 import kotlinx.serialization.encodeToString

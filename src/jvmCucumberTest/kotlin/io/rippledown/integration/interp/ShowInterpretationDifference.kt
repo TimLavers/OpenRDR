@@ -6,7 +6,7 @@ import io.rippledown.integration.pageobjects.CaseQueuePO
 import io.rippledown.integration.pageobjects.CaseViewPO
 import io.rippledown.integration.pageobjects.InterpretationViewPO
 import io.rippledown.integration.restclient.RESTClient
-import io.rippledown.model.condition.tabular.TabularCondition
+import io.rippledown.model.condition.TabularCondition
 import io.rippledown.model.condition.tabular.chain.Current
 import io.rippledown.model.condition.tabular.predicate.LessThanOrEquals
 import io.rippledown.model.condition.tabular.predicate.Normal

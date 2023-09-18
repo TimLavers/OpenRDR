@@ -13,7 +13,7 @@ import io.rippledown.constants.server.SHUTDOWN
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.tabular.TabularCondition
+import io.rippledown.model.condition.TabularCondition
 import io.rippledown.model.condition.tabular.chain.Current
 import io.rippledown.model.condition.tabular.predicate.IsNotBlank
 import io.rippledown.model.external.ExternalCase

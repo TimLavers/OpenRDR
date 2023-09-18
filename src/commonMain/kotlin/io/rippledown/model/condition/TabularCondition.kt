@@ -1,7 +1,6 @@
-package io.rippledown.model.condition.tabular
+package io.rippledown.model.condition
 
 import io.rippledown.model.*
-import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.tabular.chain.ChainPredicate
 import io.rippledown.model.condition.tabular.predicate.TestResultPredicate
 import kotlinx.serialization.KSerializer
@@ -68,12 +67,10 @@ object TabularConditionSerializer: KSerializer<TabularCondition> {
 
     override fun serialize(encoder: Encoder, value: TabularCondition) {
         encoder.encodeStructure(descriptor) {
-            encodeSerializableElement(descriptor, 0, Int.serializer().nullable, value.id!!)
+            encodeSerializableElement(descriptor, 0, Int.serializer().nullable, value.id)
             encodeSerializableElement(descriptor, 1, attributeSerializer, value.attribute)
             encodeSerializableElement(descriptor,2, predicateSerializer, value.predicate)
             encodeSerializableElement(descriptor,3, chainPredicateSerializer, value.chainPredicate)
         }
-
     }
-
 }

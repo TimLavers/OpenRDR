@@ -9,7 +9,7 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.rippledown.model.*
 import io.rippledown.model.condition.*
-import io.rippledown.model.condition.tabular.TabularCondition
+import io.rippledown.model.condition.TabularCondition
 import io.rippledown.persistence.ConditionStore
 import io.rippledown.persistence.inmemory.InMemoryAttributeStore
 import io.rippledown.persistence.inmemory.InMemoryConditionStore

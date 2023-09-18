@@ -1,11 +1,10 @@
-package io.rippledown.model.condition.tabular
+package io.rippledown.model.condition
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.TestResult
-import io.rippledown.model.condition.ConditionTestBase
 import io.rippledown.model.condition.tabular.chain.All
 import io.rippledown.model.condition.tabular.chain.Current
 import io.rippledown.model.condition.tabular.predicate.Contains
@@ -74,6 +73,10 @@ class TabularConditionTest: ConditionTestBase() {
     @Test
     fun serialization() {
         serializeDeserialize(tshLow) shouldBe tshLow
+
+        // One without an id.
+        val idLess = TabularCondition(null, tsh, Low, Current)
+        serializeDeserialize(idLess) shouldBe idLess
     }
 
     @Test

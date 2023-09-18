@@ -4,7 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.integration.restclient.RESTClient
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.*
-import io.rippledown.model.condition.tabular.TabularCondition
+import io.rippledown.model.condition.TabularCondition
 import io.rippledown.model.condition.tabular.chain.Current
 import io.rippledown.model.condition.tabular.predicate.*
 import kotlin.test.Test
@@ -97,7 +97,8 @@ internal class TSHRulesTest : TSHTest() {
     private fun containsText(attribute: Attribute, text: String) = TabularCondition(null, attribute, Contains(text), Current)
     private fun greaterThanOrEqualTo(attribute: Attribute, d: Double) = TabularCondition(null, attribute, GreaterThanOrEquals(d), Current)
     private fun lessThanOrEqualTo(attribute: Attribute, d: Double) = TabularCondition(null, attribute, LessThanOrEquals(d), Current)
-    private fun slightlyLow(attribute: Attribute, cutoff: Int) =TabularCondition(null, attribute, AtMostPercentageLow(cutoff), Current)
+    private fun slightlyLow(attribute: Attribute, cutoff: Int) =
+        TabularCondition(null, attribute, AtMostPercentageLow(cutoff), Current)
 
     private fun buildRules() {
         val tsh = attributeFactory.create("TSH")

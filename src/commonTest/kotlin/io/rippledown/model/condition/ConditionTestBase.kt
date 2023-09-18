@@ -1,7 +1,6 @@
 package io.rippledown.model.condition
 
 import io.rippledown.model.*
-import io.rippledown.model.condition.tabular.TabularCondition
 import io.rippledown.model.condition.tabular.chain.Current
 import io.rippledown.model.condition.tabular.predicate.*
 import kotlinx.serialization.encodeToString

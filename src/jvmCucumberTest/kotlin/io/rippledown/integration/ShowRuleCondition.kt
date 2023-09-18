@@ -7,7 +7,7 @@ import io.rippledown.integration.pageobjects.ConclusionsViewPO
 import io.rippledown.integration.restclient.RESTClient
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.tabular.TabularCondition
+import io.rippledown.model.condition.TabularCondition
 import io.rippledown.model.condition.tabular.chain.Current
 import io.rippledown.model.condition.tabular.predicate.GreaterThanOrEquals
 import io.rippledown.model.condition.tabular.predicate.LessThanOrEquals
