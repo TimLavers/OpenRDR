@@ -8,9 +8,9 @@ import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.TestResult
 import io.rippledown.model.caseview.ViewableCase
-import io.rippledown.persistence.AttributeOrderStore
-import io.rippledown.persistence.inmemory.InMemoryAttributeOrderStore
+import io.rippledown.persistence.OrderStore
 import io.rippledown.persistence.inmemory.InMemoryAttributeStore
+import io.rippledown.persistence.inmemory.InMemoryOrderStore
 import java.time.Instant
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -23,7 +23,7 @@ class CaseViewManagerTest {
     private lateinit var a5: Attribute
     private lateinit var a6: Attribute
     private lateinit var attributeManager: AttributeManager
-    private lateinit var attributeOrderStore: AttributeOrderStore
+    private lateinit var attributeOrderStore: OrderStore
     private lateinit var manager: CaseViewManager
 
     @BeforeTest
@@ -36,7 +36,7 @@ class CaseViewManagerTest {
         a5 = attributeManager.getOrCreate("A5")
         a6 = attributeManager.getOrCreate("A6")
 
-        attributeOrderStore = InMemoryAttributeOrderStore()
+        attributeOrderStore = InMemoryOrderStore()
         manager = CaseViewManager(attributeOrderStore, attributeManager)
     }
 

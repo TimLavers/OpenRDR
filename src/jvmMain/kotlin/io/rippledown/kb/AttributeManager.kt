@@ -3,9 +3,8 @@ package io.rippledown.kb
 import io.rippledown.model.Attribute
 import io.rippledown.persistence.AttributeStore
 
-fun interface AttributeProvider {
-    fun forId(id: Int): Attribute
-}
+typealias AttributeProvider = EntityProvider<Attribute>
+
 class AttributeManager(private val attributeStore: AttributeStore): AttributeProvider {
     private val nameToAttribute = mutableMapOf<String, Attribute>()
 

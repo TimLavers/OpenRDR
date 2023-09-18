@@ -1,14 +1,14 @@
 package io.rippledown.persistence.postgres
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.persistence.AttributeOrderStore
+import io.rippledown.persistence.OrderStore
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class MultipleDBsAttributeOrderStoresTest: MultipleDBsTest() {
-    private lateinit var store1: AttributeOrderStore
-    private lateinit var store2: AttributeOrderStore
+    private lateinit var store1: OrderStore
+    private lateinit var store2: OrderStore
 
     @BeforeTest
     override fun setup() {

@@ -7,15 +7,15 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-class PostgresAttributeOrderStoreTest: PostgresStoreTest() {
+class PostgresConclusionOrderStoreTest : PostgresStoreTest() {
     private lateinit var store: OrderStore
 
-    override fun tablesInDropOrder() = listOf(ATTRIBUTE_INDEXES_TABLE)
+    override fun tablesInDropOrder() = listOf(PostgresConclusionOrderStore.TABLE_NAME)
 
     @BeforeTest
     fun setup() {
         dropTable()
-        store = postgresKB.attributeOrderStore()
+        store = postgresKB.conclusionOrderStore()
     }
 
     @AfterTest
@@ -25,7 +25,7 @@ class PostgresAttributeOrderStoreTest: PostgresStoreTest() {
 
     override fun reload() {
         super.reload()
-        store = postgresKB.attributeOrderStore()
+        store = postgresKB.conclusionOrderStore()
     }
 
     @Test
@@ -52,7 +52,7 @@ class PostgresAttributeOrderStoreTest: PostgresStoreTest() {
 
         shouldThrow<IllegalArgumentException> {
             store.load(mapOf(1 to 1))
-        }.message shouldBe "Cannot load attribute order store if it is non-empty."
+        }.message shouldBe "Cannot load conclusion order store if it is non-empty."
     }
 
     @Test

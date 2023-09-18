@@ -291,6 +291,27 @@ class Defs : En {
                 clickDone()
             }
         }
+        And("I build a rule to add the comment {string}") { comment: String ->
+            with(interpretationViewPO) {
+                enterVerifiedText(comment)
+                selectChangesTab()
+                buildRule(0)
+            }
+            with(conditionSelectorPO) {
+                clickDone()
+            }
+        }
+
+        And("I build another rule to append the comment {string}") { comment: String ->
+            with(interpretationViewPO) {
+                appendVerifiedText(" $comment")
+                selectChangesTab()
+                buildRule(row = 1)//The first row has the unchanged comment
+            }
+            with(conditionSelectorPO) {
+                clickDone()
+            }
+        }
 
         And("I build a rule to replace the interpretation by {string} with the condition {string}") { replacement: String, condition: String ->
             with(interpretationViewPO) {
