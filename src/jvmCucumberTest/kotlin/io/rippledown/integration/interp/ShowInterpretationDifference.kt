@@ -57,7 +57,7 @@ internal class ShowInterpretationDifference : UITestBase() {
         caseViewPO.nameShown() shouldBe caseName
         val addedText = " This is a new sentence."
         interpretationViewPO
-            .enterVerifiedText(addedText)
+            .appendVerifiedText(addedText)
             .requireInterpretationText("$tshComment$addedText")
             .selectChangesTab()
             .requireOriginalTextInRow(0, tshComment)

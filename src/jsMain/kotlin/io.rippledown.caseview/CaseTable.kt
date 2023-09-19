@@ -6,9 +6,7 @@ import mui.material.Table
 import mui.system.sx
 import px12
 import react.FC
-import web.cssom.LineStyle.Companion.solid
 import web.cssom.px
-import web.cssom.rgb
 
 external interface CaseTableHandler: Handler {
     var case: ViewableCase
@@ -18,10 +16,8 @@ external interface CaseTableHandler: Handler {
 val CaseTable = FC<CaseTableHandler> { handler ->
     Table {
         sx {
-            border = 1.px
-            borderColor = rgb(128, 128, 128)
-            borderStyle = solid
             marginBottom = px12
+            minWidth = 500.px
         }
         CaseTableHeader {
             dates = handler.case.dates

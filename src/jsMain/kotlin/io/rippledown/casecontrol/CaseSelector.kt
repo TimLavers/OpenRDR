@@ -1,4 +1,4 @@
-package io.rippledown.caselist
+package io.rippledown.casecontrol
 
 import Handler
 import io.rippledown.constants.caseview.CASE_NAME_PREFIX

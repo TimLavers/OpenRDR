@@ -3,43 +3,30 @@ package io.rippledown.interpretation
 import Handler
 import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_AREA
-import io.rippledown.model.Interpretation
-import kotlinx.coroutines.launch
 import mui.material.TextField
 import mui.system.sx
 import npm.debounce
 import react.FC
+import react.dom.events.FormEvent
 import react.dom.onChange
-import web.cssom.FontFamily
-import web.cssom.FontWeight
+import react.useState
+import web.cssom.FontFamily.Companion.monospace
+import web.cssom.FontWeight.Companion.normal
 import web.html.HTMLDivElement
 
 external interface InterpretationViewHandler : Handler {
-    var interpretation: Interpretation
-    var onInterpretationEdited: (interp: Interpretation) -> Unit
+    var text: String
+    var onEdited: (text: String) -> Unit
     var isCornerstone: Boolean
 }
 
-typealias FormEventAlias = (react.dom.events.FormEvent<HTMLDivElement>) -> Unit
-
 val InterpretationView = FC<InterpretationViewHandler> { handler ->
-    val interp = handler.interpretation
+    var currentText by useState(handler.text)
 
-    fun handleFormEvent(): FormEventAlias {
-        return {
-            handler.scope.launch {
-                val changed = it.target.asDynamic().value
-                interp.verifiedText = changed
-                val updatedInterpretation = handler.api.saveVerifiedInterpretation(interp)
-
-                //this will cause a re-render of the component, so no need to update the text field directly
-                handler.onInterpretationEdited(updatedInterpretation)
-            }
-        }
-    }
-
-    fun debounceFunction(): FormEventAlias {
-        return debounce(handleFormEvent(), DEBOUNCE_WAIT_PERIOD_MILLIS)
+    fun handleFormEvent(event: FormEvent<HTMLDivElement>) {
+        val changed = event.target.asDynamic().value
+        currentText = changed
+        handler.onEdited(changed)
     }
 
     TextField {
@@ -47,15 +34,16 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
         fullWidth = true
         multiline = true
         sx {
-            fontWeight = FontWeight.normal
-            fontFamily = FontFamily.monospace
+            fontWeight = normal
+            fontFamily = monospace
         }
         rows = 10
-        onChange = debounceFunction()
-        defaultValue = interp.latestText()
+        autoFocus = true
+        onChange = debounce(func = ::handleFormEvent, wait = DEBOUNCE_WAIT_PERIOD_MILLIS)
+        defaultValue = currentText
+        onFocus = {
+            val length = it.currentTarget.asDynamic().value.length
+            it.currentTarget.asDynamic().setSelectionRange(length, length)
+        }
     }
 }
-
-
-
-

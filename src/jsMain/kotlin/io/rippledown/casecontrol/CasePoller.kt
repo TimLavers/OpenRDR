@@ -1,4 +1,4 @@
-package io.rippledown.caselist
+package io.rippledown.casecontrol
 
 import Handler
 import io.rippledown.constants.caseview.CASES
@@ -33,7 +33,7 @@ val CasePoller = FC<CasePollerHandler> { handler ->
     }
 
     if (casesInfo.count > 0) {
-        CaseListMemo {
+        CaseControl {
             scope = handler.scope
             api = handler.api
             caseIds = casesInfo.caseIds

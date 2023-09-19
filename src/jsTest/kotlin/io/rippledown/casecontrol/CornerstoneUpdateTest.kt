@@ -1,7 +1,9 @@
-package io.rippledown.caselist
+package io.rippledown.casecontrol
 
 import Api
 import io.rippledown.caseview.requireCaseToBeShowing
+import io.rippledown.cornerstoneview.requireCornerstoneCaseNotToBeShowing
+import io.rippledown.cornerstoneview.requireCornerstoneCaseToBeShowing
 import io.rippledown.interpretation.*
 import io.rippledown.model.Attribute
 import io.rippledown.model.CaseId
@@ -12,6 +14,7 @@ import io.rippledown.model.createCaseWithInterpretation
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.model.rule.UpdateCornerstoneRequest
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
@@ -20,7 +23,7 @@ import react.FC
 import react.dom.createRootFor
 import kotlin.test.Test
 
-class ConditionSelectionWhenShowingCornerstoneTest {
+class CornerstoneUpdateTest {
 
     @Test
     fun shouldUpdateCornerstoneStatusWhenAConditionIsSelected() = runTest {
@@ -39,18 +42,23 @@ class ConditionSelectionWhenShowingCornerstoneTest {
             id = 0L,
             name = "Bondi",
         )
-        val condition1 = hasCurrentValue(1, Attribute(1, "surf"))
-        val condition2 = hasCurrentValue(2, Attribute(2, "sand"))
+        val currentCCStatus = CornerstoneStatus(cornerstone, 0, 1)
+        val condition = hasCurrentValue(1, Attribute(2, "surf"))
+        val updateCornerstoneRequest = UpdateCornerstoneRequest(
+            cornerstoneStatus = currentCCStatus,
+            conditionList = ConditionList(listOf(condition))
+        )
 
         val config = config {
             returnCasesInfo = CasesInfo(caseIdList)
             returnCase = case
-            returnConditionList = ConditionList(listOf(condition1, condition2))
+            returnConditionList = ConditionList(listOf(condition))
             returnCornerstoneStatus = CornerstoneStatus(cornerstone, 0, 1)
+            expectedUpdateCornerstoneRequest = updateCornerstoneRequest
         }
 
         val fc = FC {
-            CaseList {
+            CaseControl {
                 caseIds = caseIdList
                 api = Api(mock(config))
                 scope = this@runTest
@@ -66,17 +74,12 @@ class ConditionSelectionWhenShowingCornerstoneTest {
             moveMouseOverRow(0)
             waitForEvents()
             clickBuildIconForRow(0)
-            requireConditionsToBeNotSelected(listOf(condition1.asText(), condition2.asText()))
+            requireCornerstoneCaseToBeShowing(cornerstone.name)
 
+            config.returnCornerstoneStatus = CornerstoneStatus()
             clickConditionWithIndex(0)
             waitForEvents()
-            requireConditionsToBeSelected(listOf(condition1.asText()))
-            requireConditionsToBeNotSelected(listOf(condition2.asText()))
-
-            //deselect
-            clickConditionWithIndex(0)
-            waitForEvents()
-            requireConditionsToBeNotSelected(listOf(condition1.asText(), condition2.asText()))
+            requireCornerstoneCaseNotToBeShowing()
         }
     }
 

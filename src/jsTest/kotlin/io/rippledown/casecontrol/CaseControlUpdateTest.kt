@@ -1,4 +1,4 @@
-package io.rippledown.caselist
+package io.rippledown.casecontrol
 
 import Api
 import io.rippledown.interpretation.requireInterpretation
@@ -8,12 +8,11 @@ import io.rippledown.model.createCaseWithInterpretation
 import kotlinx.coroutines.test.runTest
 import mocks.config
 import mocks.mock
-import proxy.waitForEvents
 import react.FC
 import react.dom.createRootFor
 import kotlin.test.Test
 
-class CaseListUpdateTest {
+class CaseControlUpdateTest {
 
     @Test
     fun shouldUpdateInterpretationWhenAnotherCaseNameIsClicked() = runTest {
@@ -29,17 +28,21 @@ class CaseListUpdateTest {
             returnCase = caseA
         }
         val vfc = FC {
-            CaseList {
+            CaseControl {
                 caseIds = twoCaseIds
                 api = Api(mock(config))
                 scope = this@runTest
             }
         }
         with(createRootFor(vfc)) {
+            //Given
             requireInterpretation(caseAConclusion)
+
+            //When
             config.returnCase = caseB
             selectCaseByName(caseIdB.name)
-            waitForEvents()
+
+            //Then
             requireInterpretation(caseBConclusion)
         }
     }

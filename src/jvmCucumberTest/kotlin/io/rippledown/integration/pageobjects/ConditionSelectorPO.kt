@@ -2,6 +2,7 @@ package io.rippledown.integration.pageobjects
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.rippledown.constants.interpretation.CONDITION_SELECTOR_CANCEL_BUTTON
 import io.rippledown.constants.interpretation.CONDITION_SELECTOR_DONE_BUTTON
 import io.rippledown.constants.interpretation.CONDITION_SELECTOR_ROW
 import io.rippledown.integration.pause
@@ -54,5 +55,9 @@ class ConditionSelectorPO(private val driver: WebDriver) {
 
     private fun elementContainingText(condition: String): WebElement =
         driver.findElement(By.xpath("//*[contains(text(), '$condition')]"))
+
+    fun clickCancel() {
+        driver.findElement(By.id(CONDITION_SELECTOR_CANCEL_BUTTON)).click()
+    }
 
 }

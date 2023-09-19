@@ -1,4 +1,4 @@
-package io.rippledown.caselist
+package io.rippledown.casecontrol
 
 import Api
 import io.rippledown.caseview.requireCaseToBeShowing

@@ -62,7 +62,7 @@ internal class RuleBuildingFromDiffListTest {
         )
 
         app.startRuleSession(SessionStartRequest(id, diffList.selectedChange()))
-        val ruleRequest = RuleRequest(id, diffList)
+        val ruleRequest = RuleRequest(id)
         app.commitRuleSession(ruleRequest)
 
         withClue("the latest text should be unchanged as the verified text is still null.") {
@@ -102,7 +102,7 @@ internal class RuleBuildingFromDiffListTest {
         )
 
         app.startRuleSession(SessionStartRequest(id, diffList.selectedChange()))
-        val ruleRequest = RuleRequest(id, diffList)
+        val ruleRequest = RuleRequest(id)
         app.commitRuleSession(ruleRequest)
         val updatedInterpretation = app.case(id).interpretation
 
@@ -139,7 +139,7 @@ internal class RuleBuildingFromDiffListTest {
             selected = 1 // We want the rule to be built for the removal
         )
         app.startRuleSession(SessionStartRequest(id, diffList.selectedChange()))
-        val ruleRequest = RuleRequest(id, diffList)
+        val ruleRequest = RuleRequest(id)
         app.commitRuleSession(ruleRequest)
         val updatedInterpretation = app.case(id).interpretation
 

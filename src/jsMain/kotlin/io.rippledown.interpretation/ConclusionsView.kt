@@ -40,7 +40,6 @@ val ConclusionsView = FC<ConclusionsViewHandler> { handler ->
                 }
             }
         }
-
     }
 }
 

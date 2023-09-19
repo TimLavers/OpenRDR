@@ -1,4 +1,4 @@
-package io.rippledown.caselist
+package io.rippledown.casecontrol
 
 import Api
 import io.kotest.matchers.shouldBe
@@ -23,7 +23,7 @@ import react.dom.checkContainer
 import react.dom.createRootFor
 import kotlin.test.Test
 
-class CaseListTest {
+class CaseControlTest {
 
     @Test
     fun shouldListCaseNames() = runTest {
@@ -39,15 +39,15 @@ class CaseListTest {
             returnCase = createCase(caseId1)
         }
 
-        val vfc = FC {
-            CaseList {
+        val fc = FC {
+            CaseControl {
                 caseIds = twoCaseIds
                 api = Api(mock(config))
                 scope = this@runTest
             }
         }
 
-        checkContainer(vfc) { container ->
+        checkContainer(fc) { container ->
             with(container) {
                 findAllById(CASE_NAME_PREFIX).length shouldBe 2
                 val elementA = findById("$CASE_NAME_PREFIX${caseId1.name}")
@@ -71,15 +71,15 @@ class CaseListTest {
             returnCasesInfo = CasesInfo(threeCaseIds)
             returnCase = createCase(caseId1)
         }
-        val vfc = FC {
-            CaseList {
+        val fc = FC {
+            CaseControl {
                 caseIds = threeCaseIds
                 api = Api(mock(config))
                 scope = this@runTest
             }
         }
         config.returnCase = createCase(caseB, 2)
-        val container = createRootFor(vfc)
+        val container = createRootFor(fc)
         with(container) {
             selectCaseByName(caseB)
             requireCaseToBeShowing(caseB)
@@ -100,14 +100,14 @@ class CaseListTest {
             returnCase = createCase(caseId1)
         }
 
-        val vfc = FC {
-            CaseList {
+        val fc = FC {
+            CaseControl {
                 caseIds = twoCaseIds
                 api = Api(mock(config))
                 scope = this@runTest
             }
         }
-        checkContainer(vfc) { container ->
+        checkContainer(fc) { container ->
             with(container) {
                 requireCaseToBeShowing(caseName1)
             }
@@ -127,68 +127,17 @@ class CaseListTest {
             returnCase = createCase(CaseId(100, caseName100))
         }
 
-        val vfc = FC {
-            CaseList {
+        val fc = FC {
+            CaseControl {
                 this.caseIds = caseIds
                 api = Api(mock(config))
                 scope = this@runTest
             }
         }
-        with(createRootFor(vfc)) {
+        with(createRootFor(fc)) {
             selectCaseByName(caseName100)
             requireCaseToBeShowing(caseName100)
 
-        }
-    }
-
-    @Test
-    fun shouldShowConditionSelector() = runTest {
-        val caseName = "Bondi"
-        val caseId = 45L
-        val caseIdList = listOf(CaseId(caseId, caseName))
-        val bondiComment = "Go to Bondi now!"
-        val manlyComment = "Go to Manly now!"
-        val beachComment = "Enjoy the beach!"
-        val diffList = DiffList(
-            listOf(
-                Unchanged(beachComment),
-                Removal(manlyComment),
-                Addition(bondiComment),
-                Replacement(manlyComment, bondiComment)
-            )
-        )
-        val caseWithInterp = createCaseWithInterpretation(
-            name = caseName,
-            id = caseId,
-            conclusionTexts = listOf(beachComment, manlyComment, bondiComment),
-            diffs = diffList
-        )
-        val config = config {
-            expectedCaseId = caseId
-            returnCasesInfo = CasesInfo(caseIdList)
-            returnCase = caseWithInterp
-        }
-
-        val vfc = FC {
-            CaseList {
-                caseIds = caseIdList
-                api = Api(mock(config))
-                scope = this@runTest
-            }
-        }
-        with(createRootFor(vfc)) {
-            waitForEvents()
-            requireCaseToBeShowing(caseName)
-
-            //start to build a rule for the Addition
-            selectChangesTab()
-            waitForEvents()
-            requireNumberOfRows(4)
-            moveMouseOverRow(2)
-            waitForEvents()
-            requireDoneButtonNotShowing()
-            clickBuildIconForRow(2)
-            requireDoneButtonShowing()
         }
     }
 
@@ -214,14 +163,14 @@ class CaseListTest {
             returnCase = caseWithInterp
         }
 
-        val vfc = FC {
-            CaseList {
+        val fc = FC {
+            CaseControl {
                 caseIds = caseIdList
                 api = Api(mock(config))
                 scope = this@runTest
             }
         }
-        with(createRootFor(vfc)) {
+        with(createRootFor(fc)) {
             waitForEvents()
             requireCaseToBeShowing(caseName)
 
@@ -237,7 +186,7 @@ class CaseListTest {
     }
 
     @Test
-    fun shouldUpdateConditionHintsWhenRuleIsStarted() = runTest {
+    fun shouldShowConditionHintsWhenRuleSessionIsStarted() = runTest {
         val caseId = 45L
         val caseName = "Bondi"
         val caseIdList = listOf(CaseId(caseId, caseName))
@@ -263,24 +212,31 @@ class CaseListTest {
             returnConditionList = ConditionList(listOf(condition))
         }
 
-        val vfc = FC {
-            CaseList {
+        val fc = FC {
+            CaseControl {
                 caseIds = caseIdList
                 api = Api(mock(config))
                 scope = this@runTest
             }
         }
-        with(createRootFor(vfc)) {
+        with(createRootFor(fc)) {
+            //Given
             waitForEvents()
             requireCaseToBeShowing(caseName)
-            //start to build a rule for the Addition
             selectChangesTab()
             waitForEvents()
             requireNumberOfRows(2)
             moveMouseOverRow(1)
             waitForEvents()
-            requireDoneButtonNotShowing()
+
+            //When
             clickBuildIconForRow(1)
+            waitForEvents()
+
+            //Then
+            waitForEvents()
+            waitForEvents()
+            waitForEvents()
             requireDoneButtonShowing()
             requireConditions(listOf(condition.asText()))
         }
@@ -314,14 +270,14 @@ class CaseListTest {
             returnCase = caseWithInterp
         }
 
-        val vfc = FC {
-            CaseList {
+        val fc = FC {
+            CaseControl {
                 caseIds = caseIdList
                 api = Api(mock(config))
                 scope = this@runTest
             }
         }
-        with(createRootFor(vfc)) {
+        with(createRootFor(fc)) {
             waitForEvents()
             requireCaseToBeShowing(caseName)
             //start to build a rule for the Addition
@@ -368,14 +324,14 @@ class CaseListTest {
             returnCornerstoneStatus = CornerstoneStatus(cornerstoneCase, 42, 84)
         }
 
-        val vfc = FC {
-            CaseList {
+        val fc = FC {
+            CaseControl {
                 caseIds = caseIdList
                 api = Api(mock(config))
                 scope = this@runTest
             }
         }
-        with(createRootFor(vfc)) {
+        with(createRootFor(fc)) {
             waitForEvents()
             requireCaseToBeShowing(caseName)
             //start to build a rule for the Addition
@@ -418,17 +374,18 @@ class CaseListTest {
             returnCornerstoneStatus = CornerstoneStatus(cornerstoneCase, 42, 84)
         }
 
-        val vfc = FC {
-            CaseList {
+        val fc = FC {
+            CaseControl {
                 caseIds = caseIdList
                 api = Api(mock(config))
                 scope = this@runTest
             }
         }
-        with(createRootFor(vfc)) {
+        with(createRootFor(fc)) {
             //Given
             waitForEvents()
             requireCaseToBeShowing(caseName)
+
             //start to build a rule for the Addition
             selectChangesTab()
             waitForEvents()
@@ -476,14 +433,14 @@ class CaseListTest {
             returnCornerstoneStatus = CornerstoneStatus(cornerstoneCase, 42, 84)
         }
 
-        val vfc = FC {
-            CaseList {
+        val fc = FC {
+            CaseControl {
                 caseIds = caseIdList
                 api = Api(mock(config))
                 scope = this@runTest
             }
         }
-        with(createRootFor(vfc)) {
+        with(createRootFor(fc)) {
             //Given
             waitForEvents()
             requireCaseToBeShowing(caseName)
@@ -534,14 +491,15 @@ class CaseListTest {
             returnCornerstoneStatus = CornerstoneStatus(cornerstoneCase, 42, 84)
         }
 
-        val vfc = FC {
-            CaseList {
+        val fc = FC {
+            CaseControl {
                 caseIds = caseIdList
                 api = Api(mock(config))
                 scope = this@runTest
             }
         }
-        with(createRootFor(vfc)) {
+        with(createRootFor(fc)) {
+            //Given
             waitForEvents()
             requireCaseSelectorToBeShowing()
             requireCaseToBeShowing(caseName)
@@ -551,7 +509,14 @@ class CaseListTest {
             requireNumberOfRows(1)
             moveMouseOverRow(0)
             waitForEvents()
+
+            //When
             clickBuildIconForRow(0)
+            waitForEvents()
+
+            //Then
+            waitForEvents()
+            waitForEvents()
             waitForEvents()
             requireCaseSelectorNotToBeShowing()
         }

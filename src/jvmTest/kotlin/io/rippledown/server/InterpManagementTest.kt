@@ -92,17 +92,8 @@ class InterpManagementTest : OpenRDRServerTestBase() {
     @Test
     fun `should delegate building a rule to server application`() = testApplication {
         setup()
-        val diffList = DiffList(
-            diffs = listOf(
-                Unchanged("Go to Bondi Beach."),
-                Addition("Bring your handboard."),
-                Removal("Don't forget your towel."),
-                Replacement("And have fun.", "And have lots of fun.")
-            ),
-            selected = 2
-        )
 
-        val ruleRequest = RuleRequest(1, diffList = diffList)
+        val ruleRequest = RuleRequest(1)
         val interp = Interpretation()
         every { serverApplication.commitRuleSession(ruleRequest) } returns interp
 
@@ -120,7 +111,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
         setup()
 
         val index = 42
-        val cc = createCase("bondi");
+        val cc = createCase("bondi")
         val cornerstoneStatus =
             CornerstoneStatus(cornerstoneToReview = cc, indexOfCornerstoneToReview = index, numberOfCornerstones = 52)
         every { serverApplication.cornerstoneStatusForIndex(index) } returns cornerstoneStatus

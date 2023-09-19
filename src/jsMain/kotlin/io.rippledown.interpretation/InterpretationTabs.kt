@@ -6,6 +6,8 @@ import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CONCLUSIONS
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL
 import io.rippledown.model.Interpretation
+import io.rippledown.model.diff.Diff
+import kotlinx.coroutines.launch
 import mui.lab.TabContext
 import mui.lab.TabPanel
 import mui.material.*
@@ -17,13 +19,13 @@ import web.cssom.px
 
 external interface InterpretationTabsHandler : Handler {
     var interpretation: Interpretation
-    var refreshCase: () -> Unit
-    var onStartRule: (interp: Interpretation) -> Unit
+    var onStartRule: (selectedDiff: Diff) -> Unit
     var isCornerstone: Boolean
 }
 
 val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
     var selectedTab by useState("0")
+    var interp by useState(handler.interpretation)
 
     Box {
         sx {
@@ -52,32 +54,27 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
 
                 Tab {
                     id = INTERPRETATION_TAB_CHANGES
-                    label = FC<BadgeProps> {
-                        Badge {
-                            id = INTERPRETATION_CHANGES_BADGE
-                            color = primary
-                            showZero = false
-                            badgeContent = handler.interpretation.numberOfChanges().unsafeCast<ReactNode>()
-                            +changesLabel
-                        }
-                    }.create()
+                    label = badgeFor(interp.numberOfChanges())
                     value = "2"
                 }
             }
 
             TabPanel {
                 value = "0"
-
-                //Force a re-render of the underlying TextField when the interpretation changes
-                //See https://jaketrent.com/post/rerender-defaultvalue-value-change/
-                key = handler.interpretation.latestText()
+                key = interpretationViewKey(interp.latestText())
+                sx {
+                    padding = 0.px
+                }
 
                 InterpretationView {
                     api = handler.api
                     scope = handler.scope
-                    interpretation = handler.interpretation
-                    onInterpretationEdited = {
-                        handler.refreshCase()
+                    text = interp.latestText()
+                    onEdited = { changedText ->
+                        handler.scope.launch {
+                            interp.verifiedText = changedText
+                            interp = handler.api.saveVerifiedInterpretation(interp)
+                        }
                     }
                     isCornerstone = handler.isCornerstone
                 }
@@ -85,25 +82,31 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
 
             TabPanel {
                 value = "1"
+                sx {
+                    padding = 0.px
+                }
                 ConclusionsView {
-                    interpretation = handler.interpretation
+                    interpretation = interp
                 }
             }
 
             TabPanel {
                 value = "2"
+                sx {
+                    padding = 0.px
+                }
                 DiffViewer {
-                    api = handler.api
-                    scope = handler.scope
-                    interpretation = handler.interpretation
-                    onStartRule = { newInterpretation ->
-                        handler.onStartRule(newInterpretation)
+                    diffList = interp.diffList
+                    onStartRule = { selectedDiff ->
+                        handler.onStartRule(diffList.diffs[selectedDiff])
                     }
                 }
             }
         }
     }
 }
+
+fun interpretationViewKey(text: String) = text
 
 val interpretationLabel = FC<Props> {
     Typography {
@@ -136,5 +139,13 @@ val changesLabel = FC<Props> {
     }
 }.create()
 
-
+private fun badgeFor(count: Int) = FC<BadgeProps> {
+    Badge {
+        id = INTERPRETATION_CHANGES_BADGE
+        color = primary
+        showZero = false
+        badgeContent = count.unsafeCast<ReactNode>()
+        +changesLabel
+    }
+}.create()
 

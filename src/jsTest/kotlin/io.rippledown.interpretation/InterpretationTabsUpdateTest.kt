@@ -1,14 +1,14 @@
 package io.rippledown.interpretation
 
-import io.rippledown.model.CaseId
-import io.rippledown.model.caseview.ViewableCase
-import io.rippledown.model.createCaseWithInterpretation
+import io.rippledown.casecontrol.interpretationTabsKey
+import io.rippledown.model.Interpretation
+import io.rippledown.model.diff.*
 import kotlinx.coroutines.test.runTest
 import mui.material.Button
 import proxy.findById
-import proxy.waitForEvents
 import react.FC
 import react.dom.createRootFor
+import react.dom.html.ReactHTML.div
 import react.dom.test.act
 import react.useState
 import kotlin.test.Test
@@ -16,38 +16,85 @@ import kotlin.test.Test
 class InterpretationTabsUpdateTest {
 
     @Test
-    fun shouldUpdateInterpretationWhenCaseIsChanged() = runTest {
-        val caseIdA = CaseId(id = 1, name = "case A")
-        val caseIdB = CaseId(id = 2, name = "case B")
+    fun shouldUpdateInterpretationWhenInterpretationTextIsChanged() = runTest {
         val caseAConclusion = "text for case A"
         val caseBConclusion = "text for case B"
+
+        val interpA = Interpretation(verifiedText = caseAConclusion)
+        val interpB = Interpretation(verifiedText = caseBConclusion)
+
         val buttonId = "button_id"
 
-        val caseA = createCaseWithInterpretation(caseIdA.name, caseIdA.id, listOf(caseAConclusion))
-        val caseB = createCaseWithInterpretation(caseIdB.name, caseIdB.id, listOf(caseBConclusion))
-
-        val vfc = FC {
-            var currentCase by useState<ViewableCase?>(caseA)
+        val fc = FC {
+            var interp by useState(interpA)
 
             Button {
                 id = buttonId
                 onClick = {
-                    currentCase = caseB
+                    interp = interpB
                 }
             }
-
-            InterpretationTabs {
-                interpretation = currentCase!!.interpretation
+            div {
+                key = interpretationTabsKey(interp) //Re-render when the interpretation changes
+                InterpretationTabs {
+                    interpretation = interp
+                }
             }
         }
-        with(createRootFor(vfc)) {
+        with(createRootFor(fc)) {
+            //Given
             requireInterpretation(caseAConclusion)
 
-            //switch cases
+            //When switch cases
             act { findById(buttonId).click() }
-            waitForEvents()
 
+            //Then
             requireInterpretation(caseBConclusion)
+        }
+    }
+
+    @Test
+    fun shouldUpdateInterpretationWhenDiffListIsChanged() = runTest {
+
+        val diffListA = DiffList(listOf(Addition(), Removal()))
+        val diffListB = DiffList(listOf(Unchanged(), Replacement(), Unchanged(), Addition()))
+
+        val comment = "Go to Bondi now!"
+        val interpA = Interpretation(verifiedText = comment, diffList = diffListA)
+        val interpB = Interpretation(verifiedText = comment, diffList = diffListB)
+
+        val buttonId = "button_id"
+
+        val fc = FC {
+            var interp by useState(interpA)
+
+            Button {
+                id = buttonId
+                onClick = {
+                    interp = interpB
+                }
+            }
+            div {
+                key = interpretationTabsKey(interp) //Re-render when the interpretation changes
+
+                InterpretationTabs {
+                    interpretation = interp
+                }
+            }
+        }
+        with(createRootFor(fc)) {
+            //Given
+            selectChangesTab()
+            requireNumberOfRows(diffListA.diffs.size)
+            requireBuildIconForRow(0) //The first unchanged diff for interpA
+
+            //When switch cases
+            act { findById(buttonId).click() }
+            selectChangesTab()
+
+            //Then
+            requireNumberOfRows(diffListB.diffs.size)
+            requireBuildIconForRow(1) //The first unchanged diff for interpB
         }
     }
 }

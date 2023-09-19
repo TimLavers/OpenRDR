@@ -26,7 +26,8 @@ class EngineConfig {
     var returnCasesInfo: CasesInfo = CasesInfo(emptyList())
     var returnCase: ViewableCase = createCase("The Case")
     var returnOperationResult: OperationResult = OperationResult()
-    var returnInterpretation: Interpretation = Interpretation()
+    var returnInterpretationAfterSavingInterpretation: Interpretation = Interpretation()
+    var returnInterpretationAfterBuildingRule: Interpretation = Interpretation()
     var returnCornerstoneStatus: CornerstoneStatus = CornerstoneStatus()
     var returnConditionList: ConditionList = ConditionList()
 
@@ -81,7 +82,7 @@ private class EngineBuilder(private val config: EngineConfig) {
                 }
                 respond(
                     content = ByteReadChannel(
-                        json.encodeToString(config.returnInterpretation)
+                        json.encodeToString(config.returnInterpretationAfterSavingInterpretation)
                     ),
                     status = HttpStatusCode.OK,
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
@@ -97,7 +98,7 @@ private class EngineBuilder(private val config: EngineConfig) {
                 }
                 respond(
                     content = ByteReadChannel(
-                        json.encodeToString(config.returnInterpretation)
+                        json.encodeToString(config.returnInterpretationAfterBuildingRule)
                     ),
                     status = HttpStatusCode.OK,
                     headers = headersOf(HttpHeaders.ContentType, "application/json")

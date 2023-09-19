@@ -18,12 +18,12 @@ class CornerstoneViewTest {
         val case = createCase(name)
         val ccStatus =
             CornerstoneStatus(cornerstoneToReview = case, indexOfCornerstoneToReview = 0, numberOfCornerstones = 42)
-        val vfc = FC {
+        val fc = FC {
             CornerstoneView {
                 cornerstoneStatus = ccStatus
             }
         }
-        checkContainer(vfc) { container ->
+        checkContainer(fc) { container ->
             with(container) {
                 requireCornerstoneCaseToBeShowing(name)
             }
@@ -32,12 +32,12 @@ class CornerstoneViewTest {
 
     @Test
     fun shouldNotShowCornerstoneViewIfThereIsNoCornerstoneCase() = runTest {
-        val vfc = FC {
+        val fc = FC {
             CornerstoneView {
                 cornerstoneStatus = CornerstoneStatus(cornerstoneToReview = null)
             }
         }
-        checkContainer(vfc) { container ->
+        checkContainer(fc) { container ->
             with(container) {
                 requireCornerstoneCaseNotToBeShowing()
             }
@@ -48,7 +48,7 @@ class CornerstoneViewTest {
     fun shouldHandleCornerstoneSelectionEvents() = runTest {
         val cc = createCase("Bondi")
         var selectedIndex = -1
-        val vfc = FC {
+        val fc = FC {
             CornerstoneView {
                 cornerstoneStatus = CornerstoneStatus(cc, 0, 42)
                 selectCornerstone = { index ->
@@ -56,7 +56,7 @@ class CornerstoneViewTest {
                 }
             }
         }
-        with(createRootFor(vfc)) {
+        with(createRootFor(fc)) {
             for (i in 1..30) selectNextCornerstone()
             selectedIndex shouldBe 30
             selectPreviousCornerstone()

@@ -29,8 +29,7 @@ class RuleRequestTest {
         )
         val ruleRequest = RuleRequest(
             caseId = 1,
-            diffList = diffList,
-            conditionList = conditionList
+            conditions = conditionList
         )
         val json = Json { allowStructuredMapKeys = true }
         val serialized = json.encodeToString(ruleRequest)
