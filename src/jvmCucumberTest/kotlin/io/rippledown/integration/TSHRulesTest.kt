@@ -14,7 +14,6 @@ internal class TSHRulesTest : TSHTest() {
 
     @Test
     fun checkInterpretations() {
-        stop()
         selectCaseAndCheckName("1.4.1")
         checkInterpretation("Normal T4 and TSH are consistent with a euthyroid state.")
 
