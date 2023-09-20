@@ -21,6 +21,8 @@ class KB(persistentKB: PersistentKB) {
     private val caseManager = CaseManager(persistentKB.caseStore(), attributeManager)
     private var ruleSession: RuleBuildingSession? = null
     val caseViewManager: CaseViewManager = CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
+    val interpretationViewManager: InterpretationViewManager =
+        InterpretationViewManager(persistentKB.conclusionOrderStore(), conclusionManager)
 
     fun containsCornerstoneCaseWithName(caseName: String): Boolean {
         return caseManager.ids(CaseType.Cornerstone).find { rdrCase -> rdrCase.name == caseName } != null

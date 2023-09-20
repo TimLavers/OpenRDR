@@ -1,6 +1,8 @@
 package io.rippledown.model
 
-class DummyConclusionFactory: ConclusionFactory {
+import io.rippledown.kb.ConclusionProvider
+
+class DummyConclusionFactory : ConclusionProvider {
     private val idToConclusion = mutableMapOf<Int, Conclusion>()
 
     override fun getOrCreate(text: String): Conclusion {
@@ -14,5 +16,5 @@ class DummyConclusionFactory: ConclusionFactory {
         return newConclusion
     }
 
-    override fun getById(id: Int) = idToConclusion[id]
+    override fun getById(id: Int) = idToConclusion[id]!!
 }

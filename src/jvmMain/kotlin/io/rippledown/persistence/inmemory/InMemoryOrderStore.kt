@@ -1,8 +1,12 @@
 package io.rippledown.persistence.inmemory
 
-import io.rippledown.persistence.AttributeOrderStore
+import io.rippledown.persistence.OrderStore
 
-class InMemoryAttributeOrderStore: AttributeOrderStore {
+class InMemoryOrderStore : OrderStore {
+    companion object {
+        const val ERROR_MESSAGE = "Cannot load data into a non-empty attribute order store."
+    }
+
     private val idToIndex = mutableMapOf<Int, Int>()
 
     override fun idToIndex(): Map<Int, Int> {
@@ -15,7 +19,7 @@ class InMemoryAttributeOrderStore: AttributeOrderStore {
 
     override fun load(idToIndex: Map<Int, Int>) {
         require(this.idToIndex.isEmpty()) {
-            "Cannot load data into a non-empty attribute order store."
+            ERROR_MESSAGE
         }
         this.idToIndex.putAll(idToIndex)
     }
