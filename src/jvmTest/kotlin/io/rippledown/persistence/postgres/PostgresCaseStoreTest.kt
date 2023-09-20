@@ -9,12 +9,18 @@ import io.rippledown.model.*
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-class PostgresCaseStoreTest: PostgresStoreTest() {
+class PostgresCaseStoreTest : PostgresStoreTest() {
     private val a = Attribute(1000, "A")
     private val b = Attribute(1001, "B")
     private val c = Attribute(1002, "C")
     private val idToAttribute = mapOf(a.id to a, b.id to b, c.id to c)
-    private val attributeProvider = AttributeProvider{idToAttribute[it]!!}
+    private val attributeProvider = object : AttributeProvider {
+        override fun getById(id: Int) = idToAttribute[id]!!
+
+        override fun getOrCreate(text: String): Attribute {
+            TODO("Not yet implemented")
+        }
+    }
     private val case0 = createCase("Tea Case", mapOf(a to "1", b to "1"))
     private val case1 = createCase("Coffee Case", mapOf(a to "2", b to "3"))
     private val case2 = createCase("Beer Case", mapOf(a to "5", b to "8", c to "88"))
@@ -114,13 +120,13 @@ class PostgresCaseStoreTest: PostgresStoreTest() {
         builder.addResult(a, today, testResult)
         val unitsCase = builder.build("Units Case")
         val stored = store.put(unitsCase)
-        with (store.get(stored.id!!, attributeProvider)!!) {
+        with(store.get(stored.id!!, attributeProvider)!!) {
             values(a)!![0] shouldBe testResult
             data shouldBe stored.data
         }
 
         reload()
-        with (store.get(stored.id!!, attributeProvider)!!) {
+        with(store.get(stored.id!!, attributeProvider)!!) {
             values(a)!![0] shouldBe testResult
             data shouldBe stored.data
         }
@@ -138,7 +144,7 @@ class PostgresCaseStoreTest: PostgresStoreTest() {
 
         val rangeCase = builder.build("Range Case")
         val stored = store.put(rangeCase)
-        with (store.get(stored.id!!, attributeProvider)!!) {
+        with(store.get(stored.id!!, attributeProvider)!!) {
             values(a)!![0] shouldBe lowRangeResult
             values(b)!![0] shouldBe highRangeResult
             values(c)!![0] shouldBe rangeResult
@@ -146,7 +152,7 @@ class PostgresCaseStoreTest: PostgresStoreTest() {
         }
 
         reload()
-        with (store.get(stored.id!!, attributeProvider)!!) {
+        with(store.get(stored.id!!, attributeProvider)!!) {
             values(a)!![0] shouldBe lowRangeResult
             values(b)!![0] shouldBe highRangeResult
             values(c)!![0] shouldBe rangeResult
@@ -205,7 +211,7 @@ class PostgresCaseStoreTest: PostgresStoreTest() {
         val caseX = createCase("X", mapOf(a to "1", b to "1"), 10)
         shouldThrow<IllegalArgumentException> {
             store.load(listOf(caseX))
-        }.message shouldBe  "Cannot load cases if there are already some present."
+        }.message shouldBe "Cannot load cases if there are already some present."
         store.all(attributeProvider) shouldBe listOf(stored0)
     }
 
@@ -213,7 +219,7 @@ class PostgresCaseStoreTest: PostgresStoreTest() {
     fun `cannot load cases with non-null ids`() {
         shouldThrow<IllegalArgumentException> {
             store.load(listOf(case0))
-        }.message shouldBe  "Cannot load cases unless they already have their ids set."
+        }.message shouldBe "Cannot load cases unless they already have their ids set."
         store.all(attributeProvider) shouldBe emptyList()
     }
 

@@ -1,6 +1,5 @@
 package io.rippledown.model.caseview
 
-import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCase
 import kotlinx.serialization.Serializable
 
@@ -13,11 +12,9 @@ data class ViewableCase(val rdrCase: RDRCase, val viewProperties: CaseViewProper
 
     init {
         check(rdrCase.attributes == viewProperties.attributes.toSet()) {
-            "Case attributes do not match view properties attributes"
+            "Case attributes do not match view properties attributes:\n\nCase attributes: ${rdrCase.attributes}\n\nView properties attributes: ${viewProperties.attributes}"
         }
     }
 
-    fun attributes(): List<Attribute> {
-        return viewProperties.attributes
-    }
+    fun attributes() = viewProperties.attributes
 }

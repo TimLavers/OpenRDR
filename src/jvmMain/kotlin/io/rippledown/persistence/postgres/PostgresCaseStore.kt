@@ -74,7 +74,7 @@ class PostgresCaseStore(private val db: Database): CaseStore {
         attributeProvider: AttributeProvider
     ) = PGCaseValue.find {
         PGCaseValues.caseId eq id
-    }.associateBy({ TestEvent(attributeProvider.forId(it.attributeId), it.date) }, { testResult(it) })
+    }.associateBy({ TestEvent(attributeProvider.getById(it.attributeId), it.date) }, { testResult(it) })
 
     override fun delete(id: Long) {
         transaction(db) {

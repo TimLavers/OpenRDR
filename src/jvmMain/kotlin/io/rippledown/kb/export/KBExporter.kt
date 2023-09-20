@@ -26,7 +26,7 @@ class KBExporter(destination: File, val kb: KB): KBExportImport(destination) {
         AttributesExporter(attributesFile, kb.attributeManager.all()).export()
 
         // Case view.
-        CaseViewExporter(caseViewFile, kb.caseViewManager.allAttributesInOrder()).export()
+        CaseViewExporter(caseViewFile, kb.caseViewManager.allInOrder()).export()
 
         // Conclusions.
         conclusionsDirectory.mkdirs()

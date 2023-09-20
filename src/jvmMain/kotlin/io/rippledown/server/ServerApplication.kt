@@ -142,6 +142,8 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         //reset the case's verified text
         case.interpretation.verifiedText = interpretation.verifiedText
 
+        //save the conclusions in the verified text
+
         //reset the case's diff list
         case.interpretation.diffList = diffList(interpretation)
 
@@ -177,6 +179,8 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
 
         //re-interpret the case
         kb.interpret(case)
+
+        //If a new conclusion was created, ensure that it is positioned as indicated in the verified text
 
         //reset the case's diff list to account of the updated interpretation
         val updatedInterpretation = case.interpretation
