@@ -1,7 +1,7 @@
 package io.rippledown.model.rule.dsl
 
+import io.rippledown.kb.ConclusionProvider
 import io.rippledown.model.Attribute
-import io.rippledown.model.ConclusionFactory
 import io.rippledown.model.ConditionFactory
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ContainsText
@@ -9,13 +9,13 @@ import io.rippledown.model.rule.Rule
 import io.rippledown.model.rule.RuleTree
 import kotlin.random.Random
 
-fun ruleTree(conclusionFactory: ConclusionFactory, init: AbstractRuleTemplate.() -> Unit): RootTemplate {
+fun ruleTree(conclusionFactory: ConclusionProvider, init: AbstractRuleTemplate.() -> Unit): RootTemplate {
     val n = RootTemplate(conclusionFactory)
     n.init()
     return n
 }
 
-open class AbstractRuleTemplate(val conclusionFactory: ConclusionFactory) {
+open class AbstractRuleTemplate(val conclusionFactory: ConclusionProvider) {
 
     protected lateinit var conclusionText: String
     var id = Random.nextInt()
@@ -38,7 +38,7 @@ open class AbstractRuleTemplate(val conclusionFactory: ConclusionFactory) {
     fun createConclusion() = conclusionFactory.getOrCreate(conclusionText)
 }
 
-class RootTemplate(conclusionFactory: ConclusionFactory) : AbstractRuleTemplate(conclusionFactory) {
+class RootTemplate(conclusionFactory: ConclusionProvider) : AbstractRuleTemplate(conclusionFactory) {
     override fun child(init: RuleTemplate.() -> RuleTemplate) = apply {
         val r = RuleTemplate(conclusionFactory)
         r.init()
@@ -60,7 +60,7 @@ class RootTemplate(conclusionFactory: ConclusionFactory) : AbstractRuleTemplate(
     }
 }
 
-class RuleTemplate(conclusionFactory: ConclusionFactory) : AbstractRuleTemplate(conclusionFactory) {
+class RuleTemplate(conclusionFactory: ConclusionProvider) : AbstractRuleTemplate(conclusionFactory) {
     override fun child(init: RuleTemplate.() -> RuleTemplate) = apply {
         val r = RuleTemplate(conclusionFactory)
         r.init()

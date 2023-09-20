@@ -3,6 +3,7 @@ package io.rippledown.persistence.postgres
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.rippledown.persistence.OrderStore
+import io.rippledown.persistence.postgres.PostgresConclusionOrderStore.Companion.TABLE_NAME
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -10,7 +11,7 @@ import kotlin.test.Test
 class PostgresConclusionOrderStoreTest : PostgresStoreTest() {
     private lateinit var store: OrderStore
 
-    override fun tablesInDropOrder() = listOf(PostgresConclusionOrderStore.TABLE_NAME)
+    override fun tablesInDropOrder() = listOf(TABLE_NAME)
 
     @BeforeTest
     fun setup() {

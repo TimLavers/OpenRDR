@@ -9,11 +9,15 @@ private data class IndexedEntity<T>(val entity: T, val index: Int) : Comparable<
 }
 
 open class OrderedEntityManager<T>(orderStore: OrderStore, entityProvider: EntityProvider<T>) {
+    companion object {
+        const val UNKNOWN_ENTITY = "Unknown entity: "
+        const val MOVED_ENTITY_IS_TARGET = "Moved entity is target entity: "
+    }
     private val entityToIndex = mutableMapOf<T, Int>()
 
     init {
         orderStore.idToIndex().forEach {
-            entityToIndex[entityProvider.forId(it.key)] = it.value
+            entityToIndex[entityProvider.getById(it.key)] = it.value
         }
     }
 
@@ -29,6 +33,15 @@ open class OrderedEntityManager<T>(orderStore: OrderStore, entityProvider: Entit
     }
 
     fun moveJustBelow(moved: T, target: T) {
+        check(entityToIndex.containsKey(moved)) {
+            "$UNKNOWN_ENTITY$moved"
+        }
+        check(entityToIndex.containsKey(target)) {
+            "$UNKNOWN_ENTITY$target"
+        }
+        check(moved != target) {
+            "$MOVED_ENTITY_IS_TARGET$moved"
+        }
         // Do the move by:
         //  - doubling the indices of all attributes
         //  - giving the moved conclusion the index (doubled) of the target, plus one
@@ -45,4 +58,19 @@ open class OrderedEntityManager<T>(orderStore: OrderStore, entityProvider: Entit
             entityToIndex[asList[i].entity] = i
         }
     }
+
+    fun inOrder(unordered: Collection<T>): List<T> {
+        return unordered
+            .map { getOrCreate(it) }
+            .sorted()
+            .map { it.entity }
+    }
+
+    private fun getOrCreate(entity: T): IndexedEntity<T> {
+        if (!entityToIndex.containsKey(entity)) {
+            entityToIndex[entity] = entityToIndex.size
+        }
+        return IndexedEntity(entity, entityToIndex[entity]!!)
+    }
 }
+

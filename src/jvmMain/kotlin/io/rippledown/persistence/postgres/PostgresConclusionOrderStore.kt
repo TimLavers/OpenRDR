@@ -11,9 +11,10 @@ import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.transactions.transaction
 
-const val CONCLUSION_INDEXES_TABLE = "conclusion_indexes"
-
 class PostgresConclusionOrderStore(private val db: Database) : OrderStore {
+    companion object {
+        const val TABLE_NAME = "conclusion_indexes"
+    }
 
     init {
         transaction(db) {
@@ -53,7 +54,7 @@ class PostgresConclusionOrderStore(private val db: Database) : OrderStore {
         }
     }
 
-    object PGConclusionIndexes : IntIdTable(name = CONCLUSION_INDEXES_TABLE) {
+    object PGConclusionIndexes : IntIdTable(name = TABLE_NAME) {
         val conclusionIndex = integer("conc_index")
     }
 

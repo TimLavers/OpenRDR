@@ -1,5 +1,6 @@
 package io.rippledown.kb
 
-fun interface EntityProvider<T> {
-    fun forId(id: Int): T
+interface EntityProvider<T> {
+    fun getById(id: Int): T
+    fun getOrCreate(text: String): T
 }

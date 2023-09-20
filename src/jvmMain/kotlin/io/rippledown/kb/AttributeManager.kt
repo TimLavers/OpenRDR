@@ -14,11 +14,8 @@ class AttributeManager(private val attributeStore: AttributeStore): AttributePro
         }
     }
 
-    override fun forId(id: Int): Attribute {
-        TODO("Not yet implemented")
-    }
-
-    fun getOrCreate(name: String) : Attribute {
+    @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
+    override fun getOrCreate(name: String): Attribute {
         return nameToAttribute.computeIfAbsent(name) {
             attributeStore.create(name)
         }
@@ -28,7 +25,7 @@ class AttributeManager(private val attributeStore: AttributeStore): AttributePro
         return nameToAttribute.values.toSet()
     }
 
-    fun getById(id: Int):Attribute {
+    override fun getById(id: Int): Attribute {
         return nameToAttribute.values.first { it.id == id }
     }
 }

@@ -3,6 +3,8 @@ package io.rippledown.kb
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.ints.shouldBeLessThan
 import io.kotest.matchers.shouldBe
+import io.rippledown.kb.OrderedEntityManager.Companion.MOVED_ENTITY_IS_TARGET
+import io.rippledown.kb.OrderedEntityManager.Companion.UNKNOWN_ENTITY
 import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
@@ -41,6 +43,11 @@ class CaseViewManagerTest {
     }
 
     @Test
+    fun `should be no ordering when the manager is first created`() {
+        manager.allInOrder() shouldBe emptyList()
+    }
+
+    @Test
     fun `load from the attribute order store`() {
         attributeOrderStore.store(a4.id, 1)
         attributeOrderStore.store(a3.id, 2)
@@ -49,7 +56,7 @@ class CaseViewManagerTest {
         attributeOrderStore.store(a5.id, 5)
         attributeOrderStore.store(a6.id, 6)
         manager = CaseViewManager(attributeOrderStore, attributeManager)
-        manager.allAttributesInOrder() shouldBe listOf(a4, a3, a2, a1, a5, a6)
+        manager.allInOrder() shouldBe listOf(a4, a3, a2, a1, a5, a6)
     }
 
     @Test
@@ -57,8 +64,8 @@ class CaseViewManagerTest {
         attributeOrderStore.store(a4.id, 1)
         attributeOrderStore.store(a3.id, 2)
         manager = CaseViewManager(attributeOrderStore, attributeManager)
-        manager.allAttributesInOrder()[0] shouldBe a4
-        manager.allAttributesInOrder()[1] shouldBe a3
+        manager.allInOrder()[0] shouldBe a4
+        manager.allInOrder()[1] shouldBe a3
     }
 
     @Test
@@ -104,7 +111,7 @@ class CaseViewManagerTest {
         manager.getViewableCase(createCase("Case1", listOf(a1)))
         shouldThrow<IllegalStateException>{
             manager.moveJustBelow(a2, a1)
-        }.message shouldBe "Unknown attribute: $a2"
+        }.message shouldBe "$UNKNOWN_ENTITY$a2"
     }
 
     @Test
@@ -112,15 +119,15 @@ class CaseViewManagerTest {
         manager.getViewableCase(createCase("Case1", listOf(a1)))
         shouldThrow<IllegalStateException>{
             manager.moveJustBelow(a1, a2)
-        }.message shouldBe "Unknown attribute: $a2"
+        }.message shouldBe "$UNKNOWN_ENTITY$a2"
     }
 
     @Test
     fun `moved and target attributes must be distinct`() {
         manager.getViewableCase(createCase("Case1", listOf(a1)))
-        shouldThrow<IllegalStateException>{
+        shouldThrow<IllegalStateException> {
             manager.moveJustBelow(a1, a1)
-        }.message shouldBe "Moved attribute is target attribute, $a1"
+        }.message shouldBe "$MOVED_ENTITY_IS_TARGET$a1"
     }
 
     @Test
@@ -133,10 +140,10 @@ class CaseViewManagerTest {
 
     @Test
     fun setAttributes() {
-        manager.setAttributes(listOf( a3, a2, a1))
+        manager.set(listOf(a3, a2, a1))
         val case = createCaseWithAttributesAndShowToManager(listOf(a1, a2, a3))
         case.attributes() shouldBe listOf(a3, a2, a1)
-        manager.allAttributesInOrder() shouldBe listOf(a3, a2, a1)
+        manager.allInOrder() shouldBe listOf(a3, a2, a1)
     }
 
     @Test
@@ -187,17 +194,17 @@ class CaseViewManagerTest {
         createCaseWithAttributesAndShowToManager(listOf(a2))
         createCaseWithAttributesAndShowToManager(listOf(a3))
         createCaseWithAttributesAndShowToManager(listOf(a4))
-        manager.allAttributesInOrder() shouldBe listOf(a1, a2, a3, a4)
+        manager.allInOrder() shouldBe listOf(a1, a2, a3, a4)
         manager.moveJustBelow(a4, a1)
         manager.moveJustBelow(a3, a4)
         manager.moveJustBelow(a2, a3)
         manager.moveJustBelow(a1, a2)
-        manager.allAttributesInOrder() shouldBe listOf(a4, a3, a2, a1)
+        manager.allInOrder() shouldBe listOf(a4, a3, a2, a1)
     }
 
     @Test
     fun allAttributesInOrderEmpty() {
-        manager.allAttributesInOrder() shouldBe listOf()
+        manager.allInOrder() shouldBe listOf()
     }
 
     private fun createCaseWithAttributesAndShowToManager(attributes: List<Attribute>): ViewableCase {

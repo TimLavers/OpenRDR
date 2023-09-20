@@ -2,6 +2,7 @@ package io.rippledown.persistence.inmemory
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.rippledown.persistence.inmemory.InMemoryOrderStore.Companion.ERROR_MESSAGE
 import kotlin.test.Test
 
 class InMemoryOrderStoreTest {
@@ -44,14 +45,10 @@ class InMemoryOrderStoreTest {
             // when
             val map = mapOf(1 to 43)
 
-
             // then
             shouldThrow<IllegalArgumentException> {
                 load(map)
-            } shouldBe IllegalArgumentException(
-                "Cannot load data into a non-empty order store."
-            )
-
+            } shouldBe IllegalArgumentException(ERROR_MESSAGE)
         }
     }
 }

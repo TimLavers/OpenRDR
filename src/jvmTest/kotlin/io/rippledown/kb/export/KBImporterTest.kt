@@ -34,7 +34,7 @@ class KBImporterTest : ExporterTestBase() {
         val rebuilt = KBImporter(tempDir, persistenceProvider).import()
         rebuilt.kbInfo.name shouldBe original.kbInfo.name
         rebuilt.allCornerstoneCases().size shouldBe 0
-        rebuilt.caseViewManager.allAttributesInOrder().size shouldBe 0
+        rebuilt.caseViewManager.allInOrder().size shouldBe 0
         rebuilt.ruleTree.size() shouldBe 1
     }
 
@@ -70,7 +70,7 @@ class KBImporterTest : ExporterTestBase() {
         kb.commitCurrentRuleSession()
 
         // Set up the case view.
-        kb.caseViewManager.setAttributes(listOf(hdl, ldl, glucose))
+        kb.caseViewManager.set(listOf(hdl, ldl, glucose))
 
         // Export and import.
         KBExporter(tempDir, kb).export()
@@ -85,7 +85,7 @@ class KBImporterTest : ExporterTestBase() {
         rebuilt.getProcessedCaseByName(case2.name) shouldBeEqualToComparingFields kb.getProcessedCaseByName(case2.name)
         rebuilt.getProcessedCaseByName(case3.name) shouldBeEqualToComparingFields kb.getProcessedCaseByName(case3.name)
 
-        rebuilt.caseViewManager.allAttributesInOrder() shouldBe kb.caseViewManager.allAttributesInOrder()
+        rebuilt.caseViewManager.allInOrder() shouldBe kb.caseViewManager.allInOrder()
 
         rebuilt.ruleTree.size() shouldBe 2
         rebuilt.ruleTree.root.childRules().first()

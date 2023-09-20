@@ -1,6 +1,8 @@
 package io.rippledown.kb
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.rippledown.model.Conclusion
 import io.rippledown.persistence.ConclusionStore
 import io.rippledown.persistence.inmemory.InMemoryConclusionStore
@@ -62,10 +64,15 @@ class ConclusionManagerTest {
     }
 
     @Test
-    fun `get by id when id is unknown`() {
-        conclusionManager.getOrCreate("Blah")
-        conclusionManager.getOrCreate("Whatever")
-        conclusionManager.getById(87654) shouldBe null
+    fun `should create a conclusion if the text is not found`() {
+        val conclusion = conclusionManager.getOrCreate("Blah")
+        conclusion.text shouldBe "Blah"
+        conclusion.id shouldNotBe null
+    }
+
+    @Test
+    fun `should not expect to get a conclusion with unknown id`() {
+        shouldThrow<NoSuchElementException> { conclusionManager.getById(87654) }
     }
 
     @Test

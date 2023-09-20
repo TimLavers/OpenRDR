@@ -1,11 +1,11 @@
 package io.rippledown.model.rule
 
+import io.rippledown.kb.ConclusionProvider
 import io.rippledown.model.Conclusion
-import io.rippledown.model.ConclusionFactory
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RuleFactory
 
-internal fun ConclusionFactory.getAlignedConclusion(provided: Conclusion): Conclusion {
+internal fun ConclusionProvider.getAlignedConclusion(provided: Conclusion): Conclusion {
     val conclusionInFactory = getOrCreate(provided.text)
     require(conclusionInFactory.id == provided.id) {
         "Conclusion in factory is $conclusionInFactory, conclusion provided is $provided, which do not match."
@@ -14,13 +14,13 @@ internal fun ConclusionFactory.getAlignedConclusion(provided: Conclusion): Concl
 }
 
 abstract class RuleTreeChange {
-    abstract fun alignWith(conclusionFactory: ConclusionFactory): RuleTreeChange
+    abstract fun alignWith(conclusionFactory: ConclusionProvider): RuleTreeChange
     abstract fun isApplicable(tree: RuleTree, case: RDRCase): Boolean
     abstract fun createChanger(tree: RuleTree, ruleFactory: RuleFactory): RuleTreeChanger
 }
 
 class ChangeTreeToAddConclusion(val toBeAdded: Conclusion) : RuleTreeChange() {
-    override fun alignWith(conclusionFactory: ConclusionFactory): ChangeTreeToAddConclusion {
+    override fun alignWith(conclusionFactory: ConclusionProvider): ChangeTreeToAddConclusion {
         val conclusionInFactory = conclusionFactory.getAlignedConclusion(toBeAdded)
         return ChangeTreeToAddConclusion(conclusionInFactory)
     }
@@ -33,7 +33,7 @@ class ChangeTreeToAddConclusion(val toBeAdded: Conclusion) : RuleTreeChange() {
 }
 
 open class ChangeTreeToRemoveConclusion(val toBeRemoved: Conclusion) : RuleTreeChange() {
-    override fun alignWith(conclusionFactory: ConclusionFactory): ChangeTreeToRemoveConclusion {
+    override fun alignWith(conclusionFactory: ConclusionProvider): ChangeTreeToRemoveConclusion {
         val conclusionInFactory = conclusionFactory.getAlignedConclusion(toBeRemoved)
         return ChangeTreeToRemoveConclusion(conclusionInFactory)
     }
@@ -46,7 +46,7 @@ open class ChangeTreeToRemoveConclusion(val toBeRemoved: Conclusion) : RuleTreeC
 }
 
 class ChangeTreeToReplaceConclusion(val toBeReplaced: Conclusion, val replacement: Conclusion) : RuleTreeChange() {
-    override fun alignWith(conclusionFactory: ConclusionFactory): ChangeTreeToReplaceConclusion {
+    override fun alignWith(conclusionFactory: ConclusionProvider): ChangeTreeToReplaceConclusion {
         val toBeReplacedFactoryInstance = conclusionFactory.getAlignedConclusion(toBeReplaced)
         val replacementFactoryInstance = conclusionFactory.getAlignedConclusion(replacement)
         return ChangeTreeToReplaceConclusion(toBeReplacedFactoryInstance, replacementFactoryInstance)
