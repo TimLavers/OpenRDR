@@ -133,7 +133,7 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
     /**
      * Save the verified text.
      *
-     * @return an Interpretation with the list of Diffs corresponding to the changes made to the current interpretation by the verified text
+     * @return an Interpretation with the list of Diffs corresponding to the changes made to the current interpretation as specified in the verified text
      */
     fun saveInterpretation(interpretation: Interpretation): Interpretation {
         val caseId = interpretation.caseId.id!!
@@ -143,6 +143,7 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         case.interpretation.verifiedText = interpretation.verifiedText
 
         //save the conclusions in the verified text
+        kb.saveConclusions(interpretation.verifiedText!!)
 
         //reset the case's diff list
         case.interpretation.diffList = diffList(interpretation)

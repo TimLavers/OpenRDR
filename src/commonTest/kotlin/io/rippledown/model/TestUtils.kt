@@ -41,7 +41,7 @@ fun createCaseWithInterpretation(
 ): ViewableCase {
     val case = createCase(name, id)
     var conclusionId = 10
-    val interp = Interpretation(diffList = diffs).apply {
+    val interp = Interpretation().apply {
         conclusionTexts.forEach { text ->
             add(RuleSummary(conclusion = Conclusion(conclusionId++, text)))
         }

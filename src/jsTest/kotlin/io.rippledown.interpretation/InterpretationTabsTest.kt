@@ -133,7 +133,7 @@ class InterpretationTabsTest {
                 Replacement(replacedText, replacementText)
             )
         )
-        val interpretationWithDiffs = Interpretation(diffList = diffListToReturn)
+        val interpretationWithDiffs = Interpretation()
 
         val fc = FC {
             InterpretationTabs {
@@ -168,7 +168,7 @@ class InterpretationTabsTest {
                 Addition(addedText),
             )
         )
-        val interpretationWithDiffs = Interpretation(diffList = diffListToReturn)
+        val interpretationWithDiffs = Interpretation()
         val config = config {
             returnInterpretationAfterSavingInterpretation = interpretationWithDiffs
         }
@@ -201,7 +201,7 @@ class InterpretationTabsTest {
                 Replacement()
             )
         )
-        val interpretationWithDiffs = Interpretation(diffList = diffListToReturn)
+        val interpretationWithDiffs = Interpretation()
         val fc = FC {
             InterpretationTabs {
                 scope = this@runTest
@@ -247,7 +247,7 @@ class InterpretationTabsTest {
                 Replacement(replacedText, replacementText)
             )
         )
-        val interpretationWithDiffs = Interpretation(diffList = diffListToReturn)
+        val interpretationWithDiffs = Interpretation()
         var selectedDiff: Diff? = null
 
         val fc = FC {

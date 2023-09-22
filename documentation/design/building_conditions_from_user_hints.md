@@ -17,14 +17,3 @@ There are two basic approaches that could be used to allow users to build condit
        approach is also flexible, but does not require the user to learn a new syntax. The downside is that the NLP
        processing may be compute-expensive.
 
-tsh is elevated
-
-_ is elevated
-
-_ is high
-_ is low
-_ is normal
-_ is available
-_ is > _
-_ is within _ percent of upper range
-

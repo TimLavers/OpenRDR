@@ -27,6 +27,9 @@ open class OrderedEntityManager<T>(orderStore: OrderStore, entityProvider: Entit
         return orderSet.sorted().map { it.entity }
     }
 
+    /**
+     * Regenerate the order from the given list of entities.
+     */
     fun set(entitiesInOrder: List<T>) {
         entityToIndex.clear()
         entitiesInOrder.forEachIndexed { index, entity -> entityToIndex[entity] = index }
@@ -65,6 +68,7 @@ open class OrderedEntityManager<T>(orderStore: OrderStore, entityProvider: Entit
             .sorted()
             .map { it.entity }
     }
+
 
     private fun getOrCreate(entity: T): IndexedEntity<T> {
         if (!entityToIndex.containsKey(entity)) {

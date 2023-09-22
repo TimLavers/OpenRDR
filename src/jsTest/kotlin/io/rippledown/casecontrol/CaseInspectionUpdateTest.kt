@@ -30,14 +30,9 @@ class CaseInspectionUpdateTest {
             name = "Manly",
         )
 
-        val interpBeforeRule = Interpretation(
-            verifiedText = bondiComment,
-            diffList = diffList
-        )
+        val interpBeforeRule = Interpretation()
 
-        val interpAfterRule = Interpretation(
-            verifiedText = bondiComment
-        )
+        val interpAfterRule = Interpretation()
 
         caseA.interpretation = interpBeforeRule
 

@@ -20,8 +20,8 @@ class InterpretationTabsUpdateTest {
         val caseAConclusion = "text for case A"
         val caseBConclusion = "text for case B"
 
-        val interpA = Interpretation(verifiedText = caseAConclusion)
-        val interpB = Interpretation(verifiedText = caseBConclusion)
+        val interpA = Interpretation()
+        val interpB = Interpretation()
 
         val buttonId = "button_id"
 
@@ -60,8 +60,8 @@ class InterpretationTabsUpdateTest {
         val diffListB = DiffList(listOf(Unchanged(), Replacement(), Unchanged(), Addition()))
 
         val comment = "Go to Bondi now!"
-        val interpA = Interpretation(verifiedText = comment, diffList = diffListA)
-        val interpB = Interpretation(verifiedText = comment, diffList = diffListB)
+        val interpA = Interpretation()
+        val interpB = Interpretation()
 
         val buttonId = "button_id"
 

@@ -67,7 +67,7 @@ class ApiTest {
                 Unchanged("This comment was left alone."),
             )
         )
-        val interpretation = Interpretation(CaseId(1, "Case A"), "report proxy.text")
+        val interpretation = Interpretation(CaseId(1, "Case A"))
         val config = config {
             expectedInterpretation = interpretation
             returnInterpretationAfterSavingInterpretation = interpretation.copy(diffList = expectedDiffList)
@@ -101,7 +101,7 @@ class ApiTest {
                 )
             )
         )
-        val interpretation = Interpretation(CaseId(id, "The Case"), "report proxy.text")
+        val interpretation = Interpretation(CaseId(id, "The Case"))
         val config = config {
             expectedRuleRequest = ruleRequest
             returnInterpretationAfterBuildingRule = interpretation

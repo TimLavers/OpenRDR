@@ -123,7 +123,7 @@ internal class ServerApplicationTest {
         original.interpretation.verifiedText shouldBe null
         original.interpretation.textGivenByRules() shouldBe ""
 
-        val verifiedInterpretation = Interpretation(caseId, "Verified.")
+        val verifiedInterpretation = Interpretation(caseId)
         val returnedInterpretation = app.saveInterpretation(verifiedInterpretation)
         val updated = app.case(id)
         updated.interpretation shouldBe returnedInterpretation

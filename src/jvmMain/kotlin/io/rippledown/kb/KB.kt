@@ -9,6 +9,7 @@ import io.rippledown.model.condition.Condition
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistentKB
+import io.rippledown.textdiff.splitIntoSentences
 
 class KB(persistentKB: PersistentKB) {
 
@@ -175,5 +176,12 @@ class KB(persistentKB: PersistentKB) {
         val cornerstone = cornerstones[index]
         val viewableCornerstone = viewableInterpretedCase(cornerstone)
         return CornerstoneStatus(viewableCornerstone, index, cornerstones.size)
+    }
+
+    fun saveConclusions(text: String) {
+        val conclusionList = text.splitIntoSentences().map {
+            conclusionManager.getOrCreate(it)
+        }
+        interpretationViewManager.set(conclusionList)
     }
 }

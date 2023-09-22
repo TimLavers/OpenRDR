@@ -638,6 +638,16 @@ class KBTest {
         ccStatus shouldBe CornerstoneStatus(vcc2, 1, 3)
     }
 
+    @Test
+    fun `should create and save the conclusions corresponding to the sentences in the specified text`() {
+        val bondi = "Go to Bondi."
+        val flippers = "Bring your flippers."
+        val sunScreen = "And your sunscreen."
+        kb.saveConclusions("$bondi $flippers $sunScreen")
+        kb.conclusionManager.all().map { it.text } shouldBe setOf(bondi, flippers, sunScreen)
+        kb.interpretationViewManager.allInOrder().map { it.text } shouldBe listOf(bondi, flippers, sunScreen)
+    }
+
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")
 
     private fun createCondition(): GreaterThanOrEqualTo {

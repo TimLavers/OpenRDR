@@ -36,9 +36,7 @@ class CaseInspectionWhenStartingRuleBuildingTest {
             name = "Manly",
         )
 
-        val interp = Interpretation(
-            diffList = diffList,
-        )
+        val interp = Interpretation()
         caseA.interpretation = interp
 
         val config = config {
