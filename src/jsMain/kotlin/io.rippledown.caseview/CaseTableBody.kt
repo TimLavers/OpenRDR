@@ -1,6 +1,7 @@
 package io.rippledown.caseview
 
 import Handler
+import io.rippledown.constants.caseview.CASE_TABLE_ROW_PREFIX
 import io.rippledown.model.caseview.ViewableCase
 import mui.material.TableBody
 import mui.material.TableRow
@@ -17,7 +18,7 @@ val CaseTableBody = FC<CaseTableBodyHandler> { handler ->
         handler.case.attributes().forEach { a ->
             val results = handler.case.rdrCase.resultsFor(a)!!
             TableRow {
-                id = "case_table_row_${a.name}"
+                id = "$CASE_TABLE_ROW_PREFIX${a.name}"
                 hover = true
                 sx {
                     nthOfType("even") {
