@@ -22,15 +22,29 @@ const val defaultDate = 1659752689505
 const val today = defaultDate
 val yesterday = daysAgo(1)
 val lastWeek = daysAgo(7)
+val glucose = Attribute(1, "Glucose")
 
-fun createCase(caseId: CaseId) = createCase(caseId.name, caseId.id)
+data class AttributeWithValue(val attribute: Attribute = glucose, val result: TestResult = TestResult("5.1"))
 
-fun createCase(name: String = "", id: Long? = null): ViewableCase {
-    val attribute = Attribute(1, "Glucose")
+fun createCase(caseId: CaseId, attributesWithValues: List<AttributeWithValue> = listOf(AttributeWithValue())) =
+    createCase(
+        caseId.name,
+        caseId.id,
+        attributesWithValues
+    )
+
+fun createCase(
+    name: String = "",
+    id: Long? = null,
+    attributesWithResults: List<AttributeWithValue> = listOf(AttributeWithValue())
+): ViewableCase {
     val builder = RDRCaseBuilder()
-    builder.addResult(attribute, 99994322, TestResult("5.1"))
+    attributesWithResults.forEach {
+        builder.addResult(it.attribute, 99994322, it.result)
+    }
     val rdrCase = builder.build(name, id)
-    return ViewableCase(rdrCase, CaseViewProperties(listOf(attribute)))
+    val attributes = attributesWithResults.map { it.attribute }
+    return ViewableCase(rdrCase, CaseViewProperties(attributes))
 }
 
 fun createCaseWithInterpretation(

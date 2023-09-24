@@ -98,10 +98,14 @@ class Defs : En {
             labProxy.provideCase("Case1", mapOf("A" to "a"))
             labProxy.provideCase("Case2", mapOf("A" to "a", "B" to "b"))
             labProxy.provideCase("Case3", mapOf("A" to "a", "B" to "b", "C" to "c"))
-            // The attributes are created when the cases are parsed, so select them in the right order.
-            caseListPO.select("Case1")
-            caseListPO.select("Case2")
-            caseListPO.select("Case3")
+            with(caseListPO) {
+                waitForCaseListToHaveSize(3)
+
+                // The attributes are created when the cases are parsed, so select them in the right order.
+                select("Case1")
+                select("Case2")
+                select("Case3")
+            }
         }
 
         Given("I import the configured zipped Knowledge Base {word}") { toImport: String ->
