@@ -1,6 +1,7 @@
 package io.rippledown.caseview
 
 import io.kotest.matchers.shouldBe
+import io.rippledown.constants.caseview.CASE_TABLE_ROW_PREFIX
 import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.caseview.CaseViewProperties
@@ -35,7 +36,7 @@ class CaseTableBodyTest {
             }
         }
         with(createRootFor(vfc)) {
-            val rows = findAllById("case_table_row_")
+            val rows = findAllById(CASE_TABLE_ROW_PREFIX)
             rows.length shouldBe 4
             rows[0].children[0].textContent shouldBe tsh.name
             rows[1].children[0].textContent shouldBe ft4.name
