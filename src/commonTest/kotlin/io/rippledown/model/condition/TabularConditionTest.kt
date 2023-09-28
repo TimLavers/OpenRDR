@@ -38,7 +38,7 @@ class TabularConditionTest: ConditionTestBase() {
 
         // Value is low.
         val builder1 = RDRCaseBuilder()
-        builder1.addResult(tsh, defaultDate , TestResult("0.067", range, "pmol/L"))
+        builder1.addResult(tsh, defaultDate , TestResult("0.067", tshRange, "pmol/L"))
         val case = builder1.build("Case")
         tshLow.holds(case) shouldBe true
 

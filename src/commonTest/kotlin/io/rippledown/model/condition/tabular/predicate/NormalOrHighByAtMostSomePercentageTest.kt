@@ -9,17 +9,15 @@ import io.rippledown.model.ReferenceRange
 import io.rippledown.model.TestResult
 import kotlin.test.Test
 
-class AtMostPercentageHighTest: Base() {
-    private val fivePercentHigh = AtMostPercentageHigh(5)
-    private val tenPercentHigh = AtMostPercentageHigh(10)
+class NormalOrHighByAtMostSomePercentageTest: Base() {
+    private val fivePercentHigh = NormalOrHighByAtMostSomePercentage(5)
+    private val tenPercentHigh = NormalOrHighByAtMostSomePercentage(10)
 
     @Test
     fun allowedCutoffs() {
         checkExceptionThrownForCutoff(200)
         checkExceptionThrownForCutoff(110)
         checkExceptionThrownForCutoff(101)
-        checkExceptionThrownForCutoff(100)
-        checkExceptionThrownForCutoff(0)
         checkExceptionThrownForCutoff(-1)
         checkExceptionThrownForCutoff(-10)
     }
@@ -32,9 +30,9 @@ class AtMostPercentageHighTest: Base() {
         tenPercentHigh.evaluate(testResult(1.10, 1.0)) shouldBe true
         tenPercentHigh.evaluate(testResult(1.05, 1.0)) shouldBe true
         tenPercentHigh.evaluate(testResult(1.00001, 1.0)) shouldBe true
-        tenPercentHigh.evaluate(testResult(1.00000, 1.0)) shouldBe false
-        tenPercentHigh.evaluate(testResult(0.9999, 1.0)) shouldBe false
-        tenPercentHigh.evaluate(testResult(0.95, 1.0)) shouldBe false
+        tenPercentHigh.evaluate(testResult(1.00000, 1.0)) shouldBe true
+        tenPercentHigh.evaluate(testResult(0.9999, 1.0)) shouldBe true
+        tenPercentHigh.evaluate(testResult(0.95, 1.0)) shouldBe true
 
         tenPercentHigh.evaluate(testResult(22.01, 20.0)) shouldBe false
         tenPercentHigh.evaluate(testResult(22.0, 20.0)) shouldBe true
@@ -46,8 +44,8 @@ class AtMostPercentageHighTest: Base() {
         fivePercentHigh.evaluate(testResult(1.05, 1.0)) shouldBe true
         fivePercentHigh.evaluate(testResult(1.049, 1.0)) shouldBe true
         fivePercentHigh.evaluate(testResult(1.00001, 1.0)) shouldBe true
-        fivePercentHigh.evaluate(testResult(1.00000, 1.0)) shouldBe false
-        fivePercentHigh.evaluate(testResult(0.9999, 1.0)) shouldBe false
+        fivePercentHigh.evaluate(testResult(1.00000, 1.0)) shouldBe true
+        fivePercentHigh.evaluate(testResult(0.9999, 1.0)) shouldBe true
     }
 
     @Test
@@ -62,9 +60,15 @@ class AtMostPercentageHighTest: Base() {
     }
 
     @Test
+    fun rangeHasNoLowerBound() {
+        val range = ReferenceRange(null, "10.0")
+        tenPercentHigh.evaluate(TestResult("12.0", range, "mmol/L")) shouldBe false
+    }
+
+    @Test
     fun valueNormal() {
         val range = ReferenceRange("5.0", "10.0")
-        tenPercentHigh.evaluate(TestResult("8.0", range, null)) shouldBe false
+        tenPercentHigh.evaluate(TestResult("8.0", range, null)) shouldBe true
     }
 
     @Test
@@ -80,13 +84,13 @@ class AtMostPercentageHighTest: Base() {
 
     @Test
     fun equality() {
-        tenPercentHigh shouldBe AtMostPercentageHigh(10)
-        tenPercentHigh shouldNotBe AtMostPercentageHigh(11)
+        tenPercentHigh shouldBe NormalOrHighByAtMostSomePercentage(10)
+        tenPercentHigh shouldNotBe NormalOrHighByAtMostSomePercentage(11)
     }
 
     @Test
     fun hash() {
-        tenPercentHigh.hashCode() shouldBe AtMostPercentageHigh(10).hashCode()
+        tenPercentHigh.hashCode() shouldBe NormalOrHighByAtMostSomePercentage(10).hashCode()
     }
 
     @Test
@@ -96,8 +100,8 @@ class AtMostPercentageHighTest: Base() {
 
     @Test
     fun description() {
-        tenPercentHigh.description(false) shouldBe "is at most 10% high"
-        tenPercentHigh.description(true) shouldBe "are at most 10% high"
+        tenPercentHigh.description(false) shouldBe "is normal or high by at most 10%"
+        tenPercentHigh.description(true) shouldBe "are normal or high by at most 10%"
     }
 
     private fun testResult(tshValue: Double, upperBound: Double): TestResult {
@@ -106,9 +110,8 @@ class AtMostPercentageHighTest: Base() {
     }
 
     private fun checkExceptionThrownForCutoff(cutoff: Int) {
-        val exception = shouldThrow<IllegalArgumentException> {
-            AtMostPercentageHigh(cutoff)
-        }
-        exception.message should startWith("Cutoff should be an integer in the range [1, 99]")
+        shouldThrow<IllegalArgumentException> {
+            NormalOrHighByAtMostSomePercentage(cutoff)
+        }.message should startWith(VALID_PERCENTAGE_MESSAGE)
     }
 }

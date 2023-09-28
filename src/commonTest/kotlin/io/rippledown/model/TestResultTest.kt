@@ -34,6 +34,14 @@ internal class TestResultTest {
     }
 
     @Test
+    fun construction4() {
+        val result = TestResult("23", ReferenceRange("20", "30"))
+        result.value shouldBe  Value("23")
+        result.referenceRange shouldBe  ReferenceRange("20", "30")
+        result.units shouldBe null
+    }
+
+    @Test
     fun jsonSerialisation() {
         val result1 = TestResult("1234")
         serializeDeserialize(result1)
