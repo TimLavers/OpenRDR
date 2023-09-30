@@ -406,15 +406,6 @@ internal class RuleTreeTest : RuleTestBase() {
         (tree.copy() !== tree) shouldBe true
     }
 
-    @Test
-    fun `interpreting a case should not overwrite the verified text`() {
-        val verifiedText = "Go to Bondi"
-        val case = RDRCase(CaseId(99, "Blah"))
-        case.interpretation.verifiedText = verifiedText
-        tree.apply(case)
-        case.interpretation.verifiedText shouldBe verifiedText
-    }
-
     private fun checkInterpretationForCase(text: String, vararg conclusions: String) {
         val case = clinicalNotesCase(text)
         tree.apply(case)

@@ -47,7 +47,7 @@ object RDRCaseSerializer : KSerializer<RDRCase> {
                 descriptor,
                 2,
                 interpretationRulesSerializer,
-                value.interpretation.ruleSummaries()
+                value.interpretation.ruleSummaries
             )
         }
     }

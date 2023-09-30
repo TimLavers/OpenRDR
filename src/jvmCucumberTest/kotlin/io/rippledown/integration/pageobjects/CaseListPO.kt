@@ -39,4 +39,10 @@ class CaseListPO(private val driver: WebDriver) {
         driver.findElement(By.id(id)).click()
         return CaseViewPO(driver)
     }
+
+    fun waitForCaseListToContain(caseName: String) {
+        await().atMost(5L, TimeUnit.SECONDS).until {
+            casesListed().contains(caseName)
+        }
+    }
 }

@@ -50,7 +50,7 @@ class CaseInspectionTest {
     fun shouldShowInterpretation() = runTest {
         val text = "Go to Bondi now!"
         val rdrCase = createCase(name = "case a", id = 1L)
-        rdrCase.interpretation.add(RuleSummary(conclusion = Conclusion(1, text)))
+        rdrCase.viewableInterpretation.interpretation.add(RuleSummary(conclusion = Conclusion(1, text)))
         val fc = FC {
             CaseInspection {
                 case = rdrCase

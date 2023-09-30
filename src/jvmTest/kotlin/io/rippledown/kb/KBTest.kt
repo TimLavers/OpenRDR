@@ -29,6 +29,33 @@ class KBTest {
     }
 
     @Test
+    fun `should save the verified text of a viewable interpretation`() {
+        val case = createCase("Case1", "1.0", id = 42)
+        val verified = "Bondi or bust"
+        val interp = kb.viewableCase(case).viewableInterpretation.apply { verifiedText = verified }
+        kb.saveVerifiedText(interp)
+        kb.viewableCase(case).viewableInterpretation.verifiedText shouldBe verified
+    }
+
+    @Test
+    fun `interpreting a case should not overwrite the verified text`() {
+        //Given
+        val verifiedText = "Go to Bondi"
+        val case = RDRCase(CaseId(99, "Blah"))
+        val viewableCase = kb.viewableCase(case)
+        viewableCase.viewableInterpretation.verifiedText = verifiedText
+        kb.saveVerifiedText(viewableCase.viewableInterpretation)
+        viewableCase.latestText() shouldBe verifiedText
+
+        //When
+        val reinterpreted = kb.viewableCase(case)
+
+        //Then
+        reinterpreted.latestText() shouldBe verifiedText
+    }
+
+
+    @Test
     fun processCase() {
         kb.allProcessedCases() shouldBe emptyList()
         kb.attributeManager.all() shouldBe emptySet()
@@ -47,8 +74,8 @@ class KBTest {
 
         val externalCase1 = createExternalCase("Case1", "g1")
         val processed = kb.processCase(externalCase1)
-        processed.interpretation.textGivenByRules() shouldBe conclusionToAdd
-        kb.getProcessedCase(processed.caseId.id!!)!!.interpretation.textGivenByRules() shouldBe conclusionToAdd
+        processed.interpretation.conclusionTexts() shouldBe setOf(conclusionToAdd)
+        kb.getProcessedCase(processed.caseId.id!!)!!.interpretation.conclusionTexts() shouldBe setOf(conclusionToAdd)
     }
 
     @Test
@@ -204,19 +231,18 @@ class KBTest {
         val builder = RDRCaseBuilder()
         builder.addValue(Attribute(300, "ABC"), defaultDate, "10")
         builder.addValue(Attribute(400, "DEF"), defaultDate, "20")
-        val case = builder.build("Case2")
+        val case = builder.build("Case2", 42)
 
-        case.interpretation.textGivenByRules() shouldBe ""
         // Check that it has been interpreted.
-        val viewableCase = kb.viewableInterpretedCase(case)
-        viewableCase.interpretation.textGivenByRules() shouldBe comment
+        val viewableCase = kb.viewableCase(case)
+        viewableCase.textGivenByRules() shouldBe comment
 
         // Check that ordering is working by getting the current ordering
         // and changing it, and then getting the case again and checking
         // that the new ordering is applied.
         val attributesInOriginalOrder = viewableCase.attributes()
         kb.caseViewManager.moveJustBelow(attributesInOriginalOrder[0], attributesInOriginalOrder[1])
-        val caseAfterMove = kb.viewableInterpretedCase(case)
+        val caseAfterMove = kb.viewableCase(case)
         caseAfterMove.attributes() shouldBe listOf(attributesInOriginalOrder[1], attributesInOriginalOrder[0])
     }
 
@@ -225,9 +251,9 @@ class KBTest {
         val comment = "Whatever."
         buildRuleToAddAComment(kb, comment)
         val case = createCase("Case1", "1.0")
-        case.interpretation.textGivenByRules() shouldBe ""
+        case.interpretation.conclusions() shouldBe emptySet()
         kb.interpret(case)
-        case.interpretation.textGivenByRules() shouldBe comment
+        case.interpretation.conclusions().map { it.text } shouldBe listOf(comment)
     }
 
     private fun buildRuleToAddAComment(kb: KB, comment: String) {
@@ -416,7 +442,7 @@ class KBTest {
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
         kb.commitCurrentRuleSession()
         kb.interpret(otherCase)
-        otherCase.interpretation.textGivenByRules() shouldBe "Whatever." // sanity
+        otherCase.interpretation.conclusionTexts() shouldBe setOf("Whatever.") // sanity
 
         shouldThrow<IllegalStateException> {
             kb.startRuleSession(otherCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
@@ -427,18 +453,18 @@ class KBTest {
     fun startRuleSession() {
         val sessionCase = createCase("Case1")
         kb.interpret(sessionCase)
-        sessionCase.interpretation.textGivenByRules() shouldBe ""
+        sessionCase.interpretation.conclusionTexts() shouldBe emptySet()
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
         kb.commitCurrentRuleSession()
         kb.interpret(sessionCase)
-        sessionCase.interpretation.textGivenByRules() shouldBe "Whatever."
+        sessionCase.interpretation.conclusionTexts() shouldBe setOf("Whatever.")
     }
 
     @Test
     fun conflictingCases() {
         val sessionCase = createCase("Case1", "1.0")
         kb.addCornerstoneCase(createCase("Case2", "2.0"))
-        sessionCase.interpretation.textGivenByRules() shouldBe ""
+        sessionCase.interpretation.conclusionTexts() shouldBe emptySet()
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
         kb.conflictingCasesInCurrentRuleSession().map { rdrCase -> rdrCase.name }.toSet() shouldBe setOf("Case2")
     }
@@ -447,7 +473,7 @@ class KBTest {
     fun addCondition() {
         val sessionCase = createCase("Case1", "1.0")
         kb.addCornerstoneCase(createCase("Case2", "2.0"))
-        sessionCase.interpretation.textGivenByRules() shouldBe ""
+        sessionCase.interpretation.conclusionTexts() shouldBe emptySet()
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
         kb.addConditionToCurrentRuleSession(LessThanOrEqualTo(null, glucose(), 1.2))
         kb.conflictingCasesInCurrentRuleSession().size shouldBe 0
@@ -457,15 +483,15 @@ class KBTest {
     fun commitSession() {
         val sessionCase = createCase("Case1", "1.0")
         val otherCase = createCase("Case2", "2.0")
-        sessionCase.interpretation.textGivenByRules() shouldBe ""
+        sessionCase.interpretation.conclusionTexts() shouldBe emptySet()
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
         kb.interpret(otherCase)
         // Rule not yet added...
-        otherCase.interpretation.textGivenByRules() shouldBe ""
+        otherCase.interpretation.conclusionTexts() shouldBe emptySet()
         kb.commitCurrentRuleSession()
         // Rule now added...
         kb.interpret(otherCase)
-        otherCase.interpretation.textGivenByRules() shouldBe "Whatever."
+        otherCase.interpretation.conclusionTexts() shouldBe setOf("Whatever.")
     }
 
     @Test
@@ -492,7 +518,7 @@ class KBTest {
     @Test
     fun `the session case should be stored as the cornerstone case when the rule is committed`() {
         val sessionCase = createCase("Case1", "1.0")
-        sessionCase.interpretation.textGivenByRules() shouldBe ""
+        sessionCase.interpretation.conclusionTexts() shouldBe emptySet()
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
         kb.allCornerstoneCases() shouldHaveSize 0
         kb.commitCurrentRuleSession()
@@ -503,7 +529,7 @@ class KBTest {
     @Test
     fun `should update the cornerstone status when the conditions change`() {
         val cc1 = kb.addCornerstoneCase(createCase("Case1", "1.0"))
-        val vcc1 = kb.viewableInterpretedCase(cc1)
+        val vcc1 = kb.viewableCase(cc1)
         val sessionCase = createCase("Case3", "3.0")
 
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
@@ -519,7 +545,7 @@ class KBTest {
     @Test
     fun `should not update the cornerstone status if no cornerstones are removed by the condition change`() {
         val cc1 = kb.addCornerstoneCase(createCase("Case1", "1.0"))
-        val vcc1 = kb.viewableInterpretedCase(cc1)
+        val vcc1 = kb.viewableCase(cc1)
         val sessionCase = createCase("Case3", "3.0")
 
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
@@ -537,8 +563,8 @@ class KBTest {
         val cc1 = kb.addCornerstoneCase(createCase("Case1", "1.0"))
         val cc2 = kb.addCornerstoneCase(createCase("Case2", "2.0"))
         kb.addCornerstoneCase(createCase("Case3", "3.0"))
-        val vcc1 = kb.viewableInterpretedCase(cc1)
-        val vcc2 = kb.viewableInterpretedCase(cc2)
+        val vcc1 = kb.viewableCase(cc1)
+        val vcc2 = kb.viewableCase(cc2)
         val sessionCase = createCase("Case4", "4.0")
 
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
@@ -557,8 +583,8 @@ class KBTest {
         val cc1 = kb.addCornerstoneCase(createCase("Case1", "1.0"))
         val cc2 = kb.addCornerstoneCase(createCase("Case2", "2.0"))
         kb.addCornerstoneCase(createCase("Case3", "3.0"))
-        val vcc1 = kb.viewableInterpretedCase(cc1)
-        kb.viewableInterpretedCase(cc2)
+        val vcc1 = kb.viewableCase(cc1)
+        kb.viewableCase(cc2)
         val sessionCase = createCase("Case4", "4.0")
 
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
@@ -577,8 +603,8 @@ class KBTest {
         val cc1 = kb.addCornerstoneCase(createCase("Case1", "1.0"))
         val cc2 = kb.addCornerstoneCase(createCase("Case2", "2.0"))
         kb.addCornerstoneCase(createCase("Case3", "3.0"))
-        kb.viewableInterpretedCase(cc1)
-        val vcc2 = kb.viewableInterpretedCase(cc2)
+        kb.viewableCase(cc1)
+        val vcc2 = kb.viewableCase(cc2)
         val sessionCase = createCase("Case4", "4.0")
 
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
@@ -610,7 +636,7 @@ class KBTest {
         val cc1 = kb.addCornerstoneCase(createCase("Case1", "1.0"))
         kb.addCornerstoneCase(createCase("Case2", "2.0"))
         kb.addCornerstoneCase(createCase("Case3", "3.0"))
-        val vcc1 = kb.viewableInterpretedCase(cc1)
+        val vcc1 = kb.viewableCase(cc1)
 
         val sessionCase = createCase("Case4", "4.0")
         kb.startRuleSession(
@@ -626,8 +652,8 @@ class KBTest {
         val cc1 = kb.addCornerstoneCase(createCase("Case1", "1.0"))
         val cc2 = kb.addCornerstoneCase(createCase("Case2", "2.0"))
         kb.addCornerstoneCase(createCase("Case3", "3.0"))
-        kb.viewableInterpretedCase(cc1)
-        val vcc2 = kb.viewableInterpretedCase(cc2)
+        kb.viewableCase(cc1)
+        val vcc2 = kb.viewableCase(cc2)
 
         val sessionCase = createCase("Case4", "4.0")
         kb.startRuleSession(

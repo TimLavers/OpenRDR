@@ -4,9 +4,9 @@ import Api
 import io.kotest.assertions.asClue
 import io.kotest.matchers.shouldBe
 import io.rippledown.interpretation.*
-import io.rippledown.model.Interpretation
 import io.rippledown.model.createCase
 import io.rippledown.model.diff.*
+import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.coroutines.test.runTest
 import mocks.config
@@ -31,13 +31,11 @@ class CaseInspectionWhenStartingRuleBuildingTest {
                 Replacement(manlyComment, bondiComment)
             )
         )
+        val interp = ViewableInterpretation().apply { this.diffList = diffList }
         val caseA = createCase(
             id = 1L,
             name = "Manly",
-        )
-
-        val interp = Interpretation()
-        caseA.interpretation = interp
+        ).apply { viewableInterpretation = interp }
 
         val config = config {
             returnInterpretationAfterSavingInterpretation = interp

@@ -3,6 +3,7 @@ import io.rippledown.model.*
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.HasCurrentValue
 import io.rippledown.model.diff.*
+import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
@@ -22,6 +23,25 @@ class ApiTest {
             expectedCaseId = 1
         }
         Api(mock(config)).getCase(1) shouldBe case
+    }
+
+    @Test
+    fun getCaseWithInterpretationTest() = runTest {
+        val malabarComment = "go to Malabar"
+        val case = createCaseWithInterpretation("A", 1, conclusionTexts = listOf(malabarComment))
+
+        //sanity check
+        case.viewableInterpretation.latestText() shouldBe malabarComment
+
+        val config = config {
+            returnCase = case
+            expectedCaseId = 1
+        }
+
+        val retrieved = Api(mock(config)).getCase(1)
+        retrieved shouldBe case
+        retrieved.viewableInterpretation shouldBe case.viewableInterpretation
+        retrieved.viewableInterpretation.latestText() shouldBe malabarComment
     }
 
     @Test
@@ -67,7 +87,7 @@ class ApiTest {
                 Unchanged("This comment was left alone."),
             )
         )
-        val interpretation = Interpretation(CaseId(1, "Case A"))
+        val interpretation = ViewableInterpretation()
         val config = config {
             expectedInterpretation = interpretation
             returnInterpretationAfterSavingInterpretation = interpretation.copy(diffList = expectedDiffList)
@@ -101,7 +121,7 @@ class ApiTest {
                 )
             )
         )
-        val interpretation = Interpretation(CaseId(id, "The Case"))
+        val interpretation = ViewableInterpretation()
         val config = config {
             expectedRuleRequest = ruleRequest
             returnInterpretationAfterBuildingRule = interpretation

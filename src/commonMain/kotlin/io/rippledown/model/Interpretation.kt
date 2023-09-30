@@ -22,6 +22,9 @@ data class Interpretation(val caseId: CaseId = CaseId()) {
         return ruleSummaries.mapNotNull { it.conclusion }.toSet()
     }
 
+    fun conclusionTexts(): Set<String> {
+        return conclusions().map { it.text }.toSet()
+    }
 
     fun idsOfRulesGivingConclusion(conclusion: Conclusion): Set<Int> {
         return ruleSummaries.filter { conclusion == it.conclusion }.map { it.id }.toSet()
@@ -29,5 +32,11 @@ data class Interpretation(val caseId: CaseId = CaseId()) {
 
     fun reset() {
         ruleSummaries.clear()
+    }
+
+    fun conditionsForConclusion(conclusion: Conclusion): List<String> {
+        return ruleSummaries
+            .first { ruleSummary -> conclusion == ruleSummary.conclusion }
+            .conditionTextsFromRoot
     }
 }

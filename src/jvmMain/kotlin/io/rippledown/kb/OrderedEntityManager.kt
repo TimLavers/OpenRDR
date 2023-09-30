@@ -69,6 +69,12 @@ open class OrderedEntityManager<T>(orderStore: OrderStore, entityProvider: Entit
             .map { it.entity }
     }
 
+    /**
+     * Insert the entities into the view ordering, maintaining their relative order if it is consistent with the existing view ordering.
+     */
+    fun insert(ordered: List<T>) {
+
+    }
 
     private fun getOrCreate(entity: T): IndexedEntity<T> {
         if (!entityToIndex.containsKey(entity)) {

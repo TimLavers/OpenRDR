@@ -9,12 +9,12 @@ import io.mockk.every
 import io.mockk.verify
 import io.rippledown.constants.api.*
 import io.rippledown.model.CaseId
-import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.createCase
 import io.rippledown.model.diff.*
+import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
@@ -27,6 +27,9 @@ class InterpManagementTest : OpenRDRServerTestBase() {
     fun `should delegate saving an Interpretation to server application`() = testApplication {
         setup()
         val rdrCase = RDRCase(CaseId(100, "Case1"))
+        val viewableCase = ViewableCase(rdrCase)
+        val interpretationToSave = viewableCase.viewableInterpretation.apply { verifiedText = "Verified text" }
+
         val diffs = DiffList(
             listOf(
                 Unchanged("Go to Bondi Beach."),
@@ -35,13 +38,9 @@ class InterpManagementTest : OpenRDRServerTestBase() {
                 Replacement("And have fun.", "And have lots of fun.")
             )
         )
-        val diffListToReturn = diffs
-        val viewableCase = ViewableCase(rdrCase)
-        val interpretationToSave = viewableCase.interpretation.apply {
-            verifiedText = "Verified Text"
-        }
+
         val interpretationToReturn = interpretationToSave.apply {
-            diffList = diffListToReturn
+            diffList = diffs
         }
         every { serverApplication.saveInterpretation(interpretationToSave) } returns interpretationToReturn
 
@@ -50,7 +49,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
             setBody(interpretationToSave)
         }
         result.status shouldBe HttpStatusCode.OK
-        result.body<Interpretation>() shouldBe interpretationToReturn
+        result.body<ViewableInterpretation>() shouldBe interpretationToReturn
         verify { serverApplication.saveInterpretation(interpretationToSave) }
     }
 
@@ -94,7 +93,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
         setup()
 
         val ruleRequest = RuleRequest(1)
-        val interp = Interpretation()
+        val interp = ViewableInterpretation()
         every { serverApplication.commitRuleSession(ruleRequest) } returns interp
 
         val result = httpClient.post(BUILD_RULE) {
@@ -102,7 +101,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
             setBody(ruleRequest)
         }
         result.status shouldBe HttpStatusCode.OK
-        result.body<Interpretation>() shouldBe interp
+        result.body<ViewableInterpretation>() shouldBe interp
         verify { serverApplication.commitRuleSession(ruleRequest) }
     }
 

@@ -2,10 +2,10 @@ package io.rippledown.casecontrol
 
 import Api
 import io.rippledown.interpretation.*
-import io.rippledown.model.Interpretation
 import io.rippledown.model.createCase
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
+import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.coroutines.test.runTest
 import mocks.config
@@ -25,16 +25,14 @@ class CaseInspectionUpdateTest {
                 Addition(bondiComment)
             )
         )
+
+        val interpBeforeRule = ViewableInterpretation().apply { this.diffList = diffList }
+        val interpAfterRule = ViewableInterpretation()
+
         val caseA = createCase(
             id = 1L,
             name = "Manly",
-        )
-
-        val interpBeforeRule = Interpretation()
-
-        val interpAfterRule = Interpretation()
-
-        caseA.interpretation = interpBeforeRule
+        ).apply { viewableInterpretation = interpBeforeRule }
 
         val config = config {
             returnInterpretationAfterSavingInterpretation = interpBeforeRule
@@ -47,7 +45,7 @@ class CaseInspectionUpdateTest {
                 case = caseA
                 scope = this@runTest
                 api = Api(mock(config))
-                ruleSessionInProgress = { _ -> Unit }
+                ruleSessionInProgress = { _ -> }
             }
         }
         with(createRootFor(fc)) {

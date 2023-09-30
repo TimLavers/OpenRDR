@@ -15,7 +15,7 @@ external interface CaseTableBodyHandler: Handler {
 val CaseTableBody = FC<CaseTableBodyHandler> { handler ->
     TableBody {
         handler.case.attributes().forEach { a ->
-            val results = handler.case.rdrCase.resultsFor(a)!!
+            val results = handler.case.case.resultsFor(a)!!
             TableRow {
                 id = "case_table_row_${a.name}"
                 hover = true

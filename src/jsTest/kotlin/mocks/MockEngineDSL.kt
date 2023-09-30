@@ -6,9 +6,13 @@ import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.utils.io.*
 import io.rippledown.constants.api.*
-import io.rippledown.model.*
+import io.rippledown.model.CasesInfo
+import io.rippledown.model.KBInfo
+import io.rippledown.model.OperationResult
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.createCase
+import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
@@ -26,13 +30,13 @@ class EngineConfig {
     var returnCasesInfo: CasesInfo = CasesInfo(emptyList())
     var returnCase: ViewableCase = createCase("The Case")
     var returnOperationResult: OperationResult = OperationResult()
-    var returnInterpretationAfterSavingInterpretation: Interpretation = Interpretation()
-    var returnInterpretationAfterBuildingRule: Interpretation = Interpretation()
+    var returnInterpretationAfterSavingInterpretation: ViewableInterpretation = ViewableInterpretation()
+    var returnInterpretationAfterBuildingRule: ViewableInterpretation = ViewableInterpretation()
     var returnCornerstoneStatus: CornerstoneStatus = CornerstoneStatus()
     var returnConditionList: ConditionList = ConditionList()
 
     var expectedCaseId: Long? = null
-    var expectedInterpretation: Interpretation? = null
+    var expectedInterpretation: ViewableInterpretation? = null
     var expectedRuleRequest: RuleRequest? = null
     var expectedSessionStartRequest: SessionStartRequest? = null
     var expectedCornerstoneSelection: Int? = -1
@@ -75,7 +79,7 @@ private class EngineBuilder(private val config: EngineConfig) {
 
             VERIFIED_INTERPRETATION_SAVED -> {
                 val body = request.body as TextContent
-                val bodyAsInterpretation = Json.decodeFromString(Interpretation.serializer(), body.text)
+                val bodyAsInterpretation = Json.decodeFromString(ViewableInterpretation.serializer(), body.text)
 
                 if (config.expectedInterpretation != null) {
                     bodyAsInterpretation shouldBe config.expectedInterpretation

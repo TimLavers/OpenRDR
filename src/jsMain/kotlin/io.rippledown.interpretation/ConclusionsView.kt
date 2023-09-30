@@ -1,6 +1,6 @@
 package io.rippledown.interpretation
 
-import io.rippledown.model.Interpretation
+import io.rippledown.model.interpretationview.ViewableInterpretation
 import mui.icons.material.CheckBoxOutlined
 import mui.icons.material.ExpandLess
 import mui.icons.material.ExpandMore
@@ -19,7 +19,7 @@ import react.create
 import react.createElement
 
 external interface ConclusionsViewHandler : Props {
-    var interpretation: Interpretation
+    var interpretation: ViewableInterpretation
 }
 
 val ConclusionsView = FC<ConclusionsViewHandler> { handler ->

@@ -86,6 +86,7 @@ class Defs : En {
         }
 
         And("I select case {word}") { caseName: String ->
+            caseListPO.waitForCaseListToContain(caseName)
             caseViewPO = caseListPO.select(caseName)
         }
 
@@ -99,6 +100,7 @@ class Defs : En {
             labProxy.provideCase("Case2", mapOf("A" to "a", "B" to "b"))
             labProxy.provideCase("Case3", mapOf("A" to "a", "B" to "b", "C" to "c"))
             // The attributes are created when the cases are parsed, so select them in the right order.
+            caseListPO.waitForCaseListToHaveSize(3)
             caseListPO.select("Case1")
             caseListPO.select("Case2")
             caseListPO.select("Case3")

@@ -3,12 +3,9 @@ package io.rippledown.model
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.rippledown.model.condition.ContainsText
-import io.rippledown.model.diff.Addition
-import io.rippledown.model.diff.DiffList
 import io.rippledown.model.rule.Rule
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -305,17 +302,6 @@ class RDRCaseTest {
         sd.interpretation.conclusions().first() shouldBe conclusion
     }
 
-    @Test
-    @Ignore //TODO: fix
-    fun serializedWithDiffList() {
-        val case = basicCase()
-        val diffList = DiffList(listOf(Addition("Coffee is very good")))
-        case.interpretation.diffList = diffList
-
-        val sd = serializeDeserialize(case)
-        sd shouldBe case
-        sd.interpretation.diffList shouldBe diffList
-    }
 
     @Test
     fun jsonSerialisation() {
@@ -344,19 +330,6 @@ class RDRCaseTest {
         assertEquals(sd3, case3)
     }
 
-    @Test
-    @Ignore //TODO: fix
-    fun serializedWithVerifiedText() {
-        val case = basicCase()
-        val text = "Coffee is very good"
-        case.interpretation.verifiedText = text
-
-        val builder3 = RDRCaseBuilder()
-        builder3.addValue(age, defaultDate, "52")
-        val sd = serializeDeserialize(case)
-        sd shouldBe case
-        sd.interpretation.verifiedText shouldBe text
-    }
 
     @Test
     fun serialisation() {

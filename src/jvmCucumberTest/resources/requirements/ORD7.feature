@@ -1,6 +1,5 @@
 Feature: The user should be able to determine the order of comments in a report
 
-  @single
   Scenario: When building a rule to append a comment to the report, the comment should appear at the end of the report
     Given a list of cases with the following names is stored on the server:
       | Case1 |

@@ -1,5 +1,6 @@
 package io.rippledown.model.interpretationview
 
+import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
 import io.rippledown.model.CaseId
@@ -18,18 +19,16 @@ class ViewableInterpretationTest {
     private val caseId = CaseId()
     private var attributeId = 0
     private var conditionId = 0
-    private lateinit var interpretation: Interpretation
-    private lateinit var view: ViewableInterpretation
+    private lateinit var interp: Interpretation
 
     @BeforeTest
     fun init() {
-        interpretation = Interpretation(caseId)
-        view = ViewableInterpretation(interpretation)
+        interp = Interpretation(caseId)
     }
 
     @Test
     fun constructorWithNoViewFields() {
-        with(view) {
+        with(ViewableInterpretation(interp)) {
             interpretation shouldBe interpretation
             verifiedText shouldBe null
             diffList shouldBe DiffList()
@@ -42,8 +41,8 @@ class ViewableInterpretationTest {
     fun textGivenByRules() {
         val conclusion = Conclusion(1, "First conclusion")
         val rule = Rule(0, null, conclusion, emptySet())
-        interpretation.add(rule)
-        view.textGivenByRules() shouldBe conclusion.text
+        interp.add(rule)
+        ViewableInterpretation(interp).textGivenByRules() shouldBe conclusion.text
     }
 
     @Test
@@ -51,9 +50,9 @@ class ViewableInterpretationTest {
         val conclusion = Conclusion(1, "First conclusion")
         val rule0 = Rule(0, null, conclusion, emptySet())
         val rule1 = Rule(1, null, conclusion, emptySet())
-        interpretation.add(rule0)
-        interpretation.add(rule1)
-        view.textGivenByRules() shouldBe conclusion.text
+        interp.add(rule0)
+        interp.add(rule1)
+        ViewableInterpretation(interp).textGivenByRules() shouldBe conclusion.text
     }
 
     @Test
@@ -61,9 +60,9 @@ class ViewableInterpretationTest {
         val conclusion = Conclusion(1, "First conclusion")
         val rule0 = Rule(0, null, conclusion, emptySet())
         val rule1 = Rule(1, null, null, emptySet())
-        interpretation.add(rule0)
-        interpretation.add(rule1)
-        view.textGivenByRules() shouldBe conclusion.text
+        interp.add(rule0)
+        interp.add(rule1)
+        ViewableInterpretation(interp).textGivenByRules() shouldBe conclusion.text
     }
 
     @Test
@@ -75,7 +74,7 @@ class ViewableInterpretationTest {
         interpretation.add(rule0)
         interpretation.add(rule1)
         interpretation.add(rule2)
-        view.textGivenByRules() shouldBe "A B C"
+        ViewableInterpretation(interpretation).textGivenByRules() shouldBe "A B C"
     }
 
     @Test
@@ -91,14 +90,19 @@ class ViewableInterpretationTest {
         interpretation.add(rule0)
         interpretation.add(rule1)
         interpretation.add(rule2)
-        interpretation.idsOfRulesGivingConclusion(concA) shouldBe setOf(rule0.id, rule1.id)
-        interpretation.idsOfRulesGivingConclusion(concB) shouldBe setOf(rule2.id)
+        ViewableInterpretation(interpretation).interpretation.idsOfRulesGivingConclusion(concA) shouldBe setOf(
+            rule0.id,
+            rule1.id
+        )
+        ViewableInterpretation(interpretation).interpretation.idsOfRulesGivingConclusion(concB) shouldBe setOf(
+            rule2.id
+        )
     }
 
     @Test
     fun serialisationWithVerifiedText() {
         val verified = "I can verify that is true."
-        view.apply { verifiedText = verified }
+        val view = ViewableInterpretation(interp).apply { verifiedText = verified }
         val restored = serializeDeserialize(view)
         restored.verifiedText shouldBe verified
     }
@@ -110,9 +114,11 @@ class ViewableInterpretationTest {
             Is(1, Attribute(1, "x"), "1"),
         )
         val rule = Rule(0, null, conclusion, conditions)
-        interpretation.apply { add(rule) }
+        interp.apply { add(rule) }
+        val view = ViewableInterpretation(interp)
         val restored = serializeDeserialize(view)
-        restored.interpretation shouldBe interpretation
+        restored.interpretation shouldBe interp
+        restored.latestText() shouldBe conclusion.text
     }
 
     @Test
@@ -123,9 +129,14 @@ class ViewableInterpretationTest {
         )
         val rule = Rule(0, null, conclusion, conditions)
         val ruleSummary = rule.summary()
-        interpretation.apply { add(ruleSummary) }
+        interp.apply { add(ruleSummary) }
+        val view = ViewableInterpretation(interp)
+        withClue("sanity check") {
+            view.textGivenByRules() shouldBe conclusion.text
+        }
         val restored = serializeDeserialize(view)
-        restored.interpretation shouldBe interpretation
+        restored.interpretation shouldBe interp
+        restored.textGivenByRules() shouldBe conclusion.text
     }
 
     @Test
@@ -138,9 +149,32 @@ class ViewableInterpretationTest {
                 Unchanged("I can verify that is true or false.")
             )
         )
+        val view = ViewableInterpretation(interp)
         view.apply { this.diffList = diffList }
         val restored = serializeDeserialize(view)
         restored.diffList shouldBe diffList
+    }
+
+    @Test
+    fun serialisationWithAllFields() {
+        val verified = "I can verify that is true."
+        val diffList = DiffList(
+            listOf(
+                Addition(verified),
+                Removal("I can verify that is false."),
+                Replacement("I can verify that is false.", verified),
+                Unchanged("I can verify that is true or false.")
+            )
+        )
+        val view = ViewableInterpretation(interp)
+        view.apply {
+            this.diffList = diffList
+            this.verifiedText = verified
+        }
+        val restored = serializeDeserialize(view)
+        restored.diffList shouldBe diffList
+        restored.verifiedText shouldBe verified
+        restored.latestText() shouldBe verified
     }
 
     @Test
@@ -153,6 +187,7 @@ class ViewableInterpretationTest {
                 Unchanged("I can verify that is true or false.")
             )
         )
+        val view = ViewableInterpretation(interp)
         view.apply { this.diffList = diffList }
         val restored = serializeDeserialize(view)
         restored.diffList shouldBe diffList
@@ -180,8 +215,9 @@ class ViewableInterpretationTest {
             )
         )
         val rule1 = Rule(1, null, c1, conditions1)
-        interpretation.add(rule0)
-        interpretation.add(rule1)
+        interp.add(rule0)
+        interp.add(rule1)
+        val view = ViewableInterpretation(interp)
         view.conditionsForConclusion(c0) shouldBe listOf("A contains \"text A\"", "B contains \"text B\"")
         view.conditionsForConclusion(c1) shouldBe listOf("C contains \"text C\"", "D contains \"text D\"")
     }
@@ -196,7 +232,8 @@ class ViewableInterpretationTest {
             containsText(Attribute(attributeId++, "b"), "text b"),
         )
         val rule0 = Rule(0, null, conclusion, conditions)
-        interpretation.add(rule0)
+        interp.add(rule0)
+        val view = ViewableInterpretation(interp)
         view.conditionsForConclusion(conclusion) shouldBe listOf(
             "A contains \"text A\"",
             "b contains \"text b\"",
@@ -223,7 +260,8 @@ class ViewableInterpretationTest {
         )
         val rule0 = Rule(0, null, conclusion0, conditions0)
         val rule1 = Rule(1, rule0, conclusion1, conditions1)
-        interpretation.add(rule1)
+        interp.add(rule1)
+        val view = ViewableInterpretation(interp)
         view.conditionsForConclusion(conclusion1) shouldBe listOf(
             "A contains \"text A\"",
             "b contains \"text b\"",
@@ -239,8 +277,9 @@ class ViewableInterpretationTest {
     @Test
     fun resettingTheInterpretationShouldNotChangeTheVerifiedText() {
         val verifiedText = "I can verify that is true."
+        val view = ViewableInterpretation(interp)
         view.verifiedText = verifiedText
-        interpretation.reset()
+        interp.reset()
         view.verifiedText shouldBe verifiedText
     }
 
@@ -254,8 +293,9 @@ class ViewableInterpretationTest {
                 Unchanged("I can verify that is true or false.")
             )
         )
+        val view = ViewableInterpretation(interp)
         view.diffList = diffList
-        interpretation.reset()
+        interp.reset()
         view.diffList shouldBe diffList
     }
 
@@ -267,10 +307,10 @@ class ViewableInterpretationTest {
             Is(1, Attribute(1, "x"), "1"),
         )
         val rule0 = Rule(10, null, conclusion, conditions)
-        with(Interpretation(caseId)) {
-            add(rule0)
-            latestText() shouldBe verifiedText
-        }
+        val interp = Interpretation(caseId)
+        interp.add(rule0)
+        val updatedView = ViewableInterpretation(interp, verifiedText = verifiedText)
+        updatedView.latestText() shouldBe verifiedText
     }
 
     @Test
@@ -280,10 +320,31 @@ class ViewableInterpretationTest {
             Is(1, Attribute(1, "x"), "1"),
         )
         val rule0 = Rule(10, null, conclusion, conditions)
-        with(Interpretation(caseId)) {
-            add(rule0)
-            latestText() shouldBe conclusion.text
-        }
+        val interp = Interpretation(caseId)
+        interp.add(rule0)
+        val updatedView = ViewableInterpretation(interp)
+        updatedView.latestText() shouldBe conclusion.text
+    }
+
+    @Test
+    fun serializedWithDiffList() {
+        val diffList = DiffList(listOf(Addition("Coffee is very good")))
+        val view = ViewableInterpretation(interp)
+        view.diffList = diffList
+
+        val sd = serializeDeserialize(view)
+        sd shouldBe view
+        sd.diffList shouldBe diffList
+    }
+
+    @Test
+    fun serializedWithVerifiedText() {
+        val text = "Coffee is very good"
+        val view = ViewableInterpretation(interp)
+        view.verifiedText = text
+        val sd = serializeDeserialize(view)
+        sd shouldBe view
+        sd.verifiedText shouldBe text
     }
 
     private fun containsText(attribute: Attribute, match: String): ContainsText {
@@ -298,5 +359,4 @@ class ViewableInterpretationTest {
         val serialized = format.encodeToString(viewableInterpretation)
         return format.decodeFromString(serialized)
     }
-
 }
