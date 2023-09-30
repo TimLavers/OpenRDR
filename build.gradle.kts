@@ -1,8 +1,7 @@
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
-val kotlinVersion = "1.9.0"
-val kotlinWrappersVersion = "1.0.0-pre.606"
+val kotlinWrappersVersion = "1.0.0-pre.628"
 val kotlinxCoroutinesTestVersion = "1.7.3"
 val kotlinxDateTimeVersion = "0.4.0"
 val ktor_version = "2.3.2"

@@ -6,6 +6,7 @@ import mui.icons.material.ExpandLess
 import mui.icons.material.ExpandMore
 import mui.lab.TreeItem
 import mui.lab.TreeView
+import mui.lab.TreeViewPropsBase
 import mui.material.Stack
 import mui.material.StackDirection.Companion.row
 import mui.material.SvgIconSize.Companion.small
@@ -26,6 +27,11 @@ val ConclusionsView = FC<ConclusionsViewHandler> { handler ->
     val interpretation = handler.interpretation
 
     TreeView {
+
+        //workaround for a known bug in mui wrappers
+        @Suppress("UNCHECKED_CAST_TO_EXTERNAL_INTERFACE")
+        this as TreeViewPropsBase
+
         interpretation.conclusions().forEach { conclusion ->
             TreeItem {
                 nodeId = conclusion.text
