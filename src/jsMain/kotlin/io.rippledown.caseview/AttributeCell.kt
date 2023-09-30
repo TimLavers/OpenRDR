@@ -27,17 +27,18 @@ val AttributeCell = FC<AttributeCellHandler> { handler ->
         }
         draggable = true
         onDragStart = { event ->
+            event.preventDefault()
             debug("Drag started")
             event.dataTransfer.setData("text", "${handler.attribute.id}")
             debug("Drag data set: ${handler.attribute.id}")
         }
         onDragOver = { event: DragEvent<HTMLTableCellElement> ->
-            debug("Drag over")
             event.preventDefault()
+            debug("Drag over")
         }
         onDrop = { event: DragEvent<HTMLTableCellElement> ->
-            debug("Drop")
             event.preventDefault()
+            debug("Drop")
             val targetId = handler.attribute.id
             val movedId = event.dataTransfer.getData("text").toInt()
             handler.scope.launch {
