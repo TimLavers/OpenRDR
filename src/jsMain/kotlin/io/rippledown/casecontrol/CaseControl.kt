@@ -61,7 +61,7 @@ val CaseControl = FC<CaseControlHandler> { handler ->
             Grid {
                 item = true
                 xs = 10
-                key = currentCase!!.id.toString()
+                key = caseInspectionKey(currentCase!!)
                 CaseInspectionMemo {
                     scope = handler.scope
                     api = handler.api
@@ -78,9 +78,15 @@ val CaseControl = FC<CaseControlHandler> { handler ->
     }
 }
 
+//Include the attribute list in the key so that if they are reordered the case will be re-rendered
+fun caseInspectionKey(case: ViewableCase) = "${case.id} ${case.attributes().hashCode()}"
+
+private fun sameCaseId(viewableCase1: ViewableCase, viewableCase2: ViewableCase) =
+    viewableCase1.id!! == viewableCase2.id
+
 val CaseInspectionMemo = memo(
     type = CaseInspection,
     propsAreEqual = { oldProps, newProps ->
-        oldProps.case.id == newProps.case.id
+        sameCaseId(oldProps.case, newProps.case)
     }
 )
