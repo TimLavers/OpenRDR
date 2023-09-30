@@ -1,6 +1,7 @@
 package io.rippledown.caseview
 
 import Handler
+import debug
 import io.rippledown.model.Attribute
 import kotlinx.coroutines.launch
 import mui.material.TableCell
@@ -26,12 +27,16 @@ val AttributeCell = FC<AttributeCellHandler> { handler ->
         }
         draggable = true
         onDragStart = { event ->
+            debug("Drag started")
             event.dataTransfer.setData("text", "${handler.attribute.id}")
+            debug("Drag data set: ${handler.attribute.id}")
         }
         onDragOver = { event: DragEvent<HTMLTableCellElement> ->
+            debug("Drag over")
             event.preventDefault()
         }
         onDrop = { event: DragEvent<HTMLTableCellElement> ->
+            debug("Drop")
             event.preventDefault()
             val targetId = handler.attribute.id
             val movedId = event.dataTransfer.getData("text").toInt()
