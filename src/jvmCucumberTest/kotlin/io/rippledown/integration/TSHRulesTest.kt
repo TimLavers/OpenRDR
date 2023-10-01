@@ -97,7 +97,7 @@ internal class TSHRulesTest : TSHTest() {
     private fun greaterThanOrEqualTo(attribute: Attribute, d: Double) = TabularCondition(null, attribute, GreaterThanOrEquals(d), Current)
     private fun lessThanOrEqualTo(attribute: Attribute, d: Double) = TabularCondition(null, attribute, LessThanOrEquals(d), Current)
     private fun slightlyLow(attribute: Attribute, cutoff: Int) =
-        TabularCondition(null, attribute, AtMostPercentageLow(cutoff), Current)
+        TabularCondition(null, attribute, LowByAtMostSomePercentage(cutoff), Current)
 
     private fun buildRules() {
         val tsh = attributeFactory.create("TSH")

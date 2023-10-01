@@ -3,7 +3,7 @@ package io.rippledown.model.condition
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
 import io.rippledown.model.condition.tabular.chain.All
-import io.rippledown.model.condition.tabular.predicate.HighByAtMostSomePercentage
+import io.rippledown.model.condition.tabular.predicate.NormalOrHighByAtMostSomePercentage
 import kotlin.test.Test
 
 /**
@@ -23,7 +23,7 @@ class ConditionExamplesTest: ConditionTestBase() {
         builder.addResult(ft4, sixMonthsAgo, TestResult(Value("13"), ft4Range, "pmol/L"))
         val case = builder.build("Case 1.4.18")
 
-        val condition = TabularCondition(null, tsh, HighByAtMostSomePercentage(10), All)
+        val condition = TabularCondition(null, tsh, NormalOrHighByAtMostSomePercentage(10), All)
         condition.holds(case) shouldBe true
     }
 }

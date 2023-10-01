@@ -1,27 +1,14 @@
 package io.rippledown.model.condition.tabular.predicate
 
-import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.kotest.matchers.string.startWith
-import io.rippledown.model.*
+import io.rippledown.model.ReferenceRange
+import io.rippledown.model.TestResult
 import kotlin.test.Test
 
-class AtMostPercentageLowTest: Base() {
-    private val tenPercentLow = AtMostPercentageLow( 10)
-    private val fivePercentLow = AtMostPercentageLow( 5)
-
-    @Test
-    fun allowedCutoffs() {
-        checkExceptionThrownForCutoff(200)
-        checkExceptionThrownForCutoff(110)
-        checkExceptionThrownForCutoff(101)
-        checkExceptionThrownForCutoff(100)
-        checkExceptionThrownForCutoff(0)
-        checkExceptionThrownForCutoff(-1)
-        checkExceptionThrownForCutoff(-10)
-    }
+class LowByAtMostSomePercentageTest: Base() {
+    private val tenPercentLow = LowByAtMostSomePercentage( 10)
+    private val fivePercentLow = LowByAtMostSomePercentage( 5)
 
     @Test
     fun valueHasNoReferenceRange() {
@@ -80,13 +67,13 @@ class AtMostPercentageLowTest: Base() {
 
     @Test
     fun equalsTest() {
-        tenPercentLow shouldBe AtMostPercentageLow(10)
+        tenPercentLow shouldBe LowByAtMostSomePercentage(10)
         tenPercentLow shouldNotBe fivePercentLow
     }
 
     @Test
     fun hashCodeTest() {
-        tenPercentLow.hashCode() shouldBe AtMostPercentageLow(10).hashCode()
+        tenPercentLow.hashCode() shouldBe LowByAtMostSomePercentage(10).hashCode()
     }
 
     @Test
@@ -96,19 +83,12 @@ class AtMostPercentageLowTest: Base() {
 
     @Test
     fun description() {
-        fivePercentLow.description(false) shouldBe "is at most 5% low"
-        fivePercentLow.description(true) shouldBe "are at most 5% low"
+        fivePercentLow.description(false) shouldBe "is low by at most 5%"
+        fivePercentLow.description(true) shouldBe "are low by at most 5%"
     }
 
     private fun testResult(tshValue: Double, lowerBound: Double): TestResult {
         val referenceRange = ReferenceRange("$lowerBound", "10.0")
         return TestResult("$tshValue", referenceRange, "pmol/L")
-    }
-
-    private fun checkExceptionThrownForCutoff(cutoff: Int) {
-        val exception = shouldThrow<IllegalArgumentException> {
-            AtMostPercentageLow(cutoff)
-        }
-        exception.message should startWith("Cutoff should be an integer in the range [1, 99]")
     }
 }

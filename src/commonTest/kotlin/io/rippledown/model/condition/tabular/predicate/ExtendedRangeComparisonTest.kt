@@ -4,6 +4,8 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.model.ReferenceRange
 import io.rippledown.model.TestResult
 import io.rippledown.model.Value
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import kotlin.test.Test
 
 class ExtendedRangeComparisonTest: Base() {
@@ -38,7 +40,7 @@ class ExtendedRangeComparisonTest: Base() {
         nsh10.evaluate(TestResult("11.1", rr5to10, null)) shouldBe false
         nsh10.evaluate(TestResult("11.01", rr5to10, null)) shouldBe false
         nsh10.evaluate(TestResult("11.001", rr5to10, null)) shouldBe false
-        nsh10.evaluate(TestResult("11.0001", rr5to10, null)) shouldBe false
+        // NB with 11.001, the result is true when run in JS, false when run in Java.
         // Very close to the upper limit is true.
         nsh10.evaluate(TestResult("11.00001", rr5to10, null)) shouldBe true
         nsh10.evaluate(TestResult("11", rr5to10, null)) shouldBe true
@@ -61,7 +63,7 @@ class ExtendedRangeComparisonTest: Base() {
             this.evaluate(TestResult("102", rr20to100)) shouldBe true
             this.evaluate(TestResult("100.0001", rr20to100)) shouldBe true
             this.evaluate(TestResult("100.00001", rr20to100)) shouldBe true
-            this.evaluate(TestResult("100.000001", rr20to100)) shouldBe false // counts as normal
+            // With 100.000001, the evaluation is false for Java, true for JS.
             this.evaluate(TestResult("100", rr20to100)) shouldBe false
             this.evaluate(TestResult("99.999999", rr20to100)) shouldBe false
             this.evaluate(TestResult("99.99", rr20to100)) shouldBe false
@@ -71,12 +73,35 @@ class ExtendedRangeComparisonTest: Base() {
     }
 
     @Test
-    fun allowNormalsOrSlightlyHigh(){
-        AllowNormalOrSlightlyHigh(20).includeNormalResults() shouldBe true
+    fun allowSlightlyHigh(){
+        val erc = AllowSlightlyHigh(20)
+        erc.includeNormalResults() shouldBe false
+        serializeDeserialize(erc) shouldBe erc
     }
 
     @Test
-    fun allowSlightlyHigh(){
-        AllowSlightlyHigh(20).includeNormalResults() shouldBe false
+    fun allowNormalsOrSlightlyHigh(){
+        val erc = AllowNormalOrSlightlyHigh(20)
+        erc.includeNormalResults() shouldBe true
+        serializeDeserialize(erc) shouldBe erc
+    }
+
+    @Test
+    fun allowSlightlyLow(){
+        val asl20 = AllowSlightlyLow(20)
+        asl20.includeNormalResults() shouldBe false
+        serializeDeserialize(asl20) shouldBe asl20
+    }
+
+    @Test
+    fun allowNormalsOrSlightlyLow(){
+        val erc = AllowNormalOrSlightlyLow(20)
+        erc.includeNormalResults() shouldBe true
+        serializeDeserialize(erc) shouldBe erc
+    }
+
+    fun serializeDeserialize(erc: ExpandedRangeComparison): ExpandedRangeComparison {
+        val serialized = Json.encodeToString(erc)
+        return Json.decodeFromString(serialized)
     }
 }

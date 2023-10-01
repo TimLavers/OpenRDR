@@ -30,17 +30,27 @@ data object High: TestResultPredicate {
 sealed class ExtendedRangeFunction(private val rangeComparison: ExpandedRangeComparison): TestResultPredicate {
     override fun evaluate(result: TestResult) = rangeComparison.evaluate(result)
 }
-data class AtMostPercentageLow(val allowablePercentageBelowLowRangeCutoff: Int): ExtendedRangeFunction(AllowSlightlyLow(allowablePercentageBelowLowRangeCutoff)) {
-    override fun description(plural: Boolean) = "${isOrAre(plural) } at most $allowablePercentageBelowLowRangeCutoff% low"
+
+@Serializable
+data class LowByAtMostSomePercentage(val allowablePercentageBelowLowRangeCutoff: Int): ExtendedRangeFunction(AllowSlightlyLow(allowablePercentageBelowLowRangeCutoff)) {
+    override fun description(plural: Boolean) = "${isOrAre(plural) } low by at most $allowablePercentageBelowLowRangeCutoff%"
 }
+
+@Serializable
+data class NormalOrLowByAtMostSomePercentage(val allowablePercentageBelowLowRangeCutoff: Int): ExtendedRangeFunction(AllowNormalOrSlightlyLow(allowablePercentageBelowLowRangeCutoff)) {
+    override fun description(plural: Boolean) = "${isOrAre(plural) } normal or low by at most $allowablePercentageBelowLowRangeCutoff%"
+}
+
 @Serializable
 data class HighByAtMostSomePercentage(val allowablePercentageAboveHighRangeCutoff: Int): ExtendedRangeFunction(AllowSlightlyHigh(allowablePercentageAboveHighRangeCutoff)) {
     override fun description(plural: Boolean) = "${isOrAre(plural)} high by at most $allowablePercentageAboveHighRangeCutoff%"
 }
+
 @Serializable
 data class NormalOrHighByAtMostSomePercentage(val allowablePercentageAboveHighRangeCutoff: Int): ExtendedRangeFunction(AllowNormalOrSlightlyHigh(allowablePercentageAboveHighRangeCutoff)) {
     override fun description(plural: Boolean) = "${isOrAre(plural)} normal or high by at most $allowablePercentageAboveHighRangeCutoff%"
 }
+
 @Serializable
 sealed class ExpandedRangeComparison(private val lowerCutoffExpansionPercentage: Int, private val upperCutoffExpansionPercentage: Int) {
     private val upperCutoffExpansion: Double
@@ -86,28 +96,19 @@ sealed class ExpandedRangeComparison(private val lowerCutoffExpansionPercentage:
 
     private fun veryClose(x: Float, y: Double) = abs(x - y) < 0.0001
 }
-class AllowNormalAndSlightlyHigh(allowedPercentageAbove: Int): ExpandedRangeComparison(0, allowedPercentageAbove) {
-}
-class AllowSlightlyLow(allowedPercentageBelow: Int): ExpandedRangeComparison(allowedPercentageBelow, 0) {
+
+@Serializable
+data class AllowSlightlyLow(val allowedPercentageBelow: Int): ExpandedRangeComparison(allowedPercentageBelow, 0) {
     override fun includeNormalResults() = false
 }
+
 @Serializable
-class AllowSlightlyHigh : ExpandedRangeComparison {
-    // This needs to be a val for serialization to work.
-    private val allowedPercentageAbove: Int
+data class AllowNormalOrSlightlyLow(val allowedPercentageBelow: Int): ExpandedRangeComparison(allowedPercentageBelow, 0)
 
-    constructor(allowedPercentageAbove: Int) : super(0, allowedPercentageAbove) {
-        this.allowedPercentageAbove = allowedPercentageAbove
-    }
-
+@Serializable
+data class AllowSlightlyHigh(val allowedPercentageAbove: Int): ExpandedRangeComparison(0, allowedPercentageAbove) {
     override fun includeNormalResults() = false
 }
-@Serializable
-class AllowNormalOrSlightlyHigh : ExpandedRangeComparison {
-    // This needs to be a val for serialization to work.
-    private val allowedPercentageAbove: Int
 
-    constructor(allowedPercentageAbove: Int) : super(0, allowedPercentageAbove) {
-        this.allowedPercentageAbove = allowedPercentageAbove
-    }
-}
+@Serializable
+data class AllowNormalOrSlightlyHigh(val allowedPercentageAbove: Int): ExpandedRangeComparison(0, allowedPercentageAbove)
