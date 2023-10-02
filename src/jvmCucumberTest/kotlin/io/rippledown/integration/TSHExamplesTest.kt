@@ -182,7 +182,6 @@ internal class TSHExamplesTest : TSHTest() {
         checkFreeT4("16")
         checkFreeT3("5.5")
         checkNotes( "Annual check.")
-
     }
 
     private fun checkAgeSexTestsLocation(age: Int, sex: String, tests: String = "TFTs", location: String = "General Practice.") {

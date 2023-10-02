@@ -18,6 +18,13 @@ data object IsBlank: TestResultPredicate {
 }
 
 @Serializable
+data object IsNumeric: TestResultPredicate {
+    override fun evaluate(result: TestResult) = result.value.real != null
+
+    override fun description(plural: Boolean) = if (plural) "are numeric" else "is numeric"
+}
+
+@Serializable
 data class Contains(val toFind: String): TestResultPredicate {
     override fun evaluate(result: TestResult) = result.value.text.contains(toFind)
 

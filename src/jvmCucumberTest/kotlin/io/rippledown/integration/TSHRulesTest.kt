@@ -14,6 +14,7 @@ internal class TSHRulesTest : TSHTest() {
 
     @Test
     fun checkInterpretations() {
+        stop()
         selectCaseAndCheckName("1.4.1")
         checkInterpretation("Normal T4 and TSH are consistent with a euthyroid state.")
 
@@ -146,13 +147,14 @@ internal class TSHRulesTest : TSHTest() {
         val report8b = "The increased FT3 and suppressed TSH (with a normal FT4) are consistent with T3 toxicosis. " +
                 "Suggest measure TSH-receptor antibodies (TRAb)."
         val report9 = "The severely increased TSH with a very low FT4 is consistent with primary hypothyroidism. Suggest measure TPO antibodies."
-        val report10 = "Suggest repeat TFT measurement at least 4–6 weeks after commencement of T4 replacement. "
-        val report11 = "The normal TSH and FT4 are consistent with adequate thyroid hormone replacement."
-        val report12 = "Increased TSH suggests inadequate thyroid hormone replacement if the dose has not been changed for at least 6 weeks and patient \n" +
+        val report9b = "Suggest repeat TFT measurement at least 4–6 weeks after commencement of T4 replacement. "
+        val report10 = "The normal TSH and FT4 are consistent with adequate thyroid hormone replacement."
+        val report11 = "Increased TSH suggests inadequate thyroid hormone replacement if the dose has not been changed for at least 6 weeks and patient \n" +
                 "has been taking the medication regularly. \n" +
                 "Suggest review dose and repeat TFTs in 6 weeks."
-        val report13 = "Suppressed TSH is consistent with excessive thyroid hormone replacement."
-        val report14 = "Previous history of thyroid cancer noted. Low TSH may be appropriate depending on treatment targets for this patient."
+        val report12 = "Suppressed TSH is consistent with excessive thyroid hormone replacement."
+        val report13 = "Previous history of thyroid cancer noted. Low TSH may be appropriate depending on treatment targets for this patient."
+        val report14 = "Borderline TSH persists. Suggest repeat in one year with thyroid autoantibodies (TPO antibodies)."
 
         addCommentForCase("1.4.2", report1b, tshNormal)
         replaceCommentForCase("1.4.1", report1b, report1, freeT4Normal)
@@ -167,11 +169,12 @@ internal class TSHRulesTest : TSHTest() {
         addCommentForCase("1.4.10", report8, tshLow, freeT4Normal, tiredness) // tiredness needed to exclude 1.4.8
         addCommentForCase("1.4.11", report8b, ft3High, tshLow, freeT4Normal)
         replaceCommentForCase("1.4.12", report3, report9, tshVeryHigh, ft4VeryLow)
-        replaceCommentForCase("1.4.13", report3, report10, thyroxineReplacement1Week)
-        replaceCommentForCase("1.4.14", report1, report11, t4Replacement)
-        replaceCommentForCase("1.4.15", report3b, report12, t4Replacement)
-        addCommentForCase("1.4.16", report13, tshVeryLow, t4Replacement)
-        addCommentForCase("1.4.17", report14, tshLow, onThyroxine, historyThyroidCancer)
+        replaceCommentForCase("1.4.13", report3, report9b, thyroxineReplacement1Week)
+        replaceCommentForCase("1.4.14", report1, report10, t4Replacement)
+        replaceCommentForCase("1.4.15", report3b, report11, t4Replacement)
+        addCommentForCase("1.4.16", report12, tshVeryLow, t4Replacement)
+        addCommentForCase("1.4.17", report13, tshLow, onThyroxine, historyThyroidCancer)
+        replaceCommentForCase("1.4.18", report1, report14, tshLow, onThyroxine, historyThyroidCancer)
 
     }
 

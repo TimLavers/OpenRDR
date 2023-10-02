@@ -104,6 +104,30 @@ whereas `(TSH, normal, none)` is written as `no TSH is normal`.
 The predicate `current` is left unexpressed,
 so `(TSH, normal, current)` is written as `TSH is normal`.
 
+## Restriction clauses
+Some assertions concern only certain episodes in a case, for example
+those where the patient is fasting, or those within the last few years.
+A "restriction clause" concept could be introduced to allow the expression
+of such conditions. Such a restriction clause would be a predicate
+`Episode => Boolean`
+that would be used to filter out those Episodes in a case 
+that did not satisfy the predicate.  In the condition 
+`all glucose are normal, where collection_type is "fasting"`
+the restriction clause would represent the part after the comma. 
+The evaluation of a condition with a restriction clause would
+be just like the evaluation of a regular condition, but with the 
+preliminary step of producing a "cut-down" version of the input
+case.
+
+
+In the TSH case above, the condition
+
+`all TSH are low, where FT4 > 16.0`
+
+would be evaluated as follows:
+
+`Case ==[FT > 16.0]==> Case with just first 2 episodes ==[TSH]==> ( 0.03,0.09) ==[low]==> (true, true) ==[all]==> true`
+
 ## Conditions that cannot be expressed in this format
 It's possible to think of assertions that might involve more than one
 attribute. For example, `mass/(height * height) > 28`.
@@ -115,9 +139,36 @@ could then be used in simple conditions.
 Assertions about the time between episodes in a case cannot be easily
 expressed either. One of the rules for the TSH KB adds a comment for
 cases where a pattern of nearly normal results occurs over 6 months.
-Some thought is needed here....
+Some thought is needed here.
 
-## Restriction clauses
-Some assertions concern only certain episodes in a case, for example
-those where the patient is fasting, or those within the last few years.
-A "restriction clause" could be used to allow thi
+### Cases that don't involve episodes
+Certain knowledge domains have cases that don't require the concept of an episode.
+These include:
+
+#### Text analysis
+The case consists of a single text blob that needs to be interpreted. 
+One could perhaps use machine learning to extract features (i.e. attributes), 
+and then RD to build rules on these features. 
+But it may be appropriate to use RD 
+also for the feature extraction, i.e. on the raw data
+
+#### Sets of related test results 
+The case consists of sets of related attributes, e.g. IGE values 
+testing for various type of allergies. 
+The conditions need to consider these attributes as sets.
+
+#### Multi-valued attributes
+The case consists of multi-valued attributes. A good example is microbiology, 
+where there is a hierarchy of attributes. For example, 
+there may be three skin samples taken. For each sample, 
+there may be several organisms tested for (e-coli, streptococcus), 
+and for each organism there may be three antibiotics used, 
+for example, penicillin. Each antibiotic has several properties 
+(i.e. attributes) such as name, sensitivity, method of testing etc.). 
+So each case would have multiple sensitivity values, 
+even for the same antibiotic as it may be used many times in the case.
+
+
+
+None of these 3 domains need the concept of “episode”.
+

@@ -29,3 +29,12 @@ data object All: ChainPredicate {
 
     override fun plurality() = true
 }
+
+@Serializable
+data class AtLeast(val n: Int): ChainPredicate {
+    override fun matches(pattern: List<Boolean>) = pattern.filter { it }.size >= n
+
+    override fun description() = "at least $n"
+
+    override fun plurality() = n > 1
+}
