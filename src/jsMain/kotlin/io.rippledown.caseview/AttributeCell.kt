@@ -34,7 +34,7 @@ val AttributeCell = FC<AttributeCellHandler> { handler ->
         }
         onDragOver = { event: DragEvent<HTMLTableCellElement> ->
             event.preventDefault()
-            debug("Drag over")
+            debug("Drag over ${handler.attribute.name}")
         }
         onDrop = { event: DragEvent<HTMLTableCellElement> ->
             event.preventDefault()
