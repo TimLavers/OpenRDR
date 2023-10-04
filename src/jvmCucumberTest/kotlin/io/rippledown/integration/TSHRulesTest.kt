@@ -5,6 +5,8 @@ import io.rippledown.integration.restclient.RESTClient
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.*
 import io.rippledown.model.condition.TabularCondition
+import io.rippledown.model.condition.tabular.chain.All
+import io.rippledown.model.condition.tabular.chain.AtLeast
 import io.rippledown.model.condition.tabular.chain.Current
 import io.rippledown.model.condition.tabular.predicate.*
 import kotlin.test.Test
@@ -14,7 +16,6 @@ internal class TSHRulesTest : TSHTest() {
 
     @Test
     fun checkInterpretations() {
-        stop()
         selectCaseAndCheckName("1.4.1")
         checkInterpretation("Normal T4 and TSH are consistent with a euthyroid state.")
 
@@ -71,6 +72,19 @@ internal class TSHRulesTest : TSHTest() {
         selectCaseAndCheckName("1.4.17")
         checkInterpretation("Previous history of thyroid cancer noted. Low TSH may be appropriate depending on treatment targets for this patient.")
 
+        selectCaseAndCheckName("1.4.18")
+        checkInterpretation("Borderline TSH persists. Suggest repeat in one year with thyroid autoantibodies (TPO antibodies).")
+
+        selectCaseAndCheckName("1.4.19")
+        checkInterpretation("The suppressed TSH and high-normal FT4 may suggest hyperthyroidism. FT3 and TRAb may be useful. However, low " +
+                "TSH may be seen in pregnancy which should be excluded. These results are within reference intervals for first trimester. If pregnant, " +
+                "repeat TFTs in 6 weeks.")
+
+        selectCaseAndCheckName("1.4.20")
+        checkInterpretation("Clinical conditions associated with a suppressed TSH include non-toxic goitre, subclinical hyperthyroidism and glucocorticoid " +
+                "therapy. Suggest repeat TFTs in six weeks’ time. Other causes of this pattern include: Excessive T4 therapy for hypothyroidism, treated " +
+                "primary hyperthyroidism. Acute psychiatric illness may raise FT4 and/or lower TSH.")
+
     }
 
     private fun checkInterpretation(comment: String) {
@@ -95,6 +109,7 @@ internal class TSHRulesTest : TSHTest() {
     private fun isHigh(attribute: Attribute) = TabularCondition(null, attribute, High, Current)
     private fun isCondition(attribute: Attribute, text: String) = TabularCondition(null, attribute, Is(text), Current)
     private fun containsText(attribute: Attribute, text: String) = TabularCondition(null, attribute, Contains(text), Current)
+    private fun doesNotContainText(attribute: Attribute, text: String) = TabularCondition(null, attribute, DoesNotContain(text), Current)
     private fun greaterThanOrEqualTo(attribute: Attribute, d: Double) = TabularCondition(null, attribute, GreaterThanOrEquals(d), Current)
     private fun lessThanOrEqualTo(attribute: Attribute, d: Double) = TabularCondition(null, attribute, LessThanOrEquals(d), Current)
     private fun slightlyLow(attribute: Attribute, cutoff: Int) =
@@ -102,30 +117,42 @@ internal class TSHRulesTest : TSHTest() {
 
     private fun buildRules() {
         val tsh = attributeFactory.create("TSH")
-        val freeT4 = attributeFactory.create("Free T4")
+        val ft4 = attributeFactory.create("Free T4")
         val ft3 = attributeFactory.create("Free T3")
         val tpo = attributeFactory.create("TPO Antibodies")
         val clinicalNotes = attributeFactory.create("Clinical Notes")
+        val sex = attributeFactory.create("Sex")
+        val age = attributeFactory.create("Age")
 
         val tshLow = conditionFactory.getOrCreate(isLow(tsh))
         val tshNormal = conditionFactory.getOrCreate(isNormal(tsh))
         val tshModeratelyIncreased = conditionFactory.getOrCreate(greaterThanOrEqualTo(tsh, 10.0))
         val tshHigh = conditionFactory.getOrCreate(isHigh(tsh))
         val tshVeryHigh = conditionFactory.getOrCreate(greaterThanOrEqualTo( tsh, 40.0)) // What should this be?
-        val ft4VeryLow = conditionFactory.getOrCreate(isCondition(freeT4, "<5"))
-        val t4SlightlyLow = conditionFactory.getOrCreate(slightlyLow(freeT4, 20))
+        val ft4VeryLow = conditionFactory.getOrCreate(isCondition(ft4, "<5"))
+        val ft4SlightlyLow = conditionFactory.getOrCreate(slightlyLow(ft4, 20))
         val ft3High = conditionFactory.getOrCreate(isHigh(ft3))
-        val freeT4Normal = conditionFactory.getOrCreate(isNormal( freeT4))
+        val fT4Normal = conditionFactory.getOrCreate(isNormal( ft4))
         val tpoHigh = conditionFactory.getOrCreate(isHigh(tpo))
-        val elderly = conditionFactory.getOrCreate(greaterThanOrEqualTo(attributeFactory.create("Age"), 70.0))
+        val elderly = conditionFactory.getOrCreate(greaterThanOrEqualTo(age, 70.0))
         val notesShowsTrimester1 = conditionFactory.getOrCreate(containsText(clinicalNotes, "12/40 weeks"))
+        val notesDoesNotMentionPregnancy = conditionFactory.getOrCreate(doesNotContainText(clinicalNotes, "/40 weeks"))
         val notesShowsTryingForBaby = conditionFactory.getOrCreate(containsText( clinicalNotes, "Trying for a baby"))
         val tiredness = conditionFactory.getOrCreate(containsText(clinicalNotes, "very tired"))
         val thyroxineReplacement1Week = conditionFactory.getOrCreate(containsText(clinicalNotes, "started T4 replacement 1 week ago"))
         val t4Replacement = conditionFactory.getOrCreate(containsText(clinicalNotes, "On T4 replacement"))
         val tshVeryLow = conditionFactory.getOrCreate(lessThanOrEqualTo(tsh, 0.1)) // What should this be?
+        val tshBelowDetection = conditionFactory.getOrCreate(isCondition(tsh, "<0.01"))
         val historyThyroidCancer = conditionFactory.getOrCreate(containsText( clinicalNotes, "thyroid cancer"))
         val onThyroxine = conditionFactory.getOrCreate(containsText(clinicalNotes, "On thyroxine"))
+        val borderlineHighTSH = conditionFactory.getOrCreate((TabularCondition(tsh, NormalOrHighByAtMostSomePercentage(10), All)))
+        val atLeastTwoTSH = conditionFactory.getOrCreate(TabularCondition(tsh, IsNumeric, AtLeast(2)))
+        val female = conditionFactory.getOrCreate(isCondition(sex, "F"))
+        val olderThan14 = conditionFactory.getOrCreate(greaterThanOrEqualTo(age, 14.0))
+        val youngerThan44 = conditionFactory.getOrCreate(lessThanOrEqualTo(age, 44.0))
+        val olderThan44 = conditionFactory.getOrCreate(greaterThanOrEqualTo(age, 45.0))
+        val borderlineHighFT4 = conditionFactory.getOrCreate((TabularCondition(ft4, NormalOrHighByAtMostSomePercentage(10), All)))
+        val borderlineHighFT3 = conditionFactory.getOrCreate((TabularCondition(ft3, NormalOrHighByAtMostSomePercentage(10), All)))
 
         val report1 = "Normal T4 and TSH are consistent with a euthyroid state."
         val report1b = "Normal TSH is consistent with a euthyroid state."
@@ -155,26 +182,38 @@ internal class TSHRulesTest : TSHTest() {
         val report12 = "Suppressed TSH is consistent with excessive thyroid hormone replacement."
         val report13 = "Previous history of thyroid cancer noted. Low TSH may be appropriate depending on treatment targets for this patient."
         val report14 = "Borderline TSH persists. Suggest repeat in one year with thyroid autoantibodies (TPO antibodies)."
+        val report15 = "The suppressed TSH and high-normal FT4 may suggest hyperthyroidism. FT3 and TRAb may be useful. However, low " +
+                "TSH may be seen in pregnancy which should be excluded. These results are within reference intervals for first trimester. If pregnant, " +
+                "repeat TFTs in 6 weeks."
+        val report16 = "Clinical conditions associated with a suppressed TSH include non-toxic goitre, subclinical hyperthyroidism and glucocorticoid " +
+                "therapy. Suggest repeat TFTs in six weeks’ time. Other causes of this pattern include: Excessive T4 therapy for hypothyroidism, treated " +
+                "primary hyperthyroidism. Acute psychiatric illness may raise FT4 and/or lower TSH."
 
         addCommentForCase("1.4.2", report1b, tshNormal)
-        replaceCommentForCase("1.4.1", report1b, report1, freeT4Normal)
-        replaceCommentForCase("1.4.3", report1b, report2, t4SlightlyLow)
+        replaceCommentForCase("1.4.1", report1b, report1, fT4Normal)
+        replaceCommentForCase("1.4.3", report1b, report2, ft4SlightlyLow)
         addCommentForCase("1.4.4", report3, tshHigh )
-        replaceCommentForCase("1.4.5", report3, report3b, freeT4Normal)
+        replaceCommentForCase("1.4.5", report3, report3b, fT4Normal)
         replaceCommentForCase("1.4.6", report3b, report4, elderly)
 
         replaceCommentForCase("1.4.7", report3b, report5, tshModeratelyIncreased)
         addCommentForCase("1.4.8", report6, tshLow, notesShowsTrimester1)
         replaceCommentForCase("1.4.9", report3b, report7, tpoHigh, notesShowsTryingForBaby)
-        addCommentForCase("1.4.10", report8, tshLow, freeT4Normal, tiredness) // tiredness needed to exclude 1.4.8
-        addCommentForCase("1.4.11", report8b, ft3High, tshLow, freeT4Normal)
+        addCommentForCase("1.4.10", report8, tshLow, fT4Normal, tiredness) // tiredness needed to exclude 1.4.8
+        addCommentForCase("1.4.11", report8b, ft3High, tshLow, fT4Normal)
         replaceCommentForCase("1.4.12", report3, report9, tshVeryHigh, ft4VeryLow)
         replaceCommentForCase("1.4.13", report3, report9b, thyroxineReplacement1Week)
         replaceCommentForCase("1.4.14", report1, report10, t4Replacement)
         replaceCommentForCase("1.4.15", report3b, report11, t4Replacement)
         addCommentForCase("1.4.16", report12, tshVeryLow, t4Replacement)
         addCommentForCase("1.4.17", report13, tshLow, onThyroxine, historyThyroidCancer)
-        replaceCommentForCase("1.4.18", report1, report14, tshLow, onThyroxine, historyThyroidCancer)
+        replaceCommentForCase("1.4.18", report1, report14, borderlineHighTSH, atLeastTwoTSH)
+
+        // We are assuming that the absence of "/40" means the patient is not pregnant.
+        addCommentForCase("1.4.19", report15, female, olderThan14, youngerThan44, borderlineHighFT4, tshLow, notesDoesNotMentionPregnancy)
+
+        // Not sure if olderThan44 is needed.
+        addCommentForCase("1.4.20", report16, tshBelowDetection, borderlineHighFT3, fT4Normal, olderThan44)
 
     }
 
@@ -184,7 +223,12 @@ internal class TSHRulesTest : TSHTest() {
         val conclusion = conclusionFactory.getOrCreate(comment)
         restClient.startSessionToAddConclusionForCurrentCase(conclusion)
         conditions.forEach {
-            restClient.addConditionForCurrentSession(it)
+            try {
+                restClient.addConditionForCurrentSession(it)
+            } catch (e: Throwable) {
+                println("Could not add condition: $it")
+                throw e
+            }
         }
         restClient.commitCurrentSession()
     }

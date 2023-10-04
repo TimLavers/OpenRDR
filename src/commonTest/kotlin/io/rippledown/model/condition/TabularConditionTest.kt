@@ -18,6 +18,15 @@ class TabularConditionTest: ConditionTestBase() {
     private val tshLow = TabularCondition(123, tsh, Low, Current)
 
     @Test
+    fun secondaryConstructor() {
+        val nullId = TabularCondition(tsh, Low, Current)
+        nullId.id shouldBe null
+        nullId.attribute shouldBe tsh
+        nullId.predicate shouldBe Low
+        nullId.chainPredicate shouldBe Current
+    }
+
+    @Test
     fun id() {
         tshLow.id shouldBe 123
     }

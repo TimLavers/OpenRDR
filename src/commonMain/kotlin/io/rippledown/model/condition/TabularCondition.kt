@@ -17,6 +17,8 @@ data class TabularCondition(override val id: Int? = null,
                        val predicate: TestResultPredicate,
                        val chainPredicate: ChainPredicate): Condition() {
 
+    constructor(attribute: Attribute, predicate: TestResultPredicate, chainPredicate: ChainPredicate): this(null, attribute, predicate, chainPredicate)
+
     override fun holds(case: RDRCase): Boolean {
         val values = case.values(attribute) ?: return false
         return chainPredicate.matches(values.map { predicate.evaluate(it) })
