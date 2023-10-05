@@ -182,6 +182,32 @@ internal class TSHExamplesTest : TSHTest() {
         checkFreeT4("16")
         checkFreeT3("5.5")
         checkNotes( "Annual check.")
+
+        selectCaseAndCheckName("1.4.21")
+        with (caseViewPO.datesShown()) {
+            size shouldBe 2
+            this[0] shouldBe "2023-02-14 11:54"
+            this[1] shouldBe "2023-08-04 09:40"
+        }
+        dataShown.size shouldBe 7
+        dataShown["Age"]!![0] shouldBe "53"
+        dataShown["Age"]!![1] shouldBe "53"
+        dataShown["Sex"]!![0] shouldBe "F"
+        dataShown["Sex"]!![1] shouldBe "F"
+        dataShown["TSH"]!![0] shouldBe "<0.01 mU/L"
+        dataShown["TSH"]!![1] shouldBe "<0.01 mU/L"
+        caseViewPO.referenceRange("TSH") shouldBe "0.50 - 4.0"
+        dataShown["Free T4"]!![0] shouldBe "16 pmol/L"
+        dataShown["Free T4"]!![1] shouldBe "17 pmol/L"
+        caseViewPO.referenceRange("Free T4") shouldBe "10 - 20"
+        dataShown["Free T3"]!![0] shouldBe "5.5 pmol/L"
+        dataShown["Free T3"]!![1] shouldBe "6.1 pmol/L"
+        caseViewPO.referenceRange("Free T3") shouldBe "3.0 - 5.5"
+        dataShown["Tests"]!![0] shouldBe "TFTs"
+        dataShown["Tests"]!![1] shouldBe "TFTs"
+        dataShown["Clinical Notes"]!![0] shouldBe "Annual check."
+        dataShown["Clinical Notes"]!![1] shouldBe "Previous suppressed TSH."
+
     }
 
     private fun checkAgeSexTestsLocation(age: Int, sex: String, tests: String = "TFTs", location: String = "General Practice.") {

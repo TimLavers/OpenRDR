@@ -223,4 +223,43 @@ class TSHCases(attributeFactory: AttributeFactory) {
         age = 53
         clinicalNotes = "Annual check."
     }.build(attributeFactory)
+    val TSH21 = multiEpisodeCase(attributeFactory) {
+        name = "1.4.21"
+        dates {
+            datesCSL = "2023-02-14T11:53:44.475Z, 2023-08-04T09:39:51.942Z"
+        }
+        testValues {
+            attribute = "TSH"
+            units = "mU/L"
+            lowerBound = "0.50"
+            upperBound = "4.0"
+            valuesCSL = "<0.01, <0.01"
+        }
+        testValues {
+            attribute = "Free T4"
+            units = "pmol/L"
+            lowerBound = "10"
+            upperBound = "20"
+            valuesCSL = "16, 17"
+        }
+        testValues {
+            attribute = "Free T3"
+            units = "pmol/L"
+            lowerBound = "3.0"
+            upperBound = "5.5"
+            valuesCSL = "5.5, 6.1"
+        }
+        clinicalNotes {
+            values_separated = "Annual check. _ Previous suppressed TSH."
+        }
+        testValues {
+            attribute = "Age"
+            valuesCSL = "53, 53"
+        }
+        testValues {
+            attribute = "Tests"
+            valuesCSL = "TFTs, TFTs"
+        }
+    }.build()
+
 }
