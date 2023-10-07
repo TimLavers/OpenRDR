@@ -2,6 +2,7 @@ package io.rippledown.model.condition
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
+import io.rippledown.model.condition.series.Increasing
 import io.rippledown.model.condition.tabular.chain.All
 import io.rippledown.model.condition.tabular.chain.AtLeast
 import io.rippledown.model.condition.tabular.predicate.IsNumeric
@@ -14,13 +15,24 @@ import kotlin.test.Test
 class ConditionExamplesTest: ConditionTestBase() {
     private val sixMonthsAgo = daysAgo(180)
     private val ft4Range = ReferenceRange("10.0", "20.0")
+    private val ft3Range = ReferenceRange("3.0", "5.5")
     private val ft4 = Attribute(55, "Free T4")
+    private val ft3 = Attribute(58, "Free T3")
     private val twoEpisodeCase = RDRCaseBuilder().run {
         addResult(tsh, today, TestResult(Value("3.6"), tshRange, "mU/L"))
         addResult(ft4, today, TestResult(Value("12"), ft4Range, "pmol/L"))
         addResult(tsh, sixMonthsAgo, TestResult(Value("4.3"), tshRange, "mU/L"))
         addResult(ft4, sixMonthsAgo, TestResult(Value("13"), ft4Range, "pmol/L"))
         build("Case 1.4.18")
+    }
+    private val case21 = RDRCaseBuilder().run {
+        addResult(tsh, today, TestResult(Value("<0.01"), tshRange, "mU/L"))
+        addResult(ft4, today, TestResult(Value("16"), ft4Range, "pmol/L"))
+        addResult(ft3, today, TestResult(Value("5.5"), ft3Range, "pmol/L"))
+        addResult(tsh, sixMonthsAgo, TestResult(Value("<0.01"), tshRange, "mU/L"))
+        addResult(ft4, sixMonthsAgo, TestResult(Value("17"), ft4Range, "pmol/L"))
+        addResult(ft3, sixMonthsAgo, TestResult(Value("6.1"), ft3Range, "pmol/L"))
+        build("Case 1.4.21")
     }
     private val oneEpisodeCase =         RDRCaseBuilder().run {
         addResult(tsh, today, TestResult(Value("3.6"), tshRange, "mU/L"))
@@ -52,5 +64,16 @@ class ConditionExamplesTest: ConditionTestBase() {
         condition.holds(oneEpisodeCase) shouldBe false
 
         condition.holds(twoEpisodeCase) shouldBe true
+    }
+
+    @Test
+    fun increasing() {
+        val condition = SeriesCondition(null, ft3, Increasing)
+
+        condition.asText() shouldBe "Free T3 increasing"
+
+        condition.holds(case21) shouldBe true
+        condition.holds(oneEpisodeCase) shouldBe false
+        condition.holds(twoEpisodeCase) shouldBe false
     }
 }

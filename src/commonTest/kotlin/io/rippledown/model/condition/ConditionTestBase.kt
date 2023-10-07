@@ -41,13 +41,17 @@ open class ConditionTestBase {
         return builder1.build(notes)
     }
 
-    fun multiEpisodeClinicalNotesCase(vararg notes: String): RDRCase {
+    fun multiEpisodeClinicalNotesCase(vararg notes: String) = multiEpisodeCase(clinicalNotes, *notes)
+
+    fun multiEpisodeTSHCase(vararg values: String) = multiEpisodeCase(tsh, *values)
+
+    private fun multiEpisodeCase(attribute: Attribute, vararg values: String): RDRCase {
         val builder1 = RDRCaseBuilder()
-        notes.withIndex().forEach {
+        values.withIndex().forEach {
             val date = daysAfter(it.index)
-            builder1.addValue(clinicalNotes, date ,it.value)
+            builder1.addValue(attribute, date ,it.value)
         }
-        return builder1.build("Notes Case")
+        return builder1.build("A Case")
     }
 
     fun highTSHCase(): RDRCase {
@@ -212,4 +216,6 @@ open class ConditionTestBase {
         val serialized = Json.encodeToString(condition)
         return Json.decodeFromString(serialized)
     }
+
+    fun serializeDeserialize(condition: SeriesCondition): SeriesCondition = Json.decodeFromString(Json.encodeToString(condition))
 }
