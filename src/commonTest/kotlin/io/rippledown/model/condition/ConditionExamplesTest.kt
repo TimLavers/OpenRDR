@@ -5,7 +5,9 @@ import io.rippledown.model.*
 import io.rippledown.model.condition.series.Increasing
 import io.rippledown.model.condition.tabular.chain.All
 import io.rippledown.model.condition.tabular.chain.AtLeast
+import io.rippledown.model.condition.tabular.chain.No
 import io.rippledown.model.condition.tabular.predicate.IsNumeric
+import io.rippledown.model.condition.tabular.predicate.Low
 import io.rippledown.model.condition.tabular.predicate.NormalOrHighByAtMostSomePercentage
 import kotlin.test.Test
 
@@ -58,6 +60,7 @@ class ConditionExamplesTest: ConditionTestBase() {
     @Test
     fun atLeastTwoNumeric() {
         val condition = TabularCondition(null, tsh, IsNumeric, AtLeast(2))
+        checkConditionCanBeSerialized(condition)
 
         condition.asText() shouldBe "at least 2 ${tsh.name} are numeric"
 
@@ -69,11 +72,22 @@ class ConditionExamplesTest: ConditionTestBase() {
     @Test
     fun increasing() {
         val condition = SeriesCondition(null, ft3, Increasing)
+        checkConditionCanBeSerialized(condition)
 
         condition.asText() shouldBe "Free T3 increasing"
 
         condition.holds(case21) shouldBe true
         condition.holds(oneEpisodeCase) shouldBe false
         condition.holds(twoEpisodeCase) shouldBe false
+    }
+
+    @Test
+    fun noFT3IsLow() {
+        val condition = TabularCondition(null, ft3, Low, No)
+        checkConditionCanBeSerialized(condition)
+
+        condition.asText() shouldBe "no Free T3 is low"
+
+        condition.holds(case21) shouldBe true
     }
 }

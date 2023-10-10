@@ -29,6 +29,15 @@ data object All: ChainPredicate {
 
     override fun plurality() = true
 }
+@Serializable
+data object No: ChainPredicate {
+
+    override fun matches(pattern: List<Boolean>) = if (pattern.isEmpty()) true else !pattern.contains(true)
+
+    override fun description() = "no"
+
+    override fun plurality() = false
+}
 
 @Serializable
 data class AtLeast(val n: Int): ChainPredicate {

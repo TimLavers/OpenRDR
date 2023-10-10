@@ -1,5 +1,6 @@
 package io.rippledown.model.condition
 
+import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
 import io.rippledown.model.condition.tabular.chain.Current
 import io.rippledown.model.condition.tabular.predicate.*
@@ -218,4 +219,9 @@ open class ConditionTestBase {
     }
 
     fun serializeDeserialize(condition: SeriesCondition): SeriesCondition = Json.decodeFromString(Json.encodeToString(condition))
+
+    fun checkConditionCanBeSerialized( condition: Condition) {
+        val writtenAndRead = serializeDeserialize(condition)
+        writtenAndRead shouldBe condition
+    }
 }

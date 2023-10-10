@@ -5,6 +5,7 @@ import io.rippledown.integration.restclient.RESTClient
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.*
 import io.rippledown.model.condition.TabularCondition
+import io.rippledown.model.condition.series.Increasing
 import io.rippledown.model.condition.tabular.chain.All
 import io.rippledown.model.condition.tabular.chain.AtLeast
 import io.rippledown.model.condition.tabular.chain.Current
@@ -85,6 +86,9 @@ internal class TSHRulesTest : TSHTest() {
                 "therapy. Suggest repeat TFTs in six weeks’ time. Other causes of this pattern include: Excessive T4 therapy for hypothyroidism, treated " +
                 "primary hyperthyroidism. Acute psychiatric illness may raise FT4 and/or lower TSH.")
 
+        selectCaseAndCheckName("1.4.21")
+        checkInterpretation("The increased FT3 and suppressed TSH are consistent with T3 toxicosis. Suggest measure TRAb.")
+
     }
 
     private fun checkInterpretation(comment: String) {
@@ -153,6 +157,7 @@ internal class TSHRulesTest : TSHTest() {
         val olderThan44 = conditionFactory.getOrCreate(greaterThanOrEqualTo(age, 45.0))
         val borderlineHighFT4 = conditionFactory.getOrCreate((TabularCondition(ft4, NormalOrHighByAtMostSomePercentage(10), All)))
         val borderlineHighFT3 = conditionFactory.getOrCreate((TabularCondition(ft3, NormalOrHighByAtMostSomePercentage(10), All)))
+        val ft3Increasing = conditionFactory.getOrCreate((SeriesCondition(null, ft3, Increasing)))
 
         val report1 = "Normal T4 and TSH are consistent with a euthyroid state."
         val report1b = "Normal TSH is consistent with a euthyroid state."
@@ -189,6 +194,8 @@ internal class TSHRulesTest : TSHTest() {
                 "therapy. Suggest repeat TFTs in six weeks’ time. Other causes of this pattern include: Excessive T4 therapy for hypothyroidism, treated " +
                 "primary hyperthyroidism. Acute psychiatric illness may raise FT4 and/or lower TSH."
 
+        val report16b = "The increased FT3 and suppressed TSH are consistent with T3 toxicosis. Suggest measure TRAb."
+
         addCommentForCase("1.4.2", report1b, tshNormal)
         replaceCommentForCase("1.4.1", report1b, report1, fT4Normal)
         replaceCommentForCase("1.4.3", report1b, report2, ft4SlightlyLow)
@@ -214,6 +221,8 @@ internal class TSHRulesTest : TSHTest() {
 
         // Not sure if olderThan44 is needed.
         addCommentForCase("1.4.20", report16, tshBelowDetection, borderlineHighFT3, fT4Normal, olderThan44)
+
+        addCommentForCase("1.4.21", report16b, tshBelowDetection, ft3Increasing, ft3High )
 
     }
 
