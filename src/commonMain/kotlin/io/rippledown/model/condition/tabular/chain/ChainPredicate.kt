@@ -47,3 +47,12 @@ data class AtLeast(val n: Int): ChainPredicate {
 
     override fun plurality() = n > 1
 }
+
+@Serializable
+data class AtMost(val n: Int): ChainPredicate {
+    override fun matches(pattern: List<Boolean>) = pattern.filter { it }.size <= n
+
+    override fun description() = "at most $n"
+
+    override fun plurality() = n > 1
+}

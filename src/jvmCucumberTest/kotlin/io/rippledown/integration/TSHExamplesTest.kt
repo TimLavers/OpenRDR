@@ -208,6 +208,34 @@ internal class TSHExamplesTest : TSHTest() {
         dataShown["Clinical Notes"]!![0] shouldBe "Annual check."
         dataShown["Clinical Notes"]!![1] shouldBe "Previous suppressed TSH."
 
+        selectCaseAndCheckName("1.4.22")
+        dataShown.size shouldBe 8
+        checkAgeSexTestsLocation(84, "F", location = "Emergency Department.")
+        checkTSH("<0.01")
+        checkFreeT4("45")
+        checkFreeT3("18")
+        checkNotes( "Severe hypertension, sweating and palpitation.")
+
+        selectCaseAndCheckName("1.4.23")
+        dataShown.size shouldBe 7
+        checkAgeSexTestsLocation(46, "F")
+        checkTSH("<0.01")
+        checkFreeT4("7")
+        checkNotes( "Started carbimazole therapy recently for Graves’ disease.")
+
+        selectCaseAndCheckName("1.4.24")
+        dataShown.size shouldBe 6
+        checkAgeSexTestsLocation(59, "F", location = "Nuclear Medicine.")
+        checkTSH("120")
+        checkNotes( "Thyroid cancer. Pre I-131 Thyrogen therapy.")
+
+        selectCaseAndCheckName("1.4.25")
+        dataShown.size shouldBe 8
+        checkAgeSexTestsLocation(64, "F", tests = "Tg/TgAb", location = "Oncology Clinic.")
+        dataShown["Thyroglobulin"]!![0] shouldBe "31 μg/L"
+        dataShown["Anti-Thyroglobulin"]!![0] shouldBe "<1 kU/L"
+        caseViewPO.referenceRange("Anti-Thyroglobulin") shouldBe "< 4"
+        checkNotes("Thyroid cancer. Post thyroidectomy, monitoring.")
     }
 
     private fun checkAgeSexTestsLocation(age: Int, sex: String, tests: String = "TFTs", location: String = "General Practice.") {

@@ -261,5 +261,47 @@ class TSHCases(attributeFactory: AttributeFactory) {
             valuesCSL = "TFTs, TFTs"
         }
     }.build()
+    val TSH22 = tshCase {
+        name = "1.4.22"
+        tsh = "<0.01"
+        freeT4 = "45"
+        freeT3 = "18"
+        age = 84
+        clinicalNotes = "Severe hypertension, sweating and palpitation."
+        location = "Emergency Department."
+    }.build(attributeFactory)
+    val TSH23 = tshCase {
+        name = "1.4.23"
+        tsh = "<0.01"
+        freeT4 = "7"
+        age = 46
+        clinicalNotes = "Started carbimazole therapy recently for Graves’ disease."
+    }.build(attributeFactory)
+    val TSH24 = tshCase {
+        name = "1.4.24"
+        tsh = "120"
+        age = 59
+        location = "Nuclear Medicine."
+        clinicalNotes = "Thyroid cancer. Pre I-131 Thyrogen therapy."
+    }.build(attributeFactory)
+    val TSH25 = tshCase {
+        name = "1.4.25"
+        tests = "Tg/TgAb"
+        age = 64
+        location = "Oncology Clinic."
+        clinicalNotes = "Thyroid cancer. Post thyroidectomy, monitoring."
+        testValue {
+            attribute = "Thyroglobulin"
+            value = "31"
+            units = "μg/L"
+            upperBound = "6"
+        }
+        testValue {
+            attribute = "Anti-Thyroglobulin"
+            value = "<1"
+            units = "kU/L"
+            upperBound = "4"
+        }
+    }.build(attributeFactory)
 
 }

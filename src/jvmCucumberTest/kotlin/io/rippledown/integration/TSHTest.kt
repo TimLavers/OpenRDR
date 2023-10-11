@@ -65,5 +65,10 @@ internal open class TSHTest: UITestBase() {
         labProxy.provideCase(tshCases.TSH19)
         labProxy.provideCase(tshCases.TSH20)
         labProxy.provideCase(tshCases.TSH21)
+        labProxy.provideCase(tshCases.TSH22)
+        labProxy.provideCase(tshCases.TSH23)
+        labProxy.provideCase(tshCases.TSH24)
+        labProxy.provideCase(tshCases.TSH25)
+//        labProxy.provideCase(tshCases.TSH2)
     }
 }

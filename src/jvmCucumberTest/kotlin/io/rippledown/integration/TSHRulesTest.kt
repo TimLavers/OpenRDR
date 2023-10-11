@@ -8,6 +8,7 @@ import io.rippledown.model.condition.TabularCondition
 import io.rippledown.model.condition.series.Increasing
 import io.rippledown.model.condition.tabular.chain.All
 import io.rippledown.model.condition.tabular.chain.AtLeast
+import io.rippledown.model.condition.tabular.chain.AtMost
 import io.rippledown.model.condition.tabular.chain.Current
 import io.rippledown.model.condition.tabular.predicate.*
 import kotlin.test.Test
@@ -17,6 +18,7 @@ internal class TSHRulesTest : TSHTest() {
 
     @Test
     fun checkInterpretations() {
+        stop()
         selectCaseAndCheckName("1.4.1")
         checkInterpretation("Normal T4 and TSH are consistent with a euthyroid state.")
 
@@ -89,6 +91,20 @@ internal class TSHRulesTest : TSHTest() {
         selectCaseAndCheckName("1.4.21")
         checkInterpretation("The increased FT3 and suppressed TSH are consistent with T3 toxicosis. Suggest measure TRAb.")
 
+        selectCaseAndCheckName("1.4.22")
+        checkInterpretation("The severely increased FT4and FT3 and suppressed TSH are consistent with thyrotoxicosis. These results together with the clinical presentation may indicate thyroid storm. Suggest measure TRAb.")
+
+        selectCaseAndCheckName("1.4.23")
+        checkInterpretation("The reduced FT4 is consistent with excessive anti-thyroid treatment. The suppressed TSH may take many months to normalise \n" +
+                "following commencement of ant-thyroid treatment.")
+
+        selectCaseAndCheckName("1.4.24")
+        checkInterpretation("[thyrotropin alpha (recombinant human TSH)] in blood is measured by the TSH assay.")
+
+        selectCaseAndCheckName("1.4.25")
+        checkInterpretation("Results should be interpreted in the context of serial measurement.")
+
+
     }
 
     private fun checkInterpretation(comment: String) {
@@ -108,6 +124,7 @@ internal class TSHRulesTest : TSHTest() {
         buildRules()
     }
 
+    private fun isPresent(attribute: Attribute) = TabularCondition(null, attribute, IsNotBlank, Current)
     private fun isLow(attribute: Attribute) = TabularCondition(null, attribute, Low, Current)
     private fun isNormal(attribute: Attribute) = TabularCondition(null, attribute, Normal, Current)
     private fun isHigh(attribute: Attribute) = TabularCondition(null, attribute, High, Current)
@@ -124,40 +141,57 @@ internal class TSHRulesTest : TSHTest() {
         val ft4 = attributeFactory.create("Free T4")
         val ft3 = attributeFactory.create("Free T3")
         val tpo = attributeFactory.create("TPO Antibodies")
+        val thyroglobulin = attributeFactory.create("Thyroglobulin")
+        val antiThyroglobulin = attributeFactory.create("Anti-Thyroglobulin")
         val clinicalNotes = attributeFactory.create("Clinical Notes")
         val sex = attributeFactory.create("Sex")
         val age = attributeFactory.create("Age")
 
+        val tshBelowDetection = conditionFactory.getOrCreate(isCondition(tsh, "<0.01"))
+        val tshVeryLow = conditionFactory.getOrCreate(lessThanOrEqualTo(tsh, 0.1)) // What should this be?
         val tshLow = conditionFactory.getOrCreate(isLow(tsh))
         val tshNormal = conditionFactory.getOrCreate(isNormal(tsh))
+        val borderlineHighTSH = conditionFactory.getOrCreate((TabularCondition(tsh, NormalOrHighByAtMostSomePercentage(10), All)))
         val tshModeratelyIncreased = conditionFactory.getOrCreate(greaterThanOrEqualTo(tsh, 10.0))
         val tshHigh = conditionFactory.getOrCreate(isHigh(tsh))
         val tshVeryHigh = conditionFactory.getOrCreate(greaterThanOrEqualTo( tsh, 40.0)) // What should this be?
+        val tshAbove100 = conditionFactory.getOrCreate(greaterThanOrEqualTo( tsh, 100.0)) //  should this be?
+        val atLeastTwoTSH = conditionFactory.getOrCreate(TabularCondition(tsh, IsNumeric, AtLeast(2)))
+
         val ft4VeryLow = conditionFactory.getOrCreate(isCondition(ft4, "<5"))
         val ft4SlightlyLow = conditionFactory.getOrCreate(slightlyLow(ft4, 20))
-        val ft3High = conditionFactory.getOrCreate(isHigh(ft3))
+        val ft4Low = conditionFactory.getOrCreate(isLow(ft4))
         val fT4Normal = conditionFactory.getOrCreate(isNormal( ft4))
+        val borderlineHighFT4 = conditionFactory.getOrCreate(TabularCondition(ft4, NormalOrHighByAtMostSomePercentage(10), All))
+        val severelyHighFT4 =  conditionFactory.getOrCreate(TabularCondition(ft4, GreaterThanOrEquals(40.0), Current))
+
+        val ft3High = conditionFactory.getOrCreate(isHigh(ft3))
+        val ft3Increasing = conditionFactory.getOrCreate((SeriesCondition(null, ft3, Increasing)))
+        val borderlineHighFT3 = conditionFactory.getOrCreate((TabularCondition(ft3, NormalOrHighByAtMostSomePercentage(10), All)))
+        val severelyHighFT3 =  conditionFactory.getOrCreate(TabularCondition(ft3, GreaterThanOrEquals(10.0), Current))
+
         val tpoHigh = conditionFactory.getOrCreate(isHigh(tpo))
+
+        val thyroglobulinAvailable = conditionFactory.getOrCreate(isPresent(thyroglobulin))
+        val onlyOneThyroglobulin = conditionFactory.getOrCreate(TabularCondition(thyroglobulin, IsNotBlank, AtMost(2)))
+        val antiThyroglobulinAvailable = conditionFactory.getOrCreate(isPresent(antiThyroglobulin))
+
+        val olderThan14 = conditionFactory.getOrCreate(greaterThanOrEqualTo(age, 14.0))
+        val youngerThan44 = conditionFactory.getOrCreate(lessThanOrEqualTo(age, 44.0))
+        val olderThan44 = conditionFactory.getOrCreate(greaterThanOrEqualTo(age, 45.0))
         val elderly = conditionFactory.getOrCreate(greaterThanOrEqualTo(age, 70.0))
+
+        val female = conditionFactory.getOrCreate(isCondition(sex, "F"))
+
         val notesShowsTrimester1 = conditionFactory.getOrCreate(containsText(clinicalNotes, "12/40 weeks"))
         val notesDoesNotMentionPregnancy = conditionFactory.getOrCreate(doesNotContainText(clinicalNotes, "/40 weeks"))
         val notesShowsTryingForBaby = conditionFactory.getOrCreate(containsText( clinicalNotes, "Trying for a baby"))
         val tiredness = conditionFactory.getOrCreate(containsText(clinicalNotes, "very tired"))
         val thyroxineReplacement1Week = conditionFactory.getOrCreate(containsText(clinicalNotes, "started T4 replacement 1 week ago"))
         val t4Replacement = conditionFactory.getOrCreate(containsText(clinicalNotes, "On T4 replacement"))
-        val tshVeryLow = conditionFactory.getOrCreate(lessThanOrEqualTo(tsh, 0.1)) // What should this be?
-        val tshBelowDetection = conditionFactory.getOrCreate(isCondition(tsh, "<0.01"))
         val historyThyroidCancer = conditionFactory.getOrCreate(containsText( clinicalNotes, "thyroid cancer"))
         val onThyroxine = conditionFactory.getOrCreate(containsText(clinicalNotes, "On thyroxine"))
-        val borderlineHighTSH = conditionFactory.getOrCreate((TabularCondition(tsh, NormalOrHighByAtMostSomePercentage(10), All)))
-        val atLeastTwoTSH = conditionFactory.getOrCreate(TabularCondition(tsh, IsNumeric, AtLeast(2)))
-        val female = conditionFactory.getOrCreate(isCondition(sex, "F"))
-        val olderThan14 = conditionFactory.getOrCreate(greaterThanOrEqualTo(age, 14.0))
-        val youngerThan44 = conditionFactory.getOrCreate(lessThanOrEqualTo(age, 44.0))
-        val olderThan44 = conditionFactory.getOrCreate(greaterThanOrEqualTo(age, 45.0))
-        val borderlineHighFT4 = conditionFactory.getOrCreate((TabularCondition(ft4, NormalOrHighByAtMostSomePercentage(10), All)))
-        val borderlineHighFT3 = conditionFactory.getOrCreate((TabularCondition(ft3, NormalOrHighByAtMostSomePercentage(10), All)))
-        val ft3Increasing = conditionFactory.getOrCreate((SeriesCondition(null, ft3, Increasing)))
+        val preI131Therapy = conditionFactory.getOrCreate(containsText(clinicalNotes, "Pre I-131 Thyrogen therapy"))
 
         val report1 = "Normal T4 and TSH are consistent with a euthyroid state."
         val report1b = "Normal TSH is consistent with a euthyroid state."
@@ -193,8 +227,12 @@ internal class TSHRulesTest : TSHTest() {
         val report16 = "Clinical conditions associated with a suppressed TSH include non-toxic goitre, subclinical hyperthyroidism and glucocorticoid " +
                 "therapy. Suggest repeat TFTs in six weeks’ time. Other causes of this pattern include: Excessive T4 therapy for hypothyroidism, treated " +
                 "primary hyperthyroidism. Acute psychiatric illness may raise FT4 and/or lower TSH."
-
         val report16b = "The increased FT3 and suppressed TSH are consistent with T3 toxicosis. Suggest measure TRAb."
+        val report17 = "The severely increased FT4 and FT3 and suppressed TSH are consistent with thyrotoxicosis. These results together with the clinical presentation may indicate thyroid storm. Suggest measure TRAb."
+        val report18 = "The reduced FT4 is consistent with excessive anti-thyroid treatment. The suppressed TSH may take many months to normalise \n" +
+                "following commencement of ant-thyroid treatment."
+        val report19 = "Thyroid cancer. Pre I-131 Thyrogen therapy."
+        val report20 = "Thyroid cancer. Post thyroidectomy, monitoring."
 
         addCommentForCase("1.4.2", report1b, tshNormal)
         replaceCommentForCase("1.4.1", report1b, report1, fT4Normal)
@@ -223,6 +261,10 @@ internal class TSHRulesTest : TSHTest() {
         addCommentForCase("1.4.20", report16, tshBelowDetection, borderlineHighFT3, fT4Normal, olderThan44)
 
         addCommentForCase("1.4.21", report16b, tshBelowDetection, ft3Increasing, ft3High )
+        addCommentForCase("1.4.22", report17, tshBelowDetection, severelyHighFT4, severelyHighFT3 )
+        addCommentForCase("1.4.23", report18, tshBelowDetection, ft4Low)
+        replaceCommentForCase("1.4.24", report3, report19, tshAbove100, preI131Therapy)
+        addCommentForCase("1.4.25", report20, thyroglobulinAvailable, antiThyroglobulinAvailable, onlyOneThyroglobulin)
 
     }
 
