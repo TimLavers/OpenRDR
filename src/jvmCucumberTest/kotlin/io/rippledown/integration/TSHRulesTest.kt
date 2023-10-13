@@ -18,7 +18,6 @@ internal class TSHRulesTest : TSHTest() {
 
     @Test
     fun checkInterpretations() {
-        stop()
         selectCaseAndCheckName("1.4.1")
         checkInterpretation("Normal T4 and TSH are consistent with a euthyroid state.")
 
@@ -92,14 +91,14 @@ internal class TSHRulesTest : TSHTest() {
         checkInterpretation("The increased FT3 and suppressed TSH are consistent with T3 toxicosis. Suggest measure TRAb.")
 
         selectCaseAndCheckName("1.4.22")
-        checkInterpretation("The severely increased FT4and FT3 and suppressed TSH are consistent with thyrotoxicosis. These results together with the clinical presentation may indicate thyroid storm. Suggest measure TRAb.")
+        checkInterpretation("The severely increased FT4 and FT3 and suppressed TSH are consistent with thyrotoxicosis. These results together with the clinical presentation may indicate thyroid storm. Suggest measure TRAb.")
 
         selectCaseAndCheckName("1.4.23")
-        checkInterpretation("The reduced FT4 is consistent with excessive anti-thyroid treatment. The suppressed TSH may take many months to normalise \n" +
+        checkInterpretation("The reduced FT4 is consistent with excessive anti-thyroid treatment. The suppressed TSH may take many months to normalise " +
                 "following commencement of ant-thyroid treatment.")
 
         selectCaseAndCheckName("1.4.24")
-        checkInterpretation("[thyrotropin alpha (recombinant human TSH)] in blood is measured by the TSH assay.")
+        checkInterpretation("Thyrogen [thyrotropin alpha (recombinant human TSH)] in blood is measured by the TSH assay.")
 
         selectCaseAndCheckName("1.4.25")
         checkInterpretation("Results should be interpreted in the context of serial measurement.")
@@ -229,10 +228,10 @@ internal class TSHRulesTest : TSHTest() {
                 "primary hyperthyroidism. Acute psychiatric illness may raise FT4 and/or lower TSH."
         val report16b = "The increased FT3 and suppressed TSH are consistent with T3 toxicosis. Suggest measure TRAb."
         val report17 = "The severely increased FT4 and FT3 and suppressed TSH are consistent with thyrotoxicosis. These results together with the clinical presentation may indicate thyroid storm. Suggest measure TRAb."
-        val report18 = "The reduced FT4 is consistent with excessive anti-thyroid treatment. The suppressed TSH may take many months to normalise \n" +
+        val report18 = "The reduced FT4 is consistent with excessive anti-thyroid treatment. The suppressed TSH may take many months to normalise " +
                 "following commencement of ant-thyroid treatment."
-        val report19 = "Thyroid cancer. Pre I-131 Thyrogen therapy."
-        val report20 = "Thyroid cancer. Post thyroidectomy, monitoring."
+        val report19 = "Thyrogen [thyrotropin alpha (recombinant human TSH)] in blood is measured by the TSH assay."
+        val report20 = "Results should be interpreted in the context of serial measurement."
 
         addCommentForCase("1.4.2", report1b, tshNormal)
         replaceCommentForCase("1.4.1", report1b, report1, fT4Normal)
