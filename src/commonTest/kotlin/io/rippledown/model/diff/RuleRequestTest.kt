@@ -14,15 +14,6 @@ import kotlin.test.Test
 class RuleRequestTest {
     @Test
     fun checkSerialization() {
-        val diffList = DiffList(
-            diffs = listOf(
-                Unchanged("Go to Bondi Beach."),
-                Addition("Bring your handboard."),
-                Removal("Don't forget your towel."),
-                Replacement("And have fun.", "And have lots of fun.")
-            ),
-            selected = 3
-        )
         val conditionList = ConditionList(
             listOf(
                 HasCurrentValue(1, Attribute(1, "a")),

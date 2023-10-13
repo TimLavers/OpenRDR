@@ -1,6 +1,7 @@
 package io.rippledown.casecontrol
 
 import Handler
+import debug
 import io.rippledown.caseview.CaseViewMemo
 import io.rippledown.cornerstoneview.CornerstoneView
 import io.rippledown.interpretation.ConditionSelector
@@ -32,6 +33,7 @@ val CaseInspection = FC<CaseInspectionHandler> { handler ->
     var updatedInterpretation: ViewableInterpretation by useState(handler.case.viewableInterpretation)
 
     val id = handler.case.id!!
+    debug("rendering CaseViewMemo for case $id")
 
     Grid {
         container = true

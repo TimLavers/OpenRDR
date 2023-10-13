@@ -1,5 +1,8 @@
 package io.rippledown.integration
 
+import com.microsoft.playwright.BrowserType
+import com.microsoft.playwright.Page
+import com.microsoft.playwright.Playwright
 import io.github.bonigarcia.wdm.config.DriverManagerType.CHROME
 import io.github.bonigarcia.wdm.managers.ChromeDriverManager
 import io.rippledown.integration.proxy.DirProxy
@@ -11,6 +14,7 @@ import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
 import java.time.Duration
 
+
 open class UITestBase {
     val serverProxy = ServerProxy()
     val restClient = RESTClient()
@@ -21,6 +25,8 @@ open class UITestBase {
     private val dirProxy = DirProxy()
     lateinit var driver: WebDriver
 
+    lateinit var playwrightPage: Page
+
     fun setupWebDriver(): WebDriver {
         driver = getChromeDriver()
         with(driver) {
@@ -29,6 +35,24 @@ open class UITestBase {
             get("http://localhost:9090")
         }
         return driver
+    }
+
+
+    fun setupPlaywright(): Page {
+        val playwright = Playwright.create()
+        val browser = playwright.chromium().launch(
+            BrowserType.LaunchOptions()
+                .setHeadless(false)
+        )
+        playwrightPage = browser.newPage()
+        playwrightPage.navigate("http://localhost:9090")
+        playwright.selectors().setTestIdAttribute("id");
+
+
+//        browser.close()
+//        playwright.close()
+        return playwrightPage
+
     }
 
     fun downloadsDir() = dirProxy.downloadsDir()

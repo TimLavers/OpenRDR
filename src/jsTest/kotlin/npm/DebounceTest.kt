@@ -133,7 +133,7 @@ class DebounceTest {
 
     private suspend fun HTMLElement.enterText(text: String) {
         val jsName = kotlin.js.json("value" to text)
-        val jsEvent = kotlin.js.json("target" to jsName) as EventInit
+        val jsEvent = kotlin.js.json("target" to jsName).unsafeCast<EventInit>()
         val element = findById("text-field")
         act {
             Simulate.change(element, jsEvent)

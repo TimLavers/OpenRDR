@@ -1,30 +1,30 @@
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
-val kotlinWrappersVersion = "1.0.0-pre.628"
+val kotlinWrappersVersion = "1.0.0-pre.633"
+val treeViewVersion = "6.0.0-beta.0-pre.633"
 val kotlinxCoroutinesTestVersion = "1.7.3"
 val kotlinxDateTimeVersion = "0.4.0"
-val ktor_version = "2.3.2"
-val kotestVersion = "5.6.2"
+val ktorVersion = "2.3.5"
+val kotestVersion = "5.7.2"
 val exposedVersion = "0.42.0"
-val logbackVersion = "1.4.5"
+val logbackVersion = "1.4.11"
 val diffUtilsVersion = "4.12"
 val testingLibraryReactVersion = "14.0.0"
 val webDriverVersion = "5.5.3"
-val seleniumJavaVersion = "4.11.0"
+val seleniumJavaVersion = "4.14.0"
 val awaitilityVersion = "4.2.0"
-val cucumberVersion = "7.13.0"
-val commonsIoVersion = "2.11.0"
+val cucumberVersion = "7.14.0"
+val commonsIoVersion = "2.14.0"
 val commonsTextVersion = "1.10.0"
-val mockkVersion = "1.13.4"
+val mockkVersion = "1.13.8"
 
 plugins {
     kotlin("multiplatform") version "1.9.10"
     kotlin("plugin.serialization") version "1.9.10"
-    id("io.ktor.plugin") version "2.2.4"
-    id("org.gretty") version "4.0.3"
+    id("io.ktor.plugin") version "2.3.5"
+    id("org.gretty") version "4.1.0"
     application
-    jacoco
 }
 
 
@@ -53,7 +53,7 @@ kotlin {
         sourceSets {
             val commonMain by getting {
                 dependencies {
-                    implementation(enforcedPlatform("io.ktor:ktor-bom:$ktor_version"))
+                    implementation(enforcedPlatform("io.ktor:ktor-bom:$ktorVersion"))
                     implementation("io.ktor:ktor-client-core")
                     implementation("io.ktor:ktor-serialization-kotlinx-json")
                     implementation("org.jetbrains.kotlinx:kotlinx-datetime:$kotlinxDateTimeVersion")
@@ -69,7 +69,7 @@ kotlin {
             val jvmMain by getting {
                 dependencies {
 
-                    implementation(enforcedPlatform("io.ktor:ktor-bom:$ktor_version"))
+                    implementation(enforcedPlatform("io.ktor:ktor-bom:$ktorVersion"))
                     implementation("io.ktor:ktor-serialization")
                     implementation("io.ktor:ktor-server-content-negotiation")
                     implementation("io.ktor:ktor-serialization-kotlinx-json")
@@ -90,7 +90,7 @@ kotlin {
             }
             val jvmTest by getting {
                 dependencies {
-                    implementation(enforcedPlatform("io.ktor:ktor-bom:$ktor_version"))
+                    implementation(enforcedPlatform("io.ktor:ktor-bom:$ktorVersion"))
                     implementation("io.ktor:ktor-serialization-kotlinx-json")
                     implementation("io.ktor:ktor-client-core:")
                     implementation("io.ktor:ktor-client-cio")
@@ -98,6 +98,8 @@ kotlin {
                     implementation("io.ktor:ktor-client-cio")
                     implementation("io.ktor:ktor-server-test-host")
                     implementation("org.seleniumhq.selenium:selenium-java:$seleniumJavaVersion")
+                    implementation("com.microsoft.playwright:playwright:1.38.0")
+
                     implementation("io.github.bonigarcia:webdrivermanager:$webDriverVersion")
                     implementation("commons-io:commons-io:$commonsIoVersion")
                     implementation("io.mockk:mockk:${mockkVersion}")
@@ -105,7 +107,7 @@ kotlin {
             }
             val jsMain by getting {
                 dependencies {
-                    implementation(enforcedPlatform("io.ktor:ktor-bom:$ktor_version"))
+                    implementation(enforcedPlatform("io.ktor:ktor-bom:$ktorVersion"))
                     implementation("io.ktor:ktor-client-js")
                     implementation("io.ktor:ktor-client-content-negotiation")
                     implementation("io.ktor:ktor-serialization-kotlinx-json")
@@ -114,7 +116,10 @@ kotlin {
                     implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom")
                     implementation("org.jetbrains.kotlin-wrappers:kotlin-emotion")
                     implementation("org.jetbrains.kotlin-wrappers:kotlin-mui")
+                    implementation("org.jetbrains.kotlin-wrappers:kotlin-mui-lab")
                     implementation("org.jetbrains.kotlin-wrappers:kotlin-mui-icons")
+                    implementation("org.jetbrains.kotlin-wrappers:kotlin-muix-tree-view:$treeViewVersion")
+
                     implementation(npm("debounce", "1.2.1"))
                 }
             }
@@ -123,7 +128,7 @@ kotlin {
                     implementation(enforcedPlatform("org.jetbrains.kotlin-wrappers:kotlin-wrappers-bom:$kotlinWrappersVersion"))
                     implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom-test-utils")
                     implementation("org.jetbrains.kotlin-wrappers:kotlin-extensions")
-                    implementation("io.ktor:ktor-client-mock:$ktor_version")
+                    implementation("io.ktor:ktor-client-mock:$ktorVersion")
 
                     implementation(kotlin("test-js"))
                     implementation(npm("@testing-library/react", testingLibraryReactVersion))
@@ -151,7 +156,9 @@ kotlin {
                         implementation("org.awaitility:awaitility-kotlin:$awaitilityVersion")
                         implementation("org.seleniumhq.selenium:selenium-java:$seleniumJavaVersion")
                         implementation("io.github.bonigarcia:webdrivermanager:$webDriverVersion")
-                        implementation(enforcedPlatform("io.ktor:ktor-bom:$ktor_version"))
+                        implementation("com.microsoft.playwright:playwright:1.38.0")
+
+                        implementation(enforcedPlatform("io.ktor:ktor-bom:$ktorVersion"))
                         implementation("io.ktor:ktor-client-core")
                         implementation("io.ktor:ktor-client-cio")
                         implementation("io.ktor:ktor-client-content-negotiation")
@@ -241,19 +248,6 @@ fun Jar.includeJsArtifacts() {
     ) // bring output file along into the JAR
 
     manifest.attributes["Main-Class"] = "io.rippledown.server.OpenRDRServerKt"
-}
-
-tasks.jacocoTestReport {
-    group = "Reporting"
-    dependsOn(tasks.getByName("jvmTest"))
-    reports {
-        xml.required.set(false)
-        csv.required.set(false)
-        html.outputLocation.set(layout.buildDirectory.dir("reports/jacocoHtml"))
-    }
-}
-tasks.getByName("jvmTest") {
-    finalizedBy(tasks.jacocoTestReport)
 }
 
 distributions {

@@ -48,7 +48,7 @@ fun HTMLElement.requireInterpretation(expected: String) {
 
 suspend fun HTMLElement.enterInterpretation(text: String) {
     val jsName = kotlin.js.json("value" to text)
-    val jsEvent = kotlin.js.json("target" to jsName) as EventInit
+    val jsEvent = kotlin.js.json("target" to jsName).unsafeCast<EventInit>()
     val element = findById(INTERPRETATION_TEXT_AREA)
     act {
         Simulate.change(element, jsEvent)
