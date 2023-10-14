@@ -277,6 +277,7 @@ class TSHCases(attributeFactory: AttributeFactory) {
         age = 46
         clinicalNotes = "Started carbimazole therapy recently for Graves’ disease."
     }.build(attributeFactory)
+
     val TSH24 = tshCase {
         name = "1.4.24"
         tsh = "120"
@@ -284,6 +285,7 @@ class TSHCases(attributeFactory: AttributeFactory) {
         location = "Nuclear Medicine."
         clinicalNotes = "Thyroid cancer. Pre I-131 Thyrogen therapy."
     }.build(attributeFactory)
+
     val TSH25 = tshCase {
         name = "1.4.25"
         tests = "Tg/TgAb"
@@ -294,7 +296,6 @@ class TSHCases(attributeFactory: AttributeFactory) {
             attribute = "Thyroglobulin"
             value = "31"
             units = "μg/L"
-            upperBound = "6"
         }
         testValue {
             attribute = "Anti-Thyroglobulin"
@@ -302,6 +303,51 @@ class TSHCases(attributeFactory: AttributeFactory) {
             units = "kU/L"
             upperBound = "4"
         }
+    }.build(attributeFactory)
+
+    val TSH26 = tshCase {
+        name = "1.4.26"
+        tests = "Tg/TgAb"
+        age = 64
+        location = "Oncology Clinic."
+        clinicalNotes = "Thyroid cancer. Post thyroidectomy, monitoring."
+        testValue {
+            attribute = "Thyroglobulin"
+            value = "<0.1"
+            units = "μg/L"
+        }
+        testValue {
+            attribute = "Anti-Thyroglobulin"
+            value = "14"
+            units = "kU/L"
+            upperBound = "4"
+        }
+    }.build(attributeFactory)
+
+    val TSH27 = tshCase {
+        name = "1.4.27"
+        tsh = "4.2"
+        freeT4 = "11"
+        freeT3 = "5.6"
+        age = 50
+        sex = "M"
+        testValue {
+            attribute = "TPO Antibodies"
+            value = "876"
+            units = "kU/L"
+            upperBound = "6"
+        }
+        clinicalNotes = "Family history of thyroid disease."
+    }.build(attributeFactory)
+
+    val TSH28 = tshCase {
+        name = "1.4.28"
+        tsh = "<0.01"
+        freeT4 = "23"
+        freeT3 = "5.0"
+        age = 63
+        sex = "M"
+        clinicalNotes = "On amiodarone."
     }.build(attributeFactory)
 
 }

@@ -103,7 +103,17 @@ internal class TSHRulesTest : TSHTest() {
         selectCaseAndCheckName("1.4.25")
         checkInterpretation("Results should be interpreted in the context of serial measurement.")
 
+        selectCaseAndCheckName("1.4.26")
+        checkInterpretation("The positive anti thyroglobulin antibodies may interfere with this thyroglobulin immunometric assay and cause a falsely low result " +
+                "making the thyroglobulin result unreliable. Anti-Tg Ab trends may be used as a surrogate tumour marker for monitoring.")
 
+        selectCaseAndCheckName("1.4.27")
+        checkInterpretation("The mildly increased TSH with normal FT4 and raised TPO antibodies indicate subclinical hypothyroidism due to autoimmune " +
+                "thyroid disease. FT3 measurement is helpful only in diagnosing hyperthyroidism (or in monitoring FT3 supplementation).")
+
+        selectCaseAndCheckName("1.4.28")
+        checkInterpretation("Amiodarone inhibits T4 to T3 conversion as well as presenting the thyroid with a large iodine load. The suppressed TSH and raised " +
+                "FT4 may suggest amiodarone-induced hyperthyroidism but should be interpreted in the light of clinical findings.")
     }
 
     private fun checkInterpretation(comment: String) {
@@ -162,8 +172,10 @@ internal class TSHRulesTest : TSHTest() {
         val ft4Low = conditionFactory.getOrCreate(isLow(ft4))
         val fT4Normal = conditionFactory.getOrCreate(isNormal( ft4))
         val borderlineHighFT4 = conditionFactory.getOrCreate(TabularCondition(ft4, NormalOrHighByAtMostSomePercentage(10), All))
+        val ft4High = conditionFactory.getOrCreate(isHigh(ft4))
         val severelyHighFT4 =  conditionFactory.getOrCreate(TabularCondition(ft4, GreaterThanOrEquals(40.0), Current))
 
+        val ft3Available = conditionFactory.getOrCreate(isPresent(ft3))
         val ft3High = conditionFactory.getOrCreate(isHigh(ft3))
         val ft3Increasing = conditionFactory.getOrCreate((SeriesCondition(null, ft3, Increasing)))
         val borderlineHighFT3 = conditionFactory.getOrCreate((TabularCondition(ft3, NormalOrHighByAtMostSomePercentage(10), All)))
@@ -172,8 +184,10 @@ internal class TSHRulesTest : TSHTest() {
         val tpoHigh = conditionFactory.getOrCreate(isHigh(tpo))
 
         val thyroglobulinAvailable = conditionFactory.getOrCreate(isPresent(thyroglobulin))
+        val thyroglobulinBelowDetection = conditionFactory.getOrCreate(isCondition(thyroglobulin, "<0.1"))
         val onlyOneThyroglobulin = conditionFactory.getOrCreate(TabularCondition(thyroglobulin, IsNotBlank, AtMost(2)))
         val antiThyroglobulinAvailable = conditionFactory.getOrCreate(isPresent(antiThyroglobulin))
+        val antiThyroglobulinHigh = conditionFactory.getOrCreate(isHigh(antiThyroglobulin))
 
         val olderThan14 = conditionFactory.getOrCreate(greaterThanOrEqualTo(age, 14.0))
         val youngerThan44 = conditionFactory.getOrCreate(lessThanOrEqualTo(age, 44.0))
@@ -190,6 +204,7 @@ internal class TSHRulesTest : TSHTest() {
         val t4Replacement = conditionFactory.getOrCreate(containsText(clinicalNotes, "On T4 replacement"))
         val historyThyroidCancer = conditionFactory.getOrCreate(containsText( clinicalNotes, "thyroid cancer"))
         val onThyroxine = conditionFactory.getOrCreate(containsText(clinicalNotes, "On thyroxine"))
+        val onAmiodarone = conditionFactory.getOrCreate(containsText(clinicalNotes, "On amiodarone"))
         val preI131Therapy = conditionFactory.getOrCreate(containsText(clinicalNotes, "Pre I-131 Thyrogen therapy"))
 
         val report1 = "Normal T4 and TSH are consistent with a euthyroid state."
@@ -233,6 +248,13 @@ internal class TSHRulesTest : TSHTest() {
         val report19 = "Thyrogen [thyrotropin alpha (recombinant human TSH)] in blood is measured by the TSH assay."
         val report20 = "Results should be interpreted in the context of serial measurement."
 
+        val report20b = "The positive anti thyroglobulin antibodies may interfere with this thyroglobulin immunometric assay and cause a falsely low result " +
+                "making the thyroglobulin result unreliable. Anti-Tg Ab trends may be used as a surrogate tumour marker for monitoring."
+        val report21 = "The mildly increased TSH with normal FT4 and raised TPO antibodies indicate subclinical hypothyroidism due to autoimmune " +
+                "thyroid disease. FT3 measurement is helpful only in diagnosing hyperthyroidism (or in monitoring FT3 supplementation)."
+        val report22 = "Amiodarone inhibits T4 to T3 conversion as well as presenting the thyroid with a large iodine load. The suppressed TSH and raised " +
+                "FT4 may suggest amiodarone-induced hyperthyroidism but should be interpreted in the light of clinical findings."
+
         addCommentForCase("1.4.2", report1b, tshNormal)
         replaceCommentForCase("1.4.1", report1b, report1, fT4Normal)
         replaceCommentForCase("1.4.3", report1b, report2, ft4SlightlyLow)
@@ -265,6 +287,9 @@ internal class TSHRulesTest : TSHTest() {
         replaceCommentForCase("1.4.24", report3, report19, tshAbove100, preI131Therapy)
         addCommentForCase("1.4.25", report20, thyroglobulinAvailable, antiThyroglobulinAvailable, onlyOneThyroglobulin)
 
+        replaceCommentForCase("1.4.26", report20, report20b, thyroglobulinBelowDetection, antiThyroglobulinHigh)
+        replaceCommentForCase("1.4.27", report3b, report21, borderlineHighTSH, fT4Normal, tpoHigh, ft3Available)
+        addCommentForCase("1.4.28", report22, tshBelowDetection, ft4High, onAmiodarone)
     }
 
     private fun addCommentForCase(caseName: String, comment: String, vararg conditions: Condition) {
