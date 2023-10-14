@@ -252,7 +252,7 @@ internal class TSHExamplesTest : TSHTest() {
         checkFreeT4("11")
         checkFreeT3("5.6")
         dataShown["TPO Antibodies"]!![0] shouldBe "876 kU/L"
-        caseViewPO.referenceRange("TPO Ab (Abbott)") shouldBe "< 6"
+        caseViewPO.referenceRange("TPO Antibodies") shouldBe "< 6"
         checkNotes("Family history of thyroid disease.")
 
         selectCaseAndCheckName("1.4.28")
@@ -262,6 +262,63 @@ internal class TSHExamplesTest : TSHTest() {
         checkFreeT4("23")
         checkFreeT3("5.0")
         checkNotes("On amiodarone.")
+
+        selectCaseAndCheckName("1.4.29")
+        dataShown.size shouldBe 7
+        checkAgeSexTestsLocation(53, "M", tests = "TFTs", location = "General Practice.")
+        checkTSH("1.3")
+        checkFreeT4("26")
+        checkNotes("Diabetes.")
+
+        selectCaseAndCheckName("1.4.30")
+        dataShown.size shouldBe 8
+        checkAgeSexTestsLocation(53, "M", tests = "TFTs", location = "General Practice.")
+        checkTSH("1.3")
+        checkFreeT4("26")
+        checkFreeT3("6.1")
+        checkNotes("Diabetes.")
+
+        selectCaseAndCheckName("1.4.31")
+        dataShown.size shouldBe 14
+        checkAgeSexTestsLocation(39, "M", tests = "TFTs", location = "Emergency Dept.")
+        checkTSH("<0.01")
+        checkFreeT4("43")
+        checkFreeT3("22")
+        checkNotes("General weakness.")
+        dataShown["Sodium"]!![0] shouldBe "143 mmol/L"
+        caseViewPO.referenceRange("Sodium") shouldBe "134 - 146"
+        dataShown["Potassium"]!![0] shouldBe "2.4 mmol/L"
+        caseViewPO.referenceRange("Potassium") shouldBe "3.4 - 5.0"
+        dataShown["Bicarbonate"]!![0] shouldBe "18 mmol/L"
+        caseViewPO.referenceRange("Bicarbonate") shouldBe "22 - 32"
+        dataShown["Urea"]!![0] shouldBe "6.0 mmol/L"
+        caseViewPO.referenceRange("Urea") shouldBe "3.0 - 8.0"
+        dataShown["Creatinine"]!![0] shouldBe "62 μmol/L"
+        caseViewPO.referenceRange("Creatinine") shouldBe "60 - 110"
+        dataShown["eGFR"]!![0] shouldBe ">90 mL/min/1.73 m∧2"
+
+        selectCaseAndCheckName("1.4.32")
+        dataShown.size shouldBe 7
+        checkAgeSexTestsLocation(60, "M", tests = "TFTs", location = "General Practice.")
+        checkTSH("4.5")
+        checkFreeT4("8")
+        checkNotes("Previous raised TSH.")
+
+        selectCaseAndCheckName("1.4.33")
+        dataShown.size shouldBe 7
+        checkAgeSexTestsLocation(67, "M", tests = "TFTs", location = "General Practice.")
+        checkTSH("0.02")
+        checkFreeT4("8")
+        checkNotes("Pituitary failure. On T4.")
+
+        // We haven't done case 35 as it is a chemistry panel.
+
+        selectCaseAndCheckName("1.4.35")
+        dataShown.size shouldBe 7
+        checkAgeSexTestsLocation(66, "F", tests = "TFTs", location = "Emergency Department.")
+        checkTSH(">100")
+        checkFreeT4("8")
+        checkNotes("Semi-coma.")
     }
 
     private fun checkAgeSexTestsLocation(age: Int, sex: String, tests: String = "TFTs", location: String = "General Practice.") {

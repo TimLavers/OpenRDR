@@ -114,6 +114,31 @@ internal class TSHRulesTest : TSHTest() {
         selectCaseAndCheckName("1.4.28")
         checkInterpretation("Amiodarone inhibits T4 to T3 conversion as well as presenting the thyroid with a large iodine load. The suppressed TSH and raised " +
                 "FT4 may suggest amiodarone-induced hyperthyroidism but should be interpreted in the light of clinical findings.")
+
+        selectCaseAndCheckName("1.4.28")
+        checkInterpretation("")
+
+        selectCaseAndCheckName("1.4.29")
+        checkInterpretation("")
+
+        selectCaseAndCheckName("1.4.30")
+        checkInterpretation("FT4 and TSH results confirmed by alternative method. Heterophile antibody excluded for TSH. Consider specialist Endocrine " +
+                "referral to test for TSH secreting tumour or thyroid hormone resistance.")
+
+        selectCaseAndCheckName("1.4.31")
+        checkInterpretation("The raised FT4 and FT3 with suppressed TSH are consistent with thyrotoxicosis. Hyperthyroidism with hypokalaemia and muscle " +
+                "weakness may be consistent with thyrotoxic periodic paralysis.")
+
+        selectCaseAndCheckName("1.4.32")
+        checkInterpretation("The presence of a low FT4 with only a marginal increase in TSH may suggest pituitary insufficiency, although these results may also " +
+                "be seen in non-thyroidal illness. Suggest further pituitary investigations or Specialist Endocrine referral if abnormalities persist.")
+
+        selectCaseAndCheckName("1.4.33")
+        checkInterpretation("FT4 should be maintained within the upper reference interval in patients on thyroxine for secondary hypothyroidism. Suggest " +
+                "review T4 dose (and adherence to therapy) based on clinical assessment.")
+
+        selectCaseAndCheckName("1.4.35")
+        checkInterpretation("The low FT4 and profoundly raised TSH are in keeping with severe hypothyroidism.")
     }
 
     private fun checkInterpretation(comment: String) {
