@@ -2,8 +2,8 @@ package io.rippledown.model.condition
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
-import io.rippledown.model.condition.tabular.chain.Current
-import io.rippledown.model.condition.tabular.predicate.*
+import io.rippledown.model.condition.episodic.signature.Current
+import io.rippledown.model.condition.episodic.predicate.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 

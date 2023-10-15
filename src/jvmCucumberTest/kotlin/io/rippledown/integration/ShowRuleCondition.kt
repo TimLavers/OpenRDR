@@ -8,10 +8,10 @@ import io.rippledown.integration.restclient.RESTClient
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.TabularCondition
-import io.rippledown.model.condition.tabular.chain.Current
-import io.rippledown.model.condition.tabular.predicate.GreaterThanOrEquals
-import io.rippledown.model.condition.tabular.predicate.LessThanOrEquals
-import io.rippledown.model.condition.tabular.predicate.Normal
+import io.rippledown.model.condition.episodic.signature.Current
+import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals
+import io.rippledown.model.condition.episodic.predicate.LessThanOrEquals
+import io.rippledown.model.condition.episodic.predicate.Normal
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test

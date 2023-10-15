@@ -3,12 +3,12 @@ package io.rippledown.model.condition
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
 import io.rippledown.model.condition.series.Increasing
-import io.rippledown.model.condition.tabular.chain.All
-import io.rippledown.model.condition.tabular.chain.AtLeast
-import io.rippledown.model.condition.tabular.chain.No
-import io.rippledown.model.condition.tabular.predicate.IsNumeric
-import io.rippledown.model.condition.tabular.predicate.Low
-import io.rippledown.model.condition.tabular.predicate.NormalOrHighByAtMostSomePercentage
+import io.rippledown.model.condition.episodic.signature.All
+import io.rippledown.model.condition.episodic.signature.AtLeast
+import io.rippledown.model.condition.episodic.signature.No
+import io.rippledown.model.condition.episodic.predicate.IsNumeric
+import io.rippledown.model.condition.episodic.predicate.Low
+import io.rippledown.model.condition.episodic.predicate.NormalOrHighByAtMostSomePercentage
 import kotlin.test.Test
 
 /**

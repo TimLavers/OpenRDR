@@ -5,11 +5,11 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.TestResult
-import io.rippledown.model.condition.tabular.chain.All
-import io.rippledown.model.condition.tabular.chain.Current
-import io.rippledown.model.condition.tabular.predicate.Contains
-import io.rippledown.model.condition.tabular.predicate.Low
-import io.rippledown.model.condition.tabular.predicate.Normal
+import io.rippledown.model.condition.episodic.signature.All
+import io.rippledown.model.condition.episodic.signature.Current
+import io.rippledown.model.condition.episodic.predicate.Contains
+import io.rippledown.model.condition.episodic.predicate.Low
+import io.rippledown.model.condition.episodic.predicate.Normal
 import io.rippledown.model.defaultDate
 import kotlin.test.Test
 

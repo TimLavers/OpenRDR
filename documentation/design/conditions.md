@@ -6,8 +6,9 @@ as part of our first milestone are simple assertions about a single test result.
 - `Clinical Notes contains "very tired"`
 - `Age > 70`
 
-However, some rules apply to cases with a series of values and the conditions for these rules
-are assertions about all of the test values for an attribute. For example:
+However, some rules apply to cases with a series of values. The conditions for these rules
+are assertions about the sequence of boolean values obtained by applying a predicate to 
+each of the test values for an attribute. For example:
 
 `all TSH values are within 10% of the upper reference value`
 
@@ -19,33 +20,44 @@ conditions are very common and take a variety of forms, such as:
 - `at most 2 PSA are high`
 - `previous FT3 is normal`
 
-This document describes a design that allows conditions such as these to be implemented.
+Conditions such as these will be called _episodic conditions_. As we will see below, 
+they include single episode conditions like those in the first set of examples above.
+
+A further kind of condition is one that applies a predicate to the entire sequence
+of test values for an attribute. For example:
+- `TSH is increasing`
+- `maximum BMI < 18.0`
+
+These kinds of conditions will be called _series conditions_.
+
+This document describes a software design that handles both these kinds of condition.
 
 *The way in which an end user might build or select a condition 
 while building a rule is not in the scope of this document.*
 
-## Predicates and positional quantifiers
-Multi-value conditions like those shown above have two conceptual components:
-- a *predicate* which identifies test results meeting some criterion
-- a *positional quantifier* which takes a sequence of `true` and `false` values
+## Episodic conditions
+### Test Result Predicates and Signatures
+Episodic conditions like those shown above have two conceptual components:
+- a *test result predicate* which identifies test results meeting some criterion
+- a *signature* which takes a sequence of `true` and `false` values
    and picks out those of interest.
 
-For example, in `all TSH are normal`, the predicate identifies TSG test results
+For example, in `all TSH are normal`, the predicate identifies TSH test results
 which are in their normal range. This list of TSH test results:
 
-|TSH (0.5-4.0)|  3.1 | 2.8 | 4.1 |
+`|TSH (0.5-4.0)|  3.1 | 2.8 | 4.1 |`
 
 would produce the sequence 
 
-| true | true | false |
+`| true | true | false |`
 
-The positional quantifier, `all`, would evaluate this list of booleans as `false`.
+The signature, `all`, would evaluate this list of booleans as `false`.
 
 For a condition that looks at the most recent test result for an attribute,
-the positional quantifier is `current`, which evaluates a sequence of booleans as
+the signature is `current`, which evaluates a sequence of booleans as
 `true` if the last item in the sequence is `true`.
 
-Here are the main positional quantifiers:
+Here are the main signatures:
 
 | Syntax     | Description                              | `true` example   | `false` example |
 |------------|------------------------------------------|------------------|-----------------|
@@ -57,21 +69,17 @@ Here are the main positional quantifiers:
 | At least n | True if and only if n or more are true   | F T F T  (n = 2) | F F F T (n = 2) |
 | At most n  | True if and only if n or fewer are true  | F F F T  (n = 2) | F F T T (n = 1) |
 
-Note that Positional Quantifier is a really bad name. It is trying to capture the
-fact that its evaluation depends on either the number of or the position of the
-true values in a sequence. Some alternatives: trace, signature, ...
-
-## Condition objects
-A condition has three components:
+### Episodic Condition objects
+An episodic condition has three components:
 - an attribute (eg `TSH`)
-- a predicate (eg `is normal`)
-- a positional quantifier (eg `all`)
+- a test result predicate (eg `is normal`)
+- a signature (eg `all`)
 
 ### Evaluation
 Condition evaluation for a case has three steps:
 1. the sequence of test results for the attribute is extracted from the case
-2. the predicate is applied to each element of the test results sequence
-3. the positional quantifier is applied to the sequence of booleans calculated in 
+2. the test result predicate is applied to each element of the test results sequence from step 1
+3. the signature is applied to the sequence of booleans from step 2
 
 For example, consider this case:
 
@@ -94,9 +102,10 @@ For example, consider this case:
 
 `Case ==[FT3]==> ( 6.1, 4.3, 5.5) ==[low]==> (false, false, false) ==[no]==> true`
 
-### Presentation of conditions to users
-We can turn condition objects into natural language expressions
-by expressing the predicate in a form indicated by the positional quantifier. 
+### Presentation of episodic conditions to users
+We can turn episodic condition objects into natural language expressions
+by expressing the predicate in a form that takes into account the 
+plurality indicated by the signature. 
 For example, the `normal` predicate is written as `is normal` when combined
 with `current` but as `are normal` when combined with `all`. 
 So `(TSH, normal, all)` is written as `all TSH are normal` 
@@ -104,7 +113,7 @@ whereas `(TSH, normal, none)` is written as `no TSH is normal`.
 The predicate `current` is left unexpressed,
 so `(TSH, normal, current)` is written as `TSH is normal`.
 
-## Restriction clauses
+### Restriction clauses
 Some assertions concern only certain episodes in a case, for example
 those where the patient is fasting, or those within the last few years.
 A "restriction clause" concept could be introduced to allow the expression
@@ -119,7 +128,6 @@ be just like the evaluation of a regular condition, but with the
 preliminary step of producing a "cut-down" version of the input
 case.
 
-
 In the TSH case above, the condition
 
 `all TSH are low, where FT4 > 16.0`
@@ -128,7 +136,25 @@ would be evaluated as follows:
 
 `Case ==[FT > 16.0]==> Case with just first 2 episodes ==[TSH]==> ( 0.03,0.09) ==[low]==> (true, true) ==[all]==> true`
 
-## Conditions that cannot be expressed in this format
+## Series Conditions
+A series condition will contain two sub-objects:
+- an `Attribute` of interest,
+- a `SeriesPredicate` that makes an assertion about the values in a case of the `Attribute`.
+
+The evaluation of a `SeriesCondition` has the following steps:
+1. the sequence of test results for the attribute is extracted from the case
+2. the series predicate is applied to the test results sequence from step 1
+For example, the condition
+
+`TSH is increasing`
+
+would be evaluated as follows:
+`Case ==[TSH]==> (0.03, 0.09, 1.2) ==[Increasing]==> true`
+
+A restriction clause could be applied in the evaluation of series conditions
+if required.
+
+## Case predicates that cannot be expressed as episodic or series conditions
 It's possible to think of assertions that might involve more than one
 attribute. For example, `mass/(height * height) > 28`.
 These kinds of calculations won't be expressible as conditions like
@@ -168,7 +194,4 @@ for example, penicillin. Each antibiotic has several properties
 So each case would have multiple sensitivity values, 
 even for the same antibiotic as it may be used many times in the case.
 
-
-
 None of these 3 domains need the concept of “episode”.
-

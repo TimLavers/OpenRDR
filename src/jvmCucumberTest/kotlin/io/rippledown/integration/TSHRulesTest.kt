@@ -6,11 +6,11 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.condition.*
 import io.rippledown.model.condition.TabularCondition
 import io.rippledown.model.condition.series.Increasing
-import io.rippledown.model.condition.tabular.chain.All
-import io.rippledown.model.condition.tabular.chain.AtLeast
-import io.rippledown.model.condition.tabular.chain.AtMost
-import io.rippledown.model.condition.tabular.chain.Current
-import io.rippledown.model.condition.tabular.predicate.*
+import io.rippledown.model.condition.episodic.signature.All
+import io.rippledown.model.condition.episodic.signature.AtLeast
+import io.rippledown.model.condition.episodic.signature.AtMost
+import io.rippledown.model.condition.episodic.signature.Current
+import io.rippledown.model.condition.episodic.predicate.*
 import kotlin.test.Test
 
 // ORD6

@@ -5,8 +5,8 @@ import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.TabularCondition
-import io.rippledown.model.condition.tabular.chain.Current
-import io.rippledown.model.condition.tabular.predicate.IsNotBlank
+import io.rippledown.model.condition.episodic.signature.Current
+import io.rippledown.model.condition.episodic.predicate.IsNotBlank
 import io.rippledown.persistence.ConditionStore
 
 class ConditionManager(private val attributeManager: AttributeManager,
