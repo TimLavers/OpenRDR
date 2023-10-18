@@ -442,7 +442,7 @@ class TSHCases(attributeFactory: AttributeFactory) {
 
     val TSH35 = tshCase {
         name = "1.4.35"
-        tsh = ">100"
+        tsh = "100"
         freeT4 = "8"
         age = 66
         sex = "F"

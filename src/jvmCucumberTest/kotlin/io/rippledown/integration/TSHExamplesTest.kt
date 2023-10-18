@@ -316,7 +316,7 @@ internal class TSHExamplesTest : TSHTest() {
         selectCaseAndCheckName("1.4.35")
         dataShown.size shouldBe 7
         checkAgeSexTestsLocation(66, "F", tests = "TFTs", location = "Emergency Department.")
-        checkTSH(">100")
+        checkTSH("100") //">100" in the document, but 1.4.24 has "120".
         checkFreeT4("8")
         checkNotes("Semi-coma.")
     }

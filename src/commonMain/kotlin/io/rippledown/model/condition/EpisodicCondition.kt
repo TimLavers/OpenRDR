@@ -1,7 +1,7 @@
 package io.rippledown.model.condition
 
 import io.rippledown.model.*
-import io.rippledown.model.condition.episodic.signature.ChainPredicate
+import io.rippledown.model.condition.episodic.signature.Signature
 import io.rippledown.model.condition.episodic.predicate.TestResultPredicate
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -11,46 +11,51 @@ import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.*
 
 // ORD1
-@Serializable(TabularConditionSerializer::class)
-data class TabularCondition(override val id: Int? = null,
-                       val attribute: Attribute,
-                       val predicate: TestResultPredicate,
-                       val chainPredicate: ChainPredicate): Condition() {
+/**
+ * A condition that evaluates the test results for an attribute
+ * against a predicate, episode by episode, to produce a pattern
+ * of booleans that is then evaluated using a signature function.
+ */
+@Serializable(EpisodicConditionSerializer::class)
+data class EpisodicCondition(override val id: Int? = null,
+                             val attribute: Attribute,
+                             val predicate: TestResultPredicate,
+                             val signature: Signature): Condition() {
 
-    constructor(attribute: Attribute, predicate: TestResultPredicate, chainPredicate: ChainPredicate): this(null, attribute, predicate, chainPredicate)
+    constructor(attribute: Attribute, predicate: TestResultPredicate, signature: Signature): this(null, attribute, predicate, signature)
 
     override fun holds(case: RDRCase): Boolean {
         val values = case.values(attribute) ?: return false
-        return chainPredicate.matches(values.map { predicate.evaluate(it) })
+        return signature.matches(values.map { predicate.evaluate(it) })
     }
 
-    override fun asText() = "${chainPredicate.description()} ${attribute.name} ${predicate.description(chainPredicate.plurality())}".trim()
+    override fun asText() = "${signature.description()} ${attribute.name} ${predicate.description(signature.plurality())}".trim()
 
-    override fun alignAttributes(idToAttribute: (Int) -> Attribute) = TabularCondition(id, idToAttribute(attribute.id), predicate, chainPredicate)
+    override fun alignAttributes(idToAttribute: (Int) -> Attribute) = EpisodicCondition(id, idToAttribute(attribute.id), predicate, signature)
 
     override fun sameAs(other: Condition): Boolean {
-        return if (other is TabularCondition) {
-            other.attribute.isEquivalent(attribute) && other.predicate == predicate && other.chainPredicate == chainPredicate
+        return if (other is EpisodicCondition) {
+            other.attribute.isEquivalent(attribute) && other.predicate == predicate && other.signature == signature
         } else false
     }
 }
 
-object TabularConditionSerializer: KSerializer<TabularCondition> {
+object EpisodicConditionSerializer: KSerializer<EpisodicCondition> {
     private val attributeSerializer = Attribute.serializer()
     private val predicateSerializer = TestResultPredicate.serializer()
-    private val chainPredicateSerializer = ChainPredicate.serializer()
+    private val signatureSerializer = Signature.serializer()
     override val descriptor = buildClassSerialDescriptor("TabularConditions") {
         element("id", Int.serializer().nullable.descriptor)
         element("attribute", attributeSerializer.descriptor)
         element("predicate", predicateSerializer.descriptor)
-        element("chainPredicate", chainPredicateSerializer.descriptor)
+        element("chainPredicate", signatureSerializer.descriptor)
     }
 
-    override fun deserialize(decoder: Decoder): TabularCondition {
+    override fun deserialize(decoder: Decoder): EpisodicCondition {
         var id: Int? = null
         lateinit var attribute: Attribute
         lateinit var predicate: TestResultPredicate
-        lateinit var chainPredicate: ChainPredicate
+        lateinit var signature: Signature
         decoder.decodeStructure(descriptor) {
             // Loop label needed so that break statement works in js.
             parseLoop@ while (true) {
@@ -58,21 +63,21 @@ object TabularConditionSerializer: KSerializer<TabularCondition> {
                     0 -> id = decodeSerializableElement(descriptor, 0, Int.serializer().nullable)
                     1 -> attribute = decodeSerializableElement(descriptor, 1, attributeSerializer)
                     2 -> predicate = decodeSerializableElement(descriptor, 2, predicateSerializer)
-                    3 -> chainPredicate = decodeSerializableElement(descriptor, 3, chainPredicateSerializer)
+                    3 -> signature = decodeSerializableElement(descriptor, 3, signatureSerializer)
                     CompositeDecoder.DECODE_DONE -> break@parseLoop
                     else -> error("Unexpected index: $index")
                 }
             }
         }
-        return TabularCondition(id, attribute, predicate, chainPredicate)
+        return EpisodicCondition(id, attribute, predicate, signature)
     }
 
-    override fun serialize(encoder: Encoder, value: TabularCondition) {
+    override fun serialize(encoder: Encoder, value: EpisodicCondition) {
         encoder.encodeStructure(descriptor) {
             encodeSerializableElement(descriptor, 0, Int.serializer().nullable, value.id)
             encodeSerializableElement(descriptor, 1, attributeSerializer, value.attribute)
             encodeSerializableElement(descriptor,2, predicateSerializer, value.predicate)
-            encodeSerializableElement(descriptor,3, chainPredicateSerializer, value.chainPredicate)
+            encodeSerializableElement(descriptor,3, signatureSerializer, value.signature)
         }
     }
 }

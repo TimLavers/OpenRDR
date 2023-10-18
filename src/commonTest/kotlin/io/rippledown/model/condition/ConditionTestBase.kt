@@ -1,22 +1,23 @@
 package io.rippledown.model.condition
 
 import io.kotest.matchers.shouldBe
+import io.ktor.util.*
 import io.rippledown.model.*
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.episodic.predicate.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-fun isLow(id: Int? = null,attribute: Attribute) = TabularCondition(id, attribute, Low, Current)
-fun isNormal(id: Int? = null,attribute: Attribute) = TabularCondition(id, attribute, Normal, Current)
-fun isHigh(id: Int? = null, attribute: Attribute) = TabularCondition(id, attribute, High, Current)
-fun isCondition(id: Int? = null,attribute: Attribute, text: String) = TabularCondition(id, attribute, Is(text), Current)
-fun containsText(id: Int? = null, attribute: Attribute, text: String) = TabularCondition(id, attribute, Contains(text), Current)
-fun hasCurrentValue(id: Int? = null, attribute: Attribute) = TabularCondition(id, attribute, IsNotBlank, Current)
-fun hasNoCurrentValue(id: Int? = null, attribute: Attribute) = TabularCondition(id, attribute, IsBlank, Current)
-fun greaterThanOrEqualTo(id: Int? = null,attribute: Attribute, d: Double) = TabularCondition(id, attribute, GreaterThanOrEquals(d), Current)
-fun lessThanOrEqualTo(id: Int? = null, attribute: Attribute, d: Double) = TabularCondition(id, attribute, LessThanOrEquals(d), Current)
-fun slightlyLow(id: Int? = null, attribute: Attribute, cutoff: Int) = TabularCondition(id, attribute, HighByAtMostSomePercentage(cutoff), Current)
+fun isLow(id: Int? = null,attribute: Attribute) = EpisodicCondition(id, attribute, Low, Current)
+fun isNormal(id: Int? = null,attribute: Attribute) = EpisodicCondition(id, attribute, Normal, Current)
+fun isHigh(id: Int? = null, attribute: Attribute) = EpisodicCondition(id, attribute, High, Current)
+fun isCondition(id: Int? = null,attribute: Attribute, text: String) = EpisodicCondition(id, attribute, Is(text), Current)
+fun containsText(id: Int? = null, attribute: Attribute, text: String) = EpisodicCondition(id, attribute, Contains(text), Current)
+fun hasCurrentValue(id: Int? = null, attribute: Attribute) = EpisodicCondition(id, attribute, IsNotBlank, Current)
+fun hasNoCurrentValue(id: Int? = null, attribute: Attribute) = EpisodicCondition(id, attribute, IsBlank, Current)
+fun greaterThanOrEqualTo(id: Int? = null,attribute: Attribute, d: Double) = EpisodicCondition(id, attribute, GreaterThanOrEquals(d), Current)
+fun lessThanOrEqualTo(id: Int? = null, attribute: Attribute, d: Double) = EpisodicCondition(id, attribute, LessThanOrEquals(d), Current)
+fun slightlyLow(id: Int? = null, attribute: Attribute, cutoff: Int) = EpisodicCondition(id, attribute, HighByAtMostSomePercentage(cutoff), Current)
 
 open class ConditionTestBase {
 
@@ -212,8 +213,12 @@ open class ConditionTestBase {
         val serialized = Json.encodeToString(condition)
         return Json.decodeFromString(serialized)
     }
+    fun serializeDeserialize(condition: CaseStructureCondition): CaseStructureCondition {
+        val serialized = Json.encodeToString(condition)
+        return Json.decodeFromString(serialized)
+    }
 
-    fun serializeDeserialize(condition: TabularCondition): TabularCondition {
+    fun serializeDeserialize(condition: EpisodicCondition): EpisodicCondition {
         val serialized = Json.encodeToString(condition)
         return Json.decodeFromString(serialized)
     }

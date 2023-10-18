@@ -44,7 +44,7 @@ class ConditionExamplesTest: ConditionTestBase() {
 
     @Test
     fun allBorderline() {
-        val condition = TabularCondition(null, tsh, NormalOrHighByAtMostSomePercentage(10), All)
+        val condition = EpisodicCondition(null, tsh, NormalOrHighByAtMostSomePercentage(10), All)
 
         condition.asText() shouldBe "all ${tsh.name} are normal or high by at most 10%"
 
@@ -59,7 +59,7 @@ class ConditionExamplesTest: ConditionTestBase() {
 
     @Test
     fun atLeastTwoNumeric() {
-        val condition = TabularCondition(null, tsh, IsNumeric, AtLeast(2))
+        val condition = EpisodicCondition(null, tsh, IsNumeric, AtLeast(2))
         checkConditionCanBeSerialized(condition)
 
         condition.asText() shouldBe "at least 2 ${tsh.name} are numeric"
@@ -83,7 +83,7 @@ class ConditionExamplesTest: ConditionTestBase() {
 
     @Test
     fun noFT3IsLow() {
-        val condition = TabularCondition(null, ft3, Low, No)
+        val condition = EpisodicCondition(null, ft3, Low, No)
         checkConditionCanBeSerialized(condition)
 
         condition.asText() shouldBe "no Free T3 is low"

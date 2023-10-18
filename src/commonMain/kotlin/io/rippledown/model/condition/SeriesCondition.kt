@@ -11,6 +11,10 @@ import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.*
 
 // ORD1
+/**
+ * A condition that takes the entire sequence of values for an attribute
+ * and evaluates that using a series predicate.
+ */
 @Serializable(SeriesConditionSerializer::class)
 data class SeriesCondition(override val id: Int? = null,
                            val attribute: Attribute,

@@ -13,7 +13,7 @@ import io.rippledown.constants.server.SHUTDOWN
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.TabularCondition
+import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.episodic.predicate.IsNotBlank
 import io.rippledown.model.external.ExternalCase
@@ -156,7 +156,7 @@ class RESTClient {
         if (remainderOfExpression != "id not blank") {
             throw IllegalArgumentException("Only 'is not blank' is supported")
         }
-        return TabularCondition(null, attribute, IsNotBlank, Current)
+        return EpisodicCondition(null, attribute, IsNotBlank, Current)
     }
 
     fun resetKB(): OperationResult {

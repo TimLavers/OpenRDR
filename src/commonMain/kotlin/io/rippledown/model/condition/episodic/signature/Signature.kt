@@ -3,7 +3,7 @@ package io.rippledown.model.condition.episodic.signature
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed interface ChainPredicate {
+sealed interface Signature {
 
     fun matches(pattern: List<Boolean>): Boolean
 
@@ -13,7 +13,7 @@ sealed interface ChainPredicate {
 }
 
 @Serializable
-data object Current: ChainPredicate {
+data object Current: Signature {
 
     override fun matches(pattern: List<Boolean>) = if (pattern.isEmpty()) false else pattern.last()
 
@@ -21,7 +21,7 @@ data object Current: ChainPredicate {
 }
 
 @Serializable
-data object All: ChainPredicate {
+data object All: Signature {
 
     override fun matches(pattern: List<Boolean>) = if (pattern.isEmpty()) false else !pattern.contains(false)
 
@@ -30,7 +30,7 @@ data object All: ChainPredicate {
     override fun plurality() = true
 }
 @Serializable
-data object No: ChainPredicate {
+data object No: Signature {
 
     override fun matches(pattern: List<Boolean>) = if (pattern.isEmpty()) true else !pattern.contains(true)
 
@@ -40,7 +40,7 @@ data object No: ChainPredicate {
 }
 
 @Serializable
-data class AtLeast(val n: Int): ChainPredicate {
+data class AtLeast(val n: Int): Signature {
     override fun matches(pattern: List<Boolean>) = pattern.filter { it }.size >= n
 
     override fun description() = "at least $n"
@@ -49,7 +49,7 @@ data class AtLeast(val n: Int): ChainPredicate {
 }
 
 @Serializable
-data class AtMost(val n: Int): ChainPredicate {
+data class AtMost(val n: Int): Signature {
     override fun matches(pattern: List<Boolean>) = pattern.filter { it }.size <= n
 
     override fun description() = "at most $n"

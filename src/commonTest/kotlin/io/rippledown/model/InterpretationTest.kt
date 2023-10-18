@@ -3,7 +3,7 @@ package io.rippledown.model
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.condition.isCondition
-import io.rippledown.model.condition.TabularCondition
+import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.diff.*
 import io.rippledown.model.rule.Rule
 import kotlinx.serialization.encodeToString
@@ -337,7 +337,7 @@ class InterpretationTest {
         }
     }
 
-    private fun containsText(attribute: Attribute, match: String): TabularCondition {
+    private fun containsText(attribute: Attribute, match: String): EpisodicCondition {
         return io.rippledown.model.condition.containsText(conditionId++, attribute, match)
     }
 

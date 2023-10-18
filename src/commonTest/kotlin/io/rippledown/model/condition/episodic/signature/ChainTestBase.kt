@@ -12,8 +12,8 @@ open class ChainTestBase {
     val ft = listOf(false, true)
     val ff = listOf(false, false)
 
-    fun serializeDeserialize(chainPredicate: ChainPredicate): ChainPredicate {
-        val serialized = Json.encodeToString(chainPredicate)
+    fun serializeDeserialize(signature: Signature): Signature {
+        val serialized = Json.encodeToString(signature)
         return Json.decodeFromString(serialized)
     }
 }

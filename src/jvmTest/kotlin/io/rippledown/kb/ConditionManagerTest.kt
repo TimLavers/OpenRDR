@@ -9,7 +9,7 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.rippledown.model.*
 import io.rippledown.model.condition.*
-import io.rippledown.model.condition.TabularCondition
+import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.persistence.ConditionStore
 import io.rippledown.persistence.inmemory.InMemoryAttributeStore
 import io.rippledown.persistence.inmemory.InMemoryConditionStore
@@ -108,12 +108,12 @@ class ConditionManagerTest {
     fun `created conditions use attributes from attribute manager`() {
         val glucoseCopy = glucose.copy()
         val templateCondition = isHigh(null, glucoseCopy)
-        val createdCondition = conditionManager.getOrCreate(templateCondition) as TabularCondition
+        val createdCondition = conditionManager.getOrCreate(templateCondition) as EpisodicCondition
         createdCondition.attribute shouldBeSameInstanceAs glucose
 
         // Rebuild.
         conditionManager = ConditionManager(attributeManager, conditionStore)
-        val retrieved = conditionManager.getById(createdCondition.id!!) as TabularCondition
+        val retrieved = conditionManager.getById(createdCondition.id!!) as EpisodicCondition
         retrieved.attribute shouldBeSameInstanceAs glucose
     }
 
@@ -124,7 +124,7 @@ class ConditionManagerTest {
         conditionStore.load(setOf(condition))
 
         conditionManager = ConditionManager(attributeManager, conditionStore)
-        val loadedCondition = conditionManager.all().single() as TabularCondition
+        val loadedCondition = conditionManager.all().single() as EpisodicCondition
         loadedCondition.attribute shouldBeSameInstanceAs glucose
     }
 

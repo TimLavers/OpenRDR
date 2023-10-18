@@ -23,14 +23,21 @@ conditions are very common and take a variety of forms, such as:
 Conditions such as these will be called _episodic conditions_. As we will see below, 
 they include single episode conditions like those in the first set of examples above.
 
-A further kind of condition is one that applies a predicate to the entire sequence
+A second kind of condition is one that applies a predicate to the entire sequence
 of test values for an attribute. For example:
 - `TSH is increasing`
 - `maximum BMI < 18.0`
 
 These kinds of conditions will be called _series conditions_.
 
-This document describes a software design that handles both these kinds of condition.
+A third kind of condition is one that applies a predicate at the level
+of the case structure itself. For example:
+- `TSH is not in case`
+- `at least 5 episodes in case`
+
+These kinds of conditions will be called _case structure conditions_.
+
+This document describes a software design that handles these kinds of condition.
 
 *The way in which an end user might build or select a condition 
 while building a rule is not in the scope of this document.*
@@ -136,7 +143,7 @@ would be evaluated as follows:
 
 `Case ==[FT > 16.0]==> Case with just first 2 episodes ==[TSH]==> ( 0.03,0.09) ==[low]==> (true, true) ==[all]==> true`
 
-## Series Conditions
+## Series conditions
 A series condition will contain two sub-objects:
 - an `Attribute` of interest,
 - a `SeriesPredicate` that makes an assertion about the values in a case of the `Attribute`.
@@ -154,7 +161,14 @@ would be evaluated as follows:
 A restriction clause could be applied in the evaluation of series conditions
 if required.
 
-## Case predicates that cannot be expressed as episodic or series conditions
+## Case structure conditions
+A case structure condition will hold a single sub-object, a `CaseStructurePredicate`.
+The predicate will do the actual case evaluation. In the first instance, the only
+predicates available will be `IsAbsentFromCase` and `IsPresentInCase`. These both
+have an `Attribute` and evaluate `true` or `false` depending on whether or not
+the attribute is in the data for the case.
+
+## Other kinds of conditions
 It's possible to think of assertions that might involve more than one
 attribute. For example, `mass/(height * height) > 28`.
 These kinds of calculations won't be expressible as conditions like

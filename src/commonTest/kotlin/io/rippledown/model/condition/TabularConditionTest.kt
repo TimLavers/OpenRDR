@@ -15,15 +15,15 @@ import kotlin.test.Test
 
 class TabularConditionTest: ConditionTestBase() {
 
-    private val tshLow = TabularCondition(123, tsh, Low, Current)
+    private val tshLow = EpisodicCondition(123, tsh, Low, Current)
 
     @Test
     fun secondaryConstructor() {
-        val nullId = TabularCondition(tsh, Low, Current)
+        val nullId = EpisodicCondition(tsh, Low, Current)
         nullId.id shouldBe null
         nullId.attribute shouldBe tsh
         nullId.predicate shouldBe Low
-        nullId.chainPredicate shouldBe Current
+        nullId.signature shouldBe Current
     }
 
     @Test
@@ -66,7 +66,7 @@ class TabularConditionTest: ConditionTestBase() {
 
     @Test
     fun allLow() {
-        val allTshLow = TabularCondition(null, tsh, Low, All)
+        val allTshLow = EpisodicCondition(null, tsh, Low, All)
         allTshLow.holds(threeEpisodeCaseWithEachTshLow()) shouldBe true
         allTshLow.holds(twoEpisodeCaseWithFirstTSHLowSecondNormal()) shouldBe false
         allTshLow.asText() shouldBe "all ${tsh.name} are low"
@@ -74,7 +74,7 @@ class TabularConditionTest: ConditionTestBase() {
 
     @Test
     fun allContain() {
-        val allContain = TabularCondition(null, clinicalNotes, Contains("cat"), All)
+        val allContain = EpisodicCondition(null, clinicalNotes, Contains("cat"), All)
         allContain.holds(multiEpisodeClinicalNotesCase("dog", "cat", "horse")) shouldBe false
         allContain.holds(multiEpisodeClinicalNotesCase("scatter", "cat", "cathartic")) shouldBe true
     }
@@ -84,7 +84,7 @@ class TabularConditionTest: ConditionTestBase() {
         serializeDeserialize(tshLow) shouldBe tshLow
 
         // One without an id.
-        val idLess = TabularCondition(null, tsh, Low, Current)
+        val idLess = EpisodicCondition(null, tsh, Low, Current)
         serializeDeserialize(idLess) shouldBe idLess
     }
 
@@ -107,18 +107,18 @@ class TabularConditionTest: ConditionTestBase() {
         tshLow.sameAs(tshLow) shouldBe true
 
         // Same but for id.
-        tshLow.sameAs(TabularCondition(null, tsh, Low, Current)) shouldBe true
-        tshLow.sameAs(TabularCondition(88, tsh, Low, Current)) shouldBe true
-        TabularCondition(88, tsh, Low, Current).sameAs(TabularCondition(88, tsh, Low, Current)) shouldBe true
-        TabularCondition(123, tsh, Low, Current).sameAs(TabularCondition(88, tsh, Low, Current)) shouldBe true
+        tshLow.sameAs(EpisodicCondition(null, tsh, Low, Current)) shouldBe true
+        tshLow.sameAs(EpisodicCondition(88, tsh, Low, Current)) shouldBe true
+        EpisodicCondition(88, tsh, Low, Current).sameAs(EpisodicCondition(88, tsh, Low, Current)) shouldBe true
+        EpisodicCondition(123, tsh, Low, Current).sameAs(EpisodicCondition(88, tsh, Low, Current)) shouldBe true
 
         // Attribute different.
-        tshLow.sameAs(TabularCondition(null, clinicalNotes, Low, Current)) shouldBe false
+        tshLow.sameAs(EpisodicCondition(null, clinicalNotes, Low, Current)) shouldBe false
 
         // Predicate different.
-        tshLow.sameAs(TabularCondition(null, tsh, Normal, Current)) shouldBe false
+        tshLow.sameAs(EpisodicCondition(null, tsh, Normal, Current)) shouldBe false
 
         // Chain different.
-        tshLow.sameAs(TabularCondition(null, tsh, Low, All)) shouldBe false
+        tshLow.sameAs(EpisodicCondition(null, tsh, Low, All)) shouldBe false
     }
 }

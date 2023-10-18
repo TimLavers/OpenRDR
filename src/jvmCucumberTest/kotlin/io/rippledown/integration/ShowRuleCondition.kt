@@ -7,7 +7,7 @@ import io.rippledown.integration.pageobjects.ConclusionsViewPO
 import io.rippledown.integration.restclient.RESTClient
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.TabularCondition
+import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals
 import io.rippledown.model.condition.episodic.predicate.LessThanOrEquals
@@ -38,10 +38,10 @@ internal class ShowRuleCondition : UITestBase() {
         resetKB()
         tsh = attributeFactory.create("TSH")
         abc = attributeFactory.create("ABC")
-        condition1 = conditionFactory.getOrCreate(TabularCondition(null, tsh, Normal, Current))
-        condition2 = conditionFactory.getOrCreate(TabularCondition(null, tsh, LessThanOrEquals(0.7), Current))
-        condition3 = conditionFactory.getOrCreate(TabularCondition(null, abc, GreaterThanOrEquals(6.1), Current))
-        condition4 = conditionFactory.getOrCreate(TabularCondition(null, abc, LessThanOrEquals(7.1), Current))
+        condition1 = conditionFactory.getOrCreate(EpisodicCondition(null, tsh, Normal, Current))
+        condition2 = conditionFactory.getOrCreate(EpisodicCondition(null, tsh, LessThanOrEquals(0.7), Current))
+        condition3 = conditionFactory.getOrCreate(EpisodicCondition(null, abc, GreaterThanOrEquals(6.1), Current))
+        condition4 = conditionFactory.getOrCreate(EpisodicCondition(null, abc, LessThanOrEquals(7.1), Current))
         setupCase()
         buildRuleForTSH()
         buildRuleForABC()

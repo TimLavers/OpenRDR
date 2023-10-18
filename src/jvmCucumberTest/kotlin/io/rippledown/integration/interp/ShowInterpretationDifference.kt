@@ -6,7 +6,7 @@ import io.rippledown.integration.pageobjects.CaseQueuePO
 import io.rippledown.integration.pageobjects.CaseViewPO
 import io.rippledown.integration.pageobjects.InterpretationViewPO
 import io.rippledown.integration.restclient.RESTClient
-import io.rippledown.model.condition.TabularCondition
+import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.episodic.predicate.LessThanOrEquals
 import io.rippledown.model.condition.episodic.predicate.Normal
@@ -46,8 +46,8 @@ internal class ShowInterpretationDifference : UITestBase() {
             val tsh = getOrCreateAttribute("TSH")
             val conclusion = getOrCreateConclusion(tshComment)
             startSessionToAddConclusionForCurrentCase(conclusion)
-            addConditionForCurrentSession(TabularCondition(null, tsh, Normal, Current))
-            addConditionForCurrentSession(TabularCondition(null, tsh, LessThanOrEquals(0.7), Current))
+            addConditionForCurrentSession(EpisodicCondition(null, tsh, Normal, Current))
+            addConditionForCurrentSession(EpisodicCondition(null, tsh, LessThanOrEquals(0.7), Current))
             commitCurrentSession()
         }
     }
