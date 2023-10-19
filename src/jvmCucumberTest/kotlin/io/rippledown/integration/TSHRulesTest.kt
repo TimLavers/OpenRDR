@@ -123,7 +123,7 @@ internal class TSHRulesTest : TSHTest() {
         selectCaseAndCheckName("1.4.29")
         checkInterpretation("Normal TSH indicates a euthyroid state. Causes of a raised FT4 with reduced T4/T3 conversion include non-thyroidal illness, drugs " +
                 "(beta-blockers, amiodarone, heparin, radiocontrast) and treated thyroid disease.\n" +
-                "Suggest measure FT3 if not on treatment. ")
+                "Suggest measure FT3 if not on treatment.")
 
         // The comment and explanation fpr case 1.4.30 don't really make sense unless the case
         // is a later episode for the same patient as in 1.4.29, but the FT4 and THS values are
@@ -197,7 +197,6 @@ internal class TSHRulesTest : TSHTest() {
         val borderline10HighTSH = conditionFactory.getOrCreate((EpisodicCondition(tsh, NormalOrHighByAtMostSomePercentage(10), All)))
         val borderline20HighTSH = conditionFactory.getOrCreate((EpisodicCondition(tsh, NormalOrHighByAtMostSomePercentage(20), All)))
         val tshSlightlyIncreased = conditionFactory.getOrCreate(greaterThanOrEqualTo(tsh, 10.0))
-        val tshModeratelyIncreased = conditionFactory.getOrCreate(greaterThanOrEqualTo(tsh, 20.0))
         val tshHigh = conditionFactory.getOrCreate(isHigh(tsh))
         val tshVeryHigh = conditionFactory.getOrCreate(greaterThanOrEqualTo( tsh, 40.0)) // What should this be?
         val tshProfoundlyHigh = conditionFactory.getOrCreate(greaterThanOrEqualTo( tsh, 100.0)) //  should this be?
@@ -295,10 +294,10 @@ internal class TSHRulesTest : TSHTest() {
         val report22 = "Amiodarone inhibits T4 to T3 conversion as well as presenting the thyroid with a large iodine load. The suppressed TSH and raised " +
                 "FT4 may suggest amiodarone-induced hyperthyroidism but should be interpreted in the light of clinical findings."
         val report23 = "Normal TSH indicates a euthyroid state. Causes of a raised FT4 with reduced T4/T3 conversion include non-thyroidal illness, drugs " +
-                "(beta-blockers, amiodarone, heparin, radiocontrast) and treated thyroid disease." +
+                "(beta-blockers, amiodarone, heparin, radiocontrast) and treated thyroid disease.\n" +
                 "Suggest measure FT3 if not on treatment."
-        val report23b = "FT4 and TSH results confirmed by alternative method. Heterophile antibody excluded for TSH. Consider specialist Endocrine " +
-                "referral to test for TSH secreting tumour or thyroid hormone resistance."
+//        val report23b = "FT4 and TSH results confirmed by alternative method. Heterophile antibody excluded for TSH. Consider specialist Endocrine " +
+//                "referral to test for TSH secreting tumour or thyroid hormone resistance."
         val report24 = "The raised FT4 and FT3 with suppressed TSH are consistent with thyrotoxicosis. Hyperthyroidism with hypokalaemia and muscle " +
                 "weakness may be consistent with thyrotoxic periodic paralysis."
         val report25 = "The presence of a low FT4 with only a marginal increase in TSH may suggest pituitary insufficiency, although these results may also " +
@@ -348,7 +347,7 @@ internal class TSHRulesTest : TSHTest() {
         replaceCommentForCase("1.4.31", report17, report24, severelyHighFT4, severelyHighFT3, tshBelowDetection, lowPotassium)
         replaceCommentForCase("1.4.32", report3, report25, ft4Low, borderline20HighTSH)
         addCommentForCase("1.4.33", report26, ft4Low, onT4)
-        addCommentForCase("1.4.35", report27b, ft4Low, tshProfoundlyHigh)
+        replaceCommentForCase("1.4.35", report3, report27b, ft4Low, tshProfoundlyHigh)
     }
 
     private fun addCommentForCase(caseName: String, comment: String, vararg conditions: Condition) {
