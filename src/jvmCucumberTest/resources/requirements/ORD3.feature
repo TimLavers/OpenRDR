@@ -17,6 +17,10 @@ Feature: Knowledge Base management
     And the displayed KB name is Thyroids
     And I export the current Knowledge Base
     And there is a file called Thyroids.zip in my downloads directory
+#    The new version of chrome shows a popup explaining
+#    where the downloads are. If we don't wait for this to
+#    disappear, it interferes with the test.
+    And pause for 20 seconds
     And I import the configured zipped Knowledge Base Whatever
     And the displayed KB name is Whatever
     And pause for 1 second
