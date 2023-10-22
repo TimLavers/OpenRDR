@@ -10,7 +10,6 @@ import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistentKB
-import io.rippledown.textdiff.diffList
 import io.rippledown.textdiff.splitIntoSentences
 
 class KB(persistentKB: PersistentKB) {
@@ -23,10 +22,15 @@ class KB(persistentKB: PersistentKB) {
     val ruleTree: RuleTree = ruleManager.ruleTree()
     private val caseManager = CaseManager(persistentKB.caseStore(), attributeManager)
     private var ruleSession: RuleBuildingSession? = null
-    val caseViewManager: CaseViewManager = CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
+    internal val caseViewManager: CaseViewManager =
+        CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
     private val verifiedTextStore = persistentKB.verifiedTextStore()
     val interpretationViewManager: InterpretationViewManager =
-        InterpretationViewManager(persistentKB.conclusionOrderStore(), conclusionManager, verifiedTextStore)
+        InterpretationViewManager(
+            persistentKB.conclusionOrderStore(),
+            conclusionManager,
+            verifiedTextStore
+        )
 
     fun containsCornerstoneCaseWithName(caseName: String): Boolean {
         return caseManager.ids(CaseType.Cornerstone).find { rdrCase -> rdrCase.name == caseName } != null
@@ -128,9 +132,7 @@ class KB(persistentKB: PersistentKB) {
     fun viewableCase(case: RDRCase): ViewableCase {
         val interpretation = interpret(case)
         val viewableInterpretation = interpretationViewManager.viewableInterpretation(interpretation)
-        viewableInterpretation.diffList = diffList(viewableInterpretation)
-        val viewableCase = caseViewManager.getViewableCase(case, viewableInterpretation)
-        return viewableCase
+        return caseViewManager.getViewableCase(case, viewableInterpretation)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -186,11 +188,16 @@ class KB(persistentKB: PersistentKB) {
         val conclusionList = text.splitIntoSentences().map {
             conclusionManager.getOrCreate(it)
         }
-        interpretationViewManager.set(conclusionList)
+        interpretationViewManager.insert(conclusionList)
     }
 
-    fun saveVerifiedText(interp: ViewableInterpretation) {
-        val verifiedText = interp.verifiedText
-        if (verifiedText != null) verifiedTextStore.put(interp.caseId().id!!, verifiedText)
+    fun saveInterpretation(interp: ViewableInterpretation) {
+        require(interp.verifiedText != null)
+        require(interp.caseId().id != null)
+
+        val verifiedText = interp.verifiedText!!
+        val caseId = interp.caseId().id!!
+        verifiedTextStore.put(caseId, verifiedText)
+        saveConclusions(verifiedText)
     }
 }

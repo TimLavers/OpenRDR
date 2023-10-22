@@ -1,13 +1,10 @@
 package io.rippledown.textdiff
 
 import io.kotest.matchers.shouldBe
-import io.mockk.every
-import io.mockk.mockk
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Removal
 import io.rippledown.model.diff.Replacement
 import io.rippledown.model.diff.Unchanged
-import io.rippledown.model.interpretationview.ViewableInterpretation
 import org.junit.Test
 
 class FragmentGeneratorTest {
@@ -83,30 +80,33 @@ class FragmentGeneratorTest {
 */
     @Test
     fun `should generate an unchanged fragment if the original text is the same as the changed text`() {
-        val interpretation = mockk<ViewableInterpretation>()
         val sentence = "Go to Bondi Beach."
-        every { interpretation.textGivenByRules() } returns sentence
-        every { interpretation.verifiedText } returns sentence
-
-        fragmentList(interpretation).fragments shouldBe listOf(
+        fragmentList(sentence, sentence).fragments shouldBe listOf(
             UnchangedFragment(sentence)
         )
     }
 
     @Test
     fun `should generate no fragments if the original text and changed text are blank`() {
-        val interpretation = mockk<ViewableInterpretation>()
-        val sentence = ""
-        every { interpretation.textGivenByRules() } returns sentence
-        every { interpretation.verifiedText } returns sentence
-
-        fragmentList(interpretation).fragments shouldBe emptyList()
+        fragmentList("", "").fragments shouldBe emptyList()
     }
 
     @Test
     fun `should split a paragraph into sentences delimited by a period and a space`() {
         val paragraph = "Sun is up. Go to Bondi Beach. Surf is great."
         paragraph.splitIntoSentences() shouldBe listOf("Sun is up.", "Go to Bondi Beach.", "Surf is great.")
+    }
+
+    @Test
+    fun `should split a paragraph into sentences delimited by a ! and a space`() {
+        val paragraph = "Sun is up! Go to Bondi Beach. Surf is great."
+        paragraph.splitIntoSentences() shouldBe listOf("Sun is up!", "Go to Bondi Beach.", "Surf is great.")
+    }
+
+    @Test
+    fun `should split a paragraph into sentences delimited by a question mark and a space`() {
+        val paragraph = "Is the sun up? Go to Bondi Beach! Surf is great."
+        paragraph.splitIntoSentences() shouldBe listOf("Is the sun up?", "Go to Bondi Beach!", "Surf is great.")
     }
 
     @Test
@@ -121,13 +121,9 @@ class FragmentGeneratorTest {
 
     @Test
     fun `should generate an added fragment if the changed text has added a comment`() {
-        val interpretation = mockk<ViewableInterpretation>()
         val bondiText = "Go to Bondi Beach."
         val surfText = "Surf is great."
-        every { interpretation.textGivenByRules() } returns bondiText
-        every { interpretation.verifiedText } returns "$bondiText $surfText"
-
-        fragmentList(interpretation).fragments shouldBe listOf(
+        fragmentList(bondiText, "$bondiText $surfText").fragments shouldBe listOf(
             UnchangedFragment(bondiText),
             AddedFragment(surfText)
         )
@@ -135,13 +131,9 @@ class FragmentGeneratorTest {
 
     @Test
     fun `should generate a removed fragment if the changed text has removed a comment`() {
-        val interpretation = mockk<ViewableInterpretation>()
         val bondiText = "Go to Bondi Beach."
         val surfText = "Surf is great."
-        every { interpretation.textGivenByRules() } returns "$bondiText $surfText"
-        every { interpretation.verifiedText } returns bondiText
-
-        fragmentList(interpretation).fragments shouldBe listOf(
+        fragmentList("$bondiText $surfText", bondiText).fragments shouldBe listOf(
             UnchangedFragment(bondiText),
             RemovedFragment(surfText)
         )
@@ -149,13 +141,9 @@ class FragmentGeneratorTest {
 
     @Test
     fun `should generate a replaced fragment if the changed text has replaced a comment`() {
-        val interpretation = mockk<ViewableInterpretation>()
         val bondiText = "Go to Bondi Beach."
         val surfText = "Surf is great."
-        every { interpretation.textGivenByRules() } returns bondiText
-        every { interpretation.verifiedText } returns surfText
-
-        fragmentList(interpretation).fragments shouldBe listOf(
+        fragmentList(bondiText, surfText).fragments shouldBe listOf(
             ReplacedFragment(bondiText, surfText)
         )
     }

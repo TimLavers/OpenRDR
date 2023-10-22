@@ -24,7 +24,6 @@ Feature: Order of Attributes in Case View
       | C |
     And stop the client application
 
-  @single
   Scenario: Attributes can be re-ordered by drag-and-drop
     Given I start the client application
     And the initial Attribute order is A, B, C
@@ -40,16 +39,6 @@ Feature: Order of Attributes in Case View
       | B |
       | A |
     And stop the client application
-
-  Scenario: Attributes can be re-ordered by drag-and-drop using playwright
-    Given I start the client application using playwright
-    And the initial Attribute order is A, B, C
-    And case CaseABC is provided having data:
-      | A | a |
-      | B | b |
-      | C | c |
-    When I select case CaseABC using playwright
-    And pause
 
   Scenario: New Attributes can be created after an Attribute re-ordering
     Given I start the client application

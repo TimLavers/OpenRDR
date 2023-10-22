@@ -400,6 +400,34 @@ internal class ServerApplicationTest {
     }
 
     @Test
+    fun `when saving an interpretation, the conclusions corresponding to the verified text should be saved in order`() {
+        // given
+        val id = supplyCaseFromFile("Case1", app).caseId.id!!
+        val case = app.viewableCase(id)
+        val comment1 = "Go to Bondi."
+        val comment2 = "Bring 2 sets of flippers."
+        val comment3 = "And bring sunscreen."
+        val interp = case.viewableInterpretation.apply {
+            verifiedText = "$comment1 $comment2 $comment3"
+        }
+
+        // when
+        val savedInterpretation = app.saveInterpretation(interp)
+
+        // then
+        app.kb.interpretationViewManager.allInOrder()
+            .map { it.text } shouldBe setOf(comment1, comment2, comment3)
+
+        savedInterpretation.diffList shouldBe DiffList(
+            listOf(
+                Addition(comment1),
+                Addition(comment2),
+                Addition(comment3),
+            )
+        )
+    }
+
+    @Test
     fun `After committing a rule the session case should be a cornerstone`() {
         val id = supplyCaseFromFile("Case1", app).caseId.id!!
         val conclusion = app.kb.conclusionManager.getOrCreate("Whatever")

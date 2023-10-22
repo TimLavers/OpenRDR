@@ -1,6 +1,5 @@
 package io.rippledown.model.interpretationview
 
-import io.rippledown.model.COMMENT_SEPARATOR
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.diff.DiffList
@@ -16,21 +15,11 @@ import kotlinx.serialization.encoding.*
 data class ViewableInterpretation(
     val interpretation: Interpretation = Interpretation(),
     var verifiedText: String? = null,
-    var diffList: DiffList = DiffList()
+    var diffList: DiffList = DiffList(),
+    var textGivenByRules: String = interpretation.conclusionTexts().joinToString(" ")
 ) {
     fun caseId() = interpretation.caseId
-
-    fun latestText(): String = if (verifiedText != null) verifiedText!! else textGivenByRules()
-
-    //TODO set the ordering from the interpretation view manager
-    fun textGivenByRules(): String {
-        return interpretation.ruleSummaries.asSequence().map { it.conclusion?.text }
-            .filterNotNull()
-            .toMutableSet()//eliminate duplicates
-            .toMutableList()
-            .sortedWith(String.CASE_INSENSITIVE_ORDER).joinToString(COMMENT_SEPARATOR)
-    }
-
+    fun latestText(): String = if (verifiedText != null) verifiedText!! else textGivenByRules
     fun numberOfChanges() = diffList.numberOfChanges()
     fun conditionsForConclusion(conclusion: Conclusion) = interpretation.conditionsForConclusion(conclusion)
     fun conclusions() = interpretation.conclusions()
@@ -39,19 +28,22 @@ data class ViewableInterpretation(
 object ViewableInterpretationSerializer : KSerializer<ViewableInterpretation> {
     private val interpretationSerializer = Interpretation.serializer()
     private val verifiedTextSerializer = String.serializer().nullable
-    private val diffListKSerializer = DiffList.serializer()
+    private val diffListSerializer = DiffList.serializer()
+    private val textGivenByRulesSerializer = String.serializer()
     override val descriptor: SerialDescriptor =
         buildClassSerialDescriptor("ViewableInterpretation") {
             element("interp", interpretationSerializer.descriptor)
             element("verify", verifiedTextSerializer.descriptor)
-            element("diff", diffListKSerializer.descriptor)
+            element("diff", diffListSerializer.descriptor)
+            element("text", textGivenByRulesSerializer.descriptor)
         }
 
     override fun serialize(encoder: Encoder, value: ViewableInterpretation) {
         encoder.encodeStructure(descriptor) {
             encodeSerializableElement(descriptor, 0, interpretationSerializer, value.interpretation)
             encodeSerializableElement(descriptor, 1, verifiedTextSerializer, value.verifiedText)
-            encodeSerializableElement(descriptor, 2, diffListKSerializer, value.diffList)
+            encodeSerializableElement(descriptor, 2, diffListSerializer, value.diffList)
+            encodeSerializableElement(descriptor, 3, textGivenByRulesSerializer, value.textGivenByRules)
         }
     }
 
@@ -59,18 +51,20 @@ object ViewableInterpretationSerializer : KSerializer<ViewableInterpretation> {
         var interpretation = Interpretation()
         var verifiedText: String? = null
         var diffList = DiffList()
+        var textGivenByRules = ""
         decoder.decodeStructure(descriptor) {
             // Loop label needed so that break statement works in js.
             parseLoop@ while (true) {
                 when (val index = decodeElementIndex(descriptor)) {
                     0 -> interpretation = decodeSerializableElement(descriptor, 0, interpretationSerializer)
                     1 -> verifiedText = decodeSerializableElement(descriptor, 1, verifiedTextSerializer)
-                    2 -> diffList = decodeSerializableElement(descriptor, 2, diffListKSerializer)
+                    2 -> diffList = decodeSerializableElement(descriptor, 2, diffListSerializer)
+                    3 -> textGivenByRules = decodeSerializableElement(descriptor, 3, textGivenByRulesSerializer)
                     CompositeDecoder.DECODE_DONE -> break@parseLoop
                     else -> error("Unexpected index: $index")
                 }
             }
         }
-        return ViewableInterpretation(interpretation, verifiedText, diffList)
+        return ViewableInterpretation(interpretation, verifiedText, diffList, textGivenByRules)
     }
 }

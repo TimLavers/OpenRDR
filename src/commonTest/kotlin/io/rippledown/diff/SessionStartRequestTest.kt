@@ -1,8 +1,8 @@
-package io.rippledown.model.diff
+package io.rippledown.diff
 
 import io.kotest.matchers.shouldBe
+import io.rippledown.model.diff.Addition
 import io.rippledown.model.rule.SessionStartRequest
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test

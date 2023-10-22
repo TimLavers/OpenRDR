@@ -29,33 +29,6 @@ class KBTest {
     }
 
     @Test
-    fun `should save the verified text of a viewable interpretation`() {
-        val case = createCase("Case1", "1.0", id = 42)
-        val verified = "Bondi or bust"
-        val interp = kb.viewableCase(case).viewableInterpretation.apply { verifiedText = verified }
-        kb.saveVerifiedText(interp)
-        kb.viewableCase(case).viewableInterpretation.verifiedText shouldBe verified
-    }
-
-    @Test
-    fun `interpreting a case should not overwrite the verified text`() {
-        //Given
-        val verifiedText = "Go to Bondi"
-        val case = RDRCase(CaseId(99, "Blah"))
-        val viewableCase = kb.viewableCase(case)
-        viewableCase.viewableInterpretation.verifiedText = verifiedText
-        kb.saveVerifiedText(viewableCase.viewableInterpretation)
-        viewableCase.latestText() shouldBe verifiedText
-
-        //When
-        val reinterpreted = kb.viewableCase(case)
-
-        //Then
-        reinterpreted.latestText() shouldBe verifiedText
-    }
-
-
-    @Test
     fun processCase() {
         kb.allProcessedCases() shouldBe emptyList()
         kb.attributeManager.all() shouldBe emptySet()
@@ -244,6 +217,31 @@ class KBTest {
         kb.caseViewManager.moveJustBelow(attributesInOriginalOrder[0], attributesInOriginalOrder[1])
         val caseAfterMove = kb.viewableCase(case)
         caseAfterMove.attributes() shouldBe listOf(attributesInOriginalOrder[1], attributesInOriginalOrder[0])
+    }
+
+    @Test
+    fun `should show comments given by rules in the order specified by the InterpretationViewManager`() {
+        //Given
+        val coffeeComment = "Coffee time!"
+        val teaComment = "Tea time!"
+        val chocComment = "Chocolate time!"
+        kb.saveConclusions("$teaComment $coffeeComment $chocComment")
+        kb.conclusionManager.all().map { it.text } shouldBe setOf(
+            teaComment,
+            coffeeComment,
+            chocComment
+        )
+        buildRuleToAddAComment(kb, coffeeComment)
+        buildRuleToAddAComment(kb, teaComment)
+        buildRuleToAddAComment(kb, chocComment)
+
+        val case = RDRCase(CaseId(42, "Case"))
+
+        //When the case is interpreted
+        val viewableCase = kb.viewableCase(case)
+
+        //Then the comments should be in the order specified by the InterpretationViewManager
+        viewableCase.textGivenByRules() shouldBe "$teaComment $coffeeComment $chocComment"
     }
 
     @Test
@@ -672,6 +670,28 @@ class KBTest {
         kb.saveConclusions("$bondi $flippers $sunScreen")
         kb.conclusionManager.all().map { it.text } shouldBe setOf(bondi, flippers, sunScreen)
         kb.interpretationViewManager.allInOrder().map { it.text } shouldBe listOf(bondi, flippers, sunScreen)
+    }
+
+    @Test
+    fun `should save and insert a new conclusion in the specified text`() {
+        // Given
+        val bondi = "Go to Bondi."
+        val flippers = "Bring your flippers."
+        val sunScreen = "And your sunscreen."
+        kb.saveConclusions("$bondi $flippers $sunScreen")
+
+        // When
+        val newConclusion = "And towel."
+        kb.saveConclusions("$newConclusion $flippers")
+
+        // Then
+        kb.conclusionManager.all().map { it.text }.toSet() shouldBe setOf(bondi, newConclusion, flippers, sunScreen)
+        kb.interpretationViewManager.allInOrder().map { it.text } shouldBe listOf(
+            bondi,
+            newConclusion,
+            flippers,
+            sunScreen
+        )
     }
 
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")

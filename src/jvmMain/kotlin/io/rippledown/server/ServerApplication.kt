@@ -18,7 +18,6 @@ import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.postgres.PostgresPersistenceProvider
-import io.rippledown.textdiff.diffList
 import io.rippledown.util.EntityRetrieval
 import java.io.File
 import kotlin.io.path.createTempDirectory
@@ -134,30 +133,24 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
      * @return a ViewableInterpretation with a re-calculated list of Diffs
      * corresponding to difference between the current interpretation and the verified text
      */
-    fun saveInterpretation(interpretation: ViewableInterpretation): ViewableInterpretation {
-        val caseId = interpretation.caseId()
+    fun saveInterpretation(viewableInterpretation: ViewableInterpretation): ViewableInterpretation {
+        require(viewableInterpretation.verifiedText != null) { "Cannot save an unverified interpretation." }
+
+        val caseId = viewableInterpretation.caseId()
         val case = viewableCase(caseId.id!!)
 
-        with(case) {
+        //persist the verified text and corresponding conclusions associated with the interpretation
+        kb.saveInterpretation(viewableInterpretation)
 
-            //persist the verified text
-            kb.saveVerifiedText(interpretation)
+        //reset the case's viewable interpretation including diff list
+        val updated = kb.interpretationViewManager.viewableInterpretation(viewableInterpretation.interpretation)
 
-            //reset the case's viewable interpretation
-            viewableInterpretation = interpretation
+        //update the case in the KB
+        case.viewableInterpretation = updated
+        //kb.putCase(case) TODO test this for the case where we are using the Postgres persistence provider
 
-            //TODO save the conclusions in the verified text
-//        kb.saveConclusions(interpretation.verifiedText!!)
-
-            //recalculate and reset the case's diff list
-            viewableInterpretation.diffList = diffList(interpretation)
-
-            //update the case in the KB
-            //kb.putCase(case) TODO test this for the case where we are using the Postgres persistence provider
-
-            //return the updated interpretation
-            return viewableInterpretation
-        }
+        //return the updated interpretation
+        return updated
     }
 
     /**
@@ -185,14 +178,7 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
 
         //re-interpret the case
         val updatedInterpretation = kb.interpret(case.case)
-        val updatedViewableInterpretation = kb.interpretationViewManager.viewableInterpretation(updatedInterpretation)
-
-        //If a new conclusion was created, ensure that it is positioned as indicated in the verified text
-        //todo
-
-        //reset the case's diff list to account of the updated interpretation
-        case.viewableInterpretation = updatedViewableInterpretation
-        case.viewableInterpretation.diffList = diffList(updatedViewableInterpretation)
+        case.viewableInterpretation = kb.interpretationViewManager.viewableInterpretation(updatedInterpretation)
 
         //return the updated interpretation
         logger.info("Updated interpretation after committing the rule: $updatedInterpretation")

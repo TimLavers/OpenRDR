@@ -18,6 +18,7 @@ val cucumberVersion = "7.14.0"
 val commonsIoVersion = "2.14.0"
 val commonsTextVersion = "1.10.0"
 val mockkVersion = "1.13.8"
+val testNgVersion = "7.7.0"
 
 plugins {
     kotlin("multiplatform") version "1.9.10"
@@ -35,7 +36,7 @@ repositories {
     mavenCentral()
 }
 dependencies {
-    implementation("org.testng:testng:7.1.0")
+    implementation("org.testng:testng:$testNgVersion")
 }
 
 kotlin {
@@ -57,7 +58,6 @@ kotlin {
                     implementation("io.ktor:ktor-client-core")
                     implementation("io.ktor:ktor-serialization-kotlinx-json")
                     implementation("org.jetbrains.kotlinx:kotlinx-datetime:$kotlinxDateTimeVersion")
-
                 }
             }
             val commonTest by getting {
@@ -85,7 +85,6 @@ kotlin {
                     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
                     implementation("org.postgresql:postgresql:42.5.4")
                     implementation("io.github.java-diff-utils:java-diff-utils:$diffUtilsVersion")
-
                 }
             }
             val jvmTest by getting {

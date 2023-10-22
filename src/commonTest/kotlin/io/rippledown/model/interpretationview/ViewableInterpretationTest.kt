@@ -33,7 +33,7 @@ class ViewableInterpretationTest {
             verifiedText shouldBe null
             diffList shouldBe DiffList()
             latestText() shouldBe ""
-            textGivenByRules() shouldBe ""
+            textGivenByRules shouldBe ""
         }
     }
 
@@ -42,7 +42,7 @@ class ViewableInterpretationTest {
         val conclusion = Conclusion(1, "First conclusion")
         val rule = Rule(0, null, conclusion, emptySet())
         interp.add(rule)
-        ViewableInterpretation(interp).textGivenByRules() shouldBe conclusion.text
+        ViewableInterpretation(interp).textGivenByRules shouldBe conclusion.text
     }
 
     @Test
@@ -52,7 +52,7 @@ class ViewableInterpretationTest {
         val rule1 = Rule(1, null, conclusion, emptySet())
         interp.add(rule0)
         interp.add(rule1)
-        ViewableInterpretation(interp).textGivenByRules() shouldBe conclusion.text
+        ViewableInterpretation(interp).textGivenByRules shouldBe conclusion.text
     }
 
     @Test
@@ -62,11 +62,11 @@ class ViewableInterpretationTest {
         val rule1 = Rule(1, null, null, emptySet())
         interp.add(rule0)
         interp.add(rule1)
-        ViewableInterpretation(interp).textGivenByRules() shouldBe conclusion.text
+        ViewableInterpretation(interp).textGivenByRules shouldBe conclusion.text
     }
 
     @Test
-    fun textGivenByRulesHasConclusionsInABOrder() {
+    fun default_ordering_should_be_the_order_in_which_conclusions_are_added() {
         val interpretation = Interpretation(caseId)
         val rule0 = Rule(0, null, Conclusion(1, "C"), emptySet())
         val rule1 = Rule(1, null, Conclusion(2, "A"), emptySet())
@@ -74,7 +74,7 @@ class ViewableInterpretationTest {
         interpretation.add(rule0)
         interpretation.add(rule1)
         interpretation.add(rule2)
-        ViewableInterpretation(interpretation).textGivenByRules() shouldBe "A B C"
+        ViewableInterpretation(interpretation).textGivenByRules shouldBe "C A B"
     }
 
     @Test
@@ -132,11 +132,11 @@ class ViewableInterpretationTest {
         interp.apply { add(ruleSummary) }
         val view = ViewableInterpretation(interp)
         withClue("sanity check") {
-            view.textGivenByRules() shouldBe conclusion.text
+            view.textGivenByRules shouldBe conclusion.text
         }
         val restored = serializeDeserialize(view)
         restored.interpretation shouldBe interp
-        restored.textGivenByRules() shouldBe conclusion.text
+        restored.textGivenByRules shouldBe conclusion.text
     }
 
     @Test

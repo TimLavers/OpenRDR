@@ -29,7 +29,7 @@ data class ViewableCase(
     }
 
     fun attributes() = viewProperties.attributes
-    fun textGivenByRules() = viewableInterpretation.textGivenByRules()
+    fun textGivenByRules() = viewableInterpretation.textGivenByRules
     fun verifiedText() = viewableInterpretation.verifiedText
     fun latestText() = viewableInterpretation.latestText()
     fun diffList() = viewableInterpretation.diffList

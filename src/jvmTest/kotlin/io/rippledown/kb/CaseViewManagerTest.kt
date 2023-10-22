@@ -144,6 +144,14 @@ class CaseViewManagerTest {
     }
 
     @Test
+    fun moveJustAbove() {
+        createCaseWithAttributesAndShowToManager(listOf(a1, a3, a5))
+        manager.moveJustAbove(a5, a1)
+        val caseAfter = createCaseWithAttributesAndShowToManager(listOf(a1, a3, a5))
+        caseAfter.attributes() shouldBe listOf(a5, a1, a3)
+    }
+
+    @Test
     fun setAttributes() {
         manager.set(listOf(a3, a2, a1))
         val case = createCaseWithAttributesAndShowToManager(listOf(a1, a2, a3))

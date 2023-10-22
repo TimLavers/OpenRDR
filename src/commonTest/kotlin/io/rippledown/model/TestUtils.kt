@@ -61,7 +61,9 @@ fun createCaseWithInterpretation(
             add(RuleSummary(conclusion = Conclusion(conclusionId++, text)))
         }
     }
-    val viewableInterp = ViewableInterpretation(interpretation = interp, diffList = diffs)
+    val text = interp.conclusionTexts().joinToString(" ")
+    val viewableInterp =
+        ViewableInterpretation(interpretation = interp, verifiedText = null, diffList = diffs, textGivenByRules = text)
     case.viewableInterpretation = viewableInterp
     return case
 }
