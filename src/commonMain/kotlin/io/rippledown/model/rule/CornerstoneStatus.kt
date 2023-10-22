@@ -1,8 +1,6 @@
 package io.rippledown.model.rule
 
 import io.rippledown.model.caseview.ViewableCase
-import io.rippledown.model.condition.ConditionList
-import io.rippledown.model.diff.DiffList
 import kotlinx.serialization.Serializable
 
 /**

@@ -1,7 +1,6 @@
 package io.rippledown.model.diff
 
 import io.kotest.matchers.shouldBe
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test

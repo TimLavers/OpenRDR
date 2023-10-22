@@ -2,10 +2,7 @@ package io.rippledown.model.diff
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
-import io.rippledown.model.condition.ConditionList
-import io.rippledown.model.condition.HasCurrentValue
-import io.rippledown.model.condition.HasNoCurrentValue
-import io.rippledown.model.condition.IsLow
+import io.rippledown.model.condition.*
 import io.rippledown.model.rule.RuleRequest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -25,9 +22,9 @@ class RuleRequestTest {
         )
         val conditionList = ConditionList(
             listOf(
-                HasCurrentValue(1, Attribute(1, "a")),
-                HasNoCurrentValue(2, Attribute(2, "b")),
-                IsLow(3, Attribute(3, "c"))
+                hasCurrentValue(1, Attribute(1, "a")),
+                hasNoCurrentValue(2, Attribute(2, "b")),
+                isLow(3, Attribute(3, "c"))
             )
         )
         val ruleRequest = RuleRequest(

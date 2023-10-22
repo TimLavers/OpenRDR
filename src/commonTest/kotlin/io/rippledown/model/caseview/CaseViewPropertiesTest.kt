@@ -2,7 +2,6 @@ package io.rippledown.model.caseview
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test

@@ -9,7 +9,7 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.condition.ConditionList
-import io.rippledown.model.condition.HasCurrentValue
+import io.rippledown.model.condition.hasCurrentValue
 import io.rippledown.model.createCaseWithInterpretation
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
@@ -43,7 +43,7 @@ class CornerstoneUpdateTest {
             name = "Bondi",
         )
         val currentCCStatus = CornerstoneStatus(cornerstone, 0, 1)
-        val condition = HasCurrentValue(1, Attribute(2, "surf"))
+        val condition = hasCurrentValue(1, Attribute(2, "surf"))
         val updateCornerstoneRequest = UpdateCornerstoneRequest(
             cornerstoneStatus = currentCCStatus,
             conditionList = ConditionList(listOf(condition))

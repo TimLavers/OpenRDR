@@ -4,7 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.model.Conclusion
 import io.rippledown.model.DummyConclusionFactory
 import io.rippledown.model.DummyConditionFactory
-import io.rippledown.model.condition.ContainsText
+import io.rippledown.model.condition.containsText
 import io.rippledown.model.rule.dsl.ruleTree
 import io.rippledown.util.shouldBeEqualUsingSameAs
 import kotlin.test.BeforeTest
@@ -44,7 +44,7 @@ internal class RuleBuildingSessionForChangeToReplaceConclusion : RuleTestBase() 
         tree.root.addChild(ruleGivingC)
 
         val session = RuleBuildingSession(ruleFactory, tree, sessionCase, replaceAction, cornerstones)
-        val condition = ContainsText(100, clinicalNotes, "1")
+        val condition = containsText(100, clinicalNotes, "1")
         session.addCondition(condition)
         session.cornerstoneCases() shouldBe setOf(cc1)
     }
@@ -89,7 +89,7 @@ internal class RuleBuildingSessionForChangeToReplaceConclusion : RuleTestBase() 
         val action = ChangeTreeToReplaceConclusion(conclusionFactory.getOrCreate("A"), conclusionFactory.getOrCreate("B"))
         val case = clinicalNotesCase("a")
         RuleBuildingSession(ruleFactory, tree, case, action, listOf())
-            .addCondition(ContainsText(null, clinicalNotes, "a"))
+            .addCondition(containsText(null, clinicalNotes, "a"))
             .commit()
 
         tree.root.childRules().size shouldBe 2
@@ -97,7 +97,7 @@ internal class RuleBuildingSessionForChangeToReplaceConclusion : RuleTestBase() 
         rulesAdded.size shouldBe 1
         val ruleAdded = rulesAdded.random()
         ruleAdded.childRules() shouldBe emptySet()
-        ruleAdded.conditions shouldBeEqualUsingSameAs setOf(ContainsText(null, clinicalNotes, "a"))
+        ruleAdded.conditions shouldBeEqualUsingSameAs setOf(containsText(null, clinicalNotes, "a"))
         ruleAdded.conclusion!!.text shouldBe "B"
         ruleAdded.parent!!.conclusion!!.text shouldBe "A"
     }

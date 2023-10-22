@@ -8,7 +8,7 @@ import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.TestResult
-import io.rippledown.model.condition.LessThanOrEqualTo
+import io.rippledown.model.condition.lessThanOrEqualTo
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
@@ -66,7 +66,7 @@ class KBImporterTest : ExporterTestBase() {
 
         // Add a rule.
         kb.startRuleSession(case1, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Glucose ok.")))
-        kb.addConditionToCurrentRuleSession(LessThanOrEqualTo(null, glucose, 4.1))
+        kb.addConditionToCurrentRuleSession(lessThanOrEqualTo(null, glucose, 4.1))
         kb.commitCurrentRuleSession()
 
         // Set up the case view.

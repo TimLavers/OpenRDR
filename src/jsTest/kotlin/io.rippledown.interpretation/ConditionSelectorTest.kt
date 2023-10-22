@@ -2,10 +2,7 @@ package io.rippledown.interpretation
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
-import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.IsHigh
-import io.rippledown.model.condition.IsLow
-import io.rippledown.model.condition.IsNormal
+import io.rippledown.model.condition.*
 import kotlinx.coroutines.test.runTest
 import react.FC
 import react.dom.checkContainer
@@ -14,9 +11,9 @@ import kotlin.test.Test
 
 class ConditionSelectorTest {
     private val attribute = Attribute(1, "x")
-    private val isHigh = IsHigh(0, attribute)
-    private val isLow = IsLow(1, attribute)
-    private val isNormal = IsNormal(2, attribute)
+    private val isHigh = isHigh(0, attribute)
+    private val isLow = isLow(1, attribute)
+    private val isNormal = isNormal(2, attribute)
     private val threeConditions = listOf(isHigh, isLow, isNormal)
 
     @Test

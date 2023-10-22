@@ -6,10 +6,7 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import io.rippledown.kb.AttributeManager
 import io.rippledown.kb.ConditionManager
 import io.rippledown.model.Attribute
-import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.GreaterThanOrEqualTo
-import io.rippledown.model.condition.IsHigh
-import io.rippledown.model.condition.IsLow
+import io.rippledown.model.condition.*
 import io.rippledown.persistence.inmemory.InMemoryAttributeStore
 import io.rippledown.persistence.inmemory.InMemoryConditionStore
 import org.junit.Before
@@ -21,14 +18,14 @@ class ConditionExporterTest {
 
     @Test
     fun exportToString() {
-        val glucoseHigh = IsHigh(99, glucose)
+        val glucoseHigh = isHigh(99, glucose)
         ConditionExporter().exportToString(glucoseHigh) shouldContain glucose.id.toString()
     }
 
     @Test
     fun importFromString() {
-        exportImport(IsHigh(99, glucose))
-        exportImport(GreaterThanOrEqualTo(99, ft4, 3.0))
+        exportImport(isHigh(99, glucose))
+        exportImport(greaterThanOrEqualTo(99, ft4, 3.0))
     }
 
     private fun exportImport(condition: Condition) {
@@ -51,8 +48,8 @@ class ConditionSourceTest {
         glucose = attributeManager.getOrCreate("Glucose")
         ft4 = attributeManager.getOrCreate("FT4")
         conditionManager = ConditionManager(attributeManager, InMemoryConditionStore())
-        glucoseHigh = conditionManager.getOrCreate(IsHigh(null, glucose))
-        ft4Low = conditionManager.getOrCreate(IsLow(null, ft4))
+        glucoseHigh = conditionManager.getOrCreate(isHigh(null, glucose))
+        ft4Low = conditionManager.getOrCreate(isLow(null, ft4))
     }
 
     @Test

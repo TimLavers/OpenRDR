@@ -6,7 +6,9 @@ import io.rippledown.integration.pageobjects.CaseListPO
 import io.rippledown.integration.pageobjects.CaseQueuePO
 import io.rippledown.integration.pageobjects.InterpretationViewPO
 import io.rippledown.integration.restclient.RESTClient
-import io.rippledown.model.condition.IsNormal
+import io.rippledown.model.condition.EpisodicCondition
+import io.rippledown.model.condition.episodic.signature.Current
+import io.rippledown.model.condition.episodic.predicate.Normal
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -45,7 +47,7 @@ internal class ShowCaseInterpretation : UITestBase() {
         val conclusion = conclusionFactory.getOrCreate(comment)
         restClient.startSessionToAddConclusionForCurrentCase(conclusion)
         val tsh = attributeFactory.create("TSH")
-        val condition = IsNormal(null, tsh)
+        val condition = EpisodicCondition(null, tsh, Normal, Current)
         restClient.addConditionForCurrentSession(condition)
         restClient.commitCurrentSession()
     }

@@ -134,6 +134,10 @@ No new concepts.
 
 **1.4.18**
 __PREVIOUS RESULTS__ This is in fact a multi-episode case.
+Need to look at the difference between the current and the previous
+values for TSH. Also need to assert that the two TSH values 
+are near the upper range. Perhaps we should also assert that
+there are only two TSH values.
 
 **1.4.19**
 No new concepts.
