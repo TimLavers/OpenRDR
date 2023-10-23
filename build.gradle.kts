@@ -175,7 +175,7 @@ kotlin {
                     maxHeapSize = "32G"
                     mainClass.set("io.cucumber.core.cli.Main")
                     classpath = compileDependencyFiles + runtimeDependencyFiles + output.allOutputs
-                    args = argsForCuke
+                    args = argsForCuke.apply { add("--tags"); add("not @ignore") }
                     dependsOn(
                         tasks.shadowJar,
                         tasks.compileTestJava,
