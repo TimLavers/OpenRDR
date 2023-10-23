@@ -7,16 +7,17 @@ import io.rippledown.integration.pageobjects.ConclusionsViewPO
 import io.rippledown.integration.restclient.RESTClient
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.GreaterThanOrEqualTo
-import io.rippledown.model.condition.IsNormal
-import io.rippledown.model.condition.LessThanOrEqualTo
+import io.rippledown.model.condition.EpisodicCondition
+import io.rippledown.model.condition.episodic.signature.Current
+import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals
+import io.rippledown.model.condition.episodic.predicate.LessThanOrEquals
+import io.rippledown.model.condition.episodic.predicate.Normal
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-
 // ORD2
-internal class ShowRuleCondition : io.rippledown.integration.UITestBase() {
+internal class ShowRuleCondition : UITestBase() {
 
     private lateinit var caseQueuePO: CaseQueuePO
     private lateinit var caseViewPO: CaseViewPO
@@ -37,10 +38,10 @@ internal class ShowRuleCondition : io.rippledown.integration.UITestBase() {
         resetKB()
         tsh = attributeFactory.create("TSH")
         abc = attributeFactory.create("ABC")
-        condition1 = conditionFactory.getOrCreate(IsNormal(null, tsh))
-        condition2 = conditionFactory.getOrCreate(LessThanOrEqualTo(null, tsh, 0.7))
-        condition3 = conditionFactory.getOrCreate(GreaterThanOrEqualTo(null, abc, 6.1))
-        condition4 = conditionFactory.getOrCreate(LessThanOrEqualTo(null, abc, 7.1))
+        condition1 = conditionFactory.getOrCreate(EpisodicCondition(null, tsh, Normal, Current))
+        condition2 = conditionFactory.getOrCreate(EpisodicCondition(null, tsh, LessThanOrEquals(0.7), Current))
+        condition3 = conditionFactory.getOrCreate(EpisodicCondition(null, abc, GreaterThanOrEquals(6.1), Current))
+        condition4 = conditionFactory.getOrCreate(EpisodicCondition(null, abc, LessThanOrEquals(7.1), Current))
         setupCase()
         buildRuleForTSH()
         buildRuleForABC()

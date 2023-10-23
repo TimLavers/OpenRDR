@@ -8,6 +8,8 @@ data class TestResult(val value: Value, val referenceRange: ReferenceRange?, val
 
     constructor(resultValue: String, referenceRange: ReferenceRange?, units: String?) : this(Value(resultValue), referenceRange, units )
 
+    constructor(resultValue: String, referenceRange: ReferenceRange?) : this(Value(resultValue), referenceRange, null )
+
     fun isHigh(): Boolean {
         referenceRange ?: return false
         return referenceRange.isHigh(value)

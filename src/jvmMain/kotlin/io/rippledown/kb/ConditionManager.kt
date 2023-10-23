@@ -4,7 +4,9 @@ import io.rippledown.model.ConditionFactory
 import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
-import io.rippledown.model.condition.HasCurrentValue
+import io.rippledown.model.condition.EpisodicCondition
+import io.rippledown.model.condition.episodic.signature.Current
+import io.rippledown.model.condition.episodic.predicate.IsNotBlank
 import io.rippledown.persistence.ConditionStore
 
 class ConditionManager(private val attributeManager: AttributeManager,
@@ -38,7 +40,7 @@ class ConditionManager(private val attributeManager: AttributeManager,
 
     fun conditionHintsForCase(case: RDRCase): ConditionList {
         val conditions = case.attributes.map { attribute ->
-            val condition = HasCurrentValue(null, attribute)
+            val condition = EpisodicCondition(null,attribute, IsNotBlank, Current)
             getOrCreate(condition)
         }.filter {
             it.holds(case)

@@ -3,7 +3,7 @@ package io.rippledown.interpretation
 import io.rippledown.model.Attribute
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
-import io.rippledown.model.condition.ContainsText
+import io.rippledown.model.condition.containsText
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.RuleSummary
 import kotlinx.coroutines.test.runTest
@@ -21,8 +21,8 @@ class ConclusionsViewTest {
     private val surf = Attribute(2, "Surf")
 
     private fun conditionsForConclusion(index: Int) = listOf(
-        ContainsText(1, sun, "is shining $index"),
-        ContainsText(2, surf, "is great $index")
+        containsText(1, sun, "is shining $index"),
+        containsText(2, surf, "is great $index")
     ).map { it.asText() }
 
     private fun wrapper(vararg comments: String) = FC {

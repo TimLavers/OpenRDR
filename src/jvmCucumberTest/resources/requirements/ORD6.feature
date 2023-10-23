@@ -32,9 +32,9 @@ Feature: Reviewing cornerstone cases
       | x | 1 |
     And case Case3 is provided having data:
       | x | 1 |
-    And the interpretation of the case Case1 includes "Comment 1." because of condition "x has a current value"
-    And the interpretation of the case Case2 includes "Comment 2." because of condition "x has a current value"
-    And the interpretation of the case Case3 includes "Comment 3." because of condition "x has a current value"
+    And the interpretation of the case Case1 includes "Comment 1." because of condition "x is not blank"
+    And the interpretation of the case Case2 includes "Comment 2." because of condition "x is not blank"
+    And the interpretation of the case Case3 includes "Comment 3." because of condition "x is not blank"
     And I start the client application
     And I see the case Case1 as the current case
     And I enter the text " Comment 4." in the interpretation field
@@ -52,9 +52,9 @@ Feature: Reviewing cornerstone cases
       | x | 1 |
     And case Case3 is provided having data:
       | x | 1 |
-    And the interpretation of the case Case1 includes "Comment 1." because of condition "x has a current value"
-    And the interpretation of the case Case2 includes "Comment 2." because of condition "x has a current value"
-    And the interpretation of the case Case3 includes "Comment 3." because of condition "x has a current value"
+    And the interpretation of the case Case1 includes "Comment 1." because of condition "x is not blank"
+    And the interpretation of the case Case2 includes "Comment 2." because of condition "x is not blank"
+    And the interpretation of the case Case3 includes "Comment 3." because of condition "x is not blank"
     And I start the client application
     And I see the case Case1 as the current case
     And I enter the text " Comment 4." in the interpretation field
@@ -74,9 +74,9 @@ Feature: Reviewing cornerstone cases
       | x | 1 |
     And case Case3 is provided having data:
       | x | 1 |
-    And the interpretation of the case Case1 includes "Comment 1." because of condition "x has a current value"
-    And the interpretation of the case Case2 includes "Comment 2." because of condition "x has a current value"
-    And the interpretation of the case Case3 includes "Comment 3." because of condition "x has a current value"
+    And the interpretation of the case Case1 includes "Comment 1." because of condition "x is not blank"
+    And the interpretation of the case Case2 includes "Comment 2." because of condition "x is not blank"
+    And the interpretation of the case Case3 includes "Comment 3." because of condition "x is not blank"
     And I start the client application
     And I see the case Case1 as the current case
     And I enter the text " Comment 4." in the interpretation field
@@ -84,9 +84,9 @@ Feature: Reviewing cornerstone cases
     And I start to build a rule for the change on row 3
     And the case Case2 is shown as the cornerstone case
     And the conditions showing should be:
-      | x has a current value |
-      | y has a current value |
-    When I select the condition "y has a current value"
+      | x is not blank |
+      | y is not blank |
+    When I select the condition "y is not blank"
     Then the message "No cornerstone cases to review" should be shown
     And stop the client application
 
@@ -103,10 +103,10 @@ Feature: Reviewing cornerstone cases
       | x | 1 |
     And the following rules have been defined:
       | CASE  | COMMENT ADDED | CONDITION             |
-      | Case1 | Comment 1.    | x has a current value |
-      | Case2 | Comment 2.    | x has a current value |
-      | Case3 | Comment 3.    | x has a current value |
-      | Case4 | Comment 4.    | x has a current value |
+      | Case1 | Comment 1.    | x is not blank |
+      | Case2 | Comment 2.    | x is not blank |
+      | Case3 | Comment 3.    | x is not blank |
+      | Case4 | Comment 4.    | x is not blank |
     And I start the client application
     And I see the case Case1 as the current case
     And I enter the text " Comment 5." in the interpretation field
@@ -116,9 +116,9 @@ Feature: Reviewing cornerstone cases
     And I click the next cornerstone case button
     And the case Case3 is shown as the cornerstone case
     And the conditions showing should be:
-      | x has a current value |
-      | y has a current value |
-    When I select the condition "y has a current value"
+      | x is not blank |
+      | y is not blank |
+    When I select the condition "y is not blank"
     Then the case Case3 is still shown as the cornerstone case
     And stop the client application
 
@@ -131,20 +131,23 @@ Feature: Reviewing cornerstone cases
       | x | 2 |
       | y | 2 |
       | z | 2 |
-    And the interpretation of the case Case1 includes "Comment 1." because of condition "x has a current value"
-    And the interpretation of the case Case2 includes "Comment 2." because of condition "x has a current value"
+    And the interpretation of the case Case1 includes "Comment 1." because of condition "x is not blank"
+    And the interpretation of the case Case2 includes "Comment 2." because of condition "x is not blank"
     And I start the client application
     And I see the case Case1 as the current case
     And I enter the text " Comment 3." in the interpretation field
     And I select the changes tab
     And I start to build a rule for the change on row 2
     And the conditions showing should be:
-      | x has a current value |
-      | y has a current value |
-      | z has a current value |
-    When I select the condition "y has a current value"
-    And I select the condition "z has a current value"
+      | x is not blank |
+      | y is not blank |
+      | z is not blank |
+    When I select the condition "y is not blank"
+    And I select the condition "z is not blank"
     Then the following conditions should be selected:
       | y has a current value |
       | z has a current value |
+    And stop the client application
+      | y is not blank |
+      | z is not blank |
     And stop the client application

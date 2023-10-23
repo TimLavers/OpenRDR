@@ -19,8 +19,8 @@ class ConditionManagementTest: OpenRDRServerTestBase() {
     fun getOrCreateCondition() = testApplication {
         setup()
         val glucose = Attribute(33, "Glucose")
-        val toReturn = IsHigh(54, glucose)
-        val template = IsLow(null, glucose)
+        val toReturn = isHigh(54, glucose)
+        val template = isLow(null, glucose)
         every { serverApplication.getOrCreateCondition(template) } returns toReturn
         val data = Json.encodeToJsonElement(Condition.serializer(), template)
         val result = httpClient.post(GET_OR_CREATE_CONDITION) {
@@ -38,8 +38,8 @@ class ConditionManagementTest: OpenRDRServerTestBase() {
         val caseId = 42L
         val conditionList = ConditionList(
             listOf(
-                IsNormal(1, Attribute(1, "WaveHeight")),
-                IsLow(2, Attribute(2, "SeaTemp"))
+                isNormal(1, Attribute(1, "WaveHeight")),
+                isLow(2, Attribute(2, "SeaTemp"))
             )
         )
         every { serverApplication.conditionHintsForCase(caseId) } returns conditionList

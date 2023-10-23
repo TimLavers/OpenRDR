@@ -180,7 +180,7 @@ class TSHCases(attributeFactory: AttributeFactory) {
     val TSH18 = multiEpisodeCase(attributeFactory) {
         name = "1.4.18"
         dates {
-            datesCSL = "2022-08-18T13:07:44.475Z, 2022-02-25T14:22:51.942Z"
+            datesCSL = "2022-02-25T13:07:44.475Z, 2022-08-18T14:22:51.942Z"
         }
         testValues {
             attribute = "TSH"
@@ -217,11 +217,236 @@ class TSHCases(attributeFactory: AttributeFactory) {
     }.build(attributeFactory)
     val TSH20 = tshCase {
         name = "1.4.20"
-        name = "1.4.19"
         tsh = "<0.01"
         freeT4 = "16"
         freeT3 = "5.5"
         age = 53
         clinicalNotes = "Annual check."
+    }.build(attributeFactory)
+    val TSH21 = multiEpisodeCase(attributeFactory) {
+        name = "1.4.21"
+        dates {
+            datesCSL = "2023-02-14T11:53:44.475Z, 2023-08-04T09:39:51.942Z"
+        }
+        testValues {
+            attribute = "TSH"
+            units = "mU/L"
+            lowerBound = "0.50"
+            upperBound = "4.0"
+            valuesCSL = "<0.01, <0.01"
+        }
+        testValues {
+            attribute = "Free T4"
+            units = "pmol/L"
+            lowerBound = "10"
+            upperBound = "20"
+            valuesCSL = "16, 17"
+        }
+        testValues {
+            attribute = "Free T3"
+            units = "pmol/L"
+            lowerBound = "3.0"
+            upperBound = "5.5"
+            valuesCSL = "5.5, 6.1"
+        }
+        clinicalNotes {
+            values_separated = "Annual check. _ Previous suppressed TSH."
+        }
+        testValues {
+            attribute = "Age"
+            valuesCSL = "53, 53"
+        }
+        testValues {
+            attribute = "Tests"
+            valuesCSL = "TFTs, TFTs"
+        }
+    }.build()
+    val TSH22 = tshCase {
+        name = "1.4.22"
+        tsh = "<0.01"
+        freeT4 = "45"
+        freeT3 = "18"
+        age = 84
+        clinicalNotes = "Severe hypertension, sweating and palpitation."
+        location = "Emergency Department."
+    }.build(attributeFactory)
+    val TSH23 = tshCase {
+        name = "1.4.23"
+        tsh = "<0.01"
+        freeT4 = "7"
+        age = 46
+        clinicalNotes = "Started carbimazole therapy recently for Graves’ disease."
+    }.build(attributeFactory)
+
+    val TSH24 = tshCase {
+        name = "1.4.24"
+        tsh = "120"
+        age = 59
+        location = "Nuclear Medicine."
+        clinicalNotes = "Thyroid cancer. Pre I-131 Thyrogen therapy."
+    }.build(attributeFactory)
+
+    val TSH25 = tshCase {
+        name = "1.4.25"
+        tests = "Tg/TgAb"
+        age = 64
+        location = "Oncology Clinic."
+        clinicalNotes = "Thyroid cancer. Post thyroidectomy, monitoring."
+        testValue {
+            attribute = "Thyroglobulin"
+            value = "31"
+            units = "μg/L"
+        }
+        testValue {
+            attribute = "Anti-Thyroglobulin"
+            value = "<1"
+            units = "kU/L"
+            upperBound = "4"
+        }
+    }.build(attributeFactory)
+
+    val TSH26 = tshCase {
+        name = "1.4.26"
+        tests = "Tg/TgAb"
+        age = 64
+        location = "Oncology Clinic."
+        clinicalNotes = "Thyroid cancer. Post thyroidectomy, monitoring."
+        testValue {
+            attribute = "Thyroglobulin"
+            value = "<0.1"
+            units = "μg/L"
+        }
+        testValue {
+            attribute = "Anti-Thyroglobulin"
+            value = "14"
+            units = "kU/L"
+            upperBound = "4"
+        }
+    }.build(attributeFactory)
+
+    val TSH27 = tshCase {
+        name = "1.4.27"
+        tsh = "4.2"
+        freeT4 = "11"
+        freeT3 = "5.6"
+        age = 50
+        sex = "M"
+        testValue {
+            attribute = "TPO Antibodies"
+            value = "876"
+            units = "kU/L"
+            upperBound = "6"
+        }
+        clinicalNotes = "Family history of thyroid disease."
+    }.build(attributeFactory)
+
+    val TSH28 = tshCase {
+        name = "1.4.28"
+        tsh = "<0.01"
+        freeT4 = "23"
+        freeT3 = "5.0"
+        age = 63
+        sex = "M"
+        clinicalNotes = "On amiodarone."
+    }.build(attributeFactory)
+
+    val TSH29 = tshCase {
+        name = "1.4.29"
+        tsh = "1.3"
+        freeT4 = "26"
+        age = 53
+        sex = "M"
+        clinicalNotes = "Diabetes."
+    }.build(attributeFactory)
+
+    val TSH30 = tshCase {
+        name = "1.4.30"
+        tsh = "1.3"
+        freeT4 = "26"
+        freeT3 = "6.1"
+        age = 53
+        sex = "M"
+        clinicalNotes = "Diabetes."
+    }.build(attributeFactory)
+
+    val TSH31 = tshCase {
+        name = "1.4.31"
+        tsh = "<0.01"
+        freeT4 = "43"
+        freeT3 = "22"
+        age = 39
+        sex = "M"
+        location = "Emergency Dept."
+        clinicalNotes = "General weakness."
+        testValue {
+            attribute = "Sodium"
+            value = "143"
+            units = "mmol/L"
+            upperBound = "146"
+            lowerBound = "134"
+        }
+        testValue {
+            attribute = "Potassium"
+            value = "2.4"
+            units = "mmol/L"
+            lowerBound = "3.4"
+            upperBound = "5.0"
+        }
+        testValue {
+            attribute = "Bicarbonate"
+            value = "18"
+            units = "mmol/L"
+            lowerBound = "22"
+            upperBound = "32"
+        }
+        testValue {
+            attribute = "Urea"
+            value = "6.0"
+            units = "mmol/L"
+            lowerBound = "3.0"
+            upperBound = "8.0"
+        }
+        testValue {
+            attribute = "Creatinine"
+            value = "62"
+            units = "μmol/L"
+            lowerBound = "60"
+            upperBound = "110"
+        }
+        testValue {
+            attribute = "eGFR"
+            value = ">90"
+            units = "mL/min/1.73 m∧2"
+        }
+    }.build(attributeFactory)
+
+    val TSH32 = tshCase {
+        name = "1.4.32"
+        tsh = "4.5"
+        freeT4 = "8"
+        age = 60
+        sex = "M"
+        location = "General Practice."
+        clinicalNotes = "Previous raised TSH."
+    }.build(attributeFactory)
+
+    val TSH33 = tshCase {
+        name = "1.4.33"
+        tsh = "0.02"
+        freeT4 = "8"
+        age = 67
+        sex = "M"
+        location = "General Practice."
+        clinicalNotes = "Pituitary failure. On T4."
+    }.build(attributeFactory)
+
+    val TSH35 = tshCase {
+        name = "1.4.35"
+        tsh = "100"
+        freeT4 = "8"
+        age = 66
+        sex = "F"
+        location = "Emergency Department."
+        clinicalNotes = "Semi-coma."
     }.build(attributeFactory)
 }

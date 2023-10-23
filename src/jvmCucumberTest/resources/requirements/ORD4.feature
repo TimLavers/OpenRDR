@@ -5,8 +5,8 @@ Feature: Reviewing the interpretation of a case
       | Wave | excellent |
     And case Manly is provided having data:
       | Swimming | excellent |
-    And the interpretation of the case Bondi includes "Go to Bondi." because of condition "Wave has a current value"
-    And the interpretation of the case Manly includes "Go to Manly." because of condition "Swimming has a current value"
+    And the interpretation of the case Bondi includes "Go to Bondi." because of condition "Wave is not blank"
+    And the interpretation of the case Manly includes "Go to Manly." because of condition "Swimming is not blank"
     And I start the client application
     And I should see the case Bondi as the current case
     And the interpretation field should contain the text "Go to Bondi."
@@ -31,8 +31,8 @@ Feature: Reviewing the interpretation of a case
       | Wave | excellent |
     And case Manly is provided having data:
       | Swimming | excellent |
-    And the interpretation of the case Bondi includes "Go to Bondi." because of condition "Wave has a current value"
-    And the interpretation of the case Manly includes "Go to Manly." because of condition "Swimming has a current value"
+    And the interpretation of the case Bondi includes "Go to Bondi." because of condition "Wave is not blank"
+    And the interpretation of the case Manly includes "Go to Manly." because of condition "Swimming is not blank"
     And I start the client application
     And I should see the case Bondi as the current case
     And I enter the text "and bring flippers" in the interpretation field

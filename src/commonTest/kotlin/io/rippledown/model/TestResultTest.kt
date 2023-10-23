@@ -1,12 +1,11 @@
 package io.rippledown.model
 
-import kotlinx.serialization.decodeFromString
+import io.kotest.matchers.shouldBe
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import io.kotest.matchers.shouldBe
 
 internal class TestResultTest {
 
@@ -32,6 +31,14 @@ internal class TestResultTest {
         assertEquals(result.value, Value("23"))
         assertEquals(result.referenceRange, ReferenceRange("20", "30"))
         assertEquals(result.units, "pmol/L")
+    }
+
+    @Test
+    fun construction4() {
+        val result = TestResult("23", ReferenceRange("20", "30"))
+        result.value shouldBe  Value("23")
+        result.referenceRange shouldBe  ReferenceRange("20", "30")
+        result.units shouldBe null
     }
 
     @Test

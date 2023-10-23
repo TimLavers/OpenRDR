@@ -1,16 +1,13 @@
 package io.rippledown.caseview
 
-import emotion.react.css
 import io.rippledown.model.Attribute
 import io.rippledown.model.ReferenceRange
 import io.rippledown.model.TestResult
 import mui.material.TableCell
 import mui.system.sx
 import px4
-import px8
 import react.FC
 import react.Props
-import react.dom.html.ReactHTML
 
 external interface ValueCellHandler : Props {
     var index: Int

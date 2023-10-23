@@ -3,6 +3,9 @@ package io.rippledown.model
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.rippledown.model.condition.ContainsText
+import io.rippledown.model.condition.containsText
+import io.rippledown.model.diff.Addition
+import io.rippledown.model.diff.DiffList
 import io.rippledown.model.rule.Rule
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -276,7 +279,7 @@ class RDRCaseTest {
     fun serializedWithInterpretation() {
         val conclusion = Conclusion(9, "Tea is good.")
         val root = Rule(0, null, null, emptySet(), mutableSetOf())
-        val conditions = setOf(ContainsText(100, tsh, "0.667"))
+        val conditions = setOf(containsText(100, tsh, "0.667"))
         val rule = Rule(1, root, conclusion, conditions, mutableSetOf())
         val case = RDRCase(CaseId("1234"))
         case.interpretation.add(rule)
@@ -292,7 +295,7 @@ class RDRCaseTest {
     fun serializedWithInterpretation1() {
         val conclusion = Conclusion(1, "Tea is good.")
         val root = Rule(0, null, null, emptySet(), mutableSetOf())
-        val conditions = setOf(ContainsText(1, tsh, "0.667"))
+        val conditions = setOf(containsText(1, tsh, "0.667"))
         val rule = Rule(1, root, conclusion, conditions, mutableSetOf())
         val case = RDRCase(CaseId(12, "Case"))
         case.interpretation = Interpretation(case.caseId).apply { add(rule) }
@@ -302,6 +305,17 @@ class RDRCaseTest {
         sd.interpretation.conclusions().first() shouldBe conclusion
     }
 
+    @Test
+    @Ignore //TODO: fix
+    fun serializedWithDiffList() {
+        val case = basicCase()
+        val diffList = DiffList(listOf(Addition("Coffee is very good")))
+        case.interpretation.diffList = diffList
+
+        val sd = serializeDeserialize(case)
+        sd shouldBe case
+        sd.interpretation.diffList shouldBe diffList
+    }
 
     @Test
     fun jsonSerialisation() {
@@ -330,6 +344,19 @@ class RDRCaseTest {
         assertEquals(sd3, case3)
     }
 
+    @Test
+    @Ignore //TODO: fix
+    fun serializedWithVerifiedText() {
+        val case = basicCase()
+        val text = "Coffee is very good"
+        case.interpretation.verifiedText = text
+
+        val builder3 = RDRCaseBuilder()
+        builder3.addValue(age, defaultDate, "52")
+        val sd = serializeDeserialize(case)
+        sd shouldBe case
+        sd.interpretation.verifiedText shouldBe text
+    }
 
     @Test
     fun serialisation() {

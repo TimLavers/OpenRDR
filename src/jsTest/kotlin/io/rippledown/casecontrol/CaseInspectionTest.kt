@@ -6,9 +6,9 @@ import io.rippledown.caseview.requireCaseToBeShowing
 import io.rippledown.cornerstoneview.requireCornerstoneCaseNotToBeShowing
 import io.rippledown.cornerstoneview.requireCornerstoneCaseToBeShowing
 import io.rippledown.interpretation.*
-import io.rippledown.model.Attribute
-import io.rippledown.model.CaseId
+import io.rippledown.model.*
 import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.condition.hasCurrentValue
 import io.rippledown.model.condition.HasCurrentValue
 import io.rippledown.model.createCase
 import io.rippledown.model.createCaseWithInterpretation
@@ -313,8 +313,8 @@ class CaseInspectionTest {
         )
         val conditionList = ConditionList(
             listOf(
-                HasCurrentValue(1, Attribute(1, "sun")),
-                HasCurrentValue(2, Attribute(2, "surf"))
+                hasCurrentValue(1, Attribute(1, "sun")),
+                hasCurrentValue(2, Attribute(2, "surf"))
             )
         )
 

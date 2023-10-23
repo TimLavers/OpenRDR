@@ -84,8 +84,8 @@ Feature: Building rules
     And I select the changes tab
     When I start to build a rule for the change on row 0
     Then the conditions showing should be:
-      | Wave has a current value |
-      | Sun has a current value  |
+      | Wave is not blank |
+      | Sun is not blank  |
     And stop the client application
 
   Scenario: The user should be able to build a rule to add a comment with a condition they have selected
@@ -98,14 +98,14 @@ Feature: Building rules
     And I select the changes tab
     And I start to build a rule for the change on row 0
     And the conditions showing should be:
-      | Wave has a current value |
-      | Sun has a current value  |
+      | Wave is not blank |
+      | Sun is not blank  |
     When I select the first condition
     And I complete the rule
     And I select the conclusions tab
     And click the comment "Go to the beach."
     Then the conditions showing are:
-      | Wave has a current value |
+      | Wave is not blank |
     And stop the client application
 
   Scenario: The user should be able to build a rule to remove a comment with a condition they have selected
@@ -124,8 +124,8 @@ Feature: Building rules
     And I select the changes tab
     And I start to build a rule for the change on row 0
     And the conditions showing should be:
-      | Wave has a current value |
-      | Sun has a current value  |
+      | Wave is not blank |
+      | Sun is not blank  |
     And I select the first condition
     When I complete the rule
     And I select the interpretation tab
@@ -150,8 +150,8 @@ Feature: Building rules
     And I select the changes tab
     And I start to build a rule for the change on row 0
     And the conditions showing should be:
-      | Swimming has a current value |
-      | Sun has a current value      |
+      | Swimming is not blank |
+      | Sun is not blank      |
     And I select the first condition
     When I complete the rule
     And I select the interpretation tab
@@ -165,14 +165,14 @@ Feature: Building rules
       | Wave | poor    |
       | Sun  | too hot |
     And I start the client application
-    And I build a rule to add the comment "Go to Bondi." with the condition "Wave has a current value"
+    And I build a rule to add the comment "Go to Bondi." with the condition "Wave is not blank"
     And  the interpretation field should contain the text "Go to Bondi."
-    And I build a rule to replace the interpretation by "Go to Manly." with the condition "Sun has a current value"
+    And I build a rule to replace the interpretation by "Go to Manly." with the condition "Sun is not blank"
     When I select the conclusions tab
     And click the comment "Go to Manly."
     Then the conditions showing are:
-      | Wave has a current value |
-      | Sun has a current value  |
+      | Wave is not blank |
+      | Sun is not blank  |
     And stop the client application
 
   Scenario: A new rule should apply to any case satisfying its conditions
@@ -190,8 +190,8 @@ Feature: Building rules
     And I select the changes tab
     And I start to build a rule for the change on row 0
     And the conditions showing should be:
-      | Wave has a current value |
-      | Sun has a current value  |
+      | Wave is not blank |
+      | Sun is not blank  |
     And I select the second condition
     And I complete the rule
     When I select case Manly
@@ -213,8 +213,8 @@ Feature: Building rules
     And I select the changes tab
     And I start to build a rule for the change on row 0
     And the conditions showing should be:
-      | Wave has a current value |
-      | Sun has a current value  |
+      | Wave is not blank |
+      | Sun is not blank  |
     And I select the second condition
     When I cancel the rule
     Then the changes badge indicates that there is no change

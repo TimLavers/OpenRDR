@@ -41,15 +41,15 @@ class PostgresConditionStoreTest: PostgresStoreTest() {
 
     @Test
     fun create() {
-        val inputGlucoseHigh = IsHigh(null, glucose)
+        val inputGlucoseHigh = isHigh(null, glucose)
         val createdGlucoseHigh = createAndCheck(inputGlucoseHigh)
         store.all().size shouldBe 1
 
-        val inputTSHBorderlineLow = SlightlyLow(null, tsh, 12)
+        val inputTSHBorderlineLow = slightlyLow(null, tsh, 12)
         val createdTSHBorderlineLow = createAndCheck(inputTSHBorderlineLow)
         store.all().size shouldBe 2
 
-        val inputNotesSaysDiabetic = ContainsText(null, notes, "diabetic")
+        val inputNotesSaysDiabetic = containsText(null, notes, "diabetic")
         val createdNotesSaysDiabetic = createAndCheck(inputNotesSaysDiabetic)
         store.all().size shouldBe 3
 
@@ -68,7 +68,7 @@ class PostgresConditionStoreTest: PostgresStoreTest() {
     fun load() {
         val toLoad = mutableSetOf<Condition>()
         repeat(100) {
-            val condition = ContainsText(it, notes, "Stuff: $it")
+            val condition = containsText(it, notes, "Stuff: $it")
             toLoad.add(condition)
         }
         store.load(toLoad)
@@ -81,7 +81,7 @@ class PostgresConditionStoreTest: PostgresStoreTest() {
 
     @Test
     fun `cannot load if not empty`() {
-        store.create(IsLow(null, tsh))
+        store.create(isLow(null, tsh))
         shouldThrow<IllegalArgumentException> {
             store.load(emptySet())
         }

@@ -16,6 +16,8 @@ import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.GreaterThanOrEqualTo
 import io.rippledown.model.condition.HasCurrentValue
 import io.rippledown.model.condition.Is
+import io.rippledown.model.*
+import io.rippledown.model.condition.*
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.diff.Unchanged
@@ -79,7 +81,7 @@ internal class ServerApplicationTest {
         val conclusion = app.kb.conclusionManager.getOrCreate("ABC ok.")
         app.kb.startRuleSession(retrieved, ChangeTreeToAddConclusion(conclusion))
         val abc = retrieved.getAttribute("ABC")
-        app.kb.addConditionToCurrentRuleSession(GreaterThanOrEqualTo(null, abc, 5.0))
+        app.kb.addConditionToCurrentRuleSession(greaterThanOrEqualTo(null, abc, 5.0))
         app.kb.commitCurrentRuleSession()
         val retrievedAgain = app.case(caseId.id!!)
         retrievedAgain.interpretation.conclusions() shouldContainExactly setOf(conclusion)
@@ -144,7 +146,7 @@ internal class ServerApplicationTest {
             .filter { attribute ->
                 case.getLatest(attribute) != null
             }.map { attribute ->
-                HasCurrentValue(1, attribute)
+                hasCurrentValue(1, attribute)
             }
         val hintConditions = app.conditionHintsForCase(id).conditions.toSet()
 
@@ -203,7 +205,7 @@ internal class ServerApplicationTest {
         val conclusion = app.kb.conclusionManager.getOrCreate("ABC ok.")
         app.kb.startRuleSession(retrieved.case, ChangeTreeToAddConclusion(conclusion))
         val abc = retrieved.case.getAttribute("ABC")
-        app.kb.addConditionToCurrentRuleSession(GreaterThanOrEqualTo(null, abc, 5.0))
+        app.kb.addConditionToCurrentRuleSession(greaterThanOrEqualTo(null, abc, 5.0))
         app.kb.commitCurrentRuleSession()
         val retrievedAgain = app.viewableCase(id)
         retrievedAgain.viewableInterpretation.interpretation.conclusions() shouldContainExactly setOf(conclusion)
@@ -229,7 +231,7 @@ internal class ServerApplicationTest {
     fun getOrCreateCondition() {
         app.kb.conditionManager.all() shouldBe emptySet()
         val attribute = app.getOrCreateAttribute("stuff")
-        val prototype = Is(null, attribute, "Whatever")
+        val prototype = isCondition(null, attribute, "Whatever")
         val created = app.getOrCreateCondition(prototype)
         created should beSameAs(prototype)
         app.kb.conditionManager.all() shouldBe setOf(created)
@@ -320,7 +322,7 @@ internal class ServerApplicationTest {
         val conclusion1 = app.kb.conclusionManager.getOrCreate("Whatever")
         val tsh = app.kb.attributeManager.getOrCreate("TSH")
         app.startRuleSessionToAddConclusion(id, conclusion1)
-        val tshCondition = GreaterThanOrEqualTo(null, tsh, 0.6)
+        val tshCondition = greaterThanOrEqualTo(null, tsh, 0.6)
         app.addConditionToCurrentRuleBuildingSession(tshCondition)
         app.commitCurrentRuleSession()
         app.case(id).interpretation.conclusionTexts() shouldBe setOf(conclusion1.text)

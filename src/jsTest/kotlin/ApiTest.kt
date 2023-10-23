@@ -1,7 +1,7 @@
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
 import io.rippledown.model.condition.ConditionList
-import io.rippledown.model.condition.HasCurrentValue
+import io.rippledown.model.condition.hasCurrentValue
 import io.rippledown.model.diff.*
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.CornerstoneStatus
@@ -99,8 +99,8 @@ class ApiTest {
     fun conditionHints() = runTest {
         val conditionList = ConditionList(
             listOf(
-                HasCurrentValue(1, Attribute(1, "A")),
-                HasCurrentValue(2, Attribute(2, "B"))
+                hasCurrentValue(1, Attribute(1, "A")),
+                hasCurrentValue(2, Attribute(2, "B"))
             )
         )
         val config = config {
@@ -116,8 +116,8 @@ class ApiTest {
             caseId = id,
             conditions = ConditionList(
                 listOf(
-                    HasCurrentValue(1, Attribute(1, "A")),
-                    HasCurrentValue(2, Attribute(2, "B"))
+                    hasCurrentValue(1, Attribute(1, "A")),
+                    hasCurrentValue(2, Attribute(2, "B"))
                 )
             )
         )
@@ -150,8 +150,8 @@ class ApiTest {
             cornerstoneStatus = CornerstoneStatus(),
             conditionList = ConditionList(
                 listOf(
-                    HasCurrentValue(1, Attribute(1, "A")),
-                    HasCurrentValue(2, Attribute(2, "B"))
+                    hasCurrentValue(1, Attribute(1, "A")),
+                    hasCurrentValue(2, Attribute(2, "B"))
                 )
             )
         )

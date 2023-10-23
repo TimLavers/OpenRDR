@@ -7,7 +7,7 @@ import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionTestBase
-import io.rippledown.model.condition.ContainsText
+import io.rippledown.model.condition.containsText
 
 open class RuleTestBase: ConditionTestBase() {
     private var conclusionId = 0
@@ -26,7 +26,7 @@ open class RuleTestBase: ConditionTestBase() {
     }
 
     fun createCondition(text: String): Condition {
-        return ContainsText(conditionId++, clinicalNotes, text)
+        return containsText(conditionId++, clinicalNotes, text)
     }
 
     fun checkInterpretation(interpretation: Interpretation, vararg conclusions: Conclusion) {

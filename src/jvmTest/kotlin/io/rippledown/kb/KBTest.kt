@@ -191,7 +191,7 @@ class KBTest {
     fun conditionManager() {
         kb.conditionManager.all() shouldBe emptySet()
         val glucose = kb.attributeManager.getOrCreate("Glucose")
-        val template = IsNormal(null, glucose)
+        val template = isNormal(null, glucose)
         val created = kb.conditionManager.getOrCreate(template)
         kb.conditionManager.getById(created.id!!) shouldBeSameInstanceAs created
     }
@@ -473,7 +473,7 @@ class KBTest {
         kb.addCornerstoneCase(createCase("Case2", "2.0"))
         sessionCase.interpretation.conclusionTexts() shouldBe emptySet()
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
-        kb.addConditionToCurrentRuleSession(LessThanOrEqualTo(null, glucose(), 1.2))
+        kb.addConditionToCurrentRuleSession(lessThanOrEqualTo(null, glucose(), 1.2))
         kb.conflictingCasesInCurrentRuleSession().size shouldBe 0
     }
 
@@ -495,7 +495,7 @@ class KBTest {
     @Test
     fun `should return condition hints for case`() {
         val caseWithGlucoseAttribute = createCase("A", "1.0")
-        val expectedCondition = kb.conditionManager.getOrCreate(HasCurrentValue(null, glucose()))
+        val expectedCondition = kb.conditionManager.getOrCreate(hasCurrentValue(null, glucose()))
         val conditionList = kb.conditionHintsForCase(caseWithGlucoseAttribute)
         conditionList.conditions.size shouldBe 1
         conditionList.conditions[0] should beSameAs(expectedCondition)
@@ -535,7 +535,7 @@ class KBTest {
         withClue("sanity check") {
             kb.cornerstoneStatus(vcc1) shouldBe currentCCStatus
         }
-        val condition = LessThanOrEqualTo(null, glucose(), 0.5) //false for the cornerstone
+        val condition = lessThanOrEqualTo(null, glucose(), 0.5) //false for the cornerstone
         val updateRequest = UpdateCornerstoneRequest(currentCCStatus, ConditionList(listOf(condition)))
         kb.updateCornerstone(updateRequest) shouldBe CornerstoneStatus()
     }
@@ -551,7 +551,7 @@ class KBTest {
         withClue("sanity check") {
             kb.cornerstoneStatus(vcc1) shouldBe currentCCStatus
         }
-        val condition = LessThanOrEqualTo(null, glucose(), 1.0) //true for the cornerstone
+        val condition = lessThanOrEqualTo(null, glucose(), 1.0) //true for the cornerstone
         val updateRequest = UpdateCornerstoneRequest(currentCCStatus, ConditionList(listOf(condition)))
         kb.updateCornerstone(updateRequest) shouldBe currentCCStatus
     }
@@ -570,7 +570,7 @@ class KBTest {
         withClue("sanity check") {
             kb.cornerstoneStatus(vcc1) shouldBe currentCCStatus
         }
-        val condition = GreaterThanOrEqualTo(null, glucose(), 1.5) //false for the current cornerstone
+        val condition = greaterThanOrEqualTo(null, glucose(), 1.5) //false for the current cornerstone
         val updateRequest = UpdateCornerstoneRequest(currentCCStatus, ConditionList(listOf(condition)))
         val expected = CornerstoneStatus(vcc2, 0, 2)
         kb.updateCornerstone(updateRequest) shouldBe expected
@@ -590,7 +590,7 @@ class KBTest {
         withClue("sanity check") {
             kb.cornerstoneStatus(vcc1) shouldBe currentCCStatus
         }
-        val condition = LessThanOrEqualTo(null, glucose(), 2.5) //true for the current cornerstone and cc2
+        val condition = lessThanOrEqualTo(null, glucose(), 2.5) //true for the current cornerstone and cc2
         val updateRequest = UpdateCornerstoneRequest(currentCCStatus, ConditionList(listOf(condition)))
         val expected = CornerstoneStatus(vcc1, 0, 2)
         kb.updateCornerstone(updateRequest) shouldBe expected
@@ -612,7 +612,7 @@ class KBTest {
         }
 
         val condition =
-            LessThanOrEqualTo(null, glucose(), 2.5) //true for cc1 and the current cornerstone. false for cc3
+            lessThanOrEqualTo(null, glucose(), 2.5) //true for cc1 and the current cornerstone. false for cc3
         val updateRequest = UpdateCornerstoneRequest(currentCCStatus, ConditionList(listOf(condition)))
         val expected = CornerstoneStatus(vcc2, 1, 2)
         kb.updateCornerstone(updateRequest) shouldBe expected
@@ -696,8 +696,8 @@ class KBTest {
 
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")
 
-    private fun createCondition(): GreaterThanOrEqualTo {
-        return GreaterThanOrEqualTo(null, Attribute(4567, "ABC"), 5.0)
+    private fun createCondition(): Condition {
+        return greaterThanOrEqualTo(null, Attribute(4567, "ABC"), 5.0)
     }
 
     private fun createCase(caseName: String, glucoseValue: String = "0.667", id: Long? = null): RDRCase {

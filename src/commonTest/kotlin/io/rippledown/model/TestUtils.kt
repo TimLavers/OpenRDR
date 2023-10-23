@@ -12,6 +12,9 @@ import io.rippledown.model.rule.RuleSummary
 fun daysAgo(n: Int): Long {
     return defaultDate - n * 24 * 60 * 60 * 1000
 }
+fun daysAfter(n: Int): Long {
+    return defaultDate + n * 24 * 60 * 60 * 1000
+}
 
 fun randomString(length: Int): String {
     //https://stackoverflow.com/questions/46943860/idiomatic-way-to-generate-a-random-alphanumeric-string-in-kotlin

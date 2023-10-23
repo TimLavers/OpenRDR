@@ -20,7 +20,7 @@ data class CaseTemplate(var name: String = "", var tsh: String = "", var freeT4:
     var age: Int = 0
     var location: String = "General Practice."
     var clinicalNotes: String = ""
-    private var tests: String = "TFTs"
+    var tests: String = "TFTs"
     private val extraResults = mutableMapOf<String, TestResult>()
 
     fun build(attributeFactory: AttributeFactory): RDRCase {
@@ -52,7 +52,7 @@ data class CaseTemplate(var name: String = "", var tsh: String = "", var freeT4:
 }
 
 class TestResultTemplate(var attribute: String = "", var value: String = "") {
-    private var lowerBound: String? = null
+    var lowerBound: String? = null
     var upperBound: String? = null
     var units: String? = null
 
