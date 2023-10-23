@@ -7,7 +7,6 @@ Feature: Reviewing cornerstone cases
     And I select the changes tab
     When I start to build a rule for the change on row 0
     Then the message "No cornerstone cases to review" should be shown
-    And stop the client application
 
   Scenario: The first cornerstone case should be shown to the user
     Given a list of cases with the following names is stored on the server:
@@ -23,7 +22,6 @@ Feature: Reviewing cornerstone cases
     And I select the changes tab
     When I start to build a rule for the change on row 1
     Then the case Case1 is shown as the cornerstone case
-    And stop the client application
 
   Scenario: The user should be able to switch to the next cornerstone case
     Given case Case1 is provided having data:
@@ -43,7 +41,6 @@ Feature: Reviewing cornerstone cases
     And the case Case2 is shown as the cornerstone case
     When I click the next cornerstone case button
     Then the case Case3 is shown as the cornerstone case
-    And stop the client application
 
   Scenario: The user should be able to switch to the previous cornerstone case
     Given case Case1 is provided having data:
@@ -64,7 +61,6 @@ Feature: Reviewing cornerstone cases
     And the case Case3 is shown as the cornerstone case
     When I click the previous cornerstone case button
     Then the case Case2 is shown as the cornerstone case
-    And stop the client application
 
   Scenario: Cornerstones should vanish when the user adds a condition that excludes them
     Given case Case1 is provided having data:
@@ -88,7 +84,6 @@ Feature: Reviewing cornerstone cases
       | y is not blank |
     When I select the condition "y is not blank"
     Then the message "No cornerstone cases to review" should be shown
-    And stop the client application
 
   Scenario: The current cornerstones should remain selected if the user adds a condition that does not exclude it
     Given case Case1 is provided having data:
@@ -120,7 +115,6 @@ Feature: Reviewing cornerstone cases
       | y is not blank |
     When I select the condition "y is not blank"
     Then the case Case3 is still shown as the cornerstone case
-    And stop the client application
 
   Scenario: The user should be able to add several conditions when building a rule
     Given case Case1 is provided having data:
@@ -145,9 +139,5 @@ Feature: Reviewing cornerstone cases
     When I select the condition "y is not blank"
     And I select the condition "z is not blank"
     Then the following conditions should be selected:
-      | y has a current value |
-      | z has a current value |
-    And stop the client application
       | y is not blank |
       | z is not blank |
-    And stop the client application

@@ -2,9 +2,8 @@ package io.rippledown.model
 
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.condition.isCondition
 import io.rippledown.model.condition.EpisodicCondition
-import io.rippledown.model.diff.*
+import io.rippledown.model.condition.isCondition
 import io.rippledown.model.rule.Rule
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -98,14 +97,6 @@ class InterpretationTest {
         interpretation.conclusions() shouldContain c0
         interpretation.conclusions() shouldContain c1
         interpretation.conclusions() shouldContain c2
-    }
-
-    @Test
-    fun serialisationWithVerifiedText() {
-        val verified = "I can verify that is true."
-        val interpretation = Interpretation().apply { verifiedText = verified }
-        val restored = serializeDeserialize(interpretation)
-        restored.verifiedText shouldBe verified
     }
 
     @Test
@@ -204,57 +195,6 @@ class InterpretationTest {
             "r contains \"text r\"",
             "s contains \"text s\""
         )
-    }
-
-    @Test
-    fun resettingTheInterpretationShouldNotChangeTheVerifiedText() {
-        val verifiedText = "I can verify that is true."
-        val interpretation = Interpretation(caseId, verifiedText)
-        interpretation.reset()
-        interpretation.verifiedText shouldBe verifiedText
-    }
-
-    @Test
-    fun resettingTheInterpretationShouldNotChangeTheDiffList() {
-        val verifiedText = "I can verify that is true."
-        val diffList = DiffList(
-            listOf(
-                Addition("I can verify that is true."),
-                Removal("I can verify that is false."),
-                Replacement("I can verify that is false.", "I can verify that is true."),
-                Unchanged("I can verify that is true or false.")
-            )
-        )
-        val interpretation = Interpretation(caseId, verifiedText, diffList)
-        interpretation.reset()
-        interpretation.diffList shouldBe diffList
-    }
-
-    @Test
-    fun latestTextShouldBeTheVerifiedTextIfNotNull() {
-        val verifiedText = "I can verify that is true."
-        val conclusion = Conclusion(1, "First conc")
-        val conditions = setOf(
-            isCondition(1, Attribute(1, "x"), "1"),
-        )
-        val rule0 = Rule(10, null, conclusion, conditions)
-        with(Interpretation(caseId, verifiedText)) {
-            add(rule0)
-            latestText() shouldBe verifiedText
-        }
-    }
-
-    @Test
-    fun latestTextShouldBeTheInterpretationIfNoVerifiedText() {
-        val conclusion = Conclusion( 1,"First conc")
-        val conditions = setOf(
-            isCondition(1, Attribute(1, "x"), "1"),
-        )
-        val rule0 = Rule(10, null, conclusion, conditions)
-        with(Interpretation(caseId)) {
-            add(rule0)
-            latestText() shouldBe conclusion.text
-        }
     }
 
     private fun containsText(attribute: Attribute, match: String): EpisodicCondition {

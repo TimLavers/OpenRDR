@@ -13,11 +13,9 @@ import io.rippledown.model.RDRCase
 import io.rippledown.model.TestResult
 import io.rippledown.model.beSameAs
 import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.GreaterThanOrEqualTo
-import io.rippledown.model.condition.HasCurrentValue
-import io.rippledown.model.condition.Is
-import io.rippledown.model.*
-import io.rippledown.model.condition.*
+import io.rippledown.model.condition.greaterThanOrEqualTo
+import io.rippledown.model.condition.hasCurrentValue
+import io.rippledown.model.condition.isCondition
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.diff.Unchanged
@@ -280,7 +278,7 @@ internal class ServerApplicationTest {
         app.createKB()
         app.kb.kbInfo.name shouldBe "Thyroids"
         app.kb.containsCornerstoneCaseWithName("Case1") shouldBe false //kb rebuilt
-        // Check that all of the other KBs are still there.
+        // Check that all the other KBs are still there.
         persistenceProvider.idStore().data().keys shouldBe setOf(app.kbName().id).union(kbIdsBefore)
     }
 

@@ -6,8 +6,8 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.CaseId
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
-import io.rippledown.model.condition.ContainsText
-import io.rippledown.model.condition.Is
+import io.rippledown.model.condition.containsText
+import io.rippledown.model.condition.isCondition
 import io.rippledown.model.diff.*
 import io.rippledown.model.rule.Rule
 import kotlinx.serialization.encodeToString
@@ -111,7 +111,7 @@ class ViewableInterpretationTest {
     fun serialisationWithInterpretation() {
         val conclusion = Conclusion(1, "First conc")
         val conditions = setOf(
-            Is(1, Attribute(1, "x"), "1"),
+            isCondition(1, Attribute(1, "x"), "1"),
         )
         val rule = Rule(0, null, conclusion, conditions)
         interp.apply { add(rule) }
@@ -125,7 +125,7 @@ class ViewableInterpretationTest {
     fun serialisationWithRuleSummary() {
         val conclusion = Conclusion(1, "First conc")
         val conditions = setOf(
-            Is(1, Attribute(1, "x"), "1"),
+            isCondition(1, Attribute(1, "x"), "1"),
         )
         val rule = Rule(0, null, conclusion, conditions)
         val ruleSummary = rule.summary()
@@ -247,16 +247,16 @@ class ViewableInterpretationTest {
         val conclusion0 = Conclusion(1, "First conc")
         val conclusion1 = Conclusion(2, "Second conc")
         val conditions0 = setOf(
-            ContainsText(1, Attribute(26, "z"), "text z"),
-            ContainsText(2, Attribute(1, "A"), "text A"),
-            ContainsText(3, Attribute(25, "Y"), "text Y"),
-            ContainsText(4, Attribute(2, "b"), "text b"),
+            containsText(1, Attribute(26, "z"), "text z"),
+            containsText(2, Attribute(1, "A"), "text A"),
+            containsText(3, Attribute(25, "Y"), "text Y"),
+            containsText(4, Attribute(2, "b"), "text b"),
         )
         val conditions1 = setOf(
-            ContainsText(5, Attribute(18, "r"), "text r"),
-            ContainsText(6, Attribute(19, "s"), "text s"),
-            ContainsText(7, Attribute(16, "p"), "text p"),
-            ContainsText(8, Attribute(17, "q"), "text q"),
+            containsText(5, Attribute(18, "r"), "text r"),
+            containsText(6, Attribute(19, "s"), "text s"),
+            containsText(7, Attribute(16, "p"), "text p"),
+            containsText(8, Attribute(17, "q"), "text q"),
         )
         val rule0 = Rule(0, null, conclusion0, conditions0)
         val rule1 = Rule(1, rule0, conclusion1, conditions1)
@@ -304,7 +304,7 @@ class ViewableInterpretationTest {
         val verifiedText = "I can verify that is true."
         val conclusion = Conclusion(1, "First conc")
         val conditions = setOf(
-            Is(1, Attribute(1, "x"), "1"),
+            isCondition(1, Attribute(1, "x"), "1"),
         )
         val rule0 = Rule(10, null, conclusion, conditions)
         val interp = Interpretation(caseId)
@@ -317,7 +317,7 @@ class ViewableInterpretationTest {
     fun latestTextShouldBeTheInterpretationIfNoVerifiedText() {
         val conclusion = Conclusion(1, "First conc")
         val conditions = setOf(
-            Is(1, Attribute(1, "x"), "1"),
+            isCondition(1, Attribute(1, "x"), "1"),
         )
         val rule0 = Rule(10, null, conclusion, conditions)
         val interp = Interpretation(caseId)
@@ -347,9 +347,7 @@ class ViewableInterpretationTest {
         sd.verifiedText shouldBe text
     }
 
-    private fun containsText(attribute: Attribute, match: String): ContainsText {
-        return ContainsText(conditionId++, attribute, match)
-    }
+    private fun containsText(attribute: Attribute, match: String) = containsText(conditionId++, attribute, match)
 
     private fun serializeDeserialize(viewableInterpretation: ViewableInterpretation): ViewableInterpretation {
         val format = Json {
