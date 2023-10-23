@@ -97,7 +97,6 @@ kotlin {
                     implementation("io.ktor:ktor-client-cio")
                     implementation("io.ktor:ktor-server-test-host")
                     implementation("org.seleniumhq.selenium:selenium-java:$seleniumJavaVersion")
-                    implementation("com.microsoft.playwright:playwright:1.38.0")
 
                     implementation("io.github.bonigarcia:webdrivermanager:$webDriverVersion")
                     implementation("commons-io:commons-io:$commonsIoVersion")
@@ -155,7 +154,6 @@ kotlin {
                         implementation("org.awaitility:awaitility-kotlin:$awaitilityVersion")
                         implementation("org.seleniumhq.selenium:selenium-java:$seleniumJavaVersion")
                         implementation("io.github.bonigarcia:webdrivermanager:$webDriverVersion")
-                        implementation("com.microsoft.playwright:playwright:1.38.0")
 
                         implementation(enforcedPlatform("io.ktor:ktor-bom:$ktorVersion"))
                         implementation("io.ktor:ktor-client-core")

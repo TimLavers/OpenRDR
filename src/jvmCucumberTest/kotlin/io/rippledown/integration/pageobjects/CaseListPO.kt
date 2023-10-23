@@ -5,8 +5,11 @@ import org.awaitility.Awaitility.await
 import org.awaitility.kotlin.withPollInterval
 import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver
+import org.openqa.selenium.support.ui.Wait
+import org.openqa.selenium.support.ui.WebDriverWait
 import java.time.Duration.ofSeconds
 import java.util.concurrent.TimeUnit
+
 
 class CaseListPO(private val driver: WebDriver) {
 
@@ -15,6 +18,13 @@ class CaseListPO(private val driver: WebDriver) {
     fun waitForCaseListToHaveSize(count: Int) {
         await().atMost(5L, TimeUnit.SECONDS).until {
             casesListed().size == count
+        }
+    }
+
+    fun waitForCaseListToContain(name: String) {
+        val wait: Wait<WebDriver> = WebDriverWait(driver, ofSeconds(5))
+        wait.until { _ ->
+            driver.findElement(By.id("$CASE_NAME_PREFIX$name")).isDisplayed
         }
     }
 
@@ -32,17 +42,11 @@ class CaseListPO(private val driver: WebDriver) {
 
     fun casesListed() = listItems().map { it.text }
 
-    private fun listItems() = containerElement().findElements(By.className("MuiTypography-root"))
+    private fun listItems() = containerElement().findElements(By.className("MuiListItemButton-root"))
 
     fun select(caseName: String): CaseViewPO {
         val id = "$CASE_NAME_PREFIX$caseName"
         driver.findElement(By.id(id)).click()
         return CaseViewPO(driver)
-    }
-
-    fun waitForCaseListToContain(caseName: String) {
-        await().atMost(5L, TimeUnit.SECONDS).until {
-            casesListed().contains(caseName)
-        }
     }
 }

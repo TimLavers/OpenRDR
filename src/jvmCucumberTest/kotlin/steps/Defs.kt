@@ -1,10 +1,8 @@
 package steps
 
-import com.microsoft.playwright.Page
 import io.cucumber.datatable.DataTable
 import io.cucumber.java8.En
 import io.kotest.matchers.shouldBe
-import io.rippledown.constants.caseview.CASE_NAME_PREFIX
 import io.rippledown.integration.UITestBase
 import io.rippledown.integration.pageobjects.*
 import io.rippledown.integration.restclient.RESTClient
@@ -30,8 +28,6 @@ class Defs : En {
 
     private lateinit var driver: WebDriver
 
-    private lateinit var playwrightPage: Page
-
     init {
         Before { scenario ->
             println("Before scenario '${scenario.name}'")
@@ -53,10 +49,6 @@ class Defs : En {
             conditionSelectorPO = ConditionSelectorPO(driver)
             conclusionsViewPO = ConclusionsViewPO(driver)
             kbInfoPO = KBInfoPO(driver)
-        }
-
-        When("I start the client application using playwright") {
-            playwrightPage = uiTestBase.setupPlaywright()
         }
 
         When("stop the client application") {
@@ -96,10 +88,6 @@ class Defs : En {
         And("I select case {word}") { caseName: String ->
             caseListPO.waitForCaseListToContain(caseName)
             caseListPO.select(caseName)
-        }
-        And("I select case {word} using playwright") { caseName: String ->
-            val id = "$CASE_NAME_PREFIX$caseName"
-            playwrightPage.getByTestId(id).click()
         }
 
         And("I move attribute {word} below attribute {word}") { moved: String, target: String ->
