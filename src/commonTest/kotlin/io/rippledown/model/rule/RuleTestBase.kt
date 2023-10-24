@@ -13,7 +13,7 @@ open class RuleTestBase: ConditionTestBase() {
     private var conclusionId = 0
     private var conditionId = 0
     private val caseId = CaseId(1, "Case1")
-    val interpretation = Interpretation(caseId, "")
+    val interpretation = Interpretation(caseId)
 
     fun findOrCreateConclusion(text: String, root: Rule): Conclusion {
         var conclusionWithText: Conclusion? = null

@@ -68,7 +68,7 @@ class CaseManagementTest: OpenRDRServerTestBase() {
         setup()
         val case = CaseTestUtils.getCase("Case2")
         val caseData = case.serialize()
-        val returnCase = createCase("Case2").rdrCase
+        val returnCase = createCase("Case2").case
         every { serverApplication.processCase(case) } returns returnCase
         val result = httpClient.put(PROCESS_CASE) {
             contentType(ContentType.Application.Json)

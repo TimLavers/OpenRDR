@@ -1,4 +1,4 @@
-package io.rippledown.model.diff
+package io.rippledown.diff
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute

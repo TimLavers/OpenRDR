@@ -3,10 +3,10 @@ package io.rippledown.casecontrol
 import Api
 import io.kotest.matchers.shouldBe
 import io.rippledown.interpretation.*
-import io.rippledown.model.Interpretation
 import io.rippledown.model.createCase
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
+import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.coroutines.test.runTest
 import mocks.config
@@ -25,15 +25,11 @@ class CaseInspectionWhenCancellingRuleBuildingTest {
                 Addition(bondiComment),
             )
         )
+        val interp = ViewableInterpretation().apply { this.diffList = diffList }
         val caseA = createCase(
             id = 1L,
             name = "Bondi",
-        )
-
-        val interp = Interpretation(
-            diffList = diffList,
-        )
-        caseA.interpretation = interp
+        ).apply { viewableInterpretation = interp }
 
         val config = config {
             returnInterpretationAfterSavingInterpretation = interp

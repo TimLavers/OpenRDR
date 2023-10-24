@@ -5,8 +5,8 @@ import io.rippledown.constants.interpretation.INTERPRETATION_CHANGES_BADGE
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CONCLUSIONS
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL
-import io.rippledown.model.Interpretation
 import io.rippledown.model.diff.Diff
+import io.rippledown.model.interpretationview.ViewableInterpretation
 import kotlinx.coroutines.launch
 import mui.lab.TabContext
 import mui.lab.TabPanel
@@ -18,7 +18,7 @@ import web.cssom.pc
 import web.cssom.px
 
 external interface InterpretationTabsHandler : Handler {
-    var interpretation: Interpretation
+    var interpretation: ViewableInterpretation
     var onStartRule: (selectedDiff: Diff) -> Unit
     var isCornerstone: Boolean
 }

@@ -4,6 +4,7 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.condition.containsText
+import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.RuleSummary
 import kotlinx.coroutines.test.runTest
 import proxy.waitForEvents
@@ -37,7 +38,7 @@ class ConclusionsViewTest {
             }
         }
         ConclusionsView {
-            interpretation = interp
+            interpretation = ViewableInterpretation(interp)
         }
     }
 

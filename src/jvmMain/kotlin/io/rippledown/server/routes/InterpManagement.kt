@@ -6,7 +6,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.rippledown.constants.api.*
-import io.rippledown.model.Interpretation
+import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
@@ -16,7 +16,7 @@ fun Application.interpManagement(application: ServerApplication) {
     routing {
 
         post(VERIFIED_INTERPRETATION_SAVED) {
-            val interpretation = call.receive<Interpretation>()
+            val interpretation = call.receive<ViewableInterpretation>()
             val interpretationWithDiffs = application.saveInterpretation(interpretation)
             call.respond(HttpStatusCode.OK, interpretationWithDiffs)
         }

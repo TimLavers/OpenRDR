@@ -43,6 +43,11 @@ class CaseViewManagerTest {
     }
 
     @Test
+    fun `a case's viewable interpretation should refer to the case's id`() {
+        val case = createCase("Case1", listOf())
+        manager.getViewableCase(case).viewableInterpretation.caseId() shouldBe case.caseId
+    }
+    @Test
     fun `should be no ordering when the manager is first created`() {
         manager.allInOrder() shouldBe emptyList()
     }
@@ -71,8 +76,8 @@ class CaseViewManagerTest {
     @Test
     fun `attributes in first case are above attributes in second case`() {
         val case1Attributes = listOf(a1, a3, a5)
-        val case1 = createCase("Case1", case1Attributes)
         val case2Attributes = listOf(a2, a4, a6)
+        val case1 = createCase("Case1", case1Attributes)
         val case2 = createCase("Case2", case2Attributes)
         manager.getViewableCase(case1)
         manager.getViewableCase(case2)
@@ -139,6 +144,14 @@ class CaseViewManagerTest {
     }
 
     @Test
+    fun moveJustAbove() {
+        createCaseWithAttributesAndShowToManager(listOf(a1, a3, a5))
+        manager.moveJustAbove(a5, a1)
+        val caseAfter = createCaseWithAttributesAndShowToManager(listOf(a1, a3, a5))
+        caseAfter.attributes() shouldBe listOf(a5, a1, a3)
+    }
+
+    @Test
     fun setAttributes() {
         manager.set(listOf(a3, a2, a1))
         val case = createCaseWithAttributesAndShowToManager(listOf(a1, a2, a3))
@@ -179,7 +192,7 @@ class CaseViewManagerTest {
         manager.moveJustBelow(a3, a4)
         manager.moveJustBelow(a2, a3)
         manager.moveJustBelow(a1, a2)
-        val caseAfter = manager.getViewableCase(case.rdrCase)
+        val caseAfter = manager.getViewableCase(case.case)
         caseAfter.attributes() shouldBe listOf(a6, a5, a4, a3, a2, a1)
     }
 

@@ -68,7 +68,7 @@ class Defs : En {
         }
 
         And("I select a case with all three attributes") {
-            caseViewPO = caseListPO.select("CaseABC")
+            caseListPO.select("CaseABC")
         }
 
         When("a new case with the name {word} is stored on the server") { caseName: String ->
@@ -86,7 +86,8 @@ class Defs : En {
         }
 
         And("I select case {word}") { caseName: String ->
-            caseViewPO = caseListPO.select(caseName)
+            caseListPO.waitForCaseListToContain(caseName)
+            caseListPO.select(caseName)
         }
 
         And("I move attribute {word} below attribute {word}") { moved: String, target: String ->
@@ -98,6 +99,7 @@ class Defs : En {
             labProxy.provideCase("Case1", mapOf("A" to "a"))
             labProxy.provideCase("Case2", mapOf("A" to "a", "B" to "b"))
             labProxy.provideCase("Case3", mapOf("A" to "a", "B" to "b", "C" to "c"))
+            // The attributes are created when the cases are parsed, so select them in the right order.
             with(caseListPO) {
                 waitForCaseListToHaveSize(3)
 

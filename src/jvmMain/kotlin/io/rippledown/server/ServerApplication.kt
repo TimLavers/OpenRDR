@@ -6,16 +6,18 @@ import io.rippledown.kb.export.KBExporter
 import io.rippledown.kb.export.KBImporter
 import io.rippledown.kb.export.util.Unzipper
 import io.rippledown.kb.export.util.Zipper
-import io.rippledown.model.*
-import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.CasesInfo
+import io.rippledown.model.Conclusion
+import io.rippledown.model.KBInfo
+import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.diff.*
 import io.rippledown.model.external.ExternalCase
+import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.postgres.PostgresPersistenceProvider
-import io.rippledown.textdiff.diffList
 import io.rippledown.util.EntityRetrieval
 import java.io.File
 import kotlin.io.path.createTempDirectory
@@ -105,12 +107,7 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         return case
     }
 
-    fun viewableCase(id: Long): ViewableCase {
-        return kb.viewableInterpretedCase(uninterpretedCase(id)).apply {
-            //reset the case's diff list
-            interpretation.diffList = diffList(interpretation)
-        }
-    }
+    fun viewableCase(id: Long) = kb.viewableCase(uninterpretedCase(id))
 
     fun conditionHintsForCase(id: Long): ConditionList = kb.conditionHintsForCase(case(id))
 
@@ -133,25 +130,27 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
     /**
      * Save the verified text.
      *
-     * @return an Interpretation with the list of Diffs corresponding to the changes made to the current interpretation by the verified text
+     * @return a ViewableInterpretation with a re-calculated list of Diffs
+     * corresponding to difference between the current interpretation and the verified text
      */
-    fun saveInterpretation(interpretation: Interpretation): Interpretation {
-        val caseId = interpretation.caseId.id!!
-        val case = case(caseId)
+    fun saveInterpretation(viewableInterpretation: ViewableInterpretation): ViewableInterpretation {
+        require(viewableInterpretation.verifiedText != null) { "Cannot save an unverified interpretation." }
 
-        //reset the case's verified text
-        case.interpretation.verifiedText = interpretation.verifiedText
+        val caseId = viewableInterpretation.caseId()
+        val case = viewableCase(caseId.id!!)
 
-        //save the conclusions in the verified text
+        //persist the verified text and corresponding conclusions associated with the interpretation
+        kb.saveInterpretation(viewableInterpretation)
 
-        //reset the case's diff list
-        case.interpretation.diffList = diffList(interpretation)
+        //reset the case's viewable interpretation including diff list
+        val updated = kb.interpretationViewManager.viewableInterpretation(viewableInterpretation.interpretation)
 
         //update the case in the KB
+        case.viewableInterpretation = updated
         //kb.putCase(case) TODO test this for the case where we are using the Postgres persistence provider
 
         //return the updated interpretation
-        return case.interpretation
+        return updated
     }
 
     /**
@@ -168,9 +167,9 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
 
     }
 
-    fun commitRuleSession(ruleRequest: RuleRequest): Interpretation {
+    fun commitRuleSession(ruleRequest: RuleRequest): ViewableInterpretation {
         val caseId = ruleRequest.caseId
-        val case = case(caseId)
+        val case = viewableCase(caseId)
 
         ruleRequest.conditions.conditions.forEach { condition ->
             addConditionToCurrentRuleBuildingSession(condition)
@@ -178,17 +177,12 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         commitCurrentRuleSession()
 
         //re-interpret the case
-        kb.interpret(case)
-
-        //If a new conclusion was created, ensure that it is positioned as indicated in the verified text
-
-        //reset the case's diff list to account of the updated interpretation
-        val updatedInterpretation = case.interpretation
-        case.interpretation.diffList = diffList(updatedInterpretation)
+        val updatedInterpretation = kb.interpret(case.case)
+        case.viewableInterpretation = kb.interpretationViewManager.viewableInterpretation(updatedInterpretation)
 
         //return the updated interpretation
         logger.info("Updated interpretation after committing the rule: $updatedInterpretation")
-        return case.interpretation
+        return case.viewableInterpretation
     }
 
     private fun uninterpretedCase(id: Long) = kb.getProcessedCase(id)!!
@@ -199,7 +193,7 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
     fun cornerstoneStatusForIndex(cornerstoneIndex: Int): CornerstoneStatus {
         val cornerstones = kb.conflictingCasesInCurrentRuleSession()
         val cornerstone = cornerstones[cornerstoneIndex]
-        val viewableCornerstone = kb.viewableInterpretedCase(cornerstone)
+        val viewableCornerstone = kb.viewableCase(cornerstone)
         return CornerstoneStatus(viewableCornerstone, cornerstoneIndex, cornerstones.size)
     }
 

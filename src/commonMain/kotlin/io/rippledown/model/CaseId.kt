@@ -8,6 +8,6 @@ enum class CaseType {
 }
 
 @Serializable
-data class CaseId(val id: Long?, val name: String, val type: CaseType = CaseType.Processed) {
-    constructor(name: String): this(null, name)
+data class CaseId(val id: Long?, val name: String = "", val type: CaseType = CaseType.Processed) {
+    constructor(name: String = "") : this(null, name)
 }

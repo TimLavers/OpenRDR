@@ -8,11 +8,11 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.rippledown.constants.api.*
 import io.rippledown.model.CasesInfo
-import io.rippledown.model.Interpretation
 import io.rippledown.model.KBInfo
 import io.rippledown.model.OperationResult
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
@@ -87,7 +87,7 @@ class Api(engine: HttpClientEngine = Js.create()) {
     /**
      * @return the interpretation containing the DiffList of the original and verified interpretation
      */
-    suspend fun saveVerifiedInterpretation(verifiedInterpretation: Interpretation): Interpretation {
+    suspend fun saveVerifiedInterpretation(verifiedInterpretation: ViewableInterpretation): ViewableInterpretation {
         return jsonClient.post("$endpoint$VERIFIED_INTERPRETATION_SAVED") {
             contentType(ContentType.Application.Json)
             setBody(verifiedInterpretation)
@@ -100,7 +100,7 @@ class Api(engine: HttpClientEngine = Js.create()) {
      * @param ruleRequest the information needed to build the rule
      * @return the updated interpretation
      */
-    suspend fun buildRule(ruleRequest: RuleRequest): Interpretation {
+    suspend fun buildRule(ruleRequest: RuleRequest): ViewableInterpretation {
         return jsonClient.post("$endpoint$BUILD_RULE") {
             contentType(ContentType.Application.Json)
             setBody(ruleRequest)

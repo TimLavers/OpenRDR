@@ -12,6 +12,7 @@ class InMemoryKB(val kbInfo: KBInfo): PersistentKB {
     private val conditionStore = InMemoryConditionStore()
     private val ruleStore = InMemoryRuleStore()
     private val cornerstoneCasesStore = InMemoryCaseStore()
+    private val verifiedTextStore = InMemoryVerifiedTextStore()
 
     override fun kbInfo() = kbInfo
 
@@ -28,4 +29,6 @@ class InMemoryKB(val kbInfo: KBInfo): PersistentKB {
     override fun ruleStore() = ruleStore
 
     override fun caseStore() = cornerstoneCasesStore
+
+    override fun verifiedTextStore() = verifiedTextStore
 }

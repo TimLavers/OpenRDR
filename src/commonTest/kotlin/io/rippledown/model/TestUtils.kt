@@ -6,6 +6,7 @@ import io.rippledown.model.caseview.CaseViewProperties
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.diff.DiffList
+import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.RuleSummary
 
 fun daysAgo(n: Int): Long {
@@ -58,12 +59,15 @@ fun createCaseWithInterpretation(
 ): ViewableCase {
     val case = createCase(name, id)
     var conclusionId = 10
-    val interp = Interpretation(diffList = diffs).apply {
+    val interp = Interpretation(case.case.caseId).apply {
         conclusionTexts.forEach { text ->
             add(RuleSummary(conclusion = Conclusion(conclusionId++, text)))
         }
     }
-    case.interpretation = interp
+    val text = interp.conclusionTexts().joinToString(" ")
+    val viewableInterp =
+        ViewableInterpretation(interpretation = interp, verifiedText = null, diffList = diffs, textGivenByRules = text)
+    case.viewableInterpretation = viewableInterp
     return case
 }
 

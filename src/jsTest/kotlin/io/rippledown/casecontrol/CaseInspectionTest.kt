@@ -6,14 +6,16 @@ import io.rippledown.caseview.requireCaseToBeShowing
 import io.rippledown.cornerstoneview.requireCornerstoneCaseNotToBeShowing
 import io.rippledown.cornerstoneview.requireCornerstoneCaseToBeShowing
 import io.rippledown.interpretation.*
-import io.rippledown.model.*
+import io.rippledown.model.Attribute
+import io.rippledown.model.CaseId
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.hasCurrentValue
+import io.rippledown.model.createCase
+import io.rippledown.model.createCaseWithInterpretation
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
-import io.rippledown.model.rule.RuleSummary
 import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
@@ -50,7 +52,7 @@ class CaseInspectionTest {
     fun shouldShowInterpretation() = runTest {
         val text = "Go to Bondi now!"
         val rdrCase = createCase(name = "case a", id = 1L)
-        rdrCase.interpretation.add(RuleSummary(conclusion = Conclusion(1, text)))
+        rdrCase.viewableInterpretation.textGivenByRules = text
         val fc = FC {
             CaseInspection {
                 case = rdrCase

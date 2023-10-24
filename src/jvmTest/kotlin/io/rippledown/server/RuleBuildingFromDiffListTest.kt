@@ -4,6 +4,7 @@ import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.COMMENT_SEPARATOR
 import io.rippledown.model.diff.*
+import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
@@ -50,8 +51,11 @@ internal class RuleBuildingFromDiffListTest {
         val interp = app.case(id).interpretation
         val v1 = "Verified 1."
         val v2 = "Verified 2."
-        interp.verifiedText = "$v1 $v2"
-        interp.latestText() shouldBe "$v1 $v2"
+        val viewableInterpretation = ViewableInterpretation(interp, verifiedText = "$v1 $v2")
+        viewableInterpretation.latestText() shouldBe "$v1 $v2"
+
+        //save the interpretation so that the verified text is persisted
+        app.saveInterpretation(viewableInterpretation)
 
         val diffList = DiffList(
             diffs = listOf(
@@ -63,14 +67,14 @@ internal class RuleBuildingFromDiffListTest {
 
         app.startRuleSession(SessionStartRequest(id, diffList.selectedChange()))
         val ruleRequest = RuleRequest(id)
-        app.commitRuleSession(ruleRequest)
+        val updatedInterpretation = app.commitRuleSession(ruleRequest)
 
-        withClue("the latest text should be unchanged as the verified text is still null.") {
-            interp.latestText() shouldBe "$v1 $v2"
+        withClue("the latest text should be unchanged") {
+            updatedInterpretation.latestText() shouldBe "$v1 $v2"
         }
 
         withClue("The returned DiffList should be updated to reflect the new rule.") {
-            interp.diffList shouldBe DiffList(
+            updatedInterpretation.diffList shouldBe DiffList(
                 diffs = listOf(
                     Unchanged(v1),
                     Addition(v2)
@@ -90,7 +94,7 @@ internal class RuleBuildingFromDiffListTest {
             commitCurrentRuleSession()
             startRuleSessionToAddConclusion(id, app.getOrCreateConclusion(comment2))
             commitCurrentRuleSession()
-            case(id).interpretation.latestText() shouldBe "$comment1${COMMENT_SEPARATOR}$comment2" //sanity check
+            viewableCase(id).latestText() shouldBe "$comment1${COMMENT_SEPARATOR}$comment2" //sanity check
         }
 
         val diffList = DiffList(
@@ -104,7 +108,7 @@ internal class RuleBuildingFromDiffListTest {
         app.startRuleSession(SessionStartRequest(id, diffList.selectedChange()))
         val ruleRequest = RuleRequest(id)
         app.commitRuleSession(ruleRequest)
-        val updatedInterpretation = app.case(id).interpretation
+        val updatedInterpretation = app.viewableCase(id).viewableInterpretation
 
         withClue("The returned DiffList should be updated to reflect the new rule.") {
             updatedInterpretation.diffList shouldBe DiffList(
@@ -128,7 +132,7 @@ internal class RuleBuildingFromDiffListTest {
             commitCurrentRuleSession()
             startRuleSessionToAddConclusion(id, app.getOrCreateConclusion(comment2))
             commitCurrentRuleSession()
-            case(id).interpretation.latestText() shouldBe "$comment1${COMMENT_SEPARATOR}$comment2" //sanity check
+            viewableCase(id).latestText() shouldBe "$comment1${COMMENT_SEPARATOR}$comment2" //sanity check
         }
 
         val diffList = DiffList(
@@ -141,7 +145,7 @@ internal class RuleBuildingFromDiffListTest {
         app.startRuleSession(SessionStartRequest(id, diffList.selectedChange()))
         val ruleRequest = RuleRequest(id)
         app.commitRuleSession(ruleRequest)
-        val updatedInterpretation = app.case(id).interpretation
+        val updatedInterpretation = app.viewableCase(id).viewableInterpretation
 
         withClue("The returned DiffList should be updated to reflect the new rule.") {
             updatedInterpretation.diffList shouldBe DiffList(
@@ -164,10 +168,10 @@ internal class RuleBuildingFromDiffListTest {
         val case2 = app.case(id2)
         val case3 = app.case(id3)
         val case4 = app.case(id4)
-        val cc1Id = app.kb.addCornerstoneCase(case1).id!!
-        val cc2Id = app.kb.addCornerstoneCase(case2).id!!
+        app.kb.addCornerstoneCase(case1).id!!
+        app.kb.addCornerstoneCase(case2).id!!
         val cc3Id = app.kb.addCornerstoneCase(case3).id!!
-        val cc4Id = app.kb.addCornerstoneCase(case4).id!!
+        app.kb.addCornerstoneCase(case4).id!!
         val ccStatus = app.startRuleSession(SessionStartRequest(id1, Addition("Go to Bondi")))
         withClue("sanity check. The session case is not a cornerstone") {
             ccStatus.numberOfCornerstones shouldBe 3

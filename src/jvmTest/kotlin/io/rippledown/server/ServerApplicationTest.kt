@@ -8,11 +8,18 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.rippledown.CaseTestUtils
-import io.rippledown.model.*
-import io.rippledown.model.condition.*
+import io.rippledown.model.Attribute
+import io.rippledown.model.RDRCase
+import io.rippledown.model.TestResult
+import io.rippledown.model.beSameAs
+import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.greaterThanOrEqualTo
+import io.rippledown.model.condition.hasCurrentValue
+import io.rippledown.model.condition.isCondition
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.diff.Unchanged
+import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
@@ -90,10 +97,10 @@ internal class ServerApplicationTest {
     fun `should set the interpretation's DiffList to be empty when retrieving a case with a blank interpretation`() {
         val id = supplyCaseFromFile("Case1", app).caseId.id!!
 
-        val case = app.case(id)
-        case.interpretation.verifiedText shouldBe null
-        case.interpretation.textGivenByRules() shouldBe ""
-        case.interpretation.diffList shouldBe DiffList(emptyList())
+        val case = app.viewableCase(id)
+        case.verifiedText() shouldBe null
+        case.textGivenByRules() shouldBe ""
+        case.diffList() shouldBe DiffList(emptyList())
     }
 
     @Test
@@ -106,9 +113,9 @@ internal class ServerApplicationTest {
         app.kb.commitCurrentRuleSession()
 
         with(app.viewableCase(id)) {
-            interpretation.verifiedText shouldBe null
-            interpretation.textGivenByRules() shouldBe text
-            interpretation.diffList shouldBe DiffList(listOf(Unchanged(text)))
+            verifiedText() shouldBe null
+            textGivenByRules() shouldBe text
+            diffList() shouldBe DiffList(listOf(Unchanged(text)))
         }
     }
 
@@ -116,15 +123,17 @@ internal class ServerApplicationTest {
     fun `should update a case's verified interpretation and return an interpretation containing a DiffList`() {
         val caseId = supplyCaseFromFile("Case1", app).caseId
         val id = caseId.id!!
-        val original = app.case(id)
-        original.interpretation.verifiedText shouldBe null
-        original.interpretation.textGivenByRules() shouldBe ""
+        val original = app.viewableCase(id)
+        original.verifiedText() shouldBe null
+        original.diffList() shouldBe DiffList()
 
-        val verifiedInterpretation = Interpretation(caseId, "Verified.")
+        val verified = "Verified."
+        val verifiedInterpretation = original.viewableInterpretation.apply { verifiedText = verified }
         val returnedInterpretation = app.saveInterpretation(verifiedInterpretation)
-        val updated = app.case(id)
-        updated.interpretation shouldBe returnedInterpretation
-        returnedInterpretation.diffList shouldBe DiffList(listOf(Addition("Verified.")))
+        val updated = app.viewableCase(id)
+        updated.viewableInterpretation shouldBe returnedInterpretation
+        original.verifiedText() shouldBe verified
+        updated.diffList() shouldBe DiffList(listOf(Addition(verified)))
     }
 
     @Test
@@ -186,18 +195,18 @@ internal class ServerApplicationTest {
 
         val retrieved = app.viewableCase(id)
         assertEquals(retrieved.name, "Case1")
-        assertEquals(retrieved.rdrCase.getLatest("ABC")!!.value.text, "6.7")
+        assertEquals(retrieved.case.getLatest("ABC")!!.value.text, "6.7")
         assertEquals(2, retrieved.attributes().size)
         // No rules added.
-        retrieved.interpretation.conclusions().size shouldBe 0
+        retrieved.viewableInterpretation.interpretation.conclusions().size shouldBe 0
         // Add a rule.
         val conclusion = app.kb.conclusionManager.getOrCreate("ABC ok.")
-        app.kb.startRuleSession(retrieved.rdrCase, ChangeTreeToAddConclusion(conclusion))
-        val abc = retrieved.rdrCase.getAttribute("ABC")
+        app.kb.startRuleSession(retrieved.case, ChangeTreeToAddConclusion(conclusion))
+        val abc = retrieved.case.getAttribute("ABC")
         app.kb.addConditionToCurrentRuleSession(greaterThanOrEqualTo(null, abc, 5.0))
         app.kb.commitCurrentRuleSession()
         val retrievedAgain = app.viewableCase(id)
-        retrievedAgain.interpretation.conclusions() shouldContainExactly setOf(conclusion)
+        retrievedAgain.viewableInterpretation.interpretation.conclusions() shouldContainExactly setOf(conclusion)
     }
 
     @Test
@@ -269,7 +278,7 @@ internal class ServerApplicationTest {
         app.createKB()
         app.kb.kbInfo.name shouldBe "Thyroids"
         app.kb.containsCornerstoneCaseWithName("Case1") shouldBe false //kb rebuilt
-        // Check that all of the other KBs are still there.
+        // Check that all the other KBs are still there.
         persistenceProvider.idStore().data().keys shouldBe setOf(app.kbName().id).union(kbIdsBefore)
     }
 
@@ -278,12 +287,13 @@ internal class ServerApplicationTest {
         app.kb.kbInfo.name shouldBe "Thyroids"
         val kbIdsBefore = persistenceProvider.idStore().data().keys
         val oldKBId = app.kbName().id
-        app.kb.addCornerstoneCase(createCase("Case1"))
-        app.kb.containsCornerstoneCaseWithName("Case1") shouldBe true
+        val caseName = "Case A"
+        app.kb.addCornerstoneCase(createCase(caseName))
+        app.kb.containsCornerstoneCaseWithName(caseName) shouldBe true
 
         app.reCreateKB()
         app.kb.kbInfo.name shouldBe "Thyroids"
-        app.kb.containsCornerstoneCaseWithName("Case1") shouldBe false //kb rebuilt
+        app.kb.containsCornerstoneCaseWithName(caseName) shouldBe false //kb rebuilt
         // Check that the old KB has been deleted.
         val expectedKBIdsAfter = kbIdsBefore.minus(oldKBId).plus(app.kbName().id)
         persistenceProvider.idStore().data().keys shouldBe expectedKBIdsAfter
@@ -300,7 +310,7 @@ internal class ServerApplicationTest {
         app.case(id).interpretation.conclusions() shouldBe emptySet()
         app.startRuleSessionToAddConclusion(id, app.kb.conclusionManager.getOrCreate("Whatever"))
         app.commitCurrentRuleSession()
-        app.case(id).interpretation.textGivenByRules() shouldBe "Whatever"
+        app.case(id).interpretation.conclusionTexts() shouldBe setOf("Whatever")
     }
 
     @Test
@@ -313,7 +323,7 @@ internal class ServerApplicationTest {
         val tshCondition = greaterThanOrEqualTo(null, tsh, 0.6)
         app.addConditionToCurrentRuleBuildingSession(tshCondition)
         app.commitCurrentRuleSession()
-        app.case(id).interpretation.textGivenByRules() shouldBe conclusion1.text
+        app.case(id).interpretation.conclusionTexts() shouldBe setOf(conclusion1.text)
 
         // Get the exported KB.
         val exported = app.exportKBToZip()
@@ -358,11 +368,11 @@ internal class ServerApplicationTest {
         val conclusion1 = app.kb.conclusionManager.getOrCreate("Whatever")
         app.startRuleSessionToAddConclusion(id, conclusion1)
         app.commitCurrentRuleSession()
-        app.case(id).interpretation.textGivenByRules() shouldBe conclusion1.text
+        app.case(id).interpretation.conclusionTexts() shouldBe setOf(conclusion1.text)
         val conclusion2 = app.kb.conclusionManager.getOrCreate("Blah")
         app.startRuleSessionToReplaceConclusion(id, conclusion1, conclusion2)
         app.commitCurrentRuleSession()
-        app.case(id).interpretation.textGivenByRules() shouldBe conclusion2.text
+        app.case(id).interpretation.conclusionTexts() shouldBe setOf(conclusion2.text)
     }
 
     @Test
@@ -373,9 +383,9 @@ internal class ServerApplicationTest {
             startRuleSessionToAddConclusion(id, conclusion)
             commitCurrentRuleSession()
             val case = case(id)
-            case.interpretation.latestText() shouldBe conclusion.text
+            case.interpretation.conclusionTexts() shouldBe setOf(conclusion.text)
 
-            val verifiedInterpretation = case.interpretation.apply {
+            val verifiedInterpretation = ViewableInterpretation(case.interpretation).apply {
                 verifiedText = "Go to Bondi. Bring 2 sets of flippers. And bring sunscreen."
             }
             val interpReturned = app.saveInterpretation(verifiedInterpretation)
@@ -387,6 +397,34 @@ internal class ServerApplicationTest {
                 )
             )
         }
+    }
+
+    @Test
+    fun `when saving an interpretation, the conclusions corresponding to the verified text should be saved in order`() {
+        // given
+        val id = supplyCaseFromFile("Case1", app).caseId.id!!
+        val case = app.viewableCase(id)
+        val comment1 = "Go to Bondi."
+        val comment2 = "Bring 2 sets of flippers."
+        val comment3 = "And bring sunscreen."
+        val interp = case.viewableInterpretation.apply {
+            verifiedText = "$comment1 $comment2 $comment3"
+        }
+
+        // when
+        val savedInterpretation = app.saveInterpretation(interp)
+
+        // then
+        app.kb.interpretationViewManager.allInOrder()
+            .map { it.text } shouldBe setOf(comment1, comment2, comment3)
+
+        savedInterpretation.diffList shouldBe DiffList(
+            listOf(
+                Addition(comment1),
+                Addition(comment2),
+                Addition(comment3),
+            )
+        )
     }
 
     @Test

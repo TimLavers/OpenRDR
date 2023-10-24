@@ -3,12 +3,9 @@ package io.rippledown.model
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.rippledown.model.condition.containsText
-import io.rippledown.model.diff.Addition
-import io.rippledown.model.diff.DiffList
 import io.rippledown.model.rule.Rule
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -32,12 +29,12 @@ class RDRCaseTest {
     @Test
     fun copyWithoutId() {
         val case = RDRCase(CaseId(1234, "Tea"))
-        with (case.copyWithoutId()) {
+        with(case.copyWithoutId()) {
             name shouldBe "Tea"
             id shouldBe null
             caseId.type shouldBe CaseType.Processed
         }
-        with (case.copyWithoutId(CaseType.Cornerstone)) {
+        with(case.copyWithoutId(CaseType.Cornerstone)) {
             name shouldBe "Tea"
             id shouldBe null
             caseId.type shouldBe CaseType.Cornerstone
@@ -306,18 +303,6 @@ class RDRCaseTest {
     }
 
     @Test
-    @Ignore //TODO: fix
-    fun serializedWithDiffList() {
-        val case = basicCase()
-        val diffList = DiffList(listOf(Addition("Coffee is very good")))
-        case.interpretation.diffList = diffList
-
-        val sd = serializeDeserialize(case)
-        sd shouldBe case
-        sd.interpretation.diffList shouldBe diffList
-    }
-
-    @Test
     fun jsonSerialisation() {
         val case1 = RDRCase(CaseId(99, "Big Case"), emptyMap())
         val sd1 = serializeDeserialize(case1)
@@ -342,20 +327,6 @@ class RDRCaseTest {
         val case3 = builder3.build("Case3")
         val sd3 = serializeDeserialize(case3)
         assertEquals(sd3, case3)
-    }
-
-    @Test
-    @Ignore //TODO: fix
-    fun serializedWithVerifiedText() {
-        val case = basicCase()
-        val text = "Coffee is very good"
-        case.interpretation.verifiedText = text
-
-        val builder3 = RDRCaseBuilder()
-        builder3.addValue(age, defaultDate, "52")
-        val sd = serializeDeserialize(case)
-        sd shouldBe case
-        sd.interpretation.verifiedText shouldBe text
     }
 
     @Test

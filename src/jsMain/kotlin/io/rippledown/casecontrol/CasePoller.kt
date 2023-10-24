@@ -7,6 +7,7 @@ import io.rippledown.model.CasesInfo
 import kotlinx.coroutines.launch
 import mui.material.Typography
 import react.FC
+import react.memo
 import react.useEffectOnce
 import react.useState
 import web.timers.setInterval
@@ -33,10 +34,16 @@ val CasePoller = FC<CasePollerHandler> { handler ->
     }
 
     if (casesInfo.count > 0) {
-        CaseControl {
+        CaseControlMemo {
             scope = handler.scope
             api = handler.api
             caseIds = casesInfo.caseIds
         }
     }
 }
+val CaseControlMemo = memo(
+    type = CaseControl,
+    propsAreEqual = { oldProps, newProps ->
+        oldProps.caseIds == newProps.caseIds
+    }
+)

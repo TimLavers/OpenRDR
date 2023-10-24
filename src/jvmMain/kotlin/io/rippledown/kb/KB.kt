@@ -7,8 +7,10 @@ import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.external.ExternalCase
+import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistentKB
+import io.rippledown.textdiff.splitIntoSentences
 
 class KB(persistentKB: PersistentKB) {
 
@@ -20,9 +22,15 @@ class KB(persistentKB: PersistentKB) {
     val ruleTree: RuleTree = ruleManager.ruleTree()
     private val caseManager = CaseManager(persistentKB.caseStore(), attributeManager)
     private var ruleSession: RuleBuildingSession? = null
-    val caseViewManager: CaseViewManager = CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
+    internal val caseViewManager: CaseViewManager =
+        CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
+    private val verifiedTextStore = persistentKB.verifiedTextStore()
     val interpretationViewManager: InterpretationViewManager =
-        InterpretationViewManager(persistentKB.conclusionOrderStore(), conclusionManager)
+        InterpretationViewManager(
+            persistentKB.conclusionOrderStore(),
+            conclusionManager,
+            verifiedTextStore
+        )
 
     fun containsCornerstoneCaseWithName(caseName: String): Boolean {
         return caseManager.ids(CaseType.Cornerstone).find { rdrCase -> rdrCase.name == caseName } != null
@@ -119,13 +127,12 @@ class KB(persistentKB: PersistentKB) {
         check(ruleSession != null) { "Rule session not started." }
     }
 
-    fun interpret(case: RDRCase) {
-        ruleTree.apply(case)
-    }
+    fun interpret(case: RDRCase) = ruleTree.apply(case)
 
-    fun viewableInterpretedCase(case: RDRCase): ViewableCase {
-        interpret(case)
-        return caseViewManager.getViewableCase(case)
+    fun viewableCase(case: RDRCase): ViewableCase {
+        val interpretation = interpret(case)
+        val viewableInterpretation = interpretationViewManager.viewableInterpretation(interpretation)
+        return caseViewManager.getViewableCase(case, viewableInterpretation)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -169,11 +176,28 @@ class KB(persistentKB: PersistentKB) {
         //if no cornerstone has been selected yet, or the selected cornerstone is no longer in the list of cornerstones, return the first one
         var index = 0
         if (currentCornerstone != null) {
-            index = cornerstones.indexOf(currentCornerstone.rdrCase)
+            index = cornerstones.indexOf(currentCornerstone.case)
         }
         index = if (index >= 0) index else 0
         val cornerstone = cornerstones[index]
-        val viewableCornerstone = viewableInterpretedCase(cornerstone)
+        val viewableCornerstone = viewableCase(cornerstone)
         return CornerstoneStatus(viewableCornerstone, index, cornerstones.size)
+    }
+
+    fun saveConclusions(text: String) {
+        val conclusionList = text.splitIntoSentences().map {
+            conclusionManager.getOrCreate(it)
+        }
+        interpretationViewManager.insert(conclusionList)
+    }
+
+    fun saveInterpretation(interp: ViewableInterpretation) {
+        require(interp.verifiedText != null)
+        require(interp.caseId().id != null)
+
+        val verifiedText = interp.verifiedText!!
+        val caseId = interp.caseId().id!!
+        verifiedTextStore.put(caseId, verifiedText)
+        saveConclusions(verifiedText)
     }
 }

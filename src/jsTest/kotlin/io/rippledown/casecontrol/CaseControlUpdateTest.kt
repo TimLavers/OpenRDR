@@ -1,6 +1,7 @@
 package io.rippledown.casecontrol
 
 import Api
+import io.kotest.matchers.shouldBe
 import io.rippledown.interpretation.requireInterpretation
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
@@ -23,6 +24,10 @@ class CaseControlUpdateTest {
         val twoCaseIds = listOf(caseIdA, caseIdB)
         val caseA = createCaseWithInterpretation(caseIdA.name, caseIdA.id, listOf(caseAConclusion))
         val caseB = createCaseWithInterpretation(caseIdB.name, caseIdB.id, listOf(caseBConclusion))
+        //sanity check
+        caseA.viewableInterpretation.latestText() shouldBe caseAConclusion
+        caseB.viewableInterpretation.latestText() shouldBe caseBConclusion
+
         val config = config {
             returnCasesInfo = CasesInfo(twoCaseIds)
             returnCase = caseA

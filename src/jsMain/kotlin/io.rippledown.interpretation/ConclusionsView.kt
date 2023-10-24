@@ -1,11 +1,9 @@
 package io.rippledown.interpretation
 
-import io.rippledown.model.Interpretation
+import io.rippledown.model.interpretationview.ViewableInterpretation
 import mui.icons.material.CheckBoxOutlined
 import mui.icons.material.ExpandLess
 import mui.icons.material.ExpandMore
-import mui.lab.TreeItem
-import mui.lab.TreeView
 import mui.material.Stack
 import mui.material.StackDirection.Companion.row
 import mui.material.SvgIconSize.Companion.small
@@ -13,13 +11,15 @@ import mui.material.Typography
 import mui.material.styles.TypographyVariant.Companion.subtitle1
 import mui.material.styles.TypographyVariant.Companion.subtitle2
 import mui.system.responsive
+import muix.tree.view.TreeItem
+import muix.tree.view.TreeView
 import react.FC
 import react.Props
 import react.create
 import react.createElement
 
 external interface ConclusionsViewHandler : Props {
-    var interpretation: Interpretation
+    var interpretation: ViewableInterpretation
 }
 
 val ConclusionsView = FC<ConclusionsViewHandler> { handler ->

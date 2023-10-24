@@ -1,6 +1,7 @@
 package io.rippledown.casecontrol
 
 import Handler
+import debug
 import io.rippledown.constants.caseview.CASELIST_ID
 import io.rippledown.model.CaseId
 import io.rippledown.model.caseview.ViewableCase
@@ -51,6 +52,7 @@ val CaseControl = FC<CaseControlHandler> { handler ->
                     caseIds = handler.caseIds
                     selectedCaseName = currentCase?.name
                     selectCase = { id ->
+                        debug("updating case with id $id")
                         updateCurrentCase(id)
                     }
                 }

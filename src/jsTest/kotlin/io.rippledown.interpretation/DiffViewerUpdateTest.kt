@@ -2,7 +2,7 @@ package io.rippledown.interpretation
 
 import io.rippledown.model.diff.*
 import kotlinx.coroutines.test.runTest
-import mui.base.Button
+import mui.material.Button
 import proxy.findById
 import react.FC
 import react.dom.createRootFor

@@ -56,7 +56,7 @@ val CornerstoneView = FC<CornerstoneViewHandler> { handler ->
         InterpretationTabs {
             scope = handler.scope
             api = handler.api
-            interpretation = cornerstone.interpretation
+            interpretation = cornerstone.viewableInterpretation
             isCornerstone = true
         }
     }

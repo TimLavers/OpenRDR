@@ -7,6 +7,7 @@ import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_AREA
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.diff.*
+import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.RuleSummary
 import kotlinx.coroutines.test.runTest
 import mocks.config
@@ -24,7 +25,7 @@ class InterpretationTabsTest {
     fun originalTabShouldBeSelectedByDefault() = runTest {
         val fc = FC {
             InterpretationTabs {
-                interpretation = Interpretation()
+                interpretation = ViewableInterpretation()
                 scope = this@runTest
             }
         }
@@ -44,7 +45,7 @@ class InterpretationTabsTest {
         }
         val fc = FC {
             InterpretationTabs {
-                interpretation = originalInterp
+                interpretation = ViewableInterpretation(originalInterp)
                 scope = this@runTest
             }
         }
@@ -61,7 +62,7 @@ class InterpretationTabsTest {
         val fc = FC {
             InterpretationTabs {
                 scope = this@runTest
-                interpretation = Interpretation()
+                interpretation = ViewableInterpretation()
             }
         }
         val container = createRootFor(fc)
@@ -73,11 +74,12 @@ class InterpretationTabsTest {
     @Test
     fun conclusionsTabCanBeSelected() = runTest {
         val text = "Go to Bondi."
+        val interp = Interpretation().apply {
+            add(RuleSummary(conclusion = Conclusion(1, text)))
+        }
         val fc = FC {
             InterpretationTabs {
-                interpretation = Interpretation().apply {
-                    add(RuleSummary(conclusion = Conclusion(1, text)))
-                }
+                interpretation = ViewableInterpretation(interp)
             }
         }
         val container = createRootFor(fc)
@@ -92,7 +94,7 @@ class InterpretationTabsTest {
         val fc = FC {
             InterpretationTabs {
                 scope = this@runTest
-                interpretation = Interpretation()
+                interpretation = ViewableInterpretation()
             }
         }
         val container = createRootFor(fc)
@@ -107,7 +109,7 @@ class InterpretationTabsTest {
         val fc = FC {
             InterpretationTabs {
                 scope = this@runTest
-                interpretation = Interpretation()
+                interpretation = ViewableInterpretation()
             }
         }
         val container = createRootFor(fc)
@@ -133,7 +135,7 @@ class InterpretationTabsTest {
                 Replacement(replacedText, replacementText)
             )
         )
-        val interpretationWithDiffs = Interpretation(diffList = diffListToReturn)
+        val interpretationWithDiffs = ViewableInterpretation().apply { diffList = diffListToReturn }
 
         val fc = FC {
             InterpretationTabs {
@@ -168,7 +170,7 @@ class InterpretationTabsTest {
                 Addition(addedText),
             )
         )
-        val interpretationWithDiffs = Interpretation(diffList = diffListToReturn)
+        val interpretationWithDiffs = ViewableInterpretation().apply { diffList = diffListToReturn }
         val config = config {
             returnInterpretationAfterSavingInterpretation = interpretationWithDiffs
         }
@@ -177,7 +179,7 @@ class InterpretationTabsTest {
             InterpretationTabs {
                 scope = this@runTest
                 api = Api(mock(config))
-                interpretation = Interpretation()
+                interpretation = ViewableInterpretation()
             }
         }
         with(createRootFor(fc)) {
@@ -201,7 +203,7 @@ class InterpretationTabsTest {
                 Replacement()
             )
         )
-        val interpretationWithDiffs = Interpretation(diffList = diffListToReturn)
+        val interpretationWithDiffs = ViewableInterpretation().apply { diffList = diffListToReturn }
         val fc = FC {
             InterpretationTabs {
                 scope = this@runTest
@@ -223,7 +225,7 @@ class InterpretationTabsTest {
             InterpretationTabs {
                 scope = this@runTest
                 api = Api(mock(config {}))
-                interpretation = Interpretation()
+                interpretation = ViewableInterpretation()
             }
         }
         val container = createRootFor(fc)
@@ -247,7 +249,7 @@ class InterpretationTabsTest {
                 Replacement(replacedText, replacementText)
             )
         )
-        val interpretationWithDiffs = Interpretation(diffList = diffListToReturn)
+        val interpretationWithDiffs = ViewableInterpretation().apply { diffList = diffListToReturn }
         var selectedDiff: Diff? = null
 
         val fc = FC {

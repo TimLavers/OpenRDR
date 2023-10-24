@@ -18,14 +18,13 @@ class ViewableCaseTest {
     fun construction() {
         val rdrCase = createCase("Case1")
         val viewableCase = ViewableCase(rdrCase, caseViewProperties())
-        viewableCase.rdrCase shouldBe rdrCase
+        viewableCase.case shouldBe rdrCase
         viewableCase.viewProperties shouldBe caseViewProperties()
     }
 
     @Test
     fun name() {
-        val viewableCase = ViewableCase(createCase("Case1"), caseViewProperties())
-        viewableCase.name shouldBe "Case1"
+        ViewableCase(createCase("Case1"), caseViewProperties()).name shouldBe "Case1"
     }
 
     @Test
@@ -61,21 +60,71 @@ class ViewableCaseTest {
     @Test
     fun serializationWithInterpretation() {
         val surfComment = "Surf's up."
-        val diffList = DiffList(listOf(Addition("Go to Bondi")), selected = 0)
-        val viewableCase = createCaseWithInterpretation("Case1", 123, listOf(surfComment), diffList)
+        val viewableCase = createCaseWithInterpretation("Case1", 123, listOf(surfComment))
         withClue("sanity check") {
-            viewableCase.interpretation.latestText() shouldBe surfComment
-            viewableCase.interpretation.diffList shouldBe diffList
+            viewableCase.latestText() shouldBe surfComment
         }
         val format = Json { allowStructuredMapKeys = true }
         val serialized = format.encodeToString(viewableCase)
+        println("serialized: $serialized")
 
         val deserialized = format.decodeFromString<ViewableCase>(serialized)
         deserialized shouldBe viewableCase
-        deserialized.interpretation.latestText() shouldBe surfComment
-        deserialized.interpretation.diffList shouldBe diffList
-        deserialized.interpretation.diffList.selected shouldBe 0
+        deserialized.latestText() shouldBe surfComment
+    }
 
+    @Test
+    fun serializationWithInterpretationAndDiffList() {
+        val surfComment = "Surf's up."
+        val diffList = DiffList(listOf(Addition("Go to Bondi")), selected = 0)
+        val viewableCase = createCaseWithInterpretation("Case1", 123, listOf(surfComment), diffList)
+        withClue("sanity check") {
+            viewableCase.latestText() shouldBe surfComment
+            viewableCase.diffList() shouldBe diffList
+        }
+
+        val deserialized = serializeDeserialize(viewableCase)
+
+        deserialized shouldBe viewableCase
+        deserialized.latestText() shouldBe surfComment
+        deserialized.diffList() shouldBe diffList
+        deserialized.diffList().selected shouldBe 0
+    }
+
+    @Test
+    fun serializationWithInterpretationAndVerifiedText() {
+        val surfComment = "Surf's up."
+        val sunComment = "Sun's up."
+        val viewableCase = createCaseWithInterpretation("Case1", 123, listOf(surfComment))
+        viewableCase.viewableInterpretation.apply { verifiedText = sunComment }
+        withClue("sanity check") {
+            viewableCase.latestText() shouldBe sunComment
+        }
+        val deserialized = serializeDeserialize(viewableCase)
+
+        deserialized shouldBe viewableCase
+        deserialized.latestText() shouldBe sunComment
+    }
+
+    @Test
+    fun serializationWithInterpretationDiffListAndVerifiedText() {
+        val surfComment = "Surf's up."
+        val diffList = DiffList(listOf(Addition("Go to Bondi")), selected = 0)
+        val viewableCase = createCaseWithInterpretation("Case1", 123, listOf(surfComment), diffList)
+        val verified = "verified text"
+        viewableCase.viewableInterpretation.apply { verifiedText = verified }
+        withClue("sanity check") {
+            viewableCase.latestText() shouldBe verified
+            viewableCase.diffList() shouldBe diffList
+        }
+
+        val deserialized = serializeDeserialize(viewableCase)
+
+        deserialized shouldBe viewableCase
+        deserialized.latestText() shouldBe verified
+        deserialized.diffList() shouldBe diffList
+        deserialized.diffList().selected shouldBe 0
+        deserialized.verifiedText() shouldBe verified
     }
 
     private fun caseViewProperties() = CaseViewProperties(listOf(abc, tsh, xyz))
@@ -87,4 +136,14 @@ class ViewableCaseTest {
         builder.addValue(abc, defaultDate, "0.67")
         return builder.build(name)
     }
+
+    private fun serializeDeserialize(viewableCase: ViewableCase): ViewableCase {
+        val format = Json {
+            allowStructuredMapKeys = true
+            prettyPrint = true
+        }
+        val serialized = format.encodeToString(viewableCase)
+        return format.decodeFromString(serialized)
+    }
+
 }

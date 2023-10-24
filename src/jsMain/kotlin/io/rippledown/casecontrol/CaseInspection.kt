@@ -1,14 +1,15 @@
 package io.rippledown.casecontrol
 
 import Handler
+import debug
 import io.rippledown.caseview.CaseViewMemo
 import io.rippledown.cornerstoneview.CornerstoneView
 import io.rippledown.interpretation.ConditionSelector
 import io.rippledown.interpretation.InterpretationTabs
 import io.rippledown.interpretation.diffViewerKey
-import io.rippledown.model.Interpretation
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
@@ -29,9 +30,10 @@ external interface CaseInspectionHandler : Handler {
 val CaseInspection = FC<CaseInspectionHandler> { handler ->
     var ccStatus: CornerstoneStatus? by useState(null)
     var conditionHints: ConditionList? by useState(null)
-    var updatedInterpretation: Interpretation by useState(handler.case.interpretation)
+    var updatedInterpretation: ViewableInterpretation by useState(handler.case.viewableInterpretation)
 
     val id = handler.case.id!!
+    debug("rendering CaseViewMemo for case $id")
 
     Grid {
         container = true
@@ -107,7 +109,7 @@ val CaseInspection = FC<CaseInspectionHandler> { handler ->
                     onDone = { conditionList ->
                         scope.launch {
                             val ruleRequest = RuleRequest(
-                                caseId = handler.case.rdrCase.caseId.id!!,
+                                caseId = handler.case.case.caseId.id!!,
                                 conditions = ConditionList(conditions = conditionList)
                             )
                             updatedInterpretation = api.buildRule(ruleRequest)
@@ -124,6 +126,6 @@ val CaseInspection = FC<CaseInspectionHandler> { handler ->
 /**
  * Re-render when the Diff List changes
  */
-fun interpretationTabsKey(interp: Interpretation) = with(interp) {
+fun interpretationTabsKey(interp: ViewableInterpretation) = with(interp) {
     "${diffViewerKey(diffList)}-${latestText()}"
 }
