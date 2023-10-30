@@ -24,11 +24,15 @@ fun HTMLElement.requireConclusionsLabel(expected: String) {
     findById(INTERPRETATION_TAB_CONCLUSIONS).textContent shouldBe expected
 }
 
-suspend fun HTMLElement.selectChangesTab() {
+fun HTMLElement.selectChangesTab() {
     val element = findById(INTERPRETATION_TAB_CHANGES)
-    act {
         Simulate.click(element)
-    }
+}
+
+fun HTMLElement.startToBuildRuleForRow(row: Int) {
+    selectChangesTab()
+    moveMouseOverRow(0)
+    clickBuildIconForRow(row)
 }
 
 suspend fun HTMLElement.selectInterpretationTab() {

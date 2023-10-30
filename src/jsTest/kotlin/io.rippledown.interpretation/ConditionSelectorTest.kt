@@ -2,11 +2,12 @@ package io.rippledown.interpretation
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
-import io.rippledown.model.condition.*
-import kotlinx.coroutines.test.runTest
+import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.isHigh
+import io.rippledown.model.condition.isLow
+import io.rippledown.model.condition.isNormal
 import react.FC
-import react.dom.checkContainer
-import react.dom.createRootFor
+import react.dom.test.runReactTest
 import kotlin.test.Test
 
 class ConditionSelectorTest {
@@ -17,13 +18,13 @@ class ConditionSelectorTest {
     private val threeConditions = listOf(isHigh, isLow, isNormal)
 
     @Test
-    fun shouldListConditionsThatAreHinted() = runTest {
+    fun shouldListConditionsThatAreHinted() {
         val fc = FC {
             ConditionSelector {
                 conditions = threeConditions
             }
         }
-        checkContainer(fc) { container ->
+        runReactTest(fc) { container ->
             with(container) {
                 requireConditions(threeConditions.map { it.asText() })
             }
@@ -31,7 +32,7 @@ class ConditionSelectorTest {
     }
 
     @Test
-    fun shouldBeAbleToIdentifyTheSelectConditionsWhenDoneIsClicked() = runTest {
+    fun shouldBeAbleToIdentifyTheSelectConditionsWhenDoneIsClicked() {
         val conditionsThatWereSelected = mutableListOf<Condition>()
         val fc = FC {
             ConditionSelector {
@@ -43,7 +44,7 @@ class ConditionSelectorTest {
                 }
             }
         }
-        checkContainer(fc) { container ->
+        runReactTest(fc) { container ->
             with(container) {
                 clickConditionWithIndex(0)
                 clickConditionWithIndex(2)
@@ -54,7 +55,7 @@ class ConditionSelectorTest {
     }
 
     @Test
-    fun shouldBeAbleToIdentifyADeselectedConditionWhenDoneIsClicked() = runTest {
+    fun shouldBeAbleToIdentifyADeselectedConditionWhenDoneIsClicked() {
         val conditionsThatWereSelected = mutableListOf<Condition>()
         val fc = FC {
             ConditionSelector {
@@ -66,7 +67,7 @@ class ConditionSelectorTest {
                 }
             }
         }
-        checkContainer(fc) { container ->
+        runReactTest(fc) { container ->
             with(container) {
                 conditionsThatWereSelected shouldBe emptyList()
                 clickConditionWithIndex(0)
@@ -78,7 +79,7 @@ class ConditionSelectorTest {
     }
 
     @Test
-    fun shouldBeAbleToIdentifyDeselectedConditionsWhenDoneIsClicked() = runTest {
+    fun shouldBeAbleToIdentifyDeselectedConditionsWhenDoneIsClicked() {
         val conditionsThatWereSelected = mutableListOf<Condition>()
         val fc = FC {
             ConditionSelector {
@@ -90,7 +91,7 @@ class ConditionSelectorTest {
                 }
             }
         }
-        checkContainer(fc) { container ->
+        runReactTest(fc) { container ->
             with(container) {
                 clickConditionWithIndex(0)
                 clickConditionWithIndex(2)
@@ -102,7 +103,7 @@ class ConditionSelectorTest {
     }
 
     @Test
-    fun shouldBeAbleToSelectAndDeselectACondition() = runTest {
+    fun shouldBeAbleToSelectAndDeselectACondition() {
         val fc = FC {
             ConditionSelector {
                 conditions = threeConditions
@@ -112,24 +113,26 @@ class ConditionSelectorTest {
                 }
             }
         }
-        with(createRootFor(fc)) {
-            requireConditionsToBeSelected(listOf())
-            clickConditionWithIndex(0)
-            requireConditionsToBeSelected(listOf(isHigh.asText()))
+        runReactTest(fc) { container ->
+            with(container) {
+                requireConditionsToBeSelected(listOf())
+                clickConditionWithIndex(0)
+                requireConditionsToBeSelected(listOf(isHigh.asText()))
 
-            clickConditionWithIndex(2)
-            requireConditionsToBeSelected(listOf(isHigh.asText(), isNormal.asText()))
+                clickConditionWithIndex(2)
+                requireConditionsToBeSelected(listOf(isHigh.asText(), isNormal.asText()))
 
-            clickConditionWithIndex(2) //de-select
-            requireConditionsToBeSelected(listOf(isHigh.asText()))
+                clickConditionWithIndex(2) //de-select
+                requireConditionsToBeSelected(listOf(isHigh.asText()))
 
-            clickConditionWithIndex(0) //de-select
-            requireConditionsToBeSelected(listOf())
+                clickConditionWithIndex(0) //de-select
+                requireConditionsToBeSelected(listOf())
+            }
         }
     }
 
     @Test
-    fun shouldBeAbleToCancel() = runTest {
+    fun shouldBeAbleToCancel() {
         var cancelClicked = false
         val fc = FC {
             ConditionSelector {
@@ -141,7 +144,7 @@ class ConditionSelectorTest {
                 }
             }
         }
-        checkContainer(fc) { container ->
+        runReactTest(fc) { container ->
             with(container) {
                 clickConditionWithIndex(0)
                 clickCancelButton()
@@ -151,7 +154,7 @@ class ConditionSelectorTest {
     }
 
     @Test
-    fun shouldCallOnDoneWithNoConditions() = runTest {
+    fun shouldCallOnDoneWithNoConditions() {
         var onDoneCalled = false
         val fc = FC {
             ConditionSelector {
@@ -161,7 +164,7 @@ class ConditionSelectorTest {
                 }
             }
         }
-        checkContainer(fc) { container ->
+        runReactTest(fc) { container ->
             with(container) {
                 clickDoneButton()
                 onDoneCalled shouldBe true
@@ -170,7 +173,7 @@ class ConditionSelectorTest {
     }
 
     @Test
-    fun shouldCallOnDoneWithTheSelectedConditions() = runTest {
+    fun shouldCallOnDoneWithTheSelectedConditions() {
         var selectedConditionsWhenDone = listOf<Condition>()
         val fc = FC {
             ConditionSelector {
@@ -182,7 +185,7 @@ class ConditionSelectorTest {
                 }
             }
         }
-        checkContainer(fc) { container ->
+        runReactTest(fc) { container ->
             with(container) {
                 clickConditionWithIndex(0)
                 clickConditionWithIndex(2)
@@ -193,7 +196,7 @@ class ConditionSelectorTest {
     }
 
     @Test
-    fun conditionSelectedShouldBeCalledWhenAConditionIsSelected() = runTest {
+    fun conditionSelectedShouldBeCalledWhenAConditionIsSelected() {
         var conditionsThatWereSelected = listOf<Condition>()
         val fc = FC {
             ConditionSelector {
@@ -203,7 +206,7 @@ class ConditionSelectorTest {
                 }
             }
         }
-        checkContainer(fc) { container ->
+        runReactTest(fc) { container ->
             with(container) {
                 clickConditionWithIndex(0)
                 conditionsThatWereSelected shouldBe listOf(isHigh)
@@ -212,7 +215,7 @@ class ConditionSelectorTest {
     }
 
     @Test
-    fun conditionSelectedShouldIdentifyAllSelectedConditions() = runTest {
+    fun conditionSelectedShouldIdentifyAllSelectedConditions() {
         var conditionsThatWereSelected = listOf<Condition>()
         val fc = FC {
             ConditionSelector {
@@ -222,7 +225,7 @@ class ConditionSelectorTest {
                 }
             }
         }
-        checkContainer(fc) { container ->
+        runReactTest(fc) { container ->
             with(container) {
                 clickConditionWithIndex(0)
                 clickConditionWithIndex(2)
@@ -232,7 +235,7 @@ class ConditionSelectorTest {
     }
 
     @Test
-    fun conditionSelectedShouldBeCalledWhenAConditionIsDeselected() = runTest {
+    fun conditionSelectedShouldBeCalledWhenAConditionIsDeselected() {
         var conditionsThatWereSelected = listOf<Condition>()
         val fc = FC {
             ConditionSelector {
@@ -242,7 +245,7 @@ class ConditionSelectorTest {
                 }
             }
         }
-        checkContainer(fc) { container ->
+        runReactTest(fc) { container ->
             with(container) {
                 clickConditionWithIndex(0)
                 clickConditionWithIndex(0) //deselect

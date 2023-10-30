@@ -1,28 +1,29 @@
 package io.rippledown.caseview
 
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.toInstant
 import proxy.findById
 import react.FC
-import react.dom.createRootFor
+import react.dom.test.runReactTest
 import kotlin.test.Test
 
 class EpisodeDateCellTest {
     private val date0 = 1659752689505L
 
         @Test
-    fun creation() = runTest {
+        fun creation() {
             val vfc = FC {
                 EpisodeDateCell {
                     index = 3
                     date = date0
                 }
             }
-        with(createRootFor(vfc)) {
-            val cell = findById("episode_date_cell_3")
-            cell.textContent shouldBe "2022-08-06 02:25"
-            cell.textContent shouldBe formatDate(date0)
+            runReactTest(vfc) { container ->
+                with(container) {
+                    val cell = findById("episode_date_cell_3")
+                    cell.textContent shouldBe "2022-08-06 02:25"
+                    cell.textContent shouldBe formatDate(date0)
+                }
         }
     }
 

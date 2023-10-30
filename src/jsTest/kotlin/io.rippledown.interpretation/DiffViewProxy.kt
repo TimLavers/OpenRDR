@@ -12,16 +12,15 @@ import org.w3c.dom.Element
 import proxy.findAllById
 import proxy.findById
 import react.dom.test.Simulate
-import react.dom.test.act
 import web.html.HTMLElement
 
 fun HTMLElement.requireNumberOfRows(expected: Int) {
     findAllById(DIFF_VIEWER_ROW).length shouldBe expected
 }
 
-suspend fun HTMLElement.moveMouseOverRow(row: Int) {
+fun HTMLElement.moveMouseOverRow(row: Int) {
     val tableRow = findById("$DIFF_VIEWER_ROW$row")
-   act{ Simulate.mouseOver(tableRow)}
+    Simulate.mouseOver(tableRow)
 }
 
 fun HTMLElement.requireNoBuildIconForRow(row: Int) {
@@ -38,11 +37,9 @@ fun HTMLElement.requireBuildIconForRow(row: Int) {
     findById("$DIFF_VIEWER_BUILD_ICON$row") shouldNotBe null
 }
 
-suspend fun HTMLElement.clickBuildIconForRow(row: Int) {
+fun HTMLElement.clickBuildIconForRow(row: Int) {
     val icon = findById("$DIFF_VIEWER_BUILD_ICON$row")
-    act {
         Simulate.click(icon)
-    }
 }
 
 fun HTMLElement.requireNoOriginalTextInRow(row: Int) {

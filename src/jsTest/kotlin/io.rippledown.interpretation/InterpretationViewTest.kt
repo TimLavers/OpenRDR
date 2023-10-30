@@ -2,37 +2,40 @@ package io.rippledown.interpretation
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
-import kotlinx.coroutines.test.runTest
 import proxy.waitForEvents
 import react.FC
-import react.dom.createRootFor
+import react.dom.test.runReactTest
 import kotlin.test.Test
 
 class InterpretationViewTest {
 
     @Test
-    fun shouldShowInitialInterpretationIfVerifiedTextIsNull() = runTest {
+    fun shouldShowInitialInterpretationIfVerifiedTextIsNull() {
         val initialText = "Go to Bondi now!"
         val fc = FC {
             InterpretationView {
                 text = initialText
             }
         }
-        createRootFor(fc).requireInterpretation(initialText)
+        runReactTest(fc) { container ->
+            container.requireInterpretation(initialText)
+        }
     }
 
     @Test
-    fun shouldShowBlankInterpretation() = runTest {
+    fun shouldShowBlankInterpretation() {
         val fc = FC {
             InterpretationView {
                 text = ""
             }
         }
-        createRootFor(fc).requireInterpretation("")
+        runReactTest(fc) { container ->
+            container.requireInterpretation("")
+        }
     }
 
     @Test
-    fun shouldCallOnInterpretationEdited() = runTest {
+    fun shouldCallOnInterpretationEdited() {
         val enteredText = "And bring your flippers"
         var updatedText: String? = null
         val fc = FC {
@@ -43,11 +46,13 @@ class InterpretationViewTest {
                 }
             }
         }
-        with(createRootFor(fc)) {
-            updatedText shouldBe null
-            enterInterpretation(enteredText)
-            waitForEvents(timeout = 2 * DEBOUNCE_WAIT_PERIOD_MILLIS) //get past the debounce period
-            updatedText shouldBe enteredText
+        runReactTest(fc) { container ->
+            with(container) {
+                updatedText shouldBe null
+                enterInterpretation(enteredText)
+                waitForEvents(timeout = 2 * DEBOUNCE_WAIT_PERIOD_MILLIS) //get past the debounce period
+                updatedText shouldBe enteredText
+            }
         }
     }
 }

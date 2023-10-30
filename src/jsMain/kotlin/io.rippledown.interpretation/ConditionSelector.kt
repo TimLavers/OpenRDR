@@ -61,7 +61,6 @@ val ConditionSelector = FC<ConditionSelectorHandler> { handler ->
     FormHelperText {
         +"Select the reasons for making this change"
     }
-
     Box {
         id = CONDITION_SELECTOR_BUTTONS
         sx {

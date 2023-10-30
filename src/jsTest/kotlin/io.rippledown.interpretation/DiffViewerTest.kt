@@ -3,25 +3,24 @@ package io.rippledown.interpretation
 import Api
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.diff.*
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.MainScope
 import mocks.config
 import mocks.mock
 import proxy.waitForEvents
 import react.FC
-import react.dom.checkContainer
-import react.dom.createRootFor
+import react.dom.test.runReactTest
 import kotlin.test.Test
 
 class DiffViewerTest {
 
     @Test
-    fun shouldNotShowAnyRowsIfNoChanges() = runTest {
+    fun shouldNotShowAnyRowsIfNoChanges() {
         val fc = FC {
             DiffViewer {
                 diffList = DiffList()
             }
         }
-        checkContainer(fc) { container ->
+        runReactTest(fc) { container ->
             with(container) {
                 requireNumberOfRows(0)
             }
@@ -29,13 +28,13 @@ class DiffViewerTest {
     }
 
     @Test
-    fun shouldShowARowForEachUnchangedDiff() = runTest {
+    fun shouldShowARowForEachUnchangedDiff() {
         val fc = FC {
             DiffViewer {
                 diffList = DiffList(listOf(Unchanged(), Unchanged(), Unchanged()))
             }
         }
-        checkContainer(fc) { container ->
+        runReactTest(fc) { container ->
             with(container) {
                 requireNumberOfRows(3)
             }
@@ -44,13 +43,13 @@ class DiffViewerTest {
     }
 
     @Test
-    fun shouldShowARowForEachChangedDiff() = runTest {
+    fun shouldShowARowForEachChangedDiff() {
         val fc = FC {
             DiffViewer {
                 diffList = DiffList(listOf(Addition(), Removal(), Replacement()))
             }
         }
-        checkContainer(fc) { container ->
+        runReactTest(fc) { container ->
             with(container) {
                 requireNumberOfRows(3)
             }
@@ -59,7 +58,7 @@ class DiffViewerTest {
     }
 
     @Test
-    fun shouldShowABuildIconByDefaultForFirstUnchangedDiff() = runTest {
+    fun shouldShowABuildIconByDefaultForFirstUnchangedDiff() {
         val fc = FC {
             DiffViewer {
                 diffList = DiffList(
@@ -73,33 +72,15 @@ class DiffViewerTest {
                 )
             }
         }
-        with(createRootFor(fc)) {
-            requireBuildIconForRow(3)
-        }
-    }
-
-    @Test
-    fun shouldShowABuildIconWhenMouseIsOverChangedDiff() = runTest {
-        val fc = FC {
-            DiffViewer {
-                diffList = DiffList(
-                    listOf(
-                        Addition(),
-                        Unchanged(),
-                        Removal(),
-                        Unchanged()
-                    )
-                )
+        runReactTest(fc) { container ->
+            with(container) {
+                requireBuildIconForRow(3)
             }
         }
-        with(createRootFor(fc)) {
-            moveMouseOverRow(2)
-            requireBuildIconForRow(2)
-        }
     }
 
     @Test
-    fun shouldNotShowABuildIconWhenMouseIsOverUnchangedDiff() = runTest {
+    fun shouldShowABuildIconWhenMouseIsOverChangedDiff() {
         val fc = FC {
             DiffViewer {
                 diffList = DiffList(
@@ -112,14 +93,38 @@ class DiffViewerTest {
                 )
             }
         }
-        with(createRootFor(fc)) {
-            moveMouseOverRow(1)
-            requireNoBuildIconForRow(1)
+        runReactTest(fc) { container ->
+            with(container) {
+                moveMouseOverRow(2)
+                requireBuildIconForRow(2)
+            }
         }
     }
 
     @Test
-    fun shouldShowAnUnchangedTextInOriginalAndChangedColumns() = runTest {
+    fun shouldNotShowABuildIconWhenMouseIsOverUnchangedDiff() {
+        val fc = FC {
+            DiffViewer {
+                diffList = DiffList(
+                    listOf(
+                        Addition(),
+                        Unchanged(),
+                        Removal(),
+                        Unchanged()
+                    )
+                )
+            }
+        }
+        runReactTest(fc) { container ->
+            with(container) {
+                moveMouseOverRow(1)
+                requireNoBuildIconForRow(1)
+            }
+        }
+    }
+
+    @Test
+    fun shouldShowAnUnchangedTextInOriginalAndChangedColumns() {
         val text = "Go to Bondi now!"
         val fc = FC {
             DiffViewer {
@@ -130,7 +135,7 @@ class DiffViewerTest {
                 )
             }
         }
-        checkContainer(fc) { container ->
+        runReactTest(fc) { container ->
             with(container) {
                 requireOriginalTextInRow(0, text)
                 requireChangedTextInRow(0, text)
@@ -139,14 +144,14 @@ class DiffViewerTest {
     }
 
     @Test
-    fun shouldShowAnAddedTextInGreenInChangedColumnOnly() = runTest {
+    fun shouldShowAnAddedTextInGreenInChangedColumnOnly() {
         val text = "Go to Bondi now!"
         val fc = FC {
             DiffViewer {
                 diffList = DiffList(diffs = listOf(Addition(text)))
             }
         }
-        checkContainer(fc) { container ->
+        runReactTest(fc) { container ->
             with(container) {
                 requireNoOriginalTextInRow(0)
                 requireChangedTextInRow(0, text)
@@ -156,7 +161,7 @@ class DiffViewerTest {
     }
 
     @Test
-    fun shouldShowARemovedTextInRedInOriginalColumnOnly() = runTest {
+    fun shouldShowARemovedTextInRedInOriginalColumnOnly() {
         val text = "Go to Bondi now!"
         val fc = FC {
             DiffViewer {
@@ -167,7 +172,7 @@ class DiffViewerTest {
                 )
             }
         }
-        checkContainer(fc) { container ->
+        runReactTest(fc) { container ->
             with(container) {
                 requireOriginalTextInRow(0, text)
                 requireNoChangedTextInRow(0)
@@ -177,7 +182,7 @@ class DiffViewerTest {
     }
 
     @Test
-    fun shouldShowAReplacedAndReplacementTextsInTheirRespectiveColumnsWithCorrespondingColours() = runTest {
+    fun shouldShowAReplacedAndReplacementTextsInTheirRespectiveColumnsWithCorrespondingColours() {
         val replaced = "Go to Bondi"
         val replacement = "Go to Bondi now!"
         val fc = FC {
@@ -189,7 +194,7 @@ class DiffViewerTest {
                 )
             }
         }
-        checkContainer(fc) { container ->
+        runReactTest(fc) { container ->
             with(container) {
                 requireOriginalTextInRow(0, replaced)
                 requireChangedTextInRow(0, replacement)
@@ -200,11 +205,11 @@ class DiffViewerTest {
     }
 
     @Test
-    fun shouldCallOnStartRuleWhenTheBuildIconIsClicked() = runTest {
+    fun shouldCallOnStartRuleWhenTheBuildIconIsClicked() {
         var ruleStarted = false
         val fc = FC {
             DiffViewer {
-                scope = this@runTest
+                scope = MainScope()
                 api = Api(mock(config {}))
                 diffList = DiffList(
                     listOf(
@@ -218,16 +223,18 @@ class DiffViewerTest {
                 }
             }
         }
-        with(createRootFor(fc)) {
-            ruleStarted shouldBe false
-            requireBuildIconForRow(0)
-            clickBuildIconForRow(0)
-            ruleStarted shouldBe true
+        runReactTest(fc) { container ->
+            with(container) {
+                ruleStarted shouldBe false
+                requireBuildIconForRow(0)
+                clickBuildIconForRow(0)
+                ruleStarted shouldBe true
+            }
         }
     }
 
     @Test
-    fun onStartRuleShouldIdentifyTheSelectedDiff() = runTest {
+    fun onStartRuleShouldIdentifyTheSelectedDiff() {
         val differenceList = DiffList(
             listOf(
                 Addition("Go to Bondi now!"),
@@ -237,18 +244,20 @@ class DiffViewerTest {
         )
         val fc = FC {
             DiffViewer {
-                scope = this@runTest
+                scope = MainScope()
                 diffList = differenceList
                 onStartRule = { selectedDiff ->
                     selectedDiff shouldBe 2
                 }
             }
         }
-        with(createRootFor(fc)) {
-            moveMouseOverRow(2)
-            waitForEvents()
-            clickBuildIconForRow(2)
-            //assertion is in onStartRule
+        runReactTest(fc) { container ->
+            with(container) {
+                moveMouseOverRow(2)
+                waitForEvents()
+                clickBuildIconForRow(2)
+                //assertion is in onStartRule
+            }
         }
     }
 }

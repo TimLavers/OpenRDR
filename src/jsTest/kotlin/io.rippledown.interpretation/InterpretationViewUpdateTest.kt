@@ -1,19 +1,18 @@
 package io.rippledown.interpretation
 
-import kotlinx.coroutines.test.runTest
 import mui.material.Button
 import proxy.findById
 import react.FC
-import react.dom.createRootFor
 import react.dom.html.ReactHTML.div
 import react.dom.test.act
+import react.dom.test.runReactTest
 import react.useState
 import kotlin.test.Test
 
 class InterpretationViewUpdateTest {
 
     @Test
-    fun shouldUpdateTextFieldWhenInterpretationIsChanged() = runTest {
+    fun shouldUpdateTextFieldWhenInterpretationIsChanged() {
         val textA = "text for case A"
         val textB = "text for case B"
         val buttonId = "button_id"
@@ -34,15 +33,17 @@ class InterpretationViewUpdateTest {
                 }
             }
         }
-        with(createRootFor(fc)) {
-            //Given
-            requireInterpretation(textA)
+        runReactTest(fc) { container ->
+            with(container) {
+                //Given
+                requireInterpretation(textA)
 
-            //When switch interpretations
-            act { findById(buttonId).click() }
+                //When switch interpretations
+                act { findById(buttonId).click() }
 
-            //Then
-            requireInterpretation(textB)
+                //Then
+                requireInterpretation(textB)
+            }
         }
     }
 }

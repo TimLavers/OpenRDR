@@ -15,10 +15,13 @@ import kotlin.time.Duration.Companion.seconds
 
 val POLL_PERIOD = 0.5.seconds
 
-external interface CasePollerHandler : Handler
+external interface CasePollerHandler : Handler {
+    var ruleSessionInProgress: (inProgress: Boolean) -> Unit
+}
 
 val CasePoller = FC<CasePollerHandler> { handler ->
     var casesInfo by useState(CasesInfo(emptyList(), ""))
+    var showCaseCount by useState(true)
 
     useEffectOnce {
         setInterval(delay = POLL_PERIOD) {
@@ -28,9 +31,11 @@ val CasePoller = FC<CasePollerHandler> { handler ->
         }
     }
 
-    Typography {
-        +"$CASES ${casesInfo.count}"
-        id = NUMBER_OF_CASES_ID
+    if (showCaseCount) {
+        Typography {
+            +"$CASES ${casesInfo.count}"
+            id = NUMBER_OF_CASES_ID
+        }
     }
 
     if (casesInfo.count > 0) {
@@ -38,6 +43,10 @@ val CasePoller = FC<CasePollerHandler> { handler ->
             scope = handler.scope
             api = handler.api
             caseIds = casesInfo.caseIds
+            ruleSessionInProgress = { inProgress ->
+                showCaseCount = !inProgress
+//TODO                handler.ruleSessionInProgress(inProgress)
+            }
         }
     }
 }

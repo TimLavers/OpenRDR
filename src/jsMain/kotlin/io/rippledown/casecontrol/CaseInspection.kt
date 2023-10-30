@@ -1,7 +1,6 @@
 package io.rippledown.casecontrol
 
 import Handler
-import debug
 import io.rippledown.caseview.CaseViewMemo
 import io.rippledown.cornerstoneview.CornerstoneView
 import io.rippledown.interpretation.ConditionSelector
@@ -32,8 +31,7 @@ val CaseInspection = FC<CaseInspectionHandler> { handler ->
     var conditionHints: ConditionList? by useState(null)
     var updatedInterpretation: ViewableInterpretation by useState(handler.case.viewableInterpretation)
 
-    val id = handler.case.id!!
-    debug("rendering CaseViewMemo for case $id")
+    val caseId = handler.case.id!!
 
     Grid {
         container = true
@@ -43,6 +41,7 @@ val CaseInspection = FC<CaseInspectionHandler> { handler ->
 
             Box {
                 key = interpretationTabsKey(updatedInterpretation)
+
                 CaseViewMemo {
                     scope = handler.scope
                     api = handler.api
@@ -57,11 +56,13 @@ val CaseInspection = FC<CaseInspectionHandler> { handler ->
                     api = handler.api
                     interpretation = updatedInterpretation
                     onStartRule = { selectedDiff ->
+                        handler.ruleSessionInProgress(true)
                         handler.scope.launch {
-                            val sessionStartRequest = SessionStartRequest(id, selectedDiff)
+                            val sessionStartRequest = SessionStartRequest(caseId, selectedDiff)
                             ccStatus = handler.api.startRuleSession(sessionStartRequest)
-                            conditionHints = handler.api.conditionHints(id)
-                            handler.ruleSessionInProgress(true)
+                        }
+                        handler.scope.launch {
+                            conditionHints = handler.api.conditionHints(caseId)
                         }
                     }
                 }

@@ -13,7 +13,6 @@ Feature: Reviewing cornerstone cases
       | Case1 |
       | Case2 |
     And I start the client application
-    And I see the case Case1 as the current case
     And I enter the text "Go to Bondi." in the interpretation field
     And I select the changes tab
     And I build a rule for the change on row 0

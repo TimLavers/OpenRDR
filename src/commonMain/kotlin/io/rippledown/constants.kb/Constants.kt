@@ -1,5 +1,8 @@
 package io.rippledown.constants.kb
 
+
+const val KB_INFO_CONTROLS_ID = "kb_info_controls_id"
+
 const val KB_IMPORT_DIALOG = "kb_import_dialog"
 
 const val KB_IMPORT_BUTTON_ID = "import_from_zip"

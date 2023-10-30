@@ -4,33 +4,33 @@ import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.createCase
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.MainScope
 import mocks.config
 import mocks.defaultMock
 import mocks.mock
 import proxy.findById
 import proxy.waitForNextPoll
 import react.FC
-import react.dom.createRootFor
+import react.dom.test.runReactTest
 import kotlin.test.Test
 
 class MainTest {
 
     @Test
-    fun caseQueueShouldShowOnTheMainWindow() = runTest {
-        val vfc = FC {
+    fun caseQueueShouldShowOnTheMainWindow() {
+        val fc = FC {
             OpenRDRUI {
-                scope = this@runTest
+                scope = MainScope()
                 api = Api(defaultMock)
             }
         }
-        with(createRootFor(vfc)) {
-            findById(NUMBER_OF_CASES_ID).textContent shouldBe "$CASES 0"
+        runReactTest(fc) { container ->
+            container.findById(NUMBER_OF_CASES_ID).textContent shouldBe "$CASES 0"
         }
     }
 
     @Test
-    fun caseViewShouldBeInitialisedWithTheCasesFromTheServer() = runTest {
+    fun caseViewShouldBeInitialisedWithTheCasesFromTheServer() {
         val config = config {
             val caseId1 = CaseId(1, "case 1")
             val caseId2 = CaseId(2, "case 2")
@@ -46,13 +46,15 @@ class MainTest {
         }
         val fc = FC {
             OpenRDRUI {
-                scope = this@runTest
+                scope = MainScope()
                 api = Api(mock(config))
             }
         }
-        with(createRootFor(fc)) {
-            waitForNextPoll()
-            findById(NUMBER_OF_CASES_ID).textContent shouldBe "$CASES 3"
+        runReactTest(fc) { container ->
+            with(container) {
+                waitForNextPoll()
+                findById(NUMBER_OF_CASES_ID).textContent shouldBe "$CASES 3"
+            }
         }
     }
 }

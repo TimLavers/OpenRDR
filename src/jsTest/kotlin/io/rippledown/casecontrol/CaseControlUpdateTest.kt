@@ -6,17 +6,17 @@ import io.rippledown.interpretation.requireInterpretation
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.createCaseWithInterpretation
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.MainScope
 import mocks.config
 import mocks.mock
 import react.FC
-import react.dom.createRootFor
+import react.dom.test.runReactTest
 import kotlin.test.Test
 
 class CaseControlUpdateTest {
 
     @Test
-    fun shouldUpdateInterpretationWhenAnotherCaseNameIsClicked() = runTest {
+    fun shouldUpdateInterpretationWhenAnotherCaseNameIsClicked() {
         val caseIdA = CaseId(id = 1, name = "case A")
         val caseIdB = CaseId(id = 2, name = "case B")
         val caseAConclusion = "text for case A"
@@ -36,20 +36,21 @@ class CaseControlUpdateTest {
             CaseControl {
                 caseIds = twoCaseIds
                 api = Api(mock(config))
-                scope = this@runTest
+                scope = MainScope()
             }
         }
-        with(createRootFor(vfc)) {
-            //Given
-            requireInterpretation(caseAConclusion)
+        runReactTest(vfc) { container ->
+            with(container) {
+                //Given
+                requireInterpretation(caseAConclusion)
 
-            //When
-            config.returnCase = caseB
-            selectCaseByName(caseIdB.name)
+                //When
+                config.returnCase = caseB
+                selectCaseByName(caseIdB.name)
 
-            //Then
-            requireInterpretation(caseBConclusion)
+                //Then
+                requireInterpretation(caseBConclusion)
+            }
         }
     }
-
 }

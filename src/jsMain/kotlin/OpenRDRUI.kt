@@ -6,6 +6,7 @@ import react.FC
 import react.Fragment
 import react.Props
 import react.dom.html.ReactHTML.h1
+import react.useState
 import web.cssom.FontFamily.Companion.sansSerif
 import web.cssom.TextAlign.Companion.center
 
@@ -15,6 +16,8 @@ external interface Handler : Props {
 }
 
 val OpenRDRUI = FC<Handler> { handler ->
+    var showKBInfo by useState(true)
+
     Fragment {
         h1 {
             +"Open RippleDown"
@@ -25,13 +28,18 @@ val OpenRDRUI = FC<Handler> { handler ->
             }
             id = "main_heading"
         }
-        KBInfoPane {
-            scope = handler.scope
-            api = handler.api
+        if (showKBInfo) {
+            KBInfoPane {
+                scope = handler.scope
+                api = handler.api
+            }
         }
         CasePoller {
             scope = handler.scope
             api = handler.api
+            ruleSessionInProgress = { inProgress ->
+                showKBInfo = !inProgress
+            }
         }
     }
 }

@@ -1,18 +1,16 @@
 package npm
 
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.test.TestResult
-import kotlinx.coroutines.test.runTest
 import mui.material.Button
 import mui.material.TextField
 import proxy.findById
 import proxy.waitForEvents
 import react.FC
 import react.Props
-import react.dom.createRootFor
 import react.dom.onChange
 import react.dom.test.Simulate
 import react.dom.test.act
+import react.dom.test.runReactTest
 import react.useState
 import web.events.EventInit
 import web.html.HTMLButtonElement
@@ -20,38 +18,39 @@ import web.html.HTMLDivElement
 import web.html.HTMLElement
 import kotlin.test.Test
 
+typealias MouseEventAlias = (react.dom.events.MouseEvent<HTMLButtonElement, *>) -> Unit
+typealias FormEventAlias = (react.dom.events.FormEvent<HTMLDivElement>) -> Unit
+
 class DebounceTest {
     val waitMillis = 100L
 
     @Test
-    fun shouldDebounceMouseClicks(): TestResult {
-        return runTest {
+    fun shouldDebounceMouseClicks() {
+        val DebouncedButton = FC<Props> {
+            var clicks by useState(0)
 
-            val DebouncedButton = FC<Props> {
-                var clicks by useState(0)
-
-                fun handleClickEvent(): MouseEventAlias {
-                    return {
-                        ++clicks
-                    }
-                }
-
-                fun debounceFunction(): MouseEventAlias {
-                    return debounce(handleClickEvent(), waitMillis)
-                }
-
-                Button {
-                    id = "button"
-                    onClick = debounceFunction()
-
-                    +"Clicked $clicks times"
+            fun handleClickEvent(): MouseEventAlias {
+                return {
+                    ++clicks
                 }
             }
-            val vfc = FC {
-                DebouncedButton {
-                }
+
+            fun debounceFunction(): MouseEventAlias {
+                return debounce(handleClickEvent(), waitMillis)
             }
-            val container = createRootFor(vfc)
+
+            Button {
+                id = "button"
+                onClick = debounceFunction()
+
+                +"Clicked $clicks times"
+            }
+        }
+        val fc = FC {
+            DebouncedButton {
+            }
+        }
+        runReactTest(fc) { container ->
             with(container) {
                 requireNumberOfClicks(0)
                 clickButton()
@@ -72,8 +71,7 @@ class DebounceTest {
 
 
     @Test
-    fun shouldDebounceTextViewInput() = runTest {
-
+    fun shouldDebounceTextViewInput() {
         val DebouncedTextField = FC<Props> {
             var text by useState("")
 
@@ -92,13 +90,13 @@ class DebounceTest {
                 multiline = true
                 defaultValue = text
                 onChange = debounceFunction()
-                }
             }
-            val vfc = FC {
-                DebouncedTextField {
-                }
+        }
+        val fc = FC {
+            DebouncedTextField {
             }
-            val container = createRootFor(vfc)
+        }
+        runReactTest(fc) { container ->
             with(container) {
                 requireText("")
                 enterText("A")
@@ -140,5 +138,5 @@ class DebounceTest {
         }
     }
 
-typealias MouseEventAlias = (react.dom.events.MouseEvent<HTMLButtonElement, *>) -> Unit
-typealias FormEventAlias = (react.dom.events.FormEvent<HTMLDivElement>) -> Unit
+
+}

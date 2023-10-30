@@ -11,6 +11,7 @@ val exposedVersion = "0.42.0"
 val logbackVersion = "1.4.11"
 val diffUtilsVersion = "4.12"
 val testingLibraryReactVersion = "14.0.0"
+val testingLibraryUserEventVersion = "14.5.1"
 val webDriverVersion = "5.5.3"
 val seleniumJavaVersion = "4.14.0"
 val awaitilityVersion = "4.2.0"
@@ -130,6 +131,7 @@ kotlin {
 
                     implementation(kotlin("test-js"))
                     implementation(npm("@testing-library/react", testingLibraryReactVersion))
+                    implementation(npm("@testing-library/user-event", testingLibraryUserEventVersion))
 
                     implementation("io.kotest:kotest-assertions-core-js:$kotestVersion")
                     implementation("io.kotest:kotest-framework-api-js:$kotestVersion")

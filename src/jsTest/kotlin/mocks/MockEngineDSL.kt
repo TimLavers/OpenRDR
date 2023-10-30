@@ -1,5 +1,6 @@
 package mocks
 
+import debug
 import io.kotest.matchers.shouldBe
 import io.ktor.client.engine.mock.*
 import io.ktor.http.*
@@ -181,6 +182,7 @@ private class EngineBuilder(private val config: EngineConfig) {
             }
 
             CONDITION_HINTS -> {
+                debug("CONDITION_HINTS, will return ${config.returnConditionList}")
                 if (config.expectedCaseId != null) request.url.parameters["id"] shouldBe config.expectedCaseId.toString()
                 respond(
                     content = ByteReadChannel(

@@ -1,7 +1,6 @@
 package io.rippledown.casecontrol
 
 import Handler
-import debug
 import io.rippledown.constants.caseview.CASE_NAME_PREFIX
 import io.rippledown.constants.caseview.CASE_SELECTOR_ID
 import io.rippledown.model.CaseId
@@ -21,7 +20,6 @@ external interface CaseSelectorHandler : Handler {
 }
 
 val CaseSelector = FC<CaseSelectorHandler> { handler ->
-    debug("rendering CaseSelector")
     List {
         id = CASE_SELECTOR_ID
         sx {

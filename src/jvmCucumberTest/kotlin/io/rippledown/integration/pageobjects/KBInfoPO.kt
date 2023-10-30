@@ -1,7 +1,10 @@
 package io.rippledown.integration.pageobjects
 
+import io.kotest.matchers.shouldBe
 import io.rippledown.constants.kb.KB_EXPORT_BUTTON_ID
 import io.rippledown.constants.kb.KB_IMPORT_BUTTON_ID
+import io.rippledown.constants.kb.KB_INFO_CONTROLS_ID
+import io.rippledown.constants.kb.KB_INFO_HEADING_ID
 import io.rippledown.integration.proxy.ConfiguredTestData
 import org.awaitility.Awaitility
 import org.openqa.selenium.By
@@ -11,7 +14,7 @@ import java.util.concurrent.TimeUnit
 
 class KBInfoPO(private val driver: WebDriver) {
 
-    fun headingText(): String? {
+    fun headingText(): String {
         return headingElement().text!!
     }
 
@@ -47,5 +50,9 @@ class KBInfoPO(private val driver: WebDriver) {
         }
     }
 
-    private fun headingElement() = driver.findElement(By.id("kb_info_heading"))
+    fun requireKbControlsToBeHidden() {
+        driver.findElements(By.id(KB_INFO_CONTROLS_ID)) shouldBe emptyList()
+    }
+
+    private fun headingElement() = driver.findElement(By.id(KB_INFO_HEADING_ID))
 }

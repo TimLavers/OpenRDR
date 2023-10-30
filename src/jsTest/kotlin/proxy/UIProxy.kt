@@ -13,8 +13,24 @@ import web.dom.NodeListOf
 import web.html.HTMLElement
 import kotlin.js.Date
 import kotlin.js.JSON.stringify
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
+fun HTMLElement.waitForElementToBeNull(selector: String, ms: Duration = 100.milliseconds) {
+    debug("about to waitForElementToBeNull($selector)")
+    var element: Element? = null
+    /*setTimeout(ms) {
+        element = querySelector(selector)
+        if (element == null) {
+            debug("element is null")
+        } else {
+            debug("element is not null")
+        }
+        element shouldBe null
+    }*/
+    debug("finished")
+    debug("element is $element")
+}
 
 suspend fun waitForEvents(timeout: Long = 150) {
     withContext(Default) {
@@ -28,6 +44,10 @@ suspend fun waitForNextPoll() =
 
 fun HTMLElement.requireNumberOfCases(expected: Int) {
     numberOfCasesWaiting() shouldBe expected
+}
+
+fun HTMLElement.requireNumberOfCasesNotToBeShowing() {
+    findAllById(NUMBER_OF_CASES_ID).length shouldBe 0
 }
 
 fun HTMLElement.numberOfCasesWaiting() = findById(NUMBER_OF_CASES_ID)

@@ -2,16 +2,14 @@ package io.rippledown.casecontrol
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.CaseId
-import kotlinx.coroutines.test.runTest
 import react.FC
-import react.dom.checkContainer
-import react.dom.createRootFor
+import react.dom.test.runReactTest
 import kotlin.test.Test
 
 class CaseSelectorTest {
 
     @Test
-    fun shouldListCaseNames() = runTest {
+    fun shouldListCaseNames() {
         val caseA = "case a"
         val caseB = "case b"
         val twoCaseIds = listOf(
@@ -24,7 +22,7 @@ class CaseSelectorTest {
             }
         }
 
-        checkContainer(fc) { container ->
+        runReactTest(fc) { container ->
             with(container) {
                 requireNamesToBeShowingOnCaseList(caseA, caseB)
             }
@@ -32,7 +30,7 @@ class CaseSelectorTest {
     }
 
     @Test
-    fun shouldCallSelectedCaseWhenCaseIsSelectedById() = runTest {
+    fun shouldCallSelectedCaseWhenCaseIsSelectedById() {
         val caseA = "case A"
         val caseB = "case B"
         val caseC = "case C"
@@ -49,14 +47,16 @@ class CaseSelectorTest {
                 }
             }
         }
-        with(createRootFor(fc)) {
-            selectCaseByName(caseId2.name)
-            selectedCaseId shouldBe caseId2.id
+        runReactTest(fc) { container ->
+            with(container) {
+                selectCaseByName(caseId2.name)
+                selectedCaseId shouldBe caseId2.id
+            }
         }
     }
 
     @Test
-    fun shouldSetTheInitialListSelection() = runTest {
+    fun shouldSetTheInitialListSelection() {
         val caseA = "case A"
         val caseB = "case B"
         val caseC = "case C"
@@ -70,7 +70,7 @@ class CaseSelectorTest {
                 selectedCaseName = caseB
             }
         }
-        checkContainer(fc) { container ->
+        runReactTest(fc) { container ->
             with(container) {
                 requireNameOnCaseListToBeSelected(caseB)
             }

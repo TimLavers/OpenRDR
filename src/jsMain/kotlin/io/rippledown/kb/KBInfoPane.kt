@@ -1,6 +1,7 @@
 package io.rippledown.kb
 
 import Handler
+import io.rippledown.constants.kb.KB_INFO_CONTROLS_ID
 import io.rippledown.constants.kb.KB_INFO_HEADING_ID
 import io.rippledown.model.KBInfo
 import kotlinx.coroutines.launch
@@ -14,8 +15,9 @@ import react.FC
 import react.useEffectOnce
 import react.useState
 
+external interface KBInfoPaneHandler : Handler
 
-val KBInfoPane = FC<Handler> { handler ->
+val KBInfoPane = FC<KBInfoPaneHandler> { handler ->
     var kbInfo: KBInfo? by useState(null)
 
     fun kbName() = if (kbInfo != null) kbInfo!!.name else ""
@@ -26,6 +28,7 @@ val KBInfoPane = FC<Handler> { handler ->
         }
     }
     Grid {
+        id = KB_INFO_CONTROLS_ID
         key = kbName()
         container = true
         direction = responsive(GridDirection.row)

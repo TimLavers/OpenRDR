@@ -358,5 +358,13 @@ class Defs : En {
                 "next" -> cornerstoneViewPO.selectNextCornerstoneCase()
             }
         }
+
+        Then("the KB import and export controls should be hidden") {
+            kbInfoPO.requireKbControlsToBeHidden()
+        }
+
+        And("the count of the number of cases should be hidden") {
+            caseListPO.requireCaseCountToBeHidden()
+        }
     }
 }

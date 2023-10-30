@@ -5,37 +5,39 @@ import io.rippledown.caseview.requireCaseToBeShowing
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.createCase
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.MainScope
 import mocks.config
 import mocks.mock
 import proxy.requireNumberOfCases
 import proxy.waitForEvents
 import proxy.waitForNextPoll
 import react.FC
-import react.dom.createRootFor
+import react.dom.test.runReactTest
 import kotlin.test.Test
 
 class CasePollerTest {
 
     @Test
-    fun shouldNotShowCaseListIfThereAreNoCases() = runTest {
+    fun shouldNotShowCaseListIfThereAreNoCases() {
         val config = config {
             returnCasesInfo = CasesInfo(emptyList())
         }
-        val vfc = FC {
+        val fc = FC {
             CasePoller {
-                scope = this@runTest
+                scope = MainScope()
                 api = Api(mock(config))
             }
         }
-        with(createRootFor(vfc)) {
-            waitForNextPoll()
-            requireNumberOfCases(0)
+        runReactTest(fc) { container ->
+            with(container) {
+                waitForNextPoll()
+                requireNumberOfCases(0)
+            }
         }
     }
 
     @Test
-    fun shouldGetNumberOfCases() = runTest {
+    fun shouldGetNumberOfCases() {
         val config = config {
             returnCasesInfo = CasesInfo(
                 listOf(
@@ -47,21 +49,23 @@ class CasePollerTest {
             returnCase = createCase("case 1", 1)
         }
 
-        val vfc = FC {
+        val fc = FC {
             CasePoller {
                 api = Api(mock(config))
-                scope = this@runTest
+                scope = MainScope()
             }
         }
 
-        with(createRootFor(vfc)) {
-            waitForNextPoll()
-            requireNumberOfCases(3)
+        runReactTest(fc) { container ->
+            with(container) {
+                waitForNextPoll()
+                requireNumberOfCases(3)
+            }
         }
     }
 
     @Test
-    fun shouldNotShowCaseViewWhenThereAreNoMoreCases() = runTest {
+    fun shouldNotShowCaseViewWhenThereAreNoMoreCases() {
         val config = config {
             val caseId1 = CaseId(1, "case 1")
             val caseId2 = CaseId(2, "case 2")
@@ -76,24 +80,26 @@ class CasePollerTest {
             returnCase = createCase(caseId1)
         }
 
-        val vfc = FC {
+        val fc = FC {
             CasePoller {
                 api = Api(mock(config))
-                scope = this@runTest
+                scope = MainScope()
             }
         }
 
-        with(createRootFor(vfc)) {
-            waitForNextPoll()
-            requireNumberOfCases(3)
-            config.returnCasesInfo = CasesInfo(emptyList())
-            waitForNextPoll()
-            requireNumberOfCases(0)
+        runReactTest(fc) { container ->
+            with(container) {
+                waitForNextPoll()
+                requireNumberOfCases(3)
+                config.returnCasesInfo = CasesInfo(emptyList())
+                waitForNextPoll()
+                requireNumberOfCases(0)
+            }
         }
     }
 
     @Test
-    fun shouldShowNamesOnTheCaseList() = runTest {
+    fun shouldShowNamesOnTheCaseList() {
         val case1 = "case 1"
         val case2 = "case 2"
         val caseId1 = CaseId(1, case1)
@@ -105,22 +111,24 @@ class CasePollerTest {
             )
             returnCase = createCase(caseId1)
         }
-        val vfc = FC {
+        val fc = FC {
             CasePoller {
                 api = Api(mock(config))
-                scope = this@runTest
+                scope = MainScope()
             }
         }
-        with(createRootFor(vfc)) {
-            waitForNextPoll()
-            requireNumberOfCases(2)
-            requireNamesToBeShowingOnCaseList(case1, case2)
-            requireCaseToBeShowing(case1)
+        runReactTest(fc) { container ->
+            with(container) {
+                waitForNextPoll()
+                requireNumberOfCases(2)
+                requireNamesToBeShowingOnCaseList(case1, case2)
+                requireCaseToBeShowing(case1)
+            }
         }
     }
 
     @Test
-    fun shouldShowCaseViewWhenACaseIsSelected() = runTest {
+    fun shouldShowCaseViewWhenACaseIsSelected() {
         val caseName1 = "case 1"
         val caseName2 = "case 2"
         val caseId1 = CaseId(1, caseName1)
@@ -134,26 +142,28 @@ class CasePollerTest {
             returnCase = createCase(caseId1)
         }
 
-        val vfc = FC {
+        val fc = FC {
             CasePoller {
                 api = Api(mock(config))
-                scope = this@runTest
+                scope = MainScope()
             }
         }
-        with(createRootFor(vfc)) {
-            waitForNextPoll()
-            requireNamesToBeShowingOnCaseList(caseName1, caseName2)
-            requireCaseToBeShowing(caseName1)
+        runReactTest(fc) { container ->
+            with(container) {
+                waitForNextPoll()
+                requireNamesToBeShowingOnCaseList(caseName1, caseName2)
+                requireCaseToBeShowing(caseName1)
 
-            config.returnCase = createCase(caseId2)
-            selectCaseByName(caseName2)
-            waitForEvents()
-            requireCaseToBeShowing(caseName2)
+                config.returnCase = createCase(caseId2)
+                selectCaseByName(caseName2)
+                waitForEvents()
+                requireCaseToBeShowing(caseName2)
+            }
         }
     }
 
     @Test
-    fun shouldShowNoCasesWhenThereAreNoMoreCases() = runTest {
+    fun shouldShowNoCasesWhenThereAreNoMoreCases() {
         val caseName = "case 1"
         val caseId = CaseId(1, caseName)
         val caseIds = listOf(caseId)
@@ -162,25 +172,27 @@ class CasePollerTest {
             returnCase = createCase(caseId)
         }
 
-        val vfc = FC {
+        val fc = FC {
             CasePoller {
                 api = Api(mock(config))
-                scope = this@runTest
+                scope = MainScope()
             }
         }
-        with(createRootFor(vfc)) {
-            waitForNextPoll()
-            requireNamesToBeShowingOnCaseList(caseName)
+        runReactTest(fc) { container ->
+            with(container) {
+                waitForNextPoll()
+                requireNamesToBeShowingOnCaseList(caseName)
 
-            config.returnCasesInfo = CasesInfo(emptyList())
-            waitForNextPoll()
-            requireNumberOfCases(0)
+                config.returnCasesInfo = CasesInfo(emptyList())
+                waitForNextPoll()
+                requireNumberOfCases(0)
+            }
         }
     }
 
 
     @Test
-    fun shouldSelectTheFirstCaseWhenTheSelectedCaseHasBeenDeleted() = runTest {
+    fun shouldSelectTheFirstCaseWhenTheSelectedCaseHasBeenDeleted() {
         val caseName1 = "case 1"
         val caseName2 = "case 2"
         val caseName3 = "case 3"
@@ -193,30 +205,32 @@ class CasePollerTest {
             )
             returnCase = createCase(caseId2)
         }
-        val vfc = FC {
+        val fc = FC {
             CasePoller {
                 api = Api(mock(config))
-                scope = this@runTest
+                scope = MainScope()
             }
         }
-        with(createRootFor(vfc)) {
-            waitForNextPoll()
-            selectCaseByName(caseName2)
-            requireCaseToBeShowing(caseName2)
+        runReactTest(fc) { container ->
+            with(container) {
+                waitForNextPoll()
+                selectCaseByName(caseName2)
+                requireCaseToBeShowing(caseName2)
 
-            //set the mock to return the other two cases
-            config.returnCasesInfo = CasesInfo(
-                listOf(caseId1, caseId3)
-            )
-            config.returnCase = createCase(caseId1)
-            waitForNextPoll()
-            requireCaseToBeShowing(caseName1)
-            requireNamesToBeShowingOnCaseList(caseName1, caseName3)
+                //set the mock to return the other two cases
+                config.returnCasesInfo = CasesInfo(
+                    listOf(caseId1, caseId3)
+                )
+                config.returnCase = createCase(caseId1)
+                waitForNextPoll()
+                requireCaseToBeShowing(caseName1)
+                requireNamesToBeShowingOnCaseList(caseName1, caseName3)
+            }
         }
     }
 
     @Test
-    fun shouldSelectTheFirstCaseByDefault() = runTest {
+    fun shouldSelectTheFirstCaseByDefault() {
         val case1 = "case 1"
         val case2 = "case 2"
         val caseId1 = CaseId(1, case1)
@@ -231,15 +245,17 @@ class CasePollerTest {
             )
             returnCase = createCase(caseId1)
         }
-        val vfc = FC {
+        val fc = FC {
             CasePoller {
                 api = Api(mock(config))
-                scope = this@runTest
+                scope = MainScope()
             }
         }
-        with(createRootFor(vfc)) {
-            waitForNextPoll()
-            requireCaseToBeShowing(case1)
+        runReactTest(fc) { container ->
+            with(container) {
+                waitForNextPoll()
+                requireCaseToBeShowing(case1)
+            }
         }
     }
 }

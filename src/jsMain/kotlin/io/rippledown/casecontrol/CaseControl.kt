@@ -18,6 +18,7 @@ import xs
 
 external interface CaseControlHandler : Handler {
     var caseIds: List<CaseId>
+    var ruleSessionInProgress: (inProgress: Boolean) -> Unit
 }
 
 val CaseControl = FC<CaseControlHandler> { handler ->
@@ -73,6 +74,9 @@ val CaseControl = FC<CaseControlHandler> { handler ->
                     }
                     ruleSessionInProgress = { inProgress ->
                         showSelector = !inProgress
+                        debug("CaseControl - start - rule session in progress")
+                        handler.ruleSessionInProgress(inProgress)
+                        debug("CaseControl - end   - rule session in progress")
                     }
                 }
             }
