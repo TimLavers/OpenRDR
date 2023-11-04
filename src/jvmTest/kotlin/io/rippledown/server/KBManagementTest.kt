@@ -8,10 +8,7 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.verify
-import io.rippledown.constants.api.CREATE_KB
-import io.rippledown.constants.api.EXPORT_KB
-import io.rippledown.constants.api.IMPORT_KB
-import io.rippledown.constants.api.KB_INFO
+import io.rippledown.constants.api.*
 import io.rippledown.model.KBInfo
 import io.rippledown.model.OperationResult
 import java.io.File
@@ -28,6 +25,17 @@ class KBManagementTest: OpenRDRServerTestBase() {
         result.status shouldBe HttpStatusCode.OK
         result.body<KBInfo>() shouldBe kbInfo
         verify { serverApplication.kbName() }
+    }
+
+    @Test
+    fun kbList() = testApplication {
+        setup()
+        val kbs = listOf(KBInfo("10", "Glucose"), KBInfo("1", "Thyroids"), KBInfo("3", "Whatever"))
+        every { serverApplication.kbList() } returns kbs
+        val result = httpClient.get(KB_LIST)
+        result.status shouldBe HttpStatusCode.OK
+        result.body<List<KBInfo>>() shouldBe kbs
+        verify { serverApplication.kbList() }
     }
 
     @Test

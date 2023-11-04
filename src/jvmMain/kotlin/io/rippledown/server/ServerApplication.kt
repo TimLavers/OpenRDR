@@ -30,23 +30,25 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
     lateinit var kb: KB
 
     init {
-        createKB()
+        createKB("Thyroids", false)
     }
 
     fun reCreateKB() {
         val oldKBInfo = kbName()
-        createKB()
+        createKB(oldKBInfo.name, true)
         kbManager.deleteKB(oldKBInfo)
     }
 
-    fun createKB() {
-        val kbInfo = kbManager.createKB("Thyroids", true)
+    fun createKB(name: String, force: Boolean) {
+        val kbInfo = kbManager.createKB(name, force)
         kb = (kbManager.openKB(kbInfo.id) as EntityRetrieval.Success<KB>).entity
     }
 
     fun kbName(): KBInfo {
         return kb.kbInfo
     }
+
+    fun kbList(): List<KBInfo> = kbManager.all().toList().sorted()
 
     fun exportKBToZip(): File {
         val tempDir: File = createTempDirectory().toFile()
@@ -163,7 +165,7 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         val diff = sessionStartRequest.diff
 
         startRuleSessionForDifference(caseId, diff)
-        return kb.cornerstoneStatus(null);
+        return kb.cornerstoneStatus(null)
 
     }
 
