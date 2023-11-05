@@ -36,6 +36,8 @@ class Api(engine: HttpClientEngine = Js.create()) {
 
     suspend fun kbInfo() = jsonClient.get("$endpoint$KB_INFO").body<KBInfo>()
 
+    suspend fun kbList() = jsonClient.get("$endpoint$KB_LIST").body<List<KBInfo>>()
+
     fun importKBFromZip(file: File) {
         val code: dynamic = js("window.doZipUpload")
         val zipImportURL = "$endpoint$IMPORT_KB"

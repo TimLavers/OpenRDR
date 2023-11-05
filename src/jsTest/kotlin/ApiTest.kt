@@ -78,6 +78,11 @@ class ApiTest {
     }
 
     @Test
+    fun kbList() = runTest {
+        Api(mock(config {})).kbList().map { it.name } shouldBe listOf("Glucose", "Lipids", "Thyroids")
+    }
+
+    @Test
     fun theReturnedInterpretationShouldContainTheDiffList() = runTest {
         val expectedDiffList = DiffList(
             listOf(
