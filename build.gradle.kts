@@ -11,7 +11,6 @@ val exposedVersion = "0.42.0"
 val logbackVersion = "1.4.11"
 val diffUtilsVersion = "4.12"
 val testingLibraryReactVersion = "14.0.0"
-val testingLibraryUserEventVersion = "14.5.1"
 val webDriverVersion = "5.5.3"
 val seleniumJavaVersion = "4.14.0"
 val awaitilityVersion = "4.2.0"
@@ -19,11 +18,11 @@ val cucumberVersion = "7.14.0"
 val commonsIoVersion = "2.14.0"
 val commonsTextVersion = "1.10.0"
 val mockkVersion = "1.13.8"
-val testNgVersion = "7.7.0"
+val testNgVersion = "7.8.0"
 
 plugins {
-    kotlin("multiplatform") version "1.9.10"
-    kotlin("plugin.serialization") version "1.9.10"
+    kotlin("multiplatform") version "1.9.20"
+    kotlin("plugin.serialization") version "1.9.20"
     id("io.ktor.plugin") version "2.3.5"
     id("org.gretty") version "4.1.0"
     application
@@ -48,105 +47,107 @@ kotlin {
             binaries.executable()
         }
     }
-
     jvm {
         withJava()
+    }
 
-        sourceSets {
-            val commonMain by getting {
-                dependencies {
-                    implementation(enforcedPlatform("io.ktor:ktor-bom:$ktorVersion"))
-                    implementation("io.ktor:ktor-client-core")
-                    implementation("io.ktor:ktor-serialization-kotlinx-json")
-                    implementation("org.jetbrains.kotlinx:kotlinx-datetime:$kotlinxDateTimeVersion")
-                }
-            }
-            val commonTest by getting {
-                dependencies {
-                    implementation(kotlin("test"))
-                    implementation("io.kotest:kotest-assertions-core:$kotestVersion")
-                }
-            }
-            val jvmMain by getting {
-                dependencies {
-
-                    implementation(enforcedPlatform("io.ktor:ktor-bom:$ktorVersion"))
-                    implementation("io.ktor:ktor-serialization")
-                    implementation("io.ktor:ktor-server-content-negotiation")
-                    implementation("io.ktor:ktor-serialization-kotlinx-json")
-                    implementation("io.ktor:ktor-server-cors")
-                    implementation("io.ktor:ktor-server-compression")
-                    implementation("io.ktor:ktor-server-core-jvm")
-                    implementation("io.ktor:ktor-server-call-logging")
-                    implementation("io.ktor:ktor-server-netty")
-                    implementation("ch.qos.logback:logback-classic:$logbackVersion")
-                    implementation("commons-io:commons-io:$commonsIoVersion")
-                    implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
-                    implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
-                    implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
-                    implementation("org.postgresql:postgresql:42.5.4")
-                    implementation("io.github.java-diff-utils:java-diff-utils:$diffUtilsVersion")
-                }
-            }
-            val jvmTest by getting {
-                dependencies {
-                    implementation(enforcedPlatform("io.ktor:ktor-bom:$ktorVersion"))
-                    implementation("io.ktor:ktor-serialization-kotlinx-json")
-                    implementation("io.ktor:ktor-client-core:")
-                    implementation("io.ktor:ktor-client-cio")
-                    implementation("io.ktor:ktor-client-content-negotiation")
-                    implementation("io.ktor:ktor-client-cio")
-                    implementation("io.ktor:ktor-server-test-host")
-                    implementation("org.seleniumhq.selenium:selenium-java:$seleniumJavaVersion")
-
-                    implementation("io.github.bonigarcia:webdrivermanager:$webDriverVersion")
-                    implementation("commons-io:commons-io:$commonsIoVersion")
-                    implementation("io.mockk:mockk:${mockkVersion}")
-                }
-            }
-            val jsMain by getting {
-                dependencies {
-                    implementation(enforcedPlatform("io.ktor:ktor-bom:$ktorVersion"))
-                    implementation("io.ktor:ktor-client-js")
-                    implementation("io.ktor:ktor-client-content-negotiation")
-                    implementation("io.ktor:ktor-serialization-kotlinx-json")
-                    implementation(enforcedPlatform("org.jetbrains.kotlin-wrappers:kotlin-wrappers-bom:$kotlinWrappersVersion"))
-                    implementation("org.jetbrains.kotlin-wrappers:kotlin-react")
-                    implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom")
-                    implementation("org.jetbrains.kotlin-wrappers:kotlin-emotion")
-                    implementation("org.jetbrains.kotlin-wrappers:kotlin-mui")
-                    implementation("org.jetbrains.kotlin-wrappers:kotlin-mui-lab")
-                    implementation("org.jetbrains.kotlin-wrappers:kotlin-mui-icons")
-                    implementation("org.jetbrains.kotlin-wrappers:kotlin-muix-tree-view:$treeViewVersion")
-
-                    implementation(npm("debounce", "1.2.1"))
-                }
-            }
-            val jsTest by getting {
-                dependencies {
-                    implementation(enforcedPlatform("org.jetbrains.kotlin-wrappers:kotlin-wrappers-bom:$kotlinWrappersVersion"))
-                    implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom-test-utils")
-                    implementation("org.jetbrains.kotlin-wrappers:kotlin-extensions")
-                    implementation("io.ktor:ktor-client-mock:$ktorVersion")
-
-                    implementation(kotlin("test-js"))
-                    implementation(npm("@testing-library/react", testingLibraryReactVersion))
-                    implementation(npm("@testing-library/user-event", testingLibraryUserEventVersion))
-
-                    implementation("io.kotest:kotest-assertions-core-js:$kotestVersion")
-                    implementation("io.kotest:kotest-framework-api-js:$kotestVersion")
-                    implementation("io.kotest:kotest-framework-engine-js:$kotestVersion")
-                    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinxCoroutinesTestVersion")
-                }
+    sourceSets {
+        val commonMain by getting {
+            dependencies {
+                implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.20")
+                implementation(project.dependencies.enforcedPlatform("io.ktor:ktor-bom:$ktorVersion"))
+                implementation("io.ktor:ktor-client-core")
+                implementation("io.ktor:ktor-serialization-kotlinx-json")
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:$kotlinxDateTimeVersion")
             }
         }
+        val commonTest by getting {
+            dependencies {
+                implementation(kotlin("test"))
+                implementation("io.kotest:kotest-assertions-core:$kotestVersion")
+            }
+        }
+        val jvmMain by getting {
+            dependencies {
+
+                implementation(project.dependencies.enforcedPlatform("io.ktor:ktor-bom:$ktorVersion"))
+                implementation("io.ktor:ktor-serialization")
+                implementation("io.ktor:ktor-server-content-negotiation")
+                implementation("io.ktor:ktor-serialization-kotlinx-json")
+                implementation("io.ktor:ktor-server-cors")
+                implementation("io.ktor:ktor-server-compression")
+                implementation("io.ktor:ktor-server-core-jvm")
+                implementation("io.ktor:ktor-server-call-logging")
+                implementation("io.ktor:ktor-server-netty")
+                implementation("ch.qos.logback:logback-classic:$logbackVersion")
+                implementation("commons-io:commons-io:$commonsIoVersion")
+                implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
+                implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
+                implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
+                implementation("org.postgresql:postgresql:42.5.4")
+                implementation("io.github.java-diff-utils:java-diff-utils:$diffUtilsVersion")
+            }
+        }
+        val jvmTest by getting {
+            dependencies {
+                implementation(project.dependencies.enforcedPlatform("io.ktor:ktor-bom:$ktorVersion"))
+                implementation("io.ktor:ktor-serialization-kotlinx-json")
+                implementation("io.ktor:ktor-client-core:")
+                implementation("io.ktor:ktor-client-cio")
+                implementation("io.ktor:ktor-client-content-negotiation")
+                implementation("io.ktor:ktor-client-cio")
+                implementation("io.ktor:ktor-server-test-host")
+                implementation("org.seleniumhq.selenium:selenium-java:$seleniumJavaVersion")
+
+                implementation("io.github.bonigarcia:webdrivermanager:$webDriverVersion")
+                implementation("commons-io:commons-io:$commonsIoVersion")
+                implementation("io.mockk:mockk:${mockkVersion}")
+            }
+        }
+        val jsMain by getting {
+            dependencies {
+                implementation(project.dependencies.enforcedPlatform("io.ktor:ktor-bom:$ktorVersion"))
+                implementation("io.ktor:ktor-client-js")
+                implementation("io.ktor:ktor-client-content-negotiation")
+                implementation("io.ktor:ktor-serialization-kotlinx-json")
+                implementation(project.dependencies.enforcedPlatform("org.jetbrains.kotlin-wrappers:kotlin-wrappers-bom:$kotlinWrappersVersion"))
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-react")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-emotion")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-mui")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-mui-lab")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-mui-icons")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-muix-tree-view:$treeViewVersion")
+
+                implementation(npm("debounce", "1.2.1"))
+            }
+        }
+        val jsTest by getting {
+            dependencies {
+                implementation(project.dependencies.enforcedPlatform("org.jetbrains.kotlin-wrappers:kotlin-wrappers-bom:$kotlinWrappersVersion"))
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom-test-utils")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-extensions")
+                implementation("io.ktor:ktor-client-mock:$ktorVersion")
+
+                implementation(kotlin("test-js"))
+                implementation(npm("@testing-library/react", testingLibraryReactVersion))
+
+                implementation("io.kotest:kotest-assertions-core-js:$kotestVersion")
+                implementation("io.kotest:kotest-framework-api-js:$kotestVersion")
+                implementation("io.kotest:kotest-framework-engine-js:$kotestVersion")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinxCoroutinesTestVersion")
+            }
+        }
+    }
+
+    jvm {
 
         compilations {
             val cucumberTest by compilations.creating {
                 defaultSourceSet {
                     dependsOn(sourceSets.getByName("commonMain"))
                     dependencies {
-                        implementation(enforcedPlatform("io.cucumber:cucumber-bom:$cucumberVersion"))
+                        implementation(project.dependencies.enforcedPlatform("io.cucumber:cucumber-bom:$cucumberVersion"))
                         implementation("io.cucumber:cucumber-java8")
                         implementation("io.cucumber:cucumber-junit")
                         implementation("io.cucumber:cucumber-picocontainer")
@@ -157,7 +158,7 @@ kotlin {
                         implementation("org.seleniumhq.selenium:selenium-java:$seleniumJavaVersion")
                         implementation("io.github.bonigarcia:webdrivermanager:$webDriverVersion")
 
-                        implementation(enforcedPlatform("io.ktor:ktor-bom:$ktorVersion"))
+                        implementation(project.dependencies.enforcedPlatform("io.ktor:ktor-bom:$ktorVersion"))
                         implementation("io.ktor:ktor-client-core")
                         implementation("io.ktor:ktor-client-cio")
                         implementation("io.ktor:ktor-client-content-negotiation")
@@ -239,12 +240,7 @@ fun Jar.includeJsArtifacts() {
     }
     val webpackTask = tasks.getByName<KotlinWebpack>(taskName)
     dependsOn(webpackTask) // make sure JS gets compiled first
-    from(
-        File(
-            webpackTask.destinationDirectory,
-            webpackTask.outputFileName
-        )
-    ) // bring output file along into the JAR
+    from(webpackTask.outputDirectory)
 
     manifest.attributes["Main-Class"] = "io.rippledown.server.OpenRDRServerKt"
 }
@@ -252,7 +248,7 @@ fun Jar.includeJsArtifacts() {
 distributions {
     main {
         contents {
-            from("$buildDir/libs") {
+            from("${layout.buildDirectory}/libs") {
                 rename("${rootProject.name}-jvm", rootProject.name)
                 into("lib")
             }

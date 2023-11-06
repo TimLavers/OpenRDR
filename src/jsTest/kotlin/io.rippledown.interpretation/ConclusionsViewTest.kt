@@ -6,6 +6,7 @@ import io.rippledown.model.Interpretation
 import io.rippledown.model.condition.containsText
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.RuleSummary
+import kotlinx.coroutines.test.TestResult
 import proxy.waitForEvents
 import react.FC
 import react.dom.test.runReactTest
@@ -41,9 +42,9 @@ class ConclusionsViewTest {
     }
 
     @Test
-    fun shouldShowConclusions() {
+    fun shouldShowConclusions(): TestResult {
         val fc = wrapper(comment1, comment2)
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 requireTreeItemCount(2)
                 requireTreeItems(
@@ -55,9 +56,9 @@ class ConclusionsViewTest {
     }
 
     @Test
-    fun shouldShowConditions() {
+    fun shouldShowConditions(): TestResult {
         val fc = wrapper(comment1, comment2)
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 clickComment(comment1)
                 waitForEvents()

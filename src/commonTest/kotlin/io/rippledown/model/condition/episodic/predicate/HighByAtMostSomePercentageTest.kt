@@ -9,7 +9,7 @@ import io.rippledown.model.ReferenceRange
 import io.rippledown.model.TestResult
 import kotlin.test.Test
 
-class HighByAtMostSomePercentageTest: Base() {
+class HighByAtMostSomePercentageTest : Base() {
     private val fivePercentHigh = HighByAtMostSomePercentage(5)
     private val tenPercentHigh = HighByAtMostSomePercentage(10)
 

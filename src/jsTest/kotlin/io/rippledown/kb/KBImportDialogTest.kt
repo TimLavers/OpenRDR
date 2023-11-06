@@ -1,5 +1,6 @@
 package io.rippledown.kb
 
+import kotlinx.coroutines.test.TestResult
 import proxy.waitForEvents
 import react.FC
 import react.dom.test.runReactTest
@@ -10,12 +11,12 @@ import kotlin.test.Test
 class KBImportDialogTest {
 
     @Test
-    fun importDialogShouldNotBeShowingInitially() {
+    fun importDialogShouldNotBeShowingInitially(): TestResult {
         val vfc = FC {
             KBImportDialog {
             }
         }
-        runReactTest(vfc) { container ->
+        return runReactTest(vfc) { container ->
             with(container) {
                 requireImportKBButtonToBeShowing()
                 requireImportDialogToNotBeShowing()
@@ -24,12 +25,12 @@ class KBImportDialogTest {
     }
 
     @Test
-    fun shouldShowDialogWhenImportButtonClicked() {
+    fun shouldShowDialogWhenImportButtonClicked(): TestResult {
         val vfc = FC {
             KBImportDialog {
             }
         }
-        runReactTest(vfc) { container ->
+        return runReactTest(vfc) { container ->
             with(container) {
                 clickKBImport()
                 waitForEvents()

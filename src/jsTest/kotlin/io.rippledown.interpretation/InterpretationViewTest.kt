@@ -2,6 +2,7 @@ package io.rippledown.interpretation
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
+import kotlinx.coroutines.test.TestResult
 import proxy.waitForEvents
 import react.FC
 import react.dom.test.runReactTest
@@ -10,32 +11,32 @@ import kotlin.test.Test
 class InterpretationViewTest {
 
     @Test
-    fun shouldShowInitialInterpretationIfVerifiedTextIsNull() {
+    fun shouldShowInitialInterpretationIfVerifiedTextIsNull(): TestResult {
         val initialText = "Go to Bondi now!"
         val fc = FC {
             InterpretationView {
                 text = initialText
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             container.requireInterpretation(initialText)
         }
     }
 
     @Test
-    fun shouldShowBlankInterpretation() {
+    fun shouldShowBlankInterpretation(): TestResult {
         val fc = FC {
             InterpretationView {
                 text = ""
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             container.requireInterpretation("")
         }
     }
 
     @Test
-    fun shouldCallOnInterpretationEdited() {
+    fun shouldCallOnInterpretationEdited(): TestResult {
         val enteredText = "And bring your flippers"
         var updatedText: String? = null
         val fc = FC {
@@ -46,7 +47,7 @@ class InterpretationViewTest {
                 }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 updatedText shouldBe null
                 enterInterpretation(enteredText)

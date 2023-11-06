@@ -1,5 +1,6 @@
 package io.rippledown.interpretation
 
+import kotlinx.coroutines.test.TestResult
 import mui.material.Button
 import proxy.findById
 import react.FC
@@ -12,7 +13,7 @@ import kotlin.test.Test
 class InterpretationViewUpdateTest {
 
     @Test
-    fun shouldUpdateTextFieldWhenInterpretationIsChanged() {
+    fun shouldUpdateTextFieldWhenInterpretationIsChanged(): TestResult {
         val textA = "text for case A"
         val textB = "text for case B"
         val buttonId = "button_id"
@@ -33,7 +34,7 @@ class InterpretationViewUpdateTest {
                 }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 //Given
                 requireInterpretation(textA)

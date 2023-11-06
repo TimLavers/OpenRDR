@@ -1,12 +1,12 @@
 package io.rippledown.caseview
 
-import Handler
-import debug
 import io.rippledown.model.Attribute
 import kotlinx.coroutines.launch
+import main.Handler
+import main.debug
+import main.px4
 import mui.material.TableCell
 import mui.system.sx
-import px4
 import react.FC
 import react.dom.events.DragEvent
 import web.cssom.Cursor

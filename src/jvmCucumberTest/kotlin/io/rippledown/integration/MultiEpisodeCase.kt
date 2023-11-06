@@ -8,7 +8,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 // ORD2
-internal class MultiEpisodeCase : io.rippledown.integration.UITestBase() {
+internal class MultiEpisodeCase : UITestBase() {
 
     private lateinit var caseQueuePO: CaseQueuePO
     private lateinit var caseListPO: CaseListPO

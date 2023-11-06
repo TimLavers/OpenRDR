@@ -7,6 +7,7 @@ import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.caseview.CaseViewProperties
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.defaultDate
+import kotlinx.coroutines.test.TestResult
 import proxy.findAllById
 import react.FC
 import react.dom.test.runReactTest
@@ -15,7 +16,7 @@ import kotlin.test.Test
 class CaseTableBodyTest {
 
     @Test
-    fun attributeOrdering() {
+    fun attributeOrdering(): TestResult {
         val builder1 = RDRCaseBuilder()
         val tsh = Attribute(1, "TSH")
         val ft4 = Attribute(2, "FT4")
@@ -34,7 +35,7 @@ class CaseTableBodyTest {
                 case = viewableCase
             }
         }
-        runReactTest(vfc) { container ->
+        return runReactTest(vfc) { container ->
             with(container) {
                 val rows = findAllById(CASE_TABLE_ROW_PREFIX)
                 rows.length shouldBe 4

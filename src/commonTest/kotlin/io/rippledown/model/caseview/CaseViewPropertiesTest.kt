@@ -30,7 +30,13 @@ class CaseViewPropertiesTest {
     @Test
     fun hash() {
         CaseViewProperties(emptyList()).hashCode() shouldBe CaseViewProperties(emptyList()).hashCode()
-        CaseViewProperties(listOf(abc, tsh, xyz)).hashCode() shouldBe CaseViewProperties(listOf(abc, tsh, xyz)).hashCode()
+        CaseViewProperties(listOf(abc, tsh, xyz)).hashCode() shouldBe CaseViewProperties(
+            listOf(
+                abc,
+                tsh,
+                xyz
+            )
+        ).hashCode()
     }
 
     @Test

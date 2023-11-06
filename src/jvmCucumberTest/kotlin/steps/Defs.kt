@@ -255,7 +255,7 @@ class Defs : En {
         When("I complete the rule") {
             conditionSelectorPO.clickDone()
         }
-        When("I cancel the rule") {
+        When("(I )cancel the rule") {
             conditionSelectorPO.clickCancel()
         }
 
@@ -363,8 +363,16 @@ class Defs : En {
             kbInfoPO.requireKbControlsToBeHidden()
         }
 
+        Then("the KB import and export controls should be shown") {
+            kbInfoPO.requireKbControlsToBeShown()
+        }
+
         And("the count of the number of cases should be hidden") {
             caseListPO.requireCaseCountToBeHidden()
+        }
+
+        And("the count of the number of cases should be {int}") { numberOfCases: Int ->
+            caseListPO.waitForCountOfNumberOfCasesToBe(numberOfCases)
         }
     }
 }

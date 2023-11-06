@@ -1,12 +1,13 @@
 package io.rippledown.casecontrol
 
-import Api
 import io.kotest.matchers.shouldBe
 import io.rippledown.interpretation.requireInterpretation
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.createCaseWithInterpretation
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.test.TestResult
+import main.Api
 import mocks.config
 import mocks.mock
 import react.FC
@@ -16,7 +17,7 @@ import kotlin.test.Test
 class CaseControlUpdateTest {
 
     @Test
-    fun shouldUpdateInterpretationWhenAnotherCaseNameIsClicked() {
+    fun shouldUpdateInterpretationWhenAnotherCaseNameIsClicked(): TestResult {
         val caseIdA = CaseId(id = 1, name = "case A")
         val caseIdB = CaseId(id = 2, name = "case B")
         val caseAConclusion = "text for case A"
@@ -39,7 +40,7 @@ class CaseControlUpdateTest {
                 scope = MainScope()
             }
         }
-        runReactTest(vfc) { container ->
+        return runReactTest(vfc) { container ->
             with(container) {
                 //Given
                 requireInterpretation(caseAConclusion)

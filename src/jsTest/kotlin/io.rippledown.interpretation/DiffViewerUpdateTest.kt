@@ -1,6 +1,7 @@
 package io.rippledown.interpretation
 
 import io.rippledown.model.diff.*
+import kotlinx.coroutines.test.TestResult
 import mui.material.Button
 import proxy.findById
 import react.FC
@@ -13,7 +14,7 @@ import kotlin.test.Test
 class DiffViewerUpdateTest {
 
     @Test
-    fun shouldUpdateDiffViewerWhenTheDiffListIsChanged() {
+    fun shouldUpdateDiffViewerWhenTheDiffListIsChanged(): TestResult {
         val buttonId = "button_id"
         val diffListA = DiffList(listOf(Addition(), Removal()))
         val diffListB = DiffList(listOf(Unchanged(), Replacement(), Unchanged(), Addition()))
@@ -36,7 +37,7 @@ class DiffViewerUpdateTest {
             }
         }
 
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 //Given
                 requireNumberOfRows(2)

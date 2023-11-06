@@ -1,12 +1,12 @@
 package io.rippledown.casecontrol
 
 import io.rippledown.caseview.requireCaseToBeShowing
-import io.rippledown.interpretation.*
-import io.rippledown.model.Attribute
+import io.rippledown.cornerstoneview.requireCornerstoneCaseNotToBeShowing
+import io.rippledown.cornerstoneview.requireCornerstoneCaseToBeShowing
+import io.rippledown.interpretation.clickDoneButton
+import io.rippledown.interpretation.startToBuildRuleForRow
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
-import io.rippledown.model.condition.ConditionList
-import io.rippledown.model.condition.hasCurrentValue
 import io.rippledown.model.createCaseWithInterpretation
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
@@ -17,37 +17,40 @@ import main.Api
 import mocks.config
 import mocks.mock
 import proxy.waitForEvents
+import proxy.waitForNextPoll
 import react.FC
 import react.dom.test.runReactTest
 import kotlin.test.Test
 
-class ConditionSelectionWhenShowingCornerstoneTest {
+class CaseControlAfterRuleBuildingTest {
 
     @Test
-    fun shouldUpdateCornerstoneStatusWhenAConditionIsSelected(): TestResult {
+    fun shouldRemoveCornerstoneViewAfterBuildingARule(): TestResult {
         val caseId = 1L
         val caseName = "Manly"
         val caseIdList = listOf(CaseId(caseId, caseName))
+        val bondiComment = "Go to Bondi now!"
         val beachComment = "Enjoy the beach!"
-        val diffList = DiffList(listOf(Addition(beachComment)))
+        val diffList = DiffList(listOf(Addition(bondiComment)))
         val case = createCaseWithInterpretation(
             id = caseId,
             name = caseName,
             conclusionTexts = listOf(beachComment),
             diffs = diffList
         )
-        val cornerstone = createCaseWithInterpretation(
-            id = 0L,
-            name = "Bondi",
+        val cornerstoneCase = createCaseWithInterpretation(
+            id = 2,
+            name = "Bondi"
         )
-        val condition1 = hasCurrentValue(1, Attribute(1, "surf"))
-        val condition2 = hasCurrentValue(2, Attribute(2, "sand"))
-
         val config = config {
+            expectedCaseId = caseId
             returnCasesInfo = CasesInfo(caseIdList)
             returnCase = case
-            returnConditionList = ConditionList(listOf(condition1, condition2))
-            returnCornerstoneStatus = CornerstoneStatus(cornerstone, 0, 1)
+            returnCornerstoneStatus = CornerstoneStatus(
+                cornerstoneToReview = cornerstoneCase,
+                indexOfCornerstoneToReview = 0,
+                numberOfCornerstones = 1
+            )
         }
 
         val fc = FC {
@@ -61,24 +64,18 @@ class ConditionSelectionWhenShowingCornerstoneTest {
         return runReactTest(fc) { container ->
             with(container) {
                 //Given
+                waitForNextPoll()
                 requireCaseToBeShowing(caseName)
-                //start to build a rule for the Addition
-                selectChangesTab()
-                requireNumberOfRows(1)
-                moveMouseOverRow(0)
-                clickBuildIconForRow(0)
-                requireConditionsToBeNotSelected(listOf(condition1.asText(), condition2.asText()))
+                //Build a rule for the Addition
+                startToBuildRuleForRow(0)
+                requireCornerstoneCaseToBeShowing(cornerstoneCase.name)
 
-                clickConditionWithIndex(0)
-                requireConditionsToBeSelected(listOf(condition1.asText()))
-                requireConditionsToBeNotSelected(listOf(condition2.asText()))
-
-                //deselect
-                clickConditionWithIndex(0)
+                //When
+                clickDoneButton()
                 waitForEvents()
-                requireConditionsToBeNotSelected(listOf(condition1.asText(), condition2.asText()))
 
-                //TODO test that the cornerstone status is updated
+                //Then
+                requireCornerstoneCaseNotToBeShowing()
             }
         }
     }

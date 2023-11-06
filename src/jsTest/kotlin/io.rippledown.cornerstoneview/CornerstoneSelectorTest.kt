@@ -1,6 +1,7 @@
 package io.rippledown.cornerstoneview
 
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.TestResult
 import proxy.waitForEvents
 import react.FC
 import react.dom.test.runReactTest
@@ -8,13 +9,13 @@ import kotlin.test.Test
 
 class CornerstoneSelectorTest {
     @Test
-    fun shouldDefaultToFirstCornerstoneIndex() {
+    fun shouldDefaultToFirstCornerstoneIndex(): TestResult {
         val fc = FC {
             CornerstoneSelector {
                 total = 42
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 requireSelectedCornerstoneOneBasedIndex(1)
             }
@@ -22,7 +23,7 @@ class CornerstoneSelectorTest {
     }
 
     @Test
-    fun shouldBeAbleToSelectTheNextCornerstoneIndex() {
+    fun shouldBeAbleToSelectTheNextCornerstoneIndex(): TestResult {
         var selectedZeroBasedIndex = -1
         val fc = FC {
             CornerstoneSelector {
@@ -32,7 +33,7 @@ class CornerstoneSelectorTest {
                 }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 selectNextCornerstone()
                 waitForEvents()
@@ -50,7 +51,7 @@ class CornerstoneSelectorTest {
 
 
     @Test
-    fun shouldBeAbleToSelectThePreviousCornerstoneIndex() {
+    fun shouldBeAbleToSelectThePreviousCornerstoneIndex(): TestResult {
         var selectedZeroBasedIndex = -1
         val fc = FC {
             CornerstoneSelector {
@@ -61,7 +62,7 @@ class CornerstoneSelectorTest {
             }
         }
 
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 selectNextCornerstone()
                 selectNextCornerstone()

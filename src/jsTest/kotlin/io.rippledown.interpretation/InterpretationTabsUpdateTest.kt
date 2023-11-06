@@ -6,6 +6,7 @@ import io.rippledown.model.Interpretation
 import io.rippledown.model.diff.*
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.RuleSummary
+import kotlinx.coroutines.test.TestResult
 import mui.material.Button
 import proxy.findById
 import react.FC
@@ -18,7 +19,7 @@ import kotlin.test.Test
 class InterpretationTabsUpdateTest {
 
     @Test
-    fun shouldUpdateInterpretationWhenInterpretationTextIsChanged() {
+    fun shouldUpdateInterpretationWhenInterpretationTextIsChanged(): TestResult {
         val caseAConclusion = "text for case A"
         val caseBConclusion = "text for case B"
         val i1 = Interpretation().apply { add(RuleSummary(conclusion = Conclusion(1, caseAConclusion))) }
@@ -45,7 +46,7 @@ class InterpretationTabsUpdateTest {
                 }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 //Given
                 requireInterpretation(caseAConclusion)
@@ -60,7 +61,7 @@ class InterpretationTabsUpdateTest {
     }
 
     @Test
-    fun shouldUpdateInterpretationWhenWhenVerifiedTextIsChanged() {
+    fun shouldUpdateInterpretationWhenWhenVerifiedTextIsChanged(): TestResult {
         val caseAConclusion = "text for case A"
         val caseBConclusion = "text for case B"
 
@@ -85,7 +86,7 @@ class InterpretationTabsUpdateTest {
                 }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 //Given
                 requireInterpretation(caseAConclusion)
@@ -100,7 +101,7 @@ class InterpretationTabsUpdateTest {
     }
 
     @Test
-    fun shouldUpdateInterpretationWhenDiffListIsChanged() {
+    fun shouldUpdateInterpretationWhenDiffListIsChanged(): TestResult {
 
         val diffListA = DiffList(listOf(Addition(), Removal()))
         val diffListB = DiffList(listOf(Unchanged(), Replacement(), Unchanged(), Addition()))
@@ -127,7 +128,7 @@ class InterpretationTabsUpdateTest {
                 }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 //Given
                 selectChangesTab()

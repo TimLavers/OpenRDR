@@ -3,6 +3,7 @@ package npm
 import io.kotest.matchers.shouldBe
 import io.rippledown.interpretation.requireBadgeCount
 import io.rippledown.interpretation.requireNoBadge
+import kotlinx.coroutines.test.TestResult
 import mui.material.Badge
 import mui.material.Button
 import mui.material.ButtonProps
@@ -16,13 +17,13 @@ import kotlin.test.Test
 class BadgeWithChildTest {
 
     @Test
-    fun shouldReadBadgeContent() {
+    fun shouldReadBadgeContent(): TestResult {
         val vfc = FC {
             Badge {
                 badgeContent = 42.unsafeCast<ReactNode>()
             }
         }
-        runReactTest(vfc) { container ->
+        return runReactTest(vfc) { container ->
             with(container) {
                 requireBadgeCount(42)
             }
@@ -30,13 +31,13 @@ class BadgeWithChildTest {
     }
 
     @Test
-    fun shouldHideBadgeIfContentIsZero() {
+    fun shouldHideBadgeIfContentIsZero(): TestResult {
         val vfc = FC {
             Badge {
                 badgeContent = 0.unsafeCast<ReactNode>()
             }
         }
-        runReactTest(vfc) { container ->
+        return runReactTest(vfc) { container ->
             with(container) {
                 requireNoBadge()
             }
@@ -44,7 +45,7 @@ class BadgeWithChildTest {
     }
 
     @Test
-    fun shouldRenderChildContent() {
+    fun shouldRenderChildContent(): TestResult {
         var numberOfClicks = 0
         val button = FC<ButtonProps> {
             Button {
@@ -62,7 +63,7 @@ class BadgeWithChildTest {
                 +button
             }
         }
-        runReactTest(vfc) { container ->
+        return runReactTest(vfc) { container ->
             with(container) {
                 val buttonElement = findById("button_id")
                 buttonElement.textContent shouldBe "Go to Bondi"

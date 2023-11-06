@@ -1,14 +1,16 @@
 package io.rippledown.casecontrol
 
-import Api
 import io.rippledown.caseview.requireCaseToBeShowing
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.createCase
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.test.TestResult
+import main.Api
 import mocks.config
 import mocks.mock
 import proxy.requireNumberOfCases
+import proxy.requireNumberOfCasesNotToBeShowing
 import proxy.waitForEvents
 import proxy.waitForNextPoll
 import react.FC
@@ -18,26 +20,7 @@ import kotlin.test.Test
 class CasePollerTest {
 
     @Test
-    fun shouldNotShowCaseListIfThereAreNoCases() {
-        val config = config {
-            returnCasesInfo = CasesInfo(emptyList())
-        }
-        val fc = FC {
-            CasePoller {
-                scope = MainScope()
-                api = Api(mock(config))
-            }
-        }
-        runReactTest(fc) { container ->
-            with(container) {
-                waitForNextPoll()
-                requireNumberOfCases(0)
-            }
-        }
-    }
-
-    @Test
-    fun shouldGetNumberOfCases() {
+    fun shouldGetNumberOfCases(): TestResult {
         val config = config {
             returnCasesInfo = CasesInfo(
                 listOf(
@@ -56,7 +39,7 @@ class CasePollerTest {
             }
         }
 
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 waitForNextPoll()
                 requireNumberOfCases(3)
@@ -65,7 +48,7 @@ class CasePollerTest {
     }
 
     @Test
-    fun shouldNotShowCaseViewWhenThereAreNoMoreCases() {
+    fun shouldNotShowCaseViewWhenThereAreNoMoreCases(): TestResult {
         val config = config {
             val caseId1 = CaseId(1, "case 1")
             val caseId2 = CaseId(2, "case 2")
@@ -87,19 +70,19 @@ class CasePollerTest {
             }
         }
 
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 waitForNextPoll()
                 requireNumberOfCases(3)
                 config.returnCasesInfo = CasesInfo(emptyList())
                 waitForNextPoll()
-                requireNumberOfCases(0)
+                requireCaseSelectorNotToBeShowing()
             }
         }
     }
 
     @Test
-    fun shouldShowNamesOnTheCaseList() {
+    fun shouldShowNamesOnTheCaseList(): TestResult {
         val case1 = "case 1"
         val case2 = "case 2"
         val caseId1 = CaseId(1, case1)
@@ -117,7 +100,7 @@ class CasePollerTest {
                 scope = MainScope()
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 waitForNextPoll()
                 requireNumberOfCases(2)
@@ -128,7 +111,7 @@ class CasePollerTest {
     }
 
     @Test
-    fun shouldShowCaseViewWhenACaseIsSelected() {
+    fun shouldShowCaseViewWhenACaseIsSelected(): TestResult {
         val caseName1 = "case 1"
         val caseName2 = "case 2"
         val caseId1 = CaseId(1, caseName1)
@@ -148,7 +131,7 @@ class CasePollerTest {
                 scope = MainScope()
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 waitForNextPoll()
                 requireNamesToBeShowingOnCaseList(caseName1, caseName2)
@@ -163,7 +146,7 @@ class CasePollerTest {
     }
 
     @Test
-    fun shouldShowNoCasesWhenThereAreNoMoreCases() {
+    fun shouldShowNoCasesWhenThereAreNoMoreCases(): TestResult {
         val caseName = "case 1"
         val caseId = CaseId(1, caseName)
         val caseIds = listOf(caseId)
@@ -178,21 +161,21 @@ class CasePollerTest {
                 scope = MainScope()
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 waitForNextPoll()
                 requireNamesToBeShowingOnCaseList(caseName)
 
                 config.returnCasesInfo = CasesInfo(emptyList())
                 waitForNextPoll()
-                requireNumberOfCases(0)
+                requireNumberOfCasesNotToBeShowing()
             }
         }
     }
 
 
     @Test
-    fun shouldSelectTheFirstCaseWhenTheSelectedCaseHasBeenDeleted() {
+    fun shouldSelectTheFirstCaseWhenTheSelectedCaseHasBeenDeleted(): TestResult {
         val caseName1 = "case 1"
         val caseName2 = "case 2"
         val caseName3 = "case 3"
@@ -211,7 +194,7 @@ class CasePollerTest {
                 scope = MainScope()
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 waitForNextPoll()
                 selectCaseByName(caseName2)
@@ -230,7 +213,7 @@ class CasePollerTest {
     }
 
     @Test
-    fun shouldSelectTheFirstCaseByDefault() {
+    fun shouldSelectTheFirstCaseByDefault(): TestResult {
         val case1 = "case 1"
         val case2 = "case 2"
         val caseId1 = CaseId(1, case1)
@@ -251,7 +234,7 @@ class CasePollerTest {
                 scope = MainScope()
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 waitForNextPoll()
                 requireCaseToBeShowing(case1)

@@ -1,6 +1,7 @@
 package npm
 
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.TestResult
 import mui.material.Button
 import mui.material.TextField
 import proxy.findById
@@ -25,7 +26,7 @@ class DebounceTest {
     val waitMillis = 100L
 
     @Test
-    fun shouldDebounceMouseClicks() {
+    fun shouldDebounceMouseClicks(): TestResult {
         val DebouncedButton = FC<Props> {
             var clicks by useState(0)
 
@@ -50,7 +51,7 @@ class DebounceTest {
             DebouncedButton {
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 requireNumberOfClicks(0)
                 clickButton()
@@ -71,7 +72,7 @@ class DebounceTest {
 
 
     @Test
-    fun shouldDebounceTextViewInput() {
+    fun shouldDebounceTextViewInput(): TestResult {
         val DebouncedTextField = FC<Props> {
             var text by useState("")
 
@@ -96,7 +97,7 @@ class DebounceTest {
             DebouncedTextField {
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 requireText("")
                 enterText("A")

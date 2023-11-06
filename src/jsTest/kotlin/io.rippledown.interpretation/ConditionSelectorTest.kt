@@ -6,6 +6,7 @@ import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.isHigh
 import io.rippledown.model.condition.isLow
 import io.rippledown.model.condition.isNormal
+import kotlinx.coroutines.test.TestResult
 import react.FC
 import react.dom.test.runReactTest
 import kotlin.test.Test
@@ -18,13 +19,13 @@ class ConditionSelectorTest {
     private val threeConditions = listOf(isHigh, isLow, isNormal)
 
     @Test
-    fun shouldListConditionsThatAreHinted() {
+    fun shouldListConditionsThatAreHinted(): TestResult {
         val fc = FC {
             ConditionSelector {
                 conditions = threeConditions
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 requireConditions(threeConditions.map { it.asText() })
             }
@@ -32,7 +33,7 @@ class ConditionSelectorTest {
     }
 
     @Test
-    fun shouldBeAbleToIdentifyTheSelectConditionsWhenDoneIsClicked() {
+    fun shouldBeAbleToIdentifyTheSelectConditionsWhenDoneIsClicked(): TestResult {
         val conditionsThatWereSelected = mutableListOf<Condition>()
         val fc = FC {
             ConditionSelector {
@@ -44,7 +45,7 @@ class ConditionSelectorTest {
                 }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 clickConditionWithIndex(0)
                 clickConditionWithIndex(2)
@@ -55,7 +56,7 @@ class ConditionSelectorTest {
     }
 
     @Test
-    fun shouldBeAbleToIdentifyADeselectedConditionWhenDoneIsClicked() {
+    fun shouldBeAbleToIdentifyADeselectedConditionWhenDoneIsClicked(): TestResult {
         val conditionsThatWereSelected = mutableListOf<Condition>()
         val fc = FC {
             ConditionSelector {
@@ -67,7 +68,7 @@ class ConditionSelectorTest {
                 }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 conditionsThatWereSelected shouldBe emptyList()
                 clickConditionWithIndex(0)
@@ -79,7 +80,7 @@ class ConditionSelectorTest {
     }
 
     @Test
-    fun shouldBeAbleToIdentifyDeselectedConditionsWhenDoneIsClicked() {
+    fun shouldBeAbleToIdentifyDeselectedConditionsWhenDoneIsClicked(): TestResult {
         val conditionsThatWereSelected = mutableListOf<Condition>()
         val fc = FC {
             ConditionSelector {
@@ -91,7 +92,7 @@ class ConditionSelectorTest {
                 }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 clickConditionWithIndex(0)
                 clickConditionWithIndex(2)
@@ -103,7 +104,7 @@ class ConditionSelectorTest {
     }
 
     @Test
-    fun shouldBeAbleToSelectAndDeselectACondition() {
+    fun shouldBeAbleToSelectAndDeselectACondition(): TestResult {
         val fc = FC {
             ConditionSelector {
                 conditions = threeConditions
@@ -113,7 +114,7 @@ class ConditionSelectorTest {
                 }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 requireConditionsToBeSelected(listOf())
                 clickConditionWithIndex(0)
@@ -132,7 +133,7 @@ class ConditionSelectorTest {
     }
 
     @Test
-    fun shouldBeAbleToCancel() {
+    fun shouldBeAbleToCancel(): TestResult {
         var cancelClicked = false
         val fc = FC {
             ConditionSelector {
@@ -144,7 +145,7 @@ class ConditionSelectorTest {
                 }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 clickConditionWithIndex(0)
                 clickCancelButton()
@@ -154,7 +155,7 @@ class ConditionSelectorTest {
     }
 
     @Test
-    fun shouldCallOnDoneWithNoConditions() {
+    fun shouldCallOnDoneWithNoConditions(): TestResult {
         var onDoneCalled = false
         val fc = FC {
             ConditionSelector {
@@ -164,7 +165,7 @@ class ConditionSelectorTest {
                 }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 clickDoneButton()
                 onDoneCalled shouldBe true
@@ -173,7 +174,7 @@ class ConditionSelectorTest {
     }
 
     @Test
-    fun shouldCallOnDoneWithTheSelectedConditions() {
+    fun shouldCallOnDoneWithTheSelectedConditions(): TestResult {
         var selectedConditionsWhenDone = listOf<Condition>()
         val fc = FC {
             ConditionSelector {
@@ -185,7 +186,7 @@ class ConditionSelectorTest {
                 }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 clickConditionWithIndex(0)
                 clickConditionWithIndex(2)
@@ -196,7 +197,7 @@ class ConditionSelectorTest {
     }
 
     @Test
-    fun conditionSelectedShouldBeCalledWhenAConditionIsSelected() {
+    fun conditionSelectedShouldBeCalledWhenAConditionIsSelected(): TestResult {
         var conditionsThatWereSelected = listOf<Condition>()
         val fc = FC {
             ConditionSelector {
@@ -206,7 +207,7 @@ class ConditionSelectorTest {
                 }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 clickConditionWithIndex(0)
                 conditionsThatWereSelected shouldBe listOf(isHigh)
@@ -215,7 +216,7 @@ class ConditionSelectorTest {
     }
 
     @Test
-    fun conditionSelectedShouldIdentifyAllSelectedConditions() {
+    fun conditionSelectedShouldIdentifyAllSelectedConditions(): TestResult {
         var conditionsThatWereSelected = listOf<Condition>()
         val fc = FC {
             ConditionSelector {
@@ -225,7 +226,7 @@ class ConditionSelectorTest {
                 }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 clickConditionWithIndex(0)
                 clickConditionWithIndex(2)
@@ -235,7 +236,7 @@ class ConditionSelectorTest {
     }
 
     @Test
-    fun conditionSelectedShouldBeCalledWhenAConditionIsDeselected() {
+    fun conditionSelectedShouldBeCalledWhenAConditionIsDeselected(): TestResult {
         var conditionsThatWereSelected = listOf<Condition>()
         val fc = FC {
             ConditionSelector {
@@ -245,7 +246,7 @@ class ConditionSelectorTest {
                 }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 clickConditionWithIndex(0)
                 clickConditionWithIndex(0) //deselect

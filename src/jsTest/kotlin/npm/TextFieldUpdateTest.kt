@@ -1,6 +1,7 @@
 package npm
 
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.TestResult
 import mui.material.Button
 import mui.material.TextField
 import proxy.findById
@@ -13,7 +14,7 @@ import kotlin.test.Test
 class TextFieldUpdateTest {
 
     @Test
-    fun shouldShowVerifiedTextThatHasBeenUpdated() {
+    fun shouldShowVerifiedTextThatHasBeenUpdated(): TestResult {
         val bondiText = "Go to Bondi"
         val manlyText = "Go to Manly"
         val buttonId = "button_id"
@@ -34,7 +35,7 @@ class TextFieldUpdateTest {
                 defaultValue = latestText
             }
         }
-        runReactTest(vfc) { container ->
+        return runReactTest(vfc) { container ->
             with(container) {
                 findById(textFieldId).textContent shouldBe bondiText
                 act { findById(buttonId).click() }

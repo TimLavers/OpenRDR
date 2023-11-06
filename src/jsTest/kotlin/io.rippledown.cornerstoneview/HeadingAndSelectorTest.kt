@@ -1,20 +1,21 @@
 package io.rippledown.cornerstoneview
 
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.TestResult
 import react.FC
 import react.dom.test.runReactTest
 import kotlin.test.Test
 
 class HeadingAndSelectorTest {
     @Test
-    fun shouldShowTheSpecifiedCornerstoneName() {
+    fun shouldShowTheSpecifiedCornerstoneName(): TestResult {
         val caseName = "Bondi"
         val fc = FC {
             HeadingAndSelector {
                 name = caseName
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 requireCornerstoneCaseToBeShowing(caseName)
             }
@@ -22,7 +23,7 @@ class HeadingAndSelectorTest {
     }
 
     @Test
-    fun shouldSelectTheNextCornerstoneIndex() {
+    fun shouldSelectTheNextCornerstoneIndex(): TestResult {
         val caseName = "Bondi"
         var selectedIndex = -1
         val fc = FC {
@@ -34,7 +35,7 @@ class HeadingAndSelectorTest {
                 }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 selectNextCornerstone()
                 selectedIndex shouldBe 1
@@ -45,7 +46,7 @@ class HeadingAndSelectorTest {
     }
 
     @Test
-    fun shouldSelectThePreviousCornerstoneIndex() {
+    fun shouldSelectThePreviousCornerstoneIndex(): TestResult {
         val caseName = "Bondi"
         var selectedIndex = -1
         val fc = FC {
@@ -57,7 +58,7 @@ class HeadingAndSelectorTest {
                 }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 (1..30).forEach { selectNextCornerstone() }
                 selectedIndex shouldBe 30

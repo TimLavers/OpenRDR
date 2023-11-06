@@ -2,10 +2,10 @@ package io.rippledown.model.condition.episodic.predicate
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.rippledown.model.*
+import io.rippledown.model.TestResult
 import kotlin.test.Test
 
-class ContainsTest: Base() {
+class ContainsTest : Base() {
     val stuff = "stuff"
     private val contains = Contains(stuff)
 
@@ -27,7 +27,7 @@ class ContainsTest: Base() {
     @Test
     fun equalsTest() {
         Contains("Blah") shouldBe Contains("Blah")
-        Contains("Blah") shouldNotBe  Contains("blah")
+        Contains("Blah") shouldNotBe Contains("blah")
         Contains("Blah") shouldNotBe Contains("")
     }
 

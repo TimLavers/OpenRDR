@@ -1,6 +1,5 @@
 package io.rippledown.casecontrol
 
-import Api
 import io.kotest.assertions.asClue
 import io.kotest.matchers.shouldBe
 import io.rippledown.interpretation.*
@@ -9,6 +8,8 @@ import io.rippledown.model.diff.*
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.test.TestResult
+import main.Api
 import mocks.config
 import mocks.mock
 import proxy.waitForEvents
@@ -19,7 +20,7 @@ import kotlin.test.Test
 class CaseInspectionWhenStartingRuleBuildingTest {
 
     @Test
-    fun shouldCallOnStartRuleWithExpectedInterpretation() {
+    fun shouldCallOnStartRuleWithExpectedInterpretation(): TestResult {
         val bondiComment = "Go to Bondi now!"
         val manlyComment = "Go to Manly now!"
         val beachComment = "Enjoy the beach!"
@@ -53,7 +54,7 @@ class CaseInspectionWhenStartingRuleBuildingTest {
                 }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 //Given
                 { "the first changed diff should be selected by default" }.asClue {

@@ -12,15 +12,15 @@ import org.openqa.selenium.WebDriver
 import java.io.File
 import java.util.concurrent.TimeUnit
 
+
 class KBInfoPO(private val driver: WebDriver) {
 
     fun headingText(): String {
         return headingElement().text!!
     }
 
-    private fun kbName(): String? {
-        val heading = headingText() ?: return null
-        return heading.trim()
+    private fun kbName(): String {
+        return headingText().trim()
     }
 
     fun importKB(exportedFileName: String) {
@@ -52,6 +52,10 @@ class KBInfoPO(private val driver: WebDriver) {
 
     fun requireKbControlsToBeHidden() {
         driver.findElements(By.id(KB_INFO_CONTROLS_ID)) shouldBe emptyList()
+    }
+
+    fun requireKbControlsToBeShown() {
+        driver.findElement(By.id(KB_INFO_CONTROLS_ID)).isDisplayed shouldBe true
     }
 
     private fun headingElement() = driver.findElement(By.id(KB_INFO_HEADING_ID))

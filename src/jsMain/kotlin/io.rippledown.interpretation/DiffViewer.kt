@@ -1,10 +1,11 @@
 package io.rippledown.interpretation
 
-import Handler
-import green
 import io.rippledown.constants.interpretation.*
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.diff.Unchanged
+import main.Handler
+import main.green
+import main.red
 import mui.icons.material.Build
 import mui.material.*
 import mui.material.styles.TypographyVariant.Companion.subtitle2
@@ -12,7 +13,6 @@ import mui.system.sx
 import react.FC
 import react.ReactNode
 import react.useState
-import red
 import web.cssom.Cursor.Companion.pointer
 import web.cssom.px
 

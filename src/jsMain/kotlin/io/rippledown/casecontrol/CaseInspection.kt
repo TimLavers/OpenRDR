@@ -1,6 +1,5 @@
 package io.rippledown.casecontrol
 
-import Handler
 import io.rippledown.caseview.CaseViewMemo
 import io.rippledown.cornerstoneview.CornerstoneView
 import io.rippledown.interpretation.ConditionSelector
@@ -14,11 +13,12 @@ import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import kotlinx.coroutines.launch
+import main.Handler
+import main.xs
 import mui.material.Box
 import mui.material.Grid
 import react.FC
 import react.useState
-import xs
 
 external interface CaseInspectionHandler : Handler {
     var case: ViewableCase
@@ -60,8 +60,6 @@ val CaseInspection = FC<CaseInspectionHandler> { handler ->
                         handler.scope.launch {
                             val sessionStartRequest = SessionStartRequest(caseId, selectedDiff)
                             ccStatus = handler.api.startRuleSession(sessionStartRequest)
-                        }
-                        handler.scope.launch {
                             conditionHints = handler.api.conditionHints(caseId)
                         }
                     }

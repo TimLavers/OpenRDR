@@ -59,7 +59,7 @@ class ConclusionManagerTest {
             val text = "Conclusion $it"
             val conclusion = conclusionManager.getOrCreate(text)
             conclusionManager.getById(conclusion.id) shouldBe conclusion
-            conclusionManager.getById(conclusion.id)!!.text shouldBe text
+            conclusionManager.getById(conclusion.id).text shouldBe text
         }
     }
 

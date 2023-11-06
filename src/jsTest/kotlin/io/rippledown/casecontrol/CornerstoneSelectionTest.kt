@@ -1,6 +1,5 @@
 package io.rippledown.casecontrol
 
-import Api
 import io.rippledown.caseview.requireCaseToBeShowing
 import io.rippledown.cornerstoneview.requireCornerstoneCaseToBeShowing
 import io.rippledown.cornerstoneview.selectNextCornerstone
@@ -16,6 +15,8 @@ import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.rule.CornerstoneStatus
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.test.TestResult
+import main.Api
 import mocks.config
 import mocks.mock
 import proxy.waitForEvents
@@ -27,7 +28,7 @@ class CornerstoneSelectionTest {
 
 
     @Test
-    fun shouldSelectNextAndPreviousCornerstone() {
+    fun shouldSelectNextAndPreviousCornerstone(): TestResult {
         val caseId = 1L
         val caseName = "Manly"
         val cornerstoneName = "Bondi"
@@ -64,7 +65,7 @@ class CornerstoneSelectionTest {
                 ruleSessionInProgress = { _ -> }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 waitForEvents()
                 requireCaseToBeShowing(caseName)

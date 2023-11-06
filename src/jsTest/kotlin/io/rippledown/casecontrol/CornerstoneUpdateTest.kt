@@ -1,6 +1,5 @@
 package io.rippledown.casecontrol
 
-import Api
 import io.rippledown.caseview.requireCaseToBeShowing
 import io.rippledown.cornerstoneview.requireCornerstoneCaseNotToBeShowing
 import io.rippledown.cornerstoneview.requireCornerstoneCaseToBeShowing
@@ -16,6 +15,8 @@ import io.rippledown.model.diff.DiffList
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.test.TestResult
+import main.Api
 import mocks.config
 import mocks.mock
 import proxy.waitForEvents
@@ -26,7 +27,7 @@ import kotlin.test.Test
 class CornerstoneUpdateTest {
 
     @Test
-    fun shouldUpdateCornerstoneStatusWhenAConditionIsSelected() {
+    fun shouldUpdateCornerstoneStatusWhenAConditionIsSelected(): TestResult {
         val caseId = 1L
         val caseName = "Manly"
         val caseIdList = listOf(CaseId(caseId, caseName))
@@ -65,7 +66,7 @@ class CornerstoneUpdateTest {
                 ruleSessionInProgress = { _ -> }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 requireCaseToBeShowing(caseName)
                 //start to build a rule for the Addition

@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.caseview.requireCaseToBeShowing
 import io.rippledown.constants.caseview.CASE_TABLE_ROW_PREFIX
 import io.rippledown.model.*
+import kotlinx.coroutines.test.TestResult
 import mui.material.Button
 import proxy.findAllById
 import proxy.findById
@@ -17,7 +18,7 @@ import kotlin.test.Test
 class CaseInspectionKeyTest {
 
     @Test
-    fun shouldReRenderCaseViewIfAttributesHaveBeenReordered() {
+    fun shouldReRenderCaseViewIfAttributesHaveBeenReordered(): TestResult {
         val bondi = "Bondi"
         val caseId = CaseId(id = 1, name = bondi)
         val a = Attribute(1, "a")
@@ -45,7 +46,7 @@ class CaseInspectionKeyTest {
             }
         }
 
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 //Given
                 requireCaseToBeShowing(bondi)

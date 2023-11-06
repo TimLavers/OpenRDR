@@ -1,6 +1,5 @@
 package io.rippledown.casecontrol
 
-import Api
 import io.rippledown.interpretation.*
 import io.rippledown.model.createCase
 import io.rippledown.model.diff.Addition
@@ -8,6 +7,8 @@ import io.rippledown.model.diff.DiffList
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.test.TestResult
+import main.Api
 import mocks.config
 import mocks.mock
 import proxy.waitForEvents
@@ -18,7 +19,7 @@ import kotlin.test.Test
 class CaseInspectionUpdateTest {
 
     @Test
-    fun shouldUpdateDiffViewAfterARuleIsBuilt() {
+    fun shouldUpdateDiffViewAfterARuleIsBuilt(): TestResult {
         val bondiComment = "Go to Bondi now!"
         val diffList = DiffList(
             listOf(
@@ -48,7 +49,7 @@ class CaseInspectionUpdateTest {
                 ruleSessionInProgress = { _ -> }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 //Given
                 requireBadgeCount(1)

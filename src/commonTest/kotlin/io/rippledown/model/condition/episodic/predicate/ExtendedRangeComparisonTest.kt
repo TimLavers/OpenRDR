@@ -8,7 +8,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 
-class ExtendedRangeComparisonTest: Base() {
+class ExtendedRangeComparisonTest {
     private val erf0 = AllowNormalOrSlightlyHigh(10)
 
     @Test
@@ -73,34 +73,34 @@ class ExtendedRangeComparisonTest: Base() {
     }
 
     @Test
-    fun allowSlightlyHigh(){
+    fun allowSlightlyHigh() {
         val erc = AllowSlightlyHigh(20)
         erc.includeNormalResults() shouldBe false
         serializeDeserialize(erc) shouldBe erc
     }
 
     @Test
-    fun allowNormalsOrSlightlyHigh(){
+    fun allowNormalsOrSlightlyHigh() {
         val erc = AllowNormalOrSlightlyHigh(20)
         erc.includeNormalResults() shouldBe true
         serializeDeserialize(erc) shouldBe erc
     }
 
     @Test
-    fun allowSlightlyLow(){
+    fun allowSlightlyLow() {
         val asl20 = AllowSlightlyLow(20)
         asl20.includeNormalResults() shouldBe false
         serializeDeserialize(asl20) shouldBe asl20
     }
 
     @Test
-    fun allowNormalsOrSlightlyLow(){
+    fun allowNormalsOrSlightlyLow() {
         val erc = AllowNormalOrSlightlyLow(20)
         erc.includeNormalResults() shouldBe true
         serializeDeserialize(erc) shouldBe erc
     }
 
-    fun serializeDeserialize(erc: ExpandedRangeComparison): ExpandedRangeComparison {
+    private fun serializeDeserialize(erc: ExpandedRangeComparison): ExpandedRangeComparison {
         val serialized = Json.encodeToString(erc)
         return Json.decodeFromString(serialized)
     }

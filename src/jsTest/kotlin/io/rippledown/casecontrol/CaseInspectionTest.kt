@@ -1,6 +1,5 @@
 package io.rippledown.casecontrol
 
-import Api
 import io.kotest.matchers.shouldBe
 import io.rippledown.caseview.requireCaseToBeShowing
 import io.rippledown.cornerstoneview.requireCornerstoneCaseNotToBeShowing
@@ -18,6 +17,8 @@ import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.test.TestResult
+import main.Api
 import mocks.config
 import mocks.mock
 import proxy.waitForEvents
@@ -26,9 +27,8 @@ import react.dom.test.runReactTest
 import kotlin.test.Test
 
 class CaseInspectionTest {
-
     @Test
-    fun shouldShowCaseView() {
+    fun shouldShowCaseView(): TestResult {
         val caseName = "case a"
         val caseId = CaseId(id = 1, name = caseName)
         val currentCase = createCase(caseId)
@@ -39,7 +39,7 @@ class CaseInspectionTest {
             }
         }
 
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 requireCaseToBeShowing(caseName)
             }
@@ -47,7 +47,7 @@ class CaseInspectionTest {
     }
 
     @Test
-    fun shouldShowInterpretation() {
+    fun shouldShowInterpretation(): TestResult {
         val text = "Go to Bondi now!"
         val rdrCase = createCase(name = "case a", id = 1L)
         rdrCase.viewableInterpretation.textGivenByRules = text
@@ -56,14 +56,14 @@ class CaseInspectionTest {
                 case = rdrCase
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             container.requireInterpretation(text)
         }
     }
 
 
     @Test
-    fun shouldCallRuleSessionInProgressWhenRuleIsStarted() {
+    fun shouldCallRuleSessionInProgressWhenRuleIsStarted(): TestResult {
         val diffList = DiffList(listOf(Addition("Go to Bondi now!")))
         val currentCase = createCaseWithInterpretation(
             name = "Bondi",
@@ -81,7 +81,7 @@ class CaseInspectionTest {
                 }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 //Given
                 requireCaseToBeShowing("Bondi")
@@ -100,7 +100,7 @@ class CaseInspectionTest {
     }
 
     @Test
-    fun shouldShowConditionSelectorWhenRuleIsStarted() {
+    fun shouldShowConditionSelectorWhenRuleIsStarted(): TestResult {
         val diffList = DiffList(listOf(Addition("Go to Bondi now!")))
         val currentCase = createCaseWithInterpretation(
             name = "Bondi",
@@ -115,7 +115,7 @@ class CaseInspectionTest {
                 scope = MainScope()
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 //Given
                 requireCaseToBeShowing("Bondi")
@@ -134,7 +134,7 @@ class CaseInspectionTest {
     }
 
     @Test
-    fun shouldCallConditionHintsApiWhenRuleIsStarted() {
+    fun shouldCallConditionHintsApiWhenRuleIsStarted(): TestResult {
         val diffList = DiffList(listOf(Addition("Go to Bondi now!")))
         val currentCase = createCaseWithInterpretation(
             name = "Bondi",
@@ -152,7 +152,7 @@ class CaseInspectionTest {
                 scope = MainScope()
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 //Given
                 requireCaseToBeShowing("Bondi")
@@ -170,7 +170,7 @@ class CaseInspectionTest {
     }
 
     @Test
-    fun shouldCallStartRuleSessionApiWhenRuleIsStarted() {
+    fun shouldCallStartRuleSessionApiWhenRuleIsStarted(): TestResult {
         val caseId = 45L
         val diffList = DiffList(listOf(Addition("Go to Bondi now!")))
         val currentCase = createCaseWithInterpretation(
@@ -190,7 +190,7 @@ class CaseInspectionTest {
                 scope = MainScope()
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 //Given
                 requireCaseToBeShowing("Bondi")
@@ -208,7 +208,7 @@ class CaseInspectionTest {
     }
 
     @Test
-    fun shouldShowCornerstoneWhenRuleSessionIsStarted() {
+    fun shouldShowCornerstoneWhenRuleSessionIsStarted(): TestResult {
         val caseId = 1L
         val cornerstoneId = 2L
         val caseName = "Manly"
@@ -241,7 +241,7 @@ class CaseInspectionTest {
                 ruleSessionInProgress = { _ -> }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 //Given
                 requireCaseToBeShowing(caseName)
@@ -259,7 +259,7 @@ class CaseInspectionTest {
     }
 
     @Test
-    fun shouldNotShowCornerstoneWhenRuleSessionIsFinished() {
+    fun shouldNotShowCornerstoneWhenRuleSessionIsFinished(): TestResult {
         val caseId = 1L
         val cornerstoneId = 2L
         val caseName = "Manly"
@@ -293,7 +293,7 @@ class CaseInspectionTest {
                 updateCase = { _ -> }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 //Given
                 requireCaseToBeShowing(caseName)
@@ -314,7 +314,7 @@ class CaseInspectionTest {
     }
 
     @Test
-    fun shouldCallBuildRuleWhenDoneButtonIsClickedOnConditionSelector() {
+    fun shouldCallBuildRuleWhenDoneButtonIsClickedOnConditionSelector(): TestResult {
         val diffList = DiffList(listOf(Addition("Go to Bondi now!")))
         val currentCase = createCaseWithInterpretation(
             name = "Bondi",
@@ -344,7 +344,7 @@ class CaseInspectionTest {
                 scope = MainScope()
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 //Given
                 requireCaseToBeShowing("Bondi")

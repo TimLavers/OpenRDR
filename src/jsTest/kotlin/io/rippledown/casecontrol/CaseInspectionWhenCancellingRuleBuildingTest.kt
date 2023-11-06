@@ -1,6 +1,5 @@
 package io.rippledown.casecontrol
 
-import Api
 import io.kotest.matchers.shouldBe
 import io.rippledown.interpretation.clickCancelButton
 import io.rippledown.interpretation.requireBadgeCount
@@ -11,6 +10,8 @@ import io.rippledown.model.diff.DiffList
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.test.TestResult
+import main.Api
 import mocks.config
 import mocks.mock
 import react.FC
@@ -20,7 +21,7 @@ import kotlin.test.Test
 class CaseInspectionWhenCancellingRuleBuildingTest {
 
     @Test
-    fun RuleSessionShouldNotBeInProgressIfTheRuleIsCancelled() {
+    fun RuleSessionShouldNotBeInProgressIfTheRuleIsCancelled(): TestResult {
         val bondiComment = "Go to Bondi now!"
         val diffList = DiffList(
             listOf(
@@ -49,7 +50,7 @@ class CaseInspectionWhenCancellingRuleBuildingTest {
                 }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 //Given a rule building session is in progress
                 requireBadgeCount(1)

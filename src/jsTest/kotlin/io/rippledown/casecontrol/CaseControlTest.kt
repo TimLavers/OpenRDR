@@ -1,6 +1,5 @@
 package io.rippledown.casecontrol
 
-import Api
 import io.kotest.matchers.shouldBe
 import io.rippledown.caseview.requireCaseToBeShowing
 import io.rippledown.constants.caseview.CASE_NAME_PREFIX
@@ -13,6 +12,8 @@ import io.rippledown.model.condition.hasCurrentValue
 import io.rippledown.model.diff.*
 import io.rippledown.model.rule.CornerstoneStatus
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.test.TestResult
+import main.Api
 import mocks.config
 import mocks.mock
 import proxy.findAllById
@@ -25,7 +26,7 @@ import kotlin.test.Test
 class CaseControlTest {
 
     @Test
-    fun shouldListCaseNames() {
+    fun shouldListCaseNames(): TestResult {
         val caseA = "case a"
         val caseB = "case b"
         val caseId1 = CaseId(id = 1, name = caseA)
@@ -47,7 +48,7 @@ class CaseControlTest {
             }
         }
 
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 findAllById(CASE_NAME_PREFIX).length shouldBe 2
                 val elementA = findById("$CASE_NAME_PREFIX${caseId1.name}")
@@ -59,7 +60,7 @@ class CaseControlTest {
     }
 
     @Test
-    fun shouldSelectACaseIdWhenCaseNameClicked() {
+    fun shouldSelectACaseIdWhenCaseNameClicked(): TestResult {
         val caseA = "case A"
         val caseB = "case B"
         val caseC = "case C"
@@ -80,7 +81,7 @@ class CaseControlTest {
             }
         }
         config.returnCase = createCase(caseB, 2)
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 selectCaseByName(caseB)
                 requireCaseToBeShowing(caseB)
@@ -89,7 +90,7 @@ class CaseControlTest {
     }
 
     @Test
-    fun shouldShowCaseViewForTheFirstCase() {
+    fun shouldShowCaseViewForTheFirstCase(): TestResult {
         val caseName1 = "case 1"
         val caseName2 = "case 2"
         val caseId1 = CaseId(1, caseName1)
@@ -110,7 +111,7 @@ class CaseControlTest {
                 ruleSessionInProgress = { _ -> }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 requireCaseToBeShowing(caseName1)
             }
@@ -118,7 +119,7 @@ class CaseControlTest {
     }
 
     @Test
-    fun shouldShowCaseListForManyCases() {
+    fun shouldShowCaseListForManyCases(): TestResult {
 
         val caseIds = (1..100).map { i ->
             CaseId(id = i.toLong(), name = "case $i")
@@ -138,7 +139,7 @@ class CaseControlTest {
                 ruleSessionInProgress = { _ -> }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 selectCaseByName(caseName100)
                 requireCaseToBeShowing(caseName100)
@@ -147,7 +148,7 @@ class CaseControlTest {
     }
 
     @Test
-    fun shouldNotShowCornerstoneViewIfNoCornerstone() {
+    fun shouldNotShowCornerstoneViewIfNoCornerstone(): TestResult {
         val id = 1L
         val caseName = "Bondi"
         val caseIdList = listOf(CaseId(id, caseName))
@@ -176,7 +177,7 @@ class CaseControlTest {
                 ruleSessionInProgress = { _ -> }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 waitForEvents()
                 requireCaseToBeShowing(caseName)
@@ -194,7 +195,7 @@ class CaseControlTest {
     }
 
     @Test
-    fun shouldShowConditionHintsWhenRuleSessionIsStarted() {
+    fun shouldShowConditionHintsWhenRuleSessionIsStarted(): TestResult {
         val caseId = 45L
         val caseName = "Bondi"
         val caseIdList = listOf(CaseId(caseId, caseName))
@@ -228,7 +229,7 @@ class CaseControlTest {
                 ruleSessionInProgress = { _ -> }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 //Given
                 waitForEvents()
@@ -254,7 +255,7 @@ class CaseControlTest {
     }
 
     @Test
-    fun shouldCancelConditionSelector() {
+    fun shouldCancelConditionSelector(): TestResult {
         val caseName = "Bondi"
         val caseId = 45L
         val caseIdList = listOf(CaseId(caseId, caseName))
@@ -289,7 +290,7 @@ class CaseControlTest {
                 ruleSessionInProgress = { _ -> }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 waitForEvents()
                 requireCaseToBeShowing(caseName)
@@ -310,7 +311,7 @@ class CaseControlTest {
     }
 
     @Test
-    fun shouldShowCornerstoneWhenBuildingARule() {
+    fun shouldShowCornerstoneWhenBuildingARule(): TestResult {
         val caseId = 1L
         val cornerstoneId = 2L
         val caseName = "Manly"
@@ -346,7 +347,7 @@ class CaseControlTest {
                 ruleSessionInProgress = { _ -> }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 waitForEvents()
                 requireCaseToBeShowing(caseName)
@@ -363,7 +364,7 @@ class CaseControlTest {
     }
 
     @Test
-    fun shouldNotShowCornerstoneAfterBuildingARule() {
+    fun shouldNotShowCornerstoneAfterBuildingARule(): TestResult {
         val caseId = 1L
         val cornerstoneId = 2L
         val caseName = "Manly"
@@ -399,7 +400,7 @@ class CaseControlTest {
                 ruleSessionInProgress = { _ -> }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 //Given
                 waitForEvents()
@@ -425,7 +426,7 @@ class CaseControlTest {
     }
 
     @Test
-    fun shouldNotShowCornerstoneAfterCancellingARuleBuildingSession() {
+    fun shouldNotShowCornerstoneAfterCancellingARuleBuildingSession(): TestResult {
         val caseId = 1L
         val cornerstoneId = 2L
         val caseName = "Manly"
@@ -461,7 +462,7 @@ class CaseControlTest {
                 ruleSessionInProgress = { _ -> }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 //Given
                 waitForEvents()
@@ -486,7 +487,7 @@ class CaseControlTest {
     }
 
     @Test
-    fun shouldNotShowCaseSelectorWhenBuildingARule() {
+    fun shouldNotShowCaseSelectorWhenBuildingARule(): TestResult {
         val caseId = 1L
         val cornerstoneId = 2L
         val caseName = "Manly"
@@ -522,7 +523,7 @@ class CaseControlTest {
                 ruleSessionInProgress = { _ -> }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 //Given
                 waitForEvents()
@@ -549,7 +550,7 @@ class CaseControlTest {
     }
 
     @Test
-    fun shoulCallHandlerMethodWhenStartingToBuildARule() {
+    fun shoulCallHandlerMethodWhenStartingToBuildARule(): TestResult {
         val caseId = 1L
         val caseName = "Manly"
         val caseIdList = listOf(CaseId(caseId, caseName))
@@ -580,7 +581,7 @@ class CaseControlTest {
                 }
             }
         }
-        runReactTest(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 //Given
                 isInProgress shouldBe false
