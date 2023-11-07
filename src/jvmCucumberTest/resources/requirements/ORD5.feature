@@ -224,13 +224,11 @@ Feature: Building rules
       | Manly |
     And stop the client application
 
-  @single
   Scenario: The import and export controls should be hidden when building a rule
     Given a new case with the name Case1 is stored on the server
     And I start the client application
     And I enter the text "Go to Bondi." in the interpretation field
     And I select the changes tab
-    And pause
     When I start to build a rule for the change on row 0
     Then the KB import and export controls should be hidden
     And the count of the number of cases should be hidden
