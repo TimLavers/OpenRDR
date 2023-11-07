@@ -51,7 +51,7 @@ class KBInfoPO(private val driver: WebDriver) {
     }
 
     fun requireKbControlsToBeHidden() {
-        driver.findElements(By.id(KB_INFO_CONTROLS_ID)) shouldBe emptyList()
+        driver.findElement(By.id(KB_INFO_CONTROLS_ID)).isDisplayed shouldBe false
     }
 
     fun requireKbControlsToBeShown() {
