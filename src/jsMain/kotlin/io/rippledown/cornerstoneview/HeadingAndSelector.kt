@@ -1,14 +1,14 @@
 package io.rippledown.cornerstoneview
 
-import Handler
 import io.rippledown.constants.caseview.CASEVIEW_CORNERSTONE_CASE_NAME_ID
+import main.Handler
+import main.px8
 import mui.material.Stack
 import mui.material.StackDirection.Companion.row
 import mui.material.Typography
 import mui.material.styles.TypographyVariant.Companion.subtitle2
 import mui.system.responsive
 import mui.system.sx
-import px8
 import react.FC
 import web.cssom.AlignItems.Companion.center
 import web.cssom.px

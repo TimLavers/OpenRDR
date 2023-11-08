@@ -6,11 +6,10 @@ import io.rippledown.model.Interpretation
 import io.rippledown.model.condition.containsText
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.RuleSummary
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.TestResult
 import proxy.waitForEvents
 import react.FC
-import react.dom.checkContainer
-import react.dom.createRootFor
+import react.dom.test.runReactTest
 import kotlin.test.Test
 
 
@@ -43,8 +42,9 @@ class ConclusionsViewTest {
     }
 
     @Test
-    fun shouldShowConclusions() = runTest {
-        checkContainer(wrapper(comment1, comment2)) { container ->
+    fun shouldShowConclusions(): TestResult {
+        val fc = wrapper(comment1, comment2)
+        return runReactTest(fc) { container ->
             with(container) {
                 requireTreeItemCount(2)
                 requireTreeItems(
@@ -56,27 +56,30 @@ class ConclusionsViewTest {
     }
 
     @Test
-    fun shouldShowConditions() = runTest {
-        with(createRootFor(wrapper(comment1, comment2))) {
-            clickComment(comment1)
-            waitForEvents()
-            requireTreeItemCount(4)
-            requireTreeItems(
-                comment1,
-                "Sun contains \"is shining 0\"",
-                "Surf contains \"is great 0\"",
-                comment2
-            )
-            clickComment(comment2)
-            requireTreeItemCount(6)
-            requireTreeItems(
-                comment1,
-                "Sun contains \"is shining 0\"",
-                "Surf contains \"is great 0\"",
-                comment2,
-                "Sun contains \"is shining 1\"",
-                "Surf contains \"is great 1\"",
-            )
+    fun shouldShowConditions(): TestResult {
+        val fc = wrapper(comment1, comment2)
+        return runReactTest(fc) { container ->
+            with(container) {
+                clickComment(comment1)
+                waitForEvents()
+                requireTreeItemCount(4)
+                requireTreeItems(
+                    comment1,
+                    "Sun contains \"is shining 0\"",
+                    "Surf contains \"is great 0\"",
+                    comment2
+                )
+                clickComment(comment2)
+                requireTreeItemCount(6)
+                requireTreeItems(
+                    comment1,
+                    "Sun contains \"is shining 0\"",
+                    "Surf contains \"is great 0\"",
+                    comment2,
+                    "Sun contains \"is shining 1\"",
+                    "Surf contains \"is great 1\"",
+                )
+            }
         }
     }
 }

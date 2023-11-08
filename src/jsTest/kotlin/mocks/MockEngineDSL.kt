@@ -19,6 +19,7 @@ import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import main.debug
 
 fun mock(config: EngineConfig) = EngineBuilder(config).build()
 
@@ -181,6 +182,7 @@ private class EngineBuilder(private val config: EngineConfig) {
             }
 
             CONDITION_HINTS -> {
+                debug("CONDITION_HINTS, will return ${config.returnConditionList}")
                 if (config.expectedCaseId != null) request.url.parameters["id"] shouldBe config.expectedCaseId.toString()
                 respond(
                     content = ByteReadChannel(

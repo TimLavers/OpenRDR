@@ -1,6 +1,5 @@
 package io.rippledown.interpretation
 
-import Handler
 import io.rippledown.constants.interpretation.INTERPRETATION_CHANGES_BADGE
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CONCLUSIONS
@@ -8,6 +7,7 @@ import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import kotlinx.coroutines.launch
+import main.Handler
 import mui.lab.TabContext
 import mui.lab.TabPanel
 import mui.material.*

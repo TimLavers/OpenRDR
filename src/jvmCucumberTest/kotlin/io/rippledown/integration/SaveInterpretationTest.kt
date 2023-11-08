@@ -6,9 +6,10 @@ import io.rippledown.integration.pageobjects.CaseQueuePO
 import io.rippledown.integration.pageobjects.InterpretationViewPO
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
+import kotlin.test.Test
 
 // ORD2
-internal class SaveInterpretationTest : io.rippledown.integration.UITestBase() {
+internal class SaveInterpretationTest : UITestBase() {
 
     private lateinit var caseQueuePO: CaseQueuePO
     private lateinit var caseListPO: CaseListPO
@@ -31,7 +32,7 @@ internal class SaveInterpretationTest : io.rippledown.integration.UITestBase() {
         serverProxy.shutdown()
     }
 
-//    @Test
+    @Test
     fun setInterpretationForCase() {
         // Check that Case1, Case2 and Case3 are listed.
         caseListPO.casesListed() shouldBe listOf("Case1", "Case2", "Case3")

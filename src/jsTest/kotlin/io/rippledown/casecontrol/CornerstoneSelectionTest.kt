@@ -1,6 +1,5 @@
 package io.rippledown.casecontrol
 
-import Api
 import io.rippledown.caseview.requireCaseToBeShowing
 import io.rippledown.cornerstoneview.requireCornerstoneCaseToBeShowing
 import io.rippledown.cornerstoneview.selectNextCornerstone
@@ -15,19 +14,21 @@ import io.rippledown.model.createCaseWithInterpretation
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.rule.CornerstoneStatus
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.test.TestResult
+import main.Api
 import mocks.config
 import mocks.mock
 import proxy.waitForEvents
 import react.FC
-import react.dom.createRootFor
+import react.dom.test.runReactTest
 import kotlin.test.Test
 
 class CornerstoneSelectionTest {
 
 
     @Test
-    fun shouldSelectNextAndPreviousCornerstone() = runTest {
+    fun shouldSelectNextAndPreviousCornerstone(): TestResult {
         val caseId = 1L
         val caseName = "Manly"
         val cornerstoneName = "Bondi"
@@ -60,28 +61,31 @@ class CornerstoneSelectionTest {
             CaseControl {
                 caseIds = caseIdList
                 api = Api(mock(config))
-                scope = this@runTest
+                scope = MainScope()
+                ruleSessionInProgress = { _ -> }
             }
         }
-        with(createRootFor(fc)) {
-            waitForEvents()
-            requireCaseToBeShowing(caseName)
-            //start to build a rule for the Addition
-            selectChangesTab()
-            waitForEvents()
-            requireNumberOfRows(1)
-            moveMouseOverRow(0)
-            waitForEvents()
-            clickBuildIconForRow(0)
-            requireCornerstoneCaseToBeShowing(cornerstones[0].name)
+        return runReactTest(fc) { container ->
+            with(container) {
+                waitForEvents()
+                requireCaseToBeShowing(caseName)
+                //start to build a rule for the Addition
+                selectChangesTab()
+                waitForEvents()
+                requireNumberOfRows(1)
+                moveMouseOverRow(0)
+                waitForEvents()
+                clickBuildIconForRow(0)
+                requireCornerstoneCaseToBeShowing(cornerstones[0].name)
 
-            config.returnCornerstoneStatus = CornerstoneStatus(cornerstones[1], 1, numberOfCornerstones)
-            selectNextCornerstone()
-            requireCornerstoneCaseToBeShowing(cornerstones[1].name)
+                config.returnCornerstoneStatus = CornerstoneStatus(cornerstones[1], 1, numberOfCornerstones)
+                selectNextCornerstone()
+                requireCornerstoneCaseToBeShowing(cornerstones[1].name)
 
-            config.returnCornerstoneStatus = CornerstoneStatus(cornerstones[0], 0, numberOfCornerstones)
-            selectPreviousCornerstone()
-            requireCornerstoneCaseToBeShowing(cornerstones[0].name)
+                config.returnCornerstoneStatus = CornerstoneStatus(cornerstones[0], 0, numberOfCornerstones)
+                selectPreviousCornerstone()
+                requireCornerstoneCaseToBeShowing(cornerstones[0].name)
+            }
         }
     }
 }

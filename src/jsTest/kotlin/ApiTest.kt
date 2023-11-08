@@ -9,6 +9,7 @@ import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import kotlinx.coroutines.test.runTest
+import main.Api
 import mocks.config
 import mocks.mock
 import kotlin.test.Test

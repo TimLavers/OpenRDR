@@ -1,6 +1,5 @@
 package io.rippledown.casecontrol
 
-import Api
 import io.rippledown.caseview.requireCaseToBeShowing
 import io.rippledown.interpretation.*
 import io.rippledown.model.Attribute
@@ -12,18 +11,20 @@ import io.rippledown.model.createCaseWithInterpretation
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.rule.CornerstoneStatus
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.test.TestResult
+import main.Api
 import mocks.config
 import mocks.mock
 import proxy.waitForEvents
 import react.FC
-import react.dom.createRootFor
+import react.dom.test.runReactTest
 import kotlin.test.Test
 
 class ConditionSelectionWhenShowingCornerstoneTest {
 
     @Test
-    fun shouldUpdateCornerstoneStatusWhenAConditionIsSelected() = runTest {
+    fun shouldUpdateCornerstoneStatusWhenAConditionIsSelected(): TestResult {
         val caseId = 1L
         val caseName = "Manly"
         val caseIdList = listOf(CaseId(caseId, caseName))
@@ -53,32 +54,32 @@ class ConditionSelectionWhenShowingCornerstoneTest {
             CaseControl {
                 caseIds = caseIdList
                 api = Api(mock(config))
-                scope = this@runTest
+                scope = MainScope()
+                ruleSessionInProgress = { _ -> }
             }
         }
-        with(createRootFor(fc)) {
-            waitForEvents()
-            requireCaseToBeShowing(caseName)
-            //start to build a rule for the Addition
-            selectChangesTab()
-            waitForEvents()
-            requireNumberOfRows(1)
-            moveMouseOverRow(0)
-            waitForEvents()
-            clickBuildIconForRow(0)
-            requireConditionsToBeNotSelected(listOf(condition1.asText(), condition2.asText()))
+        return runReactTest(fc) { container ->
+            with(container) {
+                //Given
+                requireCaseToBeShowing(caseName)
+                //start to build a rule for the Addition
+                selectChangesTab()
+                requireNumberOfRows(1)
+                moveMouseOverRow(0)
+                clickBuildIconForRow(0)
+                requireConditionsToBeNotSelected(listOf(condition1.asText(), condition2.asText()))
 
-            clickConditionWithIndex(0)
-            waitForEvents()
-            requireConditionsToBeSelected(listOf(condition1.asText()))
-            requireConditionsToBeNotSelected(listOf(condition2.asText()))
+                clickConditionWithIndex(0)
+                requireConditionsToBeSelected(listOf(condition1.asText()))
+                requireConditionsToBeNotSelected(listOf(condition2.asText()))
 
-            //deselect
-            clickConditionWithIndex(0)
-            waitForEvents()
-            requireConditionsToBeNotSelected(listOf(condition1.asText(), condition2.asText()))
+                //deselect
+                clickConditionWithIndex(0)
+                waitForEvents()
+                requireConditionsToBeNotSelected(listOf(condition1.asText(), condition2.asText()))
+
+                //TODO test that the cornerstone status is updated
+            }
         }
     }
-
-
 }

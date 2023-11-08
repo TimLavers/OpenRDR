@@ -1,6 +1,6 @@
 package io.rippledown.cornerstoneview
 
-import Handler
+import main.Handler
 import mui.material.Pagination
 import mui.material.PaginationColor.Companion.secondary
 import mui.material.Size.small

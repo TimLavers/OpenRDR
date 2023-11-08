@@ -1,16 +1,16 @@
 package io.rippledown.cornerstoneview
 
-import Handler
 import io.rippledown.caseview.CaseTable
 import io.rippledown.constants.interpretation.CORNERSTONE_VIEW_CONTAINER
 import io.rippledown.constants.interpretation.EMPTY_CORNERSTONE_VIEW_CONTAINER
 import io.rippledown.constants.interpretation.NO_CORNERSTONES_TO_REVIEW
 import io.rippledown.interpretation.InterpretationTabs
 import io.rippledown.model.rule.CornerstoneStatus
+import main.Handler
+import main.px12
 import mui.material.Stack
 import mui.material.Typography
 import mui.system.sx
-import px12
 import react.FC
 import web.cssom.pct
 

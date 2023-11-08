@@ -1,6 +1,5 @@
 package io.rippledown.casecontrol
 
-import Api
 import io.kotest.matchers.shouldBe
 import io.rippledown.caseview.requireCaseToBeShowing
 import io.rippledown.cornerstoneview.requireCornerstoneCaseNotToBeShowing
@@ -17,20 +16,19 @@ import io.rippledown.model.diff.DiffList
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.test.TestResult
-import kotlinx.coroutines.test.runTest
+import main.Api
 import mocks.config
 import mocks.mock
 import proxy.waitForEvents
 import react.FC
-import react.dom.checkContainer
-import react.dom.createRootFor
+import react.dom.test.runReactTest
 import kotlin.test.Test
 
 class CaseInspectionTest {
-
     @Test
-    fun shouldShowCaseView() = runTest {
+    fun shouldShowCaseView(): TestResult {
         val caseName = "case a"
         val caseId = CaseId(id = 1, name = caseName)
         val currentCase = createCase(caseId)
@@ -41,7 +39,7 @@ class CaseInspectionTest {
             }
         }
 
-        checkContainer(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 requireCaseToBeShowing(caseName)
             }
@@ -49,7 +47,7 @@ class CaseInspectionTest {
     }
 
     @Test
-    fun shouldShowInterpretation() = runTest {
+    fun shouldShowInterpretation(): TestResult {
         val text = "Go to Bondi now!"
         val rdrCase = createCase(name = "case a", id = 1L)
         rdrCase.viewableInterpretation.textGivenByRules = text
@@ -58,12 +56,14 @@ class CaseInspectionTest {
                 case = rdrCase
             }
         }
-        createRootFor(fc).requireInterpretation(text)
+        return runReactTest(fc) { container ->
+            container.requireInterpretation(text)
+        }
     }
 
 
     @Test
-    fun shouldCallRuleSessionInProgressWhenRuleIsStarted() = runTest {
+    fun shouldCallRuleSessionInProgressWhenRuleIsStarted(): TestResult {
         val diffList = DiffList(listOf(Addition("Go to Bondi now!")))
         val currentCase = createCaseWithInterpretation(
             name = "Bondi",
@@ -75,30 +75,32 @@ class CaseInspectionTest {
             CaseInspection {
                 case = currentCase
                 api = Api(mock(config {}))
-                scope = this@runTest
+                scope = MainScope()
                 ruleSessionInProgress = { started ->
                     inProgress = started
                 }
             }
         }
-        with(createRootFor(fc)) {
-            //Given
-            requireCaseToBeShowing("Bondi")
-            selectChangesTab()
-            requireNumberOfRows(1)
-            moveMouseOverRow(0)
-            inProgress shouldBe false
+        return runReactTest(fc) { container ->
+            with(container) {
+                //Given
+                requireCaseToBeShowing("Bondi")
+                selectChangesTab()
+                requireNumberOfRows(1)
+                moveMouseOverRow(0)
+                inProgress shouldBe false
 
-            //When
-            clickBuildIconForRow(0)
+                //When
+                clickBuildIconForRow(0)
 
-            //Then
-            inProgress shouldBe true
+                //Then
+                inProgress shouldBe true
+            }
         }
     }
 
     @Test
-    fun shouldShowConditionSelectorWhenRuleIsStarted() = runTest {
+    fun shouldShowConditionSelectorWhenRuleIsStarted(): TestResult {
         val diffList = DiffList(listOf(Addition("Go to Bondi now!")))
         val currentCase = createCaseWithInterpretation(
             name = "Bondi",
@@ -110,27 +112,29 @@ class CaseInspectionTest {
                 case = currentCase
                 ruleSessionInProgress = { _ -> }
                 api = Api(mock(config {}))
-                scope = this@runTest
+                scope = MainScope()
             }
         }
-        with(createRootFor(fc)) {
-            //Given
-            requireCaseToBeShowing("Bondi")
-            selectChangesTab()
-            requireNumberOfRows(1)
-            moveMouseOverRow(0)
-            requireDoneButtonNotShowing()
+        return runReactTest(fc) { container ->
+            with(container) {
+                //Given
+                requireCaseToBeShowing("Bondi")
+                selectChangesTab()
+                requireNumberOfRows(1)
+                moveMouseOverRow(0)
+                requireDoneButtonNotShowing()
 
-            //When
-            clickBuildIconForRow(0)
+                //When
+                clickBuildIconForRow(0)
 
-            //Then
-            requireDoneButtonShowing()
+                //Then
+                requireDoneButtonShowing()
+            }
         }
     }
 
     @Test
-    fun shouldCallConditionHintsApiWhenRuleIsStarted() = runTest {
+    fun shouldCallConditionHintsApiWhenRuleIsStarted(): TestResult {
         val diffList = DiffList(listOf(Addition("Go to Bondi now!")))
         val currentCase = createCaseWithInterpretation(
             name = "Bondi",
@@ -145,47 +149,49 @@ class CaseInspectionTest {
                 case = currentCase
                 ruleSessionInProgress = { _ -> }
                 api = Api(mock(config))
-                scope = this@runTest
+                scope = MainScope()
             }
         }
-        with(createRootFor(fc)) {
-            //Given
-            requireCaseToBeShowing("Bondi")
-            selectChangesTab()
-            requireNumberOfRows(1)
-            moveMouseOverRow(0)
+        return runReactTest(fc) { container ->
+            with(container) {
+                //Given
+                requireCaseToBeShowing("Bondi")
+                selectChangesTab()
+                requireNumberOfRows(1)
+                moveMouseOverRow(0)
 
-            //When
-            clickBuildIconForRow(0)
+                //When
+                clickBuildIconForRow(0)
 
-            //Then
-            //Assertion for expected case id is in the mock config
+                //Then
+                //Assertion for expected case id is in the mock config
+            }
         }
     }
 
     @Test
     fun shouldCallStartRuleSessionApiWhenRuleIsStarted(): TestResult {
         val caseId = 45L
-        return runTest {
-            val diffList = DiffList(listOf(Addition("Go to Bondi now!")))
-            val currentCase = createCaseWithInterpretation(
-                name = "Bondi",
-                id = caseId,
-                diffs = diffList
-            )
-            val config = config {
-                expectedCaseId = currentCase.id
-                expectedSessionStartRequest = SessionStartRequest(caseId, diffList.diffs[0])
+        val diffList = DiffList(listOf(Addition("Go to Bondi now!")))
+        val currentCase = createCaseWithInterpretation(
+            name = "Bondi",
+            id = caseId,
+            diffs = diffList
+        )
+        val config = config {
+            expectedCaseId = currentCase.id
+            expectedSessionStartRequest = SessionStartRequest(caseId, diffList.diffs[0])
+        }
+        val fc = FC {
+            CaseInspection {
+                case = currentCase
+                ruleSessionInProgress = { _ -> }
+                api = Api(mock(config))
+                scope = MainScope()
             }
-            val fc = FC {
-                CaseInspection {
-                    case = currentCase
-                    ruleSessionInProgress = { _ -> }
-                    api = Api(mock(config))
-                    scope = this@runTest
-                }
-            }
-            with(createRootFor(fc)) {
+        }
+        return runReactTest(fc) { container ->
+            with(container) {
                 //Given
                 requireCaseToBeShowing("Bondi")
                 selectChangesTab()
@@ -202,7 +208,7 @@ class CaseInspectionTest {
     }
 
     @Test
-    fun shouldShowCornerstoneWhenRuleSessionIsStarted() = runTest {
+    fun shouldShowCornerstoneWhenRuleSessionIsStarted(): TestResult {
         val caseId = 1L
         val cornerstoneId = 2L
         val caseName = "Manly"
@@ -231,27 +237,29 @@ class CaseInspectionTest {
             CaseInspection {
                 case = currentCase
                 api = Api(mock(config))
-                scope = this@runTest
+                scope = MainScope()
                 ruleSessionInProgress = { _ -> }
             }
         }
-        with(createRootFor(fc)) {
-            //Given
-            requireCaseToBeShowing(caseName)
-            selectChangesTab()
-            requireNumberOfRows(1)
-            moveMouseOverRow(0)
+        return runReactTest(fc) { container ->
+            with(container) {
+                //Given
+                requireCaseToBeShowing(caseName)
+                selectChangesTab()
+                requireNumberOfRows(1)
+                moveMouseOverRow(0)
 
-            //When
-            clickBuildIconForRow(0)
+                //When
+                clickBuildIconForRow(0)
 
-            //Then
-            requireCornerstoneCaseToBeShowing(cornerstoneCaseName)
+                //Then
+                requireCornerstoneCaseToBeShowing(cornerstoneCaseName)
+            }
         }
     }
 
     @Test
-    fun shouldNotShowCornerstoneWhenRuleSessionIsFinished() = runTest {
+    fun shouldNotShowCornerstoneWhenRuleSessionIsFinished(): TestResult {
         val caseId = 1L
         val cornerstoneId = 2L
         val caseName = "Manly"
@@ -280,31 +288,33 @@ class CaseInspectionTest {
             CaseInspection {
                 case = currentCase
                 api = Api(mock(config))
-                scope = this@runTest
+                scope = MainScope()
                 ruleSessionInProgress = { _ -> }
                 updateCase = { _ -> }
             }
         }
-        with(createRootFor(fc)) {
-            //Given
-            requireCaseToBeShowing(caseName)
-            selectChangesTab()
-            requireNumberOfRows(1)
-            moveMouseOverRow(0)
-            clickBuildIconForRow(0)
-            requireCornerstoneCaseToBeShowing(cornerstoneCaseName)
+        return runReactTest(fc) { container ->
+            with(container) {
+                //Given
+                requireCaseToBeShowing(caseName)
+                selectChangesTab()
+                requireNumberOfRows(1)
+                moveMouseOverRow(0)
+                clickBuildIconForRow(0)
+                requireCornerstoneCaseToBeShowing(cornerstoneCaseName)
 
-            //When
-            clickDoneButton()
-            waitForEvents()
+                //When
+                clickDoneButton()
+                waitForEvents()
 
-            //Then
-            requireCornerstoneCaseNotToBeShowing()
+                //Then
+                requireCornerstoneCaseNotToBeShowing()
+            }
         }
     }
 
     @Test
-    fun shouldCallBuildRuleWhenDoneButtonIsClickedOnConditionSelector() = runTest {
+    fun shouldCallBuildRuleWhenDoneButtonIsClickedOnConditionSelector(): TestResult {
         val diffList = DiffList(listOf(Addition("Go to Bondi now!")))
         val currentCase = createCaseWithInterpretation(
             name = "Bondi",
@@ -331,28 +341,28 @@ class CaseInspectionTest {
                 case = currentCase
                 ruleSessionInProgress = { _ -> }
                 api = Api(mock(config))
-                scope = this@runTest
+                scope = MainScope()
             }
         }
-        with(createRootFor(fc)) {
-            //Given
-            requireCaseToBeShowing("Bondi")
-            selectChangesTab()
-            requireNumberOfRows(1)
-            moveMouseOverRow(0)
-            clickBuildIconForRow(0)
-            requireDoneButtonShowing()
+        return runReactTest(fc) { container ->
+            with(container) {
+                //Given
+                requireCaseToBeShowing("Bondi")
+                selectChangesTab()
+                requireNumberOfRows(1)
+                moveMouseOverRow(0)
+                clickBuildIconForRow(0)
+                requireDoneButtonShowing()
 
-            //When
-            clickConditionWithIndex(0)
-            clickConditionWithIndex(1)
-            clickDoneButton()
-            waitForEvents()
+                //When
+                clickConditionWithIndex(0)
+                clickConditionWithIndex(1)
+                clickDoneButton()
+                waitForEvents()
 
-            //Then
-            //Assertion for expected RuleRequest is in the mock config
+                //Then
+                //Assertion for expected RuleRequest is in the mock config
+            }
         }
     }
-
-
 }

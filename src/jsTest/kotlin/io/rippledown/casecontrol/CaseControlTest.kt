@@ -1,6 +1,5 @@
 package io.rippledown.casecontrol
 
-import Api
 import io.kotest.matchers.shouldBe
 import io.rippledown.caseview.requireCaseToBeShowing
 import io.rippledown.constants.caseview.CASE_NAME_PREFIX
@@ -12,21 +11,22 @@ import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.hasCurrentValue
 import io.rippledown.model.diff.*
 import io.rippledown.model.rule.CornerstoneStatus
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.test.TestResult
+import main.Api
 import mocks.config
 import mocks.mock
 import proxy.findAllById
 import proxy.findById
 import proxy.waitForEvents
 import react.FC
-import react.dom.checkContainer
-import react.dom.createRootFor
+import react.dom.test.runReactTest
 import kotlin.test.Test
 
 class CaseControlTest {
 
     @Test
-    fun shouldListCaseNames() = runTest {
+    fun shouldListCaseNames(): TestResult {
         val caseA = "case a"
         val caseB = "case b"
         val caseId1 = CaseId(id = 1, name = caseA)
@@ -43,11 +43,12 @@ class CaseControlTest {
             CaseControl {
                 caseIds = twoCaseIds
                 api = Api(mock(config))
-                scope = this@runTest
+                scope = MainScope()
+                ruleSessionInProgress = { _ -> }
             }
         }
 
-        checkContainer(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 findAllById(CASE_NAME_PREFIX).length shouldBe 2
                 val elementA = findById("$CASE_NAME_PREFIX${caseId1.name}")
@@ -59,7 +60,7 @@ class CaseControlTest {
     }
 
     @Test
-    fun shouldSelectACaseIdWhenCaseNameClicked() = runTest {
+    fun shouldSelectACaseIdWhenCaseNameClicked(): TestResult {
         val caseA = "case A"
         val caseB = "case B"
         val caseC = "case C"
@@ -75,19 +76,21 @@ class CaseControlTest {
             CaseControl {
                 caseIds = threeCaseIds
                 api = Api(mock(config))
-                scope = this@runTest
+                scope = MainScope()
+                ruleSessionInProgress = { _ -> }
             }
         }
         config.returnCase = createCase(caseB, 2)
-        val container = createRootFor(fc)
-        with(container) {
-            selectCaseByName(caseB)
-            requireCaseToBeShowing(caseB)
+        return runReactTest(fc) { container ->
+            with(container) {
+                selectCaseByName(caseB)
+                requireCaseToBeShowing(caseB)
+            }
         }
     }
 
     @Test
-    fun shouldShowCaseViewForTheFirstCase() = runTest {
+    fun shouldShowCaseViewForTheFirstCase(): TestResult {
         val caseName1 = "case 1"
         val caseName2 = "case 2"
         val caseId1 = CaseId(1, caseName1)
@@ -104,10 +107,11 @@ class CaseControlTest {
             CaseControl {
                 caseIds = twoCaseIds
                 api = Api(mock(config))
-                scope = this@runTest
+                scope = MainScope()
+                ruleSessionInProgress = { _ -> }
             }
         }
-        checkContainer(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 requireCaseToBeShowing(caseName1)
             }
@@ -115,7 +119,7 @@ class CaseControlTest {
     }
 
     @Test
-    fun shouldShowCaseListForManyCases() = runTest {
+    fun shouldShowCaseListForManyCases(): TestResult {
 
         val caseIds = (1..100).map { i ->
             CaseId(id = i.toLong(), name = "case $i")
@@ -131,18 +135,20 @@ class CaseControlTest {
             CaseControl {
                 this.caseIds = caseIds
                 api = Api(mock(config))
-                scope = this@runTest
+                scope = MainScope()
+                ruleSessionInProgress = { _ -> }
             }
         }
-        with(createRootFor(fc)) {
-            selectCaseByName(caseName100)
-            requireCaseToBeShowing(caseName100)
-
+        return runReactTest(fc) { container ->
+            with(container) {
+                selectCaseByName(caseName100)
+                requireCaseToBeShowing(caseName100)
+            }
         }
     }
 
     @Test
-    fun shouldNotShowCornerstoneViewIfNoCornerstone() = runTest {
+    fun shouldNotShowCornerstoneViewIfNoCornerstone(): TestResult {
         val id = 1L
         val caseName = "Bondi"
         val caseIdList = listOf(CaseId(id, caseName))
@@ -167,26 +173,29 @@ class CaseControlTest {
             CaseControl {
                 caseIds = caseIdList
                 api = Api(mock(config))
-                scope = this@runTest
+                scope = MainScope()
+                ruleSessionInProgress = { _ -> }
             }
         }
-        with(createRootFor(fc)) {
-            waitForEvents()
-            requireCaseToBeShowing(caseName)
+        return runReactTest(fc) { container ->
+            with(container) {
+                waitForEvents()
+                requireCaseToBeShowing(caseName)
 
-            //start to build a rule for the Addition
-            selectChangesTab()
-            waitForEvents()
-            requireNumberOfRows(1)
-            moveMouseOverRow(0)
-            waitForEvents()
-            clickBuildIconForRow(0)
-            requireCornerstoneCaseNotToBeShowing()
+                //start to build a rule for the Addition
+                selectChangesTab()
+                waitForEvents()
+                requireNumberOfRows(1)
+                moveMouseOverRow(0)
+                waitForEvents()
+                clickBuildIconForRow(0)
+                requireCornerstoneCaseNotToBeShowing()
+            }
         }
     }
 
     @Test
-    fun shouldShowConditionHintsWhenRuleSessionIsStarted() = runTest {
+    fun shouldShowConditionHintsWhenRuleSessionIsStarted(): TestResult {
         val caseId = 45L
         val caseName = "Bondi"
         val caseIdList = listOf(CaseId(caseId, caseName))
@@ -216,34 +225,37 @@ class CaseControlTest {
             CaseControl {
                 caseIds = caseIdList
                 api = Api(mock(config))
-                scope = this@runTest
+                scope = MainScope()
+                ruleSessionInProgress = { _ -> }
             }
         }
-        with(createRootFor(fc)) {
-            //Given
-            waitForEvents()
-            requireCaseToBeShowing(caseName)
-            selectChangesTab()
-            waitForEvents()
-            requireNumberOfRows(2)
-            moveMouseOverRow(1)
-            waitForEvents()
+        return runReactTest(fc) { container ->
+            with(container) {
+                //Given
+                waitForEvents()
+                requireCaseToBeShowing(caseName)
+                selectChangesTab()
+                waitForEvents()
+                requireNumberOfRows(2)
+                moveMouseOverRow(1)
+                waitForEvents()
 
-            //When
-            clickBuildIconForRow(1)
-            waitForEvents()
+                //When
+                clickBuildIconForRow(1)
+                waitForEvents()
 
-            //Then
-            waitForEvents()
-            waitForEvents()
-            waitForEvents()
-            requireDoneButtonShowing()
-            requireConditions(listOf(condition.asText()))
+                //Then
+                waitForEvents()
+                waitForEvents()
+                waitForEvents()
+                requireDoneButtonShowing()
+                requireConditions(listOf(condition.asText()))
+            }
         }
     }
 
     @Test
-    fun shouldCancelConditionSelector() = runTest {
+    fun shouldCancelConditionSelector(): TestResult {
         val caseName = "Bondi"
         val caseId = 45L
         val caseIdList = listOf(CaseId(caseId, caseName))
@@ -274,29 +286,32 @@ class CaseControlTest {
             CaseControl {
                 caseIds = caseIdList
                 api = Api(mock(config))
-                scope = this@runTest
+                scope = MainScope()
+                ruleSessionInProgress = { _ -> }
             }
         }
-        with(createRootFor(fc)) {
-            waitForEvents()
-            requireCaseToBeShowing(caseName)
-            //start to build a rule for the Addition
-            selectChangesTab()
-            waitForEvents()
-            requireNumberOfRows(4)
-            moveMouseOverRow(2)
-            waitForEvents()
-            clickBuildIconForRow(2)
-            requireCancelButtonShowing()
-            //cancel the condition selector
-            clickCancelButton()
-            waitForEvents()
-            requireDoneButtonNotShowing()
+        return runReactTest(fc) { container ->
+            with(container) {
+                waitForEvents()
+                requireCaseToBeShowing(caseName)
+                //start to build a rule for the Addition
+                selectChangesTab()
+                waitForEvents()
+                requireNumberOfRows(4)
+                moveMouseOverRow(2)
+                waitForEvents()
+                clickBuildIconForRow(2)
+                requireCancelButtonShowing()
+                //cancel the condition selector
+                clickCancelButton()
+                waitForEvents()
+                requireDoneButtonNotShowing()
+            }
         }
     }
 
     @Test
-    fun shouldShowCornerstoneWhenBuildingARule() = runTest {
+    fun shouldShowCornerstoneWhenBuildingARule(): TestResult {
         val caseId = 1L
         val cornerstoneId = 2L
         val caseName = "Manly"
@@ -328,25 +343,28 @@ class CaseControlTest {
             CaseControl {
                 caseIds = caseIdList
                 api = Api(mock(config))
-                scope = this@runTest
+                scope = MainScope()
+                ruleSessionInProgress = { _ -> }
             }
         }
-        with(createRootFor(fc)) {
-            waitForEvents()
-            requireCaseToBeShowing(caseName)
-            //start to build a rule for the Addition
-            selectChangesTab()
-            waitForEvents()
-            requireNumberOfRows(1)
-            moveMouseOverRow(0)
-            waitForEvents()
-            clickBuildIconForRow(0)
-            requireCornerstoneCaseToBeShowing(cornerstoneCaseName)
+        return runReactTest(fc) { container ->
+            with(container) {
+                waitForEvents()
+                requireCaseToBeShowing(caseName)
+                //start to build a rule for the Addition
+                selectChangesTab()
+                waitForEvents()
+                requireNumberOfRows(1)
+                moveMouseOverRow(0)
+                waitForEvents()
+                clickBuildIconForRow(0)
+                requireCornerstoneCaseToBeShowing(cornerstoneCaseName)
+            }
         }
     }
 
     @Test
-    fun shouldNotShowCornerstoneAfterBuildingARule() = runTest {
+    fun shouldNotShowCornerstoneAfterBuildingARule(): TestResult {
         val caseId = 1L
         val cornerstoneId = 2L
         val caseName = "Manly"
@@ -378,34 +396,37 @@ class CaseControlTest {
             CaseControl {
                 caseIds = caseIdList
                 api = Api(mock(config))
-                scope = this@runTest
+                scope = MainScope()
+                ruleSessionInProgress = { _ -> }
             }
         }
-        with(createRootFor(fc)) {
-            //Given
-            waitForEvents()
-            requireCaseToBeShowing(caseName)
+        return runReactTest(fc) { container ->
+            with(container) {
+                //Given
+                waitForEvents()
+                requireCaseToBeShowing(caseName)
 
-            //start to build a rule for the Addition
-            selectChangesTab()
-            waitForEvents()
-            requireNumberOfRows(1)
-            moveMouseOverRow(0)
-            waitForEvents()
-            clickBuildIconForRow(0)
-            requireCornerstoneCaseToBeShowing(cornerstoneCaseName)
+                //start to build a rule for the Addition
+                selectChangesTab()
+                waitForEvents()
+                requireNumberOfRows(1)
+                moveMouseOverRow(0)
+                waitForEvents()
+                clickBuildIconForRow(0)
+                requireCornerstoneCaseToBeShowing(cornerstoneCaseName)
 
-            //When
-            clickDoneButton()
-            waitForEvents()
+                //When
+                clickDoneButton()
+                waitForEvents()
 
-            //Then
-            requireCornerstoneCaseNotToBeShowing()
+                //Then
+                requireCornerstoneCaseNotToBeShowing()
+            }
         }
     }
 
     @Test
-    fun shouldNotShowCornerstoneAfterCancellingARuleBuildingSession() = runTest {
+    fun shouldNotShowCornerstoneAfterCancellingARuleBuildingSession(): TestResult {
         val caseId = 1L
         val cornerstoneId = 2L
         val caseName = "Manly"
@@ -437,33 +458,36 @@ class CaseControlTest {
             CaseControl {
                 caseIds = caseIdList
                 api = Api(mock(config))
-                scope = this@runTest
+                scope = MainScope()
+                ruleSessionInProgress = { _ -> }
             }
         }
-        with(createRootFor(fc)) {
-            //Given
-            waitForEvents()
-            requireCaseToBeShowing(caseName)
-            //start to build a rule for the Addition
-            selectChangesTab()
-            waitForEvents()
-            requireNumberOfRows(1)
-            moveMouseOverRow(0)
-            waitForEvents()
-            clickBuildIconForRow(0)
-            requireCornerstoneCaseToBeShowing(cornerstoneCaseName)
+        return runReactTest(fc) { container ->
+            with(container) {
+                //Given
+                waitForEvents()
+                requireCaseToBeShowing(caseName)
+                //start to build a rule for the Addition
+                selectChangesTab()
+                waitForEvents()
+                requireNumberOfRows(1)
+                moveMouseOverRow(0)
+                waitForEvents()
+                clickBuildIconForRow(0)
+                requireCornerstoneCaseToBeShowing(cornerstoneCaseName)
 
-            //When
-            clickCancelButton()
-            waitForEvents()
+                //When
+                clickCancelButton()
+                waitForEvents()
 
-            //Then
-            requireCornerstoneCaseNotToBeShowing()
+                //Then
+                requireCornerstoneCaseNotToBeShowing()
+            }
         }
     }
 
     @Test
-    fun shouldNotShowCaseSelectorWhenBuildingARule() = runTest {
+    fun shouldNotShowCaseSelectorWhenBuildingARule(): TestResult {
         val caseId = 1L
         val cornerstoneId = 2L
         val caseName = "Manly"
@@ -495,30 +519,86 @@ class CaseControlTest {
             CaseControl {
                 caseIds = caseIdList
                 api = Api(mock(config))
-                scope = this@runTest
+                scope = MainScope()
+                ruleSessionInProgress = { _ -> }
             }
         }
-        with(createRootFor(fc)) {
-            //Given
-            waitForEvents()
-            requireCaseSelectorToBeShowing()
-            requireCaseToBeShowing(caseName)
-            //start to build a rule for the Addition
-            selectChangesTab()
-            waitForEvents()
-            requireNumberOfRows(1)
-            moveMouseOverRow(0)
-            waitForEvents()
+        return runReactTest(fc) { container ->
+            with(container) {
+                //Given
+                waitForEvents()
+                requireCaseSelectorToBeShowing()
+                requireCaseToBeShowing(caseName)
+                //start to build a rule for the Addition
+                selectChangesTab()
+                waitForEvents()
+                requireNumberOfRows(1)
+                moveMouseOverRow(0)
+                waitForEvents()
 
-            //When
-            clickBuildIconForRow(0)
-            waitForEvents()
+                //When
+                clickBuildIconForRow(0)
+                waitForEvents()
 
-            //Then
-            waitForEvents()
-            waitForEvents()
-            waitForEvents()
-            requireCaseSelectorNotToBeShowing()
+                //Then
+                waitForEvents()
+                waitForEvents()
+                waitForEvents()
+                requireCaseSelectorNotToBeShowing()
+            }
+        }
+    }
+
+    @Test
+    fun shoulCallHandlerMethodWhenStartingToBuildARule(): TestResult {
+        val caseId = 1L
+        val caseName = "Manly"
+        val caseIdList = listOf(CaseId(caseId, caseName))
+        val bondiComment = "Go to Bondi now!"
+        val beachComment = "Enjoy the beach!"
+        val diffList = DiffList(listOf(Addition(bondiComment)))
+        val caseWithInterp = createCaseWithInterpretation(
+            id = caseId,
+            name = caseName,
+            conclusionTexts = listOf(beachComment),
+            diffs = diffList
+        )
+        val config = config {
+            expectedCaseId = caseId
+            returnCasesInfo = CasesInfo(caseIdList)
+            returnCase = caseWithInterp
+            returnCornerstoneStatus = CornerstoneStatus()
+        }
+        var isInProgress = false
+
+        val fc = FC {
+            CaseControl {
+                caseIds = caseIdList
+                api = Api(mock(config))
+                scope = MainScope()
+                ruleSessionInProgress = { inProgress ->
+                    isInProgress = inProgress
+                }
+            }
+        }
+        return runReactTest(fc) { container ->
+            with(container) {
+                //Given
+                isInProgress shouldBe false
+                requireCaseSelectorToBeShowing()
+                requireCaseToBeShowing(caseName)
+                //start to build a rule for the Addition
+                selectChangesTab()
+                requireNumberOfRows(1)
+                moveMouseOverRow(0)
+
+                //When
+                clickBuildIconForRow(0)
+                waitForEvents()
+
+                //Then
+                isInProgress shouldBe true
+            }
         }
     }
 }

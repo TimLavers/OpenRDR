@@ -80,7 +80,7 @@ class OrderedEntityManagerInsertTest {
     }
 
     @Test
-    fun `should insert a new entity before an existing entity`() {
+    fun `should insert a new entity just before an existing entity`() {
         // Given
         manager.insert(l("a", "b"))
 

@@ -1,3 +1,5 @@
+package main
+
 import kotlin.js.Date
 
 fun debug(msg: String) {

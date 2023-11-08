@@ -1,16 +1,19 @@
 package io.rippledown.casecontrol
 
-import Handler
-import debug
 import io.rippledown.constants.caseview.CASELIST_ID
+import io.rippledown.constants.caseview.CASES
+import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import io.rippledown.model.CaseId
 import io.rippledown.model.caseview.ViewableCase
 import kotlinx.coroutines.launch
+import main.Handler
+import main.debug
+import main.xs
 import mui.material.Grid
+import mui.material.Typography
 import react.FC
 import react.memo
 import react.useState
-import xs
 
 /**
  * Provides the facility for the user to select a case from the list and then inspect it.
@@ -18,6 +21,7 @@ import xs
 
 external interface CaseControlHandler : Handler {
     var caseIds: List<CaseId>
+    var ruleSessionInProgress: (inProgress: Boolean) -> Unit
 }
 
 val CaseControl = FC<CaseControlHandler> { handler ->
@@ -43,10 +47,18 @@ val CaseControl = FC<CaseControlHandler> { handler ->
     Grid {
         container = true
         if (showSelector) {
+
             Grid {
                 item = true
                 id = CASELIST_ID
                 xs = 2
+
+
+
+                Typography {
+                    +"$CASES ${handler.caseIds.size}"
+                    id = NUMBER_OF_CASES_ID
+                }
 
                 CaseSelector {
                     caseIds = handler.caseIds
@@ -73,6 +85,7 @@ val CaseControl = FC<CaseControlHandler> { handler ->
                     }
                     ruleSessionInProgress = { inProgress ->
                         showSelector = !inProgress
+                        handler.ruleSessionInProgress(inProgress)
                     }
                 }
             }

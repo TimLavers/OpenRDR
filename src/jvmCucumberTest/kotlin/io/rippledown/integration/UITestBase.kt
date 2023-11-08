@@ -9,7 +9,7 @@ import io.rippledown.integration.restclient.RESTClient
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
-import java.time.Duration
+import java.time.Duration.ofSeconds
 
 
 open class UITestBase {
@@ -25,7 +25,7 @@ open class UITestBase {
     fun setupWebDriver(): WebDriver {
         driver = getChromeDriver()
         with(driver) {
-            manage().timeouts().implicitlyWait(Duration.ofSeconds(10))
+            manage().timeouts().implicitlyWait(ofSeconds(10))
             manage().window()?.maximize()
             get("http://localhost:9090")
         }
@@ -53,11 +53,6 @@ open class UITestBase {
     }
 
     fun driverClose() {
-        val tabs = driver.windowHandles as LinkedHashSet<String>
-        tabs.forEach {
-            driver.switchTo().window(it)
-            driver.close()
-        }
         driver.quit()
     }
 

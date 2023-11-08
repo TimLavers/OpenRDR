@@ -1,11 +1,10 @@
 package io.rippledown.caseview
 
-import Handler
-import debug
 import io.rippledown.model.caseview.ViewableCase
+import main.Handler
+import main.px12
 import mui.material.Table
 import mui.system.sx
-import px12
 import react.FC
 import web.cssom.px
 
@@ -15,7 +14,6 @@ external interface CaseTableHandler: Handler {
 }
 
 val CaseTable = FC<CaseTableHandler> { handler ->
-    debug("rendering CaseTable for case ${handler.case.id}")
     Table {
         sx {
             marginBottom = px12
