@@ -1,3 +1,5 @@
+package main
+
 import kotlinx.coroutines.MainScope
 import react.create
 import react.dom.client.createRoot

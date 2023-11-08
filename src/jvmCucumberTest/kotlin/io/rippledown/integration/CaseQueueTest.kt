@@ -1,6 +1,5 @@
 package io.rippledown.integration
 
-import io.kotest.matchers.shouldBe
 import io.rippledown.integration.pageobjects.CaseListPO
 import io.rippledown.integration.pageobjects.CaseQueuePO
 import kotlin.test.AfterTest
@@ -8,7 +7,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class CaseQueueTest : io.rippledown.integration.UITestBase() {
+internal class CaseQueueTest : UITestBase() {
 
     private lateinit var caseQueuePO: CaseQueuePO
     private lateinit var caseListPO: CaseListPO
@@ -42,7 +41,7 @@ internal class CaseQueueTest : io.rippledown.integration.UITestBase() {
     @Test
     fun numberOfWaitingCasesIsShown() {
         // No cases at start.
-        caseQueuePO.numberOfCases() shouldBe 0
+        caseListPO.requireCaseCountToBeHidden()
 
         // Copy a case.
         labProxy.provideCase("Case2")

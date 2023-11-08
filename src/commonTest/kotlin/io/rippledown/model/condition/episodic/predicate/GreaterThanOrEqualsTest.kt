@@ -2,10 +2,12 @@ package io.rippledown.model.condition.episodic.predicate
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.rippledown.model.*
+import io.rippledown.model.ReferenceRange
+import io.rippledown.model.TestResult
+import io.rippledown.model.Value
 import kotlin.test.Test
 
-class GreaterThanOrEqualsTest: Base() {
+class GreaterThanOrEqualsTest : Base() {
     private val gte = GreaterThanOrEquals(1.2)
     private val range = ReferenceRange("1.0", "2.5")
     private val units = "g"

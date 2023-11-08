@@ -11,11 +11,20 @@ import kotlinx.coroutines.withContext
 import web.dom.Element
 import web.dom.NodeListOf
 import web.html.HTMLElement
+import web.timers.setTimeout
 import kotlin.js.Date
 import kotlin.js.JSON.stringify
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
-
+fun HTMLElement.waitForElementToBeNull(selector: String, ms: Duration = 100.milliseconds) {
+    val element = querySelector(selector)
+    if (element != null) {
+        setTimeout(ms) {
+            waitForElementToBeNull(selector, ms)
+        }
+    }
+}
 suspend fun waitForEvents(timeout: Long = 150) {
     withContext(Default) {
         delay(timeout) // Dispatchers.Default doesn't know about TestCoroutineScheduler
@@ -28,6 +37,10 @@ suspend fun waitForNextPoll() =
 
 fun HTMLElement.requireNumberOfCases(expected: Int) {
     numberOfCasesWaiting() shouldBe expected
+}
+
+fun HTMLElement.requireNumberOfCasesNotToBeShowing() {
+    findAllById(NUMBER_OF_CASES_ID).length shouldBe 0
 }
 
 fun HTMLElement.numberOfCasesWaiting() = findById(NUMBER_OF_CASES_ID)

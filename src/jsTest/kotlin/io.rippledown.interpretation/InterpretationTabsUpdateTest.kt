@@ -6,20 +6,20 @@ import io.rippledown.model.Interpretation
 import io.rippledown.model.diff.*
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.RuleSummary
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.TestResult
 import mui.material.Button
 import proxy.findById
 import react.FC
-import react.dom.createRootFor
 import react.dom.html.ReactHTML.div
 import react.dom.test.act
+import react.dom.test.runReactTest
 import react.useState
 import kotlin.test.Test
 
 class InterpretationTabsUpdateTest {
 
     @Test
-    fun shouldUpdateInterpretationWhenInterpretationTextIsChanged() = runTest {
+    fun shouldUpdateInterpretationWhenInterpretationTextIsChanged(): TestResult {
         val caseAConclusion = "text for case A"
         val caseBConclusion = "text for case B"
         val i1 = Interpretation().apply { add(RuleSummary(conclusion = Conclusion(1, caseAConclusion))) }
@@ -46,20 +46,22 @@ class InterpretationTabsUpdateTest {
                 }
             }
         }
-        with(createRootFor(fc)) {
-            //Given
-            requireInterpretation(caseAConclusion)
+        return runReactTest(fc) { container ->
+            with(container) {
+                //Given
+                requireInterpretation(caseAConclusion)
 
-            //When switch cases
-            act { findById(buttonId).click() }
+                //When switch cases
+                act { findById(buttonId).click() }
 
-            //Then
-            requireInterpretation(caseBConclusion)
+                //Then
+                requireInterpretation(caseBConclusion)
+            }
         }
     }
 
     @Test
-    fun shouldUpdateInterpretationWhenWhenVerifiedTextIsChanged() = runTest {
+    fun shouldUpdateInterpretationWhenWhenVerifiedTextIsChanged(): TestResult {
         val caseAConclusion = "text for case A"
         val caseBConclusion = "text for case B"
 
@@ -84,20 +86,22 @@ class InterpretationTabsUpdateTest {
                 }
             }
         }
-        with(createRootFor(fc)) {
-            //Given
-            requireInterpretation(caseAConclusion)
+        return runReactTest(fc) { container ->
+            with(container) {
+                //Given
+                requireInterpretation(caseAConclusion)
 
-            //When switch cases
-            act { findById(buttonId).click() }
+                //When switch cases
+                act { findById(buttonId).click() }
 
-            //Then
-            requireInterpretation(caseBConclusion)
+                //Then
+                requireInterpretation(caseBConclusion)
+            }
         }
     }
 
     @Test
-    fun shouldUpdateInterpretationWhenDiffListIsChanged() = runTest {
+    fun shouldUpdateInterpretationWhenDiffListIsChanged(): TestResult {
 
         val diffListA = DiffList(listOf(Addition(), Removal()))
         val diffListB = DiffList(listOf(Unchanged(), Replacement(), Unchanged(), Addition()))
@@ -124,19 +128,21 @@ class InterpretationTabsUpdateTest {
                 }
             }
         }
-        with(createRootFor(fc)) {
-            //Given
-            selectChangesTab()
-            requireNumberOfRows(diffListA.diffs.size)
-            requireBuildIconForRow(0) //The first unchanged diff for interpA
+        return runReactTest(fc) { container ->
+            with(container) {
+                //Given
+                selectChangesTab()
+                requireNumberOfRows(diffListA.diffs.size)
+                requireBuildIconForRow(0) //The first unchanged diff for interpA
 
-            //When switch cases
-            act { findById(buttonId).click() }
-            selectChangesTab()
+                //When switch cases
+                act { findById(buttonId).click() }
+                selectChangesTab()
 
-            //Then
-            requireNumberOfRows(diffListB.diffs.size)
-            requireBuildIconForRow(1) //The first unchanged diff for interpB
+                //Then
+                requireNumberOfRows(diffListB.diffs.size)
+                requireBuildIconForRow(1) //The first unchanged diff for interpB
+            }
         }
     }
 }

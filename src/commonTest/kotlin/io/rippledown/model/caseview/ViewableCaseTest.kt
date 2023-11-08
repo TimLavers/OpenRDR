@@ -66,7 +66,6 @@ class ViewableCaseTest {
         }
         val format = Json { allowStructuredMapKeys = true }
         val serialized = format.encodeToString(viewableCase)
-        println("serialized: $serialized")
 
         val deserialized = format.decodeFromString<ViewableCase>(serialized)
         deserialized shouldBe viewableCase

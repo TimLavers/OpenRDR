@@ -1,6 +1,5 @@
 package io.rippledown.interpretation
 
-import Api
 import io.kotest.matchers.shouldBe
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_AREA
@@ -9,27 +8,28 @@ import io.rippledown.model.Interpretation
 import io.rippledown.model.diff.*
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.RuleSummary
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.test.TestResult
+import main.Api
 import mocks.config
 import mocks.mock
 import proxy.findById
 import proxy.waitForEvents
 import react.FC
-import react.dom.checkContainer
-import react.dom.createRootFor
+import react.dom.test.runReactTest
 import kotlin.test.Test
 
 class InterpretationTabsTest {
 
     @Test
-    fun originalTabShouldBeSelectedByDefault() = runTest {
+    fun originalTabShouldBeSelectedByDefault(): TestResult {
         val fc = FC {
             InterpretationTabs {
                 interpretation = ViewableInterpretation()
-                scope = this@runTest
+                scope = MainScope()
             }
         }
-        checkContainer(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 val originalTab = findById(INTERPRETATION_TAB_ORIGINAL)
                 originalTab.textContent shouldBe "Interpretation"
@@ -38,7 +38,7 @@ class InterpretationTabsTest {
     }
 
     @Test
-    fun originalInterpretationShouldBeShowingByDefault() = runTest {
+    fun originalInterpretationShouldBeShowingByDefault(): TestResult {
         val text = "Go to Bondi now!"
         val originalInterp = Interpretation().apply {
             add(RuleSummary(conclusion = Conclusion(1, text)))
@@ -46,10 +46,10 @@ class InterpretationTabsTest {
         val fc = FC {
             InterpretationTabs {
                 interpretation = ViewableInterpretation(originalInterp)
-                scope = this@runTest
+                scope = MainScope()
             }
         }
-        checkContainer(fc) { container ->
+        return runReactTest(fc) { container ->
             with(container) {
                 val originalPanel = findById(INTERPRETATION_TEXT_AREA)
                 originalPanel.textContent shouldBe text
@@ -58,21 +58,22 @@ class InterpretationTabsTest {
     }
 
     @Test
-    fun conclusionsTabShouldBeShowing() = runTest {
+    fun conclusionsTabShouldBeShowing(): TestResult {
         val fc = FC {
             InterpretationTabs {
-                scope = this@runTest
+                scope = MainScope()
                 interpretation = ViewableInterpretation()
             }
         }
-        val container = createRootFor(fc)
-        with(container) {
-            requireConclusionsLabel("Conclusions")
+        return runReactTest(fc) { container ->
+            with(container) {
+                requireConclusionsLabel("Conclusions")
+            }
         }
     }
 
     @Test
-    fun conclusionsTabCanBeSelected() = runTest {
+    fun conclusionsTabCanBeSelected(): TestResult {
         val text = "Go to Bondi."
         val interp = Interpretation().apply {
             add(RuleSummary(conclusion = Conclusion(1, text)))
@@ -82,46 +83,50 @@ class InterpretationTabsTest {
                 interpretation = ViewableInterpretation(interp)
             }
         }
-        val container = createRootFor(fc)
-        with(container) {
-            selectConclusionsTab()
-            requireTreeItems(text)
+
+        return runReactTest(fc) { container ->
+            with(container) {
+                selectConclusionsTab()
+                requireTreeItems(text)
+            }
         }
     }
 
     @Test
-    fun shouldBeAbleToSelectTheChangesTab() = runTest {
+    fun shouldBeAbleToSelectTheChangesTab(): TestResult {
         val fc = FC {
             InterpretationTabs {
-                scope = this@runTest
+                scope = MainScope()
                 interpretation = ViewableInterpretation()
             }
         }
-        val container = createRootFor(fc)
-        with(container) {
-            selectChangesTab()
-            requireChangesLabel("Changes")
+        return runReactTest(fc) { container ->
+            with(container) {
+                selectChangesTab()
+                requireChangesLabel("Changes")
+            }
         }
     }
 
     @Test
-    fun diffPanelShouldShowNoChangesForAnEmptyDiff() = runTest {
+    fun diffPanelShouldShowNoChangesForAnEmptyDiff(): TestResult {
         val fc = FC {
             InterpretationTabs {
-                scope = this@runTest
+                scope = MainScope()
                 interpretation = ViewableInterpretation()
             }
         }
-        val container = createRootFor(fc)
-        with(container) {
-            selectChangesTab()
-            waitForEvents()
-            requireNumberOfRows(0)
+        return runReactTest(fc) { container ->
+            with(container) {
+                selectChangesTab()
+                waitForEvents()
+                requireNumberOfRows(0)
+            }
         }
     }
 
     @Test
-    fun diffPanelShouldShowTheInterpretationDifferences() = runTest {
+    fun diffPanelShouldShowTheInterpretationDifferences(): TestResult {
         val unchangedText = "Go to Bondi now!"
         val addedText = "Bring your flippers!"
         val removedText = "Sun is shining."
@@ -139,31 +144,32 @@ class InterpretationTabsTest {
 
         val fc = FC {
             InterpretationTabs {
-                scope = this@runTest
+                scope = MainScope()
                 api = Api(mock(config {}))
                 interpretation = interpretationWithDiffs
             }
         }
-        val container = createRootFor(fc)
-        with(container) {
-            selectChangesTab()
-            requireNumberOfRows(4)
-            requireOriginalTextInRow(0, unchangedText)
-            requireChangedTextInRow(0, unchangedText)
+        return runReactTest(fc) { container ->
+            with(container) {
+                selectChangesTab()
+                requireNumberOfRows(4)
+                requireOriginalTextInRow(0, unchangedText)
+                requireChangedTextInRow(0, unchangedText)
 
-            requireOriginalTextInRow(1, "")
-            requireChangedTextInRow(1, addedText)
+                requireOriginalTextInRow(1, "")
+                requireChangedTextInRow(1, addedText)
 
-            requireOriginalTextInRow(2, removedText)
-            requireChangedTextInRow(2, "")
+                requireOriginalTextInRow(2, removedText)
+                requireChangedTextInRow(2, "")
 
-            requireOriginalTextInRow(3, replacedText)
-            requireChangedTextInRow(3, replacementText)
+                requireOriginalTextInRow(3, replacedText)
+                requireChangedTextInRow(3, replacementText)
+            }
         }
     }
 
     @Test
-    fun diffPanelShouldUpdateWhenTheInterpretationIsEdited() = runTest {
+    fun diffPanelShouldUpdateWhenTheInterpretationIsEdited(): TestResult {
         val addedText = "Bring your flippers!"
         val diffListToReturn = DiffList(
             listOf(
@@ -177,24 +183,26 @@ class InterpretationTabsTest {
 
         val fc = FC {
             InterpretationTabs {
-                scope = this@runTest
+                scope = MainScope()
                 api = Api(mock(config))
                 interpretation = ViewableInterpretation()
             }
         }
-        with(createRootFor(fc)) {
-            requireInterpretation("")
-            enterInterpretation(addedText)
-            waitForDebounce()
-            selectChangesTab()
-            requireNumberOfRows(1)
-            requireChangedTextInRow(0, addedText)
+        return runReactTest(fc) { container ->
+            with(container) {
+                requireInterpretation("")
+                enterInterpretation(addedText)
+                waitForDebounce()
+                selectChangesTab()
+                requireNumberOfRows(1)
+                requireChangedTextInRow(0, addedText)
+            }
         }
     }
 
 
     @Test
-    fun changesBadgeShouldIndicateTheNumberOfChanges() = runTest {
+    fun changesBadgeShouldIndicateTheNumberOfChanges(): TestResult {
         val diffListToReturn = DiffList(
             listOf(
                 Unchanged(),
@@ -203,39 +211,42 @@ class InterpretationTabsTest {
                 Replacement()
             )
         )
-        val interpretationWithDiffs = ViewableInterpretation().apply { diffList = diffListToReturn }
+        val interpretationWithDiffs =
+            ViewableInterpretation().apply { diffList = diffListToReturn }
         val fc = FC {
             InterpretationTabs {
-                scope = this@runTest
+                scope = MainScope()
                 api = Api(mock(config {}))
                 interpretation = interpretationWithDiffs
             }
         }
-        val container = createRootFor(fc)
-        with(container) {
-            waitForEvents()
-            findById("interpretation_changes_badge").textContent shouldBe "Changes3"
-            requireBadgeCount(3) //Unchanged does not count
+        return runReactTest(fc) { container ->
+            with(container) {
+                waitForEvents()
+                findById("interpretation_changes_badge").textContent shouldBe "Changes3"
+                requireBadgeCount(3) //Unchanged does not count
+            }
         }
     }
 
     @Test
-    fun changesBadgeShouldNotShowIfNoChanges() = runTest {
+    fun changesBadgeShouldNotShowIfNoChanges(): TestResult {
         val fc = FC {
             InterpretationTabs {
-                scope = this@runTest
+                scope = MainScope()
                 api = Api(mock(config {}))
                 interpretation = ViewableInterpretation()
             }
         }
-        val container = createRootFor(fc)
-        with(container) {
-            requireNoBadge()
+        return runReactTest(fc) { container ->
+            with(container) {
+                requireNoBadge()
+            }
         }
     }
 
     @Test
-    fun onStartRuleShouldBeCalledWhenTheBuildIconIsClicked() = runTest {
+    fun onStartRuleShouldBeCalledWhenTheBuildIconIsClicked(): TestResult {
         val unchangedText = "Go to Bondi now!"
         val addedText = "Bring your flippers!"
         val removedText = "Sun is shining."
@@ -249,12 +260,13 @@ class InterpretationTabsTest {
                 Replacement(replacedText, replacementText)
             )
         )
-        val interpretationWithDiffs = ViewableInterpretation().apply { diffList = diffListToReturn }
+        val interpretationWithDiffs =
+            ViewableInterpretation().apply { diffList = diffListToReturn }
         var selectedDiff: Diff? = null
 
         val fc = FC {
             InterpretationTabs {
-                scope = this@runTest
+                scope = MainScope()
                 api = Api(mock(config {}))
                 interpretation = interpretationWithDiffs
                 onStartRule = { diff ->
@@ -262,14 +274,15 @@ class InterpretationTabsTest {
                 }
             }
         }
-        with(createRootFor(fc)) {
-            selectChangesTab()
-            requireNumberOfRows(4)
-            moveMouseOverRow(2)
-            clickBuildIconForRow(2)
-            selectedDiff shouldBe diffListToReturn[2]
+        return runReactTest(fc) { container ->
+            with(container) {
+                selectChangesTab()
+                requireNumberOfRows(4)
+                moveMouseOverRow(2)
+                clickBuildIconForRow(2)
+                selectedDiff shouldBe diffListToReturn[2]
+            }
         }
     }
-
 }
 

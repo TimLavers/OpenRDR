@@ -8,7 +8,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 // ORD2
-internal class CaseViewTest : io.rippledown.integration.UITestBase() {
+internal class CaseViewTest : UITestBase() {
 
     private lateinit var caseQueuePO: CaseQueuePO
     private lateinit var caseListPO: CaseListPO
@@ -31,7 +31,6 @@ internal class CaseViewTest : io.rippledown.integration.UITestBase() {
 
     @Test
     fun selectCase() {
-        io.rippledown.integration.pause()
         val caseViewPO = caseListPO.select("Case2")
         assertEquals(caseViewPO.nameShown(), "Case2")
         val dataShown = caseViewPO.valuesShown()

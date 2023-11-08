@@ -1,21 +1,29 @@
 package io.rippledown.kb
 
-import Handler
+import io.rippledown.constants.kb.KB_INFO_CONTROLS_ID
 import io.rippledown.constants.kb.KB_INFO_HEADING_ID
 import io.rippledown.model.KBInfo
 import kotlinx.coroutines.launch
+import main.Handler
 import mui.material.Grid
 import mui.material.GridDirection
 import mui.material.Typography
 import mui.material.TypographyAlign
 import mui.material.styles.TypographyVariant
 import mui.system.responsive
+import mui.system.sx
 import react.FC
 import react.useEffectOnce
 import react.useState
+import web.cssom.Visibility
+import web.cssom.Visibility.Companion.visible
+import web.cssom.px
 
+external interface KBInfoPaneHandler : Handler {
+    var showKBInfo: Boolean
+}
 
-val KBInfoPane = FC<Handler> { handler ->
+val KBInfoPane = FC<KBInfoPaneHandler> { handler ->
     var kbInfo: KBInfo? by useState(null)
 
     fun kbName() = if (kbInfo != null) kbInfo!!.name else ""
@@ -26,10 +34,15 @@ val KBInfoPane = FC<Handler> { handler ->
         }
     }
     Grid {
+        id = KB_INFO_CONTROLS_ID
         key = kbName()
         container = true
         direction = responsive(GridDirection.row)
         spacing = responsive(2)
+        sx {
+            paddingBottom = 10.px
+            visibility = if (handler.showKBInfo) visible else Visibility.hidden
+        }
         Grid {
             item = true
             key = kbName()

@@ -1,12 +1,12 @@
 package io.rippledown.caseview
 
-import Handler
 import io.rippledown.constants.caseview.CASEVIEW_CASE_NAME_ID
 import io.rippledown.constants.interpretation.CASE_VIEW_CONTAINER
 import io.rippledown.model.caseview.ViewableCase
+import main.Handler
+import main.px8
 import mui.material.Typography
 import mui.system.sx
-import px8
 import react.FC
 import react.dom.html.ReactHTML.div
 import react.memo

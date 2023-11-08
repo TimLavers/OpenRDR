@@ -1,3 +1,5 @@
+package main
+
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -90,10 +92,13 @@ class Api(engine: HttpClientEngine = Js.create()) {
      * @return the interpretation containing the DiffList of the original and verified interpretation
      */
     suspend fun saveVerifiedInterpretation(verifiedInterpretation: ViewableInterpretation): ViewableInterpretation {
-        return jsonClient.post("$endpoint$VERIFIED_INTERPRETATION_SAVED") {
+        debug("saveVerifiedInterpretation: $verifiedInterpretation")
+        val returned = jsonClient.post("$endpoint$VERIFIED_INTERPRETATION_SAVED") {
             contentType(ContentType.Application.Json)
             setBody(verifiedInterpretation)
-        }.body()
+        }.body<ViewableInterpretation>()
+        debug("saveVerifiedInterpretation return: $returned")
+        return returned
     }
 
     /**
@@ -116,10 +121,13 @@ class Api(engine: HttpClientEngine = Js.create()) {
      * @return the first cornerstone, its index and the total number of cornerstones
      */
     suspend fun startRuleSession(sessionStartRequest: SessionStartRequest): CornerstoneStatus {
-        return jsonClient.post("$endpoint$START_RULE_SESSION") {
+        debug("startRuleSession: $sessionStartRequest")
+        val body = jsonClient.post("$endpoint$START_RULE_SESSION") {
             contentType(ContentType.Application.Json)
             setBody(sessionStartRequest)
-        }.body()
+        }.body<CornerstoneStatus>()
+        debug("startRuleSession return: $body")
+        return body
     }
 
     /**

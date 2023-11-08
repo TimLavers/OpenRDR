@@ -1,4 +1,5 @@
 Feature: Building rules
+
   Scenario: The user should be able to build a rule to add a comment
     Given a list of cases with the following names is stored on the server:
       | Case1 |
@@ -221,4 +222,26 @@ Feature: Building rules
     And I should see the following cases in the case list:
       | Bondi |
       | Manly |
+    And stop the client application
+
+  Scenario: The import and export controls should be hidden when building a rule
+    Given a new case with the name Case1 is stored on the server
+    And I start the client application
+    And I enter the text "Go to Bondi." in the interpretation field
+    And I select the changes tab
+    When I start to build a rule for the change on row 0
+    Then the KB import and export controls should be hidden
+    And the count of the number of cases should be hidden
+    And cancel the rule
+    And stop the client application
+
+  Scenario: The import and export controls should be re-shown after cancelling a rule
+    Given a new case with the name Case1 is stored on the server
+    And I start the client application
+    And I enter the text "Go to Bondi." in the interpretation field
+    And I select the changes tab
+    And I start to build a rule for the change on row 0
+    When I cancel the rule
+    Then the KB import and export controls should be shown
+    And the count of the number of cases should be 1
     And stop the client application

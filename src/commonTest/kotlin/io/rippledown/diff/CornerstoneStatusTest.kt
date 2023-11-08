@@ -36,7 +36,7 @@ class CornerstoneStatusTest {
 
     private fun createCase(name: String): RDRCase {
 
-        with( RDRCaseBuilder() ) {
+        with(RDRCaseBuilder()) {
             addValue(tsh, defaultDate, "0.68")
             addValue(xyz, defaultDate, "0.66")
             addValue(abc, defaultDate, "0.67")

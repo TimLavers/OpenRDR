@@ -2,10 +2,10 @@ package io.rippledown.model.condition.episodic.predicate
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.rippledown.model.*
+import io.rippledown.model.TestResult
 import kotlin.test.Test
 
-class DoesNotContainTest: Base() {
+class DoesNotContainTest : Base() {
     val stuff = "stuff"
     private val dnc = DoesNotContain(stuff)
 

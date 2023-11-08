@@ -1,21 +1,25 @@
 package io.rippledown.kb
 
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.TestResult
 import react.FC
-import react.dom.createRootFor
+import react.dom.test.runReactTest
 import kotlin.test.Ignore
+import kotlin.test.Test
 
 @Ignore //TODO: Fix this test.
 class KBExportDialogTest {
 
-    fun exportDialogShouldNotBeShowingInitially() = runTest {
+    @Test
+    fun exportDialogShouldNotBeShowingInitially(): TestResult {
         val vfc = FC {
             KBImportDialog {
             }
         }
-        with(createRootFor(vfc)) {
-            requireExportKBButtonToBeShowing()
-            requireExportDialogToNotBeShowing()
+        return runReactTest(vfc) { container ->
+            with(container) {
+                requireExportKBButtonToBeShowing()
+                requireExportDialogToNotBeShowing()
+            }
         }
     }
 }

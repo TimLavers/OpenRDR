@@ -1,9 +1,9 @@
 package io.rippledown.kb
 
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.TestResult
 import proxy.waitForEvents
 import react.FC
-import react.dom.createRootFor
+import react.dom.test.runReactTest
 import kotlin.test.Ignore
 import kotlin.test.Test
 
@@ -11,27 +11,31 @@ import kotlin.test.Test
 class KBImportDialogTest {
 
     @Test
-    fun importDialogShouldNotBeShowingInitially() = runTest {
+    fun importDialogShouldNotBeShowingInitially(): TestResult {
         val vfc = FC {
             KBImportDialog {
             }
         }
-        with(createRootFor(vfc)) {
-            requireImportKBButtonToBeShowing()
-            requireImportDialogToNotBeShowing()
+        return runReactTest(vfc) { container ->
+            with(container) {
+                requireImportKBButtonToBeShowing()
+                requireImportDialogToNotBeShowing()
+            }
         }
     }
 
     @Test
-    fun shouldShowDialogWhenImportButtonClicked() = runTest {
+    fun shouldShowDialogWhenImportButtonClicked(): TestResult {
         val vfc = FC {
             KBImportDialog {
             }
         }
-        with(createRootFor(vfc)) {
-            clickKBImport()
-            waitForEvents()
-            requireConfirmImportKBButtonToBeShowing()
+        return runReactTest(vfc) { container ->
+            with(container) {
+                clickKBImport()
+                waitForEvents()
+                requireConfirmImportKBButtonToBeShowing()
+            }
         }
     }
 }

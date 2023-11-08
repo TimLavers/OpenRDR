@@ -2,9 +2,8 @@ package io.rippledown.model.rule
 
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.*
+import io.rippledown.model.Conclusion
 import io.rippledown.model.condition.*
-import io.rippledown.model.condition.ConditionTestBase
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test

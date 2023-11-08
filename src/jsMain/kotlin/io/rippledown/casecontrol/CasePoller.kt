@@ -1,11 +1,9 @@
 package io.rippledown.casecontrol
 
-import Handler
-import io.rippledown.constants.caseview.CASES
-import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
+import io.rippledown.kb.KBInfoPane
 import io.rippledown.model.CasesInfo
 import kotlinx.coroutines.launch
-import mui.material.Typography
+import main.Handler
 import react.FC
 import react.memo
 import react.useEffectOnce
@@ -19,6 +17,7 @@ external interface CasePollerHandler : Handler
 
 val CasePoller = FC<CasePollerHandler> { handler ->
     var casesInfo by useState(CasesInfo(emptyList(), ""))
+    var showKB by useState(true)
 
     useEffectOnce {
         setInterval(delay = POLL_PERIOD) {
@@ -28,9 +27,10 @@ val CasePoller = FC<CasePollerHandler> { handler ->
         }
     }
 
-    Typography {
-        +"$CASES ${casesInfo.count}"
-        id = NUMBER_OF_CASES_ID
+    KBInfoPane {
+        scope = handler.scope
+        api = handler.api
+        showKBInfo = showKB
     }
 
     if (casesInfo.count > 0) {
@@ -38,6 +38,9 @@ val CasePoller = FC<CasePollerHandler> { handler ->
             scope = handler.scope
             api = handler.api
             caseIds = casesInfo.caseIds
+            ruleSessionInProgress = { inProgress ->
+                showKB = !inProgress
+            }
         }
     }
 }

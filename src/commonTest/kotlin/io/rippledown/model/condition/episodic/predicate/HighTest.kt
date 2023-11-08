@@ -1,10 +1,12 @@
 package io.rippledown.model.condition.episodic.predicate
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.*
+import io.rippledown.model.ReferenceRange
+import io.rippledown.model.TestResult
+import io.rippledown.model.Value
 import kotlin.test.Test
 
-class HighTest: Base() {
+class HighTest : Base() {
     private val high = High
     private val range = ReferenceRange("1.0", "2.5")
     private val units = "g"

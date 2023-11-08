@@ -7,16 +7,16 @@ import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.caseview.CaseViewProperties
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.defaultDate
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.TestResult
 import proxy.findAllById
 import react.FC
-import react.dom.createRootFor
+import react.dom.test.runReactTest
 import kotlin.test.Test
 
 class CaseTableBodyTest {
 
     @Test
-    fun attributeOrdering() = runTest {
+    fun attributeOrdering(): TestResult {
         val builder1 = RDRCaseBuilder()
         val tsh = Attribute(1, "TSH")
         val ft4 = Attribute(2, "FT4")
@@ -26,7 +26,7 @@ class CaseTableBodyTest {
         builder1.addValue(abc, defaultDate, "12.9")
         builder1.addValue(xyz, defaultDate, "1.9")
         builder1.addValue(tsh, defaultDate, "2.37")
-        val case1 = builder1.build( "Case1")
+        val case1 = builder1.build("Case1")
         val properties = CaseViewProperties(listOf(tsh, ft4, abc, xyz))
         val viewableCase = ViewableCase(case1, properties)
 
@@ -35,18 +35,20 @@ class CaseTableBodyTest {
                 case = viewableCase
             }
         }
-        with(createRootFor(vfc)) {
-            val rows = findAllById(CASE_TABLE_ROW_PREFIX)
-            rows.length shouldBe 4
-            rows[0].children[0].textContent shouldBe tsh.name
-            rows[1].children[0].textContent shouldBe ft4.name
-            rows[2].children[0].textContent shouldBe abc.name
-            rows[3].children[0].textContent shouldBe xyz.name
+        return runReactTest(vfc) { container ->
+            with(container) {
+                val rows = findAllById(CASE_TABLE_ROW_PREFIX)
+                rows.length shouldBe 4
+                rows[0].children[0].textContent shouldBe tsh.name
+                rows[1].children[0].textContent shouldBe ft4.name
+                rows[2].children[0].textContent shouldBe abc.name
+                rows[3].children[0].textContent shouldBe xyz.name
 
-            rows[0].children[1].textContent shouldBe "2.37"
-            rows[1].children[1].textContent shouldBe "12.8"
-            rows[2].children[1].textContent shouldBe "12.9"
-            rows[3].children[1].textContent shouldBe "1.9"
+                rows[0].children[1].textContent shouldBe "2.37"
+                rows[1].children[1].textContent shouldBe "12.8"
+                rows[2].children[1].textContent shouldBe "12.9"
+                rows[3].children[1].textContent shouldBe "1.9"
+            }
         }
     }
 }

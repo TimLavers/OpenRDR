@@ -1,10 +1,10 @@
 package io.rippledown.model.condition.episodic.predicate
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.*
+import io.rippledown.model.TestResult
 import kotlin.test.Test
 
-class IsBlankTest: Base() {
+class IsBlankTest : Base() {
     private val blank = IsBlank
 
     @Test

@@ -1,8 +1,8 @@
 package io.rippledown.interpretation
 
-import Handler
 import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_AREA
+import main.Handler
 import mui.material.TextField
 import mui.system.sx
 import npm.debounce

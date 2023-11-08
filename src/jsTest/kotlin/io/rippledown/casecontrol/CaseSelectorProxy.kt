@@ -20,16 +20,6 @@ suspend fun HTMLElement.selectCaseByName(caseName: String) {
     }
 }
 
-/*
-suspend fun HTMLElement.selectCaseByName(caseName: String) {
-    val container = findById(CASE_SELECTOR_ID)
-    val element = container.findByTextContent(caseName)
-    act {
-        Simulate.click(element)
-    }
-}
-*/
-
 fun HTMLElement.requireCaseSelectorToBeShowing() {
     findById(CASE_SELECTOR_ID) shouldNotBe null
 }
