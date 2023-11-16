@@ -1,6 +1,6 @@
 package io.rippledown.caseview
 
-import main.px4
+import io.rippledown.main.px4
 import mui.material.TableCell
 import mui.material.TableHead
 import mui.material.TableRow

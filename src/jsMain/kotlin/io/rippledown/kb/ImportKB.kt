@@ -1,9 +1,11 @@
 package io.rippledown.kb
 
 import io.rippledown.constants.kb.*
-import main.Handler
+import io.rippledown.main.Handler
+import mui.icons.material.FileUpload
 import mui.material.*
 import react.FC
+import react.ReactNode
 import react.dom.html.ReactHTML.input
 import react.useState
 import web.file.File
@@ -12,11 +14,11 @@ import web.timers.Timeout
 import web.timers.clearInterval
 import web.timers.setInterval
 
-external interface KBImportDialogHandler : Handler {
+external interface KBImportControlHandler : Handler {
     var reloadKB: () -> Unit
 }
 
-val KBImportDialog = FC<KBImportDialogHandler> { handler ->
+val ImportKB = FC<KBImportControlHandler> { handler ->
     var isOpen by useState(false)
     var canSubmit by useState(false)
     var selectedFile: File? by useState()
@@ -31,14 +33,20 @@ val KBImportDialog = FC<KBImportDialogHandler> { handler ->
             }
         }, 100)
     }
-
-    Button {
-        +"Import"
-        id = KB_IMPORT_BUTTON_ID
-        variant = ButtonVariant.outlined
-        size = Size.small
-        onClick = {
-            isOpen = true
+    Tooltip {
+        title = "Import knowledge base from file".unsafeCast<ReactNode>()
+        MenuItem {
+            id = KB_IMPORT_BUTTON_ID
+            ListItemIcon {
+                FileUpload {
+                }
+            }
+            ListItemText {
+                primary = "Import".unsafeCast<ReactNode>()
+            }
+            onClick = {
+                isOpen = true
+            }
         }
     }
 
@@ -71,19 +79,19 @@ val KBImportDialog = FC<KBImportDialogHandler> { handler ->
         }
         DialogActions {
             Button {
+                id = CANCEL_IMPORT_BUTTON_ID
                 onClick = { isOpen = false }
                 +"Cancel"
-                id = CANCEL_IMPORT_BUTTON_ID
             }
             Button {
+                id = CONFIRM_IMPORT_BUTTON_ID
+                disabled = !canSubmit
                 onClick = {
                     isOpen = false
                     handler.api.importKBFromZip(selectedFile!!)
                     waitForImportToFinish()
                 }
                 +"Import"
-                id = CONFIRM_IMPORT_BUTTON_ID
-                disabled = !canSubmit
             }
         }
     }

@@ -1,4 +1,4 @@
-package main
+package io.rippledown.main
 
 import mui.material.GridProps
 import web.cssom.px
@@ -13,6 +13,7 @@ val rd = rgb(24, 24, 198)
 val blue = rgb(24, 24, 198)
 val red = rgb(240, 200, 200)
 val green = rgb(200, 240, 200)
+val white = rgb(255, 255, 255)
 
 inline var GridProps.xs: Any?
     get() = asDynamic().xs

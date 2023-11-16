@@ -5,6 +5,7 @@ import io.rippledown.cornerstoneview.requireCornerstoneCaseNotToBeShowing
 import io.rippledown.cornerstoneview.requireCornerstoneCaseToBeShowing
 import io.rippledown.interpretation.clickDoneButton
 import io.rippledown.interpretation.startToBuildRuleForRow
+import io.rippledown.main.Api
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.createCaseWithInterpretation
@@ -13,7 +14,6 @@ import io.rippledown.model.diff.DiffList
 import io.rippledown.model.rule.CornerstoneStatus
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.test.TestResult
-import main.Api
 import mocks.config
 import mocks.mock
 import proxy.waitForEvents

@@ -1,5 +1,6 @@
 package io.rippledown.server
 
+import io.rippledown.constants.server.DEFAULT_PROJECT_NAME
 import io.rippledown.kb.KB
 import io.rippledown.kb.KBManager
 import io.rippledown.kb.export.KBExporter
@@ -40,7 +41,7 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
     }
 
     fun createKB() {
-        val kbInfo = kbManager.createKB("Thyroids", true)
+        val kbInfo = kbManager.createKB(DEFAULT_PROJECT_NAME, true)
         kb = (kbManager.openKB(kbInfo.id) as EntityRetrieval.Success<KB>).entity
     }
 

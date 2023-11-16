@@ -5,6 +5,7 @@ import io.rippledown.caseview.requireCaseToBeShowing
 import io.rippledown.cornerstoneview.requireCornerstoneCaseNotToBeShowing
 import io.rippledown.cornerstoneview.requireCornerstoneCaseToBeShowing
 import io.rippledown.interpretation.*
+import io.rippledown.main.Api
 import io.rippledown.model.Attribute
 import io.rippledown.model.CaseId
 import io.rippledown.model.condition.ConditionList
@@ -18,7 +19,6 @@ import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.test.TestResult
-import main.Api
 import mocks.config
 import mocks.mock
 import proxy.waitForEvents

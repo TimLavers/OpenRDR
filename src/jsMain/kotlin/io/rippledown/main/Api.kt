@@ -1,4 +1,4 @@
-package main
+package io.rippledown.main
 
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -41,9 +41,7 @@ class Api(engine: HttpClientEngine = Js.create()) {
     fun importKBFromZip(file: File) {
         val code: dynamic = js("window.doZipUpload")
         val zipImportURL = "$endpoint$IMPORT_KB"
-        println("++++++++++++++++ about to call zip import")
         code(zipImportURL, file)
-        println("++++++++++++++++ zip import done")
     }
 
     fun exportURL(): String {
@@ -119,12 +117,10 @@ class Api(engine: HttpClientEngine = Js.create()) {
      * @return the first cornerstone, its index and the total number of cornerstones
      */
     suspend fun startRuleSession(sessionStartRequest: SessionStartRequest): CornerstoneStatus {
-        debug("startRuleSession: $sessionStartRequest")
         val body = jsonClient.post("$endpoint$START_RULE_SESSION") {
             contentType(ContentType.Application.Json)
             setBody(sessionStartRequest)
         }.body<CornerstoneStatus>()
-        debug("startRuleSession return: $body")
         return body
     }
 

@@ -1,8 +1,8 @@
 package io.rippledown.cornerstoneview
 
 import io.rippledown.constants.caseview.CASEVIEW_CORNERSTONE_CASE_NAME_ID
-import main.Handler
-import main.px8
+import io.rippledown.main.Handler
+import io.rippledown.main.px8
 import mui.material.Stack
 import mui.material.StackDirection.Companion.row
 import mui.material.Typography

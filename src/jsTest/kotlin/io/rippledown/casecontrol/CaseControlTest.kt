@@ -6,6 +6,7 @@ import io.rippledown.constants.caseview.CASE_NAME_PREFIX
 import io.rippledown.cornerstoneview.requireCornerstoneCaseNotToBeShowing
 import io.rippledown.cornerstoneview.requireCornerstoneCaseToBeShowing
 import io.rippledown.interpretation.*
+import io.rippledown.main.Api
 import io.rippledown.model.*
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.hasCurrentValue
@@ -13,7 +14,6 @@ import io.rippledown.model.diff.*
 import io.rippledown.model.rule.CornerstoneStatus
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.test.TestResult
-import main.Api
 import mocks.config
 import mocks.mock
 import proxy.findAllById

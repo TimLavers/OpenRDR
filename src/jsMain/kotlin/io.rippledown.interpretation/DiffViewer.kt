@@ -1,11 +1,11 @@
 package io.rippledown.interpretation
 
 import io.rippledown.constants.interpretation.*
+import io.rippledown.main.Handler
+import io.rippledown.main.green
+import io.rippledown.main.red
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.diff.Unchanged
-import main.Handler
-import main.green
-import main.red
 import mui.icons.material.Build
 import mui.material.*
 import mui.material.styles.TypographyVariant.Companion.subtitle2
