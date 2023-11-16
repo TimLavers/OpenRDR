@@ -3,12 +3,11 @@ package io.rippledown.casecontrol
 import io.rippledown.constants.caseview.CASELIST_ID
 import io.rippledown.constants.caseview.CASES
 import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
+import io.rippledown.main.Handler
+import io.rippledown.main.xs
 import io.rippledown.model.CaseId
 import io.rippledown.model.caseview.ViewableCase
 import kotlinx.coroutines.launch
-import main.Handler
-import main.debug
-import main.xs
 import mui.material.Grid
 import mui.material.Typography
 import react.FC
@@ -53,8 +52,6 @@ val CaseControl = FC<CaseControlHandler> { handler ->
                 id = CASELIST_ID
                 xs = 2
 
-
-
                 Typography {
                     +"$CASES ${handler.caseIds.size}"
                     id = NUMBER_OF_CASES_ID
@@ -64,7 +61,6 @@ val CaseControl = FC<CaseControlHandler> { handler ->
                     caseIds = handler.caseIds
                     selectedCaseName = currentCase?.name
                     selectCase = { id ->
-                        debug("updating case with id $id")
                         updateCurrentCase(id)
                     }
                 }

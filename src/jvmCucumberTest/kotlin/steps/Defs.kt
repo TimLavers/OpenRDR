@@ -24,7 +24,7 @@ class Defs : En {
     private lateinit var interpretationViewPO: InterpretationViewPO
     private lateinit var conditionSelectorPO: ConditionSelectorPO
     private lateinit var conclusionsViewPO: ConclusionsViewPO
-    private lateinit var kbInfoPO: KBInfoPO
+    private lateinit var kbControlsPO: KBControlsPO
 
     private lateinit var driver: WebDriver
 
@@ -48,7 +48,7 @@ class Defs : En {
             interpretationViewPO = InterpretationViewPO(driver)
             conditionSelectorPO = ConditionSelectorPO(driver)
             conclusionsViewPO = ConclusionsViewPO(driver)
-            kbInfoPO = KBInfoPO(driver)
+            kbControlsPO = KBControlsPO(driver)
         }
 
         When("stop the client application") {
@@ -111,12 +111,12 @@ class Defs : En {
         }
 
         Given("I import the configured zipped Knowledge Base {word}") { toImport: String ->
-            kbInfoPO.importKB(toImport)
-            kbInfoPO.waitForKBToBeLoaded(toImport)
+            kbControlsPO.importKB(toImport)
+            kbControlsPO.waitForKBToBeLoaded(toImport)
         }
 
         And("I export the current Knowledge Base") {
-            kbInfoPO.exportKB()
+            kbControlsPO.exportKB()
         }
 
         Then("there is a file called {word} in my downloads directory") { fileName: String ->
@@ -127,7 +127,7 @@ class Defs : En {
 
         Given("I import the exported Knowledge Base {word}") { kbName: String ->
             val exportedZip = File(uiTestBase.downloadsDir(), "$kbName.zip")
-            val kbInfoPO = KBInfoPO(driver)
+            val kbInfoPO = KBControlsPO(driver)
             kbInfoPO.importFromZip(exportedZip)
             kbInfoPO.waitForKBToBeLoaded(kbName)
         }
@@ -143,9 +143,8 @@ class Defs : En {
         }
 
         Then("the displayed KB name is (now ){word}") { kbName: String ->
-            KBInfoPO(driver).headingText() shouldBe kbName
+            kbControlsPO.waitForKBToBeLoaded(kbName)
         }
-
 
         And("pause for {long} second(s)") { seconds: Long ->
             Thread.sleep(TimeUnit.SECONDS.toMillis(seconds))
@@ -359,12 +358,12 @@ class Defs : En {
             }
         }
 
-        Then("the KB import and export controls should be hidden") {
-            kbInfoPO.requireKbControlsToBeHidden()
+        Then("the KB controls (are )(should be )disabled") {
+            kbControlsPO.requireKbControlsToBeDisabled()
         }
 
-        Then("the KB import and export controls should be shown") {
-            kbInfoPO.requireKbControlsToBeShown()
+        Then("the KB controls (are )(should be )enabled") {
+            kbControlsPO.requireKbControlsToBeEnabled()
         }
 
         And("the count of the number of cases should be hidden") {

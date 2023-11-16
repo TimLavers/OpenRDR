@@ -1,4 +1,4 @@
-package main
+package io.rippledown.main
 
 import kotlinx.coroutines.MainScope
 import react.create

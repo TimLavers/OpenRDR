@@ -1,10 +1,10 @@
 package io.rippledown.interpretation
 
 import io.kotest.matchers.shouldBe
+import io.rippledown.main.Api
 import io.rippledown.model.diff.*
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.test.TestResult
-import main.Api
 import mocks.config
 import mocks.mock
 import proxy.waitForEvents

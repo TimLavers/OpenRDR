@@ -1,4 +1,4 @@
-package main
+package io.rippledown.main
 
 import kotlin.js.Date
 

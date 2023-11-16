@@ -1,19 +1,18 @@
 package io.rippledown.integration.pageobjects
 
-import io.kotest.matchers.shouldBe
 import io.rippledown.constants.kb.KB_EXPORT_BUTTON_ID
 import io.rippledown.constants.kb.KB_IMPORT_BUTTON_ID
-import io.rippledown.constants.kb.KB_INFO_CONTROLS_ID
-import io.rippledown.constants.kb.KB_INFO_HEADING_ID
+import io.rippledown.constants.kb.KB_SELECTOR_ID
 import io.rippledown.integration.proxy.ConfiguredTestData
-import org.awaitility.Awaitility
 import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver
+import org.openqa.selenium.support.ui.Wait
+import org.openqa.selenium.support.ui.WebDriverWait
 import java.io.File
-import java.util.concurrent.TimeUnit
+import java.time.Duration
 
 
-class KBInfoPO(private val driver: WebDriver) {
+class KBControlsPO(private val driver: WebDriver) {
 
     fun headingText(): String {
         return headingElement().text!!
@@ -33,30 +32,39 @@ class KBInfoPO(private val driver: WebDriver) {
     }
 
     fun exportKB() {
+        headingElement().click()
         val exportButton = driver.findElement(By.id(KB_EXPORT_BUTTON_ID))
         exportButton.click()
         KBExportPO(driver).doExport()
     }
 
     private fun activateImportKB(): KBImportPO {
+        headingElement().click()
         val importButton = driver.findElement(By.id(KB_IMPORT_BUTTON_ID))
         importButton.click()
         return KBImportPO(driver)
     }
 
     fun waitForKBToBeLoaded(name: String) {
-        Awaitility.await().atMost(10L, TimeUnit.SECONDS).until {
+        val wait: Wait<WebDriver> = WebDriverWait(driver, Duration.ofSeconds(10))
+        wait.until { _ ->
             kbName() == name
         }
     }
 
-    fun requireKbControlsToBeHidden() {
-        driver.findElement(By.id(KB_INFO_CONTROLS_ID)).isDisplayed shouldBe false
+    fun requireKbControlsToBeDisabled() {
+        val wait: Wait<WebDriver> = WebDriverWait(driver, Duration.ofSeconds(2))
+        wait.until { _ ->
+            headingElement().getAttribute("aria-disabled") == "true"
+        }
     }
 
-    fun requireKbControlsToBeShown() {
-        driver.findElement(By.id(KB_INFO_CONTROLS_ID)).isDisplayed shouldBe true
+    fun requireKbControlsToBeEnabled() {
+        val wait: Wait<WebDriver> = WebDriverWait(driver, Duration.ofSeconds(2))
+        wait.until { _ ->
+            headingElement().getAttribute("aria-disabled") == null
+        }
     }
 
-    private fun headingElement() = driver.findElement(By.id(KB_INFO_HEADING_ID))
+    private fun headingElement() = driver.findElement(By.id(KB_SELECTOR_ID))
 }
