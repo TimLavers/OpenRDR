@@ -6,10 +6,7 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.rippledown.constants.api.CREATE_KB
-import io.rippledown.constants.api.EXPORT_KB
-import io.rippledown.constants.api.IMPORT_KB
-import io.rippledown.constants.api.KB_INFO
+import io.rippledown.constants.api.*
 import io.rippledown.model.OperationResult
 import io.rippledown.server.ServerApplication
 import kotlinx.coroutines.Dispatchers
@@ -56,6 +53,9 @@ fun Application.kbManagement(application: ServerApplication) {
         }
         get(KB_INFO) {
             call.respond(application.kbName())
+        }
+        get(KB_LIST) {
+            call.respond(application.kbList())
         }
     }
 }
