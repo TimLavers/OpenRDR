@@ -1,5 +1,6 @@
 package io.rippledown.integration.pageobjects
 
+import io.rippledown.constants.kb.KB_CREATE_MENU_ITEM_ID
 import io.rippledown.constants.kb.KB_EXPORT_BUTTON_ID
 import io.rippledown.constants.kb.KB_IMPORT_BUTTON_ID
 import io.rippledown.constants.kb.KB_SELECTOR_ID
@@ -50,6 +51,12 @@ class KBControlsPO(private val driver: WebDriver) {
         wait.until { _ ->
             kbName() == name
         }
+    }
+
+    fun createKB(name: String) {
+        headingElement().click()
+        val createButton = driver.findElement(By.id(KB_CREATE_MENU_ITEM_ID))
+        createButton.click()
     }
 
     fun requireKbControlsToBeDisabled() {

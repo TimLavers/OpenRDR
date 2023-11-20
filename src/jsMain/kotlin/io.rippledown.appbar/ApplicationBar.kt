@@ -3,6 +3,7 @@ package io.rippledown.appbar
 import io.rippledown.constants.kb.KB_SELECTOR_ID
 import io.rippledown.constants.main.MAIN_HEADING
 import io.rippledown.constants.main.MAIN_HEADING_ID
+import io.rippledown.kb.CreateKB
 import io.rippledown.kb.ExportKB
 import io.rippledown.kb.ImportKB
 import io.rippledown.main.Handler
@@ -105,12 +106,13 @@ var ApplicationBar = FC<AppBarHandler> { handler ->
                     sx {
                         color = white
                     }
-                    MenuItem {
-                        value = "new"
-                        onClick = {
+                    CreateKB {
+                        api = handler.api
+                        scope = handler.scope
+                        onFinish = {
+                            reloadKB()
                             selectorIsOpen = false
                         }
-                        +"+ New project..."
                     }
                     ImportKB {
                         api = handler.api

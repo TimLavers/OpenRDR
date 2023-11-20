@@ -146,6 +146,10 @@ class Defs : En {
             kbControlsPO.waitForKBToBeLoaded(kbName)
         }
 
+        Then("I create a Knowledge Base with the name {word}") { kbName: String ->
+            kbControlsPO.createKB(kbName)
+        }
+
         And("pause for {long} second(s)") { seconds: Long ->
             Thread.sleep(TimeUnit.SECONDS.toMillis(seconds))
         }
