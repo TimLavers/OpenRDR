@@ -37,7 +37,6 @@ class Api(engine: HttpClientEngine = Js.create()) {
     }
 
     suspend fun createKB(name: String) = jsonClient.post("$endpoint$CREATE_KB") {
-        debug("API: createKB: $name")
         contentType(ContentType.Text.Plain)
         setBody(name)
     }

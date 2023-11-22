@@ -5,10 +5,8 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.beBlank
 import io.rippledown.constants.kb.*
 import kotlinx.browser.window
-import proxy.debug
 import proxy.findAllById
 import proxy.findById
-import proxy.findByTextContent
 import react.dom.screen
 import react.dom.test.act
 import web.html.HTMLElement
@@ -81,23 +79,7 @@ fun kbCreateDialog(): HTMLElement {
     }[0] as HTMLElement
 }
 
-fun buttons() {
-    val okButton = kbCreateDialog().findByTextContent("OK")
-    debug("okButton: ${okButton}")
-
-    val q = screen.queryByText("OK", json())
-    debug("query by text: $q")
-
-    val r = screen.queryByLabelText("OK", json())
-    debug("query by lable text: $r")
-
-
-//    screen.findAllByText("OK").size shouldBe 1
-//    screen.findAllByText("Cancel").size shouldBe 1
-//    screen.findAllByText("OK")[0].click()
-
-}
-
+//TODO these are not working
 suspend fun clickConfirmCreateKBButton() = act { kbCreateDialog().findById(CONFIRM_CREATE_BUTTON_ID) }
 suspend fun clickCancelCreateKBButton() = act { kbCreateDialog().findById(CANCEL_CREATE_BUTTON_ID) }
 

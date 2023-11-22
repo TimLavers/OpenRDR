@@ -2,11 +2,11 @@ package io.rippledown.kb
 
 import io.rippledown.constants.kb.*
 import io.rippledown.main.Handler
+import io.rippledown.main.debug
 import kotlinx.coroutines.launch
 import mui.material.*
 import mui.material.FormControlMargin.Companion.dense
 import mui.material.FormControlVariant.Companion.standard
-import mui.material.styles.TypographyVariant.Companion.subtitle1
 import react.FC
 import react.ReactNode
 import react.dom.events.FormEvent
@@ -21,8 +21,9 @@ external interface CreateKBHandler : Handler {
 
 val CreateKB = FC<CreateKBHandler> { handler ->
     var isOpen by useState(false)
-    var name by useState("")
+    var name = ""
 
+    debug("redraw CreateKB: isOpen = $isOpen, name = $name")
     MenuItem {
         id = KB_CREATE_MENU_ITEM_ID
         ListItemText {
@@ -37,7 +38,6 @@ val CreateKB = FC<CreateKBHandler> { handler ->
         open = isOpen
         DialogTitle {
             Typography {
-                variant = subtitle1
                 +"Create new project"
             }
         }
@@ -61,7 +61,6 @@ val CreateKB = FC<CreateKBHandler> { handler ->
                 onClick = {
                     isOpen = false
                     handler.onFinish()
-
                 }
                 +"Cancel"
             }
@@ -70,9 +69,9 @@ val CreateKB = FC<CreateKBHandler> { handler ->
                 onClick = {
                     handler.scope.launch {
                         handler.api.createKB(name)
+                        isOpen = false
+                        handler.onFinish()
                     }
-                    isOpen = false
-                    handler.onFinish()
                 }
                 +"OK"
             }
