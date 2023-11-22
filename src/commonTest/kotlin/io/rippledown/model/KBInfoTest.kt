@@ -1,6 +1,8 @@
 package io.rippledown.model
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.comparables.shouldBeGreaterThan
+import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -22,6 +24,15 @@ internal class KBInfoTest {
         idMatcher.matches(convertNameToId("General-Chemistry")) shouldBe true
         idMatcher.matches(convertNameToId("Stuff***123")) shouldBe true
         idMatcher.matches(convertNameToId("Whatever--()33")) shouldBe true
+    }
+
+    @Test
+    fun compareToTest() {
+        KBInfo("1", "ABC") shouldBeLessThan  KBInfo("2", "ABC")
+        KBInfo("2", "ABC") shouldBeGreaterThan KBInfo("1", "ABC")
+        KBInfo("1", "ABC") shouldBeLessThan  KBInfo("1", "BCD")
+        KBInfo("2", "ABC") shouldBeLessThan  KBInfo("1", "BCD")
+        KBInfo("1", "ABC") shouldBeLessThan  KBInfo("2", "BCD")
     }
 
     @Test

@@ -19,6 +19,7 @@ import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import main.debug
 
 fun mock(config: EngineConfig) = EngineBuilder(config).build()
 
@@ -45,8 +46,8 @@ class EngineConfig {
     var expectedMovedAttributeId: Int? = null
     var expectedTargetAttributeId: Int? = null
 
-    var returnKBInfo = KBInfo("Glucose")
-
+    val returnKBInfo = KBInfo("Glucose")
+    val returnKBList = listOf( KBInfo("Glucose"), KBInfo("Lipids"), KBInfo("Thyroids"))
 }
 
 private class EngineBuilder(private val config: EngineConfig) {
@@ -57,24 +58,12 @@ private class EngineBuilder(private val config: EngineConfig) {
     fun build() = MockEngine { request ->
         when (request.url.encodedPath) {
             WAITING_CASES -> {
-                respond(
-                    content = ByteReadChannel(
-                        json.encodeToString(config.returnCasesInfo)
-                    ),
-                    status = HttpStatusCode.OK,
-                    headers = headersOf(HttpHeaders.ContentType, "application/json")
-                )
+                httpResponseData(json.encodeToString(config.returnCasesInfo))
             }
 
             CASE -> {
                 if (config.expectedCaseId != null) request.url.parameters["id"] shouldBe config.expectedCaseId.toString()
-                respond(
-                    content = ByteReadChannel(
-                        json.encodeToString(config.returnCase)
-                    ),
-                    status = HttpStatusCode.OK,
-                    headers = headersOf(HttpHeaders.ContentType, "application/json")
-                )
+                httpResponseData(json.encodeToString(config.returnCase))
             }
 
             VERIFIED_INTERPRETATION_SAVED -> {
@@ -84,13 +73,7 @@ private class EngineBuilder(private val config: EngineConfig) {
                 if (config.expectedInterpretation != null) {
                     bodyAsInterpretation shouldBe config.expectedInterpretation
                 }
-                respond(
-                    content = ByteReadChannel(
-                        json.encodeToString(config.returnInterpretationAfterSavingInterpretation)
-                    ),
-                    status = HttpStatusCode.OK,
-                    headers = headersOf(HttpHeaders.ContentType, "application/json")
-                )
+                httpResponseData(json.encodeToString(config.returnInterpretationAfterSavingInterpretation))
             }
 
             BUILD_RULE -> {
@@ -100,13 +83,7 @@ private class EngineBuilder(private val config: EngineConfig) {
                 if (config.expectedRuleRequest != null) {
                     bodyAsRuleRequest shouldBe config.expectedRuleRequest
                 }
-                respond(
-                    content = ByteReadChannel(
-                        json.encodeToString(config.returnInterpretationAfterBuildingRule)
-                    ),
-                    status = HttpStatusCode.OK,
-                    headers = headersOf(HttpHeaders.ContentType, "application/json")
-                )
+                httpResponseData(json.encodeToString(config.returnInterpretationAfterBuildingRule))
             }
 
             START_RULE_SESSION -> {
@@ -116,13 +93,7 @@ private class EngineBuilder(private val config: EngineConfig) {
                 if (config.expectedSessionStartRequest != null) {
                     bodyAsSessionStartRequest shouldBe config.expectedSessionStartRequest
                 }
-                respond(
-                    content = ByteReadChannel(
-                        json.encodeToString(config.returnCornerstoneStatus)
-                    ),
-                    status = HttpStatusCode.OK,
-                    headers = headersOf(HttpHeaders.ContentType, "application/json")
-                )
+                httpResponseData(json.encodeToString(config.returnCornerstoneStatus))
             }
 
             UPDATE_CORNERSTONES -> {
@@ -133,69 +104,43 @@ private class EngineBuilder(private val config: EngineConfig) {
                 if (config.expectedUpdateCornerstoneRequest != null) {
                     bodyAsUpdateCornerstoneRequest shouldBe config.expectedUpdateCornerstoneRequest
                 }
-
-                respond(
-                    content = ByteReadChannel(
-                        json.encodeToString(config.returnCornerstoneStatus)
-                    ),
-                    status = HttpStatusCode.OK,
-                    headers = headersOf(HttpHeaders.ContentType, "application/json")
-                )
+                httpResponseData(json.encodeToString(config.returnCornerstoneStatus))
             }
 
             SELECT_CORNERSTONE -> {
                 if (config.expectedCornerstoneSelection != -1) request.url.parameters[INDEX_PARAMETER] shouldBe config.expectedCornerstoneSelection.toString()
-                respond(
-                    content = ByteReadChannel(
-                        json.encodeToString(config.returnCornerstoneStatus)
-                    ),
-                    status = HttpStatusCode.OK,
-                    headers = headersOf(HttpHeaders.ContentType, "application/json")
-                )
+                httpResponseData(json.encodeToString(config.returnCornerstoneStatus))
             }
-
 
             MOVE_ATTRIBUTE_JUST_BELOW_OTHER -> {
                 val body = request.body as TextContent
                 val data = Json.decodeFromString<Pair<Int, Int>>(body.text)
                 data.first shouldBe config.expectedMovedAttributeId
                 data.second shouldBe config.expectedTargetAttributeId
-
-                respond(
-                    content = ByteReadChannel(
-                        json.encodeToString(config.returnOperationResult)
-                    ),
-                    status = HttpStatusCode.OK,
-                    headers = headersOf(HttpHeaders.ContentType, "application/json")
-                )
+                httpResponseData(json.encodeToString(config.returnOperationResult))
             }
 
             KB_INFO -> {
-                respond(
-                    content = ByteReadChannel(
-                        json.encodeToString(config.returnKBInfo)
-                    ),
-                    status = HttpStatusCode.OK,
-                    headers = headersOf(HttpHeaders.ContentType, "application/json")
-                )
+                httpResponseData(json.encodeToString(config.returnKBInfo))
+            }
+            KB_LIST -> {
+                httpResponseData(json.encodeToString(config.returnKBList))
             }
 
             CONDITION_HINTS -> {
                 if (config.expectedCaseId != null) request.url.parameters["id"] shouldBe config.expectedCaseId.toString()
-                respond(
-                    content = ByteReadChannel(
-                        json.encodeToString(config.returnConditionList)
-                    ),
-                    status = HttpStatusCode.OK,
-                    headers = headersOf(HttpHeaders.ContentType, "application/json")
-                )
+                httpResponseData(json.encodeToString(config.returnConditionList))
             }
-
 
             else -> {
                 error("Unhandled ${request.url.fullPath}")
             }
         }
     }
-}
 
+    private fun MockRequestHandleScope.httpResponseData(dataToSend: String) = respond(
+        content = ByteReadChannel(dataToSend),
+        status = HttpStatusCode.OK,
+        headers = headersOf(HttpHeaders.ContentType, "application/json")
+    )
+}
