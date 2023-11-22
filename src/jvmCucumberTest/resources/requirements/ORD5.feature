@@ -224,24 +224,26 @@ Feature: Building rules
       | Manly |
     And stop the client application
 
-  Scenario: The import and export controls should be hidden when building a rule
+  Scenario: The KB controls should be disabled when building a rule
     Given a new case with the name Case1 is stored on the server
     And I start the client application
+    And the KB controls are enabled
     And I enter the text "Go to Bondi." in the interpretation field
     And I select the changes tab
     When I start to build a rule for the change on row 0
-    Then the KB import and export controls should be hidden
+    Then the KB controls should be disabled
     And the count of the number of cases should be hidden
     And cancel the rule
     And stop the client application
 
-  Scenario: The import and export controls should be re-shown after cancelling a rule
+  Scenario: The KB controls should be re-enabled after cancelling a rule
     Given a new case with the name Case1 is stored on the server
     And I start the client application
     And I enter the text "Go to Bondi." in the interpretation field
     And I select the changes tab
     And I start to build a rule for the change on row 0
+    And the KB controls are disabled
     When I cancel the rule
-    Then the KB import and export controls should be shown
+    Then the KB controls should be enabled
     And the count of the number of cases should be 1
     And stop the client application

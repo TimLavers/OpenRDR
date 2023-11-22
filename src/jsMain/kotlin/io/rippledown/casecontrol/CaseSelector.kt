@@ -2,8 +2,8 @@ package io.rippledown.casecontrol
 
 import io.rippledown.constants.caseview.CASE_NAME_PREFIX
 import io.rippledown.constants.caseview.CASE_SELECTOR_ID
+import io.rippledown.main.Handler
 import io.rippledown.model.CaseId
-import main.Handler
 import mui.material.List
 import mui.material.ListItemButton
 import mui.material.ListItemText

@@ -1,12 +1,12 @@
 package io.rippledown.casecontrol
 
 import io.rippledown.caseview.requireCaseToBeShowing
+import io.rippledown.main.Api
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.createCase
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.test.TestResult
-import main.Api
 import mocks.config
 import mocks.mock
 import proxy.requireNumberOfCases

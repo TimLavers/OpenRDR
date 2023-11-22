@@ -2,9 +2,9 @@ package io.rippledown.caseview
 
 import io.rippledown.constants.caseview.CASEVIEW_CASE_NAME_ID
 import io.rippledown.constants.interpretation.CASE_VIEW_CONTAINER
+import io.rippledown.main.Handler
+import io.rippledown.main.px8
 import io.rippledown.model.caseview.ViewableCase
-import main.Handler
-import main.px8
 import mui.material.Typography
 import mui.system.sx
 import react.FC

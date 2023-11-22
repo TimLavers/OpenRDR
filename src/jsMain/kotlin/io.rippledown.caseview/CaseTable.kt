@@ -1,8 +1,8 @@
 package io.rippledown.caseview
 
+import io.rippledown.main.Handler
+import io.rippledown.main.px12
 import io.rippledown.model.caseview.ViewableCase
-import main.Handler
-import main.px12
 import mui.material.Table
 import mui.system.sx
 import react.FC

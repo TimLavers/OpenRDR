@@ -4,10 +4,10 @@ import io.rippledown.constants.interpretation.INTERPRETATION_CHANGES_BADGE
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CONCLUSIONS
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL
+import io.rippledown.main.Handler
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import kotlinx.coroutines.launch
-import main.Handler
 import mui.lab.TabContext
 import mui.lab.TabPanel
 import mui.material.*
@@ -34,6 +34,7 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
         id = "interpretation_tabs"
         TabContext {
             value = selectedTab
+
 
             Tabs {
                 value = selectedTab
@@ -64,6 +65,7 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
                 key = interpretationViewKey(interp.latestText())
                 sx {
                     padding = 0.px
+                    marginTop = 10.px
                 }
 
                 InterpretationView {
@@ -84,6 +86,7 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
                 value = "1"
                 sx {
                     padding = 0.px
+                    marginTop = 10.px
                 }
                 ConclusionsView {
                     interpretation = interp
@@ -94,6 +97,7 @@ val InterpretationTabs = FC<InterpretationTabsHandler> { handler ->
                 value = "2"
                 sx {
                     padding = 0.px
+                    marginTop = 10.px
                 }
                 DiffViewer {
                     diffList = interp.diffList

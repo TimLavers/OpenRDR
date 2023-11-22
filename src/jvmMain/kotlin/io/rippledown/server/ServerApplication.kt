@@ -1,5 +1,6 @@
 package io.rippledown.server
 
+import io.rippledown.constants.server.DEFAULT_PROJECT_NAME
 import io.rippledown.kb.KB
 import io.rippledown.kb.KBManager
 import io.rippledown.kb.export.KBExporter

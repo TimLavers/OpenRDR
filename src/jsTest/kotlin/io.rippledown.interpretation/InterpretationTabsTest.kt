@@ -3,6 +3,7 @@ package io.rippledown.interpretation
 import io.kotest.matchers.shouldBe
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_AREA
+import io.rippledown.main.Api
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.diff.*
@@ -10,7 +11,6 @@ import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.RuleSummary
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.test.TestResult
-import main.Api
 import mocks.config
 import mocks.mock
 import proxy.findById

@@ -3,13 +3,13 @@ package io.rippledown.casecontrol
 import io.kotest.assertions.asClue
 import io.kotest.matchers.shouldBe
 import io.rippledown.interpretation.*
+import io.rippledown.main.Api
 import io.rippledown.model.createCase
 import io.rippledown.model.diff.*
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.test.TestResult
-import main.Api
 import mocks.config
 import mocks.mock
 import proxy.waitForEvents

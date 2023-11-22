@@ -13,7 +13,7 @@ class KBImportDialogTest {
     @Test
     fun importDialogShouldNotBeShowingInitially(): TestResult {
         val vfc = FC {
-            KBImportDialog {
+            ImportKB {
             }
         }
         return runReactTest(vfc) { container ->
@@ -27,7 +27,7 @@ class KBImportDialogTest {
     @Test
     fun shouldShowDialogWhenImportButtonClicked(): TestResult {
         val vfc = FC {
-            KBImportDialog {
+            ImportKB {
             }
         }
         return runReactTest(vfc) { container ->

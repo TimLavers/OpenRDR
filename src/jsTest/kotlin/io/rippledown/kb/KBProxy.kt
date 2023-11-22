@@ -2,6 +2,7 @@ package io.rippledown.kb
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.beBlank
 import io.rippledown.constants.kb.*
 import kotlinx.browser.window
 import proxy.findAllById
@@ -16,25 +17,28 @@ fun HTMLElement.cancelImportKBButton() = findById(CANCEL_IMPORT_BUTTON_ID)
 fun HTMLElement.importKBDialogContent() = findById(KB_IMPORT_DIALOG_CONTENT)
 fun HTMLElement.exportKBDialogContent() = findById(KB_EXPORT_DIALOG_CONTENT)
 
+fun HTMLElement.kbSelector() = findById(KB_SELECTOR_ID)
+
 //fun HTMLElement.kbImportDialog() = screen.findById(KB_IMPORT_DIALOG) //todo
 fun HTMLElement.kbImportDialog() = findById(KB_IMPORT_DIALOG)
 
 fun HTMLElement.requireKBName(name: String) {
-    findById(KB_INFO_HEADING_ID).textContent shouldBe name
+    kbSelector().textContent shouldBe name
 }
 
 fun HTMLElement.requireImportKBButtonToBeShowing() {
     importKBButton() shouldNotBe null
 }
 
-fun HTMLElement.requireKBInfoToBeVisible() {
-    val element = findById(KB_INFO_CONTROLS_ID)
-    window.getComputedStyle(element.unsafeCast<org.w3c.dom.Element>()).visibility shouldBe "visible"
+fun HTMLElement.requireKBControlsToBeEnabled() {
+    val element = kbSelector()
+    window.getComputedStyle(element.unsafeCast<org.w3c.dom.Element>())
+        .getPropertyValue("Mui-disabled") shouldBe beBlank()
 }
 
-fun HTMLElement.requireKBInfoToBeHidden() {
-    val element = findById(KB_INFO_CONTROLS_ID)
-    window.getComputedStyle(element.unsafeCast<org.w3c.dom.Element>()).visibility shouldBe "hidden"
+fun HTMLElement.requireKBControlsToBeDisabled() {
+    val element = kbSelector()
+    window.getComputedStyle(element.unsafeCast<org.w3c.dom.Element>()).getPropertyValue("Mui-disabled") shouldNotBe null
 }
 
 fun HTMLElement.requireExportKBButtonToBeShowing() {
@@ -59,4 +63,8 @@ fun HTMLElement.requireImportDialogToBeShowing() {
 
 suspend fun HTMLElement.clickKBImport() {
     act { importKBButton().click() }
+}
+
+suspend fun HTMLElement.clickKBSelector() {
+    act { kbSelector().click() }
 }

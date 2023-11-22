@@ -12,7 +12,7 @@ class KBExportDialogTest {
     @Test
     fun exportDialogShouldNotBeShowingInitially(): TestResult {
         val vfc = FC {
-            KBImportDialog {
+            ImportKB {
             }
         }
         return runReactTest(vfc) { container ->

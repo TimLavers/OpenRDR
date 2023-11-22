@@ -1,15 +1,13 @@
+package io.rippledown.main
+
 import io.kotest.matchers.shouldBe
 import io.rippledown.constants.caseview.CASES
 import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
-import io.rippledown.constants.main.MAIN_HEADING
-import io.rippledown.constants.main.MAIN_HEADING_ID
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.createCase
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.test.TestResult
-import main.Api
-import main.OpenRDRUI
 import mocks.config
 import mocks.defaultMock
 import mocks.mock
@@ -21,19 +19,6 @@ import react.dom.test.runReactTest
 import kotlin.test.Test
 
 class OpenRDRUITest {
-
-    @Test
-    fun shouldShowHeading(): TestResult {
-        val fc = FC {
-            OpenRDRUI {
-                scope = MainScope()
-                api = Api(defaultMock)
-            }
-        }
-        return runReactTest(fc) { container ->
-            container.findById(MAIN_HEADING_ID).textContent shouldBe MAIN_HEADING
-        }
-    }
 
     @Test
     fun shouldNotShowEmptyCaseQueueTest(): TestResult {

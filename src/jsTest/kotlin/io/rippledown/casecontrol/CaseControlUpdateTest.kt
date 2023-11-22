@@ -2,12 +2,12 @@ package io.rippledown.casecontrol
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.interpretation.requireInterpretation
+import io.rippledown.main.Api
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.createCaseWithInterpretation
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.test.TestResult
-import main.Api
 import mocks.config
 import mocks.mock
 import react.FC

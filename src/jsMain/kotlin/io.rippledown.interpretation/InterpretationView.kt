@@ -2,7 +2,7 @@ package io.rippledown.interpretation
 
 import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_AREA
-import main.Handler
+import io.rippledown.main.Handler
 import mui.material.TextField
 import mui.system.sx
 import npm.debounce
@@ -10,8 +10,11 @@ import react.FC
 import react.dom.events.FormEvent
 import react.dom.onChange
 import react.useState
+import web.cssom.Border
 import web.cssom.FontFamily.Companion.monospace
 import web.cssom.FontWeight.Companion.normal
+import web.cssom.LineStyle
+import web.cssom.ch
 import web.html.HTMLDivElement
 
 external interface InterpretationViewHandler : Handler {
@@ -36,6 +39,7 @@ val InterpretationView = FC<InterpretationViewHandler> { handler ->
         sx {
             fontWeight = normal
             fontFamily = monospace
+            border = Border(0.ch, LineStyle.hidden)
         }
         rows = 10
         autoFocus = true

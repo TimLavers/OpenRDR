@@ -8,6 +8,7 @@ import io.rippledown.interpretation.clickBuildIconForRow
 import io.rippledown.interpretation.moveMouseOverRow
 import io.rippledown.interpretation.requireNumberOfRows
 import io.rippledown.interpretation.selectChangesTab
+import io.rippledown.main.Api
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.createCaseWithInterpretation
@@ -16,7 +17,6 @@ import io.rippledown.model.diff.DiffList
 import io.rippledown.model.rule.CornerstoneStatus
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.test.TestResult
-import main.Api
 import mocks.config
 import mocks.mock
 import proxy.waitForEvents

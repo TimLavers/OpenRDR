@@ -5,9 +5,9 @@ import io.rippledown.constants.interpretation.CORNERSTONE_VIEW_CONTAINER
 import io.rippledown.constants.interpretation.EMPTY_CORNERSTONE_VIEW_CONTAINER
 import io.rippledown.constants.interpretation.NO_CORNERSTONES_TO_REVIEW
 import io.rippledown.interpretation.InterpretationTabs
+import io.rippledown.main.Handler
+import io.rippledown.main.px12
 import io.rippledown.model.rule.CornerstoneStatus
-import main.Handler
-import main.px12
 import mui.material.Stack
 import mui.material.Typography
 import mui.system.sx

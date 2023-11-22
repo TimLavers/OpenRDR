@@ -1,8 +1,8 @@
 package io.rippledown.caseview
 
 import io.rippledown.constants.caseview.CASE_TABLE_ROW_PREFIX
+import io.rippledown.main.Handler
 import io.rippledown.model.caseview.ViewableCase
-import main.Handler
 import mui.material.TableBody
 import mui.material.TableRow
 import mui.system.sx

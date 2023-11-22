@@ -5,6 +5,8 @@ import io.rippledown.cornerstoneview.CornerstoneView
 import io.rippledown.interpretation.ConditionSelector
 import io.rippledown.interpretation.InterpretationTabs
 import io.rippledown.interpretation.diffViewerKey
+import io.rippledown.main.Handler
+import io.rippledown.main.xs
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.interpretationview.ViewableInterpretation
@@ -13,8 +15,6 @@ import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import kotlinx.coroutines.launch
-import main.Handler
-import main.xs
 import mui.material.Box
 import mui.material.Grid
 import react.FC
