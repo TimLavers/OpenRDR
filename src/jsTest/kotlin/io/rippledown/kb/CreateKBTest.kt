@@ -41,13 +41,11 @@ class CreateKBTest {
     }
 
     @Test
-    fun newProjectNameShouldBeSetWhenOKButtonIsClicked(): TestResult {
-        var projectName = ""
+    fun onFinishShouldBeCalledWhenOKButtonIsClicked(): TestResult {
+        var finishCalled = false
         val vfc = FC {
             CreateKB {
-                onFinish = { name ->
-                    projectName = name
-                }
+                onFinish = { finishCalled = true }
             }
         }
         return runReactTest(vfc) { container ->
@@ -62,20 +60,18 @@ class CreateKBTest {
 //                clickConfirmCreateKBButton()
 
                 //then
-                projectName shouldBe "Bondi"
+                finishCalled shouldBe true
                 requireCreateKBDialogToNotBeShowing()
             }
         }
     }
 
     @Test
-    fun newProjectNameShouldNotBeSetWhenCancelButtonIsClicked(): TestResult {
-        var projectName = ""
+    fun onFinishShouldBeCalledWhenCancelButtonIsClicked(): TestResult {
+        var finished = false
         val vfc = FC {
             CreateKB {
-                onFinish = { name ->
-                    projectName = name
-                }
+                onFinish = { finished = true }
             }
         }
         return runReactTest(vfc) { container ->
@@ -88,7 +84,7 @@ class CreateKBTest {
                 clickCancelCreateKBButton()
 
                 //then
-                projectName shouldBe null
+                finished shouldBe true
                 requireCreateKBDialogToNotBeShowing()
             }
         }
