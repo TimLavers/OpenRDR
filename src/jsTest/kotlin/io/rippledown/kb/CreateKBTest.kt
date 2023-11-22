@@ -2,6 +2,7 @@ package io.rippledown.kb
 
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.TestResult
+import proxy.waitForEvents
 import react.FC
 import react.dom.test.runReactTest
 import kotlin.test.Test
@@ -52,10 +53,11 @@ class CreateKBTest {
         return runReactTest(vfc) { container ->
             with(container) {
                 //given
-                showKBCreateDialog()
-                enterNewProjectName("Bondi")
+//                showKBCreateDialog()
+//                enterNewProjectName("Bondi")
 
                 //when
+                waitForEvents()
                 buttons()
 //                clickConfirmCreateKBButton()
 

@@ -35,9 +35,9 @@ external class Container {
 external class Screen {
     fun getByText(s: String): HTMLElement
     fun getByLabelText(s: String): HTMLElement
-    fun queryByText(s: String): HTMLElement?
-    fun queryByLabelText(s: String): HTMLElement?
-    fun findAllByText(s: String): Array<HTMLElement>
+    fun queryByText(s: String, options: Json): HTMLElement?
+    fun queryByLabelText(s: String, options: Json): HTMLElement?
+    fun findAllByText(s: String, options: Json): Array<HTMLElement>
     fun queryAllByAltText(s: String): Array<HTMLElement>
     fun getByRole(role: String, options: Json): HTMLElement
     fun queryAllByRole(role: String, options: Json): Array<HTMLElement>

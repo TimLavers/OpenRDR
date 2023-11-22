@@ -69,7 +69,6 @@ kotlin {
         }
         val jvmMain by getting {
             dependencies {
-
                 implementation(project.dependencies.enforcedPlatform("io.ktor:ktor-bom:$ktorVersion"))
                 implementation("io.ktor:ktor-serialization")
                 implementation("io.ktor:ktor-server-content-negotiation")

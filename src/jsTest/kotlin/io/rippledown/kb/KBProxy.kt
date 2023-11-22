@@ -5,8 +5,10 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.beBlank
 import io.rippledown.constants.kb.*
 import kotlinx.browser.window
+import proxy.debug
 import proxy.findAllById
 import proxy.findById
+import proxy.findByTextContent
 import react.dom.screen
 import react.dom.test.act
 import web.html.HTMLElement
@@ -80,7 +82,14 @@ fun kbCreateDialog(): HTMLElement {
 }
 
 fun buttons() {
-    val okButton = screen.getByRole("button", json())
+    val okButton = kbCreateDialog().findByTextContent("OK")
+    debug("okButton: ${okButton}")
+
+    val q = screen.queryByText("OK", json())
+    debug("query by text: $q")
+
+    val r = screen.queryByLabelText("OK", json())
+    debug("query by lable text: $r")
 
 
 //    screen.findAllByText("OK").size shouldBe 1

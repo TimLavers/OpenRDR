@@ -304,6 +304,18 @@ internal class ServerApplicationTest {
     }
 
     @Test
+    fun `creating a KB should set the current KB to the new KB`() {
+        //Given
+        app.kbName().name shouldBe "Thyroids"
+
+        //When
+        app.createKB("Glucose", false)
+
+        //Then
+        app.kbName().name shouldBe "Glucose"
+    }
+
+    @Test
     fun reCreateKB() {
         app.kb.kbInfo.name shouldBe "Thyroids"
         val kbIdsBefore = persistenceProvider.idStore().data().keys

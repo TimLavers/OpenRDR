@@ -2,13 +2,13 @@ package io.rippledown.kb
 
 import io.rippledown.constants.kb.*
 import io.rippledown.main.Handler
+import kotlinx.coroutines.launch
 import mui.material.*
 import mui.material.FormControlMargin.Companion.dense
 import mui.material.FormControlVariant.Companion.standard
 import mui.material.styles.TypographyVariant.Companion.subtitle1
 import react.FC
 import react.ReactNode
-import react.dom.aria.AriaRole
 import react.dom.events.FormEvent
 import react.dom.onChange
 import react.useState
@@ -16,7 +16,7 @@ import web.html.HTMLDivElement
 import web.html.HTMLInputElement
 
 external interface CreateKBHandler : Handler {
-    var onFinish: (name: String) -> Unit
+    var onFinish: () -> Unit
 }
 
 val CreateKB = FC<CreateKBHandler> { handler ->
@@ -43,7 +43,7 @@ val CreateKB = FC<CreateKBHandler> { handler ->
         }
         DialogContent {
             TextField {
-                id = CREATE_KB_PROJECT_NAME_FIELD
+                id = KB_CREATE_PROJECT_NAME_FIELD
                 label = "Project name".unsafeCast<ReactNode>()
                 variant = standard
                 autoFocus = true
@@ -58,18 +58,21 @@ val CreateKB = FC<CreateKBHandler> { handler ->
         DialogActions {
             Button {
                 id = CANCEL_CREATE_BUTTON_ID
-                role = AriaRole.button
                 onClick = {
                     isOpen = false
+                    handler.onFinish()
+
                 }
                 +"Cancel"
             }
             Button {
                 id = CONFIRM_CREATE_BUTTON_ID
-                role = AriaRole.button
                 onClick = {
+                    handler.scope.launch {
+                        handler.api.createKB(name)
+                    }
                     isOpen = false
-                    handler.onFinish(name)
+                    handler.onFinish()
                 }
                 +"OK"
             }

@@ -28,9 +28,11 @@ Feature: Knowledge Base management
     Then the displayed KB name is now Thyroids
     And stop the client application
 
+  @single
   Scenario: A Knowledge Base can be created
     Given I start the client application
     And the displayed KB name is Thyroids
+    And pause
     When I create a Knowledge Base with the name Glucose
     Then the displayed KB name is now Glucose
     And stop the client application

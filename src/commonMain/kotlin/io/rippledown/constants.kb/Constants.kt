@@ -20,4 +20,4 @@ const val CANCEL_CREATE_BUTTON_ID = "cancel_kb_create"
 
 const val KB_IMPORT_DIALOG_CONTENT = "import_kb_dialog_content"
 const val KB_EXPORT_DIALOG_CONTENT = "export_kb_dialog_content"
-const val CREATE_KB_PROJECT_NAME_FIELD = "create_kb_project_name_field"
+const val KB_CREATE_PROJECT_NAME_FIELD = "kb_create_project_name_field"

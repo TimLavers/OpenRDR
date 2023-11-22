@@ -36,6 +36,12 @@ class Api(engine: HttpClientEngine = Js.create()) {
         }
     }
 
+    suspend fun createKB(name: String) = jsonClient.post("$endpoint$CREATE_KB") {
+        debug("API: createKB: $name")
+        contentType(ContentType.Text.Plain)
+        setBody(name)
+    }
+
     suspend fun kbInfo() = jsonClient.get("$endpoint$KB_INFO").body<KBInfo>()
 
     suspend fun kbList() = jsonClient.get("$endpoint$KB_LIST").body<List<KBInfo>>()
@@ -90,13 +96,10 @@ class Api(engine: HttpClientEngine = Js.create()) {
      * @return the interpretation containing the DiffList of the original and verified interpretation
      */
     suspend fun saveVerifiedInterpretation(verifiedInterpretation: ViewableInterpretation): ViewableInterpretation {
-        debug("saveVerifiedInterpretation: $verifiedInterpretation")
-        val returned = jsonClient.post("$endpoint$VERIFIED_INTERPRETATION_SAVED") {
+        return jsonClient.post("$endpoint$VERIFIED_INTERPRETATION_SAVED") {
             contentType(ContentType.Application.Json)
             setBody(verifiedInterpretation)
         }.body<ViewableInterpretation>()
-        debug("saveVerifiedInterpretation return: $returned")
-        return returned
     }
 
     /**
@@ -153,7 +156,5 @@ class Api(engine: HttpClientEngine = Js.create()) {
     suspend fun selectCornerstone(index: Int): CornerstoneStatus {
         return jsonClient.get("$endpoint$SELECT_CORNERSTONE?$INDEX_PARAMETER=$index").body()
     }
-
-
 }
 
