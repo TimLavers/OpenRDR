@@ -19,6 +19,7 @@ import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import main.debug
 
 fun mock(config: EngineConfig) = EngineBuilder(config).build()
 
