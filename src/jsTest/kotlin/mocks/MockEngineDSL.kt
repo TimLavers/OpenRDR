@@ -44,9 +44,10 @@ class EngineConfig {
 
     var expectedMovedAttributeId: Int? = null
     var expectedTargetAttributeId: Int? = null
+    var expectedNewProjectName: String? = null
 
     val returnKBInfo = KBInfo("Glucose")
-    val returnKBList = listOf( KBInfo("Glucose"), KBInfo("Lipids"), KBInfo("Thyroids"))
+    val returnKBList = listOf(KBInfo("Glucose"), KBInfo("Lipids"), KBInfo("Thyroids"))
 }
 
 private class EngineBuilder(private val config: EngineConfig) {
@@ -122,8 +123,16 @@ private class EngineBuilder(private val config: EngineConfig) {
             KB_INFO -> {
                 httpResponseData(json.encodeToString(config.returnKBInfo))
             }
+
             KB_LIST -> {
                 httpResponseData(json.encodeToString(config.returnKBList))
+            }
+
+            CREATE_KB -> {
+                val body = request.body as TextContent
+                val name = body.text
+                name shouldBe config.expectedNewProjectName
+                httpResponseData("")
             }
 
             CONDITION_HINTS -> {

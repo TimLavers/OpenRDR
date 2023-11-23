@@ -3,6 +3,7 @@ package io.rippledown.appbar
 import io.rippledown.constants.kb.KB_SELECTOR_ID
 import io.rippledown.constants.main.MAIN_HEADING
 import io.rippledown.constants.main.MAIN_HEADING_ID
+import io.rippledown.kb.CreateKB
 import io.rippledown.kb.ExportKB
 import io.rippledown.kb.ImportKB
 import io.rippledown.main.Handler
@@ -40,27 +41,22 @@ var ApplicationBar = FC<AppBarHandler> { handler ->
 
     fun reloadKB() {
         handler.scope.launch {
-            kbInfo = handler.api.kbInfo()
+            val newKBInfo = handler.api.kbInfo()
+            debug("AppBar reload: newKBInfo: $newKBInfo")
+            kbInfo = newKBInfo
         }
     }
 
     fun handleChange(event: ChangeEvent<HTMLInputElement>) {
         val value = event.target.value
-        if (value == "new") {
-            debug("TODO: create new KB")
-        } else {
-            debug("TODO: change KB to $value")
-//            handler.scope.launch {
-//                handler.api.setKB(value)
-//                reloadKB()
-//            }
-        }
+        debug("TODO: change KB to $value")
     }
 
     useEffectOnce {
+        debug("use effect once")
         reloadKB()
     }
-
+    debug("AppBar redraw: kbInfo: $kbInfo")
     AppBar {
         id = "app-bar"
         Toolbar {
@@ -94,7 +90,8 @@ var ApplicationBar = FC<AppBarHandler> { handler ->
                     value = kbName()
                     open = selectorIsOpen
                     onChange = { event: ChangeEvent<HTMLInputElement>, _ ->
-                        handleChange(event)
+                        debug("onChange: $event")
+//                        handleChange(event)
                     }
                     onClick = { event: MouseEvent<HTMLElement, *> ->
                         val target = event.target as HTMLElement
@@ -105,19 +102,21 @@ var ApplicationBar = FC<AppBarHandler> { handler ->
                     sx {
                         color = white
                     }
-                    MenuItem {
-                        value = "new"
-                        onClick = {
+                    CreateKB {
+                        api = handler.api
+                        scope = handler.scope
+                        onFinish = {
                             selectorIsOpen = false
+                            reloadKB()
+                            debug("finished creating KB")
                         }
-                        +"+ New project..."
                     }
                     ImportKB {
                         api = handler.api
                         scope = handler.scope
                         reloadKB = {
-                            reloadKB()
                             selectorIsOpen = false
+                            reloadKB()
                         }
                     }
                     ExportKB {

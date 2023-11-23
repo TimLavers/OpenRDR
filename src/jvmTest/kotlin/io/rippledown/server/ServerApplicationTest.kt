@@ -267,8 +267,32 @@ internal class ServerApplicationTest {
     }
 
     @Test
-    fun createKB() {
+    fun `should not create a KB with the same name if force is false`() {
         // There's a KB built at initialisation.
+        //Given
+        app.kb.kbInfo.name shouldBe "Thyroids"
+        persistenceProvider.idStore().data().keys.size shouldBe 1
+        val id0 = persistenceProvider.idStore().data().keys.first()
+        app.kb.addCornerstoneCase(createCase("Case1"))
+        app.kb.containsCornerstoneCaseWithName("Case1") shouldBe true
+
+        //When
+        try {
+            app.createKB("Thyroids", false)
+        } catch (e: Exception) {
+            //expected
+        }
+
+        //Then
+        app.kb.kbInfo.name shouldBe "Thyroids"
+        app.kb.containsCornerstoneCaseWithName("Case1") shouldBe true //kb not rebuilt
+        persistenceProvider.idStore().data().keys shouldBe setOf(id0)
+    }
+
+    @Test
+    fun `should create a KB with the same name if force is true`() {
+        // There's a KB built at initialisation.
+        //Given
         app.kb.kbInfo.name shouldBe "Thyroids"
         persistenceProvider.idStore().data().keys.size shouldBe 1
         val id0 = persistenceProvider.idStore().data().keys.first()
@@ -276,31 +300,50 @@ internal class ServerApplicationTest {
         app.kb.addCornerstoneCase(createCase("Case1"))
         app.kb.containsCornerstoneCaseWithName("Case1") shouldBe true
 
-        // Existing name, force false.
-        app.createKB("Thyroids", false)
-        app.kb.kbInfo.name shouldBe "Thyroids"
-        app.kb.containsCornerstoneCaseWithName("Case1") shouldBe true //kb not rebuilt
-        persistenceProvider.idStore().data().keys.size shouldBe setOf(id0)
 
-        // Existing name, force true.
+        //When - Existing name, force true.
         app.createKB("Thyroids", true)
+
+        //Then
         app.kb.kbInfo.name shouldBe "Thyroids"
         val id1 = app.kb.kbInfo.id
         app.kb.containsCornerstoneCaseWithName("Case1") shouldBe false //kb rebuilt
-        persistenceProvider.idStore().data().keys.size shouldBe setOf(id0, id1)
+        persistenceProvider.idStore().data().keys shouldBe setOf(id0, id1)
+    }
 
-        // New name, force false.
+    @Test
+    fun `should create a KB with a new name`() {
+        // There's a KB built at initialisation.
+        //Given
+        app.kb.kbInfo.name shouldBe "Thyroids"
+        persistenceProvider.idStore().data().keys.size shouldBe 1
+        val id0 = persistenceProvider.idStore().data().keys.first()
+        app.kb.containsCornerstoneCaseWithName("Case1") shouldBe false //sanity
+        app.kb.addCornerstoneCase(createCase("Case1"))
+        app.kb.containsCornerstoneCaseWithName("Case1") shouldBe true
+        app.createKB("Thyroids", true)
+        val id1 = app.kb.kbInfo.id
+
+        //When
         app.createKB("Glucose", false)
-        app.kb.kbInfo.name shouldBe "Glucose"
         val id2 = app.kb.kbInfo.id
-        // Check that all the other KBs are still there.
-        persistenceProvider.idStore().data().keys.size shouldBe setOf(id0, id1, id2)
-
-        // New name, force true.
         app.createKB("Lipids", true)
-        app.kb.kbInfo.name shouldBe "Lipids"
         val id3 = app.kb.kbInfo.id
-        persistenceProvider.idStore().data().keys.size shouldBe setOf(id0, id1, id2, id3)
+
+        //Then - check that all the other KBs are still there.
+        persistenceProvider.idStore().data().keys shouldBe setOf(id0, id1, id2, id3)
+    }
+
+    @Test
+    fun `creating a KB should set the current KB to the new KB`() {
+        //Given
+        app.kbName().name shouldBe "Thyroids"
+
+        //When
+        app.createKB("Glucose", false)
+
+        //Then
+        app.kbName().name shouldBe "Glucose"
     }
 
     @Test

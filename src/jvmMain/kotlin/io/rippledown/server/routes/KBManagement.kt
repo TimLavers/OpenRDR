@@ -1,6 +1,7 @@
 package io.rippledown.server.routes
 
 import io.ktor.http.*
+import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -17,10 +18,7 @@ import java.io.ByteArrayOutputStream
 
 fun Application.kbManagement(application: ServerApplication) {
     routing {
-        post(CREATE_KB) {
-            application.reCreateKB()
-            call.respond(HttpStatusCode.OK, OperationResult("KB created"))
-        }
+
         post(IMPORT_KB) {
             val multipart = call.receiveMultipart()
             val allParts = multipart.readAllParts()
@@ -40,7 +38,7 @@ fun Application.kbManagement(application: ServerApplication) {
             }
             val bytes = partReader.toByteArray()
             application.importKBFromZip(bytes)
-            call.respond(HttpStatusCode.OK, OperationResult("KB imported"))
+            call.respond(OK, OperationResult("KB imported"))
         }
         get(EXPORT_KB) {
             val file = application.exportKBToZip()
@@ -48,12 +46,21 @@ fun Application.kbManagement(application: ServerApplication) {
             call.response.header(
                 HttpHeaders.ContentDisposition, ContentDisposition.Attachment.withParameter(
                     ContentDisposition.Parameters.FileName, "$kbName.zip"
-            ).toString())
+                ).toString()
+            )
             call.respondFile(file)
         }
+
+        post(CREATE_KB) {
+            val name = call.receive<String>()
+            application.createKB(name, true)
+            call.respond(OK)
+        }
+
         get(KB_INFO) {
             call.respond(application.kbName())
         }
+
         get(KB_LIST) {
             call.respond(application.kbList())
         }
