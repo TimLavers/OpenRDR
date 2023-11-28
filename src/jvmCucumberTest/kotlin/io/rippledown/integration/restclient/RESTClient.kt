@@ -35,7 +35,7 @@ class RESTClient {
 
     private var currentCase: ViewableCase? = null
 
-    fun serverHasStarted(): Boolean {
+    fun serverIsRunning(): Boolean {
         return runBlocking {
             try {
                 jsonClient.get("$endpoint$PING")

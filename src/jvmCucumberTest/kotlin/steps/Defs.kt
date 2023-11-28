@@ -5,6 +5,7 @@ import io.cucumber.java8.En
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.UITestBase
 import io.rippledown.integration.pageobjects.*
+import io.rippledown.integration.pause
 import io.rippledown.integration.restclient.RESTClient
 import io.rippledown.integration.utils.Cyborg
 import org.awaitility.Awaitility
@@ -29,9 +30,14 @@ class Defs : En {
     private lateinit var driver: WebDriver
 
     init {
-        Before { scenario ->
+        Before("not @database") { scenario ->
             println("Before scenario '${scenario.name}'")
             serverProxy.start()
+        }
+
+        Before("@database") { scenario ->
+            println("DB Before. Scenario: '${scenario.name}'")
+            serverProxy.startWithPostgres()
         }
 
         After { scenario ->
@@ -55,6 +61,10 @@ class Defs : En {
             //client application is stopped in the After hook
         }
 
+        When("I stop the client application") {
+            uiTestBase.driverClose()
+        }
+
         Given("a list of cases with the following names is stored on the server:") { dataTable: DataTable ->
             dataTable.asList().forEach { caseName ->
                 labProxy.provideCase(caseName)
@@ -65,6 +75,12 @@ class Defs : En {
                 val padded = i.toString().padStart(3, '0')
                 labProxy.provideCaseWithName("Case_$padded")
             }
+        }
+
+        And("I re-start the server application") {
+            serverProxy.shutdown()
+            pause(3000)
+            serverProxy.reStartWithPostgres()
         }
 
         And("I select a case with all three attributes") {
@@ -194,11 +210,19 @@ class Defs : En {
             }
         }
 
+        And("I build a rule to add the conclusion {string} with no conditions") { text: String ->
+            interpretationViewPO.enterVerifiedText(text)
+        }
+
         When("I replace the text in the interpretation field with {string}") { text: String ->
             interpretationViewPO.deleteAllText()
             interpretationViewPO.enterVerifiedText(text)
         }
         Then("the interpretation field should contain the text {string}") { text: String ->
+            interpretationViewPO.selectOriginalTab()
+            interpretationViewPO.interpretationText() shouldBe text
+        }
+        Then("the interpretation should be {string}") { text: String ->
             interpretationViewPO.selectOriginalTab()
             interpretationViewPO.interpretationText() shouldBe text
         }

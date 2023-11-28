@@ -22,12 +22,21 @@ class ServerProxy {
         dirProxy.createAndCleanManagedDirectories()
     }
 
-    fun start() {
+    fun start() = start(true)
+
+    fun startWithPostgres() = start(false)
+
+    fun reStartWithPostgres() = start(false, cleanup = false)
+
+    fun start(inMemory: Boolean, cleanup: Boolean = true) {
+        println("START: inMemory = [${inMemory}], cleanup = [${cleanup}]")
         findJar()
-        dirProxy.createAndCleanManagedDirectories()
-        logProxy.deleteLogfiles()
-//        process = ProcessBuilder("java", "-jar", jarFile.absolutePath)
-        process = ProcessBuilder("java", "-jar", jarFile.absolutePath, IN_MEMORY)
+        if (cleanup) {
+            dirProxy.createAndCleanManagedDirectories()
+            logProxy.deleteLogfiles()
+        }
+        val dbFlag = if (inMemory) IN_MEMORY else ""
+        process = ProcessBuilder("java", "-jar", jarFile.absolutePath, dbFlag)
             .redirectErrorStream(true)
             .redirectOutput(systemOutputFile)
             .directory(dirProxy.tempDir())
@@ -44,7 +53,7 @@ class ServerProxy {
 
     private fun waitForServerToStart() {
         await().atMost(Duration.ofSeconds(30)).until {
-            logProxy.contains(STARTING_SERVER) && restClient.serverHasStarted()
+            logProxy.contains(STARTING_SERVER) && restClient.serverIsRunning()
         }
     }
 
@@ -52,6 +61,9 @@ class ServerProxy {
 
     fun shutdown() {
         restClient.shutdown()
+        await().atMost(Duration.ofSeconds(10)).until {
+            !restClient.serverIsRunning()
+        }
         if ( this::process.isInitialized) {
             process.destroyForcibly().waitFor()
         }

@@ -8,10 +8,7 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.verify
-import io.rippledown.constants.api.CREATE_KB
-import io.rippledown.constants.api.EXPORT_KB
-import io.rippledown.constants.api.IMPORT_KB
-import io.rippledown.constants.api.KB_INFO
+import io.rippledown.constants.api.*
 import io.rippledown.model.KBInfo
 import io.rippledown.model.OperationResult
 import java.io.File
@@ -37,6 +34,17 @@ class KBManagementTest: OpenRDRServerTestBase() {
         val result = httpClient.post(CREATE_KB)
         result.status shouldBe HttpStatusCode.OK
         result.body<OperationResult>().message shouldBe "KB created"
+        verify { serverApplication.reCreateKB() }
+    }
+
+    @Test
+    fun deleteKB() = testApplication {
+        setup()
+        val kbToGo = KBInfo("Whatever")
+        every { serverApplication.deleteKB(kbToGo) } returns Unit
+        val result = httpClient.delete(DELETE_KB)
+        result.status shouldBe HttpStatusCode.OK
+        result.body<OperationResult>().message shouldBe "KB deleted"
         verify { serverApplication.reCreateKB() }
     }
 

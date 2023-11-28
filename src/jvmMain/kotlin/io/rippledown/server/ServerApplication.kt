@@ -40,9 +40,16 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         kbManager.deleteKB(oldKBInfo)
     }
 
+    fun deleteKB(kbInfo: KBInfo) {
+        TODO()
+    }
+
     fun createKB() {
-        val kbInfo = kbManager.createKB(DEFAULT_PROJECT_NAME, true)
-        kb = (kbManager.openKB(kbInfo.id) as EntityRetrieval.Success<KB>).entity
+        val defaultProjectInfo = kbManager.all().firstOrNull { it.name == DEFAULT_PROJECT_NAME } ?: kbManager.createKB(
+            DEFAULT_PROJECT_NAME,
+            true
+        )
+        kb = (kbManager.openKB(defaultProjectInfo.id) as EntityRetrieval.Success<KB>).entity
     }
 
     fun kbName(): KBInfo {
