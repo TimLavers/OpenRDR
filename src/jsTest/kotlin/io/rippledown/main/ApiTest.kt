@@ -1,6 +1,7 @@
 package io.rippledown.main
 
 import io.kotest.matchers.shouldBe
+import io.ktor.http.HttpStatusCode.Companion.OK
 import io.rippledown.model.*
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.hasCurrentValue
@@ -77,6 +78,19 @@ class ApiTest {
     @Test
     fun kbInfo() = runTest {
         Api(mock(config {})).kbInfo().name shouldBe "Glucose"
+    }
+
+    @Test
+    fun createKB() = runTest {
+        val config = config {
+            expectedNewProjectName = "Bondi"
+        }
+        Api(mock(config)).createKB("Bondi").status shouldBe OK
+    }
+
+    @Test
+    fun kbList() = runTest {
+        Api(mock(config {})).kbList().map { it.name } shouldBe listOf("Glucose", "Lipids", "Thyroids")
     }
 
     @Test

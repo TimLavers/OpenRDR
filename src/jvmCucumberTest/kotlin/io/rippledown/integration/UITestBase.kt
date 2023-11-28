@@ -57,6 +57,6 @@ open class UITestBase {
     }
 
     fun resetKB() {
-        restClient.resetKB()
+        restClient.createKBWithDefaultName()
     }
 }

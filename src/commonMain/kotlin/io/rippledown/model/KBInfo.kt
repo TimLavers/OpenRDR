@@ -10,7 +10,7 @@ fun convertNameToId(name: String): String {
 }
 
 @Serializable
-class KBInfo(val id: String, val name: String) {
+class KBInfo(val id: String, val name: String): Comparable<KBInfo> {
     constructor(name: String): this(convertNameToId(name), name)
 
     init {
@@ -32,6 +32,11 @@ class KBInfo(val id: String, val name: String) {
         require(!name.contains('\n')) {
             "KBInfo name cannot contain a newline."
         }
+    }
+
+    override fun compareTo(other: KBInfo): Int {
+        val byName = name.compareTo(other.name)
+        return if (byName != 0) byName else id.compareTo(other.id)
     }
 
     override fun equals(other: Any?): Boolean {

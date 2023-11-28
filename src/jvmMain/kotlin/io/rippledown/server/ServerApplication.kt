@@ -1,6 +1,5 @@
 package io.rippledown.server
 
-import io.rippledown.constants.server.DEFAULT_PROJECT_NAME
 import io.rippledown.kb.KB
 import io.rippledown.kb.KBManager
 import io.rippledown.kb.export.KBExporter
@@ -31,30 +30,40 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
     lateinit var kb: KB
 
     init {
-        createKB()
+        createKB("Thyroids", false)
     }
 
     fun reCreateKB() {
         val oldKBInfo = kbName()
-        createKB()
+        createKB(oldKBInfo.name, true)
         kbManager.deleteKB(oldKBInfo)
     }
 
-    fun deleteKB(kbInfo: KBInfo) {
-        TODO()
-    }
-
-    fun createKB() {
+    /*
+     fun createKB() {
         val defaultProjectInfo = kbManager.all().firstOrNull { it.name == DEFAULT_PROJECT_NAME } ?: kbManager.createKB(
             DEFAULT_PROJECT_NAME,
             true
         )
         kb = (kbManager.openKB(defaultProjectInfo.id) as EntityRetrieval.Success<KB>).entity
     }
+     */
+    fun createKB(name: String, force: Boolean) {
+        val kbInfo = kbManager.createKB(name, force)
+        kb = (kbManager.openKB(kbInfo.id) as EntityRetrieval.Success<KB>).entity
+        logger.info("Opened KB with name: '${kbInfo.name}' and id: '${kbInfo.id}'")
+    }
+
+    fun deleteKB(kbInfo: KBInfo) {
+        TODO()
+    }
 
     fun kbName(): KBInfo {
+        logger.info("kbName will return: ${kb.kbInfo.name}")
         return kb.kbInfo
     }
+
+    fun kbList(): List<KBInfo> = kbManager.all().toList().sorted()
 
     fun exportKBToZip(): File {
         val tempDir: File = createTempDirectory().toFile()
@@ -171,7 +180,7 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         val diff = sessionStartRequest.diff
 
         startRuleSessionForDifference(caseId, diff)
-        return kb.cornerstoneStatus(null);
+        return kb.cornerstoneStatus(null)
 
     }
 

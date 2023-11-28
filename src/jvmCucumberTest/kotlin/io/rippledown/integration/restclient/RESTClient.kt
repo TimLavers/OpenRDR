@@ -8,14 +8,15 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.rippledown.constants.api.*
+import io.rippledown.constants.server.DEFAULT_PROJECT_NAME
 import io.rippledown.constants.server.PING
 import io.rippledown.constants.server.SHUTDOWN
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.EpisodicCondition
-import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.episodic.predicate.IsNotBlank
+import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.external.ExternalCase
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -159,13 +160,11 @@ class RESTClient {
         return EpisodicCondition(null, attribute, IsNotBlank, Current)
     }
 
-    fun resetKB(): OperationResult {
-        var result = OperationResult("")
-        runBlocking {
-            result = jsonClient.post(endpoint + CREATE_KB) {
-            }.body()
+    fun createKBWithDefaultName() = runBlocking {
+        jsonClient.post(endpoint + CREATE_KB) {
+            contentType(ContentType.Text.Plain)
+            setBody(DEFAULT_PROJECT_NAME)
         }
-        return result
     }
 
     fun shutdown(): Unit = runBlocking {

@@ -28,13 +28,26 @@ class KBManagementTest: OpenRDRServerTestBase() {
     }
 
     @Test
-    fun reCreateKB() = testApplication {
+    fun kbList() = testApplication {
         setup()
-        every { serverApplication.reCreateKB() } returns Unit
-        val result = httpClient.post(CREATE_KB)
+        val kbs = listOf(KBInfo("10", "Glucose"), KBInfo("1", "Thyroids"), KBInfo("3", "Whatever"))
+        every { serverApplication.kbList() } returns kbs
+        val result = httpClient.get(KB_LIST)
         result.status shouldBe HttpStatusCode.OK
-        result.body<OperationResult>().message shouldBe "KB created"
-        verify { serverApplication.reCreateKB() }
+        result.body<List<KBInfo>>() shouldBe kbs
+        verify { serverApplication.kbList() }
+    }
+
+    @Test
+    fun `should create a KB with a specified name`() = testApplication {
+        setup()
+        every { serverApplication.createKB(any(), any()) } returns Unit
+        val result = httpClient.post(CREATE_KB) {
+            contentType(ContentType.Application.Json)
+            setBody("Bondi")
+        }
+        result.status shouldBe HttpStatusCode.OK
+        verify { serverApplication.createKB("Bondi", true) }
     }
 
     @Test
