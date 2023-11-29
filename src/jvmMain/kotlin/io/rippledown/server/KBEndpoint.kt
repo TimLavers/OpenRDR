@@ -1,12 +1,6 @@
 package io.rippledown.server
 
-import io.rippledown.constants.server.DEFAULT_PROJECT_NAME
 import io.rippledown.kb.KB
-import io.rippledown.kb.KBManager
-import io.rippledown.kb.export.KBExporter
-import io.rippledown.kb.export.KBImporter
-import io.rippledown.kb.export.util.Unzipper
-import io.rippledown.kb.export.util.Zipper
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.Conclusion
 import io.rippledown.model.KBInfo
@@ -17,68 +11,15 @@ import io.rippledown.model.diff.*
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.*
-import io.rippledown.persistence.PersistenceProvider
-import io.rippledown.persistence.postgres.PostgresPersistenceProvider
-import io.rippledown.util.EntityRetrieval
 import java.io.File
-import kotlin.io.path.createTempDirectory
 
-class ServerApplication(private val persistenceProvider: PersistenceProvider = PostgresPersistenceProvider()) {
-    val casesDir = File("cases").apply { mkdirs() }
-    val interpretationsDir = File("interpretations").apply { mkdirs() }
-    private val kbManager = KBManager(persistenceProvider)
-
-    var kb: KB
-
-    init {
-        val defaultProjectInfo = kbManager.all().firstOrNull { it.name == DEFAULT_PROJECT_NAME } ?: kbManager.createKB(
-            DEFAULT_PROJECT_NAME,
-            true
-        )
-        kb = (kbManager.openKB(defaultProjectInfo.id) as EntityRetrieval.Success<KB>).entity
-    }
-
-    fun reCreateKB() {
-        val oldKBInfo = kbName()
-        createKB(oldKBInfo.name, true)
-        kbManager.deleteKB(oldKBInfo)
-    }
-
-    fun createKB(name: String, force: Boolean) {
-        val kbInfo = kbManager.createKB(name, force)
-        kb = (kbManager.openKB(kbInfo.id) as EntityRetrieval.Success<KB>).entity
-        logger.info("Opened KB with name: '${kbInfo.name}' and id: '${kbInfo.id}'")
-    }
-
-    fun deleteKB(kbInfo: KBInfo) {
-        TODO()
-    }
+class KBEndpoint(val kb: KB, casesRootDirectory: File) {
+    val casesDir = File(casesRootDirectory,"cases").apply { mkdirs() }
+    val interpretationsDir = File(casesRootDirectory, "interpretations").apply { mkdirs() }
 
     fun kbName(): KBInfo {
         logger.info("kbName will return: ${kb.kbInfo.name}")
         return kb.kbInfo
-    }
-
-    fun kbList(): List<KBInfo> = kbManager.all().toList().sorted()
-
-    fun exportKBToZip(): File {
-        val tempDir: File = createTempDirectory().toFile()
-        KBExporter(tempDir, kb).export()
-        val bytes = Zipper(tempDir).zip()
-        val file = File(tempDir, "${kb.kbInfo}.zip")
-        file.writeBytes(bytes)
-        return file
-    }
-
-    fun importKBFromZip(zipBytes: ByteArray) {
-        val tempDir: File = createTempDirectory().toFile()
-        Unzipper(zipBytes, tempDir).unzip()
-        val subDirectories = tempDir.listFiles()
-        require(subDirectories != null && subDirectories.size == 1) {
-            "Invalid zip for KB import."
-        }
-        val rootDir = subDirectories[0]
-        kb = KBImporter(rootDir, persistenceProvider).import()
     }
 
     private fun startRuleSessionForDifference(caseId: Long, diff: Diff) {

@@ -5,6 +5,7 @@ import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.defaultDate
 import io.rippledown.model.external.ExternalCase
+import io.rippledown.server.KBEndpoint
 import io.rippledown.server.ServerApplication
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
@@ -15,6 +16,10 @@ import java.nio.charset.StandardCharsets
 fun supplyCaseFromFile(caseName: String, app: ServerApplication): RDRCase {
     val externalCase = CaseTestUtils.getCase(caseName)
     return app.processCase(externalCase)
+}
+fun supplyCaseFromFile(caseName: String, kb: KBEndpoint): RDRCase {
+    val externalCase = CaseTestUtils.getCase(caseName)
+    return kb.processCase(externalCase)
 }
 
 internal object CaseTestUtils {
