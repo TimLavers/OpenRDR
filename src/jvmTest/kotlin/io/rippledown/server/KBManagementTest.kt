@@ -11,6 +11,7 @@ import io.mockk.verify
 import io.rippledown.constants.api.*
 import io.rippledown.model.KBInfo
 import io.rippledown.model.OperationResult
+import io.rippledown.server.routes.KB_ID
 import java.io.File
 import kotlin.test.Test
 
@@ -20,11 +21,13 @@ class KBManagementTest: OpenRDRServerTestBase() {
     fun kbName() = testApplication {
         setup()
         val kbInfo = KBInfo("Glucose")
-        every { serverApplication.kbName() } returns kbInfo
-        val result = httpClient.get(KB_INFO)
+        every { kbEndpoint.kbName() } returns kbInfo
+        val result = httpClient.get(KB_INFO){
+            parameter(KB_ID, kbId)
+        }
         result.status shouldBe HttpStatusCode.OK
         result.body<KBInfo>() shouldBe kbInfo
-        verify { serverApplication.kbName() }
+        verify { kbEndpoint.kbName() }
     }
 
     @Test
@@ -32,7 +35,9 @@ class KBManagementTest: OpenRDRServerTestBase() {
         setup()
         val kbs = listOf(KBInfo("10", "Glucose"), KBInfo("1", "Thyroids"), KBInfo("3", "Whatever"))
         every { serverApplication.kbList() } returns kbs
-        val result = httpClient.get(KB_LIST)
+        val result = httpClient.get(KB_LIST) {
+            parameter(KB_ID, kbId)
+        }
         result.status shouldBe HttpStatusCode.OK
         result.body<List<KBInfo>>() shouldBe kbs
         verify { serverApplication.kbList() }
@@ -41,38 +46,40 @@ class KBManagementTest: OpenRDRServerTestBase() {
     @Test
     fun `should create a KB with a specified name`() = testApplication {
         setup()
-        every { serverApplication.createKB(any(), any()) } returns Unit
+        val kbInfoToReturnOnCreation = KBInfo("east", "Bondi")
+        every { serverApplication.createKB(any(), any()) } returns kbInfoToReturnOnCreation
         val result = httpClient.post(CREATE_KB) {
             contentType(ContentType.Application.Json)
             setBody("Bondi")
         }
         result.status shouldBe HttpStatusCode.OK
+        result.body<KBInfo>() shouldBe kbInfoToReturnOnCreation
         verify { serverApplication.createKB("Bondi", true) }
     }
 
     @Test
     fun deleteKB() = testApplication {
         setup()
-        val kbToGo = KBInfo("Whatever")
-        every { serverApplication.deleteKB(kbToGo) } returns Unit
-        val result = httpClient.delete(DELETE_KB)
+        every { serverApplication.deleteKB(kbId) } returns Unit
+        val result = httpClient.delete(DELETE_KB) {parameter(KB_ID, kbId)}
         result.status shouldBe HttpStatusCode.OK
-        result.body<OperationResult>().message shouldBe "KB deleted"
-        verify { serverApplication.reCreateKB() }
+        verify { serverApplication.deleteKB(kbId) }
     }
 
     @Test
     fun exportKB() = testApplication {
         setup()
         val zipFile = File("src/jvmTest/resources/export/Empty.zip")
-        every { serverApplication.kbName() } returns KBInfo("Empty")
-        every { serverApplication.exportKBToZip() } returns zipFile
-        val result = httpClient.get(EXPORT_KB)
+        every { kbEndpoint.kbName() } returns KBInfo("Empty")
+        every { kbEndpoint.exportKBToZip() } returns zipFile
+        val result = httpClient.get(EXPORT_KB){
+            parameter(KB_ID, kbId)
+        }
         result.status shouldBe HttpStatusCode.OK
         result.headers[HttpHeaders.ContentType] shouldBe "application/zip"
         result.headers[HttpHeaders.ContentDisposition] shouldBe "attachment; filename=Empty.zip"
         result.headers[HttpHeaders.ContentLength] shouldBe zipFile.length().toString()
-        verify { serverApplication.exportKBToZip() }
+        verify { kbEndpoint.exportKBToZip() }
     }
 
     @Test
@@ -83,6 +90,7 @@ class KBManagementTest: OpenRDRServerTestBase() {
         every { serverApplication.importKBFromZip(zipBytes) } returns Unit
         val boundary = "WebAppBoundary"
         val response = httpClient.post(IMPORT_KB) {
+            parameter(KB_ID, kbId)
             setBody(
                 MultiPartFormDataContent(
                     formData {

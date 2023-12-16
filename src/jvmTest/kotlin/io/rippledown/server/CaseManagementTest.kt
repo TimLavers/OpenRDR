@@ -16,19 +16,20 @@ import io.rippledown.constants.api.WAITING_CASES
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.external.serialize
+import io.rippledown.server.routes.KB_ID
 import kotlin.test.Test
 
-class CaseManagementTest: OpenRDRServerTestBase() {
+class CaseManagementTest : OpenRDRServerTestBase() {
 
     @Test
     fun waitingCases() = testApplication {
         setup()
         val casesInfo = CasesInfo(listOf(CaseId("Tea"), CaseId("Coffee")))
-        every { serverApplication.waitingCasesInfo() } returns casesInfo
-        val result = httpClient.get(WAITING_CASES)
+        every { kbEndpoint.waitingCasesInfo() } returns casesInfo
+        val result = httpClient.get(WAITING_CASES) { parameter(KB_ID, kbId) }
         result.status shouldBe HttpStatusCode.OK
         result.body<CasesInfo>() shouldBe casesInfo
-        verify { serverApplication.waitingCasesInfo() }
+        verify { kbEndpoint.waitingCasesInfo() }
     }
 
     @Test
@@ -37,10 +38,11 @@ class CaseManagementTest: OpenRDRServerTestBase() {
         val rdrCase = RDRCase(CaseId(1, "Case1"))
         val viewableCase = ViewableCase(rdrCase)
         val caseId = 1L
-        every { serverApplication.viewableCase(caseId) } returns viewableCase
+        every { kbEndpoint.viewableCase(caseId) } returns viewableCase
 
         val result = httpClient.get(CASE) {
             parameter("id", caseId)
+            parameter(KB_ID, kbId)
         }
         result.status shouldBe HttpStatusCode.OK
         result.body<ViewableCase>() shouldBe viewableCase
@@ -50,7 +52,7 @@ class CaseManagementTest: OpenRDRServerTestBase() {
     fun viewableCaseNoId() = testApplication {
         setup()
         shouldThrow<IllegalStateException> {
-            httpClient.get(CASE)
+            httpClient.get(CASE) { parameter(KB_ID, kbId) }
         }
     }
 
@@ -59,6 +61,7 @@ class CaseManagementTest: OpenRDRServerTestBase() {
         setup()
         val result = httpClient.get(CASE) {
             parameter("id", 666)
+            parameter(KB_ID, kbId)
         }
         result.status shouldBe HttpStatusCode.BadRequest
     }
@@ -69,26 +72,28 @@ class CaseManagementTest: OpenRDRServerTestBase() {
         val case = CaseTestUtils.getCase("Case2")
         val caseData = case.serialize()
         val returnCase = createCase("Case2").case
-        every { serverApplication.processCase(case) } returns returnCase
+        every { kbEndpoint.processCase(case) } returns returnCase
         val result = httpClient.put(PROCESS_CASE) {
             contentType(ContentType.Application.Json)
             setBody(caseData)
+            parameter(KB_ID, kbId)
         }
         result.status shouldBe HttpStatusCode.Accepted
         result.body<RDRCase>() shouldBe returnCase
-        verify { serverApplication.processCase(case) }
+        verify { kbEndpoint.processCase(case) }
     }
 
     @Test
     fun deleteProcessedCaseWithName() = testApplication {
         setup()
         val caseName = "The Case"
-        every { serverApplication.deleteProcessedCase(caseName) } returns Unit
+        every { kbEndpoint.deleteProcessedCase(caseName) } returns Unit
         val result = httpClient.delete(DELETE_PROCESSED_CASE_WITH_NAME) {
             contentType(ContentType.Application.Json)
             setBody(CaseName(caseName))
+            parameter(KB_ID, kbId)
         }
         result.status shouldBe HttpStatusCode.OK
-        verify { serverApplication.deleteProcessedCase(caseName) }
+        verify { kbEndpoint.deleteProcessedCase(caseName) }
     }
 }

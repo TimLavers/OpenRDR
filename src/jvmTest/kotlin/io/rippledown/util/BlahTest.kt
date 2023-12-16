@@ -1,4 +1,5 @@
-package io.rippledown.integration.restclient
+package io.rippledown.util
+
 
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -21,9 +22,29 @@ import io.rippledown.model.external.ExternalCase
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import java.util.concurrent.atomic.AtomicReference
+import io.kotest.matchers.shouldBe
+import io.rippledown.CaseTestUtils
+import kotlin.test.Test
 
 
-class RESTClient {
+class BlahTest {
+
+    @Test
+    fun blah() {
+        val bc = BlahClient()
+
+        bc.createKBWithDefaultName()
+
+        val blahCase = CaseTestUtils.getCase("Case1")
+
+        val retrieved = bc.provideCase(blahCase)
+
+        retrieved.name shouldBe blahCase.name
+    }
+}
+
+
+class BlahClient {
     private val KB_ID = "kb"
 
     private val endpoint = "http://localhost:9090"
@@ -96,22 +117,22 @@ class RESTClient {
         }.body()
     }
 
-fun provideCase(externalCase: ExternalCase): RDRCase {
-    println("provideCase  current thread: ${Thread.currentThread().name}")
+    fun provideCase(externalCase: ExternalCase): RDRCase {
+        println("provideCase  current thread: ${Thread.currentThread().name}")
 
-    kotlin.io.println("----- provideCase, current KB is: ${currentKB.get()}")
-    val result = runBlocking {
+        kotlin.io.println("----- provideCase, current KB is: ${currentKB.get()}")
+        val result = runBlocking {
 
-        println("provideCase in run blocking current thread: ${Thread.currentThread().name}")
-        kotlin.io.println("----- provideCase, withinn run blocking current KB is: ${currentKB.get()}")
-        jsonClient.put(endpoint + PROCESS_CASE) {
-            contentType(ContentType.Application.Json)
-            setBody(externalCase)
-            parameter(KB_ID, currentKB.get()!!.id)
-        }.body<RDRCase>()
+            println("provideCase in run blocking current thread: ${Thread.currentThread().name}")
+            kotlin.io.println("----- provideCase, withinn run blocking current KB is: ${currentKB.get()}")
+            jsonClient.put(endpoint + PROCESS_CASE) {
+                contentType(ContentType.Application.Json)
+                setBody(externalCase)
+                parameter(KB_ID, currentKB.get()!!.id)
+            }.body<RDRCase>()
+        }
+        return result
     }
-    return result
-}
 
     fun startSessionToAddConclusionForCurrentCase(conclusion: Conclusion): OperationResult {
         require(currentCase != null)
@@ -133,7 +154,7 @@ fun provideCase(externalCase: ExternalCase): RDRCase {
             result = jsonClient.post(endpoint + START_SESSION_TO_REPLACE_CONCLUSION + "?id=${currentCase!!.id}") {
                 contentType(ContentType.Application.Json)
                 setBody(listOf(toGo, replacement))
-       //         parameter(KB_ID, currentKB!!.id)
+                //         parameter(KB_ID, currentKB!!.id)
             }.body()
         }
         return result
@@ -146,7 +167,7 @@ fun provideCase(externalCase: ExternalCase): RDRCase {
             result = jsonClient.post(endpoint + ADD_CONDITION) {
                 contentType(ContentType.Application.Json)
                 setBody(data)
-       //         parameter(KB_ID, currentKB!!.id)
+                //         parameter(KB_ID, currentKB!!.id)
             }.body()
         }
         return result
@@ -156,7 +177,7 @@ fun provideCase(externalCase: ExternalCase): RDRCase {
         var result = OperationResult("")
         runBlocking {
             result = jsonClient.post(endpoint + COMMIT_SESSION) {
-            //    parameter(KB_ID, currentKB!!.id)
+                //    parameter(KB_ID, currentKB!!.id)
             }.body()
         }
         return result
@@ -185,22 +206,22 @@ fun provideCase(externalCase: ExternalCase): RDRCase {
         return EpisodicCondition(null, attribute, IsNotBlank, Current)
     }
 
-fun createKBWithDefaultName() {
-    println("createKBWithDefaultName current thread: ${Thread.currentThread().name}")
-    runBlocking {
-        println("createKBWithDefaultName in run blocking current thread: ${Thread.currentThread().name}")
+    fun createKBWithDefaultName() {
+        println("createKBWithDefaultName current thread: ${Thread.currentThread().name}")
+        runBlocking {
+            println("createKBWithDefaultName in run blocking current thread: ${Thread.currentThread().name}")
 
-        kotlin.io.println("============ calling to create default KB")
-        val kbi = jsonClient.post(endpoint + CREATE_KB) {
-            contentType(ContentType.Text.Plain)
-            setBody(DEFAULT_PROJECT_NAME)
-        }.body<KBInfo>()
-        currentKB.set(kbi)
-        kotlin.io.println("after call, current KB is: ${currentKB.get()}")
+            kotlin.io.println("============ calling to create default KB")
+            val kbi = jsonClient.post(endpoint + CREATE_KB) {
+                contentType(ContentType.Text.Plain)
+                setBody(DEFAULT_PROJECT_NAME)
+            }.body<KBInfo>()
+            currentKB.set(kbi)
+            kotlin.io.println("after call, current KB is: ${currentKB.get()}")
+        }
+        kotlin.io.println("after run blocking, current KB is: ${currentKB.get()}")
+        println("createKBWithDefaultName after run blocking current thread: ${Thread.currentThread().name}")
     }
-    kotlin.io.println("after run blocking, current KB is: ${currentKB.get()}")
-    println("createKBWithDefaultName after run blocking current thread: ${Thread.currentThread().name}")
-}
 
     fun shutdown(): Unit = runBlocking {
         try {

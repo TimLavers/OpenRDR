@@ -19,6 +19,7 @@ import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
+import io.rippledown.server.routes.KB_ID
 import kotlin.test.Test
 
 class InterpManagementTest : OpenRDRServerTestBase() {
@@ -42,15 +43,16 @@ class InterpManagementTest : OpenRDRServerTestBase() {
         val interpretationToReturn = interpretationToSave.apply {
             diffList = diffs
         }
-        every { serverApplication.saveInterpretation(interpretationToSave) } returns interpretationToReturn
+        every { kbEndpoint.saveInterpretation(interpretationToSave) } returns interpretationToReturn
 
         val result = httpClient.post(VERIFIED_INTERPRETATION_SAVED) {
+            parameter(KB_ID, kbId)
             contentType(ContentType.Application.Json)
             setBody(interpretationToSave)
         }
         result.status shouldBe HttpStatusCode.OK
         result.body<ViewableInterpretation>() shouldBe interpretationToReturn
-        verify { serverApplication.saveInterpretation(interpretationToSave) }
+        verify { kbEndpoint.saveInterpretation(interpretationToSave) }
     }
 
     @Test
@@ -61,15 +63,16 @@ class InterpManagementTest : OpenRDRServerTestBase() {
         val caseId = 1L
         val sessionStartRequest = SessionStartRequest(caseId, diff)
         val cornerstoneStatus = CornerstoneStatus()
-        every { serverApplication.startRuleSession(sessionStartRequest) } returns cornerstoneStatus
+        every { kbEndpoint.startRuleSession(sessionStartRequest) } returns cornerstoneStatus
 
         val result = httpClient.post(START_RULE_SESSION) {
+            parameter(KB_ID, kbId)
             contentType(ContentType.Application.Json)
             setBody(sessionStartRequest)
         }
         result.status shouldBe HttpStatusCode.OK
         result.body<CornerstoneStatus>() shouldBe cornerstoneStatus
-        verify { serverApplication.startRuleSession(sessionStartRequest) }
+        verify { kbEndpoint.startRuleSession(sessionStartRequest) }
     }
 
     @Test
@@ -77,15 +80,16 @@ class InterpManagementTest : OpenRDRServerTestBase() {
         setup()
         val request = UpdateCornerstoneRequest(CornerstoneStatus(), ConditionList())
         val cornerstoneStatus = CornerstoneStatus()
-        every { serverApplication.updateCornerstone(request) } returns cornerstoneStatus
+        every { kbEndpoint.updateCornerstone(request) } returns cornerstoneStatus
 
         val result = httpClient.post(UPDATE_CORNERSTONES) {
+            parameter(KB_ID, kbId)
             contentType(ContentType.Application.Json)
             setBody(request)
         }
         result.status shouldBe HttpStatusCode.OK
         result.body<CornerstoneStatus>() shouldBe cornerstoneStatus
-        verify { serverApplication.updateCornerstone(request) }
+        verify { kbEndpoint.updateCornerstone(request) }
     }
 
     @Test
@@ -94,15 +98,16 @@ class InterpManagementTest : OpenRDRServerTestBase() {
 
         val ruleRequest = RuleRequest(1)
         val interp = ViewableInterpretation()
-        every { serverApplication.commitRuleSession(ruleRequest) } returns interp
+        every { kbEndpoint.commitRuleSession(ruleRequest) } returns interp
 
         val result = httpClient.post(BUILD_RULE) {
+            parameter(KB_ID, kbId)
             contentType(ContentType.Application.Json)
             setBody(ruleRequest)
         }
         result.status shouldBe HttpStatusCode.OK
         result.body<ViewableInterpretation>() shouldBe interp
-        verify { serverApplication.commitRuleSession(ruleRequest) }
+        verify { kbEndpoint.commitRuleSession(ruleRequest) }
     }
 
     @Test
@@ -113,14 +118,15 @@ class InterpManagementTest : OpenRDRServerTestBase() {
         val cc = createCase("bondi")
         val cornerstoneStatus =
             CornerstoneStatus(cornerstoneToReview = cc, indexOfCornerstoneToReview = index, numberOfCornerstones = 52)
-        every { serverApplication.cornerstoneStatusForIndex(index) } returns cornerstoneStatus
+        every { kbEndpoint.cornerstoneStatusForIndex(index) } returns cornerstoneStatus
 
         val result = httpClient.get(SELECT_CORNERSTONE) {
+            parameter(KB_ID, kbId)
             parameter(INDEX_PARAMETER, index)
         }
         result.status shouldBe HttpStatusCode.OK
         result.body<CornerstoneStatus>() shouldBe cornerstoneStatus
         result.status shouldBe HttpStatusCode.OK
-        verify { serverApplication.cornerstoneStatusForIndex(index) }
+        verify { kbEndpoint.cornerstoneStatusForIndex(index) }
     }
 }

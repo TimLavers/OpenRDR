@@ -16,7 +16,7 @@ fun Application.conditionManagement(application: ServerApplication) {
         get(CONDITION_HINTS) {
             val id = longId() // todo test
             val conditionHints = try {
-                application.conditionHintsForCase(id)
+                kbEndpoint(application).conditionHintsForCase(id)
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.BadRequest)
             }
@@ -26,7 +26,7 @@ fun Application.conditionManagement(application: ServerApplication) {
         post(GET_OR_CREATE_CONDITION) {
             val str = call.receiveText()
             val prototype = Json.decodeFromString(Condition.serializer(), str)
-            val result = application.getOrCreateCondition(prototype)
+            val result = kbEndpoint(application).getOrCreateCondition(prototype)
             call.respond(HttpStatusCode.OK, result)
         }
     }

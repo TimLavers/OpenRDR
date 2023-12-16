@@ -8,16 +8,19 @@ import io.rippledown.integration.pageobjects.*
 import io.rippledown.integration.pause
 import io.rippledown.integration.restclient.RESTClient
 import io.rippledown.integration.utils.Cyborg
+import io.rippledown.model.KBInfo
 import org.awaitility.Awaitility
 import org.openqa.selenium.WebDriver
 import java.io.File
 import java.time.Duration
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 class Defs : En {
     private val uiTestBase = UITestBase()
     private val serverProxy = uiTestBase.serverProxy
     private val labProxy = uiTestBase.labProxy
+    private val restClient = uiTestBase.restClient
 
     private lateinit var caseListPO: CaseListPO
     private lateinit var caseViewPO: CaseViewPO
@@ -33,6 +36,7 @@ class Defs : En {
         Before("not @database") { scenario ->
             println("Before scenario '${scenario.name}'")
             serverProxy.start()
+            restClient.createKBWithDefaultName()
         }
 
         Before("@database") { scenario ->
@@ -235,17 +239,17 @@ class Defs : En {
         }
 
         And("the interpretation of the case {word} is {string}") { caseName: String, text: String ->
-            RESTClient().createRuleToAddText(caseName, text)
+            restClient.createRuleToAddText(caseName, text)
         }
 
         And("the interpretation of the case {word} includes {string} because of condition {string}") { caseName: String, text: String, conditionText: String ->
-            RESTClient().createRuleToAddText(caseName, text, conditionText)
+            restClient.createRuleToAddText(caseName, text, conditionText)
         }
         And("the following rules have been defined:") { dataTable: DataTable ->
             dataTable.cells()
                 .drop(1) // Drop the header row
                 .forEach { row ->
-                    RESTClient().createRuleToAddText(row[0], row[1], row[2])
+                    restClient.createRuleToAddText(row[0], row[1], row[2])
                 }
         }
 

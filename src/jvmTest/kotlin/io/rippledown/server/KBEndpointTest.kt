@@ -370,4 +370,33 @@ internal class KBEndpointTest {
             cornerstoneStatusForIndex(1) shouldBe CornerstoneStatus(viewableCase2, 1, 2)
         }
     }
+  
+    @Test
+    fun exportKBToZip() {
+        // Add a case and a rule to the KB.
+        val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
+        val conclusion1 = endpoint.kb.conclusionManager.getOrCreate("Whatever")
+        val tsh = endpoint.kb.attributeManager.getOrCreate("TSH")
+        endpoint.startRuleSessionToAddConclusion(id, conclusion1)
+        val tshCondition = greaterThanOrEqualTo(null, tsh, 0.6)
+        endpoint.addConditionToCurrentRuleBuildingSession(tshCondition)
+        endpoint.commitCurrentRuleSession()
+        endpoint.case(id).interpretation.conclusionTexts() shouldBe setOf(conclusion1.text)
+
+        // Get the exported KB.
+        val exported = endpoint.exportKBToZip()
+        exported.name shouldBe "${endpoint.kb.kbInfo}.zip"
+
+        // Import the exported KB.
+        val persistenceProvider = InMemoryPersistenceProvider()
+        val serverApplication = ServerApplication(persistenceProvider)
+        serverApplication.importKBFromZip(exported.readBytes())
+        endpoint.kb.allCornerstoneCases().size shouldBe 1
+        endpoint.kb.ruleTree.size() shouldBe 2
+        val rule = endpoint.kb.ruleTree.root.childRules().single()
+        val conditions = rule.conditions
+        conditions.size shouldBe 1
+        conditions.single().sameAs(tshCondition) shouldBe true
+        rule.conclusion shouldBe conclusion1
+    }
 }

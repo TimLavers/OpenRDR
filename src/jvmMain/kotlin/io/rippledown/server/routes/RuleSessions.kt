@@ -20,22 +20,22 @@ fun Application.ruleSession(application: ServerApplication) {
         post(START_SESSION_TO_ADD_CONCLUSION) {
             val id = longId()
             val conclusion = call.receive<Conclusion>()
-            application.startRuleSessionToAddConclusion(id, conclusion)
+            kbEndpoint(application).startRuleSessionToAddConclusion(id, conclusion)
             call.respond(HttpStatusCode.OK, OperationResult("Session started"))
         }
         post(START_SESSION_TO_REPLACE_CONCLUSION) {
             val conclusionPair = call.receive<List<Conclusion>>()
-            application.startRuleSessionToReplaceConclusion(longId(), conclusionPair[0], conclusionPair[1])
+            kbEndpoint(application).startRuleSessionToReplaceConclusion(longId(), conclusionPair[0], conclusionPair[1])
             call.respond(HttpStatusCode.OK, OperationResult("Session started"))
         }
         post(ADD_CONDITION) {
             val str = call.receiveText()
             val condition = Json.decodeFromString(Condition.serializer(), str)
-            application.addConditionToCurrentRuleBuildingSession(condition)
+            kbEndpoint(application).addConditionToCurrentRuleBuildingSession(condition)
             call.respond(HttpStatusCode.OK, OperationResult("Condition added"))
         }
         post(COMMIT_SESSION) {
-            application.commitCurrentRuleSession()
+            kbEndpoint(application).commitCurrentRuleSession()
             call.respond(HttpStatusCode.OK, OperationResult("Session committed"))
         }
     }

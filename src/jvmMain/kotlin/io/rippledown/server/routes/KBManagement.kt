@@ -41,8 +41,9 @@ fun Application.kbManagement(application: ServerApplication) {
             call.respond(OK, OperationResult("KB imported"))
         }
         get(EXPORT_KB) {
-            val file = application.exportKBToZip()
-            val kbName = application.kbName().name
+            val kbEndpoint = kbEndpoint(application)
+            val file = kbEndpoint.exportKBToZip()
+            val kbName = kbEndpoint.kbName().name
             call.response.header(
                 HttpHeaders.ContentDisposition, ContentDisposition.Attachment.withParameter(
                     ContentDisposition.Parameters.FileName, "$kbName.zip"
@@ -53,12 +54,21 @@ fun Application.kbManagement(application: ServerApplication) {
 
         post(CREATE_KB) {
             val name = call.receive<String>()
-            application.createKB(name, true)
+            val kbInfo = application.createKB(name, true)
+            call.respond(kbInfo)
+        }
+
+        delete(DELETE_KB) {
+            application.deleteKB(kbId())
             call.respond(OK)
         }
 
+        get(DEFAULT_KB) {
+            call.respond(application.getDefaultProject())
+        }
+
         get(KB_INFO) {
-            call.respond(application.kbName())
+            call.respond(kbEndpoint(application).kbName())
         }
 
         get(KB_LIST) {

@@ -14,12 +14,12 @@ fun Application.attributeManagement(application: ServerApplication) {
     routing {
         post(MOVE_ATTRIBUTE_JUST_BELOW_OTHER) {
             val attributeIdPair = call.receive<Pair<Int, Int>>()
-            application.moveAttributeJustBelow(attributeIdPair.first, attributeIdPair.second)
+            kbEndpoint(application).moveAttributeJustBelow(attributeIdPair.first, attributeIdPair.second)
             call.respond(HttpStatusCode.OK, OperationResult("Attribute moved"))
         }
         post(GET_OR_CREATE_ATTRIBUTE) {
             val name = call.receive<String>()
-            val result = application.getOrCreateAttribute(name)
+            val result = kbEndpoint(application).getOrCreateAttribute(name)
             call.respond(HttpStatusCode.OK, result)
         }
     }

@@ -9,6 +9,7 @@ import io.mockk.every
 import io.mockk.verify
 import io.rippledown.constants.api.GET_OR_CREATE_CONCLUSION
 import io.rippledown.model.Conclusion
+import io.rippledown.server.routes.KB_ID
 import kotlin.test.Test
 
 class ConclusionManagementTest: OpenRDRServerTestBase() {
@@ -17,12 +18,13 @@ class ConclusionManagementTest: OpenRDRServerTestBase() {
         setup()
         val text = "Glucose is high."
         val conclusion = Conclusion(8, text)
-        every { serverApplication.getOrCreateConclusion(text) } returns conclusion
+        every { kbEndpoint.getOrCreateConclusion(text) } returns conclusion
         val result = httpClient.post(GET_OR_CREATE_CONCLUSION) {
+            parameter(KB_ID, kbId)
             setBody(text)
         }
         result.status shouldBe HttpStatusCode.OK
         result.body<Conclusion>() shouldBe conclusion
-        verify { serverApplication.getOrCreateConclusion(text) }
+        verify { kbEndpoint.getOrCreateConclusion(text) }
     }
  }

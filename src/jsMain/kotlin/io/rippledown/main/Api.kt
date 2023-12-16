@@ -26,6 +26,7 @@ import web.file.File
 val endpoint = window.location.origin
 
 class Api(engine: HttpClientEngine = Js.create()) {
+    private var currentKB: KBInfo? = null
     val jsonClient = HttpClient(engine) {
         install(ContentNegotiation) {
             json(Json {
@@ -36,12 +37,19 @@ class Api(engine: HttpClientEngine = Js.create()) {
         }
     }
 
-    suspend fun createKB(name: String) = jsonClient.post("$endpoint$CREATE_KB") {
-        contentType(ContentType.Text.Plain)
-        setBody(name)
+    suspend fun createKB(name: String) {
+        currentKB = jsonClient.post("$endpoint$CREATE_KB") {
+            contentType(ContentType.Text.Plain)
+            setBody(name)
+        }.body<KBInfo>()
     }
 
-    suspend fun kbInfo() = jsonClient.get("$endpoint$KB_INFO").body<KBInfo>()
+    suspend fun kbInfo(): KBInfo {
+        if (currentKB == null) {
+            currentKB = jsonClient.get("$endpoint$DEFAULT_KB").body<KBInfo>()
+        }
+        return currentKB!!
+    }
 
     suspend fun kbList() = jsonClient.get("$endpoint$KB_LIST").body<List<KBInfo>>()
 

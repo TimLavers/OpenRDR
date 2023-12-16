@@ -10,7 +10,7 @@ Feature: Changes to a KB should be persisted.
     And I select the interpretation tab
     And I build a rule to add the conclusion "Go to Bondi." with no conditions
     And I stop the client application
-    And I re-start the server application
+    When I re-start the server application
     And I start the client application
     Then I should see the case Case1 as the current case
     And the interpretation should be "Go to Bondi."

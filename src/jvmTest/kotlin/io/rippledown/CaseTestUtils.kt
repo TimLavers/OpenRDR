@@ -13,10 +13,6 @@ import org.apache.commons.io.FileUtils
 import java.io.File
 import java.nio.charset.StandardCharsets
 
-fun supplyCaseFromFile(caseName: String, app: ServerApplication): RDRCase {
-    val externalCase = CaseTestUtils.getCase(caseName)
-    return app.processCase(externalCase)
-}
 fun supplyCaseFromFile(caseName: String, kb: KBEndpoint): RDRCase {
     val externalCase = CaseTestUtils.getCase(caseName)
     return kb.processCase(externalCase)

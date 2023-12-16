@@ -21,13 +21,14 @@ private val jsonAllowSMK = Json {
 fun Application.caseManagement(application: ServerApplication) {
     routing {
         get(WAITING_CASES) {
-            call.respond(application.waitingCasesInfo())
+            call.respond(kbEndpoint(application).waitingCasesInfo())
         }
         get(CASE) {
             val id = call.parameters["id"] ?: error("Invalid case id.")
             val idLong = id.toLongOrNull() ?: error("Case id should be a long.") // todo test
+
             val viewableCase = try {
-                application.viewableCase(idLong)
+                kbEndpoint(application).viewableCase(idLong)
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.BadRequest)
             }
@@ -36,13 +37,13 @@ fun Application.caseManagement(application: ServerApplication) {
         put(PROCESS_CASE) {
             val str = call.receiveText()
             val externalCase = jsonAllowSMK.decodeFromString(ExternalCase.serializer(), str)
-            val case = application.processCase(externalCase)
+            val case = kbEndpoint(application).processCase(externalCase)
             call.respond(HttpStatusCode.Accepted, case)
         }
         delete(DELETE_PROCESSED_CASE_WITH_NAME) {
             val str = call.receiveText()
             val caseName = jsonAllowSMK.decodeFromString(CaseName.serializer(), str)
-            application.deleteProcessedCase(caseName.name)
+            kbEndpoint(application).deleteProcessedCase(caseName.name)
             call.respond(HttpStatusCode.OK)
         }
     }

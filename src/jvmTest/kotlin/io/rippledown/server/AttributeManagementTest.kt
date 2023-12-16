@@ -9,6 +9,7 @@ import io.mockk.every
 import io.mockk.verify
 import io.rippledown.constants.api.GET_OR_CREATE_ATTRIBUTE
 import io.rippledown.model.Attribute
+import io.rippledown.server.routes.KB_ID
 import kotlin.test.Test
 
 class AttributeManagementTest: OpenRDRServerTestBase() {
@@ -17,12 +18,13 @@ class AttributeManagementTest: OpenRDRServerTestBase() {
         setup()
         val glucose = "Glucose"
         val attribute = Attribute(4000, glucose)
-        every { serverApplication.getOrCreateAttribute(glucose) } returns attribute
+        every { kbEndpoint.getOrCreateAttribute(glucose) } returns attribute
         val result = httpClient.post(GET_OR_CREATE_ATTRIBUTE) {
+            parameter(KB_ID, kbId)
             setBody(glucose)
         }
         result.status shouldBe HttpStatusCode.OK
         result.body<Attribute>() shouldBe attribute
-        verify { serverApplication.getOrCreateAttribute(glucose) }
+        verify { kbEndpoint.getOrCreateAttribute(glucose) }
     }
  }

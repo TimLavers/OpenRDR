@@ -11,6 +11,7 @@ import io.rippledown.constants.api.CONDITION_HINTS
 import io.rippledown.constants.api.GET_OR_CREATE_CONDITION
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.*
+import io.rippledown.server.routes.KB_ID
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 
@@ -21,15 +22,16 @@ class ConditionManagementTest: OpenRDRServerTestBase() {
         val glucose = Attribute(33, "Glucose")
         val toReturn = isHigh(54, glucose)
         val template = isLow(null, glucose)
-        every { serverApplication.getOrCreateCondition(template) } returns toReturn
+        every { kbEndpoint.getOrCreateCondition(template) } returns toReturn
         val data = Json.encodeToJsonElement(Condition.serializer(), template)
         val result = httpClient.post(GET_OR_CREATE_CONDITION) {
+            parameter(KB_ID, kbId)
             contentType(ContentType.Application.Json)
             setBody(data)
         }
         result.status shouldBe HttpStatusCode.OK
         result.body<Condition>() shouldBe toReturn
-        verify { serverApplication.getOrCreateCondition(template) }
+        verify { kbEndpoint.getOrCreateCondition(template) }
     }
 
     @Test
@@ -42,14 +44,15 @@ class ConditionManagementTest: OpenRDRServerTestBase() {
                 isLow(2, Attribute(2, "SeaTemp"))
             )
         )
-        every { serverApplication.conditionHintsForCase(caseId) } returns conditionList
+        every { kbEndpoint.conditionHintsForCase(caseId) } returns conditionList
 
         val result = httpClient.get(CONDITION_HINTS) {
+            parameter(KB_ID, kbId)
             parameter("id", caseId)
         }
 
         result.status shouldBe HttpStatusCode.OK
         result.body<ConditionList>() shouldBe conditionList
-        verify { serverApplication.conditionHintsForCase(caseId) }
+        verify { kbEndpoint.conditionHintsForCase(caseId) }
     }
  }

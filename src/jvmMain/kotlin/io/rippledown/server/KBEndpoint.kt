@@ -1,6 +1,8 @@
 package io.rippledown.server
 
 import io.rippledown.kb.KB
+import io.rippledown.kb.export.KBExporter
+import io.rippledown.kb.export.util.Zipper
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.Conclusion
 import io.rippledown.model.KBInfo
@@ -12,6 +14,7 @@ import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.*
 import java.io.File
+import kotlin.io.path.createTempDirectory
 
 class KBEndpoint(val kb: KB, casesRootDirectory: File) {
     val casesDir = File(casesRootDirectory,"cases").apply { mkdirs() }
@@ -33,6 +36,15 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
             )
             is Unchanged -> {}
         }
+    }
+
+    fun exportKBToZip(): File {
+        val tempDir: File = createTempDirectory().toFile()
+        KBExporter(tempDir, kb).export()
+        val bytes = Zipper(tempDir).zip()
+        val file = File(tempDir, "${kb.kbInfo}.zip")
+        file.writeBytes(bytes)
+        return file
     }
 
     fun startRuleSessionToAddConclusion(caseId: Long, conclusion: Conclusion) {

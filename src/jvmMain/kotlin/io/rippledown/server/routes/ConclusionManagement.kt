@@ -12,7 +12,7 @@ fun Application.conclusionManagement(application: ServerApplication) {
     routing {
         post(GET_OR_CREATE_CONCLUSION) {
             val text = call.receive<String>()
-            val result = application.getOrCreateConclusion(text)
+            val result = kbEndpoint(application).getOrCreateConclusion(text)
             call.respond(HttpStatusCode.OK, result)
         }
     }
