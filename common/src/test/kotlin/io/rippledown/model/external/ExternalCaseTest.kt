@@ -34,7 +34,6 @@ internal class ExternalCaseTest {
     @Test
     fun construction() {
         val data = mapOf(eventG1 to tr1, eventG2 to tr2)
-
         val case = ExternalCase("Stuff", data)
         case.name shouldBe "Stuff"
         case.data shouldBe data
@@ -46,7 +45,5 @@ internal class ExternalCaseTest {
         serializeDeserialize(case) shouldBe case
     }
 
-    private fun serializeDeserialize(event: ExternalCase): ExternalCase {
-        return jsonPretty.decodeFromString(event.serialize())
-    }
+    private fun serializeDeserialize(event: ExternalCase): ExternalCase = jsonPretty.decodeFromString(event.serialize())
 }

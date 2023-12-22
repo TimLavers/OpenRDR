@@ -7,8 +7,7 @@ apply(from = "../repositories.gradle.kts")
 
 plugins {
     java
-    id("com.github.johnrengelman.shadow") version "8.1.1"
-    }
+}
 
 dependencies {
     testImplementation(testFixtures(project(":common")))
@@ -49,7 +48,7 @@ tasks.register<JavaExec>("cucumberTest") {
         add("not @ignore")
     }
     dependsOn(
-        tasks.shadowJar,
+//        tasks.shadowJar,
         tasks.compileTestJava,
         tasks.processTestResources,
         tasks.getByName("testClasses")
@@ -81,3 +80,4 @@ tasks.register<Test>("integrationTest") {
     // Run only the tests from this compilation's outputs:
 //    testClassesDirs = output.classesDirs
 }
+

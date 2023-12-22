@@ -1,7 +1,6 @@
 
 plugins {
     kotlin("plugin.serialization")
-    id ("java-library")
     id("java-test-fixtures")
 }
 dependencies {
