@@ -47,6 +47,7 @@ class Api(engine: HttpClientEngine = Js.create()) {
     suspend fun kbInfo(): KBInfo {
         if (currentKB == null) {
             currentKB = jsonClient.get("$endpoint$DEFAULT_KB").body<KBInfo>()
+            console.log("Got kbi: $currentKB" )
         }
         return currentKB!!
     }
@@ -88,9 +89,13 @@ class Api(engine: HttpClientEngine = Js.create()) {
         return inProgressFlagRaw.unsafeCast<Boolean>()
     }
 
-    suspend fun getCase(id: Long): ViewableCase = jsonClient.get("$endpoint$CASE?id=$id").body()
+    suspend fun getCase(id: Long): ViewableCase = jsonClient.get("$endpoint$CASE?id=$id") {
+        parameter("KB", kbId() )
+    }.body()
 
-    suspend fun waitingCasesInfo(): CasesInfo = jsonClient.get("$endpoint$WAITING_CASES").body()
+    suspend fun waitingCasesInfo(): CasesInfo = jsonClient.get("$endpoint$WAITING_CASES"){
+        parameter("KB", kbId() )
+    }.body()
 
     suspend fun moveAttributeJustBelowOther(moved: Int, target: Int): OperationResult {
         return jsonClient.post("$endpoint$MOVE_ATTRIBUTE_JUST_BELOW_OTHER") {
@@ -163,5 +168,7 @@ class Api(engine: HttpClientEngine = Js.create()) {
     suspend fun selectCornerstone(index: Int): CornerstoneStatus {
         return jsonClient.get("$endpoint$SELECT_CORNERSTONE?$INDEX_PARAMETER=$index").body()
     }
+
+    fun kbId() = currentKB!!.id
 }
 

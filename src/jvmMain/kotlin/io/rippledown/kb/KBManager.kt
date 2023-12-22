@@ -37,7 +37,7 @@ class KBManager(private val persistenceProvider: PersistenceProvider) {
         val result = KBInfo(name)
         persistenceProvider.createKBPersistence(result)
         kbInfos.add(result)
-        logger.info("Created KB with name: '${result.name}' and id: '${result.id}'")
+        logger.info("KBManager; KB with name: '${result.name}' and id: '${result.id}'")
         return result
     }
 

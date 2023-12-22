@@ -12,6 +12,7 @@ import io.rippledown.constants.api.WAITING_CASES
 import io.rippledown.model.CaseName
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.server.ServerApplication
+import io.rippledown.server.logger
 import kotlinx.serialization.json.Json
 
 private val jsonAllowSMK = Json {
@@ -36,8 +37,11 @@ fun Application.caseManagement(application: ServerApplication) {
         }
         put(PROCESS_CASE) {
             val str = call.receiveText()
+            logger.info("CaseManagement, put case...")
             val externalCase = jsonAllowSMK.decodeFromString(ExternalCase.serializer(), str)
             val case = kbEndpoint(application).processCase(externalCase)
+            logger.info("CaseManagement, put case, case is: $case")
+
             call.respond(HttpStatusCode.Accepted, case)
         }
         delete(DELETE_PROCESSED_CASE_WITH_NAME) {
