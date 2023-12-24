@@ -1,0 +1,66 @@
+{
+  "name": "The name of this case is too long to display",
+  "data": [
+    {
+      "attribute": {
+        "name": "TSH",
+        "id": 1
+      },
+      "date": 1659752689505
+    },
+    {
+      "value": {
+        "text": "2.75"
+      },
+      "referenceRange": {
+        "lowerString": "0.50",
+        "upperString": "4.0"
+      },
+      "units": "mU/L"
+    },{
+      "attribute": {
+        "name": "TSH",
+        "id": 1
+      },
+      "date": 1659702689505
+    },
+    {
+      "value": {
+        "text": "0.67"
+      },
+      "referenceRange": {
+        "lowerString": "0.50",
+        "upperString": "4.0"
+      },
+      "units": "mU/L"
+    },
+    {
+      "attribute": {
+        "name": "Stuff",
+        "id": 4
+      },
+      "date": 1659752689505
+    },
+    {
+      "value": {
+        "text": "6.7"
+      },
+      "referenceRange": null,
+      "units": "mU/L"
+    },
+    {
+      "attribute": {
+        "name": "Stuff",
+        "id": 4
+      },
+      "date": 1659702689505
+    },
+    {
+      "value": {
+        "text": "12.4"
+      },
+      "referenceRange": null,
+      "units": "mU/L"
+    }
+  ]
+}
