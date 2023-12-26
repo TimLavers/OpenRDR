@@ -22,19 +22,21 @@ import androidx.compose.ui.unit.dp
 import io.rippledown.constants.kb.KB_SELECTOR_ID
 import io.rippledown.model.KBInfo
 
-
 @Composable
 @Preview
 fun KBControl(handler: AppBarHandler) {
     var expanded by remember { mutableStateOf(false) }
     val selectedIndex = remember { mutableStateOf(0) }
     var kbInfo: KBInfo? by remember { mutableStateOf(null) }
-    val options = listOf("Thyroids", "Lipids", "Glucose")
+    val availableKBs = mutableListOf<KBInfo>()
 
     fun kbName() = if (kbInfo != null) kbInfo!!.name else ""
 
     LaunchedEffect(Unit) {
         kbInfo = handler.api.kbInfo()
+        val kbsApartFromCurrent = handler.api.kbList().filter { it != kbInfo }.sorted()
+        availableKBs.clear()
+        availableKBs.addAll(kbsApartFromCurrent)
     }
 
     Row(
@@ -63,12 +65,12 @@ fun KBControl(handler: AppBarHandler) {
             expanded = expanded,
             onDismissRequest = { expanded = false },
         ) {
-            options.forEachIndexed { index, option ->
+            availableKBs.forEachIndexed { index, option ->
                 DropdownMenuItem(onClick = {
                     selectedIndex.value = index
                     expanded = false
                 }) {
-                    Text(text = option)
+                    Text(text = option.name)
                 }
             }
         }

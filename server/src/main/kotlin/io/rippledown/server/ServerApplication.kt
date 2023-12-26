@@ -35,7 +35,7 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         TODO()
     }
 
-    fun kbForId(id: String) = if(idToKBEndpoint.containsKey(id)) idToKBEndpoint[id]!! else throw IllegalArgumentException("Unknown kb id: $id")
+    fun kbForId(id: String) = if (idToKBEndpoint.containsKey(id)) idToKBEndpoint[id]!! else throw IllegalArgumentException("Unknown kb id: $id")
     fun kbFor(kbInfo: KBInfo) = kbForId(kbInfo.id)
 
     fun kbList(): List<KBInfo> = kbManager.all().toList().sorted()

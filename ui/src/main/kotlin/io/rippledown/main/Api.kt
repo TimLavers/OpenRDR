@@ -21,11 +21,9 @@ import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import java.io.File
 
-
-
 class Api(engine: HttpClientEngine = CIO.create() ) {
     private var currentKB: KBInfo? = null
-    val client = HttpClient(engine){
+    private val client = HttpClient(engine){
         install(ContentNegotiation) {
             json()
         }
@@ -38,12 +36,11 @@ class Api(engine: HttpClientEngine = CIO.create() ) {
 
     suspend fun kbInfo(): KBInfo {
         if (currentKB == null) {
-            currentKB = jsonClient.get("$endpoint$DEFAULT_KB").body<KBInfo>()
-            console.log("Got kbi: $currentKB" )
+            currentKB = client.get("$API_URL$DEFAULT_KB").body<KBInfo>()
+            println("Got kbi: $currentKB" )
         }
         return currentKB!!
     }
-    suspend fun kbInfo() : KBInfo = client.get("$API_URL$KB_INFO").body<KBInfo>()
 
     suspend fun kbList() = client.get("$API_URL$KB_LIST").body<List<KBInfo>>()
 
@@ -83,9 +80,13 @@ class Api(engine: HttpClientEngine = CIO.create() ) {
         return true
     }
 
-    suspend fun getCase(id: Long): ViewableCase = client.get("$API_URL$CASE?id=$id").body()
+    suspend fun getCase(id: Long): ViewableCase = client.get("$API_URL$CASE?id=$id"){
+        parameter("KB", kbId() )
+    }.body()
 
-    suspend fun waitingCasesInfo(): CasesInfo = client.get("$API_URL$WAITING_CASES").body()
+    suspend fun waitingCasesInfo(): CasesInfo = client.get("$API_URL$WAITING_CASES"){
+        parameter("KB", kbId() )
+    }.body()
 
     suspend fun moveAttributeJustBelowOther(moved: Int, target: Int): OperationResult {
         return client.post("$API_URL$MOVE_ATTRIBUTE_JUST_BELOW_OTHER") {
@@ -159,6 +160,6 @@ class Api(engine: HttpClientEngine = CIO.create() ) {
         return client.get("$API_URL$SELECT_CORNERSTONE?$INDEX_PARAMETER=$index").body()
     }
 
-    fun kbId() = currentKB!!.id
+    private suspend fun kbId() = kbInfo().id
 }
 
