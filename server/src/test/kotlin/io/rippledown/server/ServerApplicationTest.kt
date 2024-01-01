@@ -66,6 +66,19 @@ internal class ServerApplicationTest {
         app.kbList()[0] shouldBe kbInfoDefault
     }
 
+    @Test // KBM-6
+    fun `the KBs are loaded at init`() {
+        val whatever = "Whatever"
+        val kbInfoWhatever = app.createKB(whatever, false)
+        val stuff = "Stuff"
+        val kbInfoStuff = app.createKB(stuff, false)
+        app.kbList() shouldBe listOf(kbInfoStuff, kbInfoWhatever) // Sanity check.
+
+        app = ServerApplication(persistenceProvider)
+        app.kbList() shouldBe listOf(kbInfoStuff, kbInfoWhatever) // KBs are loaded from the persistence provider.
+        app.kbForId(kbInfoStuff.id).kb.kbInfo shouldBe kbInfoStuff
+        app.kbForId(kbInfoWhatever.id).kb.kbInfo shouldBe kbInfoWhatever
+    }
 
     @Test
     fun `should not create a KB with the same name if force is false`() {

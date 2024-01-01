@@ -3,13 +3,8 @@ package io.rippledown.appbar
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.DropdownMenu
-import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.Icon
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.*
 import androidx.compose.material.MaterialTheme.colors
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -19,13 +14,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogWindow
 import io.rippledown.constants.kb.KB_SELECTOR_ID
+import io.rippledown.constants.main.CREATE_KB_ITEM
+import io.rippledown.constants.main.CREATE_KB_TEXT
+import io.rippledown.constants.main.KBS_DROPDOWN_ID
+import io.rippledown.constants.main.kbItemId
 import io.rippledown.model.KBInfo
 
 @Composable
 @Preview
 fun KBControl(handler: AppBarHandler) {
     var expanded by remember { mutableStateOf(false) }
+    var createKbDialogShowing by remember { mutableStateOf(false) }
     val selectedIndex = remember { mutableStateOf(0) }
     var kbInfo: KBInfo? by remember { mutableStateOf(null) }
     val availableKBs = mutableListOf<KBInfo>()
@@ -37,6 +38,24 @@ fun KBControl(handler: AppBarHandler) {
         val kbsApartFromCurrent = handler.api.kbList().filter { it != kbInfo }.sorted()
         availableKBs.clear()
         availableKBs.addAll(kbsApartFromCurrent)
+    }
+
+    if (createKbDialogShowing) {
+        DialogWindow(
+            onCloseRequest = {createKbDialogShowing = false},
+            title = "Create KB"
+        ) {
+            Column {
+                CreateKB(object: CreateKBHandler {
+                    override fun create(name: String) {
+                        println("create.....name: $name")
+                    }
+                    override fun cancel() {
+                        createKbDialogShowing = false
+                    }
+                })
+            }
+        }
     }
 
     Row(
@@ -64,13 +83,20 @@ fun KBControl(handler: AppBarHandler) {
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
+            modifier = Modifier.testTag(KBS_DROPDOWN_ID)
         ) {
+            DropdownMenuItem(onClick = {
+                expanded = false
+                createKbDialogShowing = true
+            }) {
+                Text(text = CREATE_KB_TEXT)
+            }
             availableKBs.forEachIndexed { index, option ->
                 DropdownMenuItem(onClick = {
                     selectedIndex.value = index
                     expanded = false
                 }) {
-                    Text(text = option.name)
+                    Text(text = option.name, modifier = Modifier.testTag(kbItemId(option)))
                 }
             }
         }

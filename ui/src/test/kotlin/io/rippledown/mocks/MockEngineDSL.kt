@@ -48,8 +48,9 @@ class EngineConfig {
     var expectedTargetAttributeId: Int? = null
     var expectedNewProjectName: String? = null
 
-    val returnKBInfo = KBInfo("Glucose")
-    val returnKBList = listOf(KBInfo("Glucose"), KBInfo("Lipids"), KBInfo("Thyroids"))
+    val defaultKB = KBInfo("Thyroids")
+    val returnKBInfo = defaultKB
+    val returnKBList = listOf(KBInfo("Glucose"), KBInfo("Lipids"), defaultKB)
 }
 
 private class EngineBuilder(private val config: EngineConfig) {
@@ -144,6 +145,10 @@ private class EngineBuilder(private val config: EngineConfig) {
             CONDITION_HINTS -> {
                 if (config.expectedCaseId != null) request.url.parameters["id"] shouldBe config.expectedCaseId.toString()
                 httpResponseData(json.encodeToString(config.returnConditionList))
+            }
+
+            DEFAULT_KB -> {
+                httpResponseData(json.encodeToString(config.defaultKB))
             }
 
             else -> {

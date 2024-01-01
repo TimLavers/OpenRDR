@@ -15,8 +15,14 @@ import kotlin.io.path.createTempDirectory
 class ServerApplication(private val persistenceProvider: PersistenceProvider = PostgresPersistenceProvider()) {
     val kbDataDir = File("data").apply { mkdirs() }
     private val kbManager = KBManager(persistenceProvider)
-
     private val idToKBEndpoint = mutableMapOf<String, KBEndpoint>()
+
+    init {
+        persistenceProvider.idStore().data().keys.forEach {
+            val kbPersistence = persistenceProvider.kbPersistence(it)
+            loadKnownKB(kbPersistence.kbInfo())
+        }
+    }
 
     fun getDefaultProject(): KBInfo {
         return kbManager.all().firstOrNull { it.name == DEFAULT_PROJECT_NAME } ?: createKB(DEFAULT_PROJECT_NAME, false)
@@ -25,9 +31,7 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
     fun createKB(name: String, force: Boolean): KBInfo {
         logger.info("Creating KB, name: $name, force: $force.")
         val kbInfo = kbManager.createKB(name, force)
-        val kb = (kbManager.openKB(kbInfo.id) as EntityRetrieval.Success<KB>).entity
-        logger.info("Created KB with name: '${kbInfo.name}' and id: '${kbInfo.id}'.")
-        idToKBEndpoint[kbInfo.id] = kbEndpoint(kb)
+        loadKnownKB(kbInfo)
         return kbInfo //todo test return value
     }
 
@@ -35,7 +39,11 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         TODO()
     }
 
-    fun kbForId(id: String) = if (idToKBEndpoint.containsKey(id)) idToKBEndpoint[id]!! else throw IllegalArgumentException("Unknown kb id: $id")
+    fun kbForId(id: String): KBEndpoint {
+        logger.info("kbForId. Keys are: ${idToKBEndpoint.keys}")
+        return if (idToKBEndpoint.containsKey(id)) idToKBEndpoint[id]!! else throw IllegalArgumentException("Unknown kb id: $id")
+    }
+
     fun kbFor(kbInfo: KBInfo) = kbForId(kbInfo.id)
 
     fun kbList(): List<KBInfo> = kbManager.all().toList().sorted()
@@ -56,4 +64,10 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
     private fun kbDataFile(kb: KB) = File(kbDataDir, kb.kbInfo.id)
 
     private fun kbEndpoint(kb: KB) = KBEndpoint(kb, kbDataFile(kb))
+
+    private fun loadKnownKB(kbInfo: KBInfo) {
+        val kb = (kbManager.openKB(kbInfo.id) as EntityRetrieval.Success<KB>).entity
+        logger.info("Loaded KB with name: '${kbInfo.name}' and id: '${kbInfo.id}'.")
+        idToKBEndpoint[kbInfo.id] = kbEndpoint(kb)
+    }
 }
