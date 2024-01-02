@@ -29,9 +29,12 @@ class Api(engine: HttpClientEngine = CIO.create() ) {
         }
     }
 
-    suspend fun createKB(name: String) = client.post("$API_URL$CREATE_KB") {
-        contentType(ContentType.Text.Plain)
-        setBody(name)
+    suspend fun createKB(name: String): KBInfo {
+        currentKB = client.post("$API_URL$CREATE_KB") {
+            contentType(ContentType.Text.Plain)
+            setBody(name)
+        }.body()
+        return currentKB!!
     }
 
     suspend fun kbInfo(): KBInfo {

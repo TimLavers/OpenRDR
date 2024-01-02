@@ -9,11 +9,12 @@ import io.rippledown.constants.main.CREATE_KB_TEXT
 import io.rippledown.main.Handler
 import io.rippledown.main.handlerImpl
 import io.rippledown.mocks.engineConfig
+import io.rippledown.model.KBInfo
 import org.junit.Before
 import org.junit.Rule
+import javax.swing.SwingUtilities
 import kotlin.test.Test
 
-@OptIn(ExperimentalTestApi::class)
 class KBControlTest {
 
     @get:Rule
@@ -37,13 +38,21 @@ class KBControlTest {
     }
 
     @Test
-    fun `create KB button`() {
+    fun `create KB`() {
+        val newKbName = "Lipids"
+        engineConfig.expectedNewProjectName = newKbName
+        engineConfig.returnKBInfo = KBInfo("12345_id", newKbName)
         uiKbControl.assertCreateKbButtonIsNotShowing()
         uiKbControl.clickControl()
 
         uiKbControl.assertCreateKbButtonIsShowing()
         val uiCreateKB = uiKbControl.clickCreateKbButton()
         uiCreateKB.assertOkButtonIsNotEnabled()
+        SwingUtilities.invokeAndWait(Runnable {
+            uiCreateKB.setNameAndClickCreate(newKbName)
+        })
+//        uiCreateKB.waitToVanish()
+
     }
 }
 

@@ -39,7 +39,7 @@ class CreateKBTest {
             onNodeWithTag(CREATE_KB_OK_BUTTON_ID)
                 .assertIsNotEnabled()
                 .assertIsDisplayed()
-                .assertTextEquals(OK)
+                .assertTextEquals(CREATE)
             onNodeWithTag(CREATE_KB_CANCEL_BUTTON_ID)
                 .assertIsEnabled()
                 .assertIsDisplayed()
@@ -58,7 +58,7 @@ class CreateKBTest {
     fun ok() {
         val newKBName = "Whatever"
         uiCreateKB.performTextInput(newKBName)
-        uiCreateKB.clickOkButton()
+        uiCreateKB.clickCreateButton()
         handler.createdName shouldBe newKBName
         handler.cancelled shouldBe false
     }
@@ -66,11 +66,11 @@ class CreateKBTest {
     @Test
     fun `kb name validation`() {
         uiCreateKB.performTextInput("A")
-        uiCreateKB.assertOkButtonIsEnabled()
+        uiCreateKB.assertCreateButtonIsEnabled()
         uiCreateKB.performTextClearance()
         uiCreateKB.assertOkButtonIsNotEnabled()
         uiCreateKB.performTextInput("Bats")
-        uiCreateKB.assertOkButtonIsEnabled()
+        uiCreateKB.assertCreateButtonIsEnabled()
     }
 
     class DummyCreateKBHandler : CreateKBHandler {
@@ -92,15 +92,25 @@ class UICreateKB(private val composeTestRule: ComposeContentTestRule) {
         composeTestRule.waitUntilExactlyOneExists(hasText(CREATE_KB_NAME))
     }
 
+    fun setNameAndClickCreate(text: String) {
+        performTextInput(text)
+        clickCreateButton()
+    }
+
+    fun waitToVanish() {
+        composeTestRule.waitUntil {
+            composeTestRule.onAllNodesWithTag(CREATE_KB_NAME_FIELD_ID).fetchSemanticsNodes().isEmpty()
+        }
+    }
     fun performTextInput(text: String) = composeTestRule.onNodeWithTag(CREATE_KB_NAME_FIELD_ID).performTextInput(text)
 
     fun performTextClearance() = composeTestRule.onNodeWithTag(CREATE_KB_NAME_FIELD_ID).performTextClearance()
 
-    fun assertOkButtonIsEnabled() = composeTestRule.onNodeWithTag(CREATE_KB_OK_BUTTON_ID).assertIsEnabled()
+    fun assertCreateButtonIsEnabled() = composeTestRule.onNodeWithTag(CREATE_KB_OK_BUTTON_ID).assertIsEnabled()
 
     fun assertOkButtonIsNotEnabled() = composeTestRule.onNodeWithTag(CREATE_KB_OK_BUTTON_ID).assertIsNotEnabled()
 
-    fun clickOkButton() = composeTestRule.onNodeWithTag(CREATE_KB_OK_BUTTON_ID).performClick()
+    fun clickCreateButton() = composeTestRule.onNodeWithTag(CREATE_KB_OK_BUTTON_ID).performClick()
 
     fun clickCancelButton() = composeTestRule.onNodeWithTag(CREATE_KB_CANCEL_BUTTON_ID).performClick()
 }

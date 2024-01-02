@@ -49,7 +49,7 @@ class EngineConfig {
     var expectedNewProjectName: String? = null
 
     val defaultKB = KBInfo("Thyroids")
-    val returnKBInfo = defaultKB
+    var returnKBInfo = defaultKB
     val returnKBList = listOf(KBInfo("Glucose"), KBInfo("Lipids"), defaultKB)
 }
 

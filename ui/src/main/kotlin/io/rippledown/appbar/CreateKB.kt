@@ -1,16 +1,11 @@
 package io.rippledown.appbar
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.material.TextField
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import io.rippledown.constants.main.*
 
 interface CreateKBHandler {
@@ -24,41 +19,45 @@ fun CreateKB(handler: CreateKBHandler) {
     fun isNameOK() = kbName.isNotBlank()
 
     MaterialTheme {
-        Column {
-            Text(
-                text = CREATE_KB_NAME,
-                color = androidx.compose.ui.graphics.Color.Companion.Black,
-                textAlign = TextAlign.Start
-            )
-            TextField(
-                value = kbName,
-                enabled = true,
-                onValueChange = { s ->
-                    kbName = s
-                    println("Text is: $s")
-                },
-                modifier = Modifier.testTag(CREATE_KB_NAME_FIELD_ID)
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.End
-            ) {
-                Button(
-                    onClick = {
-                        handler.create(kbName)
-                    },
-                    enabled = isNameOK(),
-                    modifier = Modifier.testTag(CREATE_KB_OK_BUTTON_ID)
+        Surface {
+            Box {
+                Column(
+                    modifier = Modifier.padding(all = 4.dp)
                 ) {
-                    Text(OK)
-                }
-                Button(
-                    onClick = {
-                        handler.cancel()
-                    },
-                    modifier = Modifier.testTag(CREATE_KB_CANCEL_BUTTON_ID)
-                ) {
-                    Text(CANCEL)
+                    OutlinedTextField(
+                        value = kbName,
+                        enabled = true,
+                        onValueChange = { s ->
+                            kbName = s
+                        },
+                        label = { Text(text = CREATE_KB_NAME) },
+                        modifier = Modifier
+                            .testTag(CREATE_KB_NAME_FIELD_ID)
+                            .fillMaxWidth(),
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Button(
+                            onClick = {
+                                handler.create(kbName)
+                            },
+                            enabled = isNameOK(),
+                            modifier = Modifier.testTag(CREATE_KB_OK_BUTTON_ID)
+                        ) {
+                            Text(CREATE)
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = {
+                                handler.cancel()
+                            },
+                            modifier = Modifier.testTag(CREATE_KB_CANCEL_BUTTON_ID)
+                        ) {
+                            Text(CANCEL)
+                        }
+                    }
                 }
             }
         }
