@@ -11,7 +11,7 @@ const val OK = "OK"
 const val CANCEL = "Cancel"
 
 const val KBS_DROPDOWN_ID = "kbs_dropdown"
-const val CREATE_KB_ITEM = "create_kb_item"
+const val CREATE_KB_ITEM_ID = "create_kb_item"
 const val CREATE_KB_NAME_FIELD_ID = "create_kb_name"
 const val CREATE_KB_OK_BUTTON_ID = "create_kb_ok_button"
 const val CREATE_KB_CANCEL_BUTTON_ID = "create_kb_cancel_button"

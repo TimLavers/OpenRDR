@@ -1,16 +1,15 @@
 package io.rippledown.appbar
 
 import androidx.compose.ui.test.*
+import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
-import io.mockk.InternalPlatformDsl.toStr
-import io.rippledown.constants.kb.KB_SELECTOR_ID
+import io.rippledown.constants.kb.KB_CONTROL_ID
+import io.rippledown.constants.main.CREATE_KB_ITEM_ID
 import io.rippledown.constants.main.CREATE_KB_TEXT
-import io.rippledown.constants.main.KBS_DROPDOWN_ID
 import io.rippledown.main.Handler
 import io.rippledown.main.handlerImpl
 import io.rippledown.mocks.engineConfig
-import io.rippledown.proxy.findById
-import kotlinx.coroutines.test.runTest
+import org.junit.Before
 import org.junit.Rule
 import kotlin.test.Test
 
@@ -20,35 +19,57 @@ class KBControlTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    @Test
-    fun `should select default project`() = runTest {
-        with(composeTestRule) {
-            setContent {
-                ApplicationBar(object : Handler by handlerImpl, AppBarHandler {
-                    override var isRuleSessionInProgress = false
-                })
-            }
-            waitUntilExactlyOneExists(hasText(engineConfig.returnKBInfo.name))
+    private lateinit var uiKbControl: UIKBControl
+
+    @Before
+    fun setup() {
+        composeTestRule.setContent {
+            ApplicationBar(object : Handler by handlerImpl, AppBarHandler {
+                override var isRuleSessionInProgress = false
+            })
         }
+        uiKbControl = UIKBControl(composeTestRule)
     }
 
     @Test
-    fun `create KB button`() = runTest {
-        with(composeTestRule) {
-            setContent {
-                ApplicationBar(object : Handler by handlerImpl, AppBarHandler {
-                    override var isRuleSessionInProgress = false
-                })
-            }
-            waitUntilExactlyOneExists(hasText(engineConfig.returnKBInfo.name))
-            onNodeWithText(engineConfig.returnKBInfo.name).performClick()
-            waitUntilExactlyOneExists(hasText(CREATE_KB_TEXT))
-            onNodeWithText(CREATE_KB_TEXT).performClick()
+    fun `should select default project`() {
+        uiKbControl.assertKbNameIs(engineConfig.returnKBInfo.name)
+    }
 
-//            onNodeWithText(engineConfig.returnKBInfo.name).as()
-//            onNodeWithTag(KB_SELECTOR_ID).assertExists()
-//            waitUntilExactlyOneExists(hasTestTag(KB_SELECTOR_ID))
-        }
+    @Test
+    fun `create KB button`() {
+        uiKbControl.assertCreateKbButtonIsNotShowing()
+        uiKbControl.clickControl()
 
+        uiKbControl.assertCreateKbButtonIsShowing()
+        val uiCreateKB = uiKbControl.clickCreateKbButton()
+        uiCreateKB.assertOkButtonIsNotEnabled()
+    }
+}
+
+@OptIn(ExperimentalTestApi::class)
+class UIKBControl(private val composeTestRule: ComposeContentTestRule) {
+    init {
+        composeTestRule.waitUntilExactlyOneExists(hasTestTag(KB_CONTROL_ID))
+    }
+
+    fun assertKbNameIs(expected: String) {
+        composeTestRule.waitUntilExactlyOneExists(hasText(expected))
+        val onNodeWithTag = composeTestRule.onNodeWithTag(KB_CONTROL_ID)
+        onNodeWithTag.assertTextEquals(expected)
+    }
+
+    fun clickControl() = composeTestRule.onNodeWithTag(KB_CONTROL_ID).performClick()
+
+    fun assertCreateKbButtonIsNotShowing() = composeTestRule.onAllNodesWithText(CREATE_KB_TEXT).assertCountEquals(0)
+
+    fun assertCreateKbButtonIsShowing() {
+        composeTestRule.waitUntilExactlyOneExists(hasText(CREATE_KB_TEXT))
+        composeTestRule.onNodeWithText(CREATE_KB_TEXT).assertIsEnabled()
+    }
+
+    fun clickCreateKbButton(): UICreateKB {
+        composeTestRule.onNodeWithTag(CREATE_KB_ITEM_ID).performClick()
+        return UICreateKB(composeTestRule)
     }
 }
