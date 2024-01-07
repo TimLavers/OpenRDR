@@ -22,11 +22,11 @@ internal class ShowInterpretationDifferenceForMoreComplexScenarios : UITestBase(
     fun setup() {
         serverProxy.start()
         resetKB()
-        setupWebDriver()
-        caseQueuePO = CaseQueuePO(driver)
-        caseListPO = CaseListPO(driver)
-        caseViewPO = CaseViewPO(driver)
-        interpretationViewPO = InterpretationViewPO(driver)
+//        setupWebDriver()
+//        caseQueuePO = CaseQueuePO(driver)
+//        caseListPO = CaseListPO(driver)
+//        caseViewPO = CaseViewPO(driver)
+//        interpretationViewPO = InterpretationViewPO(driver)
     }
 
     @AfterTest

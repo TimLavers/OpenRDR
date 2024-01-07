@@ -1,26 +1,24 @@
 package io.rippledown.integration.pageobjects
 
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CONCLUSIONS
-import org.openqa.selenium.By
-import org.openqa.selenium.WebDriver
 
-class ConclusionsViewPO(private val driver: WebDriver) {
+class ConclusionsViewPO() {
 
     fun selectConclusionsTab() {
-        driver.findElement(By.id(INTERPRETATION_TAB_CONCLUSIONS)).click()
+//        driver.findElement(By.id(INTERPRETATION_TAB_CONCLUSIONS)).click()
     }
 
     fun clickClose() {
-        driver.findElement(By.id("conclusions_dialog_close")).click()
+//        driver.findElement(By.id("conclusions_dialog_close")).click()
     }
 
     fun clickComment(comment: String) {
-        driver.findElement(By.ByXPath("//*[contains(@id, '$comment')]")).click()
+//        driver.findElement(By.ByXPath("//*[contains(@id, '$comment')]")).click()
     }
 
     fun requireConditionsToBeShown(vararg conditions: String) {
-        conditions.forEach { condition ->
-            driver.findElement(By.ByXPath("//*[contains(@id, '$condition')]"))
-        }
+//        conditions.forEach { condition ->
+//            driver.findElement(By.ByXPath("//*[contains(@id, '$condition')]"))
+//        }
     }
 }

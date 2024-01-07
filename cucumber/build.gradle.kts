@@ -7,18 +7,25 @@ apply(from = "../repositories.gradle.kts")
 
 plugins {
     java
+    id("org.jetbrains.compose") version "1.5.11"
+
 }
 
 dependencies {
+    testImplementation(project(":ui"))
     testImplementation(testFixtures(project(":common")))
+    testImplementation(compose.desktop.currentOs)
+    testImplementation(compose.preview)
+
+    testImplementation("org.jetbrains.compose.ui:ui-tooling-preview-desktop:${Version.compose}")
 
     testImplementation(project.dependencies.enforcedPlatform("io.cucumber:cucumber-bom:$cucumber"))
     testImplementation("io.cucumber:cucumber-java8")
     testImplementation("io.cucumber:cucumber-junit")
     testImplementation("io.cucumber:cucumber-picocontainer")
     testImplementation("io.kotest:kotest-assertions-core:$kotest")
-    testImplementation("io.kotest:kotest-runner-junit5:$kotest")
-    testImplementation(kotlin("test-junit"))
+//    testImplementation("io.kotest:kotest-runner-junit5:$kotest")
+//    testImplementation(kotlin("test-junit"))
     testImplementation("org.awaitility:awaitility-kotlin:$awaitility")
     testImplementation(project.dependencies.enforcedPlatform("io.ktor:ktor-bom:$ktor"))
     testImplementation("io.ktor:ktor-client-core")

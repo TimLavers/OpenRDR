@@ -19,11 +19,11 @@ internal class SaveInterpretationTest : UITestBase() {
     fun setup() {
         serverProxy.start()
         setupCases()
-        setupWebDriver()
-        caseQueuePO = CaseQueuePO(driver)
+//        setupWebDriver()
+        caseQueuePO = CaseQueuePO()
         caseQueuePO.waitForNumberOfCasesToBe(3)
-        caseListPO = CaseListPO(driver)
-        interpretationViewPO = InterpretationViewPO(driver)
+        caseListPO = CaseListPO()
+        interpretationViewPO = InterpretationViewPO()
     }
 
     @AfterTest

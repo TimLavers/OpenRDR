@@ -45,10 +45,10 @@ internal class ShowRuleCondition : UITestBase() {
         setupCase()
         buildRuleForTSH()
         buildRuleForABC()
-        setupWebDriver()
-        caseQueuePO = CaseQueuePO(driver).apply { waitForNumberOfCasesToBe(1) }
-        caseViewPO = CaseViewPO(driver)
-        conclusionsViewPO = ConclusionsViewPO(driver)
+//        setupWebDriver()
+        caseQueuePO = CaseQueuePO().apply { waitForNumberOfCasesToBe(1) }
+        caseViewPO = CaseViewPO()
+        conclusionsViewPO = ConclusionsViewPO()
     }
 
     @AfterTest

@@ -17,10 +17,10 @@ internal class CaseViewTest : UITestBase() {
     fun setup() {
         serverProxy.start()
         setupCases()
-        setupWebDriver()
-        caseQueuePO = CaseQueuePO(driver)
+//        setupWebDriver()
+        caseQueuePO = CaseQueuePO()
         caseQueuePO.waitForNumberOfCasesToBe(3)
-        caseListPO = CaseListPO(driver)
+        caseListPO = CaseListPO()
     }
 
     @AfterTest

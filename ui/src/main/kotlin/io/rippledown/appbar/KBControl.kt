@@ -17,11 +17,16 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
+import io.rippledown.constants.kb.KB_CONTROL_DESCRIPTION
 import io.rippledown.constants.kb.KB_CONTROL_ID
 import io.rippledown.constants.kb.KB_SELECTOR_ID
 import io.rippledown.constants.main.CREATE_KB_ITEM_ID
@@ -29,6 +34,7 @@ import io.rippledown.constants.main.CREATE_KB_TEXT
 import io.rippledown.constants.main.KBS_DROPDOWN_ID
 import io.rippledown.constants.main.kbItemId
 import io.rippledown.model.KBInfo
+import kotlinx.coroutines.launch
 
 @Composable
 @Preview
@@ -38,6 +44,7 @@ fun KBControl(handler: AppBarHandler) {
     val selectedIndex = remember { mutableStateOf(0) }
     var kbInfo: KBInfo? by remember { mutableStateOf(null) }
     val availableKBs = mutableListOf<KBInfo>()
+    val coroutineScope = rememberCoroutineScope()
 
     fun kbName() = if (kbInfo != null) kbInfo!!.name else ""
 
@@ -57,7 +64,11 @@ fun KBControl(handler: AppBarHandler) {
         ) {
             CreateKB(object : CreateKBHandler {
                 override fun create(name: String) {
-//                    kbInfo = handler.api.createKB(name)
+                    println("create...name: $name")
+                    coroutineScope.launch {
+                        kbInfo = handler.api.createKB(name)
+                        println("Got new kbInfo: $kbInfo")
+                    }
                     createKbDialogShowing = false
                 }
 
@@ -71,6 +82,10 @@ fun KBControl(handler: AppBarHandler) {
     Row(
         Modifier
             .clickable(onClick = { expanded = true })
+            .semantics {
+                role = Role.Button
+                contentDescription = KB_CONTROL_DESCRIPTION
+            }
             .background(color = colors.primary)
             .padding(16.dp)
             .testTag(KB_CONTROL_ID)

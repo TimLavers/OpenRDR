@@ -6,7 +6,7 @@ import io.rippledown.model.TestResult
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.external.MeasurementEvent
 import kotlinx.serialization.json.Json
-import org.apache.commons.io.FileUtils
+//import org.apache.commons.io.FileUtils
 import java.io.File
 import java.time.Instant
 
@@ -18,7 +18,7 @@ class LabProxy(tempDir: File, val restProxy: RESTClient) {
         if (!inputDir.exists()) {
             inputDir.mkdirs()
         }
-        FileUtils.cleanDirectory(inputDir)
+//        FileUtils.cleanDirectory(inputDir)
     }
 
     fun provideCase(caseName: String) {

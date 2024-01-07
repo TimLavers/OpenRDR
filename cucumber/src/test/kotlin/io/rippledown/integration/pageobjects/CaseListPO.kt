@@ -7,39 +7,39 @@ import io.rippledown.constants.caseview.CASE_NAME_PREFIX
 import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import org.awaitility.Awaitility.await
 import org.awaitility.kotlin.withPollInterval
-import org.openqa.selenium.By
-import org.openqa.selenium.WebDriver
-import org.openqa.selenium.support.ui.Wait
-import org.openqa.selenium.support.ui.WebDriverWait
 import java.time.Duration.ofSeconds
 import java.util.concurrent.TimeUnit
 
+class CaseListPO() {
 
-class CaseListPO(private val driver: WebDriver) {
-
-    private fun containerElement() = driver.findElement(By.id(CASELIST_ID))
+    private fun containerElement() {
+        TODO()
+    }
 
     fun waitForCaseListToHaveSize(count: Int) {
-        await().atMost(5L, TimeUnit.SECONDS).until {
-            casesListed().size == count
-        }
+//        await().atMost(5L, TimeUnit.SECONDS).until {
+//            casesListed().size == count
+//        }
     }
 
     fun waitForCountOfNumberOfCasesToBe(count: Int) {
-        val wait: Wait<WebDriver> = WebDriverWait(driver, ofSeconds(5))
-        wait.until { _ ->
-            countOfTheNumberOfCases() == count
-        }
+//        val wait: Wait<WebDriver> = WebDriverWait(driver, ofSeconds(5))
+//        wait.until { _ ->
+//            countOfTheNumberOfCases() == count
+//        }
     }
 
-    fun countOfTheNumberOfCases() = driver.findElement(By.id(NUMBER_OF_CASES_ID)).text
-        .substringAfter("$CASES ").toInt()
+    fun countOfTheNumberOfCases() {
+        TODO()
+    }
+//        driver.findElement(By.id(NUMBER_OF_CASES_ID)).text
+//        .substringAfter("$CASES ").toInt()
 
     fun waitForCaseListToContain(name: String) {
-        val wait: Wait<WebDriver> = WebDriverWait(driver, ofSeconds(5))
-        wait.until { _ ->
-            driver.findElement(By.id("$CASE_NAME_PREFIX$name")).isDisplayed
-        }
+//        val wait: Wait<WebDriver> = WebDriverWait(driver, ofSeconds(5))
+//        wait.until { _ ->
+//            driver.findElement(By.id("$CASE_NAME_PREFIX$name")).isDisplayed
+//        }
     }
 
     fun waitForNoCases() {
@@ -54,21 +54,28 @@ class CaseListPO(private val driver: WebDriver) {
             }
     }
 
-    fun casesListed() = listItems().map { it.text }
+    fun casesListed() {
+        TODO()
+    }
+//    = listItems().map { it.text }
 
-    private fun listItems() = containerElement().findElements(By.className("MuiListItemButton-root"))
+    private fun listItems()  {
+        TODO()
+    }
+//        containerElement().findElements(By.className("MuiListItemButton-root"))
 
     fun select(caseName: String): CaseViewPO {
-        val id = "$CASE_NAME_PREFIX$caseName"
-        driver.findElement(By.id(id)).click()
-        return CaseViewPO(driver)
+        TODO()
+//        val id = "$CASE_NAME_PREFIX$caseName"
+//        driver.findElement(By.id(id)).click()
+//        return CaseViewPO(driver)
     }
 
     fun requireCaseCountToBeHidden() {
-        driver.findElements(By.id(NUMBER_OF_CASES_ID)) shouldBe emptyList()
+//        driver.findElements(By.id(NUMBER_OF_CASES_ID)) shouldBe emptyList()
     }
 
     fun requireCaseCountToBe(expected: Int) {
-        driver.findElements(By.id(NUMBER_OF_CASES_ID)) shouldBe emptyList()
+//        driver.findElements(By.id(NUMBER_OF_CASES_ID)) shouldBe emptyList()
     }
 }

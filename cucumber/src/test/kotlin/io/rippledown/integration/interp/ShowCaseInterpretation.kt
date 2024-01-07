@@ -13,7 +13,6 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-
 // ORD2
 internal class ShowCaseInterpretation : UITestBase() {
 
@@ -28,11 +27,11 @@ internal class ShowCaseInterpretation : UITestBase() {
         resetKB()
         setupCases()
         buildRule()
-        setupWebDriver()
-        caseQueuePO = CaseQueuePO(driver)
-        caseQueuePO.waitForNumberOfCasesToBe(3)
-        caseListPO = CaseListPO(driver)
-        interpretationViewPO = InterpretationViewPO(driver)
+//        setupWebDriver()
+//        caseQueuePO = CaseQueuePO(driver)
+//        caseQueuePO.waitForNumberOfCasesToBe(3)
+//        caseListPO = CaseListPO(driver)
+//        interpretationViewPO = InterpretationViewPO(driver)
     }
 
     @AfterTest

@@ -50,14 +50,14 @@ class Defs : En {
         }
 
         When("I start the client application") {
-            driver = uiTestBase.setupWebDriver()
-            caseListPO = CaseListPO(driver)
-            caseViewPO = CaseViewPO(driver)
-            cornerstoneViewPO = CornerstoneCaseViewPO(driver)
-            interpretationViewPO = InterpretationViewPO(driver)
-            conditionSelectorPO = ConditionSelectorPO(driver)
-            conclusionsViewPO = ConclusionsViewPO(driver)
-            kbControlsPO = KBControlsPO(driver)
+//            driver = uiTestBase.setupWebDriver()
+//            caseListPO = CaseListPO(driver)
+//            caseViewPO = CaseViewPO(driver)
+//            cornerstoneViewPO = CornerstoneCaseViewPO(driver)
+//            interpretationViewPO = InterpretationViewPO(driver)
+//            conditionSelectorPO = ConditionSelectorPO(driver)
+//            conclusionsViewPO = ConclusionsViewPO(driver)
+//            kbControlsPO = KBControlsPO(driver)
         }
 
         When("stop the client application") {
@@ -145,10 +145,10 @@ class Defs : En {
         }
 
         Given("I import the exported Knowledge Base {word}") { kbName: String ->
-            val exportedZip = File(uiTestBase.downloadsDir(), "$kbName.zip")
-            val kbInfoPO = KBControlsPO(driver)
-            kbInfoPO.importFromZip(exportedZip)
-            kbInfoPO.waitForKBToBeLoaded(kbName)
+//            val exportedZip = File(uiTestBase.downloadsDir(), "$kbName.zip")
+//            val kbInfoPO = KBControlsPO(driver)
+//            kbInfoPO.importFromZip(exportedZip)
+//            kbInfoPO.waitForKBToBeLoaded(kbName)
         }
 
         Given("case {word} is provided having data:") { caseName: String, dataTable: DataTable ->

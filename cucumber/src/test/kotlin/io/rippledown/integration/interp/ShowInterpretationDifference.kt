@@ -28,10 +28,10 @@ internal class ShowInterpretationDifference : UITestBase() {
         resetKB()
         setupCase()
         buildRuleForTSHComment()
-        setupWebDriver()
-        caseQueuePO = CaseQueuePO(driver).apply { waitForNumberOfCasesToBe(1) }
-        caseViewPO = CaseViewPO(driver)
-        interpretationViewPO = InterpretationViewPO(driver)
+//        setupWebDriver()
+//        caseQueuePO = CaseQueuePO(driver).apply { waitForNumberOfCasesToBe(1) }
+//        caseViewPO = CaseViewPO(driver)
+//        interpretationViewPO = InterpretationViewPO(driver)
     }
 
     @AfterTest

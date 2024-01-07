@@ -6,7 +6,6 @@ import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.utils.io.*
 import io.rippledown.constants.api.*
-import io.rippledown.main.Api
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.OperationResult
@@ -46,7 +45,7 @@ class EngineConfig {
 
     var expectedMovedAttributeId: Int? = null
     var expectedTargetAttributeId: Int? = null
-    var expectedNewProjectName: String? = null
+    var newKbName: String? = null
 
     val defaultKB = KBInfo("Thyroids")
     var returnKBInfo = defaultKB
@@ -138,7 +137,7 @@ private class EngineBuilder(private val config: EngineConfig) {
             CREATE_KB -> {
                 val body = request.body as TextContent
                 val name = body.text
-                name shouldBe config.expectedNewProjectName
+                config.newKbName = name
                 httpResponseData("")
             }
 

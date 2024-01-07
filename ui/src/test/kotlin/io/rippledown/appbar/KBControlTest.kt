@@ -3,6 +3,7 @@ package io.rippledown.appbar
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
+import io.kotest.matchers.shouldBe
 import io.rippledown.constants.kb.KB_CONTROL_ID
 import io.rippledown.constants.main.CREATE_KB_ITEM_ID
 import io.rippledown.constants.main.CREATE_KB_TEXT
@@ -10,6 +11,7 @@ import io.rippledown.main.Handler
 import io.rippledown.main.handlerImpl
 import io.rippledown.mocks.engineConfig
 import io.rippledown.model.KBInfo
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import javax.swing.SwingUtilities
@@ -20,7 +22,7 @@ class KBControlTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private lateinit var uiKbControl: UIKBControl
+    private lateinit var uiKbControlOperator: KbControlOperator
 
     @Before
     fun setup() {
@@ -29,35 +31,35 @@ class KBControlTest {
                 override var isRuleSessionInProgress = false
             })
         }
-        uiKbControl = UIKBControl(composeTestRule)
+        uiKbControlOperator = KbControlOperator(composeTestRule)
     }
 
     @Test
     fun `should select default project`() {
-        uiKbControl.assertKbNameIs(engineConfig.returnKBInfo.name)
+        uiKbControlOperator.assertKbNameIs(engineConfig.returnKBInfo.name)
     }
 
     @Test
-    fun `create KB`() {
+    fun `create KB`() = runTest {
         val newKbName = "Lipids"
-        engineConfig.expectedNewProjectName = newKbName
         engineConfig.returnKBInfo = KBInfo("12345_id", newKbName)
-        uiKbControl.assertCreateKbButtonIsNotShowing()
-        uiKbControl.clickControl()
+        uiKbControlOperator.assertCreateKbButtonIsNotShowing()
+        uiKbControlOperator.clickControl()
 
-        uiKbControl.assertCreateKbButtonIsShowing()
-        val uiCreateKB = uiKbControl.clickCreateKbButton()
+        uiKbControlOperator.assertCreateKbButtonIsShowing()
+        val uiCreateKB = uiKbControlOperator.clickCreateKbButton()
         uiCreateKB.assertOkButtonIsNotEnabled()
         SwingUtilities.invokeAndWait(Runnable {
             uiCreateKB.setNameAndClickCreate(newKbName)
         })
+        engineConfig.newKbName shouldBe  newKbName
 //        uiCreateKB.waitToVanish()
 
     }
 }
 
 @OptIn(ExperimentalTestApi::class)
-class UIKBControl(private val composeTestRule: ComposeContentTestRule) {
+class KbControlOperator(private val composeTestRule: ComposeContentTestRule) {
     init {
         composeTestRule.waitUntilExactlyOneExists(hasTestTag(KB_CONTROL_ID))
     }
@@ -77,8 +79,8 @@ class UIKBControl(private val composeTestRule: ComposeContentTestRule) {
         composeTestRule.onNodeWithText(CREATE_KB_TEXT).assertIsEnabled()
     }
 
-    fun clickCreateKbButton(): UICreateKB {
+    fun clickCreateKbButton(): CreateKbOperator {
         composeTestRule.onNodeWithTag(CREATE_KB_ITEM_ID).performClick()
-        return UICreateKB(composeTestRule)
+        return CreateKbOperator(composeTestRule)
     }
 }

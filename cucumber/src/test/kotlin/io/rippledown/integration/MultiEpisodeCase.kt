@@ -17,10 +17,10 @@ internal class MultiEpisodeCase : UITestBase() {
     fun setup() {
         serverProxy.start()
         setupCases()
-        setupWebDriver()
-        caseQueuePO = CaseQueuePO(driver)
+//        setupWebDriver()
+        caseQueuePO = CaseQueuePO()
         caseQueuePO.waitForNumberOfCasesToBe(1)
-        caseListPO = CaseListPO(driver)
+        caseListPO = CaseListPO()
     }
 
     @AfterTest

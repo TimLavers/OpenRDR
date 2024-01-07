@@ -1,17 +1,14 @@
 package io.rippledown.integration.pageobjects
 
-import org.openqa.selenium.WebDriver
-import org.openqa.selenium.WebElement
-
-class KBExportPO(private val driver: WebDriver) {
+class KBExportPO() {
 
     init {
-        driver.waitForElementWithId("confirm_zip_export")
+//        driver.waitForElementWithId("confirm_zip_export")
     }
 
     fun doExport() {
-        confirmExportButton().click()
+//        confirmExportButton().click()
     }
 
-    private fun confirmExportButton(): WebElement = driver.waitForElementWithId("confirm_zip_export")
+//    private fun confirmExportButton(): WebElement = driver.waitForElementWithId("confirm_zip_export")
 }

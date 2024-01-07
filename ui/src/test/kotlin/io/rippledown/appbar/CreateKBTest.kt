@@ -17,7 +17,7 @@ class CreateKBTest {
     @get:Rule
     var composeTestRule = createComposeRule()
 
-    private lateinit var uiCreateKB: UICreateKB
+    private lateinit var createKbOperator: CreateKbOperator
 
     @Before
     fun setup() {
@@ -25,7 +25,7 @@ class CreateKBTest {
         composeTestRule.setContent {
             CreateKB(handler)
         }
-        uiCreateKB = UICreateKB(composeTestRule)
+        createKbOperator = CreateKbOperator(composeTestRule)
     }
 
     @Test
@@ -50,27 +50,27 @@ class CreateKBTest {
     @Test
     fun cancel() {
         handler.cancelled shouldBe false
-        uiCreateKB.clickCancelButton()
+        createKbOperator.clickCancelButton()
         handler.cancelled shouldBe true
     }
 
     @Test
     fun ok() {
         val newKBName = "Whatever"
-        uiCreateKB.performTextInput(newKBName)
-        uiCreateKB.clickCreateButton()
+        createKbOperator.performTextInput(newKBName)
+        createKbOperator.clickCreateButton()
         handler.createdName shouldBe newKBName
         handler.cancelled shouldBe false
     }
 
     @Test
     fun `kb name validation`() {
-        uiCreateKB.performTextInput("A")
-        uiCreateKB.assertCreateButtonIsEnabled()
-        uiCreateKB.performTextClearance()
-        uiCreateKB.assertOkButtonIsNotEnabled()
-        uiCreateKB.performTextInput("Bats")
-        uiCreateKB.assertCreateButtonIsEnabled()
+        createKbOperator.performTextInput("A")
+        createKbOperator.assertCreateButtonIsEnabled()
+        createKbOperator.performTextClearance()
+        createKbOperator.assertOkButtonIsNotEnabled()
+        createKbOperator.performTextInput("Bats")
+        createKbOperator.assertCreateButtonIsEnabled()
     }
 
     class DummyCreateKBHandler : CreateKBHandler {
@@ -87,7 +87,7 @@ class CreateKBTest {
 }
 
 @OptIn(ExperimentalTestApi::class)
-class UICreateKB(private val composeTestRule: ComposeContentTestRule) {
+class CreateKbOperator(private val composeTestRule: ComposeContentTestRule) {
     init {
         composeTestRule.waitUntilExactlyOneExists(hasText(CREATE_KB_NAME))
     }
@@ -102,6 +102,7 @@ class UICreateKB(private val composeTestRule: ComposeContentTestRule) {
             composeTestRule.onAllNodesWithTag(CREATE_KB_NAME_FIELD_ID).fetchSemanticsNodes().isEmpty()
         }
     }
+
     fun performTextInput(text: String) = composeTestRule.onNodeWithTag(CREATE_KB_NAME_FIELD_ID).performTextInput(text)
 
     fun performTextClearance() = composeTestRule.onNodeWithTag(CREATE_KB_NAME_FIELD_ID).performTextClearance()

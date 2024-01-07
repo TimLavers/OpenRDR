@@ -1,13 +1,9 @@
-package io.rippledown.proxy
+package io.rippledown.integration.utils
 
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import io.rippledown.constants.caseview.CASES
-import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import io.rippledown.constants.main.TITLE
 import io.rippledown.main.Api
 import io.rippledown.main.Handler
@@ -15,21 +11,6 @@ import io.rippledown.main.OpenRDRUI
 
 fun findById(id : String) {
     println("findById")
-}
-@OptIn(ExperimentalTestApi::class)
-fun ComposeTestRule.findById(id: String) = onNodeWithTag(id)
-
-fun ComposeTestRule.findAllById(id: String) {
-     onAllNodesWithTag(id)
-    println("findAllById")
-}
-fun findId(id: String) {
-    println("findAllById")
-}
-
-@OptIn(ExperimentalTestApi::class)
-fun ComposeTestRule.requireNumberOfCases(expected: Int) {
-    waitUntilExactlyOneExists(hasText("$CASES $expected"), timeoutMillis = 2_000)
 }
 
 
@@ -62,6 +43,7 @@ class OpenRdUIProxy() {
                     }
                 }
             }
+            appWindow.setVisible(true)
         }
         Thread(runnable, "App Runner").start()
 //        }
