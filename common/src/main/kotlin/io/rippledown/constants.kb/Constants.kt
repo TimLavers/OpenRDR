@@ -3,7 +3,7 @@ package io.rippledown.constants.kb
 
 const val KB_SELECTOR_ID = "kb_selector_id"
 const val KB_CONTROL_ID = "kb_control_id"
-const val KB_CONTROL_DESCRIPTION = "Clickable KB selection row"
+const val KB_CONTROL_DESCRIPTION = "Show KB selection options"
 
 const val KB_IMPORT_DIALOG = "kb_import_dialog"
 const val KB_CREATE_DIALOG = "kb_create_dialog"

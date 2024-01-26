@@ -89,7 +89,6 @@ fun KBControl(handler: AppBarHandler) {
             .background(color = colors.primary)
             .padding(16.dp)
             .testTag(KB_CONTROL_ID)
-
     ) {
         Icon(
             imageVector = Icons.Default.KeyboardArrowDown,

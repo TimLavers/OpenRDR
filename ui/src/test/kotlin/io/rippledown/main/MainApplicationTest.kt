@@ -17,13 +17,19 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.ApplicationScope
 import androidx.compose.ui.window.rememberWindowState
+import io.kotest.matchers.shouldBe
+import io.mockk.Awaits
+import io.rippledown.constants.kb.KB_CONTROL_DESCRIPTION
 import io.rippledown.proxy.dumpToText
+import io.rippledown.proxy.find
+import io.rippledown.proxy.waitForWindowToShow
 import kotlinx.coroutines.*
 import java.awt.GraphicsEnvironment
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.takeWhile
 import org.jetbrains.skiko.MainUIDispatcher
 import org.junit.Assume.assumeFalse
+import javax.accessibility.AccessibleRole
 import javax.swing.SwingUtilities
 import androidx.compose.ui.window.launchApplication as realLaunchApplication
 
@@ -33,7 +39,7 @@ class MainApplicationTest {
 
     @Test
     fun blah() {
-        lateinit var window: ComposeWindow
+        var windowHolder: ComposeWindow? = null
 
 //        SwingUtilities.invokeLater {
         val runnable = java.lang.Runnable {
@@ -44,11 +50,11 @@ class MainApplicationTest {
                         icon = painterResource("water-wave-icon.png"),
                         title = TITLE
                     ) {
-                        window = this.window
-//                        OpenRDRUI(handlerImpl)
-                        OpenRDRUI(object : Handler {
-                            override var api = Api()
-                        })
+                        windowHolder = this.window
+                        OpenRDRUI(handlerImpl)
+//                        OpenRDRUI(object : Handler {
+//                            override var api = Api()
+//                        })
 
                     }
                 }
@@ -56,16 +62,43 @@ class MainApplicationTest {
         }
         Thread(runnable, "App Runner").start()
 //        }
-        Thread.sleep(1000)
+
+        while (windowHolder == null) {
+            Thread.sleep(1000)
+        }
+        val window = windowHolder!!
+
+        window.waitForWindowToShow()
+        println("------------ TEST READY!! -------------")
+
+
         val accessibleContext = window.accessibleContext
-        println("accessibleContext: $accessibleContext")
-        val name = accessibleContext.accessibleName
-        println("------- name: $name")
-        val childCount = accessibleContext.accessibleChildrenCount
-        println(childCount)
-        val child0 = accessibleContext.getAccessibleChild(0)
-        println(child0)
-        accessibleContext.dumpToText()
+        val kbRow = accessibleContext.find(KB_CONTROL_DESCRIPTION, AccessibleRole.PUSH_BUTTON)
+
+        println("kbRow: $kbRow")
+
+        val action = kbRow!!.accessibleAction
+        val count = action.accessibleActionCount
+        println("action count: $count")
+        count shouldBe 1
+        val actionDescription = action.getAccessibleActionDescription(0)
+        println("action description: $actionDescription")
+
+        action.doAccessibleAction(0)
+
+        Thread.sleep(10_000)
+
+//        println("row action: $action")
+//        println("accessibleContext: $accessibleContext")
+//        val name = accessibleContext.accessibleName
+//        println("------- name: $name")
+//        val childCount = accessibleContext.accessibleChildrenCount
+//        println(childCount)
+//        val child0 = accessibleContext.getAccessibleChild(0)
+//        println(child0)
+//        accessibleContext.dumpToText()
+
+
 
     }
 
