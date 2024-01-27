@@ -17,16 +17,16 @@ fun AccessibleContext.find(description: String, role: AccessibleRole): Accessibl
     }
     return null
 }
-fun AccessibleContext.dumpToText(componentDepth: Int = 0, ignoreNulls: Boolean = true) {
+fun AccessibleContext.dumpToText(componentDepth: Int = 0, showNulls: Boolean = false) {
     val childCount = accessibleChildrenCount
     val name = this.accessibleName
     val role = this.accessibleRole.toDisplayString()
     val description = this.accessibleDescription
-    if (!ignoreNulls || name != null || description != null) {
+    if (showNulls || name != null || description != null) {
         println("Name: $name, role: $role, description: $description, componentDepth: $componentDepth, child count: $childCount ")
     }
     for (i in 0..<childCount) {
-        getAccessibleChild(i).accessibleContext.dumpToText(componentDepth + 1)
+        getAccessibleChild(i).accessibleContext.dumpToText(componentDepth + 1, showNulls)
     }
 }
 

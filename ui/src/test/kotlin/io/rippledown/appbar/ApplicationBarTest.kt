@@ -1,12 +1,17 @@
 package io.rippledown.appbar
 
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.printToLog
+import androidx.compose.ui.test.printToString
 import io.rippledown.constants.kb.KB_SELECTOR_ID
 import io.rippledown.constants.main.MAIN_HEADING_ID
 import io.rippledown.main.Handler
 import io.rippledown.main.handlerImpl
 import org.junit.Rule
+import javax.accessibility.AccessibleRole
 import kotlin.test.Test
 
 class ApplicationBarTest {
@@ -47,6 +52,18 @@ class ApplicationBarTest {
                 })
             }
             onNodeWithTag(testTag = KB_SELECTOR_ID).assertDoesNotExist()
+        }
+    }
+
+    @Test
+    fun semantics() {
+        with(composeTestRule) {
+            setContent {
+                ApplicationBar(object : Handler by handlerImpl, AppBarHandler {
+                    override var isRuleSessionInProgress = false
+                })
+            }
+            onRoot().printToLog(AccessibleRole.GROUP_BOX.toString())
         }
     }
 }

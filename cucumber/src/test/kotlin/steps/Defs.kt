@@ -164,7 +164,10 @@ class Defs : En {
         }
 
         Then("the displayed KB name is (now ){word}") { kbName: String ->
-            kbControlsPO.waitForKBToBeLoaded(kbName)
+            val applicationBarOperator = rdUiOperator.applicationBarOperator()
+            with (applicationBarOperator.kbControlOperator()) {
+                this.currentKB() shouldBe kbName
+            }
         }
 
         Then("the displayed product name is 'Open RippleDown'") {

@@ -3,7 +3,9 @@ package io.rippledown.constants.kb
 
 const val KB_SELECTOR_ID = "kb_selector_id"
 const val KB_CONTROL_ID = "kb_control_id"
-const val KB_CONTROL_DESCRIPTION = "Show KB selection options"
+const val KB_CONTROL_DESCRIPTION = "Knowledge Base Management Controls"
+const val KB_CONTROL_DROPDOWN_DESCRIPTION = "Show controls menu"
+const val KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION = "Current Knowledge Base"
 
 const val KB_IMPORT_DIALOG = "kb_import_dialog"
 const val KB_CREATE_DIALOG = "kb_create_dialog"

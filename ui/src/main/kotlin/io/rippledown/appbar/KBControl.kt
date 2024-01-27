@@ -7,11 +7,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.DropdownMenu
-import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.Icon
+import androidx.compose.material.*
 import androidx.compose.material.MaterialTheme.colors
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.runtime.*
@@ -23,9 +20,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
-import io.rippledown.constants.kb.KB_CONTROL_DESCRIPTION
-import io.rippledown.constants.kb.KB_CONTROL_ID
-import io.rippledown.constants.kb.KB_SELECTOR_ID
+import io.rippledown.constants.kb.*
 import io.rippledown.constants.main.*
 import io.rippledown.model.KBInfo
 import kotlinx.coroutines.flow.merge
@@ -77,20 +72,24 @@ fun KBControl(handler: AppBarHandler) {
 
     Row(
         Modifier
-            .clickable(onClick = { expanded = true })
             .semantics {
-                role = Role.Button
                 contentDescription = KB_CONTROL_DESCRIPTION
-            }.clearAndSetSemantics {  }
-            .background(color = colors.primary)
+            }
             .padding(16.dp)
             .testTag(KB_CONTROL_ID)
     ) {
-        Icon(
-            imageVector = Icons.Default.KeyboardArrowDown,
-            contentDescription = "Select a Knowledge Base",
-            tint = colors.onPrimary
-        )
+        IconButton(
+            onClick = {expanded = true},
+            modifier = Modifier.semantics {
+                contentDescription = KB_CONTROL_DROPDOWN_DESCRIPTION
+            }
+        ) {
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowDown,
+                contentDescription = KB_CONTROL_DROPDOWN_DESCRIPTION,
+                tint = colors.onPrimary
+            )
+        }
         Spacer(Modifier.width(4.dp))
         Text(
             text = kbName(),
@@ -99,6 +98,9 @@ fun KBControl(handler: AppBarHandler) {
             modifier = Modifier
                 .weight(1f)
                 .testTag(KB_SELECTOR_ID)
+                .semantics {
+                    contentDescription = KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION
+                }
         )
 
         DropdownMenu(
@@ -120,17 +122,8 @@ fun KBControl(handler: AppBarHandler) {
                         role = Role.Button
                         contentDescription = CREATE_KB_TEXT
                     }
-//                    .semantics(mergeDescendants = true){
-//                        contentDescription = CREATE_KB_TEXT
-//                        role = Role.Button
-//                    }
             ) {
-                Text(text = CREATE_KB_TEXT,
-//                    modifier = Modifier.clearAndSetSemantics {
-//                        contentDescription = CREATE_KB_TEXT
-//                        role = Role.Button
-//                    }
-                )
+                Text(text = CREATE_KB_TEXT)
             }
             availableKBs.forEachIndexed { index, option ->
                 DropdownMenuItem(onClick = {

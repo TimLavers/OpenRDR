@@ -1,12 +1,27 @@
 package io.rippledown.appbar
 
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import io.kotest.matchers.shouldBe
+import io.rippledown.constants.kb.KB_CONTROL_DESCRIPTION
 import io.rippledown.constants.kb.KB_CONTROL_ID
 import io.rippledown.constants.main.CREATE_KB_ITEM_ID
 import io.rippledown.constants.main.CREATE_KB_TEXT
+import io.rippledown.constants.main.MAIN_HEADING
+import io.rippledown.constants.main.MAIN_HEADING_ID
 import io.rippledown.main.Handler
 import io.rippledown.main.handlerImpl
 import io.rippledown.mocks.engineConfig
@@ -31,7 +46,52 @@ class KBControlTest {
                 override var isRuleSessionInProgress = false
             })
         }
-        uiKbControlOperator = KbControlOperator(composeTestRule)
+//        uiKbControlOperator = KbControlOperator(composeTestRule)
+    }
+
+    @Test
+    fun semantics() {
+        composeTestRule.setContent {
+//            ApplicationBar(object : Handler by handlerImpl, AppBarHandler {
+//                override var isRuleSessionInProgress = false
+//            })
+            TopAppBar(
+                modifier = Modifier.semantics {
+                    contentDescription = "TopAppBar"
+                }
+            ) {
+                Row {
+
+                    Text(
+                        text = "AAA",
+                        modifier = Modifier
+                            .testTag("TT_AAA")
+                            .semantics {
+                                contentDescription = "CD_AAA"
+                            }
+                    )
+                    Text(
+                        text = "BBB",
+                        modifier = Modifier
+//                            .testTag("TT_BBB")
+                            .semantics {
+                                contentDescription = "CD_BBB"
+                            }
+                    )
+                    Text(
+                        text = "CCC",
+//                        modifier = Modifier
+//                            .testTag("TT_CCC")
+//                            .semantics {
+//                                contentDescription = "CD_CCC"
+//                            }
+                    )
+
+                }
+
+            }
+        }
+        composeTestRule.onNodeWithContentDescription("TopAppBar").printToLog("NODE")
     }
 
     @Test
@@ -52,7 +112,7 @@ class KBControlTest {
         SwingUtilities.invokeAndWait(Runnable {
             uiCreateKB.setNameAndClickCreate(newKbName)
         })
-        engineConfig.newKbName shouldBe  newKbName
+        engineConfig.newKbName shouldBe newKbName
 //        uiCreateKB.waitToVanish()
 
     }

@@ -19,6 +19,7 @@ import androidx.compose.ui.window.ApplicationScope
 import androidx.compose.ui.window.rememberWindowState
 import io.kotest.matchers.shouldBe
 import io.rippledown.constants.kb.KB_CONTROL_DESCRIPTION
+import io.rippledown.constants.kb.KB_CONTROL_DROPDOWN_DESCRIPTION
 import io.rippledown.constants.main.CREATE_KB_TEXT
 import io.rippledown.constants.main.KBS_DROPDOWN_DESCRIPTION
 import io.rippledown.proxy.dumpToText
@@ -76,14 +77,18 @@ class MainApplicationTest {
 
 
         val accessibleContext0 = window.accessibleContext
-        accessibleContext0.dumpToText()
+        accessibleContext0.dumpToText(showNulls = true)
 
+//        Thread.sleep(50_000)
 
-        val kbRow = accessibleContext0.find(KB_CONTROL_DESCRIPTION, AccessibleRole.PUSH_BUTTON)
+        val kbRow = accessibleContext0.find(KB_CONTROL_DESCRIPTION, AccessibleRole.UNKNOWN)
 
         println("kbRow: $kbRow")
 
-        val action = kbRow!!.accessibleAction
+        val expandDropdownButton = kbRow!!.find(KB_CONTROL_DROPDOWN_DESCRIPTION, AccessibleRole.PUSH_BUTTON)
+        println("eDB: $expandDropdownButton")
+
+        val action = expandDropdownButton!!.accessibleAction
         val count = action.accessibleActionCount
         println("action count: $count")
         count shouldBe 1
