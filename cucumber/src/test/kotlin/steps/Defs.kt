@@ -3,19 +3,15 @@ package steps
 import io.cucumber.datatable.DataTable
 import io.cucumber.java8.En
 import io.kotest.matchers.shouldBe
+import io.rippledown.TestClientLauncher
 import io.rippledown.integration.UITestBase
 import io.rippledown.integration.pageobjects.*
 import io.rippledown.integration.pause
-import io.rippledown.integration.restclient.RESTClient
 import io.rippledown.integration.utils.Cyborg
-import io.rippledown.model.KBInfo
 import org.awaitility.Awaitility
-import org.junit.Rule
 import java.io.File
 import java.time.Duration
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
-
 
 class Defs : En {
     private val uiTestBase = UITestBase()
@@ -23,6 +19,8 @@ class Defs : En {
     private val labProxy = uiTestBase.labProxy
     private val restClient = uiTestBase.restClient
 
+    private lateinit var testClientLauncher: TestClientLauncher
+    private lateinit var rdUiOperator: RippleDownUIOperator
     private lateinit var caseListPO: CaseListPO
     private lateinit var caseViewPO: CaseViewPO
     private lateinit var cornerstoneViewPO: CornerstoneCaseViewPO
@@ -45,11 +43,14 @@ class Defs : En {
 
         After { scenario ->
             println("After scenario '${scenario.name}'")
-            uiTestBase.driverClose()
+            testClientLauncher.stopClient()
             serverProxy.shutdown()
         }
 
         When("I start the client application") {
+            testClientLauncher = TestClientLauncher()
+            val composeWindow = testClientLauncher.launchClient()
+            rdUiOperator = RippleDownUIOperator(composeWindow)
 //            driver = uiTestBase.setupWebDriver()
 //            caseListPO = CaseListPO(driver)
 //            caseViewPO = CaseViewPO(driver)
@@ -61,6 +62,7 @@ class Defs : En {
         }
 
         When("stop the client application") {
+//            rdUiOperator.
             //client application is stopped in the After hook
         }
 
@@ -163,6 +165,12 @@ class Defs : En {
 
         Then("the displayed KB name is (now ){word}") { kbName: String ->
             kbControlsPO.waitForKBToBeLoaded(kbName)
+        }
+
+        Then("the displayed product name is 'Open RippleDown'") {
+            with(rdUiOperator.applicationBarOperator().title()) {
+                this shouldBe "Open RippleDown"
+            }
         }
 
         Then("I create a Knowledge Base with the name {word}") { kbName: String ->

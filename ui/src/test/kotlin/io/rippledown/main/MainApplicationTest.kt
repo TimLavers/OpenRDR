@@ -18,10 +18,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.ApplicationScope
 import androidx.compose.ui.window.rememberWindowState
 import io.kotest.matchers.shouldBe
-import io.mockk.Awaits
 import io.rippledown.constants.kb.KB_CONTROL_DESCRIPTION
+import io.rippledown.constants.main.CREATE_KB_TEXT
+import io.rippledown.constants.main.KBS_DROPDOWN_DESCRIPTION
 import io.rippledown.proxy.dumpToText
 import io.rippledown.proxy.find
+import io.rippledown.proxy.findComposeDialogThatIsShowing
 import io.rippledown.proxy.waitForWindowToShow
 import kotlinx.coroutines.*
 import java.awt.GraphicsEnvironment
@@ -30,6 +32,7 @@ import kotlinx.coroutines.flow.takeWhile
 import org.jetbrains.skiko.MainUIDispatcher
 import org.junit.Assume.assumeFalse
 import javax.accessibility.AccessibleRole
+import javax.swing.JFrame
 import javax.swing.SwingUtilities
 import androidx.compose.ui.window.launchApplication as realLaunchApplication
 
@@ -72,8 +75,11 @@ class MainApplicationTest {
         println("------------ TEST READY!! -------------")
 
 
-        val accessibleContext = window.accessibleContext
-        val kbRow = accessibleContext.find(KB_CONTROL_DESCRIPTION, AccessibleRole.PUSH_BUTTON)
+        val accessibleContext0 = window.accessibleContext
+        accessibleContext0.dumpToText()
+
+
+        val kbRow = accessibleContext0.find(KB_CONTROL_DESCRIPTION, AccessibleRole.PUSH_BUTTON)
 
         println("kbRow: $kbRow")
 
@@ -85,19 +91,30 @@ class MainApplicationTest {
         println("action description: $actionDescription")
 
         action.doAccessibleAction(0)
+        println("clicked, init")
 
-        Thread.sleep(10_000)
+        Thread.sleep(5_000)
 
-//        println("row action: $action")
-//        println("accessibleContext: $accessibleContext")
-//        val name = accessibleContext.accessibleName
-//        println("------- name: $name")
-//        val childCount = accessibleContext.accessibleChildrenCount
-//        println(childCount)
-//        val child0 = accessibleContext.getAccessibleChild(0)
-//        println(child0)
-//        accessibleContext.dumpToText()
+        val accessibleContext1 = window.accessibleContext
+        accessibleContext1.dumpToText()
 
+        val dropDown = accessibleContext1.find(KBS_DROPDOWN_DESCRIPTION, AccessibleRole.COMBO_BOX)
+        println("dropDown: $dropDown")
+
+        val createKBItem = dropDown!!.find(CREATE_KB_TEXT, AccessibleRole.PUSH_BUTTON)
+        println("createKBItem: $createKBItem")
+        val createKBActionCount = createKBItem!!.accessibleAction.accessibleActionCount
+        createKBActionCount shouldBe 1
+        createKBItem.accessibleAction.doAccessibleAction(0)
+
+        Thread.sleep(5_000)
+        println("-----------------------------------------------------")
+        window.accessibleContext.dumpToText()
+        Thread.sleep(5_000)
+
+        val dialog = findComposeDialogThatIsShowing()
+        println("=========================================================== dialog: $dialog")
+        dialog!!.accessibleContext.dumpToText()
 
 
     }

@@ -17,10 +17,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -29,11 +26,9 @@ import androidx.compose.ui.window.rememberDialogState
 import io.rippledown.constants.kb.KB_CONTROL_DESCRIPTION
 import io.rippledown.constants.kb.KB_CONTROL_ID
 import io.rippledown.constants.kb.KB_SELECTOR_ID
-import io.rippledown.constants.main.CREATE_KB_ITEM_ID
-import io.rippledown.constants.main.CREATE_KB_TEXT
-import io.rippledown.constants.main.KBS_DROPDOWN_ID
-import io.rippledown.constants.main.kbItemId
+import io.rippledown.constants.main.*
 import io.rippledown.model.KBInfo
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 
 @Composable
@@ -60,7 +55,8 @@ fun KBControl(handler: AppBarHandler) {
         DialogWindow(
             onCloseRequest = { createKbDialogShowing = false },
             title = "Create KB",
-            state = dialogState
+            state = dialogState,
+
         ) {
             CreateKB(object : CreateKBHandler {
                 override fun create(name: String) {
@@ -85,7 +81,7 @@ fun KBControl(handler: AppBarHandler) {
             .semantics {
                 role = Role.Button
                 contentDescription = KB_CONTROL_DESCRIPTION
-            }
+            }.clearAndSetSemantics {  }
             .background(color = colors.primary)
             .padding(16.dp)
             .testTag(KB_CONTROL_ID)
@@ -109,6 +105,10 @@ fun KBControl(handler: AppBarHandler) {
             expanded = expanded,
             onDismissRequest = { expanded = false },
             modifier = Modifier.testTag(KBS_DROPDOWN_ID)
+                .semantics {
+                    role = Role.DropdownList
+                    contentDescription = KBS_DROPDOWN_DESCRIPTION
+                }
         ) {
             DropdownMenuItem(
                 onClick = {
@@ -116,8 +116,21 @@ fun KBControl(handler: AppBarHandler) {
                     createKbDialogShowing = true
                 },
                 modifier = Modifier.testTag(CREATE_KB_ITEM_ID)
+                    .semantics(mergeDescendants = true) {
+                        role = Role.Button
+                        contentDescription = CREATE_KB_TEXT
+                    }
+//                    .semantics(mergeDescendants = true){
+//                        contentDescription = CREATE_KB_TEXT
+//                        role = Role.Button
+//                    }
             ) {
-                Text(text = CREATE_KB_TEXT)
+                Text(text = CREATE_KB_TEXT,
+//                    modifier = Modifier.clearAndSetSemantics {
+//                        contentDescription = CREATE_KB_TEXT
+//                        role = Role.Button
+//                    }
+                )
             }
             availableKBs.forEachIndexed { index, option ->
                 DropdownMenuItem(onClick = {

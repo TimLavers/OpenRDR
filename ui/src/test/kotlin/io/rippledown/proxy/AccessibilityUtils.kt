@@ -1,13 +1,14 @@
 package io.rippledown.proxy
 
+import androidx.compose.ui.awt.ComposeDialog
 import androidx.compose.ui.awt.ComposeWindow
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleRole
 
 fun AccessibleContext.find(description: String, role: AccessibleRole): AccessibleContext? {
-    println("find, this.name: ${this.accessibleName}, this.descr: ${this.accessibleDescription}, this.role: ${this.accessibleRole}")
+//    println("find, this.name: ${this.accessibleName}, this.descr: ${this.accessibleDescription}, this.role: ${this.accessibleRole}")
     val nameMatch = description == this.accessibleDescription
-    println("nameMatch: $nameMatch")
+//    println("nameMatch: $nameMatch")
     if (nameMatch && role == this.accessibleRole) return this
     val childCount = accessibleChildrenCount
     for (i in 0..<childCount) {
@@ -16,12 +17,14 @@ fun AccessibleContext.find(description: String, role: AccessibleRole): Accessibl
     }
     return null
 }
-fun AccessibleContext.dumpToText(componentDepth: Int = 0) {
+fun AccessibleContext.dumpToText(componentDepth: Int = 0, ignoreNulls: Boolean = true) {
     val childCount = accessibleChildrenCount
     val name = this.accessibleName
     val role = this.accessibleRole.toDisplayString()
     val description = this.accessibleDescription
-    println("Name: $name, role: $role, description: $description, componentDepth: $componentDepth, child count: $childCount ")
+    if (!ignoreNulls || name != null || description != null) {
+        println("Name: $name, role: $role, description: $description, componentDepth: $componentDepth, child count: $childCount ")
+    }
     for (i in 0..<childCount) {
         getAccessibleChild(i).accessibleContext.dumpToText(componentDepth + 1)
     }
@@ -37,5 +40,10 @@ fun ComposeWindow.waitForWindowToShow() {
     }
 }
 
+fun findComposeDialogThatIsShowing(): ComposeDialog? {
+    val allWindows = java.awt.Window.getWindows()
+    val d = allWindows.firstOrNull{w -> w is ComposeDialog }
+    return if (d == null) null else d as ComposeDialog
+}
 class AccessibilityUtils {
 }

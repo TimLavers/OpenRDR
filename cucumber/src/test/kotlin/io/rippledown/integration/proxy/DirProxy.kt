@@ -20,7 +20,9 @@ class DirProxy {
     fun logDir() = logDir
 
     fun createAndCleanManagedDirectories() {
-        userDir = File(System.getProperty("user.dir"))
+        val fromRuntime = File(System.getProperty("user.dir"))
+        userDir = if (fromRuntime.name.endsWith("cucumber")) fromRuntime.parentFile else fromRuntime
+
         tempDir = File(userDir, "temp")
         cleanupAndCreateAnew(tempDir)
         downloadsDir = File(userDir, "downloads")

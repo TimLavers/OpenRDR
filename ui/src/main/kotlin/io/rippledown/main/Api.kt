@@ -29,6 +29,10 @@ class Api(engine: HttpClientEngine = CIO.create() ) {
         }
     }
 
+    fun shutdown() {
+        client.close()
+    }
+
     suspend fun createKB(name: String): KBInfo {
         currentKB = client.post("$API_URL$CREATE_KB") {
             contentType(ContentType.Text.Plain)

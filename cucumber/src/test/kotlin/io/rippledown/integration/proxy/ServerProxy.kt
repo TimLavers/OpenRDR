@@ -46,6 +46,7 @@ class ServerProxy {
 
     private fun findJar() {
         val rootDirectory = dirProxy.userDir()
+        println("rootDirecoty: ${rootDirectory.path}")
         val libsDir = Paths.get(rootDirectory.path, "build", "libs").toFile()
         jarFile = libsDir.listFiles { it -> it.name == "OpenRDR-all.jar" }!![0]
         println("jar ${jarFile.absolutePath}, modified: ${Date(jarFile.lastModified())}")

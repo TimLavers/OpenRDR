@@ -10,8 +10,13 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.unit.dp
+import io.rippledown.constants.main.APPLICATION_BAR_DESCRIPTION
 import io.rippledown.constants.main.APPLICATION_BAR_ID
 import io.rippledown.constants.main.MAIN_HEADING
 import io.rippledown.constants.main.MAIN_HEADING_ID
@@ -27,7 +32,9 @@ interface AppBarHandler : Handler {
 @Preview
 fun ApplicationBar (handler: AppBarHandler) {
 
-    TopAppBar {
+    TopAppBar(modifier = Modifier.semantics {
+        contentDescription = APPLICATION_BAR_DESCRIPTION
+    }.testTag(APPLICATION_BAR_ID)) {
 
         Row {
             Text(
@@ -38,6 +45,9 @@ fun ApplicationBar (handler: AppBarHandler) {
                 modifier = Modifier
                     .padding(10.dp)
                     .testTag(MAIN_HEADING_ID)
+                    .semantics {
+                        contentDescription = MAIN_HEADING
+                    }
             )
 
             //Simplify the ApplicationBar by removing the KBControl if a rule session is in progress
