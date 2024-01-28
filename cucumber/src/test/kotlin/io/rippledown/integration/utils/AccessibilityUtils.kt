@@ -2,6 +2,7 @@ package io.rippledown.integration.utils
 
 import androidx.compose.ui.awt.ComposeDialog
 import androidx.compose.ui.awt.ComposeWindow
+import io.rippledown.constants.kb.KB_CONTROL_DROPDOWN_DESCRIPTION
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleRole
 
@@ -27,6 +28,19 @@ fun AccessibleContext.dumpToText(componentDepth: Int = 0, ignoreNulls: Boolean =
     }
     for (i in 0..<childCount) {
         getAccessibleChild(i).accessibleContext.dumpToText(componentDepth + 1)
+    }
+}
+fun AccessibleContext.findAndClick(description: String) {
+    val expandDropdownButton = find(description, AccessibleRole.PUSH_BUTTON)
+    val action = expandDropdownButton!!.accessibleAction
+    action.doAccessibleAction(0)
+}
+fun AccessibleContext.printActions() {
+    val actions = this.accessibleAction
+    val count = actions.accessibleActionCount
+    println("Number of actions: $count")
+    for (i in 0..<count) {
+        println("Action $i: ${actions.getAccessibleActionDescription(i)}")
     }
 }
 

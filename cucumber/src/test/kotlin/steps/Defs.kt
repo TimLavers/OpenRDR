@@ -1,5 +1,6 @@
 package steps
 
+import androidx.compose.ui.awt.ComposeWindow
 import io.cucumber.datatable.DataTable
 import io.cucumber.java8.En
 import io.kotest.matchers.shouldBe
@@ -9,6 +10,7 @@ import io.rippledown.integration.pageobjects.*
 import io.rippledown.integration.pause
 import io.rippledown.integration.utils.Cyborg
 import org.awaitility.Awaitility
+import org.picocontainer.monitors.ComposingMonitor
 import java.io.File
 import java.time.Duration
 import java.util.concurrent.TimeUnit
@@ -20,6 +22,7 @@ class Defs : En {
     private val restClient = uiTestBase.restClient
 
     private lateinit var testClientLauncher: TestClientLauncher
+    private lateinit var composeWindow: ComposeWindow
     private lateinit var rdUiOperator: RippleDownUIOperator
     private lateinit var caseListPO: CaseListPO
     private lateinit var caseViewPO: CaseViewPO
@@ -49,7 +52,7 @@ class Defs : En {
 
         When("I start the client application") {
             testClientLauncher = TestClientLauncher()
-            val composeWindow = testClientLauncher.launchClient()
+            composeWindow = testClientLauncher.launchClient()
             rdUiOperator = RippleDownUIOperator(composeWindow)
 //            driver = uiTestBase.setupWebDriver()
 //            caseListPO = CaseListPO(driver)
@@ -177,7 +180,9 @@ class Defs : En {
         }
 
         Then("I create a Knowledge Base with the name {word}") { kbName: String ->
-            kbControlsPO.createKB(kbName)
+            val applicationBarOperator = rdUiOperator.applicationBarOperator()
+            val kbControlOperator = applicationBarOperator.kbControlOperator()
+            kbControlOperator.createKB(kbName)
         }
 
         And("pause for {long} second(s)") { seconds: Long ->

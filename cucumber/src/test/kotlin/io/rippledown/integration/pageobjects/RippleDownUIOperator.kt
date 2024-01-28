@@ -11,7 +11,14 @@ class RippleDownUIOperator(private val window: ComposeWindow) {
         window.waitForWindowToShow()
     }
 
-    fun applicationBarOperator() = ApplicationBarOperator(window.accessibleContext.find(APPLICATION_BAR_DESCRIPTION, AccessibleRole.GROUP_BOX)!!)
+    fun applicationBarOperator(): ApplicationBarOperator {
+        println("--> RDUIO, aBO")
+        return ApplicationBarOperator {
+            context()
+        }
+    }
+
+    fun context() = window.accessibleContext
 
     fun shutdown() {
         window.accessibleContext.accessibleAction.doAccessibleAction(0)

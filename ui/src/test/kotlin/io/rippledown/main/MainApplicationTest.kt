@@ -77,7 +77,7 @@ class MainApplicationTest {
 
 
         val accessibleContext0 = window.accessibleContext
-        accessibleContext0.dumpToText(showNulls = true)
+//        accessibleContext0.dumpToText(showNulls = true)
 
 //        Thread.sleep(50_000)
 
@@ -98,10 +98,10 @@ class MainApplicationTest {
         action.doAccessibleAction(0)
         println("clicked, init")
 
-        Thread.sleep(5_000)
+        Thread.sleep(1_000)
 
         val accessibleContext1 = window.accessibleContext
-        accessibleContext1.dumpToText()
+//        accessibleContext1.dumpToText()
 
         val dropDown = accessibleContext1.find(KBS_DROPDOWN_DESCRIPTION, AccessibleRole.COMBO_BOX)
         println("dropDown: $dropDown")
@@ -112,15 +112,16 @@ class MainApplicationTest {
         createKBActionCount shouldBe 1
         createKBItem.accessibleAction.doAccessibleAction(0)
 
-        Thread.sleep(5_000)
+        Thread.sleep(1_000)
         println("-----------------------------------------------------")
-        window.accessibleContext.dumpToText()
+//        window.accessibleContext.dumpToText()
         Thread.sleep(5_000)
 
         val dialog = findComposeDialogThatIsShowing()
         println("=========================================================== dialog: $dialog")
         dialog!!.accessibleContext.dumpToText()
 
+        Thread.sleep(5_000)
 
     }
 

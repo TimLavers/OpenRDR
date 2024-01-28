@@ -5,6 +5,8 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.main.*
 
@@ -33,7 +35,10 @@ fun CreateKB(handler: CreateKBHandler) {
                         label = { Text(text = CREATE_KB_NAME) },
                         modifier = Modifier
                             .testTag(CREATE_KB_NAME_FIELD_ID)
-                            .fillMaxWidth(),
+                            .fillMaxWidth()
+                            .semantics {
+                                contentDescription = CREATE_KB_NAME_FIELD_DESCRIPTION
+                            }
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -45,6 +50,9 @@ fun CreateKB(handler: CreateKBHandler) {
                             },
                             enabled = isNameOK(),
                             modifier = Modifier.testTag(CREATE_KB_OK_BUTTON_ID)
+                                .semantics {
+                                    contentDescription = CREATE_KB_OK_BUTTON_DESCRIPTION
+                                }
                         ) {
                             Text(CREATE)
                         }
