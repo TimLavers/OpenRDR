@@ -50,6 +50,10 @@ class Defs : En {
             serverProxy.shutdown()
         }
 
+        When("A Knowledge Base called {string} has been created") { name: String ->
+            restClient.createKB(name)
+        }
+
         When("I start the client application") {
             testClientLauncher = TestClientLauncher()
             composeWindow = testClientLauncher.launchClient()
@@ -171,6 +175,17 @@ class Defs : En {
             with (applicationBarOperator.kbControlOperator()) {
                 this.currentKB() shouldBe kbName
             }
+        }
+
+        Then("I activate the KB management control") {
+            rdUiOperator.applicationBarOperator().kbControlOperator().expandDropdownMenu()
+        }
+
+        Then("I (should )see this list of available KBs:") { dataTable: DataTable ->
+            val expectedKBs = dataTable.asList()
+            rdUiOperator.applicationBarOperator()
+                .kbControlOperator()
+                .availableKBs() shouldBe expectedKBs
         }
 
         Then("the displayed product name is 'Open RippleDown'") {

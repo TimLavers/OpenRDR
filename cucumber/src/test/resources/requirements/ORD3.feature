@@ -35,3 +35,15 @@ Feature: Knowledge Base management
 #    Then the displayed KB name is now Glucose
     And stop the client application
 
+  Scenario: Available Knowledge Bases are displayed
+    Given A Knowledge Base called 'B' has been created
+    And A Knowledge Base called 'C' has been created
+    And A Knowledge Base called 'A' has been created
+    And I start the client application
+    And I activate the KB management control
+    Then pause for 5 seconds
+    Then I should see this list of available KBs:
+      | A |
+      | B |
+      | C |
+    And stop the client application

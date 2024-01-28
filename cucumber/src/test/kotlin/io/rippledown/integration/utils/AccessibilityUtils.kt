@@ -18,6 +18,17 @@ fun AccessibleContext.find(description: String, role: AccessibleRole): Accessibl
     }
     return null
 }
+fun AccessibleContext.findLabelChildren(): List<String> {
+    val result = mutableListOf<String>()
+    val childCount = accessibleChildrenCount
+    for (i in 0..<childCount) {
+        val child = getAccessibleChild(i)
+        if (child.accessibleContext.accessibleRole == AccessibleRole.LABEL) {
+            result.add(child.accessibleContext.accessibleName)
+        }
+    }
+    return result
+}
 fun AccessibleContext.dumpToText(componentDepth: Int = 0, ignoreNulls: Boolean = true) {
     val childCount = accessibleChildrenCount
     val name = this.accessibleName
