@@ -1,6 +1,5 @@
 Feature: Knowledge Base management
 
-#  @single
   Scenario: The product name should be displayed
     Given I start the client application
     Then the displayed product name is 'Open RippleDown'
