@@ -23,6 +23,7 @@ import androidx.compose.ui.window.rememberDialogState
 import io.rippledown.constants.kb.*
 import io.rippledown.constants.main.*
 import io.rippledown.model.KBInfo
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 
@@ -33,16 +34,19 @@ fun KBControl(handler: AppBarHandler) {
     var createKbDialogShowing by remember { mutableStateOf(false) }
     val selectedIndex = remember { mutableStateOf(0) }
     var kbInfo: KBInfo? by remember { mutableStateOf(null) }
-    val availableKBs = mutableListOf<KBInfo>()
+    val availableKBs = remember {  mutableStateListOf<KBInfo>() } // https://tigeroakes.com/posts/mutablestateof-list-vs-mutablestatelistof/
     val coroutineScope = rememberCoroutineScope()
 
     fun kbName() = if (kbInfo != null) kbInfo!!.name else ""
 
     LaunchedEffect(Unit) {
-        kbInfo = handler.api.kbInfo()
-        val kbsApartFromCurrent = handler.api.kbList().filter { it != kbInfo }.sorted()
-        availableKBs.clear()
-        availableKBs.addAll(kbsApartFromCurrent)
+        while(true) {
+            kbInfo = handler.api.kbInfo()
+            val kbsApartFromCurrent = handler.api.kbList().filter { it != kbInfo }.sorted()
+            availableKBs.clear()
+            availableKBs.addAll(kbsApartFromCurrent)
+            delay(5000)
+        }
     }
 
     if (createKbDialogShowing) {

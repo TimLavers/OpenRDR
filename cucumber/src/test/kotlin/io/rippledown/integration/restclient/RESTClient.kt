@@ -185,22 +185,24 @@ fun provideCase(externalCase: ExternalCase): RDRCase {
         return EpisodicCondition(null, attribute, IsNotBlank, Current)
     }
 
-fun createKBWithDefaultName() {
-    println("createKBWithDefaultName current thread: ${Thread.currentThread().name}")
-    runBlocking {
-        println("createKBWithDefaultName in run blocking current thread: ${Thread.currentThread().name}")
+    fun createKB(name: String) {
+        println("createKBWithDefaultName current thread: ${Thread.currentThread().name}")
+        runBlocking {
+            println("createKBWithDefaultName in run blocking current thread: ${Thread.currentThread().name}")
 
-        kotlin.io.println("============ calling to create default KB")
-        val kbi = jsonClient.post(endpoint + CREATE_KB) {
-            contentType(ContentType.Text.Plain)
-            setBody(DEFAULT_PROJECT_NAME)
-        }.body<KBInfo>()
-        currentKB.set(kbi)
-        kotlin.io.println("after call, current KB is: ${currentKB.get()}")
+            kotlin.io.println("============ calling to create default KB")
+            val kbi = jsonClient.post(endpoint + CREATE_KB) {
+                contentType(ContentType.Text.Plain)
+                setBody(name)
+            }.body<KBInfo>()
+            currentKB.set(kbi)
+            kotlin.io.println("after call, current KB is: ${currentKB.get()}")
+        }
+        kotlin.io.println("after run blocking, current KB is: ${currentKB.get()}")
+        println("createKBWithDefaultName after run blocking current thread: ${Thread.currentThread().name}")
     }
-    kotlin.io.println("after run blocking, current KB is: ${currentKB.get()}")
-    println("createKBWithDefaultName after run blocking current thread: ${Thread.currentThread().name}")
-}
+
+    fun createKBWithDefaultName()  = createKB(DEFAULT_PROJECT_NAME)
 
     fun shutdown(): Unit = runBlocking {
         try {
