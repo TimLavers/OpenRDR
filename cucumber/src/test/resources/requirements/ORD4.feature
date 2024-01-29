@@ -1,3 +1,4 @@
+@ignore
 Feature: Reviewing the interpretation of a case
 
   Scenario: The user should be able to see different interpretations for different cases

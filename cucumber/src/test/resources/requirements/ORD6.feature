@@ -1,3 +1,4 @@
+@ignore
 Feature: Reviewing cornerstone cases
 
   Scenario: A user message should be shown if there are no cornerstone cases

@@ -8,7 +8,6 @@ apply(from = "../repositories.gradle.kts")
 plugins {
     java
     id("org.jetbrains.compose") version "1.5.11"
-
 }
 
 dependencies {
@@ -36,6 +35,10 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
 
+val cukeClassPath =
+    configurations.testRuntimeClasspath.get()
+        .plus(project.sourceSets.main.get().output)
+        .plus(project.sourceSets.test.get().output)
 
 val pathToRequirements = "${projectDir.path}/src/test/resources/requirements"
 val argsForCuke = mutableListOf(
@@ -49,13 +52,13 @@ tasks.register<JavaExec>("cucumberTest") {
     group = LifecycleBasePlugin.VERIFICATION_GROUP
     maxHeapSize = "32G"
     mainClass.set("io.cucumber.core.cli.Main")
-//    classpath = compileDependencyFiles + runtimeDependencyFiles + output.allOutputs
+    classpath = cukeClassPath
     args = argsForCuke.apply {
         add("--tags")
         add("not @ignore")
     }
     dependsOn(
-//        tasks.shadowJar,
+        ":server:shadowJar",
         tasks.compileTestJava,
         tasks.processTestResources,
         tasks.getByName("testClasses")
@@ -66,25 +69,15 @@ tasks.register<JavaExec>("cucumberSingleTest") {
     group = LifecycleBasePlugin.VERIFICATION_GROUP
     maxHeapSize = "32G"
     mainClass.set("io.cucumber.core.cli.Main")
-//    classpath = compileDependencyFiles + runtimeDependencyFiles + output.allOutputs
-    args = argsForCuke.apply { add("--tags"); add("@single") }
+    classpath = cukeClassPath
+    args = argsForCuke.apply {
+        add("--tags")
+        add("@single") }
     dependsOn(
-//        tasks.shadowJar,
+        ":server:shadowJar",
         tasks.compileTestJava,
         tasks.processTestResources,
-        tasks.getByName("jvmCucumberTestClasses")
+        tasks.getByName("testClasses")
     )
-}
-
-tasks.register<Test>("integrationTest") {
-//    dependsOn(tasks.shadowJar)
-    group = LifecycleBasePlugin.VERIFICATION_GROUP
-
-    // Run the tests with the classpath containing the compile dependencies (including 'main'),
-    // runtime dependencies, and the outputs of this compilation:
-//    classpath = compileDependencyFiles + runtimeDependencyFiles + output.allOutputs
-
-    // Run only the tests from this compilation's outputs:
-//    testClassesDirs = output.classesDirs
 }
 
