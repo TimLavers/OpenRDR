@@ -65,7 +65,7 @@ class Defs : En {
 //            interpretationViewPO = InterpretationViewPO(driver)
 //            conditionSelectorPO = ConditionSelectorPO(driver)
 //            conclusionsViewPO = ConclusionsViewPO(driver)
-//            kbControlsPO = KBControlsPO(driver)
+//            kbControlsPO = KBControlsPO(composeWindow)
         }
 
         When("stop the client application") {

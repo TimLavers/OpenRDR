@@ -7,7 +7,9 @@ plugins {
     kotlin("jvm") version "1.9.21"
     kotlin("plugin.serialization") version "1.9.21"
     id("io.ktor.plugin") version "2.3.5"
+    id("com.github.johnrengelman.shadow") version "5.2.0"
 }
+
 kotlin {
     jvmToolchain(17)
 }
@@ -48,7 +50,6 @@ subprojects {
         }
     }
 }
-
 
 group = "io.rippledown"
 version = "1.0-SNAPSHOT"

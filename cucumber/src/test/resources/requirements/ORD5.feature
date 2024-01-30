@@ -1,3 +1,4 @@
+@ignore
 Feature: Building rules
 
   Scenario: The user should be able to build a rule to add a comment

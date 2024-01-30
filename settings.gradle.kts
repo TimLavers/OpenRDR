@@ -4,7 +4,6 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
-rootProject.name = "OpenRDR"
 include("common")
 include("server")
 include("ui")
