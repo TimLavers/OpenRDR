@@ -1,4 +1,3 @@
-@ignore
 Feature: Show a list of cases
 
   Scenario: Should show the list of cases that have been stored by the server
@@ -12,6 +11,7 @@ Feature: Show a list of cases
       | Case2 |
     And stop the client application
 
+  @ignore
   Scenario: Should be able to select the last in a long list of cases
     Given a list of 1000 cases is stored on the server
     And I start the client application
@@ -19,6 +19,7 @@ Feature: Show a list of cases
     Then I should see the case Case_1000 as the current case
     And stop the client application
 
+  @ignore
   Scenario: The list of cases should be updated when a new case is stored by the server
     Given a list of cases with the following names is stored on the server:
       | Case1 |
@@ -34,6 +35,7 @@ Feature: Show a list of cases
       | Case3 |
     And stop the client application
 
+  @ignore
   Scenario: The list of cases should be updated when a case is deleted on the server
     Given a list of cases with the following names is stored on the server:
       | Case1 |
@@ -49,6 +51,7 @@ Feature: Show a list of cases
     And I should see the case Case2 as the current case
     And stop the client application
 
+  @ignore
   Scenario: The list of cases should not be visible when all cases are deleted on the server
     Given a list of cases with the following names is stored on the server:
       | Case1 |
@@ -63,6 +66,7 @@ Feature: Show a list of cases
     Then I should see no cases in the case list
     And stop the client application
 
+  @ignore
   Scenario: The current case should not be visible when all cases are deleted on the server
     Given a list of cases with the following names is stored on the server:
       | Case1 |
@@ -78,6 +82,7 @@ Feature: Show a list of cases
     Then I should not see any current case
     And stop the client application
 
+  @ignore
   Scenario: Should select the first case on the list by default
     Given a list of cases with the following names is stored on the server:
       | Case1 |
