@@ -3,7 +3,7 @@ package io.rippledown.integration.proxy
 import java.io.File
 
 object ConfiguredTestData {
-    private const val resourcesRoot = "src/jvmTest/resources/"
+    private const val resourcesRoot = "src/test/resources/"
 
     fun caseFile(caseName: String): File {
         return File("${resourcesRoot}cases/$caseName.json")

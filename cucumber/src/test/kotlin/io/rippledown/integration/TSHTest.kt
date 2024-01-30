@@ -26,7 +26,7 @@ internal open class TSHTest: UITestBase() {
         caseQueuePO = CaseQueuePO()
         interpretationViewPO = InterpretationViewPO()
         pause()//todo use Awaitility
-        caseListPO = CaseListPO()
+//        caseListPO = CaseListPO()
     }
 
     @AfterTest

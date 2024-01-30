@@ -1,16 +1,11 @@
 package io.rippledown.integration.pageobjects
 
-import io.kotest.matchers.shouldBe
-import io.rippledown.constants.caseview.CASELIST_ID
-import io.rippledown.constants.caseview.CASES
-import io.rippledown.constants.caseview.CASE_NAME_PREFIX
-import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
+import androidx.compose.ui.awt.ComposeWindow
 import org.awaitility.Awaitility.await
 import org.awaitility.kotlin.withPollInterval
 import java.time.Duration.ofSeconds
-import java.util.concurrent.TimeUnit
 
-class CaseListPO() {
+class CaseListPO(private val window: ComposeWindow) {
 
     private fun containerElement() {
         TODO()

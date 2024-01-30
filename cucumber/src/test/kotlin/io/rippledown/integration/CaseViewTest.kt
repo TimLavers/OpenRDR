@@ -20,7 +20,7 @@ internal class CaseViewTest : UITestBase() {
 //        setupWebDriver()
         caseQueuePO = CaseQueuePO()
         caseQueuePO.waitForNumberOfCasesToBe(3)
-        caseListPO = CaseListPO()
+//        caseListPO = CaseListPO()
     }
 
     @AfterTest

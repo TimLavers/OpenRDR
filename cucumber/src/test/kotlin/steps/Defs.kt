@@ -10,7 +10,6 @@ import io.rippledown.integration.pageobjects.*
 import io.rippledown.integration.pause
 import io.rippledown.integration.utils.Cyborg
 import org.awaitility.Awaitility
-import org.picocontainer.monitors.ComposingMonitor
 import java.io.File
 import java.time.Duration
 import java.util.concurrent.TimeUnit
@@ -58,8 +57,8 @@ class Defs : En {
             testClientLauncher = TestClientLauncher()
             composeWindow = testClientLauncher.launchClient()
             rdUiOperator = RippleDownUIOperator(composeWindow)
-//            driver = uiTestBase.setupWebDriver()
-//            caseListPO = CaseListPO(driver)
+            caseListPO = CaseListPO(composeWindow)
+
 //            caseViewPO = CaseViewPO(driver)
 //            cornerstoneViewPO = CornerstoneCaseViewPO(driver)
 //            interpretationViewPO = InterpretationViewPO(driver)

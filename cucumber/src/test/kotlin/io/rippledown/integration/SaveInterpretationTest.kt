@@ -22,7 +22,7 @@ internal class SaveInterpretationTest : UITestBase() {
 //        setupWebDriver()
         caseQueuePO = CaseQueuePO()
         caseQueuePO.waitForNumberOfCasesToBe(3)
-        caseListPO = CaseListPO()
+//        caseListPO = CaseListPO()
         interpretationViewPO = InterpretationViewPO()
     }
 
