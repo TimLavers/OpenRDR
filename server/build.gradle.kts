@@ -2,7 +2,6 @@ import Version.commonsIo
 import Version.commonsLang3
 import Version.diffUtils
 import Version.exposed
-import Version.ktor
 import Version.logback
 
 apply(from = "../repositories.gradle.kts")
