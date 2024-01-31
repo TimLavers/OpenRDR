@@ -7,13 +7,29 @@ import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleRole
 
 fun AccessibleContext.find(description: String, role: AccessibleRole): AccessibleContext? {
-//    println("find, this.name: ${this.accessibleName}, this.descr: ${this.accessibleDescription}, this.role: ${this.accessibleRole}")
-    val nameMatch = description == this.accessibleDescription
-//    println("nameMatch: $nameMatch")
-    if (nameMatch && role == this.accessibleRole) return this
+    val matcher = { context: AccessibleContext ->
+        (description == context.accessibleDescription && role == context.accessibleRole)
+    }
+    return this.find(matcher)
+}
+fun AccessibleContext.findByName(name: String, role: AccessibleRole): AccessibleContext? {
+    println("Find by name: '$name', role: '$role'")
+    val matcher = { context: AccessibleContext ->
+        val nameMatch = name == context.accessibleName
+        println("nameMatch: $nameMatch, context accessible name: '${context.accessibleName}'.")
+        val roleMatch = role == context.accessibleRole
+        println("roleMatch: $roleMatch")
+        (name == context.accessibleName && role == context.accessibleRole)
+    }
+    return this.find(matcher, true)
+}
+fun AccessibleContext.find(matcher: (AccessibleContext) -> Boolean, debug: Boolean = false): AccessibleContext? {
+    if (debug) println("find, this.name: ${this.accessibleName}, this.description: ${this.accessibleDescription}, this.role: ${this.accessibleRole}")
+    if (matcher(this)) return this
     val childCount = accessibleChildrenCount
+    if (debug) println("Searching amongst children, of which there are $childCount")
     for (i in 0..<childCount) {
-        val child = getAccessibleChild(i).accessibleContext.find(description, role)
+        val child = getAccessibleChild(i).accessibleContext.find(matcher, debug)
         if (child != null) return child
     }
     return null

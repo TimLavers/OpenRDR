@@ -20,16 +20,25 @@ class KbControlOperator(private val contextProvider: () -> AccessibleContext) {
 
     fun createKB(name: String) {
         expandDropdownMenu()
-        println("clicked, init")
-
-        Thread.sleep(3_000)
+        Thread.sleep(1_000)
         clickCreateKbButton()
-
 
         Thread.sleep(1_000)
         val dialog = findComposeDialogThatIsShowing()
         val createKbOperator = CreateKbOperator(dialog!!)
         createKbOperator.createKB(name)
+    }
+
+    fun selectKB(name: String) {
+        expandDropdownMenu()
+        Thread.sleep(1_000)
+        val dropDown = contextProvider().find(KBS_DROPDOWN_DESCRIPTION, AccessibleRole.COMBO_BOX)!!
+        Thread.sleep(1_000)
+        dropDown.dumpToText()
+        Thread.sleep(1_000)
+        val menuItem = dropDown.findByName(name, AccessibleRole.LABEL)!!
+        menuItem.accessibleAction.doAccessibleAction(0)
+        Thread.sleep(1_000)
     }
 
     fun availableKBs(): List<String> {

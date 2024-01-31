@@ -200,6 +200,12 @@ class Defs : En {
             kbControlOperator.createKB(kbName)
         }
 
+        Then("I select the Knowledge Base named {word}") { kbName: String ->
+            val applicationBarOperator = rdUiOperator.applicationBarOperator()
+            val kbControlOperator = applicationBarOperator.kbControlOperator()
+            kbControlOperator.selectKB(kbName)
+        }
+
         And("pause for {long} second(s)") { seconds: Long ->
             Thread.sleep(TimeUnit.SECONDS.toMillis(seconds))
         }
