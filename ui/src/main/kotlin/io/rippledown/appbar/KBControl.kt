@@ -133,6 +133,7 @@ fun KBControl(handler: AppBarHandler) {
                 DropdownMenuItem(onClick = {
                     selectedIndex.value = index
                     expanded = false
+                    println("Selected menu item")
                 }) {
                     Text(text = option.name, modifier = Modifier.testTag(kbItemId(option)))
                 }
