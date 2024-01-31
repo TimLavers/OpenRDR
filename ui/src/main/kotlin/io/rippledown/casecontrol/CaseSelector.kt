@@ -2,9 +2,6 @@ package io.rippledown.casecontrol
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ListItem
@@ -12,7 +9,8 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import io.rippledown.constants.caseview.CASELIST_ID
 import io.rippledown.constants.caseview.CASE_NAME_PREFIX
 import io.rippledown.main.Handler
@@ -39,7 +37,11 @@ fun CaseSelector(handler: CaseSelectorHandler) {
                     .testTag("$CASE_NAME_PREFIX${caseId.name}"),
                 text = {
                     Text(
-                        text = caseId.name)
+                        text = caseId.name,
+                        modifier = Modifier.semantics {
+                            contentDescription = "$CASE_NAME_PREFIX${caseId.name}"
+                        }
+                    )
                 }
             )
         }

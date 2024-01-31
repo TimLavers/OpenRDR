@@ -1,17 +1,23 @@
 package io.rippledown.integration.pageobjects
 
-import androidx.compose.ui.awt.ComposeWindow
+import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
+import io.rippledown.integration.utils.find
 import org.awaitility.Awaitility.await
 import org.awaitility.kotlin.withPollInterval
 import java.time.Duration.ofSeconds
+import javax.accessibility.AccessibleContext
+import javax.accessibility.AccessibleRole
 
-class CaseListPO(private val window: ComposeWindow) {
+class CaseListPO(val accessibleContext: AccessibleContext) {
 
     private fun containerElement() {
         TODO()
     }
 
     fun waitForCaseListToHaveSize(count: Int) {
+        val ac = accessibleContext.find(NUMBER_OF_CASES_ID, AccessibleRole.UNKNOWN)
+        print("ac: $ac")
+
 //        await().atMost(5L, TimeUnit.SECONDS).until {
 //            casesListed().size == count
 //        }

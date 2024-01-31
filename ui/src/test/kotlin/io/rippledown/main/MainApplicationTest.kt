@@ -4,48 +4,44 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.*
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.application
-import io.rippledown.constants.main.TITLE
-import kotlin.test.Test
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.ApplicationScope
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import io.kotest.matchers.shouldBe
 import io.rippledown.constants.kb.KB_CONTROL_DESCRIPTION
 import io.rippledown.constants.kb.KB_CONTROL_DROPDOWN_DESCRIPTION
 import io.rippledown.constants.main.CREATE_KB_TEXT
 import io.rippledown.constants.main.KBS_DROPDOWN_DESCRIPTION
+import io.rippledown.constants.main.TITLE
 import io.rippledown.proxy.dumpToText
 import io.rippledown.proxy.find
 import io.rippledown.proxy.findComposeDialogThatIsShowing
 import io.rippledown.proxy.waitForWindowToShow
 import kotlinx.coroutines.*
-import java.awt.GraphicsEnvironment
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.takeWhile
 import org.jetbrains.skiko.MainUIDispatcher
 import org.junit.Assume.assumeFalse
+import java.awt.GraphicsEnvironment
 import javax.accessibility.AccessibleRole
-import javax.swing.JFrame
 import javax.swing.SwingUtilities
+import kotlin.test.Test
 import androidx.compose.ui.window.launchApplication as realLaunchApplication
 
 class MainApplicationTest {
-//    @get:Rule
-//    val composeTestRule = runApplicationTest()
 
     @Test
     fun blah() {
         var windowHolder: ComposeWindow? = null
 
-//        SwingUtilities.invokeLater {
         val runnable = java.lang.Runnable {
             run {
                 application {
@@ -56,16 +52,11 @@ class MainApplicationTest {
                     ) {
                         windowHolder = this.window
                         OpenRDRUI(handlerImpl)
-//                        OpenRDRUI(object : Handler {
-//                            override var api = Api()
-//                        })
-
                     }
                 }
             }
         }
         Thread(runnable, "App Runner").start()
-//        }
 
         while (windowHolder == null) {
             Thread.sleep(1000)
