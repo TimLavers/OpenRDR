@@ -219,9 +219,8 @@ class Defs : En {
 
         Then("I (should )see the following cases in the case list:") { dataTable: DataTable ->
             val expectedCaseNames = dataTable.asList()
-            caseListPO.waitForCaseListToHaveSize(expectedCaseNames.size)
-            val actualCaseNames = caseListPO.casesListed()
-            actualCaseNames shouldBe expectedCaseNames
+            caseListPO.waitForCountOfNumberOfCasesToBe(expectedCaseNames.size)
+            caseListPO.requireCaseNamesToBe(expectedCaseNames)
         }
 
         Then("I should see no cases in the case list") {

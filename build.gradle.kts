@@ -2,7 +2,6 @@ import Version.mockk
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 apply(from = "repositories.gradle.kts")
-project.setProperty("mainClassName", "io.rippledown.server.OpenRDRServerKt")
 
 plugins {
     kotlin("jvm") version "1.9.21"

@@ -28,13 +28,17 @@ fun CaseSelector(handler: CaseSelectorHandler) {
     val count = handler.caseIds.size
     LazyColumn(
         modifier = Modifier.testTag(CASELIST_ID)
+            .semantics {
+                contentDescription = CASELIST_ID
+            }
     ) {
         items(count){ index ->
             val caseId = handler.caseIds[index]
             ListItem(
                 modifier = Modifier
                     .clickable { handler.selectCase(caseId.id!!) }
-                    .testTag("$CASE_NAME_PREFIX${caseId.name}"),
+                    .testTag("$CASE_NAME_PREFIX${caseId.name}")
+                    .semantics { contentDescription = "$CASE_NAME_PREFIX${caseId.name}" },
                 text = {
                     Text(
                         text = caseId.name,
