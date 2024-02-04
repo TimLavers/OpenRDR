@@ -41,6 +41,15 @@ class Api(engine: HttpClientEngine = CIO.create() ) {
         return currentKB!!
     }
 
+    suspend fun selectKB(id: String): KBInfo {
+        println("Api: selectKB: $id")
+        currentKB = client.post("$API_URL$SELECT_KB") {
+            contentType(ContentType.Text.Plain)
+            setBody(id)
+        }.body()
+        return currentKB!!
+    }
+
     suspend fun kbInfo(): KBInfo {
         if (currentKB == null) {
             currentKB = client.get("$API_URL$DEFAULT_KB").body<KBInfo>()

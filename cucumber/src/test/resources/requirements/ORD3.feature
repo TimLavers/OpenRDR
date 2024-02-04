@@ -54,5 +54,5 @@ Feature: Knowledge Base management
     Given A Knowledge Base called 'Stuff' has been created
     And I start the client application
     Then I select the Knowledge Base named Stuff
-#    Then the displayed KB name is now Stuff
+    Then the displayed KB name is now Stuff
     And stop the client application
