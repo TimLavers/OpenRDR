@@ -44,6 +44,19 @@ class KBManagementTest: OpenRDRServerTestBase() {
     }
 
     @Test
+    fun selectKB() = testApplication {
+        setup()
+        val kbInfo = KBInfo("10", "Glucose")
+        every { serverApplication.selectKB(kbInfo.id) } returns kbInfo
+        val result = httpClient.post(SELECT_KB) {
+            setBody(kbInfo.id)
+        }
+        result.status shouldBe HttpStatusCode.OK
+        result.body<KBInfo>() shouldBe kbInfo
+        verify { serverApplication.selectKB(kbInfo.id) }
+    }
+
+    @Test
     fun `should create a KB with a specified name`() = testApplication {
         setup()
         val kbInfoToReturnOnCreation = KBInfo("east", "Bondi")

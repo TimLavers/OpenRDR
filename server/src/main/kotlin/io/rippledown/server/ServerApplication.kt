@@ -35,6 +35,11 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         return kbInfo //todo test return value
     }
 
+    fun selectKB(id: String): KBInfo {
+        logger.info("Selecting kb with id: $id")
+        return kbForId(id).kbName()
+    }
+
     fun deleteKB(id: String) {
         TODO()
     }

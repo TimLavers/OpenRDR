@@ -10,6 +10,7 @@ import io.ktor.server.routing.*
 import io.rippledown.constants.api.*
 import io.rippledown.model.OperationResult
 import io.rippledown.server.ServerApplication
+import io.rippledown.server.logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedOutputStream
@@ -55,6 +56,14 @@ fun Application.kbManagement(application: ServerApplication) {
         post(CREATE_KB) {
             val name = call.receive<String>()
             val kbInfo = application.createKB(name, true)
+            call.respond(kbInfo)
+        }
+
+        post(SELECT_KB) {
+            logger.info("KBManagement: select kb...")
+            val id = call.receive<String>()
+            logger.info("KBManagement: select kb, id is: $id")
+            val kbInfo = application.selectKB(id)
             call.respond(kbInfo)
         }
 

@@ -81,6 +81,16 @@ internal class ServerApplicationTest {
     }
 
     @Test
+    fun selectKB() {
+        val kbi1 = app.createKB("KB1", false)
+        val kbi2 = app.createKB("KB2", false)
+        val kbi3 = app.createKB("KB3", false)
+        app.selectKB(kbi1.id) shouldBe kbi1
+        app.selectKB(kbi2.id) shouldBe kbi2
+        app.selectKB(kbi3.id) shouldBe kbi3
+    }
+
+    @Test
     fun `should not create a KB with the same name if force is false`() {
         app.kbList().size shouldBe 0
         val kbName = "Whatever"
