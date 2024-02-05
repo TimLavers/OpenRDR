@@ -10,7 +10,7 @@ Feature: Show a list of cases
       | Case2 |
     And stop the client application
 
-  @ignore
+  @single
   Scenario: Should be able to select the last in a long list of cases
     Given a list of 1000 cases is stored on the server
     And I start the client application
