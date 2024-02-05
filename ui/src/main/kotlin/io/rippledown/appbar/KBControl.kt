@@ -32,7 +32,6 @@ import kotlinx.coroutines.launch
 fun KBControl(handler: AppBarHandler) {
     var expanded by remember { mutableStateOf(false) }
     var createKbDialogShowing by remember { mutableStateOf(false) }
-    val selectedIndex = remember { mutableStateOf(0) }
     var kbInfo: KBInfo? by remember { mutableStateOf(null) }
     val availableKBs = remember {  mutableStateListOf<KBInfo>() } // https://tigeroakes.com/posts/mutablestateof-list-vs-mutablestatelistof/
     val coroutineScope = rememberCoroutineScope()
@@ -59,10 +58,8 @@ fun KBControl(handler: AppBarHandler) {
         ) {
             CreateKB(object : CreateKBHandler {
                 override fun create(name: String) {
-                    println("create...name: $name")
                     coroutineScope.launch {
                         kbInfo = handler.api.createKB(name)
-                        println("Got new kbInfo: $kbInfo")
                     }
                     createKbDialogShowing = false
                 }
@@ -129,14 +126,17 @@ fun KBControl(handler: AppBarHandler) {
             ) {
                 Text(text = CREATE_KB_TEXT)
             }
-            availableKBs.forEachIndexed { index, option ->
-                DropdownMenuItem(onClick = {
-                    selectedIndex.value = index
-                    expanded = false
-                    println("Selected menu item")
-                }) {
-                    Text(text = option.name, modifier = Modifier.testTag(kbItemId(option)))
-                }
+            availableKBs.forEach { kbi ->
+                KbInfoItem(object : KbSelectionHandler {
+                    override fun kbInfo() = kbi
+
+                    override fun select() {
+                        coroutineScope.launch {
+                            kbInfo = handler.api.selectKB(kbi.id)
+                        }
+                        expanded = false
+                    }
+                })
             }
         }
     }
