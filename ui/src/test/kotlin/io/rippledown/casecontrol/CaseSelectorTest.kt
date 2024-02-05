@@ -1,20 +1,13 @@
 package io.rippledown.casecontrol
 
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.kotest.matchers.shouldBe
-import io.rippledown.appbar.AppBarHandler
-import io.rippledown.appbar.ApplicationBar
 import io.rippledown.constants.main.TITLE
-import io.rippledown.main.Api
 import io.rippledown.main.Handler
-import io.rippledown.main.OpenRDRUI
 import io.rippledown.main.handlerImpl
-import io.rippledown.mocks.engineConfig
 import io.rippledown.model.CaseId
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
@@ -65,7 +58,7 @@ class CaseSelectorTest {
                 })
             }
             selectedCaseId shouldBe 0
-            selectCaseByName(caseId2.name)
+            selectCaseByNameUsingContentDescription(caseId2.name)
             selectedCaseId shouldBe caseId2.id
         }
     }

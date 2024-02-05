@@ -436,7 +436,7 @@ class Defs : En {
             caseListPO.requireCaseCountToBeHidden()
         }
 
-        And("the count of the number of cases should be {int}") { numberOfCases: Int ->
+        And("the count of the number of cases is {int}") { numberOfCases: Int ->
             caseListPO.waitForCountOfNumberOfCasesToBe(numberOfCases)
         }
     }

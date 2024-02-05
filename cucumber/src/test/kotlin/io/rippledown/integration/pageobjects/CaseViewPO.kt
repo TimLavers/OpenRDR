@@ -1,11 +1,10 @@
 package io.rippledown.integration.pageobjects
 
-import io.rippledown.constants.interpretation.CASE_VIEW_CONTAINER
 import io.rippledown.integration.pause
-import kotlin.test.assertEquals
+import javax.accessibility.AccessibleContext
 
 // ORD2
-class CaseViewPO() {
+class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
 
     init {
         pause()//Need to wait for the case to render else we get a stale element. todo use a better mechanism

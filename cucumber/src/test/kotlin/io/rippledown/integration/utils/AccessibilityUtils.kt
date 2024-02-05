@@ -2,13 +2,19 @@ package io.rippledown.integration.utils
 
 import androidx.compose.ui.awt.ComposeDialog
 import androidx.compose.ui.awt.ComposeWindow
-import io.rippledown.constants.kb.KB_CONTROL_DROPDOWN_DESCRIPTION
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleRole
 
 fun AccessibleContext.find(description: String, role: AccessibleRole): AccessibleContext? {
     val matcher = { context: AccessibleContext ->
-        (description == context.accessibleDescription && role == context.accessibleRole)
+        description == context.accessibleDescription && role == context.accessibleRole
+    }
+    return this.find(matcher)
+}
+
+fun AccessibleContext.waitTillFound(description: String, role: AccessibleRole): AccessibleContext? {
+    val matcher = { context: AccessibleContext ->
+        description == context.accessibleDescription && role == context.accessibleRole
     }
     return this.find(matcher)
 }

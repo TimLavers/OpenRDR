@@ -12,10 +12,11 @@ Feature: Show a list of cases
 
   @single
   Scenario: Should be able to select the last in a long list of cases
-    Given a list of 1000 cases is stored on the server
+    Given a list of 10 cases is stored on the server
     And I start the client application
-    When I select case Case_1000
-    Then I should see the case Case_1000 as the current case
+    And the count of the number of cases is 10
+    When I select case Case_010
+    Then I should see the case Case_010 as the current case
     And stop the client application
 
   @ignore

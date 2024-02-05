@@ -97,13 +97,7 @@ class RESTClient {
     }
 
 fun provideCase(externalCase: ExternalCase): RDRCase {
-    println("provideCase  current thread: ${Thread.currentThread().name}")
-
-    kotlin.io.println("----- provideCase, current KB is: ${currentKB.get()}")
     val result = runBlocking {
-
-        println("provideCase in run blocking current thread: ${Thread.currentThread().name}")
-        kotlin.io.println("----- provideCase, withinn run blocking current KB is: ${currentKB.get()}")
         jsonClient.put(endpoint + PROCESS_CASE) {
             contentType(ContentType.Application.Json)
             setBody(externalCase)
