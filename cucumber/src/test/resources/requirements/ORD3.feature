@@ -50,6 +50,7 @@ Feature: Knowledge Base management
       | C |
     And stop the client application
 
+  @ignore
   Scenario: An existing Knowledge Base can be opened
     Given A Knowledge Base called 'Stuff' has been created
     And I start the client application

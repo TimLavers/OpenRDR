@@ -10,7 +10,6 @@ import io.rippledown.integration.pageobjects.*
 import io.rippledown.integration.pause
 import io.rippledown.integration.utils.Cyborg
 import org.awaitility.Awaitility
-import org.picocontainer.monitors.ComposingMonitor
 import java.io.File
 import java.time.Duration
 import java.util.concurrent.TimeUnit
@@ -58,8 +57,8 @@ class Defs : En {
             testClientLauncher = TestClientLauncher()
             composeWindow = testClientLauncher.launchClient()
             rdUiOperator = RippleDownUIOperator(composeWindow)
-//            driver = uiTestBase.setupWebDriver()
-//            caseListPO = CaseListPO(driver)
+            caseListPO = rdUiOperator.caseListPO()
+
 //            caseViewPO = CaseViewPO(driver)
 //            cornerstoneViewPO = CornerstoneCaseViewPO(driver)
 //            interpretationViewPO = InterpretationViewPO(driver)
@@ -220,9 +219,8 @@ class Defs : En {
 
         Then("I (should )see the following cases in the case list:") { dataTable: DataTable ->
             val expectedCaseNames = dataTable.asList()
-            caseListPO.waitForCaseListToHaveSize(expectedCaseNames.size)
-            val actualCaseNames = caseListPO.casesListed()
-            actualCaseNames shouldBe expectedCaseNames
+            caseListPO.waitForCountOfNumberOfCasesToBe(expectedCaseNames.size)
+            caseListPO.requireCaseNamesToBe(expectedCaseNames)
         }
 
         Then("I should see no cases in the case list") {

@@ -5,7 +5,6 @@ import io.rippledown.integration.pageobjects.CaseQueuePO
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
 internal class CaseQueueTest : UITestBase() {
 
@@ -17,7 +16,7 @@ internal class CaseQueueTest : UITestBase() {
         serverProxy.start()
 //        setupWebDriver()
         caseQueuePO = CaseQueuePO()
-        caseListPO = CaseListPO()
+//        caseListPO = CaseListPO()
 
     }
 

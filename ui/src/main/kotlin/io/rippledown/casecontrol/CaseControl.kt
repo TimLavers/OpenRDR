@@ -9,6 +9,8 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.caseview.CASES
@@ -64,6 +66,9 @@ fun CaseControl(handler: CaseControlHandler) {
             textAlign = TextAlign.Start,
             modifier = Modifier
                 .testTag(NUMBER_OF_CASES_ID)
+                .semantics {
+                    contentDescription = NUMBER_OF_CASES_ID
+                }
         )
 
         CaseSelector(object : CaseSelectorHandler, CaseControlHandler by handler {
