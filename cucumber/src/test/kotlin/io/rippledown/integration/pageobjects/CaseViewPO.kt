@@ -1,7 +1,10 @@
 package io.rippledown.integration.pageobjects
 
+import io.rippledown.constants.caseview.CASEVIEW_CASE_NAME_ID
 import io.rippledown.integration.pause
+import io.rippledown.integration.utils.find
 import javax.accessibility.AccessibleContext
+import javax.accessibility.AccessibleRole
 
 // ORD2
 class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
@@ -13,8 +16,8 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
 //    private fun caseContainerElement() = driver.findElement(By.id(CASE_VIEW_CONTAINER))
 
     fun nameShown(): String {
-        TODO()
-//        return caseContainerElement().findElement(By.id("case_view_case_name")).text
+        val nameField = contextProvider().find(CASEVIEW_CASE_NAME_ID, AccessibleRole.LABEL)!!.accessibleName
+        return nameField.substring("Case: ".length)
     }
 
     fun noNameShowing(): Boolean {

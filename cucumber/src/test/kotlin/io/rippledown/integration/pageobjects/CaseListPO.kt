@@ -45,22 +45,23 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
         return actualCount
     }
 
-    fun casesListed(): List<String>? {
+    fun casesListed(): List<String> {
         val scrollPaneContext = caseListContext()
-        return scrollPaneContext?.findLabelChildren()
+        return scrollPaneContext.findLabelChildren()
     }
 
     fun requireCaseNamesToBe(expectedCaseNames: List<String>) {
         await().atMost(5L, TimeUnit.SECONDS).until {
-            val found = casesListed()
-            found != null && found == expectedCaseNames
+            casesListed() == expectedCaseNames
         }
     }
 
     fun select(caseName: String): CaseViewPO {
         println("finding case name $CASE_NAME_PREFIX$caseName")
         caseNameContext(caseName).accessibleAction.doAccessibleAction(0)
-        return CaseViewPO(contextProvider)
+        return CaseViewPO {
+            contextProvider()
+        }
     }
 
     private fun caseNameContext(caseName: String): AccessibleContext {

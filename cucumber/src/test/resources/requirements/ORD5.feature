@@ -246,5 +246,5 @@ Feature: Building rules
     And the KB controls are disabled
     When I cancel the rule
     Then the KB controls should be enabled
-    And the count of the number of cases should be 1
+    And the count of the number of cases is 1
     And stop the client application

@@ -1,14 +1,6 @@
 package io.rippledown.casecontrol
 
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onChildren
-import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.application
-import io.rippledown.constants.caseview.CASE_NAME_PREFIX
-import io.rippledown.constants.main.TITLE
 import io.rippledown.main.Api
 import io.rippledown.main.Handler
 import io.rippledown.main.handlerImpl
@@ -17,9 +9,6 @@ import io.rippledown.mocks.mock
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.createCase
-import io.rippledown.proxy.findById
-import io.rippledown.proxy.requireNumberOfCases
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import kotlin.test.Test
@@ -54,94 +43,95 @@ class CaseControlTest {
             requireNamesToBeShowingOnCaseList(caseA, caseB)
         }
     }
-    /*
-        @Test
-        fun shouldSelectACaseIdWhenCaseNameClicked(): TestResult {
-            val caseA = "case A"
-            val caseB = "case B"
-            val caseC = "case C"
-            val caseId1 = CaseId(id = 1, name = caseA)
-            val caseId2 = CaseId(id = 2, name = caseB)
-            val caseId3 = CaseId(id = 3, name = caseC)
-            val threeCaseIds = listOf(caseId1, caseId2, caseId3)
-            val config = config {
-                returnCasesInfo = CasesInfo(threeCaseIds)
-                returnCase = createCase(caseId1)
+
+    @Test
+    fun `should select a CaseId when case name is clicked`() = runTest {
+        val caseA = "case A"
+        val caseB = "case B"
+        val caseC = "case C"
+        val caseId1 = CaseId(id = 1, name = caseA)
+        val caseId2 = CaseId(id = 2, name = caseB)
+        val caseId3 = CaseId(id = 3, name = caseC)
+        val threeCaseIds = listOf(caseId1, caseId2, caseId3)
+        val config = config {
+            returnCasesInfo = CasesInfo(threeCaseIds)
+            returnCase = createCase(caseId1)
+        }
+
+        with(composeTestRule) {
+            setContent {
+                CaseControl(object : Handler by handlerImpl, CaseControlHandler {
+                    override var caseIds = threeCaseIds
+                    override var api = Api(mock(config))
+                    override var setRuleInProgress = { _: Boolean -> }
+                })
             }
-            val fc = FC {
-                CaseControl {
-                    caseIds = threeCaseIds
-                    api = Api(mock(config))
-                    scope = MainScope()
-                    ruleSessionInProgress = { _ -> }
-                }
-            }
+            //Given
+            requireNumberOfCasesOnCaseList(3)
+            requireNamesToBeShowingOnCaseList(caseA, caseB, caseC)
+
+            //When
             config.returnCase = createCase(caseB, 2)
-            return runReactTest(fc) { container ->
-                with(container) {
-                    selectCaseByName(caseB)
-                    requireCaseToBeShowing(caseB)
-                }
+            selectCaseByName(caseB)
+
+            //Then
+            requireCaseToBeShowing(caseB)
+
+        }
+    }
+
+    @Test
+    fun `should show case view for the first case`() = runTest {
+        val caseName1 = "case 1"
+        val caseName2 = "case 2"
+        val caseId1 = CaseId(1, caseName1)
+        val caseId2 = CaseId(2, caseName2)
+        val twoCaseIds = listOf(
+            caseId1, caseId2
+        )
+        val config = config {
+            returnCasesInfo = CasesInfo(twoCaseIds)
+            returnCase = createCase(caseId1)
+        }
+        with(composeTestRule) {
+            setContent {
+                CaseControl(object : Handler by handlerImpl, CaseControlHandler {
+                    override var caseIds = twoCaseIds
+                    override var api = Api(mock(config))
+                    override var setRuleInProgress = { _: Boolean -> }
+                })
             }
+            requireCaseToBeShowing(caseName1)
+        }
+    }
+
+    @Test
+    fun `should show case list for several cases`() = runTest {
+
+        val caseIds = (1..100).map { i ->
+            CaseId(id = i.toLong(), name = "case $i")
         }
 
-        @Test
-        fun shouldShowCaseViewForTheFirstCase(): TestResult {
-            val caseName1 = "case 1"
-            val caseName2 = "case 2"
-            val caseId1 = CaseId(1, caseName1)
-            val caseId2 = CaseId(2, caseName2)
-            val twoCaseIds = listOf(
-                caseId1, caseId2
-            )
-            val config = config {
-                returnCasesInfo = CasesInfo(twoCaseIds)
-                returnCase = createCase(caseId1)
-            }
-
-            val fc = FC {
-                CaseControl {
-                    caseIds = twoCaseIds
-                    api = Api(mock(config))
-                    scope = MainScope()
-                    ruleSessionInProgress = { _ -> }
-                }
-            }
-            return runReactTest(fc) { container ->
-                with(container) {
-                    requireCaseToBeShowing(caseName1)
-                }
-            }
+        val caseName1 = "case 1"
+        val caseName10 = "case 10"
+        val config = config {
+            returnCasesInfo = CasesInfo(caseIds)
+            returnCase = createCase(CaseId(10, caseName10))
         }
-
-        @Test
-        fun shouldShowCaseListForManyCases(): TestResult {
-
-            val caseIds = (1..100).map { i ->
-                CaseId(id = i.toLong(), name = "case $i")
+        with(composeTestRule) {
+            setContent {
+                CaseControl(object : Handler by handlerImpl, CaseControlHandler {
+                    override var caseIds = caseIds
+                    override var api = Api(mock(config))
+                    override var setRuleInProgress = { _: Boolean -> }
+                })
             }
-
-            val caseName100 = "case 100"
-            val config = config {
-                returnCasesInfo = CasesInfo(caseIds)
-                returnCase = createCase(CaseId(100, caseName100))
-            }
-
-            val fc = FC {
-                CaseControl {
-                    this.caseIds = caseIds
-                    api = Api(mock(config))
-                    scope = MainScope()
-                    ruleSessionInProgress = { _ -> }
-                }
-            }
-            return runReactTest(fc) { container ->
-                with(container) {
-                    selectCaseByName(caseName100)
-                    requireCaseToBeShowing(caseName100)
-                }
-            }
+            requireCaseToBeShowing(caseName1)
+            selectCaseByName(caseName10)
+            requireCaseToBeShowing(caseName10)
         }
+    }
+    /*
 
         @Test
         fun shouldNotShowCornerstoneViewIfNoCornerstone(): TestResult {

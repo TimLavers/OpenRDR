@@ -58,6 +58,7 @@ class Defs : En {
             composeWindow = testClientLauncher.launchClient()
             rdUiOperator = RippleDownUIOperator(composeWindow)
             caseListPO = rdUiOperator.caseListPO()
+            caseViewPO = rdUiOperator.caseViewPO()
 
 //            caseViewPO = CaseViewPO(driver)
 //            cornerstoneViewPO = CornerstoneCaseViewPO(driver)

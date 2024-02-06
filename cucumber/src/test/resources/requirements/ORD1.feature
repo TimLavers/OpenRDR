@@ -10,8 +10,7 @@ Feature: Show a list of cases
       | Case2 |
     And stop the client application
 
-  @single
-  Scenario: Should be able to select the last in a long list of cases
+  Scenario: Should be able to select the last in a list of cases
     Given a list of 10 cases is stored on the server
     And I start the client application
     And the count of the number of cases is 10
