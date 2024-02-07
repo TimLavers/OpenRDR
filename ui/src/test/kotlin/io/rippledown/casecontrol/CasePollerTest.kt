@@ -10,7 +10,6 @@ import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.createCase
 import io.rippledown.proxy.requireNumberOfCases
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import kotlin.test.Test
@@ -65,8 +64,32 @@ class CasePollerTest {
                 })
             }
             requireNumberOfCases(2)
-                requireNamesToBeShowingOnCaseList(case1, case2)
-//                requireCaseToBeShowing(case1)
+            requireNamesToBeShowingOnCaseList(case1, case2)
+        }
+    }
+
+    @Test
+    fun `should select the first case on the case list`() = runTest {
+        val case1 = "case 1"
+        val case2 = "case 2"
+        val caseId1 = CaseId(1, case1)
+        val caseId2 = CaseId(2, case2)
+        val caseIds = listOf(caseId1, caseId2)
+        val config = config {
+            returnCasesInfo = CasesInfo(
+                caseIds
+            )
+            returnCase = createCase(caseId1)
+        }
+        with(composeTestRule) {
+            setContent {
+                CasePoller(object : Handler by handlerImpl, CasePollerHandler {
+                    override var api = Api(mock(config))
+                    override var isRuleSessionInProgress = false
+                    override var setRuleInProgress: (Boolean) -> Unit = {}
+                })
+            }
+            requireCaseToBeShowing(case1)
         }
     }
 

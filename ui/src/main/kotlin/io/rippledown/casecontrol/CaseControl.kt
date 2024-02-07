@@ -15,6 +15,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.caseview.CASES
 import io.rippledown.constants.caseview.CASEVIEW_CASE_NAME_ID
+import io.rippledown.constants.caseview.CASE_HEADING
 import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import io.rippledown.main.Handler
 import io.rippledown.model.CaseId
@@ -87,7 +88,7 @@ fun CaseControl(handler: CaseControlHandler) {
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             Text(
-                text = "Case: ${currentCase?.name}",
+                text = "$CASE_HEADING${currentCase?.name}",
                 style = MaterialTheme.typography.subtitle1,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Start,
                 modifier = Modifier
