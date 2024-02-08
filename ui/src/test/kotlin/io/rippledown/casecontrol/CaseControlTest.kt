@@ -108,7 +108,7 @@ class CaseControlTest {
     @Test
     fun `should show case list for several cases`() = runTest {
 
-        val caseIds = (1..100).map { i ->
+        val caseIds = (1..10).map { i ->
             CaseId(id = i.toLong(), name = "case $i")
         }
 
@@ -116,7 +116,7 @@ class CaseControlTest {
         val caseName10 = "case 10"
         val config = config {
             returnCasesInfo = CasesInfo(caseIds)
-            returnCase = createCase(CaseId(10, caseName10))
+            returnCase = createCase(CaseId(10, caseName1))
         }
         with(composeTestRule) {
             setContent {
@@ -126,8 +126,14 @@ class CaseControlTest {
                     override var setRuleInProgress = { _: Boolean -> }
                 })
             }
+            //Given
             requireCaseToBeShowing(caseName1)
+
+            //When
+            config.returnCase = createCase(CaseId(10, caseName10))
             selectCaseByName(caseName10)
+
+            //Then
             requireCaseToBeShowing(caseName10)
         }
     }

@@ -9,7 +9,6 @@ import io.rippledown.mocks.mock
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.createCase
-import io.rippledown.proxy.requireNumberOfCases
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import kotlin.test.Test
@@ -93,41 +92,37 @@ class CasePollerTest {
         }
     }
 
-    /*
-        @Test
-        fun shouldNotShowCaseViewWhenThereAreNoMoreCases(): TestResult {
-            val config = config {
-                val caseId1 = CaseId(1, "case 1")
-                val caseId2 = CaseId(2, "case 2")
-                val caseId3 = CaseId(3, "case 3")
-                returnCasesInfo = CasesInfo(
-                    listOf(
-                        caseId1,
-                        caseId2,
-                        caseId3
-                    )
+    @Test
+    fun `should not show case selector when there are no more cases`() = runTest {
+        val config = config {
+            returnCasesInfo = CasesInfo(
+                listOf(
+                    CaseId(1, "case 1"),
+                    CaseId(2, "case 2"),
+                    CaseId(3, "case 3")
                 )
-                returnCase = createCase(caseId1)
-            }
-
-            val fc = FC {
-                CasePoller {
-                    api = Api(mock(config))
-                    scope = MainScope()
-                }
-            }
-
-            return runReactTest(fc) { container ->
-                with(container) {
-                    waitForNextPoll()
-                    requireNumberOfCases(3)
-                    config.returnCasesInfo = CasesInfo(emptyList())
-                    waitForNextPoll()
-                    requireCaseSelectorNotToBeShowing()
-                }
-            }
+            )
+            returnCase = createCase("case 1", 1)
         }
-        */
+        with(composeTestRule) {
+            setContent {
+                CasePoller(object : Handler by handlerImpl, CasePollerHandler {
+                    override var api = Api(mock(config))
+                    override var isRuleSessionInProgress = false
+                    override var setRuleInProgress: (Boolean) -> Unit = {}
+                })
+            }
+            //Given
+            requireNumberOfCases(3)
+
+            //When
+            config.returnCasesInfo = CasesInfo(emptyList())
+
+            //Then
+            requireCaseSelectorNotToBeShowing()
+        }
+    }
+
 
     /*
         @Test
