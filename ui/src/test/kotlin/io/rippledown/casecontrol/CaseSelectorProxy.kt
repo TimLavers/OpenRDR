@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTestApi::class)
+
 package io.rippledown.casecontrol
 
 import androidx.compose.ui.test.*
@@ -13,8 +15,11 @@ fun ComposeTestRule.requireNamesToBeShowingOnCaseList(vararg caseNames: String) 
     }
 }
 
+@OptIn(ExperimentalTestApi::class)
 fun ComposeTestRule.selectCaseByName(caseName: String) {
-    onNode(hasTestTag("$CASE_NAME_PREFIX$caseName")).performClick()
+    val matcher = hasTestTag("$CASE_NAME_PREFIX$caseName")
+    waitUntilExactlyOneExists(matcher, timeoutMillis = 2_000)
+    onNode(matcher).performClick()
 }
 fun ComposeTestRule.selectCaseByNameUsingContentDescription(caseName: String) {
     onNode(hasContentDescriptionExactly("$CASE_NAME_PREFIX$caseName"), true).performClick()
@@ -24,12 +29,10 @@ fun ComposeTestRule.requireNumberOfCasesOnCaseList(expected: Int) {
     onNodeWithTag(CASELIST_ID).onChildren().assertCountEquals(expected)
 }
 
-@OptIn(ExperimentalTestApi::class)
 fun ComposeTestRule.waitForNumberOfCases(expected: Int) {
     waitUntilExactlyOneExists(hasText("$CASES $expected"), timeoutMillis = 2_000)
 }
 
-@OptIn(ExperimentalTestApi::class)
 fun ComposeTestRule.waitForCaseSelectorNotToBeShowing() {
     waitUntilDoesNotExist(hasTestTag(CASELIST_ID), timeoutMillis = 2_000)
 }
