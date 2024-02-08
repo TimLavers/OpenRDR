@@ -18,7 +18,7 @@ class CasePollerTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `should get the number of cases`() = runTest {
+    fun `should show the number of cases`() = runTest {
         val config = config {
             returnCasesInfo = CasesInfo(
                 listOf(
@@ -37,7 +37,7 @@ class CasePollerTest {
                     override var setRuleInProgress: (Boolean) -> Unit = {}
                 })
             }
-            requireNumberOfCases(3)
+            waitForNumberOfCases(3)
         }
     }
 
@@ -62,13 +62,13 @@ class CasePollerTest {
                     override var setRuleInProgress: (Boolean) -> Unit = {}
                 })
             }
-            requireNumberOfCases(2)
+            waitForNumberOfCases(2)
             requireNamesToBeShowingOnCaseList(case1, case2)
         }
     }
 
     @Test
-    fun `should select the first case on the case list`() = runTest {
+    fun `should select the first case on the case list by default`() = runTest {
         val case1 = "case 1"
         val case2 = "case 2"
         val caseId1 = CaseId(1, case1)
@@ -113,82 +113,84 @@ class CasePollerTest {
                 })
             }
             //Given
-            requireNumberOfCases(3)
+            waitForNumberOfCases(3)
 
             //When
             config.returnCasesInfo = CasesInfo(emptyList())
 
             //Then
-            requireCaseSelectorNotToBeShowing()
+            waitForCaseSelectorNotToBeShowing()
         }
     }
 
 
+    @Test
+    fun `should show a case view when a case is selected`() = runTest {
+        val caseName1 = "case 1"
+        val caseName2 = "case 2"
+        val caseId1 = CaseId(1, caseName1)
+        val caseId2 = CaseId(2, caseName2)
+        val caseIds = listOf(
+            caseId1,
+            caseId2,
+        )
+        val config = config {
+            returnCasesInfo = CasesInfo(caseIds)
+            returnCase = createCase(caseId1)
+        }
+
+        with(composeTestRule) {
+            setContent {
+                CasePoller(object : Handler by handlerImpl, CasePollerHandler {
+                    override var api = Api(mock(config))
+                    override var isRuleSessionInProgress = false
+                    override var setRuleInProgress: (Boolean) -> Unit = {}
+                })
+            }
+
+            //Given
+            requireNamesToBeShowingOnCaseList(caseName1, caseName2)
+            requireCaseToBeShowing(caseName1)
+
+            //When
+            config.returnCase = createCase(caseId2)
+            selectCaseByName(caseName2)
+
+            //Then
+            requireCaseToBeShowing(caseName2)
+        }
+    }
+
+
+    @Test
+    fun `should update the number of cases`() = runTest {
+        val caseId1 = CaseId(1, "case 1")
+        val caseId2 = CaseId(2, "case 2")
+        val config = config {
+            returnCasesInfo = CasesInfo(listOf(caseId1))
+            returnCase = createCase(caseId1)
+        }
+
+        with(composeTestRule) {
+            setContent {
+                CasePoller(object : Handler by handlerImpl, CasePollerHandler {
+                    override var api = Api(mock(config))
+                    override var isRuleSessionInProgress = false
+                    override var setRuleInProgress: (Boolean) -> Unit = {}
+                })
+            }
+
+            //Given
+            waitForNumberOfCases(1)
+
+            //When
+            config.returnCasesInfo = CasesInfo(listOf(caseId1, caseId2))
+
+            //Then
+            waitForNumberOfCases(2)
+        }
+    }
     /*
-        @Test
-        fun shouldShowCaseViewWhenACaseIsSelected(): TestResult {
-            val caseName1 = "case 1"
-            val caseName2 = "case 2"
-            val caseId1 = CaseId(1, caseName1)
-            val caseId2 = CaseId(2, caseName2)
-            val caseIds = listOf(
-                caseId1,
-                caseId2,
-            )
-            val config = config {
-                returnCasesInfo = CasesInfo(caseIds)
-                returnCase = createCase(caseId1)
-            }
-
-            val fc = FC {
-                CasePoller {
-                    api = Api(mock(config))
-                    scope = MainScope()
-                }
-            }
-            return runReactTest(fc) { container ->
-                with(container) {
-                    waitForNextPoll()
-                    requireNamesToBeShowingOnCaseList(caseName1, caseName2)
-                    requireCaseToBeShowing(caseName1)
-
-                    config.returnCase = createCase(caseId2)
-                    selectCaseByName(caseName2)
-                    waitForEvents()
-                    requireCaseToBeShowing(caseName2)
-                }
-            }
-        }
-
-        @Test
-        fun shouldShowNoCasesWhenThereAreNoMoreCases(): TestResult {
-            val caseName = "case 1"
-            val caseId = CaseId(1, caseName)
-            val caseIds = listOf(caseId)
-            val config = config {
-                returnCasesInfo = CasesInfo(caseIds)
-                returnCase = createCase(caseId)
-            }
-
-            val fc = FC {
-                CasePoller {
-                    api = Api(mock(config))
-                    scope = MainScope()
-                }
-            }
-            return runReactTest(fc) { container ->
-                with(container) {
-                    waitForNextPoll()
-                    requireNamesToBeShowingOnCaseList(caseName)
-
-                    config.returnCasesInfo = CasesInfo(emptyList())
-                    waitForNextPoll()
-                    requireNumberOfCasesNotToBeShowing()
-                }
-            }
-        }
-
-
         @Test
         fun shouldSelectTheFirstCaseWhenTheSelectedCaseHasBeenDeleted(): TestResult {
             val caseName1 = "case 1"
