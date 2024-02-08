@@ -58,7 +58,7 @@ private class EngineBuilder(private val config: EngineConfig) {
     }
 
     fun build()  = MockEngine { request ->
-        println("MockEngine called with ${request.url.fullPath}")
+//        println("MockEngine called with ${request.url.fullPath}")
         when (request.url.encodedPath) {
             WAITING_CASES -> {
                 println("api call to WAITING_CASES with ${request.url.parameters} will return ${config.returnCasesInfo}")

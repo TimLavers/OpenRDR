@@ -36,7 +36,7 @@ internal open class TSHTest: UITestBase() {
     }
 
     fun selectCaseAndCheckName(name: String) {
-        caseViewPO = caseListPO.select(name)
+//        caseViewPO = caseListPO.select(name)
         dataShown = caseViewPO.valuesShown()
         assertEquals(name, caseViewPO.nameShown())
     }

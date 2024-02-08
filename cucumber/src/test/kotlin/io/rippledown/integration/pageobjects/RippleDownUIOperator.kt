@@ -24,4 +24,8 @@ class RippleDownUIOperator(private val window: ComposeWindow) {
     fun shutdown() {
         window.accessibleContext.accessibleAction.doAccessibleAction(0)
     }
+
+    fun caseViewPO() = CaseViewPO {
+        context()
+    }
 }

@@ -8,10 +8,10 @@ import io.rippledown.integration.restclient.RESTClient
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.EpisodicCondition
-import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals
 import io.rippledown.model.condition.episodic.predicate.LessThanOrEquals
 import io.rippledown.model.condition.episodic.predicate.Normal
+import io.rippledown.model.condition.episodic.signature.Current
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -47,7 +47,7 @@ internal class ShowRuleCondition : UITestBase() {
         buildRuleForABC()
 //        setupWebDriver()
         caseQueuePO = CaseQueuePO().apply { waitForNumberOfCasesToBe(1) }
-        caseViewPO = CaseViewPO()
+//        caseViewPO = CaseViewPO()
         conclusionsViewPO = ConclusionsViewPO()
     }
 

@@ -58,6 +58,7 @@ class Defs : En {
             composeWindow = testClientLauncher.launchClient()
             rdUiOperator = RippleDownUIOperator(composeWindow)
             caseListPO = rdUiOperator.caseListPO()
+            caseViewPO = rdUiOperator.caseViewPO()
 
 //            caseViewPO = CaseViewPO(driver)
 //            cornerstoneViewPO = CornerstoneCaseViewPO(driver)
@@ -436,7 +437,7 @@ class Defs : En {
             caseListPO.requireCaseCountToBeHidden()
         }
 
-        And("the count of the number of cases should be {int}") { numberOfCases: Int ->
+        And("the count of the number of cases is {int}") { numberOfCases: Int ->
             caseListPO.waitForCountOfNumberOfCasesToBe(numberOfCases)
         }
     }

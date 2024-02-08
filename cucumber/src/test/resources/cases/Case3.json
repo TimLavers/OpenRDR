@@ -1,0 +1,30 @@
+{
+  "name": "Case3",
+  "data": [
+    {
+      "testName": "TSH",
+      "testTime": 1659752689505
+    },
+    {
+      "value": {
+        "text": "0.49"
+      },
+      "referenceRange": {
+        "lowerString": "0.50",
+        "upperString": "4.0"
+      },
+      "units": "mU/L"
+    },
+    {
+      "testName": "CDE",
+      "testTime": 1659752689505
+    },
+    {
+      "value": {
+        "text": "10.9"
+      },
+      "referenceRange": null,
+      "units": null
+    }
+  ]
+}
