@@ -75,7 +75,7 @@ class CaseControlTest {
             selectCaseByName(caseB)
 
             //Then
-            requireCaseToBeShowing(caseB)
+            waitForCaseToBeShowing(caseB)
 
         }
     }
@@ -101,7 +101,7 @@ class CaseControlTest {
                     override var setRuleInProgress = { _: Boolean -> }
                 })
             }
-            requireCaseToBeShowing(caseName1)
+            waitForCaseToBeShowing(caseName1)
         }
     }
 
@@ -127,14 +127,14 @@ class CaseControlTest {
                 })
             }
             //Given
-            requireCaseToBeShowing(caseName1)
+            waitForCaseToBeShowing(caseName1)
 
             //When
             config.returnCase = createCase(CaseId(10, caseName10))
             selectCaseByName(caseName10)
 
             //Then
-            requireCaseToBeShowing(caseName10)
+            waitForCaseToBeShowing(caseName10)
         }
     }
     /*

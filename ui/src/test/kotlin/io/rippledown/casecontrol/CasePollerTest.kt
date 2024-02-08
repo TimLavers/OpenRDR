@@ -89,7 +89,7 @@ class CasePollerTest {
                     override var setRuleInProgress: (Boolean) -> Unit = {}
                 })
             }
-            requireCaseToBeShowing(case1)
+            waitForCaseToBeShowing(case1)
         }
     }
 
@@ -152,14 +152,14 @@ class CasePollerTest {
             //Given
             waitForNumberOfCases(2)
             requireNamesToBeShowingOnCaseList(caseName1, caseName2)
-            requireCaseToBeShowing(caseName1)
+            waitForCaseToBeShowing(caseName1)
 
             //When
             config.returnCase = createCase(caseId2)
             selectCaseByName(caseName2)
 
             //Then
-            requireCaseToBeShowing(caseName2)
+            waitForCaseToBeShowing(caseName2)
         }
     }
 
@@ -218,7 +218,7 @@ class CasePollerTest {
             }
             //Given
             selectCaseByName(caseName2)
-            requireCaseToBeShowing(caseName2)
+            waitForCaseToBeShowing(caseName2)
 
             //When
             //set the mock to return only the other two cases
@@ -228,39 +228,36 @@ class CasePollerTest {
             config.returnCase = createCase(caseId1)
 
             //Then
-            requireCaseToBeShowing(caseName1)
+            waitForCaseToBeShowing(caseName1)
             requireNamesToBeShowingOnCaseList(caseName1, caseName3)
         }
     }
-    /*
-            @Test
-            fun shouldSelectTheFirstCaseByDefault(): TestResult {
-                val case1 = "case 1"
-                val case2 = "case 2"
-                val caseId1 = CaseId(1, case1)
-                val caseId2 = CaseId(2, case2)
-                val caseIds = listOf(
-                    caseId1,
-                    caseId2,
-                )
-                val config = config {
-                    returnCasesInfo = CasesInfo(
-                        caseIds
-                    )
-                    returnCase = createCase(caseId1)
-                }
-                val fc = FC {
-                    CasePoller {
-                        api = Api(mock(config))
-                        scope = MainScope()
-                    }
-                }
-                return runReactTest(fc) { container ->
-                    with(container) {
-                        waitForNextPoll()
-                        requireCaseToBeShowing(case1)
-                    }
-                }
+
+    @Test
+    fun shouldSelectTheFirstCaseByDefault() = runTest {
+        val case1 = "case 1"
+        val case2 = "case 2"
+        val caseId1 = CaseId(1, case1)
+        val caseId2 = CaseId(2, case2)
+        val caseIds = listOf(
+            caseId1,
+            caseId2,
+        )
+        val config = config {
+            returnCasesInfo = CasesInfo(
+                caseIds
+            )
+            returnCase = createCase(caseId1)
+        }
+        with(composeTestRule) {
+            setContent {
+                CasePoller(object : Handler by handlerImpl, CasePollerHandler {
+                    override var api = Api(mock(config))
+                    override var isRuleSessionInProgress = false
+                    override var setRuleInProgress: (Boolean) -> Unit = {}
+                })
             }
-            */
+            waitForCaseToBeShowing(case1)
+        }
+    }
 }

@@ -1,5 +1,4 @@
 Feature: Show a list of cases
-
   Scenario: Should show the list of cases that have been stored by the server
     Given a list of cases with the following names is stored on the server:
       | Case1 |

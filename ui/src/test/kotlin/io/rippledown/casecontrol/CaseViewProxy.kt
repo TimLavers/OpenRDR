@@ -7,7 +7,7 @@ import io.rippledown.constants.caseview.CASE_HEADING
 
 
 @OptIn(ExperimentalTestApi::class)
-fun ComposeTestRule.requireCaseToBeShowing(caseName: String) {
+fun ComposeTestRule.waitForCaseToBeShowing(caseName: String) {
     waitUntilExactlyOneExists(hasText("$CASE_HEADING$caseName"), timeoutMillis = 2_000)
 }
 
