@@ -17,7 +17,6 @@ Feature: Show a list of cases
     Then I should see the case Case_010 as the current case
     And stop the client application
 
-  @ignore
   Scenario: The list of cases should be updated when a new case is stored by the server
     Given a list of cases with the following names is stored on the server:
       | Case1 |
