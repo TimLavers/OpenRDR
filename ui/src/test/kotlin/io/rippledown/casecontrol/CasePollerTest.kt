@@ -150,6 +150,7 @@ class CasePollerTest {
             }
 
             //Given
+            waitForNumberOfCases(2)
             requireNamesToBeShowingOnCaseList(caseName1, caseName2)
             requireCaseToBeShowing(caseName1)
 

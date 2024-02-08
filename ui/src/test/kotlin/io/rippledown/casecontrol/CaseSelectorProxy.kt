@@ -9,7 +9,6 @@ import io.rippledown.constants.caseview.CASES
 import io.rippledown.constants.caseview.CASE_NAME_PREFIX
 
 fun ComposeTestRule.requireNamesToBeShowingOnCaseList(vararg caseNames: String) {
-    waitForNumberOfCases(caseNames.size)
     caseNames.forEach {  caseName ->
         onNode(hasTestTag("$CASE_NAME_PREFIX$caseName")).assertExists()
     }
