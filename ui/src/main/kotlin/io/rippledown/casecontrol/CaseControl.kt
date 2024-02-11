@@ -13,10 +13,13 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import io.rippledown.caseview.CaseView
+import io.rippledown.caseview.CaseViewHandler
 import io.rippledown.constants.caseview.CASES
 import io.rippledown.constants.caseview.CASEVIEW_CASE_NAME_ID
 import io.rippledown.constants.caseview.CASE_HEADING
 import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
+import io.rippledown.main.Api
 import io.rippledown.main.Handler
 import io.rippledown.model.CaseId
 import io.rippledown.model.caseview.ViewableCase
@@ -77,26 +80,14 @@ fun CaseControl(handler: CaseControlHandler) {
                     currentCaseId = id
                 }
             })
-
-
         }
 
-        //TODO REPLACE THIS WITH CASEINSPECTION / CASEVIEW
-        Column(
-            modifier = Modifier
-                .padding(10.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            Text(
-                text = "$CASE_HEADING${currentCase?.name}",
-                style = MaterialTheme.typography.subtitle1,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Start,
-                modifier = Modifier
-                    .testTag(CASEVIEW_CASE_NAME_ID)
-                    .semantics {
-                        contentDescription = CASEVIEW_CASE_NAME_ID
-                    }
-            )
+        if (currentCase != null) {
+            CaseView(object : CaseViewHandler {
+                override var case = currentCase!!
+                override var api = handler.api
+                override fun caseEdited() {}
+            })
         }
     }
 }
