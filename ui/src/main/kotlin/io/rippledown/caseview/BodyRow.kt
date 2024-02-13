@@ -9,14 +9,15 @@ import io.rippledown.model.TestResult
 
 @Composable
 fun LazyItemScope.BodyRow(
+    index: Int,
     attribute: Attribute,
     columnWidths: ColumnWidths,
     case: RDRCase
 ) {
     Row {
-        AttributeCell(attribute, columnWidths.attributeColumnWeight)
+        AttributeCell(index, attribute, columnWidths.attributeColumnWeight)
         case.resultsFor(attribute)!!.forEachIndexed { columnIndex: Int, testResult: TestResult ->
-            ValueCell(testResult, columnWidths.columnWeight(columnIndex + 1))
+            ValueCell(attribute, index, testResult, columnWidths.columnWeight(columnIndex + 1))
         }
     }
 }

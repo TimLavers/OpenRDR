@@ -4,8 +4,11 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import io.rippledown.constants.caseview.DATE_CELL_DESCRIPTION_PREFIX
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -14,11 +17,16 @@ import kotlinx.datetime.toLocalDateTime
 fun RowScope.DateCell(index: Int, date: Long, widthWeight: Float) {
     Text(
         text = formatDate(date),
-        modifier = Modifier.weight(widthWeight),
+        modifier = Modifier.weight(widthWeight)
+            .semantics{
+                contentDescription = dateCellContentDescription(index)
+            },
         fontWeight = FontWeight.Bold,
         textAlign = TextAlign.Start
     )
 }
+
+fun dateCellContentDescription(index: Int) = "$DATE_CELL_DESCRIPTION_PREFIX $index"
 
 fun formatDate(date: Long): String {
     fun pad(n: Int): String {

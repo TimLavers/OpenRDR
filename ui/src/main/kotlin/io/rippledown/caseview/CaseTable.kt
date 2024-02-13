@@ -28,7 +28,7 @@ fun CaseTable(handler: CaseTableHandler) {
             HeaderRow(columnWidths, dates)
         }
         itemsIndexed(handler.viewableCase.attributes()) { index: Int, attribute: Attribute ->
-            BodyRow(attribute, columnWidths, case)
+            BodyRow(index, attribute, columnWidths, case)
 
         }
     }

@@ -103,6 +103,10 @@ class Defs : En {
             labProxy.provideCase(caseName)
         }
 
+        Given("the configured case {word} is stored on the server") { caseName: String ->
+            labProxy.provideCase(caseName)
+        }
+
         Given("the following cases are deleted on the server:") { dataTable: DataTable ->
             dataTable.asList().forEach { caseName ->
                 labProxy.restProxy.deleteProcessedCaseWithName(caseName)
@@ -164,10 +168,6 @@ class Defs : En {
             val attributeNameToValue = mutableMapOf<String, String>()
             dataTable.asMap().forEach { (t, u) -> attributeNameToValue[t] = u }
             labProxy.provideCase(caseName, attributeNameToValue)
-        }
-
-        Then("^the case (should show|shows) the attributes in order:$") { _: String, dataTable: DataTable ->
-            caseViewPO.attributes() shouldBe dataTable.asList()
         }
 
         Then("the displayed KB name is (now ){word}") { kbName: String ->
@@ -439,6 +439,20 @@ class Defs : En {
 
         And("the count of the number of cases is {int}") { numberOfCases: Int ->
             caseListPO.waitForCountOfNumberOfCasesToBe(numberOfCases)
+        }
+
+        Then("I (should )see these episode dates:") { dataTable: DataTable ->
+            val expectedDates = dataTable.asList()
+            rdUiOperator.caseViewPO().datesShown() shouldBe expectedDates
+        }
+
+        Then("I (should )see these attributes:") { dataTable: DataTable ->
+            val expectedNames = dataTable.asList()
+            rdUiOperator.caseViewPO().attributeNames() shouldBe expectedNames
+        }
+
+        Then("I (should )see these values for {string}:") { attribute: String, dataTable: DataTable ->
+            rdUiOperator.caseViewPO().valuesForAttribute(attribute) shouldBe dataTable.asList()
         }
     }
 }
