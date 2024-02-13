@@ -7,9 +7,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 
 @Composable
-fun RowScope.AttributesHeaderCell(text: String, widthWeight: Float) {
+fun RowScope.AttributesHeaderCell(widthWeight: Float) {
     Text(
-        text = text,
+        text = "Attributes",
         modifier = Modifier.weight(widthWeight),
         fontWeight = FontWeight.Bold
     )
