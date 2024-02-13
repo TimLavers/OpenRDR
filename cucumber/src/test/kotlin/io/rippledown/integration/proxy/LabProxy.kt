@@ -12,7 +12,6 @@ import java.time.Instant
 
 class LabProxy(tempDir: File, val restProxy: RESTClient) {
     private val inputDir = File(tempDir, "cases")
-    private val interpretationsDir = File(tempDir, "interpretations")
 
     fun cleanCasesDir() {
         if (!inputDir.exists()) {

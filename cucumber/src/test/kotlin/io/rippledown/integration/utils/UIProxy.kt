@@ -56,6 +56,6 @@ class OpenRdUIProxy() {
         println(childCount)
         val child0 = accessibleContext.getAccessibleChild(0)
         println(child0)
-        accessibleContext.dumpToText()
+        accessibleContext.dumpToText(0)
     }
 }

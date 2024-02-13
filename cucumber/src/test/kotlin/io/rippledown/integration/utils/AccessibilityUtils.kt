@@ -46,21 +46,23 @@ fun AccessibleContext.findLabelChildren(): List<String> {
     for (i in 0..<childCount) {
         val child = getAccessibleChild(i)
         if (child.accessibleContext.accessibleRole == AccessibleRole.LABEL) {
-            result.add(child.accessibleContext.accessibleName)
+            val caseName = child.accessibleContext.accessibleName
+            //TODO. Why is this necessary? It seems that the same name is added multiple times.
+            if (!result.contains(caseName)) result.add(caseName)
         }
     }
     return result
 }
-fun AccessibleContext.dumpToText(componentDepth: Int = 0, ignoreNulls: Boolean = true) {
+fun AccessibleContext.dumpToText(index: Int, componentDepth: Int = 0, ignoreNulls: Boolean = true) {
     val childCount = accessibleChildrenCount
-    val name = this.accessibleName
-    val role = this.accessibleRole.toDisplayString()
-    val description = this.accessibleDescription
+    val name = accessibleName
+    val role = accessibleRole.toDisplayString()
+    val description = accessibleDescription
     if (!ignoreNulls || name != null || description != null) {
-        println("Name: $name, role: $role, description: $description, componentDepth: $componentDepth, child count: $childCount ")
+        println("Index: $index, Name: $name, role: $role, description: $description, componentDepth: $componentDepth, child count: $childCount ")
     }
     for (i in 0..<childCount) {
-        getAccessibleChild(i).accessibleContext.dumpToText(componentDepth + 1)
+        getAccessibleChild(i).accessibleContext.dumpToText(i, componentDepth + 1, ignoreNulls)
     }
 }
 fun AccessibleContext.findAndClick(description: String) {

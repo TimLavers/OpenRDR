@@ -4,14 +4,14 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 apply(from = "repositories.gradle.kts")
 
 plugins {
-    kotlin("jvm") version "1.9.21"
-    kotlin("plugin.serialization") version "1.9.21"
+    kotlin("jvm") version "1.9.22"
+    kotlin("plugin.serialization") version "1.9.22"
     id("io.ktor.plugin") version "2.3.5"
     id("com.github.johnrengelman.shadow") version "5.2.0"
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 subprojects {
@@ -38,11 +38,7 @@ subprojects {
         testImplementation("io.ktor:ktor-client-mock")
         testImplementation("io.mockk:mockk:${mockk}")
     }
-    tasks.withType<KotlinCompile> {
-        kotlinOptions {
-            jvmTarget = Version.java.toString()
-        }
-    }
+
     tasks.test {
         //compose desktop tests are not working with junit5, just use junit4 for now
         if ( project.name != "ui" ) {

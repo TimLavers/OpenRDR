@@ -7,7 +7,6 @@ import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findLabelChildren
 import org.awaitility.Awaitility.await
-import org.awaitility.kotlin.withPollInterval
 import java.time.Duration.ofSeconds
 import java.util.concurrent.TimeUnit
 import javax.accessibility.AccessibleContext
@@ -46,8 +45,7 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun casesListed(): List<String> {
-        val scrollPaneContext = caseListContext()
-        return scrollPaneContext.findLabelChildren()
+        return caseListContext()?.findLabelChildren()?: emptyList()
     }
 
     fun requireCaseNamesToBe(expectedCaseNames: List<String>) {
@@ -58,50 +56,30 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
 
     fun select(caseName: String): CaseViewPO {
         println("finding case name $CASE_NAME_PREFIX$caseName")
-        caseNameContext(caseName).accessibleAction.doAccessibleAction(0)
+        caseNameContext(caseName)!!.accessibleAction.doAccessibleAction(0)
         return CaseViewPO {
             contextProvider()
         }
     }
 
-    private fun caseNameContext(caseName: String): AccessibleContext {
-        var caseNameContext: AccessibleContext? = null
-        await().atMost(5L, TimeUnit.SECONDS).until {
-            caseNameContext = caseListContext().find(description = "$CASE_NAME_PREFIX$caseName", role = LABEL)
-            caseNameContext != null
-        }
-        return caseNameContext!!
-    }
+    private fun caseNameContext(caseName: String) = contextProvider().find("$CASE_NAME_PREFIX$caseName", LABEL)
 
+    private fun caseListContext() = contextProvider().find(CASELIST_ID, SCROLL_PANE)
 
-    private fun caseListContext(): AccessibleContext {
-        await().atMost(5L, TimeUnit.SECONDS).until {
-            val found = contextProvider().find(CASELIST_ID, SCROLL_PANE)
-            found != null
-        }
-        return contextProvider().find(description = CASELIST_ID, role = SCROLL_PANE)!!
-    }
     fun waitForCaseListToContain(name: String) {
-//        val wait: Wait<WebDriver> = WebDriverWait(driver, ofSeconds(5))
-//        wait.until { _ ->
-//            driver.findElement(By.id("$CASE_NAME_PREFIX$name")).isDisplayed
-//        }
+        await().atMost(ofSeconds(5)).until {
+            casesListed().contains(name)
+        }
     }
 
     fun waitForNoCases() {
-        await().atMost(ofSeconds(15))
-            .withPollInterval(ofSeconds(2)).until {
-                val containerElement = try {
-                    containerElement()
-                } catch (e: Exception) {
-                    null
-                }
-                containerElement == null
-            }
+        await().atMost(ofSeconds(5)).until {
+            casesListed().isEmpty()
+        }
     }
 
-//    = listItems().map { it.text }
-private fun listItems() {
+    //    = listItems().map { it.text }
+    private fun listItems() {
         TODO()
     }
 
