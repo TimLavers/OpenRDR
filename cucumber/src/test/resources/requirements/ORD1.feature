@@ -75,7 +75,6 @@ Feature: Show a list of cases
     Then I should not see any current case
     And stop the client application
 
-  @ignore
   Scenario: Should select the first case on the list by default
     Given a list of cases with the following names is stored on the server:
       | Case1 |
