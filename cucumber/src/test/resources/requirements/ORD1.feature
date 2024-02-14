@@ -33,7 +33,6 @@ Feature: Show a list of cases
       | Case3 |
     And stop the client application
 
-  @ignore
   Scenario: The list of cases should be updated when a case is deleted on the server
     Given a list of cases with the following names is stored on the server:
       | Case1 |
@@ -43,19 +42,16 @@ Feature: Show a list of cases
       | Case1 |
       | Case2 |
     When the case with the name Case1 is deleted on the server
-    And pause for 2 seconds
     Then I should see the following cases in the case list:
       | Case2 |
     And I should see the case Case2 as the current case
     And stop the client application
 
-  @ignore
   Scenario: The list of cases should not be visible when all cases are deleted on the server
     Given a list of cases with the following names is stored on the server:
       | Case1 |
       | Case2 |
     And I start the client application
-
     And I see the following cases in the case list:
       | Case1 |
       | Case2 |
@@ -65,7 +61,6 @@ Feature: Show a list of cases
     Then I should see no cases in the case list
     And stop the client application
 
-  @ignore
   Scenario: The current case should not be visible when all cases are deleted on the server
     Given a list of cases with the following names is stored on the server:
       | Case1 |
@@ -81,7 +76,6 @@ Feature: Show a list of cases
     Then I should not see any current case
     And stop the client application
 
-  @ignore
   Scenario: Should select the first case on the list by default
     Given a list of cases with the following names is stored on the server:
       | Case1 |

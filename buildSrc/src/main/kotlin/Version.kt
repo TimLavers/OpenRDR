@@ -1,8 +1,8 @@
 import org.gradle.api.JavaVersion
 
 object Version {
-    val java = JavaVersion.VERSION_17
-    const val kotlin = "1.9.21"
+    val java = JavaVersion.VERSION_21
+    const val kotlin = "1.9.22"
     const val ktor = "2.3.7"
     const val kotest = "5.7.2"
     const val compose = "1.5.12"

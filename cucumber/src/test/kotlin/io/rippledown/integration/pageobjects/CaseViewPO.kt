@@ -1,5 +1,6 @@
 package io.rippledown.integration.pageobjects
 
+import io.kotest.matchers.shouldBe
 import io.rippledown.constants.caseview.ATTRIBUTE_CELL_DESCRIPTION_PREFIX
 import io.rippledown.constants.caseview.CASEVIEW_CASE_NAME_ID
 import io.rippledown.constants.caseview.DATE_CELL_DESCRIPTION_PREFIX
@@ -20,9 +21,8 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
 
     fun nameShown(): String = contextProvider().find(CASEVIEW_CASE_NAME_ID, LABEL)!!.accessibleName
 
-    fun noNameShowing(): Boolean {
-        TODO()
-//        return driver.findElements(By.id(CASE_VIEW_CONTAINER)).size == 0
+    fun requireNoNameShowing(){
+         contextProvider().find(CASEVIEW_CASE_NAME_ID, AccessibleRole.LABEL)  shouldBe null
     }
 
     fun datesShown() = extractMatchingValuesInOrderShown(DATE_CELL_DESCRIPTION_PREFIX) { context -> DateCellPO(context) }
