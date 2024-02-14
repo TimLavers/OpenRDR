@@ -68,7 +68,7 @@ class RESTClient {
         runBlocking {
             jsonClient.delete(endpoint + DELETE_PROCESSED_CASE_WITH_NAME) {
                 contentType(ContentType.Application.Json)
-//                parameter(KB_ID, currentKB!!.id)
+                parameter(KB_ID, currentKB.get().id)
                 setBody(CaseName(name))
             }
         }
@@ -77,14 +77,14 @@ class RESTClient {
     fun getOrCreateAttribute(name: String): Attribute = runBlocking {
         jsonClient.post(endpoint + GET_OR_CREATE_ATTRIBUTE) {
             setBody(name)
-//            parameter(KB_ID, currentKB!!.id)
+            parameter(KB_ID, currentKB.get().id)
         }.body()
     }
 
     fun getOrCreateConclusion(text: String): Conclusion = runBlocking {
         jsonClient.post(endpoint + GET_OR_CREATE_CONCLUSION) {
             setBody(text)
-//            parameter(KB_ID, currentKB!!.id)
+            parameter(KB_ID, currentKB.get().id)
         }.body()
     }
 
@@ -92,7 +92,7 @@ class RESTClient {
         jsonClient.post(endpoint + GET_OR_CREATE_CONDITION) {
             contentType(ContentType.Application.Json)
             setBody(prototype)
-//            parameter(KB_ID, currentKB!!.id)
+            parameter(KB_ID, currentKB.get().id)
         }.body()
     }
 
@@ -101,7 +101,7 @@ fun provideCase(externalCase: ExternalCase): RDRCase {
         jsonClient.put(endpoint + PROCESS_CASE) {
             contentType(ContentType.Application.Json)
             setBody(externalCase)
-            parameter(KB_ID, currentKB.get()!!.id)
+            parameter(KB_ID, currentKB.get().id)
         }.body<RDRCase>()
     }
     return result
@@ -114,7 +114,7 @@ fun provideCase(externalCase: ExternalCase): RDRCase {
             result = jsonClient.post(endpoint + START_SESSION_TO_ADD_CONCLUSION + "?id=${currentCase!!.id}") {
                 contentType(ContentType.Application.Json)
                 setBody(conclusion)
-                parameter(KB_ID, currentKB.get()!!.id)
+                parameter(KB_ID, currentKB.get().id)
             }.body()
         }
         return result
@@ -127,7 +127,7 @@ fun provideCase(externalCase: ExternalCase): RDRCase {
             result = jsonClient.post(endpoint + START_SESSION_TO_REPLACE_CONCLUSION + "?id=${currentCase!!.id}") {
                 contentType(ContentType.Application.Json)
                 setBody(listOf(toGo, replacement))
-       //         parameter(KB_ID, currentKB!!.id)
+                parameter(KB_ID, currentKB.get().id)
             }.body()
         }
         return result
@@ -140,7 +140,7 @@ fun provideCase(externalCase: ExternalCase): RDRCase {
             result = jsonClient.post(endpoint + ADD_CONDITION) {
                 contentType(ContentType.Application.Json)
                 setBody(data)
-       //         parameter(KB_ID, currentKB!!.id)
+                parameter(KB_ID, currentKB.get().id)
             }.body()
         }
         return result
@@ -150,7 +150,7 @@ fun provideCase(externalCase: ExternalCase): RDRCase {
         var result = OperationResult("")
         runBlocking {
             result = jsonClient.post(endpoint + COMMIT_SESSION) {
-            //    parameter(KB_ID, currentKB!!.id)
+                parameter(KB_ID, currentKB.get().id)
             }.body()
         }
         return result
@@ -182,17 +182,13 @@ fun provideCase(externalCase: ExternalCase): RDRCase {
     fun createKB(name: String) {
         println("createKBWithDefaultName current thread: ${Thread.currentThread().name}")
         runBlocking {
-            println("createKBWithDefaultName in run blocking current thread: ${Thread.currentThread().name}")
-
-            kotlin.io.println("============ calling to create default KB")
             val kbi = jsonClient.post(endpoint + CREATE_KB) {
                 contentType(ContentType.Text.Plain)
                 setBody(name)
             }.body<KBInfo>()
             currentKB.set(kbi)
-            kotlin.io.println("after call, current KB is: ${currentKB.get()}")
         }
-        kotlin.io.println("after run blocking, current KB is: ${currentKB.get()}")
+        println("current KB is: ${currentKB.get()}")
         println("createKBWithDefaultName after run blocking current thread: ${Thread.currentThread().name}")
     }
 
