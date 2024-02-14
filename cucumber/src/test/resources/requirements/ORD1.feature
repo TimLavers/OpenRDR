@@ -60,7 +60,6 @@ Feature: Show a list of cases
     Then I should see no cases in the case list
     And stop the client application
 
-  @ignore
   Scenario: The current case should not be visible when all cases are deleted on the server
     Given a list of cases with the following names is stored on the server:
       | Case1 |

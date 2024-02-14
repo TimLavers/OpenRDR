@@ -1,5 +1,6 @@
 package io.rippledown.integration.pageobjects
 
+import io.kotest.matchers.shouldBe
 import io.rippledown.constants.caseview.CASEVIEW_CASE_NAME_ID
 import io.rippledown.integration.pause
 import io.rippledown.integration.utils.find
@@ -20,9 +21,8 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
         return nameField.substring("Case: ".length)
     }
 
-    fun noNameShowing(): Boolean {
-        TODO()
-//        return driver.findElements(By.id(CASE_VIEW_CONTAINER)).size == 0
+    fun requireNoNameShowing(){
+         contextProvider().find(CASEVIEW_CASE_NAME_ID, AccessibleRole.LABEL)  shouldBe null
     }
 
     fun datesShown(): List<String> {

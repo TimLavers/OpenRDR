@@ -232,7 +232,7 @@ class Defs : En {
             caseViewPO.nameShown() shouldBe caseName
         }
         Then("I should not see any current case") {
-            caseViewPO.noNameShowing() shouldBe true
+            caseViewPO.requireNoNameShowing()
         }
 
         And("(I )select the case {word}") { caseName: String ->
