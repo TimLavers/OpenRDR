@@ -22,7 +22,7 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
     fun nameShown(): String = contextProvider().find(CASEVIEW_CASE_NAME_ID, LABEL)!!.accessibleName
 
     fun requireNoNameShowing(){
-         contextProvider().find(CASEVIEW_CASE_NAME_ID, AccessibleRole.LABEL)  shouldBe null
+         contextProvider().find(CASEVIEW_CASE_NAME_ID, LABEL)  shouldBe null
     }
 
     fun datesShown() = extractMatchingValuesInOrderShown(DATE_CELL_DESCRIPTION_PREFIX) { context -> DateCellPO(context) }
