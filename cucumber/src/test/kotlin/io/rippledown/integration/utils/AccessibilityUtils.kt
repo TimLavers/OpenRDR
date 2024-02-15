@@ -40,6 +40,25 @@ fun AccessibleContext.find(matcher: (AccessibleContext) -> Boolean, debug: Boole
     }
     return null
 }
+fun AccessibleContext.findAllByDescriptionPrefix(prefix: String): Set<AccessibleContext> {
+    val matcher = { context: AccessibleContext ->
+        if (context.accessibleDescription == null) false else context.accessibleDescription.startsWith(prefix)
+    }
+    return this.findAll(matcher)
+}
+fun AccessibleContext.findAll(matcher: (AccessibleContext) -> Boolean, debug: Boolean = false): Set<AccessibleContext> {
+    val result = mutableSetOf<AccessibleContext>()
+    this.findAll(result, matcher, debug)
+    return result
+}
+fun AccessibleContext.findAll(holder: MutableSet<AccessibleContext>, matcher: (AccessibleContext) -> Boolean, debug: Boolean = false) {
+    if (matcher(this)) holder.add(this)
+    val childCount = accessibleChildrenCount
+    for (i in 0..<childCount) {
+        getAccessibleChild(i).accessibleContext.findAll(holder, matcher, debug)
+    }
+}
+
 fun AccessibleContext.findLabelChildren(): List<String> {
     val result = mutableListOf<String>()
     val childCount = accessibleChildrenCount

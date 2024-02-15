@@ -1,11 +1,14 @@
 package io.rippledown.integration.pageobjects
 
 import io.kotest.matchers.shouldBe
+import io.rippledown.constants.caseview.ATTRIBUTE_CELL_DESCRIPTION_PREFIX
 import io.rippledown.constants.caseview.CASEVIEW_CASE_NAME_ID
+import io.rippledown.constants.caseview.DATE_CELL_DESCRIPTION_PREFIX
 import io.rippledown.integration.pause
 import io.rippledown.integration.utils.find
+import io.rippledown.integration.utils.findAllByDescriptionPrefix
 import javax.accessibility.AccessibleContext
-import javax.accessibility.AccessibleRole
+import javax.accessibility.AccessibleRole.LABEL
 
 // ORD2
 class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
@@ -16,45 +19,17 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
 
 //    private fun caseContainerElement() = driver.findElement(By.id(CASE_VIEW_CONTAINER))
 
-    fun nameShown(): String {
-        val nameField = contextProvider().find(CASEVIEW_CASE_NAME_ID, AccessibleRole.LABEL)!!.accessibleName
-        return nameField.substring("Case: ".length)
-    }
+    fun nameShown(): String = contextProvider().find(CASEVIEW_CASE_NAME_ID, LABEL)!!.accessibleName
 
     fun requireNoNameShowing(){
-         contextProvider().find(CASEVIEW_CASE_NAME_ID, AccessibleRole.LABEL)  shouldBe null
+         contextProvider().find(CASEVIEW_CASE_NAME_ID, LABEL)  shouldBe null
     }
 
-    fun datesShown(): List<String> {
-        TODO()
-//        val result = mutableListOf<String>()
-//
-//        val containerElement = caseContainerElement()
-//         Get the case header.
-//        val headerElement = containerElement.findElement(By.tagName("thead"))
-//         Get all cells in the head.
-//        val rowCells = headerElement.findElements(By.tagName("th"))
-//         First column and last columns are not dates.
-//        rowCells.forEachIndexed { index, cell ->
-//            if (index != 0 && index != rowCells.size - 1) {
-//                val cellId = "episode_date_cell_${index - 1}"
-//                assertEquals(cellId, cell.getAttribute("id")) //Sanity
-//                result.add(cell.text)
-//            }
-//        }
-//        return result
-    }
+    fun datesShown() = extractMatchingValuesInOrderShown(DATE_CELL_DESCRIPTION_PREFIX) { context -> DateCellPO(context) }
 
-    fun attributes(): List<String> {
-        val result = mutableListOf<String>()
-//        val containerElement = caseContainerElement()
-//        val caseBodyElement = containerElement.findElement(By.tagName("tbody"))
-//        caseBodyElement.findElements(By.tagName("tr")).forEach { rowElement ->
-//            val rowCells = rowElement.findElements(By.tagName("td"))
-//            result.add(rowCells[0].text)
-//        }
-        return result
-    }
+    fun attributeNames() = extractMatchingValuesInOrderShown(ATTRIBUTE_CELL_DESCRIPTION_PREFIX) { context -> AttributeCellPO(context)}
+
+    fun valuesForAttribute(attribute: String) = extractMatchingValuesInOrderShown("$attribute value"){context -> ValueCellPO(context, attribute) }
 
     fun valuesShown(): Map<String, List<String>> {
         val result = mutableMapOf<String, List<String>>()
@@ -84,6 +59,12 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
         return result
     }
 
+    private fun extractMatchingValuesInOrderShown(descriptionPrefix: String, contextToPO: (AccessibleContext) -> (CellPO)) = contextProvider()
+        .findAllByDescriptionPrefix(descriptionPrefix)
+        .map {contextToPO(it) }
+        .sorted()
+        .map { it.text() }
+
     private fun attributeCellId(attributeName: String?) = "attribute_name_cell_$attributeName"
 
     fun dragAttribute(draggedAttribute: String, targetAttribute: String) {
@@ -98,3 +79,13 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
 //        return attributeValueCell!!.text
     }
 }
+open class CellPO(val context: AccessibleContext, descriptionPrefix: String): Comparable<CellPO> {
+    private val index = context.accessibleDescription.substring(descriptionPrefix.length).trim().toInt()
+
+    override fun compareTo(other: CellPO) = index.compareTo(other.index)
+
+    fun text(): String = context.accessibleName
+}
+class DateCellPO(context: AccessibleContext): CellPO(context, DATE_CELL_DESCRIPTION_PREFIX)
+class AttributeCellPO(context: AccessibleContext): CellPO(context, ATTRIBUTE_CELL_DESCRIPTION_PREFIX)
+class ValueCellPO(context: AccessibleContext, attribute: String): CellPO(context, "$attribute value")
