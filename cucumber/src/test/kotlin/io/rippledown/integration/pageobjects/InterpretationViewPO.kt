@@ -6,9 +6,10 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import io.rippledown.constants.interpretation.*
 import io.rippledown.integration.waitForDebounce
+import javax.accessibility.AccessibleContext
 
 // ORD2
-class InterpretationViewPO() {
+class InterpretationViewPO(private val contextProvider: () -> AccessibleContext) {
 
     fun appendVerifiedText(text: String): InterpretationViewPO {
         val textArea = interpretationArea()

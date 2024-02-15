@@ -59,10 +59,9 @@ class Defs : En {
             rdUiOperator = RippleDownUIOperator(composeWindow)
             caseListPO = rdUiOperator.caseListPO()
             caseViewPO = rdUiOperator.caseViewPO()
+            interpretationViewPO = rdUiOperator.interpretationViewPO()
 
-//            caseViewPO = CaseViewPO(driver)
 //            cornerstoneViewPO = CornerstoneCaseViewPO(driver)
-//            interpretationViewPO = InterpretationViewPO(driver)
 //            conditionSelectorPO = ConditionSelectorPO(driver)
 //            conclusionsViewPO = ConclusionsViewPO(driver)
 //            kbControlsPO = KBControlsPO(composeWindow)
