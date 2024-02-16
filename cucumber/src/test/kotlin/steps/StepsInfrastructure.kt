@@ -59,3 +59,4 @@ class LaunchedClient {
 }
 fun caseListPO() = StepsInfrastructure.client().caseListPO
 fun caseViewPO() = StepsInfrastructure.client().caseViewPO
+fun labProxy() = StepsInfrastructure.uiTestBase!!.labProxy

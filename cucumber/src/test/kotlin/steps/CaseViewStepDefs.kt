@@ -2,6 +2,7 @@ package steps
 
 import io.cucumber.datatable.DataTable
 import io.cucumber.java8.En
+import io.cucumber.java8.PendingException
 import io.kotest.matchers.shouldBe
 
 class CaseViewStepDefs : En {
@@ -18,6 +19,10 @@ class CaseViewStepDefs : En {
 
         Then("I (should )see these values for {string}:") { attribute: String, dataTable: DataTable ->
             StepsInfrastructure.client().rdUiOperator.caseViewPO().valuesForAttribute(attribute) shouldBe dataTable.asList()
+        }
+
+        Then("I (should )see {string} as reference range for {string}") { range: String, attribute: String ->
+            StepsInfrastructure.client().rdUiOperator.caseViewPO().referenceRange(attribute) shouldBe range
         }
     }
 }

@@ -1,12 +1,8 @@
 package steps
 
-import androidx.compose.ui.awt.ComposeWindow
 import io.cucumber.datatable.DataTable
 import io.cucumber.java8.En
 import io.kotest.matchers.shouldBe
-import io.rippledown.TestClientLauncher
-import io.rippledown.integration.UITestBase
-import io.rippledown.integration.pageobjects.*
 import io.rippledown.integration.pause
 import io.rippledown.integration.utils.Cyborg
 import org.awaitility.Awaitility
@@ -15,7 +11,6 @@ import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 class Defs : En {
-    private fun labProxy() = StepsInfrastructure.uiTestBase!!.labProxy
     init {
         println("--------------- Defs init!!!!!!!!!!!!!!!!!!!!!!!----------------------")
         Before("not @database") { scenario ->
