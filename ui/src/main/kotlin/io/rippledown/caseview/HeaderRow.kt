@@ -17,9 +17,9 @@ fun LazyItemScope.HeaderRow(columnWidths: ColumnWidths, dates: List<Long>) {
             .background(Color.Gray),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        AttributesHeaderCell( columnWidths.columnWeight(0))
+        AttributesHeaderCell( columnWidths.valueColumnWeight())
         dates.forEachIndexed { i, date ->
-            DateCell(i, date, columnWidths.columnWeight(i + 1))
+            DateCell(i, date, columnWidths.valueColumnWeight())
         }
     }
 }

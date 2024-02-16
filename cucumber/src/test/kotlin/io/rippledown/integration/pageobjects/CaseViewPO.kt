@@ -1,13 +1,16 @@
 package io.rippledown.integration.pageobjects
 
 import io.kotest.matchers.shouldBe
+import io.rippledown.caseview.referenceRangeCellContentDescription
 import io.rippledown.constants.caseview.ATTRIBUTE_CELL_DESCRIPTION_PREFIX
 import io.rippledown.constants.caseview.CASEVIEW_CASE_NAME_ID
 import io.rippledown.constants.caseview.DATE_CELL_DESCRIPTION_PREFIX
+import io.rippledown.constants.caseview.REFERENCE_RANGE_CELL_DESCRIPTION_PREFIX
 import io.rippledown.integration.pause
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
 import javax.accessibility.AccessibleContext
+import javax.accessibility.AccessibleRole
 import javax.accessibility.AccessibleRole.LABEL
 
 // ORD2
@@ -71,15 +74,11 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
 //        DnD(driver).dragAttribute(draggedAttribute, targetAttribute)
     }
 
-    fun referenceRange(attribute: String): String {
-        TODO()
-//        val containerElement = caseContainerElement()
-//        val idOfRangeCellForAttribute = "reference_range_cell_$attribute"
-//        val attributeValueCell = containerElement.findElement(By.id(idOfRangeCellForAttribute))
-//        return attributeValueCell!!.text
-    }
+    fun referenceRange(attribute: String): String = contextProvider()
+        .find(referenceRangeCellContentDescription(attribute), LABEL)!!
+        .accessibleName
 }
-open class CellPO(val context: AccessibleContext, descriptionPrefix: String): Comparable<CellPO> {
+open class CellPO(private val context: AccessibleContext, descriptionPrefix: String): Comparable<CellPO> {
     private val index = context.accessibleDescription.substring(descriptionPrefix.length).trim().toInt()
 
     override fun compareTo(other: CellPO) = index.compareTo(other.index)
@@ -89,3 +88,4 @@ open class CellPO(val context: AccessibleContext, descriptionPrefix: String): Co
 class DateCellPO(context: AccessibleContext): CellPO(context, DATE_CELL_DESCRIPTION_PREFIX)
 class AttributeCellPO(context: AccessibleContext): CellPO(context, ATTRIBUTE_CELL_DESCRIPTION_PREFIX)
 class ValueCellPO(context: AccessibleContext, attribute: String): CellPO(context, "$attribute value")
+class ReferenceRangeCellPO(context: AccessibleContext, attribute: String): CellPO(context, "$REFERENCE_RANGE_CELL_DESCRIPTION_PREFIX $attribute")

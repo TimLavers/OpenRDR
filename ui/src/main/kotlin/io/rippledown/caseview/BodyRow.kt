@@ -16,8 +16,10 @@ fun LazyItemScope.BodyRow(
 ) {
     Row {
         AttributeCell(index, attribute, columnWidths.attributeColumnWeight)
-        case.resultsFor(attribute)!!.forEachIndexed { columnIndex: Int, testResult: TestResult ->
-            ValueCell(attribute, index, testResult, columnWidths.columnWeight(columnIndex + 1))
+        val resultsList = case.resultsFor(attribute)!!
+        resultsList.forEachIndexed { columnIndex: Int, testResult: TestResult ->
+            ValueCell(attribute, columnIndex, testResult, columnWidths.valueColumnWeight())
         }
+        ReferenceRangeCell(attribute, resultsList[0], columnWidths.referenceRangeColumnWeight)
     }
 }
