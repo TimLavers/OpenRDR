@@ -26,8 +26,7 @@ object StepsInfrastructure {
         launchedClient = LaunchedClient()
     }
 
-    fun client(): LaunchedClient {
-        require(launchedClient != null) {
+    fun client(): LaunchedClient { require(launchedClient != null) {
             "Was the client launched?"
         }
         return launchedClient!!
@@ -58,3 +57,5 @@ class LaunchedClient {
         testClientLauncher.stopClient()
     }
 }
+fun caseListPO() = StepsInfrastructure.client().caseListPO
+fun caseViewPO() = StepsInfrastructure.client().caseViewPO

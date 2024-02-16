@@ -15,16 +15,6 @@ import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 class Defs : En {
-    private lateinit var composeWindow: ComposeWindow
-    private lateinit var rdUiOperator: RippleDownUIOperator
-    private lateinit var caseListPO: CaseListPO
-    private lateinit var caseViewPO: CaseViewPO
-//    private lateinit var cornerstoneViewPO: CornerstoneCaseViewPO
-//    private lateinit var interpretationViewPO: InterpretationViewPO
-//    private lateinit var conditionSelectorPO: ConditionSelectorPO
-//    private lateinit var conclusionsViewPO: ConclusionsViewPO
-//    private lateinit var kbControlsPO: KBControlsPO
-    
     private fun labProxy() = StepsInfrastructure.uiTestBase!!.labProxy
     init {
         println("--------------- Defs init!!!!!!!!!!!!!!!!!!!!!!!----------------------")
@@ -49,10 +39,9 @@ class Defs : En {
 
         When("I start the client application") {
             StepsInfrastructure.startClient()
-            composeWindow = StepsInfrastructure.client().composeWindow
-            rdUiOperator = RippleDownUIOperator(composeWindow)
-            caseListPO = rdUiOperator.caseListPO()
-            caseViewPO = rdUiOperator.caseViewPO()
+//            rdUiOperator = RippleDownUIOperator(composeWindow)
+//            caseListPO = rdUiOperator.caseListPO()
+//            caseViewPO = rdUiOperator.caseViewPO()
         }
 
         When("stop the client application") {
@@ -83,7 +72,7 @@ class Defs : En {
         }
 
         And("I select a case with all three attributes") {
-            caseListPO.select("CaseABC")
+            caseListPO().select("CaseABC")
         }
 
         When("a new case with the name {word} is stored on the server") { caseName: String ->
@@ -105,12 +94,12 @@ class Defs : En {
         }
 
         And("I select case {word}") { caseName: String ->
-            caseListPO.waitForCaseListToContain(caseName)
-            caseListPO.select(caseName)
+            caseListPO().waitForCaseListToContain(caseName)
+            caseListPO().select(caseName)
         }
 
         And("I move attribute {word} below attribute {word}") { moved: String, target: String ->
-            caseViewPO.dragAttribute(moved, target)
+            caseViewPO().dragAttribute(moved, target)
             Thread.sleep(1000)
         }
 
@@ -119,7 +108,7 @@ class Defs : En {
             labProxy().provideCase("Case2", mapOf("A" to "a", "B" to "b"))
             labProxy().provideCase("Case3", mapOf("A" to "a", "B" to "b", "C" to "c"))
             // The attributes are created when the cases are parsed, so select them in the right order.
-            with(caseListPO) {
+            with(caseListPO()) {
                 waitForCaseListToHaveSize(3)
 
                 // The attributes are created when the cases are parsed, so select them in the right order.
@@ -158,37 +147,37 @@ class Defs : En {
         }
 
         Then("the displayed KB name is (now ){word}") { kbName: String ->
-            val applicationBarOperator = rdUiOperator.applicationBarOperator()
+            val applicationBarOperator = StepsInfrastructure.client().rdUiOperator.applicationBarOperator()
             with (applicationBarOperator.kbControlOperator()) {
                 this.currentKB() shouldBe kbName
             }
         }
 
         Then("I activate the KB management control") {
-            rdUiOperator.applicationBarOperator().kbControlOperator().expandDropdownMenu()
+            StepsInfrastructure.client().rdUiOperator.applicationBarOperator().kbControlOperator().expandDropdownMenu()
         }
 
         Then("I (should )see this list of available KBs:") { dataTable: DataTable ->
             val expectedKBs = dataTable.asList()
-            rdUiOperator.applicationBarOperator()
+            StepsInfrastructure.client().rdUiOperator.applicationBarOperator()
                 .kbControlOperator()
                 .availableKBs() shouldBe expectedKBs
         }
 
         Then("the displayed product name is 'Open RippleDown'") {
-            with(rdUiOperator.applicationBarOperator().title()) {
+            with(StepsInfrastructure.client().rdUiOperator.applicationBarOperator().title()) {
                 this shouldBe "Open RippleDown"
             }
         }
 
         Then("I create a Knowledge Base with the name {word}") { kbName: String ->
-            val applicationBarOperator = rdUiOperator.applicationBarOperator()
+            val applicationBarOperator = StepsInfrastructure.client().rdUiOperator.applicationBarOperator()
             val kbControlOperator = applicationBarOperator.kbControlOperator()
             kbControlOperator.createKB(kbName)
         }
 
         Then("I select the Knowledge Base named {word}") { kbName: String ->
-            val applicationBarOperator = rdUiOperator.applicationBarOperator()
+            val applicationBarOperator = StepsInfrastructure.client().rdUiOperator.applicationBarOperator()
             val kbControlOperator = applicationBarOperator.kbControlOperator()
             kbControlOperator.selectKB(kbName)
         }
@@ -207,23 +196,23 @@ class Defs : En {
 
         Then("I (should )see the following cases in the case list:") { dataTable: DataTable ->
             val expectedCaseNames = dataTable.asList()
-            caseListPO.waitForCountOfNumberOfCasesToBe(expectedCaseNames.size)
-            caseListPO.requireCaseNamesToBe(expectedCaseNames)
+            caseListPO().waitForCountOfNumberOfCasesToBe(expectedCaseNames.size)
+            caseListPO().requireCaseNamesToBe(expectedCaseNames)
         }
 
         Then("I should see no cases in the case list") {
-            caseListPO.waitForNoCases()
+            caseListPO().waitForNoCases()
         }
 
         Then("I (should )see the case {word} as the current case") { caseName: String ->
-            caseViewPO.nameShown() shouldBe caseName
+            caseViewPO().nameShown() shouldBe caseName
         }
         Then("I should not see any current case") {
-            caseViewPO.requireNoNameShowing()
+            caseViewPO().requireNoNameShowing()
         }
 
         And("(I )select the case {word}") { caseName: String ->
-            caseListPO.select(caseName)
+            caseListPO().select(caseName)
         }
 
         When("I delete all the text in the interpretation field") {
@@ -421,25 +410,11 @@ class Defs : En {
         }
 
         And("the count of the number of cases should be hidden") {
-            caseListPO.requireCaseCountToBeHidden()
+            caseListPO().requireCaseCountToBeHidden()
         }
 
         And("the count of the number of cases is {int}") { numberOfCases: Int ->
-            caseListPO.waitForCountOfNumberOfCasesToBe(numberOfCases)
-        }
-
-        Then("I (should )see these episode dates:") { dataTable: DataTable ->
-            val expectedDates = dataTable.asList()
-            rdUiOperator.caseViewPO().datesShown() shouldBe expectedDates
-        }
-
-        Then("I (should )see these attributes:") { dataTable: DataTable ->
-            val expectedNames = dataTable.asList()
-            rdUiOperator.caseViewPO().attributeNames() shouldBe expectedNames
-        }
-
-        Then("I (should )see these values for {string}:") { attribute: String, dataTable: DataTable ->
-            rdUiOperator.caseViewPO().valuesForAttribute(attribute) shouldBe dataTable.asList()
+            caseListPO().waitForCountOfNumberOfCasesToBe(numberOfCases)
         }
     }
 }
