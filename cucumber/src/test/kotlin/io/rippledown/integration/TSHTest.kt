@@ -24,7 +24,7 @@ internal open class TSHTest: UITestBase() {
         setupCases()
 //        setupWebDriver()
         caseQueuePO = CaseQueuePO()
-        interpretationViewPO = InterpretationViewPO()
+//        interpretationViewPO = InterpretationViewPO()
         pause()//todo use Awaitility
 //        caseListPO = CaseListPO()
     }

@@ -23,7 +23,7 @@ internal class SaveInterpretationTest : UITestBase() {
         caseQueuePO = CaseQueuePO()
         caseQueuePO.waitForNumberOfCasesToBe(3)
 //        caseListPO = CaseListPO()
-        interpretationViewPO = InterpretationViewPO()
+//        interpretationViewPO = InterpretationViewPO()
     }
 
     @AfterTest

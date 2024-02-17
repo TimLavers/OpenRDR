@@ -1,11 +1,13 @@
 Feature: Reviewing the interpretation of a case
 
+  @single
   Scenario: The user should be able to see the interpretation of a case
     And case Bondi is provided having data:
       | Wave | excellent |
-    And the interpretation of the case Bondi includes "Go to Bondi." because of condition "Wave is not blank"
+    And the interpretation of the case Bondi is "Go to Bondi."
     And I start the client application
     And I should see the case Bondi as the current case
+    And pause
     And the interpretation field should contain the text "Go to Bondi."
     And stop the client application
 
