@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import io.rippledown.caseview.AttributesHeaderCell
 
 @Composable
 fun LazyItemScope.HeaderRow(columnWidths: ColumnWidths, dates: List<Long>) {
@@ -17,9 +18,10 @@ fun LazyItemScope.HeaderRow(columnWidths: ColumnWidths, dates: List<Long>) {
             .background(Color.Gray),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        AttributesHeaderCell( columnWidths.valueColumnWeight())
+        this.AttributesHeaderCell(columnWidths)
         dates.forEachIndexed { i, date ->
-            DateCell(i, date, columnWidths.valueColumnWeight())
+            DateCell(i, date, columnWidths)
         }
+        this.ReferenceRangesHeaderCell(columnWidths)
     }
 }

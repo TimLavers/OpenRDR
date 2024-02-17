@@ -14,10 +14,10 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
 @Composable
-fun RowScope.DateCell(index: Int, date: Long, widthWeight: Float) {
+fun RowScope.DateCell(index: Int, date: Long, columnWidths: ColumnWidths) {
     Text(
         text = formatDate(date),
-        modifier = Modifier.weight(widthWeight)
+        modifier = Modifier.weight(columnWidths.valueColumnWeight())
             .semantics{
                 contentDescription = dateCellContentDescription(index)
             },

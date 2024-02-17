@@ -3,7 +3,6 @@ package io.rippledown.caseview
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -15,7 +14,6 @@ interface CaseTableHandler {
 }
 
 // See
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun CaseTable(handler: CaseTableHandler) {
     val dates = handler.viewableCase.dates
@@ -29,7 +27,6 @@ fun CaseTable(handler: CaseTableHandler) {
         }
         itemsIndexed(handler.viewableCase.attributes()) { index: Int, attribute: Attribute ->
             BodyRow(index, attribute, columnWidths, case)
-
         }
     }
 }

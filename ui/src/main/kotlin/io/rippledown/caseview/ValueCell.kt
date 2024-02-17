@@ -12,10 +12,10 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.TestResult
 
 @Composable
-fun RowScope.ValueCell(attribute: Attribute, index: Int, result: TestResult, widthWeight: Float) {
+fun RowScope.ValueCell(attribute: Attribute, index: Int, result: TestResult, columnWidths: ColumnWidths) {
     Text(
         text = resultText(result),
-        modifier = Modifier.weight(widthWeight)
+        modifier = Modifier.weight(columnWidths.valueColumnWeight())
             .semantics {
                 contentDescription = valueCellContentDescription(attribute, index)
             },
