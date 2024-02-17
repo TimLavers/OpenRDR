@@ -36,7 +36,6 @@ internal class ShowInterpretationDifference : UITestBase() {
 
     @AfterTest
     fun cleanup() {
-        driverClose()
         serverProxy.shutdown()
     }
 

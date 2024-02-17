@@ -31,7 +31,6 @@ internal class ShowInterpretationDifferenceForMoreComplexScenarios : UITestBase(
 
     @AfterTest
     fun cleanup() {
-        driverClose()
         serverProxy.shutdown()
     }
 

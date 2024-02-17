@@ -31,7 +31,6 @@ internal open class TSHTest: UITestBase() {
 
     @AfterTest
     fun cleanup() {
-        driverClose()
         serverProxy.shutdown()
     }
 

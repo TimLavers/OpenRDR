@@ -25,7 +25,6 @@ internal class CaseViewTest : UITestBase() {
 
     @AfterTest
     fun cleanup() {
-        driverClose()
         serverProxy.shutdown()
     }
 

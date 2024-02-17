@@ -53,7 +53,6 @@ internal class ShowRuleCondition : UITestBase() {
 
     @AfterTest
     fun cleanup() {
-        driverClose()
         serverProxy.shutdown()
     }
 

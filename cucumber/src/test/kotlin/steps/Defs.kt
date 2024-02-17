@@ -45,7 +45,6 @@ class Defs : En {
         }
 
         When("I stop the client application") {
-            StepsInfrastructure.uiTestBase!!.driverClose()
         }
 
         Given("a list of cases with the following names is stored on the server:") { dataTable: DataTable ->

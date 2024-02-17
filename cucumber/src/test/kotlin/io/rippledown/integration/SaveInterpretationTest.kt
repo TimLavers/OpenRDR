@@ -28,7 +28,6 @@ internal class SaveInterpretationTest : UITestBase() {
 
     @AfterTest
     fun cleanup() {
-        driverClose()
         serverProxy.shutdown()
     }
 
