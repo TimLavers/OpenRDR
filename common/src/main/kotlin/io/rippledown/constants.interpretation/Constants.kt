@@ -8,7 +8,9 @@ const val INTERPRETATION_PANEL_CONCLUSIONS = "interpretation_panel_conclusions"
 const val INTERPRETATION_PANEL_CHANGES = "interpretation_panel_changes"
 
 const val INTERPRETATION_TEXT_AREA = "interpretation_text_area"
-const val DEBOUNCE_WAIT_PERIOD_MILLIS = 500L
+const val INTERPRETATION_VIEW_LABEL = "Report for this case"
+const val DEBOUNCE_WAIT_PERIOD_MILLIS = 1_000L
+
 
 const val DIFF_VIEWER_TABLE = "diff_viewer_table"
 const val DIFF_VIEWER_ROW = "diff_viewer_row_"
