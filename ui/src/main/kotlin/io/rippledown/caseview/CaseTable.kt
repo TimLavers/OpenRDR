@@ -26,7 +26,8 @@ fun CaseTable(handler: CaseTableHandler) {
             HeaderRow(columnWidths, dates)
         }
         itemsIndexed(handler.viewableCase.attributes()) { index: Int, attribute: Attribute ->
-            BodyRow(index, attribute, columnWidths, case)
+            val resultsList = case.resultsFor(attribute)!!
+            BodyRow(index, attribute, columnWidths, resultsList)
         }
     }
 }

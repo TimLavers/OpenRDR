@@ -20,7 +20,7 @@ fun RowScope.ValueCell(attribute: Attribute, index: Int, result: TestResult, col
                 contentDescription = valueCellContentDescription(attribute, index)
             },
         fontWeight = FontWeight.Normal,
-        textAlign = TextAlign.Start
+        textAlign = TextAlign.Center
     )
 }
 fun resultText(result: TestResult): String {

@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import io.rippledown.constants.caseview.ATTRIBUTE_HEADER_CELL_DESCRIPTION
 import io.rippledown.constants.caseview.ATTRIBUTE_HEADER_CELL_TEXT
 
@@ -18,6 +19,7 @@ fun RowScope.AttributesHeaderCell(columnWidths: ColumnWidths) {
             .semantics {
                 contentDescription = ATTRIBUTE_HEADER_CELL_DESCRIPTION
             },
-        fontWeight = FontWeight.Bold
+        fontWeight = FontWeight.Bold,
+        textAlign = TextAlign.End
     )
 }
