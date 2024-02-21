@@ -88,11 +88,13 @@ fun CaseControl(handler: CaseControlHandler) {
                     override var api = handler.api
                     override fun caseEdited() {}
                 })
-                InterpretationView(object : InterpretationViewHandler {
-                    override var text = currentCase!!.textGivenByRules()
-                    override var onEdited = { text: String -> }
-                    override var isCornertone = false
-                })
+                key(currentCase!!.id) {
+                    InterpretationView(object : InterpretationViewHandler {
+                        override var text = currentCase!!.textGivenByRules()
+                        override var onEdited = { text: String -> }
+                        override var isCornertone = false
+                    })
+                }
             }
         }
     }

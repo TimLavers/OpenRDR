@@ -1,12 +1,15 @@
 package io.rippledown.integration.pageobjects
 
-import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
-import io.kotest.matchers.string.shouldContain
 import io.rippledown.constants.interpretation.*
+import io.rippledown.integration.utils.dumpToText
+import io.rippledown.integration.utils.find
 import io.rippledown.integration.waitForDebounce
+import org.awaitility.Awaitility.await
+import org.awaitility.kotlin.withPollInterval
+import java.time.Duration.ofSeconds
 import javax.accessibility.AccessibleContext
+import javax.accessibility.AccessibleRole.TEXT
 
 // ORD2
 class InterpretationViewPO(private val contextProvider: () -> AccessibleContext) {
@@ -25,17 +28,29 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
         return this
     }
 
-    fun interpretationText() = "" //interpretationArea().getAttribute("value")
+    fun interpretationText(): String {
+        return contextProvider().find(INTERPRETATION_TEXT_FIELD, TEXT)?.accessibleName ?: ""
+    }
 
-    fun requireInterpretationText(expected: String): InterpretationViewPO {
-        interpretationText() shouldBe expected
+    fun waitForInterpretationText(expected: String): InterpretationViewPO {
+        await()
+            .atMost(ofSeconds(5))
+            .until {
+                interpretationText() == expected
+            }
         return this
+    }
+
+    fun waitForInterpretationTextToContain(expected: String) {
+        await().atMost(ofSeconds(5)).until {
+            println("interpretationText() = ${interpretationText()}")
+            interpretationText().contains(expected)
+        }
     }
 
     fun interpretationArea() {
         TODO()
     }
-//        driver.findElement(By.id(INTERPRETATION_TEXT_AREA))!!
 
     fun selectChangesTab(): InterpretationViewPO {
 //        driver.findElement(By.id(INTERPRETATION_TAB_CHANGES)).click()

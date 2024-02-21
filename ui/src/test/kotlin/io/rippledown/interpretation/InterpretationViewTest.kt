@@ -105,7 +105,7 @@ fun main() {
             title = TITLE
         ) {
             InterpretationView(object : Handler by handlerImpl, InterpretationViewHandler {
-                override var text = ""
+                override var text = "Go to Bondi"
                 override var onEdited = { entered: String -> println("onEdited $entered") }
                 override var isCornertone = false
             })

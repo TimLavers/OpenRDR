@@ -1,6 +1,7 @@
 package io.rippledown.casecontrol
 
 import androidx.compose.ui.test.junit4.createComposeRule
+import io.rippledown.interpretation.requireInterpretation
 import io.rippledown.main.Api
 import io.rippledown.main.Handler
 import io.rippledown.main.handlerImpl
@@ -9,6 +10,7 @@ import io.rippledown.mocks.mock
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.createCase
+import io.rippledown.model.createCaseWithInterpretation
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import kotlin.test.Test
@@ -78,6 +80,76 @@ class CaseControlTest {
             waitForCaseToBeShowing(caseB)
 
         }
+    }
+
+    @Test
+    fun `should show the interpretation of the first case`() = runTest {
+        val caseA = "case A"
+        val caseB = "case B"
+        val caseId1 = CaseId(id = 1, name = caseA)
+        val caseId2 = CaseId(id = 2, name = caseB)
+        val caseIds = listOf(caseId1, caseId2)
+        val bondiComment = "Go to Bondi"
+        val config = config {
+            returnCasesInfo = CasesInfo(caseIds)
+            returnCase = createCaseWithInterpretation(name = caseA, id = 1, conclusionTexts = listOf(bondiComment))
+        }
+
+        with(composeTestRule) {
+            setContent {
+                CaseControl(object : Handler by handlerImpl, CaseControlHandler {
+                    override var caseIds = caseIds
+                    override var api = Api(mock(config))
+                    override var setRuleInProgress = { _: Boolean -> }
+                })
+            }
+            //Given
+            requireNumberOfCasesOnCaseList(2)
+            requireNamesToBeShowingOnCaseList(caseA, caseB)
+
+            //When
+            waitForCaseToBeShowing(caseA)
+
+            //Then
+            requireInterpretation(bondiComment)
+        }
+    }
+    @Test
+    fun `should update the interpretation when a case is selected`() = runTest {
+        val caseA = "case A"
+        val caseB = "case B"
+        val caseId1 = CaseId(id = 1, name = caseA)
+        val caseId2 = CaseId(id = 2, name = caseB)
+        val caseIds = listOf(caseId1, caseId2)
+        val bondiComment = "Go to Bondi"
+        val malabarComment = "Go to Malabar"
+        val config = config {
+            returnCasesInfo = CasesInfo(caseIds)
+            returnCase = createCaseWithInterpretation(name = caseA, id = 1, conclusionTexts = listOf(bondiComment))
+        }
+
+        with(composeTestRule) {
+            setContent {
+                CaseControl(object : Handler by handlerImpl, CaseControlHandler {
+                    override var caseIds = caseIds
+                    override var api = Api(mock(config))
+                    override var setRuleInProgress = { _: Boolean -> }
+                })
+            }
+            //Given
+            requireNumberOfCasesOnCaseList(2)
+            requireNamesToBeShowingOnCaseList(caseA, caseB)
+            waitForCaseToBeShowing(caseA)
+            requireInterpretation(bondiComment)
+
+            //When
+            config.returnCase = createCaseWithInterpretation(name = caseB, id = 2, conclusionTexts = listOf(malabarComment))
+            selectCaseByName(caseB)
+
+            //Then
+            waitForCaseToBeShowing(caseB)
+            requireInterpretation(malabarComment)
+       }
     }
 
     @Test

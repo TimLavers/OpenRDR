@@ -46,7 +46,7 @@ class KBControlTest {
                 override var isRuleSessionInProgress = false
             })
         }
-//        uiKbControlOperator = KbControlOperator(composeTestRule)
+        uiKbControlOperator = KbControlOperator(composeTestRule)
     }
 
     @Test

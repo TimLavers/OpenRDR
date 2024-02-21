@@ -40,7 +40,7 @@ fun CaseView(handler: CaseViewHandler) {
             style = MaterialTheme.typography.subtitle1,
             textAlign = TextAlign.Start,
             modifier = Modifier
-                .testTag(CASEVIEW_CASE_NAME_ID)
+                .testTag("$CASEVIEW_CASE_NAME_ID${handler.case.name}")
                 .semantics {
                     contentDescription = CASEVIEW_CASE_NAME_ID
                 }

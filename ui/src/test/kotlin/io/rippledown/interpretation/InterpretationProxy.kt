@@ -1,9 +1,8 @@
 package io.rippledown.interpretation
 
-import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
-import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_AREA
+import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
 
 fun ComposeTestRule.requireInterpretation(text: String) {
     onNodeWithText(text).assertExists()
@@ -11,14 +10,14 @@ fun ComposeTestRule.requireInterpretation(text: String) {
 
 @OptIn(ExperimentalTestApi::class)
 fun ComposeTestRule.enterInterpretationAndWaitForUpdate(enteredText: String) {
-    onNodeWithContentDescription(INTERPRETATION_TEXT_AREA).performTextInput(enteredText)
+    onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD).performTextInput(enteredText)
     waitUntilExactlyOneExists(hasText(enteredText))
 }
 fun ComposeTestRule.enterInterpretation(enteredText: String) {
-    onNodeWithContentDescription(INTERPRETATION_TEXT_AREA).performTextInput(enteredText)
+    onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD).performTextInput(enteredText)
 }
 fun ComposeTestRule.replaceInterpretationBy(enteredText: String) {
-    onNodeWithContentDescription(INTERPRETATION_TEXT_AREA).performTextReplacement(enteredText)
+    onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD).performTextReplacement(enteredText)
 }
 
 /*

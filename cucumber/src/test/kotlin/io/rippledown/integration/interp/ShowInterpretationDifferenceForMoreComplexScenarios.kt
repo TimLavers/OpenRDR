@@ -40,10 +40,11 @@ internal class ShowInterpretationDifferenceForMoreComplexScenarios : UITestBase(
         labProxy.provideCaseWithName(caseName)
         caseQueuePO.waitForNumberOfCasesToBe(1)
         caseViewPO.nameShown() shouldBe caseName
-        interpretationViewPO
-            .requireChangesLabel("CHANGES")
-            .requireInterpretationText("")
-            .selectChangesTab()
-            .requireNoRowsInDiffTable()
+        with (interpretationViewPO) {
+            requireChangesLabel("CHANGES")
+            waitForInterpretationText("")
+            selectChangesTab()
+            requireNoRowsInDiffTable()
+        }
     }
 }
