@@ -45,7 +45,6 @@ class Defs : En {
         }
 
         When("I stop the client application") {
-            StepsInfrastructure.uiTestBase!!.driverClose()
         }
 
         Given("a list of cases with the following names is stored on the server:") { dataTable: DataTable ->
@@ -200,7 +199,7 @@ class Defs : En {
         }
 
         Then("I (should )see the case {word} as the current case") { caseName: String ->
-            caseViewPO().nameShown() shouldBe caseName
+            caseViewPO().waitForNameToShow(caseName)
         }
         Then("I should not see any current case") {
             caseViewPO().requireNoNameShowing()
@@ -233,13 +232,12 @@ class Defs : En {
 //            interpretationViewPO.enterVerifiedText(text)
         }
         Then("the interpretation field should contain the text {string}") { text: String ->
-//            interpretationViewPO.selectOriginalTab()
-//            interpretationViewPO.interpretationText() shouldBe text
+            interpretationViewPO().waitForInterpretationTextToContain(text)
         }
         Then("the interpretation should be {string}") { text: String ->
-//            interpretationViewPO.selectOriginalTab()
-//            interpretationViewPO.interpretationText() shouldBe text
+            interpretationViewPO().waitForInterpretationText(text)
         }
+
         Then("the interpretation field should be empty") {
             //interpretationViewPO.interpretationText() shouldBe ""
         }

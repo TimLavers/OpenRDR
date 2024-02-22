@@ -10,19 +10,21 @@ import io.rippledown.constants.caseview.CASE_NAME_PREFIX
 
 fun ComposeTestRule.requireNamesToBeShowingOnCaseList(vararg caseNames: String) {
     caseNames.forEach {  caseName ->
-        onNode(hasTestTag("$CASE_NAME_PREFIX$caseName")).assertExists()
+        onNode(caseMatcher(caseName)).assertExists()
     }
 }
 
 @OptIn(ExperimentalTestApi::class)
+
 fun ComposeTestRule.selectCaseByName(caseName: String) {
-    val matcher = hasTestTag("$CASE_NAME_PREFIX$caseName")
-    waitUntilExactlyOneExists(matcher, timeoutMillis = 2_000)
-    onNode(matcher).performClick()
+    waitUntilExactlyOneExists(caseMatcher(caseName), timeoutMillis = 2_000)
+    onNode(caseMatcher(caseName)).performClick()
 }
+
 fun ComposeTestRule.selectCaseByNameUsingContentDescription(caseName: String) {
-    onNode(hasContentDescriptionExactly("$CASE_NAME_PREFIX$caseName"), true).performClick()
+    onNode(caseMatcher(caseName), true).performClick()
 }
+ fun caseMatcher(caseName: String) = hasContentDescriptionExactly("$CASE_NAME_PREFIX$caseName")
 
 fun ComposeTestRule.requireNumberOfCasesOnCaseList(expected: Int) {
     onNodeWithTag(CASELIST_ID).onChildren().assertCountEquals(expected)

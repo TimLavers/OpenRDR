@@ -36,7 +36,6 @@ internal class ShowInterpretationDifference : UITestBase() {
 
     @AfterTest
     fun cleanup() {
-        driverClose()
         serverProxy.shutdown()
     }
 
@@ -58,7 +57,7 @@ internal class ShowInterpretationDifference : UITestBase() {
         val addedText = " This is a new sentence."
         interpretationViewPO
             .appendVerifiedText(addedText)
-            .requireInterpretationText("$tshComment$addedText")
+            .waitForInterpretationText("$tshComment$addedText")
             .selectChangesTab()
             .requireOriginalTextInRow(0, tshComment)
             .requireChangedTextInRow(0, tshComment)
@@ -73,7 +72,7 @@ internal class ShowInterpretationDifference : UITestBase() {
         caseViewPO.nameShown() shouldBe caseName
         interpretationViewPO
             .deleteAllText()
-            .requireInterpretationText("")
+            .waitForInterpretationText("")
             .selectChangesTab()
             .requireOriginalTextInRow(0, tshComment)
             .requireChangedTextInRow(0, "")
@@ -87,7 +86,7 @@ internal class ShowInterpretationDifference : UITestBase() {
         interpretationViewPO
             .deleteAllText()
             .enterVerifiedText(replacementText)
-            .requireInterpretationText(replacementText)
+            .waitForInterpretationText(replacementText)
             .selectChangesTab()
             .requireOriginalTextInRow(0, tshComment)
             .requireChangedTextInRow(0, replacementText)
@@ -98,7 +97,7 @@ internal class ShowInterpretationDifference : UITestBase() {
     fun `should update the change count whenever verified text is entered`() {
         caseViewPO.nameShown() shouldBe caseName
         interpretationViewPO
-            .requireInterpretationText(tshComment)
+            .waitForInterpretationText(tshComment)
             .requireNoBadge()
             .enterVerifiedText(" Go to Bondi. Bring your flippers.") //two additions
             .requireBadgeCount(2)
@@ -111,11 +110,12 @@ internal class ShowInterpretationDifference : UITestBase() {
    @Test
     fun `should show one Unchanged sentence if the user has not changed a non-blank interpretation`() {
         caseViewPO.nameShown() shouldBe caseName
-        interpretationViewPO
-            .requireInterpretationText(tshComment)
-            .selectChangesTab()
-            .requireOriginalTextInRow(0, tshComment)
-            .requireChangedTextInRow(0, tshComment)
+        with (interpretationViewPO) {
+            waitForInterpretationText(tshComment)
+            selectChangesTab()
+            requireOriginalTextInRow(0, tshComment)
+            requireChangedTextInRow(0, tshComment)
+        }
     }
 
     private fun setupCase() = labProxy.provideCase(caseName)

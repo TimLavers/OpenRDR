@@ -194,7 +194,6 @@ class CasePollerTest {
     }
 
     @Test
-    @Ignore //TODO: fix this
     fun `should select the first case when the selected case has been deleted`() = runTest {
         val caseName1 = "case 1"
         val caseName2 = "case 2"

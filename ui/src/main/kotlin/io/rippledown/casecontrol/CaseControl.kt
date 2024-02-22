@@ -1,10 +1,7 @@
 package io.rippledown.casecontrol
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
@@ -19,6 +16,8 @@ import io.rippledown.constants.caseview.CASES
 import io.rippledown.constants.caseview.CASEVIEW_CASE_NAME_ID
 import io.rippledown.constants.caseview.CASE_HEADING
 import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
+import io.rippledown.interpretation.InterpretationView
+import io.rippledown.interpretation.InterpretationViewHandler
 import io.rippledown.main.Api
 import io.rippledown.main.Handler
 import io.rippledown.model.CaseId
@@ -83,11 +82,20 @@ fun CaseControl(handler: CaseControlHandler) {
         }
 
         if (currentCase != null) {
-            CaseView(object : CaseViewHandler {
-                override var case = currentCase!!
-                override var api = handler.api
-                override fun caseEdited() {}
-            })
+            Column {
+                CaseView(object : CaseViewHandler {
+                    override var case = currentCase!!
+                    override var api = handler.api
+                    override fun caseEdited() {}
+                })
+                key(currentCase!!.id) {
+                    InterpretationView(object : InterpretationViewHandler {
+                        override var text = currentCase!!.textGivenByRules()
+                        override var onEdited = { text: String -> }
+                        override var isCornertone = false
+                    })
+                }
+            }
         }
     }
 }

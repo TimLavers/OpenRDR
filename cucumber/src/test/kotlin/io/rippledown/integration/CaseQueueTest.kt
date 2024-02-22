@@ -14,15 +14,12 @@ internal class CaseQueueTest : UITestBase() {
     @BeforeTest
     fun setup() {
         serverProxy.start()
-//        setupWebDriver()
         caseQueuePO = CaseQueuePO()
-//        caseListPO = CaseListPO()
 
     }
 
     @AfterTest
     fun cleanup() {
-        driverClose()
         serverProxy.shutdown()
     }
 

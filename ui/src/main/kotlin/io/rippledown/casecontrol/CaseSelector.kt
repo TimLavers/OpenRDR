@@ -52,7 +52,6 @@ fun CaseSelector(handler: CaseSelectorHandler) {
                         .clickable {
                             handler.selectCase(caseId.id!!)
                         }
-                        .testTag("$CASE_NAME_PREFIX${caseId.name}")
                         .semantics { contentDescription = "$CASE_NAME_PREFIX${caseId.name}" },
                     text = {
                         Text(

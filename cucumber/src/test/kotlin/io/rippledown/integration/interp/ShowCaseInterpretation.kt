@@ -36,7 +36,6 @@ internal class ShowCaseInterpretation : UITestBase() {
 
     @AfterTest
     fun cleanup() {
-        driverClose()
         serverProxy.shutdown()
     }
 

@@ -154,7 +154,7 @@ internal class TSHRulesTest : TSHTest() {
 
     @Suppress("SameParameterValue")
     private fun checkInterpretationIgnoringWhitespace(comment: String) {
-        interpretationViewPO.interpretationText().replace("\\s".toRegex(), "") shouldBe comment.replace(
+        interpretationViewPO.interpretationText()!!.replace("\\s".toRegex(), "") shouldBe comment.replace(
             "\\s".toRegex(),
             ""
         )

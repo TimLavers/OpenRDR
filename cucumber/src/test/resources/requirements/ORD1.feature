@@ -4,7 +4,6 @@ Feature: Show a list of cases
       | Case1 |
       | Case2 |
     And I start the client application
-    And pause
     Then I should see the following cases in the case list:
       | Case1 |
       | Case2 |
