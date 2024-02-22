@@ -24,5 +24,10 @@ class CaseViewStepDefs : En {
         Then("I (should )see {string} as reference range for {string}") { range: String, attribute: String ->
             StepsInfrastructure.client().rdUiOperator.caseViewPO().referenceRange(attribute) shouldBe range
         }
+
+        Then("blah") {
+            val cd = StepsInfrastructure.client().caseViewPO.valuesShown()
+            println("cd: $cd")
+        }
     }
 }

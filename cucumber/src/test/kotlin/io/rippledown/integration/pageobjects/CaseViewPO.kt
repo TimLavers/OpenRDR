@@ -10,7 +10,6 @@ import io.rippledown.integration.pause
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
 import javax.accessibility.AccessibleContext
-import javax.accessibility.AccessibleRole
 import javax.accessibility.AccessibleRole.LABEL
 
 // ORD2
@@ -36,6 +35,9 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
 
     fun valuesShown(): Map<String, List<String>> {
         val result = mutableMapOf<String, List<String>>()
+        attributeNames().forEach { attribute ->
+            result[attribute] = valuesForAttribute(attribute)
+        }
 
 //        val containerElement = caseContainerElement()
         // Get the case body.

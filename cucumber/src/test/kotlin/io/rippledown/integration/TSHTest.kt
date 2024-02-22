@@ -19,13 +19,13 @@ internal open class TSHTest: UITestBase() {
 
     @BeforeTest
     fun setup() {
-        serverProxy.start()
+//        serverProxy.start()
         resetKB()
         setupCases()
 //        setupWebDriver()
-        caseQueuePO = CaseQueuePO()
-        interpretationViewPO = InterpretationViewPO()
-        pause()//todo use Awaitility
+//        caseQueuePO = CaseQueuePO()
+//        interpretationViewPO = InterpretationViewPO()
+//        pause()//todo use Awaitility
 //        caseListPO = CaseListPO()
     }
 
