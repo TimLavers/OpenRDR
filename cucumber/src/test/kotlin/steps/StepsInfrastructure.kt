@@ -3,6 +3,8 @@ package steps
 import io.rippledown.TestClientLauncher
 import io.rippledown.integration.UITestBase
 import io.rippledown.integration.pageobjects.*
+import steps.StepsInfrastructure.client
+import steps.StepsInfrastructure.uiTestBase
 
 object StepsInfrastructure {
     var uiTestBase: UITestBase? = null
@@ -52,6 +54,7 @@ class LaunchedClient {
     val rdUiOperator = RippleDownUIOperator(composeWindow)
     val caseListPO = rdUiOperator.caseListPO()
     val caseViewPO = rdUiOperator.caseViewPO()
+    val interpretationViewPO = rdUiOperator.interpretationViewPO()
 
     fun stopClient() {
         testClientLauncher.stopClient()
@@ -61,3 +64,4 @@ fun caseListPO() = StepsInfrastructure.client().caseListPO
 fun caseViewPO() = StepsInfrastructure.client().caseViewPO
 fun labProxy() = StepsInfrastructure.uiTestBase!!.labProxy
 fun restClient() = StepsInfrastructure.uiTestBase!!.restClient
+fun interpretationViewPO() = client().interpretationViewPO

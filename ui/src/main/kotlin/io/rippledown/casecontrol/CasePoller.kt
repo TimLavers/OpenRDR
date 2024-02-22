@@ -11,7 +11,7 @@ interface CasePollerHandler : AppBarHandler {
     var setRuleInProgress: (inProgress: Boolean) -> Unit
 }
 
-val POLL_PERIOD = 0.5.seconds
+val POLL_PERIOD = 2.seconds
 
 @Composable
 @Preview
@@ -27,9 +27,12 @@ fun CasePoller(handler: CasePollerHandler) {
     }
 
     if (casesInfo.count > 0) {
-        CaseControl(object : CaseControlHandler, CasePollerHandler by handler {
-            override var caseIds = casesInfo.caseIds
-            override var setRuleInProgress = handler.setRuleInProgress
-        })
+        //Don't redraw if the cases have not changed
+        key(casesInfo.caseIds) {
+            CaseControl(object : CaseControlHandler, CasePollerHandler by handler {
+                override var caseIds = casesInfo.caseIds
+                override var setRuleInProgress = handler.setRuleInProgress
+            })
+        }
     }
 }

@@ -15,10 +15,6 @@ import javax.accessibility.AccessibleRole.SCROLL_PANE
 
 class CaseListPO(private val contextProvider: () -> AccessibleContext) {
 
-    private fun containerElement() {
-        TODO()
-    }
-
     fun waitForCaseListToHaveSize(count: Int) {
         await().atMost(5L, TimeUnit.SECONDS).until {
             val found = caseCount()
@@ -55,7 +51,6 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun select(caseName: String): CaseViewPO {
-        println("finding case name $CASE_NAME_PREFIX$caseName")
         caseNameContext(caseName)!!.accessibleAction.doAccessibleAction(0)
         return CaseViewPO {
             contextProvider()

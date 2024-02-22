@@ -25,13 +25,12 @@ internal open class TSHTest: UITestBase() {
 //        setupWebDriver()
 //        caseQueuePO = CaseQueuePO()
 //        interpretationViewPO = InterpretationViewPO()
-//        pause()//todo use Awaitility
+        pause()//todo use Awaitility
 //        caseListPO = CaseListPO()
     }
 
     @AfterTest
     fun cleanup() {
-        driverClose()
         serverProxy.shutdown()
     }
 

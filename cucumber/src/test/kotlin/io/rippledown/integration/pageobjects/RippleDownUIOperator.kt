@@ -28,4 +28,8 @@ class RippleDownUIOperator(private val window: ComposeWindow) {
     fun caseViewPO() = CaseViewPO {
         context()
     }
+
+    fun interpretationViewPO() = InterpretationViewPO {
+        context()
+    }
 }

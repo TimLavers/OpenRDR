@@ -54,7 +54,9 @@ class RESTClient {
 
     fun getCaseWithName(name: String): ViewableCase? {
         runBlocking {
-            val casesInfo: CasesInfo = jsonClient.get(endpoint + WAITING_CASES).body()
+            val casesInfo: CasesInfo = jsonClient.get(endpoint + WAITING_CASES){
+                parameter(KB_ID, currentKB.get()!!.id)
+            }.body()
             val caseId = casesInfo.caseIds.first { it.name == name }
             currentCase = jsonClient.get(endpoint + CASE){
                 parameter("id", caseId.id)
