@@ -22,7 +22,7 @@ Feature: Reviewing the interpretation of a case
     Then the interpretation field should contain the text "Go to Manly."
     And stop the client application
 
-  @ignore
+  @single
   Scenario: The changes to an interpretation should be saved
     Given a list of cases with the following names is stored on the server:
       | Case1 |
