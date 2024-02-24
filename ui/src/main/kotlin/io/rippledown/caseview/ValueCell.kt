@@ -13,6 +13,8 @@ import io.rippledown.model.TestResult
 
 @Composable
 fun RowScope.ValueCell(attribute: Attribute, index: Int, result: TestResult, columnWidths: ColumnWidths) {
+    println("attribute: ${attribute.name}, index: $index, result: $result")
+    println("resultText: ${resultText(result)}")
     Text(
         text = resultText(result),
         modifier = Modifier.weight(columnWidths.valueColumnWeight())
@@ -28,7 +30,7 @@ fun resultText(result: TestResult): String {
     return if (result.units == null) {
         value
     } else {
-        "$value ${result.units}"
+        "$value ${result.units!!.trim()}"
     }
 }
 fun valueCellContentDescription(attribute: Attribute, index: Int) = "${attribute.name} value $index"

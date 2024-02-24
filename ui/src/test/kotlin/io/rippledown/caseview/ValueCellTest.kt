@@ -4,10 +4,12 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.rippledown.mocks.DummyRowScope
 import io.rippledown.model.Attribute
+import io.rippledown.model.ReferenceRange
 import io.rippledown.model.TestResult
 import org.junit.Rule
 import org.junit.Test
@@ -54,6 +56,15 @@ class ValueCellTest {
         with(composeTestRule) {
             waitUntilExactlyOneExists(hasText("12.8 waves / sec"))
         }
+    }
+
+    @Test
+    fun resultTextTest() {
+        resultText(TestResult("44.1", null, null)) shouldBe "44.1"
+        resultText(TestResult("44.1", ReferenceRange("1", "2"), null)) shouldBe "44.1"
+        resultText(TestResult("44.1", null, "furlongs / fortnight")) shouldBe "44.1 furlongs / fortnight"
+        resultText(TestResult("10", null, "mmol/L")) shouldBe "10 mmol/L"
+        resultText(TestResult("10", null, " mmol/L ")) shouldBe "10 mmol/L"
     }
 }
 
