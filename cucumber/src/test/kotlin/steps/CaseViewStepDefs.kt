@@ -30,19 +30,24 @@ class CaseViewStepDefs : En {
         }
 
         Then("I (should )see these case values:") { dataTable: DataTable ->
-            val valuesShown = StepsInfrastructure.client().rdUiOperator.caseViewPO().valuesShown()
+            val caseViewPO = StepsInfrastructure.client().rdUiOperator.caseViewPO()
+            val valuesShown = caseViewPO.valuesShown()
+            val rowCount = valuesShown.size
             // Check the number of rows is correct.
-            valuesShown.size shouldBe dataTable.height()
+            rowCount shouldBe dataTable.height()
+            // Extract the expected attributes, reference ranges and test result values.
             val expectedAttributes = dataTable.column(0)
-            val expectedValues = dataTable.subTable(0, 1)
+            val referenceRangesExpected = dataTable.column(dataTable.width() - 1)
+            val expectedValues = dataTable.subTable(0, 1, rowCount, dataTable.width() - 1)
             // Check each row.
             valuesShown.keys.forEachIndexed { row, attribute ->
                 attribute shouldBe expectedAttributes[row]
                 val expectedRow = expectedValues.row(row)
                 val rowShown = valuesShown[attribute]
-                println("expectedRow: $expectedRow")
-                println("   rowShown: $rowShown")
                 expectedRow shouldBe rowShown
+                val expectedReferenceRange = referenceRangesExpected[row].orEmpty()
+                val referenceRangeShown = caseViewPO.referenceRange(attribute)
+                expectedReferenceRange shouldBe referenceRangeShown
             }
         }
     }

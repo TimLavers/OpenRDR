@@ -82,13 +82,13 @@ fun CaseControl(handler: CaseControlHandler) {
         }
 
         if (currentCase != null) {
-            Column {
-                CaseView(object : CaseViewHandler {
-                    override var case = currentCase!!
-                    override var api = handler.api
-                    override fun caseEdited() {}
-                })
-                key(currentCase!!.id) {
+            key(currentCase!!.id) {
+                Column {
+                    CaseView(object : CaseViewHandler {
+                        override var case = currentCase!!
+                        override var api = handler.api
+                        override fun caseEdited() {}
+                    })
                     InterpretationView(object : InterpretationViewHandler {
                         override var text = currentCase!!.textGivenByRules()
                         override var onEdited = { text: String -> }

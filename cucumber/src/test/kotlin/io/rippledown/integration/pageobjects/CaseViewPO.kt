@@ -86,5 +86,3 @@ open class CellPO(private val context: AccessibleContext, descriptionPrefix: Str
 class DateCellPO(context: AccessibleContext) : CellPO(context, DATE_CELL_DESCRIPTION_PREFIX)
 class AttributeCellPO(context: AccessibleContext) : CellPO(context, ATTRIBUTE_CELL_DESCRIPTION_PREFIX)
 class ValueCellPO(context: AccessibleContext, attribute: String) : CellPO(context, "$attribute value")
-class ReferenceRangeCellPO(context: AccessibleContext, attribute: String) :
-    CellPO(context, "$REFERENCE_RANGE_CELL_DESCRIPTION_PREFIX $attribute")
