@@ -2,7 +2,9 @@ package io.rippledown.interpretation
 
 import InterpretationTabs
 import InterpretationTabsHandler
+import androidx.compose.material.Surface
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
@@ -35,7 +37,7 @@ class InterpretationTabsTest {
                     override var isCornerstone = false
                 })
             }
-            requireInterpretationTabToBeDisplayed()
+            requireInterpretation("")
         }
     }
 
@@ -51,8 +53,8 @@ class InterpretationTabsTest {
                     override var isCornerstone = false
 
                 })
-                requireInterpretation(text)
             }
+            requireInterpretation(text)
         }
     }
     /*
@@ -297,7 +299,8 @@ fun main() {
             icon = painterResource("water-wave-icon.png"),
             title = TITLE
         ) {
-            val viewableInterpretation = ViewableInterpretation(Interpretation()).apply { verifiedText = "bondi or bust" }
+            val viewableInterpretation =
+                ViewableInterpretation(Interpretation()).apply { verifiedText = "bondi or bust" }
             InterpretationTabs(object : Handler by handlerImpl, InterpretationTabsHandler {
                 override var interpretation = viewableInterpretation
                 override var onStartRule: (selectedDiff: Diff) -> Unit = { }

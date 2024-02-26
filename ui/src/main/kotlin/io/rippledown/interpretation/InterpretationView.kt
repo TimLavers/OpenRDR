@@ -14,8 +14,6 @@ import androidx.compose.ui.unit.dp
 import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
 import io.rippledown.constants.interpretation.INTERPRETATION_VIEW_LABEL
-import io.rippledown.main.Handler
-import io.rippledown.model.interpretationview.ViewableInterpretation
 import kotlinx.coroutines.delay
 
 interface InterpretationViewHandler {
@@ -26,18 +24,19 @@ interface InterpretationViewHandler {
 
 @Composable
 fun InterpretationView(handler: InterpretationViewHandler) {
+    println("IV recompose with text: '${handler.text}'")
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
 
-    var entered : String by remember { mutableStateOf(handler.text) }
+    var entered: String by remember { mutableStateOf(handler.text) }
 
     //Only call the handler to update the server's version of the text after the debounce period
     LaunchedEffect(entered) {
         delay(DEBOUNCE_WAIT_PERIOD_MILLIS)
+        println("about to call onEdited with text: '${entered}'")
         handler.onEdited(entered)
-        println("interpretation view handler called with text: '${entered}'")
     }
 
     OutlinedTextField(

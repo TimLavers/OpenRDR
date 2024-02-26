@@ -6,6 +6,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CONCLUSIONS
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL
@@ -15,7 +16,7 @@ import io.rippledown.main.Handler
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.interpretationview.ViewableInterpretation
 
-interface InterpretationTabsHandler : Handler {
+interface InterpretationTabsHandler {
     var interpretation: ViewableInterpretation
     var onStartRule: (selectedDiff: Diff) -> Unit
     var isCornerstone: Boolean
@@ -28,7 +29,7 @@ fun InterpretationTabs(handler: InterpretationTabsHandler) {
     var tabPage by remember { mutableStateOf(0) }
 
 
-    Column {
+    Column(modifier = Modifier.semantics { testTag = "tabs" }) {
         TabRow(selectedTabIndex = tabPage,
             modifier = Modifier.semantics {
                 contentDescription = "interpretation_tabs"
@@ -38,25 +39,27 @@ fun InterpretationTabs(handler: InterpretationTabsHandler) {
                 Tab(
                     text = { Text(title) },
                     selected = tabPage == index,
-                    onClick = { tabPage = index }
+                    onClick = { tabPage = index },
+                    modifier = Modifier.semantics {
+                        contentDescription = "interpretation_tab_$title"
+                    }
                 )
             }
         }
+        println("latest text ${handler.interpretation.latestText()}")
         when (tabPage) {
             0 -> {
                 InterpretationView(handler = object : InterpretationViewHandler {
                     override var text: String = handler.interpretation.latestText()
-                    override var onEdited: (text: String) -> Unit = { }
+                    override var onEdited: (text: String) -> Unit = {
+                        println("onEdited in InterpTabs called with text: '$it'")
+                    }
                     override var isCornertone: Boolean = false
                 })
             }
 
-            1 -> {/* Content of Tab2 */
-            }
-
-            2 -> {/* Content of Tab1 */
-            }
-
+            1 -> {}
+            2 -> {}
         }
     }
 }
