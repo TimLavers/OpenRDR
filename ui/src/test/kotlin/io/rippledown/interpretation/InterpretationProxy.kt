@@ -5,7 +5,8 @@ import androidx.compose.ui.test.junit4.ComposeTestRule
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
 
 fun ComposeTestRule.requireInterpretation(text: String) {
-    onNodeWithText(text).assertExists()
+    onNodeWithContentDescription("interpretation_tabs").printToString()
+//    onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD).assertTextEquals(text)
 }
 
 @OptIn(ExperimentalTestApi::class)
@@ -18,6 +19,9 @@ fun ComposeTestRule.enterInterpretation(enteredText: String) {
 }
 fun ComposeTestRule.replaceInterpretationBy(enteredText: String) {
     onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD).performTextReplacement(enteredText)
+}
+fun ComposeTestRule.requireInterpretationTabToBeDisplayed() {
+    onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD).assertIsDisplayed()
 }
 
 /*

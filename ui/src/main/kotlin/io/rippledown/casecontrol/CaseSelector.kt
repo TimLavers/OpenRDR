@@ -25,6 +25,7 @@ import io.rippledown.model.CaseId
 
 interface CaseSelectorHandler : Handler {
     var caseIds: List<CaseId>
+    var selectedCaseName: String?
     var selectCase: (id: Long) -> Unit
 }
 

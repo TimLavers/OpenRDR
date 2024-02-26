@@ -23,7 +23,7 @@ import io.rippledown.main.Handler
 import io.rippledown.model.CaseId
 import io.rippledown.model.caseview.ViewableCase
 
-interface CaseControlHandler : Handler {
+interface CaseControlHandler :  Handler {
     var caseIds: List<CaseId>
     var setRuleInProgress: (_: Boolean) -> Unit
 }
@@ -74,28 +74,25 @@ fun CaseControl(handler: CaseControlHandler) {
                     }
             )
 
-            CaseSelector(object : CaseSelectorHandler, CaseControlHandler by handler {
+            CaseSelector(object : CaseSelectorHandler, Handler by handler {
                 override var selectCase = { id: Long ->
                     currentCaseId = id
                 }
+                override var caseIds = handler.caseIds
+                override var selectedCaseName = currentCase?.name
             })
         }
 
         if (currentCase != null) {
-            Column {
-                CaseView(object : CaseViewHandler {
-                    override var case = currentCase!!
-                    override var api = handler.api
-                    override fun caseEdited() {}
-                })
-                key(currentCase!!.id) {
-                    InterpretationView(object : InterpretationViewHandler {
-                        override var text = currentCase!!.textGivenByRules()
-                        override var onEdited = { text: String -> }
-                        override var isCornertone = false
-                    })
+            CaseInspection(object : CaseInspectionHandler, Handler by handler {
+                override var case = currentCase!!
+                override var updateCase = { id: Long ->
+                    currentCaseId = id
                 }
-            }
+                override var ruleSessionInProgress: (Boolean) -> Unit = {
+                    handler.setRuleInProgress(it)
+                }
+            })
         }
     }
 }

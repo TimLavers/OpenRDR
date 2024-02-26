@@ -28,6 +28,8 @@ Feature: Reviewing the interpretation of a case
       | Case1 |
       | Case2 |
     And I start the client application
+    And pause
+
     And I should see the case Case1 as the current case
     When I enter the text "Go to Bondi." in the interpretation field
     And select the case Case2

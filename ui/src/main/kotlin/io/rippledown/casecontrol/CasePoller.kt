@@ -3,6 +3,7 @@ package io.rippledown.casecontrol
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.runtime.*
 import io.rippledown.appbar.AppBarHandler
+import io.rippledown.main.Handler
 import io.rippledown.model.CasesInfo
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
@@ -29,7 +30,7 @@ fun CasePoller(handler: CasePollerHandler) {
     if (casesInfo.count > 0) {
         //Don't redraw if the cases have not changed
         key(casesInfo.caseIds) {
-            CaseControl(object : CaseControlHandler, CasePollerHandler by handler {
+            CaseControl(object : CaseControlHandler, Handler by handler {
                 override var caseIds = casesInfo.caseIds
                 override var setRuleInProgress = handler.setRuleInProgress
             })
