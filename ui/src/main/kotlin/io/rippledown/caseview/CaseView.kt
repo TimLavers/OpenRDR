@@ -35,6 +35,7 @@ fun CaseView(handler: CaseViewHandler) {
             .padding(10.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
+        println("drawing case: ${handler.case.name}")
         Text(
             text = handler.case.name,
             style = MaterialTheme.typography.subtitle1,

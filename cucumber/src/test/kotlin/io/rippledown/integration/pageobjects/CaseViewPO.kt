@@ -12,9 +12,10 @@ import io.rippledown.integration.utils.findAllByDescriptionPrefix
 import org.awaitility.kotlin.await
 import java.time.Duration
 import java.time.Duration.ofSeconds
+import java.util.*
 import javax.accessibility.AccessibleContext
-import javax.accessibility.AccessibleRole
 import javax.accessibility.AccessibleRole.LABEL
+import kotlin.collections.LinkedHashMap
 
 // ORD2
 class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
@@ -46,31 +47,11 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
     fun valuesForAttribute(attribute: String) =
         extractMatchingValuesInOrderShown("$attribute value") { context -> ValueCellPO(context, attribute) }
 
-    fun valuesShown(): Map<String, List<String>> {
-        val result = mutableMapOf<String, List<String>>()
-
-//        val containerElement = caseContainerElement()
-        // Get the case body.
-//        val caseBodyElement = containerElement.findElement(By.tagName("tbody"))
-        // For each row...
-//        caseBodyElement.findElements(By.tagName("tr")).forEach { rowElement ->
-//            val valuesList = mutableListOf<String>()
-        // Get all cells in the row
-//            val rowCells = rowElement.findElements(By.tagName("td"))
-        // First is the name.
-//            val attributeName = rowCells[0].text
-//            assertEquals(attributeCellId(attributeName), rowCells[0].getAttribute("id")) //Sanity check.
-        // Last is the reference range. In between are the values.
-//            rowCells.forEachIndexed { index, cell ->
-//                if (index != 0 && index != rowCells.size - 1) {
-//                    val idOfValueCellForAttribute = "attribute_value_cell_${attributeName}_${index - 1}"
-//                    assertEquals(idOfValueCellForAttribute, cell.getAttribute("id")) //Sanity
-//                    val value = cell.text
-//                    valuesList.add(value)
-//                }
-//            }
-//            result[attributeName] = valuesList
-//        }
+    fun valuesShown(): LinkedHashMap<String, List<String>> {
+        val result = LinkedHashMap<String, List<String>>()
+        attributeNames().forEach { attribute ->
+            result[attribute] = valuesForAttribute(attribute)
+        }
         return result
     }
 
@@ -105,5 +86,3 @@ open class CellPO(private val context: AccessibleContext, descriptionPrefix: Str
 class DateCellPO(context: AccessibleContext) : CellPO(context, DATE_CELL_DESCRIPTION_PREFIX)
 class AttributeCellPO(context: AccessibleContext) : CellPO(context, ATTRIBUTE_CELL_DESCRIPTION_PREFIX)
 class ValueCellPO(context: AccessibleContext, attribute: String) : CellPO(context, "$attribute value")
-class ReferenceRangeCellPO(context: AccessibleContext, attribute: String) :
-    CellPO(context, "$REFERENCE_RANGE_CELL_DESCRIPTION_PREFIX $attribute")
