@@ -60,7 +60,8 @@ class LaunchedClient {
         testClientLauncher.stopClient()
     }
 }
-fun caseListPO() = client().caseListPO
-fun caseViewPO() = client().caseViewPO
-fun labProxy() = uiTestBase!!.labProxy
+fun caseListPO() = StepsInfrastructure.client().caseListPO
+fun caseViewPO() = StepsInfrastructure.client().caseViewPO
+fun labProxy() = StepsInfrastructure.uiTestBase!!.labProxy
+fun restClient() = StepsInfrastructure.uiTestBase!!.restClient
 fun interpretationViewPO() = client().interpretationViewPO

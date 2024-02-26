@@ -2,7 +2,6 @@ package steps
 
 import io.cucumber.datatable.DataTable
 import io.cucumber.java8.En
-import io.cucumber.java8.PendingException
 import io.kotest.matchers.shouldBe
 
 class CaseViewStepDefs : En {
@@ -23,6 +22,33 @@ class CaseViewStepDefs : En {
 
         Then("I (should )see {string} as reference range for {string}") { range: String, attribute: String ->
             StepsInfrastructure.client().rdUiOperator.caseViewPO().referenceRange(attribute) shouldBe range
+        }
+
+        Then("blah") {
+            val cd = StepsInfrastructure.client().caseViewPO.valuesShown()
+            println("cd: $cd")
+        }
+
+        Then("I (should )see these case values:") { dataTable: DataTable ->
+            val caseViewPO = StepsInfrastructure.client().rdUiOperator.caseViewPO()
+            val valuesShown = caseViewPO.valuesShown()
+            val rowCount = valuesShown.size
+            // Check the number of rows is correct.
+            rowCount shouldBe dataTable.height()
+            // Extract the expected attributes, reference ranges and test result values.
+            val expectedAttributes = dataTable.column(0)
+            val referenceRangesExpected = dataTable.column(dataTable.width() - 1)
+            val expectedValues = dataTable.subTable(0, 1, rowCount, dataTable.width() - 1)
+            // Check each row.
+            valuesShown.keys.forEachIndexed { row, attribute ->
+                attribute shouldBe expectedAttributes[row]
+                val expectedRow = expectedValues.row(row)
+                val rowShown = valuesShown[attribute]
+                expectedRow shouldBe rowShown
+                val expectedReferenceRange = referenceRangesExpected[row].orEmpty()
+                val referenceRangeShown = caseViewPO.referenceRange(attribute)
+                expectedReferenceRange shouldBe referenceRangeShown
+            }
         }
     }
 }

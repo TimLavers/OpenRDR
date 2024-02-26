@@ -23,7 +23,7 @@ import io.rippledown.main.Handler
 import io.rippledown.model.CaseId
 import io.rippledown.model.caseview.ViewableCase
 
-interface CaseControlHandler :  Handler {
+interface CaseControlHandler : Handler {
     var caseIds: List<CaseId>
     var setRuleInProgress: (_: Boolean) -> Unit
 }

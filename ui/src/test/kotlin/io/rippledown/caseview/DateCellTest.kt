@@ -5,6 +5,8 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import io.kotest.matchers.shouldBe
+import io.mockk.every
+import io.mockk.mockk
 import io.rippledown.mocks.DummyRowScope
 import kotlinx.datetime.toInstant
 import org.junit.Rule
@@ -18,10 +20,12 @@ class DateCellTest {
     @Test
     fun show() {
         val date = "2010-06-01T22:19:44.475Z".toInstant().toEpochMilliseconds()
+        val columnWidths = mockk<ColumnWidths>()
+        every { columnWidths.valueColumnWeight() }.returns(0.5F)
 
         val rowScope: RowScope = DummyRowScope()
         composeTestRule.setContent {
-            rowScope.DateCell( 1, date, 0.1F)
+            rowScope.DateCell( 1, date, columnWidths)
         }
         with(composeTestRule) {
             waitUntilExactlyOneExists(hasText("2010-06-01 22:20"))
