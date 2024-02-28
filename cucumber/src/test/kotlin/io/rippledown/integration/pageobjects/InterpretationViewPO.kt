@@ -22,9 +22,8 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
     }
 
     fun enterVerifiedText(text: String): InterpretationViewPO {
-//        val textArea = interpretationArea()
-//        textArea.sendKeys(text)
-//        waitForDebounce()
+        contextProvider().find(INTERPRETATION_TEXT_FIELD, TEXT)?.accessibleEditableText?.setTextContents(text)
+        waitForDebounce()
         return this
     }
 

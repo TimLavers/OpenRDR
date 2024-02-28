@@ -2,22 +2,22 @@ package io.rippledown.interpretation
 
 import InterpretationTabs
 import InterpretationTabsHandler
-import androidx.compose.material.Surface
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import io.kotest.matchers.shouldBe
 import io.rippledown.constants.main.TITLE
+import io.rippledown.main.Api
 import io.rippledown.main.Handler
 import io.rippledown.main.handlerImpl
-import io.rippledown.model.Conclusion
+import io.rippledown.mocks.config
+import io.rippledown.mocks.mock
+import io.rippledown.model.CasesInfo
 import io.rippledown.model.Interpretation
+import io.rippledown.model.createCase
 import io.rippledown.model.diff.*
 import io.rippledown.model.interpretationview.ViewableInterpretation
-import io.rippledown.model.rule.RuleSummary
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import kotlin.test.Test
@@ -25,7 +25,6 @@ import kotlin.test.Test
 class InterpretationTabsTest {
     @get:Rule
     val composeTestRule = createComposeRule()
-
 
     @Test
     fun `interpretation tab should be selected by default`() = runTest {
@@ -55,6 +54,36 @@ class InterpretationTabsTest {
                 })
             }
             requireInterpretation(text)
+        }
+    }
+
+    @Test
+    fun `changes to the interpretation should be saved`() = runTest {
+        val text = "Go to Bondi now!"
+        val originalInterpretation = ViewableInterpretation(Interpretation())
+        val changedInterpretation = originalInterpretation.apply { verifiedText = text }
+        val config = config {
+            expectedInterpretation = changedInterpretation
+            returnInterpretationAfterSavingInterpretation = changedInterpretation
+        }
+        with(composeTestRule) {
+            setContent {
+                InterpretationTabs(object :  InterpretationTabsHandler {
+                    override var interpretation = originalInterpretation
+                    override var onStartRule: (selectedDiff: Diff) -> Unit = { }
+                    override var isCornerstone = false
+                    override var api = Api(mock(config))
+                })
+            }
+            //Given
+//            requireInterpretation("")
+
+            //When
+            enterInterpretationAndWaitForUpdate(text)
+
+            //Then
+            requireInterpretation(text)
+            //assertion that the interpretation was saved is in the config
         }
     }
     /*

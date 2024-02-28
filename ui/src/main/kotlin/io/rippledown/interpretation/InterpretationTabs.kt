@@ -7,16 +7,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
-import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
-import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CONCLUSIONS
-import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL
 import io.rippledown.interpretation.InterpretationView
 import io.rippledown.interpretation.InterpretationViewHandler
 import io.rippledown.main.Handler
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.interpretationview.ViewableInterpretation
 
-interface InterpretationTabsHandler {
+interface InterpretationTabsHandler : Handler {
     var interpretation: ViewableInterpretation
     var onStartRule: (selectedDiff: Diff) -> Unit
     var isCornerstone: Boolean
@@ -27,6 +24,16 @@ fun InterpretationTabs(handler: InterpretationTabsHandler) {
     val titles = listOf("Interpretation", "Conclusions", "Changes")
 
     var tabPage by remember { mutableStateOf(0) }
+
+    var text by remember { mutableStateOf(handler.interpretation.verifiedText) }
+
+    LaunchedEffect(text) {
+        if (text != handler.interpretation.verifiedText) {
+            println("saving interpretation: ${text}")
+            val interpretation = handler.interpretation.apply { verifiedText = text }
+            handler.api.saveVerifiedInterpretation(interpretation)
+        }
+    }
 
 
     Column(modifier = Modifier.semantics { testTag = "tabs" }) {
@@ -51,8 +58,8 @@ fun InterpretationTabs(handler: InterpretationTabsHandler) {
             0 -> {
                 InterpretationView(handler = object : InterpretationViewHandler {
                     override var text: String = handler.interpretation.latestText()
-                    override var onEdited: (text: String) -> Unit = {
-                        println("onEdited in InterpTabs called with text: '$it'")
+                    override var onEdited: (text: String) -> Unit = { editedText ->
+                        text = editedText
                     }
                     override var isCornertone: Boolean = false
                 })

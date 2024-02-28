@@ -118,6 +118,7 @@ class Api(engine: HttpClientEngine = CIO.create() ) {
         return client.post("$API_URL$VERIFIED_INTERPRETATION_SAVED") {
             contentType(ContentType.Application.Json)
             setBody(verifiedInterpretation)
+            parameter("KB", kbId() )
         }.body<ViewableInterpretation>()
     }
 

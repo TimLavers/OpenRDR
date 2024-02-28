@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
 import io.rippledown.constants.interpretation.INTERPRETATION_VIEW_LABEL
+import io.rippledown.main.Handler
 import kotlinx.coroutines.delay
 
 interface InterpretationViewHandler {

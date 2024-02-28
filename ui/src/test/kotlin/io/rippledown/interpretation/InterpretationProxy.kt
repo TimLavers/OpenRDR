@@ -7,7 +7,6 @@ import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
 @OptIn(ExperimentalTestApi::class)
 fun ComposeTestRule.requireInterpretation(text: String) {
     waitUntilExactlyOneExists(hasText(text))
-//    onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD, useUnmergedTree = false).assertTextEquals(text)
 }
 
 @OptIn(ExperimentalTestApi::class)
@@ -22,7 +21,6 @@ fun ComposeTestRule.replaceInterpretationBy(enteredText: String) {
     onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD).performTextReplacement(enteredText)
 }
 fun ComposeTestRule.requireInterpretationTabToBeDisplayed() {
-//    onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD).printToString()
     onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD).assertIsDisplayed()
 }
 

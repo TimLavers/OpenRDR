@@ -4,9 +4,9 @@ import InterpretationTabs
 import InterpretationTabsHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import io.rippledown.caseview.CaseView
 import io.rippledown.caseview.CaseViewHandler
-import io.rippledown.main.Api
 import io.rippledown.main.Handler
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.diff.Diff
@@ -26,10 +26,12 @@ fun CaseInspection(handler: CaseInspectionHandler) {
             override fun caseEdited() {}
             override var api= handler.api
         })
-        InterpretationTabs( object : InterpretationTabsHandler, Handler by handler {
-            override var interpretation: ViewableInterpretation = handler.case.viewableInterpretation
-            override var onStartRule: (selectedDiff: Diff) -> Unit = { }
-            override var isCornerstone: Boolean = false
-        })
+        key(handler.case) {
+            InterpretationTabs(object : InterpretationTabsHandler, Handler by handler {
+                override var interpretation: ViewableInterpretation = handler.case.viewableInterpretation
+                override var onStartRule: (selectedDiff: Diff) -> Unit = { }
+                override var isCornerstone: Boolean = false
+            })
+        }
     }
 }

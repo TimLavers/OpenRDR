@@ -214,7 +214,7 @@ class Defs : En {
         }
 
         And("I enter the text {string} in the interpretation field") { text: String ->
-//            interpretationViewPO.enterVerifiedText(text)
+            interpretationViewPO().enterVerifiedText(text)
         }
 
         And("I slowly type the text {string} in the interpretation field") { text: String ->
