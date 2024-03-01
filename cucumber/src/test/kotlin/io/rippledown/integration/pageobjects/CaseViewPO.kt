@@ -2,20 +2,15 @@ package io.rippledown.integration.pageobjects
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.caseview.referenceRangeCellContentDescription
-import io.rippledown.constants.caseview.ATTRIBUTE_CELL_DESCRIPTION_PREFIX
-import io.rippledown.constants.caseview.CASEVIEW_CASE_NAME_ID
-import io.rippledown.constants.caseview.DATE_CELL_DESCRIPTION_PREFIX
-import io.rippledown.constants.caseview.REFERENCE_RANGE_CELL_DESCRIPTION_PREFIX
+import io.rippledown.caseview.valueCellContentDescriptionPrefix
+import io.rippledown.constants.caseview.*
 import io.rippledown.integration.pause
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
 import org.awaitility.kotlin.await
-import java.time.Duration
 import java.time.Duration.ofSeconds
-import java.util.*
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleRole.LABEL
-import kotlin.collections.LinkedHashMap
 
 // ORD2
 class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
@@ -32,6 +27,12 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
         contextProvider().find(CASEVIEW_CASE_NAME_ID, LABEL) shouldBe null
     }
 
+    fun waitForNoNameShowing() {
+        await.atMost(ofSeconds(5)).until {
+            contextProvider().find(CASEVIEW_CASE_NAME_ID, LABEL) == null
+        }
+    }
+
     fun waitForNameToShow(name: String) {
         await.atMost(ofSeconds(5)).until {
             nameShown() != null && nameShown() == name
@@ -44,12 +45,15 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
     fun attributeNames() =
         extractMatchingValuesInOrderShown(ATTRIBUTE_CELL_DESCRIPTION_PREFIX) { context -> AttributeCellPO(context) }
 
-    fun valuesForAttribute(attribute: String) =
-        extractMatchingValuesInOrderShown("$attribute value") { context -> ValueCellPO(context, attribute) }
+    fun valuesForAttribute(attribute: String): List<String> {
+        val contentDescriptionPrefix = valueCellContentDescriptionPrefix(attribute)
+        return extractMatchingValuesInOrderShown(contentDescriptionPrefix) { context -> ValueCellPO(context, attribute) }
+    }
 
     fun valuesShown(): LinkedHashMap<String, List<String>> {
         val result = LinkedHashMap<String, List<String>>()
         attributeNames().forEach { attribute ->
+            println("values for attribute $attribute were ${valuesForAttribute(attribute)}")
             result[attribute] = valuesForAttribute(attribute)
         }
         return result
@@ -57,8 +61,9 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
 
     private fun extractMatchingValuesInOrderShown(
         descriptionPrefix: String,
-        contextToPO: (AccessibleContext) -> (CellPO)
+        contextToPO: (AccessibleContext) -> CellPO
     ) = contextProvider()
+        .find(CASE_VIEW_TABLE)!!//narrow down the context to the table
         .findAllByDescriptionPrefix(descriptionPrefix)
         .map { contextToPO(it) }
         .sorted()

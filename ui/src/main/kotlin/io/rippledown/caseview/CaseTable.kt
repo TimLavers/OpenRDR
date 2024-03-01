@@ -10,6 +10,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import io.rippledown.constants.caseview.CASE_VIEW_TABLE
 import io.rippledown.model.Attribute
 import io.rippledown.model.caseview.ViewableCase
 
@@ -27,7 +28,7 @@ fun CaseTable(handler: CaseTableHandler) {
 
     LazyColumn(
         modifier = Modifier.padding(5.dp).semantics {
-            contentDescription="Case view table"
+            contentDescription= CASE_VIEW_TABLE
         }
     ) {
         item {

@@ -1,12 +1,17 @@
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.unit.dp
 import io.rippledown.interpretation.InterpretationView
 import io.rippledown.interpretation.InterpretationViewHandler
 import io.rippledown.main.Handler
@@ -29,7 +34,6 @@ fun InterpretationTabs(handler: InterpretationTabsHandler) {
 
     LaunchedEffect(text) {
         if (text != handler.interpretation.verifiedText) {
-            println("saving interpretation: ${text}")
             val interpretation = handler.interpretation.apply { verifiedText = text }
             handler.api.saveVerifiedInterpretation(interpretation)
         }
@@ -41,6 +45,8 @@ fun InterpretationTabs(handler: InterpretationTabsHandler) {
             modifier = Modifier.semantics {
                 contentDescription = "interpretation_tabs"
             }
+                .padding(10.dp)
+
         ) {
             titles.forEachIndexed { index, title ->
                 Tab(
@@ -50,10 +56,11 @@ fun InterpretationTabs(handler: InterpretationTabsHandler) {
                     modifier = Modifier.semantics {
                         contentDescription = "interpretation_tab_$title"
                     }
+                        .background(Color.Gray)
+
                 )
             }
         }
-        println("latest text ${handler.interpretation.latestText()}")
         when (tabPage) {
             0 -> {
                 InterpretationView(handler = object : InterpretationViewHandler {

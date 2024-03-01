@@ -5,15 +5,17 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.util.reflect.*
 import io.rippledown.constants.api.CASE
-import io.rippledown.constants.api.DELETE_PROCESSED_CASE_WITH_NAME
+import io.rippledown.constants.api.DELETE_CASE_WITH_NAME
 import io.rippledown.constants.api.PROCESS_CASE
 import io.rippledown.constants.api.WAITING_CASES
-import io.rippledown.model.CaseName
+import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.server.ServerApplication
 import io.rippledown.server.logger
 import kotlinx.serialization.json.Json
+import kotlin.reflect.KClass
 
 private val jsonAllowSMK = Json {
     allowStructuredMapKeys = true
@@ -44,10 +46,9 @@ fun Application.caseManagement(application: ServerApplication) {
 
             call.respond(HttpStatusCode.Accepted, case)
         }
-        delete(DELETE_PROCESSED_CASE_WITH_NAME) {
-            val str = call.receiveText()
-            val caseName = jsonAllowSMK.decodeFromString(CaseName.serializer(), str)
-            kbEndpoint(application).deleteProcessedCase(caseName.name)
+        delete(DELETE_CASE_WITH_NAME) {
+            val caseName = call.parameters["name"] ?: error("Invalid case name.")
+            kbEndpoint(application).deleteCase(caseName)
             call.respond(HttpStatusCode.OK)
         }
     }

@@ -142,7 +142,7 @@ class Defs : En {
 
         Then("the displayed KB name is (now ){word}") { kbName: String ->
             val applicationBarOperator = StepsInfrastructure.client().rdUiOperator.applicationBarOperator()
-            with (applicationBarOperator.kbControlOperator()) {
+            with(applicationBarOperator.kbControlOperator()) {
                 this.currentKB() shouldBe kbName
             }
         }
@@ -205,8 +205,16 @@ class Defs : En {
             caseViewPO().requireNoNameShowing()
         }
 
+        Then("Eventually I should not see any cases") {
+            caseViewPO().waitForNoNameShowing()
+        }
+
         And("(I )select the case {word}") { caseName: String ->
             caseListPO().select(caseName)
+        }
+        And("(I )select the case {word} followed by {word}") { caseName1: String, caseName2: String ->
+            caseListPO().select(caseName1)
+            caseListPO().select(caseName2)
         }
 
         When("I delete all the text in the interpretation field") {

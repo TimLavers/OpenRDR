@@ -32,7 +32,10 @@ fun CaseView(handler: CaseViewHandler) {
 
     Column(
         modifier = Modifier
-            .padding(10.dp),
+            .padding(10.dp)
+            .semantics {
+                contentDescription = CASE_HEADING
+            },
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         println("drawing case: ${handler.case.name}")

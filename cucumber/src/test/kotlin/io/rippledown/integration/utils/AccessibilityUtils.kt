@@ -48,7 +48,10 @@ fun AccessibleContext.find(matcher: (AccessibleContext) -> Boolean, debug: Boole
 }
 fun AccessibleContext.findAllByDescriptionPrefix(prefix: String): Set<AccessibleContext> {
     val matcher = { context: AccessibleContext ->
-        if (context.accessibleDescription == null) false else context.accessibleDescription.startsWith(prefix)
+        if (context.accessibleDescription == null) false else {
+            println("context.accessibleDescription = '${context.accessibleDescription}' starts with prefix '$prefix'= ${context.accessibleDescription?.startsWith(prefix)}")
+            context.accessibleDescription.startsWith(prefix)
+        }
     }
     return this.findAll(matcher)
 }
@@ -58,9 +61,13 @@ fun AccessibleContext.findAll(matcher: (AccessibleContext) -> Boolean, debug: Bo
     return result
 }
 fun AccessibleContext.findAll(holder: MutableSet<AccessibleContext>, matcher: (AccessibleContext) -> Boolean, debug: Boolean = false) {
-    if (matcher(this)) holder.add(this)
+    if (matcher(this)) {
+        holder.add(this)
+        println("added context this = $this")
+    }
     val childCount = accessibleChildrenCount
     for (i in 0..<childCount) {
+        println("getting accessible child i = ${i}")
         getAccessibleChild(i).accessibleContext.findAll(holder, matcher, debug)
     }
 }

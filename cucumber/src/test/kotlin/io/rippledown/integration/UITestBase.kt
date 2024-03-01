@@ -14,13 +14,7 @@ open class UITestBase {
     val labProxy = LabProxy(serverProxy.tempDir(), restClient)
     private val dirProxy = DirProxy()
 
-
     fun downloadsDir() = dirProxy.downloadsDir()
-
-
-    fun driverClose() {
-//        driver.quit()
-    }
 
     fun resetKB() {
         restClient.createKBWithDefaultName()

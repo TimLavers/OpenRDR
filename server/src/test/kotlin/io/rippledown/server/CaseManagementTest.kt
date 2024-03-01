@@ -10,7 +10,7 @@ import io.mockk.every
 import io.mockk.verify
 import io.rippledown.CaseTestUtils
 import io.rippledown.constants.api.CASE
-import io.rippledown.constants.api.DELETE_PROCESSED_CASE_WITH_NAME
+import io.rippledown.constants.api.DELETE_CASE_WITH_NAME
 import io.rippledown.constants.api.PROCESS_CASE
 import io.rippledown.constants.api.WAITING_CASES
 import io.rippledown.model.*
@@ -49,11 +49,14 @@ class CaseManagementTest : OpenRDRServerTestBase() {
     }
 
     @Test
-    fun viewableCaseNoId() = testApplication {
+    fun `should return null if no case with that id`() = testApplication {
         setup()
-        shouldThrow<IllegalStateException> {
-            httpClient.get(CASE) { parameter(KB_ID, kbId) }
+        val result = httpClient.get(CASE) {
+            parameter("id", 42L)
+            parameter(KB_ID, kbId)
         }
+        result.status shouldBe HttpStatusCode.OK
+        result.body<ViewableCase?>() shouldBe null
     }
 
     @Test
@@ -87,13 +90,13 @@ class CaseManagementTest : OpenRDRServerTestBase() {
     fun deleteProcessedCaseWithName() = testApplication {
         setup()
         val caseName = "The Case"
-        every { kbEndpoint.deleteProcessedCase(caseName) } returns Unit
-        val result = httpClient.delete(DELETE_PROCESSED_CASE_WITH_NAME) {
+        every { kbEndpoint.deleteCase(caseName) } returns Unit
+        val result = httpClient.delete(DELETE_CASE_WITH_NAME) {
             contentType(ContentType.Application.Json)
             setBody(CaseName(caseName))
             parameter(KB_ID, kbId)
         }
         result.status shouldBe HttpStatusCode.OK
-        verify { kbEndpoint.deleteProcessedCase(caseName) }
+        verify { kbEndpoint.deleteCase(caseName) }
     }
 }

@@ -5,9 +5,11 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.kotest.matchers.shouldBe
+import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
 import io.rippledown.constants.main.TITLE
 import io.rippledown.main.Handler
 import io.rippledown.main.handlerImpl
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import kotlin.test.Test
@@ -93,6 +95,29 @@ class InterpretationViewTest {
             updatedText shouldBe ""
         }
     }
+
+    @Test
+    fun `should no call OnEdited if the text has not changed`() = runTest {
+        var onEditedCalled = false
+
+        with(composeTestRule) {
+            setContent {
+                InterpretationView(object : Handler by handlerImpl, InterpretationViewHandler {
+                    override var text = ""
+                    override var onEdited = { changed: String -> onEditedCalled = true }
+                    override var isCornertone = false
+                })
+            }
+            //Given
+
+            //When
+
+            //Then
+            onEditedCalled shouldBe false
+        }
+    }
+
+
 }
 
 

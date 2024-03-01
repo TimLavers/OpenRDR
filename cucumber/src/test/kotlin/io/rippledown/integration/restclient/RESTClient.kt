@@ -11,6 +11,7 @@ import io.rippledown.constants.api.*
 import io.rippledown.constants.server.DEFAULT_PROJECT_NAME
 import io.rippledown.constants.server.PING
 import io.rippledown.constants.server.SHUTDOWN
+import io.rippledown.main.Api
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
@@ -54,11 +55,11 @@ class RESTClient {
 
     fun getCaseWithName(name: String): ViewableCase? {
         runBlocking {
-            val casesInfo: CasesInfo = jsonClient.get(endpoint + WAITING_CASES){
+            val casesInfo: CasesInfo = jsonClient.get(endpoint + WAITING_CASES) {
                 parameter(KB_ID, currentKB.get()!!.id)
             }.body()
             val caseId = casesInfo.caseIds.first { it.name == name }
-            currentCase = jsonClient.get(endpoint + CASE){
+            currentCase = jsonClient.get(endpoint + CASE) {
                 parameter("id", caseId.id)
                 parameter(KB_ID, currentKB.get()!!.id)
             }.body()
@@ -68,11 +69,7 @@ class RESTClient {
 
     fun deleteProcessedCaseWithName(name: String) {
         runBlocking {
-            jsonClient.delete(endpoint + DELETE_PROCESSED_CASE_WITH_NAME) {
-                contentType(ContentType.Application.Json)
-                parameter(KB_ID, currentKB.get().id)
-                setBody(CaseName(name))
-            }
+            Api().deleteCase(name)
         }
     }
 
@@ -98,16 +95,16 @@ class RESTClient {
         }.body()
     }
 
-fun provideCase(externalCase: ExternalCase): RDRCase {
-    val result = runBlocking {
-        jsonClient.put(endpoint + PROCESS_CASE) {
-            contentType(ContentType.Application.Json)
-            setBody(externalCase)
-            parameter(KB_ID, currentKB.get().id)
-        }.body<RDRCase>()
+    fun provideCase(externalCase: ExternalCase): RDRCase {
+        val result = runBlocking {
+            jsonClient.put(endpoint + PROCESS_CASE) {
+                contentType(ContentType.Application.Json)
+                setBody(externalCase)
+                parameter(KB_ID, currentKB.get().id)
+            }.body<RDRCase>()
+        }
+        return result
     }
-    return result
-}
 
     fun startSessionToAddConclusionForCurrentCase(conclusion: Conclusion): OperationResult {
         require(currentCase != null)
@@ -194,7 +191,7 @@ fun provideCase(externalCase: ExternalCase): RDRCase {
         println("createKBWithDefaultName after run blocking current thread: ${Thread.currentThread().name}")
     }
 
-    fun createKBWithDefaultName()  = createKB(DEFAULT_PROJECT_NAME)
+    fun createKBWithDefaultName() = createKB(DEFAULT_PROJECT_NAME)
 
     fun shutdown(): Unit = runBlocking {
         try {

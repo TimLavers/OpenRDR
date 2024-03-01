@@ -12,7 +12,7 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.interpretationview.ViewableInterpretation
 
-interface CaseInspectionHandler :  Handler {
+interface CaseInspectionHandler : Handler {
     var case: ViewableCase
     var updateCase: (Long) -> Unit
     var ruleSessionInProgress: (Boolean) -> Unit

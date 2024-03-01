@@ -29,7 +29,7 @@ class CaseSelectorTest {
                 CaseSelector(object : Handler by handlerImpl, CaseSelectorHandler {
                     override var caseIds= twoCaseIds
                     override var selectCase: (_: Long) -> Unit = {}
-
+                    override var selectedCaseName: String? = null
                 })
             }
             requireNamesToBeShowingOnCaseList(caseA, caseB)
@@ -55,6 +55,8 @@ class CaseSelectorTest {
                     override var selectCase: (id: Long) -> Unit = {
                         selectedCaseId = it
                     }
+                    override var selectedCaseName: String? = null
+
                 })
             }
             selectedCaseId shouldBe 0
@@ -79,6 +81,8 @@ class CaseSelectorTest {
                 CaseSelector(object : Handler by handlerImpl, CaseSelectorHandler {
                     override var caseIds = threeCaseIds
                     override var selectCase: (id: Long) -> Unit = {}
+                    override var selectedCaseName: String? = null
+
                 })
             }
 //            requireNameOnCaseListToBeSelected(caseB)
@@ -103,6 +107,7 @@ fun main() = application {
         CaseSelector(object : Handler by handlerImpl, CaseSelectorHandler {
             override var caseIds = threeCaseIds
             override var selectCase: (id: Long) -> Unit = {}
+            override var selectedCaseName: String? = null
         })
     }
 }

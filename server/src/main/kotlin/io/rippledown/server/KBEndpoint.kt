@@ -79,7 +79,7 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
 
     fun processCase(externalCase: ExternalCase) = kb.processCase(externalCase)
 
-    fun deleteProcessedCase(name: String) = kb.deletedProcessedCaseWithName(name)
+    fun deleteCase(name: String) = kb.deletedProcessedCaseWithName(name)
 
     fun moveAttributeJustBelow(movedId: Int, targetId: Int) {
         val moved = kb.attributeManager.getById(movedId)
@@ -103,6 +103,7 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
         require(viewableInterpretation.verifiedText != null) { "Cannot save an unverified interpretation." }
 
         val caseId = viewableInterpretation.caseId()
+        caseId.id ?: error("Case id should be a long.")
         val case = viewableCase(caseId.id!!)
 
         //persist the verified text and corresponding conclusions associated with the interpretation

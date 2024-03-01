@@ -21,9 +21,9 @@ import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import java.io.File
 
-class Api(engine: HttpClientEngine = CIO.create() ) {
+class Api(engine: HttpClientEngine = CIO.create()) {
     private var currentKB: KBInfo? = null
-    private val client = HttpClient(engine){
+    private val client = HttpClient(engine) {
         install(ContentNegotiation) {
             json()
         }
@@ -42,7 +42,6 @@ class Api(engine: HttpClientEngine = CIO.create() ) {
     }
 
     suspend fun selectKB(id: String): KBInfo {
-        println("Api: selectKB: $id")
         currentKB = client.post("$API_URL$SELECT_KB") {
             contentType(ContentType.Text.Plain)
             setBody(id)
@@ -53,7 +52,7 @@ class Api(engine: HttpClientEngine = CIO.create() ) {
     suspend fun kbInfo(): KBInfo {
         if (currentKB == null) {
             currentKB = client.get("$API_URL$DEFAULT_KB").body<KBInfo>()
-            println("Got kbi: $currentKB" )
+            println("Got kbi: $currentKB")
         }
         return currentKB!!
     }
@@ -96,12 +95,26 @@ class Api(engine: HttpClientEngine = CIO.create() ) {
         return true
     }
 
-    suspend fun getCase(id: Long): ViewableCase = client.get("$API_URL$CASE?id=$id"){
-        parameter("KB", kbId() )
-    }.body()
+    suspend fun getCase(id: Long): ViewableCase? {
+        try {
+           return client.get("$API_URL$CASE?id=$id") {
+                parameter("KB", kbId())
+            }.body()
+        } catch (e: Exception) {
+            println("getCase exception: $e")
+            return null
+        }
+    }
 
-    suspend fun waitingCasesInfo(): CasesInfo = client.get("$API_URL$WAITING_CASES"){
-        parameter("KB", kbId() )
+    suspend fun deleteCase(caseName: String) {
+        client.delete("$API_URL$DELETE_CASE_WITH_NAME") {
+            parameter("KB", kbId())
+            parameter("name", caseName)
+        }
+    }
+
+    suspend fun waitingCasesInfo(): CasesInfo = client.get("$API_URL$WAITING_CASES") {
+        parameter("KB", kbId())
     }.body()
 
     suspend fun moveAttributeJustBelowOther(moved: Int, target: Int): OperationResult {
@@ -115,11 +128,13 @@ class Api(engine: HttpClientEngine = CIO.create() ) {
      * @return the interpretation containing the DiffList of the original and verified interpretation
      */
     suspend fun saveVerifiedInterpretation(verifiedInterpretation: ViewableInterpretation): ViewableInterpretation {
-        return client.post("$API_URL$VERIFIED_INTERPRETATION_SAVED") {
+        val returned = client.post("$API_URL$VERIFIED_INTERPRETATION_SAVED") {
             contentType(ContentType.Application.Json)
             setBody(verifiedInterpretation)
-            parameter("KB", kbId() )
+            parameter("KB", kbId())
         }.body<ViewableInterpretation>()
+        println("returned from save verified interpretation = ${returned}")
+        return returned
     }
 
     /**

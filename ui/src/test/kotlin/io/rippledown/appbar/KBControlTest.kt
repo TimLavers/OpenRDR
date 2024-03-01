@@ -96,7 +96,7 @@ class KBControlTest {
 
     @Test
     fun `should select default project`() {
-        uiKbControlOperator.assertKbNameIs(engineConfig.returnKBInfo.name)
+        uiKbControlOperator.assertKbNameIs(engineConfig.defaultKB.name)
     }
 
     @Test
@@ -109,12 +109,10 @@ class KBControlTest {
         uiKbControlOperator.assertCreateKbButtonIsShowing()
         val uiCreateKB = uiKbControlOperator.clickCreateKbButton()
         uiCreateKB.assertOkButtonIsNotEnabled()
-        SwingUtilities.invokeAndWait(Runnable {
+        SwingUtilities.invokeAndWait{
             uiCreateKB.setNameAndClickCreate(newKbName)
-        })
+        }
         engineConfig.newKbName shouldBe newKbName
-//        uiCreateKB.waitToVanish()
-
     }
 }
 

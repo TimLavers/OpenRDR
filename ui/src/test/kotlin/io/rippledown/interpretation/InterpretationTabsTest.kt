@@ -61,14 +61,13 @@ class InterpretationTabsTest {
     fun `changes to the interpretation should be saved`() = runTest {
         val text = "Go to Bondi now!"
         val originalInterpretation = ViewableInterpretation(Interpretation())
-        val changedInterpretation = originalInterpretation.apply { verifiedText = text }
+        val changedInterpretation = ViewableInterpretation(Interpretation()).apply { verifiedText = text }
         val config = config {
             expectedInterpretation = changedInterpretation
-            returnInterpretationAfterSavingInterpretation = changedInterpretation
         }
         with(composeTestRule) {
             setContent {
-                InterpretationTabs(object :  InterpretationTabsHandler {
+                InterpretationTabs(object : Handler by handlerImpl, InterpretationTabsHandler {
                     override var interpretation = originalInterpretation
                     override var onStartRule: (selectedDiff: Diff) -> Unit = { }
                     override var isCornerstone = false
@@ -76,7 +75,35 @@ class InterpretationTabsTest {
                 })
             }
             //Given
-//            requireInterpretation("")
+            requireInterpretation("")
+
+            //When
+            enterInterpretationAndWaitForUpdate(text)
+
+            //Then
+            requireInterpretation(text)
+            //assertion that the interpretation was saved is in the config
+        }
+    }
+    @Test
+    fun `should not save interpretation if no changes have been made`() = runTest {
+        val text = "Go to Bondi now!"
+        val originalInterpretation = ViewableInterpretation(Interpretation())
+        val changedInterpretation = ViewableInterpretation(Interpretation()).apply { verifiedText = text }
+        val config = config {
+            expectedInterpretation = changedInterpretation
+        }
+        with(composeTestRule) {
+            setContent {
+                InterpretationTabs(object : Handler by handlerImpl, InterpretationTabsHandler {
+                    override var interpretation = originalInterpretation
+                    override var onStartRule: (selectedDiff: Diff) -> Unit = { }
+                    override var isCornerstone = false
+                    override var api = Api(mock(config))
+                })
+            }
+            //Given
+            requireInterpretation("")
 
             //When
             enterInterpretationAndWaitForUpdate(text)
