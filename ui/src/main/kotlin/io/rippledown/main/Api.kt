@@ -52,7 +52,6 @@ class Api(engine: HttpClientEngine = CIO.create()) {
     suspend fun kbInfo(): KBInfo {
         if (currentKB == null) {
             currentKB = client.get("$API_URL$DEFAULT_KB").body<KBInfo>()
-            println("Got kbi: $currentKB")
         }
         return currentKB!!
     }

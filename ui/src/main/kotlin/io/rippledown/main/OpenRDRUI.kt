@@ -10,8 +10,7 @@ import io.rippledown.appbar.ApplicationBar
 import io.rippledown.casecontrol.CasePoller
 import io.rippledown.casecontrol.CasePollerHandler
 import io.rippledown.constants.main.APPLICATION_BAR_ID
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.MainScope
+import io.rippledown.model.CasesInfo
 
 interface Handler {
     var api: Api
@@ -21,6 +20,7 @@ interface Handler {
 @Preview
 fun OpenRDRUI(handler: Handler) {
     var ruleInProgress by remember { mutableStateOf(false) }
+    var casesInfo by remember { mutableStateOf(CasesInfo()) }
 
     Scaffold(
         modifier = Modifier.testTag(APPLICATION_BAR_ID),
@@ -34,6 +34,9 @@ fun OpenRDRUI(handler: Handler) {
             override var isRuleSessionInProgress = ruleInProgress
             override var setRuleInProgress = { inProgress : Boolean ->
                 ruleInProgress = inProgress
+            }
+            override var updatedCasesInfo: (updated: CasesInfo) -> Unit = {
+                casesInfo = it
             }
         })
     }

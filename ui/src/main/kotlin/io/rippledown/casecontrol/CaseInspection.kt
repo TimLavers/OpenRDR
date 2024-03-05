@@ -26,7 +26,7 @@ fun CaseInspection(handler: CaseInspectionHandler) {
             override fun caseEdited() {}
             override var api= handler.api
         })
-        key(handler.case) {
+        key(handler.case.latestText()) {
             InterpretationTabs(object : InterpretationTabsHandler, Handler by handler {
                 override var interpretation: ViewableInterpretation = handler.case.viewableInterpretation
                 override var onStartRule: (selectedDiff: Diff) -> Unit = { }

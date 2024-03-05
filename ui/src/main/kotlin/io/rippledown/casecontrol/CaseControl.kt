@@ -1,7 +1,10 @@
 package io.rippledown.casecontrol
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
@@ -10,15 +13,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import io.rippledown.caseview.CaseView
-import io.rippledown.caseview.CaseViewHandler
 import io.rippledown.constants.caseview.CASES
-import io.rippledown.constants.caseview.CASEVIEW_CASE_NAME_ID
-import io.rippledown.constants.caseview.CASE_HEADING
 import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
-import io.rippledown.interpretation.InterpretationView
-import io.rippledown.interpretation.InterpretationViewHandler
-import io.rippledown.main.Api
 import io.rippledown.main.Handler
 import io.rippledown.model.CaseId
 import io.rippledown.model.caseview.ViewableCase
@@ -55,7 +51,7 @@ fun CaseControl(handler: CaseControlHandler) {
     }
 
     selectFirstCase()
-
+    println("CaseControl caseName: ${currentCase?.name} size: ${handler.caseIds.size} ")
     Row {
         Column(
             modifier = Modifier

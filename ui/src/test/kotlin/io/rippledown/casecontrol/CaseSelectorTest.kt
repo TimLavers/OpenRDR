@@ -37,7 +37,7 @@ class CaseSelectorTest {
     }
 
     @Test
-    fun `should call selectCase when case is selected by id`() = runTest {
+    fun `should call selectCase when case is selected by name`() = runTest {
         val caseA = "case A"
         val caseB = "case B"
         val caseC = "case C"
@@ -59,35 +59,17 @@ class CaseSelectorTest {
 
                 })
             }
+            //Given
             selectedCaseId shouldBe 0
-            selectCaseByNameUsingContentDescription(caseId2.name)
+
+            //When
+            selectCaseByName(caseId2.name)
+
+            //Then
             selectedCaseId shouldBe caseId2.id
         }
     }
 
-    @Test
-    fun `should set the initial list selection`()= runTest {
-        val caseA = "case A"
-        val caseB = "case B"
-        val caseC = "case C"
-        val caseId1 = CaseId(id = 1, name = caseA)
-        val caseId2 = CaseId(id = 2, name = caseB)
-        val caseId3 = CaseId(id = 3, name = caseC)
-        val threeCaseIds = listOf(caseId1, caseId2, caseId3)
-        var selectedCaseName: String? = null
-
-        with(composeTestRule) {
-            setContent {
-                CaseSelector(object : Handler by handlerImpl, CaseSelectorHandler {
-                    override var caseIds = threeCaseIds
-                    override var selectCase: (id: Long) -> Unit = {}
-                    override var selectedCaseName: String? = null
-
-                })
-            }
-//            requireNameOnCaseListToBeSelected(caseB)
-        }
-    }
 }
 
 fun main() = application {

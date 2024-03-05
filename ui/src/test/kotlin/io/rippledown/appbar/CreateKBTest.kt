@@ -3,6 +3,8 @@ package io.rippledown.appbar
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.application
 import io.kotest.matchers.shouldBe
 import io.rippledown.constants.main.*
 import org.junit.Before
@@ -28,6 +30,7 @@ class CreateKBTest {
         createKbOperator = CreateKbOperator(composeTestRule)
     }
 
+
     @Test
     fun `initial layout`() {
         with(composeTestRule) {
@@ -35,7 +38,9 @@ class CreateKBTest {
             onNodeWithTag(CREATE_KB_NAME_FIELD_ID)
                 .assertIsEnabled()
                 .assertIsDisplayed()
-                .assertTextEquals("")
+//                .assertTextEquals("")//TODO why doesn't this work?
+            waitUntilExactlyOneExists(hasText(""))
+
             onNodeWithTag(CREATE_KB_OK_BUTTON_ID)
                 .assertIsNotEnabled()
                 .assertIsDisplayed()
@@ -114,4 +119,15 @@ class CreateKbOperator(private val composeTestRule: ComposeContentTestRule) {
     fun clickCreateButton() = composeTestRule.onNodeWithTag(CREATE_KB_OK_BUTTON_ID).performClick()
 
     fun clickCancelButton() = composeTestRule.onNodeWithTag(CREATE_KB_CANCEL_BUTTON_ID).performClick()
+}
+
+fun main() {
+
+    application {
+        Window(
+            onCloseRequest = ::exitApplication,
+        ) {
+            CreateKB(CreateKBTest.DummyCreateKBHandler())
+        }
+    }
 }

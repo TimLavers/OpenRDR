@@ -10,6 +10,7 @@ import kotlin.time.Duration.Companion.seconds
 
 interface CasePollerHandler : AppBarHandler {
     var setRuleInProgress: (inProgress: Boolean) -> Unit
+    var updatedCasesInfo: (updated: CasesInfo) -> Unit
 }
 
 val POLL_PERIOD = 2.seconds
@@ -17,23 +18,27 @@ val POLL_PERIOD = 2.seconds
 @Composable
 @Preview
 fun CasePoller(handler: CasePollerHandler) {
+    val counter = remember { mutableStateOf(0) }
+    println("recompose CasePoller with counter ${counter.value}")
     var casesInfo by remember { mutableStateOf(CasesInfo()) }
 
-    val counter = remember { mutableStateOf(0) }
 
     LaunchedEffect(counter.value) {
         delay(POLL_PERIOD)
-        casesInfo = handler.api.waitingCasesInfo()
+        val updatedCasesInfo = handler.api.waitingCasesInfo()
+        println("CasePoller: CasesInfo: $casesInfo")
+        if (updatedCasesInfo != casesInfo) {
+            println("CasePoller: updatedCasesInfo: $updatedCasesInfo")
+            casesInfo = updatedCasesInfo
+            handler.updatedCasesInfo(updatedCasesInfo)
+        }
         counter.value++
     }
 
     if (casesInfo.count > 0) {
-        //Don't redraw if the cases have not changed
-        key(casesInfo.caseIds) {
-            CaseControl(object : CaseControlHandler, Handler by handler {
-                override var caseIds = casesInfo.caseIds
-                override var setRuleInProgress = handler.setRuleInProgress
-            })
-        }
+        CaseControl(object : CaseControlHandler, Handler by handler {
+            override var caseIds = casesInfo.caseIds
+            override var setRuleInProgress = handler.setRuleInProgress
+        })
     }
 }

@@ -29,7 +29,7 @@ class OpenRDRUITest {
     fun `should show OpenRDR UI`() = runTest {
         with(composeTestRule) {
             setContent { OpenRDRUI(handlerImpl) }
-            onNodeWithTag(testTag = APPLICATION_BAR_ID, useUnmergedTree = true).assertExists()
+            onNodeWithTag(testTag = APPLICATION_BAR_ID).assertExists()
         }
     }
 }

@@ -28,7 +28,6 @@ fun AccessibleContext.findByName(name: String, role: AccessibleRole): Accessible
     println("Find by name: '$name', role: '$role'")
     val matcher = { context: AccessibleContext ->
         val nameMatch = name == context.accessibleName
-        println("nameMatch: $nameMatch, context accessible name: '${context.accessibleName}'.")
         val roleMatch = role == context.accessibleRole
         println("roleMatch: $roleMatch")
         (name == context.accessibleName && role == context.accessibleRole)
@@ -49,7 +48,6 @@ fun AccessibleContext.find(matcher: (AccessibleContext) -> Boolean, debug: Boole
 fun AccessibleContext.findAllByDescriptionPrefix(prefix: String): Set<AccessibleContext> {
     val matcher = { context: AccessibleContext ->
         if (context.accessibleDescription == null) false else {
-            println("context.accessibleDescription = '${context.accessibleDescription}' starts with prefix '$prefix'= ${context.accessibleDescription?.startsWith(prefix)}")
             context.accessibleDescription.startsWith(prefix)
         }
     }
@@ -63,11 +61,9 @@ fun AccessibleContext.findAll(matcher: (AccessibleContext) -> Boolean, debug: Bo
 fun AccessibleContext.findAll(holder: MutableSet<AccessibleContext>, matcher: (AccessibleContext) -> Boolean, debug: Boolean = false) {
     if (matcher(this)) {
         holder.add(this)
-        println("added context this = $this")
     }
     val childCount = accessibleChildrenCount
     for (i in 0..<childCount) {
-        println("getting accessible child i = ${i}")
         getAccessibleChild(i).accessibleContext.findAll(holder, matcher, debug)
     }
 }

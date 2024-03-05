@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -20,6 +22,13 @@ fun CreateKB(handler: CreateKBHandler) {
     var kbName by remember { mutableStateOf("") }
     fun isNameOK() = kbName.isNotBlank()
 
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
+
+    println("kbName = '${kbName}'")
     MaterialTheme {
         Surface {
             Box {
@@ -39,6 +48,7 @@ fun CreateKB(handler: CreateKBHandler) {
                             .semantics {
                                 contentDescription = CREATE_KB_NAME_FIELD_DESCRIPTION
                             }
+                            .focusRequester(focusRequester)
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),

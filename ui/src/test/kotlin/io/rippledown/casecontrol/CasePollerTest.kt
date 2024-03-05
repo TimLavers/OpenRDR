@@ -11,7 +11,6 @@ import io.rippledown.model.CasesInfo
 import io.rippledown.model.createCase
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
-import kotlin.test.Ignore
 import kotlin.test.Test
 
 class CasePollerTest {
@@ -36,6 +35,7 @@ class CasePollerTest {
                     override var api = Api(mock(config))
                     override var isRuleSessionInProgress = false
                     override var setRuleInProgress: (Boolean) -> Unit = {}
+                    override var updatedCasesInfo: (updated: CasesInfo) -> Unit = {}
                 })
             }
             waitForNumberOfCases(3)
@@ -61,6 +61,8 @@ class CasePollerTest {
                     override var api = Api(mock(config))
                     override var isRuleSessionInProgress = false
                     override var setRuleInProgress: (Boolean) -> Unit = {}
+                    override var updatedCasesInfo: (updated: CasesInfo) -> Unit = {}
+
                 })
             }
             waitForNumberOfCases(2)
@@ -87,6 +89,8 @@ class CasePollerTest {
                     override var api = Api(mock(config))
                     override var isRuleSessionInProgress = false
                     override var setRuleInProgress: (Boolean) -> Unit = {}
+                    override var updatedCasesInfo: (updated: CasesInfo) -> Unit = {}
+
                 })
             }
             waitForCaseToBeShowing(case1)
@@ -111,6 +115,8 @@ class CasePollerTest {
                     override var api = Api(mock(config))
                     override var isRuleSessionInProgress = false
                     override var setRuleInProgress: (Boolean) -> Unit = {}
+                    override var updatedCasesInfo: (updated: CasesInfo) -> Unit = {}
+
                 })
             }
             //Given
@@ -146,6 +152,8 @@ class CasePollerTest {
                     override var api = Api(mock(config))
                     override var isRuleSessionInProgress = false
                     override var setRuleInProgress: (Boolean) -> Unit = {}
+                    override var updatedCasesInfo: (updated: CasesInfo) -> Unit = {}
+
                 })
             }
 
@@ -179,6 +187,8 @@ class CasePollerTest {
                     override var api = Api(mock(config))
                     override var isRuleSessionInProgress = false
                     override var setRuleInProgress: (Boolean) -> Unit = {}
+                    override var updatedCasesInfo: (updated: CasesInfo) -> Unit = {}
+
                 })
             }
 
@@ -193,6 +203,47 @@ class CasePollerTest {
         }
     }
 
+    @Test
+    fun `should call handler only when the polled CasesInfo has changed`() = runTest {
+        val caseName1 = "case 1"
+        val caseId1 = CaseId(1, caseName1)
+        val config = config {
+            returnCasesInfo = CasesInfo(
+                listOf(caseId1)
+            )
+            returnCase = createCase(caseId1)
+        }
+        var casesInfo = CasesInfo()
+        with(composeTestRule) {
+            setContent {
+                CasePoller(object : Handler by handlerImpl, CasePollerHandler {
+                    override var api = Api(mock(config))
+                    override var isRuleSessionInProgress = false
+                    override var setRuleInProgress: (Boolean) -> Unit = {}
+                    override var updatedCasesInfo: (updated: CasesInfo) -> Unit = {
+                        casesInfo = it
+                        println("it = ${it}")
+                    }
+
+                })
+            }
+            //Given
+            selectCaseByName(caseName1)
+//            waitForCaseToBeShowing(caseName2)
+
+            //When
+            //set the mock to return only the other two cases
+            /* config.returnCasesInfo = CasesInfo(
+                 listOf(caseId1, caseId3)
+             )
+             config.returnCase = createCase(caseId1)
+
+             //Then
+             waitForCaseToBeShowing(caseName1)
+             requireNamesToBeShowingOnCaseList(caseName1, caseName3)
+         */
+        }
+    }
     @Test
     fun `should select the first case when the selected case has been deleted`() = runTest {
         val caseName1 = "case 1"
@@ -213,6 +264,7 @@ class CasePollerTest {
                     override var api = Api(mock(config))
                     override var isRuleSessionInProgress = false
                     override var setRuleInProgress: (Boolean) -> Unit = {}
+                    override var updatedCasesInfo: (updated: CasesInfo) -> Unit = {}
                 })
             }
             //Given
@@ -254,6 +306,8 @@ class CasePollerTest {
                     override var api = Api(mock(config))
                     override var isRuleSessionInProgress = false
                     override var setRuleInProgress: (Boolean) -> Unit = {}
+                    override var updatedCasesInfo: (updated: CasesInfo) -> Unit = {}
+
                 })
             }
             waitForCaseToBeShowing(case1)
