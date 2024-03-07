@@ -13,23 +13,35 @@ import io.rippledown.mocks.mock
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.createCase
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import kotlin.test.Test
 
 val handlerImpl = object : Handler {
     override var api = Api(defaultMock)
+    override var isClosing = { false }
 }
 
 class OpenRDRUITest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `should show OpenRDR UI`() = runTest {
+    fun `should show OpenRDR UI`() = runTest(UnconfinedTestDispatcher()) {
+        var closing = true
         with(composeTestRule) {
-            setContent { OpenRDRUI(handlerImpl) }
+            setContent {
+                OpenRDRUI(object : Handler by handlerImpl {
+                    override var isClosing: () -> Boolean = { closing }
+                })
+            }
+            println("about to check")
             onNodeWithTag(testTag = APPLICATION_BAR_ID).assertExists()
+            println("about to close")
+            closing = true
         }
     }
 }
@@ -52,6 +64,7 @@ fun main() {
         ) {
             OpenRDRUI(object : Handler {
                 override var api = Api(mock(config))
+                override var isClosing = { false }
             })
         }
     }

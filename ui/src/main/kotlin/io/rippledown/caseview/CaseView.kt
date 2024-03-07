@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
@@ -17,9 +17,9 @@ import io.rippledown.constants.caseview.CASE_HEADING
 import io.rippledown.main.Handler
 import io.rippledown.model.caseview.ViewableCase
 
-interface CaseViewHandler : Handler {
+ interface CaseViewHandler : Handler {
     var case: ViewableCase
-    fun caseEdited()
+    var caseEdited: () -> Unit
 }
 
 /**

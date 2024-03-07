@@ -21,10 +21,9 @@ interface CaseInspectionHandler : Handler {
 @Composable
 fun CaseInspection(handler: CaseInspectionHandler) {
     Column {
-        CaseView(handler = object : CaseViewHandler  {
+        CaseView(handler = object : CaseViewHandler, Handler by handler {
             override var case: ViewableCase = handler.case
-            override fun caseEdited() {}
-            override var api= handler.api
+            override var caseEdited = {}
         })
         key(handler.case.latestText()) {
             InterpretationTabs(object : InterpretationTabsHandler, Handler by handler {

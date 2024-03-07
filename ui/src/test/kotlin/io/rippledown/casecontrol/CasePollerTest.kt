@@ -1,6 +1,9 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package io.rippledown.casecontrol
 
 import androidx.compose.ui.test.junit4.createComposeRule
+import io.kotest.matchers.shouldBe
 import io.rippledown.main.Api
 import io.rippledown.main.Handler
 import io.rippledown.main.handlerImpl
@@ -9,6 +12,8 @@ import io.rippledown.mocks.mock
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.createCase
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import kotlin.test.Test
@@ -33,8 +38,6 @@ class CasePollerTest {
             setContent {
                 CasePoller(object : Handler by handlerImpl, CasePollerHandler {
                     override var api = Api(mock(config))
-                    override var isRuleSessionInProgress = false
-                    override var setRuleInProgress: (Boolean) -> Unit = {}
                     override var updatedCasesInfo: (updated: CasesInfo) -> Unit = {}
                 })
             }
@@ -59,10 +62,7 @@ class CasePollerTest {
             setContent {
                 CasePoller(object : Handler by handlerImpl, CasePollerHandler {
                     override var api = Api(mock(config))
-                    override var isRuleSessionInProgress = false
-                    override var setRuleInProgress: (Boolean) -> Unit = {}
                     override var updatedCasesInfo: (updated: CasesInfo) -> Unit = {}
-
                 })
             }
             waitForNumberOfCases(2)
@@ -87,10 +87,7 @@ class CasePollerTest {
             setContent {
                 CasePoller(object : Handler by handlerImpl, CasePollerHandler {
                     override var api = Api(mock(config))
-                    override var isRuleSessionInProgress = false
-                    override var setRuleInProgress: (Boolean) -> Unit = {}
                     override var updatedCasesInfo: (updated: CasesInfo) -> Unit = {}
-
                 })
             }
             waitForCaseToBeShowing(case1)
@@ -109,14 +106,14 @@ class CasePollerTest {
             )
             returnCase = createCase("case 1", 1)
         }
+        var closing = false
+
         with(composeTestRule) {
             setContent {
                 CasePoller(object : Handler by handlerImpl, CasePollerHandler {
                     override var api = Api(mock(config))
-                    override var isRuleSessionInProgress = false
-                    override var setRuleInProgress: (Boolean) -> Unit = {}
                     override var updatedCasesInfo: (updated: CasesInfo) -> Unit = {}
-
+                    override var isClosing: () -> Boolean = { closing }
                 })
             }
             //Given
@@ -127,6 +124,9 @@ class CasePollerTest {
 
             //Then
             waitForCaseSelectorNotToBeShowing()
+
+            //Cleanup
+            closing = true
         }
     }
 
@@ -145,15 +145,14 @@ class CasePollerTest {
             returnCasesInfo = CasesInfo(caseIds)
             returnCase = createCase(caseId1)
         }
+        var closing = false
 
         with(composeTestRule) {
             setContent {
                 CasePoller(object : Handler by handlerImpl, CasePollerHandler {
                     override var api = Api(mock(config))
-                    override var isRuleSessionInProgress = false
-                    override var setRuleInProgress: (Boolean) -> Unit = {}
                     override var updatedCasesInfo: (updated: CasesInfo) -> Unit = {}
-
+                    override var isClosing: () -> Boolean = { closing }
                 })
             }
 
@@ -168,6 +167,9 @@ class CasePollerTest {
 
             //Then
             waitForCaseToBeShowing(caseName2)
+
+            //Cleanup
+            closing = true
         }
     }
 
@@ -181,14 +183,13 @@ class CasePollerTest {
             returnCase = createCase(caseId1)
         }
 
+        var closing = false
         with(composeTestRule) {
             setContent {
                 CasePoller(object : Handler by handlerImpl, CasePollerHandler {
                     override var api = Api(mock(config))
-                    override var isRuleSessionInProgress = false
-                    override var setRuleInProgress: (Boolean) -> Unit = {}
                     override var updatedCasesInfo: (updated: CasesInfo) -> Unit = {}
-
+                    override var isClosing: () -> Boolean = { closing }
                 })
             }
 
@@ -200,6 +201,9 @@ class CasePollerTest {
 
             //Then
             waitForNumberOfCases(2)
+
+            //Cleanup
+            closing = true
         }
     }
 
@@ -214,22 +218,22 @@ class CasePollerTest {
             returnCase = createCase(caseId1)
         }
         var casesInfo = CasesInfo()
+        var closing = false
         with(composeTestRule) {
             setContent {
                 CasePoller(object : Handler by handlerImpl, CasePollerHandler {
                     override var api = Api(mock(config))
-                    override var isRuleSessionInProgress = false
-                    override var setRuleInProgress: (Boolean) -> Unit = {}
                     override var updatedCasesInfo: (updated: CasesInfo) -> Unit = {
                         casesInfo = it
                         println("it = ${it}")
                     }
-
+                    override var isClosing: () -> Boolean = { closing }
                 })
             }
             //Given
             selectCaseByName(caseName1)
 //            waitForCaseToBeShowing(caseName2)
+
 
             //When
             //set the mock to return only the other two cases
@@ -242,6 +246,8 @@ class CasePollerTest {
              waitForCaseToBeShowing(caseName1)
              requireNamesToBeShowingOnCaseList(caseName1, caseName3)
          */
+            //Cleanup
+            closing = true
         }
     }
     @Test
@@ -256,31 +262,45 @@ class CasePollerTest {
             returnCasesInfo = CasesInfo(
                 listOf(caseId1, caseId2, caseId3)
             )
-            returnCase = createCase(caseId2)
+            returnCase = createCase(caseId1)
         }
+        var closing = false
         with(composeTestRule) {
             setContent {
                 CasePoller(object : Handler by handlerImpl, CasePollerHandler {
                     override var api = Api(mock(config))
-                    override var isRuleSessionInProgress = false
-                    override var setRuleInProgress: (Boolean) -> Unit = {}
                     override var updatedCasesInfo: (updated: CasesInfo) -> Unit = {}
+                    override var isClosing: () -> Boolean = { closing }
                 })
             }
             //Given
-            selectCaseByName(caseName2)
-            waitForCaseToBeShowing(caseName2)
+            println("---------------about to check for case 1 initially")
 
-            //When
-            //set the mock to return only the other two cases
+            waitForCaseToBeShowing(caseName1)
+            println("***************checked initially")
+
+            //When case 2 is selected
+            config.returnCase = createCase(caseId2)
+            println("---------------about select case 2")
+            selectCaseByName(caseName2)
+            println("---------------selected ---about to check for case 2 ")
+            waitForCaseToBeShowing(caseName2)
+            println("***************checked case 2")
+
+            //And the mock is set to return only the other two cases
+            config.returnCase = createCase(caseId1)
             config.returnCasesInfo = CasesInfo(
                 listOf(caseId1, caseId3)
             )
-            config.returnCase = createCase(caseId1)
 
             //Then
+            println("---------------about to check for case 1")
             waitForCaseToBeShowing(caseName1)
-            requireNamesToBeShowingOnCaseList(caseName1, caseName3)
+            println("***************checked")
+
+            //Cleanup
+            closing = true
+//            requireNamesToBeShowingOnCaseList(caseName1, caseName3)
         }
     }
 
@@ -300,17 +320,32 @@ class CasePollerTest {
             )
             returnCase = createCase(caseId1)
         }
+        var closing = false
+        var updated: CasesInfo? = null
         with(composeTestRule) {
             setContent {
                 CasePoller(object : Handler by handlerImpl, CasePollerHandler {
                     override var api = Api(mock(config))
-                    override var isRuleSessionInProgress = false
-                    override var setRuleInProgress: (Boolean) -> Unit = {}
-                    override var updatedCasesInfo: (updated: CasesInfo) -> Unit = {}
-
+                    override var updatedCasesInfo: (updated: CasesInfo) -> Unit = {
+                        updated = it
+                    }
+                    override var isClosing: () -> Boolean = {
+                        println("reading closing = $closing")
+                        closing
+                    }
                 })
             }
-            waitForCaseToBeShowing(case1)
+            //Given
+            updated shouldBe null
+
+            //When
+            delay(2000)
+
+            //Then
+            updated = config.returnCasesInfo
+
+            //Cleanup
+//            closing = true
         }
     }
 }

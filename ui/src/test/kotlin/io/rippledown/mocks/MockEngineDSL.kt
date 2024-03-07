@@ -61,7 +61,7 @@ private class EngineBuilder(private val config: EngineConfig) {
 //        println("MockEngine called with ${request.url.fullPath}")
         when (request.url.encodedPath) {
             WAITING_CASES -> {
-                println("api call to WAITING_CASES with ${request.url.parameters} will return ${config.returnCasesInfo}")
+//                println("api call to WAITING_CASES with ${request.url.parameters} will return ${config.returnCasesInfo}")
                 httpResponseData(json.encodeToString(config.returnCasesInfo))
             }
 
