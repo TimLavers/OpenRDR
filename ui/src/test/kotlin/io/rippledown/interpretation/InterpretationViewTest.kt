@@ -5,11 +5,9 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.kotest.matchers.shouldBe
-import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
 import io.rippledown.constants.main.TITLE
 import io.rippledown.main.Handler
 import io.rippledown.main.handlerImpl
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import kotlin.test.Test
@@ -24,8 +22,8 @@ class InterpretationViewTest {
         val initialText = "Go to Bondi now!"
         with(composeTestRule) {
             setContent {
-                InterpretationView(object : Handler by handlerImpl, InterpretationViewHandler {
-                    override var text = initialText
+                InterpretationView("", object : Handler by handlerImpl, InterpretationViewHandler {
+                    //                    override var text = initialText
                     override var onEdited = { _: String -> }
                     override var isCornertone = false
                 })
@@ -38,8 +36,8 @@ class InterpretationViewTest {
     fun `should show a blank interpretation`() = runTest {
         with(composeTestRule) {
             setContent {
-                InterpretationView(object : Handler by handlerImpl, InterpretationViewHandler {
-                    override var text = ""
+                InterpretationView("", object : Handler by handlerImpl, InterpretationViewHandler {
+                    //                    override var text = ""
                     override var onEdited = { _: String -> }
                     override var isCornertone = false
                 })
@@ -49,14 +47,13 @@ class InterpretationViewTest {
     }
 
     @Test
-    fun `should call OnEdited after the debounce period once the text is changed`() = runTest {
+    fun `should call OnEdited once the text is changed`() = runTest {
         val enteredText = "And bring your flippers"
         var updatedText = ""
 
         with(composeTestRule) {
             setContent {
-                InterpretationView(object : Handler by handlerImpl, InterpretationViewHandler {
-                    override var text = ""
+                InterpretationView("", object : Handler by handlerImpl, InterpretationViewHandler {
                     override var onEdited = { changed: String -> updatedText = changed }
                     override var isCornertone = false
                 })
@@ -73,37 +70,12 @@ class InterpretationViewTest {
     }
 
     @Test
-    fun `should not call OnEdited before the debounce period once the text is changed`() = runTest {
-        val enteredText = "And bring your flippers"
-        var updatedText = ""
-
-        with(composeTestRule) {
-            setContent {
-                InterpretationView(object : Handler by handlerImpl, InterpretationViewHandler {
-                    override var text = ""
-                    override var onEdited = { changed: String -> updatedText = changed }
-                    override var isCornertone = false
-                })
-            }
-            //Given
-            updatedText shouldBe ""
-
-            //When
-            enterInterpretation(enteredText)
-
-            //Then
-            updatedText shouldBe ""
-        }
-    }
-
-    @Test
     fun `should no call OnEdited if the text has not changed`() = runTest {
         var onEditedCalled = false
 
         with(composeTestRule) {
             setContent {
-                InterpretationView(object : Handler by handlerImpl, InterpretationViewHandler {
-                    override var text = ""
+                InterpretationView("", object : Handler by handlerImpl, InterpretationViewHandler {
                     override var onEdited = { changed: String -> onEditedCalled = true }
                     override var isCornertone = false
                 })
@@ -129,8 +101,7 @@ fun main() {
             icon = painterResource("water-wave-icon.png"),
             title = TITLE
         ) {
-            InterpretationView(object : Handler by handlerImpl, InterpretationViewHandler {
-                override var text = "Go to Bondi"
+            InterpretationView("", object : Handler by handlerImpl, InterpretationViewHandler {
                 override var onEdited = { entered: String -> println("onEdited $entered") }
                 override var isCornertone = false
             })

@@ -1,6 +1,5 @@
 package io.rippledown.server
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -13,8 +12,11 @@ import io.rippledown.constants.api.CASE
 import io.rippledown.constants.api.DELETE_CASE_WITH_NAME
 import io.rippledown.constants.api.PROCESS_CASE
 import io.rippledown.constants.api.WAITING_CASES
-import io.rippledown.model.*
+import io.rippledown.model.CaseId
+import io.rippledown.model.CasesInfo
+import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.createCase
 import io.rippledown.model.external.serialize
 import io.rippledown.server.routes.KB_ID
 import kotlin.test.Test
@@ -49,14 +51,13 @@ class CaseManagementTest : OpenRDRServerTestBase() {
     }
 
     @Test
-    fun `should return null if no case with that id`() = testApplication {
+    fun `should return error status the case with that id has been deleted`() = testApplication {
         setup()
         val result = httpClient.get(CASE) {
             parameter("id", 42L)
             parameter(KB_ID, kbId)
         }
-        result.status shouldBe HttpStatusCode.OK
-        result.body<ViewableCase?>() shouldBe null
+        result.status shouldBe HttpStatusCode.BadRequest
     }
 
     @Test
@@ -93,8 +94,8 @@ class CaseManagementTest : OpenRDRServerTestBase() {
         every { kbEndpoint.deleteCase(caseName) } returns Unit
         val result = httpClient.delete(DELETE_CASE_WITH_NAME) {
             contentType(ContentType.Application.Json)
-            setBody(CaseName(caseName))
             parameter(KB_ID, kbId)
+            parameter("name", caseName)
         }
         result.status shouldBe HttpStatusCode.OK
         verify { kbEndpoint.deleteCase(caseName) }

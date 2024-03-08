@@ -1,7 +1,6 @@
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
 import androidx.compose.material.Text
@@ -63,8 +62,8 @@ fun InterpretationTabs(handler: InterpretationTabsHandler) {
         }
         when (tabPage) {
             0 -> {
-                InterpretationView(handler = object : InterpretationViewHandler {
-                    override var text: String = handler.interpretation.latestText()
+                InterpretationView(text = text ?: "", handler = object : InterpretationViewHandler {
+                    //                    override var text: String = handler.interpretation.latestText()
                     override var onEdited: (text: String) -> Unit = { editedText ->
                         text = editedText
                     }
