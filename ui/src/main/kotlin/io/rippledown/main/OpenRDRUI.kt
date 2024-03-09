@@ -10,6 +10,8 @@ import io.rippledown.casecontrol.CaseControlHandler
 import io.rippledown.casecontrol.CasePoller
 import io.rippledown.casecontrol.CasePollerHandler
 import io.rippledown.model.CasesInfo
+import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.diff.Diff
 
 interface Handler {
     var api: Api
@@ -41,6 +43,25 @@ fun OpenRDRUI(handler: Handler) {
                 override var setRuleInProgress = { inProgress: Boolean ->
                     ruleInProgress = inProgress
                 }
+                override var onStartRule: (selectedDiff: Diff) -> Unit
+                    get() = TODO("Not yet implemented")
+                    set(value) {}
+                override var onInterpretationEdited: (text: String) -> Unit
+                    get() = TODO("Not yet implemented")
+                    set(value) {}
+                override var isCornerstone: Boolean
+                    get() = TODO("Not yet implemented")
+                    set(value) {}
+                override var case: ViewableCase
+                    get() = TODO("Not yet implemented")
+                    set(value) {}
+
+                override var updateCase: (Long) -> Unit
+                    get() = TODO("Not yet implemented")
+                    set(value) {}
+
+                override var ruleSessionInProgress: (Boolean) -> Unit = { }
+
             })
         }
     }

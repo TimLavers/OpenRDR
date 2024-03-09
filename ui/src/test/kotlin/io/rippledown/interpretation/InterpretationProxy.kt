@@ -11,7 +11,7 @@ fun ComposeTestRule.requireInterpretation(text: String) {
 
 @OptIn(ExperimentalTestApi::class)
 fun ComposeTestRule.enterInterpretationAndWaitForUpdate(enteredText: String) {
-    onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD).performTextInput(enteredText)
+    enterInterpretation(enteredText)
     waitUntilExactlyOneExists(hasText(enteredText))
 }
 fun ComposeTestRule.enterInterpretation(enteredText: String) {

@@ -11,6 +11,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.unit.dp
+import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES_LABEL
+import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CONCLUSIONS_LABEL
+import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL_LABEL
 import io.rippledown.interpretation.InterpretationView
 import io.rippledown.interpretation.InterpretationViewHandler
 import io.rippledown.main.Handler
@@ -18,25 +21,21 @@ import io.rippledown.model.diff.Diff
 import io.rippledown.model.interpretationview.ViewableInterpretation
 
 interface InterpretationTabsHandler : Handler {
-    var interpretation: ViewableInterpretation
     var onStartRule: (selectedDiff: Diff) -> Unit
+    var onInterpretationEdited: (text: String) -> Unit
     var isCornerstone: Boolean
 }
 
 @Composable
-fun InterpretationTabs(handler: InterpretationTabsHandler) {
-    val titles = listOf("Interpretation", "Conclusions", "Changes")
+fun InterpretationTabs(viewableInterpretation: ViewableInterpretation, handler: InterpretationTabsHandler) {
+    val titles = listOf(
+        INTERPRETATION_TAB_ORIGINAL_LABEL,
+        INTERPRETATION_TAB_CONCLUSIONS_LABEL,
+        INTERPRETATION_TAB_CHANGES_LABEL
+    )
 
     var tabPage by remember { mutableStateOf(0) }
-
-    var text by remember { mutableStateOf(handler.interpretation.verifiedText) }
-
-    LaunchedEffect(text) {
-        if (text != handler.interpretation.verifiedText) {
-            val interpretation = handler.interpretation.apply { verifiedText = text }
-            handler.api.saveVerifiedInterpretation(interpretation)
-        }
-    }
+    println("--Redraw InterpretationTabs with interp = ${viewableInterpretation} and tab page = ${tabPage}--")
 
 
     Column(modifier = Modifier.semantics { testTag = "tabs" }) {
@@ -56,19 +55,20 @@ fun InterpretationTabs(handler: InterpretationTabsHandler) {
                         contentDescription = "interpretation_tab_$title"
                     }
                         .background(Color.Gray)
-
                 )
             }
         }
         when (tabPage) {
             0 -> {
-                InterpretationView(text = text ?: "", handler = object : InterpretationViewHandler {
-                    //                    override var text: String = handler.interpretation.latestText()
-                    override var onEdited: (text: String) -> Unit = { editedText ->
-                        text = editedText
-                    }
-                    override var isCornertone: Boolean = false
-                })
+                InterpretationView(
+                    text = viewableInterpretation.latestText() ?: "",
+                    handler = object : InterpretationViewHandler {
+                        override var onEdited: (text: String) -> Unit = { editedText ->
+                            println("Updating interp with editedText = ${editedText}")
+                            handler.onInterpretationEdited(editedText)
+                        }
+                        override var isCornertone: Boolean = false
+                    })
             }
 
             1 -> {}

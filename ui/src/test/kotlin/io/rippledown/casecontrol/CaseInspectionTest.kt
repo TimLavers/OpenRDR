@@ -1,12 +1,12 @@
 package io.rippledown.casecontrol
 
 import androidx.compose.ui.test.junit4.createComposeRule
+import io.mockk.mockk
 import io.rippledown.interpretation.requireInterpretation
-import io.rippledown.main.Handler
-import io.rippledown.main.handlerImpl
 import io.rippledown.model.CaseId
 import io.rippledown.model.createCase
 import kotlinx.coroutines.test.runTest
+import org.junit.Before
 import org.junit.Rule
 import kotlin.test.Test
 
@@ -14,6 +14,12 @@ class CaseInspectionTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
+    lateinit var handler: CaseInspectionHandler
+
+    @Before
+    fun setUp() {
+        handler = mockk<CaseInspectionHandler>()
+    }
     @Test
     fun shouldShowCaseView() = runTest {
         val caseName = "case a"
@@ -22,11 +28,7 @@ class CaseInspectionTest {
 
         with(composeTestRule) {
             setContent {
-                CaseInspection(object : Handler by handlerImpl, CaseInspectionHandler {
-                    override var case = currentCase
-                    override var updateCase = { _: Long -> }
-                    override var ruleSessionInProgress = { _: Boolean -> }
-                })
+                CaseInspection(handler)
             }
             waitForCaseToBeShowing(caseName)
         }
@@ -40,11 +42,7 @@ class CaseInspectionTest {
 
         with(composeTestRule) {
             setContent {
-                CaseInspection(object : Handler by handlerImpl, CaseInspectionHandler {
-                    override var case = currentCase
-                    override var updateCase = { _: Long -> }
-                    override var ruleSessionInProgress = { _: Boolean -> }
-                })
+                CaseInspection(handler)
             }
             requireInterpretation(text)
         }

@@ -7,8 +7,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import io.rippledown.main.Handler
-import io.rippledown.main.handlerImpl
+import io.mockk.mockk
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import kotlinx.coroutines.test.runTest
@@ -94,12 +93,9 @@ class CaseInspectionKeyTest {
 fun CaseInspectionWithButton(initialCase: ViewableCase, changedCase: ViewableCase) {
 
     var currentCase by remember { mutableStateOf(initialCase) }
+    val handler = mockk<CaseInspectionHandler>()
 
-    CaseInspection(object : Handler by handlerImpl, CaseInspectionHandler {
-        override var case = currentCase
-        override var updateCase = { _: Long -> }
-        override var ruleSessionInProgress = { _: Boolean -> }
-    })
+    CaseInspection(handler)
 
     Button(
         onClick = {
@@ -109,5 +105,4 @@ fun CaseInspectionWithButton(initialCase: ViewableCase, changedCase: ViewableCas
     ) {}
 }
 
-fun caseInspectionKey(case: ViewableCase) = "${case.id} ${case.attributes().hashCode()}"
 

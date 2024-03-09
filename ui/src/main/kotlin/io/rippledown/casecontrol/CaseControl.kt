@@ -18,8 +18,9 @@ import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import io.rippledown.main.Handler
 import io.rippledown.model.CaseId
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.diff.Diff
 
-interface CaseControlHandler : Handler {
+interface CaseControlHandler : Handler, CaseInspectionHandler {
     var caseIds: List<CaseId>
     var setRuleInProgress: (_: Boolean) -> Unit
 }
@@ -88,6 +89,9 @@ fun CaseControl(handler: CaseControlHandler) {
                 override var ruleSessionInProgress: (Boolean) -> Unit = {
                     handler.setRuleInProgress(it)
                 }
+                override var onStartRule: (selectedDiff: Diff) -> Unit = {}
+                override var onInterpretationEdited: (text: String) -> Unit = {}
+                override var isCornerstone: Boolean = false
             })
         }
     }

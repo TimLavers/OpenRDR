@@ -1,14 +1,15 @@
 package io.rippledown.interpretation
 
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import io.kotest.matchers.shouldBe
-import io.rippledown.constants.main.TITLE
+import io.mockk.Called
+import io.mockk.mockk
+import io.mockk.verify
 import io.rippledown.main.Handler
 import io.rippledown.main.handlerImpl
 import kotlinx.coroutines.test.runTest
+import org.junit.Before
 import org.junit.Rule
 import kotlin.test.Test
 
@@ -17,16 +18,19 @@ class InterpretationViewTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
+    lateinit var handler: InterpretationViewHandler
+
+    @Before
+    fun setUp() {
+        handler = mockk<InterpretationViewHandler>(relaxed = true)
+    }
+
     @Test
     fun `should show initial non-blank interpretation`() = runTest {
         val initialText = "Go to Bondi now!"
         with(composeTestRule) {
             setContent {
-                InterpretationView("", object : Handler by handlerImpl, InterpretationViewHandler {
-                    //                    override var text = initialText
-                    override var onEdited = { _: String -> }
-                    override var isCornertone = false
-                })
+                InterpretationView(initialText, handler)
             }
             requireInterpretation(initialText)
         }
@@ -36,11 +40,7 @@ class InterpretationViewTest {
     fun `should show a blank interpretation`() = runTest {
         with(composeTestRule) {
             setContent {
-                InterpretationView("", object : Handler by handlerImpl, InterpretationViewHandler {
-                    //                    override var text = ""
-                    override var onEdited = { _: String -> }
-                    override var isCornertone = false
-                })
+                InterpretationView("", handler)
             }
             requireInterpretation("")
         }
@@ -48,48 +48,36 @@ class InterpretationViewTest {
 
     @Test
     fun `should call OnEdited once the text is changed`() = runTest {
-        val enteredText = "And bring your flippers"
-        var updatedText = ""
-
+        //Given
         with(composeTestRule) {
             setContent {
-                InterpretationView("", object : Handler by handlerImpl, InterpretationViewHandler {
-                    override var onEdited = { changed: String -> updatedText = changed }
-                    override var isCornertone = false
-                })
+                InterpretationView("", handler)
             }
-            //Given
-            updatedText shouldBe ""
 
             //When
-            enterInterpretationAndWaitForUpdate(enteredText)
+            val enteredText = "And bring your flippers"
+            enterInterpretation(enteredText)
 
             //Then
-            updatedText shouldBe enteredText
+            verify { handler.onEdited(enteredText) }
         }
     }
 
     @Test
-    fun `should no call OnEdited if the text has not changed`() = runTest {
-        var onEditedCalled = false
+    fun `should not call OnEdited if the text has not changed`() = runTest {
 
         with(composeTestRule) {
-            setContent {
-                InterpretationView("", object : Handler by handlerImpl, InterpretationViewHandler {
-                    override var onEdited = { changed: String -> onEditedCalled = true }
-                    override var isCornertone = false
-                })
-            }
             //Given
+            setContent {
+                InterpretationView("Go to Bondi", handler)
+            }
 
             //When
 
             //Then
-            onEditedCalled shouldBe false
+            verify { handler.onEdited wasNot Called }
         }
     }
-
-
 }
 
 
@@ -98,8 +86,6 @@ fun main() {
     application {
         Window(
             onCloseRequest = ::exitApplication,
-            icon = painterResource("water-wave-icon.png"),
-            title = TITLE
         ) {
             InterpretationView("", object : Handler by handlerImpl, InterpretationViewHandler {
                 override var onEdited = { entered: String -> println("onEdited $entered") }

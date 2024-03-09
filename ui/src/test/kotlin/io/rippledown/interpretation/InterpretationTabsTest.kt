@@ -2,23 +2,19 @@ package io.rippledown.interpretation
 
 import InterpretationTabs
 import InterpretationTabsHandler
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import io.rippledown.constants.main.TITLE
-import io.rippledown.main.Api
+import io.mockk.Called
+import io.mockk.mockk
+import io.mockk.verify
 import io.rippledown.main.Handler
 import io.rippledown.main.handlerImpl
-import io.rippledown.mocks.config
-import io.rippledown.mocks.mock
-import io.rippledown.model.CasesInfo
 import io.rippledown.model.Interpretation
-import io.rippledown.model.createCase
-import io.rippledown.model.diff.*
+import io.rippledown.model.diff.Diff
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import kotlinx.coroutines.test.runTest
+import org.junit.Before
 import org.junit.Rule
 import kotlin.test.Test
 
@@ -26,15 +22,18 @@ class InterpretationTabsTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
+    lateinit var handler: InterpretationTabsHandler
+
+    @Before
+    fun setUp() {
+        handler = mockk<InterpretationTabsHandler>(relaxed = true)
+    }
+
     @Test
     fun `interpretation tab should be selected by default`() = runTest {
         with(composeTestRule) {
             setContent {
-                InterpretationTabs(object : Handler by handlerImpl, InterpretationTabsHandler {
-                    override var interpretation = ViewableInterpretation()
-                    override var onStartRule: (selectedDiff: Diff) -> Unit = { }
-                    override var isCornerstone = false
-                })
+                InterpretationTabs(ViewableInterpretation(), handler)
             }
             requireInterpretation("")
         }
@@ -46,71 +45,48 @@ class InterpretationTabsTest {
         val viewableInterpretation = ViewableInterpretation(Interpretation()).apply { verifiedText = text }
         with(composeTestRule) {
             setContent {
-                InterpretationTabs(object : Handler by handlerImpl, InterpretationTabsHandler {
-                    override var interpretation = viewableInterpretation
-                    override var onStartRule: (selectedDiff: Diff) -> Unit = { }
-                    override var isCornerstone = false
-
-                })
+                InterpretationTabs(viewableInterpretation, handler)
             }
             requireInterpretation(text)
         }
     }
 
     @Test
-    fun `changes to the interpretation should be saved`() = runTest {
-        val text = "Go to Bondi now!"
-        val originalInterpretation = ViewableInterpretation(Interpretation())
-        val changedInterpretation = ViewableInterpretation(Interpretation()).apply { verifiedText = text }
-        val config = config {
-            expectedInterpretation = changedInterpretation
-        }
+    fun `the handler should be called if the interpretationtext is edited`() = runTest {
+        val viewableInterpretation = ViewableInterpretation(Interpretation())
         with(composeTestRule) {
             setContent {
-                InterpretationTabs(object : Handler by handlerImpl, InterpretationTabsHandler {
-                    override var interpretation = originalInterpretation
-                    override var onStartRule: (selectedDiff: Diff) -> Unit = { }
-                    override var isCornerstone = false
-                    override var api = Api(mock(config))
-                })
+                InterpretationTabs(viewableInterpretation, handler)
             }
             //Given
             requireInterpretation("")
 
             //When
-            enterInterpretationAndWaitForUpdate(text)
+            val newText = "...and bring your flippers!"
+            enterInterpretation(newText)
 
             //Then
-            requireInterpretation(text)
-            //assertion that the interpretation was saved is in the config
+            verify { handler.onInterpretationEdited(newText) }
         }
     }
+
     @Test
-    fun `should not save interpretation if no changes have been made`() = runTest {
+    fun `should not call the handler if no changes have been made to the interpretation`() = runTest {
+        //Given
         val text = "Go to Bondi now!"
         val originalInterpretation = ViewableInterpretation(Interpretation())
-        val changedInterpretation = ViewableInterpretation(Interpretation()).apply { verifiedText = text }
-        val config = config {
-            expectedInterpretation = changedInterpretation
-        }
+
         with(composeTestRule) {
             setContent {
-                InterpretationTabs(object : Handler by handlerImpl, InterpretationTabsHandler {
-                    override var interpretation = originalInterpretation
-                    override var onStartRule: (selectedDiff: Diff) -> Unit = { }
-                    override var isCornerstone = false
-                    override var api = Api(mock(config))
-                })
+                InterpretationTabs(originalInterpretation, handler)
             }
-            //Given
             requireInterpretation("")
 
             //When
-            enterInterpretationAndWaitForUpdate(text)
+            enterInterpretation(text)
 
             //Then
-            requireInterpretation(text)
-            //assertion that the interpretation was saved is in the config
+            verify { handler.api wasNot Called }
         }
     }
     /*
@@ -348,19 +324,16 @@ class InterpretationTabsTest {
 }
 
 fun main() {
-
     application {
         Window(
             onCloseRequest = ::exitApplication,
-            icon = painterResource("water-wave-icon.png"),
-            title = TITLE
         ) {
             val viewableInterpretation =
                 ViewableInterpretation(Interpretation()).apply { verifiedText = "bondi or bust" }
-            InterpretationTabs(object : Handler by handlerImpl, InterpretationTabsHandler {
-                override var interpretation = viewableInterpretation
+            InterpretationTabs(viewableInterpretation, object : Handler by handlerImpl, InterpretationTabsHandler {
                 override var onStartRule: (selectedDiff: Diff) -> Unit = { }
                 override var isCornerstone = false
+                override var onInterpretationEdited: (text: String) -> Unit = { }
 
             })
         }

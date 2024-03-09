@@ -23,6 +23,7 @@ interface InterpretationViewHandler {
 
 @Composable
 fun InterpretationView(text: String, handler: InterpretationViewHandler) {
+    println("***Redraw InterpretationView with text = '${text}' and isCornerstone = ${handler.isCornertone}***")
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
@@ -50,5 +51,4 @@ fun InterpretationView(text: String, handler: InterpretationViewHandler) {
             .padding(10.dp)
             .fillMaxWidth()
     )
-
 }

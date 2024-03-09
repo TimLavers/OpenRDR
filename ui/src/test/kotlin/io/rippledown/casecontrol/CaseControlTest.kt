@@ -1,17 +1,15 @@
 package io.rippledown.casecontrol
 
 import androidx.compose.ui.test.junit4.createComposeRule
+import io.mockk.mockk
 import io.rippledown.interpretation.requireInterpretation
-import io.rippledown.main.Api
-import io.rippledown.main.Handler
-import io.rippledown.main.handlerImpl
 import io.rippledown.mocks.config
-import io.rippledown.mocks.mock
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.createCase
 import io.rippledown.model.createCaseWithInterpretation
 import kotlinx.coroutines.test.runTest
+import org.junit.Before
 import org.junit.Rule
 import kotlin.test.Test
 
@@ -19,6 +17,13 @@ class CaseControlTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
+
+    lateinit var handler: CaseControlHandler
+
+    @Before
+    fun setUp() {
+        handler = mockk<CaseControlHandler>()
+    }
 
     @Test
     fun `should list case names`() = runTest {
@@ -35,11 +40,7 @@ class CaseControlTest {
         }
         with(composeTestRule) {
             setContent {
-                CaseControl(object : Handler by handlerImpl, CaseControlHandler {
-                    override var caseIds = twoCaseIds
-                    override var api = Api(mock(config))
-                    override var setRuleInProgress = { _: Boolean -> }
-                })
+                CaseControl(handler)
             }
             requireNumberOfCasesOnCaseList(2)
             requireNamesToBeShowingOnCaseList(caseA, caseB)
@@ -62,11 +63,7 @@ class CaseControlTest {
 
         with(composeTestRule) {
             setContent {
-                CaseControl(object : Handler by handlerImpl, CaseControlHandler {
-                    override var caseIds = threeCaseIds
-                    override var api = Api(mock(config))
-                    override var setRuleInProgress = { _: Boolean -> }
-                })
+                CaseControl(handler)
             }
             //Given
             requireNumberOfCasesOnCaseList(3)
@@ -97,11 +94,7 @@ class CaseControlTest {
 
         with(composeTestRule) {
             setContent {
-                CaseControl(object : Handler by handlerImpl, CaseControlHandler {
-                    override var caseIds = caseIds
-                    override var api = Api(mock(config))
-                    override var setRuleInProgress = { _: Boolean -> }
-                })
+                CaseControl(handler)
             }
             //Given
             requireNumberOfCasesOnCaseList(2)
@@ -130,11 +123,7 @@ class CaseControlTest {
 
         with(composeTestRule) {
             setContent {
-                CaseControl(object : Handler by handlerImpl, CaseControlHandler {
-                    override var caseIds = caseIds
-                    override var api = Api(mock(config))
-                    override var setRuleInProgress = { _: Boolean -> }
-                })
+                CaseControl(handler)
             }
             //Given
             requireNumberOfCasesOnCaseList(2)
@@ -167,11 +156,7 @@ class CaseControlTest {
         }
         with(composeTestRule) {
             setContent {
-                CaseControl(object : Handler by handlerImpl, CaseControlHandler {
-                    override var caseIds = twoCaseIds
-                    override var api = Api(mock(config))
-                    override var setRuleInProgress = { _: Boolean -> }
-                })
+                CaseControl(handler)
             }
             waitForCaseToBeShowing(caseName1)
         }
@@ -192,11 +177,7 @@ class CaseControlTest {
         }
         with(composeTestRule) {
             setContent {
-                CaseControl(object : Handler by handlerImpl, CaseControlHandler {
-                    override var caseIds = caseIds
-                    override var api = Api(mock(config))
-                    override var setRuleInProgress = { _: Boolean -> }
-                })
+                CaseControl(handler)
             }
             //Given
             waitForCaseToBeShowing(caseName1)

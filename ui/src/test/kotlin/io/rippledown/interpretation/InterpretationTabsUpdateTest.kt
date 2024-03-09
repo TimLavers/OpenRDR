@@ -9,14 +9,13 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import io.rippledown.main.Handler
-import io.rippledown.main.handlerImpl
+import io.mockk.mockk
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
-import io.rippledown.model.diff.Diff
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.RuleSummary
 import kotlinx.coroutines.test.runTest
+import org.junit.Before
 import org.junit.Rule
 import kotlin.test.Test
 
@@ -26,6 +25,13 @@ import kotlin.test.Test
 class InterpretationTabsUpdateTest {
     @get:Rule
     val composeTestRule = createComposeRule()
+
+    lateinit var handler: InterpretationTabsHandler
+
+    @Before
+    fun setUp() {
+        handler = mockk<InterpretationTabsHandler>(relaxed = true)
+    }
 
     val textA = "text for case A"
     val textB = "text for case B"
@@ -55,6 +61,8 @@ class InterpretationTabsUpdateTest {
     fun `should update interpretation when the verified text is changed`() = runTest {
         val original = ViewableInterpretation().apply { verifiedText = textA }
         val changed = ViewableInterpretation().apply { verifiedText = textB }
+
+        println("The same? ${original == changed}")
         with(composeTestRule) {
             setContent {
                 InterpretationTabsWithButton(original, changed)
@@ -74,17 +82,13 @@ class InterpretationTabsUpdateTest {
     fun InterpretationTabsWithButton(original: ViewableInterpretation, changed: ViewableInterpretation) {
         var viewableInterpretation: ViewableInterpretation by remember { mutableStateOf(original) }
 
-        key(viewableInterpretation.latestText()) {
-            InterpretationTabs(object : Handler by handlerImpl, InterpretationTabsHandler {
-                override var interpretation = viewableInterpretation
-                override var onStartRule: (selectedDiff: Diff) -> Unit = { }
-                override var isCornerstone = false
-            })
-        }
+        println("viewable interp: ${viewableInterpretation.verifiedText}")
+        InterpretationTabs(viewableInterpretation, handler)
 
         Button(
             onClick = {
                 viewableInterpretation = changed
+                println("changed to  = ${viewableInterpretation.verifiedText}")
             },
             modifier = Modifier.testTag("buttonTag")
         ) {
