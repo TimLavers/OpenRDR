@@ -19,10 +19,11 @@ import io.rippledown.main.Handler
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.diff.Diff
+import io.rippledown.model.interpretationview.ViewableInterpretation
 
 interface CaseControlHandler : Handler, CaseInspectionHandler {
     var setRuleInProgress: (_: Boolean) -> Unit
-    var getCase: suspend (caseId: Long) -> ViewableCase?
+    var getCase: (caseId: Long) -> ViewableCase?
 }
 
 @Composable
@@ -32,26 +33,16 @@ fun CaseControl(casesInfo: CasesInfo, handler: CaseControlHandler) {
     var showSelector by remember { mutableStateOf(true) }
     var currentCaseId: Long? by remember { mutableStateOf(null) }
 
-    LaunchedEffect(Unit) {
-        if (currentCase == null && casesInfo.caseIds.isNotEmpty()) {
-            currentCaseId = casesInfo.caseIds[0].id!!
+    LaunchedEffect(casesInfo, currentCaseId) {
+        if (casesInfo.caseIds.isNotEmpty()) {
+            if (currentCaseId == null || currentCaseId !in casesInfo.caseIds.map { it.id }) {
+                //No initial case, or it's now been deleted
+                currentCaseId = casesInfo.caseIds[0].id!!
+            }
+            currentCase = handler.getCase(currentCaseId!!)
         }
     }
 
-    LaunchedEffect(currentCaseId) {
-        currentCase = handler.getCase(currentCaseId!!)
-    }
-
-//    fun selectFirstCase() {
-//        val names = casesInfo.caseIds.map { it.name }
-//        val currentCaseNullOrNotAvailable = currentCase == null || !names.contains(currentCase?.name)
-//        if (currentCaseNullOrNotAvailable && names.isNotEmpty()) {
-//            val firstCaseId = handler.caseIds[0]
-//            currentCaseId = firstCaseId.id!!
-//        }
-//    }
-
-//    selectFirstCase()
     Row {
         Column(
             modifier = Modifier
@@ -86,7 +77,17 @@ fun CaseControl(casesInfo: CasesInfo, handler: CaseControlHandler) {
                     handler.setRuleInProgress(it)
                 }
                 override var onStartRule: (selectedDiff: Diff) -> Unit = {}
-                override var onInterpretationEdited: (text: String) -> Unit = {}
+                override var onInterpretationEdited: (text: String) -> Unit = {
+                    //create a new instance of the case with the updated verified text to trigger a redraw
+                    val updated = ViewableCase(
+                        case = currentCase!!.case,
+                        viewableInterpretation = ViewableInterpretation(currentCase!!.case.interpretation).apply {
+                            verifiedText = it
+                        },
+                        viewProperties = currentCase!!.viewProperties
+                    )
+                    currentCase = updated
+                }
                 override var isCornerstone: Boolean = false
                 override var caseEdited: () -> Unit = {}
             })

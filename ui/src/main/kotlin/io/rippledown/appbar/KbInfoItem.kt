@@ -23,7 +23,6 @@ fun KbInfoItem(name: String, handler: KbSelectionHandler) {
         modifier = Modifier.semantics { contentDescription = "$KB_INFO_ITEM$name" }
 
     ) {
-        println("KbInfoItem: name = $name")
         Text(text = name)
     }
 }

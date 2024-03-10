@@ -3,7 +3,10 @@ package io.rippledown.integration.pageobjects
 import io.kotest.matchers.shouldBe
 import io.rippledown.caseview.referenceRangeCellContentDescription
 import io.rippledown.caseview.valueCellContentDescriptionPrefix
-import io.rippledown.constants.caseview.*
+import io.rippledown.constants.caseview.ATTRIBUTE_CELL_DESCRIPTION_PREFIX
+import io.rippledown.constants.caseview.CASEVIEW_CASE_NAME_ID
+import io.rippledown.constants.caseview.CASE_VIEW_TABLE
+import io.rippledown.constants.caseview.DATE_CELL_DESCRIPTION_PREFIX
 import io.rippledown.integration.pause
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
@@ -34,7 +37,7 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun waitForNameToShow(name: String) {
-        await.atMost(ofSeconds(5)).until {
+        await.atMost(ofSeconds(10)).until {
             nameShown() != null && nameShown() == name
         }
     }

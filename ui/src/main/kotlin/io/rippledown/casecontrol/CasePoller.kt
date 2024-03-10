@@ -21,9 +21,9 @@ fun CasePoller(handler: CasePollerHandler) {
 
     LaunchedEffect(Unit) {
         while (!handler.isClosing()) {
-            delay(POLL_PERIOD)
             val updatedCasesInfo = handler.updateCasesInfo()
             handler.onUpdate(updatedCasesInfo)
+            delay(POLL_PERIOD)
         }
     }
 }

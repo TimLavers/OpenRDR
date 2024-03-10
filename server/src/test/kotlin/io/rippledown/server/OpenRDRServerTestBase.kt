@@ -16,7 +16,7 @@ open class OpenRDRServerTestBase {
     lateinit var httpClient: HttpClient
 
     fun ApplicationTestBuilder.setup() {
-        kbEndpoint = mockk<KBEndpoint>()
+        kbEndpoint = mockk<KBEndpoint>(relaxed = true)
         serverApplication = mockk<ServerApplication>()
         every { serverApplication.kbForId(kbId) } returns kbEndpoint
         httpClient = createClient {

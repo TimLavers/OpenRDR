@@ -27,7 +27,6 @@ fun CreateKB(handler: CreateKBHandler) {
         focusRequester.requestFocus()
     }
 
-    println("Create KB with kbName = '${kbName}'")
     MaterialTheme {
         Surface {
             Box {
@@ -55,7 +54,6 @@ fun CreateKB(handler: CreateKBHandler) {
                     ) {
                         Button(
                             onClick = {
-                                println("CreateKB: calling handler for kbName = $kbName")
                                 handler.create(kbName)
                             },
                             enabled = isNameOK(),

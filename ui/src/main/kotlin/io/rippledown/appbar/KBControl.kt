@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.*
+import androidx.compose.material.MaterialTheme.colors
 import androidx.compose.material.icons.Icons.Default
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.runtime.*
@@ -37,8 +38,6 @@ interface KBControlHandler {
 @Composable
 @Preview
 fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
-
-
     var expanded by remember { mutableStateOf(false) }
     var createKbDialogShowing by remember { mutableStateOf(false) }
     val availableKBs =
@@ -61,13 +60,11 @@ fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
         ) {
             CreateKB(object : CreateKBHandler {
                 override var create: (name: String) -> Unit = { name ->
-                    println("CreateKB dialog: OK called handler for kbName = $name")
                     handler.createKB(name)
                     createKbDialogShowing = false
                 }
 
                 override var cancel: () -> Unit = {
-                    println("CreateKB dialog: Cancel called")
                     createKbDialogShowing = false
                 }
             })
@@ -91,14 +88,14 @@ fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
             Icon(
                 imageVector = Default.KeyboardArrowDown,
                 contentDescription = KB_CONTROL_DROPDOWN_DESCRIPTION,
-//                tint = colors.onPrimary
+                tint = colors.onPrimary
             )
         }
 
         Spacer(Modifier.width(4.dp))
         Text(
             text = kbName(),
-//                color = colors.onPrimary,
+            color = colors.onPrimary,
             textAlign = Start,
             modifier = Modifier
                 .weight(1f)

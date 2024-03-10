@@ -1,13 +1,15 @@
 Feature: Knowledge Base management
 
   Scenario: Name of current Knowledge Base should be displayed
-    Given I start the client application
+    Given A Knowledge Base called Thyroids has been created
+    And I start the client application
     Then the displayed KB name is now Thyroids
     And stop the client application
 
   @ignore
   Scenario: A previously exported Knowledge Base can be imported
-    Given I start the client application
+    Given A Knowledge Base called Thyroids has been created
+    And I start the client application
     And the displayed KB name is Thyroids
     When I import the configured zipped Knowledge Base Whatever
     Then the displayed KB name is now Whatever
@@ -38,9 +40,9 @@ Feature: Knowledge Base management
     And stop the client application
 
   Scenario: Available Knowledge Bases are displayed
-    Given A Knowledge Base called 'B' has been created
-    And A Knowledge Base called 'C' has been created
-    And A Knowledge Base called 'A' has been created
+    Given A Knowledge Base called B has been created
+    And A Knowledge Base called C has been created
+    And A Knowledge Base called A has been created
     And I start the client application
     And I activate the KB management control
     Then pause for 5 seconds
@@ -48,11 +50,11 @@ Feature: Knowledge Base management
       | A |
       | B |
       | C |
+      | Thyroids |
     And stop the client application
 
-  @ignore
   Scenario: An existing Knowledge Base can be opened
-    Given A Knowledge Base called 'Stuff' has been created
+    Given A Knowledge Base called Stuff has been created
     And I start the client application
     Then I select the Knowledge Base named Stuff
     Then the displayed KB name is now Stuff

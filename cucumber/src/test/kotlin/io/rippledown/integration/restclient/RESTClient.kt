@@ -26,8 +26,8 @@ import java.util.concurrent.atomic.AtomicReference
 
 class RESTClient {
     private val KB_ID = "kb"
-
     private val endpoint = "http://localhost:9090"
+    private val api = Api()
 
     private val jsonClient = HttpClient(CIO) {
         install(ContentNegotiation) {
@@ -179,12 +179,8 @@ class RESTClient {
     }
 
     fun createKB(name: String) {
-        println("createKBWithDefaultName current thread: ${Thread.currentThread().name}")
         runBlocking {
-            val kbi = jsonClient.post(endpoint + CREATE_KB) {
-                contentType(ContentType.Text.Plain)
-                setBody(name)
-            }.body<KBInfo>()
+            val kbi = api.createKB(name)
             currentKB.set(kbi)
         }
     }

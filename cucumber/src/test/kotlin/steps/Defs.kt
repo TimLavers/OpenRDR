@@ -28,7 +28,7 @@ class Defs : En {
             StepsInfrastructure.cleanup()
         }
 
-        When("A Knowledge Base called {string} has been created") { name: String ->
+        When("A Knowledge Base called {word} has been created") { name: String ->
             StepsInfrastructure.uiTestBase!!.restClient.createKB(name)
         }
 

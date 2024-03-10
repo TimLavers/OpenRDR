@@ -28,6 +28,10 @@ fun OpenRDRUI(handler: Handler) {
     var casesInfo by remember { mutableStateOf(CasesInfo()) }
     var kbInfo: KBInfo? by remember { mutableStateOf(null) }
 
+    LaunchedEffect(Unit) {
+        kbInfo = api.kbList().firstOrNull()
+    }
+
     Scaffold(
         topBar = {
             ApplicationBar(kbInfo, object : AppBarHandler {
@@ -39,7 +43,9 @@ fun OpenRDRUI(handler: Handler) {
         }
     ) {
         CasePoller(object : CasePollerHandler {
-            override var onUpdate: (updated: CasesInfo) -> Unit = { casesInfo = it }
+            override var onUpdate: (updated: CasesInfo) -> Unit = {
+                casesInfo = it
+            }
             override var updateCasesInfo: () -> CasesInfo = { runBlocking { api.waitingCasesInfo() } }
             override var isClosing: () -> Boolean = handler.isClosing
         })
@@ -55,7 +61,7 @@ fun OpenRDRUI(handler: Handler) {
                 override var updateCase: (Long) -> Unit = { }
                 override var ruleSessionInProgress: (Boolean) -> Unit = { }
                 override var caseEdited: () -> Unit = {}
-                override var getCase: suspend (caseId: Long) -> ViewableCase? = { api.getCase(it) }
+                override var getCase: (caseId: Long) -> ViewableCase? = { runBlocking { api.getCase(it) } }
                 override var isClosing = { false }
             })
         }

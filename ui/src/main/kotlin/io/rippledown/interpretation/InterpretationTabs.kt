@@ -58,7 +58,7 @@ fun InterpretationTabs(viewableInterpretation: ViewableInterpretation, handler: 
         when (tabPage) {
             0 -> {
                 InterpretationView(
-                    text = viewableInterpretation.latestText() ?: "",
+                    text = viewableInterpretation.latestText(),
                     handler = object : InterpretationViewHandler {
                         override var onEdited: (text: String) -> Unit = { editedText ->
                             println("Updating interp with editedText = ${editedText}")

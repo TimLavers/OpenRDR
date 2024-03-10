@@ -5,11 +5,14 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.rippledown.appbar.assertKbNameIs
 import io.rippledown.constants.main.APPLICATION_BAR_ID
 import io.rippledown.constants.main.TITLE
 import io.rippledown.model.CaseId
+import io.rippledown.model.KBInfo
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -22,10 +25,13 @@ class OpenRDRUITest {
     val composeTestRule = createComposeRule()
 
     lateinit var handler: Handler
+    lateinit var api: Api
 
     @Before
     fun setUp() {
         handler = mockk<Handler>(relaxed = true)
+        api = mockk<Api>(relaxed = true)
+        every { handler.api } returns api
         every { handler.isClosing } returns { true }
     }
 
@@ -37,6 +43,17 @@ class OpenRDRUITest {
                 OpenRDRUI(handler)
             }
             onNodeWithTag(testTag = APPLICATION_BAR_ID).assertExists()
+        }
+    }
+
+    @Test
+    fun `should show the first project if there is one`() = runTest {
+        coEvery { handler.api.kbList() } returns listOf(KBInfo("Bondi"), KBInfo("Malabar"))
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler)
+            }
+            assertKbNameIs("Bondi")
         }
     }
 }

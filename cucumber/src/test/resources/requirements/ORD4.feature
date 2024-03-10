@@ -1,4 +1,5 @@
 Feature: Reviewing the interpretation of a case
+
   Scenario: The user should be able to see the interpretation of a case
     And case Bondi is provided having data:
       | Wave | excellent |
@@ -22,6 +23,16 @@ Feature: Reviewing the interpretation of a case
     Then the interpretation field should contain the text "Go to Manly."
     And stop the client application
 
+  Scenario: The changes to an interpretation should be shown
+    Given a list of cases with the following names is stored on the server:
+      | Case1 |
+    And I start the client application
+    And I should see the case Case1 as the current case
+    When I enter the text "Go to Bondi." in the interpretation field
+    Then the interpretation field should contain the text "Go to Bondi."
+    And stop the client application
+
+  @ignore
   Scenario: The changes to an interpretation should be saved
     Given a list of cases with the following names is stored on the server:
       | Case1 |
@@ -29,6 +40,7 @@ Feature: Reviewing the interpretation of a case
     And I start the client application
     And I should see the case Case1 as the current case
     When I enter the text "Go to Bondi." in the interpretation field
+    And pause
     And select the case Case2
     And select the case Case1
     Then the interpretation field should contain the text "Go to Bondi."

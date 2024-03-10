@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalTestApi::class)
+@file:OptIn(ExperimentalTestApi::class, ExperimentalTestApi::class)
 
 package io.rippledown.appbar
 
@@ -8,13 +8,6 @@ import io.rippledown.constants.main.CREATE_KB_CANCEL_BUTTON_ID
 import io.rippledown.constants.main.CREATE_KB_NAME_FIELD_ID
 import io.rippledown.constants.main.CREATE_KB_OK_BUTTON_ID
 
-@OptIn(ExperimentalTestApi::class)
-fun ComposeTestRule.setNameAndClickCreate(text: String) {
-    enterKBName(text)
-    clickCreateButton()
-    println("set name and clickCreateButton: text = ${text}")
-    Thread.sleep(100000)
-}
 
 fun ComposeTestRule.waitToVanish() {
     waitUntil {
@@ -28,6 +21,7 @@ fun ComposeTestRule.enterKBName(text: String) {
     println("typed              = ${text}")
 }
 
+@OptIn(ExperimentalTestApi::class)
 fun ComposeTestRule.requireEnteredKBName(text: String) {
     waitUntilAtLeastOneExists(hasText(text))
     println(onNodeWithTag(CREATE_KB_NAME_FIELD_ID).printToString())

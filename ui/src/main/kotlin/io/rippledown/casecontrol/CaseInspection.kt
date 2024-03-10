@@ -23,7 +23,9 @@ fun CaseInspection(case: ViewableCase, handler: CaseInspectionHandler) {
         InterpretationTabs(case.viewableInterpretation, object : InterpretationTabsHandler {
             override var onStartRule: (selectedDiff: Diff) -> Unit = { }
             override var isCornerstone: Boolean = false
-            override var onInterpretationEdited: (text: String) -> Unit = { }
+            override var onInterpretationEdited: (text: String) -> Unit = {
+                handler.onInterpretationEdited(it)
+            }
         })
     }
 }
