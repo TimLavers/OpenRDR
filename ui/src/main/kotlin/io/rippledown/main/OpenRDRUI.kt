@@ -10,8 +10,10 @@ import io.rippledown.casecontrol.CaseControlHandler
 import io.rippledown.casecontrol.CasePoller
 import io.rippledown.casecontrol.CasePollerHandler
 import io.rippledown.model.CasesInfo
+import io.rippledown.model.KBInfo
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.diff.Diff
+import kotlinx.coroutines.runBlocking
 
 interface Handler {
     var api: Api
@@ -21,47 +23,40 @@ interface Handler {
 @Composable
 @Preview
 fun OpenRDRUI(handler: Handler) {
+    val api = handler.api
     var ruleInProgress by remember { mutableStateOf(false) }
     var casesInfo by remember { mutableStateOf(CasesInfo()) }
+    var kbInfo: KBInfo? by remember { mutableStateOf(null) }
 
     Scaffold(
         topBar = {
-            ApplicationBar(object : AppBarHandler, Handler by handler {
+            ApplicationBar(kbInfo, object : AppBarHandler {
                 override var isRuleSessionInProgress = ruleInProgress
+                override var selectKB: (id: String) -> Unit = { runBlocking { kbInfo = api.selectKB(it) } }
+                override var createKB: (name: String) -> Unit = { runBlocking { kbInfo = api.createKB(it) } }
+                override val kbList: () -> List<KBInfo> = { runBlocking { api.kbList() } }
             })
         }
     ) {
-        CasePoller(object : CasePollerHandler, Handler by handler {
-            override var updatedCasesInfo: (updated: CasesInfo) -> Unit = {
-                casesInfo = it
-            }
+        CasePoller(object : CasePollerHandler {
+            override var onUpdate: (updated: CasesInfo) -> Unit = { casesInfo = it }
+            override var updateCasesInfo: () -> CasesInfo = { runBlocking { api.waitingCasesInfo() } }
+            override var isClosing: () -> Boolean = handler.isClosing
         })
 
         if (casesInfo.count > 0) {
-            CaseControl(object : CaseControlHandler, Handler by handler {
-                override var caseIds = casesInfo.caseIds
+            CaseControl(casesInfo, object : CaseControlHandler, Handler by handler {
                 override var setRuleInProgress = { inProgress: Boolean ->
                     ruleInProgress = inProgress
                 }
-                override var onStartRule: (selectedDiff: Diff) -> Unit
-                    get() = TODO("Not yet implemented")
-                    set(value) {}
-                override var onInterpretationEdited: (text: String) -> Unit
-                    get() = TODO("Not yet implemented")
-                    set(value) {}
-                override var isCornerstone: Boolean
-                    get() = TODO("Not yet implemented")
-                    set(value) {}
-                override var case: ViewableCase
-                    get() = TODO("Not yet implemented")
-                    set(value) {}
-
-                override var updateCase: (Long) -> Unit
-                    get() = TODO("Not yet implemented")
-                    set(value) {}
-
+                override var onStartRule: (selectedDiff: Diff) -> Unit = { }
+                override var onInterpretationEdited: (text: String) -> Unit = { }
+                override var isCornerstone: Boolean = false
+                override var updateCase: (Long) -> Unit = { }
                 override var ruleSessionInProgress: (Boolean) -> Unit = { }
-
+                override var caseEdited: () -> Unit = {}
+                override var getCase: suspend (caseId: Long) -> ViewableCase? = { api.getCase(it) }
+                override var isClosing = { false }
             })
         }
     }

@@ -18,31 +18,31 @@ class CaseInspectionTest {
 
     @Before
     fun setUp() {
-        handler = mockk<CaseInspectionHandler>()
+        handler = mockk<CaseInspectionHandler>(relaxed = true)
     }
     @Test
-    fun shouldShowCaseView() = runTest {
+    fun `should show case view`() = runTest {
         val caseName = "case a"
         val caseId = CaseId(id = 1, name = caseName)
-        val currentCase = createCase(caseId)
+        val case = createCase(caseId)
 
         with(composeTestRule) {
             setContent {
-                CaseInspection(handler)
+                CaseInspection(case, handler)
             }
             waitForCaseToBeShowing(caseName)
         }
     }
 
     @Test
-    fun shouldShowInterpretation() = runTest {
+    fun `should show interpretation`() = runTest {
         val text = "Go to Bondi now!"
-        val currentCase = createCase(name = "case a", id = 1L)
-        currentCase.viewableInterpretation.textGivenByRules = text
+        val case = createCase(name = "case a", id = 1L)
+        case.viewableInterpretation.textGivenByRules = text
 
         with(composeTestRule) {
             setContent {
-                CaseInspection(handler)
+                CaseInspection(case, handler)
             }
             requireInterpretation(text)
         }

@@ -1,9 +1,9 @@
 package io.rippledown.casecontrol
 
 import androidx.compose.ui.test.junit4.createComposeRule
+import io.mockk.coEvery
 import io.mockk.mockk
 import io.rippledown.interpretation.requireInterpretation
-import io.rippledown.mocks.config
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.createCase
@@ -22,7 +22,7 @@ class CaseControlTest {
 
     @Before
     fun setUp() {
-        handler = mockk<CaseControlHandler>()
+        handler = mockk<CaseControlHandler>(relaxed = true)
     }
 
     @Test
@@ -34,13 +34,10 @@ class CaseControlTest {
         val twoCaseIds = listOf(
             caseId1, caseId2
         )
-        val config = config {
-            returnCasesInfo = CasesInfo(twoCaseIds)
-            returnCase = createCase(caseId1)
-        }
+        coEvery { handler.getCase(1) } returns createCase(caseId1)
         with(composeTestRule) {
             setContent {
-                CaseControl(handler)
+                CaseControl(CasesInfo(twoCaseIds), handler)
             }
             requireNumberOfCasesOnCaseList(2)
             requireNamesToBeShowingOnCaseList(caseA, caseB)
@@ -48,33 +45,33 @@ class CaseControlTest {
     }
 
     @Test
-    fun `should select a CaseId when case name is clicked`() = runTest {
-        val caseA = "case A"
-        val caseB = "case B"
-        val caseC = "case C"
-        val caseId1 = CaseId(id = 1, name = caseA)
-        val caseId2 = CaseId(id = 2, name = caseB)
-        val caseId3 = CaseId(id = 3, name = caseC)
+    fun `should show a case when its case name is clicked`() = runTest {
+        val caseNameA = "case A"
+        val caseNameB = "case B"
+        val caseNameC = "case C"
+        val caseId1 = CaseId(id = 1, name = caseNameA)
+        val caseId2 = CaseId(id = 2, name = caseNameB)
+        val caseId3 = CaseId(id = 3, name = caseNameC)
         val threeCaseIds = listOf(caseId1, caseId2, caseId3)
-        val config = config {
-            returnCasesInfo = CasesInfo(threeCaseIds)
-            returnCase = createCase(caseId1)
-        }
+        val caseA = createCase(caseId1)
+        val caseB = createCase(caseId2)
+
+        coEvery { handler.getCase(1) } returns caseA
+        coEvery { handler.getCase(2) } returns caseB
 
         with(composeTestRule) {
             setContent {
-                CaseControl(handler)
+                CaseControl(CasesInfo(threeCaseIds), handler)
             }
             //Given
             requireNumberOfCasesOnCaseList(3)
-            requireNamesToBeShowingOnCaseList(caseA, caseB, caseC)
+            requireNamesToBeShowingOnCaseList(caseNameA, caseNameB, caseNameC)
 
             //When
-            config.returnCase = createCase(caseB, 2)
-            selectCaseByName(caseB)
+            selectCaseByName(caseNameB)
 
             //Then
-            waitForCaseToBeShowing(caseB)
+            waitForCaseToBeShowing(caseNameB)
 
         }
     }
@@ -87,14 +84,11 @@ class CaseControlTest {
         val caseId2 = CaseId(id = 2, name = caseB)
         val caseIds = listOf(caseId1, caseId2)
         val bondiComment = "Go to Bondi"
-        val config = config {
-            returnCasesInfo = CasesInfo(caseIds)
-            returnCase = createCaseWithInterpretation(name = caseA, id = 1, conclusionTexts = listOf(bondiComment))
-        }
+        coEvery { handler.getCase(1) } returns createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
 
         with(composeTestRule) {
             setContent {
-                CaseControl(handler)
+                CaseControl(CasesInfo(caseIds), handler)
             }
             //Given
             requireNumberOfCasesOnCaseList(2)
@@ -107,6 +101,7 @@ class CaseControlTest {
             requireInterpretation(bondiComment)
         }
     }
+
     @Test
     fun `should update the interpretation when a case is selected`() = runTest {
         val caseA = "case A"
@@ -116,14 +111,21 @@ class CaseControlTest {
         val caseIds = listOf(caseId1, caseId2)
         val bondiComment = "Go to Bondi"
         val malabarComment = "Go to Malabar"
-        val config = config {
-            returnCasesInfo = CasesInfo(caseIds)
-            returnCase = createCaseWithInterpretation(name = caseA, id = 1, conclusionTexts = listOf(bondiComment))
-        }
 
+
+        coEvery { handler.getCase(caseId1.id!!) } returns createCaseWithInterpretation(
+            name = caseA,
+            id = 1,
+            conclusionTexts = listOf(bondiComment)
+        )
+        coEvery { handler.getCase(caseId2.id!!) } returns createCaseWithInterpretation(
+            name = caseB,
+            id = 2,
+            conclusionTexts = listOf(malabarComment)
+        )
         with(composeTestRule) {
             setContent {
-                CaseControl(handler)
+                CaseControl(CasesInfo(caseIds), handler)
             }
             //Given
             requireNumberOfCasesOnCaseList(2)
@@ -132,13 +134,12 @@ class CaseControlTest {
             requireInterpretation(bondiComment)
 
             //When
-            config.returnCase = createCaseWithInterpretation(name = caseB, id = 2, conclusionTexts = listOf(malabarComment))
             selectCaseByName(caseB)
 
             //Then
             waitForCaseToBeShowing(caseB)
             requireInterpretation(malabarComment)
-       }
+        }
     }
 
     @Test
@@ -150,13 +151,14 @@ class CaseControlTest {
         val twoCaseIds = listOf(
             caseId1, caseId2
         )
-        val config = config {
-            returnCasesInfo = CasesInfo(twoCaseIds)
-            returnCase = createCase(caseId1)
-        }
+        coEvery { handler.getCase(1) } returns createCaseWithInterpretation(
+            name = caseName1,
+            id = 1
+        )
+
         with(composeTestRule) {
             setContent {
-                CaseControl(handler)
+                CaseControl(CasesInfo(twoCaseIds), handler)
             }
             waitForCaseToBeShowing(caseName1)
         }
@@ -166,24 +168,21 @@ class CaseControlTest {
     fun `should show case list for several cases`() = runTest {
 
         val caseIds = (1..10).map { i ->
-            CaseId(id = i.toLong(), name = "case $i")
+            val caseId = CaseId(id = i.toLong(), name = "case $i")
+            coEvery { handler.getCase(caseId.id!!) } returns createCase(caseId)
+            caseId
         }
 
         val caseName1 = "case 1"
         val caseName10 = "case 10"
-        val config = config {
-            returnCasesInfo = CasesInfo(caseIds)
-            returnCase = createCase(CaseId(10, caseName1))
-        }
         with(composeTestRule) {
             setContent {
-                CaseControl(handler)
+                CaseControl(CasesInfo(caseIds), handler)
             }
             //Given
             waitForCaseToBeShowing(caseName1)
 
             //When
-            config.returnCase = createCase(CaseId(10, caseName10))
             selectCaseByName(caseName10)
 
             //Then

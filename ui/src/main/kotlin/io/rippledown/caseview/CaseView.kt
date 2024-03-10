@@ -1,4 +1,4 @@
- package io.rippledown.caseview
+package io.rippledown.caseview
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,11 +14,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.caseview.CASEVIEW_CASE_NAME_ID
 import io.rippledown.constants.caseview.CASE_HEADING
-import io.rippledown.main.Handler
 import io.rippledown.model.caseview.ViewableCase
 
- interface CaseViewHandler : Handler {
-    var case: ViewableCase
+interface CaseViewHandler {
     var caseEdited: () -> Unit
 }
 
@@ -28,8 +26,7 @@ import io.rippledown.model.caseview.ViewableCase
  *  ORD2
  */
 @Composable
-fun CaseView(handler: CaseViewHandler) {
-
+fun CaseView(case: ViewableCase, handler: CaseViewHandler) {
     Column(
         modifier = Modifier
             .padding(10.dp)
@@ -38,19 +35,16 @@ fun CaseView(handler: CaseViewHandler) {
             },
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        println("drawing case: ${handler.case.name}")
         Text(
-            text = handler.case.name,
+            text = case.name,
             style = MaterialTheme.typography.subtitle1,
             textAlign = TextAlign.Start,
             modifier = Modifier
-                .testTag("$CASEVIEW_CASE_NAME_ID${handler.case.name}")
+                .testTag("$CASEVIEW_CASE_NAME_ID${case.name}")
                 .semantics {
                     contentDescription = CASEVIEW_CASE_NAME_ID
                 }
         )
-        CaseTable(object : CaseTableHandler {
-            override val viewableCase = handler.case
-        })
+        CaseTable(case)
     }
 }

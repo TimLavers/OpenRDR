@@ -16,11 +16,10 @@ import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CONCLUSIONS_LAB
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL_LABEL
 import io.rippledown.interpretation.InterpretationView
 import io.rippledown.interpretation.InterpretationViewHandler
-import io.rippledown.main.Handler
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.interpretationview.ViewableInterpretation
 
-interface InterpretationTabsHandler : Handler {
+interface InterpretationTabsHandler {
     var onStartRule: (selectedDiff: Diff) -> Unit
     var onInterpretationEdited: (text: String) -> Unit
     var isCornerstone: Boolean
@@ -35,8 +34,6 @@ fun InterpretationTabs(viewableInterpretation: ViewableInterpretation, handler: 
     )
 
     var tabPage by remember { mutableStateOf(0) }
-    println("--Redraw InterpretationTabs with interp = ${viewableInterpretation} and tab page = ${tabPage}--")
-
 
     Column(modifier = Modifier.semantics { testTag = "tabs" }) {
         TabRow(selectedTabIndex = tabPage,

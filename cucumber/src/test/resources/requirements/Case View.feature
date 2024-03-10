@@ -1,5 +1,6 @@
 Feature: The user should be able to see all test dates and results for a case
 
+  @single
   Scenario: Case with two episodes
     Given the configured case Case4 is stored on the server
     And I start the client application

@@ -187,8 +187,6 @@ class RESTClient {
             }.body<KBInfo>()
             currentKB.set(kbi)
         }
-        println("current KB is: ${currentKB.get()}")
-        println("createKBWithDefaultName after run blocking current thread: ${Thread.currentThread().name}")
     }
 
     fun createKBWithDefaultName() = createKB(DEFAULT_PROJECT_NAME)

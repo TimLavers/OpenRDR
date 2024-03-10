@@ -10,7 +10,7 @@ fun convertNameToId(name: String): String {
 }
 
 @Serializable
-class KBInfo(val id: String, val name: String): Comparable<KBInfo> {
+class KBInfo(val id: String, val name: String) : Comparable<KBInfo> {
     constructor(name: String): this(convertNameToId(name), name)
 
     init {

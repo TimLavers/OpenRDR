@@ -3,21 +3,27 @@ package io.rippledown.appbar
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import io.rippledown.model.KBInfo
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 
 interface KbSelectionHandler {
-    fun kbInfo(): KBInfo
-    fun select()
+    var onSelect: () -> Unit
 }
 
+const val KB_INFO_ITEM = "KB_INFO_ITEM"
+
 @Composable
-fun KbInfoItem(handler: KbSelectionHandler) {
+fun KbInfoItem(name: String, handler: KbSelectionHandler) {
 
     DropdownMenuItem(
         onClick = {
-            handler.select()
-        }
+            handler.onSelect()
+        },
+        modifier = Modifier.semantics { contentDescription = "$KB_INFO_ITEM$name" }
+
     ) {
-        Text(text = handler.kbInfo().name)
+        println("KbInfoItem: name = $name")
+        Text(text = name)
     }
 }

@@ -14,12 +14,15 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import kotlin.test.Test
 
-class CaseInspectionKeyTest {
+private val buttonId = "buttonId"
+
+class CaseInspectionUpdateTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
+
     @Test
-    fun shouldReRenderCaseViewIfCasenameChanges() = runTest {
+    fun `should recompose case view if the case changes`() = runTest {
         val bondi = "Bondi"
         val malabar = "Malabar"
         val caseIdBondi = CaseId(id = 1, name = bondi)
@@ -36,7 +39,7 @@ class CaseInspectionKeyTest {
             waitForCaseToBeShowing(bondi)
 
             //When update the case
-            onNodeWithTag("buttonId").performClick()
+            onNodeWithTag(buttonId).performClick()
 
             //Then
             waitForCaseToBeShowing(malabar)
@@ -53,7 +56,6 @@ class CaseInspectionKeyTest {
         val attributeWithValueB = AttributeWithValue(b, TestResult("43"))
         val initialCase = createCase(caseId, listOf(attributeWithValueA, attributeWithValueB))
         val caseWithReorderedAttributes = createCase(caseId, listOf(attributeWithValueB, attributeWithValueA))
-
 
         with(composeTestRule) {
             setContent {
@@ -95,13 +97,13 @@ fun CaseInspectionWithButton(initialCase: ViewableCase, changedCase: ViewableCas
     var currentCase by remember { mutableStateOf(initialCase) }
     val handler = mockk<CaseInspectionHandler>()
 
-    CaseInspection(handler)
+    CaseInspection(currentCase, handler)
 
     Button(
         onClick = {
             currentCase = changedCase
         },
-        modifier = Modifier.testTag("buttonId")
+        modifier = Modifier.testTag(buttonId)
     ) {}
 }
 

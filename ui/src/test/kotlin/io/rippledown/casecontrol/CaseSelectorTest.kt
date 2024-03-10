@@ -1,21 +1,26 @@
 package io.rippledown.casecontrol
 
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import io.kotest.matchers.shouldBe
-import io.rippledown.constants.main.TITLE
-import io.rippledown.main.Handler
-import io.rippledown.main.handlerImpl
+import io.mockk.mockk
+import io.mockk.verify
 import io.rippledown.model.CaseId
 import kotlinx.coroutines.test.runTest
+import org.junit.Before
 import org.junit.Rule
 import kotlin.test.Test
 
 class CaseSelectorTest {
     @get:Rule
     val composeTestRule = createComposeRule()
+
+    lateinit var handler: CaseSelectorHandler
+
+    @Before
+    fun setUp() {
+        handler = mockk<CaseSelectorHandler>(relaxed = true)
+    }
 
     @Test
     fun `should list case names `() = runTest {
@@ -26,11 +31,7 @@ class CaseSelectorTest {
         )
         with(composeTestRule) {
             setContent {
-                CaseSelector(object : Handler by handlerImpl, CaseSelectorHandler {
-                    override var caseIds= twoCaseIds
-                    override var selectCase: (_: Long) -> Unit = {}
-                    override var selectedCaseName: String? = null
-                })
+                CaseSelector(twoCaseIds, handler)
             }
             requireNamesToBeShowingOnCaseList(caseA, caseB)
         }
@@ -46,27 +47,17 @@ class CaseSelectorTest {
         val caseId3 = CaseId(id = 3, name = caseC)
         val threeCaseIds = listOf(caseId1, caseId2, caseId3)
 
-        var selectedCaseId: Long = 0
-
         with(composeTestRule) {
             setContent {
-                CaseSelector(object : Handler by handlerImpl, CaseSelectorHandler {
-                    override var caseIds= threeCaseIds
-                    override var selectCase: (id: Long) -> Unit = {
-                        selectedCaseId = it
-                    }
-                    override var selectedCaseName: String? = null
-
-                })
+                CaseSelector(threeCaseIds, handler)
             }
             //Given
-            selectedCaseId shouldBe 0
 
             //When
             selectCaseByName(caseId2.name)
 
             //Then
-            selectedCaseId shouldBe caseId2.id
+            verify { handler.selectCase(caseId2.id!!) }
         }
     }
 
@@ -75,8 +66,6 @@ class CaseSelectorTest {
 fun main() = application {
     Window(
         onCloseRequest = ::exitApplication,
-        icon = painterResource("water-wave-icon.png"),
-        title = TITLE
     ) {
 
         val caseA = "case A"
@@ -86,10 +75,8 @@ fun main() = application {
         val caseId2 = CaseId(id = 2, name = caseB)
         val caseId3 = CaseId(id = 3, name = caseC)
         val threeCaseIds = listOf(caseId1, caseId2, caseId3)
-        CaseSelector(object : Handler by handlerImpl, CaseSelectorHandler {
-            override var caseIds = threeCaseIds
-            override var selectCase: (id: Long) -> Unit = {}
-            override var selectedCaseName: String? = null
+        CaseSelector(threeCaseIds, object : CaseSelectorHandler {
+            override var selectCase: (id: Long) -> Unit = { println("selectCaseID = $it") }
         })
     }
 }

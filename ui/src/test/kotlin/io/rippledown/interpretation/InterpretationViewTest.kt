@@ -6,8 +6,6 @@ import androidx.compose.ui.window.application
 import io.mockk.Called
 import io.mockk.mockk
 import io.mockk.verify
-import io.rippledown.main.Handler
-import io.rippledown.main.handlerImpl
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -87,7 +85,7 @@ fun main() {
         Window(
             onCloseRequest = ::exitApplication,
         ) {
-            InterpretationView("", object : Handler by handlerImpl, InterpretationViewHandler {
+            InterpretationView("", object : InterpretationViewHandler {
                 override var onEdited = { entered: String -> println("onEdited $entered") }
                 override var isCornertone = false
             })

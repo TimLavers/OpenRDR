@@ -13,8 +13,8 @@ import androidx.compose.ui.unit.dp
 import io.rippledown.constants.main.*
 
 interface CreateKBHandler {
-    fun create(name: String)
-    fun cancel()
+    var create: (name: String) -> Unit
+    var cancel: () -> Unit
 }
 
 @Composable
@@ -27,8 +27,7 @@ fun CreateKB(handler: CreateKBHandler) {
         focusRequester.requestFocus()
     }
 
-
-    println("kbName = '${kbName}'")
+    println("Create KB with kbName = '${kbName}'")
     MaterialTheme {
         Surface {
             Box {
@@ -56,6 +55,7 @@ fun CreateKB(handler: CreateKBHandler) {
                     ) {
                         Button(
                             onClick = {
+                                println("CreateKB: calling handler for kbName = $kbName")
                                 handler.create(kbName)
                             },
                             enabled = isNameOK(),

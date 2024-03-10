@@ -35,9 +35,9 @@ class OpenRdUIProxy() {
                         title = TITLE
                     ) {
                         appWindow = this.window
-//                        OpenRDRUI(handlerImpl)
                         OpenRDRUI(object : Handler {
                             override var api = Api()
+                            override var isClosing: () -> Boolean = { false }
                         })
 
                     }

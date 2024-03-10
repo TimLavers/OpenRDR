@@ -8,8 +8,6 @@ import androidx.compose.ui.window.application
 import io.mockk.Called
 import io.mockk.mockk
 import io.mockk.verify
-import io.rippledown.main.Handler
-import io.rippledown.main.handlerImpl
 import io.rippledown.model.Interpretation
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.interpretationview.ViewableInterpretation
@@ -52,7 +50,7 @@ class InterpretationTabsTest {
     }
 
     @Test
-    fun `the handler should be called if the interpretationtext is edited`() = runTest {
+    fun `the handler should be called if the interpretation text is edited`() = runTest {
         val viewableInterpretation = ViewableInterpretation(Interpretation())
         with(composeTestRule) {
             setContent {
@@ -73,7 +71,6 @@ class InterpretationTabsTest {
     @Test
     fun `should not call the handler if no changes have been made to the interpretation`() = runTest {
         //Given
-        val text = "Go to Bondi now!"
         val originalInterpretation = ViewableInterpretation(Interpretation())
 
         with(composeTestRule) {
@@ -83,10 +80,9 @@ class InterpretationTabsTest {
             requireInterpretation("")
 
             //When
-            enterInterpretation(text)
 
             //Then
-            verify { handler.api wasNot Called }
+            verify { handler.onInterpretationEdited wasNot Called }
         }
     }
     /*
@@ -330,7 +326,7 @@ fun main() {
         ) {
             val viewableInterpretation =
                 ViewableInterpretation(Interpretation()).apply { verifiedText = "bondi or bust" }
-            InterpretationTabs(viewableInterpretation, object : Handler by handlerImpl, InterpretationTabsHandler {
+            InterpretationTabs(viewableInterpretation, object : InterpretationTabsHandler {
                 override var onStartRule: (selectedDiff: Diff) -> Unit = { }
                 override var isCornerstone = false
                 override var onInterpretationEdited: (text: String) -> Unit = { }

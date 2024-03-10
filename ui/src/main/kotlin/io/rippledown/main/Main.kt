@@ -20,8 +20,8 @@ fun main() = application {
         title = TITLE
     ) {
         OpenRDRUI(object : Handler {
-            override var api = Api()
             override var isClosing = { closing }
+            override var api: Api = Api()
         })
     }
 }

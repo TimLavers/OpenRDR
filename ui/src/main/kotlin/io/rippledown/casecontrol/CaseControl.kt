@@ -16,43 +16,42 @@ import androidx.compose.ui.unit.dp
 import io.rippledown.constants.caseview.CASES
 import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import io.rippledown.main.Handler
-import io.rippledown.model.CaseId
+import io.rippledown.model.CasesInfo
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.diff.Diff
 
 interface CaseControlHandler : Handler, CaseInspectionHandler {
-    var caseIds: List<CaseId>
     var setRuleInProgress: (_: Boolean) -> Unit
+    var getCase: suspend (caseId: Long) -> ViewableCase?
 }
 
 @Composable
 @Preview
-fun CaseControl(handler: CaseControlHandler) {
+fun CaseControl(casesInfo: CasesInfo, handler: CaseControlHandler) {
     var currentCase: ViewableCase? by remember { mutableStateOf(null) }
     var showSelector by remember { mutableStateOf(true) }
     var currentCaseId: Long? by remember { mutableStateOf(null) }
 
     LaunchedEffect(Unit) {
-        if (currentCase == null && handler.caseIds.isNotEmpty()) {
-            currentCaseId = handler.caseIds[0].id!!
+        if (currentCase == null && casesInfo.caseIds.isNotEmpty()) {
+            currentCaseId = casesInfo.caseIds[0].id!!
         }
     }
 
     LaunchedEffect(currentCaseId) {
-        currentCase = handler.api.getCase(currentCaseId!!)
+        currentCase = handler.getCase(currentCaseId!!)
     }
 
-    fun selectFirstCase() {
-        val names = handler.caseIds.map { it.name }
-        val currentCaseNullOrNotAvailable = currentCase == null || !names.contains(currentCase?.name)
-        if (currentCaseNullOrNotAvailable && names.isNotEmpty()) {
-            val firstCaseId = handler.caseIds[0]
-            currentCaseId = firstCaseId.id!!
-        }
-    }
+//    fun selectFirstCase() {
+//        val names = casesInfo.caseIds.map { it.name }
+//        val currentCaseNullOrNotAvailable = currentCase == null || !names.contains(currentCase?.name)
+//        if (currentCaseNullOrNotAvailable && names.isNotEmpty()) {
+//            val firstCaseId = handler.caseIds[0]
+//            currentCaseId = firstCaseId.id!!
+//        }
+//    }
 
-    selectFirstCase()
-    println("CaseControl caseName: ${currentCase?.name} size: ${handler.caseIds.size} ")
+//    selectFirstCase()
     Row {
         Column(
             modifier = Modifier
@@ -61,7 +60,7 @@ fun CaseControl(handler: CaseControlHandler) {
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             Text(
-                text = "$CASES ${handler.caseIds.size}",
+                text = "$CASES ${casesInfo.caseIds.size}",
                 style = MaterialTheme.typography.subtitle1,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Start,
                 modifier = Modifier
@@ -71,18 +70,15 @@ fun CaseControl(handler: CaseControlHandler) {
                     }
             )
 
-            CaseSelector(object : CaseSelectorHandler, Handler by handler {
+            CaseSelector(casesInfo.caseIds, object : CaseSelectorHandler, Handler by handler {
                 override var selectCase = { id: Long ->
                     currentCaseId = id
                 }
-                override var caseIds = handler.caseIds
-                override var selectedCaseName = currentCase?.name
             })
         }
 
         if (currentCase != null) {
-            CaseInspection(object : CaseInspectionHandler, Handler by handler {
-                override var case = currentCase!!
+            CaseInspection(currentCase!!, object : CaseInspectionHandler, Handler by handler {
                 override var updateCase = { id: Long ->
                     currentCaseId = id
                 }
@@ -92,6 +88,7 @@ fun CaseControl(handler: CaseControlHandler) {
                 override var onStartRule: (selectedDiff: Diff) -> Unit = {}
                 override var onInterpretationEdited: (text: String) -> Unit = {}
                 override var isCornerstone: Boolean = false
+                override var caseEdited: () -> Unit = {}
             })
         }
     }

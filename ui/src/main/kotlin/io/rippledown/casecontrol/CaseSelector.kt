@@ -20,20 +20,17 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.caseview.CASELIST_ID
 import io.rippledown.constants.caseview.CASE_NAME_PREFIX
-import io.rippledown.main.Handler
 import io.rippledown.model.CaseId
 
-interface CaseSelectorHandler : Handler {
-    var caseIds: List<CaseId>
-    var selectedCaseName: String?
+interface CaseSelectorHandler {
     var selectCase: (id: Long) -> Unit
 }
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 @Preview
-fun CaseSelector(handler: CaseSelectorHandler) {
-    val count = handler.caseIds.size
+fun CaseSelector(caseIds: List<CaseId>, handler: CaseSelectorHandler) {
+    val count = caseIds.size
     val scrollState = rememberLazyListState()
 
     Row {
@@ -47,7 +44,7 @@ fun CaseSelector(handler: CaseSelectorHandler) {
                 }
         ) {
             items(count) { index ->
-                val caseId = handler.caseIds[index]
+                val caseId = caseIds[index]
                 ListItem(
                     modifier = Modifier
                         .clickable {
@@ -55,9 +52,7 @@ fun CaseSelector(handler: CaseSelectorHandler) {
                         }
                         .semantics { contentDescription = "$CASE_NAME_PREFIX${caseId.name}" },
                     text = {
-                        Text(
-                            text = caseId.name
-                        )
+                        Text(text = caseId.name)
                     }
                 )
             }
