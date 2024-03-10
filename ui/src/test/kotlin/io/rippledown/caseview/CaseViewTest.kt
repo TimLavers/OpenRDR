@@ -3,14 +3,13 @@ package io.rippledown.caseview
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
-import io.rippledown.main.Api
-import io.rippledown.mocks.config
-import io.rippledown.mocks.mock
+import io.mockk.mockk
 import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.caseview.CaseViewProperties
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.defaultDate
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
@@ -18,6 +17,13 @@ import org.junit.Test
 class CaseViewTest {
     @get:Rule
     var composeTestRule = createComposeRule()
+
+    private lateinit var caseViewHandler: CaseViewHandler
+
+    @Before
+    fun setUp() {
+        caseViewHandler = mockk<CaseViewHandler>(relaxed = true)
+    }
 
     @Test
     fun show() {
@@ -30,27 +36,18 @@ class CaseViewTest {
         val properties = CaseViewProperties(listOf(tsh, ft4))
         val viewableCase = ViewableCase(case1, properties)
 
-        val config = config {
-            returnCase = viewableCase
-        }
-        val caseTableHandler = object : CaseViewHandler {
-            override var case: ViewableCase
-                get() = viewableCase
-                set(value) {}
-
-            override fun caseEdited() {
-            }
-
-            override var api = Api(mock(config))
-        }
-
-        composeTestRule.setContent {
-            CaseView( caseTableHandler)
-        }
         with(composeTestRule) {
+            setContent {
+                CaseView(viewableCase, caseViewHandler)
+            }
             waitUntilExactlyOneExists(hasText(case1.name))
             waitUntilExactlyOneExists(hasText(tsh.name))
             waitUntilExactlyOneExists(hasText(resultText(viewableCase.case.getLatest(tsh)!!)))
         }
+    }
+
+    @Test
+    fun `should call handler when edited`() {
+        //todo
     }
 }

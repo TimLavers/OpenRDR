@@ -13,7 +13,6 @@ import io.rippledown.main.OpenRDRUI
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.awt.event.WindowEvent
 import javax.swing.JFrame
 import javax.swing.SwingUtilities
@@ -28,7 +27,6 @@ class TestClientLauncher {
                 application {
                     Window(
                         onCloseRequest = {
-                            println("UI in test is closing")
                             api.shutdown()
                         },
                         icon = painterResource("water-wave-icon.png"),
@@ -37,6 +35,7 @@ class TestClientLauncher {
                         composeWindow = this.window
                         OpenRDRUI(object : Handler {
                             override var api = api
+                            override var isClosing: () -> Boolean = { false }
                         })
                     }
                 }

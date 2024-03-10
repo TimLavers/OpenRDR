@@ -1,35 +1,16 @@
 package io.rippledown.appbar
 
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import io.kotest.matchers.shouldBe
-import io.rippledown.constants.kb.KB_CONTROL_DESCRIPTION
-import io.rippledown.constants.kb.KB_CONTROL_ID
-import io.rippledown.constants.main.CREATE_KB_ITEM_ID
-import io.rippledown.constants.main.CREATE_KB_TEXT
-import io.rippledown.constants.main.MAIN_HEADING
-import io.rippledown.constants.main.MAIN_HEADING_ID
-import io.rippledown.main.Handler
-import io.rippledown.main.handlerImpl
-import io.rippledown.mocks.engineConfig
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.application
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import io.rippledown.model.KBInfo
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
-import javax.swing.SwingUtilities
+import javax.swing.SwingUtilities.invokeAndWait
 import kotlin.test.Test
 
 class KBControlTest {
@@ -37,110 +18,110 @@ class KBControlTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private lateinit var uiKbControlOperator: KbControlOperator
+    private val lipidsInfo = KBInfo("12345_id", "Lipids")
+    private lateinit var handler: KBControlHandler
 
     @Before
     fun setup() {
-        composeTestRule.setContent {
-            ApplicationBar(object : Handler by handlerImpl, AppBarHandler {
-                override var isRuleSessionInProgress = false
-            })
-        }
-        uiKbControlOperator = KbControlOperator(composeTestRule)
+        handler = mockk<KBControlHandler>(relaxed = true)
+        every { handler.kbList } returns { emptyList() }
     }
 
     @Test
-    fun semantics() {
-        composeTestRule.setContent {
-//            ApplicationBar(object : Handler by handlerImpl, AppBarHandler {
-//                override var isRuleSessionInProgress = false
-//            })
-            TopAppBar(
-                modifier = Modifier.semantics {
-                    contentDescription = "TopAppBar"
-                }
-            ) {
-                Row {
-
-                    Text(
-                        text = "AAA",
-                        modifier = Modifier
-                            .testTag("TT_AAA")
-                            .semantics {
-                                contentDescription = "CD_AAA"
-                            }
-                    )
-                    Text(
-                        text = "BBB",
-                        modifier = Modifier
-//                            .testTag("TT_BBB")
-                            .semantics {
-                                contentDescription = "CD_BBB"
-                            }
-                    )
-                    Text(
-                        text = "CCC",
-//                        modifier = Modifier
-//                            .testTag("TT_CCC")
-//                            .semantics {
-//                                contentDescription = "CD_CCC"
-//                            }
-                    )
-
-                }
-
+    fun `should display the KB name`() {
+        with(composeTestRule) {
+            setContent {
+                KBControl(lipidsInfo, handler)
             }
+            assertKbNameIs(lipidsInfo.name)
         }
-        composeTestRule.onNodeWithContentDescription("TopAppBar").printToLog("NODE")
     }
 
     @Test
-    fun `should select default project`() {
-        uiKbControlOperator.assertKbNameIs(engineConfig.returnKBInfo.name)
+    fun `should show dropdown of all available KBs if there is no current KB`() = runTest {
+        val glucose = "Glucose"
+        val glucoseInfo = KBInfo(glucose)
+        every { handler.kbList } returns { listOf(lipidsInfo, glucoseInfo) }
+        with(composeTestRule) {
+            setContent {
+                KBControl(null, handler)
+            }
+            //Given
+            assertCreateKbButtonIsNotShowing()
+            assertKbNameIs("")
+
+            //when
+            clickDropdown()
+
+            //Then
+            assertCreateKbButtonIsShowing()
+            assertDropdownItemsContain(lipidsInfo.name, glucose)
+
+        }
     }
 
     @Test
-    fun `create KB`() = runTest {
-        val newKbName = "Lipids"
-        engineConfig.returnKBInfo = KBInfo("12345_id", newKbName)
-        uiKbControlOperator.assertCreateKbButtonIsNotShowing()
-        uiKbControlOperator.clickControl()
+    fun `should not include in the dropdown the current KB`() = runTest {
+        val glucose = "Glucose"
+        val glucoseInfo = KBInfo(glucose)
+        every { handler.kbList } returns { listOf(lipidsInfo, glucoseInfo) }
+        with(composeTestRule) {
+            setContent {
+                KBControl(glucoseInfo, handler)
+            }
+            //Given
+            assertCreateKbButtonIsNotShowing()
+            assertKbNameIs(glucose)
 
-        uiKbControlOperator.assertCreateKbButtonIsShowing()
-        val uiCreateKB = uiKbControlOperator.clickCreateKbButton()
-        uiCreateKB.assertOkButtonIsNotEnabled()
-        SwingUtilities.invokeAndWait(Runnable {
-            uiCreateKB.setNameAndClickCreate(newKbName)
-        })
-        engineConfig.newKbName shouldBe newKbName
-//        uiCreateKB.waitToVanish()
+            //when
+            clickDropdown()
 
+            //Then
+            assertCreateKbButtonIsShowing()
+            assertDropdownItemsContain(lipidsInfo.name)
+
+        }
+    }
+
+    @Test
+    fun `should create KB`() = runTest {
+        val glucose = "Glucose"
+        val glucoseInfo = KBInfo(glucose)
+        every { handler.kbList } returns { listOf(lipidsInfo, glucoseInfo) }
+        with(composeTestRule) {
+            setContent {
+                KBControl(glucoseInfo, handler)
+            }
+            //Given
+            assertCreateKbButtonIsNotShowing()
+            assertKbNameIs(glucose)
+            clickDropdown()
+            assertCreateKbButtonIsShowing()
+
+            //When
+            clickCreateKbButton()
+            assertOkButtonIsNotEnabled()
+            enterKBName(lipidsInfo.name)
+            requireEnteredKBName(lipidsInfo.name)
+            invokeAndWait { clickCreateButton() }
+
+            //Then
+            verify { handler.createKB(lipidsInfo.name) }
+        }
     }
 }
 
-@OptIn(ExperimentalTestApi::class)
-class KbControlOperator(private val composeTestRule: ComposeContentTestRule) {
-    init {
-        composeTestRule.waitUntilExactlyOneExists(hasTestTag(KB_CONTROL_ID))
-    }
+fun main() {
+    val lipidInfo = KBInfo("Lipids")
+    val glucoseInfo = KBInfo("Glucose")
+    val handler = mockk<KBControlHandler>(relaxed = true)
+    every { handler.kbList } returns { listOf(lipidInfo, glucoseInfo) }
 
-    fun assertKbNameIs(expected: String) {
-        composeTestRule.waitUntilExactlyOneExists(hasText(expected))
-        val onNodeWithTag = composeTestRule.onNodeWithTag(KB_CONTROL_ID)
-        onNodeWithTag.assertTextEquals(expected)
-    }
-
-    fun clickControl() = composeTestRule.onNodeWithTag(KB_CONTROL_ID).performClick()
-
-    fun assertCreateKbButtonIsNotShowing() = composeTestRule.onAllNodesWithText(CREATE_KB_TEXT).assertCountEquals(0)
-
-    fun assertCreateKbButtonIsShowing() {
-        composeTestRule.waitUntilExactlyOneExists(hasText(CREATE_KB_TEXT))
-        composeTestRule.onNodeWithText(CREATE_KB_TEXT).assertIsEnabled()
-    }
-
-    fun clickCreateKbButton(): CreateKbOperator {
-        composeTestRule.onNodeWithTag(CREATE_KB_ITEM_ID).performClick()
-        return CreateKbOperator(composeTestRule)
+    application {
+        Window(
+            onCloseRequest = ::exitApplication
+        ) {
+            KBControl(lipidInfo, handler)
+        }
     }
 }

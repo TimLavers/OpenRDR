@@ -7,6 +7,10 @@ const val INTERPRETATION_PANEL_ORIGINAL = "interpretation_panel_original"
 const val INTERPRETATION_PANEL_CONCLUSIONS = "interpretation_panel_conclusions"
 const val INTERPRETATION_PANEL_CHANGES = "interpretation_panel_changes"
 
+const val INTERPRETATION_TAB_ORIGINAL_LABEL = "Interpretation"
+const val INTERPRETATION_TAB_CONCLUSIONS_LABEL = "Conclusions"
+const val INTERPRETATION_TAB_CHANGES_LABEL = "Changes"
+
 const val INTERPRETATION_TEXT_FIELD = "interpretation_text_area"
 const val INTERPRETATION_VIEW_LABEL = "Report for this case"
 const val DEBOUNCE_WAIT_PERIOD_MILLIS = 1_000L

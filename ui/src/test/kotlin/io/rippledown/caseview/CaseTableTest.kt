@@ -3,9 +3,11 @@ package io.rippledown.caseview
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
-import io.rippledown.model.*
+import io.rippledown.model.Attribute
+import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.caseview.CaseViewProperties
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.defaultDate
 import org.junit.Rule
 import org.junit.Test
 
@@ -28,13 +30,9 @@ class CaseTableTest {
         val case1 = builder1.build("Case1")
         val properties = CaseViewProperties(listOf(tsh, ft4, abc, xyz))
         val viewableCase = ViewableCase(case1, properties)
-        val caseTableHandler = object : CaseTableHandler {
-            override val viewableCase: ViewableCase
-                get() = viewableCase
-        }
 
         composeTestRule.setContent {
-            CaseTable( caseTableHandler)
+            CaseTable(viewableCase)
         }
         with(composeTestRule) {
             waitUntilExactlyOneExists(hasText(tsh.name))

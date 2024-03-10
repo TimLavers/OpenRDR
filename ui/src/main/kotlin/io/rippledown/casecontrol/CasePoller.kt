@@ -1,14 +1,16 @@
 package io.rippledown.casecontrol
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.runtime.*
-import io.rippledown.appbar.AppBarHandler
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import io.rippledown.model.CasesInfo
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
 
-interface CasePollerHandler : AppBarHandler {
-    var setRuleInProgress: (inProgress: Boolean) -> Unit
+interface CasePollerHandler {
+    var onUpdate: (updated: CasesInfo) -> Unit
+    var updateCasesInfo: () -> CasesInfo
+    var isClosing: () -> Boolean
 }
 
 val POLL_PERIOD = 2.seconds
@@ -16,23 +18,12 @@ val POLL_PERIOD = 2.seconds
 @Composable
 @Preview
 fun CasePoller(handler: CasePollerHandler) {
-    var casesInfo by remember { mutableStateOf(CasesInfo()) }
 
-    val counter = remember { mutableStateOf(0) }
-
-    LaunchedEffect(counter.value) {
-        delay(POLL_PERIOD)
-        casesInfo = handler.api.waitingCasesInfo()
-        counter.value++
-    }
-
-    if (casesInfo.count > 0) {
-        //Don't redraw if the cases have not changed
-        key(casesInfo.caseIds) {
-            CaseControl(object : CaseControlHandler, CasePollerHandler by handler {
-                override var caseIds = casesInfo.caseIds
-                override var setRuleInProgress = handler.setRuleInProgress
-            })
+    LaunchedEffect(Unit) {
+        while (!handler.isClosing()) {
+            val updatedCasesInfo = handler.updateCasesInfo()
+            handler.onUpdate(updatedCasesInfo)
+            delay(POLL_PERIOD)
         }
     }
 }

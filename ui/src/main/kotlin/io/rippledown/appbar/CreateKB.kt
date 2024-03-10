@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -11,14 +13,19 @@ import androidx.compose.ui.unit.dp
 import io.rippledown.constants.main.*
 
 interface CreateKBHandler {
-    fun create(name: String)
-    fun cancel()
+    var create: (name: String) -> Unit
+    var cancel: () -> Unit
 }
 
 @Composable
 fun CreateKB(handler: CreateKBHandler) {
     var kbName by remember { mutableStateOf("") }
     fun isNameOK() = kbName.isNotBlank()
+
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
 
     MaterialTheme {
         Surface {
@@ -39,6 +46,7 @@ fun CreateKB(handler: CreateKBHandler) {
                             .semantics {
                                 contentDescription = CREATE_KB_NAME_FIELD_DESCRIPTION
                             }
+                            .focusRequester(focusRequester)
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),

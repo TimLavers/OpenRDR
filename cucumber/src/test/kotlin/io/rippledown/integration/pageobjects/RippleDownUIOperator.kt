@@ -1,6 +1,8 @@
 package io.rippledown.integration.pageobjects
 
 import androidx.compose.ui.awt.ComposeWindow
+import io.rippledown.constants.caseview.CASE_HEADING
+import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.waitForWindowToShow
 
 class RippleDownUIOperator(private val window: ComposeWindow) {

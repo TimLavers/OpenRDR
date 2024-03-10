@@ -29,7 +29,7 @@ fun config(block: EngineConfig.() -> Unit) = EngineConfig().apply(block)
 
 class EngineConfig {
     var returnCasesInfo: CasesInfo = CasesInfo(emptyList())
-    var returnCase: ViewableCase = createCase("The Case")
+    var returnCase: ViewableCase? = createCase("The Case")
     var returnOperationResult: OperationResult = OperationResult()
     var returnInterpretationAfterSavingInterpretation: ViewableInterpretation = ViewableInterpretation()
     var returnInterpretationAfterBuildingRule: ViewableInterpretation = ViewableInterpretation()
@@ -61,7 +61,7 @@ private class EngineBuilder(private val config: EngineConfig) {
 //        println("MockEngine called with ${request.url.fullPath}")
         when (request.url.encodedPath) {
             WAITING_CASES -> {
-                println("api call to WAITING_CASES with ${request.url.parameters} will return ${config.returnCasesInfo}")
+//                println("api call to WAITING_CASES with ${request.url.parameters} will return ${config.returnCasesInfo}")
                 httpResponseData(json.encodeToString(config.returnCasesInfo))
             }
 
@@ -138,7 +138,7 @@ private class EngineBuilder(private val config: EngineConfig) {
                 val body = request.body as TextContent
                 val name = body.text
                 config.newKbName = name
-                httpResponseData("")
+                httpResponseData(json.encodeToString(KBInfo(name)))
             }
 
             CONDITION_HINTS -> {
