@@ -1,7 +1,10 @@
 package io.rippledown.casecontrol
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
@@ -10,51 +13,35 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import io.rippledown.caseview.CaseView
-import io.rippledown.caseview.CaseViewHandler
 import io.rippledown.constants.caseview.CASES
-import io.rippledown.constants.caseview.CASEVIEW_CASE_NAME_ID
-import io.rippledown.constants.caseview.CASE_HEADING
 import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
-import io.rippledown.interpretation.InterpretationView
-import io.rippledown.interpretation.InterpretationViewHandler
-import io.rippledown.main.Api
 import io.rippledown.main.Handler
-import io.rippledown.model.CaseId
+import io.rippledown.model.CasesInfo
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.diff.Diff
+import io.rippledown.model.interpretationview.ViewableInterpretation
 
-interface CaseControlHandler : Handler {
-    var caseIds: List<CaseId>
+interface CaseControlHandler : Handler, CaseInspectionHandler {
     var setRuleInProgress: (_: Boolean) -> Unit
+    var getCase: (caseId: Long) -> ViewableCase?
 }
 
 @Composable
 @Preview
-fun CaseControl(handler: CaseControlHandler) {
+fun CaseControl(casesInfo: CasesInfo, handler: CaseControlHandler) {
     var currentCase: ViewableCase? by remember { mutableStateOf(null) }
     var showSelector by remember { mutableStateOf(true) }
     var currentCaseId: Long? by remember { mutableStateOf(null) }
 
-    LaunchedEffect(Unit) {
-        if (currentCase == null && handler.caseIds.isNotEmpty()) {
-            currentCaseId = handler.caseIds[0].id!!
+    LaunchedEffect(casesInfo, currentCaseId) {
+        if (casesInfo.caseIds.isNotEmpty()) {
+            if (currentCaseId == null || currentCaseId !in casesInfo.caseIds.map { it.id }) {
+                //No initial case, or it's now been deleted
+                currentCaseId = casesInfo.caseIds[0].id!!
+            }
+            currentCase = handler.getCase(currentCaseId!!)
         }
     }
-
-    LaunchedEffect(currentCaseId) {
-        currentCase = handler.api.getCase(currentCaseId!!)
-    }
-
-    fun selectFirstCase() {
-        val names = handler.caseIds.map { it.name }
-        val currentCaseNullOrNotAvailable = currentCase == null || !names.contains(currentCase?.name)
-        if (currentCaseNullOrNotAvailable && names.isNotEmpty()) {
-            val firstCaseId = handler.caseIds[0]
-            currentCaseId = firstCaseId.id!!
-        }
-    }
-
-    selectFirstCase()
 
     Row {
         Column(
@@ -64,7 +51,7 @@ fun CaseControl(handler: CaseControlHandler) {
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             Text(
-                text = "$CASES ${handler.caseIds.size}",
+                text = "$CASES ${casesInfo.caseIds.size}",
                 style = MaterialTheme.typography.subtitle1,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Start,
                 modifier = Modifier
@@ -74,7 +61,7 @@ fun CaseControl(handler: CaseControlHandler) {
                     }
             )
 
-            CaseSelector(object : CaseSelectorHandler, CaseControlHandler by handler {
+            CaseSelector(casesInfo.caseIds, object : CaseSelectorHandler, Handler by handler {
                 override var selectCase = { id: Long ->
                     currentCaseId = id
                 }
@@ -82,44 +69,28 @@ fun CaseControl(handler: CaseControlHandler) {
         }
 
         if (currentCase != null) {
-            key(currentCase!!.id) {
-                Column {
-                    CaseView(CaseViewHandlerImpl(handler, currentCase!!))
-                    InterpretationView(object : InterpretationViewHandler {
-                        override var text = currentCase!!.textGivenByRules()
-                        override var onEdited = { text: String -> }
-                        override var isCornertone = false
-                    })
+            CaseInspection(currentCase!!, object : CaseInspectionHandler, Handler by handler {
+                override var updateCase = { id: Long ->
+                    currentCaseId = id
                 }
-            }
+                override var ruleSessionInProgress: (Boolean) -> Unit = {
+                    handler.setRuleInProgress(it)
+                }
+                override var onStartRule: (selectedDiff: Diff) -> Unit = {}
+                override var onInterpretationEdited: (text: String) -> Unit = {
+                    //create a new instance of the case with the updated verified text to trigger a redraw
+                    val updated = ViewableCase(
+                        case = currentCase!!.case,
+                        viewableInterpretation = ViewableInterpretation(currentCase!!.case.interpretation).apply {
+                            verifiedText = it
+                        },
+                        viewProperties = currentCase!!.viewProperties
+                    )
+                    currentCase = updated
+                }
+                override var isCornerstone: Boolean = false
+                override var caseEdited: () -> Unit = {}
+            })
         }
     }
-}
-
-class CaseViewHandlerImpl(val ccHandler: CaseControlHandler, val currentCase: ViewableCase): CaseViewHandler {
-    override var case: ViewableCase
-        get() = currentCase
-        set(value) {}
-
-    override fun caseEdited() {
-        TODO("Not yet implemented")
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as CaseViewHandlerImpl
-
-        return currentCase == other.currentCase
-    }
-
-    override fun hashCode(): Int {
-        return currentCase.hashCode()
-    }
-
-    override var api: Api
-        get() = ccHandler.api
-        set(value) {}
-
 }

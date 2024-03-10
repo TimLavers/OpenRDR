@@ -1,12 +1,12 @@
 package io.rippledown.integration.pageobjects
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.constants.interpretation.*
-import io.rippledown.integration.utils.dumpToText
+import io.rippledown.constants.interpretation.DIFF_VIEWER_CHANGED
+import io.rippledown.constants.interpretation.DIFF_VIEWER_ORIGINAL
+import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.waitForDebounce
 import org.awaitility.Awaitility.await
-import org.awaitility.kotlin.withPollInterval
 import java.time.Duration.ofSeconds
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleRole.TEXT
@@ -22,9 +22,8 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
     }
 
     fun enterVerifiedText(text: String): InterpretationViewPO {
-//        val textArea = interpretationArea()
-//        textArea.sendKeys(text)
-//        waitForDebounce()
+        contextProvider().find(INTERPRETATION_TEXT_FIELD, TEXT)?.accessibleEditableText?.setTextContents(text)
+        waitForDebounce()
         return this
     }
 
@@ -43,7 +42,6 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
 
     fun waitForInterpretationTextToContain(expected: String) {
         await().atMost(ofSeconds(5)).until {
-            println("interpretationText() = ${interpretationText()}")
             interpretationText().contains(expected)
         }
     }

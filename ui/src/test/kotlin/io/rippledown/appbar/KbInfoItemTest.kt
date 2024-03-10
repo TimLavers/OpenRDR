@@ -5,7 +5,8 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import io.kotest.matchers.shouldBe
+import io.mockk.mockk
+import io.mockk.verify
 import io.rippledown.model.KBInfo
 import org.junit.Before
 import org.junit.Rule
@@ -13,41 +14,38 @@ import kotlin.test.Test
 
 @OptIn(ExperimentalTestApi::class)
 class KbInfoItemTest {
-
-    private val kbInfo = KBInfo("gl123", "Glucose")
-    private var selected = false
-    private val handler = object: KbSelectionHandler{
-        override fun kbInfo() = kbInfo
-
-        override fun select() {
-            selected = true
-        }
-    }
-
     @get:Rule
     var composeTestRule = createComposeRule()
 
+    private val kbInfo = KBInfo("gl123", "Glucose")
+
+    private lateinit var handler: KbSelectionHandler
+
     @Before
     fun setup() {
-        selected = false
-        composeTestRule.setContent {
-            KbInfoItem(handler)
+        handler = mockk<KbSelectionHandler>(relaxed = true)
+    }
+
+    @Test
+    fun `should display kb name`() {
+        with(composeTestRule) {
+            setContent {
+                KbInfoItem("Bondi", handler)
+            }
+            with(composeTestRule) {
+                waitUntilExactlyOneExists(hasText("Bondi"))
+            }
         }
     }
 
     @Test
-    fun `item text`() {
+    fun `should call handler when a kb name is selected`() {
         with(composeTestRule) {
-            waitUntilExactlyOneExists(hasText(kbInfo.name))
-        }
-    }
-
-    @Test
-    fun select() {
-        with(composeTestRule) {
-            selected shouldBe false
+            setContent {
+                KbInfoItem(kbInfo.name, handler)
+            }
             onNodeWithText(kbInfo.name).performClick()
-            selected shouldBe true
+            verify { handler.onSelect() }
         }
     }
 }

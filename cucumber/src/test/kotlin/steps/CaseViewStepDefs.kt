@@ -39,11 +39,15 @@ class CaseViewStepDefs : En {
             val expectedAttributes = dataTable.column(0)
             val referenceRangesExpected = dataTable.column(dataTable.width() - 1)
             val expectedValues = dataTable.subTable(0, 1, rowCount, dataTable.width() - 1)
+            println("expectedValues = ${expectedValues}")
             // Check each row.
             valuesShown.keys.forEachIndexed { row, attribute ->
                 attribute shouldBe expectedAttributes[row]
                 val expectedRow = expectedValues.row(row)
                 val rowShown = valuesShown[attribute]
+                println("row = ${row}, attribute = ${attribute}")
+                println("expected row " + expectedRow)
+                println("row shown    " + rowShown)
                 expectedRow shouldBe rowShown
                 val expectedReferenceRange = referenceRangesExpected[row].orEmpty()
                 val referenceRangeShown = caseViewPO.referenceRange(attribute)

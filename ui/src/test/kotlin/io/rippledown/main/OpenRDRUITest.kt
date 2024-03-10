@@ -5,31 +5,55 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.mockk
+import io.rippledown.appbar.assertKbNameIs
 import io.rippledown.constants.main.APPLICATION_BAR_ID
 import io.rippledown.constants.main.TITLE
-import io.rippledown.mocks.config
-import io.rippledown.mocks.defaultMock
-import io.rippledown.mocks.mock
 import io.rippledown.model.CaseId
-import io.rippledown.model.CasesInfo
-import io.rippledown.model.createCase
+import io.rippledown.model.KBInfo
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import org.junit.Before
 import org.junit.Rule
 import kotlin.test.Test
 
-val handlerImpl = object : Handler {
-    override var api = Api(defaultMock)
-}
 
 class OpenRDRUITest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
+    lateinit var handler: Handler
+    lateinit var api: Api
+
+    @Before
+    fun setUp() {
+        handler = mockk<Handler>(relaxed = true)
+        api = mockk<Api>(relaxed = true)
+        every { handler.api } returns api
+        every { handler.isClosing } returns { true }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `should show OpenRDR UI`() = runTest {
         with(composeTestRule) {
-            setContent { OpenRDRUI(handlerImpl) }
-            onNodeWithTag(testTag = APPLICATION_BAR_ID, useUnmergedTree = true).assertExists()
+            setContent {
+                OpenRDRUI(handler)
+            }
+            onNodeWithTag(testTag = APPLICATION_BAR_ID).assertExists()
+        }
+    }
+
+    @Test
+    fun `should show the first project if there is one`() = runTest {
+        coEvery { handler.api.kbList() } returns listOf(KBInfo("Bondi"), KBInfo("Malabar"))
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler)
+            }
+            assertKbNameIs("Bondi")
         }
     }
 }
@@ -39,10 +63,7 @@ fun main() {
     val caseIds = (1..100).map { i ->
         CaseId(id = i.toLong(), name = "case $i")
     }
-    val config = config {
-        returnCasesInfo = CasesInfo(caseIds)
-        returnCase = createCase(caseIds[0])
-    }
+    val handler = mockk<Handler>(relaxed = true)
 
     application {
         Window(
@@ -50,9 +71,7 @@ fun main() {
             icon = painterResource("water-wave-icon.png"),
             title = TITLE
         ) {
-            OpenRDRUI(object : Handler {
-                override var api = Api(mock(config))
-            })
+            OpenRDRUI(handler)
         }
     }
 }

@@ -5,7 +5,6 @@ Feature: The user should be able to see all test dates and results for a case
     And I start the client application
     When I see the case Case4 as the current case
     And pause for 1 seconds
-    Then blah
     Then I should see these episode dates:
       | 2022-08-05 12:31 |
       | 2022-08-06 02:25 |

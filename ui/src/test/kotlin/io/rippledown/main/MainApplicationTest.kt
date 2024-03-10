@@ -16,6 +16,8 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import io.kotest.matchers.shouldBe
+import io.mockk.every
+import io.mockk.mockk
 import io.rippledown.constants.kb.KB_CONTROL_DESCRIPTION
 import io.rippledown.constants.kb.KB_CONTROL_DROPDOWN_DESCRIPTION
 import io.rippledown.constants.main.CREATE_KB_TEXT
@@ -30,6 +32,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.takeWhile
 import org.jetbrains.skiko.MainUIDispatcher
 import org.junit.Assume.assumeFalse
+import org.junit.Before
 import java.awt.GraphicsEnvironment
 import javax.accessibility.AccessibleRole
 import javax.swing.SwingUtilities
@@ -37,6 +40,14 @@ import kotlin.test.Test
 import androidx.compose.ui.window.launchApplication as realLaunchApplication
 
 class MainApplicationTest {
+
+    lateinit var handler: Handler
+
+    @Before
+    fun setUp() {
+        handler = mockk<Handler>(relaxed = true)
+        every { handler.isClosing } returns { true }
+    }
 
     @Test
     fun blah() {
@@ -51,7 +62,7 @@ class MainApplicationTest {
                         title = TITLE
                     ) {
                         windowHolder = this.window
-                        OpenRDRUI(handlerImpl)
+                        OpenRDRUI(handler)
                     }
                 }
             }
@@ -130,7 +141,7 @@ class MainApplicationTest {
                 ) {
                     window = this.window
 
-                    OpenRDRUI(handlerImpl)
+                    OpenRDRUI(handler)
                 }
             }
         }

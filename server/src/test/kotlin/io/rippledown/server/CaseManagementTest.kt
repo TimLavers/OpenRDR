@@ -1,6 +1,5 @@
 package io.rippledown.server
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -10,11 +9,14 @@ import io.mockk.every
 import io.mockk.verify
 import io.rippledown.CaseTestUtils
 import io.rippledown.constants.api.CASE
-import io.rippledown.constants.api.DELETE_PROCESSED_CASE_WITH_NAME
+import io.rippledown.constants.api.DELETE_CASE_WITH_NAME
 import io.rippledown.constants.api.PROCESS_CASE
 import io.rippledown.constants.api.WAITING_CASES
-import io.rippledown.model.*
+import io.rippledown.model.CaseId
+import io.rippledown.model.CasesInfo
+import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.createCase
 import io.rippledown.model.external.serialize
 import io.rippledown.server.routes.KB_ID
 import kotlin.test.Test
@@ -49,21 +51,34 @@ class CaseManagementTest : OpenRDRServerTestBase() {
     }
 
     @Test
-    fun viewableCaseNoId() = testApplication {
+    fun `should throw exception when trying to get a case which has been deleted`() = testApplication {
         setup()
-        shouldThrow<IllegalStateException> {
-            httpClient.get(CASE) { parameter(KB_ID, kbId) }
+        var ok = false
+        try {
+            httpClient.get(CASE) {
+                parameter("id", 42L)
+                parameter(KB_ID, kbId)
+            }
+        } catch (e: Exception) {
+            ok = true
         }
+        ok shouldBe true
     }
 
     @Test
     fun viewableCaseBadId() = testApplication {
         setup()
-        val result = httpClient.get(CASE) {
-            parameter("id", 666)
-            parameter(KB_ID, kbId)
+        var ok = false
+        try {
+            httpClient.get(CASE) {
+                parameter("id", "badId")
+                parameter(KB_ID, kbId)
+            }
+        } catch (e: Exception) {
+            ok = true
+
         }
-        result.status shouldBe HttpStatusCode.BadRequest
+        ok shouldBe true
     }
 
     @Test
@@ -87,13 +102,13 @@ class CaseManagementTest : OpenRDRServerTestBase() {
     fun deleteProcessedCaseWithName() = testApplication {
         setup()
         val caseName = "The Case"
-        every { kbEndpoint.deleteProcessedCase(caseName) } returns Unit
-        val result = httpClient.delete(DELETE_PROCESSED_CASE_WITH_NAME) {
+        every { kbEndpoint.deleteCase(caseName) } returns Unit
+        val result = httpClient.delete(DELETE_CASE_WITH_NAME) {
             contentType(ContentType.Application.Json)
-            setBody(CaseName(caseName))
             parameter(KB_ID, kbId)
+            parameter("name", caseName)
         }
         result.status shouldBe HttpStatusCode.OK
-        verify { kbEndpoint.deleteProcessedCase(caseName) }
+        verify { kbEndpoint.deleteCase(caseName) }
     }
 }

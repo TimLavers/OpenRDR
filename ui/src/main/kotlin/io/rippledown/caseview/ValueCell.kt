@@ -17,7 +17,7 @@ fun RowScope.ValueCell(attribute: Attribute, index: Int, result: TestResult, col
         text = resultText(result),
         modifier = Modifier.weight(columnWidths.valueColumnWeight())
             .semantics {
-                contentDescription = valueCellContentDescription(attribute, index)
+                contentDescription = valueCellContentDescription(attribute.name, index)
             },
         fontWeight = FontWeight.Normal,
         textAlign = TextAlign.Center
@@ -31,4 +31,5 @@ fun resultText(result: TestResult): String {
         "$value ${result.units!!.trim()}"
     }
 }
-fun valueCellContentDescription(attribute: Attribute, index: Int) = "${attribute.name} value $index"
+fun valueCellContentDescriptionPrefix(attributeName: String) = "$attributeName value"
+private fun valueCellContentDescription(attributeName: String, index: Int) = "${valueCellContentDescriptionPrefix(attributeName)} $index"

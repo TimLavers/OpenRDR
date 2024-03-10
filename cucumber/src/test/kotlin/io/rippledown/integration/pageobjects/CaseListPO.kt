@@ -51,6 +51,7 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun select(caseName: String): CaseViewPO {
+        waitForCaseListToContain(caseName)
         caseNameContext(caseName)!!.accessibleAction.doAccessibleAction(0)
         return CaseViewPO {
             contextProvider()

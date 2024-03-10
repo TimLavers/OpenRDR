@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalTestApi::class)
+@file:OptIn(ExperimentalTestApi::class, ExperimentalTestApi::class, ExperimentalTestApi::class)
 
 package io.rippledown.casecontrol
 
@@ -17,7 +17,7 @@ fun ComposeTestRule.requireNamesToBeShowingOnCaseList(vararg caseNames: String) 
 @OptIn(ExperimentalTestApi::class)
 
 fun ComposeTestRule.selectCaseByName(caseName: String) {
-    waitUntilExactlyOneExists(caseMatcher(caseName), timeoutMillis = 2_000)
+    waitUntilExactlyOneExists(caseMatcher(caseName))
     onNode(caseMatcher(caseName)).performClick()
 }
 
@@ -30,6 +30,7 @@ fun ComposeTestRule.requireNumberOfCasesOnCaseList(expected: Int) {
     onNodeWithTag(CASELIST_ID).onChildren().assertCountEquals(expected)
 }
 
+@OptIn(ExperimentalTestApi::class)
 fun ComposeTestRule.waitForNumberOfCases(expected: Int) {
     waitUntilExactlyOneExists(hasText("$CASES $expected"), timeoutMillis = 2_000)
 }

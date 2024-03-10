@@ -49,3 +49,7 @@ subprojects {
 
 group = "io.rippledown"
 version = "1.0-SNAPSHOT"
+
+application {
+    mainClass.set("io.rippledown.server.OpenRDRServerKt")
+}

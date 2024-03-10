@@ -1,9 +1,12 @@
 package io.rippledown.appbar
 
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
-import io.kotest.matchers.shouldBe
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.application
+import io.mockk.Called
+import io.mockk.mockk
+import io.mockk.verify
 import io.rippledown.constants.main.*
 import org.junit.Before
 import org.junit.Rule
@@ -12,30 +15,29 @@ import kotlin.test.Test
 @OptIn(ExperimentalTestApi::class)
 class CreateKBTest {
 
-    private var handler = DummyCreateKBHandler()
+    private lateinit var handler: CreateKBHandler
 
     @get:Rule
     var composeTestRule = createComposeRule()
 
-    private lateinit var createKbOperator: CreateKbOperator
-
     @Before
     fun setup() {
-        handler = DummyCreateKBHandler()
-        composeTestRule.setContent {
-            CreateKB(handler)
-        }
-        createKbOperator = CreateKbOperator(composeTestRule)
+        handler = mockk<CreateKBHandler>(relaxed = true)
     }
+
 
     @Test
     fun `initial layout`() {
         with(composeTestRule) {
+            setContent {
+                CreateKB(handler)
+            }
             waitUntilExactlyOneExists(hasTestTag(CREATE_KB_NAME_FIELD_ID))
             onNodeWithTag(CREATE_KB_NAME_FIELD_ID)
                 .assertIsEnabled()
                 .assertIsDisplayed()
-                .assertTextEquals("")
+            waitUntilExactlyOneExists(hasText(""))
+
             onNodeWithTag(CREATE_KB_OK_BUTTON_ID)
                 .assertIsNotEnabled()
                 .assertIsDisplayed()
@@ -49,69 +51,59 @@ class CreateKBTest {
 
     @Test
     fun cancel() {
-        handler.cancelled shouldBe false
-        createKbOperator.clickCancelButton()
-        handler.cancelled shouldBe true
+        with(composeTestRule) {
+            setContent {
+                CreateKB(handler)
+            }
+            clickCancelButton()
+
+            verify { handler.cancel() }
+        }
     }
 
     @Test
     fun ok() {
-        val newKBName = "Whatever"
-        createKbOperator.performTextInput(newKBName)
-        createKbOperator.clickCreateButton()
-        handler.createdName shouldBe newKBName
-        handler.cancelled shouldBe false
+        with(composeTestRule) {
+            setContent {
+                CreateKB(handler)
+            }
+            val newKBName = "Whatever"
+            enterKBName(newKBName)
+            clickCreateButton()
+            verify { handler.create(newKBName) }
+            verify { handler.cancel wasNot Called }
+        }
     }
 
     @Test
     fun `kb name validation`() {
-        createKbOperator.performTextInput("A")
-        createKbOperator.assertCreateButtonIsEnabled()
-        createKbOperator.performTextClearance()
-        createKbOperator.assertOkButtonIsNotEnabled()
-        createKbOperator.performTextInput("Bats")
-        createKbOperator.assertCreateButtonIsEnabled()
-    }
-
-    class DummyCreateKBHandler : CreateKBHandler {
-        var createdName = ""
-        var cancelled = false
-        override fun create(name: String) {
-            createdName = name
-        }
-
-        override fun cancel() {
-            cancelled = true
+        with(composeTestRule) {
+            setContent {
+                CreateKB(handler)
+            }
+            val createKbOperator = onNodeWithTag(CREATE_KB_OK_BUTTON_ID)
+            createKbOperator.assertIsNotEnabled()
+            enterKBName("A")
+            createKbOperator.assertIsEnabled()
+            performTextClearance()
+            createKbOperator.assertIsNotEnabled()
+            enterKBName("Bats")
+            createKbOperator.assertIsEnabled()
         }
     }
 }
 
-@OptIn(ExperimentalTestApi::class)
-class CreateKbOperator(private val composeTestRule: ComposeContentTestRule) {
-    init {
-        composeTestRule.waitUntilExactlyOneExists(hasText(CREATE_KB_NAME))
-    }
 
-    fun setNameAndClickCreate(text: String) {
-        performTextInput(text)
-        clickCreateButton()
-    }
+fun main() {
 
-    fun waitToVanish() {
-        composeTestRule.waitUntil {
-            composeTestRule.onAllNodesWithTag(CREATE_KB_NAME_FIELD_ID).fetchSemanticsNodes().isEmpty()
+    application {
+        Window(
+            onCloseRequest = ::exitApplication,
+        ) {
+            CreateKB(object : CreateKBHandler {
+                override var create: (name: String) -> Unit = { name -> }
+                override var cancel: () -> Unit = {}
+            })
         }
     }
-
-    fun performTextInput(text: String) = composeTestRule.onNodeWithTag(CREATE_KB_NAME_FIELD_ID).performTextInput(text)
-
-    fun performTextClearance() = composeTestRule.onNodeWithTag(CREATE_KB_NAME_FIELD_ID).performTextClearance()
-
-    fun assertCreateButtonIsEnabled() = composeTestRule.onNodeWithTag(CREATE_KB_OK_BUTTON_ID).assertIsEnabled()
-
-    fun assertOkButtonIsNotEnabled() = composeTestRule.onNodeWithTag(CREATE_KB_OK_BUTTON_ID).assertIsNotEnabled()
-
-    fun clickCreateButton() = composeTestRule.onNodeWithTag(CREATE_KB_OK_BUTTON_ID).performClick()
-
-    fun clickCancelButton() = composeTestRule.onNodeWithTag(CREATE_KB_CANCEL_BUTTON_ID).performClick()
 }

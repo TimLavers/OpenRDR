@@ -173,7 +173,7 @@ internal class KBEndpointTest {
         val externalCase2 = CaseTestUtils.getCase("Case2")
         val case2 = endpoint.processCase(externalCase2)
         endpoint.kb.allProcessedCases() shouldBe listOf(case1, case2)
-        endpoint.deleteProcessedCase(case2.name)
+        endpoint.deleteCase(case2.name)
         endpoint.kb.allProcessedCases() shouldBe listOf(case1)
     }
 
