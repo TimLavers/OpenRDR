@@ -84,11 +84,7 @@ fun CaseControl(handler: CaseControlHandler) {
         if (currentCase != null) {
             key(currentCase!!.id) {
                 Column {
-                    CaseView(object : CaseViewHandler {
-                        override var case = currentCase!!
-                        override var api = handler.api
-                        override fun caseEdited() {}
-                    })
+                    CaseView(CaseViewHandlerImpl(handler, currentCase!!))
                     InterpretationView(object : InterpretationViewHandler {
                         override var text = currentCase!!.textGivenByRules()
                         override var onEdited = { text: String -> }
@@ -98,4 +94,32 @@ fun CaseControl(handler: CaseControlHandler) {
             }
         }
     }
+}
+
+class CaseViewHandlerImpl(val ccHandler: CaseControlHandler, val currentCase: ViewableCase): CaseViewHandler {
+    override var case: ViewableCase
+        get() = currentCase
+        set(value) {}
+
+    override fun caseEdited() {
+        TODO("Not yet implemented")
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as CaseViewHandlerImpl
+
+        return currentCase == other.currentCase
+    }
+
+    override fun hashCode(): Int {
+        return currentCase.hashCode()
+    }
+
+    override var api: Api
+        get() = ccHandler.api
+        set(value) {}
+
 }

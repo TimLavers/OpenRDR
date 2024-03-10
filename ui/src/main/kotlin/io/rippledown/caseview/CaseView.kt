@@ -29,15 +29,15 @@ interface CaseViewHandler : Handler {
  */
 @Composable
 fun CaseView(handler: CaseViewHandler) {
-
+    val case: ViewableCase by remember { mutableStateOf(handler.case) }
     Column(
         modifier = Modifier
             .padding(10.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        println("drawing case: ${handler.case.name}")
+        println("drawing case: ${case.name}")
         Text(
-            text = handler.case.name,
+            text = case.name,
             style = MaterialTheme.typography.subtitle1,
             textAlign = TextAlign.Start,
             modifier = Modifier
@@ -47,7 +47,7 @@ fun CaseView(handler: CaseViewHandler) {
                 }
         )
         CaseTable(object : CaseTableHandler {
-            override val viewableCase = handler.case
+            override val viewableCase = case
         })
     }
 }
