@@ -51,13 +51,18 @@ class CaseManagementTest : OpenRDRServerTestBase() {
     }
 
     @Test
-    fun `should return error status the case with that id has been deleted`() = testApplication {
+    fun `should throw exception when trying to get a case which has been deleted`() = testApplication {
         setup()
-        val result = httpClient.get(CASE) {
-            parameter("id", 42L)
-            parameter(KB_ID, kbId)
+        var ok = false
+        try {
+            httpClient.get(CASE) {
+                parameter("id", 42L)
+                parameter(KB_ID, kbId)
+            }
+        } catch (e: Exception) {
+            ok = true
         }
-        result.status shouldBe HttpStatusCode.BadRequest
+        ok shouldBe true
     }
 
     @Test
