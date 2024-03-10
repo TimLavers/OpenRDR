@@ -100,7 +100,6 @@ class Api(engine: HttpClientEngine = CIO.create()) {
                 parameter("KB", kbId())
             }.body()
         } catch (e: Exception) {
-            println("getCase exception: $e")
             return null
         }
     }

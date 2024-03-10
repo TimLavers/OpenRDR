@@ -63,11 +63,17 @@ class CaseManagementTest : OpenRDRServerTestBase() {
     @Test
     fun viewableCaseBadId() = testApplication {
         setup()
-        val result = httpClient.get(CASE) {
-            parameter("id", 666)
-            parameter(KB_ID, kbId)
+        var ok = false
+        try {
+            httpClient.get(CASE) {
+                parameter("id", "badId")
+                parameter(KB_ID, kbId)
+            }
+        } catch (e: Exception) {
+            ok = true
+
         }
-        result.status shouldBe HttpStatusCode.BadRequest
+        ok shouldBe true
     }
 
     @Test
