@@ -50,6 +50,7 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
 
     fun valuesForAttribute(attribute: String): List<String> {
         val contentDescriptionPrefix = valueCellContentDescriptionPrefix(attribute)
+        println("contentDescriptionPrefix = ${contentDescriptionPrefix}")
         return extractMatchingValuesInOrderShown(contentDescriptionPrefix) { context -> ValueCellPO(context, attribute) }
     }
 
@@ -83,10 +84,13 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
         .accessibleName
 }
 
-open class CellPO(private val context: AccessibleContext, descriptionPrefix: String) : Comparable<CellPO> {
+open class CellPO(private val context: AccessibleContext, val descriptionPrefix: String) : Comparable<CellPO> {
     private val index = context.accessibleDescription.substring(descriptionPrefix.length).trim().toInt()
 
-    override fun compareTo(other: CellPO) = index.compareTo(other.index)
+    override fun compareTo(other: CellPO): Int {
+        println("comparing $index to ${other.index} for $descriptionPrefix")
+        return index.compareTo(other.index)
+    }
 
     fun text(): String = context.accessibleName
 }

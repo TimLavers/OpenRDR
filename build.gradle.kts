@@ -1,4 +1,5 @@
 import Version.mockk
+import org.gradle.jvm.toolchain.JavaLanguageVersion.of
 
 apply(from = "repositories.gradle.kts")
 
@@ -14,7 +15,7 @@ kotlin {
 }
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = of(21)
     }
 }
 

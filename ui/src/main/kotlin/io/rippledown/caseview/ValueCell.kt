@@ -32,4 +32,5 @@ fun resultText(result: TestResult): String {
     }
 }
 fun valueCellContentDescriptionPrefix(attributeName: String) = "$attributeName value"
-private fun valueCellContentDescription(attributeName: String, index: Int) = "${valueCellContentDescriptionPrefix(attributeName)} $index"
+fun valueCellContentDescription(attributeName: String, index: Int) =
+    "${valueCellContentDescriptionPrefix(attributeName)} $index"
