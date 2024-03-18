@@ -1,67 +1,51 @@
 package steps
 
-import io.rippledown.TestClientLauncher
 import io.rippledown.integration.UITestBase
-import io.rippledown.integration.pageobjects.*
 import steps.StepsInfrastructure.client
 import steps.StepsInfrastructure.uiTestBase
 
 object StepsInfrastructure {
-    var uiTestBase: UITestBase? = null
-    private var launchedClient: LaunchedClient? = null
+    lateinit var uiTestBase: UITestBase
+    private lateinit var launchedClient: LaunchedClient
+    private fun setup() {
+        uiTestBase = UITestBase()
+    }
 
     fun startServerWithInMemoryDatabase() {
         setup()
-        uiTestBase!!.serverProxy.start()
-        uiTestBase!!.restClient.createKBWithDefaultName()
+        uiTestBase.serverProxy.start()
+        uiTestBase.restClient.createKBWithDefaultName()
     }
 
     fun startServerWithPostgresDatabase() {
         setup()
-        uiTestBase!!.serverProxy.startWithPostgres()
+        uiTestBase.serverProxy.startWithPostgres()
+    }
+
+    fun reStartWithPostgres() {
+        uiTestBase.serverProxy.reStartWithPostgres()
+    }
+
+    fun stopServer() {
+        uiTestBase.serverProxy.shutdown()
     }
 
     fun startClient() {
-        require(launchedClient == null) {
-            "LaunchedClient not null. Was the previous test cleaned up?"
-        }
         launchedClient = LaunchedClient()
     }
-
-    fun client(): LaunchedClient { require(launchedClient != null) {
-            "Was the client launched?"
-        }
-        return launchedClient!!
-    }
+    fun client() = launchedClient
 
     fun cleanup() {
-        launchedClient?.stopClient()
-        launchedClient = null
-        uiTestBase!!.serverProxy.shutdown()
-        uiTestBase = null
+        launchedClient.stopClient()
+        uiTestBase.serverProxy.shutdown()
     }
 
-    private fun setup() {
-        require(uiTestBase == null) {
-            "UITestBase not null. Did the previous test clean up?"
-        }
-        uiTestBase = UITestBase()
-    }
-}
-class LaunchedClient {
-    val testClientLauncher = TestClientLauncher()
-    val composeWindow = testClientLauncher.launchClient()
-    val rdUiOperator = RippleDownUIOperator(composeWindow)
-    val caseListPO = rdUiOperator.caseListPO()
-    val caseViewPO = rdUiOperator.caseViewPO()
-    val interpretationViewPO = rdUiOperator.interpretationViewPO()
 
-    fun stopClient() {
-        testClientLauncher.stopClient()
-    }
 }
-fun caseListPO() = client().caseListPO
-fun caseViewPO() = client().caseViewPO
-fun labProxy() = uiTestBase!!.labProxy
-fun restClient() = uiTestBase!!.restClient
-fun interpretationViewPO() = client().interpretationViewPO
+
+fun labProxy() = uiTestBase.labProxy
+fun restClient() = uiTestBase.restClient
+fun applicationBarPO() = client().applicationBarPO()
+fun caseListPO() = client().caseListPO()
+fun caseViewPO() = client().caseViewPO()
+fun interpretationViewPO() = client().interpretationViewPO()

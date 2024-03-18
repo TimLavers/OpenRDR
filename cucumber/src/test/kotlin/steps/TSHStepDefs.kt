@@ -9,8 +9,6 @@ class TSHStepDefs : En {
         When("the TSH sample KB has been loaded") {
             setupTSHSampleKB()
         }
-
-
     }
 
     private fun checkCase1() {

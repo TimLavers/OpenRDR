@@ -30,7 +30,7 @@ fun CaseTable(viewableCase: ViewableCase) {
         }
         itemsIndexed(viewableCase.attributes()) { index: Int, attribute: Attribute ->
             val resultsList = case.resultsFor(attribute)!!
-            BodyRow(index, attribute, columnWidths, resultsList)
+            BodyRow(index, viewableCase.name, attribute, columnWidths, resultsList)
         }
     }
 }

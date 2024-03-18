@@ -11,8 +11,8 @@ fun ComposeTestRule.waitForCaseToBeShowing(caseName: String) {
     waitUntilAtLeastOneExists(hasTestTag("$CASEVIEW_CASE_NAME_ID$caseName"))
 }
 
-fun ComposeTestRule.requireValueForAttribute(attributeName: String, value: String) {
-    onNodeWithContentDescription(valueCellContentDescription(attributeName, 0))
+fun ComposeTestRule.requireValueForAttribute(caseName: String, attributeName: String, value: String) {
+    onNodeWithContentDescription(valueCellContentDescription(caseName, attributeName, 0))
         .assert(hasText(value))
 }
 

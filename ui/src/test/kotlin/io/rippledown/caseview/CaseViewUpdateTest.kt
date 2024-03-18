@@ -59,17 +59,19 @@ class CaseViewUpdateTest {
             }
 
             //Given
-            waitForCaseToBeShowing(viewableBondiCase.name)
-            requireValueForAttribute(tsh.name, "2.37")
-            requireValueForAttribute(clinicalNotes.name, "Lethargy")
+            val bondi = viewableBondiCase.name
+            waitForCaseToBeShowing(bondi)
+            requireValueForAttribute(bondi, tsh.name, "2.37")
+            requireValueForAttribute(bondi, clinicalNotes.name, "Lethargy")
 
             //When update the case
             onNodeWithTag(buttonId).performClick()
 
             //Then
-            waitForCaseToBeShowing(viewableMalabarCase.name)
-            requireValueForAttribute(tsh.name, "2.38")
-            requireValueForAttribute(clinicalNotes.name, "Lethargy")
+            val malabar = viewableMalabarCase.name
+            waitForCaseToBeShowing(malabar)
+            requireValueForAttribute(malabar, tsh.name, "2.38")
+            requireValueForAttribute(malabar, clinicalNotes.name, "Lethargy")
         }
     }
 

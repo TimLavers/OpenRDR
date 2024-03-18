@@ -31,7 +31,6 @@ class KbControlOperator(private val contextProvider: () -> AccessibleContext) {
         Thread.sleep(1_000)
         val dropDown = contextProvider().find(KBS_DROPDOWN_DESCRIPTION, AccessibleRole.COMBO_BOX)!!
         Thread.sleep(1_000)
-        dropDown.dumpToText(0)
         Thread.sleep(1_000)
         val menuItem = dropDown.findByName(name, AccessibleRole.LABEL)!!
         menuItem.accessibleAction.doAccessibleAction(0)
@@ -39,21 +38,14 @@ class KbControlOperator(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun availableKBs(): List<String> {
-        contextProvider().dumpToText(0)
-
         val dropDown = contextProvider().find(KBS_DROPDOWN_DESCRIPTION, AccessibleRole.COMBO_BOX)!!
-
-
         return dropDown.findLabelChildren()
     }
 
 
     public fun expandDropdownMenu()  = contextProvider().findAndClick(KB_CONTROL_DROPDOWN_DESCRIPTION)
-    public fun clickCreateKbButton() {
-        println("========================================================")
-        contextProvider().dumpToText(0)
+    fun clickCreateKbButton() {
         val dropDown = contextProvider().find(KBS_DROPDOWN_DESCRIPTION, AccessibleRole.COMBO_BOX)
-        println("dropDown: $dropDown")
         dropDown!!.findAndClick(CREATE_KB_TEXT)
 
     }

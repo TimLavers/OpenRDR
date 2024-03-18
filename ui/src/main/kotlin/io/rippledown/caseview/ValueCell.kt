@@ -12,12 +12,18 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.TestResult
 
 @Composable
-fun RowScope.ValueCell(attribute: Attribute, index: Int, result: TestResult, columnWidths: ColumnWidths) {
+fun RowScope.ValueCell(
+    caseName: String,
+    attribute: Attribute,
+    index: Int,
+    result: TestResult,
+    columnWidths: ColumnWidths
+) {
     Text(
         text = resultText(result),
         modifier = Modifier.weight(columnWidths.valueColumnWeight())
             .semantics {
-                contentDescription = valueCellContentDescription(attribute.name, index)
+                contentDescription = valueCellContentDescription(caseName, attribute.name, index)
             },
         fontWeight = FontWeight.Normal,
         textAlign = TextAlign.Center
@@ -31,6 +37,6 @@ fun resultText(result: TestResult): String {
         "$value ${result.units!!.trim()}"
     }
 }
-fun valueCellContentDescriptionPrefix(attributeName: String) = "$attributeName value"
-fun valueCellContentDescription(attributeName: String, index: Int) =
-    "${valueCellContentDescriptionPrefix(attributeName)} $index"
+fun valueCellContentDescriptionPrefix(caseName: String, attributeName: String) = "$caseName $attributeName value"
+fun valueCellContentDescription(caseName: String, attributeName: String, index: Int) =
+    "${valueCellContentDescriptionPrefix(caseName, attributeName)} $index"

@@ -31,7 +31,8 @@ internal class CaseViewTest : UITestBase() {
     @Test
     fun selectCase() {
         val caseViewPO = caseListPO.select("Case2")
-        assertEquals(caseViewPO.nameShown(), "Case2")
+        val caseName = caseViewPO.nameShown()!!
+        assertEquals(caseName, "Case2")
         val dataShown = caseViewPO.valuesShown()
         assertEquals(dataShown.size, 2)
         assertEquals(dataShown["TSH"]!![0], "0.72 mU/L")

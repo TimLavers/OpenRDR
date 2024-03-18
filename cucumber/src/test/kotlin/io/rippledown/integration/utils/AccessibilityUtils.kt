@@ -9,13 +9,13 @@ fun AccessibleContext.find(description: String, role: AccessibleRole): Accessibl
     val matcher = { context: AccessibleContext ->
         description == context.accessibleDescription && role == context.accessibleRole
     }
-    return this.find(matcher)
+    return find(matcher)
 }
 fun AccessibleContext.find(description: String): AccessibleContext? {
     val matcher = { context: AccessibleContext ->
         description == context.accessibleDescription
     }
-    return this.find(matcher)
+    return find(matcher)
 }
 
 fun AccessibleContext.waitTillFound(description: String, role: AccessibleRole): AccessibleContext? {
