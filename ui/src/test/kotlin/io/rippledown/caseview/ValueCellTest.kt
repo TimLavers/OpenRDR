@@ -27,7 +27,7 @@ class ValueCellTest {
         val testResult = TestResult("12.8", null, null)
         val rowScope: RowScope = DummyRowScope()
         composeTestRule.setContent {
-            rowScope.ValueCell(tsh, 1, testResult, columnWidths)
+            rowScope.ValueCell("Bondi", tsh, 1, testResult, columnWidths)
         }
         with(composeTestRule) {
             waitUntilExactlyOneExists(hasText("12.8"))
@@ -42,7 +42,7 @@ class ValueCellTest {
         val testResult = TestResult("12.8", null, null)
         val rowScope: RowScope = DummyRowScope()
         composeTestRule.setContent {
-            rowScope.ValueCell(tsh, 1, testResult, columnWidths)
+            rowScope.ValueCell("Bondi", tsh, 1, testResult, columnWidths)
         }
     }
 
@@ -51,7 +51,7 @@ class ValueCellTest {
         val testResult = TestResult("12.8", null, "waves / sec")
         val rowScope: RowScope = DummyRowScope()
         composeTestRule.setContent {
-            rowScope.ValueCell(tsh, 1, testResult, columnWidths)
+            rowScope.ValueCell("Bondi", tsh, 1, testResult, columnWidths)
         }
         with(composeTestRule) {
             waitUntilExactlyOneExists(hasText("12.8 waves / sec"))

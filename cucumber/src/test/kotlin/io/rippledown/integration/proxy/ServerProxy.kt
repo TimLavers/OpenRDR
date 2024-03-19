@@ -69,4 +69,5 @@ class ServerProxy {
             process.destroyForcibly().waitFor()
         }
     }
+    fun restClient() = restClient
 }

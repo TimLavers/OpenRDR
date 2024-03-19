@@ -1,5 +1,5 @@
 import Version.mockk
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.gradle.jvm.toolchain.JavaLanguageVersion.of
 
 apply(from = "repositories.gradle.kts")
 
@@ -12,6 +12,11 @@ plugins {
 
 kotlin {
     jvmToolchain(21)
+}
+java {
+    toolchain {
+        languageVersion = of(21)
+    }
 }
 
 subprojects {

@@ -1,12 +1,8 @@
 package io.rippledown.kb
 
 
-import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.kotest.matchers.string.beBlank
 import io.rippledown.constants.kb.*
-import io.rippledown.proxy.act
-import io.rippledown.proxy.findAllById
 import io.rippledown.proxy.findById
 
 fun importKBButton() = findById(KB_IMPORT_BUTTON_ID)
@@ -77,9 +73,7 @@ fun requireCreateKBDialogToBeShowing() {
 //suspend fun clickCancelCreateKBButton() = act { kbCreateDialog().findById(CANCEL_CREATE_BUTTON_ID) }
 
 suspend fun enterNewProjectName(name: String) {
-    act {
 //        kbCreateDialog().textContent = name
-    }
 }
 
 fun requireImportDialogToBeShowing() {

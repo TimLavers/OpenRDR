@@ -7,6 +7,7 @@ import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findLabelChildren
 import org.awaitility.Awaitility.await
+import org.awaitility.kotlin.withPollDelay
 import java.time.Duration.ofSeconds
 import java.util.concurrent.TimeUnit
 import javax.accessibility.AccessibleContext
@@ -27,7 +28,7 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun waitForCountOfNumberOfCasesToBe(count: Int) {
-        await().atMost(5L, TimeUnit.SECONDS).until {
+        await().withPollDelay(ofSeconds(1)).atMost(5L, TimeUnit.SECONDS).until {
             val found = countOfTheNumberOfCases()
             found != null && found == count
         }
@@ -63,7 +64,7 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
     private fun caseListContext() = contextProvider().find(CASELIST_ID, SCROLL_PANE)
 
     fun waitForCaseListToContain(name: String) {
-        await().atMost(ofSeconds(5)).until {
+        await().pollDelay(ofSeconds(1)).atMost(ofSeconds(5)).until {
             casesListed().contains(name)
         }
     }

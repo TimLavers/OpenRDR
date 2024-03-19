@@ -3,11 +3,10 @@ package io.rippledown.integration
 import io.rippledown.integration.proxy.DirProxy
 import io.rippledown.integration.proxy.LabProxy
 import io.rippledown.integration.proxy.ServerProxy
-import io.rippledown.integration.restclient.RESTClient
 
 open class UITestBase {
     val serverProxy = ServerProxy()
-    val restClient = RESTClient()
+    val restClient = serverProxy.restClient()
     val attributeFactory = RestClientAttributeFactory(restClient)
     val conclusionFactory = RestClientConclusionFactory(restClient)
     val conditionFactory = RestClientConditionFactory(restClient)

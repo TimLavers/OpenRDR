@@ -28,7 +28,7 @@ class BodyRowTest {
         every { columnWidths.valueColumnWeight() }.returns(0.3F)
         every { columnWidths.referenceRangeColumnWeight }.returns(0.2F)
         composeTestRule.setContent {
-            BodyRow( 5, attribute, columnWidths, results)
+            BodyRow(5, "Bondi", attribute, columnWidths, results)
         }
         with(composeTestRule) {
             waitUntilExactlyOneExists(hasText(attribute.name))

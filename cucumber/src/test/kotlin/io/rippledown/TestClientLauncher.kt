@@ -11,47 +11,46 @@ import io.rippledown.main.Api
 import io.rippledown.main.Handler
 import io.rippledown.main.OpenRDRUI
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import java.awt.event.WindowEvent
+import java.lang.Thread.sleep
 import javax.swing.JFrame
 import javax.swing.SwingUtilities
 
 
 class TestClientLauncher {
+    private val handler = object : Handler {
+        override var api = Api()
+        override var isClosing: () -> Boolean = { false }
+    }
     private lateinit var composeWindow: ComposeWindow
 
     fun launchClient(): ComposeWindow {
-            GlobalScope.launch {
-                val api = Api()
-                application {
-                    Window(
-                        onCloseRequest = {
-                            api.shutdown()
-                        },
-                        icon = painterResource("water-wave-icon.png"),
-                        title = TITLE
-                    ) {
-                        composeWindow = this.window
-                        OpenRDRUI(object : Handler {
-                            override var api = api
-                            override var isClosing: () -> Boolean = { false }
-                        })
-                    }
+        val api = Api()
+        Thread {
+            application {
+                Window(
+                    onCloseRequest = {
+                        api.shutdown()
+                    },
+                    icon = painterResource("water-wave-icon.png"),
+                    title = TITLE
+                ) {
+                    composeWindow = this.window
+                    OpenRDRUI(handler)
                 }
             }
-
-        var attempt = 0
-        while (!::composeWindow.isInitialized && attempt++ < 50) {
-            Thread.sleep(100)
+        }.start()
+        while (!::composeWindow.isInitialized) {
+            sleep(100)
         }
         return composeWindow
     }
 
     fun stopClient() {
+        handler.isClosing = { true }
         val frame = composeWindow as JFrame
         frame.dispatchEvent(WindowEvent(frame, WindowEvent.WINDOW_CLOSING))
-        SwingUtilities.invokeAndWait{
+        SwingUtilities.invokeAndWait {
             frame.dispose()
         }
     }

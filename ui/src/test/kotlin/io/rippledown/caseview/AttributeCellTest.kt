@@ -21,7 +21,7 @@ class AttributeCellTest {
     fun `show result that does not have units`() {
         val rowScope: RowScope = DummyRowScope()
         composeTestRule.setContent {
-            rowScope.AttributeCell(3, tsh, columnWidths)
+            rowScope.AttributeCell(3, "Bondi", tsh, columnWidths)
         }
         with(composeTestRule) {
             waitUntilExactlyOneExists(hasText(tsh.name))
