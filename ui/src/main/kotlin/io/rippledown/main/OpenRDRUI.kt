@@ -62,6 +62,8 @@ fun OpenRDRUI(handler: Handler) {
                 override var ruleSessionInProgress: (Boolean) -> Unit = { }
                 override var caseEdited: () -> Unit = {}
                 override var getCase: (caseId: Long) -> ViewableCase? = { runBlocking { api.getCase(it) } }
+                override var saveCase: (case: ViewableCase) -> Unit =
+                    { runBlocking { api.saveVerifiedInterpretation(it) } }
                 override var isClosing = { false }
             })
         }

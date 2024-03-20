@@ -111,11 +111,15 @@ class ApiTest {
             )
         )
         val interpretation = ViewableInterpretation()
+        val originalCase = createCase(CaseId())
+        val interpToReturn = interpretation.copy(diffList = expectedDiffList)
+        val updatedCase = originalCase.copy().apply { viewableInterpretation = interpToReturn }
+
         val config = config {
-            expectedInterpretation = interpretation
-            returnInterpretationAfterSavingInterpretation = interpretation.copy(diffList = expectedDiffList)
+            expectedCase = originalCase
+            returnCase = updatedCase
         }
-        Api(mock(config)).saveVerifiedInterpretation(interpretation) shouldBe interpretation.copy(diffList = expectedDiffList)
+        Api(mock(config)).saveVerifiedInterpretation(originalCase) shouldBe updatedCase
     }
 
     @Test

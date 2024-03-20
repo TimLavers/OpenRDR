@@ -1,18 +1,7 @@
 package io.rippledown.integration
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.integration.pageobjects.CaseQueuePO
-import io.rippledown.integration.pageobjects.CaseViewPO
-import io.rippledown.integration.pageobjects.ConclusionsViewPO
-import io.rippledown.integration.restclient.RESTClient
 import io.rippledown.main.Api
-import io.rippledown.model.Attribute
-import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.EpisodicCondition
-import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals
-import io.rippledown.model.condition.episodic.predicate.LessThanOrEquals
-import io.rippledown.model.condition.episodic.predicate.Normal
-import io.rippledown.model.condition.episodic.signature.Current
 import kotlinx.coroutines.runBlocking
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -40,7 +29,7 @@ class APITest {
     @Test
     fun `should save edited interpretation`() {
         runBlocking {
-            with(RESTClient()) {
+            with(uiTestBase.restClient) {
 
                 // Given
                 createRuleToAddText(caseName, originalText)
@@ -51,10 +40,10 @@ class APITest {
                 // When
                 val editedText = "Go to Bondi. And bring your flippers."
                 viewableCase.viewableInterpretation.verifiedText = editedText
-                val returned = Api().saveVerifiedInterpretation(viewableCase.viewableInterpretation)
+                val returned = Api().saveVerifiedInterpretation(viewableCase)
 
                 // Then
-                returned.verifiedText shouldBe editedText
+                returned.verifiedText() shouldBe editedText
                 returned.latestText() shouldBe editedText
             }
         }

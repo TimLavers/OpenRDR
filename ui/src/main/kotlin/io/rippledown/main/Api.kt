@@ -125,13 +125,12 @@ class Api(engine: HttpClientEngine = CIO.create()) {
     /**
      * @return the interpretation containing the DiffList of the original and verified interpretation
      */
-    suspend fun saveVerifiedInterpretation(verifiedInterpretation: ViewableInterpretation): ViewableInterpretation {
+    suspend fun saveVerifiedInterpretation(case: ViewableCase): ViewableCase {
         val returned = client.post("$API_URL$VERIFIED_INTERPRETATION_SAVED") {
             contentType(ContentType.Application.Json)
-            setBody(verifiedInterpretation)
+            setBody(case)
             parameter("KB", kbId())
-        }.body<ViewableInterpretation>()
-        println("returned from save verified interpretation = ${returned}")
+        }.body<ViewableCase>()
         return returned
     }
 

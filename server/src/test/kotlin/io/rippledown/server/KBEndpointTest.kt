@@ -117,12 +117,11 @@ internal class KBEndpointTest {
         original.diffList() shouldBe DiffList()
 
         val verified = "Verified."
-        val verifiedInterpretation = original.viewableInterpretation.apply { verifiedText = verified }
-        val returnedInterpretation = endpoint.saveInterpretation(verifiedInterpretation)
-        val updated = endpoint.viewableCase(id)
-        updated.viewableInterpretation shouldBe returnedInterpretation
-        original.verifiedText() shouldBe verified
-        updated.diffList() shouldBe DiffList(listOf(Addition(verified)))
+        original.viewableInterpretation.apply { verifiedText = verified }
+        val returnedCase = endpoint.saveInterpretation(original)
+        returnedCase.id shouldBe original.id
+        returnedCase.verifiedText() shouldBe verified
+        returnedCase.diffList() shouldBe DiffList(listOf(Addition(verified)))
     }
 
     @Test
@@ -284,7 +283,7 @@ internal class KBEndpointTest {
     }
 
     @Test
-    fun `when saving an interpretation, an interpretation with diffs should be returned`() {
+    fun `when saving a viewableCase, an interpretation with diffs should be returned`() {
         val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
         val conclusion = endpoint.kb.conclusionManager.getOrCreate("Go to Bondi.")
         with(endpoint) {
@@ -296,8 +295,11 @@ internal class KBEndpointTest {
             val verifiedInterpretation = ViewableInterpretation(case.interpretation).apply {
                 verifiedText = "Go to Bondi. Bring 2 sets of flippers. And bring sunscreen."
             }
-            val interpReturned = endpoint.saveInterpretation(verifiedInterpretation)
-            interpReturned.diffList shouldBe DiffList(
+            val viewableCase = viewableCase(id).apply {
+                viewableInterpretation = verifiedInterpretation
+            }
+            val caseReturned = endpoint.saveInterpretation(viewableCase)
+            caseReturned.diffList() shouldBe DiffList(
                 listOf(
                     Unchanged("Go to Bondi."),
                     Addition("Bring 2 sets of flippers."),
@@ -318,15 +320,18 @@ internal class KBEndpointTest {
         val interp = case.viewableInterpretation.apply {
             verifiedText = "$comment1 $comment2 $comment3"
         }
+        val viewableCase = case.apply {
+            viewableInterpretation = interp
+        }
 
         // when
-        val savedInterpretation = endpoint.saveInterpretation(interp)
+        val savedCase = endpoint.saveInterpretation(viewableCase)
 
         // then
         endpoint.kb.interpretationViewManager.allInOrder()
             .map { it.text } shouldBe setOf(comment1, comment2, comment3)
 
-        savedInterpretation.diffList shouldBe DiffList(
+        savedCase.diffList() shouldBe DiffList(
             listOf(
                 Addition(comment1),
                 Addition(comment2),

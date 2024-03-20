@@ -24,6 +24,7 @@ import io.rippledown.model.interpretationview.ViewableInterpretation
 interface CaseControlHandler : Handler, CaseInspectionHandler {
     var setRuleInProgress: (_: Boolean) -> Unit
     var getCase: (caseId: Long) -> ViewableCase?
+    var saveCase: (case: ViewableCase) -> Unit
 }
 
 @Composable
@@ -86,6 +87,7 @@ fun CaseControl(casesInfo: CasesInfo, handler: CaseControlHandler) {
                         },
                         viewProperties = currentCase!!.viewProperties
                     )
+                    handler.saveCase(updated)
                     currentCase = updated
                 }
                 override var isCornerstone: Boolean = false
