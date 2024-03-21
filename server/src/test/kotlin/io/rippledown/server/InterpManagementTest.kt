@@ -43,16 +43,19 @@ class InterpManagementTest : OpenRDRServerTestBase() {
         val interpretationToReturn = interpretationToSave.apply {
             diffList = diffs
         }
-        every { kbEndpoint.saveInterpretation(interpretationToSave) } returns interpretationToReturn
+        val caseToReturn = viewableCase.apply {
+            viewableInterpretation = interpretationToReturn
+        }
+        every { kbEndpoint.saveInterpretation(viewableCase) } returns caseToReturn
 
         val result = httpClient.post(VERIFIED_INTERPRETATION_SAVED) {
             parameter(KB_ID, kbId)
             contentType(ContentType.Application.Json)
-            setBody(interpretationToSave)
+            setBody(viewableCase)
         }
         result.status shouldBe HttpStatusCode.OK
-        result.body<ViewableInterpretation>() shouldBe interpretationToReturn
-        verify { kbEndpoint.saveInterpretation(interpretationToSave) }
+        result.body<ViewableCase>() shouldBe caseToReturn
+        verify { kbEndpoint.saveInterpretation(viewableCase) }
     }
 
     @Test
