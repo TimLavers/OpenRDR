@@ -33,7 +33,8 @@ Feature: Knowledge Base management
     And stop the client application
 
   Scenario: A Knowledge Base can be created
-    Given I start the client application
+    Given A Knowledge Base called Thyroids has been created
+    And I start the client application
     And the displayed KB name is Thyroids
     When I create a Knowledge Base with the name Glucose
     Then the displayed KB name is now Glucose
