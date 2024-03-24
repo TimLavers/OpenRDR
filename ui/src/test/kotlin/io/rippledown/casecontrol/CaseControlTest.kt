@@ -142,6 +142,7 @@ class CaseControlTest {
         }
     }
 
+
     @Test
     fun `should update the interpretation when a case is selected`() = runTest {
         val caseA = "case A"
@@ -228,6 +229,7 @@ class CaseControlTest {
             waitForCaseToBeShowing(caseName10)
         }
     }
+
     /*
 
         @Test

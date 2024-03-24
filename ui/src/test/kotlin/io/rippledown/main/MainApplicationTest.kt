@@ -117,13 +117,11 @@ class MainApplicationTest {
         Thread.sleep(1_000)
         println("-----------------------------------------------------")
 //        window.accessibleContext.dumpToText()
-        Thread.sleep(5_000)
+        Thread.sleep(1_000)
 
         val dialog = findComposeDialogThatIsShowing()
         println("=========================================================== dialog: $dialog")
         dialog!!.accessibleContext.dumpToText()
-
-        Thread.sleep(5_000)
 
     }
 

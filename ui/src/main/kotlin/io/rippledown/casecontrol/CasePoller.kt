@@ -20,10 +20,16 @@ val POLL_PERIOD = 2.seconds
 fun CasePoller(handler: CasePollerHandler) {
 
     LaunchedEffect(Unit) {
+        queryForCases(handler = handler)
         while (!handler.isClosing()) {
-            val updatedCasesInfo = handler.updateCasesInfo()
-            handler.onUpdate(updatedCasesInfo)
             delay(POLL_PERIOD)
+            queryForCases(handler = handler)
         }
     }
 }
+
+fun queryForCases(handler: CasePollerHandler) {
+    val updatedCasesInfo = handler.updateCasesInfo()
+    handler.onUpdate(updatedCasesInfo)
+}
+
