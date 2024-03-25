@@ -60,7 +60,7 @@ class DragDropListState(
     }
 
     fun printState() {
-        println("DDLS. iDE index: ${initiallyDraggedElement?.index}, cIODI: $currentIndexOfDraggedItem,dD: $draggedDistance ")
+//        println("DDLS. iDE index: ${initiallyDraggedElement?.index}, cIODI: $currentIndexOfDraggedItem,dD: $draggedDistance ")
     }
     // Helper function to calculate start and end offsets
     // Calculate the start and end offsets of the dragged element
@@ -72,7 +72,7 @@ class DragDropListState(
     }
 
     fun onDrag(offset: Offset) {
-        println("On drag. Offset: $offset")
+//        println("On drag. Offset: $offset")
         draggedDistance += offset.y
         val topOffset = initialOffsets?.first ?: return
         val (startOffset, endOffset) = calculateOffsets(topOffset.toFloat())
@@ -94,6 +94,7 @@ class DragDropListState(
                 }
             }
 
+//            println("target item: $targetItem")
             if (targetItem != null) {
                 currentIndexOfDraggedItem.let { current ->
                     onMove.invoke(current, targetItem.index)
@@ -105,7 +106,7 @@ class DragDropListState(
     }
 
     fun onDragInterrupted() {
-        println("Drag interrupted")
+//        println("Drag interrupted")
         draggedDistance = 0f
         currentIndexOfDraggedItem = -1
         initiallyDraggedElement = null

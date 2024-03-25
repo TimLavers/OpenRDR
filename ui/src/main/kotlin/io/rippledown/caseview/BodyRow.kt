@@ -19,7 +19,7 @@ fun BodyRow(
     results: List<TestResult>,
     displacementOffset: Float? = null,
 ) {
-//    println("Body row, displacement: $displacementOffset")
+//    println("Body row $index, ${attribute.name}, displacement: $displacementOffset")
     val bg = if (displacementOffset != null) Color.Green else Color.White
     Column(
         modifier = Modifier

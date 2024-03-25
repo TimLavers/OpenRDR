@@ -1,11 +1,12 @@
 Feature: The cases described in the TSH paper can be represented in OpenRDR
 
   @tsh
+    @single
   Scenario: TSH cases
     Given the TSH sample KB has been loaded
     And I start the client application
     Then the count of the number of cases is 34
-    And pause for 30 seconds
+    And pause for 300 seconds
 
     When I select case 1.4.1
     Then I see these case values:
