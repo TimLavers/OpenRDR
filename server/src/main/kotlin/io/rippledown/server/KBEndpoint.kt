@@ -7,6 +7,7 @@ import io.rippledown.model.CasesInfo
 import io.rippledown.model.Conclusion
 import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
+import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.diff.*
@@ -96,28 +97,24 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
     /**
      * Save the verified text.
      *
-     * @return a ViewableInterpretation with a re-calculated list of Diffs
+     * @return a ViewableCase with a re-calculated list of Diffs
      * corresponding to difference between the current interpretation and the verified text
      */
-    fun saveInterpretation(viewableInterpretation: ViewableInterpretation): ViewableInterpretation {
-        require(viewableInterpretation.verifiedText != null) { "Cannot save an unverified interpretation." }
-
-        val caseId = viewableInterpretation.caseId()
-        caseId.id ?: error("Case id should be a long.")
-        val case = viewableCase(caseId.id!!)
+    fun saveInterpretation(case: ViewableCase): ViewableCase {
+        require(case.viewableInterpretation.verifiedText != null) { "Cannot save an unverified interpretation." }
 
         //persist the verified text and corresponding conclusions associated with the interpretation
-        kb.saveInterpretation(viewableInterpretation)
+        kb.saveInterpretation(case.viewableInterpretation)
 
         //reset the case's viewable interpretation including diff list
-        val updated = kb.interpretationViewManager.viewableInterpretation(viewableInterpretation.interpretation)
+        val updated = kb.interpretationViewManager.viewableInterpretation(case.viewableInterpretation.interpretation)
 
         //update the case in the KB
         case.viewableInterpretation = updated
         //kb.putCase(case) TODO test this for the case where we are using the Postgres persistence provider
 
-        //return the updated interpretation
-        return updated
+        //return the updated case
+        return case
     }
 
     /**

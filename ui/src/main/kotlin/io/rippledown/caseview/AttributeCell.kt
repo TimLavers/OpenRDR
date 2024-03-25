@@ -12,15 +12,18 @@ import io.rippledown.constants.caseview.ATTRIBUTE_CELL_DESCRIPTION_PREFIX
 import io.rippledown.model.Attribute
 
 @Composable
-fun RowScope.AttributeCell(index: Int, attribute: Attribute, columnWidths: ColumnWidths) {
+fun RowScope.AttributeCell(index: Int, caseName: String, attribute: Attribute, columnWidths: ColumnWidths) {
     Text(
         text = attribute.name,
         modifier = Modifier.weight(columnWidths.attributeColumnWeight)
             .semantics {
-                contentDescription = attributeCellContentDescription(index)
+                contentDescription = attributeCellContentDescription(index, caseName)
             },
         fontWeight = FontWeight.Bold,
         textAlign = TextAlign.End
     )
 }
-fun attributeCellContentDescription(index: Int) = "$ATTRIBUTE_CELL_DESCRIPTION_PREFIX $index"
+
+fun attributeCellContentDescriptionPrefix(caseName: String) = "$ATTRIBUTE_CELL_DESCRIPTION_PREFIX $caseName"
+fun attributeCellContentDescription(index: Int, caseName: String) =
+    "${attributeCellContentDescriptionPrefix(caseName)} $index"

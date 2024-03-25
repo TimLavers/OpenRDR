@@ -14,7 +14,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import kotlin.test.Test
 
-private val buttonId = "buttonId"
+private const val buttonId = "buttonId"
 
 class CaseInspectionUpdateTest {
     @get:Rule
@@ -106,5 +106,3 @@ fun CaseInspectionWithButton(initialCase: ViewableCase, changedCase: ViewableCas
         modifier = Modifier.testTag(buttonId)
     ) {}
 }
-
-

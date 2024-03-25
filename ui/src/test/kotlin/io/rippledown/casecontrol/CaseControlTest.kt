@@ -2,12 +2,16 @@ package io.rippledown.casecontrol
 
 import androidx.compose.ui.test.junit4.createComposeRule
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
+import io.rippledown.interpretation.replaceInterpretationBy
 import io.rippledown.interpretation.requireInterpretation
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
+import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.createCase
 import io.rippledown.model.createCaseWithInterpretation
+import io.rippledown.model.interpretationview.ViewableInterpretation
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -103,6 +107,43 @@ class CaseControlTest {
     }
 
     @Test
+    fun `should save the case when its interpretation changes`() = runTest {
+        val caseA = "case A"
+        val caseId1 = CaseId(id = 1, name = caseA)
+        val caseIds = listOf(caseId1)
+        val bondiComment = "Go to Bondi"
+        val manlyComment = "Go to Manly"
+        val originalCase = createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
+        val updatedCase = ViewableCase(
+            case = originalCase.case,
+            viewableInterpretation = ViewableInterpretation(originalCase.case.interpretation).apply {
+                verifiedText = manlyComment
+            },
+            viewProperties = originalCase.viewProperties
+        )
+        coEvery { handler.getCase(1) } returns originalCase
+
+        with(composeTestRule) {
+            setContent {
+                CaseControl(CasesInfo(caseIds), handler)
+            }
+            //Given
+            requireNumberOfCasesOnCaseList(1)
+            requireNamesToBeShowingOnCaseList(caseA)
+            waitForCaseToBeShowing(caseA)
+            requireInterpretation(bondiComment)
+
+            //When
+            replaceInterpretationBy(manlyComment)
+            waitForIdle()
+
+            //Then
+            coVerify { handler.saveCase(updatedCase) }
+        }
+    }
+
+
+    @Test
     fun `should update the interpretation when a case is selected`() = runTest {
         val caseA = "case A"
         val caseB = "case B"
@@ -111,7 +152,6 @@ class CaseControlTest {
         val caseIds = listOf(caseId1, caseId2)
         val bondiComment = "Go to Bondi"
         val malabarComment = "Go to Malabar"
-
 
         coEvery { handler.getCase(caseId1.id!!) } returns createCaseWithInterpretation(
             name = caseA,
@@ -189,6 +229,7 @@ class CaseControlTest {
             waitForCaseToBeShowing(caseName10)
         }
     }
+
     /*
 
         @Test

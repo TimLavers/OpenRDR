@@ -14,6 +14,7 @@ import io.rippledown.model.TestResult
 @Composable
 fun BodyRow(
     index: Int,
+    caseName: String,
     attribute: Attribute,
     columnWidths: ColumnWidths,
     results: List<TestResult>,

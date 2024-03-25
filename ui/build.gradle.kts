@@ -11,6 +11,7 @@ dependencies {
     implementation(compose.desktop.currentOs)
     implementation(compose.preview)
     implementation("org.jetbrains.compose.ui:ui-tooling-preview-desktop:${Version.compose}")
+    implementation("ch.qos.logback:logback-classic:${Version.logback}")
 
     testImplementation(compose.desktop.uiTestJUnit4)
     testImplementation(testFixtures(project(":common")))

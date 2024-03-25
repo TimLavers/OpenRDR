@@ -28,14 +28,6 @@ fun InterpretationView(text: String, handler: InterpretationViewHandler) {
         focusRequester.requestFocus()
     }
 
-    //Only call the handler to update the server's version of the text after the debounce period
-//    LaunchedEffect(entered) {
-//        delay(DEBOUNCE_WAIT_PERIOD_MILLIS)
-//        if (entered != handler.text) {
-//            handler.onEdited(entered)
-//        }
-//    }
-
     OutlinedTextField(
         label = { Text(INTERPRETATION_VIEW_LABEL) },
         value = text,

@@ -6,6 +6,12 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.integration.pause
 import io.rippledown.integration.utils.Cyborg
 import org.awaitility.Awaitility
+import steps.StepsInfrastructure.cleanup
+import steps.StepsInfrastructure.reStartWithPostgres
+import steps.StepsInfrastructure.startClient
+import steps.StepsInfrastructure.startServerWithInMemoryDatabase
+import steps.StepsInfrastructure.startServerWithPostgresDatabase
+import steps.StepsInfrastructure.stopServer
 import java.io.File
 import java.time.Duration
 import java.util.concurrent.TimeUnit
@@ -15,32 +21,28 @@ class Defs : En {
         println("--------------- Defs init!!!!!!!!!!!!!!!!!!!!!!!----------------------")
         Before("not @database") { scenario ->
             println("Before scenario '${scenario.name}'")
-            StepsInfrastructure.startServerWithInMemoryDatabase()
+            startServerWithInMemoryDatabase()
         }
 
         Before("@database") { scenario ->
             println("DB Before. Scenario: '${scenario.name}'")
-            StepsInfrastructure.startServerWithPostgresDatabase()
+            startServerWithPostgresDatabase()
         }
 
         After { scenario ->
             println("After scenario '${scenario.name}'")
-            StepsInfrastructure.cleanup()
+            cleanup()
         }
 
         When("A Knowledge Base called {word} has been created") { name: String ->
-            StepsInfrastructure.uiTestBase!!.restClient.createKB(name)
+            restClient().createKB(name)
         }
 
         When("I start the client application") {
-            StepsInfrastructure.startClient()
-//            rdUiOperator = RippleDownUIOperator(composeWindow)
-//            caseListPO = rdUiOperator.caseListPO()
-//            caseViewPO = rdUiOperator.caseViewPO()
+            startClient()
         }
 
         When("stop the client application") {
-//            rdUiOperator.
             //client application is stopped in the After hook
         }
 
@@ -60,9 +62,9 @@ class Defs : En {
         }
 
         And("I re-start the server application") {
-            StepsInfrastructure.uiTestBase!!.serverProxy.shutdown()
+            stopServer()
             pause(3000)
-            StepsInfrastructure.uiTestBase!!.serverProxy.reStartWithPostgres()
+            reStartWithPostgres()
         }
 
         And("I select a case with all three attributes") {
@@ -88,6 +90,7 @@ class Defs : En {
         }
 
         And("I select case {word}") { caseName: String ->
+            pause(1);
             caseListPO().waitForCaseListToContain(caseName)
             caseListPO().select(caseName)
         }
@@ -141,38 +144,31 @@ class Defs : En {
         }
 
         Then("the displayed KB name is (now ){word}") { kbName: String ->
-            val applicationBarOperator = StepsInfrastructure.client().rdUiOperator.applicationBarOperator()
-            with(applicationBarOperator.kbControlOperator()) {
-                this.currentKB() shouldBe kbName
-            }
+            applicationBarPO().kbControlOperator().currentKB() shouldBe kbName
         }
 
         Then("I activate the KB management control") {
-            StepsInfrastructure.client().rdUiOperator.applicationBarOperator().kbControlOperator().expandDropdownMenu()
+            applicationBarPO().kbControlOperator().expandDropdownMenu()
         }
 
         Then("I (should )see this list of available KBs:") { dataTable: DataTable ->
             val expectedKBs = dataTable.asList()
-            StepsInfrastructure.client().rdUiOperator.applicationBarOperator()
+            applicationBarPO()
                 .kbControlOperator()
                 .availableKBs() shouldBe expectedKBs
         }
 
         Then("the displayed product name is 'Open RippleDown'") {
-            with(StepsInfrastructure.client().rdUiOperator.applicationBarOperator().title()) {
-                this shouldBe "Open RippleDown"
-            }
+            applicationBarPO().title() shouldBe "Open RippleDown"
         }
 
         Then("I create a Knowledge Base with the name {word}") { kbName: String ->
-            val applicationBarOperator = StepsInfrastructure.client().rdUiOperator.applicationBarOperator()
-            val kbControlOperator = applicationBarOperator.kbControlOperator()
+            val kbControlOperator = applicationBarPO().kbControlOperator()
             kbControlOperator.createKB(kbName)
         }
 
         Then("I select the Knowledge Base named {word}") { kbName: String ->
-            val applicationBarOperator = StepsInfrastructure.client().rdUiOperator.applicationBarOperator()
-            val kbControlOperator = applicationBarOperator.kbControlOperator()
+            val kbControlOperator = applicationBarPO().kbControlOperator()
             kbControlOperator.selectKB(kbName)
         }
 
@@ -251,17 +247,17 @@ class Defs : En {
         }
 
         And("the interpretation of the case {word} is {string}") { caseName: String, text: String ->
-            StepsInfrastructure.uiTestBase!!.restClient.createRuleToAddText(caseName, text)
+            restClient().createRuleToAddText(caseName, text)
         }
 
         And("the interpretation of the case {word} includes {string} because of condition {string}") { caseName: String, text: String, conditionText: String ->
-            StepsInfrastructure.uiTestBase!!.restClient.createRuleToAddText(caseName, text, conditionText)
+            restClient().createRuleToAddText(caseName, text, conditionText)
         }
         And("the following rules have been defined:") { dataTable: DataTable ->
             dataTable.cells()
                 .drop(1) // Drop the header row
                 .forEach { row ->
-                    StepsInfrastructure.uiTestBase!!.restClient.createRuleToAddText(row[0], row[1], row[2])
+                    restClient().createRuleToAddText(row[0], row[1], row[2])
                 }
         }
 

@@ -60,7 +60,7 @@ fun CaseDataTable(columnWidths: ColumnWidths,
             } else {
                 null
             }
-            BodyRow(index, attribute, columnWidths, resultsList, displacementOffset)
+            BodyRow(index, viewableCase.name, attribute, columnWidths, resultsList, displacementOffset)
         }
     }
 }

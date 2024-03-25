@@ -46,7 +46,6 @@ class ServerProxy {
 
     private fun findJar() {
         val rootDirectory = dirProxy.userDir()
-        println("rootDirectory: ${rootDirectory.path}")
         val serverLibsDir = Paths.get(rootDirectory.path, "server", "build", "libs").toFile()
         jarFile = serverLibsDir.listFiles { it -> it.name == "server-all.jar" }!![0]
         println("jar ${jarFile.absolutePath}, modified: ${Date(jarFile.lastModified())}")
@@ -69,4 +68,5 @@ class ServerProxy {
             process.destroyForcibly().waitFor()
         }
     }
+    fun restClient() = restClient
 }

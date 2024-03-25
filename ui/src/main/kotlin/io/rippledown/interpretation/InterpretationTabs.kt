@@ -61,7 +61,6 @@ fun InterpretationTabs(viewableInterpretation: ViewableInterpretation, handler: 
                     text = viewableInterpretation.latestText(),
                     handler = object : InterpretationViewHandler {
                         override var onEdited: (text: String) -> Unit = { editedText ->
-                            println("Updating interp with editedText = ${editedText}")
                             handler.onInterpretationEdited(editedText)
                         }
                         override var isCornertone: Boolean = false

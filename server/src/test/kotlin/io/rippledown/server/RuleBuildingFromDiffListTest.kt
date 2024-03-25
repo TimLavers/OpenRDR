@@ -56,16 +56,18 @@ internal class RuleBuildingFromDiffListTest {
     }
 
     @Test
-    fun `should build a rule and return an interpretation containing an updated DiffList when a comment is added`() {
+    fun `should build a rule and return an case containing an updated DiffList when a comment is added`() {
         val id = supplyCaseFromFile("Case1", kbEndpoint).caseId.id!!
         val interp = kbEndpoint.case(id).interpretation
         val v1 = "Verified 1."
         val v2 = "Verified 2."
         val viewableInterpretation = ViewableInterpretation(interp, verifiedText = "$v1 $v2")
         viewableInterpretation.latestText() shouldBe "$v1 $v2"
+        val viewableCase = kbEndpoint.viewableCase(id)
+        viewableCase.viewableInterpretation = viewableInterpretation
 
         //save the interpretation so that the verified text is persisted
-        kbEndpoint.saveInterpretation(viewableInterpretation)
+        kbEndpoint.saveInterpretation(viewableCase)
 
         val diffList = DiffList(
             diffs = listOf(

@@ -22,22 +22,18 @@ import kotlinx.serialization.json.Json
 
 fun mock(config: EngineConfig)  = EngineBuilder(config).build()
 
-val engineConfig = EngineConfig()
-val defaultMock = mock(engineConfig)
-
 fun config(block: EngineConfig.() -> Unit) = EngineConfig().apply(block)
 
 class EngineConfig {
     var returnCasesInfo: CasesInfo = CasesInfo(emptyList())
     var returnCase: ViewableCase? = createCase("The Case")
     var returnOperationResult: OperationResult = OperationResult()
-    var returnInterpretationAfterSavingInterpretation: ViewableInterpretation = ViewableInterpretation()
     var returnInterpretationAfterBuildingRule: ViewableInterpretation = ViewableInterpretation()
     var returnCornerstoneStatus: CornerstoneStatus = CornerstoneStatus()
     var returnConditionList: ConditionList = ConditionList()
 
     var expectedCaseId: Long? = null
-    var expectedInterpretation: ViewableInterpretation? = null
+    var expectedCase: ViewableCase? = null
     var expectedRuleRequest: RuleRequest? = null
     var expectedSessionStartRequest: SessionStartRequest? = null
     var expectedCornerstoneSelection: Int? = -1
@@ -73,17 +69,17 @@ private class EngineBuilder(private val config: EngineConfig) {
 
             VERIFIED_INTERPRETATION_SAVED -> {
                 val body = request.body as TextContent
-                val bodyAsInterpretation = Json.decodeFromString(ViewableInterpretation.serializer(), body.text)
+                val bodyAsCase = json.decodeFromString(ViewableCase.serializer(), body.text)
 
-                if (config.expectedInterpretation != null) {
-                    bodyAsInterpretation shouldBe config.expectedInterpretation
+                if (config.expectedCase != null) {
+                    bodyAsCase shouldBe config.expectedCase
                 }
-                httpResponseData(json.encodeToString(config.returnInterpretationAfterSavingInterpretation))
+                httpResponseData(json.encodeToString(config.returnCase))
             }
 
             BUILD_RULE -> {
                 val body = request.body as TextContent
-                val bodyAsRuleRequest = Json.decodeFromString(RuleRequest.serializer(), body.text)
+                val bodyAsRuleRequest = json.decodeFromString(RuleRequest.serializer(), body.text)
 
                 if (config.expectedRuleRequest != null) {
                     bodyAsRuleRequest shouldBe config.expectedRuleRequest
