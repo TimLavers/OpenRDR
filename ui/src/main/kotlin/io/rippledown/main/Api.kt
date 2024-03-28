@@ -115,10 +115,11 @@ class Api(engine: HttpClientEngine = CIO.create()) {
         parameter("KB", kbId())
     }.body()
 
-    suspend fun moveAttributeJustBelowOther(moved: Int, target: Int): OperationResult {
-        return client.post("$API_URL$MOVE_ATTRIBUTE_JUST_BELOW_OTHER") {
+    suspend fun moveAttribute(moved: Int, target: Int): OperationResult {
+        return client.post("$API_URL$MOVE_ATTRIBUTE") {
             contentType(ContentType.Application.Json)
             setBody(Pair(moved, target))
+            parameter("KB", kbId())
         }.body()
     }
 

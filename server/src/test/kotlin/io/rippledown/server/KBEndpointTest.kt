@@ -228,7 +228,7 @@ internal class KBEndpointTest {
         val retrieved = endpoint.viewableCase(id)
         val attributesBefore = retrieved.attributes()
         attributesBefore.size shouldBe 2 // sanity
-        endpoint.moveAttributeJustBelow(attributesBefore[0].id, attributesBefore[1].id)
+        endpoint.moveAttribute(attributesBefore[0].id, attributesBefore[1].id)
         // Get the case again and check that the order has been applied.
         val retrievedAfter = endpoint.viewableCase(id)
         retrievedAfter.attributes()[0] shouldBe attributesBefore[1]

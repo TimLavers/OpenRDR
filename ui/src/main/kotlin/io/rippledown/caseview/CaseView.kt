@@ -14,10 +14,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.caseview.CASEVIEW_CASE_NAME_ID
 import io.rippledown.constants.caseview.CASE_HEADING
+import io.rippledown.model.Attribute
 import io.rippledown.model.caseview.ViewableCase
 
 interface CaseViewHandler {
     var caseEdited: () -> Unit
+    fun swapAttributes(moved: Attribute, target: Attribute)
 }
 
 /**
@@ -46,6 +48,8 @@ fun CaseView(case: ViewableCase, handler: CaseViewHandler) {
                     contentDescription = CASEVIEW_CASE_NAME_ID
                 }
         )
-        CaseTable(case)
+        CaseTable(case) { a: Attribute, b: Attribute ->
+            handler.swapAttributes(a, b)
+        }
     }
 }

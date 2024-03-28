@@ -12,16 +12,20 @@ import io.rippledown.pomodoro.offsetEnd
 @Composable
 fun rememberDragDropListState(
     lazyListState: LazyListState = rememberLazyListState(),
-    onMove: (Int, Int) -> Unit
+    onDragStarted: (Int) -> Unit,
+    onMove: (Int, Int) -> Unit,
+    onDragFinished: (Int) -> Unit,
 ): DragDropListState {
-    return remember { DragDropListState(lazyListState, onMove) }
+    return remember { DragDropListState(lazyListState, onDragStarted, onMove, onDragFinished) }
 }
 
 
 class DragDropListState(
     private val lazyListState: LazyListState,
-    private val onMove: (Int, Int) -> Unit
-    ) {
+    private val onDragStarted: (Int) -> Unit,
+    private val onMove: (Int, Int) -> Unit,
+    private val onDragFinished: (Int) -> Unit
+) {
     private var initiallyDraggedElement by mutableStateOf<LazyListItemInfo?>(null)
     private var draggedDistance by mutableFloatStateOf(0f)
     private var currentIndexOfDraggedItem by mutableIntStateOf(-1)
@@ -55,6 +59,7 @@ class DragDropListState(
             ?.also {
                 currentIndexOfDraggedItem = it.index
                 initiallyDraggedElement = it
+                onDragStarted(initiallyDraggedElement!!.index)
             }
         printState()
     }
@@ -62,6 +67,7 @@ class DragDropListState(
     fun printState() {
 //        println("DDLS. iDE index: ${initiallyDraggedElement?.index}, cIODI: $currentIndexOfDraggedItem,dD: $draggedDistance ")
     }
+
     // Helper function to calculate start and end offsets
     // Calculate the start and end offsets of the dragged element
     private fun calculateOffsets(offset: Float): Pair<Float, Float> {
@@ -94,7 +100,6 @@ class DragDropListState(
                 }
             }
 
-//            println("target item: $targetItem")
             if (targetItem != null) {
                 currentIndexOfDraggedItem.let { current ->
                     onMove.invoke(current, targetItem.index)
@@ -106,7 +111,8 @@ class DragDropListState(
     }
 
     fun onDragInterrupted() {
-//        println("Drag interrupted")
+        println("Drag interrupted")
+        onDragFinished(currentIndexOfDraggedItem)
         draggedDistance = 0f
         currentIndexOfDraggedItem = -1
         initiallyDraggedElement = null

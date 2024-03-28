@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -22,16 +21,32 @@ import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
 
 @Composable
-fun CaseTable(viewableCase: ViewableCase) {
+fun CaseTable(viewableCase: ViewableCase, attributeMoveListener: (Attribute, Attribute) -> Unit) {
     val columnWidths = ColumnWidths(viewableCase.numberOfColumns)
     val attributes  = remember{mutableStateListOf<Attribute>()}
     attributes.clear()
     attributes.addAll(viewableCase.attributes())
+    var draggedAttribute: Attribute? = null
+    var targetAttribute: Attribute? = null
     val dragDropListState = rememberDragDropListState(
+        onDragStarted = {
+                        println("(((  handler on drag started: $it   )))")
+            draggedAttribute = attributes[it]
+            targetAttribute = null
+        },
         onMove = {
             a: Int, b: Int ->
             println("{{{{{[moving $a to $b ]}}}}}")
+            targetAttribute = attributes[b]
             attributes.move(a, b)
+        },
+        onDragFinished = {
+            println("(((  handler on drag finished: $it   )))")
+            if (draggedAttribute != null && targetAttribute != null) {
+                attributeMoveListener(draggedAttribute!!, targetAttribute!!)
+            }
+            draggedAttribute = null
+            targetAttribute = null
         }
     )
     Column {
@@ -60,32 +75,14 @@ fun CaseDataTable(columnWidths: ColumnWidths,
             } else {
                 null
             }
-            BodyRow(index, viewableCase.name, attribute, columnWidths, resultsList, displacementOffset)
+            BodyRow(index, case.name, attribute, columnWidths, resultsList, displacementOffset)
         }
     }
 }
 
-/*
-   Moving element in the list
-*/
-fun <T> MutableList<T>.move(
-    from: Int,
-    to: Int
-) {
+fun <T> MutableList<T>.move(from: Int, to: Int) {
     if (from == to)
         return
     val element = this.removeAt(from) ?: return
     this.add(to, element)
-}
-
-fun <T> List<T>.swap(index1: Int, index2: Int): List<T> {
-    if (index1 == index2 || index1 < 0 || index2 < 0 || index1 >= size || index2 >= size) {
-        return this
-    }
-
-    val result = toMutableList()
-    val temp = result[index1]
-    result[index1] = result[index2]
-    result[index2] = temp
-    return result
 }

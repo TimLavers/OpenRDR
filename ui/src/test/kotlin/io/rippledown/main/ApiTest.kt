@@ -78,7 +78,7 @@ class ApiTest {
             expectedMovedAttributeId = moved.id
             expectedTargetAttributeId = target.id
         }
-        Api(mock(config)).moveAttributeJustBelowOther(moved.id, target.id) shouldBe expectedResult
+        Api(mock(config)).moveAttribute(moved.id, target.id) shouldBe expectedResult
     }
 
     @Test

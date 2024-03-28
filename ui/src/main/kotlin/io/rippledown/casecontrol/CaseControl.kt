@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import io.rippledown.constants.caseview.CASES
 import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import io.rippledown.main.Handler
+import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.diff.Diff
@@ -92,6 +93,10 @@ fun CaseControl(casesInfo: CasesInfo, handler: CaseControlHandler) {
                 }
                 override var isCornerstone: Boolean = false
                 override var caseEdited: () -> Unit = {}
+                override fun swapAttributes(moved: Attribute, target: Attribute) {
+                    println("----Case Control.sA. moved: ${moved.name}, target: ${target.name}")
+                    handler.swapAttributes(moved, target)
+                }
             })
         }
     }

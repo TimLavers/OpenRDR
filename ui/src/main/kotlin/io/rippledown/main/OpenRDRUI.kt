@@ -12,6 +12,7 @@ import io.rippledown.casecontrol.CaseControlHandler
 import io.rippledown.casecontrol.CasePoller
 import io.rippledown.casecontrol.CasePollerHandler
 import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
+import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.caseview.ViewableCase
@@ -80,6 +81,12 @@ fun OpenRDRUI(handler: Handler) {
                     }
                 }
                 override var isClosing = { false }
+                override fun swapAttributes(moved: Attribute, target: Attribute) {
+                    println("---- OpenRDRUI.sA. moved: ${moved.name}, target: ${target.name}")
+                    runBlocking {
+                        api.moveAttribute(moved.id, target.id)
+                    }
+                }
             })
         }
     }

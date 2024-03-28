@@ -113,7 +113,7 @@ private class EngineBuilder(private val config: EngineConfig) {
                 httpResponseData(json.encodeToString(config.returnCornerstoneStatus))
             }
 
-            MOVE_ATTRIBUTE_JUST_BELOW_OTHER -> {
+            MOVE_ATTRIBUTE -> {
                 val body = request.body as TextContent
                 val data = Json.decodeFromString<Pair<Int, Int>>(body.text)
                 data.first shouldBe config.expectedMovedAttributeId

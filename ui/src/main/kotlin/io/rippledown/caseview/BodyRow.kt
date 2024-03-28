@@ -20,7 +20,6 @@ fun BodyRow(
     results: List<TestResult>,
     displacementOffset: Float? = null,
 ) {
-//    println("Body row $index, ${attribute.name}, displacement: $displacementOffset")
     val bg = if (displacementOffset != null) Color.Green else Color.White
     Column(
         modifier = Modifier
@@ -34,9 +33,9 @@ fun BodyRow(
         ) {
 
             Row {
-                AttributeCell(index, attribute, columnWidths)
+                AttributeCell(index, caseName, attribute, columnWidths)
                 results.forEachIndexed { columnIndex: Int, testResult: TestResult ->
-                    ValueCell(attribute, columnIndex, testResult, columnWidths)
+                    ValueCell(caseName, attribute, columnIndex, testResult, columnWidths)
                 }
                 ReferenceRangeCell(attribute, results.last(), columnWidths.referenceRangeColumnWeight)
             }
