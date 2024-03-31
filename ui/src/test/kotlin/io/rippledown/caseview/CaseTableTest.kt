@@ -34,7 +34,9 @@ class CaseTableTest {
         val viewableCase = ViewableCase(case1, properties)
 
         composeTestRule.setContent {
-            CaseTable(viewableCase)
+            CaseTable(viewableCase) { a: Attribute, b: Attribute ->
+
+            }
         }
         with(composeTestRule) {
             waitUntilExactlyOneExists(hasText(tsh.name))

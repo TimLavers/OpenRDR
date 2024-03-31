@@ -5,8 +5,6 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.*
 import androidx.compose.ui.geometry.Offset
-import io.rippledown.pomodoro.getVisibleItemInfoFor
-import io.rippledown.pomodoro.offsetEnd
 
 // See credits.md
 @Composable
@@ -18,7 +16,6 @@ fun rememberDragDropListState(
 ): DragDropListState {
     return remember { DragDropListState(lazyListState, onDragStarted, onMove, onDragFinished) }
 }
-
 
 class DragDropListState(
     private val lazyListState: LazyListState,
@@ -53,7 +50,6 @@ class DragDropListState(
     }
 
     fun onDragStart(offset: Offset) {
-        println("Drag started. Offset: $offset")
         lazyListState.layoutInfo.visibleItemsInfo
             .firstOrNull { item -> offset.y.toInt() in item.offset..(item.offset + item.size) }
             ?.also {
@@ -61,11 +57,6 @@ class DragDropListState(
                 initiallyDraggedElement = it
                 onDragStarted(initiallyDraggedElement!!.index)
             }
-        printState()
-    }
-
-    fun printState() {
-//        println("DDLS. iDE index: ${initiallyDraggedElement?.index}, cIODI: $currentIndexOfDraggedItem,dD: $draggedDistance ")
     }
 
     // Helper function to calculate start and end offsets
@@ -77,9 +68,8 @@ class DragDropListState(
         return startOffset to endOffset
     }
 
-    fun onDrag(offset: Offset) {
-//        println("On drag. Offset: $offset")
-        draggedDistance += offset.y
+    fun onDrag(offset: Float) {
+        draggedDistance += offset
         val topOffset = initialOffsets?.first ?: return
         val (startOffset, endOffset) = calculateOffsets(topOffset.toFloat())
 
@@ -107,19 +97,27 @@ class DragDropListState(
                 }
             }
         }
-        printState()
     }
 
     fun onDragInterrupted() {
-        println("Drag interrupted")
-        onDragFinished(currentIndexOfDraggedItem)
+        onDragFinished( currentIndexOfDraggedItem)
         draggedDistance = 0f
         currentIndexOfDraggedItem = -1
         initiallyDraggedElement = null
-        printState()
     }
 
     fun getCurrentIndexOfDraggedListItem(): Int {
         return currentIndexOfDraggedItem
     }
+}
+/*
+  Bottom offset of the element in Vertical list
+*/
+val LazyListItemInfo.offsetEnd: Int
+    get() = this.offset + this.size
+
+fun LazyListState.getVisibleItemInfoFor(absoluteIndex: Int): LazyListItemInfo? {
+    return this.layoutInfo.visibleItemsInfo.getOrNull(
+        absoluteIndex - this.layoutInfo.visibleItemsInfo.first().index
+    )
 }

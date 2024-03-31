@@ -11,11 +11,11 @@ fun AccessibleContext.find(description: String, role: AccessibleRole): Accessibl
     }
     return find(matcher)
 }
-fun AccessibleContext.find(description: String): AccessibleContext? {
+fun AccessibleContext.find(description: String, debug: Boolean = false): AccessibleContext? {
     val matcher = { context: AccessibleContext ->
         description == context.accessibleDescription
     }
-    return find(matcher)
+    return find(matcher, debug)
 }
 
 fun AccessibleContext.waitTillFound(description: String, role: AccessibleRole): AccessibleContext? {

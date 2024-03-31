@@ -25,7 +25,7 @@ Feature: Order of Attributes in Case View
       | C |
     And stop the client application
 
-  @ignore
+  @single
   Scenario: Attributes can be re-ordered by drag-and-drop
     Given I start the client application
     And the initial Attribute order is A, B, C
@@ -33,13 +33,14 @@ Feature: Order of Attributes in Case View
       | A | a |
       | B | b |
       | C | c |
-    When I select case CaseABC
-    And I move attribute C below attribute A
-    And I move attribute A below attribute B
-    Then the case should show the attributes in order:
-      | C |
-      | B |
-      | A |
+    When I select the case CaseABC
+    And pause for 20 seconds
+#    And I move attribute C below attribute A
+#    And I move attribute A below attribute B
+#    Then I see these case values:
+#      | C | c |
+#      | B | b |
+#      | A | a |
     And stop the client application
 
   @ignore

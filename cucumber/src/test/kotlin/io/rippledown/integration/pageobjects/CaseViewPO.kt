@@ -1,6 +1,7 @@
 package io.rippledown.integration.pageobjects
 
 import io.kotest.matchers.shouldBe
+import io.rippledown.caseview.attributeCellContentDescription
 import io.rippledown.caseview.attributeCellContentDescriptionPrefix
 import io.rippledown.caseview.referenceRangeCellContentDescription
 import io.rippledown.caseview.valueCellContentDescriptionPrefix
@@ -10,6 +11,7 @@ import io.rippledown.constants.caseview.DATE_CELL_DESCRIPTION_PREFIX
 import io.rippledown.integration.pause
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
+import io.rippledown.integration.utils.printActions
 import org.awaitility.kotlin.await
 import java.time.Duration.ofSeconds
 import javax.accessibility.AccessibleContext
@@ -74,6 +76,16 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
         return result
     }
 
+    private fun getAttributeCellsInOrderShown(): List<AttributeCellPO> {
+        val caseName = nameShown()!!
+        val contentDescriptionPrefix = attributeCellContentDescriptionPrefix(caseName)
+        return contextProvider()
+            .find(CASE_VIEW_TABLE)!!//narrow down the context to the table
+            .findAllByDescriptionPrefix(contentDescriptionPrefix)
+            .map { AttributeCellPO(it, caseName) }
+            .sorted()
+    }
+
     private fun extractMatchingValuesInOrderShown(
         descriptionPrefix: String,
         contextToPO: (AccessibleContext) -> CellPO
@@ -87,6 +99,24 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
     private fun attributeCellId(attributeName: String?) = "attribute_name_cell_$attributeName"
 
     fun dragAttribute(draggedAttribute: String, targetAttribute: String) {
+        val allAttributeCells = getAttributeCellsInOrderShown()
+        val draggedCell = allAttributeCells.find { it.text() == draggedAttribute }!!
+        println("DRAGGED: $draggedCell")
+        draggedCell.context.printActions()
+//        val caseName = nameShown()!!
+//        val allAttributesInCase = attributeNames()
+//        println("All attributes: $allAttributesInCase")
+//        val draggedIndex =  allAttributesInCase.indexOf(draggedAttribute) + 1
+//        println("dragged index $draggedIndex")
+//        val targetIndex = allAttributesInCase.indexOf(targetAttribute) + 1
+//        val draggedDescription = attributeCellContentDescription(draggedIndex, caseName)
+//        println("draggedDescription: $draggedDescription")
+//        val targetDescription = attributeCellContentDescription(targetIndex, caseName)
+//        val dragged = contextProvider().find(draggedDescription)
+//        println("DRAGGED: $dragged")
+//        contextProvider().find(draggedDescription)?.printActions()
+//        val draggedAttributeDescription = at
+//        contextProvider().find(at)
 //        DnD(driver).dragAttribute(draggedAttribute, targetAttribute)
     }
 
@@ -95,7 +125,7 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
         .accessibleName
 }
 
-open class CellPO(private val context: AccessibleContext, descriptionPrefix: String) : Comparable<CellPO> {
+open class CellPO(val context: AccessibleContext, descriptionPrefix: String) : Comparable<CellPO> {
     private val index = context.accessibleDescription.substring(descriptionPrefix.length).trim().toInt()
 
     override fun compareTo(other: CellPO) = index.compareTo(other.index)
