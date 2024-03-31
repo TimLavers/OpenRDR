@@ -131,7 +131,6 @@ Feature: Reviewing the interpretation of a case
     Then I should see that the text "Go to Bondi." has been replaced by "Go to Manly."
     And stop the client application
 
-  @ignore
   Scenario: A comment should be able to be entered very slowly
     Given a new case with the name Case1 is stored on the server
     And I start the client application
