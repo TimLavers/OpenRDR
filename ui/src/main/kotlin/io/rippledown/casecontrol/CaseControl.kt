@@ -94,7 +94,6 @@ fun CaseControl(casesInfo: CasesInfo, handler: CaseControlHandler) {
                 override var isCornerstone: Boolean = false
                 override var caseEdited: () -> Unit = {}
                 override fun swapAttributes(moved: Attribute, target: Attribute) {
-                    println("----Case Control.sA. moved: ${moved.name}, target: ${target.name}")
                     handler.swapAttributes(moved, target)
                 }
             })

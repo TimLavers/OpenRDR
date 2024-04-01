@@ -100,6 +100,10 @@ fun AccessibleContext.findAndClick(description: String) {
 }
 fun AccessibleContext.printActions() {
     val actions = this.accessibleAction
+    if (actions == null) {
+        println("actions is null")
+        return
+    }
     val count = actions.accessibleActionCount
     println("Number of actions: $count")
     for (i in 0..<count) {

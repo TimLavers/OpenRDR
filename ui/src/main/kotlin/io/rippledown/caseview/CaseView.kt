@@ -29,7 +29,6 @@ interface CaseViewHandler {
  */
 @Composable
 fun CaseView(case: ViewableCase, handler: CaseViewHandler) {
-    println("CaseView, case: ${case.name}")
     Column(
         modifier = Modifier
             .padding(10.dp)

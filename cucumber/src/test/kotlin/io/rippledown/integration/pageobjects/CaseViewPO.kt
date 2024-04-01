@@ -1,7 +1,6 @@
 package io.rippledown.integration.pageobjects
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.caseview.attributeCellContentDescription
 import io.rippledown.caseview.attributeCellContentDescriptionPrefix
 import io.rippledown.caseview.referenceRangeCellContentDescription
 import io.rippledown.caseview.valueCellContentDescriptionPrefix
@@ -11,8 +10,8 @@ import io.rippledown.constants.caseview.DATE_CELL_DESCRIPTION_PREFIX
 import io.rippledown.integration.pause
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
-import io.rippledown.integration.utils.printActions
 import org.awaitility.kotlin.await
+import java.awt.Point
 import java.time.Duration.ofSeconds
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleRole.LABEL
@@ -100,24 +99,12 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
 
     fun dragAttribute(draggedAttribute: String, targetAttribute: String) {
         val allAttributeCells = getAttributeCellsInOrderShown()
-        val draggedCell = allAttributeCells.find { it.text() == draggedAttribute }!!
-        println("DRAGGED: $draggedCell")
-        draggedCell.context.printActions()
-//        val caseName = nameShown()!!
-//        val allAttributesInCase = attributeNames()
-//        println("All attributes: $allAttributesInCase")
-//        val draggedIndex =  allAttributesInCase.indexOf(draggedAttribute) + 1
-//        println("dragged index $draggedIndex")
-//        val targetIndex = allAttributesInCase.indexOf(targetAttribute) + 1
-//        val draggedDescription = attributeCellContentDescription(draggedIndex, caseName)
-//        println("draggedDescription: $draggedDescription")
-//        val targetDescription = attributeCellContentDescription(targetIndex, caseName)
-//        val dragged = contextProvider().find(draggedDescription)
-//        println("DRAGGED: $dragged")
-//        contextProvider().find(draggedDescription)?.printActions()
-//        val draggedAttributeDescription = at
-//        contextProvider().find(at)
-//        DnD(driver).dragAttribute(draggedAttribute, targetAttribute)
+        fun cellPosition(attribute: String): Point {
+            val draggedCell = allAttributeCells.find { it.text() == attribute }!!
+            val accessibleComponent = draggedCell.context.accessibleComponent
+            return accessibleComponent.locationOnScreen
+        }
+        dragVertically(cellPosition(draggedAttribute), cellPosition(targetAttribute))
     }
 
     fun referenceRange(attribute: String): String = contextProvider()

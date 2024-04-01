@@ -45,5 +45,16 @@ class CaseViewStepDefs : En {
                 expectedReferenceRange shouldBe referenceRangeShown
             }
         }
+
+        Then("the case should show the attributes in order:") { dataTable: DataTable ->
+            val caseViewPO = caseViewPO()
+            val valuesShown = caseViewPO.attributeNames()
+            // Check the number of rows is correct.
+            valuesShown.size shouldBe dataTable.height()
+            val expectedAttributes = dataTable.column(0)
+            valuesShown.forEachIndexed { row, attribute ->
+                attribute shouldBe expectedAttributes[row]
+            }
+        }
     }
 }

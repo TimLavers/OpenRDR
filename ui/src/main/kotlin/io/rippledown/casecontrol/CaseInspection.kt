@@ -21,7 +21,6 @@ fun CaseInspection(case: ViewableCase, handler: CaseInspectionHandler) {
         CaseView(case, handler = object : CaseViewHandler {
             override var caseEdited = {} //TODO
             override fun swapAttributes(moved: Attribute, target: Attribute) {
-                println("----Case Inspection.sA. moved: ${moved.name}, target: ${target.name}")
                 handler.swapAttributes(moved, target)
             }
         })

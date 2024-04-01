@@ -9,7 +9,6 @@ import io.rippledown.integration.pause
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findLabelChildren
 import org.awaitility.Awaitility.await
-import org.awaitility.kotlin.withPollDelay
 import java.time.Duration.ofSeconds
 import java.util.concurrent.TimeUnit
 import javax.accessibility.AccessibleContext
@@ -42,7 +41,12 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun casesListed(): List<String> {
-        return caseListContext()?.findLabelChildren()?: emptyList()
+        val result = mutableListOf<String>()
+        SwingUtilities.invokeAndWait {
+            val caseNames = caseListContext()?.findLabelChildren()?: emptyList()
+            result.addAll(caseNames)
+        }
+        return result
     }
 
     fun requireCaseNamesToBe(expectedCaseNames: List<String>) {

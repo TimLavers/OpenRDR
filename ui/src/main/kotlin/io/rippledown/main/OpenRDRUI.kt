@@ -82,7 +82,6 @@ fun OpenRDRUI(handler: Handler) {
                 }
                 override var isClosing = { false }
                 override fun swapAttributes(moved: Attribute, target: Attribute) {
-                    println("---- OpenRDRUI.sA. moved: ${moved.name}, target: ${target.name}")
                     runBlocking {
                         api.moveAttribute(moved.id, target.id)
                     }
