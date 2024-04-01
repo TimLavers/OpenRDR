@@ -47,7 +47,9 @@ fun CaseTable(viewableCase: ViewableCase, attributeMoveListener: (Attribute, Att
             targetAttribute = null
         }
     )
-    Column {
+    Column(modifier = Modifier.semantics {
+        contentDescription = CASE_VIEW_TABLE
+    }) {
         HeaderRow(columnWidths, viewableCase.dates)
         CaseDataTable(columnWidths, dragDropListState, attributes, viewableCase.case)
     }
@@ -59,9 +61,9 @@ fun CaseDataTable(columnWidths: ColumnWidths,
                   attributes: List<Attribute>,
                   case: RDRCase) {
     LazyColumn(
-        modifier = Modifier.padding(5.dp).semantics {
-            contentDescription = CASE_VIEW_TABLE
-        }.pointerInput(Unit) {
+        modifier = Modifier
+            .padding(5.dp)
+            .pointerInput(Unit) {
                 // See credits.md
                 detectVerticalDragGestures(
                     onDragStart = { offset -> dragDropListState.onDragStart(offset) },
