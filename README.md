@@ -44,4 +44,6 @@ To run a single cucumber test or feature file, add the @single annotation at the
 
 ## Acknowledgements
 
-[water wave icon](https://uxwing.com/water-wave-icon) made by [uxwing](https://www.uxwing.com)
+[water wave icon](https://uxwing.com/water-wave-icon) by [uxwing](https://www.uxwing.com)
+[collapse icon](https://icons8.com/icon/60653/collapse-arrow) by [Icons8](https://icons8.com)
+[expand icon](https://icons8.com/icon/60662/expand-arrow) by [Icons8](https://icons8.com)

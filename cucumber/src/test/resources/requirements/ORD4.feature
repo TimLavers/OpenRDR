@@ -1,16 +1,16 @@
 Feature: Reviewing the interpretation of a case
 
   Scenario: The user should be able to see the interpretation of a case
-    And case Bondi is provided having data:
+    Given case Bondi is provided having data:
       | Wave | excellent |
     And the interpretation of the case Bondi is "Go to Bondi."
-    And I start the client application
-    And I should see the case Bondi as the current case
+    When I start the client application
+    Then  I should see the case Bondi as the current case
     And the interpretation field should contain the text "Go to Bondi."
     And stop the client application
 
   Scenario: The user should be able to see different interpretations for different cases
-    And case Bondi is provided having data:
+    Given case Bondi is provided having data:
       | Wave | excellent |
     And case Manly is provided having data:
       | Swimming | excellent |
