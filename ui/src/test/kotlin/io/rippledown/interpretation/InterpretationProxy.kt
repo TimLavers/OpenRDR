@@ -2,6 +2,8 @@ package io.rippledown.interpretation
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
+import io.rippledown.constants.interpretation.INTERPRETATION_PANEL_CONCLUSIONS
+import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CONCLUSIONS
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
 
 @OptIn(ExperimentalTestApi::class)
@@ -24,15 +26,15 @@ fun ComposeTestRule.requireInterpretationTabToBeDisplayed() {
     onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD).assertIsDisplayed()
 }
 
-/*
-
-suspend fun HTMLElement.selectConclusionsTab() {
-    val element = findById(INTERPRETATION_TAB_CONCLUSIONS)
-    act {
-        Simulate.click(element)
-    }
+fun ComposeTestRule.selectConclusionsTab() {
+    onNodeWithContentDescription(INTERPRETATION_TAB_CONCLUSIONS).performClick()
 }
 
+fun ComposeTestRule.requireConclusionsPanelToBeShowing() {
+    onNodeWithContentDescription(INTERPRETATION_PANEL_CONCLUSIONS).assertIsDisplayed()
+}
+
+/*
 fun HTMLElement.requireConclusionsLabel(expected: String) {
     findById(INTERPRETATION_TAB_CONCLUSIONS).textContent shouldBe expected
 }

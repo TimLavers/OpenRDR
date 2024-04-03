@@ -18,7 +18,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
-data class TreeNode(val name: String, val children: List<TreeNode> = emptyList())
+data class TreeNode(val name: String = "", val children: MutableList<TreeNode> = mutableListOf()) {
+    fun add(node: TreeNode) {
+        children.add(node)
+    }
+}
 
 @Composable
 fun collapseIcon() = painterResource("icons8-collapse-30.png")

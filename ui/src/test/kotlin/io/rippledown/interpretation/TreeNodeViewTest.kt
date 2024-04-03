@@ -72,17 +72,17 @@ class TreeNodeViewTest {
 fun treeNodeView() = TreeNodeView(
     TreeNode(
         "Root",
-        listOf(
+        mutableListOf(
             TreeNode(
                 "Child 1",
-                listOf(
+                mutableListOf(
                     TreeNode("Grandchild 1"),
                     TreeNode("Grandchild 2")
                 )
             ),
             TreeNode(
                 name = "Child 2",
-                listOf(
+                mutableListOf(
                     TreeNode("Grandchild 3"),
                     TreeNode("Grandchild 4")
                 )
