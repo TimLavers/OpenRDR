@@ -27,6 +27,9 @@ class RippleDownUIOperator(private val window: ComposeWindow) {
     fun interpretationViewPO() = InterpretationViewPO {
         context()
     }
+    fun conclusionsViewPO() = ConclusionsViewPO {
+        context()
+    }
 
     fun shutdown() {
         window.accessibleContext.accessibleAction.doAccessibleAction(0)

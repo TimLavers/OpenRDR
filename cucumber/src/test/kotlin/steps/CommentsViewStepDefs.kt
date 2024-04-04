@@ -7,10 +7,16 @@ class CommentsViewStepDefs : En {
     init {
 
         When("I click on the Comments tab") {
-            TODO("Not yet implemented")
+            conclusionsViewPO().selectConclusionsTab()
         }
-        Then("I should see the conditions for each comment as follows:") { dataTable: DataTable ->
-            TODO("Not yet implemented")
+        Then("I should see the condition for each comment as follows:") { dataTable: DataTable ->
+            val expected = dataTable.asLists().drop(1)// Remove the header row
+            expected.forEachIndexed { index, row ->
+                val comment = row[0]
+                val condition = row[1]
+                conclusionsViewPO().requireCommentAtIndex(index, comment)
+                conclusionsViewPO().requireConditionAtIndex(index, 0, condition)
+            }
         }
     }
 }

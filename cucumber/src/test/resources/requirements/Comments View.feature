@@ -1,6 +1,4 @@
 Feature: The user should be able to see the conditions that are used to determine each comment in the interpretation
-
-  @single
   Scenario: The user should be able to view the conditions for a comment
     Given case Bondi is provided having data:
       | Wave | excellent |
@@ -10,9 +8,8 @@ Feature: The user should be able to see the conditions that are used to determin
     And I start the client application
     And I should see the case Bondi as the current case
     And the interpretation field should contain the text "Go to Bondi. Wear sunscreen."
-    And pause
     When I click on the Comments tab
-    Then I should see the conditions for each comment as follows:
+    Then I should see the condition for each comment as follows:
       | Comment         | Condition         |
       | Go to Bondi.    | Wave is not blank |
       | Wear sunscreen. | UV is not blank   |
