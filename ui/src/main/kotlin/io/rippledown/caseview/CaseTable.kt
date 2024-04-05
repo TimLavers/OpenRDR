@@ -15,10 +15,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.rippledown.dragdrop.rememberDragDropListState
 import io.rippledown.constants.caseview.CASE_VIEW_TABLE
-import io.rippledown.dragdrop.DragDropListState
 import io.rippledown.dragdrop.move
 import io.rippledown.model.Attribute
-import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
 
 @Composable
@@ -51,40 +49,32 @@ fun CaseTable(viewableCase: ViewableCase, attributeMoveListener: (Attribute, Att
         contentDescription = CASE_VIEW_TABLE
     }) {
         HeaderRow(columnWidths, viewableCase.dates)
-        CaseDataTable(columnWidths, dragDropListState, attributes, viewableCase.case)
-    }
-}
-
-@Composable
-fun CaseDataTable(columnWidths: ColumnWidths,
-                  dragDropListState: DragDropListState,
-                  attributes: List<Attribute>,
-                  case: RDRCase) {
-    LazyColumn(
-        modifier = Modifier
-            .padding(5.dp)
-            .pointerInput(Unit) {
-                // See credits.md
-                detectVerticalDragGestures(
-                    onDragStart = { offset -> dragDropListState.onDragStart(offset) },
-                    onVerticalDrag = { change, offset ->
-                        change.consume()
-                        dragDropListState.onDrag(offset)
-                    },
-                    onDragCancel = { dragDropListState.onDragInterrupted() },
-                    onDragEnd = { dragDropListState.onDragInterrupted() }
-                )
-            },
-        state = dragDropListState.getLazyListState()
-    ) {
-        itemsIndexed(attributes) { index: Int, attribute: Attribute ->
-            val resultsList = case.resultsFor(attribute)!!
-            val displacementOffset = if (index == dragDropListState.getCurrentIndexOfDraggedListItem()) {
-                dragDropListState.elementDisplacement.takeIf { it != 0f }
-            } else {
-                null
+        LazyColumn(
+            modifier = Modifier
+                .padding(5.dp)
+                .pointerInput(Unit) {
+                    // See credits.md
+                    detectVerticalDragGestures(
+                        onDragStart = { offset -> dragDropListState.onDragStart(offset) },
+                        onVerticalDrag = { change, offset ->
+                            change.consume()
+                            dragDropListState.onDrag(offset)
+                        },
+                        onDragCancel = { dragDropListState.onDragInterrupted() },
+                        onDragEnd = { dragDropListState.onDragInterrupted() }
+                    )
+                },
+            state = dragDropListState.getLazyListState()
+        ) {
+            itemsIndexed(attributes) { index: Int, attribute: Attribute ->
+                val resultsList = viewableCase.case.resultsFor(attribute)!!
+                val displacementOffset = if (index == dragDropListState.getCurrentIndexOfDraggedListItem()) {
+                    dragDropListState.elementDisplacement.takeIf { it != 0f }
+                } else {
+                    null
+                }
+                BodyRow(index, viewableCase.name, attribute, columnWidths, resultsList, displacementOffset)
             }
-            BodyRow(index, case.name, attribute, columnWidths, resultsList, displacementOffset)
         }
     }
 }

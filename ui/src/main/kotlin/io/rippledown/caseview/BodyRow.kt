@@ -17,23 +17,16 @@ fun BodyRow(
     results: List<TestResult>,
     displacementOffset: Float? = null,
 ) {
-    Column(
-        modifier = Modifier
+    Row(
+        modifier = Modifier.padding(8.dp)
             .graphicsLayer { translationY = displacementOffset ?: 0f }
             .fillMaxWidth()
-            .fillMaxHeight()
+            .fillMaxHeight(),
     ) {
-        Column(
-            modifier = Modifier.padding(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Row {
-                AttributeCell(index, caseName, attribute, columnWidths)
-                results.forEachIndexed { columnIndex: Int, testResult: TestResult ->
-                    ValueCell(caseName, attribute, columnIndex, testResult, columnWidths)
-                }
-                ReferenceRangeCell(attribute, results.last(), columnWidths.referenceRangeColumnWeight)
-            }
+        AttributeCell(index, caseName, attribute, columnWidths)
+        results.forEachIndexed { columnIndex: Int, testResult: TestResult ->
+            ValueCell(caseName, attribute, columnIndex, testResult, columnWidths)
         }
+        ReferenceRangeCell(attribute, results.last(), columnWidths.referenceRangeColumnWeight)
     }
 }

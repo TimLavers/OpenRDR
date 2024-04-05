@@ -18,7 +18,7 @@ class AttributeCellTest {
     private val columnWidths = ColumnWidths(7)
 
     @Test
-    fun `show result that does not have units`() {
+    fun `attribute name is shown`() {
         val rowScope: RowScope = DummyRowScope()
         composeTestRule.setContent {
             rowScope.AttributeCell(3, "Bondi", tsh, columnWidths)
