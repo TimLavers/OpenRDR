@@ -11,15 +11,6 @@ class TSHStepDefs : En {
         }
     }
 
-    private fun checkCase1() {
-//        assertEquals(dataShown.size, 7)
-//        checkAgeSexTestsLocation(28, "F")
-//        checkTSH("0.67")
-//        checkFreeT4("16")
-//        checkNotes( "Lethargy.")
-
-    }
-    
     private fun setupTSHSampleKB() {
         val tshCases = TSHCases(RestClientAttributeFactory(restClient()))
         labProxy().provideCase(tshCases.TSH1)

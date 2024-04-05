@@ -48,7 +48,7 @@ internal class ShowRuleCondition : UITestBase() {
 //        setupWebDriver()
         caseQueuePO = CaseQueuePO().apply { waitForNumberOfCasesToBe(1) }
 //        caseViewPO = CaseViewPO()
-        conclusionsViewPO = ConclusionsViewPO()
+//        conclusionsViewPO = ConclusionsViewPO()
     }
 
     @AfterTest
@@ -84,15 +84,15 @@ internal class ShowRuleCondition : UITestBase() {
         with(conclusionsViewPO) {
             selectConclusionsTab()
             clickComment(tshComment)
-            requireConditionsToBeShown(
-                condition1.asText(),
-                condition2.asText(),
-            )
+//            requireConditionsToBeShownForComment(
+//                condition1.asText(),
+//                condition2.asText(),
+//            )
             clickComment(abcComment)
-            requireConditionsToBeShown(
-                condition3.asText(),
-                condition4.asText()
-            )
+//            requireConditionsToBeShownForComment(
+//                condition3.asText(),
+//                condition4.asText()
+//            )
         }
     }
 

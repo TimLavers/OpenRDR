@@ -6,8 +6,10 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.mockk.Called
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.interpretationview.ViewableInterpretation
@@ -85,22 +87,25 @@ class InterpretationTabsTest {
             verify { handler.onInterpretationEdited wasNot Called }
         }
     }
-    /*
 
     @Test
-    fun conclusionsTabShouldBeShowing(): TestResult {
-        val fc = FC {
-            InterpretationTabs {
-                scope = MainScope()
-                interpretation = ViewableInterpretation()
+    fun `conclusions should be showing after clicking the tab`() = runTest {
+
+        with(composeTestRule) {
+            //Given
+            setContent {
+                InterpretationTabs(interpretationWithConclusions(), handler)
             }
-        }
-        return runReactTest(fc) { container ->
-            with(container) {
-                requireConclusionsLabel("Conclusions")
-            }
+
+            //When
+            selectConclusionsTab()
+
+            //Then
+            requireConclusionsPanelToBeShowing()
         }
     }
+
+    /*
 
     @Test
     fun conclusionsTabCanBeSelected(): TestResult {
@@ -324,9 +329,7 @@ fun main() {
         Window(
             onCloseRequest = ::exitApplication,
         ) {
-            val viewableInterpretation =
-                ViewableInterpretation(Interpretation()).apply { verifiedText = "bondi or bust" }
-            InterpretationTabs(viewableInterpretation, object : InterpretationTabsHandler {
+            InterpretationTabs(interpretationWithConclusions(), object : InterpretationTabsHandler {
                 override var onStartRule: (selectedDiff: Diff) -> Unit = { }
                 override var isCornerstone = false
                 override var onInterpretationEdited: (text: String) -> Unit = { }
@@ -336,3 +339,19 @@ fun main() {
     }
 }
 
+private fun interpretationWithConclusions(): ViewableInterpretation {
+    val interpretation = mockk<ViewableInterpretation>()
+    val c11 = Conclusion(11, "This is conclusion 11")
+    val c12 = Conclusion(12, "This is conclusion 12")
+    val c21 = Conclusion(21, "This is conclusion 21")
+    val c22 = Conclusion(22, "This is conclusion 22")
+    with(interpretation) {
+        every { conclusions() } returns setOf(c11, c12, c21, c22)
+        every { conditionsForConclusion(c11) } returns listOf("Condition 111", "Condition 112")
+        every { conditionsForConclusion(c12) } returns listOf("Condition 121", "Condition 122")
+        every { conditionsForConclusion(c21) } returns listOf("Condition 211", "Condition 212")
+        every { conditionsForConclusion(c22) } returns listOf("Condition 221", "Condition 222")
+        every { latestText() } returns "Go to Bondi"
+    }
+    return interpretation
+}

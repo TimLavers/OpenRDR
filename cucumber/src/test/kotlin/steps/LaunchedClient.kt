@@ -11,6 +11,7 @@ class LaunchedClient {
     fun caseListPO() = rdUiOperator.caseListPO()
     fun caseViewPO() = rdUiOperator.caseViewPO()
     fun interpretationViewPO() = rdUiOperator.interpretationViewPO()
+    fun conclusionsViewPO() = rdUiOperator.conclusionsViewPO()
 
     fun stopClient() {
         testClientLauncher.stopClient()
