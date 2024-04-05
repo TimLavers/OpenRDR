@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES_LABEL
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CONCLUSIONS_LABEL
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL_LABEL
+import io.rippledown.interpretation.ConclusionsView
 import io.rippledown.interpretation.InterpretationView
 import io.rippledown.interpretation.InterpretationViewHandler
 import io.rippledown.model.diff.Diff
@@ -67,7 +68,9 @@ fun InterpretationTabs(viewableInterpretation: ViewableInterpretation, handler: 
                     })
             }
 
-            1 -> {}
+            1 -> {
+                ConclusionsView(viewableInterpretation)
+            }
             2 -> {}
         }
     }
