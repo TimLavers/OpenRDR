@@ -47,6 +47,16 @@ class ViewableCaseTest {
         viewableCase.dates shouldBe listOf(yesterday, defaultDate)
     }
 
+   @Test
+    fun numberOfColumns() {
+        val builder = RDRCaseBuilder()
+        builder.addValue(tsh, defaultDate, "1.0")
+        builder.addValue(tsh, daysAgo(1), "2.0")
+        val properties = CaseViewProperties(listOf(tsh))
+        val viewableCase = ViewableCase(builder.build("Case1"), properties)
+        viewableCase.numberOfColumns shouldBe 2
+    }
+
     @Test
     fun serialization() {
         val properties = caseViewProperties()

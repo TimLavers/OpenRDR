@@ -45,5 +45,3 @@ fun findComposeDialogThatIsShowing(): ComposeDialog? {
     val d = allWindows.firstOrNull{w -> w is ComposeDialog }
     return if (d == null) null else d as ComposeDialog
 }
-class AccessibilityUtils {
-}

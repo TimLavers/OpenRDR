@@ -1,13 +1,12 @@
 package io.rippledown.constants.api
 
 const val API_URL = "http://localhost:9090"
-const val CASE_NAME = "casename"
 const val WAITING_CASES = "/api/waitingCasesInfo"
 const val CONDITION_HINTS = "/api/conditionHints"
 const val CASE = "/api/case"
 const val PROCESS_CASE = "/api/processCase"
 const val DELETE_CASE_WITH_NAME = "/api/deleteProcessedCaseWithName"
-const val MOVE_ATTRIBUTE_JUST_BELOW_OTHER = "/api/moveAttributeJustBelowOther"
+const val MOVE_ATTRIBUTE = "/api/moveAttribute"
 const val GET_OR_CREATE_ATTRIBUTE = "/api/attribute/getOrCreate"
 const val GET_OR_CREATE_CONCLUSION = "/api/conclusion/getOrCreate"
 const val GET_OR_CREATE_CONDITION = "/api/condition/getOrCreate"

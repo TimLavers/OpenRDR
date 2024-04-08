@@ -27,7 +27,7 @@ class HeaderRowTest {
         every { columnWidths.referenceRangeColumnWeight }.returns(0.2F)
         val lazyItemScope: LazyItemScope = DummyLazyItemScope()
         composeTestRule.setContent {
-            lazyItemScope.HeaderRow( columnWidths, dates)
+            HeaderRow( columnWidths, dates)
         }
         with(composeTestRule) {
             waitUntilExactlyOneExists(hasText(ATTRIBUTE_HEADER_CELL_TEXT))

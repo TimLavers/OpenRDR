@@ -11,6 +11,7 @@ import io.rippledown.integration.pause
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
 import org.awaitility.kotlin.await
+import java.awt.Point
 import java.time.Duration.ofSeconds
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleRole.LABEL
@@ -74,6 +75,16 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
         return result
     }
 
+    private fun getAttributeCellsInOrderShown(): List<AttributeCellPO> {
+        val caseName = nameShown()!!
+        val contentDescriptionPrefix = attributeCellContentDescriptionPrefix(caseName)
+        return contextProvider()
+            .find(CASE_VIEW_TABLE)!!//narrow down the context to the table
+            .findAllByDescriptionPrefix(contentDescriptionPrefix)
+            .map { AttributeCellPO(it, caseName) }
+            .sorted()
+    }
+
     private fun extractMatchingValuesInOrderShown(
         descriptionPrefix: String,
         contextToPO: (AccessibleContext) -> CellPO
@@ -87,7 +98,13 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
     private fun attributeCellId(attributeName: String?) = "attribute_name_cell_$attributeName"
 
     fun dragAttribute(draggedAttribute: String, targetAttribute: String) {
-//        DnD(driver).dragAttribute(draggedAttribute, targetAttribute)
+        val allAttributeCells = getAttributeCellsInOrderShown()
+        fun cellPosition(attribute: String): Point {
+            val draggedCell = allAttributeCells.find { it.text() == attribute }!!
+            val accessibleComponent = draggedCell.context.accessibleComponent
+            return accessibleComponent.locationOnScreen
+        }
+        dragVertically(cellPosition(draggedAttribute), cellPosition(targetAttribute))
     }
 
     fun referenceRange(attribute: String): String = contextProvider()
@@ -95,7 +112,7 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
         .accessibleName
 }
 
-open class CellPO(private val context: AccessibleContext, descriptionPrefix: String) : Comparable<CellPO> {
+open class CellPO(val context: AccessibleContext, descriptionPrefix: String) : Comparable<CellPO> {
     private val index = context.accessibleDescription.substring(descriptionPrefix.length).trim().toInt()
 
     override fun compareTo(other: CellPO) = index.compareTo(other.index)

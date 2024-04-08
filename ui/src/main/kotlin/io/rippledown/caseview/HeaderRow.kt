@@ -11,7 +11,7 @@ import androidx.compose.ui.graphics.Color
 import io.rippledown.caseview.AttributesHeaderCell
 
 @Composable
-fun LazyItemScope.HeaderRow(columnWidths: ColumnWidths, dates: List<Long>) {
+fun HeaderRow(columnWidths: ColumnWidths, dates: List<Long>) {
     Row(
         modifier = Modifier
             .fillMaxWidth()

@@ -1,4 +1,4 @@
-@ignore
+
 Feature: Order of Attributes in Case View
   Scenario: Default Attribute order is by order created
     Given I start the client application
@@ -25,7 +25,6 @@ Feature: Order of Attributes in Case View
       | C |
     And stop the client application
 
-  @ignore
   Scenario: Attributes can be re-ordered by drag-and-drop
     Given I start the client application
     And the initial Attribute order is A, B, C
@@ -33,16 +32,16 @@ Feature: Order of Attributes in Case View
       | A | a |
       | B | b |
       | C | c |
-    When I select case CaseABC
+    When I select the case CaseABC
+    And pause for 2 seconds
     And I move attribute C below attribute A
     And I move attribute A below attribute B
-    Then the case should show the attributes in order:
-      | C |
-      | B |
-      | A |
+    Then I see these case values:
+      | C | c | |
+      | B | b | |
+      | A | a | |
     And stop the client application
 
-  @ignore
   Scenario: New Attributes can be created after an Attribute re-ordering
     Given I start the client application
     And the initial Attribute order is A, B, C
@@ -53,7 +52,7 @@ Feature: Order of Attributes in Case View
     And I select case CaseABC
     And I move attribute C below attribute A
     And I move attribute A below attribute B
-    And the case shows the attributes in order:
+    Then the case should show the attributes in order:
       | C |
       | B |
       | A |
