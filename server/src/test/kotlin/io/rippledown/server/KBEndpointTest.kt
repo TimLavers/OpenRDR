@@ -236,6 +236,22 @@ internal class KBEndpointTest {
     }
 
     @Test
+    fun setAttributesOrder() {
+        val id = supplyCaseFromFile("Case5", endpoint).caseId.id!!
+        val retrieved = endpoint.viewableCase(id)
+        val attributesBefore = retrieved.attributes()
+        attributesBefore.size shouldBe 4 // sanity
+        val reordered = attributesBefore.reversed()
+        endpoint.setAttributeOrder(reordered)
+        // Get the case again and check that the order has been applied.
+        val retrievedAfter = endpoint.viewableCase(id)
+        retrievedAfter.attributes()[0] shouldBe attributesBefore[3]
+        retrievedAfter.attributes()[1] shouldBe attributesBefore[2]
+        retrievedAfter.attributes()[2] shouldBe attributesBefore[1]
+        retrievedAfter.attributes()[3] shouldBe attributesBefore[0]
+    }
+
+    @Test
     fun waitingCasesInfo() {
         FileUtils.cleanDirectory(endpoint.casesDir)
         assertEquals(endpoint.waitingCasesInfo().kbName, endpoint.kb.kbInfo.name)

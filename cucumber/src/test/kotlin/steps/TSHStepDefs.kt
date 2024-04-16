@@ -12,6 +12,21 @@ class TSHStepDefs : En {
     }
 
     private fun setupTSHSampleKB() {
+        val attributeNamesInOrder = listOf(
+            "Sex",
+            "Age",
+            "TSH",
+            "Free T4",
+            "Free T3",
+            "TPO Antibodies",
+            "Patient Location",
+            "Tests",
+            "Clinical Notes",
+        )
+        val attributesInOrder = attributeNamesInOrder.map {
+            labProxy().restProxy.getOrCreateAttribute(it)
+        }
+        labProxy().restProxy.setAttributeOrder(attributesInOrder)
         val tshCases = TSHCases(RestClientAttributeFactory(restClient()))
         labProxy().provideCase(tshCases.TSH1)
         labProxy().provideCase(tshCases.TSH2)
