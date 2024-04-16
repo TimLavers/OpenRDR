@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -41,7 +42,7 @@ fun ToolTipForIconAndLabel(
 
         tooltip = {
             Surface(
-                color = Color.Gray,
+                color = Color.Blue,
                 shape = RoundedCornerShape(5.dp)
             ) {
                 Text(
@@ -79,7 +80,7 @@ fun ToolTipForIconAndLabel(
                     text = labelText,
                     modifier = Modifier.padding(5.dp),
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                    color = if (isSelected) Color.Blue else Color.Black,
+                    color = if (isSelected) MaterialTheme.colors.primary else Color.Black,
                     fontSize = 14.sp,
                 )
             }

@@ -1,5 +1,4 @@
 Feature: Reviewing the interpretation of a case
-
   Scenario: The user should be able to see the interpretation of a case
     Given case Bondi is provided having data:
       | Wave | excellent |

@@ -82,13 +82,11 @@ class InterpretationTabsUpdateTest {
     fun InterpretationTabsWithButton(original: ViewableInterpretation, changed: ViewableInterpretation) {
         var viewableInterpretation: ViewableInterpretation by remember { mutableStateOf(original) }
 
-        println("viewable interp: ${viewableInterpretation.verifiedText}")
         InterpretationTabs(viewableInterpretation, handler)
 
         Button(
             onClick = {
                 viewableInterpretation = changed
-                println("changed to  = ${viewableInterpretation.verifiedText}")
             },
             modifier = Modifier.testTag("buttonTag")
         ) {

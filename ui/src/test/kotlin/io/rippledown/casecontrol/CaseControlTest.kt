@@ -1,6 +1,8 @@
 package io.rippledown.casecontrol
 
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.application
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -688,4 +690,24 @@ class CaseControlTest {
         }
 
      */
+}
+
+fun main() {
+    application {
+        Window(
+            onCloseRequest = ::exitApplication,
+        ) {
+            val handler = mockk<CaseControlHandler>(relaxed = true)
+            val caseNames = (0..100).map { "case $it" }
+            val caseIds = caseNames.mapIndexed { index, name ->
+                CaseId(id = index.toLong(), name = name)
+            }
+            caseIds.map { caseId ->
+                createCaseWithInterpretation(caseId.name, caseId.id, listOf("Go to Bondi $caseId"))
+            }.forEach {
+                coEvery { handler.getCase(it.case.caseId.id!!) } returns it
+            }
+            CaseControl(CasesInfo(caseIds), handler)
+        }
+    }
 }

@@ -1,9 +1,12 @@
 @file:OptIn(ExperimentalComposeUiApi::class, ExperimentalComposeUiApi::class)
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.Tab
-import androidx.compose.material.TabRow
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.*
+import androidx.compose.material.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -18,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES_LABEL
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CONCLUSIONS_LABEL
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL_LABEL
+import io.rippledown.constants.interpretation.INTERPRETATION_TAB_PREFIX
 import io.rippledown.interpretation.ConclusionsView
 import io.rippledown.interpretation.InterpretationView
 import io.rippledown.interpretation.InterpretationViewHandler
@@ -30,9 +34,6 @@ interface InterpretationTabsHandler {
     var onInterpretationEdited: (text: String) -> Unit
     var isCornerstone: Boolean
 }
-
-//val lightBlueColor = Color(100, 149, 237)
-val lightBlueColor = Color(70, 130, 180)
 
 @Composable
 fun InterpretationTabs(viewableInterpretation: ViewableInterpretation, handler: InterpretationTabsHandler) {
@@ -51,22 +52,29 @@ fun InterpretationTabs(viewableInterpretation: ViewableInterpretation, handler: 
         TabRow(selectedTabIndex = tabPage,
             modifier = Modifier.semantics {
                 contentDescription = "interpretation_tabs"
+            },
+            indicator = @Composable { tabPositions: List<TabPosition> ->
+                TabRowDefaults.Indicator(
+                    Modifier.tabIndicatorOffset(tabPositions[tabPage]),
+                    color = MaterialTheme.colors.primary,
+                    height = 2.dp // Set height
+                )
             }
         ) {
             titles.forEachIndexed { index, title ->
                 val isSelected = tabPage == index
                 Tab(
                     selected = isSelected,
-                    onClick = {}, // Do nothing, we handle this in the ToolTipForIconAndLabel
+                    onClick = {
+                        tabPage = index
+                    }, // Do nothing, we handle this in the ToolTipForIconAndLabel
                     modifier = Modifier.semantics {
-                        contentDescription = "interpretation_tab_$title"
+                        contentDescription = "$INTERPRETATION_TAB_PREFIX$title"
                     }.background(Color.White)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Start,
-                        modifier = Modifier
-                            .padding(5.dp)
                     ) {
                         ToolTipForIconAndLabel(
                             toolTipText = toolTipTextForIndex(index),
@@ -74,7 +82,9 @@ fun InterpretationTabs(viewableInterpretation: ViewableInterpretation, handler: 
                             iconContentDescription = "icon_content_description",
                             isSelected = isSelected,
                             icon = painterForIndex(index),
-                            onClick = { tabPage = index }
+                            onClick = {
+                                tabPage = index
+                            }
                         )
                     }
                 }

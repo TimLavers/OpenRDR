@@ -2,14 +2,17 @@
 
 package io.rippledown.casecontrol
 
+import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import io.rippledown.constants.caseview.CASELIST_ID
 import io.rippledown.constants.caseview.CASES
 import io.rippledown.constants.caseview.CASE_NAME_PREFIX
+import java.awt.event.KeyEvent.VK_DOWN
+import java.awt.event.KeyEvent.VK_UP
 
 fun ComposeTestRule.requireNamesToBeShowingOnCaseList(vararg caseNames: String) {
-    caseNames.forEach {  caseName ->
+    caseNames.forEach { caseName ->
         onNode(caseMatcher(caseName)).assertExists()
     }
 }
@@ -21,10 +24,12 @@ fun ComposeTestRule.selectCaseByName(caseName: String) {
     onNode(caseMatcher(caseName)).performClick()
 }
 
-fun ComposeTestRule.selectCaseByNameUsingContentDescription(caseName: String) {
-    onNode(caseMatcher(caseName), true).performClick()
+fun ComposeTestRule.requireCaseToBeFocused(caseName: String) {
+    onNode(caseMatcher(caseName))
+//    onNode(caseMatcher(caseName)).assertIsFocused()
 }
- fun caseMatcher(caseName: String) = hasContentDescriptionExactly("$CASE_NAME_PREFIX$caseName")
+
+fun caseMatcher(caseName: String) = hasContentDescriptionExactly("$CASE_NAME_PREFIX$caseName")
 
 fun ComposeTestRule.requireNumberOfCasesOnCaseList(expected: Int) {
     onNodeWithTag(CASELIST_ID).onChildren().assertCountEquals(expected)
@@ -37,4 +42,18 @@ fun ComposeTestRule.waitForNumberOfCases(expected: Int) {
 
 fun ComposeTestRule.waitForCaseSelectorNotToBeShowing() {
     waitUntilDoesNotExist(hasTestTag(CASELIST_ID), timeoutMillis = 2_000)
+}
+
+fun ComposeTestRule.downArrowOnCase(caseName: String) {
+    onNode(caseMatcher(caseName), true).performKeyPress(
+        KeyEvent(VK_DOWN)
+    )
+    waitForIdle()
+}
+
+fun ComposeTestRule.upArrowOnCase(caseName: String) {
+    onNode(caseMatcher(caseName), true).performKeyPress(
+        KeyEvent(VK_UP)
+    )
+    waitForIdle()
 }
