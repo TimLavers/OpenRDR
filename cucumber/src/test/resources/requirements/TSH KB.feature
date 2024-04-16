@@ -127,4 +127,85 @@ Feature: The cases described in the TSH paper can be represented in OpenRDR
       | Tests             | TFTs               |            |
       | Clinical Notes    | Hypothyroid?       |            |
 
+    When I select case 1.4.13
+    Then I see these case values:
+      | Sex               | M                  | M                                               |            |
+      | Age               | 74                 | 74                                              |            |
+      | TSH               | 59 mU/L            | 40 mU/L                                         | 0.50 - 4.0 |
+      | Free T4           | <5 pmol/L          | 8 pmol/L                                        |   10 - 20  |
+      | Patient Location  | General Practice.  | General Practice.                               |            |
+      | Tests             | TFTs               | TFTs                                            |            |
+      | Clinical Notes    | Hypothyroid?       | Hypothyroid, started T4 replacement 1 week ago. |            |
+
+    When I select case 1.4.14
+    Then I see these case values:
+      | Sex               | F                  |            |
+      | Age               | 43                 |            |
+      | TSH               | 0.72 mU/L          | 0.50 - 4.0 |
+      | Free T4           | 16 pmol/L          |   10 - 20  |
+      | Patient Location  | General Practice.  |            |
+      | Tests             | TFTs               |            |
+      | Clinical Notes    | On T4 replacement. |            |
+
+    When I select case 1.4.15
+    Then I see these case values:
+      | Sex               | F                  |            |
+      | Age               | 54                 |            |
+      | TSH               | 5.6 mU/L           | 0.50 - 4.0 |
+      | Free T4           | 12 pmol/L          |   10 - 20  |
+      | Patient Location  | General Practice.  |            |
+      | Tests             | TFTs               |            |
+      | Clinical Notes    | On T4 replacement. |            |
+
+    When I select case 1.4.16
+    Then I see these case values:
+      | Sex               | F                  |            |
+      | Age               | 61                 |            |
+      | TSH               | 0.02 mU/L          | 0.50 - 4.0 |
+      | Free T4           | 19 pmol/L          |   10 - 20  |
+      | Patient Location  | General Practice.  |            |
+      | Tests             | TFTs               |            |
+      | Clinical Notes    | On T4 replacement. |            |
+
+    When I select case 1.4.17
+    Then I see these case values:
+      | Sex               | F                                                              |            |
+      | Age               | 51                                                             |            |
+      | TSH               | 0.12 mU/L                                                      | 0.50 - 4.0 |
+      | Free T4           | 19 pmol/L                                                      |   10 - 20  |
+      | Patient Location  | General Practice.                                              |            |
+      | Tests             | TFTs                                                           |            |
+      | Clinical Notes    | Previous total thyroidectomy for thyroid cancer. On thyroxine. |            |
+
+    When I select case 1.4.18
+    Then I see these case values:
+      | Sex               | F                  | F                                               |            |
+      | Age               | 56                 | 56                                              |            |
+      | TSH               | 4.3 mU/L           | 3.6 mU/L                                        | 0.50 - 4.0 |
+      | Free T4           | 13 pmol/L          | 12 pmol/L                                       |   10 - 20  |
+      | Tests             | TFTs               | TFTs                                            |            |
+      | Clinical Notes    |                    | Subclinical hypothyroidism, follow-up.          |            |
+
+    When I select case 1.4.19
+    Then I see these case values:
+      | Sex               | F                  |            |
+      | Age               | 37                 |            |
+      | TSH               | 0.03 mU/L          | 0.50 - 4.0 |
+      | Free T4           | 20 pmol/L          |   10 - 20  |
+      | Patient Location  | General Practice.  |            |
+      | Tests             | TFTs               |            |
+      | Clinical Notes    | Amenorrhea.        |            |
+
+    When I select case 1.4.20
+    Then I see these case values:
+      | Sex               | F                    |            |
+      | Age               | 53                   |            |
+      | TSH               | <0.01 mU/L           | 0.50 - 4.0 |
+      | Free T4           | 16 pmol/L            |   10 - 20  |
+      | Free T3           | 5.5 pmol/L           |  3.0 - 5.5 |
+      | Patient Location  | General Practice.    |            |
+      | Tests             | TFTs                 |            |
+      | Clinical Notes    | Annual check.        |            |
+
+
     And stop the client application

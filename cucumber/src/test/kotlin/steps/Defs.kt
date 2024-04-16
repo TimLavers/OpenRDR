@@ -90,7 +90,7 @@ class Defs : En {
         }
 
         And("I select case {word}") { caseName: String ->
-            pause(1);
+//            pause(1);
             caseListPO().waitForCaseListToContain(caseName)
             caseListPO().select(caseName)
         }
