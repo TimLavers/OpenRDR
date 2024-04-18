@@ -12,6 +12,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
+import androidx.compose.ui.input.key.KeyEventType.Companion.KeyDown
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -62,16 +63,12 @@ fun CaseSelector(caseIds: List<CaseId>, handler: CaseSelectorHandler) {
                         }
                         .background(if (index == selectedCaseIndex) Color.LightGray else Color.White)
                         .onKeyEvent { keyEvent ->
-                            if (keyEvent.type == KeyEventType.KeyDown) {
-                                val nextIndex = if (downArrowKeyWasPressed(keyEvent)) {
-                                    min(count - 1, selectedCaseIndex + 1)
-                                } else {
-                                    if (upArrowKeyWasPressed(keyEvent)) {
-                                        max(0, selectedCaseIndex - 1)
-                                    } else {
-                                        selectedCaseIndex
-                                    }
-                                }
+                            if (downArrowKeyWasPressed(keyEvent)) {
+                                val nextIndex = min(count - 1, selectedCaseIndex + 1)
+                                focusRequestors[nextIndex].requestFocus()
+                                selectedCaseIndex = nextIndex
+                            } else if (upArrowKeyWasPressed(keyEvent)) {
+                                val nextIndex = max(0, selectedCaseIndex - 1)
                                 focusRequestors[nextIndex].requestFocus()
                                 selectedCaseIndex = nextIndex
                             }
@@ -91,10 +88,10 @@ fun CaseSelector(caseIds: List<CaseId>, handler: CaseSelectorHandler) {
 }
 
 private fun downArrowKeyWasPressed(keyEvent: KeyEvent) =
-    keyEvent == KeyEvent(VK_DOWN) //detect event generated from keyboard
-            || keyEvent.key == Key.DirectionDown //detect event generated from ComposeTestRule
+    ((keyEvent.type == KeyDown) && (keyEvent.key == Key.DirectionDown))//detect event generated from ComposeTestRule
+            || keyEvent == KeyEvent(VK_DOWN) //detect event generated from keyboard
 
 private fun upArrowKeyWasPressed(keyEvent: KeyEvent) =
-    keyEvent == KeyEvent(VK_UP) //detect event generated from keyboard
-            || keyEvent.key == Key.DirectionUp //detect event generated from ComposeTestRule
+    ((keyEvent.type == KeyDown) && (keyEvent.key == Key.DirectionUp)) //detect event generated from ComposeTestRule
+            || keyEvent == KeyEvent(VK_UP) //detect event generated from keyboard
 

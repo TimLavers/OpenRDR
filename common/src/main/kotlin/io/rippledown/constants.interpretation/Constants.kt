@@ -2,7 +2,7 @@ package io.rippledown.constants.interpretation
 
 
 const val INTERPRETATION_TAB_ORIGINAL_LABEL = "Interpretive report"
-const val INTERPRETATION_TAB_CONCLUSIONS_LABEL = "Comments and conditions"
+const val INTERPRETATION_TAB_CONCLUSIONS_LABEL = "Comments & conditions"
 const val INTERPRETATION_TAB_CHANGES_LABEL = "Differences"
 
 const val INTERPRETATION_TAB_PREFIX = "interpretation_tab_"

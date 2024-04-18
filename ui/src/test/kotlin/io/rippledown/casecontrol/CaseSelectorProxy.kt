@@ -2,14 +2,12 @@
 
 package io.rippledown.casecontrol
 
-import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import io.rippledown.constants.caseview.CASELIST_ID
 import io.rippledown.constants.caseview.CASES
 import io.rippledown.constants.caseview.CASE_NAME_PREFIX
-import java.awt.event.KeyEvent.VK_DOWN
-import java.awt.event.KeyEvent.VK_UP
 
 fun ComposeTestRule.requireNamesToBeShowingOnCaseList(vararg caseNames: String) {
     caseNames.forEach { caseName ->
@@ -26,7 +24,7 @@ fun ComposeTestRule.selectCaseByName(caseName: String) {
 
 fun ComposeTestRule.requireCaseToBeFocused(caseName: String) {
     onNode(caseMatcher(caseName))
-//    onNode(caseMatcher(caseName)).assertIsFocused()
+    onNode(caseMatcher(caseName)).assertIsFocused()
 }
 
 fun caseMatcher(caseName: String) = hasContentDescriptionExactly("$CASE_NAME_PREFIX$caseName")
@@ -45,15 +43,15 @@ fun ComposeTestRule.waitForCaseSelectorNotToBeShowing() {
 }
 
 fun ComposeTestRule.downArrowOnCase(caseName: String) {
-    onNode(caseMatcher(caseName), true).performKeyPress(
-        KeyEvent(VK_DOWN)
-    )
+    onNode(caseMatcher(caseName), true).performKeyInput {
+        keyDown(Key.Companion.DirectionDown)
+    }
     waitForIdle()
 }
 
 fun ComposeTestRule.upArrowOnCase(caseName: String) {
-    onNode(caseMatcher(caseName), true).performKeyPress(
-        KeyEvent(VK_UP)
-    )
+    onNode(caseMatcher(caseName), true).performKeyInput {
+        keyDown(Key.Companion.DirectionUp)
+    }
     waitForIdle()
 }

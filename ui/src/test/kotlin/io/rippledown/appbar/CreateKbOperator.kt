@@ -16,9 +16,7 @@ fun ComposeTestRule.waitToVanish() {
 }
 
 fun ComposeTestRule.enterKBName(text: String) {
-    println("about to type text = ${text}")
     onNodeWithTag(CREATE_KB_NAME_FIELD_ID).performTextInput(text)
-    println("typed              = ${text}")
 }
 
 @OptIn(ExperimentalTestApi::class)

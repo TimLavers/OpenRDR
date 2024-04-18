@@ -91,35 +91,32 @@ class CaseSelectorTest {
     }
 
     @Test
-    fun `should be able to select the previous case name using the keyboard`() {
+    fun `should be able to select the previous case name using the keyboard`() = runTest {
         val case0 = "case 0"
         val case1 = "case 1"
-        runTest {
-            val caseIds = (0..1).map { i ->
-                CaseId(id = i.toLong(), name = "case $i")
+        val caseIds = (0..1).map { i ->
+            CaseId(id = i.toLong(), name = "case $i")
+        }
+
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(caseIds, handler)
             }
+            //Given
+            composeTestRule.onNodeWithContentDescription(contentDescription(0)).assertIsDisplayed()
+            selectCaseByName(case1)
 
-            with(composeTestRule) {
-                setContent {
-                    CaseSelector(caseIds, handler)
-                }
-                //Given
-                composeTestRule.onNodeWithContentDescription(contentDescription(0)).assertIsDisplayed()
-                selectCaseByName(case1)
+            //When
+            upArrowOnCase(case1)
 
-                //When
-                upArrowOnCase(case1)
-
-                //Then
-                requireCaseToBeFocused(case0)
-            }
+            //Then
+            requireCaseToBeFocused(case0)
         }
     }
 
     @Test
-    fun `should not be able to down arrow past the last case`() {
+    fun `should not be able to down arrow past the last case`() = runTest {
         val case1 = "case 1"
-        runTest {
             val caseIds = (0..1).map { i ->
                 CaseId(id = i.toLong(), name = "case $i")
             }
@@ -138,13 +135,11 @@ class CaseSelectorTest {
                 //Then
                 requireCaseToBeFocused(case1)
             }
-        }
     }
 
     @Test
-    fun `should not be able to up arrow before the first case`() {
+    fun `should not be able to up arrow before the first case`() = runTest {
         val case0 = "case 0"
-        runTest {
             val caseIds = (0..1).map { i ->
                 CaseId(id = i.toLong(), name = "case $i")
             }
@@ -163,7 +158,6 @@ class CaseSelectorTest {
                 //Then
                 requireCaseToBeFocused(case0)
             }
-        }
     }
 
     @Test
