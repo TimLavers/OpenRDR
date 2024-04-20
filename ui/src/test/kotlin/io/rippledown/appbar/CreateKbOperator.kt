@@ -22,7 +22,6 @@ fun ComposeTestRule.enterKBName(text: String) {
 @OptIn(ExperimentalTestApi::class)
 fun ComposeTestRule.requireEnteredKBName(text: String) {
     waitUntilAtLeastOneExists(hasText(text))
-    println(onNodeWithTag(CREATE_KB_NAME_FIELD_ID).printToString())
 }
 
 fun ComposeTestRule.performTextClearance() = onNodeWithTag(CREATE_KB_NAME_FIELD_ID).performTextClearance()

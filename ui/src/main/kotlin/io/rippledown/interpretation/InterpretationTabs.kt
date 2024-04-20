@@ -122,8 +122,8 @@ fun painterForIndex(index: Int): Painter {
 
 fun toolTipTextForIndex(index: Int): String {
     return when (index) {
-        0 -> "The report given by the rules in the project. Edit it if not appropriate for this case."
-        1 -> "The comments comprising the report, and the reasons why each comment is present."
-        else -> "The differences between the original report and the one you edited. You can build a rule for each difference."
+        0 -> "The report given by the rules in the project.\nEdit it if not appropriate for this case."
+        1 -> "The comments comprising the report\nand the reasons why each comment is present."
+        else -> "The differences between the original report and the one you edited.\nYou can build a rule for each difference."
     }
 }
