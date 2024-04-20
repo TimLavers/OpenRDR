@@ -45,7 +45,7 @@ internal class SaveInterpretationTest : UITestBase() {
         interpretationViewPO.enterVerifiedText(verifiedReport)
 
         // Check that the case list in the user interface still shows just Case1, Case2 and Case3.
-        caseListPO.waitForCaseListToHaveSize(3)
+        caseListPO.waitForCountOfNumberOfCasesToBe(3)
         caseListPO.casesListed() shouldBe listOf("Case1", "Case2", "Case3")
 
         caseListPO.select("Case1")

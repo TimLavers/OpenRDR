@@ -37,6 +37,14 @@ open class OrderedEntityManager<T>(orderStore: OrderStore, entityProvider: Entit
         entitiesInOrder.forEachIndexed { index, entity -> entityToIndex[entity] = index }
     }
 
+    fun move(moved: T, target: T) {
+        checkMovables(moved, target)
+        val originalIndexOfMoved = entityToIndex[moved]!!
+        val originalIndexOfTarget = entityToIndex[target]!!
+        val direction = if (originalIndexOfMoved < originalIndexOfTarget) BELOW else ABOVE
+        move(moved, target, direction)
+    }
+
     fun moveJustBelow(moved: T, target: T) = move(moved, target, BELOW)
 
     fun moveJustAbove(moved: T, target: T) = move(moved, target, ABOVE)
@@ -46,15 +54,7 @@ open class OrderedEntityManager<T>(orderStore: OrderStore, entityProvider: Entit
     }
 
     private fun move(moved: T, target: T, direction: MoveDirection) {
-        check(entityToIndex.containsKey(moved)) {
-            "$UNKNOWN_ENTITY$moved"
-        }
-        check(entityToIndex.containsKey(target)) {
-            "$UNKNOWN_ENTITY$target"
-        }
-        check(moved != target) {
-            "$MOVED_ENTITY_IS_TARGET$moved"
-        }
+        checkMovables(moved, target)
         // Do the move by:
         //  - doubling the indices of all attributes
         //  - giving the moved conclusion the index (doubled) of the target, plus one
@@ -69,6 +69,18 @@ open class OrderedEntityManager<T>(orderStore: OrderStore, entityProvider: Entit
         val asList = newOrderSet.toList()
         for (i in asList.indices) {
             entityToIndex[asList[i].entity] = i
+        }
+    }
+
+    private fun checkMovables(moved: T, target: T) {
+        check(entityToIndex.containsKey(moved)) {
+            "$UNKNOWN_ENTITY$moved"
+        }
+        check(entityToIndex.containsKey(target)) {
+            "$UNKNOWN_ENTITY$target"
+        }
+        check(moved != target) {
+            "$MOVED_ENTITY_IS_TARGET$moved"
         }
     }
 

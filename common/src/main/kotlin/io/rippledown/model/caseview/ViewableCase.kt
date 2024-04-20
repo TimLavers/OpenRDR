@@ -18,6 +18,7 @@ data class ViewableCase(
     val name = case.caseId.name
     val id = case.caseId.id
     val dates = case.dates
+    val numberOfColumns = dates.size
 
     init {
         check(case.attributes == viewProperties.attributes.toSet()) {

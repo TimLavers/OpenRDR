@@ -82,10 +82,10 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
 
     fun deleteCase(name: String) = kb.deletedProcessedCaseWithName(name)
 
-    fun moveAttributeJustBelow(movedId: Int, targetId: Int) {
+    fun moveAttribute(movedId: Int, targetId: Int) {
         val moved = kb.attributeManager.getById(movedId)
         val target = kb.attributeManager.getById(targetId)
-        kb.caseViewManager.moveJustBelow(moved, target)
+        kb.caseViewManager.move(moved, target)
     }
 
     fun getOrCreateAttribute(name: String) = kb.attributeManager.getOrCreate(name)

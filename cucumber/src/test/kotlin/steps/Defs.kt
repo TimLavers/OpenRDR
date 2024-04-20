@@ -107,7 +107,7 @@ class Defs : En {
             labProxy().provideCase("Case3", mapOf("A" to "a", "B" to "b", "C" to "c"))
             // The attributes are created when the cases are parsed, so select them in the right order.
             with(caseListPO()) {
-                waitForCaseListToHaveSize(3)
+                waitForCountOfNumberOfCasesToBe(3)
 
                 // The attributes are created when the cases are parsed, so select them in the right order.
                 select("Case1")
