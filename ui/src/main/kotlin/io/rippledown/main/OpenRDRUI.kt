@@ -2,7 +2,6 @@
 
 package io.rippledown.main
 
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.*
 import io.rippledown.appbar.AppBarHandler
@@ -28,7 +27,6 @@ interface Handler {
 }
 
 @Composable
-@Preview
 fun OpenRDRUI(handler: Handler) {
     val api = handler.api
     var ruleInProgress by remember { mutableStateOf(false) }

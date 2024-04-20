@@ -18,7 +18,6 @@ fun main() = application {
         },
         icon = painterResource("water-wave-icon.png"),
         title = TITLE,
-
     ) {
         OpenRDRUI(object : Handler {
             override var isClosing = { closing }
