@@ -31,7 +31,7 @@ interface CaseViewHandler {
 fun CaseView(case: ViewableCase, handler: CaseViewHandler) {
     Column(
         modifier = Modifier
-            .padding(10.dp)
+            .padding(top = 10.dp)
             .semantics {
                 contentDescription = CASE_HEADING
             },
@@ -40,6 +40,8 @@ fun CaseView(case: ViewableCase, handler: CaseViewHandler) {
         Text(
             text = case.name,
             style = MaterialTheme.typography.subtitle1,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+            color = MaterialTheme.colors.primary,
             textAlign = TextAlign.Start,
             modifier = Modifier
                 .testTag("$CASEVIEW_CASE_NAME_ID${case.name}")

@@ -21,7 +21,7 @@ fun CaseInspection(case: ViewableCase, handler: CaseInspectionHandler) {
     Column(
         verticalArrangement = Arrangement.Top,
         modifier = androidx.compose.ui.Modifier
-            .padding(10.dp)
+            .padding(bottom = 5.dp)
             .fillMaxHeight()
             .fillMaxWidth()
     ) {

@@ -45,6 +45,7 @@ fun CaseSelector(caseIds: List<CaseId>, handler: CaseSelectorHandler) {
         Column(
             modifier = Modifier
                 .size(150.dp, 800.dp)
+                .padding(start = 5.dp)
                 .testTag(CASELIST_ID)
                 .semantics {
                     contentDescription = CASELIST_ID

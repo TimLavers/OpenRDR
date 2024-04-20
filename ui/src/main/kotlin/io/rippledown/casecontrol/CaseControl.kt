@@ -1,18 +1,18 @@
 package io.rippledown.casecontrol
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign.Companion
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import io.rippledown.constants.caseview.CASES
 import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import io.rippledown.main.Handler
@@ -47,21 +47,33 @@ fun CaseControl(casesInfo: CasesInfo, handler: CaseControlHandler) {
 
     Row {
         Column(
-            modifier = Modifier
-                .padding(10.dp)
-                .testTag("caseControl"),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            modifier = Modifier.padding(10.dp),
+            verticalArrangement = Arrangement.spacedBy(5.dp)
         ) {
-            Text(
-                text = "$CASES ${casesInfo.caseIds.size}",
-                style = MaterialTheme.typography.subtitle1,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Start,
-                modifier = Modifier
-                    .testTag(NUMBER_OF_CASES_ID)
-                    .semantics {
-                        contentDescription = NUMBER_OF_CASES_ID
-                    }
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom,
+                modifier = Modifier.width(150.dp)
             )
+            {
+                Text(
+                    text = CASES,
+                    textAlign = Companion.Left,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    color = MaterialTheme.colors.primary,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    text = casesInfo.count.toString(),
+                    textAlign = Companion.Right,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    fontSize = 12.sp,
+                    modifier = Modifier.weight(1f).padding(end = 10.dp)
+                        .testTag(NUMBER_OF_CASES_ID)
+                        .semantics { contentDescription = NUMBER_OF_CASES_ID }
+
+                )
+            }
 
             CaseSelector(casesInfo.caseIds, object : CaseSelectorHandler, Handler by handler {
                 override var selectCase = { id: Long ->

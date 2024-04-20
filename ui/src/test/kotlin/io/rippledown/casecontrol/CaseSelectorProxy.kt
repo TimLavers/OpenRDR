@@ -6,7 +6,6 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import io.rippledown.constants.caseview.CASELIST_ID
-import io.rippledown.constants.caseview.CASES
 import io.rippledown.constants.caseview.CASE_NAME_PREFIX
 
 fun ComposeTestRule.requireNamesToBeShowingOnCaseList(vararg caseNames: String) {
@@ -35,7 +34,7 @@ fun ComposeTestRule.requireNumberOfCasesOnCaseList(expected: Int) {
 
 @OptIn(ExperimentalTestApi::class)
 fun ComposeTestRule.waitForNumberOfCases(expected: Int) {
-    waitUntilExactlyOneExists(hasText("$CASES $expected"), timeoutMillis = 2_000)
+    waitUntilExactlyOneExists(hasText(expected.toString()), timeoutMillis = 2_000)
 }
 
 fun ComposeTestRule.waitForCaseSelectorNotToBeShowing() {
