@@ -19,6 +19,8 @@ class TSHStepDefs : En {
             "Free T4",
             "Free T3",
             "TPO Antibodies",
+            "Thyroglobulin",
+            "Anti-Thyroglobulin",
             "Patient Location",
             "Tests",
             "Clinical Notes",

@@ -207,5 +207,54 @@ Feature: The cases described in the TSH paper can be represented in OpenRDR
       | Tests             | TFTs                 |            |
       | Clinical Notes    | Annual check.        |            |
 
+    When I select case 1.4.21
+    Then I see these case values:
+      | Sex            | F             | F                        |            |
+      | Age            | 53            | 53                       |            |
+      | TSH            | <0.01 mU/L    | <0.01 mU/L               | 0.50 - 4.0 |
+      | Free T4        | 16 pmol/L     | 17 pmol/L                |   10 - 20  |
+      | Free T3        | 5.5 pmol/L    | 6.1 pmol/L               |  3.0 - 5.5 |
+      | Tests          | TFTs          | TFTs                     |            |
+      | Clinical Notes | Annual check. | Previous suppressed TSH. |            |
+
+    When I select case 1.4.22
+    Then I see these case values:
+      | Sex               | F                                                           |            |
+      | Age               | 84                                                          |            |
+      | TSH               | <0.01 mU/L                                                  | 0.50 - 4.0 |
+      | Free T4           | 45 pmol/L                                                   |   10 - 20  |
+      | Free T3           | 18 pmol/L                                                   |  3.0 - 5.5 |
+      | Patient Location  | Emergency Department.                                       |            |
+      | Tests             | TFTs                                                        |            |
+      | Clinical Notes    | Severe hypertension, sweating and palpitation. |            |
+
+    When I select case 1.4.23
+    Then I see these case values:
+      | Sex               | F                                                         |            |
+      | Age               | 46                                                        |            |
+      | TSH               | <0.01 mU/L                                                | 0.50 - 4.0 |
+      | Free T4           | 7 pmol/L                                                  |   10 - 20  |
+      | Patient Location  | General Practice.                                         |            |
+      | Tests             | TFTs                                                      |            |
+      | Clinical Notes    | Started carbimazole therapy recently for Graves’ disease. |            |
+
+    When I select case 1.4.24
+    Then I see these case values:
+      | Sex               | F                                           |            |
+      | Age               | 59                                          |            |
+      | TSH               | 120 mU/L                                    | 0.50 - 4.0 |
+      | Patient Location  | Nuclear Medicine.                           |            |
+      | Tests             | TFTs                                        |            |
+      | Clinical Notes    | Thyroid cancer. Pre I-131 Thyrogen therapy. |            |
+
+    When I select case 1.4.25
+    Then I see these case values:
+      | Sex                | F                                               |     |
+      | Age                | 64                                              |     |
+      | Thyroglobulin      | 31 μg/L                                         |     |
+      | Anti-Thyroglobulin | <1 kU/L                                         | < 4 |
+      | Patient Location   | Oncology Clinic.                                |     |
+      | Tests              | Tg/TgAb                                         |     |
+      | Clinical Notes     | Thyroid cancer. Post thyroidectomy, monitoring. |     |
 
     And stop the client application
