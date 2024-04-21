@@ -1,10 +1,13 @@
 package io.rippledown.casecontrol
 
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.application
 import io.mockk.mockk
 import io.rippledown.interpretation.requireInterpretation
 import io.rippledown.model.CaseId
 import io.rippledown.model.createCase
+import io.rippledown.model.diff.Diff
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -353,4 +356,23 @@ class CaseInspectionTest {
                 }
             }
         }*/
+}
+
+fun main() {
+    val case = createCase(name = "Bondi", id = 45L)
+    application {
+        Window(
+            onCloseRequest = ::exitApplication,
+        ) {
+            CaseInspection(case, object : CaseInspectionHandler {
+                override var caseEdited: () -> Unit = {}
+                override var updateCase: (Long) -> Unit = { }
+                override var ruleSessionInProgress: (Boolean) -> Unit = {}
+                override var onStartRule: (selectedDiff: Diff) -> Unit = { }
+                override var isCornerstone = false
+                override var onInterpretationEdited: (text: String) -> Unit = { }
+
+            })
+        }
+    }
 }

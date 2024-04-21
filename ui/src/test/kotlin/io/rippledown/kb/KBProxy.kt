@@ -3,7 +3,11 @@ package io.rippledown.kb
 
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.constants.kb.*
-import io.rippledown.proxy.findById
+
+//TODO remove this
+fun findById(id: String) {
+    println("findById: $id")
+}
 
 fun importKBButton() = findById(KB_IMPORT_BUTTON_ID)
 fun exportKBButton() = findById(KB_EXPORT_BUTTON_ID)
