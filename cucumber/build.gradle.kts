@@ -1,4 +1,3 @@
-import Version.awaitility
 import Version.cucumber
 import Version.kotest
 import Version.ktor
@@ -23,9 +22,7 @@ dependencies {
     testImplementation("io.cucumber:cucumber-junit")
     testImplementation("io.cucumber:cucumber-picocontainer")
     testImplementation("io.kotest:kotest-assertions-core:$kotest")
-//    testImplementation("io.kotest:kotest-runner-junit5:$kotest")
-//    testImplementation(kotlin("test-junit"))
-    testImplementation("org.awaitility:awaitility-kotlin:$awaitility")
+    testImplementation("org.assertj:assertj-swing:${Version.assertjSwing}")
     testImplementation(project.dependencies.enforcedPlatform("io.ktor:ktor-bom:$ktor"))
     testImplementation("io.ktor:ktor-client-core")
     testImplementation("io.ktor:ktor-client-cio")

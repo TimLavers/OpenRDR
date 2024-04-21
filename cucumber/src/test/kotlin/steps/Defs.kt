@@ -5,6 +5,7 @@ import io.cucumber.java8.En
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.pause
 import io.rippledown.integration.utils.Cyborg
+import io.rippledown.integration.waitUntilAssertedOnEventThread
 import org.awaitility.Awaitility
 import steps.StepsInfrastructure.cleanup
 import steps.StepsInfrastructure.reStartWithPostgres
@@ -144,7 +145,9 @@ class Defs : En {
         }
 
         Then("the displayed KB name is (now ){word}") { kbName: String ->
-            applicationBarPO().kbControlOperator().currentKB() shouldBe kbName
+            waitUntilAssertedOnEventThread {
+                applicationBarPO().kbControlOperator().currentKB() shouldBe kbName
+            }
         }
 
         Then("I activate the KB management control") {

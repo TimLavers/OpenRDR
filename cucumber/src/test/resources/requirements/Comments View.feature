@@ -1,4 +1,5 @@
 Feature: The user should be able to see the conditions that are used to determine each comment in the interpretation
+
   Scenario: The user should be able to view the conditions for a comment
     Given case Bondi is provided having data:
       | Wave | excellent |

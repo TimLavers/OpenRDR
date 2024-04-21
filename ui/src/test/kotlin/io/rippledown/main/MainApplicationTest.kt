@@ -92,13 +92,10 @@ class MainApplicationTest {
 
         val action = expandDropdownButton!!.accessibleAction
         val count = action.accessibleActionCount
-        println("action count: $count")
         count shouldBe 1
         val actionDescription = action.getAccessibleActionDescription(0)
-        println("action description: $actionDescription")
 
         action.doAccessibleAction(0)
-        println("clicked, init")
 
         Thread.sleep(1_000)
 
@@ -106,21 +103,16 @@ class MainApplicationTest {
 //        accessibleContext1.dumpToText()
 
         val dropDown = accessibleContext1.find(KBS_DROPDOWN_DESCRIPTION, AccessibleRole.COMBO_BOX)
-        println("dropDown: $dropDown")
 
         val createKBItem = dropDown!!.find(CREATE_KB_TEXT, AccessibleRole.PUSH_BUTTON)
-        println("createKBItem: $createKBItem")
         val createKBActionCount = createKBItem!!.accessibleAction.accessibleActionCount
         createKBActionCount shouldBe 1
         createKBItem.accessibleAction.doAccessibleAction(0)
 
         Thread.sleep(1_000)
-        println("-----------------------------------------------------")
 //        window.accessibleContext.dumpToText()
-        Thread.sleep(1_000)
 
         val dialog = findComposeDialogThatIsShowing()
-        println("=========================================================== dialog: $dialog")
         dialog!!.accessibleContext.dumpToText()
 
     }

@@ -1,3 +1,4 @@
+import Version.awaitility
 import Version.mockk
 import org.gradle.jvm.toolchain.JavaLanguageVersion.of
 
@@ -42,6 +43,8 @@ subprojects {
         testImplementation("io.kotest:kotest-assertions-core:${Version.kotest}")
         testImplementation("io.ktor:ktor-client-mock")
         testImplementation("io.mockk:mockk:${mockk}")
+        testImplementation("org.awaitility:awaitility-kotlin:$awaitility")
+
     }
 
     tasks.test {
