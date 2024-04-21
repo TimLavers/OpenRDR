@@ -257,4 +257,59 @@ Feature: The cases described in the TSH paper can be represented in OpenRDR
       | Tests              | Tg/TgAb                                         |     |
       | Clinical Notes     | Thyroid cancer. Post thyroidectomy, monitoring. |     |
 
+    When I select case 1.4.26
+    Then I see these case values:
+      | Sex                | F                                               |     |
+      | Age                | 64                                              |     |
+      | Thyroglobulin      | <0.1 μg/L                                       |     |
+      | Anti-Thyroglobulin | 14 kU/L                                         | < 4 |
+      | Patient Location   | Oncology Clinic.                                |     |
+      | Tests              | Tg/TgAb                                         |     |
+      | Clinical Notes     | Thyroid cancer. Post thyroidectomy, monitoring. |     |
+
+    When I select case 1.4.27
+    Then I see these case values:
+      | Sex               | M                                  |            |
+      | Age               | 50                                 |            |
+      | TSH               | 4.2 mU/L                           | 0.50 - 4.0 |
+      | Free T4           | 11 pmol/L                          |   10 - 20  |
+      | Free T3           | 5.6 pmol/L                         |  3.0 - 5.5 |
+      | TPO Antibodies    | 876 kU/L                           |   < 6      |
+      | Patient Location  | General Practice. |            |
+      | Tests             | TFTs                               |            |
+      | Clinical Notes    | Family history of thyroid disease. |            |
+
+    When I select case 1.4.28
+    Then I see these case values:
+      | Sex               | M                 |            |
+      | Age               | 63                |            |
+      | TSH               | <0.01 mU/L        | 0.50 - 4.0 |
+      | Free T4           | 23 pmol/L         |   10 - 20  |
+      | Free T3           | 5.0 pmol/L        |  3.0 - 5.5 |
+      | Patient Location  | General Practice. |            |
+      | Tests             | TFTs              |            |
+      | Clinical Notes    | On amiodarone.    |            |
+
+    When I select case 1.4.29
+    Then I see these case values:
+      | Sex               | M                 |            |
+      | Age               | 53                |            |
+      | TSH               | 1.3 mU/L          | 0.50 - 4.0 |
+      | Free T4           | 26 pmol/L         |   10 - 20  |
+      | Patient Location  | General Practice. |            |
+      | Tests             | TFTs              |            |
+      | Clinical Notes    | Diabetes.         |            |
+
+    When I select case 1.4.30
+    Then I see these case values:
+      | Sex               | M                 |            |
+      | Age               | 53                |            |
+      | TSH               | 1.3 mU/L          | 0.50 - 4.0 |
+      | Free T4           | 26 pmol/L         |   10 - 20  |
+      | Free T3           | 6.1 pmol/L        |  3.0 - 5.5 |
+      | Patient Location  | General Practice. |            |
+      | Tests             | TFTs              |            |
+      | Clinical Notes    | Diabetes.         |            |
+
+
     And stop the client application
