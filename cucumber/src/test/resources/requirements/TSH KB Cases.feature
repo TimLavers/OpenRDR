@@ -1,6 +1,5 @@
 Feature: The cases described in the TSH paper can be represented in OpenRDR
 
-  @single
   @tsh
   Scenario: TSH cases
     Given the TSH sample KB has been loaded
