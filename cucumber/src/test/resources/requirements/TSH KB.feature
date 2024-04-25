@@ -311,5 +311,54 @@ Feature: The cases described in the TSH paper can be represented in OpenRDR
       | Tests             | TFTs              |            |
       | Clinical Notes    | Diabetes.         |            |
 
+    When I select case 1.4.31
+    Then I see these case values:
+      | Sex               | M                   |            |
+      | Age               | 39                  |            |
+      | TSH               | <0.01 mU/L          | 0.50 - 4.0 |
+      | Free T4           | 43 pmol/L           |   10 - 20  |
+      | Free T3           | 22 pmol/L           |  3.0 - 5.5 |
+      | Sodium            | 143 mmol/L          |  134 - 146 |
+      | Potassium         | 2.4 mmol/L          |  3.4 - 5.0 |
+      | Bicarbonate       | 18 mmol/L           |   22 - 32  |
+      | Urea              | 6.0 mmol/L          |  3.0 - 8.0 |
+      | Creatinine        | 62 μmol/L           |  60 - 110  |
+      | eGFR              | >90 mL/min/1.73 m∧2 |            |
+      | Patient Location  | Emergency Dept.     |            |
+      | Tests             | TFTs                |            |
+      | Clinical Notes    | General weakness.   |            |
+
+    When I select case 1.4.32
+    Then I see these case values:
+      | Sex               | M                    |            |
+      | Age               | 60                   |            |
+      | TSH               | 4.5 mU/L             | 0.50 - 4.0 |
+      | Free T4           | 8 pmol/L             |   10 - 20  |
+      | Patient Location  | General Practice.    |            |
+      | Tests             | TFTs                 |            |
+      | Clinical Notes    | Previous raised TSH. |            |
+
+    When I select case 1.4.33
+    Then I see these case values:
+      | Sex               | M                         |            |
+      | Age               | 67                        |            |
+      | TSH               | 0.02 mU/L                 | 0.50 - 4.0 |
+      | Free T4           | 8 pmol/L                  |   10 - 20  |
+      | Patient Location  | General Practice.         |            |
+      | Tests             | TFTs                      |            |
+      | Clinical Notes    | Pituitary failure. On T4. |            |
+
+# We haven't done case 35 as it is a chemistry panel.
+
+#  TSH is ">100" in the document, but 1.4.24 has "120".
+    When I select case 1.4.35
+    Then I see these case values:
+      | Sex               | F                     |            |
+      | Age               | 66                    |            |
+      | TSH               | 100 mU/L              | 0.50 - 4.0 |
+      | Free T4           | 8 pmol/L              |   10 - 20  |
+      | Patient Location  | Emergency Department. |            |
+      | Tests             | TFTs                  |            |
+      | Clinical Notes    | Semi-coma.            |            |
 
     And stop the client application
