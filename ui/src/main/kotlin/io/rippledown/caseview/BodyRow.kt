@@ -18,7 +18,7 @@ fun BodyRow(
     displacementOffset: Float? = null,
 ) {
     Row(
-        modifier = Modifier.padding(8.dp)
+        modifier = Modifier.padding(2.dp)
             .graphicsLayer { translationY = displacementOffset ?: 0f }
             .fillMaxWidth()
             .fillMaxHeight(),

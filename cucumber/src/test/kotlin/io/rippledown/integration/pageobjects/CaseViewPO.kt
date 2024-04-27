@@ -117,7 +117,7 @@ open class CellPO(val context: AccessibleContext, descriptionPrefix: String) : C
 
     override fun compareTo(other: CellPO) = index.compareTo(other.index)
 
-    fun text(): String = context.accessibleName
+    fun text() = context.accessibleName ?: ""
 }
 
 class DateCellPO(context: AccessibleContext) : CellPO(context, DATE_CELL_DESCRIPTION_PREFIX)

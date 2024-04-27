@@ -39,7 +39,7 @@ class CaseViewStepDefs : En {
                 val expectedRow = expectedValues.row(row)
                 val rowShown = valuesShown[attribute]
                 attribute shouldBe expectedAttributes[row]
-                rowShown shouldBe expectedRow
+                rowShown shouldBe expectedRow.map { it ?: "" }
                 val expectedReferenceRange = referenceRangesExpected[row].orEmpty()
                 val referenceRangeShown = caseViewPO.referenceRange(attribute)
                 expectedReferenceRange shouldBe referenceRangeShown
