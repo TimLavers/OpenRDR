@@ -191,30 +191,30 @@ class TSHRulesBuilder(val restClient: RESTClient) {
                 "Suggest repeat measurement with TPO antibodies in 6 weeks."
         val report4 = "Mildly increased TSH with a normal FT4 can be seen in the euthyroid elderly."
         val report5 = "A moderately increased TSH with a normal FT4 is consistent with (mild) primary hypothyroidism."
-        val report6 = "TSH reference intervals in pregnancy. \n" +
-                "1st trimester                          0.02–2.5 \n" +
+        val report6 = "TSH reference intervals in pregnancy.\n" +
+                "1st trimester                          0.02–2.5\n" +
                 "2nd and 3rd trimester                  0.30–3.0"
-        val report7 = "The mildly increased TSH and raised TPO antibodies indicate subclinical hypothyroidism due to autoimmune thyroid disease. \n" +
-                "Suggest confirming subclinical hypothyroidism by repeat testing. Poor pregnancy outcomes have been described in women with a \n" +
+        val report7 = "The mildly increased TSH and raised TPO antibodies indicate subclinical hypothyroidism due to autoimmune thyroid disease.\n" +
+                "Suggest confirming subclinical hypothyroidism by repeat testing. Poor pregnancy outcomes have been described in women with a\n" +
                 "raised TSH. If raised TSH confirmed, consider thyroxine replacement."
-        val report8 = "The suppressed TSH and normal FT4 are consistent with subclinical hyperthyroidism. \n" +
+        val report8 = "The suppressed TSH and normal FT4 are consistent with subclinical hyperthyroidism.\n" +
                 "Suggest measure free triiodothyronine (FT3)."
         val report8b = "The increased FT3 and suppressed TSH (with a normal FT4) are consistent with T3 toxicosis. " +
                 "Suggest measure TSH-receptor antibodies (TRAb)."
         val report9 = "The severely increased TSH with a very low FT4 is consistent with primary hypothyroidism. Suggest measure TPO antibodies."
-        val report9b = "Suggest repeat TFT measurement at least 4–6 weeks after commencement of T4 replacement. "
+        val report9b = "Suggest repeat TFT measurement at least 4–6 weeks after commencement of T4 replacement."
         val report10 = "The normal TSH and FT4 are consistent with adequate thyroid hormone replacement."
-        val report11 = "Increased TSH suggests inadequate thyroid hormone replacement if the dose has not been changed for at least 6 weeks and patient \n" +
-                "has been taking the medication regularly. \n" +
+        val report11 = "Increased TSH suggests inadequate thyroid hormone replacement if the dose has not been changed for at least 6 weeks and patient\n" +
+                "has been taking the medication regularly.\n" +
                 "Suggest review dose and repeat TFTs in 6 weeks."
         val report12 = "Suppressed TSH is consistent with excessive thyroid hormone replacement."
         val report13 = "Previous history of thyroid cancer noted. Low TSH may be appropriate depending on treatment targets for this patient."
         val report14 = "Borderline TSH persists. Suggest repeat in one year with thyroid autoantibodies (TPO antibodies)."
-        val report15 = "The suppressed TSH and high-normal FT4 may suggest hyperthyroidism. FT3 and TRAb may be useful. However, low " +
-                "TSH may be seen in pregnancy which should be excluded. These results are within reference intervals for first trimester. If pregnant, " +
+        val report15 = "The suppressed TSH and high-normal FT4 may suggest hyperthyroidism. FT3 and TRAb may be useful. However, low\n" +
+                "TSH may be seen in pregnancy which should be excluded. These results are within reference intervals for first trimester. If pregnant,\n" +
                 "repeat TFTs in 6 weeks."
-        val report16 = "Clinical conditions associated with a suppressed TSH include non-toxic goitre, subclinical hyperthyroidism and glucocorticoid " +
-                "therapy. Suggest repeat TFTs in six weeks’ time. Other causes of this pattern include: Excessive T4 therapy for hypothyroidism, treated " +
+        val report16 = "Clinical conditions associated with a suppressed TSH include non-toxic goitre, subclinical hyperthyroidism and glucocorticoid\n" +
+                "therapy. Suggest repeat TFTs in six weeks’ time. Other causes of this pattern include: Excessive T4 therapy for hypothyroidism, treated\n" +
                 "primary hyperthyroidism. Acute psychiatric illness may raise FT4 and/or lower TSH."
         val report16b = "The increased FT3 and suppressed TSH are consistent with T3 toxicosis. Suggest measure TRAb."
         val report17 = "The severely increased FT4 and FT3 and suppressed TSH are consistent with thyrotoxicosis. These results together with the clinical presentation may indicate thyroid storm. Suggest measure TRAb."

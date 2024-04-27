@@ -1,6 +1,7 @@
 package steps
 
 import io.cucumber.datatable.DataTable
+import io.cucumber.docstring.DocString
 import io.cucumber.java8.En
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.pause
@@ -243,6 +244,9 @@ class Defs : En {
         }
         Then("the interpretation should be {string}") { text: String ->
             interpretationViewPO().waitForInterpretationText(text)
+        }
+        Then("the interpretation should be this:") { text: DocString ->
+            interpretationViewPO().waitForInterpretationText(text.content)
         }
 
         Then("the interpretation field should be empty") {
