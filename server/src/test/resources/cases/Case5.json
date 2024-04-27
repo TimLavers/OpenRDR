@@ -1,0 +1,49 @@
+{
+  "name": "Case5",
+  "data": [
+    {
+      "testName": "ABC",
+      "testTime": 1659752689505
+    },
+    {
+      "value": {
+        "text": "1"
+      },
+      "referenceRange": null,
+      "units": null
+    },
+    {
+      "testName": "DEF",
+      "testTime": 1659752689505
+    },
+    {
+      "value": {
+        "text": "2"
+      },
+      "referenceRange": null,
+      "units": null
+    },
+    {
+      "testName": "GHI",
+      "testTime": 1659752689505
+    },
+    {
+      "value": {
+        "text": "3"
+      },
+      "referenceRange": null,
+      "units": null
+    },
+    {
+      "testName": "JKL",
+      "testTime": 1659752689505
+    },
+    {
+      "value": {
+        "text": "4"
+      },
+      "referenceRange": null,
+      "units": null
+    }
+  ]
+}

@@ -3,10 +3,7 @@ package io.rippledown.server
 import io.rippledown.kb.KB
 import io.rippledown.kb.export.KBExporter
 import io.rippledown.kb.export.util.Zipper
-import io.rippledown.model.CasesInfo
-import io.rippledown.model.Conclusion
-import io.rippledown.model.KBInfo
-import io.rippledown.model.RDRCase
+import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
@@ -89,6 +86,8 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
     }
 
     fun getOrCreateAttribute(name: String) = kb.attributeManager.getOrCreate(name)
+
+    fun setAttributeOrder(attributesInOrder: List<Attribute>) = kb.caseViewManager.set(attributesInOrder)
 
     fun getOrCreateConclusion(text: String) = kb.conclusionManager.getOrCreate(text)
 

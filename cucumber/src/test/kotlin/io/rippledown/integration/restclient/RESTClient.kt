@@ -80,6 +80,14 @@ class RESTClient {
         }.body()
     }
 
+    fun setAttributeOrder(attributesInOrder: List<Attribute>) = runBlocking {
+        jsonClient.post(endpoint + SET_ATTRIBUTE_ORDER) {
+            contentType(ContentType.Application.Json)
+            setBody(attributesInOrder)
+            parameter(KB_ID, currentKB.get().id)
+        }
+    }
+
     fun getOrCreateConclusion(text: String): Conclusion = runBlocking {
         jsonClient.post(endpoint + GET_OR_CREATE_CONCLUSION) {
             setBody(text)

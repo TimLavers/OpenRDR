@@ -7,6 +7,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.rippledown.constants.api.GET_OR_CREATE_ATTRIBUTE
 import io.rippledown.constants.api.MOVE_ATTRIBUTE
+import io.rippledown.constants.api.SET_ATTRIBUTE_ORDER
+import io.rippledown.model.Attribute
 import io.rippledown.model.OperationResult
 import io.rippledown.server.ServerApplication
 
@@ -21,6 +23,11 @@ fun Application.attributeManagement(application: ServerApplication) {
             val name = call.receive<String>()
             val result = kbEndpoint(application).getOrCreateAttribute(name)
             call.respond(HttpStatusCode.OK, result)
+        }
+        post(SET_ATTRIBUTE_ORDER) {
+            val attributesInOrder = call.receive<List<Attribute>>()
+            kbEndpoint(application).setAttributeOrder(attributesInOrder)
+            call.respond(HttpStatusCode.OK, OperationResult("Attribute order set"))
         }
     }
 }

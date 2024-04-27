@@ -25,7 +25,9 @@ data class CaseTemplate(var name: String = "", var tsh: String = "", var freeT4:
         val result = RDRCaseBuilder()
         result.addValue(attributeFactory.create("Sex"), defaultDate, sex )
         result.addValue(attributeFactory.create("Age"), defaultDate, age.toString())
-        result.addResult(attributeFactory.create("TSH"), defaultDate, TestResult(Value(tsh), defaultTSHRange, " mU/L"))
+        if (tsh.isNotBlank()) {
+            result.addResult(attributeFactory.create("TSH"), defaultDate, TestResult(Value(tsh), defaultTSHRange, " mU/L"))
+        }
         if (freeT4.isNotBlank()) {
             result.addResult(attributeFactory.create("Free T4"), defaultDate, TestResult(Value(freeT4), defaultFreeT4Range, " pmol/L"))
         }
