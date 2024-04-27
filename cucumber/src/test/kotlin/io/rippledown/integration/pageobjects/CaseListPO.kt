@@ -67,7 +67,7 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
     private fun caseListContext() = contextProvider().find(CASELIST_ID, SCROLL_PANE)
 
     fun waitForCaseListToContain(name: String) {
-        await().pollDelay(ofSeconds(1)).atMost(ofSeconds(5)).until {
+        await().atMost(ofSeconds(5)).until {
             casesListed().contains(name)
         }
     }
