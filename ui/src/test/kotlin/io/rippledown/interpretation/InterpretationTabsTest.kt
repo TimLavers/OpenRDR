@@ -12,6 +12,7 @@ import io.mockk.verify
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.diff.Diff
+import io.rippledown.model.diff.DiffList
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -90,7 +91,6 @@ class InterpretationTabsTest {
 
     @Test
     fun `conclusions should be showing after clicking the tab`() = runTest {
-
         with(composeTestRule) {
             //Given
             setContent {
@@ -105,6 +105,48 @@ class InterpretationTabsTest {
         }
     }
 
+    @Test
+    fun `badge on differences icon should not show if there are no differences`() = runTest {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                InterpretationTabs(interpretationWithDifferences(0), handler)
+            }
+
+            //Then
+            requireBadgeOnDifferencesTabNotToBeShowing()
+        }
+    }
+
+    @Test
+    fun `badge on differences icon should show the expected number of differences`() = runTest {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                InterpretationTabs(interpretationWithDifferences(42), handler)
+            }
+
+            //Then
+            requireBadgeOnDifferencesTabToShow(42)
+        }
+    }
+
+    @Test
+    fun `should be able to select the differences tab`() = runTest {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                InterpretationTabs(interpretationWithDifferences(42), handler)
+            }
+            requireDifferencesTabToBeNotShowing()
+
+            //When
+            selectDifferencesTab()
+
+            //Then
+            requireDifferencesTabToBeShowing()
+        }
+    }
     /*
 
     @Test
@@ -127,21 +169,7 @@ class InterpretationTabsTest {
         }
     }
 
-    @Test
-    fun shouldBeAbleToSelectTheChangesTab(): TestResult {
-        val fc = FC {
-            InterpretationTabs {
-                scope = MainScope()
-                interpretation = ViewableInterpretation()
-            }
-        }
-        return runReactTest(fc) { container ->
-            with(container) {
-                selectChangesTab()
-                requireChangesLabel("Changes")
-            }
-        }
-    }
+
 
     @Test
     fun diffPanelShouldShowNoChangesForAnEmptyDiff(): TestResult {
@@ -236,51 +264,8 @@ class InterpretationTabsTest {
     }
 
 
-    @Test
-    fun changesBadgeShouldIndicateTheNumberOfChanges(): TestResult {
-        val diffListToReturn = DiffList(
-            listOf(
-                Unchanged(),
-                Addition(),
-                Removal(),
-                Replacement()
-            )
-        )
-        val interpretationWithDiffs =
-            ViewableInterpretation().apply { diffList = diffListToReturn }
-        val fc = FC {
-            InterpretationTabs {
-                scope = MainScope()
-                api = Api(mock(config {}))
-                interpretation = interpretationWithDiffs
-            }
-        }
-        return runReactTest(fc) { container ->
-            with(container) {
-                waitForEvents()
-                findById("interpretation_changes_badge").textContent shouldBe "Changes3"
-                requireBadgeCount(3) //Unchanged does not count
-            }
-        }
-    }
 
-    @Test
-    fun changesBadgeShouldNotShowIfNoChanges(): TestResult {
-        val fc = FC {
-            InterpretationTabs {
-                scope = MainScope()
-                api = Api(mock(config {}))
-                interpretation = ViewableInterpretation()
-            }
-        }
-        return runReactTest(fc) { container ->
-            with(container) {
-                requireNoBadge()
-            }
-        }
-    }
-
-    @Test
+       @Test
     fun onStartRuleShouldBeCalledWhenTheBuildIconIsClicked(): TestResult {
         val unchangedText = "Go to Bondi now!"
         val addedText = "Bring your flippers!"
@@ -352,6 +337,20 @@ private fun interpretationWithConclusions(): ViewableInterpretation {
         every { conditionsForConclusion(c21) } returns listOf("Condition 211", "Condition 212")
         every { conditionsForConclusion(c22) } returns listOf("Condition 221", "Condition 222")
         every { latestText() } returns "Go to Bondi"
+        every { numberOfChanges() } returns 0
+    }
+    return interpretation
+}
+
+private fun interpretationWithDifferences(numberOfDiffs: Int): ViewableInterpretation {
+    val interpretation = mockk<ViewableInterpretation>()
+    with(interpretation) {
+        every { latestText() } returns "Go to Malabar"
+        every { numberOfChanges() } returns numberOfDiffs
+        every { diffList } returns DiffList((0..numberOfDiffs - 1).map {
+            mockk<Diff>()
+        }
+        )
     }
     return interpretation
 }

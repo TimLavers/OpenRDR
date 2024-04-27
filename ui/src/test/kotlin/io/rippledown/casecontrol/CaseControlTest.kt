@@ -3,19 +3,26 @@ package io.rippledown.casecontrol
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import io.rippledown.interpretation.replaceInterpretationBy
-import io.rippledown.interpretation.requireInterpretation
+import io.mockk.slot
+import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
+import io.rippledown.interpretation.*
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.createCase
 import io.rippledown.model.createCaseWithInterpretation
+import io.rippledown.model.diff.DiffList
+import io.rippledown.model.diff.Replacement
 import io.rippledown.model.interpretationview.ViewableInterpretation
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import kotlin.test.Test
 
@@ -40,7 +47,10 @@ class CaseControlTest {
         val twoCaseIds = listOf(
             caseId1, caseId2
         )
-        coEvery { handler.getCase(1) } returns createCase(caseId1)
+        val case = createCase(caseId1)
+        coEvery { handler.getCase(1) } returns case
+        coEvery { handler.saveCase(any()) } answers { firstArg() }
+
         with(composeTestRule) {
             setContent {
                 CaseControl(CasesInfo(twoCaseIds), handler)
@@ -64,6 +74,7 @@ class CaseControlTest {
 
         coEvery { handler.getCase(1) } returns caseA
         coEvery { handler.getCase(2) } returns caseB
+        coEvery { handler.saveCase(any()) } answers { firstArg() }
 
         with(composeTestRule) {
             setContent {
@@ -90,7 +101,9 @@ class CaseControlTest {
         val caseId2 = CaseId(id = 2, name = caseB)
         val caseIds = listOf(caseId1, caseId2)
         val bondiComment = "Go to Bondi"
-        coEvery { handler.getCase(1) } returns createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
+        val case = createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
+        coEvery { handler.getCase(1) } returns case
+        coEvery { handler.saveCase(any()) } answers { firstArg() }
 
         with(composeTestRule) {
             setContent {
@@ -111,20 +124,14 @@ class CaseControlTest {
     @Test
     fun `should save the case when its interpretation changes`() = runTest {
         val caseA = "case A"
-        val caseId1 = CaseId(id = 1, name = caseA)
-        val caseIds = listOf(caseId1)
+        val caseId = CaseId(id = 1, name = caseA)
+        val caseIds = listOf(caseId)
         val bondiComment = "Go to Bondi"
         val manlyComment = "Go to Manly"
         val originalCase = createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
-        val updatedCase = ViewableCase(
-            case = originalCase.case,
-            viewableInterpretation = ViewableInterpretation(originalCase.case.interpretation).apply {
-                verifiedText = manlyComment
-            },
-            viewProperties = originalCase.viewProperties
-        )
         coEvery { handler.getCase(1) } returns originalCase
-
+        val slot = slot<ViewableCase>()
+        coEvery { handler.saveCase(capture(slot)) } answers { firstArg() }
         with(composeTestRule) {
             setContent {
                 CaseControl(CasesInfo(caseIds), handler)
@@ -134,13 +141,86 @@ class CaseControlTest {
             requireNamesToBeShowingOnCaseList(caseA)
             waitForCaseToBeShowing(caseA)
             requireInterpretation(bondiComment)
+            waitForIdle()
 
             //When
             replaceInterpretationBy(manlyComment)
             waitForIdle()
 
             //Then
-            coVerify { handler.saveCase(updatedCase) }
+            slot.captured.viewableInterpretation.verifiedText shouldBe manlyComment
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    @Ignore("TODO: Fix this test")
+    fun `should debounce the saving the case when its interpretation changes`() = runTest {
+        val caseA = "case A"
+        val caseId1 = CaseId(id = 1, name = caseA)
+        val caseIds = listOf(caseId1)
+        val bondiComment = "Go to Bondi"
+        val bronteComment = "Go to Bronte"
+        val originalCase = createCaseWithInterpretation(caseA, 1)
+        coEvery { handler.getCase(1) } returns originalCase
+
+        val slot = slot<ViewableCase>()
+        coEvery { handler.saveCase(capture(slot)) } answers { firstArg() }
+
+        with(composeTestRule) {
+            setContent {
+                CaseControl(CasesInfo(caseIds), handler)
+            }
+            //Given
+            requireNumberOfCasesOnCaseList(1)
+            waitForCaseToBeShowing(caseA)
+            requireInterpretation("")
+
+            //When
+            enterInterpretation(bondiComment)
+            replaceInterpretationBy(bronteComment)
+            delay(2 * DEBOUNCE_WAIT_PERIOD_MILLIS)
+            waitForIdle()
+
+            //Then only the last change is saved
+            coVerify(exactly = 1) { handler.saveCase(any()) }
+            slot.captured.viewableInterpretation!!.verifiedText shouldBe bronteComment
+        }
+    }
+
+    @Test
+    fun `should update the badge count when the interpretation changes`() = runTest {
+        val caseA = "case A"
+        val caseId1 = CaseId(id = 1, name = caseA)
+        val caseIds = listOf(caseId1)
+        val bondiComment = "Go to Bondi"
+        val manlyComment = "Go to Manly"
+        val originalCase = createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
+        val updatedCase = ViewableCase(
+            case = originalCase.case,
+            viewableInterpretation = ViewableInterpretation(originalCase.case.interpretation).apply {
+                verifiedText = manlyComment
+                diffList = DiffList(listOf(Replacement(bondiComment, manlyComment)))
+            },
+            viewProperties = originalCase.viewProperties
+        )
+        coEvery { handler.getCase(1) } returns originalCase
+        coEvery { handler.saveCase(any()) } returns updatedCase
+
+        with(composeTestRule) {
+            setContent {
+                CaseControl(CasesInfo(caseIds), handler)
+            }
+            //Given
+            requireInterpretation(bondiComment)
+            requireBadgeOnDifferencesTabNotToBeShowing()
+
+            //When
+            replaceInterpretationBy(manlyComment)
+            waitForIdle()
+
+            //Then the badge count should indicate 1 change (i.e. replacement)
+            requireBadgeOnDifferencesTabToShow(1)
         }
     }
 
@@ -155,16 +235,20 @@ class CaseControlTest {
         val bondiComment = "Go to Bondi"
         val malabarComment = "Go to Malabar"
 
-        coEvery { handler.getCase(caseId1.id!!) } returns createCaseWithInterpretation(
+        val viewableCaseA = createCaseWithInterpretation(
             name = caseA,
             id = 1,
             conclusionTexts = listOf(bondiComment)
         )
-        coEvery { handler.getCase(caseId2.id!!) } returns createCaseWithInterpretation(
+        val viewableCaseB = createCaseWithInterpretation(
             name = caseB,
             id = 2,
             conclusionTexts = listOf(malabarComment)
         )
+        coEvery { handler.getCase(caseId1.id!!) } returns viewableCaseA
+        coEvery { handler.getCase(caseId2.id!!) } returns viewableCaseB
+        coEvery { handler.saveCase(any()) } answers { firstArg() }
+
         with(composeTestRule) {
             setContent {
                 CaseControl(CasesInfo(caseIds), handler)
@@ -197,6 +281,7 @@ class CaseControlTest {
             name = caseName1,
             id = 1
         )
+        coEvery { handler.saveCase(any()) } answers { firstArg() }
 
         with(composeTestRule) {
             setContent {
@@ -214,6 +299,7 @@ class CaseControlTest {
             coEvery { handler.getCase(caseId.id!!) } returns createCase(caseId)
             caseId
         }
+        coEvery { handler.saveCase(any()) } answers { firstArg() }
 
         val caseName1 = "case 1"
         val caseName10 = "case 10"

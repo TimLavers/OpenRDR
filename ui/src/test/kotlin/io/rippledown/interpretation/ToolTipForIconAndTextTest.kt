@@ -23,15 +23,14 @@ class ToolTipForIconAndTextTest {
     val isSelected = false
 
     @Composable
-    private fun BondiToolTipAndText(badgeLabel: String = "") {
+    private fun BondiToolTipAndText(badgeCount: Int = 0) {
         ToolTipForIconAndLabel(
             toolTipText = toolTipText,
             labelText = labelText,
-            iconContentDescription = iconContentDescription,
             isSelected = isSelected,
             icon = painterResource("plus-minus_24.png"),
             onClick = { },
-            badgeLabel = badgeLabel
+            badgeCount = badgeCount
         )
     }
 
@@ -78,7 +77,7 @@ class ToolTipForIconAndTextTest {
     }
 
     @Test
-    fun `badge should not show if badge text is blank`() = runTest {
+    fun `badge should not show if the count is zero`() = runTest {
         with(composeTestRule) {
             //Given
             setContent { BondiToolTipAndText() }
@@ -89,13 +88,13 @@ class ToolTipForIconAndTextTest {
     }
 
     @Test
-    fun `badge should show if badge text is not blank`() = runTest {
+    fun `should show the badge if the count is greater than zero`() = runTest {
         with(composeTestRule) {
             //Given
-            setContent { BondiToolTipAndText("42") }
+            setContent { BondiToolTipAndText(42) }
 
             //Then
-            onNodeWithContentDescription(BADGE_CONTENT_DESCRIPTION).assertIsDisplayed()
+            onNodeWithContentDescription(BADGE_CONTENT_DESCRIPTION, useUnmergedTree = true).assertTextEquals("42")
         }
     }
 }
@@ -108,11 +107,10 @@ fun main() {
             ToolTipForIconAndLabel(
                 toolTipText = "Go to Bondi Beach",
                 labelText = "Bondi",
-                iconContentDescription = "iconContentDescription",
                 isSelected = true,
                 icon = painterResource("plus-minus_24.png"),
                 onClick = { },
-                badgeLabel = "42"
+                badgeCount = 42
             )
         }
     }

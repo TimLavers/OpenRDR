@@ -15,17 +15,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.rippledown.constants.caseview.CASES
 import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
+import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
 import io.rippledown.main.Handler
 import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.diff.Diff
-import io.rippledown.model.interpretationview.ViewableInterpretation
+import kotlinx.coroutines.delay
 
 interface CaseControlHandler : Handler, CaseInspectionHandler {
     var setRuleInProgress: (_: Boolean) -> Unit
     var getCase: (caseId: Long) -> ViewableCase?
-    var saveCase: (case: ViewableCase) -> Unit
+    suspend fun saveCase(case: ViewableCase): ViewableCase
 }
 
 @Composable
@@ -34,6 +35,7 @@ fun CaseControl(casesInfo: CasesInfo, handler: CaseControlHandler) {
     var currentCase: ViewableCase? by remember { mutableStateOf(null) }
     var showSelector by remember { mutableStateOf(true) }
     var currentCaseId: Long? by remember { mutableStateOf(null) }
+    var verifiedText: String? by remember { mutableStateOf(null) }
 
     LaunchedEffect(casesInfo, currentCaseId) {
         if (casesInfo.caseIds.isNotEmpty()) {
@@ -42,6 +44,12 @@ fun CaseControl(casesInfo: CasesInfo, handler: CaseControlHandler) {
                 currentCaseId = casesInfo.caseIds[0].id!!
             }
             currentCase = handler.getCase(currentCaseId!!)
+        }
+    }
+    LaunchedEffect(verifiedText) {
+        if (verifiedText != null) {
+            delay(DEBOUNCE_WAIT_PERIOD_MILLIS)
+            currentCase = handler.saveCase(currentCase!!)
         }
     }
 
@@ -68,10 +76,9 @@ fun CaseControl(casesInfo: CasesInfo, handler: CaseControlHandler) {
                     textAlign = Companion.Right,
                     fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                     fontSize = 12.sp,
-                    modifier = Modifier.weight(1f).padding(end = 10.dp)
+                    modifier = Modifier.weight(1f).padding(end = 20.dp)
                         .testTag(NUMBER_OF_CASES_ID)
                         .semantics { contentDescription = NUMBER_OF_CASES_ID }
-
                 )
             }
 
@@ -92,16 +99,10 @@ fun CaseControl(casesInfo: CasesInfo, handler: CaseControlHandler) {
                 }
                 override var onStartRule: (selectedDiff: Diff) -> Unit = {}
                 override var onInterpretationEdited: (text: String) -> Unit = {
-                    //create a new instance of the case with the updated verified text to trigger a redraw
-                    val updated = ViewableCase(
-                        case = currentCase!!.case,
-                        viewableInterpretation = ViewableInterpretation(currentCase!!.case.interpretation).apply {
-                            verifiedText = it
-                        },
-                        viewProperties = currentCase!!.viewProperties
+                    verifiedText = it
+                    currentCase = currentCase!!.copy(
+                        viewableInterpretation = currentCase!!.viewableInterpretation.copy(verifiedText = verifiedText)
                     )
-                    handler.saveCase(updated)
-                    currentCase = updated
                 }
                 override var isCornerstone: Boolean = false
                 override var caseEdited: () -> Unit = {}

@@ -11,12 +11,12 @@ fun stop() {
 
 fun pause() = pause(1000)
 
-fun pause(period: Long) {
-    Thread.sleep(period)
+fun pause(millis: Long) {
+    Thread.sleep(millis)
 }
 
 fun waitForDebounce() {
-    pause(2 * DEBOUNCE_WAIT_PERIOD_MILLIS)
+    pause(DEBOUNCE_WAIT_PERIOD_MILLIS + 100)
 }
 
 fun waitUntilAssertedOnEventThread(assertion: () -> Unit) {

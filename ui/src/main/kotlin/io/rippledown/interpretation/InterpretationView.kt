@@ -27,9 +27,12 @@ fun InterpretationView(text: String, handler: InterpretationViewHandler) {
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
-
     OutlinedTextField(
-        label = { Text(INTERPRETATION_VIEW_LABEL) },
+        label = {
+            Text(
+                text = INTERPRETATION_VIEW_LABEL,
+                modifier = Modifier.semantics { contentDescription = "Interpretation label" })
+        },
         value = text,
         onValueChange = {
             handler.onEdited(it)
