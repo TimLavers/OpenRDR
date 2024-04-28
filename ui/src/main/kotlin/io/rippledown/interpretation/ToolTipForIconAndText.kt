@@ -34,11 +34,10 @@ val BADGE_CONTENT_DESCRIPTION = "BADGE"
 fun ToolTipForIconAndLabel(
     toolTipText: String,
     labelText: String,
-    iconContentDescription: String,
     isSelected: Boolean,
     icon: Painter,
     onClick: () -> Unit,
-    badgeLabel: String = ""
+    badgeCount: Int = 0
 ) {
     TooltipArea(
         modifier = Modifier
@@ -74,20 +73,20 @@ fun ToolTipForIconAndLabel(
             ) {
                 Box {
                     Icon(
-                        icon,
-                        contentDescription = iconContentDescription,
+                        painter = icon,
+                        contentDescription = "",
                         tint = Color.Black,
                         modifier = Modifier
                             .height(30.dp)
                             .width(30.dp)
                             .padding(5.dp)
                     )
-                    //the optional badge
-                    if (badgeLabel.isNotEmpty()) {
+                    //the optional badge.
+                    if (badgeCount > 0) {
                         Text(
-                            text = badgeLabel,
+                            text = badgeCount.toString(),
                             color = Color.White,
-                            style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 12.sp),
+                            style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 10.sp),
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
                                 .offset(x = 10.dp, y = -10.dp)

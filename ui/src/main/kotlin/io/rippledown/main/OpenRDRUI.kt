@@ -10,15 +10,12 @@ import io.rippledown.casecontrol.CaseControl
 import io.rippledown.casecontrol.CaseControlHandler
 import io.rippledown.casecontrol.CasePoller
 import io.rippledown.casecontrol.CasePollerHandler
-import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
 import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.diff.Diff
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
 
 interface Handler {
@@ -67,17 +64,7 @@ fun OpenRDRUI(handler: Handler) {
                 override var ruleSessionInProgress: (Boolean) -> Unit = { }
                 override var caseEdited: () -> Unit = {}
                 override var getCase: (caseId: Long) -> ViewableCase? = { runBlocking { api.getCase(it) } }
-                override var saveCase: (case: ViewableCase) -> Unit = {
-                    runBlocking {
-                        flow {
-                            emit(it)
-                        }.debounce {
-                            DEBOUNCE_WAIT_PERIOD_MILLIS
-                        }.collect {
-                            api.saveVerifiedInterpretation(it)
-                        }
-                    }
-                }
+                override suspend fun saveCase(case: ViewableCase) = api.saveVerifiedInterpretation(case)
                 override var isClosing = { false }
                 override fun swapAttributes(moved: Attribute, target: Attribute) {
                     runBlocking {

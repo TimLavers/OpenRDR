@@ -2,7 +2,6 @@ package io.rippledown.integration.pageobjects
 
 import io.kotest.assertions.fail
 import io.rippledown.constants.caseview.CASELIST_ID
-import io.rippledown.constants.caseview.CASES
 import io.rippledown.constants.caseview.CASE_NAME_PREFIX
 import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import io.rippledown.integration.pause
@@ -36,7 +35,7 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
     fun countOfTheNumberOfCases(): Int? {
         val textContext = contextProvider().find(NUMBER_OF_CASES_ID, LABEL)
         val name = textContext?.accessibleName
-        val actualCount = name?.substringAfter("$CASES ")?.toInt()
+        val actualCount = name?.toInt()
         return actualCount
     }
 
@@ -68,7 +67,7 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
     private fun caseListContext() = contextProvider().find(CASELIST_ID, SCROLL_PANE)
 
     fun waitForCaseListToContain(name: String) {
-        await().pollDelay(ofSeconds(1)).atMost(ofSeconds(5)).until {
+        await().atMost(ofSeconds(5)).until {
             casesListed().contains(name)
         }
     }

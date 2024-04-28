@@ -1,9 +1,7 @@
 package io.rippledown.integration.pageobjects
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.constants.interpretation.DIFF_VIEWER_CHANGED
-import io.rippledown.constants.interpretation.DIFF_VIEWER_ORIGINAL
-import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
+import io.rippledown.constants.interpretation.*
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.waitForDebounce
 import org.awaitility.Awaitility.await
@@ -46,6 +44,16 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
         }
     }
 
+    fun requireBadgeCount(expected: Int): InterpretationViewPO {
+        waitForDebounce()
+        val badgeCount = diffTabProvider().getAccessibleChild(0).accessibleContext.accessibleName.toInt()
+        badgeCount shouldBe expected
+        return this
+    }
+
+    private fun diffTabProvider() = contextProvider()
+        .find("$INTERPRETATION_TAB_PREFIX$INTERPRETATION_TAB_CHANGES_LABEL")!!
+
     fun interpretationArea() {
         TODO()
     }
@@ -66,6 +74,7 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
     }
 
     fun requireOriginalTextInRow(row: Int, text: String) = requireTextInRow(DIFF_VIEWER_ORIGINAL, row, text)
+
     fun requireChangedTextInRow(row: Int, text: String) = requireTextInRow(DIFF_VIEWER_CHANGED, row, text)
 
     fun numberOfRows(): Int {
@@ -162,12 +171,6 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
 
     fun requireChangesLabel(expected: String): InterpretationViewPO {
 //        driver.findElement(By.id(INTERPRETATION_TAB_CHANGES)).text shouldBe expected
-        return this
-    }
-
-    fun requireBadgeCount(expected: Int): InterpretationViewPO {
-        waitForDebounce()
-//        driver.findElement(By.id(INTERPRETATION_CHANGES_BADGE)).text shouldContain expected.toString()
         return this
     }
 

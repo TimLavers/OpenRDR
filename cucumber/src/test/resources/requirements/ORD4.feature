@@ -1,4 +1,5 @@
 Feature: Reviewing the interpretation of a case
+
   Scenario: The user should be able to see the interpretation of a case
     Given case Bondi is provided having data:
       | Wave | excellent |
@@ -73,19 +74,27 @@ Feature: Reviewing the interpretation of a case
     Then the interpretation field should contain the text "Go to Bondi."
     And stop the client application
 
-
-  @ignore
-  Scenario: The label indicating the number of changes to an interpretation should be saved for two cases
+  Scenario: The badge indicating the number of changes to an interpretation should be shown
     Given a new case with the name Case1 is stored on the server
     And  a new case with the name Case2 is stored on the server
     And the interpretation of the case Case1 is "Go to Bondi."
     And I start the client application
     And I should see the case Case1 as the current case
     And the interpretation field should contain the text "Go to Bondi."
-    And I enter the text " And bring your flippers." in the interpretation field
+    When I enter the text "No, go to Malabar." in the interpretation field
+    Then the changes badge indicates that there is 1 change
+    And stop the client application
+
+  Scenario: The badge indicating the number of changes to an interpretation should be saved for two cases
+    Given a new case with the name Case1 is stored on the server
+    And  a new case with the name Case2 is stored on the server
+    And the interpretation of the case Case1 is "Go to Bondi."
+    And I start the client application
+    And I should see the case Case1 as the current case
+    And the interpretation field should contain the text "Go to Bondi."
+    And I enter the text "And bring your flippers." in the interpretation field
     And the changes badge indicates that there is 1 change
     And select the case Case2
-    And I delete all the text in the interpretation field
     And I enter the text "Go to Manly. And bring your sunscreen" in the interpretation field
     And the changes badge indicates that there are 2 changes
     When select the case Case1

@@ -22,10 +22,7 @@ import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES_LABEL
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CONCLUSIONS_LABEL
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL_LABEL
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_PREFIX
-import io.rippledown.interpretation.ConclusionsView
-import io.rippledown.interpretation.InterpretationView
-import io.rippledown.interpretation.InterpretationViewHandler
-import io.rippledown.interpretation.ToolTipForIconAndLabel
+import io.rippledown.interpretation.*
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.interpretationview.ViewableInterpretation
 
@@ -79,12 +76,14 @@ fun InterpretationTabs(viewableInterpretation: ViewableInterpretation, handler: 
                         ToolTipForIconAndLabel(
                             toolTipText = toolTipTextForIndex(index),
                             labelText = title,
-                            iconContentDescription = "icon_content_description",
                             isSelected = isSelected,
                             icon = painterForIndex(index),
                             onClick = {
                                 tabPage = index
-                            }
+                            },
+                            badgeCount = if (index == 2) {
+                                viewableInterpretation.numberOfChanges()
+                            } else 0
                         )
                     }
                 }
@@ -106,7 +105,14 @@ fun InterpretationTabs(viewableInterpretation: ViewableInterpretation, handler: 
                 ConclusionsView(viewableInterpretation)
             }
 
-            2 -> {}
+            2 -> {
+                DifferencesView(viewableInterpretation.diffList,
+                    handler = object : DifferencesViewHandler {
+                        override fun onStartRule(selectedDiff: Diff) {
+                            handler.onStartRule(selectedDiff)
+                        }
+                    })
+            }
         }
     }
 }

@@ -92,7 +92,6 @@ class Defs : En {
         }
 
         And("I select case {word}") { caseName: String ->
-//            pause(1);
             caseListPO().waitForCaseListToContain(caseName)
             caseListPO().select(caseName)
         }
@@ -289,7 +288,7 @@ class Defs : En {
 //            interpretationViewPO.requireReplacedText(replaced, replacement)
         }
         And("the changes badge indicates that there is/are {int} change(s)") { numberOfChanges: Int ->
-            //interpretationViewPO.requireBadgeCount(numberOfChanges)
+            interpretationViewPO().requireBadgeCount(numberOfChanges)
         }
         And("the changes badge indicates that there is no change") {
 //            interpretationViewPO.requireNoBadge()
