@@ -7,7 +7,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import io.rippledown.interpretation.*
 
-fun ComposeTestRule.requireNumberOfRows(expected: Int) {
+fun ComposeTestRule.requireNumberOfDiffRows(expected: Int) {
     onNodeWithContentDescription(DIFF_VIEW).onChildren().assertCountEquals(expected)
 }
 
