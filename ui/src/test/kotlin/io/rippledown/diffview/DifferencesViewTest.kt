@@ -34,7 +34,7 @@ class DifferencesViewTest {
             }
 
             //Then
-            requireNumberOfRows(0)
+            requireNumberOfDiffRows(0)
         }
     }
 
@@ -55,7 +55,7 @@ class DifferencesViewTest {
                 DifferencesView(diffList, handler)
             }
             //Then
-            requireNumberOfRows(diffs.size)
+            requireNumberOfDiffRows(diffs.size)
         }
     }
 

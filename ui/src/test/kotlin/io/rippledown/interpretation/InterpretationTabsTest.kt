@@ -9,10 +9,12 @@ import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import io.rippledown.diffview.clickBuildIconForRow
+import io.rippledown.diffview.moveMouseOverRow
+import io.rippledown.diffview.requireNumberOfDiffRows
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
-import io.rippledown.model.diff.Diff
-import io.rippledown.model.diff.DiffList
+import io.rippledown.model.diff.*
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -147,9 +149,103 @@ class InterpretationTabsTest {
             requireDifferencesTabToBeShowing()
         }
     }
-    /*
 
     @Test
+    fun `difference view should not show any changes if the DiffList is empty`() = runTest {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                InterpretationTabs(interpretationWithDifferences(0), handler)
+            }
+            requireDifferencesTabToBeNotShowing()
+
+            //When
+            selectDifferencesTab()
+            requireDifferencesTabToBeShowing()
+
+            //Then
+            requireNumberOfDiffRows(0)
+        }
+    }
+
+    @Test
+    fun `difference view should show a row for each diff in the DiffList`() = runTest {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                //Using LazyColumn, so keep the visible rows to a minimum
+                InterpretationTabs(interpretationWithDifferences(10), handler)
+            }
+            requireDifferencesTabToBeNotShowing()
+
+            //When
+            selectDifferencesTab()
+            requireDifferencesTabToBeShowing()
+
+            //Then
+            requireNumberOfDiffRows(10)
+        }
+    }
+
+    @Test
+    fun `difference view should update when the interpretation is edited`() = runTest {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                //Using LazyColumn, so keep the visible rows to a minimum
+                InterpretationTabs(interpretationWithDifferences(10), handler)
+            }
+            requireDifferencesTabToBeNotShowing()
+
+            //When
+            selectDifferencesTab()
+            requireDifferencesTabToBeShowing()
+
+            //Then
+            requireNumberOfDiffRows(10)
+        }
+    }
+
+    @Test
+    fun `handler should be called when the build icon is clicked on the Difference View`() = runTest {
+        val unchangedText = "Go to Bondi now!"
+        val addedText = "Bring your flippers!"
+        val removedText = "Sun is shining."
+        val replacedText = "Surf's up!"
+        val replacementText = "Surf's really up!"
+        val differenceList = DiffList(
+            listOf(
+                Unchanged(unchangedText),
+                Addition(addedText),
+                Removal(removedText),
+                Replacement(replacedText, replacementText)
+            )
+        )
+        val interpretationWithDiffs =
+            ViewableInterpretation().apply { diffList = differenceList }
+
+        with(composeTestRule) {
+            //Given
+            setContent {
+                InterpretationTabs(interpretationWithDiffs, handler)
+            }
+            requireDifferencesTabToBeNotShowing()
+            selectDifferencesTab()
+            requireDifferencesTabToBeShowing()
+            requireNumberOfDiffRows(4)
+
+            //When
+            moveMouseOverRow(2)
+            clickBuildIconForRow(2)
+
+            //Then
+            verify { handler.onStartRule(differenceList[2]) }
+        }
+    }
+
+    /*
+
+@Test
     fun conclusionsTabCanBeSelected(): TestResult {
         val text = "Go to Bondi."
         val interp = Interpretation().apply {
@@ -168,143 +264,6 @@ class InterpretationTabsTest {
             }
         }
     }
-
-
-
-    @Test
-    fun diffPanelShouldShowNoChangesForAnEmptyDiff(): TestResult {
-        val fc = FC {
-            InterpretationTabs {
-                scope = MainScope()
-                interpretation = ViewableInterpretation()
-            }
-        }
-        return runReactTest(fc) { container ->
-            with(container) {
-                selectChangesTab()
-                waitForEvents()
-                requireNumberOfRows(0)
-            }
-        }
-    }
-
-    @Test
-    fun diffPanelShouldShowTheInterpretationDifferences(): TestResult {
-        val unchangedText = "Go to Bondi now!"
-        val addedText = "Bring your flippers!"
-        val removedText = "Sun is shining."
-        val replacedText = "Surf's up!"
-        val replacementText = "Surf's really up!"
-        val diffListToReturn = DiffList(
-            listOf(
-                Unchanged(unchangedText),
-                Addition(addedText),
-                Removal(removedText),
-                Replacement(replacedText, replacementText)
-            )
-        )
-        val interpretationWithDiffs = ViewableInterpretation().apply { diffList = diffListToReturn }
-
-        val fc = FC {
-            InterpretationTabs {
-                scope = MainScope()
-                api = Api(mock(config {}))
-                interpretation = interpretationWithDiffs
-            }
-        }
-        return runReactTest(fc) { container ->
-            with(container) {
-                selectChangesTab()
-                requireNumberOfRows(4)
-                requireOriginalTextInRow(0, unchangedText)
-                requireChangedTextInRow(0, unchangedText)
-
-                requireOriginalTextInRow(1, "")
-                requireChangedTextInRow(1, addedText)
-
-                requireOriginalTextInRow(2, removedText)
-                requireChangedTextInRow(2, "")
-
-                requireOriginalTextInRow(3, replacedText)
-                requireChangedTextInRow(3, replacementText)
-            }
-        }
-    }
-
-    @Test
-    fun diffPanelShouldUpdateWhenTheInterpretationIsEdited(): TestResult {
-        val addedText = "Bring your flippers!"
-        val diffListToReturn = DiffList(
-            listOf(
-                Addition(addedText),
-            )
-        )
-        val interpretationWithDiffs = ViewableInterpretation().apply { diffList = diffListToReturn }
-        val config = config {
-            returnInterpretationAfterSavingInterpretation = interpretationWithDiffs
-        }
-
-        val fc = FC {
-            InterpretationTabs {
-                scope = MainScope()
-                api = Api(mock(config))
-                interpretation = ViewableInterpretation()
-            }
-        }
-        return runReactTest(fc) { container ->
-            with(container) {
-                requireInterpretation("")
-                enterInterpretation(addedText)
-                waitForDebounce()
-                selectChangesTab()
-                requireNumberOfRows(1)
-                requireChangedTextInRow(0, addedText)
-            }
-        }
-    }
-
-
-
-       @Test
-    fun onStartRuleShouldBeCalledWhenTheBuildIconIsClicked(): TestResult {
-        val unchangedText = "Go to Bondi now!"
-        val addedText = "Bring your flippers!"
-        val removedText = "Sun is shining."
-        val replacedText = "Surf's up!"
-        val replacementText = "Surf's really up!"
-        val diffListToReturn = DiffList(
-            listOf(
-                Unchanged(unchangedText),
-                Addition(addedText),
-                Removal(removedText),
-                Replacement(replacedText, replacementText)
-            )
-        )
-        val interpretationWithDiffs =
-            ViewableInterpretation().apply { diffList = diffListToReturn }
-        var selectedDiff: Diff? = null
-
-        val fc = FC {
-            InterpretationTabs {
-                scope = MainScope()
-                api = Api(mock(config {}))
-                interpretation = interpretationWithDiffs
-                onStartRule = { diff ->
-                    selectedDiff = diff
-                }
-            }
-        }
-        return runReactTest(fc) { container ->
-            with(container) {
-                selectChangesTab()
-                requireNumberOfRows(4)
-                moveMouseOverRow(2)
-                clickBuildIconForRow(2)
-                selectedDiff shouldBe diffListToReturn[2]
-            }
-        }
-    }
-}
 
 */
 }
@@ -348,7 +307,7 @@ private fun interpretationWithDifferences(numberOfDiffs: Int): ViewableInterpret
         every { latestText() } returns "Go to Malabar"
         every { numberOfChanges() } returns numberOfDiffs
         every { diffList } returns DiffList((0..numberOfDiffs - 1).map {
-            mockk<Diff>()
+            Addition("Addition $it")
         }
         )
     }
