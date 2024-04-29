@@ -29,6 +29,12 @@ interface DifferencesViewHandler {
     fun onStartRule(selectedDiff: Diff)
 }
 
+val DIFF_VIEW = "DIFF_VIEW"
+val DIFF_ROW_PREFIX = "DIFF_ROW_"
+val ORIGINAL_PREFIX = "ORIGINAL_"
+val CHANGED_PREFIX = "CHANGED_"
+val ICON_PREFIX = "ICON_PREFIX_"
+
 @Composable
 fun DifferencesView(diffList: DiffList, handler: DifferencesViewHandler) {
     var cursorOnRow: Int by remember { mutableStateOf(diffList.indexOfFirstChange()) }
@@ -54,7 +60,7 @@ fun DifferencesView(diffList: DiffList, handler: DifferencesViewHandler) {
             )
             Text("")
         }
-        LazyColumn {
+        LazyColumn(modifier = Modifier.semantics { contentDescription = DIFF_VIEW }) {
             itemsIndexed(diffList.diffs) { index, diff ->
                 Row(
                     modifier = Modifier
@@ -62,6 +68,7 @@ fun DifferencesView(diffList: DiffList, handler: DifferencesViewHandler) {
                         .padding(start = 5.dp)
                         .height(40.dp)
                         .onPointerEvent(PointerEventType.Enter) { cursorOnRow = index }
+                        .semantics { contentDescription = "$DIFF_ROW_PREFIX$index" }
                 ) {
                     Text(
                         text = diff.left(),
@@ -69,6 +76,7 @@ fun DifferencesView(diffList: DiffList, handler: DifferencesViewHandler) {
                             .weight(1f)
                             .height(30.dp)
                             .background(if (diff !is Unchanged) LightRed else Transparent)
+                            .semantics { contentDescription = "$ORIGINAL_PREFIX$index" }
                     )
                     Text(
                         text = diff.right(),
@@ -76,13 +84,15 @@ fun DifferencesView(diffList: DiffList, handler: DifferencesViewHandler) {
                             .weight(1f)
                             .height(30.dp)
                             .background(if (diff !is Unchanged) LightGreen else Transparent)
+                            .semantics { contentDescription = "$CHANGED_PREFIX$index" }
                     )
                     if (diff !is Unchanged && cursorOnRow == index) {
                         ToolTipForIconAndLabel(
                             toolTipText = "Build a rule for this change",
                             isSelected = false,
                             icon = painterResource("wrench_24.png"),
-                            onClick = { handler.onStartRule(diff) }
+                            onClick = { handler.onStartRule(diff) },
+                            iconContentDescription = "$ICON_PREFIX$index"
                         )
                     } else {
                         Spacer(modifier = Modifier.width(40.dp))
