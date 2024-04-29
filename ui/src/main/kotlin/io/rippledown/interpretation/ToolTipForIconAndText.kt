@@ -33,7 +33,7 @@ val BADGE_CONTENT_DESCRIPTION = "BADGE"
 @Composable
 fun ToolTipForIconAndLabel(
     toolTipText: String,
-    labelText: String,
+    labelText: String = "",
     isSelected: Boolean,
     icon: Painter,
     onClick: () -> Unit,
