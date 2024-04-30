@@ -217,11 +217,15 @@ class Defs : En {
         }
 
         When("I delete all the text in the interpretation field") {
-//            interpretationViewPO.deleteAllText()
+            interpretationViewPO().deleteAllText()
         }
 
         And("I enter the text {string} in the interpretation field") { text: String ->
-            interpretationViewPO().enterVerifiedText(text)
+            interpretationViewPO().setVerifiedText(text)
+        }
+
+        And("I add the text {string} at the end of the current interpretation") { text: String ->
+            interpretationViewPO().addVerifiedTextAtEndOfCurrentInterpretation(text)
         }
 
         And("I slowly type the text {string} in the interpretation field") { text: String ->
@@ -269,24 +273,13 @@ class Defs : En {
 
         And("I select the {word} tab") { tabName: String ->
             when (tabName) {
-//                "interpretation" -> interpretationViewPO.selectOriginalTab()
-//                "conclusions" -> interpretationViewPO.selectConclusionsTab()
-//                "changes" -> interpretationViewPO.selectChangesTab()
+                "interpretation" -> interpretationViewPO().selectOriginalTab()
+                "conclusions" -> interpretationViewPO().selectConclusionsTab()
+                "changes" -> interpretationViewPO().selectDifferencesTab()
                 else -> throw IllegalArgumentException("Unknown tab name: $tabName")
             }
         }
 
-        Then("I should see that the text {string} has been added") { text: String ->
-//            interpretationViewPO.requireAddedText(text)
-        }
-
-        Then("I should see that the text {string} has been deleted") { text: String ->
-//            interpretationViewPO.requireDeletedText(text)
-        }
-
-        Then("I should see that the text {string} has been replaced by {string}") { replaced: String, replacement: String ->
-//            interpretationViewPO.requireReplacedText(replaced, replacement)
-        }
         And("the changes badge indicates that there is/are {int} change(s)") { numberOfChanges: Int ->
             interpretationViewPO().requireBadgeCount(numberOfChanges)
         }

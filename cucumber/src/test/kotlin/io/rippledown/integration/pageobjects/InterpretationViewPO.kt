@@ -1,9 +1,15 @@
 package io.rippledown.integration.pageobjects
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.constants.interpretation.*
+import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
+import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
 import io.rippledown.integration.utils.find
+import io.rippledown.integration.utils.findAllByDescriptionPrefix
 import io.rippledown.integration.waitForDebounce
+import io.rippledown.interpretation.CHANGED_PREFIX
+import io.rippledown.interpretation.DIFF_ROW_PREFIX
+import io.rippledown.interpretation.ORIGINAL_PREFIX
+import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
 import javax.accessibility.AccessibleContext
@@ -12,21 +18,20 @@ import javax.accessibility.AccessibleRole.TEXT
 // ORD2
 class InterpretationViewPO(private val contextProvider: () -> AccessibleContext) {
 
-    fun appendVerifiedText(text: String): InterpretationViewPO {
-        val textArea = interpretationArea()
-//        textArea.sendKeys(Keys.END)
-        enterVerifiedText(text)
-        return this
-    }
-
-    fun enterVerifiedText(text: String): InterpretationViewPO {
+    fun setVerifiedText(text: String): InterpretationViewPO {
         contextProvider().find(INTERPRETATION_TEXT_FIELD, TEXT)?.accessibleEditableText?.setTextContents(text)
         waitForDebounce()
         return this
     }
 
-    fun interpretationText(): String {
-        return contextProvider().find(INTERPRETATION_TEXT_FIELD, TEXT)?.accessibleName ?: ""
+    fun addVerifiedTextAtEndOfCurrentInterpretation(text: String): InterpretationViewPO {
+        setVerifiedText(interpretationText() + text)
+        waitForDebounce()
+        return this
+    }
+
+    fun interpretationText() = execute<String> {
+        contextProvider().find(INTERPRETATION_TEXT_FIELD, TEXT)?.accessibleName ?: ""
     }
 
     fun waitForInterpretationText(expected: String): InterpretationViewPO {
@@ -52,16 +57,9 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
     }
 
     private fun diffTabProvider() = contextProvider()
-        .find("$INTERPRETATION_TAB_PREFIX$INTERPRETATION_TAB_CHANGES_LABEL")!!
+        .find(INTERPRETATION_TAB_CHANGES)!!
 
-    fun interpretationArea() {
-        TODO()
-    }
-
-    fun selectChangesTab(): InterpretationViewPO {
-//        driver.findElement(By.id(INTERPRETATION_TAB_CHANGES)).click()
-        return this
-    }
+    fun selectDifferencesTab() = diffTabProvider().accessibleAction.doAccessibleAction(0)
 
     fun selectConclusionsTab(): InterpretationViewPO {
 //        driver.findElement(By.id(INTERPRETATION_TAB_CONCLUSIONS)).click()
@@ -69,103 +67,43 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
     }
 
     fun selectOriginalTab(): InterpretationViewPO {
-//        driver.findElement(By.id(INTERPRETATION_TAB_ORIGINAL)).click()
         return this
     }
 
-    fun requireOriginalTextInRow(row: Int, text: String) = requireTextInRow(DIFF_VIEWER_ORIGINAL, row, text)
+    fun requireOriginalTextInRow(row: Int, text: String) = requireTextInCellInRowWithPrefix(ORIGINAL_PREFIX, row, text)
 
-    fun requireChangedTextInRow(row: Int, text: String) = requireTextInRow(DIFF_VIEWER_CHANGED, row, text)
+    fun requireChangedTextInRow(row: Int, text: String) = requireTextInCellInRowWithPrefix(CHANGED_PREFIX, row, text)
 
-    fun numberOfRows(): Int {
-        TODO()
-//        val table = driver.findElement(By.id(DIFF_VIEWER_TABLE))
-//        return table.findElements(By.tagName("tr")).size
-    }
+    fun numberOfRows() = execute<Int> { contextProvider().findAllByDescriptionPrefix(DIFF_ROW_PREFIX).size }
 
     fun requireNoRowsInDiffTable() = numberOfRows() shouldBe 0
 
-    fun requireAddedText(text: String) {
-        var found = false
-        0.until(numberOfRows()).forEach { row ->
-            try {
-                requireOriginalTextInRow(row, "")
-                requireAddedTextInRow(row, text)
-                found = true
-            } catch (e: AssertionError) {
-                // Ignore
-            }
-        }
-        if (!found) {
-            throw AssertionError("Could not find added text '$text'")
-        }
+    fun requireAddedTextRow(row: Int, text: String) {
+        requireNoTextInCellInRowWithPrefix(ORIGINAL_PREFIX, row)
+        requireTextInCellInRowWithPrefix(CHANGED_PREFIX, row, text)
     }
 
-    fun requireDeletedText(text: String) {
-        var found = false
-        0.until(numberOfRows()).forEach { row ->
-            try {
-                requireOriginalTextInRow(row, text)
-                requireChangedTextInRow(row, "")
-                found = true
-            } catch (e: AssertionError) {
-                // Ignore
-            }
-        }
-        if (!found) {
-            throw AssertionError("Could not find deleted text '$text'")
-        }
+    fun requireDeletedTextRow(row: Int, text: String) {
+        requireTextInCellInRowWithPrefix(ORIGINAL_PREFIX, row, text)
+        requireNoTextInCellInRowWithPrefix(CHANGED_PREFIX, row)
     }
 
-    fun requireReplacedText(replaced: String, replacement: String) {
-        var found = false
-        0.until(numberOfRows()).forEach { row ->
-            try {
-                requireOriginalTextInRow(row, replaced)
-                requireChangedTextInRow(row, replacement)
-                found = true
-            } catch (e: AssertionError) {
-                // Ignore
-            }
-        }
-        if (!found) {
-            throw AssertionError("Could not find replacement of '$replaced' with '$replacement'")
-        }
+    fun requireReplacedTextRow(row: Int, replaced: String, replacement: String) {
+        requireTextInCellInRowWithPrefix(ORIGINAL_PREFIX, row, replaced)
+        requireTextInCellInRowWithPrefix(CHANGED_PREFIX, row, replacement)
     }
 
-    fun requireAddedTextInRow(row: Int, text: String) {
-        requireTextInRow(DIFF_VIEWER_ORIGINAL, row, "")
-        requireTextInRow(DIFF_VIEWER_CHANGED, row, text)
-        requireCheckBoxInRow(row)
+    private fun requireTextInCellInRowWithPrefix(prefix: String, row: Int, text: String) {
+        val found = execute<String> { contextProvider().find("$prefix$row")?.accessibleName }
+        found shouldBe text
     }
 
-    fun requireCheckBoxInRow(row: Int): InterpretationViewPO {
-//        driver.findElement(By.id("$DIFF_VIEWER_BUILD_ICON$row")) shouldNotBe null
-        return this
+    private fun requireNoTextInCellInRowWithPrefix(prefix: String, row: Int) {
+        val found = execute<String?> { contextProvider().find("$prefix$row", TEXT)?.accessibleName }
+        found shouldBe null
     }
 
-    fun requireNoCheckBoxInRow(row: Int): InterpretationViewPO {
-//        driver.findElements(By.id("$DIFF_VIEWER_BUILD_ICON$row")) shouldHaveSize 0
-        return this
-    }
-
-    private fun requireTextInRow(
-        id: String,
-        row: Int,
-        text: String
-    ): InterpretationViewPO {
-//        val findElement = driver.findElement(By.id("$id$row"))
-//        findElement.text shouldBe text
-        return this
-    }
-
-    fun deleteAllText(): InterpretationViewPO {
-//        val textArea = driver.findElement(By.id(INTERPRETATION_TEXT_AREA))
-//        textArea.selectAllText()
-//        textArea.delete()
-//        waitForDebounce()
-        return this
-    }
+    fun deleteAllText() = setVerifiedText("")
 
 //    fun WebElement.selectAllText() = sendKeys(Keys.chord(Keys.CONTROL, "a"))
 

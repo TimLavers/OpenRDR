@@ -7,9 +7,9 @@ import io.rippledown.integration.pageobjects.CaseViewPO
 import io.rippledown.integration.pageobjects.InterpretationViewPO
 import io.rippledown.integration.restclient.RESTClient
 import io.rippledown.model.condition.EpisodicCondition
-import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.episodic.predicate.LessThanOrEquals
 import io.rippledown.model.condition.episodic.predicate.Normal
+import io.rippledown.model.condition.episodic.signature.Current
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -52,58 +52,16 @@ internal class ShowInterpretationDifference : UITestBase() {
     }
 
     @Test
-    fun shouldShowTheChangeWhenASentenceIsAdded() {
-        caseViewPO.nameShown() shouldBe caseName
-        val addedText = " This is a new sentence."
-        interpretationViewPO
-            .appendVerifiedText(addedText)
-            .waitForInterpretationText("$tshComment$addedText")
-            .selectChangesTab()
-            .requireOriginalTextInRow(0, tshComment)
-            .requireChangedTextInRow(0, tshComment)
-            .requireNoCheckBoxInRow(0)
-            .requireOriginalTextInRow(1, "")
-            .requireChangedTextInRow(1, addedText.trim())
-            .requireCheckBoxInRow(1)
-    }
-
-    @Test
-    fun shouldShowTheChangeWhenASentenceIsRemoved() {
-        caseViewPO.nameShown() shouldBe caseName
-        interpretationViewPO
-            .deleteAllText()
-            .waitForInterpretationText("")
-            .selectChangesTab()
-            .requireOriginalTextInRow(0, tshComment)
-            .requireChangedTextInRow(0, "")
-            .requireCheckBoxInRow(0)
-    }
-
-    @Test
-    fun shouldShowTheChangeWhenASentenceIsReplaced() {
-        caseViewPO.nameShown() shouldBe caseName
-        val replacementText = "This is a new sentence."
-        interpretationViewPO
-            .deleteAllText()
-            .enterVerifiedText(replacementText)
-            .waitForInterpretationText(replacementText)
-            .selectChangesTab()
-            .requireOriginalTextInRow(0, tshComment)
-            .requireChangedTextInRow(0, replacementText)
-            .requireCheckBoxInRow(0)
-    }
-
-    @Test
     fun `should update the change count whenever verified text is entered`() {
         caseViewPO.nameShown() shouldBe caseName
         interpretationViewPO
             .waitForInterpretationText(tshComment)
             .requireNoBadge()
-            .enterVerifiedText(" Go to Bondi. Bring your flippers.") //two additions
+            .setVerifiedText(" Go to Bondi. Bring your flippers.") //two additions
             .requireBadgeCount(2)
             .deleteAllText()
             .requireBadgeCount(1)
-            .enterVerifiedText(tshComment)
+            .setVerifiedText(tshComment)
             .requireNoBadge() //back to the original
     }
 
@@ -112,7 +70,7 @@ internal class ShowInterpretationDifference : UITestBase() {
         caseViewPO.nameShown() shouldBe caseName
         with (interpretationViewPO) {
             waitForInterpretationText(tshComment)
-            selectChangesTab()
+            selectDifferencesTab()
             requireOriginalTextInRow(0, tshComment)
             requireChangedTextInRow(0, tshComment)
         }

@@ -10,6 +10,7 @@ import io.rippledown.constants.caseview.DATE_CELL_DESCRIPTION_PREFIX
 import io.rippledown.integration.pause
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
+import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.kotlin.await
 import java.awt.Point
 import java.time.Duration.ofSeconds
@@ -23,7 +24,7 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
         pause()//Need to wait for the case to render else we get a stale element. todo use a better mechanism
     }
 
-    fun nameShown(): String? = contextProvider().find(CASEVIEW_CASE_NAME_ID, LABEL)?.accessibleName
+    fun nameShown(): String? = execute<String> { contextProvider().find(CASEVIEW_CASE_NAME_ID, LABEL)?.accessibleName }
 
     fun requireNoNameShowing() {
         contextProvider().find(CASEVIEW_CASE_NAME_ID, LABEL) shouldBe null
