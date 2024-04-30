@@ -5,6 +5,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.mockk.mockk
 import io.rippledown.interpretation.requireInterpretation
+import io.rippledown.model.Attribute
 import io.rippledown.model.CaseId
 import io.rippledown.model.createCase
 import io.rippledown.model.diff.Diff
@@ -371,6 +372,7 @@ fun main() {
                 override var onStartRule: (selectedDiff: Diff) -> Unit = { }
                 override var isCornerstone = false
                 override var onInterpretationEdited: (text: String) -> Unit = { }
+                override fun swapAttributes(moved: Attribute, target: Attribute) {}
 
             })
         }

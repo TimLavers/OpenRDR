@@ -43,7 +43,7 @@ internal class ShowInterpretationDifferenceForMoreComplexScenarios : UITestBase(
         with (interpretationViewPO) {
             requireChangesLabel("CHANGES")
             waitForInterpretationText("")
-            selectChangesTab()
+            selectDifferencesTab()
             requireNoRowsInDiffTable()
         }
     }

@@ -101,20 +101,19 @@ Feature: Reviewing the interpretation of a case
     Then the changes badge indicates that there is 1 change
     And stop the client application
 
-  @ignore
   Scenario: A new comment that is entered by the user should show as a addition in the changes panel
     Given a new case with the name Case1 is stored on the server
     And the interpretation of the case Case1 is "Go to Bondi."
     And I start the client application
     And I should see the case Case1 as the current case
     And the interpretation field should contain the text "Go to Bondi."
-    When I enter the text " And bring your flippers." in the interpretation field
+    When I add the text " And bring your flippers." at the end of the current interpretation
     And  the interpretation field should contain the text "Go to Bondi. And bring your flippers."
     And I select the changes tab
-    Then I should see that the text "And bring your flippers." has been added
+    Then the differences table should show 2 rows
+    And I should see in row 2 that the text "And bring your flippers." has been added
     And stop the client application
 
-  @ignore
   Scenario: A comment that is deleted by the user should show as a removal in the changes panel
     Given a new case with the name Case1 is stored on the server
     And the interpretation of the case Case1 is "Go to Bondi."
@@ -123,10 +122,10 @@ Feature: Reviewing the interpretation of a case
     And the interpretation field should contain the text "Go to Bondi."
     When I delete all the text in the interpretation field
     And I select the changes tab
-    Then I should see that the text "Go to Bondi." has been deleted
+    Then the differences table should show 1 row
+    And I should see in row 1 that the text "Go to Bondi." has been deleted
     And stop the client application
 
-  @ignore
   Scenario: A comment that is replaced by the user should show as a replacement in the changes panel
     Given a new case with the name Case1 is stored on the server
     And the interpretation of the case Case1 is "Go to Bondi."
@@ -136,7 +135,8 @@ Feature: Reviewing the interpretation of a case
     When I delete all the text in the interpretation field
     And I enter the text "Go to Manly." in the interpretation field
     And I select the changes tab
-    Then I should see that the text "Go to Bondi." has been replaced by "Go to Manly."
+    Then the differences table should show 1 row
+    And I should see in row 1 that the text "Go to Bondi." has been replaced by "Go to Manly."
     And stop the client application
 
   Scenario: A comment should be able to be entered very slowly
