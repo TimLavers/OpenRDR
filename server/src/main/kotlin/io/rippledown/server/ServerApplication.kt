@@ -53,7 +53,7 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
 
     fun kbList(): List<KBInfo> = kbManager.all().toList().sorted()
 
-    fun importKBFromZip(zipBytes: ByteArray) {
+    fun importKBFromZip(zipBytes: ByteArray): KBInfo {
         val tempDir: File = createTempDirectory().toFile()
         Unzipper(zipBytes, tempDir).unzip()
         val subDirectories = tempDir.listFiles()
@@ -64,6 +64,7 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         val kb = KBImporter(rootDir, persistenceProvider).import()
         logger.info("Imported KB with name: '${kb.kbInfo.name}' and id: '${kb.kbInfo.id}' from zip.")
         idToKBEndpoint[kb.kbInfo.id] = kbEndpoint(kb)
+        return kb.kbInfo
     }
 
     private fun kbDataFile(kb: KB) = File(kbDataDir, kb.kbInfo.id)

@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons.Default
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role.Companion.Button
 import androidx.compose.ui.semantics.Role.Companion.DropdownList
@@ -23,15 +24,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
 import io.rippledown.constants.kb.*
-import io.rippledown.constants.main.CREATE_KB_ITEM_ID
-import io.rippledown.constants.main.CREATE_KB_TEXT
-import io.rippledown.constants.main.KBS_DROPDOWN_DESCRIPTION
-import io.rippledown.constants.main.KBS_DROPDOWN_ID
+import io.rippledown.constants.main.*
 import io.rippledown.model.KBInfo
+import java.io.File
+import javax.swing.JFileChooser
 
 interface KBControlHandler {
     var selectKB: (id: String) -> Unit
     var createKB: (name: String) -> Unit
+    var importKB: (data: File) -> Unit
     val kbList: () -> List<KBInfo>
 }
 
@@ -40,6 +41,7 @@ interface KBControlHandler {
 fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
     var expanded by remember { mutableStateOf(false) }
     var createKbDialogShowing by remember { mutableStateOf(false) }
+    var importKbDialogShowing by remember { mutableStateOf(false) }
     val availableKBs =
         remember { mutableStateListOf<KBInfo>() } // https://tigeroakes.com/posts/mutablestateof-list-vs-mutablestatelistof/
 
@@ -66,6 +68,40 @@ fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
 
                 override var cancel: () -> Unit = {
                     createKbDialogShowing = false
+                }
+            })
+        }
+    }
+    if (importKbDialogShowing) {
+        val dialogState = rememberDialogState(size = DpSize(640.dp, 160.dp))
+        DialogWindow(
+            onCloseRequest = { importKbDialogShowing = false },
+            title = "Import KB",
+            state = dialogState,
+        ) {
+            TextInputWithCancel(object : TextInputHandler {
+                override fun isValidInput(input: String): Boolean {
+                    val file = File(input)
+                    return file.isFile && file.exists()
+                }
+
+                override fun labelText() = IMPORT_KB_TEXT
+
+                override fun inputFieldDescription() = IMPORT_KB_NAME_FIELD_DESCRIPTION
+
+                override fun confirmButtonText() = IMPORT
+
+                override fun confirmButtonDescription() = IMPORT_KB_OK_BUTTON_DESCRIPTION
+
+                override fun cancelButtonText() = CANCEL
+
+                override fun handleInput(value: String) {
+                    handler.importKB(File(value))
+                    importKbDialogShowing = false
+                }
+
+                override fun cancel() {
+                    importKbDialogShowing = false
                 }
             })
         }
@@ -127,6 +163,20 @@ fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
             ) {
                 Text(text = CREATE_KB_TEXT)
             }
+            DropdownMenuItem(
+                onClick = {
+                    expanded = false
+                    importKbDialogShowing = true
+                },
+                modifier = Modifier.testTag(IMPORT_KB_ITEM_ID)
+                    .semantics(mergeDescendants = true) {
+                        role = Button
+                        contentDescription = IMPORT_KB_TEXT
+                    }
+            ) {
+                Text(text = IMPORT_KB_TEXT)
+            }
+            Divider(startIndent = 2.dp, thickness = 1.dp)
             availableKBs.forEach { kbi ->
                 KbInfoItem(kbi.name, object : KbSelectionHandler {
                     override var onSelect: () -> Unit = {
@@ -136,7 +186,6 @@ fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
                 })
             }
         }
-
     }
 }
 

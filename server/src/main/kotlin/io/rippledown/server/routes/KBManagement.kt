@@ -21,8 +21,12 @@ fun Application.kbManagement(application: ServerApplication) {
     routing {
 
         post(IMPORT_KB) {
+            logger.info("KBManagement, import kb...")
+
             val multipart = call.receiveMultipart()
             val allParts = multipart.readAllParts()
+            logger.info("KBManagement, import case, parts: ${allParts.size}")
+
             require(allParts.size == 1) {
                 "Zip import takes a single file."
             }
@@ -38,8 +42,8 @@ fun Application.kbManagement(application: ServerApplication) {
                 buffered.flush()
             }
             val bytes = partReader.toByteArray()
-            application.importKBFromZip(bytes)
-            call.respond(OK, OperationResult("KB imported"))
+            val kbInfo = application.importKBFromZip(bytes)
+            call.respond(OK, kbInfo)
         }
         get(EXPORT_KB) {
             val kbEndpoint = kbEndpoint(application)

@@ -6,6 +6,7 @@ import io.ktor.client.engine.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.rippledown.constants.api.*
@@ -58,10 +59,26 @@ class Api(engine: HttpClientEngine = CIO.create()) {
 
     suspend fun kbList() = client.get("$API_URL$KB_LIST").body<List<KBInfo>>()
 
-    fun importKBFromZip(file: File) {
-//        val code: dynamic = js("window.doZipUpload")
-//        val zipImportURL = "$API_URL$IMPORT_KB"
-//        code(zipImportURL, file)
+    suspend fun importKBFromZip(file: File): KBInfo {
+        val data = file.readBytes()
+        println("---- IMPORTING KB, data length: ${data.size} ----")
+        // C:\Code4\OpenRDR\cucumber\src\test\resources\export\Whatever.zip
+        currentKB = client.post("$API_URL$IMPORT_KB") {
+            contentType(ContentType.Application.Zip)
+            setBody(MultiPartFormDataContent(
+                formData {
+                    append(
+                        "document",
+                        data,
+                        Headers.build {
+                            append(HttpHeaders.ContentType, "images/*") // Mime type required
+                            append(HttpHeaders.ContentDisposition, "filename=${file.name}")
+                        }
+                    )
+                }
+            ))
+        }.body()
+        return currentKB!!
     }
 
     fun exportURL(): String {

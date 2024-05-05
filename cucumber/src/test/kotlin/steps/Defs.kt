@@ -5,6 +5,7 @@ import io.cucumber.docstring.DocString
 import io.cucumber.java8.En
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.pause
+import io.rippledown.integration.proxy.ConfiguredTestData
 import io.rippledown.integration.utils.Cyborg
 import io.rippledown.integration.waitUntilAssertedOnEventThread
 import org.awaitility.Awaitility
@@ -117,6 +118,10 @@ class Defs : En {
         }
 
         Given("I import the configured zipped Knowledge Base {word}") { toImport: String ->
+            val zipFile = ConfiguredTestData.kbZipFile(toImport)
+
+            val kbControlOperator = applicationBarPO().kbControlOperator()
+            kbControlOperator.importKB(zipFile.absolutePath)
 //            kbControlsPO.importKB(toImport)
 //            kbControlsPO.waitForKBToBeLoaded(toImport)
         }
