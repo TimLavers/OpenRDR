@@ -23,7 +23,9 @@ interface TextInputHandler {
     fun handleInput(value: String)
     fun cancel()
 }
-
+const val TEXT_INPUT_FIELD_TEST_TAG = "text_input_id"
+const val TEXT_INPUT_OK_BUTTON_TEST_TAG = "ok_button_id"
+const val TEXT_INPUT_CANCEL_BUTTON_TEST_TAG = "cancel_button_id"
 @Composable
 fun TextInputWithCancel(handler: TextInputHandler) {
     var textValue by remember { mutableStateOf("") }
@@ -47,7 +49,7 @@ fun TextInputWithCancel(handler: TextInputHandler) {
                         },
                         label = { Text(text = handler.labelText()) },
                         modifier = Modifier
-                            .testTag("text_input_id")
+                            .testTag(TEXT_INPUT_FIELD_TEST_TAG)
                             .fillMaxWidth()
                             .semantics {
                                 contentDescription = handler.inputFieldDescription()
@@ -63,7 +65,7 @@ fun TextInputWithCancel(handler: TextInputHandler) {
                                 handler.handleInput(textValue)
                             },
                             enabled = handler.isValidInput(textValue),
-                            modifier = Modifier.testTag("ok_button_id")
+                            modifier = Modifier.testTag(TEXT_INPUT_OK_BUTTON_TEST_TAG)
                                 .semantics {
                                     contentDescription = handler.confirmButtonDescription()
                                 }
@@ -75,7 +77,7 @@ fun TextInputWithCancel(handler: TextInputHandler) {
                             onClick = {
                                 handler.cancel()
                             },
-                            modifier = Modifier.testTag("cancel_button_id")
+                            modifier = Modifier.testTag(TEXT_INPUT_CANCEL_BUTTON_TEST_TAG)
                         ) {
                             Text(handler.cancelButtonText())
                         }

@@ -8,6 +8,8 @@ import io.rippledown.constants.kb.KB_CONTROL_DROPDOWN_DESCRIPTION
 import io.rippledown.constants.kb.KB_SELECTOR_ID
 import io.rippledown.constants.main.CREATE_KB_ITEM_ID
 import io.rippledown.constants.main.CREATE_KB_TEXT
+import io.rippledown.constants.main.IMPORT_KB_ITEM_ID
+import io.rippledown.constants.main.IMPORT_KB_TEXT
 
 fun ComposeTestRule.assertKbNameIs(expected: String) {
     waitUntilExactlyOneExists(hasText(expected))
@@ -17,9 +19,13 @@ fun ComposeTestRule.assertKbNameIs(expected: String) {
 fun ComposeTestRule.clickDropdown() = onNodeWithContentDescription(KB_CONTROL_DROPDOWN_DESCRIPTION).performClick()
 
 fun ComposeTestRule.assertCreateKbButtonIsNotShowing() = onAllNodesWithText(CREATE_KB_TEXT).assertCountEquals(0)
+fun ComposeTestRule.assertImportKbButtonIsNotShowing() = onAllNodesWithText(IMPORT_KB_TEXT).assertCountEquals(0)
 
 fun ComposeTestRule.assertCreateKbButtonIsShowing() {
     onNodeWithText(CREATE_KB_TEXT).assertIsEnabled()
+}
+fun ComposeTestRule.assertImportKbButtonIsShowing() {
+    onNodeWithText(IMPORT_KB_TEXT).assertIsEnabled()
 }
 
 fun ComposeTestRule.assertDropdownItemsContain(vararg items: String) {
@@ -28,6 +34,5 @@ fun ComposeTestRule.assertDropdownItemsContain(vararg items: String) {
     }
 }
 
-fun ComposeTestRule.clickCreateKbButton() {
-    onNodeWithTag(CREATE_KB_ITEM_ID).performClick()
-}
+fun ComposeTestRule.clickCreateKbButton() = onNodeWithTag(CREATE_KB_ITEM_ID).performClick()
+fun ComposeTestRule.clickImportKbButton() = onNodeWithTag(IMPORT_KB_ITEM_ID).performClick()

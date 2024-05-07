@@ -60,15 +60,22 @@ fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
             title = "Create KB",
             state = dialogState,
         ) {
-            CreateKB(object : CreateKBHandler {
-                override var create: (name: String) -> Unit = { name ->
-                    handler.createKB(name)
+            TextInputWithCancel(object : TextInputHandler {
+                override fun handleInput(value: String) {
+                    handler.createKB(value)
                     createKbDialogShowing = false
                 }
 
-                override var cancel: () -> Unit = {
+                override fun cancel() {
                     createKbDialogShowing = false
                 }
+
+                override fun isValidInput(input: String) = input.isNotBlank()
+                override fun labelText() = CREATE_KB_NAME
+                override fun inputFieldDescription() = CREATE_KB_NAME_FIELD_DESCRIPTION
+                override fun confirmButtonText() = CREATE
+                override fun confirmButtonDescription() = CREATE_KB_OK_BUTTON_DESCRIPTION
+                override fun cancelButtonText() = CANCEL
             })
         }
     }
@@ -86,15 +93,10 @@ fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
                 }
 
                 override fun labelText() = IMPORT_KB_TEXT
-
                 override fun inputFieldDescription() = IMPORT_KB_NAME_FIELD_DESCRIPTION
-
                 override fun confirmButtonText() = IMPORT
-
                 override fun confirmButtonDescription() = IMPORT_KB_OK_BUTTON_DESCRIPTION
-
                 override fun cancelButtonText() = CANCEL
-
                 override fun handleInput(value: String) {
                     handler.importKB(File(value))
                     importKbDialogShowing = false
