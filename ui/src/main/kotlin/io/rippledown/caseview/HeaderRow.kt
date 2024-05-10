@@ -16,7 +16,7 @@ fun HeaderRow(columnWidths: ColumnWidths, dates: List<Long>) {
             .background(Color.LightGray),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        this.AttributesHeaderCell(columnWidths)
+        AttributesHeaderCell(columnWidths)
         dates.forEachIndexed { i, date ->
             DateCell(i, date, columnWidths)
         }

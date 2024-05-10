@@ -33,11 +33,12 @@ val BADGE_CONTENT_DESCRIPTION = "BADGE"
 @Composable
 fun ToolTipForIconAndLabel(
     toolTipText: String,
-    labelText: String,
+    labelText: String = "",
     isSelected: Boolean,
     icon: Painter,
     onClick: () -> Unit,
-    badgeCount: Int = 0
+    badgeCount: Int = 0,
+    iconContentDescription: String = ""
 ) {
     TooltipArea(
         modifier = Modifier
@@ -74,7 +75,7 @@ fun ToolTipForIconAndLabel(
                 Box {
                     Icon(
                         painter = icon,
-                        contentDescription = "",
+                        contentDescription = iconContentDescription,
                         tint = Color.Black,
                         modifier = Modifier
                             .height(30.dp)

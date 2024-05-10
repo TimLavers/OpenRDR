@@ -319,6 +319,37 @@ class CaseControlTest {
     }
 
     /*
+@Test
+    fun diffPanelShouldUpdateWhenTheInterpretationIsEdited(): TestResult {
+        val addedText = "Bring your flippers!"
+        val diffListToReturn = DiffList(
+            listOf(
+                Addition(addedText),
+            )
+        )
+        val interpretationWithDiffs = ViewableInterpretation().apply { diffList = diffListToReturn }
+        val config = config {
+            returnInterpretationAfterSavingInterpretation = interpretationWithDiffs
+        }
+
+        val fc = FC {
+            InterpretationTabs {
+                scope = MainScope()
+                api = Api(mock(config))
+                interpretation = ViewableInterpretation()
+            }
+        }
+        return runReactTest(fc) { container ->
+            with(container) {
+                requireInterpretation("")
+                enterInterpretation(addedText)
+                waitForDebounce()
+                selectChangesTab()
+                requireNumberOfRows(1)
+                requireChangedTextInRow(0, addedText)
+            }
+        }
+    }
 
         @Test
         fun shouldNotShowCornerstoneViewIfNoCornerstone(): TestResult {

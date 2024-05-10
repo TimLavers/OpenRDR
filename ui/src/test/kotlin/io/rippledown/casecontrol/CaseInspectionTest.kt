@@ -372,9 +372,7 @@ fun main() {
                 override var onStartRule: (selectedDiff: Diff) -> Unit = { }
                 override var isCornerstone = false
                 override var onInterpretationEdited: (text: String) -> Unit = { }
-                override fun swapAttributes(moved: Attribute, target: Attribute) {
-
-                }
+                override fun swapAttributes(moved: Attribute, target: Attribute) {}
             })
         }
     }
