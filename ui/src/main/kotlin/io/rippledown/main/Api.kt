@@ -62,7 +62,6 @@ class Api(engine: HttpClientEngine = CIO.create()) {
     suspend fun importKBFromZip(file: File): KBInfo {
         val data = file.readBytes()
         println("---- IMPORTING KB, data length: ${data.size} ----")
-        // C:\Code4\OpenRDR\cucumber\src\test\resources\export\Whatever.zip
         currentKB = client.post("$API_URL$IMPORT_KB") {
             contentType(ContentType.Application.Zip)
             setBody(MultiPartFormDataContent(
@@ -81,43 +80,20 @@ class Api(engine: HttpClientEngine = CIO.create()) {
         return currentKB!!
     }
 
-    fun exportURL(): String {
-        return "$API_URL/api/exportKB"
-    }
-
-    suspend fun exportKBToZip() {
-        println("++++++++++++++++ about to call zip export")
-        val response = client.get("$API_URL$EXPORT_KB")
-//        debug("got response: ", response)
-//        debug("got heraders: ", response.headers)
-//        debug("got cont-disp: ", response.headers["Content-Disposition"])
-//        debug("got cont-type: ", response.headers["Content-Type"])
-//        val file = jsonClient.get("$API_URL/api/exportKB").body<File>()
-//            println("++++++++++++++++ zip export done, got bytes, length: ${file.size}")
-//        debug("blob: ${file.size}")
-//        println("blob: ${file.size}")
-//        val code: dynamic = js("window.saveZip")
-//        code(file)
-        debug("blobbbing done")
-    }
-
-    fun importInProgress(): Boolean {
-//        val inProgressFlagRaw = window.asDynamic().uploadZipInProgress.unsafeCast<Any>()
-//        debug("inProgressFlagRaw: $inProgressFlagRaw")
-//        if (inProgressFlagRaw == undefined) {
-//            return false
-//        }
-//        return inProgressFlagRaw.unsafeCast<Boolean>()
-        return true
+    suspend fun exportKBToZip(destination: File) {
+        val bytes = client.get("$API_URL/api/exportKB"){
+            parameter("KB", kbId())
+        }.body<ByteArray>()
+        destination.writeBytes(bytes)
     }
 
     suspend fun getCase(id: Long): ViewableCase? {
-        try {
-           return client.get("$API_URL$CASE?id=$id") {
+        return try {
+            client.get("$API_URL$CASE?id=$id") {
                 parameter("KB", kbId())
             }.body()
         } catch (e: Exception) {
-            return null
+            null
         }
     }
 

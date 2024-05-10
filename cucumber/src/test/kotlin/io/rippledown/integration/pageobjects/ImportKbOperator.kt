@@ -10,6 +10,7 @@ import javax.accessibility.AccessibleRole
 class ImportKbOperator(private val dialog: ComposeDialog) {
 
     fun importKB(path: String) {
+        Thread.sleep(1000)
         enterPath(path)
         Thread.sleep(1000)
         clickImportButton()

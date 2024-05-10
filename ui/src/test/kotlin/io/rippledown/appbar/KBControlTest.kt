@@ -48,14 +48,14 @@ class KBControlTest {
                 KBControl(null, handler)
             }
             //Given
-            assertCreateKbButtonIsNotShowing()
+            assertCreateKbMenuItemIsNotShowing()
             assertKbNameIs("")
 
             //when
             clickDropdown()
 
             //Then
-            assertCreateKbButtonIsShowing()
+            assertCreateKbMenuItemIsShowing()
             assertDropdownItemsContain(lipidsInfo.name, glucose)
         }
     }
@@ -70,14 +70,14 @@ class KBControlTest {
                 KBControl(glucoseInfo, handler)
             }
             //Given
-            assertCreateKbButtonIsNotShowing()
+            assertCreateKbMenuItemIsNotShowing()
             assertKbNameIs(glucose)
 
             //when
             clickDropdown()
 
             //Then
-            assertCreateKbButtonIsShowing()
+            assertCreateKbMenuItemIsShowing()
             assertDropdownItemsContain(lipidsInfo.name)
         }
     }
@@ -92,15 +92,15 @@ class KBControlTest {
                 KBControl(glucoseInfo, handler)
             }
             //Given
-            assertCreateKbButtonIsNotShowing()
+            assertCreateKbMenuItemIsNotShowing()
             assertKbNameIs(glucose)
             clickDropdown()
-            assertCreateKbButtonIsShowing()
+            assertCreateKbMenuItemIsShowing()
 
             //When
-            clickCreateKbButton()
+            clickCreateKbMenuItem()
             assertOkButtonIsNotEnabled()
-            enterText(lipidsInfo.name)
+            enterKbName(lipidsInfo.name)
             requireEnteredKBName(lipidsInfo.name)
             invokeAndWait { clickCreateButton() }
 
@@ -121,13 +121,13 @@ class KBControlTest {
                 KBControl(glucoseInfo, handler)
             }
             //Given
-            assertImportKbButtonIsNotShowing()
+            assertImportKbMenuItemIsNotShowing()
             assertKbNameIs(glucose)
             clickDropdown()
-            assertImportKbButtonIsShowing()
+            assertImportKbMenuItemIsShowing()
 
             //When
-            clickImportKbButton()
+            clickImportKbMenuItem()
             assertImportButtonIsNotEnabled()
             enterZipFileName(zip.absolutePath)
             invokeAndWait { clickImportButton() }

@@ -27,7 +27,6 @@ fun AccessibleContext.waitTillFound(description: String, role: AccessibleRole): 
 fun AccessibleContext.findByName(name: String, role: AccessibleRole): AccessibleContext? {
     println("Find by name: '$name', role: '$role'")
     val matcher = { context: AccessibleContext ->
-        val nameMatch = name == context.accessibleName
         val roleMatch = role == context.accessibleRole
         println("roleMatch: $roleMatch")
         (name == context.accessibleName && role == context.accessibleRole)
@@ -123,6 +122,6 @@ fun ComposeWindow.waitForWindowToShow() {
 
 fun findComposeDialogThatIsShowing(): ComposeDialog? {
     val allWindows = java.awt.Window.getWindows()
-    val d = allWindows.firstOrNull{w -> w is ComposeDialog }
+    val d = allWindows.firstOrNull{w -> w is ComposeDialog && w.isShowing}
     return if (d == null) null else d as ComposeDialog
 }

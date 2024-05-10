@@ -3,7 +3,6 @@ package io.rippledown.appbar
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import io.kotest.matchers.shouldBe
-import io.rippledown.constants.main.*
 import org.junit.Before
 import org.junit.Rule
 import kotlin.test.Test
@@ -44,17 +43,17 @@ class TextInputWithCancelTest {
             setContent {
                 TextInputWithCancel(handler)
             }
-            waitUntilExactlyOneExists(hasTestTag(TEXT_INPUT_FIELD_TEST_TAG))
-            onNodeWithTag(TEXT_INPUT_FIELD_TEST_TAG)
+            waitUntilExactlyOneExists(hasContentDescription(handler.inputFieldDescription()))
+            onNodeWithContentDescription(handler.inputFieldDescription())
                 .assertIsEnabled()
                 .assertIsDisplayed()
             waitUntilExactlyOneExists(hasText(""))
 
-            onNodeWithTag(TEXT_INPUT_OK_BUTTON_TEST_TAG)
+            onNodeWithContentDescription(handler.confirmButtonDescription())
                 .assertIsNotEnabled()
                 .assertIsDisplayed()
                 .assertTextEquals(handler.confirmButtonText())
-            onNodeWithTag(TEXT_INPUT_CANCEL_BUTTON_TEST_TAG)
+            onNodeWithText(handler.cancelButtonText())
                 .assertIsEnabled()
                 .assertIsDisplayed()
                 .assertTextEquals(handler.cancelButtonText())
@@ -68,7 +67,7 @@ class TextInputWithCancelTest {
                 TextInputWithCancel(handler)
             }
             handler.cancelled shouldBe false
-            clickCancelButton()
+            onNodeWithText(handler.cancelButtonText()).performClick()
 
             handler.cancelled shouldBe true
         }
@@ -81,8 +80,8 @@ class TextInputWithCancelTest {
                 TextInputWithCancel(handler)
             }
             val data = "Whatever"
-            enterText(data)
-            clickCreateButton()
+            onNodeWithContentDescription(handler.inputFieldDescription()).performTextInput(data)
+            onNodeWithContentDescription(handler.confirmButtonDescription()).performClick()
             handler.input shouldBe data
             handler.cancelled shouldBe false
         }
@@ -94,12 +93,12 @@ class TextInputWithCancelTest {
             setContent {
                 TextInputWithCancel(handler)
             }
-            val okButton = onNodeWithTag(TEXT_INPUT_OK_BUTTON_TEST_TAG)
+            val okButton = onNodeWithContentDescription(handler.confirmButtonDescription())
             okButton.assertIsNotEnabled()
-            enterText("A")
-            performTextClearance()
+            onNodeWithContentDescription(handler.inputFieldDescription()).performTextInput("A")
+            onNodeWithContentDescription(handler.inputFieldDescription()).performTextClearance()
             okButton.assertIsNotEnabled()
-            enterText("Bats")
+            onNodeWithContentDescription(handler.inputFieldDescription()).performTextInput("Bats")
             okButton.assertIsEnabled()
         }
     }

@@ -11,7 +11,6 @@ import androidx.compose.material.icons.Icons.Default
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role.Companion.Button
 import androidx.compose.ui.semantics.Role.Companion.DropdownList
@@ -27,12 +26,12 @@ import io.rippledown.constants.kb.*
 import io.rippledown.constants.main.*
 import io.rippledown.model.KBInfo
 import java.io.File
-import javax.swing.JFileChooser
 
 interface KBControlHandler {
     var selectKB: (id: String) -> Unit
     var createKB: (name: String) -> Unit
     var importKB: (data: File) -> Unit
+    var exportKB: (data: File) -> Unit
     val kbList: () -> List<KBInfo>
 }
 
@@ -42,6 +41,7 @@ fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
     var expanded by remember { mutableStateOf(false) }
     var createKbDialogShowing by remember { mutableStateOf(false) }
     var importKbDialogShowing by remember { mutableStateOf(false) }
+    var exportKbDialogShowing by remember { mutableStateOf(false) }
     val availableKBs =
         remember { mutableStateListOf<KBInfo>() } // https://tigeroakes.com/posts/mutablestateof-list-vs-mutablestatelistof/
 
@@ -75,7 +75,6 @@ fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
                 override fun inputFieldDescription() = CREATE_KB_NAME_FIELD_DESCRIPTION
                 override fun confirmButtonText() = CREATE
                 override fun confirmButtonDescription() = CREATE_KB_OK_BUTTON_DESCRIPTION
-                override fun cancelButtonText() = CANCEL
             })
         }
     }
@@ -96,7 +95,6 @@ fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
                 override fun inputFieldDescription() = IMPORT_KB_NAME_FIELD_DESCRIPTION
                 override fun confirmButtonText() = IMPORT
                 override fun confirmButtonDescription() = IMPORT_KB_OK_BUTTON_DESCRIPTION
-                override fun cancelButtonText() = CANCEL
                 override fun handleInput(value: String) {
                     handler.importKB(File(value))
                     importKbDialogShowing = false
@@ -104,6 +102,34 @@ fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
 
                 override fun cancel() {
                     importKbDialogShowing = false
+                }
+            })
+        }
+    }
+    if (exportKbDialogShowing) {
+        val dialogState = rememberDialogState(size = DpSize(640.dp, 160.dp))
+        DialogWindow(
+            onCloseRequest = { exportKbDialogShowing = false },
+            title = "Export KB",
+            state = dialogState,
+        ) {
+            TextInputWithCancel(object : TextInputHandler {
+                override fun isValidInput(input: String): Boolean {
+                    val file = File(input)
+                    return file.isFile && !file.exists()
+                }
+
+                override fun labelText() = EXPORT_KB_TEXT
+                override fun inputFieldDescription() = EXPORT_KB_NAME_FIELD_DESCRIPTION
+                override fun confirmButtonText() = EXPORT
+                override fun confirmButtonDescription() = EXPORT_KB_OK_BUTTON_DESCRIPTION
+                override fun handleInput(value: String) {
+                    handler.exportKB(File(value))
+                    exportKbDialogShowing = false
+                }
+
+                override fun cancel() {
+                    exportKbDialogShowing = false
                 }
             })
         }
@@ -146,8 +172,7 @@ fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.testTag(KBS_DROPDOWN_ID)
-                .semantics {
+            modifier = Modifier.semantics {
                     role = DropdownList
                     contentDescription = KBS_DROPDOWN_DESCRIPTION
                 }
@@ -157,8 +182,7 @@ fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
                     expanded = false
                     createKbDialogShowing = true
                 },
-                modifier = Modifier.testTag(CREATE_KB_ITEM_ID)
-                    .semantics(mergeDescendants = true) {
+                modifier = Modifier.semantics(mergeDescendants = true) {
                         role = Button
                         contentDescription = CREATE_KB_TEXT
                     }
@@ -170,13 +194,24 @@ fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
                     expanded = false
                     importKbDialogShowing = true
                 },
-                modifier = Modifier.testTag(IMPORT_KB_ITEM_ID)
-                    .semantics(mergeDescendants = true) {
+                modifier = Modifier.semantics(mergeDescendants = true) {
                         role = Button
                         contentDescription = IMPORT_KB_TEXT
                     }
             ) {
                 Text(text = IMPORT_KB_TEXT)
+            }
+            DropdownMenuItem(
+                onClick = {
+                    expanded = false
+                    exportKbDialogShowing = true
+                },
+                modifier = Modifier.semantics(mergeDescendants = true) {
+                        role = Button
+                        contentDescription = EXPORT_KB_TEXT
+                    }
+            ) {
+                Text(text = EXPORT_KB_TEXT)
             }
             Divider(startIndent = 2.dp, thickness = 1.dp)
             availableKBs.forEach { kbi ->

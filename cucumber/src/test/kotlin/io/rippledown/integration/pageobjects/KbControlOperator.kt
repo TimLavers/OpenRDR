@@ -3,6 +3,7 @@ package io.rippledown.integration.pageobjects
 import io.rippledown.constants.kb.KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION
 import io.rippledown.constants.kb.KB_CONTROL_DROPDOWN_DESCRIPTION
 import io.rippledown.constants.main.CREATE_KB_TEXT
+import io.rippledown.constants.main.EXPORT_KB_TEXT
 import io.rippledown.constants.main.IMPORT_KB_TEXT
 import io.rippledown.constants.main.KBS_DROPDOWN_DESCRIPTION
 import io.rippledown.integration.utils.*
@@ -40,13 +41,26 @@ class KbControlOperator(private val contextProvider: () -> AccessibleContext) {
     fun importKB(filePath: String) {
         Thread.sleep(100)
         expandDropdownMenu()
-        Thread.sleep(100)
+        Thread.sleep(2000)
         clickDropdownItem(IMPORT_KB_TEXT)
-        Thread.sleep(100)
+        Thread.sleep(2000)
         SwingUtilities.invokeAndWait {
             val dialog = findComposeDialogThatIsShowing()
             val importKbOperator = ImportKbOperator(dialog!!)
             importKbOperator.importKB(filePath)
+        }
+    }
+
+    fun exportKB(filePath: String) {
+        Thread.sleep(100)
+        expandDropdownMenu()
+        Thread.sleep(100)
+        clickDropdownItem(EXPORT_KB_TEXT)
+        Thread.sleep(1000)
+        SwingUtilities.invokeAndWait {
+            val dialog = findComposeDialogThatIsShowing()
+            val exportKbOperator = ExportKbOperator(dialog!!)
+            exportKbOperator.importKB(filePath)
         }
     }
 
@@ -55,7 +69,7 @@ class KbControlOperator(private val contextProvider: () -> AccessibleContext) {
         return dropDown.findLabelChildren()
     }
 
-    public fun expandDropdownMenu() {
+    fun expandDropdownMenu() {
         SwingUtilities.invokeAndWait{
             contextProvider().findAndClick(KB_CONTROL_DROPDOWN_DESCRIPTION)
         }
