@@ -12,6 +12,7 @@ dependencies {
     implementation(compose.preview)
     implementation("org.jetbrains.compose.ui:ui-tooling-preview-desktop:${Version.compose}")
     implementation("ch.qos.logback:logback-classic:${Version.logback}")
+    implementation("com.darkrockstudios:mpfilepicker:3.1.0")
 
     testImplementation(compose.desktop.uiTestJUnit4)
     testImplementation(testFixtures(project(":common")))

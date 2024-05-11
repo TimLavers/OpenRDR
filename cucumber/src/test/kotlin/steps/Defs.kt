@@ -5,6 +5,7 @@ import io.cucumber.docstring.DocString
 import io.cucumber.java8.En
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.pause
+import io.rippledown.integration.proxy.ConfiguredTestData
 import io.rippledown.integration.utils.Cyborg
 import io.rippledown.integration.waitUntilAssertedOnEventThread
 import org.awaitility.Awaitility
@@ -19,6 +20,7 @@ import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 class Defs : En {
+    private var exportedZip: File? = null
     init {
         println("--------------- Defs init!!!!!!!!!!!!!!!!!!!!!!!----------------------")
         Before("not @database") { scenario ->
@@ -117,25 +119,30 @@ class Defs : En {
         }
 
         Given("I import the configured zipped Knowledge Base {word}") { toImport: String ->
-//            kbControlsPO.importKB(toImport)
-//            kbControlsPO.waitForKBToBeLoaded(toImport)
+            val zipFile = ConfiguredTestData.kbZipFile(toImport)
+            val kbControlOperator = applicationBarPO().kbControlOperator()
+            pause(10_000)
+            kbControlOperator.importKB(zipFile.absolutePath)
         }
 
         And("I export the current Knowledge Base") {
-//            kbControlsPO.exportKB()
+            exportedZip = File.createTempFile("Exported", ".zip")
+            val kbControlOperator = applicationBarPO().kbControlOperator()
+            kbControlOperator.exportKB(exportedZip!!.absolutePath)
         }
 
         Then("there is a file called {word} in my downloads directory") { fileName: String ->
             Awaitility.await().atMost(Duration.ofSeconds(5)).until {
-                File(StepsInfrastructure.uiTestBase!!.downloadsDir(), fileName).exists()
+                File(StepsInfrastructure.uiTestBase.downloadsDir(), fileName).exists()
             }
         }
 
-        Given("I import the exported Knowledge Base {word}") { kbName: String ->
-//            val exportedZip = File(uiTestBase.downloadsDir(), "$kbName.zip")
-//            val kbInfoPO = KBControlsPO(driver)
-//            kbInfoPO.importFromZip(exportedZip)
-//            kbInfoPO.waitForKBToBeLoaded(kbName)
+        Given("I import the previously exported Knowledge Base") {
+            require(exportedZip != null) {
+                "Import of previously exported KB attempted but exported KB is null."
+            }
+            val kbControlOperator = applicationBarPO().kbControlOperator()
+            kbControlOperator.importKB(exportedZip!!.absolutePath)
         }
 
         Given("case {word} is provided having data:") { caseName: String, dataTable: DataTable ->

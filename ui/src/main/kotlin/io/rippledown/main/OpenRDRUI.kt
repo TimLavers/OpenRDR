@@ -17,6 +17,7 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.diff.Diff
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.runBlocking
+import java.io.File
 
 interface Handler {
     var api: Api
@@ -40,6 +41,8 @@ fun OpenRDRUI(handler: Handler) {
                 override var isRuleSessionInProgress = ruleInProgress
                 override var selectKB: (id: String) -> Unit = { runBlocking { kbInfo = api.selectKB(it) } }
                 override var createKB: (name: String) -> Unit = { runBlocking { kbInfo = api.createKB(it) } }
+                override var importKB: (data: File) -> Unit = { runBlocking { kbInfo = api.importKBFromZip(it) } }
+                override var exportKB: (data: File) -> Unit = { runBlocking { api.exportKBToZip(it) } }
                 override val kbList: () -> List<KBInfo> = { runBlocking { api.kbList() } }
             })
         }

@@ -17,6 +17,10 @@ class Cyborg {
 
     fun tab() = pressAndRelease(KeyEvent.VK_TAB)
 
+    fun type(text: String) = text.forEach {
+        typeChar(it)
+    }
+
     fun typeSlowly(text: String) = text.forEach {
         typeChar(it)
         waitForDebounce()
@@ -24,10 +28,14 @@ class Cyborg {
 
     private fun typeChar(key: Char) {
         val keyCode = KeyEvent.getExtendedKeyCodeForChar(key.code)
-        if (keyCode == KeyEvent.VK_UNDEFINED) {
+        if (keyCode == KeyEvent.VK_UNDEFINED || keyCode == KeyEvent.VK_COLON) {
             typeSpecialChar(key)
         } else {
-            pressAndRelease(keyCode)
+            try {
+                pressAndRelease(keyCode)
+            } catch (e: Exception) {
+                println("Could not type '$key'. Key code is: $keyCode.")
+            }
         }
     }
 
@@ -69,6 +77,5 @@ class Cyborg {
         robot.delay(50)
         robot.keyRelease(KeyEvent.VK_SHIFT)
         robot.delay(50)
-
     }
 }

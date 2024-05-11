@@ -6,7 +6,6 @@ Feature: Knowledge Base management
     Then the displayed KB name is now Thyroids
     And stop the client application
 
-  @ignore
   Scenario: A previously exported Knowledge Base can be imported
     Given A Knowledge Base called Thyroids has been created
     And I start the client application
@@ -15,20 +14,15 @@ Feature: Knowledge Base management
     Then the displayed KB name is now Whatever
     And stop the client application
 
-  @ignore
   Scenario: A Knowledge Base can be exported
     Given I start the client application
     And the displayed KB name is Thyroids
     And I export the current Knowledge Base
-    And there is a file called Thyroids.zip in my downloads directory
-#  The new version of chrome shows a popup explaining
-#  where the downloads are. If we don't wait for this to
-#  disappear, it interferes with the test.
-    And pause for 20 seconds
+    And pause for 2 seconds
     And I import the configured zipped Knowledge Base Whatever
     And the displayed KB name is Whatever
-    And pause for 1 second
-    When I import the exported Knowledge Base Thyroids
+    And pause for 2 seconds
+    When I import the previously exported Knowledge Base
     Then the displayed KB name is now Thyroids
     And stop the client application
 

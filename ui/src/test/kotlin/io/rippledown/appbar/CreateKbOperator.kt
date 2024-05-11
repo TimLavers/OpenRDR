@@ -4,19 +4,14 @@ package io.rippledown.appbar
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
-import io.rippledown.constants.main.CREATE_KB_CANCEL_BUTTON_ID
-import io.rippledown.constants.main.CREATE_KB_NAME_FIELD_ID
-import io.rippledown.constants.main.CREATE_KB_OK_BUTTON_ID
+import io.rippledown.constants.main.*
 
-
-fun ComposeTestRule.waitToVanish() {
-    waitUntil {
-        onAllNodesWithTag(CREATE_KB_NAME_FIELD_ID).fetchSemanticsNodes().isEmpty()
-    }
+fun ComposeTestRule.enterKbName(text: String) {
+    onNodeWithContentDescription(CREATE_KB_NAME_FIELD_DESCRIPTION).performTextInput(text)
 }
 
-fun ComposeTestRule.enterKBName(text: String) {
-    onNodeWithTag(CREATE_KB_NAME_FIELD_ID).performTextInput(text)
+fun ComposeTestRule.enterZipFileName(path: String) {
+    onNodeWithContentDescription(IMPORT_KB_NAME_FIELD_DESCRIPTION).performTextInput(path)
 }
 
 @OptIn(ExperimentalTestApi::class)
@@ -24,12 +19,8 @@ fun ComposeTestRule.requireEnteredKBName(text: String) {
     waitUntilAtLeastOneExists(hasText(text))
 }
 
-fun ComposeTestRule.performTextClearance() = onNodeWithTag(CREATE_KB_NAME_FIELD_ID).performTextClearance()
+fun ComposeTestRule.assertOkButtonIsNotEnabled() = onNodeWithContentDescription(CREATE_KB_OK_BUTTON_DESCRIPTION).assertIsNotEnabled()
+fun ComposeTestRule.assertImportButtonIsNotEnabled() = onNodeWithContentDescription(IMPORT_KB_OK_BUTTON_DESCRIPTION).assertIsNotEnabled()
 
-fun ComposeTestRule.assertCreateButtonIsEnabled() = onNodeWithTag(CREATE_KB_OK_BUTTON_ID).assertIsEnabled()
-
-fun ComposeTestRule.assertOkButtonIsNotEnabled() = onNodeWithTag(CREATE_KB_OK_BUTTON_ID).assertIsNotEnabled()
-
-fun ComposeTestRule.clickCreateButton() = onNodeWithTag(CREATE_KB_OK_BUTTON_ID).performClick()
-
-fun ComposeTestRule.clickCancelButton() = onNodeWithTag(CREATE_KB_CANCEL_BUTTON_ID).performClick()
+fun ComposeTestRule.clickCreateButton() = onNodeWithContentDescription(CREATE_KB_OK_BUTTON_DESCRIPTION).performClick()
+fun ComposeTestRule.clickImportButton() = onNodeWithText(IMPORT_KB_TEXT).performClick()

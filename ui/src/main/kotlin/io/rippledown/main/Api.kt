@@ -6,6 +6,7 @@ import io.ktor.client.engine.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.rippledown.constants.api.*
@@ -58,49 +59,41 @@ class Api(engine: HttpClientEngine = CIO.create()) {
 
     suspend fun kbList() = client.get("$API_URL$KB_LIST").body<List<KBInfo>>()
 
-    fun importKBFromZip(file: File) {
-//        val code: dynamic = js("window.doZipUpload")
-//        val zipImportURL = "$API_URL$IMPORT_KB"
-//        code(zipImportURL, file)
+    suspend fun importKBFromZip(file: File): KBInfo {
+        val data = file.readBytes()
+        println("---- IMPORTING KB, data length: ${data.size} ----")
+        currentKB = client.post("$API_URL$IMPORT_KB") {
+            contentType(ContentType.Application.Zip)
+            setBody(MultiPartFormDataContent(
+                formData {
+                    append(
+                        "document",
+                        data,
+                        Headers.build {
+                            append(HttpHeaders.ContentType, "images/*") // Mime type required
+                            append(HttpHeaders.ContentDisposition, "filename=${file.name}")
+                        }
+                    )
+                }
+            ))
+        }.body()
+        return currentKB!!
     }
 
-    fun exportURL(): String {
-        return "$API_URL/api/exportKB"
-    }
-
-    suspend fun exportKBToZip() {
-        println("++++++++++++++++ about to call zip export")
-        val response = client.get("$API_URL$EXPORT_KB")
-//        debug("got response: ", response)
-//        debug("got heraders: ", response.headers)
-//        debug("got cont-disp: ", response.headers["Content-Disposition"])
-//        debug("got cont-type: ", response.headers["Content-Type"])
-//        val file = jsonClient.get("$API_URL/api/exportKB").body<File>()
-//            println("++++++++++++++++ zip export done, got bytes, length: ${file.size}")
-//        debug("blob: ${file.size}")
-//        println("blob: ${file.size}")
-//        val code: dynamic = js("window.saveZip")
-//        code(file)
-        debug("blobbbing done")
-    }
-
-    fun importInProgress(): Boolean {
-//        val inProgressFlagRaw = window.asDynamic().uploadZipInProgress.unsafeCast<Any>()
-//        debug("inProgressFlagRaw: $inProgressFlagRaw")
-//        if (inProgressFlagRaw == undefined) {
-//            return false
-//        }
-//        return inProgressFlagRaw.unsafeCast<Boolean>()
-        return true
+    suspend fun exportKBToZip(destination: File) {
+        val bytes = client.get("$API_URL/api/exportKB"){
+            parameter("KB", kbId())
+        }.body<ByteArray>()
+        destination.writeBytes(bytes)
     }
 
     suspend fun getCase(id: Long): ViewableCase? {
-        try {
-           return client.get("$API_URL$CASE?id=$id") {
+        return try {
+            client.get("$API_URL$CASE?id=$id") {
                 parameter("KB", kbId())
             }.body()
         } catch (e: Exception) {
-            return null
+            null
         }
     }
 

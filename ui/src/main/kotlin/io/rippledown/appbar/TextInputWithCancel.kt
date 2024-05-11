@@ -6,21 +6,24 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.main.*
 
-interface CreateKBHandler {
-    var create: (name: String) -> Unit
-    var cancel: () -> Unit
+interface TextInputHandler {
+    fun isValidInput(input: String): Boolean
+    fun labelText(): String
+    fun inputFieldDescription(): String
+    fun confirmButtonText(): String
+    fun confirmButtonDescription(): String
+    fun cancelButtonText() = CANCEL
+    fun handleInput(value: String)
+    fun cancel()
 }
-
 @Composable
-fun CreateKB(handler: CreateKBHandler) {
-    var kbName by remember { mutableStateOf("") }
-    fun isNameOK() = kbName.isNotBlank()
+fun TextInputWithCancel(handler: TextInputHandler) {
+    var textValue by remember { mutableStateOf("") }
 
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) {
@@ -34,17 +37,16 @@ fun CreateKB(handler: CreateKBHandler) {
                     modifier = Modifier.padding(all = 4.dp)
                 ) {
                     OutlinedTextField(
-                        value = kbName,
+                        value = textValue,
                         enabled = true,
                         onValueChange = { s ->
-                            kbName = s
+                            textValue = s
                         },
-                        label = { Text(text = CREATE_KB_NAME) },
+                        label = { Text(text = handler.labelText()) },
                         modifier = Modifier
-                            .testTag(CREATE_KB_NAME_FIELD_ID)
                             .fillMaxWidth()
                             .semantics {
-                                contentDescription = CREATE_KB_NAME_FIELD_DESCRIPTION
+                                contentDescription = handler.inputFieldDescription()
                             }
                             .focusRequester(focusRequester)
                     )
@@ -54,24 +56,22 @@ fun CreateKB(handler: CreateKBHandler) {
                     ) {
                         Button(
                             onClick = {
-                                handler.create(kbName)
+                                handler.handleInput(textValue)
                             },
-                            enabled = isNameOK(),
-                            modifier = Modifier.testTag(CREATE_KB_OK_BUTTON_ID)
-                                .semantics {
-                                    contentDescription = CREATE_KB_OK_BUTTON_DESCRIPTION
+                            enabled = handler.isValidInput(textValue),
+                            modifier = Modifier.semantics {
+                                    contentDescription = handler.confirmButtonDescription()
                                 }
                         ) {
-                            Text(CREATE)
+                            Text(handler.confirmButtonText())
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Button(
                             onClick = {
                                 handler.cancel()
                             },
-                            modifier = Modifier.testTag(CREATE_KB_CANCEL_BUTTON_ID)
                         ) {
-                            Text(CANCEL)
+                            Text(handler.cancelButtonText())
                         }
                     }
                 }

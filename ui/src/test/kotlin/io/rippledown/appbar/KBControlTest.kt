@@ -10,6 +10,7 @@ import io.rippledown.model.KBInfo
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
+import java.io.File
 import javax.swing.SwingUtilities.invokeAndWait
 import kotlin.test.Test
 
@@ -47,16 +48,15 @@ class KBControlTest {
                 KBControl(null, handler)
             }
             //Given
-            assertCreateKbButtonIsNotShowing()
+            assertCreateKbMenuItemIsNotShowing()
             assertKbNameIs("")
 
             //when
             clickDropdown()
 
             //Then
-            assertCreateKbButtonIsShowing()
+            assertCreateKbMenuItemIsShowing()
             assertDropdownItemsContain(lipidsInfo.name, glucose)
-
         }
     }
 
@@ -70,16 +70,15 @@ class KBControlTest {
                 KBControl(glucoseInfo, handler)
             }
             //Given
-            assertCreateKbButtonIsNotShowing()
+            assertCreateKbMenuItemIsNotShowing()
             assertKbNameIs(glucose)
 
             //when
             clickDropdown()
 
             //Then
-            assertCreateKbButtonIsShowing()
+            assertCreateKbMenuItemIsShowing()
             assertDropdownItemsContain(lipidsInfo.name)
-
         }
     }
 
@@ -93,20 +92,48 @@ class KBControlTest {
                 KBControl(glucoseInfo, handler)
             }
             //Given
-            assertCreateKbButtonIsNotShowing()
+            assertCreateKbMenuItemIsNotShowing()
             assertKbNameIs(glucose)
             clickDropdown()
-            assertCreateKbButtonIsShowing()
+            assertCreateKbMenuItemIsShowing()
 
             //When
-            clickCreateKbButton()
+            clickCreateKbMenuItem()
             assertOkButtonIsNotEnabled()
-            enterKBName(lipidsInfo.name)
+            enterKbName(lipidsInfo.name)
             requireEnteredKBName(lipidsInfo.name)
             invokeAndWait { clickCreateButton() }
 
             //Then
             verify { handler.createKB(lipidsInfo.name) }
+        }
+    }
+
+    @Test
+    fun `should import KB`() = runTest {
+        val glucose = "Glucose"
+        val resourcesRoot = "src/test/resources/"
+        val zip = File("${resourcesRoot}export/Empty.zip")
+        val glucoseInfo = KBInfo(glucose)
+        every { handler.kbList } returns { listOf(lipidsInfo, glucoseInfo) }
+        with(composeTestRule) {
+            setContent {
+                KBControl(glucoseInfo, handler)
+            }
+            //Given
+            assertImportKbMenuItemIsNotShowing()
+            assertKbNameIs(glucose)
+            clickDropdown()
+            assertImportKbMenuItemIsShowing()
+
+            //When
+            clickImportKbMenuItem()
+            assertImportButtonIsNotEnabled()
+            enterZipFileName(zip.absolutePath)
+            invokeAndWait { clickImportButton() }
+
+            //Then
+//            verify { handler.importKB(zip) }
         }
     }
 }
