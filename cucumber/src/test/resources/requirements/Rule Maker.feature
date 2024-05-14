@@ -1,6 +1,21 @@
-@ignore
-Feature: Building rules
+Feature: The user can make rules that change the interpretive report
 
+  @single
+  Scenario: When the user starts to build a rule, condition hints should be shown
+    Given I start the client application
+    And case Bondi is provided having data:
+      | Wave | excellent |
+      | Sun  | hot       |
+    And I enter the text "Let's surf" in the interpretation field
+    And the changes badge indicates that there is 1 change
+    And I select the changes tab
+    When I start to build a rule for the change on row 0
+    Then the conditions showing should be:
+      | Wave is not blank |
+      | Sun is not blank  |
+    And stop the client application
+
+  @ignore
   Scenario: The user should be able to build a rule to add a comment
     Given a list of cases with the following names is stored on the server:
       | Case1 |
@@ -18,6 +33,7 @@ Feature: Building rules
     And  the interpretation field should contain the text "Go to Bondi."
     And stop the client application
 
+  @ignore
   Scenario: The user should be able to build rules to add several comments
     Given a list of cases with the following names is stored on the server:
       | Case1 |
@@ -38,6 +54,7 @@ Feature: Building rules
     And  the interpretation field should contain the text "Go to Bondi. Grow some trees."
     And stop the client application
 
+  @ignore
   Scenario: The user should be able to build a rule to remove a comment
     Given a list of cases with the following names is stored on the server:
       | Case1 |
@@ -57,6 +74,7 @@ Feature: Building rules
     And  the interpretation field should be empty
     And stop the client application
 
+  @ignore
   Scenario: The user should be able to build a rule to replace a comment
     Given a list of cases with the following names is stored on the server:
       | Case1 |
@@ -76,20 +94,7 @@ Feature: Building rules
     And  the interpretation field should contain the text "Go to Maroubra."
     And stop the client application
 
-  Scenario: When the user starts to build a rule, condition hints should be shown
-    Given I start the client application
-    And case Bondi is provided having data:
-      | Wave | excellent |
-      | Sun  | hot       |
-    And I enter the text "Let's surf" in the interpretation field
-    And the changes badge indicates that there is 1 change
-    And I select the changes tab
-    When I start to build a rule for the change on row 0
-    Then the conditions showing should be:
-      | Wave is not blank |
-      | Sun is not blank  |
-    And stop the client application
-
+  @ignore
   Scenario: The user should be able to build a rule to add a comment with a condition they have selected
     Given I start the client application
     And case Bondi is provided having data:
@@ -110,6 +115,7 @@ Feature: Building rules
       | Wave is not blank |
     And stop the client application
 
+  @ignore
   Scenario: The user should be able to build a rule to remove a comment with a condition they have selected
     Given case Bondi is provided having data:
       | Wave | poor    |
@@ -136,6 +142,7 @@ Feature: Building rules
     And  the interpretation field should contain the text "Go to Bondi."
     And stop the client application
 
+  @ignore
   Scenario: The user should be able to build a rule to replace a comment with a condition they have selected
     Given case Bondi is provided having data:
       | Wave | poor    |
@@ -162,6 +169,7 @@ Feature: Building rules
     And  the interpretation field should contain the text "Go to Bondi."
     And stop the client application
 
+  @ignore
   Scenario: The conditions shown for a comment that is a replacement should include the conditions for the comment that has been replaced
     Given case Bondi is provided having data:
       | Wave | poor    |
@@ -177,6 +185,7 @@ Feature: Building rules
       | Sun is not blank  |
     And stop the client application
 
+  @ignore
   Scenario: A new rule should apply to any case satisfying its conditions
     Given I start the client application
     And case Bondi is provided having data:
@@ -202,6 +211,7 @@ Feature: Building rules
     And the interpretation field should be empty
     And stop the client application
 
+  @ignore
   Scenario: The user should be able to cancel the current rule being built
     Given I start the client application
     And case Bondi is provided having data:
@@ -225,6 +235,7 @@ Feature: Building rules
       | Manly |
     And stop the client application
 
+  @ignore
   Scenario: The KB controls should be disabled when building a rule
     Given a new case with the name Case1 is stored on the server
     And I start the client application
@@ -237,6 +248,7 @@ Feature: Building rules
     And cancel the rule
     And stop the client application
 
+  @ignore
   Scenario: The KB controls should be re-enabled after cancelling a rule
     Given a new case with the name Case1 is stored on the server
     And I start the client application

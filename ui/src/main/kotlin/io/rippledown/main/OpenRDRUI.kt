@@ -14,6 +14,7 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.condition.Condition
 import io.rippledown.model.diff.Diff
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.runBlocking
@@ -56,7 +57,7 @@ fun OpenRDRUI(handler: Handler) {
         })
 
         if (casesInfo.count > 0) {
-            CaseControl(casesInfo, object : CaseControlHandler, Handler by handler {
+            CaseControl(false, casesInfo, object : CaseControlHandler, Handler by handler {
                 override var setRuleInProgress = { inProgress: Boolean ->
                     ruleInProgress = inProgress
                 }
@@ -73,6 +74,9 @@ fun OpenRDRUI(handler: Handler) {
                     runBlocking {
                         api.moveAttribute(moved.id, target.id)
                     }
+                }
+                override suspend fun conditionHintsForCase(caseId: Long): List<Condition> {
+                    return api.conditionHints(caseId).conditions
                 }
             })
         }

@@ -60,7 +60,7 @@ class DifferencesViewTest {
     }
 
     @Test
-    fun `should show a a build icon for the first changed diff`() = runTest {
+    fun `should show a build icon for the first changed diff`() = runTest {
         val diffs = listOf(
             Unchanged(),
             Unchanged(),

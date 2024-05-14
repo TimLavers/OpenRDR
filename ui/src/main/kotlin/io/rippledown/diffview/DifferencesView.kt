@@ -91,7 +91,10 @@ fun DifferencesView(diffList: DiffList, handler: DifferencesViewHandler) {
                             toolTipText = "Build a rule for this change",
                             isSelected = false,
                             icon = painterResource("wrench_24.png"),
-                            onClick = { handler.onStartRule(diff) },
+                            onClick = {
+                                println("Starting rule for diff $diff")
+                                handler.onStartRule(diff)
+                            },
                             iconContentDescription = "$ICON_PREFIX$index"
                         )
                     } else {

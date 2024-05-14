@@ -13,7 +13,6 @@ import io.rippledown.model.diff.Diff
 
 interface CaseInspectionHandler : CaseViewHandler, InterpretationTabsHandler {
     var updateCase: (Long) -> Unit
-    var ruleSessionInProgress: (Boolean) -> Unit
 }
 
 @Composable
@@ -32,7 +31,7 @@ fun CaseInspection(case: ViewableCase, handler: CaseInspectionHandler) {
             }
         })
         InterpretationTabs(case.viewableInterpretation, object : InterpretationTabsHandler {
-            override var onStartRule: (selectedDiff: Diff) -> Unit = { }
+            override var onStartRule: (selectedDiff: Diff) -> Unit = { handler.onStartRule(it) }
             override var isCornerstone: Boolean = false
             override var onInterpretationEdited: (text: String) -> Unit = {
                 handler.onInterpretationEdited(it)
