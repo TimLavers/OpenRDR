@@ -23,11 +23,10 @@ import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CONCLUSIONS_LAB
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL_LABEL
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_PREFIX
 import io.rippledown.interpretation.*
-import io.rippledown.model.diff.Diff
 import io.rippledown.model.interpretationview.ViewableInterpretation
 
 interface InterpretationTabsHandler {
-    var onStartRule: (selectedDiff: Diff) -> Unit
+    var onStartRule: (indexOfSelectedDiff: Int) -> Unit
     var onInterpretationEdited: (text: String) -> Unit
     var isCornerstone: Boolean
 }
@@ -108,8 +107,8 @@ fun InterpretationTabs(viewableInterpretation: ViewableInterpretation, handler: 
             2 -> {
                 DifferencesView(viewableInterpretation.diffList,
                     handler = object : DifferencesViewHandler {
-                        override fun onStartRule(selectedDiff: Diff) {
-                            handler.onStartRule(selectedDiff)
+                        override var onStartRule = { indexOfSelectedDiff: Int ->
+                            handler.onStartRule(indexOfSelectedDiff)
                         }
                     })
             }

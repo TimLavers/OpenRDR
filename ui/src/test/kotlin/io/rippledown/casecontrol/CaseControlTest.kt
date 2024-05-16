@@ -820,10 +820,11 @@ fun main() {
                 CaseId(id = index.toLong(), name = name)
             }
             caseIds.map { caseId ->
-                createCaseWithInterpretation(caseId.name, caseId.id, listOf("Go to Bondi $caseId"))
+                createCaseWithInterpretation(caseId.name, caseId.id, listOf("Go to Bondi ${caseId.id}."))
             }.forEach {
                 coEvery { handler.getCase(it.case.caseId.id!!) } returns it
             }
+            coEvery { handler.saveCase(any()) } answers { firstArg() }
             CaseControl(false, CasesInfo(caseIds), handler)
         }
     }

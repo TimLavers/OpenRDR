@@ -1,6 +1,6 @@
 Feature: The user can make rules that change the interpretive report
 
-  @single
+#  @single
   Scenario: When the user starts to build a rule, condition hints should be shown
     Given I start the client application
     And case Bondi is provided having data:

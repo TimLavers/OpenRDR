@@ -237,7 +237,7 @@ class DifferencesViewTest {
             clickBuildIconForRow(1)
 
             //Then
-            verify { handler.onStartRule(diffs[1]) }
+            verify { handler.onStartRule(1) }
         }
     }
 }

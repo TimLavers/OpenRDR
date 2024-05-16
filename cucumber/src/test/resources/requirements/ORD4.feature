@@ -74,6 +74,7 @@ Feature: Reviewing the interpretation of a case
     Then the interpretation field should contain the text "Go to Bondi."
     And stop the client application
 
+  @single
   Scenario: The badge indicating the number of changes to an interpretation should be shown
     Given a new case with the name Case1 is stored on the server
     And  a new case with the name Case2 is stored on the server
@@ -82,6 +83,7 @@ Feature: Reviewing the interpretation of a case
     And I should see the case Case1 as the current case
     And the interpretation field should contain the text "Go to Bondi."
     When I enter the text "No, go to Malabar." in the interpretation field
+    And I select the changes tab
     Then the changes badge indicates that there is 1 change
     And stop the client application
 

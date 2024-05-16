@@ -14,7 +14,6 @@ import io.rippledown.model.CaseId
 import io.rippledown.model.createCase
 import io.rippledown.model.createCaseWithInterpretation
 import io.rippledown.model.diff.Addition
-import io.rippledown.model.diff.Diff
 import io.rippledown.model.diff.DiffList
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -83,7 +82,7 @@ class CaseInspectionTest {
             clickBuildIconForRow(0)
 
             //Then
-            verify { handler.onStartRule(diffList.get(0)) }
+            verify { handler.onStartRule(0) }
         }
     }
     /*
@@ -365,7 +364,7 @@ fun main() {
             CaseInspection(case, object : CaseInspectionHandler {
                 override var caseEdited: () -> Unit = {}
                 override var updateCase: (Long) -> Unit = { }
-                override var onStartRule: (selectedDiff: Diff) -> Unit = { }
+                override var onStartRule: (indexOfSelectedDiff: Int) -> Unit = { }
                 override var isCornerstone = false
                 override var onInterpretationEdited: (text: String) -> Unit = { }
                 override fun swapAttributes(moved: Attribute, target: Attribute) {}

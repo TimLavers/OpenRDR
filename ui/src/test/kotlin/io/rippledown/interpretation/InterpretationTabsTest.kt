@@ -239,7 +239,7 @@ class InterpretationTabsTest {
             clickBuildIconForRow(2)
 
             //Then
-            verify { handler.onStartRule(differenceList[2]) }
+            verify { handler.onStartRule(2) }
         }
     }
 
@@ -274,7 +274,7 @@ fun main() {
             onCloseRequest = ::exitApplication,
         ) {
             InterpretationTabs(interpretationWithConclusions(), object : InterpretationTabsHandler {
-                override var onStartRule: (selectedDiff: Diff) -> Unit = { }
+                override var onStartRule: (indexOfSelectedDiff: Int) -> Unit = { }
                 override var isCornerstone = false
                 override var onInterpretationEdited: (text: String) -> Unit = { }
 
