@@ -39,7 +39,7 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
         return actualCount
     }
 
-    fun casesListed(): List<String> {
+    private fun casesListed(): List<String> {
         val result = mutableListOf<String>()
         SwingUtilities.invokeAndWait {
             val caseNames = caseListContext()?.findLabelChildren()?: emptyList()
