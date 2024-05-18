@@ -97,9 +97,9 @@ class TSHStepDefs : En {
     }
 }
 class TSHRulesBuilder(val restClient: RESTClient) {
-    val attributeFactory = RestClientAttributeFactory(restClient)
-    val conclusionFactory = RestClientConclusionFactory(restClient)
-    val conditionFactory = RestClientConditionFactory(restClient)
+    private val attributeFactory = RestClientAttributeFactory(restClient)
+    private val conclusionFactory = RestClientConclusionFactory(restClient)
+    private val conditionFactory = RestClientConditionFactory(restClient)
 
     private fun isPresent(attribute: Attribute) = EpisodicCondition(null, attribute, IsNotBlank, Current)
     private fun isNotPresent(attribute: Attribute) = CaseStructureCondition(null, IsAbsentFromCase(attribute))
