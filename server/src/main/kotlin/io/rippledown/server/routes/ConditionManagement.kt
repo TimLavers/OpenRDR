@@ -18,8 +18,10 @@ fun Application.conditionManagement(application: ServerApplication) {
             val conditionHints = try {
                 kbEndpoint(application).conditionHintsForCase(id)
             } catch (e: Exception) {
+                e.printStackTrace()
                 call.respond(HttpStatusCode.BadRequest)
             }
+            println("conditionHints from server for id $id = ${conditionHints}")
             call.respond(conditionHints)
         }
 

@@ -100,7 +100,7 @@ class KBManagementTest: OpenRDRServerTestBase() {
         setup()
         val zipFile = File("src/test/resources/export/KBExported.zip")
         val zipBytes = zipFile.readBytes()
-        every { serverApplication.importKBFromZip(zipBytes) } returns Unit
+//        every { serverApplication.importKBFromZip(zipBytes) } returns Unit
         val boundary = "WebAppBoundary"
         val response = httpClient.post(IMPORT_KB) {
             parameter(KB_ID, kbId)

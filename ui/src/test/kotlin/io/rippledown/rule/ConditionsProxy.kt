@@ -4,6 +4,17 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import io.rippledown.constants.rule.*
+import io.rippledown.utils.print
+
+fun ComposeTestRule.requireRuleMakerToBeDisplayed() {
+    val onNodeWithContentDescription = onNodeWithContentDescription(RULE_MAKER)
+    onNodeWithContentDescription.print()
+    onNodeWithContentDescription.assertIsDisplayed()
+}
+
+fun ComposeTestRule.requireRuleMakerNotToBeDisplayed() {
+    onNodeWithContentDescription(RULE_MAKER).assertDoesNotExist()
+}
 
 fun ComposeTestRule.requireAvailableConditionsToBeDisplayed(conditions: List<String>) {
     onNodeWithContentDescription(AVAILABLE_CONDITIONS).onChildren().assertCountEquals(conditions.size)
@@ -32,4 +43,12 @@ fun ComposeTestRule.hoverOverSelectedCondition(index: Int) {
 
 fun ComposeTestRule.removeSelectedCondition(index: Int) {
     onNodeWithContentDescription("$REMOVE_CONDITION_ICON_PREFIX$index").performClick()
+}
+
+fun ComposeTestRule.clickFinishRuleButton() {
+    onNodeWithContentDescription(FINISH_RULE_BUTTON).performClick()
+}
+
+fun ComposeTestRule.clickCancelRuleButton() {
+    onNodeWithContentDescription(CANCEL_RULE_BUTTON).performClick()
 }

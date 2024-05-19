@@ -21,7 +21,7 @@ fun CaseInspection(case: ViewableCase, handler: CaseInspectionHandler) {
         modifier = androidx.compose.ui.Modifier
             .padding(bottom = 5.dp)
             .fillMaxHeight()
-            .fillMaxWidth()
+            .width(1000.dp)
     ) {
         CaseView(case, handler = object : CaseViewHandler {
             override var caseEdited = {} //TODO

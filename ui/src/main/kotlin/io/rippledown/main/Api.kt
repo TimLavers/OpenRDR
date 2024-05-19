@@ -22,12 +22,18 @@ import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import java.io.File
 
+const val KB_PARAMETER = "KB"
+
 class Api(engine: HttpClientEngine = CIO.create()) {
     private var currentKB: KBInfo? = null
     private val client = HttpClient(engine) {
         install(ContentNegotiation) {
             json()
         }
+    }
+
+    suspend fun HttpRequestBuilder.setKBParameter() {
+        parameter(KB_PARAMETER, kbInfo().id)
     }
 
     fun shutdown() {
@@ -81,8 +87,8 @@ class Api(engine: HttpClientEngine = CIO.create()) {
     }
 
     suspend fun exportKBToZip(destination: File) {
-        val bytes = client.get("$API_URL/api/exportKB"){
-            parameter("KB", kbId())
+        val bytes = client.get("$API_URL/api/exportKB") {
+            setKBParameter()
         }.body<ByteArray>()
         destination.writeBytes(bytes)
     }
@@ -90,7 +96,7 @@ class Api(engine: HttpClientEngine = CIO.create()) {
     suspend fun getCase(id: Long): ViewableCase? {
         return try {
             client.get("$API_URL$CASE?id=$id") {
-                parameter("KB", kbId())
+                setKBParameter()
             }.body()
         } catch (e: Exception) {
             null
@@ -99,20 +105,20 @@ class Api(engine: HttpClientEngine = CIO.create()) {
 
     suspend fun deleteCase(caseName: String) {
         client.delete("$API_URL$DELETE_CASE_WITH_NAME") {
-            parameter("KB", kbId())
             parameter("name", caseName)
+            setKBParameter()
         }
     }
 
     suspend fun waitingCasesInfo(): CasesInfo = client.get("$API_URL$WAITING_CASES") {
-        parameter("KB", kbId())
+        setKBParameter()
     }.body()
 
     suspend fun moveAttribute(moved: Int, target: Int): OperationResult {
         return client.post("$API_URL$MOVE_ATTRIBUTE") {
             contentType(ContentType.Application.Json)
             setBody(Pair(moved, target))
-            parameter("KB", kbId())
+            setKBParameter()
         }.body()
     }
 
@@ -123,10 +129,11 @@ class Api(engine: HttpClientEngine = CIO.create()) {
         val returned = client.post("$API_URL$VERIFIED_INTERPRETATION_SAVED") {
             contentType(ContentType.Application.Json)
             setBody(case)
-            parameter("KB", kbId())
+            setKBParameter()
         }.body<ViewableCase>()
         return returned
     }
+
 
     /**
      * Build a rule for the selected Diff in the interpretation
@@ -138,6 +145,7 @@ class Api(engine: HttpClientEngine = CIO.create()) {
         return client.post("$API_URL$BUILD_RULE") {
             contentType(ContentType.Application.Json)
             setBody(ruleRequest)
+            setKBParameter()
         }.body()
     }
 
@@ -151,6 +159,7 @@ class Api(engine: HttpClientEngine = CIO.create()) {
         val body = client.post("$API_URL$START_RULE_SESSION") {
             contentType(ContentType.Application.Json)
             setBody(sessionStartRequest)
+            setKBParameter()
         }.body<CornerstoneStatus>()
         return body
     }
@@ -164,14 +173,18 @@ class Api(engine: HttpClientEngine = CIO.create()) {
         return client.post("$API_URL$UPDATE_CORNERSTONES") {
             contentType(ContentType.Application.Json)
             setBody(updateCornerstoneRequest)
+            setKBParameter()
         }.body()
     }
 
     /**
      * @return the conditions that are suggested for building a rule for the selected Diff in the case's interpretation
      */
-    suspend fun conditionHints(caseId: Long): ConditionList =
-        client.get("$API_URL$CONDITION_HINTS?id=$caseId").body()
+    suspend fun conditionHints(caseId: Long): ConditionList {
+        return client.get("$API_URL$CONDITION_HINTS?id=$caseId") {
+            setKBParameter()
+        }.body()
+    }
 
     /**
      * Retrieves the specified cornerstone for current the rule session
@@ -180,9 +193,10 @@ class Api(engine: HttpClientEngine = CIO.create()) {
      * @return the cornerstone, its index and the total number of cornerstones
      */
     suspend fun selectCornerstone(index: Int): CornerstoneStatus {
-        return client.get("$API_URL$SELECT_CORNERSTONE?$INDEX_PARAMETER=$index").body()
+        return client.get("$API_URL$SELECT_CORNERSTONE?$INDEX_PARAMETER=$index") {
+            setKBParameter()
+        }.body()
     }
 
-    private suspend fun kbId() = kbInfo().id
 }
 

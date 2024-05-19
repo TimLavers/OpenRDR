@@ -1,6 +1,6 @@
 Feature: The user can make rules that change the interpretive report
 
-#  @single
+  @single
   Scenario: When the user starts to build a rule, condition hints should be shown
     Given I start the client application
     And case Bondi is provided having data:
@@ -9,6 +9,7 @@ Feature: The user can make rules that change the interpretive report
     And I enter the text "Let's surf" in the interpretation field
     And the changes badge indicates that there is 1 change
     And I select the changes tab
+    And pause
     When I start to build a rule for the change on row 0
     Then the conditions showing should be:
       | Wave is not blank |

@@ -1,11 +1,14 @@
 package io.rippledown.rule
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import io.rippledown.constants.rule.RULE_MAKER
 import io.rippledown.model.condition.Condition
 
 interface RuleMakerHandler {
@@ -20,8 +23,11 @@ fun RuleMaker(allConditions: List<Condition>, handler: RuleMakerHandler) {
     var availableConditions by remember { mutableStateOf(allConditions) }
     var filterText by remember { mutableStateOf("") }
 
+    println("RuleMaker")
     Column(
-        modifier = Modifier.heightIn(100.dp, 400.dp)
+        modifier = Modifier
+            .height(800.dp)
+            .semantics { contentDescription = RULE_MAKER }
     ) {
         SelectedConditions(selectedConditions, object : SelectedConditionsHandler {
             override var onRemoveCondition = { condition: Condition ->
@@ -42,6 +48,11 @@ fun RuleMaker(allConditions: List<Condition>, handler: RuleMakerHandler) {
                 selectedConditions = selectedConditions + condition
                 availableConditions = availableConditions - condition
             }
+        })
+
+        RuleControlButtons(object : RuleControlButtonsHandler {
+            override var cancel = handler.onCancel
+            override var finish = { handler.onDone(selectedConditions) }
         })
     }
 }

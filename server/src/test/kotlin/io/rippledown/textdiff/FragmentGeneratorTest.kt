@@ -98,6 +98,12 @@ class FragmentGeneratorTest {
     }
 
     @Test
+    fun `should trim a paragraph before splitting`() {
+        val paragraph = "Sun is up.  "
+        paragraph.splitIntoSentences() shouldBe listOf("Sun is up.")
+    }
+
+    @Test
     fun `should split a paragraph into sentences delimited by a ! and a space`() {
         val paragraph = "Sun is up! Go to Bondi Beach. Surf is great."
         paragraph.splitIntoSentences() shouldBe listOf("Sun is up!", "Go to Bondi Beach.", "Surf is great.")

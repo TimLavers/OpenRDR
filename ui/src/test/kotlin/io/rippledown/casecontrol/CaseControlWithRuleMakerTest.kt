@@ -19,7 +19,7 @@ import io.rippledown.model.createCaseWithInterpretation
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.diff.Unchanged
-import io.rippledown.rule.requireAvailableConditionsToBeDisplayed
+import io.rippledown.rule.*
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -31,8 +31,8 @@ class CaseControlWithRuleMakerTest {
     val composeTestRule = createComposeRule()
 
     lateinit var handler: CaseControlHandler
-    lateinit var caseName: String
-    lateinit var caseId: CaseId
+    private lateinit var caseName: String
+    private lateinit var caseId: CaseId
     lateinit var condition: Condition
 
     @Before
@@ -76,7 +76,51 @@ class CaseControlWithRuleMakerTest {
             clickBuildIconForRow(1)
 
             //Then
+            requireRuleMakerToBeDisplayed()
             requireAvailableConditionsToBeDisplayed(listOf(condition.asText()))
+        }
+    }
+
+    @Test
+    fun `should not show rule maker when a rule session is finished`() = runTest {
+        with(composeTestRule) {
+            setContent {
+                CaseControl(false, CasesInfo(listOf(caseId)), handler)
+            }
+            //Given
+            waitForCaseToBeShowing(caseName)
+            selectDifferencesTab()
+            requireNumberOfDiffRows(2)
+            clickBuildIconForRow(1)
+            requireRuleMakerToBeDisplayed()
+
+            //When
+            clickFinishRuleButton()
+
+            //Then
+            requireRuleMakerNotToBeDisplayed()
+        }
+    }
+
+    @Test
+    fun `should not show rule maker when a rule session is cancelled`() = runTest {
+        with(composeTestRule) {
+            setContent {
+                CaseControl(false, CasesInfo(listOf(caseId)), handler)
+            }
+            //Given
+            waitForCaseToBeShowing(caseName)
+            selectDifferencesTab()
+            requireNumberOfDiffRows(2)
+            println("clicking build icon")
+            clickBuildIconForRow(1)
+            requireRuleMakerToBeDisplayed()
+
+            //When
+            clickCancelRuleButton()
+
+            //Then
+            requireRuleMakerNotToBeDisplayed()
         }
     }
 

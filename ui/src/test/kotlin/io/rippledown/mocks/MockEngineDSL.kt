@@ -139,6 +139,7 @@ private class EngineBuilder(private val config: EngineConfig) {
 
             CONDITION_HINTS -> {
                 if (config.expectedCaseId != null) request.url.parameters["id"] shouldBe config.expectedCaseId.toString()
+                request.url.parameters["id"] shouldBe config.expectedCaseId.toString()
                 httpResponseData(json.encodeToString(config.returnConditionList))
             }
 

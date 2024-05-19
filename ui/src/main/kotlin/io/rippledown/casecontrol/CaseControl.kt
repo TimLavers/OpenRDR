@@ -2,19 +2,10 @@ package io.rippledown.casecontrol
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign.Companion
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import io.rippledown.constants.caseview.CASES
-import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
 import io.rippledown.main.Handler
 import io.rippledown.model.Attribute
@@ -60,35 +51,17 @@ fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseCont
         }
     }
 
-    Row {
+    Row(
+        modifier = Modifier.fillMaxSize(),
+        horizontalArrangement = Arrangement.Start,
+        verticalAlignment = Alignment.CenterVertically
+    )
+    {
         Column(
             modifier = Modifier.padding(10.dp),
             verticalArrangement = Arrangement.spacedBy(5.dp)
         ) {
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom,
-                modifier = Modifier.width(150.dp)
-            )
-            {
-                Text(
-                    text = CASES,
-                    textAlign = Companion.Left,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                    color = MaterialTheme.colors.primary,
-                    modifier = Modifier.weight(1f)
-                )
-                Text(
-                    text = casesInfo.count.toString(),
-                    textAlign = Companion.Right,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                    fontSize = 12.sp,
-                    modifier = Modifier.weight(1f).padding(end = 20.dp)
-                        .testTag(NUMBER_OF_CASES_ID)
-                        .semantics { contentDescription = NUMBER_OF_CASES_ID }
-                )
-            }
-
+            CaseSelectorHeader(casesInfo.caseIds.size)
             CaseSelector(casesInfo.caseIds, object : CaseSelectorHandler, Handler by handler {
                 override var selectCase = { id: Long ->
                     currentCaseId = id
@@ -126,18 +99,19 @@ fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseCont
                     handler.swapAttributes(moved, target)
                 }
             })
-        }
-        if (showRuleMaker) {
-            RuleMaker(conditionHintsForCase, object : RuleMakerHandler, Handler by handler {
-                override var onDone = { conditions: List<Condition> ->
-                    showRuleMaker = false
-                }
 
-                override var onCancel = {
-                    showRuleMaker = false
-                }
-            })
-        }
+            if (showRuleMaker) {
+                println("Showing RuleMaker")
+                RuleMaker(conditionHintsForCase, object : RuleMakerHandler, Handler by handler {
+                    override var onDone = { conditions: List<Condition> ->
+                        showRuleMaker = false
+                    }
 
+                    override var onCancel = {
+                        showRuleMaker = false
+                    }
+                })
+            }
+        }
     }
 }
