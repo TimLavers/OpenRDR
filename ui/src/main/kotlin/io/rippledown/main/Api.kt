@@ -10,6 +10,7 @@ import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.rippledown.constants.api.*
+import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.OperationResult
@@ -22,7 +23,6 @@ import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import java.io.File
 
-const val KB_PARAMETER = "KB"
 
 class Api(engine: HttpClientEngine = CIO.create()) {
     private var currentKB: KBInfo? = null
@@ -33,7 +33,7 @@ class Api(engine: HttpClientEngine = CIO.create()) {
     }
 
     suspend fun HttpRequestBuilder.setKBParameter() {
-        parameter(KB_PARAMETER, kbInfo().id)
+        parameter(KB_ID, kbInfo().id)
     }
 
     fun shutdown() {

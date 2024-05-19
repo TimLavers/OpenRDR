@@ -9,9 +9,8 @@ import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.verify
 import io.rippledown.constants.api.*
+import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.KBInfo
-import io.rippledown.model.OperationResult
-import io.rippledown.server.routes.KB_ID
 import java.io.File
 import kotlin.test.Test
 
@@ -100,10 +99,9 @@ class KBManagementTest: OpenRDRServerTestBase() {
         setup()
         val zipFile = File("src/test/resources/export/KBExported.zip")
         val zipBytes = zipFile.readBytes()
-//        every { serverApplication.importKBFromZip(zipBytes) } returns Unit
+        every { serverApplication.importKBFromZip(zipBytes) } returns KBInfo("Thyroid")
         val boundary = "WebAppBoundary"
         val response = httpClient.post(IMPORT_KB) {
-            parameter(KB_ID, kbId)
             setBody(
                 MultiPartFormDataContent(
                     formData {
@@ -117,7 +115,6 @@ class KBManagementTest: OpenRDRServerTestBase() {
                 )
             )
         }
-        response.body<OperationResult>().message shouldBe "KB imported"
         verify { serverApplication.importKBFromZip(zipBytes) }
     }
  }

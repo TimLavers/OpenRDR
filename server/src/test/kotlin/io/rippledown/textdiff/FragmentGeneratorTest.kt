@@ -5,7 +5,7 @@ import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Removal
 import io.rippledown.model.diff.Replacement
 import io.rippledown.model.diff.Unchanged
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class FragmentGeneratorTest {
 

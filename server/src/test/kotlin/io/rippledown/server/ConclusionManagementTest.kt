@@ -8,8 +8,8 @@ import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.verify
 import io.rippledown.constants.api.GET_OR_CREATE_CONCLUSION
+import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.Conclusion
-import io.rippledown.server.routes.KB_ID
 import kotlin.test.Test
 
 class ConclusionManagementTest: OpenRDRServerTestBase() {

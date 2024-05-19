@@ -7,9 +7,9 @@ Feature: The user can make rules that change the interpretive report
       | Wave | excellent |
       | Sun  | hot       |
     And I enter the text "Let's surf" in the interpretation field
+    And pause
     And the changes badge indicates that there is 1 change
     And I select the changes tab
-    And pause
     When I start to build a rule for the change on row 0
     Then the conditions showing should be:
       | Wave is not blank |

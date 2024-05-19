@@ -5,7 +5,9 @@ import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
+import io.rippledown.integration.utils.waitTillFound
 import io.rippledown.integration.waitForDebounce
+import io.rippledown.integration.waitUntilAssertedOnEventThread
 import io.rippledown.interpretation.CHANGED_PREFIX
 import io.rippledown.interpretation.DIFF_ROW_PREFIX
 import io.rippledown.interpretation.ORIGINAL_PREFIX
@@ -19,7 +21,14 @@ import javax.accessibility.AccessibleRole.TEXT
 class InterpretationViewPO(private val contextProvider: () -> AccessibleContext) {
 
     fun setVerifiedText(text: String): InterpretationViewPO {
-        contextProvider().find(INTERPRETATION_TEXT_FIELD, TEXT)?.accessibleEditableText?.setTextContents(text)
+        execute {
+            val accessibleContext = contextProvider().waitTillFound(INTERPRETATION_TEXT_FIELD, TEXT)
+            println("accessibleContext: $accessibleContext")
+            val accessibleEditableText = accessibleContext?.accessibleEditableText
+            println("accessibleEditableText = ${accessibleEditableText}")
+            accessibleEditableText?.setTextContents(text)
+        }
+        println("setVerifiedText: $text")
         waitForDebounce()
         return this
     }
@@ -49,11 +58,18 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
         }
     }
 
-    fun requireBadgeCount(expected: Int): InterpretationViewPO {
+    fun requireBadgeCount(expected: Int) {
+        try {
+            val badgeCount = diffTabProvider().getAccessibleChild(0).accessibleContext.accessibleName.toInt()
+            badgeCount shouldBe expected
+        } catch (e: NumberFormatException) {
+            throw AssertionError("Badge count is not a number")
+        }
+    }
+
+    fun waitForBadgeCount(expected: Int) {
         waitForDebounce()
-        val badgeCount = diffTabProvider().getAccessibleChild(0).accessibleContext.accessibleName.toInt()
-        badgeCount shouldBe expected
-        return this
+        waitUntilAssertedOnEventThread { requireBadgeCount(expected) }
     }
 
     private fun diffTabProvider() = contextProvider()

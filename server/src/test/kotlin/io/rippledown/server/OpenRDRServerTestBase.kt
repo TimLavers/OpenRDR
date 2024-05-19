@@ -8,6 +8,7 @@ import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.mockk
 import io.rippledown.server.routes.*
+import kotlinx.serialization.json.Json
 
 open class OpenRDRServerTestBase {
     val kbId = "2023"
@@ -21,7 +22,9 @@ open class OpenRDRServerTestBase {
         every { serverApplication.kbForId(kbId) } returns kbEndpoint
         httpClient = createClient {
             install(ContentNegotiation) {
-                json()
+                json(Json {
+                    ignoreUnknownKeys = true
+                })
             }
         }
         application {

@@ -8,6 +8,7 @@ import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.verify
 import io.rippledown.constants.api.*
+import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.CaseId
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
@@ -19,7 +20,6 @@ import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
-import io.rippledown.server.routes.KB_ID
 import kotlin.test.Test
 
 class InterpManagementTest : OpenRDRServerTestBase() {

@@ -288,7 +288,7 @@ class Defs : En {
         }
 
         And("the changes badge indicates that there is/are {int} change(s)") { numberOfChanges: Int ->
-            interpretationViewPO().requireBadgeCount(numberOfChanges)
+            interpretationViewPO().waitForBadgeCount(numberOfChanges)
         }
         And("the changes badge indicates that there is no change") {
 //            interpretationViewPO.requireNoBadge()

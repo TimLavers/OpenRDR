@@ -2,6 +2,8 @@ package io.rippledown.integration.utils
 
 import androidx.compose.ui.awt.ComposeDialog
 import androidx.compose.ui.awt.ComposeWindow
+import org.awaitility.Awaitility
+import java.time.Duration
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleRole
 
@@ -22,7 +24,10 @@ fun AccessibleContext.waitTillFound(description: String, role: AccessibleRole): 
     val matcher = { context: AccessibleContext ->
         description == context.accessibleDescription && role == context.accessibleRole
     }
-    return this.find(matcher)
+    Awaitility.await().atMost(Duration.ofSeconds(10)).until {
+        this.find(matcher, true) != null
+    }
+    return find(matcher, true)
 }
 fun AccessibleContext.findByName(name: String, role: AccessibleRole): AccessibleContext? {
     println("Find by name: '$name', role: '$role'")
