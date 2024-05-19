@@ -260,7 +260,7 @@ class Defs : En {
         }
 
         Then("the interpretation field should be empty") {
-            //interpretationViewPO.interpretationText() shouldBe ""
+            interpretationViewPO().interpretationText() shouldBe ""
         }
 
         And("the interpretation of the case {word} is {string}") { caseName: String, text: String ->

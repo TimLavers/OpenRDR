@@ -2,29 +2,13 @@ package steps
 
 import io.cucumber.java8.En
 import io.rippledown.examples.contact_lenses.*
-import io.rippledown.examples.contact_lenses.Age.young
-import io.rippledown.examples.contact_lenses.Astigmatism.astigmatic
+import io.rippledown.examples.contact_lenses.Age.pre_presbyopic
 import io.rippledown.examples.contact_lenses.Astigmatism.not_astigmatic
-import io.rippledown.examples.contact_lenses.Prescription.myope
+import io.rippledown.examples.contact_lenses.Prescription.hypermetrope
 import io.rippledown.examples.contact_lenses.TearProduction.normal
-import io.rippledown.examples.vltsh.TSHCases
 import io.rippledown.integration.RestClientAttributeFactory
-import io.rippledown.integration.RestClientConclusionFactory
-import io.rippledown.integration.RestClientConditionFactory
 import io.rippledown.integration.RestClientRuleBuilder
 import io.rippledown.integration.restclient.RESTClient
-import io.rippledown.model.Attribute
-import io.rippledown.model.condition.CaseStructureCondition
-import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.EpisodicCondition
-import io.rippledown.model.condition.SeriesCondition
-import io.rippledown.model.condition.episodic.predicate.*
-import io.rippledown.model.condition.episodic.signature.All
-import io.rippledown.model.condition.episodic.signature.AtLeast
-import io.rippledown.model.condition.episodic.signature.AtMost
-import io.rippledown.model.condition.episodic.signature.Current
-import io.rippledown.model.condition.series.Increasing
-import io.rippledown.model.condition.structural.IsAbsentFromCase
 
 class ContactLensesKBStepDefs : En {
     init {
@@ -54,15 +38,18 @@ class ContactLensesKBRuleBuilder(restClient: RESTClient): RestClientRuleBuilder(
     private val astigmatism = attributeFactory.create("astigmatism")
     private val tearProduction = attributeFactory.create("tear production")
     val young = conditionFactory.getOrCreate(isCondition(age, Age.young.name))
+    private val prePresbyopic = conditionFactory.getOrCreate(isCondition(age, pre_presbyopic.name))
     private val notAstigmatic = conditionFactory.getOrCreate(isCondition(astigmatism, not_astigmatic.name))
     private val astigmatic = conditionFactory.getOrCreate(isCondition(astigmatism, Astigmatism.astigmatic.name))
     private val normalTearProduction = conditionFactory.getOrCreate(isCondition(tearProduction, normal.name))
     private val myope = conditionFactory.getOrCreate(isCondition(prescription, Prescription.myope.name))
+    private val isHypermetrope = conditionFactory.getOrCreate(isCondition(prescription, hypermetrope.name))
     private val soft = "soft"
     private val hard = "hard"
 
     fun buildRules() {
         addCommentForCase("Case2", soft, notAstigmatic, normalTearProduction)
-        addCommentForCase("Case4", hard, myope, astigmatic, normalTearProduction)
+        addCommentForCase("Case4", hard, astigmatic, normalTearProduction)
+        removeCommentForCase("Case16", hard, prePresbyopic, isHypermetrope)
     }
 }

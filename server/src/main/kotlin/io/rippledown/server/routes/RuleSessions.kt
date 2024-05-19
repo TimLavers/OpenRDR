@@ -5,10 +5,7 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.rippledown.constants.api.ADD_CONDITION
-import io.rippledown.constants.api.COMMIT_SESSION
-import io.rippledown.constants.api.START_SESSION_TO_ADD_CONCLUSION
-import io.rippledown.constants.api.START_SESSION_TO_REPLACE_CONCLUSION
+import io.rippledown.constants.api.*
 import io.rippledown.model.Conclusion
 import io.rippledown.model.OperationResult
 import io.rippledown.model.condition.Condition
@@ -21,6 +18,11 @@ fun Application.ruleSession(application: ServerApplication) {
             val id = longId()
             val conclusion = call.receive<Conclusion>()
             kbEndpoint(application).startRuleSessionToAddConclusion(id, conclusion)
+            call.respond(HttpStatusCode.OK, OperationResult("Session started"))
+        }
+        post(START_SESSION_TO_REMOVE_CONCLUSION) {
+            val conclusion = call.receive<Conclusion>()
+            kbEndpoint(application).startRuleSessionToRemoveConclusion(longId(), conclusion)
             call.respond(HttpStatusCode.OK, OperationResult("Session started"))
         }
         post(START_SESSION_TO_REPLACE_CONCLUSION) {

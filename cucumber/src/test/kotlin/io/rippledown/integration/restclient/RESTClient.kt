@@ -127,6 +127,19 @@ class RESTClient {
         return result
     }
 
+    fun startSessionToRemoveConclusionForCurrentCase(toGo: Conclusion): OperationResult {
+        require(currentCase != null)
+        var result = OperationResult("")
+        runBlocking {
+            result = jsonClient.post(endpoint + START_SESSION_TO_REMOVE_CONCLUSION + "?id=${currentCase!!.id}") {
+                contentType(ContentType.Application.Json)
+                setBody(toGo)
+                parameter(KB_ID, currentKB.get().id)
+            }.body()
+        }
+        return result
+    }
+
     fun startSessionToReplaceConclusionForCurrentCase(toGo: Conclusion, replacement: Conclusion): OperationResult {
         require(currentCase != null)
         var result = OperationResult("")

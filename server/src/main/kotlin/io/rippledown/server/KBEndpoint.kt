@@ -49,7 +49,7 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
         kb.startRuleSession(case(caseId), ChangeTreeToAddConclusion(conclusion))
     }
 
-    private fun startRuleSessionToRemoveConclusion(caseId: Long, conclusion: Conclusion) {
+    fun startRuleSessionToRemoveConclusion(caseId: Long, conclusion: Conclusion) {
         kb.startRuleSession(case(caseId), ChangeTreeToRemoveConclusion(conclusion))
     }
 

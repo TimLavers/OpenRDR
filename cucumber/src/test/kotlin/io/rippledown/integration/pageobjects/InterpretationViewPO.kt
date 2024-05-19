@@ -30,7 +30,7 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
         return this
     }
 
-    fun interpretationText() = execute<String> {
+    fun interpretationText(): String = execute<String> {
         contextProvider().find(INTERPRETATION_TEXT_FIELD, TEXT)?.accessibleName ?: ""
     }
 

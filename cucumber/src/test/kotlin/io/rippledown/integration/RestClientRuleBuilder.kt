@@ -58,4 +58,17 @@ open class RestClientRuleBuilder(val restClient: RESTClient) {
         restClient.commitCurrentSession()
     }
 
+    fun removeCommentForCase(
+        caseName: String,
+        toGo: String,
+        vararg conditions: Condition
+    ) {
+        restClient.getCaseWithName(caseName)
+        val conclusionToGo = conclusionFactory.getOrCreate(toGo)
+        restClient.startSessionToRemoveConclusionForCurrentCase(conclusionToGo)
+        conditions.forEach {
+            restClient.addConditionForCurrentSession(it)
+        }
+        restClient.commitCurrentSession()
+    }
 }
