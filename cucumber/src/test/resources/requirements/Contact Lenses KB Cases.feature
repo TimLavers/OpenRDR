@@ -1,6 +1,5 @@
 Feature: The cases described in the Contact Lenses sample KB can be represented in OpenRDR
 
-  @single
   Scenario: Contact Lenses cases
     Given the Contact Lenses sample KB has been loaded
     And I start the client application
