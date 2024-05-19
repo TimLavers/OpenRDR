@@ -3,23 +3,21 @@ package steps
 import io.cucumber.java8.En
 import io.rippledown.examples.vltsh.TSHCases
 import io.rippledown.integration.RestClientAttributeFactory
-import io.rippledown.integration.RestClientConclusionFactory
-import io.rippledown.integration.RestClientConditionFactory
 import io.rippledown.integration.RestClientRuleBuilder
 import io.rippledown.integration.restclient.RESTClient
-import io.rippledown.model.Attribute
-import io.rippledown.model.condition.CaseStructureCondition
-import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.SeriesCondition
-import io.rippledown.model.condition.episodic.predicate.*
+import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals
+import io.rippledown.model.condition.episodic.predicate.IsNotBlank
+import io.rippledown.model.condition.episodic.predicate.IsNumeric
+import io.rippledown.model.condition.episodic.predicate.NormalOrHighByAtMostSomePercentage
 import io.rippledown.model.condition.episodic.signature.All
 import io.rippledown.model.condition.episodic.signature.AtLeast
 import io.rippledown.model.condition.episodic.signature.AtMost
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.series.Increasing
-import io.rippledown.model.condition.structural.IsAbsentFromCase
 
+@Suppress("unused") // Used in cucumber file.
 class TSHStepDefs : En {
     init {
         When("the TSH sample KB has been loaded") {

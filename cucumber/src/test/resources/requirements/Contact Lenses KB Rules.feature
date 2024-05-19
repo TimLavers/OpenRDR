@@ -1,11 +1,10 @@
 Feature: The cases described in the Contact Lenses sample KB get the correct interpretations
 
-  @single
   Scenario: Contact Lenses cases
     Given the Contact Lenses sample KB has been loaded
     And I start the client application
     Then the count of the number of cases is 24
-    And pause for 3 seconds
+    And pause for 2 seconds
 
     When I select case Case1
     Then the interpretation field should be empty
@@ -56,20 +55,28 @@ Feature: The cases described in the Contact Lenses sample KB get the correct int
     And pause for 2 seconds
     Then the interpretation field should be empty
 
-#    When I select case Case17
-#
-#    When I select case Case18
-#
-#    When I select case Case19
-#
-#    When I select case Case20
-#
-#    When I select case Case21
-#
-#    When I select case Case22
-#
-#    When I select case Case23
-#
-#    When I select case Case24
-#
+    When I select case Case17
+    Then the interpretation field should be empty
+
+    When I select case Case18
+    Then the interpretation field should be empty
+
+    When I select case Case19
+    Then the interpretation field should be empty
+
+    When I select case Case20
+    Then the interpretation should be "hard"
+
+    When I select case Case21
+    Then the interpretation field should be empty
+
+    When I select case Case22
+    Then the interpretation should be "soft"
+
+    When I select case Case23
+    Then the interpretation field should be empty
+
+    When I select case Case24
+    Then the interpretation field should be empty
+
     And stop the client application
