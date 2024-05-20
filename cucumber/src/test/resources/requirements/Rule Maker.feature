@@ -2,15 +2,16 @@ Feature: The user can make rules that change the interpretive report
 
   @single
   Scenario: When the user starts to build a rule, condition hints should be shown
-    Given I start the client application
-    And case Bondi is provided having data:
+    Given case Bondi is provided having data:
       | Wave | excellent |
       | Sun  | hot       |
+    And I start the client application
+    And I see the case Bondi as the current case
     And I enter the text "Let's surf" in the interpretation field
-    And pause
     And the changes badge indicates that there is 1 change
     And I select the changes tab
     When I start to build a rule for the change on row 0
+    And pause
     Then the conditions showing should be:
       | Wave is not blank |
       | Sun is not blank  |

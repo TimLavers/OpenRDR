@@ -2,8 +2,10 @@ package io.rippledown.casecontrol
 
 import InterpretationTabs
 import InterpretationTabsHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import io.rippledown.caseview.CaseView
 import io.rippledown.caseview.CaseViewHandler
@@ -19,9 +21,10 @@ fun CaseInspection(case: ViewableCase, handler: CaseInspectionHandler) {
     Column(
         verticalArrangement = Arrangement.Top,
         modifier = androidx.compose.ui.Modifier
-            .padding(bottom = 5.dp)
             .fillMaxHeight()
-            .width(1000.dp)
+            .padding(start = 5.dp)
+            .width(600.dp)
+            .background(Color.Red)
     ) {
         CaseView(case, handler = object : CaseViewHandler {
             override var caseEdited = {} //TODO

@@ -3,7 +3,6 @@ package io.rippledown.casecontrol
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
@@ -52,16 +51,14 @@ fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseCont
     }
 
     Row(
-        modifier = Modifier.fillMaxSize(),
-        horizontalArrangement = Arrangement.Start,
-        verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(10.dp)
     )
     {
-        Column(
-            modifier = Modifier.padding(10.dp),
-            verticalArrangement = Arrangement.spacedBy(5.dp)
-        ) {
+        Column {
             CaseSelectorHeader(casesInfo.caseIds.size)
+            Spacer(modifier = Modifier.height(10.dp))
             CaseSelector(casesInfo.caseIds, object : CaseSelectorHandler, Handler by handler {
                 override var selectCase = { id: Long ->
                     currentCaseId = id

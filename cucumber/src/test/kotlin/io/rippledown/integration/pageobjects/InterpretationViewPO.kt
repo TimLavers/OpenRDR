@@ -5,7 +5,6 @@ import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
-import io.rippledown.integration.utils.waitTillFound
 import io.rippledown.integration.waitForDebounce
 import io.rippledown.integration.waitUntilAssertedOnEventThread
 import io.rippledown.interpretation.CHANGED_PREFIX
@@ -21,14 +20,7 @@ import javax.accessibility.AccessibleRole.TEXT
 class InterpretationViewPO(private val contextProvider: () -> AccessibleContext) {
 
     fun setVerifiedText(text: String): InterpretationViewPO {
-        execute {
-            val accessibleContext = contextProvider().waitTillFound(INTERPRETATION_TEXT_FIELD, TEXT)
-            println("accessibleContext: $accessibleContext")
-            val accessibleEditableText = accessibleContext?.accessibleEditableText
-            println("accessibleEditableText = ${accessibleEditableText}")
-            accessibleEditableText?.setTextContents(text)
-        }
-        println("setVerifiedText: $text")
+        contextProvider().find(INTERPRETATION_TEXT_FIELD, TEXT)?.accessibleEditableText?.setTextContents(text)
         waitForDebounce()
         return this
     }

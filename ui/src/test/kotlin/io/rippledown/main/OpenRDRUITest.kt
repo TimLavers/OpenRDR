@@ -114,6 +114,11 @@ fun main() {
         CaseId(id = i.toLong(), name = "case $i")
     }
     val handler = mockk<Handler>(relaxed = true)
+    val api = mockk<Api>(relaxed = true)
+    coEvery { handler.api } returns api
+    coEvery { handler.isClosing() } returns false
+    coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+    coEvery { api.getCase(any()) } returns createCaseWithInterpretation("case A", 1, listOf("Go to Bondi"))
 
     application {
         Window(
