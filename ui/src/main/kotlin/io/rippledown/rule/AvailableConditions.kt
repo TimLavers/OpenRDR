@@ -4,9 +4,6 @@ package io.rippledown.rule
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,6 +11,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventType.Companion.Enter
+import androidx.compose.ui.input.pointer.PointerEventType.Companion.Exit
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -29,42 +27,50 @@ interface AvailableConditionsHandler {
 @Composable
 fun AvailableConditions(conditions: List<Condition>, handler: AvailableConditionsHandler) {
     var cursorOnRow: Int by remember { mutableStateOf(-1) }
-    val scrollState = rememberLazyListState()
+    val scrollState = rememberScrollState()
+    val hoverOverScroll = remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
             .height(200.dp)
-            .width(300.dp)
+            .border(1.dp, Color.Black)
     ) {
-        LazyColumn(
-            state = scrollState,
+        Column(
             modifier = Modifier
+                .border(1.dp, Color.Red)
+                .fillMaxWidth()
+                .verticalScroll(scrollState)
                 .semantics { contentDescription = AVAILABLE_CONDITIONS }
         ) {
-            itemsIndexed(conditions) { index, condition ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
+            conditions.forEachIndexed { index, condition ->
+                Text(
+                    text = condition.asText(),
                     modifier = Modifier
+                        .onPointerEvent(Enter) {
+                            cursorOnRow = index
+                        }
                         .background(
                             if (cursorOnRow == index) Color.LightGray else Color.Transparent
                         )
-                ) {
-                    Text(
-                        text = condition.asText(),
-                        modifier = Modifier
-                            .onPointerEvent(Enter) { cursorOnRow = index }
-                            .onClick {
-                                handler.onAddCondition(condition)
-                            }
-                            .padding(start = 10.dp)
-                            .semantics { contentDescription = "${AVAILABLE_CONDITION_PREFIX}$index" }
+                        .onClick {
+                            handler.onAddCondition(condition)
+                        }
+                        .padding(start = 10.dp)
+                        .semantics { contentDescription = "${AVAILABLE_CONDITION_PREFIX}$index" }
 
-                    )
-                }
+                )
             }
         }
         VerticalScrollbar(
-            modifier = Modifier.align(Alignment.CenterEnd),
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .onPointerEvent(Enter) {
+                    hoverOverScroll.value = true
+                }
+                .onPointerEvent(Exit) {
+                    hoverOverScroll.value = false
+                }
+                .requiredWidth(if (hoverOverScroll.value) 10.dp else 5.dp),
             adapter = rememberScrollbarAdapter(scrollState)
         )
     }

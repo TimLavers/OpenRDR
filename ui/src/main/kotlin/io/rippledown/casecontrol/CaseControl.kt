@@ -26,11 +26,9 @@ interface CaseControlHandler : Handler, CaseInspectionHandler {
 @Preview
 fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseControlHandler) {
     var currentCase: ViewableCase? by remember { mutableStateOf(null) }
-    var showSelector by remember { mutableStateOf(true) }
     var currentCaseId: Long? by remember { mutableStateOf(null) }
     var verifiedText: String? by remember { mutableStateOf(null) }
     var indexOfSelectedDiff: Int by remember { mutableStateOf(-1) }
-    var showRuleMaker by remember { mutableStateOf(ruleInProgress) }
     var conditionHintsForCase by remember { mutableStateOf(listOf<Condition>()) }
 
     LaunchedEffect(casesInfo, currentCaseId) {
@@ -52,18 +50,19 @@ fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseCont
 
     Row(
         modifier = Modifier
-            .fillMaxSize()
             .padding(10.dp)
     )
     {
-        Column {
-            CaseSelectorHeader(casesInfo.caseIds.size)
-            Spacer(modifier = Modifier.height(10.dp))
-            CaseSelector(casesInfo.caseIds, object : CaseSelectorHandler, Handler by handler {
-                override var selectCase = { id: Long ->
-                    currentCaseId = id
-                }
-            })
+        if (!ruleInProgress) {
+            Column {
+                CaseSelectorHeader(casesInfo.caseIds.size)
+                Spacer(modifier = Modifier.height(10.dp))
+                CaseSelector(casesInfo.caseIds, object : CaseSelectorHandler, Handler by handler {
+                    override var selectCase = { id: Long ->
+                        currentCaseId = id
+                    }
+                })
+            }
         }
 
         if (currentCase != null) {
@@ -80,7 +79,6 @@ fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseCont
                                 .copy(diffList = updatedDiffList)
                         )
                     currentCase = updatedCase
-                    showRuleMaker = true
                     handler.setRuleInProgress(true)
                 }
                 override var onInterpretationEdited: (text: String) -> Unit = {
@@ -96,16 +94,17 @@ fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseCont
                     handler.swapAttributes(moved, target)
                 }
             })
-
-            if (showRuleMaker) {
+            if (ruleInProgress) {
                 println("Showing RuleMaker")
+                Spacer(modifier = Modifier.width(10.dp))
                 RuleMaker(conditionHintsForCase, object : RuleMakerHandler, Handler by handler {
                     override var onDone = { conditions: List<Condition> ->
-                        showRuleMaker = false
+                        handler.setRuleInProgress(false)
                     }
 
                     override var onCancel = {
-                        showRuleMaker = false
+                        println("case control Canceling rule")
+                        handler.setRuleInProgress(false)
                     }
                 })
             }

@@ -5,6 +5,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import io.rippledown.model.condition.Condition
 import org.junit.Before
 import org.junit.Rule
@@ -30,7 +31,7 @@ class RuleMakerTest {
         with(composeTestRule) {
             //Given
             setContent {
-                RuleMaker(allConditions, mockk())
+                RuleMaker(allConditions, mockk(relaxed = true))
             }
 
             //Then
@@ -43,7 +44,7 @@ class RuleMakerTest {
         with(composeTestRule) {
             //Given
             setContent {
-                RuleMaker(allConditions, mockk())
+                RuleMaker(allConditions, mockk(relaxed = true))
             }
 
             //When
@@ -51,6 +52,24 @@ class RuleMakerTest {
 
             //Then
             requireSelectedConditionsToBeDisplayed(listOf(allConditions[2].asText()))
+        }
+    }
+
+    @Test
+    fun `should call handler when the done button is clicked`() {
+        val handler = mockk<RuleMakerHandler>(relaxed = true)
+        with(composeTestRule) {
+            //Given
+            setContent {
+                RuleMaker(allConditions, handler)
+            }
+            clickAvailableCondition(2)
+
+            //When
+            clickFinishRuleButton()
+
+            //Then
+            verify { handler.onDone(listOf(allConditions[2])) }
         }
     }
 

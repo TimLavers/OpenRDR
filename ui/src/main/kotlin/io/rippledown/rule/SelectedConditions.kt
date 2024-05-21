@@ -2,9 +2,6 @@ package io.rippledown.rule
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,6 +10,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventType.Companion.Enter
+import androidx.compose.ui.input.pointer.PointerEventType.Companion.Exit
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
@@ -33,13 +31,14 @@ interface SelectedConditionsHandler {
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun SelectedConditions(conditions: List<Condition>, handler: SelectedConditionsHandler) {
-    val scrollState = rememberLazyListState()
+    val scrollState = rememberScrollState()
+    val hoverOverScroll = remember { mutableStateOf(false) }
     var cursorOnRow: Int by remember { mutableStateOf(-1) }
 
-    Column(
+    Box(
         modifier = Modifier
-            .height(200.dp)
-            .width(300.dp)
+            .height(100.dp)
+            .border(1.dp, Color.Black)
     ) {
         Text(
             text = "Selected conditions",
@@ -51,11 +50,12 @@ fun SelectedConditions(conditions: List<Condition>, handler: SelectedConditionsH
                 .padding(5.dp)
                 .fillMaxWidth()
         )
-        LazyColumn(state = scrollState,
+        Column(
             modifier = Modifier
+                .verticalScroll(scrollState)
                 .semantics { contentDescription = SELECTED_CONDITIONS }
         ) {
-            itemsIndexed(conditions) { index, condition ->
+            conditions.forEachIndexed { index, condition ->
                 Row(
                     verticalAlignment = CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -88,7 +88,15 @@ fun SelectedConditions(conditions: List<Condition>, handler: SelectedConditionsH
             }
         }
         VerticalScrollbar(
-            modifier = Modifier.align(Alignment.End),
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .onPointerEvent(Enter) {
+                    hoverOverScroll.value = true
+                }
+                .onPointerEvent(Exit) {
+                    hoverOverScroll.value = false
+                }
+                .requiredWidth(if (hoverOverScroll.value) 10.dp else 5.dp),
             adapter = rememberScrollbarAdapter(scrollState)
         )
     }

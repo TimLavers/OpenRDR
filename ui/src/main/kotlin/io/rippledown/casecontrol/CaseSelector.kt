@@ -16,7 +16,6 @@ import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.key.KeyEventType.Companion.KeyDown
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.onPointerEvent
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -50,11 +49,10 @@ fun CaseSelector(caseIds: List<CaseId>, handler: CaseSelectorHandler) {
             modifier = Modifier
                 .size(150.dp, 800.dp)
                 .padding(start = 5.dp)
-                .testTag(CASELIST_ID)
+                .verticalScroll(scrollState)
                 .semantics {
                     contentDescription = CASELIST_ID
                 }
-                .verticalScroll(scrollState)
         ) {
             caseIds.forEachIndexed { index, caseId ->
                 focusRequestors.add(FocusRequester())

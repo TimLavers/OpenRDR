@@ -46,9 +46,12 @@ fun ComposeTestRule.removeSelectedCondition(index: Int) {
 }
 
 fun ComposeTestRule.clickFinishRuleButton() {
+    onNodeWithContentDescription(FINISH_RULE_BUTTON).assertIsDisplayed()
     onNodeWithContentDescription(FINISH_RULE_BUTTON).performClick()
+    waitForIdle()
 }
 
 fun ComposeTestRule.clickCancelRuleButton() {
     onNodeWithContentDescription(CANCEL_RULE_BUTTON).performClick()
+    waitForIdle()
 }

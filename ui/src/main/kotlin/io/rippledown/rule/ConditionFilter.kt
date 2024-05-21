@@ -1,6 +1,5 @@
 package io.rippledown.rule
 
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Icon
@@ -11,7 +10,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -28,11 +26,6 @@ interface ConditionFilterHandler {
 
 @Composable
 fun ConditionFilter(filter: String, handler: ConditionFilterHandler) {
-    Row(
-        verticalAlignment = CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-    ) {
         val focusRequester = remember { FocusRequester() }
 
         LaunchedEffect(Unit) {
@@ -59,6 +52,7 @@ fun ConditionFilter(filter: String, handler: ConditionFilterHandler) {
                 )
             },
             modifier = Modifier
+                .fillMaxWidth()
                 .focusRequester(focusRequester)
                 .semantics {
                     contentDescription = CURRENT_CONDITION
@@ -67,4 +61,3 @@ fun ConditionFilter(filter: String, handler: ConditionFilterHandler) {
 
     }
 
-}

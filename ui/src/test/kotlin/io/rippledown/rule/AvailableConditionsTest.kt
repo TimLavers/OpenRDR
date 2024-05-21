@@ -53,11 +53,8 @@ class AvailableConditionsTest {
 
             //Then
             verify { handler.onAddCondition(conditions[2]) }
-
         }
     }
-
-
 }
 
 fun main() {

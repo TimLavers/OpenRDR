@@ -19,7 +19,8 @@ import io.rippledown.model.createCaseWithInterpretation
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.diff.Unchanged
-import io.rippledown.rule.*
+import io.rippledown.rule.clickCancelRuleButton
+import io.rippledown.rule.clickFinishRuleButton
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -62,7 +63,7 @@ class CaseControlWithRuleMakerTest {
     }
 
     @Test
-    fun `should show rule maker when a rule session is started`() = runTest {
+    fun `should call handler when a rule session is started`() = runTest {
         with(composeTestRule) {
             setContent {
                 CaseControl(false, CasesInfo(listOf(caseId)), handler)
@@ -76,51 +77,55 @@ class CaseControlWithRuleMakerTest {
             clickBuildIconForRow(1)
 
             //Then
-            requireRuleMakerToBeDisplayed()
-            requireAvailableConditionsToBeDisplayed(listOf(condition.asText()))
+            coVerify { handler.setRuleInProgress(true) }
         }
     }
 
     @Test
-    fun `should not show rule maker when a rule session is finished`() = runTest {
+    fun `should call handler when a rule session is finished`() = runTest {
         with(composeTestRule) {
             setContent {
-                CaseControl(false, CasesInfo(listOf(caseId)), handler)
+                CaseControl(true, CasesInfo(listOf(caseId)), handler)
             }
             //Given
             waitForCaseToBeShowing(caseName)
-            selectDifferencesTab()
-            requireNumberOfDiffRows(2)
-            clickBuildIconForRow(1)
-            requireRuleMakerToBeDisplayed()
 
             //When
             clickFinishRuleButton()
 
             //Then
-            requireRuleMakerNotToBeDisplayed()
+            coVerify { handler.setRuleInProgress(false) }
         }
     }
 
     @Test
-    fun `should not show rule maker when a rule session is cancelled`() = runTest {
+    fun `should call handler when a rule session is cancelled`() = runTest {
         with(composeTestRule) {
             setContent {
-                CaseControl(false, CasesInfo(listOf(caseId)), handler)
+                CaseControl(true, CasesInfo(listOf(caseId)), handler)
             }
             //Given
             waitForCaseToBeShowing(caseName)
-            selectDifferencesTab()
-            requireNumberOfDiffRows(2)
-            println("clicking build icon")
-            clickBuildIconForRow(1)
-            requireRuleMakerToBeDisplayed()
 
             //When
             clickCancelRuleButton()
 
             //Then
-            requireRuleMakerNotToBeDisplayed()
+            coVerify { handler.setRuleInProgress(false) }
+        }
+    }
+
+    @Test
+    fun `should not show case selector when a rule session is started`() = runTest {
+        with(composeTestRule) {
+            setContent {
+                CaseControl(true, CasesInfo(listOf(caseId)), handler)
+            }
+            //Given
+            waitForCaseToBeShowing(caseName)
+
+            //Then
+            requireCaseSelectorNotToBeDisplayed()
         }
     }
 
@@ -144,25 +149,26 @@ class CaseControlWithRuleMakerTest {
     }
 
     @Test
-    fun `should set the selected difference in the viewable interpretation when a rule session is started`() = runTest {
-        with(composeTestRule) {
-            setContent {
-                CaseControl(false, CasesInfo(listOf(caseId)), handler)
+    fun `should set the selected difference in the viewable interpretation when a rule session is started`() =
+        runTest {
+            with(composeTestRule) {
+                setContent {
+                    CaseControl(false, CasesInfo(listOf(caseId)), handler)
+                }
+                //Given
+                waitForCaseToBeShowing(caseName)
+                selectDifferencesTab()
+                requireNumberOfDiffRows(2)
+
+                //When
+                clickBuildIconForRow(1)
+
+                //Then
+                val slot = slot<ViewableCase>()
+                coVerify { handler.saveCase(capture(slot)) }
+                slot.captured.viewableInterpretation.diffList.selected shouldBe 1
             }
-            //Given
-            waitForCaseToBeShowing(caseName)
-            selectDifferencesTab()
-            requireNumberOfDiffRows(2)
-
-            //When
-            clickBuildIconForRow(1)
-
-            //Then
-            val slot = slot<ViewableCase>()
-            coVerify { handler.saveCase(capture(slot)) }
-            slot.captured.viewableInterpretation.diffList.selected shouldBe 1
         }
-    }
 
     /*
         @Test

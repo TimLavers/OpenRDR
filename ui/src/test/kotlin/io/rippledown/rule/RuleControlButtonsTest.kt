@@ -44,7 +44,7 @@ class RuleControlButtonsTest {
             clickCancelRuleButton()
 
             //Then
-            verify { handler.cancel }
+            verify { handler.cancel() }
         }
     }
 
