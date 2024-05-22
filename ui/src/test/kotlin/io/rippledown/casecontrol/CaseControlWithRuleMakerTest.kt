@@ -1,24 +1,24 @@
 package io.rippledown.casecontrol
 
 import androidx.compose.ui.test.junit4.createComposeRule
-import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.slot
 import io.rippledown.diffview.clickBuildIconForRow
 import io.rippledown.diffview.requireNumberOfDiffRows
 import io.rippledown.interpretation.selectDifferencesTab
 import io.rippledown.model.Attribute
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
-import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.hasCurrentValue
 import io.rippledown.model.createCaseWithInterpretation
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.diff.Unchanged
+import io.rippledown.model.rule.RuleRequest
+import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.rule.clickCancelRuleButton
 import io.rippledown.rule.clickFinishRuleButton
 import kotlinx.coroutines.test.runTest
@@ -32,38 +32,39 @@ class CaseControlWithRuleMakerTest {
     val composeTestRule = createComposeRule()
 
     lateinit var handler: CaseControlHandler
-    private lateinit var caseName: String
-    private lateinit var caseId: CaseId
     lateinit var condition: Condition
+
+    val caseName = "Bondi"
+    val caseId = CaseId(45L, caseName)
+    val beachComment = "Enjoy the beach!"
+    val bondiComment = "Go to Bondi now!"
+    val diffList = DiffList(
+        listOf(
+            Unchanged(beachComment),
+            Addition(bondiComment),
+        )
+    )
+    val viewableCase = createCaseWithInterpretation(
+        name = caseName,
+        id = 1,
+        conclusionTexts = listOf(bondiComment),
+        diffs = diffList
+    )
 
     @Before
     fun setUp() {
         handler = mockk<CaseControlHandler>(relaxed = true)
-        caseName = "Bondi"
-        caseId = CaseId(45L, caseName)
-        val beachComment = "Enjoy the beach!"
-        val bondiComment = "Go to Bondi now!"
-        val diffList = DiffList(
-            listOf(
-                Unchanged(beachComment),
-                Addition(bondiComment),
-            )
-        )
-        val viewableCase = createCaseWithInterpretation(
-            name = caseName,
-            id = 1,
-            conclusionTexts = listOf(bondiComment),
-            diffs = diffList
-        )
+
 
         condition = hasCurrentValue(1, Attribute(2, "surf"))
+        coEvery { handler.buildRule(any()) } returns viewableCase
         coEvery { handler.getCase(any()) } returns viewableCase
         coEvery { handler.saveCase(any()) } answers { firstArg() }
         coEvery { handler.conditionHintsForCase(any()) } returns listOf(condition)
     }
 
     @Test
-    fun `should call handler when a rule session is started`() = runTest {
+    fun `should call handler to set the rule in progress flag when a rule session is started`() = runTest {
         with(composeTestRule) {
             setContent {
                 CaseControl(false, CasesInfo(listOf(caseId)), handler)
@@ -82,7 +83,26 @@ class CaseControlWithRuleMakerTest {
     }
 
     @Test
-    fun `should call handler when a rule session is finished`() = runTest {
+    fun `should call handler to start a backend rule session`() = runTest {
+        with(composeTestRule) {
+            setContent {
+                CaseControl(false, CasesInfo(listOf(caseId)), handler)
+            }
+            //Given
+            waitForCaseToBeShowing(caseName)
+            selectDifferencesTab()
+            requireNumberOfDiffRows(2)
+
+            //When
+            clickBuildIconForRow(1)
+
+            //Then
+            coVerify { handler.startRuleSession(SessionStartRequest(caseId.id!!, diffList[1])) }
+        }
+    }
+
+    @Test
+    fun `should call handler to finish rule session`() = runTest {
         with(composeTestRule) {
             setContent {
                 CaseControl(true, CasesInfo(listOf(caseId)), handler)
@@ -95,6 +115,24 @@ class CaseControlWithRuleMakerTest {
 
             //Then
             coVerify { handler.setRuleInProgress(false) }
+        }
+    }
+
+    @Test
+    fun `should call handler to build a rule with the appropriate rule request`() = runTest {
+        with(composeTestRule) {
+            setContent {
+                CaseControl(true, CasesInfo(listOf(caseId)), handler)
+            }
+            //Given
+            waitForCaseToBeShowing(caseName)
+
+            //When
+            clickFinishRuleButton()
+
+            //Then
+            val expectedRuleRequest = RuleRequest(1, ConditionList())
+            coVerify { handler.buildRule(expectedRuleRequest) }
         }
     }
 
@@ -148,27 +186,6 @@ class CaseControlWithRuleMakerTest {
         }
     }
 
-    @Test
-    fun `should set the selected difference in the viewable interpretation when a rule session is started`() =
-        runTest {
-            with(composeTestRule) {
-                setContent {
-                    CaseControl(false, CasesInfo(listOf(caseId)), handler)
-                }
-                //Given
-                waitForCaseToBeShowing(caseName)
-                selectDifferencesTab()
-                requireNumberOfDiffRows(2)
-
-                //When
-                clickBuildIconForRow(1)
-
-                //Then
-                val slot = slot<ViewableCase>()
-                coVerify { handler.saveCase(capture(slot)) }
-                slot.captured.viewableInterpretation.diffList.selected shouldBe 1
-            }
-        }
 
     /*
         @Test

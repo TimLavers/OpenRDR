@@ -79,14 +79,14 @@ internal class RuleBuildingFromDiffListTest {
 
         kbEndpoint.startRuleSession(SessionStartRequest(id, diffList.selectedChange()))
         val ruleRequest = RuleRequest(id)
-        val updatedInterpretation = kbEndpoint.commitRuleSession(ruleRequest)
+        val updatedCase = kbEndpoint.commitRuleSession(ruleRequest)
 
         withClue("the latest text should be unchanged") {
-            updatedInterpretation.latestText() shouldBe "$v1 $v2"
+            updatedCase.latestText() shouldBe "$v1 $v2"
         }
 
         withClue("The returned DiffList should be updated to reflect the new rule.") {
-            updatedInterpretation.diffList shouldBe DiffList(
+            updatedCase.diffList() shouldBe DiffList(
                 diffs = listOf(
                     Unchanged(v1),
                     Addition(v2)

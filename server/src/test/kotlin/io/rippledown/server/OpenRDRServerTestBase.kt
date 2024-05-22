@@ -24,6 +24,7 @@ open class OpenRDRServerTestBase {
             install(ContentNegotiation) {
                 json(Json {
                     ignoreUnknownKeys = true
+                    allowStructuredMapKeys = true
                 })
             }
         }

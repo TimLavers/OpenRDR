@@ -294,8 +294,7 @@ class Defs : En {
 //            interpretationViewPO.requireNoBadge()
         }
         When("I build a rule for the change on row {int}") { row: Int ->
-//            interpretationViewPO.buildRule(row)
-//            conditionSelectorPO.clickDone()
+            interpretationViewPO().buildRule(row)
         }
         When("I complete the rule") {
 //            conditionSelectorPO.clickDone()
@@ -305,7 +304,7 @@ class Defs : En {
         }
 
         When("I start to build a rule for the change on row {int}") { row: Int ->
-//            interpretationViewPO.buildRule(row)
+            interpretationViewPO().clickBuildIconOnRow(row)
         }
         When("I select the condition in position {int}") { index: Int ->
 //            conditionSelectorPO.clickConditionWithIndex(index)

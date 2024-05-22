@@ -21,11 +21,12 @@ import androidx.compose.ui.unit.dp
 import io.rippledown.constants.interpretation.INTERPRETATION_PANEL_CHANGES
 import io.rippledown.decoration.LightGreen
 import io.rippledown.decoration.LightRed
+import io.rippledown.model.diff.Diff
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.diff.Unchanged
 
 interface DifferencesViewHandler {
-    var onStartRule: (indexOfSelectedDiff: Int) -> Unit
+    fun onStartRule(selectedDiff: Diff)
 }
 
 val DIFF_VIEW = "DIFF_VIEW"
@@ -91,7 +92,7 @@ fun DifferencesView(diffList: DiffList, handler: DifferencesViewHandler) {
                             isSelected = false,
                             icon = painterResource("wrench_24.png"),
                             onClick = {
-                                handler.onStartRule(index)
+                                handler.onStartRule(diff)
                             },
                             iconContentDescription = "$ICON_PREFIX$index"
                         )

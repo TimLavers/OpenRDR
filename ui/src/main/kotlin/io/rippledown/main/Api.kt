@@ -16,7 +16,6 @@ import io.rippledown.model.KBInfo
 import io.rippledown.model.OperationResult
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
-import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
@@ -139,9 +138,9 @@ class Api(engine: HttpClientEngine = CIO.create()) {
      * Build a rule for the selected Diff in the interpretation
      *
      * @param ruleRequest the information needed to build the rule
-     * @return the updated interpretation
+     * @return the updated case
      */
-    suspend fun buildRule(ruleRequest: RuleRequest): ViewableInterpretation {
+    suspend fun buildRule(ruleRequest: RuleRequest): ViewableCase {
         return client.post("$API_URL$BUILD_RULE") {
             contentType(ContentType.Application.Json)
             setBody(ruleRequest)

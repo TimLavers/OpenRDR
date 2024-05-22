@@ -1,6 +1,5 @@
 Feature: The user can make rules that change the interpretive report
 
-  @single
   Scenario: When the user starts to build a rule, condition hints should be shown
     Given case Bondi is provided having data:
       | Wave | excellent |
@@ -10,14 +9,14 @@ Feature: The user can make rules that change the interpretive report
     And I enter the text "Let's surf" in the interpretation field
     And the changes badge indicates that there is 1 change
     And I select the changes tab
+    And pause for 2 seconds
     When I start to build a rule for the change on row 0
-    And pause
     Then the conditions showing should be:
       | Wave is not blank |
       | Sun is not blank  |
     And stop the client application
 
-  @ignore
+  @single
   Scenario: The user should be able to build a rule to add a comment
     Given a list of cases with the following names is stored on the server:
       | Case1 |
@@ -30,6 +29,7 @@ Feature: The user can make rules that change the interpretive report
     When I build a rule for the change on row 0
     Then the changes badge indicates that there is no change
     And I select the interpretation tab
+    And pause
     And  the interpretation field should contain the text "Go to Bondi."
     And select the case Case2
     And  the interpretation field should contain the text "Go to Bondi."

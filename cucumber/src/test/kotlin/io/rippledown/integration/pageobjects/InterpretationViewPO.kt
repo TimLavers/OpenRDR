@@ -1,14 +1,17 @@
 package io.rippledown.integration.pageobjects
 
+import io.kotest.matchers.comparables.shouldBeGreaterThanOrEqualTo
 import io.kotest.matchers.shouldBe
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
+import io.rippledown.constants.rule.FINISH_RULE_BUTTON
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
 import io.rippledown.integration.waitForDebounce
 import io.rippledown.integration.waitUntilAssertedOnEventThread
 import io.rippledown.interpretation.CHANGED_PREFIX
 import io.rippledown.interpretation.DIFF_ROW_PREFIX
+import io.rippledown.interpretation.ICON_PREFIX
 import io.rippledown.interpretation.ORIGINAL_PREFIX
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
@@ -84,6 +87,10 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
 
     fun numberOfRows() = execute<Int> { contextProvider().findAllByDescriptionPrefix(DIFF_ROW_PREFIX).size }
 
+    fun waitForNumberOfRowsToBeAtLeast(rows: Int) = waitUntilAssertedOnEventThread {
+        numberOfRows() shouldBeGreaterThanOrEqualTo rows
+    }
+
     fun requireNoRowsInDiffTable() = numberOfRows() shouldBe 0
 
     fun requireAddedTextRow(row: Int, text: String) {
@@ -127,8 +134,17 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
 
 //    fun WebElement.delete() = sendKeys(Keys.DELETE, Keys.BACK_SPACE)
 
-    fun buildRule(row: Int): InterpretationViewPO {
-//        driver.findElement(By.id("$DIFF_VIEWER_BUILD_ICON$row")).click()
-        return this
+    fun buildRule(row: Int) {
+        clickBuildIconOnRow(row)
+        clickFinishRuleButton()
+    }
+
+    private fun clickFinishRuleButton() {
+        execute { contextProvider().find(FINISH_RULE_BUTTON)?.accessibleAction?.doAccessibleAction(0) }
+    }
+
+    fun clickBuildIconOnRow(row: Int) {
+        waitForNumberOfRowsToBeAtLeast(row + 1)
+        execute { contextProvider().find("$ICON_PREFIX$row")?.accessibleAction?.doAccessibleAction(0) }
     }
 }

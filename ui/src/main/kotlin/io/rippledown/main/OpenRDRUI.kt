@@ -18,6 +18,9 @@ import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.diff.Diff
+import io.rippledown.model.rule.RuleRequest
+import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -64,7 +67,15 @@ fun OpenRDRUI(handler: Handler) {
                 override var setRuleInProgress = { inProgress: Boolean ->
                     ruleInProgress = inProgress
                 }
-                override var onStartRule: (indexOfSelectedDiff: Int) -> Unit = { }
+                override fun onStartRule(selectedDiff: Diff) {}//todo remove
+                override fun buildRule(ruleRequest: RuleRequest) = runBlocking {
+                    api.buildRule(ruleRequest)
+                }
+
+                override fun startRuleSession(sessionStartRequest: SessionStartRequest) = runBlocking {
+                    api.startRuleSession(sessionStartRequest)
+                }
+
                 override var onInterpretationEdited: (text: String) -> Unit = { }
                 override var isCornerstone: Boolean = false
                 override var updateCase: (Long) -> Unit = { }

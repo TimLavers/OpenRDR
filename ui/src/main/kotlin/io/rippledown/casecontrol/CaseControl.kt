@@ -11,6 +11,11 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.diff.Diff
+import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.model.rule.RuleRequest
+import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.rule.RuleMaker
 import io.rippledown.rule.RuleMakerHandler
 import kotlinx.coroutines.delay
@@ -20,6 +25,8 @@ interface CaseControlHandler : Handler, CaseInspectionHandler {
     var getCase: (caseId: Long) -> ViewableCase?
     suspend fun saveCase(case: ViewableCase): ViewableCase
     suspend fun conditionHintsForCase(caseId: Long): List<Condition>
+    fun startRuleSession(sessionStartRequest: SessionStartRequest): CornerstoneStatus
+    fun buildRule(ruleRequest: RuleRequest): ViewableCase
 }
 
 @Composable
@@ -70,16 +77,9 @@ fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseCont
                 override var updateCase = { id: Long ->
                     currentCaseId = id
                 }
-                override var onStartRule: (indexOfSelectedDiff: Int) -> Unit = {
-                    indexOfSelectedDiff = it
-                    val updatedDiffList = currentCase!!.viewableInterpretation.diffList.apply { selected = it }
-                    val updatedCase = currentCase!!
-                        .copy(
-                            viewableInterpretation = currentCase!!.viewableInterpretation
-                                .copy(diffList = updatedDiffList)
-                        )
-                    currentCase = updatedCase
-                    handler.setRuleInProgress(true)
+                override fun onStartRule(selectedDiff: Diff) {
+                    handler.setRuleInProgress(true)//todo remove
+                    handler.startRuleSession(SessionStartRequest(currentCaseId!!, selectedDiff))
                 }
                 override var onInterpretationEdited: (text: String) -> Unit = {
                     verifiedText = it
@@ -95,15 +95,15 @@ fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseCont
                 }
             })
             if (ruleInProgress) {
-                println("Showing RuleMaker")
                 Spacer(modifier = Modifier.width(10.dp))
                 RuleMaker(conditionHintsForCase, object : RuleMakerHandler, Handler by handler {
                     override var onDone = { conditions: List<Condition> ->
                         handler.setRuleInProgress(false)
+                        val ruleRequest = RuleRequest(currentCase!!.id!!, ConditionList(conditions))
+                        currentCase = handler.buildRule(ruleRequest)
                     }
 
                     override var onCancel = {
-                        println("case control Canceling rule")
                         handler.setRuleInProgress(false)
                     }
                 })
