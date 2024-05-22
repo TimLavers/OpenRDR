@@ -107,7 +107,7 @@ fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseCont
                         handler.setRuleInProgress(false)
                     }
                 })
-            }
+            } else Spacer(modifier = Modifier.width(310.dp))
         }
     }
 }

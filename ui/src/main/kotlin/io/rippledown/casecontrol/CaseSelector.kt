@@ -47,7 +47,7 @@ fun CaseSelector(caseIds: List<CaseId>, handler: CaseSelectorHandler) {
     ) {
         Column(
             modifier = Modifier
-                .size(150.dp, 800.dp)
+                .size(100.dp, 800.dp)
                 .padding(start = 5.dp)
                 .verticalScroll(scrollState)
                 .semantics {

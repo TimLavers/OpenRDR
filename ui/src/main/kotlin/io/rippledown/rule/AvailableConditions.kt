@@ -33,11 +33,9 @@ fun AvailableConditions(conditions: List<Condition>, handler: AvailableCondition
     Box(
         modifier = Modifier
             .height(200.dp)
-            .border(1.dp, Color.Black)
     ) {
         Column(
             modifier = Modifier
-                .border(1.dp, Color.Red)
                 .fillMaxWidth()
                 .verticalScroll(scrollState)
                 .semantics { contentDescription = AVAILABLE_CONDITIONS }

@@ -181,7 +181,7 @@ class MainApplicationTest {
                     )
                 ) {
                     window1 = this.window
-                    Box(Modifier.size(32.dp).background(Color.Red))
+                    Box(Modifier.size(32.dp))
                 }
             }
         }

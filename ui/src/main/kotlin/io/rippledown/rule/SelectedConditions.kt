@@ -38,7 +38,6 @@ fun SelectedConditions(conditions: List<Condition>, handler: SelectedConditionsH
     Box(
         modifier = Modifier
             .height(100.dp)
-            .border(1.dp, Color.Black)
     ) {
         Text(
             text = "Selected conditions",

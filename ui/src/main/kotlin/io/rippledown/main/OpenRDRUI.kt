@@ -42,7 +42,7 @@ fun OpenRDRUI(handler: Handler) {
     }
 
     Scaffold(
-        modifier = Modifier.width(1_200.dp),
+        modifier = Modifier.width(1_800.dp),
         topBar = {
             ApplicationBar(kbInfo, object : AppBarHandler {
                 override var isRuleSessionInProgress = ruleInProgress

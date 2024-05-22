@@ -1,12 +1,10 @@
 package io.rippledown.rule
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -28,7 +26,6 @@ fun RuleMaker(allConditions: List<Condition>, handler: RuleMakerHandler) {
     Column(
         modifier = Modifier
             .width(300.dp)
-            .background(color = Color.Green)
             .semantics { contentDescription = RULE_MAKER }
     ) {
         SelectedConditions(selectedConditions, object : SelectedConditionsHandler {
