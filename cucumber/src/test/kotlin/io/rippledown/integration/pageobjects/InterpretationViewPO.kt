@@ -3,6 +3,8 @@ package io.rippledown.integration.pageobjects
 import io.kotest.matchers.comparables.shouldBeGreaterThanOrEqualTo
 import io.kotest.matchers.shouldBe
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
+import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CONCLUSIONS
+import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
 import io.rippledown.constants.rule.FINISH_RULE_BUTTON
 import io.rippledown.integration.utils.find
@@ -67,19 +69,13 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
         waitUntilAssertedOnEventThread { requireBadgeCount(expected) }
     }
 
-    private fun diffTabProvider() = contextProvider()
-        .find(INTERPRETATION_TAB_CHANGES)!!
+    private fun interpretationTabProvider() = contextProvider().find(INTERPRETATION_TAB_ORIGINAL)!!
+    private fun diffTabProvider() = contextProvider().find(INTERPRETATION_TAB_CHANGES)!!
+    private fun conclusionsTabProvider() = contextProvider().find(INTERPRETATION_TAB_CONCLUSIONS)!!
 
+    fun selectOriginalTab() = interpretationTabProvider().accessibleAction.doAccessibleAction(0)
+    fun selectConclusionsTab() = conclusionsTabProvider().accessibleAction.doAccessibleAction(0)
     fun selectDifferencesTab() = diffTabProvider().accessibleAction.doAccessibleAction(0)
-
-    fun selectConclusionsTab(): InterpretationViewPO {
-//        driver.findElement(By.id(INTERPRETATION_TAB_CONCLUSIONS)).click()
-        return this
-    }
-
-    fun selectOriginalTab(): InterpretationViewPO {
-        return this
-    }
 
     fun requireOriginalTextInRow(row: Int, text: String) = requireTextInCellInRowWithPrefix(ORIGINAL_PREFIX, row, text)
 

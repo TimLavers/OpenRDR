@@ -242,12 +242,11 @@ class Defs : En {
         }
 
         And("I build a rule to add the conclusion {string} with no conditions") { text: String ->
-//            interpretationViewPO.enterVerifiedText(text)
+            TODO()
         }
 
         When("I replace the text in the interpretation field with {string}") { text: String ->
-//            interpretationViewPO.deleteAllText()
-//            interpretationViewPO.enterVerifiedText(text)
+            interpretationViewPO().setVerifiedText(text)
         }
         Then("the interpretation field should contain the text {string}") { text: String ->
             interpretationViewPO().waitForInterpretationTextToContain(text)
@@ -260,7 +259,7 @@ class Defs : En {
         }
 
         Then("the interpretation field should be empty") {
-            //interpretationViewPO.interpretationText() shouldBe ""
+            TODO()
         }
 
         And("the interpretation of the case {word} is {string}") { caseName: String, text: String ->
