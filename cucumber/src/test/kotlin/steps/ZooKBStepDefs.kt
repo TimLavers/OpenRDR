@@ -32,6 +32,7 @@ class SingleClassificationZooKBRuleBuilder(restClient: RESTClient): RestClientRu
     private val legs = attributeFactory.create("legs")
     private val fins = attributeFactory.create("fins")
     private val eggs = attributeFactory.create("eggs")
+    private val tail = attributeFactory.create("tail")
     private val t = "true"
     private val f = "false"
     private val mammal = "mammal"
@@ -50,9 +51,12 @@ class SingleClassificationZooKBRuleBuilder(restClient: RESTClient): RestClientRu
     private val hasSpine = conditionFactory.getOrCreate(isCondition(backbone, t))
     private val doesNotBreathe = conditionFactory.getOrCreate(isCondition(breathes, f))
     private val legless = conditionFactory.getOrCreate(isCondition(legs, "0"))
+    private val atLeast4Legs = conditionFactory.getOrCreate(greaterThanOrEqualTo(legs, 4.0))
+    private val sixLegs = conditionFactory.getOrCreate(isCondition(legs, "6"))
     private val finless = conditionFactory.getOrCreate(isCondition(fins, f))
     private val laysEggs = conditionFactory.getOrCreate(isCondition(eggs, t))
     private val doesBreathe = conditionFactory.getOrCreate(isCondition(breathes, t))
+    private val hasTail = conditionFactory.getOrCreate(isCondition(tail, t))
 
     fun buildRules() {
         addCommentForCase("aardvark", mammal, milkTrue)
@@ -66,5 +70,12 @@ class SingleClassificationZooKBRuleBuilder(restClient: RESTClient): RestClientRu
         replaceCommentForCase("frog", fish, amphibian, doesBreathe, milkFalse, featherless)
         addCommentForCase("pitviper", reptile, hasSpine, doesBreathe, legless)
         removeCommentForCase("dolphin", reptile, milkTrue)
+        addCommentForCase("scorpion", mollusc, spineless, doesBreathe, atLeast4Legs)
+        replaceCommentForCase("seasnake", fish, reptile, hasSpine, featherless, finless, legless)
+        replaceCommentForCase("slug", insect, mollusc, legless)
+        replaceCommentForCase("termite", mollusc, insect, sixLegs)
+        addCommentForCase("tortoise", reptile, laysEggs, hasSpine, hasTail, atLeast4Legs)
+        removeCommentForCase("newt", reptile, isAquatic, atLeast4Legs)
+//        removeCommentForCase("platypus", reptile, milkTrue)
     }
 }
