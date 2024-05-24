@@ -97,11 +97,13 @@ class KBManagementTest: OpenRDRServerTestBase() {
     @Test
     fun importKB() = testApplication {
         setup()
-        val zipFile = File("src/test/resources/export/KBExported.zip")
+        val zipFile = File("src/test/resources/export/Whatever.zip")
         val zipBytes = zipFile.readBytes()
-        every { serverApplication.importKBFromZip(zipBytes) } returns KBInfo("Thyroid")
+        val toReturn = KBInfo("3435", "Something")
+        every { serverApplication.importKBFromZip(zipBytes) } returns toReturn
         val boundary = "WebAppBoundary"
         val response = httpClient.post(IMPORT_KB) {
+            parameter(KB_ID, kbId)
             setBody(
                 MultiPartFormDataContent(
                     formData {
@@ -115,6 +117,7 @@ class KBManagementTest: OpenRDRServerTestBase() {
                 )
             )
         }
+        response.body<KBInfo>() shouldBe toReturn
         verify { serverApplication.importKBFromZip(zipBytes) }
     }
  }

@@ -3,22 +3,21 @@ package steps
 import io.cucumber.java8.En
 import io.rippledown.examples.vltsh.TSHCases
 import io.rippledown.integration.RestClientAttributeFactory
-import io.rippledown.integration.RestClientConclusionFactory
-import io.rippledown.integration.RestClientConditionFactory
+import io.rippledown.integration.RestClientRuleBuilder
 import io.rippledown.integration.restclient.RESTClient
-import io.rippledown.model.Attribute
-import io.rippledown.model.condition.CaseStructureCondition
-import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.SeriesCondition
-import io.rippledown.model.condition.episodic.predicate.*
+import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals
+import io.rippledown.model.condition.episodic.predicate.IsNotBlank
+import io.rippledown.model.condition.episodic.predicate.IsNumeric
+import io.rippledown.model.condition.episodic.predicate.NormalOrHighByAtMostSomePercentage
 import io.rippledown.model.condition.episodic.signature.All
 import io.rippledown.model.condition.episodic.signature.AtLeast
 import io.rippledown.model.condition.episodic.signature.AtMost
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.series.Increasing
-import io.rippledown.model.condition.structural.IsAbsentFromCase
 
+@Suppress("unused") // Used in cucumber file.
 class TSHStepDefs : En {
     init {
         When("the TSH sample KB has been loaded") {
@@ -96,24 +95,7 @@ class TSHStepDefs : En {
         labProxy().provideCase(tshCases.TSH35)
     }
 }
-class TSHRulesBuilder(val restClient: RESTClient) {
-    val attributeFactory = RestClientAttributeFactory(restClient)
-    val conclusionFactory = RestClientConclusionFactory(restClient)
-    val conditionFactory = RestClientConditionFactory(restClient)
-
-    private fun isPresent(attribute: Attribute) = EpisodicCondition(null, attribute, IsNotBlank, Current)
-    private fun isNotPresent(attribute: Attribute) = CaseStructureCondition(null, IsAbsentFromCase(attribute))
-    private fun isLow(attribute: Attribute) = EpisodicCondition(null, attribute, Low, Current)
-    private fun isNormal(attribute: Attribute) = EpisodicCondition(null, attribute, Normal, Current)
-    private fun isHigh(attribute: Attribute) = EpisodicCondition(null, attribute, High, Current)
-    private fun isCondition(attribute: Attribute, text: String) = EpisodicCondition(null, attribute, Is(text), Current)
-    private fun containsText(attribute: Attribute, text: String) = EpisodicCondition(null, attribute, Contains(text), Current)
-    private fun doesNotContainText(attribute: Attribute, text: String) = EpisodicCondition(null, attribute, DoesNotContain(text), Current)
-    private fun greaterThanOrEqualTo(attribute: Attribute, d: Double) = EpisodicCondition(null, attribute, GreaterThanOrEquals(d), Current)
-    private fun lessThanOrEqualTo(attribute: Attribute, d: Double) = EpisodicCondition(null, attribute, LessThanOrEquals(d), Current)
-    private fun slightlyLow(attribute: Attribute, cutoff: Int) =
-        EpisodicCondition(null, attribute, LowByAtMostSomePercentage(cutoff), Current)
-
+class TSHRulesBuilder(restClient: RESTClient) : RestClientRuleBuilder(restClient) {
     fun buildRules() {
         val tsh = attributeFactory.create("TSH")
         val ft4 = attributeFactory.create("Free T4")
@@ -284,36 +266,5 @@ class TSHRulesBuilder(val restClient: RESTClient) {
         replaceCommentForCase("1.4.32", report3, report25, ft4Low, borderline20HighTSH)
         addCommentForCase("1.4.33", report26, ft4Low, onT4)
         replaceCommentForCase("1.4.35", report3, report27b, ft4Low, tshProfoundlyHigh)
-    }
-
-    private fun addCommentForCase(caseName: String, comment: String, vararg conditions: Condition) {
-        restClient.getCaseWithName(caseName)
-        val conclusion = conclusionFactory.getOrCreate(comment)
-        restClient.startSessionToAddConclusionForCurrentCase(conclusion)
-        conditions.forEach {
-            try {
-                restClient.addConditionForCurrentSession(it)
-            } catch (e: Throwable) {
-                println("Could not add condition: $it")
-                throw e
-            }
-        }
-        restClient.commitCurrentSession()
-    }
-
-    private fun replaceCommentForCase(
-        caseName: String,
-        toGo: String,
-        replacement: String,
-        vararg conditions: Condition
-    ) {
-        restClient.getCaseWithName(caseName)
-        val conclusionToGo = conclusionFactory.getOrCreate(toGo)
-        val replacementConclusion = conclusionFactory.getOrCreate(replacement)
-        restClient.startSessionToReplaceConclusionForCurrentCase(conclusionToGo, replacementConclusion)
-        conditions.forEach {
-            restClient.addConditionForCurrentSession(it)
-        }
-        restClient.commitCurrentSession()
     }
 }

@@ -285,6 +285,19 @@ internal class KBEndpointTest {
     }
 
     @Test
+    fun startSessionToRemoveConclusion() {
+        val caseId = supplyCaseFromFile("Case1", endpoint).caseId
+        val id = caseId.id!!
+        val conclusion1 = endpoint.kb.conclusionManager.getOrCreate("Whatever")
+        endpoint.startRuleSessionToAddConclusion(id, conclusion1)
+        endpoint.commitCurrentRuleSession()
+        endpoint.case(id).interpretation.conclusionTexts() shouldBe setOf(conclusion1.text)
+        endpoint.startRuleSessionToRemoveConclusion(id, conclusion1)
+        endpoint.commitCurrentRuleSession()
+        endpoint.case(id).interpretation.conclusionTexts() shouldBe emptySet()
+    }
+
+    @Test
     fun startSessionToReplaceConclusion() {
         val caseId = supplyCaseFromFile("Case1", endpoint).caseId
         val id = caseId.id!!
