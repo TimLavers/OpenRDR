@@ -40,7 +40,9 @@ fun AvailableConditions(conditions: List<Condition>, handler: AvailableCondition
                 .verticalScroll(scrollState)
                 .semantics { contentDescription = AVAILABLE_CONDITIONS }
         ) {
-            conditions.forEachIndexed { index, condition ->
+            conditions
+                .sortedWith(compareBy { it.asText() })
+                .forEachIndexed { index, condition ->
                 Text(
                     text = condition.asText(),
                     modifier = Modifier
@@ -50,7 +52,7 @@ fun AvailableConditions(conditions: List<Condition>, handler: AvailableCondition
                         .background(
                             if (cursorOnRow == index) Color.LightGray else Color.Transparent
                         )
-                        .onClick {
+                        .clickable {
                             handler.onAddCondition(condition)
                         }
                         .padding(start = 10.dp)

@@ -26,7 +26,9 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
         if (::caseNamesCached.isInitialized) return caseNamesCached
         else {
             waitTillCaseListContextIsAccessible()
+            println("start loading all case names ${System.currentTimeMillis()}")
             caseNamesCached = execute<List<String>> { caseListContext()?.findLabelChildren() ?: emptyList() }
+            println("end   loading all case names ${System.currentTimeMillis()}")
         }
         return caseNamesCached
     }

@@ -21,8 +21,6 @@ class SelectedConditionsTest {
 
     @Test
     fun `should show the selected conditions`() {
-
-
         with(composeTestRule) {
             //Given
             setContent {

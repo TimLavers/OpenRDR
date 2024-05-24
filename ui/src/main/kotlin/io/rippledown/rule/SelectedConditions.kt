@@ -34,32 +34,32 @@ fun SelectedConditions(conditions: List<Condition>, handler: SelectedConditionsH
     val scrollState = rememberScrollState()
     val hoverOverScroll = remember { mutableStateOf(false) }
     var cursorOnRow: Int by remember { mutableStateOf(-1) }
-
+    Text(
+        text = "Selected conditions",
+        style = TextStyle(
+            fontSize = 14.sp,
+            fontStyle = FontStyle.Italic
+        ),
+        modifier = Modifier
+            .fillMaxWidth()
+    )
     Box(
         modifier = Modifier
             .height(100.dp)
     ) {
-        Text(
-            text = "Selected conditions",
-            style = TextStyle(
-                fontSize = 14.sp,
-                fontStyle = FontStyle.Italic
-            ),
-            modifier = Modifier
-                .padding(5.dp)
-                .fillMaxWidth()
-        )
         Column(
             modifier = Modifier
+                .padding(10.dp)
                 .verticalScroll(scrollState)
                 .semantics { contentDescription = SELECTED_CONDITIONS }
         ) {
-            conditions.forEachIndexed { index, condition ->
+            conditions
+                .sortedWith(compareBy { it.asText() })
+                .forEachIndexed { index, condition ->
                 Row(
                     verticalAlignment = CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier
-                        .padding(start = 10.dp)
                         .fillMaxWidth()
                         .background(
                             if (cursorOnRow == index) Color.LightGray else Color.Transparent

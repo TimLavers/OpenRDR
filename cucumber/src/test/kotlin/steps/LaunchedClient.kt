@@ -12,6 +12,7 @@ class LaunchedClient {
     fun caseCountPO() = rdUiOperator.caseCountPO()
     fun caseViewPO() = rdUiOperator.caseViewPO()
     fun interpretationViewPO() = rdUiOperator.interpretationViewPO()
+    fun ruleMakerPO() = rdUiOperator.ruleMakerPO()
     fun conclusionsViewPO() = rdUiOperator.conclusionsViewPO()
 
     fun stopClient() {

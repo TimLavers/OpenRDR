@@ -20,7 +20,7 @@ interface RuleMakerHandler {
 @Composable
 fun RuleMaker(allConditions: List<Condition>, handler: RuleMakerHandler) {
     var selectedConditions by remember { mutableStateOf(listOf<Condition>()) }
-    var availableConditions by remember { mutableStateOf(allConditions) }
+    var availableConditions: List<Condition> by remember { mutableStateOf(allConditions.sortedWith(compareBy { it.asText() })) }
     var filterText by remember { mutableStateOf("") }
 
     Column(
@@ -32,6 +32,7 @@ fun RuleMaker(allConditions: List<Condition>, handler: RuleMakerHandler) {
             override var onRemoveCondition = { condition: Condition ->
                 selectedConditions = selectedConditions - condition
                 availableConditions = availableConditions + condition
+
             }
         })
 

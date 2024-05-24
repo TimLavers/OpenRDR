@@ -18,7 +18,7 @@ class AvailableConditionsTest {
 
     @Test
     fun `should show the available conditions`() {
-        val conditions = (1..10).map { index ->
+        val conditions = (0..9).map { index ->
             val attribute = Attribute(index, "Surf $index")
             EpisodicCondition(attribute, Low, Current)
         }
@@ -36,7 +36,7 @@ class AvailableConditionsTest {
 
     @Test
     fun `should call the handler when an available condition is clicked`() {
-        val conditions = (1..10).map { index ->
+        val conditions = (0..9).map { index ->
             val attribute = Attribute(index, "Surf $index")
             EpisodicCondition(attribute, Low, Current)
         }

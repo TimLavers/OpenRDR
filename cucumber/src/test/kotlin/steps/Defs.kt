@@ -297,7 +297,7 @@ class Defs : En {
             interpretationViewPO().buildRule(row)
         }
         When("I complete the rule") {
-//            conditionSelectorPO.clickDone()
+            ruleMakerPO().clickDoneButton()
         }
         When("(I )cancel the rule") {
 //            conditionSelectorPO.clickCancel()
@@ -315,6 +315,7 @@ class Defs : En {
 
         When("I select the {word} condition") { position: String ->
             when (position) {
+                "first" -> ruleMakerPO().clickAvailableCondition(0)
 //                "first" -> conditionSelectorPO.clickConditionWithIndex(0)
 //                "second" -> conditionSelectorPO.clickConditionWithIndex(1)
 //                "third" -> conditionSelectorPO.clickConditionWithIndex(2)
