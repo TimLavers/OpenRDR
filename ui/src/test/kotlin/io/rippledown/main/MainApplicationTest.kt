@@ -139,8 +139,6 @@ class MainApplicationTest {
         val name = window.accessibleContext.accessibleName
         println("------- name: $name")
         awaitIdle()
-
-
     }
 
     @Test
@@ -181,7 +179,7 @@ class MainApplicationTest {
                     )
                 ) {
                     window1 = this.window
-                    Box(Modifier.size(32.dp).background(Color.Red))
+                    Box(Modifier.size(32.dp))
                 }
             }
         }

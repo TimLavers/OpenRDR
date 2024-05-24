@@ -4,11 +4,18 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.mockk.mockk
+import io.mockk.verify
+import io.rippledown.diffview.clickBuildIconForRow
+import io.rippledown.diffview.requireNumberOfDiffRows
 import io.rippledown.interpretation.requireInterpretation
+import io.rippledown.interpretation.selectDifferencesTab
 import io.rippledown.model.Attribute
 import io.rippledown.model.CaseId
 import io.rippledown.model.createCase
+import io.rippledown.model.createCaseWithInterpretation
+import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Diff
+import io.rippledown.model.diff.DiffList
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -24,6 +31,7 @@ class CaseInspectionTest {
     fun setUp() {
         handler = mockk<CaseInspectionHandler>(relaxed = true)
     }
+
     @Test
     fun `should show case view`() = runTest {
         val caseName = "case a"
@@ -52,44 +60,33 @@ class CaseInspectionTest {
         }
     }
 
-    /*
 
-        @Test
-        fun shouldCallRuleSessionInProgressWhenRuleIsStarted(): TestResult {
-            val diffList = DiffList(listOf(Addition("Go to Bondi now!")))
-            val currentCase = createCaseWithInterpretation(
-                name = "Bondi",
-                id = 45L,
-                diffs = diffList
-            )
-            var inProgress = false
-            val fc = FC {
-                CaseInspection {
-                    case = currentCase
-                    api = Api(mock(config {}))
-                    scope = MainScope()
-                    ruleSessionInProgress = { started ->
-                        inProgress = started
-                    }
-                }
+    @Test
+    fun `should handler when a rule session is started`() = runTest {
+        val diffList = DiffList(listOf(Addition("Go to Bondi now!")))
+        val currentCase = createCaseWithInterpretation(
+            name = "Bondi",
+            id = 45L,
+            diffs = diffList
+        )
+        with(composeTestRule) {
+            setContent {
+                CaseInspection(currentCase, handler)
             }
-            return runReactTest(fc) { container ->
-                with(container) {
-                    //Given
-                    requireCaseToBeShowing("Bondi")
-                    selectChangesTab()
-                    requireNumberOfRows(1)
-                    moveMouseOverRow(0)
-                    inProgress shouldBe false
 
-                    //When
-                    clickBuildIconForRow(0)
+            //Given
+            waitForCaseToBeShowing("Bondi")
+            selectDifferencesTab()
+            requireNumberOfDiffRows(1)
 
-                    //Then
-                    inProgress shouldBe true
-                }
-            }
+            //When
+            clickBuildIconForRow(0)
+
+            //Then
+            verify { handler.onStartRule(diffList[0]) }
         }
+    }
+    /*
 
         @Test
         fun shouldShowConditionSelectorWhenRuleIsStarted(): TestResult {
@@ -368,8 +365,7 @@ fun main() {
             CaseInspection(case, object : CaseInspectionHandler {
                 override var caseEdited: () -> Unit = {}
                 override var updateCase: (Long) -> Unit = { }
-                override var ruleSessionInProgress: (Boolean) -> Unit = {}
-                override var onStartRule: (selectedDiff: Diff) -> Unit = { }
+                override fun onStartRule(selectedDiff: Diff) {}
                 override var isCornerstone = false
                 override var onInterpretationEdited: (text: String) -> Unit = { }
                 override fun swapAttributes(moved: Attribute, target: Attribute) {}

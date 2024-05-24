@@ -4,12 +4,12 @@ package io.rippledown.constants.interpretation
 const val INTERPRETATION_TAB_ORIGINAL_LABEL = "Interpretive report"
 const val INTERPRETATION_TAB_CONCLUSIONS_LABEL = "Comments & conditions"
 const val INTERPRETATION_TAB_CHANGES_LABEL = "Differences"
-
 const val INTERPRETATION_TAB_PREFIX = "interpretation_tab_"
+
+const val INTERPRETATION_TABS = "interpretation_tabs"
 const val INTERPRETATION_TAB_ORIGINAL = "$INTERPRETATION_TAB_PREFIX$INTERPRETATION_TAB_ORIGINAL_LABEL"
 const val INTERPRETATION_TAB_CONCLUSIONS = "$INTERPRETATION_TAB_PREFIX$INTERPRETATION_TAB_CONCLUSIONS_LABEL"
 const val INTERPRETATION_TAB_CHANGES = "$INTERPRETATION_TAB_PREFIX$INTERPRETATION_TAB_CHANGES_LABEL"
-const val INTERPRETATION_PANEL_ORIGINAL = "interpretation_panel_original"
 const val INTERPRETATION_PANEL_CONCLUSIONS = "interpretation_panel_$INTERPRETATION_TAB_CONCLUSIONS_LABEL"
 const val INTERPRETATION_PANEL_CHANGES = "interpretation_panel_changes"
 
@@ -28,11 +28,6 @@ const val BADGE_CLASS = "MuiBadge-badge"
 const val BADGE_INVISIBLE_CLASS = "MuiBadge-invisible"
 const val INTERPRETATION_CHANGES_BADGE = "interpretation_changes_badge"
 
-const val CONDITION_SELECTOR_ROW = "condition_selector_row"
-const val CONDITION_SELECTOR_CHECKBOX = "condition_selector_checkbox"
-const val CONDITION_SELECTOR_BUTTONS = "condition_selector_buttons"
-const val CONDITION_SELECTOR_DONE_BUTTON = "condition_selector_done_button"
-const val CONDITION_SELECTOR_CANCEL_BUTTON = "condition_selector_cancel_button"
 
 const val CASE_VIEW_CONTAINER = "case_view_container"
 

@@ -50,6 +50,13 @@ internal class KBInfoTest {
         assertEquals(sd, info)
     }
 
+    @Test
+    fun jsonSerialisationWithExplicitId() {
+        val info = KBInfo("thy", "Thyroids")
+        val sd = serializeDeserialize(info)
+        assertEquals(sd, info)
+    }
+
     @Test //KBId-2
     fun nameNotBlank() {
         shouldThrow<IllegalArgumentException> {

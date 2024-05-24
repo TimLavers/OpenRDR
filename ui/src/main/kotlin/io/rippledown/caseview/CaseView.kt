@@ -1,8 +1,8 @@
 package io.rippledown.caseview
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -31,11 +31,9 @@ interface CaseViewHandler {
 fun CaseView(case: ViewableCase, handler: CaseViewHandler) {
     Column(
         modifier = Modifier
-            .padding(top = 10.dp)
             .semantics {
                 contentDescription = CASE_HEADING
             },
-        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         Text(
             text = case.name,
@@ -49,6 +47,7 @@ fun CaseView(case: ViewableCase, handler: CaseViewHandler) {
                     contentDescription = CASEVIEW_CASE_NAME_ID
                 }
         )
+        Spacer(modifier = Modifier.height(10.dp))
         CaseTable(case) { a: Attribute, b: Attribute ->
             handler.swapAttributes(a, b)
         }

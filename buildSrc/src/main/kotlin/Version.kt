@@ -2,11 +2,11 @@ import org.gradle.api.JavaVersion
 
 object Version {
     val java = JavaVersion.VERSION_21
-    const val assertjSwing = "3.17.1"
-    const val kotlin = "1.9.23"
+    const val compose = "1.6.1"
+    const val kotlin = "1.9.22"
     const val ktor = "2.3.7"
     const val kotest = "5.7.2"
-    const val compose = "1.6.1"
+    const val assertjSwing = "3.17.1"
     const val mockk = "1.13.8"
     const val logback = "1.4.11"
     const val cucumberShortSummary = "1.0.14"

@@ -29,7 +29,7 @@ fun ComposeTestRule.requireCaseToBeFocused(caseName: String) {
 fun caseMatcher(caseName: String) = hasContentDescriptionExactly("$CASE_NAME_PREFIX$caseName")
 
 fun ComposeTestRule.requireNumberOfCasesOnCaseList(expected: Int) {
-    onNodeWithTag(CASELIST_ID).onChildren().assertCountEquals(expected)
+    onNodeWithContentDescription(CASELIST_ID).onChildren().assertCountEquals(expected)
 }
 
 @OptIn(ExperimentalTestApi::class)
@@ -37,8 +37,8 @@ fun ComposeTestRule.waitForNumberOfCases(expected: Int) {
     waitUntilExactlyOneExists(hasText(expected.toString()), timeoutMillis = 2_000)
 }
 
-fun ComposeTestRule.waitForCaseSelectorNotToBeShowing() {
-    waitUntilDoesNotExist(hasTestTag(CASELIST_ID), timeoutMillis = 2_000)
+fun ComposeTestRule.requireCaseSelectorNotToBeDisplayed() {
+    onNodeWithContentDescription(CASELIST_ID).assertDoesNotExist()
 }
 
 fun ComposeTestRule.downArrowOnCase(caseName: String) {

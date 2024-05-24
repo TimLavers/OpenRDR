@@ -82,6 +82,7 @@ Feature: Reviewing the interpretation of a case
     And I should see the case Case1 as the current case
     And the interpretation field should contain the text "Go to Bondi."
     When I enter the text "No, go to Malabar." in the interpretation field
+    And I select the changes tab
     Then the changes badge indicates that there is 1 change
     And stop the client application
 

@@ -16,18 +16,14 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.unit.dp
-import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES_LABEL
-import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CONCLUSIONS_LABEL
-import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL_LABEL
-import io.rippledown.constants.interpretation.INTERPRETATION_TAB_PREFIX
+import io.rippledown.constants.interpretation.*
 import io.rippledown.interpretation.*
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.interpretationview.ViewableInterpretation
 
 interface InterpretationTabsHandler {
-    var onStartRule: (selectedDiff: Diff) -> Unit
+    fun onStartRule(selectedDiff: Diff)
     var onInterpretationEdited: (text: String) -> Unit
     var isCornerstone: Boolean
 }
@@ -43,12 +39,11 @@ fun InterpretationTabs(viewableInterpretation: ViewableInterpretation, handler: 
     var tabPage by remember { mutableStateOf(0) }
 
     Column(modifier = Modifier
-        .semantics { testTag = "tabs" }
         .fillMaxWidth()
     ) {
         TabRow(selectedTabIndex = tabPage,
             modifier = Modifier.semantics {
-                contentDescription = "interpretation_tabs"
+                contentDescription = INTERPRETATION_TABS
             },
             indicator = @Composable { tabPositions: List<TabPosition> ->
                 TabRowDefaults.Indicator(
@@ -64,7 +59,7 @@ fun InterpretationTabs(viewableInterpretation: ViewableInterpretation, handler: 
                     selected = isSelected,
                     onClick = {
                         tabPage = index
-                    }, // Do nothing, we handle this in the ToolTipForIconAndLabel
+                    },
                     modifier = Modifier.semantics {
                         contentDescription = "$INTERPRETATION_TAB_PREFIX$title"
                     }.background(Color.White)

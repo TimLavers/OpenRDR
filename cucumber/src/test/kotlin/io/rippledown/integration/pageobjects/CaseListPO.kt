@@ -1,70 +1,56 @@
 package io.rippledown.integration.pageobjects
 
-import io.kotest.assertions.fail
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.rippledown.constants.caseview.CASELIST_ID
 import io.rippledown.constants.caseview.CASE_NAME_PREFIX
-import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
-import io.rippledown.integration.pause
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findLabelChildren
+import io.rippledown.integration.waitUntilAssertedOnEventThread
+import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
-import java.util.concurrent.TimeUnit
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleRole.LABEL
 import javax.accessibility.AccessibleRole.SCROLL_PANE
-import javax.swing.SwingUtilities
 
 class CaseListPO(private val contextProvider: () -> AccessibleContext) {
 
-    fun waitForCountOfNumberOfCasesToBe(count: Int) {
-        repeat(5) {
-            val found = countTheNumberOfCasesEventThread()
-            if (count == found) return
-            pause(1000)
-        }
-        fail("Did not find $count cases, actual count: ${countOfTheNumberOfCases()}")
-    }
+    private lateinit var caseNamesCached: List<String>
 
-    fun countTheNumberOfCasesEventThread(): Int? {
-        val caseCount = mutableListOf<Int?>()
-        SwingUtilities.invokeAndWait{ caseCount.add(countOfTheNumberOfCases())}
-        return caseCount[0]
-    }
-
-    fun countOfTheNumberOfCases(): Int? {
-        val textContext = contextProvider().find(NUMBER_OF_CASES_ID, LABEL)
-        val name = textContext?.accessibleName
-        val actualCount = name?.toInt()
-        return actualCount
+    fun loadAllCaseNames() {
+        caseNamesCached = casesListed()
     }
 
     private fun casesListed(): List<String> {
-        val result = mutableListOf<String>()
-        SwingUtilities.invokeAndWait {
-            val caseNames = caseListContext()?.findLabelChildren()?: emptyList()
-            result.addAll(caseNames)
+        if (::caseNamesCached.isInitialized) return caseNamesCached
+        else {
+            waitTillCaseListContextIsAccessible()
+            println("start loading all case names ${System.currentTimeMillis()}")
+            caseNamesCached = execute<List<String>> { caseListContext()?.findLabelChildren() ?: emptyList() }
+            println("end   loading all case names ${System.currentTimeMillis()}")
         }
-        return result
+        return caseNamesCached
     }
+
+    private fun waitTillCaseListContextIsAccessible() =
+        waitUntilAssertedOnEventThread {
+            caseListContext() shouldNotBe null
+        }
+
+    private fun caseListContext() = contextProvider().find(CASELIST_ID, SCROLL_PANE)
+
 
     fun requireCaseNamesToBe(expectedCaseNames: List<String>) {
-        await().atMost(5L, TimeUnit.SECONDS).until {
-            casesListed() == expectedCaseNames
-        }
+        caseNamesCached shouldBe expectedCaseNames
     }
 
-    fun select(caseName: String): CaseViewPO {
+    fun select(caseName: String) {
         waitForCaseListToContain(caseName)
-        caseNameContext(caseName)!!.accessibleAction.doAccessibleAction(0)
-        return CaseViewPO {
-            contextProvider()
-        }
+        execute { caseNameContext(caseName)!!.accessibleAction.doAccessibleAction(0) }
     }
 
     private fun caseNameContext(caseName: String) = contextProvider().find("$CASE_NAME_PREFIX$caseName", LABEL)
-
-    private fun caseListContext() = contextProvider().find(CASELIST_ID, SCROLL_PANE)
 
     fun waitForCaseListToContain(name: String) {
         await().atMost(ofSeconds(5)).until {
@@ -76,20 +62,5 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
         await().atMost(ofSeconds(5)).until {
             casesListed().isEmpty()
         }
-    }
-
-    //    = listItems().map { it.text }
-    private fun listItems() {
-        TODO()
-    }
-
-//        containerElement().findElements(By.className("MuiListItemButton-root"))
-
-    fun requireCaseCountToBeHidden() {
-//        driver.findElements(By.id(NUMBER_OF_CASES_ID)) shouldBe emptyList()
-    }
-
-    fun requireCaseCountToBe(expected: Int) {
-//        driver.findElements(By.id(NUMBER_OF_CASES_ID)) shouldBe emptyList()
     }
 }

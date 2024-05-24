@@ -18,20 +18,12 @@ fun AccessibleContext.find(description: String, debug: Boolean = false): Accessi
     return find(matcher, debug)
 }
 
-fun AccessibleContext.waitTillFound(description: String, role: AccessibleRole): AccessibleContext? {
-    val matcher = { context: AccessibleContext ->
-        description == context.accessibleDescription && role == context.accessibleRole
-    }
-    return this.find(matcher)
-}
 fun AccessibleContext.findByName(name: String, role: AccessibleRole): AccessibleContext? {
     println("Find by name: '$name', role: '$role'")
     val matcher = { context: AccessibleContext ->
-        val roleMatch = role == context.accessibleRole
-        println("roleMatch: $roleMatch")
         (name == context.accessibleName && role == context.accessibleRole)
     }
-    return this.find(matcher, true)
+    return find(matcher, true)
 }
 fun AccessibleContext.find(matcher: (AccessibleContext) -> Boolean, debug: Boolean = false): AccessibleContext? {
     if (debug) println("find, this.name: ${this.accessibleName}, this.description: ${this.accessibleDescription}, this.role: ${this.accessibleRole}")
@@ -80,13 +72,14 @@ fun AccessibleContext.findLabelChildren(): List<String> {
     }
     return result
 }
-fun AccessibleContext.dumpToText(index: Int, componentDepth: Int = 0, ignoreNulls: Boolean = true) {
+fun AccessibleContext.dumpToText(index: Int = 0, componentDepth: Int = 0, ignoreNulls: Boolean = true) {
     val childCount = accessibleChildrenCount
     val name = accessibleName
     val role = accessibleRole.toDisplayString()
     val description = accessibleDescription
     if (!ignoreNulls || name != null || description != null) {
-        println("Index: $index, Name: $name, role: $role, description: $description, componentDepth: $componentDepth, child count: $childCount ")
+        val indent = "  ".repeat(componentDepth)
+        println("$indent Index: $index, Name: $name, role: $role, description: $description, componentDepth: $componentDepth, child count: $childCount ")
     }
     for (i in 0..<childCount) {
         getAccessibleChild(i).accessibleContext.dumpToText(i, componentDepth + 1, ignoreNulls)
