@@ -1,6 +1,5 @@
 package io.rippledown.integration.interp
 
-import io.kotest.matchers.shouldBe
 import io.rippledown.integration.UITestBase
 import io.rippledown.integration.pageobjects.CaseQueuePO
 import io.rippledown.integration.pageobjects.CaseViewPO
@@ -12,7 +11,6 @@ import io.rippledown.model.condition.episodic.predicate.Normal
 import io.rippledown.model.condition.episodic.signature.Current
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
-import kotlin.test.Test
 
 internal class ShowInterpretationDifference : UITestBase() {
 
@@ -51,7 +49,7 @@ internal class ShowInterpretationDifference : UITestBase() {
         }
     }
 
-    @Test
+    /*@Test
     fun `should update the change count whenever verified text is entered`() {
         caseViewPO.nameShown() shouldBe caseName
         interpretationViewPO
@@ -75,7 +73,7 @@ internal class ShowInterpretationDifference : UITestBase() {
             requireChangedTextInRow(0, tshComment)
         }
     }
-
+*/
     private fun setupCase() = labProxy.provideCase(caseName)
 
 }

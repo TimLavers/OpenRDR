@@ -55,3 +55,10 @@ To run a single cucumber test or feature file, add the @single annotation at the
 [document_icons](https://www.flaticon.com/free-icons/document) by [Icon Hubs - Flaticon](https://www.flaticon.com/)
 
 [wrench icon](https://www.flaticon.com/free-icons/work-tools) by [Icon Hubs - Flaticon](https://www.flaticon.com/)
+
+[plus icon](https://www.flaticon.com/free-icons/plus) by [Freepik - Flaticon](https://www.flaticon.com/)
+
+<a href="https://www.flaticon.com/free-icons/plus" title="plus icons">Plus icons created by Royyan Wijaya - Flaticon</a>
+
+[minus icon](https://www.flaticon.com/free-icons/minus) by [Freepik - Flaticon](https://www.flaticon.com/)
+

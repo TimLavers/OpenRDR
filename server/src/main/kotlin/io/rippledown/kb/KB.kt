@@ -198,6 +198,7 @@ class KB(persistentKB: PersistentKB) {
 
         val verifiedText = interp.verifiedText!!
         val caseId = interp.caseId().id!!
+        println("verifiedText = '${verifiedText}'")
         verifiedTextStore.put(caseId, verifiedText)
         saveConclusions(verifiedText)
     }

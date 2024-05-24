@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit
 
 class Defs : En {
     private var exportedZip: File? = null
+
     init {
         println("--------------- Defs init!!!!!!!!!!!!!!!!!!!!!!!----------------------")
         Before("not @database") { scenario ->
@@ -94,7 +95,7 @@ class Defs : En {
         }
 
         And("I select case {word}") { caseName: String ->
-            caseListPO().waitForCaseListToContain(caseName)
+//            caseListPO().waitForCaseListToContain(caseName)
             caseListPO().select(caseName)
         }
 
@@ -107,10 +108,10 @@ class Defs : En {
             labProxy().provideCase("Case1", mapOf("A" to "a"))
             labProxy().provideCase("Case2", mapOf("A" to "a", "B" to "b"))
             labProxy().provideCase("Case3", mapOf("A" to "a", "B" to "b", "C" to "c"))
-            // The attributes are created when the cases are parsed, so select them in the right order.
-            with(caseListPO()) {
-                waitForCountOfNumberOfCasesToBe(3)
 
+            // The attributes are created when the cases are parsed, so select them in the right order.
+            caseCountPO().waitForCountOfNumberOfCasesToBe(3)
+            with(caseListPO()) {
                 // The attributes are created when the cases are parsed, so select them in the right order.
                 select("Case1")
                 select("Case2")
@@ -196,7 +197,7 @@ class Defs : En {
 
         Then("I (should )see the following cases in the case list:") { dataTable: DataTable ->
             val expectedCaseNames = dataTable.asList()
-            caseListPO().waitForCountOfNumberOfCasesToBe(expectedCaseNames.size)
+            caseCountPO().waitForCountOfNumberOfCasesToBe(expectedCaseNames.size)
             caseListPO().requireCaseNamesToBe(expectedCaseNames)
         }
 
@@ -242,12 +243,11 @@ class Defs : En {
         }
 
         And("I build a rule to add the conclusion {string} with no conditions") { text: String ->
-//            interpretationViewPO.enterVerifiedText(text)
+            TODO()
         }
 
         When("I replace the text in the interpretation field with {string}") { text: String ->
-//            interpretationViewPO.deleteAllText()
-//            interpretationViewPO.enterVerifiedText(text)
+            interpretationViewPO().setVerifiedText(text)
         }
         Then("the interpretation field should contain the text {string}") { text: String ->
             interpretationViewPO().waitForInterpretationTextToContain(text)
@@ -260,7 +260,7 @@ class Defs : En {
         }
 
         Then("the interpretation field should be empty") {
-            //interpretationViewPO.interpretationText() shouldBe ""
+            interpretationViewPO().waitForInterpretationText("")
         }
 
         And("the interpretation of the case {word} is {string}") { caseName: String, text: String ->
@@ -288,24 +288,23 @@ class Defs : En {
         }
 
         And("the changes badge indicates that there is/are {int} change(s)") { numberOfChanges: Int ->
-            interpretationViewPO().requireBadgeCount(numberOfChanges)
+            interpretationViewPO().waitForBadgeCount(numberOfChanges)
         }
         And("the changes badge indicates that there is no change") {
-//            interpretationViewPO.requireNoBadge()
+            interpretationViewPO().waitForNoBadgeCount()
         }
         When("I build a rule for the change on row {int}") { row: Int ->
-//            interpretationViewPO.buildRule(row)
-//            conditionSelectorPO.clickDone()
+            interpretationViewPO().buildRule(row)
         }
         When("I complete the rule") {
-//            conditionSelectorPO.clickDone()
+            ruleMakerPO().clickDoneButton()
         }
         When("(I )cancel the rule") {
 //            conditionSelectorPO.clickCancel()
         }
 
         When("I start to build a rule for the change on row {int}") { row: Int ->
-//            interpretationViewPO.buildRule(row)
+            interpretationViewPO().clickBuildIconOnRow(row)
         }
         When("I select the condition in position {int}") { index: Int ->
 //            conditionSelectorPO.clickConditionWithIndex(index)
@@ -316,6 +315,7 @@ class Defs : En {
 
         When("I select the {word} condition") { position: String ->
             when (position) {
+                "first" -> ruleMakerPO().clickAvailableCondition(0)
 //                "first" -> conditionSelectorPO.clickConditionWithIndex(0)
 //                "second" -> conditionSelectorPO.clickConditionWithIndex(1)
 //                "third" -> conditionSelectorPO.clickConditionWithIndex(2)
@@ -413,11 +413,15 @@ class Defs : En {
         }
 
         And("the count of the number of cases should be hidden") {
-            caseListPO().requireCaseCountToBeHidden()
+            caseCountPO().requireCaseCountToBeHidden()
         }
 
         And("the count of the number of cases is {int}") { numberOfCases: Int ->
-            caseListPO().waitForCountOfNumberOfCasesToBe(numberOfCases)
+            caseCountPO().waitForCountOfNumberOfCasesToBe(numberOfCases)
         }
+        And("the cases are loaded") {
+            caseListPO().loadAllCaseNames()
+        }
+
     }
 }

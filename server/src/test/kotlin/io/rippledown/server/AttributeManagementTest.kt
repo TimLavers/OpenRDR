@@ -9,9 +9,8 @@ import io.mockk.every
 import io.mockk.verify
 import io.rippledown.constants.api.GET_OR_CREATE_ATTRIBUTE
 import io.rippledown.constants.api.SET_ATTRIBUTE_ORDER
+import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.Attribute
-import io.rippledown.server.routes.KB_ID
-import kotlinx.serialization.json.Json
 import kotlin.test.Test
 
 class AttributeManagementTest: OpenRDRServerTestBase() {

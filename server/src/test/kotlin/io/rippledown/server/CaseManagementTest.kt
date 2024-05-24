@@ -12,13 +12,13 @@ import io.rippledown.constants.api.CASE
 import io.rippledown.constants.api.DELETE_CASE_WITH_NAME
 import io.rippledown.constants.api.PROCESS_CASE
 import io.rippledown.constants.api.WAITING_CASES
+import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.createCase
 import io.rippledown.model.external.serialize
-import io.rippledown.server.routes.KB_ID
 import kotlin.test.Test
 
 class CaseManagementTest : OpenRDRServerTestBase() {

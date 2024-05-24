@@ -8,18 +8,17 @@ import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.verify
 import io.rippledown.constants.api.*
+import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.CaseId
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.createCase
 import io.rippledown.model.diff.*
-import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
-import io.rippledown.server.routes.KB_ID
 import kotlin.test.Test
 
 class InterpManagementTest : OpenRDRServerTestBase() {
@@ -100,8 +99,8 @@ class InterpManagementTest : OpenRDRServerTestBase() {
         setup()
 
         val ruleRequest = RuleRequest(1)
-        val interp = ViewableInterpretation()
-        every { kbEndpoint.commitRuleSession(ruleRequest) } returns interp
+        val viewableCase = createCase(CaseId(1, "Bondi"))
+        every { kbEndpoint.commitRuleSession(ruleRequest) } returns viewableCase
 
         val result = httpClient.post(BUILD_RULE) {
             parameter(KB_ID, kbId)
@@ -109,7 +108,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
             setBody(ruleRequest)
         }
         result.status shouldBe HttpStatusCode.OK
-        result.body<ViewableInterpretation>() shouldBe interp
+        result.body<ViewableCase>() shouldBe viewableCase
         verify { kbEndpoint.commitRuleSession(ruleRequest) }
     }
 

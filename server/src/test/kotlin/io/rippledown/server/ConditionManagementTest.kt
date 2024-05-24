@@ -9,9 +9,9 @@ import io.mockk.every
 import io.mockk.verify
 import io.rippledown.constants.api.CONDITION_HINTS
 import io.rippledown.constants.api.GET_OR_CREATE_CONDITION
+import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.*
-import io.rippledown.server.routes.KB_ID
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 

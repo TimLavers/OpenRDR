@@ -1,12 +1,8 @@
 package io.rippledown.integration.pageobjects
 
-import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
-import io.rippledown.constants.interpretation.CONDITION_SELECTOR_CANCEL_BUTTON
-import io.rippledown.constants.interpretation.CONDITION_SELECTOR_DONE_BUTTON
-import io.rippledown.constants.interpretation.CONDITION_SELECTOR_ROW
-import io.rippledown.integration.pause
-import org.awaitility.kotlin.await
+//import io.rippledown.constants.interpretation.CONDITION_SELECTOR_CANCEL_BUTTON
+//import io.rippledown.constants.interpretation.CONDITION_SELECTOR_DONE_BUTTON
+//import io.rippledown.constants.interpretation.CONDITION_SELECTOR_ROW
 
 // ORD2
 class ConditionSelectorPO() {

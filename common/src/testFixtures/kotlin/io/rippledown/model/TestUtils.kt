@@ -58,7 +58,7 @@ fun createCaseWithInterpretation(
     conclusionTexts: List<String> = listOf(),
     diffs: DiffList = DiffList()
 ): ViewableCase {
-    val case = createCase(name, id)
+    val case = createCase(name, id, listOf(AttributeWithValue()))
     var conclusionId = 10
     val interp = Interpretation(case.case.caseId).apply {
         conclusionTexts.forEach { text ->
