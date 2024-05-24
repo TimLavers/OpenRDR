@@ -139,8 +139,6 @@ class MainApplicationTest {
         val name = window.accessibleContext.accessibleName
         println("------- name: $name")
         awaitIdle()
-
-
     }
 
     @Test

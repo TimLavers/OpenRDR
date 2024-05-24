@@ -19,8 +19,8 @@ fun waitForDebounce() {
     pause(DEBOUNCE_WAIT_PERIOD_MILLIS + 100)
 }
 
-fun waitUntilAssertedOnEventThread(assertion: () -> Unit) {
-    await().atMost(ofSeconds(10)).untilAsserted {
+fun waitUntilAssertedOnEventThread(seconds: Long = 10, assertion: () -> Unit) {
+    await().atMost(ofSeconds(seconds)).untilAsserted {
         execute { assertion() }
     }
 }

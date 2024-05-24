@@ -9,6 +9,7 @@ class LaunchedClient {
     private val rdUiOperator = RippleDownUIOperator(composeWindow)
     fun applicationBarPO() = rdUiOperator.applicationBarOperator()
     fun caseListPO() = rdUiOperator.caseListPO()
+    fun caseCountPO() = rdUiOperator.caseCountPO()
     fun caseViewPO() = rdUiOperator.caseViewPO()
     fun interpretationViewPO() = rdUiOperator.interpretationViewPO()
     fun conclusionsViewPO() = rdUiOperator.conclusionsViewPO()

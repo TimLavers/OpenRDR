@@ -78,8 +78,8 @@ fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseCont
                     currentCaseId = id
                 }
                 override fun onStartRule(selectedDiff: Diff) {
-                    handler.setRuleInProgress(true)//todo remove
                     handler.startRuleSession(SessionStartRequest(currentCaseId!!, selectedDiff))
+                    handler.setRuleInProgress(true)//todo remove
                 }
                 override var onInterpretationEdited: (text: String) -> Unit = {
                     verifiedText = it

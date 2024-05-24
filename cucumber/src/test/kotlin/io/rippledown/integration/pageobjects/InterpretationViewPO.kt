@@ -1,11 +1,10 @@
 package io.rippledown.integration.pageobjects
 
+import io.kotest.assertions.withClue
 import io.kotest.matchers.comparables.shouldBeGreaterThanOrEqualTo
 import io.kotest.matchers.shouldBe
-import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CHANGES
-import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CONCLUSIONS
-import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL
-import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
+import io.kotest.matchers.shouldNotBe
+import io.rippledown.constants.interpretation.*
 import io.rippledown.constants.rule.FINISH_RULE_BUTTON
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
@@ -20,14 +19,24 @@ import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleRole.TEXT
+import javax.accessibility.AccessibleState
 
 // ORD2
 class InterpretationViewPO(private val contextProvider: () -> AccessibleContext) {
 
     fun setVerifiedText(text: String): InterpretationViewPO {
-        contextProvider().find(INTERPRETATION_TEXT_FIELD, TEXT)?.accessibleEditableText?.setTextContents(text)
+        waitForTextFieldToBeAccessible()
+        execute { interpretationTextContext()?.accessibleEditableText?.setTextContents(text) }
         waitForDebounce()
         return this
+    }
+
+    private fun interpretationTextContext() = contextProvider().find(INTERPRETATION_TEXT_FIELD, TEXT)
+
+    private fun waitForTextFieldToBeAccessible() {
+        waitUntilAssertedOnEventThread {
+            interpretationTextContext() shouldNotBe null
+        }
     }
 
     fun addVerifiedTextAtEndOfCurrentInterpretation(text: String): InterpretationViewPO {
@@ -56,12 +65,27 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
     }
 
     fun requireBadgeCount(expected: Int) {
-        try {
-            val badgeCount = diffTabProvider().getAccessibleChild(0).accessibleContext.accessibleName.toInt()
-            badgeCount shouldBe expected
-        } catch (e: NumberFormatException) {
-            throw AssertionError("Badge count is not a number")
+        require(expected >= 1) {
+            "To use this method, badge count must be greater than or equal to 1, but was $expected"
         }
+        val badgeCountString = diffTabProvider().getAccessibleChild(0).accessibleContext.accessibleName
+        try {
+            badgeCountString.toInt() shouldBe expected
+        } catch (e: NumberFormatException) {
+            throw AssertionError("Badge count '$badgeCountString' is not a number")
+        }
+    }
+
+    fun requireNoBadgeCount() {
+        withClue("This is a bit obscure. If there is no badge, the child is the tab label") {
+            diffTabProvider().accessibleChildrenCount shouldBe 1
+            diffTabProvider().getAccessibleChild(0).accessibleContext.accessibleName shouldBe INTERPRETATION_TAB_CHANGES_LABEL
+        }
+    }
+
+    fun waitForNoBadgeCount() {
+        waitForDebounce()
+        waitUntilAssertedOnEventThread { requireNoBadgeCount() }
     }
 
     fun waitForBadgeCount(expected: Int) {
@@ -73,7 +97,7 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
     private fun diffTabProvider() = contextProvider().find(INTERPRETATION_TAB_CHANGES)!!
     private fun conclusionsTabProvider() = contextProvider().find(INTERPRETATION_TAB_CONCLUSIONS)!!
 
-    fun selectOriginalTab() = interpretationTabProvider().accessibleAction.doAccessibleAction(0)
+    fun selectOriginalTab() = execute { interpretationTabProvider().accessibleAction.doAccessibleAction(0) }
     fun selectConclusionsTab() = conclusionsTabProvider().accessibleAction.doAccessibleAction(0)
     fun selectDifferencesTab() = diffTabProvider().accessibleAction.doAccessibleAction(0)
 
@@ -116,8 +140,6 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
 
     fun deleteAllText() = setVerifiedText("")
 
-//    fun WebElement.selectAllText() = sendKeys(Keys.chord(Keys.CONTROL, "a"))
-
     fun requireChangesLabel(expected: String): InterpretationViewPO {
 //        driver.findElement(By.id(INTERPRETATION_TAB_CHANGES)).text shouldBe expected
         return this
@@ -133,14 +155,33 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
     fun buildRule(row: Int) {
         clickBuildIconOnRow(row)
         clickFinishRuleButton()
+        waitForDebounce()
+    }
+
+    private fun waitForFinishButtonToBeShowing() {
+        waitUntilAssertedOnEventThread {
+            contextProvider().find(FINISH_RULE_BUTTON)?.accessibleStateSet?.contains(AccessibleState.SHOWING) shouldBe true
+        }
     }
 
     private fun clickFinishRuleButton() {
+        waitForFinishButtonToBeShowing()
         execute { contextProvider().find(FINISH_RULE_BUTTON)?.accessibleAction?.doAccessibleAction(0) }
     }
 
     fun clickBuildIconOnRow(row: Int) {
         waitForNumberOfRowsToBeAtLeast(row + 1)
-        execute { contextProvider().find("$ICON_PREFIX$row")?.accessibleAction?.doAccessibleAction(0) }
+        println("number of rows is ${numberOfRows()}")
+        waitForBuildIconToBeShowing(row)
+        println("build icon is showing")
+        execute { buildIconContext(row)?.accessibleAction?.doAccessibleAction(0) }
     }
+
+    private fun waitForBuildIconToBeShowing(row: Int) {
+        waitUntilAssertedOnEventThread {
+            buildIconContext(row) shouldNotBe null
+        }
+    }
+
+    private fun buildIconContext(row: Int) = contextProvider().find("$ICON_PREFIX$row")
 }

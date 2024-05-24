@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit
 
 class Defs : En {
     private var exportedZip: File? = null
+
     init {
         println("--------------- Defs init!!!!!!!!!!!!!!!!!!!!!!!----------------------")
         Before("not @database") { scenario ->
@@ -94,7 +95,7 @@ class Defs : En {
         }
 
         And("I select case {word}") { caseName: String ->
-            caseListPO().waitForCaseListToContain(caseName)
+//            caseListPO().waitForCaseListToContain(caseName)
             caseListPO().select(caseName)
         }
 
@@ -107,10 +108,10 @@ class Defs : En {
             labProxy().provideCase("Case1", mapOf("A" to "a"))
             labProxy().provideCase("Case2", mapOf("A" to "a", "B" to "b"))
             labProxy().provideCase("Case3", mapOf("A" to "a", "B" to "b", "C" to "c"))
-            // The attributes are created when the cases are parsed, so select them in the right order.
-            with(caseListPO()) {
-                waitForCountOfNumberOfCasesToBe(3)
 
+            // The attributes are created when the cases are parsed, so select them in the right order.
+            caseCountPO().waitForCountOfNumberOfCasesToBe(3)
+            with(caseListPO()) {
                 // The attributes are created when the cases are parsed, so select them in the right order.
                 select("Case1")
                 select("Case2")
@@ -196,7 +197,7 @@ class Defs : En {
 
         Then("I (should )see the following cases in the case list:") { dataTable: DataTable ->
             val expectedCaseNames = dataTable.asList()
-            caseListPO().waitForCountOfNumberOfCasesToBe(expectedCaseNames.size)
+            caseCountPO().waitForCountOfNumberOfCasesToBe(expectedCaseNames.size)
             caseListPO().requireCaseNamesToBe(expectedCaseNames)
         }
 
@@ -259,7 +260,7 @@ class Defs : En {
         }
 
         Then("the interpretation field should be empty") {
-            TODO()
+            interpretationViewPO().waitForInterpretationText("")
         }
 
         And("the interpretation of the case {word} is {string}") { caseName: String, text: String ->
@@ -290,7 +291,7 @@ class Defs : En {
             interpretationViewPO().waitForBadgeCount(numberOfChanges)
         }
         And("the changes badge indicates that there is no change") {
-//            interpretationViewPO.requireNoBadge()
+            interpretationViewPO().waitForNoBadgeCount()
         }
         When("I build a rule for the change on row {int}") { row: Int ->
             interpretationViewPO().buildRule(row)
@@ -411,11 +412,15 @@ class Defs : En {
         }
 
         And("the count of the number of cases should be hidden") {
-            caseListPO().requireCaseCountToBeHidden()
+            caseCountPO().requireCaseCountToBeHidden()
         }
 
         And("the count of the number of cases is {int}") { numberOfCases: Int ->
-            caseListPO().waitForCountOfNumberOfCasesToBe(numberOfCases)
+            caseCountPO().waitForCountOfNumberOfCasesToBe(numberOfCases)
         }
+        And("the cases are loaded") {
+            caseListPO().loadAllCaseNames()
+        }
+
     }
 }

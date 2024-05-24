@@ -72,13 +72,14 @@ fun AccessibleContext.findLabelChildren(): List<String> {
     }
     return result
 }
-fun AccessibleContext.dumpToText(index: Int, componentDepth: Int = 0, ignoreNulls: Boolean = true) {
+fun AccessibleContext.dumpToText(index: Int = 0, componentDepth: Int = 0, ignoreNulls: Boolean = true) {
     val childCount = accessibleChildrenCount
     val name = accessibleName
     val role = accessibleRole.toDisplayString()
     val description = accessibleDescription
     if (!ignoreNulls || name != null || description != null) {
-        println("Index: $index, Name: $name, role: $role, description: $description, componentDepth: $componentDepth, child count: $childCount ")
+        val indent = "  ".repeat(componentDepth)
+        println("$indent Index: $index, Name: $name, role: $role, description: $description, componentDepth: $componentDepth, child count: $childCount ")
     }
     for (i in 0..<childCount) {
         getAccessibleChild(i).accessibleContext.dumpToText(i, componentDepth + 1, ignoreNulls)
