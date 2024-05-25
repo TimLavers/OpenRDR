@@ -45,7 +45,6 @@ Feature: The cases described in the Zoo sample KB can be represented in OpenRDR
 
     And stop the client application
 
-  @single
   Scenario: Single classification Zoo KB
     Given the Zoo KB cases have been loaded
     And the single classification Zoo KB rules have been built
