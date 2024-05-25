@@ -15,20 +15,9 @@ import javax.accessibility.AccessibleRole.LABEL
 import javax.accessibility.AccessibleRole.SCROLL_PANE
 
 class CaseListPO(private val contextProvider: () -> AccessibleContext) {
-
-    private lateinit var caseNamesCached: List<String>
-
-    fun loadAllCaseNames() {
-        caseNamesCached = casesListed()
-    }
-
     private fun casesListed(): List<String> {
-        if (::caseNamesCached.isInitialized) return caseNamesCached
-        else {
             waitTillCaseListContextIsAccessible()
-            caseNamesCached = execute<List<String>> { caseListContext()?.findLabelChildren() ?: emptyList() }
-        }
-        return caseNamesCached
+        return execute<List<String>> { caseListContext()?.findLabelChildren() ?: emptyList() }
     }
 
     private fun waitTillCaseListContextIsAccessible() =
@@ -40,7 +29,7 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
 
 
     fun requireCaseNamesToBe(expectedCaseNames: List<String>) {
-        caseNamesCached shouldBe expectedCaseNames
+        casesListed() shouldBe expectedCaseNames
     }
 
     fun select(caseName: String) {
@@ -60,5 +49,13 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
         await().atMost(ofSeconds(5)).until {
             casesListed().isEmpty()
         }
+    }
+
+    fun requireCaseListToBeHidden() {
+        waitUntilAssertedOnEventThread { caseListContext() shouldBe null }
+    }
+
+    fun requireCaseListToBeShown() {
+        waitUntilAssertedOnEventThread { caseListContext() shouldNotBe null }
     }
 }

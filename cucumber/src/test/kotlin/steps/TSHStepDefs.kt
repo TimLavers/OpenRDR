@@ -16,14 +16,15 @@ import io.rippledown.model.condition.episodic.signature.AtLeast
 import io.rippledown.model.condition.episodic.signature.AtMost
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.series.Increasing
+import io.rippledown.model.printDuration
 
 @Suppress("unused") // Used in cucumber file.
 class TSHStepDefs : En {
     init {
         When("the TSH sample KB has been loaded") {
-            setupTSHAttributes()
-            setupTSHSampleCases()
-            buildTSHRules()
+            printDuration("setup TSH attributes") { setupTSHAttributes() }
+            printDuration("setup TSH cases") { setupTSHSampleCases() }
+            printDuration("setup TSH rules") { buildTSHRules() }
         }
     }
 

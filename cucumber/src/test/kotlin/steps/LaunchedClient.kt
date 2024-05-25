@@ -10,6 +10,7 @@ class LaunchedClient {
     fun applicationBarPO() = rdUiOperator.applicationBarOperator()
     fun caseListPO() = rdUiOperator.caseListPO()
     fun caseCountPO() = rdUiOperator.caseCountPO()
+    fun kbControlsPO() = rdUiOperator.kbControlsPO()
     fun caseViewPO() = rdUiOperator.caseViewPO()
     fun interpretationViewPO() = rdUiOperator.interpretationViewPO()
     fun ruleMakerPO() = rdUiOperator.ruleMakerPO()

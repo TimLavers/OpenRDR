@@ -171,9 +171,7 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
 
     fun clickBuildIconOnRow(row: Int) {
         waitForNumberOfRowsToBeAtLeast(row + 1)
-        println("number of rows is ${numberOfRows()}")
         waitForBuildIconToBeShowing(row)
-        println("build icon is showing")
         execute { buildIconContext(row)?.accessibleAction?.doAccessibleAction(0) }
     }
 

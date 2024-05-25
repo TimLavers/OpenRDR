@@ -3,7 +3,6 @@ Feature: The reports for the cases described in the TSH paper can be generated u
   Scenario: TSH KB rules
     Given the TSH sample KB has been loaded
     And I start the client application
-    And the cases are loaded
     Then the count of the number of cases is 34
 
     When I select case 1.4.1
