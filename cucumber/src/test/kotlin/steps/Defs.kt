@@ -194,7 +194,7 @@ class Defs : En {
         }
 
         Then("I should see no cases in the case list") {
-            caseListPO().waitForNoCases()
+            caseCountPO().requireCaseCountToBeHidden()
         }
 
         Then("I (should )see the case {word} as the current case") { caseName: String ->

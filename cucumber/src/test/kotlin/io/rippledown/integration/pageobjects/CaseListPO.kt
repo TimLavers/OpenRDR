@@ -45,12 +45,6 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
         }
     }
 
-    fun waitForNoCases() {
-        await().atMost(ofSeconds(5)).until {
-            casesListed().isEmpty()
-        }
-    }
-
     fun requireCaseListToBeHidden() {
         waitUntilAssertedOnEventThread { caseListContext() shouldBe null }
     }
