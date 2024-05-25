@@ -31,7 +31,6 @@ fun RuleControlButtons(handler: RuleControlButtonsHandler) {
     {
         Button(
             onClick = {
-                println("click Cancel rule")
                 handler.cancel()
             },
             modifier = Modifier.semantics { contentDescription = CANCEL_RULE_BUTTON }
@@ -40,7 +39,6 @@ fun RuleControlButtons(handler: RuleControlButtonsHandler) {
         }
         Button(
             onClick = {
-                println("click Finish rule")
                 handler.finish()
             },
             modifier = Modifier.semantics { contentDescription = FINISH_RULE_BUTTON }

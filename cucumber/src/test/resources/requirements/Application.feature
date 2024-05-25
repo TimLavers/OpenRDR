@@ -1,4 +1,4 @@
-Feature: Knowledge Base management
+Feature: Application management
   Scenario: The product name should be displayed
     Given I start the client application
     Then the displayed product name is 'Open RippleDown'

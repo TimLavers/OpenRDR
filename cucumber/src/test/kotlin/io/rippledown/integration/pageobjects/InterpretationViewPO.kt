@@ -98,8 +98,8 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
     private fun conclusionsTabProvider() = contextProvider().find(INTERPRETATION_TAB_CONCLUSIONS)!!
 
     fun selectOriginalTab() = execute { interpretationTabProvider().accessibleAction.doAccessibleAction(0) }
-    fun selectConclusionsTab() = conclusionsTabProvider().accessibleAction.doAccessibleAction(0)
-    fun selectDifferencesTab() = diffTabProvider().accessibleAction.doAccessibleAction(0)
+    fun selectConclusionsTab() = execute { conclusionsTabProvider().accessibleAction.doAccessibleAction(0) }
+    fun selectDifferencesTab() = execute { diffTabProvider().accessibleAction.doAccessibleAction(0) }
 
     fun requireOriginalTextInRow(row: Int, text: String) = requireTextInCellInRowWithPrefix(ORIGINAL_PREFIX, row, text)
 
@@ -171,9 +171,7 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
 
     fun clickBuildIconOnRow(row: Int) {
         waitForNumberOfRowsToBeAtLeast(row + 1)
-        println("number of rows is ${numberOfRows()}")
         waitForBuildIconToBeShowing(row)
-        println("build icon is showing")
         execute { buildIconContext(row)?.accessibleAction?.doAccessibleAction(0) }
     }
 

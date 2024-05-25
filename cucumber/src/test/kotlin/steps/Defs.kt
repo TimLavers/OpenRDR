@@ -23,19 +23,18 @@ class Defs : En {
     private var exportedZip: File? = null
 
     init {
-        println("--------------- Defs init!!!!!!!!!!!!!!!!!!!!!!!----------------------")
         Before("not @database") { scenario ->
-            println("Before scenario '${scenario.name}'")
+            println("\nBefore scenario '${scenario.name}'")
             startServerWithInMemoryDatabase()
         }
 
         Before("@database") { scenario ->
-            println("DB Before. Scenario: '${scenario.name}'")
+            println("\nDB Before. Scenario: '${scenario.name}'")
             startServerWithPostgresDatabase()
         }
 
         After { scenario ->
-            println("After scenario '${scenario.name}'")
+            println("After scenario '${scenario.name}'\n")
             cleanup()
         }
 
@@ -121,15 +120,13 @@ class Defs : En {
 
         Given("I import the configured zipped Knowledge Base {word}") { toImport: String ->
             val zipFile = ConfiguredTestData.kbZipFile(toImport)
-            val kbControlOperator = applicationBarPO().kbControlOperator()
             pause(10_000)
-            kbControlOperator.importKB(zipFile.absolutePath)
+            kbControlsPO().importKB(zipFile.absolutePath)
         }
 
         And("I export the current Knowledge Base") {
             exportedZip = File.createTempFile("Exported", ".zip")
-            val kbControlOperator = applicationBarPO().kbControlOperator()
-            kbControlOperator.exportKB(exportedZip!!.absolutePath)
+            kbControlsPO().exportKB(exportedZip!!.absolutePath)
         }
 
         Then("there is a file called {word} in my downloads directory") { fileName: String ->
@@ -142,8 +139,7 @@ class Defs : En {
             require(exportedZip != null) {
                 "Import of previously exported KB attempted but exported KB is null."
             }
-            val kbControlOperator = applicationBarPO().kbControlOperator()
-            kbControlOperator.importKB(exportedZip!!.absolutePath)
+            kbControlsPO().importKB(exportedZip!!.absolutePath)
         }
 
         Given("case {word} is provided having data:") { caseName: String, dataTable: DataTable ->
@@ -154,19 +150,17 @@ class Defs : En {
 
         Then("the displayed KB name is (now ){word}") { kbName: String ->
             waitUntilAssertedOnEventThread {
-                applicationBarPO().kbControlOperator().currentKB() shouldBe kbName
+                kbControlsPO().currentKB() shouldBe kbName
             }
         }
 
         Then("I activate the KB management control") {
-            applicationBarPO().kbControlOperator().expandDropdownMenu()
+            kbControlsPO().expandDropdownMenu()
         }
 
         Then("I (should )see this list of available KBs:") { dataTable: DataTable ->
             val expectedKBs = dataTable.asList()
-            applicationBarPO()
-                .kbControlOperator()
-                .availableKBs() shouldBe expectedKBs
+            kbControlsPO().availableKBs() shouldBe expectedKBs
         }
 
         Then("the displayed product name is 'Open RippleDown'") {
@@ -174,13 +168,11 @@ class Defs : En {
         }
 
         Then("I create a Knowledge Base with the name {word}") { kbName: String ->
-            val kbControlOperator = applicationBarPO().kbControlOperator()
-            kbControlOperator.createKB(kbName)
+            kbControlsPO().createKB(kbName)
         }
 
         Then("I select the Knowledge Base named {word}") { kbName: String ->
-            val kbControlOperator = applicationBarPO().kbControlOperator()
-            kbControlOperator.selectKB(kbName)
+            kbControlsPO().selectKB(kbName)
         }
 
         And("pause for {long} second(s)") { seconds: Long ->
@@ -202,7 +194,7 @@ class Defs : En {
         }
 
         Then("I should see no cases in the case list") {
-            caseListPO().waitForNoCases()
+            caseCountPO().requireCaseCountToBeHidden()
         }
 
         Then("I (should )see the case {word} as the current case") { caseName: String ->
@@ -250,16 +242,20 @@ class Defs : En {
             interpretationViewPO().setVerifiedText(text)
         }
         Then("the interpretation field should contain the text {string}") { text: String ->
+            interpretationViewPO().selectOriginalTab()
             interpretationViewPO().waitForInterpretationTextToContain(text)
         }
         Then("the interpretation should be {string}") { text: String ->
+            interpretationViewPO().selectOriginalTab()
             interpretationViewPO().waitForInterpretationText(text)
         }
         Then("the interpretation should be this:") { text: DocString ->
+            interpretationViewPO().selectOriginalTab()
             interpretationViewPO().waitForInterpretationText(text.content)
         }
 
         Then("the interpretation field should be empty") {
+            interpretationViewPO().selectOriginalTab()
             interpretationViewPO().waitForInterpretationText("")
         }
 
@@ -293,55 +289,18 @@ class Defs : En {
         And("the changes badge indicates that there is no change") {
             interpretationViewPO().waitForNoBadgeCount()
         }
-        When("I build a rule for the change on row {int}") { row: Int ->
-            interpretationViewPO().buildRule(row)
-        }
-        When("I complete the rule") {
-            ruleMakerPO().clickDoneButton()
-        }
-        When("(I )cancel the rule") {
-//            conditionSelectorPO.clickCancel()
-        }
 
-        When("I start to build a rule for the change on row {int}") { row: Int ->
-            interpretationViewPO().clickBuildIconOnRow(row)
-        }
         When("I select the condition in position {int}") { index: Int ->
 //            conditionSelectorPO.clickConditionWithIndex(index)
         }
         When("I select the condition {string}") { text: String ->
 //            conditionSelectorPO.clickConditionWithText(text)
         }
-
-        When("I select the {word} condition") { position: String ->
-            when (position) {
-                "first" -> ruleMakerPO().clickAvailableCondition(0)
-//                "first" -> conditionSelectorPO.clickConditionWithIndex(0)
-//                "second" -> conditionSelectorPO.clickConditionWithIndex(1)
-//                "third" -> conditionSelectorPO.clickConditionWithIndex(2)
-            }
-        }
-        Then("the conditions showing should be:") { dataTable: DataTable ->
-            val expectedConditions = dataTable.asList()
-//            conditionSelectorPO.requireConditionsShowing(expectedConditions)
-        }
-
         Then("the following conditions (are )(should be )selected:") { dataTable: DataTable ->
             val expectedConditions = dataTable.asList()
 //            conditionSelectorPO.requireConditionsToBeSelected(expectedConditions)
         }
 
-        And("I build a rule to add the comment {string} with the condition {string}") { comment: String, condition: String ->
-//            with(interpretationViewPO) {
-//                enterVerifiedText(comment)
-//                selectChangesTab()
-//                buildRule(0)
-//            }
-//            with(conditionSelectorPO) {
-//                clickConditionWithText(condition)
-//                clickDone()
-//            }
-        }
         And("I build a rule to add the comment {string}") { comment: String ->
 //            with(interpretationViewPO) {
 //                enterVerifiedText(comment)
@@ -404,24 +363,28 @@ class Defs : En {
             }
         }
 
-        Then("the KB controls (are )(should be )disabled") {
-//            kbControlsPO.requireKbControlsToBeDisabled()
+        Then("the KB controls (are )(should be )hidden") {
+            kbControlsPO().requireKbControlsToBeHidden()
         }
 
-        Then("the KB controls (are )(should be )enabled") {
-//            kbControlsPO.requireKbControlsToBeEnabled()
+        Then("the KB controls (are )(should be )shown") {
+            kbControlsPO().requireKbControlsToBeShown()
         }
 
-        And("the count of the number of cases should be hidden") {
+        And("the case list (is )(should be )hidden") {
+            caseCountPO().requireCasesLabelToBeHidden()
             caseCountPO().requireCaseCountToBeHidden()
+            caseListPO().requireCaseListToBeHidden()
+        }
+
+        And("the case list (is )(should be )shown") {
+            caseCountPO().requireCasesLabelToBeShown()
+            caseCountPO().requireCaseCountToBeShown()
+            caseListPO().requireCaseListToBeShown()
         }
 
         And("the count of the number of cases is {int}") { numberOfCases: Int ->
             caseCountPO().waitForCountOfNumberOfCasesToBe(numberOfCases)
         }
-        And("the cases are loaded") {
-            caseListPO().loadAllCaseNames()
-        }
-
     }
 }

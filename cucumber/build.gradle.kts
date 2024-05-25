@@ -47,7 +47,7 @@ val argsForCuke = mutableListOf(
 
 tasks.register<JavaExec>("cucumberTest") {
     group = LifecycleBasePlugin.VERIFICATION_GROUP
-    maxHeapSize = "4G"
+    maxHeapSize = "32G"
     mainClass.set("io.cucumber.core.cli.Main")
     classpath = cukeClassPath
     args = argsForCuke.apply {

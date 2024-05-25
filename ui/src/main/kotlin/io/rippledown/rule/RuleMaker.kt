@@ -52,7 +52,6 @@ fun RuleMaker(allConditions: List<Condition>, handler: RuleMakerHandler) {
 
         RuleControlButtons(object : RuleControlButtonsHandler {
             override var cancel = {
-                println("Rule maker click Cancel rule")
                 handler.onCancel()
             }
             override var finish = { handler.onDone(selectedConditions) }

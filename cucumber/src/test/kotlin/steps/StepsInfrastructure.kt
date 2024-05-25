@@ -48,6 +48,7 @@ fun restClient() = uiTestBase.restClient
 fun applicationBarPO() = client().applicationBarPO()
 fun caseListPO() = client().caseListPO()
 fun caseCountPO() = client().caseCountPO()
+fun kbControlsPO() = client().kbControlsPO()
 fun caseViewPO() = client().caseViewPO()
 fun interpretationViewPO() = client().interpretationViewPO()
 fun ruleMakerPO() = client().ruleMakerPO()

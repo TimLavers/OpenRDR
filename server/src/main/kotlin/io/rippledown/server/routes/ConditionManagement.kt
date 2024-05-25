@@ -21,7 +21,6 @@ fun Application.conditionManagement(application: ServerApplication) {
                 e.printStackTrace()
                 call.respond(HttpStatusCode.BadRequest)
             }
-            println("conditionHints from server for id $id = ${conditionHints}")
             call.respond(conditionHints)
         }
 
