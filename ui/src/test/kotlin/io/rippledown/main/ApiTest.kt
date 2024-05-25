@@ -148,12 +148,12 @@ class ApiTest {
                 )
             )
         )
-        val interpretation = ViewableInterpretation()
+        val caseToReturn = createCase("A", 1)
         val config = config {
             expectedRuleRequest = ruleRequest
-            returnInterpretationAfterBuildingRule = interpretation
+            returnCaseAfterBuildingRule = caseToReturn
         }
-        Api(mock(config)).buildRule(ruleRequest) shouldBe interpretation
+        Api(mock(config)).buildRule(ruleRequest) shouldBe caseToReturn
     }
 
     @Test

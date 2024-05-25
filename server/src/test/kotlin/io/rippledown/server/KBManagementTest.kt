@@ -9,9 +9,8 @@ import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.verify
 import io.rippledown.constants.api.*
+import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.KBInfo
-import io.rippledown.model.OperationResult
-import io.rippledown.server.routes.KB_ID
 import java.io.File
 import kotlin.test.Test
 

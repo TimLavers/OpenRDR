@@ -9,7 +9,6 @@ import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.diff.*
 import io.rippledown.model.external.ExternalCase
-import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.*
 import java.io.File
 import kotlin.io.path.createTempDirectory
@@ -124,13 +123,12 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
     fun startRuleSession(sessionStartRequest: SessionStartRequest): CornerstoneStatus {
         val caseId = sessionStartRequest.caseId
         val diff = sessionStartRequest.diff
-
         startRuleSessionForDifference(caseId, diff)
         return kb.cornerstoneStatus(null)
 
     }
 
-    fun commitRuleSession(ruleRequest: RuleRequest): ViewableInterpretation {
+    fun commitRuleSession(ruleRequest: RuleRequest): ViewableCase {
         val caseId = ruleRequest.caseId
         val case = viewableCase(caseId)
 
@@ -145,7 +143,7 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
 
         //return the updated interpretation
         logger.info("Updated interpretation after committing the rule: $updatedInterpretation")
-        return case.viewableInterpretation
+        return case
     }
 
     private fun uninterpretedCase(id: Long) = kb.getProcessedCase(id)!!

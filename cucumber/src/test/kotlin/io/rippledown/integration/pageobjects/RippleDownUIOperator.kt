@@ -19,6 +19,12 @@ class RippleDownUIOperator(private val window: ComposeWindow) {
     fun caseListPO() = CaseListPO {
         context()
     }
+    fun caseCountPO() = CaseCountPO {
+        context()
+    }
+    fun kbControlsPO(): KbControlsPO = KbControlsPO {
+        context()
+    }
 
     fun caseViewPO() = CaseViewPO {
         context()
@@ -28,6 +34,10 @@ class RippleDownUIOperator(private val window: ComposeWindow) {
         context()
     }
     fun conclusionsViewPO() = ConclusionsViewPO {
+        context()
+    }
+
+    fun ruleMakerPO() = RuleMakerPO {
         context()
     }
 

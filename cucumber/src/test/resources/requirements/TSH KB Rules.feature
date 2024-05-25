@@ -1,6 +1,6 @@
-Feature: The cases described in the TSH paper can be represented in OpenRDR
+Feature: The reports for the cases described in the TSH paper can be generated using OpenRDR rules
 
-  Scenario: TSH cases
+  Scenario: TSH KB rules
     Given the TSH sample KB has been loaded
     And I start the client application
     Then the count of the number of cases is 34

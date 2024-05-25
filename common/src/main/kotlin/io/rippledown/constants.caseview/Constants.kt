@@ -1,6 +1,7 @@
 package io.rippledown.constants.caseview
 
 const val NUMBER_OF_CASES_ID = "number_of_cases_id"
+const val NUMBER_OF_CASES_LABEL = "number_of_cases_label"
 const val CASE_HEADING = "Case: "
 const val CASES = "Cases"
 const val CASEVIEW_CASE_NAME_ID = "case_view_case_name"

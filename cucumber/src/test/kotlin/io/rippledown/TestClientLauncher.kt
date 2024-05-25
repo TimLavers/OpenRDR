@@ -4,8 +4,11 @@ package io.rippledown
 
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import androidx.compose.ui.window.rememberWindowState
 import io.rippledown.constants.main.TITLE
 import io.rippledown.main.Api
 import io.rippledown.main.Handler
@@ -33,7 +36,8 @@ class TestClientLauncher {
                         api.shutdown()
                     },
                     icon = painterResource("water-wave-icon.png"),
-                    title = TITLE
+                    title = TITLE,
+                    state = rememberWindowState(size = DpSize(1200.dp, 800.dp))
                 ) {
                     composeWindow = this.window
                     OpenRDRUI(handler)

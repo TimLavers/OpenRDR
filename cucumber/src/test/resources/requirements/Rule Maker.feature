@@ -1,5 +1,19 @@
-@ignore
-Feature: Building rules
+Feature: The user can make rules that change the interpretive report
+
+  Scenario: When the user starts to build a rule, condition hints should be shown
+    Given case Bondi is provided having data:
+      | Wave | excellent |
+      | Sun  | hot       |
+    And I start the client application
+    And I see the case Bondi as the current case
+    And I enter the text "Let's surf" in the interpretation field
+    And the changes badge indicates that there is 1 change
+    And I select the changes tab
+    When I start to build a rule for the change on row 0
+    Then the conditions showing should be:
+      | Sun is not blank  |
+      | Wave is not blank |
+    And stop the client application
 
   Scenario: The user should be able to build a rule to add a comment
     Given a list of cases with the following names is stored on the server:
@@ -25,8 +39,10 @@ Feature: Building rules
     And I start the client application
     And I should see the case Case1 as the current case
     And I enter the text "Go to Bondi." in the interpretation field
+    And the changes badge indicates that there is 1 change
     And I select the changes tab
     And I build a rule for the change on row 0
+    And the changes badge indicates that there is no change
     And I select the interpretation tab
     And I replace the text in the interpretation field with "Go to Bondi. Grow some trees."
     And the changes badge indicates that there is 1 change
@@ -76,32 +92,18 @@ Feature: Building rules
     And  the interpretation field should contain the text "Go to Maroubra."
     And stop the client application
 
-  Scenario: When the user starts to build a rule, condition hints should be shown
-    Given I start the client application
-    And case Bondi is provided having data:
-      | Wave | excellent |
-      | Sun  | hot       |
-    And I enter the text "Let's surf" in the interpretation field
-    And the changes badge indicates that there is 1 change
-    And I select the changes tab
-    When I start to build a rule for the change on row 0
-    Then the conditions showing should be:
-      | Wave is not blank |
-      | Sun is not blank  |
-    And stop the client application
-
   Scenario: The user should be able to build a rule to add a comment with a condition they have selected
     Given I start the client application
     And case Bondi is provided having data:
-      | Wave | excellent |
       | Sun  | hot       |
+      | Wave | excellent |
     And I enter the text "Go to the beach." in the interpretation field
     And the changes badge indicates that there is 1 change
     And I select the changes tab
     And I start to build a rule for the change on row 0
     And the conditions showing should be:
-      | Wave is not blank |
       | Sun is not blank  |
+      | Wave is not blank |
     When I select the first condition
     And I complete the rule
     And I select the conclusions tab
@@ -112,8 +114,8 @@ Feature: Building rules
 
   Scenario: The user should be able to build a rule to remove a comment with a condition they have selected
     Given case Bondi is provided having data:
-      | Wave | poor    |
       | Sun  | too hot |
+      | Wave | poor    |
     And case Manly is provided having data:
       | Swimming | pleasant |
       | Sun      | hot      |
@@ -126,9 +128,9 @@ Feature: Building rules
     And I select the changes tab
     And I start to build a rule for the change on row 0
     And the conditions showing should be:
-      | Wave is not blank |
       | Sun is not blank  |
-    And I select the first condition
+      | Wave is not blank |
+    And I select the second condition
     When I complete the rule
     And I select the interpretation tab
     Then  the interpretation field should be empty
@@ -138,11 +140,11 @@ Feature: Building rules
 
   Scenario: The user should be able to build a rule to replace a comment with a condition they have selected
     Given case Bondi is provided having data:
-      | Wave | poor    |
       | Sun  | too hot |
+      | Wave | poor    |
     And case Manly is provided having data:
-      | Swimming | pleasant |
       | Sun      | hot      |
+      | Swimming | pleasant |
     And the interpretation of the case Bondi is "Go to Bondi."
     And I start the client application
     And I select case Manly
@@ -152,9 +154,9 @@ Feature: Building rules
     And I select the changes tab
     And I start to build a rule for the change on row 0
     And the conditions showing should be:
-      | Swimming is not blank |
       | Sun is not blank      |
-    And I select the first condition
+      | Swimming is not blank |
+    And I select the second condition
     When I complete the rule
     And I select the interpretation tab
     Then  the interpretation field should contain the text "Go to Manly."
@@ -164,8 +166,8 @@ Feature: Building rules
 
   Scenario: The conditions shown for a comment that is a replacement should include the conditions for the comment that has been replaced
     Given case Bondi is provided having data:
-      | Wave | poor    |
       | Sun  | too hot |
+      | Wave | poor    |
     And I start the client application
     And I build a rule to add the comment "Go to Bondi." with the condition "Wave is not blank"
     And  the interpretation field should contain the text "Go to Bondi."
@@ -173,18 +175,18 @@ Feature: Building rules
     When I select the conclusions tab
     And click the comment "Go to Manly."
     Then the conditions showing are:
-      | Wave is not blank |
       | Sun is not blank  |
+      | Wave is not blank |
     And stop the client application
 
   Scenario: A new rule should apply to any case satisfying its conditions
     Given I start the client application
     And case Bondi is provided having data:
-      | Wave | excellent |
       | Sun  | hot       |
+      | Wave | excellent |
     And case Manly is provided having data:
-      | Swimming | pleasant |
       | Sun      | hot      |
+      | Swimming | pleasant |
     And case Malabar is provided having data:
       | Swimming | pleasant |
     And I select case Bondi
@@ -192,9 +194,9 @@ Feature: Building rules
     And I select the changes tab
     And I start to build a rule for the change on row 0
     And the conditions showing should be:
-      | Wave is not blank |
       | Sun is not blank  |
-    And I select the second condition
+      | Wave is not blank |
+    And I select the first condition
     And I complete the rule
     When I select case Manly
     Then the interpretation field should contain the text "Go for a surf."
@@ -205,46 +207,48 @@ Feature: Building rules
   Scenario: The user should be able to cancel the current rule being built
     Given I start the client application
     And case Bondi is provided having data:
-      | Wave | excellent |
       | Sun  | hot       |
+      | Wave | excellent |
     And case Manly is provided having data:
-      | Swimming | pleasant |
       | Sun      | hot      |
+      | Swimming | pleasant |
     And I enter the text "Let's surf" in the interpretation field
     And the changes badge indicates that there is 1 change
     And I select the changes tab
     And I start to build a rule for the change on row 0
     And the conditions showing should be:
-      | Wave is not blank |
       | Sun is not blank  |
-    And I select the second condition
+      | Wave is not blank |
+    And I select the first condition
     When I cancel the rule
-    Then the changes badge indicates that there is no change
-    And I should see the following cases in the case list:
-      | Bondi |
-      | Manly |
+    Then the changes badge indicates that there is 1 change
+    And I select case Bondi
+    And the interpretation field should contain the text "Let's surf"
+    And I select case Manly
+    And the interpretation field should be empty
     And stop the client application
 
-  Scenario: The KB controls should be disabled when building a rule
+  Scenario: The KB controls and case list should be disabled when building a rule
     Given a new case with the name Case1 is stored on the server
     And I start the client application
-    And the KB controls are enabled
+    And the KB controls are shown
     And I enter the text "Go to Bondi." in the interpretation field
     And I select the changes tab
     When I start to build a rule for the change on row 0
-    Then the KB controls should be disabled
-    And the count of the number of cases should be hidden
+    Then the KB controls should be hidden
+    And the case list should be hidden
     And cancel the rule
     And stop the client application
 
-  Scenario: The KB controls should be re-enabled after cancelling a rule
+  Scenario: The KB controls and case list should be re-enabled after cancelling a rule
     Given a new case with the name Case1 is stored on the server
     And I start the client application
     And I enter the text "Go to Bondi." in the interpretation field
     And I select the changes tab
     And I start to build a rule for the change on row 0
-    And the KB controls are disabled
+    And the KB controls are hidden
+    And the case list is hidden
     When I cancel the rule
-    Then the KB controls should be enabled
-    And the count of the number of cases is 1
+    Then the KB controls should be shown
+    And the case list should be shown
     And stop the client application

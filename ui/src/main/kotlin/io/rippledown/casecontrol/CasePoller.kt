@@ -18,7 +18,6 @@ val POLL_PERIOD = 2.seconds
 @Composable
 @Preview
 fun CasePoller(handler: CasePollerHandler) {
-
     LaunchedEffect(Unit) {
         queryForCases(handler = handler)
         while (!handler.isClosing()) {

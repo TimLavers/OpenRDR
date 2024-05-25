@@ -12,9 +12,4 @@ class ApplicationBarOperator(private val contextProvider: () -> AccessibleContex
         return textContext.accessibleName
     }
 
-    fun kbControlOperator(): KbControlOperator {
-        return KbControlOperator{
-            contextProvider()
-        }
-    }
 }

@@ -53,7 +53,7 @@ class CaseControlTest {
 
         with(composeTestRule) {
             setContent {
-                CaseControl(CasesInfo(twoCaseIds), handler)
+                CaseControl(false, CasesInfo(twoCaseIds), handler)
             }
             requireNumberOfCasesOnCaseList(2)
             requireNamesToBeShowingOnCaseList(caseA, caseB)
@@ -78,7 +78,7 @@ class CaseControlTest {
 
         with(composeTestRule) {
             setContent {
-                CaseControl(CasesInfo(threeCaseIds), handler)
+                CaseControl(false, CasesInfo(threeCaseIds), handler)
             }
             //Given
             requireNumberOfCasesOnCaseList(3)
@@ -107,7 +107,7 @@ class CaseControlTest {
 
         with(composeTestRule) {
             setContent {
-                CaseControl(CasesInfo(caseIds), handler)
+                CaseControl(false, CasesInfo(caseIds), handler)
             }
             //Given
             requireNumberOfCasesOnCaseList(2)
@@ -134,7 +134,7 @@ class CaseControlTest {
         coEvery { handler.saveCase(capture(slot)) } answers { firstArg() }
         with(composeTestRule) {
             setContent {
-                CaseControl(CasesInfo(caseIds), handler)
+                CaseControl(false, CasesInfo(caseIds), handler)
             }
             //Given
             requireNumberOfCasesOnCaseList(1)
@@ -169,7 +169,7 @@ class CaseControlTest {
 
         with(composeTestRule) {
             setContent {
-                CaseControl(CasesInfo(caseIds), handler)
+                CaseControl(false, CasesInfo(caseIds), handler)
             }
             //Given
             requireNumberOfCasesOnCaseList(1)
@@ -209,7 +209,7 @@ class CaseControlTest {
 
         with(composeTestRule) {
             setContent {
-                CaseControl(CasesInfo(caseIds), handler)
+                CaseControl(false, CasesInfo(caseIds), handler)
             }
             //Given
             requireInterpretation(bondiComment)
@@ -251,7 +251,7 @@ class CaseControlTest {
 
         with(composeTestRule) {
             setContent {
-                CaseControl(CasesInfo(caseIds), handler)
+                CaseControl(false, CasesInfo(caseIds), handler)
             }
             //Given
             requireNumberOfCasesOnCaseList(2)
@@ -285,7 +285,7 @@ class CaseControlTest {
 
         with(composeTestRule) {
             setContent {
-                CaseControl(CasesInfo(twoCaseIds), handler)
+                CaseControl(false, CasesInfo(twoCaseIds), handler)
             }
             waitForCaseToBeShowing(caseName1)
         }
@@ -305,7 +305,7 @@ class CaseControlTest {
         val caseName10 = "case 10"
         with(composeTestRule) {
             setContent {
-                CaseControl(CasesInfo(caseIds), handler)
+                CaseControl(false, CasesInfo(caseIds), handler)
             }
             //Given
             waitForCaseToBeShowing(caseName1)
@@ -820,11 +820,12 @@ fun main() {
                 CaseId(id = index.toLong(), name = name)
             }
             caseIds.map { caseId ->
-                createCaseWithInterpretation(caseId.name, caseId.id, listOf("Go to Bondi $caseId"))
+                createCaseWithInterpretation(caseId.name, caseId.id, listOf("Go to Bondi ${caseId.id}."))
             }.forEach {
                 coEvery { handler.getCase(it.case.caseId.id!!) } returns it
             }
-            CaseControl(CasesInfo(caseIds), handler)
+            coEvery { handler.saveCase(any()) } answers { firstArg() }
+            CaseControl(false, CasesInfo(caseIds), handler)
         }
     }
 }

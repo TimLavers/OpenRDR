@@ -1,7 +1,6 @@
 Feature: The cases described in the TSH paper can be represented in OpenRDR
 
-  @tsh
-  Scenario: TSH cases
+  Scenario: TSH KB cases
     Given the TSH sample KB has been loaded
     And I start the client application
     Then the count of the number of cases is 34

@@ -23,8 +23,8 @@ fun Application.interpManagement(application: ServerApplication) {
 
         post(BUILD_RULE) {
             val ruleRequest = call.receive<RuleRequest>()
-            val interpretationWithDiffs = kbEndpoint(application).commitRuleSession(ruleRequest)
-            call.respond(HttpStatusCode.OK, interpretationWithDiffs)
+            val viewableCase = kbEndpoint(application).commitRuleSession(ruleRequest)
+            call.respond(HttpStatusCode.OK, viewableCase)
         }
 
         post(START_RULE_SESSION) {

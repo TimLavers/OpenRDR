@@ -12,7 +12,6 @@ import io.rippledown.model.OperationResult
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.createCase
-import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
@@ -28,7 +27,7 @@ class EngineConfig {
     var returnCasesInfo: CasesInfo = CasesInfo(emptyList())
     var returnCase: ViewableCase? = createCase("The Case")
     var returnOperationResult: OperationResult = OperationResult()
-    var returnInterpretationAfterBuildingRule: ViewableInterpretation = ViewableInterpretation()
+    var returnCaseAfterBuildingRule: ViewableCase = createCase("The Case")
     var returnCornerstoneStatus: CornerstoneStatus = CornerstoneStatus()
     var returnConditionList: ConditionList = ConditionList()
 
@@ -84,7 +83,7 @@ private class EngineBuilder(private val config: EngineConfig) {
                 if (config.expectedRuleRequest != null) {
                     bodyAsRuleRequest shouldBe config.expectedRuleRequest
                 }
-                httpResponseData(json.encodeToString(config.returnInterpretationAfterBuildingRule))
+                httpResponseData(json.encodeToString(config.returnCaseAfterBuildingRule))
             }
 
             START_RULE_SESSION -> {

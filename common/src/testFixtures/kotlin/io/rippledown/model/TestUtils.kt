@@ -8,10 +8,12 @@ import io.rippledown.model.condition.Condition
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.RuleSummary
+import kotlin.system.measureTimeMillis
 
 fun daysAgo(n: Int): Long {
     return defaultDate - n * 24 * 60 * 60 * 1000
 }
+
 fun daysAfter(n: Int): Long {
     return defaultDate + n * 24 * 60 * 60 * 1000
 }
@@ -20,6 +22,10 @@ fun randomString(length: Int): String {
     //https://stackoverflow.com/questions/46943860/idiomatic-way-to-generate-a-random-alphanumeric-string-in-kotlin
     val alphabet: List<Char> = ('a'..'z') + ('A'..'Z')
     return List(length) { alphabet.random() }.joinToString("")
+}
+
+fun printDuration(text: String, block: () -> Unit) {
+    System.out.print("${"Millis for $text"}: ${measureTimeMillis(block)}\n")
 }
 
 const val defaultDate = 1659752689505
@@ -58,7 +64,7 @@ fun createCaseWithInterpretation(
     conclusionTexts: List<String> = listOf(),
     diffs: DiffList = DiffList()
 ): ViewableCase {
-    val case = createCase(name, id)
+    val case = createCase(name, id, listOf(AttributeWithValue()))
     var conclusionId = 10
     val interp = Interpretation(case.case.caseId).apply {
         conclusionTexts.forEach { text ->

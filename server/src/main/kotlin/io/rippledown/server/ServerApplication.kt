@@ -45,7 +45,6 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
     }
 
     fun kbForId(id: String): KBEndpoint {
-        logger.info("kbForId. Keys are: ${idToKBEndpoint.keys}")
         return if (idToKBEndpoint.containsKey(id)) idToKBEndpoint[id]!! else throw IllegalArgumentException("Unknown kb id: $id")
     }
 

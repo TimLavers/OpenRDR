@@ -274,7 +274,7 @@ fun main() {
             onCloseRequest = ::exitApplication,
         ) {
             InterpretationTabs(interpretationWithConclusions(), object : InterpretationTabsHandler {
-                override var onStartRule: (selectedDiff: Diff) -> Unit = { }
+                override fun onStartRule(selectedDiff: Diff) {}
                 override var isCornerstone = false
                 override var onInterpretationEdited: (text: String) -> Unit = { }
 

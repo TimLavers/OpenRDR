@@ -100,7 +100,9 @@ fun ToolTipForIconAndLabel(
                 }
                 Text(
                     text = labelText,
-                    modifier = Modifier.padding(start = 10.dp),
+                    modifier = Modifier
+                        .padding(start = 10.dp)
+                        .semantics { contentDescription = labelText },
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                     color = if (isSelected) MaterialTheme.colors.primary else Color.Black,
                     fontSize = 14.sp,

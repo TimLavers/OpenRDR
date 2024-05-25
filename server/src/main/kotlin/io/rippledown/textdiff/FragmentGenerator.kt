@@ -20,7 +20,7 @@ internal fun fragmentList(originalText: String, verifiedText: String?): Fragment
     }
 }
 
-internal fun String.splitIntoSentences() = if (isBlank()) emptyList() else split(REGEX).map { it.trim() }
+internal fun String.splitIntoSentences() = if (isBlank()) emptyList() else trim().split(REGEX).map { it.trim() }
 
 internal fun generateDifferences(
     originalTexts: List<String>,

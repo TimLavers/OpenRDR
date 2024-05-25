@@ -6,7 +6,7 @@ apply(from = "../repositories.gradle.kts")
 
 plugins {
     java
-    id("org.jetbrains.compose") version "1.5.12"
+    id("org.jetbrains.compose") version "1.6.1"
 }
 
 dependencies {
@@ -47,7 +47,7 @@ val argsForCuke = mutableListOf(
 
 tasks.register<JavaExec>("cucumberTest") {
     group = LifecycleBasePlugin.VERIFICATION_GROUP
-    maxHeapSize = "4G"
+    maxHeapSize = "32G"
     mainClass.set("io.cucumber.core.cli.Main")
     classpath = cukeClassPath
     args = argsForCuke.apply {
