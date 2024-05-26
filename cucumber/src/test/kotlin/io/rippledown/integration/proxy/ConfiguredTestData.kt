@@ -12,4 +12,6 @@ object ConfiguredTestData {
     fun kbZipFile(fileName: String): File {
         return File("${resourcesRoot}export/$fileName.zip")
     }
+
+    fun testDataFile(relativePath: String) = File("$resourcesRoot/$relativePath")
 }
