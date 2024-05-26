@@ -345,24 +345,6 @@ class Defs : En {
 //            conclusionsViewPO.requireConditionsToBeShown(*expectedConditions.toTypedArray())
         }
 
-        Then("the message {string} should be shown") { message: String ->
-//            cornerstoneViewPO.requireMessageForNoCornerstones(message)
-        }
-
-        Then("the case {word} is (still )shown as the cornerstone case") { ccName: String ->
-//            cornerstoneViewPO.requireCornerstoneCase(ccName)
-        }
-
-        Then("the number of cornerstone cases should be shown as {int}") { numberOfCornerstoneCases: Int ->
-//            cornerstoneViewPO.requireNumberOfCornerstones(numberOfCornerstoneCases)
-        }
-        When("I click the {word} cornerstone case button") { direction: String ->
-            when (direction) {
-//                "previous" -> cornerstoneViewPO.selectPreviousCornerstoneCase()
-//                "next" -> cornerstoneViewPO.selectNextCornerstoneCase()
-            }
-        }
-
         Then("the KB controls (are )(should be )hidden") {
             kbControlsPO().requireKbControlsToBeHidden()
         }

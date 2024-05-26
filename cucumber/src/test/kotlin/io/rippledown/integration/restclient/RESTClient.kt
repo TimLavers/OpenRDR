@@ -213,6 +213,8 @@ class RESTClient {
             jsonClient.post("$endpoint$SHUTDOWN")
         } catch (e: Exception) {
             //expected
+        } finally {
+            jsonClient.close()
         }
     }
 }

@@ -36,7 +36,7 @@ object StepsInfrastructure {
     fun client() = launchedClient
 
     fun cleanup() {
-        launchedClient.stopClient()
+        if (::launchedClient.isInitialized) launchedClient.stopClient()
         uiTestBase.serverProxy.shutdown()
     }
 
@@ -50,6 +50,7 @@ fun caseListPO() = client().caseListPO()
 fun caseCountPO() = client().caseCountPO()
 fun kbControlsPO() = client().kbControlsPO()
 fun caseViewPO() = client().caseViewPO()
+fun cornerstonePO() = client().cornerstonePO()
 fun interpretationViewPO() = client().interpretationViewPO()
 fun ruleMakerPO() = client().ruleMakerPO()
 fun conclusionsViewPO() = client().conclusionsViewPO()

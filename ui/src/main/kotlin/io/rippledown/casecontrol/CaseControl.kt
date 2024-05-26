@@ -6,6 +6,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
+import io.rippledown.cornerstone.CornerstoneView
 import io.rippledown.main.Handler
 import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
@@ -95,6 +96,7 @@ fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseCont
                 }
             })
             if (ruleInProgress) {
+                CornerstoneView()
                 Spacer(modifier = Modifier.width(10.dp))
                 RuleMaker(conditionHintsForCase, object : RuleMakerHandler, Handler by handler {
                     override var onDone = { conditions: List<Condition> ->
