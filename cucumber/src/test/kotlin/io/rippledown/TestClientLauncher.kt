@@ -33,6 +33,7 @@ class TestClientLauncher {
             application {
                 Window(
                     onCloseRequest = {
+                        println("Shutting down client")
                         api.shutdown()
                     },
                     icon = painterResource("water-wave-icon.png"),

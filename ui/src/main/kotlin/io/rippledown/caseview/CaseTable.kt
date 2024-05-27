@@ -13,14 +13,14 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import io.rippledown.dragdrop.rememberDragDropListState
 import io.rippledown.constants.caseview.CASE_VIEW_TABLE
 import io.rippledown.dragdrop.move
+import io.rippledown.dragdrop.rememberDragDropListState
 import io.rippledown.model.Attribute
 import io.rippledown.model.caseview.ViewableCase
 
 @Composable
-fun CaseTable(viewableCase: ViewableCase, attributeMoveListener: (Attribute, Attribute) -> Unit) {
+fun CaseTable(viewableCase: ViewableCase, attributeMoveListener: (Attribute, Attribute) -> Unit = { _, _ -> }) {
     val columnWidths = ColumnWidths(viewableCase.numberOfColumns)
     val attributes  = remember{mutableStateListOf<Attribute>()}
     attributes.clear()

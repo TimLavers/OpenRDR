@@ -239,6 +239,7 @@ class Defs : En {
         }
 
         When("I replace the text in the interpretation field with {string}") { text: String ->
+            interpretationViewPO().selectOriginalTab()
             interpretationViewPO().setVerifiedText(text)
         }
         Then("the interpretation field should contain the text {string}") { text: String ->

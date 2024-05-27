@@ -24,15 +24,5 @@ const val DIFF_VIEWER_BUILD_ICON = "diff_viewer_build_icon_"
 const val DIFF_VIEWER_ORIGINAL = "diff_viewer_original_"
 const val DIFF_VIEWER_CHANGED = "diff_viewer_changed_"
 
-const val BADGE_CLASS = "MuiBadge-badge"
-const val BADGE_INVISIBLE_CLASS = "MuiBadge-invisible"
-const val INTERPRETATION_CHANGES_BADGE = "interpretation_changes_badge"
-
-
 const val CASE_VIEW_CONTAINER = "case_view_container"
-
-const val CORNERSTONE_VIEW_CONTAINER = "cornerstone_view_container"
-const val EMPTY_CORNERSTONE_VIEW_CONTAINER = "empty_cornerstone_view_container"
-const val NO_CORNERSTONES_TO_REVIEW_LABEL = "NO_CORNERSTONES_TO_REVIEW_LABEL"
-const val NO_CORNERSTONES_TO_REVIEW = "No cornerstone cases to review"
 

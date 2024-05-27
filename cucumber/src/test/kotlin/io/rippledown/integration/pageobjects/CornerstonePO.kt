@@ -1,8 +1,9 @@
 package io.rippledown.integration.pageobjects
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.constants.interpretation.NO_CORNERSTONES_TO_REVIEW
-import io.rippledown.constants.interpretation.NO_CORNERSTONES_TO_REVIEW_LABEL
+
+import io.rippledown.constants.cornerstone.NO_CORNERSTONES_TO_REVIEW_ID
+import io.rippledown.constants.cornerstone.NO_CORNERSTONES_TO_REVIEW_MSG
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.waitUntilAssertedOnEventThread
 import javax.accessibility.AccessibleContext
@@ -12,7 +13,7 @@ class CornerstonePO(private val contextProvider: () -> AccessibleContext) {
 
     fun requireMessageForNoCornerstones() {
         waitUntilAssertedOnEventThread {
-            contextProvider().find(NO_CORNERSTONES_TO_REVIEW_LABEL)?.accessibleName shouldBe NO_CORNERSTONES_TO_REVIEW
+            contextProvider().find(NO_CORNERSTONES_TO_REVIEW_ID)?.accessibleName shouldBe NO_CORNERSTONES_TO_REVIEW_MSG
         }
     }
 

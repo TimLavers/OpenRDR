@@ -8,7 +8,7 @@ class CornerstoneStepDefs : En {
         }
 
         Then("the case {word} is (still )shown as the cornerstone case") { ccName: String ->
-//            cornerstonePO.requireCornerstoneCase(ccName)
+            cornerstonePO().requireCornerstoneCase(ccName)
         }
 
         Then("the number of cornerstone cases should be shown as {int}") { numberOfCornerstoneCases: Int ->

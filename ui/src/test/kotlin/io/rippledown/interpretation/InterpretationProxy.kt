@@ -26,6 +26,10 @@ fun ComposeTestRule.selectDifferencesTab() {
     onNodeWithContentDescription(INTERPRETATION_TAB_CHANGES).performClick()
 }
 
+fun ComposeTestRule.requireNoDifferencesTab() {
+    onNodeWithContentDescription(INTERPRETATION_TAB_CHANGES).assertDoesNotExist()
+}
+
 fun ComposeTestRule.requireConclusionsPanelToBeShowing() {
     onNodeWithContentDescription(INTERPRETATION_PANEL_CONCLUSIONS).assertIsDisplayed()
 }

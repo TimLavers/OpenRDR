@@ -6,7 +6,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
-import io.rippledown.cornerstone.CornerstoneView
+import io.rippledown.cornerstone.CornerstoneInspection
 import io.rippledown.main.Handler
 import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
@@ -38,6 +38,7 @@ fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseCont
     var verifiedText: String? by remember { mutableStateOf(null) }
     var indexOfSelectedDiff: Int by remember { mutableStateOf(-1) }
     var conditionHintsForCase by remember { mutableStateOf(listOf<Condition>()) }
+    var cornerstoneStatus: CornerstoneStatus? by remember { mutableStateOf(null) }
 
     LaunchedEffect(casesInfo, currentCaseId) {
         if (casesInfo.caseIds.isNotEmpty()) {
@@ -78,10 +79,12 @@ fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseCont
                 override var updateCase = { id: Long ->
                     currentCaseId = id
                 }
+
                 override fun onStartRule(selectedDiff: Diff) {
-                    handler.startRuleSession(SessionStartRequest(currentCaseId!!, selectedDiff))
+                    cornerstoneStatus = handler.startRuleSession(SessionStartRequest(currentCaseId!!, selectedDiff))
                     handler.setRuleInProgress(true)//todo remove
                 }
+
                 override var onInterpretationEdited: (text: String) -> Unit = {
                     verifiedText = it
                     currentCase = currentCase!!.copy(
@@ -95,21 +98,21 @@ fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseCont
                     handler.swapAttributes(moved, target)
                 }
             })
-            if (ruleInProgress) {
-                CornerstoneView()
-                Spacer(modifier = Modifier.width(10.dp))
-                RuleMaker(conditionHintsForCase, object : RuleMakerHandler, Handler by handler {
-                    override var onDone = { conditions: List<Condition> ->
-                        handler.setRuleInProgress(false)
-                        val ruleRequest = RuleRequest(currentCase!!.id!!, ConditionList(conditions))
-                        currentCase = handler.buildRule(ruleRequest)
-                    }
+        }
+        if (ruleInProgress) {
+            CornerstoneInspection(cornerstoneStatus!!)
+            Spacer(modifier = Modifier.width(10.dp))
+            RuleMaker(conditionHintsForCase, object : RuleMakerHandler, Handler by handler {
+                override var onDone = { conditions: List<Condition> ->
+                    handler.setRuleInProgress(false)
+                    val ruleRequest = RuleRequest(currentCase!!.id!!, ConditionList(conditions))
+                    currentCase = handler.buildRule(ruleRequest)
+                }
 
-                    override var onCancel = {
-                        handler.setRuleInProgress(false)
-                    }
-                })
-            } else Spacer(modifier = Modifier.width(310.dp))
+                override var onCancel = {
+                    handler.setRuleInProgress(false)
+                }
+            })
         }
     }
 }
