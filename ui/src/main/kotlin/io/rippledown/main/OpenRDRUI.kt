@@ -83,6 +83,7 @@ fun OpenRDRUI(handler: Handler) {
                 override var getCase: (caseId: Long) -> ViewableCase? = { runBlocking { api.getCase(it) } }
                 override suspend fun saveCase(case: ViewableCase) = api.saveVerifiedInterpretation(case)
                 override var isClosing = { false }
+
                 override fun swapAttributes(moved: Attribute, target: Attribute) {
                     runBlocking {
                         api.moveAttribute(moved.id, target.id)
@@ -92,6 +93,8 @@ fun OpenRDRUI(handler: Handler) {
                 override suspend fun conditionHintsForCase(caseId: Long): List<Condition> {
                     return api.conditionHints(caseId).conditions
                 }
+
+                override suspend fun selectCornerstone(index: Int) = api.selectCornerstone(index)
             })
         }
     }

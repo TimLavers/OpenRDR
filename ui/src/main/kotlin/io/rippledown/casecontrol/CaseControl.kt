@@ -2,11 +2,17 @@ package io.rippledown.casecontrol
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import io.rippledown.constants.cornerstone.NO_CORNERSTONES_TO_REVIEW_ID
+import io.rippledown.constants.cornerstone.NO_CORNERSTONES_TO_REVIEW_MSG
 import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
-import io.rippledown.cornerstone.CornerstoneInspection
+import io.rippledown.cornerstone.CornerstonePager
+import io.rippledown.cornerstone.CornerstonePagerHandler
 import io.rippledown.main.Handler
 import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
@@ -21,7 +27,7 @@ import io.rippledown.rule.RuleMaker
 import io.rippledown.rule.RuleMakerHandler
 import kotlinx.coroutines.delay
 
-interface CaseControlHandler : Handler, CaseInspectionHandler {
+interface CaseControlHandler : Handler, CaseInspectionHandler, CornerstonePagerHandler {
     var setRuleInProgress: (_: Boolean) -> Unit
     var getCase: (caseId: Long) -> ViewableCase?
     suspend fun saveCase(case: ViewableCase): ViewableCase
@@ -38,7 +44,7 @@ fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseCont
     var verifiedText: String? by remember { mutableStateOf(null) }
     var indexOfSelectedDiff: Int by remember { mutableStateOf(-1) }
     var conditionHintsForCase by remember { mutableStateOf(listOf<Condition>()) }
-    var cornerstoneStatus: CornerstoneStatus? by remember { mutableStateOf(null) }
+    var cornerstoneStatus: CornerstoneStatus by remember { mutableStateOf(CornerstoneStatus()) }
 
     LaunchedEffect(casesInfo, currentCaseId) {
         if (casesInfo.caseIds.isNotEmpty()) {
@@ -100,7 +106,15 @@ fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseCont
             })
         }
         if (ruleInProgress) {
-            CornerstoneInspection(cornerstoneStatus!!)
+            if (cornerstoneStatus.cornerstoneToReview == null) {
+                Text(
+                    text = NO_CORNERSTONES_TO_REVIEW_MSG,
+                    modifier = Modifier.padding(10.dp)
+                        .semantics { contentDescription = NO_CORNERSTONES_TO_REVIEW_ID }
+                )
+            } else {
+                CornerstonePager(cornerstoneStatus, handler)
+            }
             Spacer(modifier = Modifier.width(10.dp))
             RuleMaker(conditionHintsForCase, object : RuleMakerHandler, Handler by handler {
                 override var onDone = { conditions: List<Condition> ->

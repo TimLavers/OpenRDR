@@ -28,6 +28,7 @@ class EngineConfig {
     var returnCase: ViewableCase? = createCase("The Case")
     var returnOperationResult: OperationResult = OperationResult()
     var returnCaseAfterBuildingRule: ViewableCase = createCase("The Case")
+    var returnCornerstone: ViewableCase = createCase("The Case")
     var returnCornerstoneStatus: CornerstoneStatus = CornerstoneStatus()
     var returnConditionList: ConditionList = ConditionList()
 
@@ -109,7 +110,7 @@ private class EngineBuilder(private val config: EngineConfig) {
 
             SELECT_CORNERSTONE -> {
                 if (config.expectedCornerstoneSelection != -1) request.url.parameters[INDEX_PARAMETER] shouldBe config.expectedCornerstoneSelection.toString()
-                httpResponseData(json.encodeToString(config.returnCornerstoneStatus))
+                httpResponseData(json.encodeToString(config.returnCornerstone))
             }
 
             MOVE_ATTRIBUTE -> {

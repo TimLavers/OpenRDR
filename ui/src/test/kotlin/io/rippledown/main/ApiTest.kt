@@ -16,10 +16,10 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
 class ApiTest {
+    val case = createCase("A", 1)
 
     @Test
     fun getCaseTest() = runTest {
-        val case = createCase("A", 1)
         val config = config {
             returnCase = case
             expectedCaseId = 1
@@ -197,9 +197,9 @@ class ApiTest {
 
         val config = config {
             expectedCornerstoneSelection = selectedCornerstoneIndex
-            returnCornerstoneStatus = CornerstoneStatus()
+            returnCornerstone = case
         }
-        Api(mock(config)).selectCornerstone(selectedCornerstoneIndex) shouldBe config.returnCornerstoneStatus
+        Api(mock(config)).selectCornerstone(selectedCornerstoneIndex) shouldBe case
     }
 
 }

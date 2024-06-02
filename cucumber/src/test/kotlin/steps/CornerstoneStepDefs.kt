@@ -1,6 +1,7 @@
 package steps
 
 import io.cucumber.java8.En
+import io.rippledown.integration.pause
 
 class CornerstoneStepDefs : En {
     init {
@@ -18,7 +19,9 @@ class CornerstoneStepDefs : En {
             when (direction) {
                 "previous" -> cornerstonePO().selectPreviousCornerstoneCase()
                 "next" -> cornerstonePO().selectNextCornerstoneCase()
+                else -> throw IllegalArgumentException("Unknown direction: $direction")
             }
+            pause(1_000) //TODO remove this
         }
 
         Then("the message indicating no cornerstone cases to review should be shown") {

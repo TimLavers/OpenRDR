@@ -1,9 +1,13 @@
 package io.rippledown.casecontrol
 
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.rippledown.constants.cornerstone.NO_CORNERSTONES_TO_REVIEW_ID
+import io.rippledown.constants.cornerstone.NO_CORNERSTONES_TO_REVIEW_MSG
 import io.rippledown.diffview.clickBuildIconForRow
 import io.rippledown.diffview.requireNumberOfDiffRows
 import io.rippledown.interpretation.selectDifferencesTab
@@ -183,6 +187,17 @@ class CaseControlWithRuleMakerTest {
 
             //Then
             coVerify { handler.setRuleInProgress(true) }
+        }
+    }
+
+    @Test
+    fun `should display the 'no cornerstones to review' message when there are no cornerstones`() {
+        with(composeTestRule) {
+            setContent {
+                CaseControl(true, CasesInfo(), handler)
+            }
+            onNodeWithContentDescription(NO_CORNERSTONES_TO_REVIEW_ID)
+                .assertTextEquals(NO_CORNERSTONES_TO_REVIEW_MSG)
         }
     }
 

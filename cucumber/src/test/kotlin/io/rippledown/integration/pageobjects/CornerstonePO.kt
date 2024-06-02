@@ -1,11 +1,15 @@
 package io.rippledown.integration.pageobjects
 
 import io.kotest.matchers.shouldBe
+import io.rippledown.constants.cornerstone.CORNERSTONE_CASE_NAME_ID
 
 import io.rippledown.constants.cornerstone.NO_CORNERSTONES_TO_REVIEW_ID
 import io.rippledown.constants.cornerstone.NO_CORNERSTONES_TO_REVIEW_MSG
+import io.rippledown.constants.navigation.NEXT_BUTTON
+import io.rippledown.constants.navigation.PREVIOUS_BUTTON
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.waitUntilAssertedOnEventThread
+import org.assertj.swing.edt.GuiActionRunner.execute
 import javax.accessibility.AccessibleContext
 
 // ORD2
@@ -18,17 +22,17 @@ class CornerstonePO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun requireCornerstoneCase(expectedCaseName: String) {
-//        cornerstoneContainerElement().findElement(By.id(CASEVIEW_CORNERSTONE_CASE_NAME_ID)).text shouldBe expectedCaseName
+        waitUntilAssertedOnEventThread {
+            contextProvider().find(CORNERSTONE_CASE_NAME_ID)?.accessibleName shouldBe expectedCaseName
+        }
     }
 
     fun selectNextCornerstoneCase() {
-//        cornerstoneContainerElement()
-//            .findElement(By.cssSelector("[aria-label='Go to next page']")).click()
+        execute { contextProvider().find(NEXT_BUTTON)!!.accessibleAction?.doAccessibleAction(0) }
     }
 
     fun selectPreviousCornerstoneCase() {
-//        cornerstoneContainerElement()
-//            .findElement(By.cssSelector("[aria-label='Go to previous page']")).click()
+        execute { contextProvider().find(PREVIOUS_BUTTON)!!.accessibleAction?.doAccessibleAction(0) }
     }
 
     fun requireNumberOfCornerstones(expectedNumberOfCornerstones: Int) {

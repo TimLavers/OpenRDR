@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.verify
@@ -52,7 +53,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
             contentType(ContentType.Application.Json)
             setBody(viewableCase)
         }
-        result.status shouldBe HttpStatusCode.OK
+        result.status shouldBe OK
         result.body<ViewableCase>() shouldBe caseToReturn
         verify { kbEndpoint.saveInterpretation(viewableCase) }
     }
@@ -72,7 +73,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
             contentType(ContentType.Application.Json)
             setBody(sessionStartRequest)
         }
-        result.status shouldBe HttpStatusCode.OK
+        result.status shouldBe OK
         result.body<CornerstoneStatus>() shouldBe cornerstoneStatus
         verify { kbEndpoint.startRuleSession(sessionStartRequest) }
     }
@@ -89,7 +90,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
             contentType(ContentType.Application.Json)
             setBody(request)
         }
-        result.status shouldBe HttpStatusCode.OK
+        result.status shouldBe OK
         result.body<CornerstoneStatus>() shouldBe cornerstoneStatus
         verify { kbEndpoint.updateCornerstone(request) }
     }
@@ -107,7 +108,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
             contentType(ContentType.Application.Json)
             setBody(ruleRequest)
         }
-        result.status shouldBe HttpStatusCode.OK
+        result.status shouldBe OK
         result.body<ViewableCase>() shouldBe viewableCase
         verify { kbEndpoint.commitRuleSession(ruleRequest) }
     }
@@ -118,17 +119,15 @@ class InterpManagementTest : OpenRDRServerTestBase() {
 
         val index = 42
         val cc = createCase("bondi")
-        val cornerstoneStatus =
-            CornerstoneStatus(cornerstoneToReview = cc, indexOfCornerstoneToReview = index, numberOfCornerstones = 52)
-        every { kbEndpoint.cornerstoneStatusForIndex(index) } returns cornerstoneStatus
+        every { kbEndpoint.cornerstoneForIndex(index) } returns cc
 
         val result = httpClient.get(SELECT_CORNERSTONE) {
             parameter(KB_ID, kbId)
             parameter(INDEX_PARAMETER, index)
         }
-        result.status shouldBe HttpStatusCode.OK
-        result.body<CornerstoneStatus>() shouldBe cornerstoneStatus
-        result.status shouldBe HttpStatusCode.OK
-        verify { kbEndpoint.cornerstoneStatusForIndex(index) }
+        result.status shouldBe OK
+        result.body<ViewableCase>() shouldBe cc
+        result.status shouldBe OK
+        verify { kbEndpoint.cornerstoneForIndex(index) }
     }
 }

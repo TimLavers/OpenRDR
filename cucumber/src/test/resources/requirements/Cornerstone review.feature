@@ -1,6 +1,5 @@
 Feature: Reviewing cornerstone cases
 
-
   Scenario: A user message should be shown if there are no cornerstone cases
     Given a new case with the name Case1 is stored on the server
     And I start the client application
@@ -9,7 +8,6 @@ Feature: Reviewing cornerstone cases
     When I start to build a rule for the change on row 0
     Then the message indicating no cornerstone cases to review should be shown
 
-  @single
   Scenario: The first cornerstone case should be shown to the user
     Given a list of cases with the following names is stored on the server:
       | Case1 |
@@ -23,14 +21,13 @@ Feature: Reviewing cornerstone cases
     When I start to build a rule for the change on row 1
     Then the case Case1 is shown as the cornerstone case
 
-  @ignore
   Scenario: The user should be able to switch to the next cornerstone case
     Given case Case1 is provided having data:
       | x | 1 |
     And case Case2 is provided having data:
-      | x | 1 |
+      | x | 2 |
     And case Case3 is provided having data:
-      | x | 1 |
+      | x | 3 |
     And the interpretation of the case Case1 includes "Comment 1." because of condition "x is not blank"
     And the interpretation of the case Case2 includes "Comment 2." because of condition "x is not blank"
     And the interpretation of the case Case3 includes "Comment 3." because of condition "x is not blank"
@@ -38,19 +35,18 @@ Feature: Reviewing cornerstone cases
     And I see the case Case1 as the current case
     And I enter the text " Comment 4." in the interpretation field
     And I select the changes tab
-    And I start to build a rule for the change on row 3
+    And I start to build a rule for the change on row 0
     And the case Case2 is shown as the cornerstone case
     When I click the next cornerstone case button
     Then the case Case3 is shown as the cornerstone case
 
-  @ignore
   Scenario: The user should be able to switch to the previous cornerstone case
     Given case Case1 is provided having data:
       | x | 1 |
     And case Case2 is provided having data:
-      | x | 1 |
+      | x | 2 |
     And case Case3 is provided having data:
-      | x | 1 |
+      | x | 3 |
     And the interpretation of the case Case1 includes "Comment 1." because of condition "x is not blank"
     And the interpretation of the case Case2 includes "Comment 2." because of condition "x is not blank"
     And the interpretation of the case Case3 includes "Comment 3." because of condition "x is not blank"
@@ -58,7 +54,7 @@ Feature: Reviewing cornerstone cases
     And I see the case Case1 as the current case
     And I enter the text " Comment 4." in the interpretation field
     And I select the changes tab
-    And I start to build a rule for the change on row 3
+    And I start to build a rule for the change on row 0
     And I click the next cornerstone case button
     And the case Case3 is shown as the cornerstone case
     When I click the previous cornerstone case button
