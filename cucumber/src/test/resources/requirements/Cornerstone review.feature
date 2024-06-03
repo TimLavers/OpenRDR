@@ -40,6 +40,7 @@ Feature: Reviewing cornerstone cases
     When I click the next cornerstone case button
     Then the case Case3 is shown as the cornerstone case
 
+  @single
   Scenario: The user should be able to switch to the previous cornerstone case
     Given case Case1 is provided having data:
       | x | 1 |
@@ -116,29 +117,3 @@ Feature: Reviewing cornerstone cases
     When I select the condition "y is not blank"
     Then the case Case3 is still shown as the cornerstone case
 
-  @ignore
-  Scenario: The user should be able to add several conditions when building a rule
-    Given case Case1 is provided having data:
-      | x | 1 |
-      | y | 1 |
-      | z | 1 |
-    And case Case2 is provided having data:
-      | x | 2 |
-      | y | 2 |
-      | z | 2 |
-    And the interpretation of the case Case1 includes "Comment 1." because of condition "x is not blank"
-    And the interpretation of the case Case2 includes "Comment 2." because of condition "x is not blank"
-    And I start the client application
-    And I see the case Case1 as the current case
-    And I enter the text " Comment 3." in the interpretation field
-    And I select the changes tab
-    And I start to build a rule for the change on row 2
-    And the conditions showing should be:
-      | x is not blank |
-      | y is not blank |
-      | z is not blank |
-    When I select the condition "y is not blank"
-    And I select the condition "z is not blank"
-    Then the following conditions should be selected:
-      | y is not blank |
-      | z is not blank |

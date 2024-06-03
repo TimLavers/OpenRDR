@@ -21,7 +21,7 @@ class CornerstoneStepDefs : En {
                 "next" -> cornerstonePO().selectNextCornerstoneCase()
                 else -> throw IllegalArgumentException("Unknown direction: $direction")
             }
-            pause(1_000) //TODO remove this
+            pause(2_000) //TODO remove this
         }
 
         Then("the message indicating no cornerstone cases to review should be shown") {

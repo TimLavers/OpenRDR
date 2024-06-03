@@ -34,11 +34,10 @@ fun CornerstonePager(cornerstoneStatus: CornerstoneStatus, handler: CornerstoneP
         println("LE INDEX END  : ${pagerState.currentPage}, ${currentIndex.value}")
     }
 
-    LaunchedEffect(currentIndex.value, pagerState.currentPage) {
+    LaunchedEffect(pagerState.currentPage) {
         println("LE PAGER START: ${pagerState.currentPage}, ${currentIndex.value}")
         case = handler.selectCornerstone(pagerState.currentPage)
         pagerState.animateScrollToPage(pagerState.currentPage)
-//        currentIndex.value = pagerState.currentPage
         println("LE PAGER END  : ${pagerState.currentPage}, ${currentIndex.value}")
     }
 

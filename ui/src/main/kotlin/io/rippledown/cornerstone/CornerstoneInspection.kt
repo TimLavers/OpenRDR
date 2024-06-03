@@ -2,7 +2,6 @@ package io.rippledown.cornerstone
 
 import InterpretationTabs
 import InterpretationTabsHandler
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -29,7 +28,6 @@ fun CornerstoneInspection(case: ViewableCase) {
             .fillMaxHeight()
             .padding(start = 5.dp)
             .width(500.dp)
-            .border(1.dp, MaterialTheme.colors.primary)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
