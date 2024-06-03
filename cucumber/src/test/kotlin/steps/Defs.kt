@@ -325,16 +325,16 @@ class Defs : En {
         }
 
         And("I build a rule to replace the interpretation by {string} with the condition {string}") { replacement: String, condition: String ->
-//            with(interpretationViewPO) {
-//                deleteAllText()
-//                enterVerifiedText(replacement)
-//                selectChangesTab()
-//                buildRule(0)
-//            }
-//            with(conditionSelectorPO) {
-//                clickConditionWithText(condition)
-//                clickDone()
-//            }
+            with(interpretationViewPO()) {
+                deleteAllText()
+                setVerifiedText(replacement)
+                selectDifferencesTab()
+                clickBuildIconOnRow(0)
+            }
+            with(ruleMakerPO()) {
+                clickConditionWithText(condition)
+                clickDoneButton()
+            }
         }
 
         And("click the comment {string}") { comment: String ->
@@ -343,7 +343,9 @@ class Defs : En {
 
         Then("the conditions showing are:") { dataTable: DataTable ->
             val expectedConditions = dataTable.asList()
-//            conclusionsViewPO.requireConditionsToBeShown(*expectedConditions.toTypedArray())
+            expectedConditions.forEachIndexed { index, condition ->
+                conclusionsViewPO().requireConditionAtIndex(0, index, condition)
+            }
         }
 
         Then("the KB controls (are )(should be )hidden") {
