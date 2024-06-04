@@ -38,7 +38,7 @@ class TestClientLauncher {
                     },
                     icon = painterResource("water-wave-icon.png"),
                     title = TITLE,
-                    state = rememberWindowState(size = DpSize(1200.dp, 800.dp))
+                    state = rememberWindowState(size = DpSize(1_400.dp, 800.dp))
                 ) {
                     composeWindow = this.window
                     OpenRDRUI(handler)

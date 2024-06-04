@@ -62,9 +62,11 @@ fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseCont
     Row(
         modifier = Modifier
             .padding(10.dp)
+            .width(1800.dp)
     )
     {
         if (!ruleInProgress) {
+            handler.setInfoMessage("")
             Column {
                 CaseSelectorHeader(casesInfo.caseIds.size)
                 Spacer(modifier = Modifier.height(10.dp))
@@ -77,13 +79,12 @@ fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseCont
         }
 
         if (currentCase != null) {
-            CaseInspection(currentCase!!, object : CaseInspectionHandler, Handler by handler {
+            CaseInspection(currentCase!!, ruleInProgress, object : CaseInspectionHandler, Handler by handler {
                 override var updateCase = { id: Long ->
                     currentCaseId = id
                 }
 
                 override fun onStartRule(selectedDiff: Diff) {
-                    println("onStartRule")
                     cornerstoneStatus = handler.startRuleSession(SessionStartRequest(currentCaseId!!, selectedDiff))
                     handler.setRuleInProgress(true)//todo remove
                 }
@@ -106,7 +107,6 @@ fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseCont
             if (cornerstoneStatus.cornerstoneToReview == null) {
                 handler.setInfoMessage(NO_CORNERSTONES_TO_REVIEW_MSG)
             } else {
-                handler.setInfoMessage("")
                 CornerstonePager(cornerstoneStatus, handler)
             }
 

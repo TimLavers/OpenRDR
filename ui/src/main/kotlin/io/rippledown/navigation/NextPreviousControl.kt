@@ -1,6 +1,7 @@
 package io.rippledown.navigation
 
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -25,7 +26,10 @@ interface NextPreviousControlHandler {
 
 @Composable
 fun NextPreviousControl(currentIndex: Int, total: Int, handler: NextPreviousControlHandler) {
-    Row(verticalAlignment = CenterVertically) {
+    Row(
+        verticalAlignment = CenterVertically,
+        modifier = Modifier.height(40.dp)
+    ) {
         IconButton(
             onClick = { handler.previous() },
             enabled = currentIndex > 0

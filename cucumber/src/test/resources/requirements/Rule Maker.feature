@@ -171,31 +171,31 @@ Feature: The user can make rules that change the interpretive report
       | Sun is not blank  |
     And stop the client application
 
-  @ignore
-  Scenario: A new rule should apply to any case satisfying its conditions
-    Given I start the client application
-    And case Bondi is provided having data:
-      | Sun  | hot       |
-      | Wave | excellent |
-    And case Manly is provided having data:
-      | Sun      | hot      |
-      | Swimming | pleasant |
-    And case Malabar is provided having data:
-      | Swimming | pleasant |
-    And I select case Bondi
-    And I enter the text "Go for a surf." in the interpretation field
-    And I select the changes tab
-    And I start to build a rule for the change on row 0
-    And the conditions showing should be:
-      | Sun is not blank  |
-      | Wave is not blank |
-    And I select the first condition
-    And I complete the rule
-    When I select case Manly
-    Then the interpretation field should contain the text "Go for a surf."
-    And I select case Malabar
+#  @ignore
+#  Scenario: A new rule should apply to any case satisfying its conditions
+#    Given I start the client application
+#    And case Bondi is provided having data:
+#      | Sun  | hot       |
+#      | Wave | excellent |
+#    And case Manly is provided having data:
+#      | Sun      | hot      |
+#      | Swimming | pleasant |
+#    And case Malabar is provided having data:
+#      | Swimming | pleasant |
+#    And I select case Bondi
+#    And I enter the text "Go for a surf." in the interpretation field
+#    And I select the changes tab
+#    And I start to build a rule for the change on row 0
+#    And the conditions showing should be:
+#      | Sun is not blank  |
+#      | Wave is not blank |
+#    And I select the first condition
+#    And I complete the rule
+#    When I select case Manly
+#    Then the interpretation field should contain the text "Go for a surf."
+#    And I select case Malabar
 #    And the interpretation field should be empty //todo
-    And stop the client application
+#    And stop the client application
 
   Scenario: The user should be able to cancel the current rule being built
     Given I start the client application

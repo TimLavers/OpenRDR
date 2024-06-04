@@ -40,7 +40,7 @@ class CaseInspectionTest {
 
         with(composeTestRule) {
             setContent {
-                CaseInspection(case, handler)
+                CaseInspection(case, false, handler)
             }
             waitForCaseToBeShowing(caseName)
         }
@@ -54,7 +54,7 @@ class CaseInspectionTest {
 
         with(composeTestRule) {
             setContent {
-                CaseInspection(case, handler)
+                CaseInspection(case, false, handler)
             }
             requireInterpretation(text)
         }
@@ -71,7 +71,7 @@ class CaseInspectionTest {
         )
         with(composeTestRule) {
             setContent {
-                CaseInspection(currentCase, handler)
+                CaseInspection(currentCase, false, handler)
             }
 
             //Given
@@ -362,7 +362,7 @@ fun main() {
         Window(
             onCloseRequest = ::exitApplication,
         ) {
-            CaseInspection(case, object : CaseInspectionHandler {
+            CaseInspection(case, false, object : CaseInspectionHandler {
                 override var caseEdited: () -> Unit = {}
                 override var updateCase: (Long) -> Unit = { }
                 override fun onStartRule(selectedDiff: Diff) {}

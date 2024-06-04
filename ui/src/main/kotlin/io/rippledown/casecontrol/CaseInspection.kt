@@ -4,6 +4,7 @@ import InterpretationTabs
 import InterpretationTabsHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.rippledown.caseview.CaseView
 import io.rippledown.caseview.CaseViewHandler
@@ -16,7 +17,7 @@ interface CaseInspectionHandler : CaseViewHandler, InterpretationTabsHandler {
 }
 
 @Composable
-fun CaseInspection(case: ViewableCase, handler: CaseInspectionHandler) {
+fun CaseInspection(case: ViewableCase, isRuleBuilding: Boolean, handler: CaseInspectionHandler) {
     Column(
         verticalArrangement = Arrangement.Top,
         modifier = androidx.compose.ui.Modifier
@@ -24,6 +25,7 @@ fun CaseInspection(case: ViewableCase, handler: CaseInspectionHandler) {
             .padding(start = 5.dp)
             .width(500.dp)
     ) {
+        if (isRuleBuilding) Spacer(modifier = Modifier.height(40.dp))
         CaseView(case, handler = object : CaseViewHandler {
             override var caseEdited = {} //TODO
             override fun swapAttributes(moved: Attribute, target: Attribute) {
