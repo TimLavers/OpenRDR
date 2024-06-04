@@ -5,9 +5,11 @@ import io.rippledown.kb.KB
 import io.rippledown.kb.KBManager
 import io.rippledown.kb.export.KBImporter
 import io.rippledown.kb.export.util.Unzipper
+import io.rippledown.kb.sample.loadSampleKB
 import io.rippledown.model.KBInfo
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.postgres.PostgresPersistenceProvider
+import io.rippledown.sample.SampleKB
 import io.rippledown.util.EntityRetrieval
 import java.io.File
 import kotlin.io.path.createTempDirectory
@@ -33,6 +35,14 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         val kbInfo = kbManager.createKB(name, force)
         loadKnownKB(kbInfo)
         return kbInfo //todo test return value
+    }
+
+    fun createSampleKB(name: String, sampleKB: SampleKB): KBInfo {
+        logger.info("Creating Sample KB, name: $name, sample: $sampleKB.")
+        val kbInfo = kbManager.createKB(name, true)
+        loadKnownKB(kbInfo)
+        loadSampleKB(kbFor(kbInfo), sampleKB)
+        return kbInfo
     }
 
     fun selectKB(id: String): KBInfo {
