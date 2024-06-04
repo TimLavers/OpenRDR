@@ -1,12 +1,7 @@
 package io.rippledown.casecontrol
 
-import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.mockk
-import io.rippledown.constants.cornerstone.NO_CORNERSTONES_TO_REVIEW_ID
+import io.mockk.*
 import io.rippledown.constants.cornerstone.NO_CORNERSTONES_TO_REVIEW_MSG
 import io.rippledown.diffview.clickBuildIconForRow
 import io.rippledown.diffview.requireNumberOfDiffRows
@@ -21,6 +16,7 @@ import io.rippledown.model.createCaseWithInterpretation
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.diff.Unchanged
+import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.rule.clickCancelRuleButton
@@ -59,12 +55,12 @@ class CaseControlWithRuleMakerTest {
     fun setUp() {
         handler = mockk<CaseControlHandler>(relaxed = true)
 
-
         condition = hasCurrentValue(1, Attribute(2, "surf"))
         coEvery { handler.buildRule(any()) } returns viewableCase
         coEvery { handler.getCase(any()) } returns viewableCase
         coEvery { handler.saveCase(any()) } answers { firstArg() }
         coEvery { handler.conditionHintsForCase(any()) } returns listOf(condition)
+        coEvery { handler.selectCornerstone(any()) } returns viewableCase
     }
 
     @Test
@@ -191,13 +187,33 @@ class CaseControlWithRuleMakerTest {
     }
 
     @Test
-    fun `should display the 'no cornerstones to review' message when there are no cornerstones`() {
+    fun `should set the 'no cornerstones to review' message when there are no cornerstones`() {
         with(composeTestRule) {
             setContent {
                 CaseControl(true, CasesInfo(), handler)
             }
-            onNodeWithContentDescription(NO_CORNERSTONES_TO_REVIEW_ID)
-                .assertTextEquals(NO_CORNERSTONES_TO_REVIEW_MSG)
+            verify { handler.setInfoMessage(NO_CORNERSTONES_TO_REVIEW_MSG) }
+        }
+    }
+
+    @Test
+    fun `should remove the 'no cornerstones to review' message when there are cornerstones`() {
+        every { handler.startRuleSession(any()) } returns CornerstoneStatus(viewableCase, 42, 84)
+
+        with(composeTestRule) {
+            setContent {
+                CaseControl(true, CasesInfo(listOf(caseId)), handler)
+            }
+            //Given
+            waitForCaseToBeShowing(caseName)
+            selectDifferencesTab()
+            requireNumberOfDiffRows(2)
+
+            //When
+            clickBuildIconForRow(1)
+
+            //Then
+            verify { handler.setInfoMessage("") }
         }
     }
 

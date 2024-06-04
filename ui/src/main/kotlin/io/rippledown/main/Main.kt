@@ -26,6 +26,7 @@ fun main() = application {
         OpenRDRUI(object : Handler {
             override var isClosing = { closing }
             override var api: Api = Api()
+            override var setInfoMessage: (String) -> Unit = {}
         })
     }
 }

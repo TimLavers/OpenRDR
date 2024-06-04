@@ -2,13 +2,9 @@ package io.rippledown.casecontrol
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import io.rippledown.constants.cornerstone.NO_CORNERSTONES_TO_REVIEW_ID
 import io.rippledown.constants.cornerstone.NO_CORNERSTONES_TO_REVIEW_MSG
 import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
 import io.rippledown.cornerstone.CornerstonePager
@@ -87,6 +83,7 @@ fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseCont
                 }
 
                 override fun onStartRule(selectedDiff: Diff) {
+                    println("onStartRule")
                     cornerstoneStatus = handler.startRuleSession(SessionStartRequest(currentCaseId!!, selectedDiff))
                     handler.setRuleInProgress(true)//todo remove
                 }
@@ -107,14 +104,12 @@ fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseCont
         }
         if (ruleInProgress) {
             if (cornerstoneStatus.cornerstoneToReview == null) {
-                Text(
-                    text = NO_CORNERSTONES_TO_REVIEW_MSG,
-                    modifier = Modifier.padding(10.dp)
-                        .semantics { contentDescription = NO_CORNERSTONES_TO_REVIEW_ID }
-                )
+                handler.setInfoMessage(NO_CORNERSTONES_TO_REVIEW_MSG)
             } else {
+                handler.setInfoMessage("")
                 CornerstonePager(cornerstoneStatus, handler)
             }
+
             Spacer(modifier = Modifier.width(10.dp))
             RuleMaker(conditionHintsForCase, object : RuleMakerHandler, Handler by handler {
                 override var onDone = { conditions: List<Condition> ->

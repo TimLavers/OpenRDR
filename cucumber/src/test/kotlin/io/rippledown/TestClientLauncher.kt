@@ -24,6 +24,7 @@ class TestClientLauncher {
     private val handler = object : Handler {
         override var api = Api()
         override var isClosing: () -> Boolean = { false }
+        override var setInfoMessage: (String) -> Unit = {}
     }
     private lateinit var composeWindow: ComposeWindow
 
@@ -33,7 +34,6 @@ class TestClientLauncher {
             application {
                 Window(
                     onCloseRequest = {
-                        println("Shutting down client")
                         api.shutdown()
                     },
                     icon = painterResource("water-wave-icon.png"),
