@@ -239,6 +239,7 @@ class Defs : En {
         }
 
         When("I replace the text in the interpretation field with {string}") { text: String ->
+            interpretationViewPO().selectOriginalTab()
             interpretationViewPO().setVerifiedText(text)
         }
         Then("the interpretation field should contain the text {string}") { text: String ->
@@ -324,16 +325,16 @@ class Defs : En {
         }
 
         And("I build a rule to replace the interpretation by {string} with the condition {string}") { replacement: String, condition: String ->
-//            with(interpretationViewPO) {
-//                deleteAllText()
-//                enterVerifiedText(replacement)
-//                selectChangesTab()
-//                buildRule(0)
-//            }
-//            with(conditionSelectorPO) {
-//                clickConditionWithText(condition)
-//                clickDone()
-//            }
+            with(interpretationViewPO()) {
+                deleteAllText()
+                setVerifiedText(replacement)
+                selectDifferencesTab()
+                clickBuildIconOnRow(0)
+            }
+            with(ruleMakerPO()) {
+                clickConditionWithText(condition)
+                clickDoneButton()
+            }
         }
 
         And("click the comment {string}") { comment: String ->
@@ -342,24 +343,8 @@ class Defs : En {
 
         Then("the conditions showing are:") { dataTable: DataTable ->
             val expectedConditions = dataTable.asList()
-//            conclusionsViewPO.requireConditionsToBeShown(*expectedConditions.toTypedArray())
-        }
-
-        Then("the message {string} should be shown") { message: String ->
-//            cornerstoneViewPO.requireMessageForNoCornerstones(message)
-        }
-
-        Then("the case {word} is (still )shown as the cornerstone case") { ccName: String ->
-//            cornerstoneViewPO.requireCornerstoneCase(ccName)
-        }
-
-        Then("the number of cornerstone cases should be shown as {int}") { numberOfCornerstoneCases: Int ->
-//            cornerstoneViewPO.requireNumberOfCornerstones(numberOfCornerstoneCases)
-        }
-        When("I click the {word} cornerstone case button") { direction: String ->
-            when (direction) {
-//                "previous" -> cornerstoneViewPO.selectPreviousCornerstoneCase()
-//                "next" -> cornerstoneViewPO.selectNextCornerstoneCase()
+            expectedConditions.forEachIndexed { index, condition ->
+                conclusionsViewPO().requireConditionAtIndex(0, index, condition)
             }
         }
 

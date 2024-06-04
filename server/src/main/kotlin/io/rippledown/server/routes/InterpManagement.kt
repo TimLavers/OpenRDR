@@ -41,8 +41,8 @@ fun Application.interpManagement(application: ServerApplication) {
 
         get(SELECT_CORNERSTONE) {
             val cornerstoneIndex = call.parameters[INDEX_PARAMETER]?.toInt() ?: error("Invalid cornerstone index.")
-            val cornerstoneStatus = kbEndpoint(application).cornerstoneStatusForIndex(cornerstoneIndex)
-            call.respond(cornerstoneStatus)
+            val cornerstone = kbEndpoint(application).cornerstoneForIndex(cornerstoneIndex)
+            call.respond(cornerstone)
         }
     }
 }

@@ -121,6 +121,21 @@ class InterpretationTabsTest {
     }
 
     @Test
+    fun `should not show difference tab if a cornerstone case`() = runTest {
+        with(composeTestRule) {
+            every { handler.isCornerstone } returns true
+
+            //Given
+            setContent {
+                InterpretationTabs(interpretationWithDifferences(0), handler)
+            }
+
+            //Then
+            requireNoDifferencesTab()
+        }
+    }
+
+    @Test
     fun `badge on differences icon should show the expected number of differences`() = runTest {
         with(composeTestRule) {
             //Given

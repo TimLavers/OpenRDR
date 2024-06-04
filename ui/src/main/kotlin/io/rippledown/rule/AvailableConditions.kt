@@ -32,7 +32,7 @@ fun AvailableConditions(conditions: List<Condition>, handler: AvailableCondition
 
     Box(
         modifier = Modifier
-            .height(200.dp)
+            .height(100.dp)
     ) {
         Column(
             modifier = Modifier

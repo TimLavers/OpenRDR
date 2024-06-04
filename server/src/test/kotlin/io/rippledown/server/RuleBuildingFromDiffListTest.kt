@@ -191,7 +191,7 @@ internal class RuleBuildingFromDiffListTest {
         withClue("There are 3 cornerstones showing, so index 1 0-based corresponds to case3") {
 
         }
-        val cornerstoneStatus = kbEndpoint.cornerstoneStatusForIndex(1) //0-based index
+        val cornerstoneStatus = kbEndpoint.cornerstoneForIndex(1) //0-based index
         cornerstoneStatus shouldBe CornerstoneStatus(kbEndpoint.viewableCase(cc3Id), 1, 3)
     }
 }

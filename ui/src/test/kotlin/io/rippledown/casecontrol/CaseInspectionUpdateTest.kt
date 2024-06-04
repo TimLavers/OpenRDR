@@ -97,7 +97,7 @@ fun CaseInspectionWithButton(initialCase: ViewableCase, changedCase: ViewableCas
     var currentCase by remember { mutableStateOf(initialCase) }
     val handler = mockk<CaseInspectionHandler>()
 
-    CaseInspection(currentCase, handler)
+    CaseInspection(currentCase, false, handler)
 
     Button(
         onClick = {

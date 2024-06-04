@@ -151,11 +151,11 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
     /**
      * @param cornerstoneIndex the 0-based index of the cornerstone to return
      */
-    fun cornerstoneStatusForIndex(cornerstoneIndex: Int): CornerstoneStatus {
+    fun cornerstoneForIndex(cornerstoneIndex: Int): ViewableCase {
+        logger.info("about to get cc for index $cornerstoneIndex")
         val cornerstones = kb.conflictingCasesInCurrentRuleSession()
-        val cornerstone = cornerstones[cornerstoneIndex]
-        val viewableCornerstone = kb.viewableCase(cornerstone)
-        return CornerstoneStatus(viewableCornerstone, cornerstoneIndex, cornerstones.size)
+        logger.info("got cc for index          $cornerstoneIndex")
+        return kb.viewableCase(cornerstones[cornerstoneIndex])
     }
 
     fun updateCornerstone(request: UpdateCornerstoneRequest) = kb.updateCornerstone(request)

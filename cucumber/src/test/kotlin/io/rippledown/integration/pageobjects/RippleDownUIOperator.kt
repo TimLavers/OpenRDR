@@ -30,6 +30,10 @@ class RippleDownUIOperator(private val window: ComposeWindow) {
         context()
     }
 
+    fun cornerstonePO() = CornerstonePO {
+        context()
+    }
+
     fun interpretationViewPO() = InterpretationViewPO {
         context()
     }

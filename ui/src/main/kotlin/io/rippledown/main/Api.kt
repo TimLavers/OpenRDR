@@ -188,10 +188,11 @@ class Api(engine: HttpClientEngine = CIO.create()) {
     /**
      * Retrieves the specified cornerstone for current the rule session
      *
-     * @param index the 0-based index of the cornerstone to retrieve
-     * @return the cornerstone, its index and the total number of cornerstones
+     * @param index the 0-based index of the cornerstone to retrieve. See CornerstoneStatus
+     * @return the cornerstone
      */
-    suspend fun selectCornerstone(index: Int): CornerstoneStatus {
+    suspend fun selectCornerstone(index: Int): ViewableCase {
+        println("   API: Selecting cornerstone $index")
         return client.get("$API_URL$SELECT_CORNERSTONE?$INDEX_PARAMETER=$index") {
             setKBParameter()
         }.body()
