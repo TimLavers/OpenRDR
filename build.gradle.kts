@@ -9,6 +9,14 @@ plugins {
     kotlin("plugin.serialization") version "1.9.22"
     id("io.ktor.plugin") version "2.3.5"
     id("com.github.johnrengelman.shadow") version "5.2.0"
+    idea
+}
+
+idea {
+    module {
+        isDownloadJavadoc = true
+        isDownloadSources = true
+    }
 }
 
 kotlin {

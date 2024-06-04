@@ -6,7 +6,13 @@ import io.cucumber.java8.En
 class RuleMakerStepDefs : En {
     init {
         When("I build a rule for the change on row {int}") { row: Int ->
+            interpretationViewPO().selectDifferencesTab()
             interpretationViewPO().buildRule(row)
+        }
+
+        When("I build a rule for this change") {
+            interpretationViewPO().selectDifferencesTab()
+            interpretationViewPO().buildRule(0)
         }
 
         When("I complete the rule") {
@@ -18,6 +24,7 @@ class RuleMakerStepDefs : En {
         }
 
         When("I start to build a rule for the change on row {int}") { row: Int ->
+            interpretationViewPO().selectDifferencesTab()
             interpretationViewPO().clickBuildIconOnRow(row)
         }
 

@@ -62,3 +62,5 @@ To run a single cucumber test or feature file, add the @single annotation at the
 
 [minus icon](https://www.flaticon.com/free-icons/minus) by [Freepik - Flaticon](https://www.flaticon.com/)
 
+<a href="https://www.flaticon.com/free-icons/arrow-symbol" title="arrow symbol icons">Arrow symbol icons created by
+Steven Edward Simanjuntak - Flaticon</a>

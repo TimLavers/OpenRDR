@@ -2,11 +2,10 @@
 
 package io.rippledown.main
 
-import androidx.compose.foundation.layout.width
+import androidx.compose.material.BottomAppBar
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 import io.rippledown.appbar.AppBarHandler
 import io.rippledown.appbar.ApplicationBar
 import io.rippledown.casecontrol.CaseControl
@@ -28,6 +27,7 @@ import java.io.File
 interface Handler {
     var api: Api
     var isClosing: () -> Boolean
+    var setInfoMessage: (String) -> Unit
 }
 
 @Composable
@@ -36,13 +36,17 @@ fun OpenRDRUI(handler: Handler) {
     var ruleInProgress by remember { mutableStateOf(false) }
     var casesInfo by remember { mutableStateOf(CasesInfo()) }
     var kbInfo: KBInfo? by remember { mutableStateOf(null) }
+    var infoMessage by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         kbInfo = api.kbList().firstOrNull()
     }
 
+    handler.setInfoMessage = {
+        infoMessage = it
+    }
+
     Scaffold(
-        modifier = Modifier.width(1_800.dp),
         topBar = {
             ApplicationBar(kbInfo, object : AppBarHandler {
                 override var isRuleSessionInProgress = ruleInProgress
@@ -52,6 +56,14 @@ fun OpenRDRUI(handler: Handler) {
                 override var exportKB: (data: File) -> Unit = { runBlocking { api.exportKBToZip(it) } }
                 override val kbList: () -> List<KBInfo> = { runBlocking { api.kbList() } }
             })
+        },
+        bottomBar = {
+            BottomAppBar(
+                backgroundColor = Color.White,
+            )
+            {
+                InformationPanel(infoMessage)
+            }
         })
     {
         CasePoller(object : CasePollerHandler {
@@ -67,6 +79,7 @@ fun OpenRDRUI(handler: Handler) {
                 override var setRuleInProgress = { inProgress: Boolean ->
                     ruleInProgress = inProgress
                 }
+
                 override fun onStartRule(selectedDiff: Diff) {}//todo remove
                 override fun buildRule(ruleRequest: RuleRequest) = runBlocking {
                     api.buildRule(ruleRequest)
@@ -83,6 +96,7 @@ fun OpenRDRUI(handler: Handler) {
                 override var getCase: (caseId: Long) -> ViewableCase? = { runBlocking { api.getCase(it) } }
                 override suspend fun saveCase(case: ViewableCase) = api.saveVerifiedInterpretation(case)
                 override var isClosing = { false }
+
                 override fun swapAttributes(moved: Attribute, target: Attribute) {
                     runBlocking {
                         api.moveAttribute(moved.id, target.id)
@@ -92,6 +106,8 @@ fun OpenRDRUI(handler: Handler) {
                 override suspend fun conditionHintsForCase(caseId: Long): List<Condition> {
                     return api.conditionHints(caseId).conditions
                 }
+
+                override suspend fun selectCornerstone(index: Int) = api.selectCornerstone(index)
             })
         }
     }

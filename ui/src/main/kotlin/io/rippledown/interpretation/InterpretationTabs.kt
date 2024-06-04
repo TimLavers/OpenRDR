@@ -30,16 +30,19 @@ interface InterpretationTabsHandler {
 
 @Composable
 fun InterpretationTabs(viewableInterpretation: ViewableInterpretation, handler: InterpretationTabsHandler) {
-    val titles = listOf(
-        INTERPRETATION_TAB_ORIGINAL_LABEL,
-        INTERPRETATION_TAB_CONCLUSIONS_LABEL,
-        INTERPRETATION_TAB_CHANGES_LABEL
-    )
+    val titles = buildList {
+        add(INTERPRETATION_TAB_ORIGINAL_LABEL)
+        add(INTERPRETATION_TAB_CONCLUSIONS_LABEL)
+        if (!handler.isCornerstone) {
+            add(INTERPRETATION_TAB_CHANGES_LABEL)
+        }
+    }
 
     var tabPage by remember { mutableStateOf(0) }
 
-    Column(modifier = Modifier
-        .fillMaxWidth()
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
     ) {
         TabRow(selectedTabIndex = tabPage,
             modifier = Modifier.semantics {

@@ -6,7 +6,7 @@ apply(from = "../repositories.gradle.kts")
 
 plugins {
     java
-    id("org.jetbrains.compose") version "1.6.1"
+    id("org.jetbrains.compose") version "1.6.10"
 }
 
 dependencies {

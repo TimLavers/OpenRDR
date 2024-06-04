@@ -395,13 +395,13 @@ internal class KBEndpointTest {
 
             val viewableCase1 = endpoint.viewableCase(kb.allCornerstoneCases().first().id!!)
             startRuleSessionToAddConclusion(id2, conclusion2)
-            cornerstoneStatusForIndex(0) shouldBe CornerstoneStatus(viewableCase1, 0, 1)
+            cornerstoneForIndex(0) shouldBe CornerstoneStatus(viewableCase1, 0, 1)
             commitCurrentRuleSession()
             kb.allCornerstoneCases() shouldHaveSize 2
 
             val viewableCase2 = endpoint.viewableCase(kb.allCornerstoneCases()[1].id!!)
             startRuleSessionToAddConclusion(id3, conclusion3)
-            cornerstoneStatusForIndex(1) shouldBe CornerstoneStatus(viewableCase2, 1, 2)
+            cornerstoneForIndex(1) shouldBe CornerstoneStatus(viewableCase2, 1, 2)
         }
     }
   
