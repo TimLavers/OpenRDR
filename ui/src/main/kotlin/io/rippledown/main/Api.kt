@@ -20,6 +20,7 @@ import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
+import io.rippledown.sample.SampleKB
 import java.io.File
 
 
@@ -47,6 +48,14 @@ class Api(engine: HttpClientEngine = CIO.create()) {
         return currentKB!!
     }
 
+    suspend fun createKBFromSample(name: String, sample: SampleKB): KBInfo {
+        currentKB = client.post("$API_URL$CREATE_KB_FROM_SAMPLE") {
+            contentType(ContentType.Application.Json)
+            setBody(Pair(name, sample))
+        }.body()
+        return currentKB!!
+    }
+
     suspend fun selectKB(id: String): KBInfo {
         currentKB = client.post("$API_URL$SELECT_KB") {
             contentType(ContentType.Text.Plain)
@@ -66,7 +75,6 @@ class Api(engine: HttpClientEngine = CIO.create()) {
 
     suspend fun importKBFromZip(file: File): KBInfo {
         val data = file.readBytes()
-        println("---- IMPORTING KB, data length: ${data.size} ----")
         currentKB = client.post("$API_URL$IMPORT_KB") {
             contentType(ContentType.Application.Zip)
             setBody(MultiPartFormDataContent(

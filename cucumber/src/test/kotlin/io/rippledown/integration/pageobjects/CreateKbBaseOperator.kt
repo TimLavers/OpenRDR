@@ -9,12 +9,12 @@ import io.rippledown.integration.utils.findAndClick
 import io.rippledown.integration.utils.printActions
 import javax.accessibility.AccessibleRole
 
-class CreateKbOperator(dialog: ComposeDialog) : CreateKbBaseOperator(dialog){
+open class CreateKbBaseOperator(val dialog: ComposeDialog) {
 
-    fun createKB(name: String) {
-        enterName(name)
-        Thread.sleep(1000)
-        clickCreateButton()
-        Thread.sleep(1000)
+   fun clickCreateButton() = dialog.accessibleContext.findAndClick(CREATE_KB_OK_BUTTON_DESCRIPTION)
+
+    fun enterName(name: String) {
+        val nameFieldContext = dialog.accessibleContext.find(CREATE_KB_NAME_FIELD_DESCRIPTION, AccessibleRole.TEXT)
+        nameFieldContext!!.accessibleEditableText.setTextContents(name)
     }
 }

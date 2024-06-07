@@ -90,6 +90,11 @@ fun AccessibleContext.findAndClick(description: String) {
     val action = expandDropdownButton!!.accessibleAction
     action.doAccessibleAction(0)
 }
+fun AccessibleContext.findAndClickRadioButton(description: String) {
+    val button = find(description, AccessibleRole.RADIO_BUTTON)
+    val action = button!!.accessibleAction
+    action.doAccessibleAction(0)
+}
 fun AccessibleContext.printActions() {
     val actions = this.accessibleAction
     if (actions == null) {

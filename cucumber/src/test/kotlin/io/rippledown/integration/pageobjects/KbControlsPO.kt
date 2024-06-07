@@ -4,10 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.constants.kb.KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION
 import io.rippledown.constants.kb.KB_CONTROL_DROPDOWN_DESCRIPTION
-import io.rippledown.constants.main.CREATE_KB_TEXT
-import io.rippledown.constants.main.EXPORT_KB_TEXT
-import io.rippledown.constants.main.IMPORT_KB_TEXT
-import io.rippledown.constants.main.KBS_DROPDOWN_DESCRIPTION
+import io.rippledown.constants.main.*
 import io.rippledown.integration.utils.*
 import io.rippledown.integration.waitUntilAssertedOnEventThread
 import org.assertj.swing.edt.GuiActionRunner.execute
@@ -38,6 +35,16 @@ class KbControlsPO(private val contextProvider: () -> AccessibleContext) {
         val dialog = findComposeDialogThatIsShowing()
         val createKbOperator = CreateKbOperator(dialog!!)
         createKbOperator.createKB(name)
+    }
+
+    fun createKBFromSample(name: String, sampleTitle: String) {
+        expandDropdownMenu()
+        Thread.sleep(1_000)
+        clickDropdownItem(CREATE_KB_FROM_SAMPLE_TEXT)
+        Thread.sleep(1_000)
+        val dialog = findComposeDialogThatIsShowing()
+        val createKbOperator = CreateKbFromSampleOperator(dialog!!)
+        createKbOperator.createKbFromSample(name, sampleTitle)
     }
 
     fun selectKB(name: String) {

@@ -11,6 +11,7 @@ import io.mockk.verify
 import io.rippledown.constants.api.*
 import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.KBInfo
+import io.rippledown.sample.SampleKB
 import java.io.File
 import kotlin.test.Test
 
@@ -67,6 +68,20 @@ class KBManagementTest: OpenRDRServerTestBase() {
         result.status shouldBe HttpStatusCode.OK
         result.body<KBInfo>() shouldBe kbInfoToReturnOnCreation
         verify { serverApplication.createKB("Bondi", true) }
+    }
+
+    @Test
+    fun `create KB from sample`() = testApplication {
+        setup()
+        val kbInfoToReturn = KBInfo("east", "Bondi")
+        every { serverApplication.createSampleKB(any(), any()) } returns kbInfoToReturn
+        val result = httpClient.post(CREATE_KB_FROM_SAMPLE) {
+            contentType(ContentType.Application.Json)
+            setBody(Pair(kbInfoToReturn.name, SampleKB.TSH))
+        }
+        result.status shouldBe HttpStatusCode.OK
+        result.body<KBInfo>() shouldBe kbInfoToReturn
+        verify { serverApplication.createSampleKB(kbInfoToReturn.name, SampleKB.TSH) }
     }
 
     @Test

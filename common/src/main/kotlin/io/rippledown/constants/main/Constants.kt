@@ -1,7 +1,5 @@
 package io.rippledown.constants.main
 
-import io.rippledown.model.KBInfo
-
 const val TITLE = "OpenRDR"
 const val MAIN_HEADING = "Open RippleDown"
 const val APPLICATION_BAR_ID = "application_bar"
@@ -28,3 +26,8 @@ const val EXPORT_KB_TEXT = "Export KB"
 const val EXPORT_KB_NAME_FIELD_DESCRIPTION = "Zip file path"
 const val EXPORT_KB_OK_BUTTON_DESCRIPTION = "Export KB confirmation button"
 const val EXPORT = "Export"
+
+const val SELECT_SAMPLE = "Select sample"
+const val CREATE_KB_FROM_SAMPLE_TEXT = "Create KB from sample"
+const val CREATE_KB_FROM_SAMPLE_NAME = "Name"
+
