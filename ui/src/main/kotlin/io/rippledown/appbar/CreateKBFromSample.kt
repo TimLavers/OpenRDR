@@ -46,7 +46,9 @@ fun CreateKBFromSample(handler: CreateKBFromSampleHandler) {
                             contentDescription = SELECT_SAMPLE
                         }
                 )
-                TemplateChooser { s -> selectedSampleKB = s}
+                TemplateChooser { s ->
+                    selectedSampleKB = s
+                }
                 OutlinedTextField(
                     value = textValue,
                     enabled = true,

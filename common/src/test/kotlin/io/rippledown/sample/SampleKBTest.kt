@@ -18,6 +18,12 @@ internal class SampleKBTest {
     }
 
     @Test
+    fun title() {
+        TSH.title() shouldBe "Thyroid Stimulating Hormone"
+        TSH_CASES.title() shouldBe "Thyroid Stimulating Hormone - cases only"
+    }
+
+    @Test
     fun jsonSerialisation() {
         TSH_CASES shouldBe serializeDeserialize(TSH_CASES)
         TSH shouldBe serializeDeserialize(TSH)

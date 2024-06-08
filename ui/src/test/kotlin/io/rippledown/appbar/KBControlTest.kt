@@ -7,6 +7,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.model.KBInfo
+import io.rippledown.sample.SampleKB
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -106,6 +107,33 @@ class KBControlTest {
 
             //Then
             verify { handler.createKB(lipidsInfo.name) }
+        }
+    }
+
+    @Test
+    fun `should create KB from sample`() = runTest {
+        val glucose = "Glucose"
+        val glucoseInfo = KBInfo(glucose)
+        every { handler.kbList } returns { listOf(lipidsInfo, glucoseInfo) }
+        with(composeTestRule) {
+            setContent {
+                KBControl(glucoseInfo, handler)
+            }
+            //Given
+            assertCreateKbMenuItemIsNotShowing()
+            assertKbNameIs(glucose)
+            clickDropdown()
+            assertCreateKbFromSampleMenuItemIsShowing()
+
+            //When
+            clickCreateKbFromSampleMenuItem()
+            assertOkButtonIsNotEnabled()
+            enterKbName(lipidsInfo.name)
+            requireEnteredKBName(lipidsInfo.name)
+            invokeAndWait { clickCreateButton() }
+
+            //Then
+            verify { handler.createKBFromSample(lipidsInfo.name, SampleKB.TSH) }
         }
     }
 
