@@ -74,14 +74,14 @@ class KBManagementTest: OpenRDRServerTestBase() {
     fun `create KB from sample`() = testApplication {
         setup()
         val kbInfoToReturn = KBInfo("east", "Bondi")
-        every { serverApplication.createSampleKB(any(), any()) } returns kbInfoToReturn
+        every { serverApplication.createKBFromSample(any(), any()) } returns kbInfoToReturn
         val result = httpClient.post(CREATE_KB_FROM_SAMPLE) {
             contentType(ContentType.Application.Json)
             setBody(Pair(kbInfoToReturn.name, SampleKB.TSH))
         }
         result.status shouldBe HttpStatusCode.OK
         result.body<KBInfo>() shouldBe kbInfoToReturn
-        verify { serverApplication.createSampleKB(kbInfoToReturn.name, SampleKB.TSH) }
+        verify { serverApplication.createKBFromSample(kbInfoToReturn.name, SampleKB.TSH) }
     }
 
     @Test

@@ -37,9 +37,9 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         return kbInfo //todo test return value
     }
 
-    fun createSampleKB(name: String, sampleKB: SampleKB): KBInfo {
+    fun createKBFromSample(name: String, sampleKB: SampleKB): KBInfo {
         logger.info("Creating Sample KB, name: $name, sample: $sampleKB.")
-        val kbInfo = kbManager.createKB(name, true)
+        val kbInfo = kbManager.createKB(name, false)
         loadKnownKB(kbInfo)
         loadSampleKB(kbFor(kbInfo), sampleKB)
         return kbInfo

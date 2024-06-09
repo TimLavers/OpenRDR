@@ -2,6 +2,7 @@ package io.rippledown.server
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.rippledown.CaseTestUtils
 import io.rippledown.constants.server.DEFAULT_PROJECT_NAME
@@ -9,6 +10,8 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCase
 import io.rippledown.model.TestResult
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
+import io.rippledown.sample.SampleKB.TSH
+import io.rippledown.sample.SampleKB.TSH_CASES
 import org.apache.commons.io.FileUtils
 import java.io.File
 import java.nio.file.Files
@@ -91,7 +94,7 @@ internal class ServerApplicationTest {
     }
 
     @Test
-    fun `should not create a KB with the same name if force is false`() {
+    fun `should not create a KB with the same name as an existing KB if force is false`() {
         app.kbList().size shouldBe 0
         val kbName = "Whatever"
         app.createKB(kbName, false)
@@ -193,6 +196,51 @@ internal class ServerApplicationTest {
         app.kbList().map { it.name } shouldBe listOf("Glucose", "Thyroids", "Thyroids", "Whatever")
         app.createKB("Blah", true)
         app.kbList().map { it.name } shouldBe listOf("Blah", "Glucose", "Thyroids", "Thyroids", "Whatever")
+    }
+
+    @Test
+    fun `create KB from sample`() {
+        app.kbList().size shouldBe 0
+        val kbName = "Whatever"
+        val info = app.createKBFromSample(kbName, TSH)
+        info.name shouldBe kbName
+        app.kbList() shouldBe listOf(info)
+
+        // Check the kb.
+        app.kbFor(info).kb.allProcessedCases() shouldHaveSize 34
+        app.kbFor(info).kb.ruleTree.size() shouldBe 34
+
+        // Now create another.
+        val kbName2 = "Stuff"
+        val info2 = app.createKBFromSample(kbName2, TSH_CASES)
+        info2.name shouldBe kbName2
+        app.kbList() shouldBe listOf(info2, info)
+        app.kbFor(info2).kb.allProcessedCases() shouldHaveSize 34
+        app.kbFor(info2).kb.ruleTree.size() shouldBe 1
+    }
+
+    @Test
+    fun `should not create a KB from sample with existing KB name`() {
+        app.kbList().size shouldBe 0
+        val kbName = "Whatever"
+        app.createKB(kbName, false)
+
+        //Given
+        app.kbList().size shouldBe 1
+        val kbInfo = app.kbList()[0]
+        kbInfo.name shouldBe kbName
+        val id0 = persistenceProvider.idStore().data().keys.first()
+
+        //When
+        try {
+            app.createKBFromSample(kbName, TSH)
+        } catch (e: Exception) {
+            //expected
+        }
+
+        //Then
+        app.kbFor(kbInfo).kb.kbInfo.name shouldBe kbName
+        persistenceProvider.idStore().data().keys shouldBe setOf(id0)
     }
 
     private fun createCase(caseName: String) = CaseTestUtils.createCase(caseName)

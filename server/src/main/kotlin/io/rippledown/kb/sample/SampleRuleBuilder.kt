@@ -1,7 +1,6 @@
 package io.rippledown.kb.sample
 
 import io.rippledown.model.Attribute
-import io.rippledown.model.AttributeFactory
 import io.rippledown.model.condition.CaseStructureCondition
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.EpisodicCondition
@@ -11,9 +10,6 @@ import io.rippledown.model.condition.structural.IsAbsentFromCase
 import io.rippledown.server.KBEndpoint
 
 open class SampleRuleBuilder(val kbe: KBEndpoint) {
-//    val attributeFactory = AttributeFactory(restClient)
-//    val conclusionFactory = RestClientConclusionFactory(restClient)
-//    val conditionFactory = RestClientConditionFactory(restClient)
 
     fun isPresent(attribute: Attribute) = EpisodicCondition(null, attribute, IsNotBlank, Current)
     fun isNotPresent(attribute: Attribute) = CaseStructureCondition(null, IsAbsentFromCase(attribute))

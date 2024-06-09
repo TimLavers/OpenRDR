@@ -8,7 +8,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.rippledown.constants.api.*
-import io.rippledown.model.OperationResult
 import io.rippledown.sample.SampleKB
 import io.rippledown.server.ServerApplication
 import io.rippledown.server.logger
@@ -66,7 +65,7 @@ fun Application.kbManagement(application: ServerApplication) {
 
         post(CREATE_KB_FROM_SAMPLE) {
             val data = call.receive<Pair<String, SampleKB>>()
-            val kbInfo = application.createSampleKB(data.first, data.second)
+            val kbInfo = application.createKBFromSample(data.first, data.second)
             call.respond(kbInfo)
         }
 
