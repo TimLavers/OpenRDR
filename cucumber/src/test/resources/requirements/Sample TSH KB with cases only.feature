@@ -1,8 +1,12 @@
-Feature: The cases described in the TSH paper can be represented in OpenRDR
+Feature: The cases described in the TSH paper are present in a KB built from the TSH sample.
+
+#  We check the data for each of the cases but only test a few cases
+#  for a blank interpretation.
 
   Scenario: TSH KB cases
-    Given the TSH sample KB has been loaded
     And I start the client application
+    Given I create a Knowledge Base with the name TSHCases based on the "Thyroid Stimulating Hormone - cases only" sample
+    And pause for 2 seconds
     Then the count of the number of cases is 34
 
     When I select case 1.4.1
@@ -14,6 +18,7 @@ Feature: The cases described in the TSH paper can be represented in OpenRDR
       | Patient Location  | General Practice. |            |
       | Tests             | TFTs              |            |
       | Clinical Notes    | Lethargy.         |            |
+    And the interpretation field should be empty
 
     When I select case 1.4.2
     Then I see these case values:
@@ -23,6 +28,7 @@ Feature: The cases described in the TSH paper can be represented in OpenRDR
       | Patient Location  | General Practice. |            |
       | Tests             | TFTs              |            |
       | Clinical Notes    | Lethargy.         |            |
+    And the interpretation field should be empty
 
     When I select case 1.4.3
     Then I see these case values:
@@ -33,6 +39,7 @@ Feature: The cases described in the TSH paper can be represented in OpenRDR
       | Patient Location  | General Practice. |            |
       | Tests             | TFTs              |            |
       | Clinical Notes    | Weight loss.      |            |
+    And the interpretation field should be empty
 
     When I select case 1.4.4
     Then I see these case values:

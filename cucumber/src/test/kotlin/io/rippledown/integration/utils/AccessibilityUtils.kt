@@ -31,8 +31,12 @@ fun AccessibleContext.find(matcher: (AccessibleContext) -> Boolean, debug: Boole
     val childCount = accessibleChildrenCount
     if (debug) println("Searching amongst children, of which there are $childCount")
     for (i in 0..<childCount) {
-        val child = getAccessibleChild(i).accessibleContext.find(matcher, debug)
-        if (child != null) return child
+        try {
+            val child = getAccessibleChild(i).accessibleContext.find(matcher, debug)
+            if (child != null) return child
+        } catch (e: Exception) {
+            // ignore
+        }
     }
     return null
 }
@@ -55,7 +59,11 @@ fun AccessibleContext.findAll(holder: MutableSet<AccessibleContext>, matcher: (A
     }
     val childCount = accessibleChildrenCount
     for (i in 0..<childCount) {
-        getAccessibleChild(i).accessibleContext.findAll(holder, matcher, debug)
+        try {
+            getAccessibleChild(i).accessibleContext.findAll(holder, matcher, debug)
+        } catch (e: Exception) {
+            // ignore
+        }
     }
 }
 
