@@ -50,7 +50,7 @@ class MainApplicationTest {
     }
 
     @Test
-    fun blah() {
+    fun `application should be accessible via its owning window`() {
         var windowHolder: ComposeWindow? = null
 
         val runnable = java.lang.Runnable {
@@ -70,37 +70,27 @@ class MainApplicationTest {
         Thread(runnable, "App Runner").start()
 
         while (windowHolder == null) {
-            Thread.sleep(1000)
+            Thread.sleep(500)
         }
         val window = windowHolder!!
 
         window.waitForWindowToShow()
-        println("------------ TEST READY!! -------------")
 
 
         val accessibleContext0 = window.accessibleContext
-//        accessibleContext0.dumpToText(showNulls = true)
-
-//        Thread.sleep(50_000)
 
         val kbRow = accessibleContext0.find(KB_CONTROL_DESCRIPTION, AccessibleRole.UNKNOWN)
 
-        println("kbRow: $kbRow")
-
         val expandDropdownButton = kbRow!!.find(KB_CONTROL_DROPDOWN_DESCRIPTION, AccessibleRole.PUSH_BUTTON)
-        println("eDB: $expandDropdownButton")
 
         val action = expandDropdownButton!!.accessibleAction
         val count = action.accessibleActionCount
         count shouldBe 1
-        val actionDescription = action.getAccessibleActionDescription(0)
-
         action.doAccessibleAction(0)
 
-        Thread.sleep(1_000)
+        Thread.sleep(500)
 
         val accessibleContext1 = window.accessibleContext
-//        accessibleContext1.dumpToText()
 
         val dropDown = accessibleContext1.find(KBS_DROPDOWN_DESCRIPTION, AccessibleRole.COMBO_BOX)
 
@@ -109,8 +99,7 @@ class MainApplicationTest {
         createKBActionCount shouldBe 1
         createKBItem.accessibleAction.doAccessibleAction(0)
 
-        Thread.sleep(1_000)
-//        window.accessibleContext.dumpToText()
+        Thread.sleep(500)
 
         val dialog = findComposeDialogThatIsShowing()
         dialog!!.accessibleContext.dumpToText()

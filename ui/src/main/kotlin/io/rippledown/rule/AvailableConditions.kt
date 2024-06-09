@@ -56,7 +56,7 @@ fun AvailableConditions(conditions: List<Condition>, handler: AvailableCondition
                             handler.onAddCondition(condition)
                         }
                         .padding(start = 10.dp)
-                        .semantics { contentDescription = "${AVAILABLE_CONDITION_PREFIX}$index" }
+                        .semantics { contentDescription = "$AVAILABLE_CONDITION_PREFIX$index" }
 
                 )
             }
