@@ -5,8 +5,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import io.kotest.matchers.shouldBe
 import io.rippledown.constants.main.*
 import io.rippledown.sample.SampleKB
-import io.rippledown.sample.SampleKB.TSH
-import io.rippledown.sample.SampleKB.TSH_CASES
+import io.rippledown.sample.SampleKB.*
 import org.junit.Before
 import org.junit.Rule
 import kotlin.test.Test
@@ -52,6 +51,16 @@ class CreateKBFromSampleTest {
                 .assertIsSelected()
 
             onNodeWithContentDescription("select ${TSH_CASES.title()}")
+                .assertIsEnabled()
+                .assertIsDisplayed()
+                .assertIsNotSelected()
+
+            onNodeWithContentDescription("select ${CONTACT_LENSES.title()}")
+                .assertIsEnabled()
+                .assertIsDisplayed()
+                .assertIsNotSelected()
+
+            onNodeWithContentDescription("select ${CONTACT_LENSES_CASES.title()}")
                 .assertIsEnabled()
                 .assertIsDisplayed()
                 .assertIsNotSelected()

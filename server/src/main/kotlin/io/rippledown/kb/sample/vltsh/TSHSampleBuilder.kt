@@ -21,34 +21,6 @@ class TSHSampleBuilder(private val kbe: KBEndpoint)  {
         TSHRulesBuilder(kbe).buildRules()
     }
 
-    private fun setupTSHAttributes() {
-        // We create the attributes ahead of time and set their order
-        // so that the order in the case view is well-defined.
-        val attributeNamesInOrder = listOf(
-            "Sex",
-            "Age",
-            "TSH",
-            "Free T4",
-            "Free T3",
-            "TPO Antibodies",
-            "Thyroglobulin",
-            "Anti-Thyroglobulin",
-            "Sodium",
-            "Potassium",
-            "Bicarbonate",
-            "Urea",
-            "Creatinine",
-            "eGFR",
-            "Patient Location",
-            "Tests",
-            "Clinical Notes",
-        )
-        val attributesInOrder = attributeNamesInOrder.map {
-            kbe.getOrCreateAttribute(it)
-        }
-        kbe.setAttributeOrder(attributesInOrder)
-    }
-
     fun setupTSHSampleCases() {
         setupTSHAttributes()
         val tshCases = TSHCases(kbe.kb.attributeManager)
@@ -86,6 +58,34 @@ class TSHSampleBuilder(private val kbe: KBEndpoint)  {
         kbe.kb.addProcessedCase(tshCases.TSH32)
         kbe.kb.addProcessedCase(tshCases.TSH33)
         kbe.kb.addProcessedCase(tshCases.TSH35)
+    }
+
+    private fun setupTSHAttributes() {
+        // We create the attributes ahead of time and set their order
+        // so that the order in the case view is well-defined.
+        val attributeNamesInOrder = listOf(
+            "Sex",
+            "Age",
+            "TSH",
+            "Free T4",
+            "Free T3",
+            "TPO Antibodies",
+            "Thyroglobulin",
+            "Anti-Thyroglobulin",
+            "Sodium",
+            "Potassium",
+            "Bicarbonate",
+            "Urea",
+            "Creatinine",
+            "eGFR",
+            "Patient Location",
+            "Tests",
+            "Clinical Notes",
+        )
+        val attributesInOrder = attributeNamesInOrder.map {
+            kbe.getOrCreateAttribute(it)
+        }
+        kbe.setAttributeOrder(attributesInOrder)
     }
 }
 class TSHRulesBuilder(kbe: KBEndpoint) : SampleRuleBuilder(kbe) {

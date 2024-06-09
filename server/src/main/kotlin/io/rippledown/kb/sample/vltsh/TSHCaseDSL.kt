@@ -1,10 +1,9 @@
 package io.rippledown.kb.sample.vltsh
 
 import io.rippledown.kb.AttributeManager
+import io.rippledown.kb.sample.defaultDate
 import io.rippledown.model.*
 import kotlinx.datetime.Instant
-
-const val defaultDate = 1659752689505
 
 fun tshCase(lambda: CaseTemplate.() -> Unit): CaseTemplate {
     val template = CaseTemplate()

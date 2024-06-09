@@ -1,16 +1,27 @@
-Feature: The cases described in the Contact Lenses sample KB get the correct interpretations
+Feature: A sample KB can be created that has the Contact Lense Prescription cases and rules.
 
+#  We just check a couple of the cases as there's another test that checks them all./
   Scenario: Contact Lenses cases
-    Given the Contact Lenses sample KB has been loaded
-    And I start the client application
+    Given I start the client application
+    And I create a Knowledge Base with the name ContactLenseRules based on the "Contact Lense Prescription" sample
     Then the count of the number of cases is 24
     And pause for 2 seconds
 
     When I select case Case1
-    Then the interpretation field should be empty
+    Then I see these case values:
+      | age               | young          | |
+      | prescription      | myope          | |
+      | astigmatism       | not_astigmatic | |
+      | tear production   | reduced        | |
+    And the interpretation field should be empty
 
     When I select case Case2
-    Then the interpretation should be "soft"
+    Then I see these case values:
+      | age               | young          | |
+      | prescription      | myope          | |
+      | astigmatism       | not_astigmatic | |
+      | tear production   | normal         | |
+    And the interpretation should be "soft"
 
     When I select case Case3
     Then the interpretation field should be empty

@@ -6,8 +6,7 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.kb.KB
 import io.rippledown.kb.KBManager
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
-import io.rippledown.sample.SampleKB.TSH
-import io.rippledown.sample.SampleKB.TSH_CASES
+import io.rippledown.sample.SampleKB.*
 import io.rippledown.server.KBEndpoint
 import io.rippledown.util.EntityRetrieval
 import org.apache.commons.io.FileUtils
@@ -60,6 +59,27 @@ class SampleKBLoaderTest {
         endpoint.kb.ruleTree.size() shouldBe 1
     }
 
+    @Test
+    fun `load Contact Lenses sample`() {
+        loadSampleKB(endpoint, CONTACT_LENSES)
+        val caseNames = endpoint.kb.processedCaseIds().map { it.name }
+        caseNames shouldHaveSize 24
+        caseNames[0] shouldBe "Case1"
+        caseNames[1] shouldBe "Case2"
+        caseNames[23] shouldBe "Case24"
+        endpoint.kb.ruleTree.size() shouldBe 6
+    }
+
+    @Test
+    fun `load Contact Lenses Cases sample`() {
+        loadSampleKB(endpoint, CONTACT_LENSES_CASES)
+        val caseNames = endpoint.kb.processedCaseIds().map { it.name }
+        caseNames shouldHaveSize 24
+        caseNames[0] shouldBe "Case1"
+        caseNames[1] shouldBe "Case2"
+        caseNames[23] shouldBe "Case24"
+        endpoint.kb.ruleTree.size() shouldBe 1L
+    }
     @Test
     fun `cannot load into a KB that already has rules`() {
         loadSampleKB(endpoint, TSH)

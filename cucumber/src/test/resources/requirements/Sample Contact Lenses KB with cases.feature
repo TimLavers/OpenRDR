@@ -1,8 +1,11 @@
-Feature: The cases described in the Contact Lenses sample KB can be represented in OpenRDR
+Feature: A sample KB can be created that has the Contact Lense Prescription cases.
 
+#  We check the data for each case and check that the interpretations of a couple of cases are blank.
+@single
   Scenario: Contact Lenses cases
-    Given the Contact Lenses sample KB has been loaded
-    And I start the client application
+    Given I start the client application
+    And I create a Knowledge Base with the name ContactLenseCases based on the "Contact Lense Prescription - cases only" sample
+    And pause for 2 seconds
     Then the count of the number of cases is 24
     And pause for 1 second
     When I select case Case1
@@ -18,6 +21,7 @@ Feature: The cases described in the Contact Lenses sample KB can be represented 
       | prescription      | myope          | |
       | astigmatism       | not_astigmatic | |
       | tear production   | normal         | |
+    And the interpretation field should be empty
 
     When I select case Case3
     Then I see these case values:
@@ -25,6 +29,7 @@ Feature: The cases described in the Contact Lenses sample KB can be represented 
       | prescription      | myope      | |
       | astigmatism       | astigmatic | |
       | tear production   | reduced    | |
+    And the interpretation field should be empty
 
     When I select case Case4
     Then I see these case values:
