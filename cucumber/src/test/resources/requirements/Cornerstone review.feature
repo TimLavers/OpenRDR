@@ -60,7 +60,6 @@ Feature: Reviewing cornerstone cases
     When I click the previous cornerstone case button
     Then the case Case2 is shown as the cornerstone case
 
-  @ignore
   Scenario: Cornerstones should vanish when the user adds a condition that excludes them
     Given case Case1 is provided having data:
       | x | 1 |
@@ -76,7 +75,7 @@ Feature: Reviewing cornerstone cases
     And I see the case Case1 as the current case
     And I enter the text " Comment 4." in the interpretation field
     And I select the changes tab
-    And I start to build a rule for the change on row 3
+    And I start to build a rule for the change on row 0
     And the case Case2 is shown as the cornerstone case
     And the conditions showing should be:
       | x is not blank |
@@ -106,7 +105,7 @@ Feature: Reviewing cornerstone cases
     And I see the case Case1 as the current case
     And I enter the text " Comment 5." in the interpretation field
     And I select the changes tab
-    And I start to build a rule for the change on row 4
+    And I start to build a rule for the change on row 1
     And the case Case2 is shown as the cornerstone case
     And I click the next cornerstone case button
     And the case Case3 is shown as the cornerstone case

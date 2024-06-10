@@ -1,6 +1,7 @@
 package io.rippledown.casecontrol
 
 import androidx.compose.ui.test.junit4.createComposeRule
+import io.kotest.matchers.shouldBe
 import io.mockk.*
 import io.rippledown.constants.cornerstone.NO_CORNERSTONES_TO_REVIEW_MSG
 import io.rippledown.diffview.clickBuildIconForRow
@@ -19,8 +20,11 @@ import io.rippledown.model.diff.Unchanged
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
+import io.rippledown.model.rule.UpdateCornerstoneRequest
+import io.rippledown.rule.clickAvailableConditionWithText
 import io.rippledown.rule.clickCancelRuleButton
 import io.rippledown.rule.clickFinishRuleButton
+import io.rippledown.rule.requireAvailableConditionsToBeDisplayed
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -67,7 +71,7 @@ class CaseControlWithRuleMakerTest {
     fun `should call handler to set the rule in progress flag when a rule session is started`() = runTest {
         with(composeTestRule) {
             setContent {
-                CaseControl(false, CasesInfo(listOf(caseId)), handler)
+                CaseControl(ruleInProgress = false, CasesInfo(listOf(caseId)), handler)
             }
             //Given
             waitForCaseToBeShowing(caseName)
@@ -105,7 +109,7 @@ class CaseControlWithRuleMakerTest {
     fun `should call handler to finish rule session`() = runTest {
         with(composeTestRule) {
             setContent {
-                CaseControl(true, CasesInfo(listOf(caseId)), handler)
+                CaseControl(ruleInProgress = true, CasesInfo(listOf(caseId)), handler)
             }
             //Given
             waitForCaseToBeShowing(caseName)
@@ -122,7 +126,7 @@ class CaseControlWithRuleMakerTest {
     fun `should call handler to build a rule with the appropriate rule request`() = runTest {
         with(composeTestRule) {
             setContent {
-                CaseControl(true, CasesInfo(listOf(caseId)), handler)
+                CaseControl(ruleInProgress = true, CasesInfo(listOf(caseId)), handler)
             }
             //Given
             waitForCaseToBeShowing(caseName)
@@ -140,7 +144,7 @@ class CaseControlWithRuleMakerTest {
     fun `should call handler when a rule session is cancelled`() = runTest {
         with(composeTestRule) {
             setContent {
-                CaseControl(true, CasesInfo(listOf(caseId)), handler)
+                CaseControl(ruleInProgress = true, CasesInfo(listOf(caseId)), handler)
             }
             //Given
             waitForCaseToBeShowing(caseName)
@@ -157,7 +161,7 @@ class CaseControlWithRuleMakerTest {
     fun `should not show case selector when a rule session is started`() = runTest {
         with(composeTestRule) {
             setContent {
-                CaseControl(true, CasesInfo(listOf(caseId)), handler)
+                CaseControl(ruleInProgress = true, CasesInfo(listOf(caseId)), handler)
             }
             //Given
             waitForCaseToBeShowing(caseName)
@@ -171,7 +175,7 @@ class CaseControlWithRuleMakerTest {
     fun `should call handler to set rule in progress when a rule session is started`() = runTest {
         with(composeTestRule) {
             setContent {
-                CaseControl(false, CasesInfo(listOf(caseId)), handler)
+                CaseControl(ruleInProgress = false, CasesInfo(listOf(caseId)), handler)
             }
             //Given
             waitForCaseToBeShowing(caseName)
@@ -190,7 +194,7 @@ class CaseControlWithRuleMakerTest {
     fun `should set the 'no cornerstones to review' message when there are no cornerstones`() {
         with(composeTestRule) {
             setContent {
-                CaseControl(true, CasesInfo(), handler)
+                CaseControl(ruleInProgress = true, CasesInfo(), handler)
             }
             verify { handler.setInfoMessage(NO_CORNERSTONES_TO_REVIEW_MSG) }
         }
@@ -202,7 +206,7 @@ class CaseControlWithRuleMakerTest {
 
         with(composeTestRule) {
             setContent {
-                CaseControl(true, CasesInfo(listOf(caseId)), handler)
+                CaseControl(ruleInProgress = true, CasesInfo(listOf(caseId)), handler)
             }
             //Given
             waitForCaseToBeShowing(caseName)
@@ -214,6 +218,30 @@ class CaseControlWithRuleMakerTest {
 
             //Then
             verify { handler.setInfoMessage("") }
+        }
+    }
+
+    @Test
+    fun `should call handler to update the cornerstone status when a condition is added to the rule`() {
+        val ccStatus = CornerstoneStatus(viewableCase, 42, 84)
+        every { handler.startRuleSession(any()) } returns ccStatus
+
+        with(composeTestRule) {
+            setContent {
+                CaseControl(ruleInProgress = true, CasesInfo(listOf(caseId)), handler)
+            }
+            //Given
+            waitForCaseToBeShowing(caseName)
+            requireAvailableConditionsToBeDisplayed(listOf(condition.asText()))
+
+            //When
+            clickAvailableConditionWithText(condition.asText())
+
+            //Then
+            val slot = slot<UpdateCornerstoneRequest>()
+            verify { handler.updateCornerstoneStatus(capture(slot)) }
+            slot.captured.conditionList shouldBe ConditionList(listOf(condition))
+
         }
     }
 

@@ -160,6 +160,7 @@ class Api(engine: HttpClientEngine = CIO.create()) {
             setBody(sessionStartRequest)
             setKBParameter()
         }.body<CornerstoneStatus>()
+        println("   API: Started rule session with cornerstone ${body.cornerstoneToReview?.case?.name}")
         return body
     }
 

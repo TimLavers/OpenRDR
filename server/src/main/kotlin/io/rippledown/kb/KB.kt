@@ -163,7 +163,7 @@ class KB(persistentKB: PersistentKB) {
 
         //update the cornerstone status
         val currentCC = request.cornerstoneStatus.cornerstoneToReview
-        return cornerstoneStatus(currentCC!!)
+        return cornerstoneStatus(currentCC)
     }
 
     /**

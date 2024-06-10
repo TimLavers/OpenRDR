@@ -44,6 +44,7 @@ class TestClientLauncher {
                     OpenRDRUI(handler)
                 }
             }
+            println("Compose window launch thread exiting")
         }.start()
         while (!::composeWindow.isInitialized) {
             sleep(100)
