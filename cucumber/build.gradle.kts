@@ -69,7 +69,9 @@ tasks.register<JavaExec>("cucumberSingleTest") {
     classpath = cukeClassPath
     args = argsForCuke.apply {
         add("--tags")
-        add("@single") }
+        add("@single")
+        add("not @ignore")
+    }
     dependsOn(
         ":server:shadowJar",
         tasks.compileTestJava,
