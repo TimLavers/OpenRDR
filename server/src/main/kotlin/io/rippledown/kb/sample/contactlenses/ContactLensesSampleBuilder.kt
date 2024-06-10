@@ -11,6 +11,7 @@ class ContactLensesSampleBuilder(private val kbe: KBEndpoint) {
     }
 
     fun setupCases() {
+        createAttributes()
         Cases(kbe.kb.attributeManager).allCases.forEach {
             kbe.kb.addProcessedCase(it)
         }

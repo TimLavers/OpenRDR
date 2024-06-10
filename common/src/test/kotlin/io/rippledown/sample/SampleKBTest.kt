@@ -11,11 +11,13 @@ internal class SampleKBTest {
     @Test
     fun values() {
         val all = SampleKB.entries.toTypedArray()
-        all.size shouldBe 4
+        all.size shouldBe 6
         all[0] shouldBe TSH
         all[1] shouldBe TSH_CASES
         all[2] shouldBe CONTACT_LENSES
         all[3] shouldBe CONTACT_LENSES_CASES
+        all[4] shouldBe ZOO
+        all[5] shouldBe ZOO_CASES
     }
 
     @Test
@@ -24,6 +26,8 @@ internal class SampleKBTest {
         TSH_CASES.title() shouldBe "Thyroid Stimulating Hormone - cases only"
         CONTACT_LENSES.title() shouldBe "Contact Lense Prescription"
         CONTACT_LENSES_CASES.title() shouldBe "Contact Lense Prescription - cases only"
+        ZOO.title() shouldBe "Zoo Animals"
+        ZOO_CASES.title() shouldBe "Zoo Animals - cases only"
     }
 
     @Test

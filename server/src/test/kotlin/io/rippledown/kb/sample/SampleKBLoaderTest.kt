@@ -80,6 +80,30 @@ class SampleKBLoaderTest {
         caseNames[23] shouldBe "Case24"
         endpoint.kb.ruleTree.size() shouldBe 1L
     }
+
+
+    @Test
+    fun `load Zoo Animals sample`() {
+        loadSampleKB(endpoint, ZOO)
+        val caseNames = endpoint.kb.processedCaseIds().map { it.name }
+        caseNames shouldHaveSize 101
+        caseNames[0] shouldBe "aardvark"
+        caseNames[1] shouldBe "antelope"
+        caseNames[2] shouldBe "bass"
+        endpoint.kb.ruleTree.size() shouldBe 18
+    }
+
+    @Test
+    fun `load Zoo Animals cases-only sample`() {
+        loadSampleKB(endpoint, ZOO_CASES)
+        val caseNames = endpoint.kb.processedCaseIds().map { it.name }
+        caseNames shouldHaveSize 101
+        caseNames[0] shouldBe "aardvark"
+        caseNames[1] shouldBe "antelope"
+        caseNames[2] shouldBe "bass"
+        endpoint.kb.ruleTree.size() shouldBe 1
+    }
+
     @Test
     fun `cannot load into a KB that already has rules`() {
         loadSampleKB(endpoint, TSH)

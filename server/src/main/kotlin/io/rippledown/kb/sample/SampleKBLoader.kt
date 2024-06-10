@@ -2,6 +2,7 @@ package io.rippledown.kb.sample
 
 import io.rippledown.kb.sample.contactlenses.ContactLensesSampleBuilder
 import io.rippledown.kb.sample.vltsh.TSHSampleBuilder
+import io.rippledown.kb.sample.zoo.ZooSampleBuilder
 import io.rippledown.sample.SampleKB
 import io.rippledown.sample.SampleKB.*
 import io.rippledown.server.KBEndpoint
@@ -17,5 +18,7 @@ fun loadSampleKB(kbEndpoint: KBEndpoint, sampleKB: SampleKB) {
         TSH_CASES -> TSHSampleBuilder(kbEndpoint).setupTSHSampleCases()
         CONTACT_LENSES -> ContactLensesSampleBuilder(kbEndpoint).buildRules()
         CONTACT_LENSES_CASES -> ContactLensesSampleBuilder(kbEndpoint).setupCases()
+        ZOO -> ZooSampleBuilder(kbEndpoint).buildRules()
+        ZOO_CASES -> ZooSampleBuilder(kbEndpoint).setupCases()
     }
 }
