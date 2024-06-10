@@ -1,6 +1,6 @@
 Feature: A sample KB can be created that has the Contact Lense Prescription cases and rules.
 
-#  We just check a couple of the cases as there's another test that checks them all./
+#  We just check a couple of the cases as there's another test that checks them all.
   Scenario: Contact Lenses cases
     Given I start the client application
     And I create a Knowledge Base with the name ContactLenseRules based on the "Contact Lense Prescription" sample
