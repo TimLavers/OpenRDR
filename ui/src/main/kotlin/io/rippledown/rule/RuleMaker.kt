@@ -14,15 +14,19 @@ import io.rippledown.model.condition.Condition
 interface RuleMakerHandler {
     var onDone: (conditions: List<Condition>) -> Unit
     var onCancel: () -> Unit
+    var onUpdateConditions: (conditions: List<Condition>) -> Unit
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun RuleMaker(allConditions: List<Condition>, handler: RuleMakerHandler) {
     var selectedConditions by remember { mutableStateOf(listOf<Condition>()) }
-    var availableConditions: List<Condition> by remember { mutableStateOf(allConditions.sortedWith(compareBy { it.asText() })) }
+    var availableConditions: List<Condition> by remember { mutableStateOf(listOf()) }
     var filterText by remember { mutableStateOf("") }
 
+    LaunchedEffect(allConditions) {
+        availableConditions = allConditions.sortedWith(compareBy { it.asText() })
+    }
     Column(
         modifier = Modifier
             .width(300.dp)
@@ -32,14 +36,14 @@ fun RuleMaker(allConditions: List<Condition>, handler: RuleMakerHandler) {
             override var onRemoveCondition = { condition: Condition ->
                 selectedConditions = selectedConditions - condition
                 availableConditions = availableConditions + condition
-
+                handler.onUpdateConditions(selectedConditions)
             }
         })
 
         ConditionFilter(filterText, object : ConditionFilterHandler {
             override var onFilterChange = { filter: String ->
                 filterText = filter
-                availableConditions = filterConditions(allConditions, filter) - selectedConditions
+                availableConditions = allConditions.filterConditions(filter) - selectedConditions
             }
         })
 
@@ -47,6 +51,7 @@ fun RuleMaker(allConditions: List<Condition>, handler: RuleMakerHandler) {
             override var onAddCondition = { condition: Condition ->
                 selectedConditions = selectedConditions + condition
                 availableConditions = availableConditions - condition
+                handler.onUpdateConditions(selectedConditions)
             }
         })
 
@@ -59,6 +64,4 @@ fun RuleMaker(allConditions: List<Condition>, handler: RuleMakerHandler) {
     }
 }
 
-fun filterConditions(conditions: List<Condition>, filter: String): List<Condition> {
-    return conditions.filter { it.asText().contains(filter, ignoreCase = true) }
-}
+fun List<Condition>.filterConditions(filter: String) = filter { it.asText().contains(filter, ignoreCase = true) }

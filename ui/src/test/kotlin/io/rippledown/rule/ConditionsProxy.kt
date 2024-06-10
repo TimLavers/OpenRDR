@@ -33,6 +33,29 @@ fun ComposeTestRule.requireSelectedConditionsToBeDisplayed(conditions: List<Stri
 fun ComposeTestRule.clickAvailableCondition(index: Int) {
     onNodeWithContentDescription("$AVAILABLE_CONDITION_PREFIX$index").performClick()
 }
+fun ComposeTestRule.clickAvailableConditionWithText(text: String) {
+    onNodeWithContentDescription(AVAILABLE_CONDITIONS)
+        .onChildren().filterToOne(hasText(text)).performClick()
+    waitForIdle()
+}
+
+fun ComposeTestRule.clickAvailableConditions(conditions: List<String>) {
+    conditions.forEach { condition ->
+        clickAvailableConditionWithText(condition)
+    }
+}
+
+fun ComposeTestRule.clickSelectedConditionWithText(text: String) {
+    onNodeWithContentDescription(SELECTED_CONDITIONS)
+        .onChildren().filterToOne(hasText(text)).performClick()
+    waitForIdle()
+}
+
+fun ComposeTestRule.clickSelectedConditions(conditions: List<String>) {
+    conditions.forEach { condition ->
+        clickSelectedConditionWithText(condition)
+    }
+}
 
 @OptIn(ExperimentalTestApi::class)
 fun ComposeTestRule.hoverOverSelectedCondition(index: Int) {

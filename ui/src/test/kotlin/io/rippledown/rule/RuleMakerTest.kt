@@ -73,6 +73,41 @@ class RuleMakerTest {
         }
     }
 
+    @Test
+    fun `should call handler when conditions are added`() {
+        val handler = mockk<RuleMakerHandler>(relaxed = true)
+        with(composeTestRule) {
+            //Given
+            setContent {
+                RuleMaker(allConditions, handler)
+            }
+
+            //When
+            clickAvailableConditions(listOf(allConditions[1].asText(), allConditions[2].asText()))
+
+            //Then
+            verify { handler.onUpdateConditions(listOf(allConditions[1], allConditions[2])) }
+        }
+    }
+
+    @Test
+    fun `should call handler when conditions are removed`() {
+        val handler = mockk<RuleMakerHandler>(relaxed = true)
+        with(composeTestRule) {
+            //Given
+            setContent {
+                RuleMaker(allConditions, handler)
+            }
+            clickAvailableConditions(allConditions.map { it.asText() })
+
+            //When
+            clickSelectedConditions(listOf(allConditions[1].asText(), allConditions[2].asText()))
+
+            //Then
+            verify { handler.onUpdateConditions(listOf(allConditions[0], allConditions[3], allConditions[4])) }
+        }
+    }
+
 }
 
 fun main() {

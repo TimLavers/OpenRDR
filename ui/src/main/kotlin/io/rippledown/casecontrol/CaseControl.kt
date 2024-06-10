@@ -19,6 +19,7 @@ import io.rippledown.model.diff.Diff
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
+import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.rule.RuleMaker
 import io.rippledown.rule.RuleMakerHandler
 import kotlinx.coroutines.delay
@@ -30,6 +31,7 @@ interface CaseControlHandler : Handler, CaseInspectionHandler, CornerstonePagerH
     suspend fun conditionHintsForCase(caseId: Long): List<Condition>
     fun startRuleSession(sessionStartRequest: SessionStartRequest): CornerstoneStatus
     fun buildRule(ruleRequest: RuleRequest): ViewableCase
+    fun updateCornerstoneStatus(cornerstoneRequest: UpdateCornerstoneRequest): CornerstoneStatus
 }
 
 @Composable
@@ -38,7 +40,7 @@ fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseCont
     var currentCase: ViewableCase? by remember { mutableStateOf(null) }
     var currentCaseId: Long? by remember { mutableStateOf(null) }
     var verifiedText: String? by remember { mutableStateOf(null) }
-    var indexOfSelectedDiff: Int by remember { mutableStateOf(-1) }
+    val indexOfSelectedDiff: Int by remember { mutableStateOf(-1) }
     var conditionHintsForCase by remember { mutableStateOf(listOf<Condition>()) }
     var cornerstoneStatus: CornerstoneStatus by remember { mutableStateOf(CornerstoneStatus()) }
 
@@ -121,6 +123,12 @@ fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseCont
 
                 override var onCancel = {
                     handler.setRuleInProgress(false)
+                }
+
+                override var onUpdateConditions = { conditions: List<Condition> ->
+                    Unit
+                    val ccUpdateRequest = UpdateCornerstoneRequest(cornerstoneStatus, ConditionList(conditions))
+                    cornerstoneStatus = handler.updateCornerstoneStatus(ccUpdateRequest)
                 }
             })
         }

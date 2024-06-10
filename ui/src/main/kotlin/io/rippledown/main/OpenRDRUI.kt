@@ -21,6 +21,7 @@ import io.rippledown.model.diff.Diff
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.sample.SampleKB
+import io.rippledown.model.rule.UpdateCornerstoneRequest
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -85,6 +86,10 @@ fun OpenRDRUI(handler: Handler) {
                 override fun onStartRule(selectedDiff: Diff) {}//todo remove
                 override fun buildRule(ruleRequest: RuleRequest) = runBlocking {
                     api.buildRule(ruleRequest)
+                }
+
+                override fun updateCornerstoneStatus(cornerstoneRequest: UpdateCornerstoneRequest) = runBlocking {
+                    api.updateCornerstoneStatus(cornerstoneRequest)
                 }
 
                 override fun startRuleSession(sessionStartRequest: SessionStartRequest) = runBlocking {

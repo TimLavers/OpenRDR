@@ -1,9 +1,9 @@
 package io.rippledown.integration.utils
-
 import androidx.compose.ui.awt.ComposeDialog
 import androidx.compose.ui.awt.ComposeWindow
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleRole
+
 
 fun AccessibleContext.find(description: String, role: AccessibleRole): AccessibleContext? {
     val matcher = { context: AccessibleContext ->
@@ -11,6 +11,24 @@ fun AccessibleContext.find(description: String, role: AccessibleRole): Accessibl
     }
     return find(matcher)
 }
+
+/*
+fun AccessibleContext.find(description: String, role: AccessibleRole): AccessibleContext? {
+//    println("find, this.name: ${this.accessibleName}, this.descr: ${this.accessibleDescription}, this.role: ${this.accessibleRole}")
+    val nameMatch = description == this.accessibleDescription
+//    println("nameMatch: $nameMatch")
+    if (nameMatch && role == this.accessibleRole) return this
+    val childCount = accessibleChildrenCount
+    for (i in 0..<childCount) {
+        val child = getAccessibleChild(i).accessibleContext.find(description, role)
+        if (child != null) return child
+    }
+    return null
+}
+*/
+
+
+
 fun AccessibleContext.find(description: String, debug: Boolean = false): AccessibleContext? {
     val matcher = { context: AccessibleContext ->
         description == context.accessibleDescription
@@ -25,6 +43,7 @@ fun AccessibleContext.findByName(name: String, role: AccessibleRole): Accessible
     }
     return find(matcher, true)
 }
+
 fun AccessibleContext.find(matcher: (AccessibleContext) -> Boolean, debug: Boolean = false): AccessibleContext? {
     if (debug) println("find, this.name: ${this.accessibleName}, this.description: ${this.accessibleDescription}, this.role: ${this.accessibleRole}")
     if (matcher(this)) return this
@@ -46,7 +65,7 @@ fun AccessibleContext.findAllByDescriptionPrefix(prefix: String): Set<Accessible
             context.accessibleDescription.startsWith(prefix)
         }
     }
-    return this.findAll(matcher)
+    return findAll(matcher)
 }
 fun AccessibleContext.findAll(matcher: (AccessibleContext) -> Boolean, debug: Boolean = false): Set<AccessibleContext> {
     val result = mutableSetOf<AccessibleContext>()
@@ -62,7 +81,7 @@ fun AccessibleContext.findAll(holder: MutableSet<AccessibleContext>, matcher: (A
         try {
             getAccessibleChild(i).accessibleContext.findAll(holder, matcher, debug)
         } catch (e: Exception) {
-            // ignore
+            //ignore. This is a workaround for a possible bug in the Java AccessibleContext API
         }
     }
 }
@@ -130,4 +149,17 @@ fun findComposeDialogThatIsShowing(): ComposeDialog? {
     val allWindows = java.awt.Window.getWindows()
     val d = allWindows.firstOrNull{w -> w is ComposeDialog && w.isShowing}
     return if (d == null) null else d as ComposeDialog
+}
+
+fun AccessibleContext.dumpToText(componentDepth: Int = 0, showNulls: Boolean = false) {
+    val childCount = accessibleChildrenCount
+    val name = this.accessibleName
+    val role = this.accessibleRole.toDisplayString()
+    val description = this.accessibleDescription
+    if (showNulls || name != null || description != null) {
+        println("Name: $name, role: $role, description: $description, componentDepth: $componentDepth, child count: $childCount ")
+    }
+    for (i in 0..<childCount) {
+        getAccessibleChild(i).accessibleContext.dumpToText(componentDepth + 1, showNulls)
+    }
 }
