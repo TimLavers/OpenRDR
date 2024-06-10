@@ -27,7 +27,7 @@ class ContactLensesSampleBuilder(private val kbe: KBEndpoint) {
         kbe.setAttributeOrder(attributesInOrder)
     }
 }
-class ContactLensesRulesBuilder(kbe: KBEndpoint) : SampleRuleBuilder(kbe) {
+internal class ContactLensesRulesBuilder(kbe: KBEndpoint) : SampleRuleBuilder(kbe) {
     private val age = kbe.getOrCreateAttribute("age")
     private val prescription = kbe.getOrCreateAttribute("prescription")
     private val astigmatism = kbe.getOrCreateAttribute("astigmatism")

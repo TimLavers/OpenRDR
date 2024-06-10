@@ -2,39 +2,10 @@ package io.rippledown.kb.sample.vltsh
 
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.rippledown.kb.KB
-import io.rippledown.kb.KBManager
-import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
-import io.rippledown.server.KBEndpoint
-import io.rippledown.util.EntityRetrieval
-import org.apache.commons.io.FileUtils
-import java.io.File
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
+import io.rippledown.kb.sample.SampleBuilderTest
 import kotlin.test.Test
 
-class TSHSampleBuilderTest {
-    private val kbName = "Whatever"
-    private val persistenceProvider = InMemoryPersistenceProvider()
-    private val kbManager = KBManager(persistenceProvider)
-
-    private lateinit var endpoint: KBEndpoint
-
-    @BeforeTest
-    fun setup() {
-        val rootDir = File("kbe")
-        val kbInfo = kbManager.createKB(kbName)
-        val kb = (kbManager.openKB(kbInfo.id) as EntityRetrieval.Success<KB>).entity
-        endpoint = KBEndpoint(kb, rootDir)
-        FileUtils.cleanDirectory(endpoint.casesDir)
-        FileUtils.cleanDirectory(endpoint.interpretationsDir)
-    }
-
-    @AfterTest
-    fun cleanup() {
-        kbManager.deleteKB(endpoint.kbName())
-    }
-
+class TSHSampleBuilderTest: SampleBuilderTest() {
     @Test
     fun `set up cases`() {
         TSHSampleBuilder(endpoint).setupTSHSampleCases()
