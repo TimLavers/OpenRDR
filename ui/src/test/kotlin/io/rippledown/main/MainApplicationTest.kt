@@ -23,10 +23,6 @@ import io.rippledown.constants.kb.KB_CONTROL_DROPDOWN_DESCRIPTION
 import io.rippledown.constants.main.CREATE_KB_TEXT
 import io.rippledown.constants.main.KBS_DROPDOWN_DESCRIPTION
 import io.rippledown.constants.main.TITLE
-import io.rippledown.proxy.dumpToText
-import io.rippledown.proxy.find
-import io.rippledown.proxy.findComposeDialogThatIsShowing
-import io.rippledown.proxy.waitForWindowToShow
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.takeWhile
@@ -34,6 +30,7 @@ import org.jetbrains.skiko.MainUIDispatcher
 import org.junit.Assume.assumeFalse
 import org.junit.Before
 import java.awt.GraphicsEnvironment
+import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleRole
 import javax.swing.SwingUtilities
 import kotlin.test.Test
@@ -98,12 +95,6 @@ class MainApplicationTest {
         val createKBActionCount = createKBItem!!.accessibleAction.accessibleActionCount
         createKBActionCount shouldBe 1
         createKBItem.accessibleAction.doAccessibleAction(0)
-
-        Thread.sleep(500)
-
-        val dialog = findComposeDialogThatIsShowing()
-        dialog!!.accessibleContext.dumpToText()
-
     }
 
     @Test
@@ -341,4 +332,38 @@ internal class WindowTestScope(
 
         exceptionHandler.throwIfCaught()
     }
+}
+
+//TODO remove these duplicate functions
+private fun ComposeWindow.waitForWindowToShow() {
+    var loop = 0
+    while (!isReadyForTesting() && loop++ < 50) {
+        Thread.sleep(100)
+    }
+}
+
+private fun ComposeWindow.isReadyForTesting(): Boolean {
+    return this.isActive && this.isEnabled && this.isFocusable
+}
+
+private fun AccessibleContext.find(description: String, role: AccessibleRole): AccessibleContext? {
+    val matcher = { context: AccessibleContext ->
+        description == context.accessibleDescription && role == context.accessibleRole
+    }
+    return find(matcher)
+}
+
+private fun AccessibleContext.find(
+    matcher: (AccessibleContext) -> Boolean,
+    debug: Boolean = false
+): AccessibleContext? {
+    if (debug) println("find, this.name: ${this.accessibleName}, this.description: ${this.accessibleDescription}, this.role: ${this.accessibleRole}")
+    if (matcher(this)) return this
+    val childCount = accessibleChildrenCount
+    if (debug) println("Searching amongst children, of which there are $childCount")
+    for (i in 0..<childCount) {
+        val child = getAccessibleChild(i).accessibleContext.find(matcher, debug)
+        if (child != null) return child
+    }
+    return null
 }

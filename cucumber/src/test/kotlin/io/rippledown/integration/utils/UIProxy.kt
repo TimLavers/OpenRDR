@@ -38,8 +38,8 @@ class OpenRdUIProxy() {
                         OpenRDRUI(object : Handler {
                             override var api = Api()
                             override var isClosing: () -> Boolean = { false }
+                            override var setInfoMessage: (String) -> Unit = {}
                         })
-
                     }
                 }
             }
