@@ -38,8 +38,6 @@ object StepsInfrastructure {
     fun cleanup() {
         if (::launchedClient.isInitialized) launchedClient.stopClient()
         uiTestBase.serverProxy.shutdown()
-        Runtime.getRuntime().gc()
-        println("Free mem: ${Runtime.getRuntime().freeMemory()}")
     }
 
 

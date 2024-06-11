@@ -1,5 +1,4 @@
 Feature: Reviewing cornerstone cases
-
   Scenario: A user message should be shown if there are no cornerstone cases
     Given a new case with the name Case1 is stored on the server
     And I start the client application
@@ -83,7 +82,6 @@ Feature: Reviewing cornerstone cases
     When I select the condition "y is not blank"
     Then the message "No cornerstone cases to review" should be shown
 
-  @ignore
   Scenario: The current cornerstones should remain selected if the user adds a condition that does not exclude it
     Given case Case1 is provided having data:
       | x | 1 |
@@ -105,7 +103,7 @@ Feature: Reviewing cornerstone cases
     And I see the case Case1 as the current case
     And I enter the text " Comment 5." in the interpretation field
     And I select the changes tab
-    And I start to build a rule for the change on row 1
+    And I start to build a rule for the change on row 0
     And the case Case2 is shown as the cornerstone case
     And I click the next cornerstone case button
     And the case Case3 is shown as the cornerstone case

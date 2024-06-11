@@ -36,7 +36,7 @@ class ServerProxy {
             logProxy.deleteLogfiles()
         }
         val dbFlag = if (inMemory) IN_MEMORY else ""
-        process = ProcessBuilder("java", "-jar", jarFile.absolutePath, dbFlag)
+        process = ProcessBuilder("java", "-jar", jarFile.absolutePath, dbFlag, "-Xmx24G")
             .redirectErrorStream(true)
             .redirectOutput(systemOutputFile)
             .directory(dirProxy.tempDir())

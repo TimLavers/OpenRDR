@@ -160,7 +160,6 @@ class Api(engine: HttpClientEngine = CIO.create()) {
             setBody(sessionStartRequest)
             setKBParameter()
         }.body<CornerstoneStatus>()
-        println("   API: Started rule session with cornerstone ${body.cornerstoneToReview?.case?.name}")
         return body
     }
 
@@ -193,7 +192,6 @@ class Api(engine: HttpClientEngine = CIO.create()) {
      * @return the cornerstone
      */
     suspend fun selectCornerstone(index: Int): ViewableCase {
-        println("   API: Selecting cornerstone $index")
         return client.get("$API_URL$SELECT_CORNERSTONE?$INDEX_PARAMETER=$index") {
             setKBParameter()
         }.body()
