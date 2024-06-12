@@ -6,6 +6,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import io.rippledown.constants.cornerstone.CORNERSTONE_CASE_NAME_ID
 import io.rippledown.constants.navigation.INDEX_AND_TOTAL_ID
@@ -53,6 +54,20 @@ class CornerstonePagerTest {
             //Then
             onNodeWithContentDescription(CORNERSTONE_CASE_NAME_ID)
                 .assertTextEquals("$caseNamePrefix$index")
+        }
+    }
+
+    @Test
+    fun `should not attempt to select a cornerstone if the index is -1`() {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                CornerstonePager(CornerstoneStatus(), handler)
+            }
+            waitForIdle()
+
+            //Then
+            coVerify(exactly = 0) { handler.selectCornerstone(-1) }
         }
     }
 

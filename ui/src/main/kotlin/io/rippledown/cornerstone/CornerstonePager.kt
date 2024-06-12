@@ -25,16 +25,22 @@ fun CornerstonePager(cornerstoneStatus: CornerstoneStatus, handler: CornerstoneP
         pageCount = { cornerstoneStatus.numberOfCornerstones }
     )
     LaunchedEffect(Unit) {
-        case = handler.selectCornerstone(currentIndex.value)
+        if (currentIndex.value > -1) {
+            case = handler.selectCornerstone(currentIndex.value)
+        }
     }
     LaunchedEffect(currentIndex.value) {
-        case = handler.selectCornerstone(currentIndex.value)
-        pagerState.animateScrollToPage(currentIndex.value)
+        if (currentIndex.value > -1) {
+            case = handler.selectCornerstone(currentIndex.value)
+            pagerState.animateScrollToPage(currentIndex.value)
+        }
     }
 
     LaunchedEffect(pagerState.currentPage) {
-        case = handler.selectCornerstone(pagerState.currentPage)
-        pagerState.animateScrollToPage(pagerState.currentPage)
+        if (pagerState.currentPage > -1) {
+            case = handler.selectCornerstone(pagerState.currentPage)
+            pagerState.animateScrollToPage(pagerState.currentPage)
+        }
     }
 
     Column {
