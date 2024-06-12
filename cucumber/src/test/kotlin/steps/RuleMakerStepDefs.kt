@@ -36,8 +36,12 @@ class RuleMakerStepDefs : En {
             }
         }
 
-        When("I select the condition {string}") { text: String ->
+        When("I add the condition {string}") { text: String ->
             ruleMakerPO().clickConditionWithText(text)
+        }
+
+        When("I remove the condition {string}") { text: String ->
+            ruleMakerPO().removeConditionWithText(text)
         }
 
         Then("the conditions showing should be:") { dataTable: DataTable ->

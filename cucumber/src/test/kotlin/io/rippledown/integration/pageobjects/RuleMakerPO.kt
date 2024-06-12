@@ -6,6 +6,7 @@ import io.kotest.matchers.shouldNotBe
 import io.rippledown.constants.rule.AVAILABLE_CONDITION_PREFIX
 import io.rippledown.constants.rule.CANCEL_RULE_BUTTON
 import io.rippledown.constants.rule.FINISH_RULE_BUTTON
+import io.rippledown.constants.rule.SELECTED_CONDITION_PREFIX
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
 import io.rippledown.integration.waitUntilAssertedOnEventThread
@@ -19,6 +20,11 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
             availableConditionContextForIndex(index) shouldNotBe null
         }
     }
+    private fun waitForSelectedConditionsContextForIndex(index: Int) {
+        waitUntilAssertedOnEventThread {
+            selectedConditionsContextForIndex(index) shouldNotBe null
+        }
+    }
 
     private fun waitForAvailableConditionsContext() {
         waitUntilAssertedOnEventThread {
@@ -26,16 +32,34 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
         }
     }
 
+    private fun waitForSelectedConditionsContext() {
+        waitUntilAssertedOnEventThread {
+            selectedConditionsContext().size shouldBeGreaterThanOrEqualTo 1
+        }
+    }
+
     fun clickAvailableCondition(index: Int) {
         waitForAvailableConditionContextForIndex(index)
         execute { availableConditionContextForIndex(index)?.accessibleAction?.doAccessibleAction(0) }
+
+    }
+
+    fun clickSelectedCondition(index: Int) {
+        waitForSelectedConditionsContextForIndex(index)
+        execute { selectedConditionsContextForIndex(index)?.accessibleAction?.doAccessibleAction(0) }
     }
 
     private fun availableConditionContextForIndex(index: Int) =
         contextProvider().find("$AVAILABLE_CONDITION_PREFIX$index")
 
+    private fun selectedConditionsContextForIndex(index: Int) =
+        contextProvider().find("$SELECTED_CONDITION_PREFIX$index")
+
     private fun availableConditionsContext() =
         contextProvider().findAllByDescriptionPrefix(AVAILABLE_CONDITION_PREFIX)
+
+    private fun selectedConditionsContext() =
+        contextProvider().findAllByDescriptionPrefix(SELECTED_CONDITION_PREFIX)
 
     fun clickDoneButton() =
         execute { contextProvider().find(FINISH_RULE_BUTTON)!!.accessibleAction!!.doAccessibleAction(0) }
@@ -53,6 +77,15 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
         waitForAvailableConditionsContext()
         execute {
             availableConditionsContext().first {
+                it.accessibleName == condition
+            }.accessibleAction?.doAccessibleAction(0)
+        }
+    }
+
+    fun removeConditionWithText(condition: String) {
+        waitForSelectedConditionsContext()
+        execute {
+            selectedConditionsContext().first {
                 it.accessibleName == condition
             }.accessibleAction?.doAccessibleAction(0)
         }
