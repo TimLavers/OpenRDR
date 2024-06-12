@@ -1,28 +1,29 @@
-package io.rippledown.examples.zoo
+package io.rippledown.kb.sample.zoo
 
-import io.rippledown.integration.proxy.ConfiguredTestData
-import io.rippledown.model.AttributeFactory
+import io.rippledown.kb.AttributeManager
+import io.rippledown.kb.sample.defaultDate
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
-import io.rippledown.model.defaultDate
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
-class ZooCases(attributeFactory: AttributeFactory) {
-    private val hair= attributeFactory.create("hair")
-    private val feathers= attributeFactory.create("feathers")
-    private val eggs= attributeFactory.create("eggs")
-    private val milk= attributeFactory.create("milk")
-    private val airborne= attributeFactory.create("airborne")
-    private val aquatic	= attributeFactory.create("aquatic")
-    private val predator= attributeFactory.create("predator")
-    private val toothed	= attributeFactory.create("toothed")
-    private val backbone= attributeFactory.create("backbone")
-    private val breathes= attributeFactory.create("breathes")
-    private val venomous= attributeFactory.create("venomous")
-    private val fins= attributeFactory.create("fins")
-    private val legs= attributeFactory.create("legs")
-    private val tail= attributeFactory.create("tail")
-    private val domestic= attributeFactory.create("domestic")
-    private val catsize	= attributeFactory.create("catsize")
+class ZooCases(attributeFactory: AttributeManager) {
+    private val hair= attributeFactory.getOrCreate("hair")
+    private val feathers= attributeFactory.getOrCreate("feathers")
+    private val eggs= attributeFactory.getOrCreate("eggs")
+    private val milk= attributeFactory.getOrCreate("milk")
+    private val airborne= attributeFactory.getOrCreate("airborne")
+    private val aquatic	= attributeFactory.getOrCreate("aquatic")
+    private val predator= attributeFactory.getOrCreate("predator")
+    private val toothed	= attributeFactory.getOrCreate("toothed")
+    private val backbone= attributeFactory.getOrCreate("backbone")
+    private val breathes= attributeFactory.getOrCreate("breathes")
+    private val venomous= attributeFactory.getOrCreate("venomous")
+    private val fins= attributeFactory.getOrCreate("fins")
+    private val legs= attributeFactory.getOrCreate("legs")
+    private val tail= attributeFactory.getOrCreate("tail")
+    private val domestic= attributeFactory.getOrCreate("domestic")
+    private val catsize	= attributeFactory.getOrCreate("catsize")
 
     private val indexToAttribute = mapOf(
         1 to hair,
@@ -47,8 +48,8 @@ class ZooCases(attributeFactory: AttributeFactory) {
 
     fun cases(): List<RDRCase> {
         val result = mutableListOf<RDRCase>()
-        val zooCasesFile = ConfiguredTestData.testDataFile("zoo/zoo.data")
-        zooCasesFile.readLines().forEach {
+        val zooData = this::class.java.getResourceAsStream("/zoo/zoo.data")!!
+        BufferedReader(InputStreamReader(zooData)).lines().forEach {
             result.add(parseCase(it))
         }
         return result

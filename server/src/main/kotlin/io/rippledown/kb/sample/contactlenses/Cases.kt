@@ -1,11 +1,10 @@
 @file:Suppress("EnumEntryName")
+package io.rippledown.kb.sample.contactlenses
 
-package io.rippledown.examples.contact_lenses
-
-import io.rippledown.model.AttributeFactory
+import io.rippledown.kb.AttributeManager
+import io.rippledown.kb.sample.defaultDate
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
-import io.rippledown.model.defaultDate
 
 enum class Age {
     young, pre_presbyopic, presbyopic
@@ -20,15 +19,11 @@ enum class TearProduction {
     reduced, normal
 }
 
-/**
- * Cases from the Contact Lenses KB at
- * https://www.cse.unsw.edu.au/~cs9416/06s1/lectures/rdr/rdr_trace.html
- */
-class ContactLensesCases(attributeFactory: AttributeFactory) {
-    val age = attributeFactory.create("age")
-    val prescription = attributeFactory.create("prescription")
-    val astigmatism = attributeFactory.create("astigmatism")
-    val tearProduction = attributeFactory.create("tear production")
+class Cases(attributeFactory: AttributeManager) {
+    val age = attributeFactory.getOrCreate("age")
+    val prescription = attributeFactory.getOrCreate("prescription")
+    val astigmatism = attributeFactory.getOrCreate("astigmatism")
+    val tearProduction = attributeFactory.getOrCreate("tear production")
     private val case1 = makeCase("Case1", Age.young, Prescription.myope, Astigmatism.not_astigmatic, TearProduction.reduced)
     private val case2 = makeCase("Case2", Age.young, Prescription.myope, Astigmatism.not_astigmatic, TearProduction.normal)                        // soft
     private val case3 = makeCase("Case3", Age.young, Prescription.myope, Astigmatism.astigmatic, TearProduction.reduced)                           // none

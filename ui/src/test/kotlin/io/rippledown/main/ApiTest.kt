@@ -12,6 +12,8 @@ import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
+import io.rippledown.sample.SampleKB
+import io.rippledown.sample.SampleKB.TSH_CASES
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
@@ -93,6 +95,16 @@ class ApiTest {
         val config = config { }
         Api(mock(config)).createKB(expectedName)
         config.newKbName shouldBe expectedName
+    }
+
+    @Test
+    fun createKBFromSample() = runTest {
+        val expectedName = "Bondi"
+        val config = config { }
+        val result = Api(mock(config)).createKBFromSample(expectedName, TSH_CASES)
+        config.newKbName shouldBe expectedName
+        config.sampleKB shouldBe TSH_CASES
+        result.name shouldBe expectedName
     }
 
     @Test

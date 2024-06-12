@@ -25,11 +25,13 @@ import androidx.compose.ui.window.rememberDialogState
 import io.rippledown.constants.kb.*
 import io.rippledown.constants.main.*
 import io.rippledown.model.KBInfo
+import io.rippledown.sample.SampleKB
 import java.io.File
 
 interface KBControlHandler {
     var selectKB: (id: String) -> Unit
     var createKB: (name: String) -> Unit
+    var createKBFromSample: (name: String, sample: SampleKB) -> Unit
     var importKB: (data: File) -> Unit
     var exportKB: (data: File) -> Unit
     val kbList: () -> List<KBInfo>
@@ -40,6 +42,7 @@ interface KBControlHandler {
 fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
     var expanded by remember { mutableStateOf(false) }
     var createKbDialogShowing by remember { mutableStateOf(false) }
+    var createKbFromSampleDialogShowing by remember { mutableStateOf(false) }
     var importKbDialogShowing by remember { mutableStateOf(false) }
     var exportKbDialogShowing by remember { mutableStateOf(false) }
     val availableKBs =
@@ -75,6 +78,26 @@ fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
                 override fun inputFieldDescription() = CREATE_KB_NAME_FIELD_DESCRIPTION
                 override fun confirmButtonText() = CREATE
                 override fun confirmButtonDescription() = CREATE_KB_OK_BUTTON_DESCRIPTION
+            })
+        }
+    }
+    if (createKbFromSampleDialogShowing) {
+        val dialogState = rememberDialogState(size = DpSize(640.dp, 460.dp))
+        DialogWindow(
+            onCloseRequest = {createKbFromSampleDialogShowing = false},
+            title = "Create KB from Template",
+            state = dialogState
+        ) {
+            CreateKBFromSample(object : CreateKBFromSampleHandler {
+                override fun createKB(name: String, sample: SampleKB) {
+                    println("Create KB from sample....name: $name, sample: $sample")
+                    handler.createKBFromSample(name, sample)
+                    createKbFromSampleDialogShowing = false
+                }
+
+                override fun cancel() {
+                    createKbFromSampleDialogShowing = false
+                }
             })
         }
     }
@@ -188,6 +211,18 @@ fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
                     }
             ) {
                 Text(text = CREATE_KB_TEXT)
+            }
+            DropdownMenuItem(
+                onClick = {
+                    expanded = false
+                    createKbFromSampleDialogShowing = true
+                },
+                modifier = Modifier.semantics(mergeDescendants = true) {
+                        role = Button
+                        contentDescription = CREATE_KB_FROM_SAMPLE_TEXT
+                    }
+            ) {
+                Text(text = CREATE_KB_FROM_SAMPLE_TEXT)
             }
             DropdownMenuItem(
                 onClick = {

@@ -1,24 +1,51 @@
-Feature: The reports for the cases described in the TSH paper can be generated using OpenRDR rules
+Feature: The knowledge base described in the TSH paper is implemented by a KB built from the TSH sample.
 
+#  We check the interpretation of each of the cases. Just a few of
+#  the cases are checked as the other TSH sample cuke checks all of them.
   Scenario: TSH KB rules
-    Given the TSH sample KB has been loaded
-    And I start the client application
+    Given I start the client application
+    And I create a Knowledge Base with the name TSHNew based on the "Thyroid Stimulating Hormone" sample
+    And pause for 2 seconds
+
     Then the count of the number of cases is 34
 
     When I select case 1.4.1
-    Then the interpretation should be this:
+    Then I see these case values:
+      | Sex               | F                 |            |
+      | Age               | 28                |            |
+      | TSH               | 0.67 mU/L         | 0.50 - 4.0 |
+      | Free T4           | 16 pmol/L         |   10 - 20  |
+      | Patient Location  | General Practice. |            |
+      | Tests             | TFTs              |            |
+      | Clinical Notes    | Lethargy.         |            |
+    And the interpretation should be this:
       """
       Normal T4 and TSH are consistent with a euthyroid state.
       """
 
     When I select case 1.4.2
-    Then the interpretation should be this:
+    Then I see these case values:
+      | Sex               | F                 |            |
+      | Age               | 28                |            |
+      | TSH               | 0.67 mU/L         | 0.50 - 4.0 |
+      | Patient Location  | General Practice. |            |
+      | Tests             | TFTs              |            |
+      | Clinical Notes    | Lethargy.         |            |
+    And the interpretation should be this:
       """
       Normal TSH is consistent with a euthyroid state.
       """
 
     When I select case 1.4.3
-    Then the interpretation should be this:
+    Then I see these case values:
+      | Sex               | F                 |            |
+      | Age               | 36                |            |
+      | TSH               | 0.74 mU/L         | 0.50 - 4.0 |
+      | Free T4           | 8 pmol/L          |   10 - 20  |
+      | Patient Location  | General Practice. |            |
+      | Tests             | TFTs              |            |
+      | Clinical Notes    | Weight loss.      |            |
+    And the interpretation should be this:
       """
       A mildly reduced FT4 with a normal TSH may be due to non-thyroidal illness or pituitary hypothyroidism.
       """

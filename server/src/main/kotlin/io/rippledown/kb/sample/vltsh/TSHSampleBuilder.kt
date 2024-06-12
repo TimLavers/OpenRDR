@@ -1,10 +1,6 @@
-package steps
+package io.rippledown.kb.sample.vltsh
 
-import io.cucumber.java8.En
-import io.rippledown.examples.vltsh.TSHCases
-import io.rippledown.integration.RestClientAttributeFactory
-import io.rippledown.integration.RestClientRuleBuilder
-import io.rippledown.integration.restclient.RESTClient
+import io.rippledown.kb.sample.SampleRuleBuilder
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.SeriesCondition
 import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals
@@ -16,19 +12,53 @@ import io.rippledown.model.condition.episodic.signature.AtLeast
 import io.rippledown.model.condition.episodic.signature.AtMost
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.series.Increasing
-import io.rippledown.model.printDuration
+import io.rippledown.server.KBEndpoint
 
-@Suppress("unused") // Used in cucumber file.
-class TSHStepDefs : En {
-    init {
-        When("the TSH sample KB has been loaded") {
-            printDuration("setup TSH attributes") { setupTSHAttributes() }
-            printDuration("setup TSH cases") { setupTSHSampleCases() }
-            printDuration("setup TSH rules") { buildTSHRules() }
-        }
+class TSHSampleBuilder(private val kbe: KBEndpoint)  {
+
+    fun buildTSHRules() {
+        setupTSHSampleCases()
+        TSHRulesBuilder(kbe).buildRules()
     }
 
-    private fun buildTSHRules() = TSHRulesBuilder(labProxy().restProxy).buildRules()
+    fun setupTSHSampleCases() {
+        setupTSHAttributes()
+        val tshCases = TSHCases(kbe.kb.attributeManager)
+        kbe.kb.addProcessedCase(tshCases.TSH1)
+        kbe.kb.addProcessedCase(tshCases.TSH2)
+        kbe.kb.addProcessedCase(tshCases.TSH3)
+        kbe.kb.addProcessedCase(tshCases.TSH4)
+        kbe.kb.addProcessedCase(tshCases.TSH5)
+        kbe.kb.addProcessedCase(tshCases.TSH6)
+        kbe.kb.addProcessedCase(tshCases.TSH7)
+        kbe.kb.addProcessedCase(tshCases.TSH8)
+        kbe.kb.addProcessedCase(tshCases.TSH9)
+        kbe.kb.addProcessedCase(tshCases.TSH10)
+        kbe.kb.addProcessedCase(tshCases.TSH11)
+        kbe.kb.addProcessedCase(tshCases.TSH12)
+        kbe.kb.addProcessedCase(tshCases.TSH13)
+        kbe.kb.addProcessedCase(tshCases.TSH14)
+        kbe.kb.addProcessedCase(tshCases.TSH15)
+        kbe.kb.addProcessedCase(tshCases.TSH16)
+        kbe.kb.addProcessedCase(tshCases.TSH17)
+        kbe.kb.addProcessedCase(tshCases.TSH18)
+        kbe.kb.addProcessedCase(tshCases.TSH19)
+        kbe.kb.addProcessedCase(tshCases.TSH20)
+        kbe.kb.addProcessedCase(tshCases.TSH21)
+        kbe.kb.addProcessedCase(tshCases.TSH22)
+        kbe.kb.addProcessedCase(tshCases.TSH23)
+        kbe.kb.addProcessedCase(tshCases.TSH24)
+        kbe.kb.addProcessedCase(tshCases.TSH25)
+        kbe.kb.addProcessedCase(tshCases.TSH26)
+        kbe.kb.addProcessedCase(tshCases.TSH27)
+        kbe.kb.addProcessedCase(tshCases.TSH28)
+        kbe.kb.addProcessedCase(tshCases.TSH29)
+        kbe.kb.addProcessedCase(tshCases.TSH30)
+        kbe.kb.addProcessedCase(tshCases.TSH31)
+        kbe.kb.addProcessedCase(tshCases.TSH32)
+        kbe.kb.addProcessedCase(tshCases.TSH33)
+        kbe.kb.addProcessedCase(tshCases.TSH35)
+    }
 
     private fun setupTSHAttributes() {
         // We create the attributes ahead of time and set their order
@@ -53,117 +83,79 @@ class TSHStepDefs : En {
             "Clinical Notes",
         )
         val attributesInOrder = attributeNamesInOrder.map {
-            labProxy().restProxy.getOrCreateAttribute(it)
+            kbe.getOrCreateAttribute(it)
         }
-        labProxy().restProxy.setAttributeOrder(attributesInOrder)
-    }
-
-    private fun setupTSHSampleCases() {
-        val tshCases = TSHCases(RestClientAttributeFactory(restClient()))
-        labProxy().provideCase(tshCases.TSH1)
-        labProxy().provideCase(tshCases.TSH2)
-        labProxy().provideCase(tshCases.TSH3)
-        labProxy().provideCase(tshCases.TSH4)
-        labProxy().provideCase(tshCases.TSH5)
-        labProxy().provideCase(tshCases.TSH6)
-        labProxy().provideCase(tshCases.TSH7)
-        labProxy().provideCase(tshCases.TSH8)
-        labProxy().provideCase(tshCases.TSH9)
-        labProxy().provideCase(tshCases.TSH10)
-        labProxy().provideCase(tshCases.TSH11)
-        labProxy().provideCase(tshCases.TSH12)
-        labProxy().provideCase(tshCases.TSH13)
-        labProxy().provideCase(tshCases.TSH14)
-        labProxy().provideCase(tshCases.TSH15)
-        labProxy().provideCase(tshCases.TSH16)
-        labProxy().provideCase(tshCases.TSH17)
-        labProxy().provideCase(tshCases.TSH18)
-        labProxy().provideCase(tshCases.TSH19)
-        labProxy().provideCase(tshCases.TSH20)
-        labProxy().provideCase(tshCases.TSH21)
-        labProxy().provideCase(tshCases.TSH22)
-        labProxy().provideCase(tshCases.TSH23)
-        labProxy().provideCase(tshCases.TSH24)
-        labProxy().provideCase(tshCases.TSH25)
-        labProxy().provideCase(tshCases.TSH26)
-        labProxy().provideCase(tshCases.TSH27)
-        labProxy().provideCase(tshCases.TSH28)
-        labProxy().provideCase(tshCases.TSH29)
-        labProxy().provideCase(tshCases.TSH30)
-        labProxy().provideCase(tshCases.TSH31)
-        labProxy().provideCase(tshCases.TSH32)
-        labProxy().provideCase(tshCases.TSH33)
-        labProxy().provideCase(tshCases.TSH35)
+        kbe.setAttributeOrder(attributesInOrder)
     }
 }
-class TSHRulesBuilder(restClient: RESTClient) : RestClientRuleBuilder(restClient) {
+class TSHRulesBuilder(kbe: KBEndpoint) : SampleRuleBuilder(kbe) {
     fun buildRules() {
-        val tsh = attributeFactory.create("TSH")
-        val ft4 = attributeFactory.create("Free T4")
-        val ft3 = attributeFactory.create("Free T3")
-        val tpo = attributeFactory.create("TPO Antibodies")
-        val thyroglobulin = attributeFactory.create("Thyroglobulin")
-        val antiThyroglobulin = attributeFactory.create("Anti-Thyroglobulin")
-        val potassium = attributeFactory.create("Potassium")
-        val clinicalNotes = attributeFactory.create("Clinical Notes")
-        val sex = attributeFactory.create("Sex")
-        val age = attributeFactory.create("Age")
+        val tsh = kbe.getOrCreateAttribute("TSH")
+        val ft4 = kbe.getOrCreateAttribute("Free T4")
+        val ft3 = kbe.getOrCreateAttribute("Free T3")
+        val tpo = kbe.getOrCreateAttribute("TPO Antibodies")
+        val thyroglobulin = kbe.getOrCreateAttribute("Thyroglobulin")
+        val antiThyroglobulin = kbe.getOrCreateAttribute("Anti-Thyroglobulin")
+        val potassium = kbe.getOrCreateAttribute("Potassium")
+        val clinicalNotes = kbe.getOrCreateAttribute("Clinical Notes")
+        val sex = kbe.getOrCreateAttribute("Sex")
+        val age = kbe.getOrCreateAttribute("Age")
 
-        val tshBelowDetection = conditionFactory.getOrCreate(isCondition(tsh, "<0.01"))
-        val tshVeryLow = conditionFactory.getOrCreate(lessThanOrEqualTo(tsh, 0.1)) // What should this be?
-        val tshLow = conditionFactory.getOrCreate(isLow(tsh))
-        val tshNormal = conditionFactory.getOrCreate(isNormal(tsh))
-        val borderline10HighTSH = conditionFactory.getOrCreate((EpisodicCondition(tsh, NormalOrHighByAtMostSomePercentage(10), All)))
-        val borderline20HighTSH = conditionFactory.getOrCreate((EpisodicCondition(tsh, NormalOrHighByAtMostSomePercentage(20), All)))
-        val tshSlightlyIncreased = conditionFactory.getOrCreate(greaterThanOrEqualTo(tsh, 10.0))
-        val tshHigh = conditionFactory.getOrCreate(isHigh(tsh))
-        val tshVeryHigh = conditionFactory.getOrCreate(greaterThanOrEqualTo( tsh, 40.0)) // What should this be?
-        val tshProfoundlyHigh = conditionFactory.getOrCreate(greaterThanOrEqualTo( tsh, 100.0)) //  should this be?
-        val atLeastTwoTSH = conditionFactory.getOrCreate(EpisodicCondition(tsh, IsNumeric, AtLeast(2)))
+        val tshBelowDetection = kbe.getOrCreateCondition(isCondition(tsh, "<0.01"))
+        val tshVeryLow = kbe.getOrCreateCondition(lessThanOrEqualTo(tsh, 0.1)) // What should this be?
+        val tshLow = kbe.getOrCreateCondition(isLow(tsh))
+        val tshNormal = kbe.getOrCreateCondition(isNormal(tsh))
+        val borderline10HighTSH = kbe.getOrCreateCondition((EpisodicCondition(tsh, NormalOrHighByAtMostSomePercentage(10), All)))
+        val borderline20HighTSH = kbe.getOrCreateCondition((EpisodicCondition(tsh, NormalOrHighByAtMostSomePercentage(20), All)))
+        val tshSlightlyIncreased = kbe.getOrCreateCondition(greaterThanOrEqualTo(tsh, 10.0))
+        val tshHigh = kbe.getOrCreateCondition(isHigh(tsh))
+        val tshVeryHigh = kbe.getOrCreateCondition(greaterThanOrEqualTo( tsh, 40.0)) // What should this be?
+        val tshProfoundlyHigh = kbe.getOrCreateCondition(greaterThanOrEqualTo( tsh, 100.0)) //  should this be?
+        val atLeastTwoTSH = kbe.getOrCreateCondition(EpisodicCondition(tsh, IsNumeric, AtLeast(2)))
 
-        val ft4VeryLow = conditionFactory.getOrCreate(isCondition(ft4, "<5"))
-        val ft4SlightlyLow = conditionFactory.getOrCreate(slightlyLow(ft4, 20))
-        val ft4Low = conditionFactory.getOrCreate(isLow(ft4))
-        val fT4Normal = conditionFactory.getOrCreate(isNormal( ft4))
-        val borderlineHighFT4 = conditionFactory.getOrCreate(EpisodicCondition(ft4, NormalOrHighByAtMostSomePercentage(10), All))
-        val ft4High = conditionFactory.getOrCreate(isHigh(ft4))
-        val severelyHighFT4 =  conditionFactory.getOrCreate(EpisodicCondition(ft4, GreaterThanOrEquals(40.0), Current))
+        val ft4VeryLow = kbe.getOrCreateCondition(isCondition(ft4, "<5"))
+        val ft4SlightlyLow = kbe.getOrCreateCondition(slightlyLow(ft4, 20))
+        val ft4Low = kbe.getOrCreateCondition(isLow(ft4))
+        val fT4Normal = kbe.getOrCreateCondition(isNormal( ft4))
+        val borderlineHighFT4 = kbe.getOrCreateCondition(EpisodicCondition(ft4, NormalOrHighByAtMostSomePercentage(10), All))
+        val ft4High = kbe.getOrCreateCondition(isHigh(ft4))
+        val severelyHighFT4 =  kbe.getOrCreateCondition(EpisodicCondition(ft4, GreaterThanOrEquals(40.0), Current))
 
-        val ft3Available = conditionFactory.getOrCreate(isPresent(ft3))
-        val ft3NotAvailable = conditionFactory.getOrCreate(isNotPresent(ft3))
-        val ft3High = conditionFactory.getOrCreate(isHigh(ft3))
-        val ft3Increasing = conditionFactory.getOrCreate((SeriesCondition(null, ft3, Increasing)))
-        val borderlineHighFT3 = conditionFactory.getOrCreate((EpisodicCondition(ft3, NormalOrHighByAtMostSomePercentage(10), All)))
-        val severelyHighFT3 =  conditionFactory.getOrCreate(EpisodicCondition(ft3, GreaterThanOrEquals(10.0), Current))
+        val ft3Available = kbe.getOrCreateCondition(isPresent(ft3))
+        val ft3NotAvailable = kbe.getOrCreateCondition(isNotPresent(ft3))
+        val ft3High = kbe.getOrCreateCondition(isHigh(ft3))
+        val ft3Increasing = kbe.getOrCreateCondition((SeriesCondition(null, ft3, Increasing)))
+        val borderlineHighFT3 = kbe.getOrCreateCondition((EpisodicCondition(ft3, NormalOrHighByAtMostSomePercentage(10), All)))
+        val severelyHighFT3 =  kbe.getOrCreateCondition(EpisodicCondition(ft3, GreaterThanOrEquals(10.0), Current))
 
-        val tpoHigh = conditionFactory.getOrCreate(isHigh(tpo))
+        val tpoHigh = kbe.getOrCreateCondition(isHigh(tpo))
 
-        val thyroglobulinAvailable = conditionFactory.getOrCreate(isPresent(thyroglobulin))
-        val thyroglobulinBelowDetection = conditionFactory.getOrCreate(isCondition(thyroglobulin, "<0.1"))
-        val onlyOneThyroglobulin = conditionFactory.getOrCreate(EpisodicCondition(thyroglobulin, IsNotBlank, AtMost(2)))
-        val antiThyroglobulinAvailable = conditionFactory.getOrCreate(isPresent(antiThyroglobulin))
-        val antiThyroglobulinHigh = conditionFactory.getOrCreate(isHigh(antiThyroglobulin))
+        val thyroglobulinAvailable = kbe.getOrCreateCondition(isPresent(thyroglobulin))
+        val thyroglobulinBelowDetection = kbe.getOrCreateCondition(isCondition(thyroglobulin, "<0.1"))
+        val onlyOneThyroglobulin = kbe.getOrCreateCondition(EpisodicCondition(thyroglobulin, IsNotBlank, AtMost(2)))
+        val antiThyroglobulinAvailable = kbe.getOrCreateCondition(isPresent(antiThyroglobulin))
+        val antiThyroglobulinHigh = kbe.getOrCreateCondition(isHigh(antiThyroglobulin))
 
-        val lowPotassium = conditionFactory.getOrCreate(isLow(potassium))
+        val lowPotassium = kbe.getOrCreateCondition(isLow(potassium))
 
-        val olderThan14 = conditionFactory.getOrCreate(greaterThanOrEqualTo(age, 14.0))
-        val youngerThan44 = conditionFactory.getOrCreate(lessThanOrEqualTo(age, 44.0))
-        val olderThan44 = conditionFactory.getOrCreate(greaterThanOrEqualTo(age, 45.0))
-        val elderly = conditionFactory.getOrCreate(greaterThanOrEqualTo(age, 70.0))
+        val olderThan14 = kbe.getOrCreateCondition(greaterThanOrEqualTo(age, 14.0))
+        val youngerThan44 = kbe.getOrCreateCondition(lessThanOrEqualTo(age, 44.0))
+        val olderThan44 = kbe.getOrCreateCondition(greaterThanOrEqualTo(age, 45.0))
+        val elderly = kbe.getOrCreateCondition(greaterThanOrEqualTo(age, 70.0))
 
-        val female = conditionFactory.getOrCreate(isCondition(sex, "F"))
+        val female = kbe.getOrCreateCondition(isCondition(sex, "F"))
 
-        val notesShowsTrimester1 = conditionFactory.getOrCreate(containsText(clinicalNotes, "12/40 weeks"))
-        val notesDoesNotMentionPregnancy = conditionFactory.getOrCreate(doesNotContainText(clinicalNotes, "/40 weeks"))
-        val notesShowsTryingForBaby = conditionFactory.getOrCreate(containsText( clinicalNotes, "Trying for a baby"))
-        val tiredness = conditionFactory.getOrCreate(containsText(clinicalNotes, "very tired"))
-        val thyroxineReplacement1Week = conditionFactory.getOrCreate(containsText(clinicalNotes, "started T4 replacement 1 week ago"))
-        val t4Replacement = conditionFactory.getOrCreate(containsText(clinicalNotes, "On T4 replacement"))
-        val historyThyroidCancer = conditionFactory.getOrCreate(containsText( clinicalNotes, "thyroid cancer"))
-        val onThyroxine = conditionFactory.getOrCreate(containsText(clinicalNotes, "On thyroxine"))
-        val onT4 = conditionFactory.getOrCreate(containsText(clinicalNotes, "On T4"))
-        val onAmiodarone = conditionFactory.getOrCreate(containsText(clinicalNotes, "On amiodarone"))
-        val preI131Therapy = conditionFactory.getOrCreate(containsText(clinicalNotes, "Pre I-131 Thyrogen therapy"))
+        val notesShowsTrimester1 = kbe.getOrCreateCondition(containsText(clinicalNotes, "12/40 weeks"))
+        val notesDoesNotMentionPregnancy = kbe.getOrCreateCondition(doesNotContainText(clinicalNotes, "/40 weeks"))
+        val notesShowsTryingForBaby = kbe.getOrCreateCondition(containsText( clinicalNotes, "Trying for a baby"))
+        val tiredness = kbe.getOrCreateCondition(containsText(clinicalNotes, "very tired"))
+        val thyroxineReplacement1Week = kbe.getOrCreateCondition(containsText(clinicalNotes, "started T4 replacement 1 week ago"))
+        val t4Replacement = kbe.getOrCreateCondition(containsText(clinicalNotes, "On T4 replacement"))
+        val historyThyroidCancer = kbe.getOrCreateCondition(containsText( clinicalNotes, "thyroid cancer"))
+        val onThyroxine = kbe.getOrCreateCondition(containsText(clinicalNotes, "On thyroxine"))
+        val onT4 = kbe.getOrCreateCondition(containsText(clinicalNotes, "On T4"))
+        val onAmiodarone = kbe.getOrCreateCondition(containsText(clinicalNotes, "On amiodarone"))
+        val preI131Therapy = kbe.getOrCreateCondition(containsText(clinicalNotes, "Pre I-131 Thyrogen therapy"))
 
         val report1 = "Normal T4 and TSH are consistent with a euthyroid state."
         val report1b = "Normal TSH is consistent with a euthyroid state."

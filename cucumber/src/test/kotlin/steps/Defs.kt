@@ -177,6 +177,10 @@ class Defs : En {
             kbControlsPO().createKB(kbName)
         }
 
+        Then("I create a Knowledge Base with the name {word} based on the {string} sample") { kbName: String, sampleTitle: String ->
+            kbControlsPO().createKBFromSample(kbName, sampleTitle)
+        }
+
         Then("I select the Knowledge Base named {word}") { kbName: String ->
             kbControlsPO().selectKB(kbName)
         }

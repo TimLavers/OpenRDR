@@ -16,6 +16,7 @@ import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
+import io.rippledown.sample.SampleKB
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -42,6 +43,7 @@ class EngineConfig {
     var expectedMovedAttributeId: Int? = null
     var expectedTargetAttributeId: Int? = null
     var newKbName: String? = null
+    var sampleKB: SampleKB? = null
 
     val defaultKB = KBInfo("Thyroids")
     var returnKBInfo = defaultKB
@@ -135,6 +137,15 @@ private class EngineBuilder(private val config: EngineConfig) {
                 val name = body.text
                 config.newKbName = name
                 httpResponseData(json.encodeToString(KBInfo(name)))
+            }
+
+            CREATE_KB_FROM_SAMPLE -> {
+                val body = request.body as TextContent
+                val data = Json.decodeFromString<Pair<String, SampleKB>>(body.text)
+                config.newKbName = data.first
+                config.sampleKB = data.second
+
+                httpResponseData(json.encodeToString(KBInfo(data.first)))
             }
 
             CONDITION_HINTS -> {

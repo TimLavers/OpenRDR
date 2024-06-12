@@ -1,6 +1,6 @@
-package io.rippledown.examples.vltsh
+package io.rippledown.kb.sample.vltsh
 
-import io.rippledown.model.AttributeFactory
+import io.rippledown.kb.AttributeManager
 
 /**
  * Cases from the paper "Interpretative commenting in clinical chemistry with worked
@@ -8,7 +8,7 @@ import io.rippledown.model.AttributeFactory
  *
  * ORD4
  */
-class TSHCases(attributeFactory: AttributeFactory) {
+class TSHCases(attributeFactory: AttributeManager) {
 
     val TSH1 = tshCase {
         name = "1.4.1"

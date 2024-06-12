@@ -1,5 +1,7 @@
-package io.rippledown.examples.vltsh
+package io.rippledown.kb.sample.vltsh
 
+import io.rippledown.kb.AttributeManager
+import io.rippledown.kb.sample.defaultDate
 import io.rippledown.model.*
 import kotlinx.datetime.Instant
 
@@ -21,24 +23,24 @@ data class CaseTemplate(var name: String = "", var tsh: String = "", var freeT4:
     var tests: String = "TFTs"
     private val extraResults = mutableMapOf<String, TestResult>()
 
-    fun build(attributeFactory: AttributeFactory): RDRCase {
+    fun build(attributeFactory: AttributeManager): RDRCase {
         val result = RDRCaseBuilder()
-        result.addValue(attributeFactory.create("Sex"), defaultDate, sex )
-        result.addValue(attributeFactory.create("Age"), defaultDate, age.toString())
+        result.addValue(attributeFactory.getOrCreate("Sex"), defaultDate, sex )
+        result.addValue(attributeFactory.getOrCreate("Age"), defaultDate, age.toString())
         if (tsh.isNotBlank()) {
-            result.addResult(attributeFactory.create("TSH"), defaultDate, TestResult(Value(tsh), defaultTSHRange, " mU/L"))
+            result.addResult(attributeFactory.getOrCreate("TSH"), defaultDate, TestResult(Value(tsh), defaultTSHRange, " mU/L"))
         }
         if (freeT4.isNotBlank()) {
-            result.addResult(attributeFactory.create("Free T4"), defaultDate, TestResult(Value(freeT4), defaultFreeT4Range, " pmol/L"))
+            result.addResult(attributeFactory.getOrCreate("Free T4"), defaultDate, TestResult(Value(freeT4), defaultFreeT4Range, " pmol/L"))
         }
         if (freeT3.isNotBlank()) {
-            result.addResult(attributeFactory.create("Free T3"), defaultDate, TestResult(Value(freeT3), defaultFreeT3Range, " pmol/L"))
+            result.addResult(attributeFactory.getOrCreate("Free T3"), defaultDate, TestResult(Value(freeT3), defaultFreeT3Range, " pmol/L"))
         }
-        result.addValue(attributeFactory.create("Patient Location"), defaultDate,  location)
-        result.addValue(attributeFactory.create("Tests"), defaultDate, tests)
-        result.addValue(attributeFactory.create("Clinical Notes"), defaultDate, clinicalNotes)
+        result.addValue(attributeFactory.getOrCreate("Patient Location"), defaultDate,  location)
+        result.addValue(attributeFactory.getOrCreate("Tests"), defaultDate, tests)
+        result.addValue(attributeFactory.getOrCreate("Clinical Notes"), defaultDate, clinicalNotes)
         extraResults.forEach {
-            result.addResult(attributeFactory.create(it.key), defaultDate, it.value)
+            result.addResult(attributeFactory.getOrCreate(it.key), defaultDate, it.value)
         }
         return result.build( name)
     }
@@ -65,13 +67,13 @@ class TestResultTemplate(var attribute: String = "", var value: String = "") {
     }
 }
 
-fun multiEpisodeCase(attributeFactory: AttributeFactory, lambda: MultiEpisodeCaseTemplate.() -> Unit): MultiEpisodeCaseTemplate {
+fun multiEpisodeCase(attributeFactory: AttributeManager, lambda: MultiEpisodeCaseTemplate.() -> Unit): MultiEpisodeCaseTemplate {
     val template = MultiEpisodeCaseTemplate(attributeFactory)
     template.lambda()
     return template
 }
 
-data class MultiEpisodeCaseTemplate(val attributeFactory: AttributeFactory, var name: String = "") {
+data class MultiEpisodeCaseTemplate(val attributeFactory: AttributeManager, var name: String = "") {
     private var dates: List<Long> = emptyList()
     private var attributeToValues = mutableMapOf<Attribute, List<TestResult>>()
     var sex = "F"
@@ -88,7 +90,7 @@ data class MultiEpisodeCaseTemplate(val attributeFactory: AttributeFactory, var 
                 val testResult = it.value[index]
                 builder.addResult(it.key, date, testResult)
             }
-            builder.addResult(attributeFactory.create("Sex"), date,TestResult( sex))
+            builder.addResult(attributeFactory.getOrCreate("Sex"), date,TestResult( sex))
         }
         return builder.build( name)
     }
@@ -103,14 +105,14 @@ data class MultiEpisodeCaseTemplate(val attributeFactory: AttributeFactory, var 
     fun testValues(lambda: TestResultsTemplate.() -> Unit): TestResultsTemplate {
         val template = TestResultsTemplate()
         template.lambda()
-        attributeToValues[attributeFactory.create(template.attribute)] = template.results()
+        attributeToValues[attributeFactory.getOrCreate(template.attribute)] = template.results()
         return template
     }
 
     fun clinicalNotes(lambda: ClinicalNotesTemplate.() -> Unit): ClinicalNotesTemplate {
         val template = ClinicalNotesTemplate()
         template.lambda()
-        attributeToValues[attributeFactory.create(template.attribute)] = template.results()
+        attributeToValues[attributeFactory.getOrCreate(template.attribute)] = template.results()
         return template
     }
 }
