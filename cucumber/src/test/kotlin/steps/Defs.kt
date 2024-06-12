@@ -298,17 +298,18 @@ class Defs : En {
         }
 
         When("I select the condition in position {int}") { index: Int ->
+            TODO()
 //            conditionSelectorPO.clickConditionWithIndex(index)
         }
-        When("I select the condition {string}") { text: String ->
-//            conditionSelectorPO.clickConditionWithText(text)
-        }
+
         Then("the following conditions (are )(should be )selected:") { dataTable: DataTable ->
+            TODO()
             val expectedConditions = dataTable.asList()
 //            conditionSelectorPO.requireConditionsToBeSelected(expectedConditions)
         }
 
         And("I build a rule to add the comment {string}") { comment: String ->
+            TODO()
 //            with(interpretationViewPO) {
 //                enterVerifiedText(comment)
 //                selectChangesTab()
@@ -320,6 +321,7 @@ class Defs : En {
         }
 
         And("I build another rule to append the comment {string}") { comment: String ->
+            TODO()
 //            with(interpretationViewPO) {
 //                appendVerifiedText(" $comment")
 //                selectChangesTab()
@@ -344,6 +346,7 @@ class Defs : En {
         }
 
         And("click the comment {string}") { comment: String ->
+            TODO()
 //            conclusionsViewPO.clickComment(comment)
         }
 

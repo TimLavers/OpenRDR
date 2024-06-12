@@ -94,7 +94,7 @@ Feature: Reviewing cornerstone cases
     And case Case4 is provided having data:
       | x | 1 |
     And the following rules have been defined:
-      | CASE  | COMMENT ADDED | CONDITION             |
+      | CASE  | COMMENT ADDED | CONDITION      |
       | Case1 | Comment 1.    | x is not blank |
       | Case2 | Comment 2.    | x is not blank |
       | Case3 | Comment 3.    | x is not blank |
@@ -104,6 +104,7 @@ Feature: Reviewing cornerstone cases
     And I enter the text " Comment 5." in the interpretation field
     And I select the changes tab
     And I start to build a rule for the change on row 0
+    And the number of cornerstone cases should be shown as 3
     And the case Case2 is shown as the cornerstone case
     And I click the next cornerstone case button
     And the case Case3 is shown as the cornerstone case
@@ -111,5 +112,7 @@ Feature: Reviewing cornerstone cases
       | x is not blank |
       | y is not blank |
     When I select the condition "y is not blank"
-    Then the case Case3 is still shown as the cornerstone case
+    Then the number of cornerstone cases should be shown as 1
+    And the case Case3 is still shown as the cornerstone case
+
 
