@@ -7,6 +7,7 @@ object Version {
     const val ktor = "2.3.7"
     const val kotest = "5.7.2"
     const val assertjSwing = "3.17.1"
+    const val guava = "33.2.1-jre"
     const val mockk = "1.13.8"
     const val logback = "1.4.11"
     const val cucumberShortSummary = "1.0.14"

@@ -1,9 +1,11 @@
 package steps
 
+import com.google.common.base.Stopwatch
 import io.cucumber.datatable.DataTable
 import io.cucumber.docstring.DocString
 import io.cucumber.java8.En
 import io.kotest.matchers.shouldBe
+import io.rippledown.integration.memUsage
 import io.rippledown.integration.pause
 import io.rippledown.integration.proxy.ConfiguredTestData
 import io.rippledown.integration.utils.Cyborg
@@ -18,13 +20,16 @@ import steps.StepsInfrastructure.stopServer
 import java.io.File
 import java.time.Duration
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeUnit.SECONDS
 
 class Defs : En {
     private var exportedZip: File? = null
+    private lateinit var stopwatch: Stopwatch
 
     init {
         Before("not @database") { scenario ->
-            println("\nBefore scenario '${scenario.name}'")
+            println("\nBefore scenario '${scenario.name}', Mem usage: ${memUsage()}")
+            stopwatch = Stopwatch.createStarted()
             startServerWithInMemoryDatabase()
         }
 
@@ -34,8 +39,9 @@ class Defs : En {
         }
 
         After { scenario ->
-            println("After scenario '${scenario.name}'\n")
+            stopwatch.stop()
             cleanup()
+            println("After scenario  '${scenario.name}', duration:${stopwatch.elapsed(SECONDS)} seconds, Mem usage ${memUsage()}\n")
         }
 
         When("A Knowledge Base called {word} has been created") { name: String ->
@@ -176,7 +182,7 @@ class Defs : En {
         }
 
         And("pause for {long} second(s)") { seconds: Long ->
-            Thread.sleep(TimeUnit.SECONDS.toMillis(seconds))
+            Thread.sleep(SECONDS.toMillis(seconds))
         }
 
         And("pause") {
@@ -184,7 +190,7 @@ class Defs : En {
         }
 
         And("pause briefly") {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(20L))
+            Thread.sleep(SECONDS.toMillis(20L))
         }
 
         Then("I (should )see the following cases in the case list:") { dataTable: DataTable ->
@@ -292,17 +298,18 @@ class Defs : En {
         }
 
         When("I select the condition in position {int}") { index: Int ->
+            TODO()
 //            conditionSelectorPO.clickConditionWithIndex(index)
         }
-        When("I select the condition {string}") { text: String ->
-//            conditionSelectorPO.clickConditionWithText(text)
-        }
+
         Then("the following conditions (are )(should be )selected:") { dataTable: DataTable ->
+            TODO()
             val expectedConditions = dataTable.asList()
 //            conditionSelectorPO.requireConditionsToBeSelected(expectedConditions)
         }
 
         And("I build a rule to add the comment {string}") { comment: String ->
+            TODO()
 //            with(interpretationViewPO) {
 //                enterVerifiedText(comment)
 //                selectChangesTab()
@@ -314,6 +321,7 @@ class Defs : En {
         }
 
         And("I build another rule to append the comment {string}") { comment: String ->
+            TODO()
 //            with(interpretationViewPO) {
 //                appendVerifiedText(" $comment")
 //                selectChangesTab()
@@ -338,6 +346,7 @@ class Defs : En {
         }
 
         And("click the comment {string}") { comment: String ->
+            TODO()
 //            conclusionsViewPO.clickComment(comment)
         }
 

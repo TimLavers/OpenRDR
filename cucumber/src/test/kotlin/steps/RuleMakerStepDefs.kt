@@ -35,6 +35,11 @@ class RuleMakerStepDefs : En {
                 "third" -> ruleMakerPO().clickAvailableCondition(2)
             }
         }
+
+        When("I select the condition {string}") { text: String ->
+            ruleMakerPO().clickConditionWithText(text)
+        }
+
         Then("the conditions showing should be:") { dataTable: DataTable ->
             val expectedConditions = dataTable.asList()
             ruleMakerPO().requireAvailableConditions(expectedConditions)

@@ -50,8 +50,12 @@ fun AccessibleContext.find(matcher: (AccessibleContext) -> Boolean, debug: Boole
     val childCount = accessibleChildrenCount
     if (debug) println("Searching amongst children, of which there are $childCount")
     for (i in 0..<childCount) {
-        val child = getAccessibleChild(i).accessibleContext.find(matcher, debug)
-        if (child != null) return child
+        try {
+            val child = getAccessibleChild(i).accessibleContext.find(matcher, debug)
+            if (child != null) return child
+        } catch (e: Exception) {
+            //ignore. This is a workaround for a possible bug in the Java AccessibleContext API
+        }
     }
     return null
 }

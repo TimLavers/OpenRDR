@@ -1,9 +1,12 @@
 package io.rippledown.integration.pageobjects
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.rippledown.constants.cornerstone.CORNERSTONE_CASE_NAME_ID
 import io.rippledown.constants.cornerstone.NO_CORNERSTONES_TO_REVIEW_MSG
+import io.rippledown.constants.navigation.INDEX_AND_TOTAL_ID
 import io.rippledown.constants.navigation.NEXT_BUTTON
+import io.rippledown.constants.navigation.OF
 import io.rippledown.constants.navigation.PREVIOUS_BUTTON
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.waitUntilAssertedOnEventThread
@@ -35,9 +38,13 @@ class CornerstonePO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun requireNumberOfCornerstones(expectedNumberOfCornerstones: Int) {
-//        val listElements = cornerstoneContainerElement().findElements(By.tagName("li"))
+        waitUntilAssertedOnEventThread {
+            val contextForIndexAndTotal = contextProvider().find(INDEX_AND_TOTAL_ID)
+            contextForIndexAndTotal shouldNotBe null
 
-        //first and last list elements are the navigation buttons
-//        listElements.size - 2 shouldBe expectedNumberOfCornerstones
+            val indexAndTotal = contextForIndexAndTotal!!.accessibleName
+            val (_, total) = indexAndTotal.split(" $OF ")
+            total.toInt() shouldBe expectedNumberOfCornerstones
+        }
     }
 }
