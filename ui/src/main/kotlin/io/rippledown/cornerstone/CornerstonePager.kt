@@ -28,17 +28,13 @@ fun CornerstonePager(cornerstoneStatus: CornerstoneStatus, handler: CornerstoneP
         case = handler.selectCornerstone(currentIndex.value)
     }
     LaunchedEffect(currentIndex.value) {
-        println("LE INDEX START: ${pagerState.currentPage}, ${currentIndex.value}")
         case = handler.selectCornerstone(currentIndex.value)
         pagerState.animateScrollToPage(currentIndex.value)
-        println("LE INDEX END  : ${pagerState.currentPage}, ${currentIndex.value}")
     }
 
     LaunchedEffect(pagerState.currentPage) {
-        println("LE PAGER START: ${pagerState.currentPage}, ${currentIndex.value}")
         case = handler.selectCornerstone(pagerState.currentPage)
         pagerState.animateScrollToPage(pagerState.currentPage)
-        println("LE PAGER END  : ${pagerState.currentPage}, ${currentIndex.value}")
     }
 
     Column {
@@ -47,18 +43,15 @@ fun CornerstonePager(cornerstoneStatus: CornerstoneStatus, handler: CornerstoneP
             cornerstoneStatus.numberOfCornerstones,
             object : NextPreviousControlHandler {
                 override fun next() {
-                    println("NEXT: ${pagerState.currentPage}, ${currentIndex.value}")
                     currentIndex.value = pagerState.currentPage + 1
                 }
 
                 override fun previous() {
-                    println("PREV: ${pagerState.currentPage}, ${currentIndex.value}")
                     currentIndex.value = pagerState.currentPage - 1
                 }
             })
 
         VerticalPager(state = pagerState) {
-            println("VerticalPager : ${pagerState.currentPage}, ${currentIndex.value}")
             if (case != null) CornerstoneInspection(case!!)
         }
     }

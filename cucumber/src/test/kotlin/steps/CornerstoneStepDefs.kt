@@ -13,7 +13,7 @@ class CornerstoneStepDefs : En {
         }
 
         Then("the number of cornerstone cases should be shown as {int}") { numberOfCornerstoneCases: Int ->
-//            cornerstonePO.requireNumberOfCornerstones(numberOfCornerstoneCases)
+            cornerstonePO().requireNumberOfCornerstones(numberOfCornerstoneCases)
         }
         When("I click the {word} cornerstone case button") { direction: String ->
             when (direction) {

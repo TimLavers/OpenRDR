@@ -15,8 +15,8 @@ import io.rippledown.main.Handler
 import io.rippledown.main.OpenRDRUI
 import kotlinx.coroutines.DelicateCoroutinesApi
 import java.awt.event.WindowEvent
+import java.awt.event.WindowEvent.WINDOW_CLOSING
 import java.lang.Thread.sleep
-import javax.swing.JFrame
 import javax.swing.SwingUtilities
 
 
@@ -27,14 +27,18 @@ class TestClientLauncher {
         override var setInfoMessage: (String) -> Unit = {}
     }
     private lateinit var composeWindow: ComposeWindow
+    private lateinit var thread: Thread
 
     fun launchClient(): ComposeWindow {
         val api = Api()
-        Thread {
-            application {
+        thread = Thread {
+            application(
+                exitProcessOnExit = false
+            ) {
                 Window(
                     onCloseRequest = {
                         api.shutdown()
+                        exitApplication()
                     },
                     icon = painterResource("water-wave-icon.png"),
                     title = TITLE,
@@ -44,8 +48,8 @@ class TestClientLauncher {
                     OpenRDRUI(handler)
                 }
             }
-            println("Compose window launch thread exiting")
-        }.start()
+        }
+        thread.start()
         while (!::composeWindow.isInitialized) {
             sleep(100)
         }
@@ -55,10 +59,10 @@ class TestClientLauncher {
 
     fun stopClient() {
         handler.isClosing = { true }
-        val frame = composeWindow as JFrame
-        frame.dispatchEvent(WindowEvent(frame, WindowEvent.WINDOW_CLOSING))
         SwingUtilities.invokeAndWait {
-            frame.dispose()
+            composeWindow.dispatchEvent(WindowEvent(composeWindow, WINDOW_CLOSING))
+            composeWindow.dispose()
         }
+        thread.join()
     }
 }
