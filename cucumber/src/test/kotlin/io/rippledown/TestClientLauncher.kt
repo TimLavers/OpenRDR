@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
+import io.ktor.client.engine.cio.*
 import io.rippledown.constants.main.TITLE
 import io.rippledown.main.Api
 import io.rippledown.main.Handler
@@ -19,10 +20,11 @@ import java.awt.event.WindowEvent.WINDOW_CLOSING
 import java.lang.Thread.sleep
 import javax.swing.SwingUtilities
 
+val clientCIO = CIO.create()
 
 class TestClientLauncher {
     private val handler = object : Handler {
-        override var api = Api()
+        override var api = Api(clientCIO)
         override var isClosing: () -> Boolean = { false }
         override var setInfoMessage: (String) -> Unit = {}
     }

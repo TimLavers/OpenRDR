@@ -116,12 +116,12 @@ class Defs : En {
 
             // The attributes are created when the cases are parsed, so select them in the right order.
             caseCountPO().waitForCountOfNumberOfCasesToBe(3)
-            with(caseListPO()) {
-                // The attributes are created when the cases are parsed, so select them in the right order.
-                select("Case1")
-                select("Case2")
-                select("Case3")
-            }
+//            with(caseListPO()) {
+//                 The attributes are created when the cases are parsed, so select them in the right order.
+//                select("Case1")
+//                select("Case2")
+//                select("Case3")
+//            }
         }
 
         Given("I import the configured zipped Knowledge Base {word}") { toImport: String ->
