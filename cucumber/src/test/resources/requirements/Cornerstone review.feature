@@ -38,7 +38,6 @@ Feature: Reviewing cornerstone cases
     When I click the next cornerstone case button
     Then the case Case3 is shown as the cornerstone case
 
-  @single
   Scenario: The user should be able to switch to the previous cornerstone case
     Given case Case1 is provided having data:
       | x | 1 |
