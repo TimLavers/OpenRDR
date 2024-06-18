@@ -99,11 +99,13 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
     private fun attributeCellId(attributeName: String?) = "attribute_name_cell_$attributeName"
 
     fun dragAttribute(draggedAttribute: String, targetAttribute: String) {
+        println("draggedAttribute = [${draggedAttribute}], targetAttribute = [${targetAttribute}]")
         val allAttributeCells = getAttributeCellsInOrderShown()
         fun cellPosition(attribute: String): Point {
             val draggedCell = allAttributeCells.find { it.text() == attribute }!!
             val accessibleComponent = draggedCell.context.accessibleComponent
-            return accessibleComponent.locationOnScreen
+            val topLeft = accessibleComponent.locationOnScreen
+            return Point(topLeft.x + 5, topLeft.y + 5)
         }
         dragVertically(cellPosition(draggedAttribute), cellPosition(targetAttribute))
     }

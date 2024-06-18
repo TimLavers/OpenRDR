@@ -33,7 +33,6 @@ Feature: Order of Attributes in Case View
       | B | b |
       | C | c |
     When I select the case CaseABC
-    And pause for 2 seconds
     And I move attribute C below attribute A
     And I move attribute A below attribute B
     Then I see these case values:
