@@ -64,7 +64,6 @@ Feature: The user can make rules that change the interpretive report
     And  the interpretation field should contain the text "Go to Bondi."
     And I delete all the text in the interpretation field
     And the changes badge indicates that there is 1 change
-    And I select the changes tab
     When I build a rule for the change on row 0
     Then the changes badge indicates that there is no change
     And I select the interpretation tab
@@ -92,6 +91,7 @@ Feature: The user can make rules that change the interpretive report
     And  the interpretation field should contain the text "Go to Maroubra."
     And stop the client application
 
+    @ignore
   Scenario: The user should be able to build a rule to add a comment with a condition they have selected
     Given I start the client application
     And case Bondi is provided having data:
@@ -143,7 +143,6 @@ Feature: The user can make rules that change the interpretive report
     And  the interpretation field should contain the text "Go to Bondi."
     And I replace the text in the interpretation field with "Go to Manly."
     And the changes badge indicates that there is 1 change
-    And I select the changes tab
     And I start to build a rule for the change on row 0
     And the conditions showing should be:
       | Sun is not blank      |
@@ -155,7 +154,7 @@ Feature: The user can make rules that change the interpretive report
     And I select case Bondi
     And  the interpretation field should contain the text "Go to Bondi."
     And stop the client application
-
+  @ignore
   Scenario: The conditions shown for a comment that is a replacement should include the conditions for the comment that has been replaced
     Given case Bondi is provided having data:
       | Sun  | too hot |

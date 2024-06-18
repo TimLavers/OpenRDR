@@ -150,8 +150,6 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
         return this
     }
 
-//    fun WebElement.delete() = sendKeys(Keys.DELETE, Keys.BACK_SPACE)
-
     fun buildRule(row: Int) {
         clickBuildIconOnRow(row)
         clickFinishRuleButton()

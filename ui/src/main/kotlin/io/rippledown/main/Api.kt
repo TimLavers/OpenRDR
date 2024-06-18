@@ -24,7 +24,7 @@ import io.rippledown.sample.SampleKB
 import java.io.File
 
 
-class Api(engine: HttpClientEngine = CIO.create()) {
+class Api(private val engine: HttpClientEngine = CIO.create()) {
     private var currentKB: KBInfo? = null
     private val client = HttpClient(engine) {
         install(ContentNegotiation) {
@@ -32,12 +32,13 @@ class Api(engine: HttpClientEngine = CIO.create()) {
         }
     }
 
-    suspend fun HttpRequestBuilder.setKBParameter() {
+    private suspend fun HttpRequestBuilder.setKBParameter() {
         parameter(KB_ID, kbInfo().id)
     }
 
     fun shutdown() {
-        client.close()
+//        client.close()
+//        engine.close()
     }
 
     suspend fun createKB(name: String): KBInfo {
@@ -101,10 +102,16 @@ class Api(engine: HttpClientEngine = CIO.create()) {
     }
 
     suspend fun getCase(id: Long): ViewableCase? {
+        println("Api get case: $id")
         return try {
-            client.get("$API_URL$CASE?id=$id") {
+            val before = System.currentTimeMillis()
+            val result: ViewableCase = client.get("$API_URL$CASE?id=$id") {
                 setKBParameter()
             }.body()
+            val after = System.currentTimeMillis()
+            val diff = after - before
+            println("=== time to get case: $diff ms ===")
+            result
         } catch (e: Exception) {
             null
         }
