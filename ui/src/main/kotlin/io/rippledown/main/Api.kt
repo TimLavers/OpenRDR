@@ -102,15 +102,10 @@ class Api(private val engine: HttpClientEngine = CIO.create()) {
     }
 
     suspend fun getCase(id: Long): ViewableCase? {
-        println("Api get case: $id")
         return try {
-            val before = System.currentTimeMillis()
             val result: ViewableCase = client.get("$API_URL$CASE?id=$id") {
                 setKBParameter()
             }.body()
-            val after = System.currentTimeMillis()
-            val diff = after - before
-            println("=== time to get case: $diff ms ===")
             result
         } catch (e: Exception) {
             null

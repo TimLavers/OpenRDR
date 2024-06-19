@@ -91,7 +91,6 @@ Feature: The user can make rules that change the interpretive report
     And  the interpretation field should contain the text "Go to Maroubra."
     And stop the client application
 
-    @ignore
   Scenario: The user should be able to build a rule to add a comment with a condition they have selected
     Given I start the client application
     And case Bondi is provided having data:
@@ -99,9 +98,9 @@ Feature: The user can make rules that change the interpretive report
       | Wave | excellent |
     And I build a rule to add the comment "Go to the beach." with the condition "Sun is not blank"
     And I select the conclusions tab
-    And click the comment "Go to the beach."
-    Then the conditions showing are:
-      | Sun is not blank |
+    Then I should see the condition for each comment as follows:
+      | Comment          | Condition        |
+      | Go to the beach. | Sun is not blank |
     And stop the client application
 
   Scenario: The user should be able to build a rule to remove a comment with a condition they have selected
@@ -154,6 +153,7 @@ Feature: The user can make rules that change the interpretive report
     And I select case Bondi
     And  the interpretation field should contain the text "Go to Bondi."
     And stop the client application
+
   @ignore
   Scenario: The conditions shown for a comment that is a replacement should include the conditions for the comment that has been replaced
     Given case Bondi is provided having data:

@@ -40,13 +40,14 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
     }
 
     fun addVerifiedTextAtEndOfCurrentInterpretation(text: String): InterpretationViewPO {
-        setVerifiedText(interpretationText() + text)
+        val newVerifiedText = interpretationText() + " $text"
+        setVerifiedText(newVerifiedText)
         waitForDebounce()
         return this
     }
 
     fun interpretationText(): String = execute<String> {
-        contextProvider().find(INTERPRETATION_TEXT_FIELD, TEXT)?.accessibleName ?: ""
+        contextProvider().find(INTERPRETATION_TEXT_FIELD, TEXT)!!.accessibleName ?: ""
     }
 
     fun waitForInterpretationText(expected: String): InterpretationViewPO {

@@ -15,4 +15,7 @@ data class CornerstoneStatus(
     init {
         require(indexOfCornerstoneToReview < numberOfCornerstones) { "index of the cornerstone to show is between -1 and the number of cornerstones" }
     }
+
+    fun summary() =
+        "Cornerstone: ${cornerstoneToReview?.name}, Index: ${indexOfCornerstoneToReview}, Total: $numberOfCornerstones"
 }

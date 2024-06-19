@@ -108,7 +108,7 @@ Feature: Reviewing the interpretation of a case
     And I start the client application
     And I should see the case Case1 as the current case
     And the interpretation field should contain the text "Go to Bondi."
-    When I add the text " And bring your flippers." at the end of the current interpretation
+    When I add the text "And bring your flippers." at the end of the current interpretation
     And  the interpretation field should contain the text "Go to Bondi. And bring your flippers."
     And I select the changes tab
     Then the differences table should show 2 rows

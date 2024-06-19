@@ -37,13 +37,14 @@ class CornerstonePO(private val contextProvider: () -> AccessibleContext) {
         execute { contextProvider().find(PREVIOUS_BUTTON)!!.accessibleAction?.doAccessibleAction(0) }
     }
 
-    fun requireNumberOfCornerstones(expectedNumberOfCornerstones: Int) {
+    fun requireIndexAndNumberOfCornerstones(expectedIndex: Int, expectedNumberOfCornerstones: Int) {
         waitUntilAssertedOnEventThread {
             val contextForIndexAndTotal = contextProvider().find(INDEX_AND_TOTAL_ID)
             contextForIndexAndTotal shouldNotBe null
 
             val indexAndTotal = contextForIndexAndTotal!!.accessibleName
-            val (_, total) = indexAndTotal.split(" $OF ")
+            val (index, total) = indexAndTotal.split(" $OF ")
+            index.toInt() shouldBe expectedIndex
             total.toInt() shouldBe expectedNumberOfCornerstones
         }
     }

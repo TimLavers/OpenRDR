@@ -1,4 +1,5 @@
 Feature: Reviewing cornerstone cases
+
   Scenario: A user message should be shown if there are no cornerstone cases
     Given a new case with the name Case1 is stored on the server
     And I start the client application
@@ -77,10 +78,10 @@ Feature: Reviewing cornerstone cases
     And the conditions showing should be:
       | x is not blank |
       | y is not blank |
-    When I select the condition "y is not blank"
+    When I add the condition "y is not blank"
     Then the message "No cornerstone cases to review" should be shown
 
-  Scenario: The current cornerstones should remain selected if the user adds a condition that does not exclude it
+  Scenario: The current cornerstone should remain selected if the user adds a condition that does not exclude it
     Given case Case1 is provided having data:
       | x | 1 |
       | y | 1 |
@@ -102,15 +103,42 @@ Feature: Reviewing cornerstone cases
     And I enter the text " Comment 5." in the interpretation field
     And I select the changes tab
     And I start to build a rule for the change on row 0
-    And the number of cornerstone cases should be shown as 3
-    And the case Case2 is shown as the cornerstone case
     And I click the next cornerstone case button
     And the case Case3 is shown as the cornerstone case
-    And the conditions showing should be:
-      | x is not blank |
-      | y is not blank |
-    When I select the condition "y is not blank"
-    Then the number of cornerstone cases should be shown as 1
+    And the cornerstone case indicator should show 2 of 3
+    And I add the condition "y is not blank"
+    And the cornerstone case indicator should show 1 of 1
+    And the case Case3 is still shown as the cornerstone case
+
+  Scenario: The current cornerstone should remain selected if the user removes a condition
+    Given case Case1 is provided having data:
+      | x | 1 |
+      | y | 1 |
+    And case Case2 is provided having data:
+      | x | 1 |
+    And case Case3 is provided having data:
+      | x | 1 |
+      | y | 1 |
+    And case Case4 is provided having data:
+      | x | 1 |
+    And the following rules have been defined:
+      | CASE  | COMMENT ADDED | CONDITION      |
+      | Case1 | Comment 1.    | x is not blank |
+      | Case2 | Comment 2.    | x is not blank |
+      | Case3 | Comment 3.    | x is not blank |
+      | Case4 | Comment 4.    | x is not blank |
+    And I start the client application
+    And I see the case Case1 as the current case
+    And I enter the text " Comment 5." in the interpretation field
+    And I select the changes tab
+    And I start to build a rule for the change on row 0
+    And I click the next cornerstone case button
+    And the cornerstone case indicator should show 2 of 3
+    And the case Case3 is shown as the cornerstone case
+    And I add the condition "y is not blank"
+    And the cornerstone case indicator should show 1 of 1
+    When I remove the condition "y is not blank"
+    Then the cornerstone case indicator should show 2 of 3
     And the case Case3 is still shown as the cornerstone case
 
 

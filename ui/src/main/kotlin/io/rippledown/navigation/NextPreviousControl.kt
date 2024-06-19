@@ -31,7 +31,9 @@ fun NextPreviousControl(currentIndex: Int, total: Int, handler: NextPreviousCont
         modifier = Modifier.height(40.dp)
     ) {
         IconButton(
-            onClick = { handler.previous() },
+            onClick = {
+                handler.previous()
+            },
             enabled = currentIndex > 0
         ) {
             Icon(
@@ -48,7 +50,10 @@ fun NextPreviousControl(currentIndex: Int, total: Int, handler: NextPreviousCont
                 .semantics { contentDescription = INDEX_AND_TOTAL_ID }
         )
         IconButton(
-            onClick = { handler.next() },
+
+            onClick = {
+                handler.next()
+            },
             enabled = currentIndex < total - 1
         ) {
             Icon(
