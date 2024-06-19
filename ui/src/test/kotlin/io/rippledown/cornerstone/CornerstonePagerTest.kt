@@ -8,8 +8,6 @@ import androidx.compose.ui.window.application
 import io.mockk.coEvery
 import io.mockk.mockk
 import io.rippledown.constants.cornerstone.CORNERSTONE_CASE_NAME_ID
-import io.rippledown.constants.navigation.INDEX_AND_TOTAL_ID
-import io.rippledown.constants.navigation.OF
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.createCase
 import io.rippledown.model.rule.CornerstoneStatus
@@ -26,7 +24,7 @@ class CornerstonePagerTest {
     val total = 100
     val case = createCase(caseNamePrefix)
     val cornerstoneStatus = CornerstoneStatus(
-        cornerstoneToReview = createCase(caseNamePrefix),
+        cornerstoneToReview = case,
         indexOfCornerstoneToReview = index,
         numberOfCornerstones = total
     )
@@ -92,21 +90,32 @@ class CornerstonePagerTest {
     }
 
     @Test
+    fun `should show index of current cornerstone and the number of cornerstones`() {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                CornerstonePager(cornerstoneStatus, handler)
+            }
+            //Then
+            requireIndexAndTotalToBeDisplayed(index, total)
+        }
+    }
+
+    @Test
     fun `clicking next should update the navigation status`() {
         with(composeTestRule) {
             //Given
             setContent {
                 CornerstonePager(cornerstoneStatus, handler)
             }
-            onNodeWithContentDescription(INDEX_AND_TOTAL_ID)
-                .assertTextEquals("${index + 1} $OF $total")//Display is 1-based
+            requireIndexAndTotalToBeDisplayed(index, total)
+
 
             //When
             clickNext()
 
             //Then
-            onNodeWithContentDescription(INDEX_AND_TOTAL_ID)
-                .assertTextEquals("${index + 2} $OF $total")
+            requireIndexAndTotalToBeDisplayed(index + 1, total)
         }
     }
 
@@ -117,15 +126,13 @@ class CornerstonePagerTest {
             setContent {
                 CornerstonePager(cornerstoneStatus, handler)
             }
-            onNodeWithContentDescription(INDEX_AND_TOTAL_ID)
-                .assertTextEquals("${index + 1} $OF $total") //Display is 1-based
+            requireIndexAndTotalToBeDisplayed(index, total)
 
             //When
             clickPrevious()
 
             //Then
-            onNodeWithContentDescription(INDEX_AND_TOTAL_ID)
-                .assertTextEquals("${index} $OF $total")
+            requireIndexAndTotalToBeDisplayed(index - 1, total)
         }
     }
 

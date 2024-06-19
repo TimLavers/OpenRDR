@@ -21,10 +21,7 @@ import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
-import io.rippledown.rule.clickAvailableConditionWithText
-import io.rippledown.rule.clickCancelRuleButton
-import io.rippledown.rule.clickFinishRuleButton
-import io.rippledown.rule.requireAvailableConditionsToBeDisplayed
+import io.rippledown.rule.*
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -241,7 +238,32 @@ class CaseControlWithRuleMakerTest {
             val slot = slot<UpdateCornerstoneRequest>()
             verify { handler.updateCornerstoneStatus(capture(slot)) }
             slot.captured.conditionList shouldBe ConditionList(listOf(condition))
+        }
+    }
 
+    @Test
+    fun `should call handler to update the cornerstone status when a condition is removed from the rule`() {
+        val ccStatus = CornerstoneStatus(viewableCase, 42, 84)
+        every { handler.startRuleSession(any()) } returns ccStatus
+
+        with(composeTestRule) {
+            setContent {
+                CaseControl(ruleInProgress = true, CasesInfo(listOf(caseId)), handler)
+            }
+            //Given
+            waitForCaseToBeShowing(caseName)
+            requireAvailableConditionsToBeDisplayed(listOf(condition.asText()))
+            clickAvailableConditionWithText(condition.asText())
+
+            //When
+            clickSelectedConditionWithText(condition.asText())
+
+            //Then
+            val capturedRequests = mutableListOf<UpdateCornerstoneRequest>()
+            verify { handler.updateCornerstoneStatus(capture(capturedRequests)) }
+            capturedRequests.size shouldBe 2
+            capturedRequests[0].conditionList shouldBe ConditionList(listOf(condition))
+            capturedRequests[1].conditionList shouldBe ConditionList(listOf())
         }
     }
 

@@ -18,15 +18,17 @@ interface CornerstonePagerHandler {
 @Composable
 fun CornerstonePager(cornerstoneStatus: CornerstoneStatus, handler: CornerstonePagerHandler) {
     val currentIndex = remember { mutableStateOf(cornerstoneStatus.indexOfCornerstoneToReview) }
-    var case: ViewableCase? by remember { mutableStateOf(null) }
+    var case: ViewableCase? by remember { mutableStateOf(cornerstoneStatus.cornerstoneToReview) }
 
     val pagerState = rememberPagerState(
         initialPage = cornerstoneStatus.indexOfCornerstoneToReview,
         pageCount = { cornerstoneStatus.numberOfCornerstones }
     )
-    LaunchedEffect(Unit) {
-        case = handler.selectCornerstone(currentIndex.value)
+
+    LaunchedEffect(cornerstoneStatus) {
+        pagerState.animateScrollToPage(cornerstoneStatus.indexOfCornerstoneToReview)
     }
+
     LaunchedEffect(currentIndex.value) {
         case = handler.selectCornerstone(currentIndex.value)
         pagerState.animateScrollToPage(currentIndex.value)

@@ -56,35 +56,34 @@ fun SelectedConditions(conditions: List<Condition>, handler: SelectedConditionsH
             conditions
                 .sortedWith(compareBy { it.asText() })
                 .forEachIndexed { index, condition ->
-                Row(
-                    verticalAlignment = CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            if (cursorOnRow == index) Color.LightGray else Color.Transparent
-                        )
-                        .onClick { handler.onRemoveCondition(condition) }
-                ) {
-                    Text(
-                        text = condition.asText(),
+                    Row(
+                        verticalAlignment = CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         modifier = Modifier
-                            .onPointerEvent(Enter) { cursorOnRow = index }
-                            .semantics {
-                                contentDescription = "$SELECTED_CONDITION_PREFIX$index"
+                            .fillMaxWidth()
+                            .background(
+                                if (cursorOnRow == index) Color.LightGray else Color.Transparent
+                            )
+                            .clickable {
+                                handler.onRemoveCondition(condition)
                             }
-
-                    )
-                    if (cursorOnRow == index)
-                        Image(
-                            painter = painterResource("line_24.png"),
-                            contentDescription = "$REMOVE_CONDITION_ICON_PREFIX$index",
+                            .semantics { contentDescription = "$SELECTED_CONDITION_PREFIX$index" }
+                    ) {
+                        Text(
+                            text = condition.asText(),
+                            modifier = Modifier
+                                .onPointerEvent(Enter) { cursorOnRow = index }
                         )
-                    else {
-                        Spacer(modifier = Modifier.width(24.dp))
+                        if (cursorOnRow == index)
+                            Image(
+                                painter = painterResource("line_24.png"),
+                                contentDescription = "$REMOVE_CONDITION_ICON_PREFIX$index",
+                            )
+                        else {
+                            Spacer(modifier = Modifier.width(24.dp))
+                        }
                     }
                 }
-            }
         }
         VerticalScrollbar(
             modifier = Modifier

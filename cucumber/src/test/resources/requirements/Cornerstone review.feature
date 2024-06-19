@@ -110,7 +110,6 @@ Feature: Reviewing cornerstone cases
     And the cornerstone case indicator should show 1 of 1
     And the case Case3 is still shown as the cornerstone case
 
-  @single
   Scenario: The current cornerstone should remain selected if the user removes a condition
     Given case Case1 is provided having data:
       | x | 1 |

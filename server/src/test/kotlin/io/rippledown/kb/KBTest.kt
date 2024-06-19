@@ -557,7 +557,7 @@ class KBTest {
     }
 
     @Test
-    fun `should reset the first cornerstone caseif the current cornerstone has been removed by the condition change`() {
+    fun `should reset the first cornerstone case if the current cornerstone has been removed by the condition change`() {
         val cc1 = kb.addCornerstoneCase(createCase("Case1", "1.0"))
         val cc2 = kb.addCornerstoneCase(createCase("Case2", "2.0"))
         kb.addCornerstoneCase(createCase("Case3", "3.0"))
@@ -579,10 +579,9 @@ class KBTest {
     @Test
     fun `should remain on the current cornerstone case if it has not been removed by the condition change`() {
         val cc1 = kb.addCornerstoneCase(createCase("Case1", "1.0"))
-        val cc2 = kb.addCornerstoneCase(createCase("Case2", "2.0"))
+        kb.addCornerstoneCase(createCase("Case2", "2.0"))
         kb.addCornerstoneCase(createCase("Case3", "3.0"))
         val vcc1 = kb.viewableCase(cc1)
-        kb.viewableCase(cc2)
         val sessionCase = createCase("Case4", "4.0")
 
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
@@ -594,6 +593,37 @@ class KBTest {
         val updateRequest = UpdateCornerstoneRequest(currentCCStatus, ConditionList(listOf(condition)))
         val expected = CornerstoneStatus(vcc1, 0, 2)
         kb.updateCornerstone(updateRequest) shouldBe expected
+    }
+
+    @Test
+    fun `should restore the index of the current cornerstone case if it has not been removed by the condition change`() {
+        //Given
+        val cc1 = kb.addCornerstoneCase(createCase("Case1", "1.0"))
+        val cc2 = kb.addCornerstoneCase(createCase("Case2", "2.0"))
+        kb.addCornerstoneCase(createCase("Case3", "3.0"))
+        val vcc2 = kb.viewableCase(cc2)
+        val sessionCase = createCase("Case4", "4.0")
+
+        //When add a condition that is true for cc1 and the current cornerstone cc2
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+
+        //Assume that the user has skipped to the 2nd cornerstone
+        val originalCCStatus = CornerstoneStatus(vcc2, 1, 3)
+        withClue("sanity check") {
+            kb.cornerstoneStatus(vcc2) shouldBe originalCCStatus
+        }
+        val condition = lessThanOrEqualTo(null, glucose(), 2.5) //true for cc1 and the current cornerstone cc2
+        var updateRequest = UpdateCornerstoneRequest(originalCCStatus, ConditionList(listOf(condition)))
+        val expected = CornerstoneStatus(vcc2, 1, 2)
+        kb.updateCornerstone(updateRequest) shouldBe expected
+        kb.cornerstoneStatus(vcc2) shouldBe expected
+
+        //Remove the condition that was added
+        updateRequest = UpdateCornerstoneRequest(expected, ConditionList(emptyList()))
+
+        //Then
+        kb.updateCornerstone(updateRequest) shouldBe originalCCStatus
+        kb.cornerstoneStatus(vcc2) shouldBe originalCCStatus
     }
 
     @Test

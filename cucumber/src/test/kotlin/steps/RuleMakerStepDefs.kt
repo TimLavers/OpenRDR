@@ -2,6 +2,7 @@ package steps
 
 import io.cucumber.datatable.DataTable
 import io.cucumber.java8.En
+import io.rippledown.integration.pause
 
 class RuleMakerStepDefs : En {
     init {
@@ -60,6 +61,31 @@ class RuleMakerStepDefs : En {
                 clickDoneButton()
             }
         }
+
+        And("I build a rule to add the comment {string}") { comment: String ->
+            with(interpretationViewPO()) {
+                setVerifiedText(comment)
+                selectDifferencesTab()
+                clickBuildIconOnRow(0)
+            }
+            with(ruleMakerPO()) {
+                clickDoneButton()
+            }
+        }
+
+        And("I build another rule to append the comment {string}") { comment: String ->
+            with(interpretationViewPO()) {
+                selectOriginalTab()
+                pause() //TODO remove this
+                addVerifiedTextAtEndOfCurrentInterpretation(comment)
+                selectDifferencesTab()
+
+                //The first row has the unchanged comment
+                //The second row is the new comment
+                buildRule(row = 1)
+            }
+        }
+
 
 
     }
