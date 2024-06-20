@@ -167,6 +167,25 @@ class KB(persistentKB: PersistentKB) {
     }
 
     /**
+     * @param cornerstoneStatus the current cornerstone status
+     *
+     * @return the CornerstoneStatus for the current session after the cornerstone specified in cornerstoneStatus has been exempted
+     */
+    fun exemptCornerstone(ccStatus: CornerstoneStatus): CornerstoneStatus {
+        checkSession()
+
+        ruleSession!!.exemptCornerstone(ccStatus.cornerstoneToReview!!.case)
+        val index = ccStatus.indexOfCornerstoneToReview
+        val cornerstones = ruleSession!!.cornerstoneCases()
+        return if (cornerstones.isEmpty()) {
+            CornerstoneStatus()
+        } else {
+            val newCC = cornerstones[index.coerceAtMost(cornerstones.size - 1)]
+            cornerstoneStatus(viewableCase(newCC))
+        }
+    }
+
+    /**
      * @return the CornerstoneStatus for the current session where the specified cornerstone should remain selected if it is still in the list of cornerstones
      */
     internal fun cornerstoneStatus(currentCornerstone: ViewableCase?): CornerstoneStatus {

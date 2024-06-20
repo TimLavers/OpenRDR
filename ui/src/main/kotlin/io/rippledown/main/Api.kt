@@ -187,6 +187,19 @@ class Api(private val engine: HttpClientEngine = CIO.create()) {
     }
 
     /**
+     * Exempts the cornerstone defined by CornerstoneStatus for the current rule session
+     *
+     * @return the updated CornerstoneStatus
+     */
+    suspend fun exemptCornerstoneStatus(currentCornerstoneStatus: CornerstoneStatus): CornerstoneStatus {
+        return client.post("$API_URL$EXEMPT_CORNERSTONE") {
+            contentType(ContentType.Application.Json)
+            setBody(currentCornerstoneStatus)
+            setKBParameter()
+        }.body()
+    }
+
+    /**
      * @return the conditions that are suggested for building a rule for the selected Diff in the case's interpretation
      */
     suspend fun conditionHints(caseId: Long): ConditionList {

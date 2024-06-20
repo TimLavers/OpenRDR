@@ -12,7 +12,6 @@ import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
-import io.rippledown.sample.SampleKB
 import io.rippledown.sample.SampleKB.TSH_CASES
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -201,6 +200,18 @@ class ApiTest {
             returnCornerstoneStatus = CornerstoneStatus(newCornerstone, 0, 1)
         }
         Api(mock(config)).updateCornerstoneStatus(request) shouldBe config.returnCornerstoneStatus
+    }
+
+    @Test
+    fun `should exempt a cornerstone case`() = runTest {
+        val currentCornerstoneStatus = CornerstoneStatus()
+        val updatedCornerstoneStatus = CornerstoneStatus(createCase("Bondi"), 42, 100)
+
+        val config = config {
+            expectedCurrentCornerstoneStatus = currentCornerstoneStatus
+            returnCornerstoneStatus = updatedCornerstoneStatus
+        }
+        Api(mock(config)).exemptCornerstoneStatus(currentCornerstoneStatus) shouldBe config.returnCornerstoneStatus
     }
 
     @Test
