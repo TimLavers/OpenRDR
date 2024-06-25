@@ -72,7 +72,6 @@ class KB(persistentKB: PersistentKB) {
 
     fun processCase(externalCase: ExternalCase): RDRCase {
         val case = createRDRCase(externalCase)
-        println("processing case, RDRCase is: $case")
         val stored = caseManager.add(case)
         interpret(stored)
         return stored

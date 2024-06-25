@@ -141,4 +141,18 @@ Feature: Reviewing cornerstone cases
     Then the cornerstone case indicator should show 2 of 3
     And the case Case3 is still shown as the cornerstone case
 
+  @single
+  Scenario: The next cornerstone case should be shown if the current cornerstone case is approved
+    Given a list of cases with the following names is stored on the server:
+      | Case1 |
+      | Case2 |
+      | Case3 |
+    And I start the client application
+    And I build a rule to add the comment "Comment 1." for case Case1
+    And pause
+    And I build a rule to add the comment "Comment 2." for case Case2
+    And I start to build a rule to add the comment "Comment 3." for case Case3
+    And the case Case1 is shown as the cornerstone case
+    When I approve the cornerstone case "Case1"
+    Then the case Case2 is shown as the cornerstone case
 

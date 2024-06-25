@@ -62,8 +62,11 @@ class RuleMakerStepDefs : En {
             }
         }
 
-        And("I build a rule to add the comment {string}") { comment: String ->
+        And("I build a rule to add the comment {string} for case {word}") { comment: String, caseName: String ->
+            caseListPO().select(caseName)
+
             with(interpretationViewPO()) {
+                selectOriginalTab()
                 setVerifiedText(comment)
                 selectDifferencesTab()
                 clickBuildIconOnRow(0)
@@ -86,7 +89,19 @@ class RuleMakerStepDefs : En {
             }
         }
 
+        And("I start to build a rule to add the comment {string} for case {word}") { comment: String, caseName: String ->
+            caseListPO().select(caseName)
 
+            with(interpretationViewPO()) {
+                setVerifiedText(comment)
+                selectDifferencesTab()
+                clickBuildIconOnRow(0)
+            }
 
+        }
+
+        When("I approve the cornerstone case {word}") { caseName: String ->
+            TODO("Not yet implemented")
+        }
     }
 }
