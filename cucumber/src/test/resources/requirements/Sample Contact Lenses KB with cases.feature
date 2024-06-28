@@ -5,9 +5,7 @@ Feature: A sample KB can be created that has the Contact Lense Prescription case
   Scenario: Contact Lenses cases
     Given I start the client application
     And I create a Knowledge Base with the name ContactLenseCases based on the "Contact Lense Prescription - cases only" sample
-    And pause for 2 seconds
     Then the count of the number of cases is 24
-    And pause for 1 second
     When I select case Case1
     Then I see these case values:
       | age             | young          |  |

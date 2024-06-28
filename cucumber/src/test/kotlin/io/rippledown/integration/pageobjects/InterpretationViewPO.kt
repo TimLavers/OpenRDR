@@ -190,7 +190,8 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
     fun clickBuildIconOnRow(row: Int) {
         waitForNumberOfRowsToBeAtLeast(row + 1)
         waitForBuildIconToBeShowing(row)
-        execute { buildIconContext(row)?.accessibleAction?.doAccessibleAction(0) }
+        val buildIconContext = buildIconContext(row)
+        execute { buildIconContext?.accessibleAction?.doAccessibleAction(0) }
     }
 
     private fun waitForBuildIconToBeShowing(row: Int) {
@@ -199,5 +200,5 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
         }
     }
 
-    private fun buildIconContext(row: Int) = contextProvider().find("$ICON_PREFIX$row")
+    private fun buildIconContext(row: Int) = execute<AccessibleContext?> { contextProvider().find("$ICON_PREFIX$row") }
 }

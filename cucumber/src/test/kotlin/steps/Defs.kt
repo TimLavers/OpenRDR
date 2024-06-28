@@ -5,7 +5,6 @@ import io.cucumber.datatable.DataTable
 import io.cucumber.docstring.DocString
 import io.cucumber.java8.En
 import io.kotest.matchers.shouldBe
-import io.rippledown.integration.memUsage
 import io.rippledown.integration.pause
 import io.rippledown.integration.proxy.ConfiguredTestData
 import io.rippledown.integration.utils.Cyborg
@@ -41,7 +40,7 @@ class Defs : En {
         After { scenario ->
             stopwatch.stop()
             cleanup()
-            println("After scenario  '${scenario.name}', duration:${stopwatch.elapsed(SECONDS)} seconds, Mem usage ${memUsage()}\n")
+            println("After scenario  '${scenario.name}', duration: ${stopwatch.elapsed(SECONDS)} seconds")
         }
 
         When("A Knowledge Base called {word} has been created") { name: String ->

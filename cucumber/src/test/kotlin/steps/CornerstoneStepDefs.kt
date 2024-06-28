@@ -15,7 +15,7 @@ class CornerstoneStepDefs : En {
             cornerstonePO().requireCornerstoneCaseNotToBeShowing(ccName)
         }
 
-        Then("the cornerstone case indicator should show {int} of {int}") { index: Int, numberOfCornerstoneCases: Int ->
+        Then("the cornerstone case indicator (should )show(s) {int} of {int}") { index: Int, numberOfCornerstoneCases: Int ->
             cornerstonePO().requireIndexAndNumberOfCornerstones(index, numberOfCornerstoneCases)
         }
         When("I click the {word} cornerstone case button") { direction: String ->
