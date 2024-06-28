@@ -20,8 +20,8 @@ import io.rippledown.model.condition.Condition
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
-import io.rippledown.sample.SampleKB
 import io.rippledown.model.rule.UpdateCornerstoneRequest
+import io.rippledown.sample.SampleKB
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -54,7 +54,8 @@ fun OpenRDRUI(handler: Handler) {
                 override var isRuleSessionInProgress = ruleInProgress
                 override var selectKB: (id: String) -> Unit = { runBlocking { kbInfo = api.selectKB(it) } }
                 override var createKB: (name: String) -> Unit = { runBlocking { kbInfo = api.createKB(it) } }
-                override var createKBFromSample: (name: String, sample: SampleKB) -> Unit = { name: String, sample: SampleKB -> runBlocking { kbInfo = api.createKBFromSample(name, sample) } }
+                override var createKBFromSample: (name: String, sample: SampleKB) -> Unit =
+                    { name: String, sample: SampleKB -> runBlocking { kbInfo = api.createKBFromSample(name, sample) } }
                 override var importKB: (data: File) -> Unit = { runBlocking { kbInfo = api.importKBFromZip(it) } }
                 override var exportKB: (data: File) -> Unit = { runBlocking { api.exportKBToZip(it) } }
                 override val kbList: () -> List<KBInfo> = { runBlocking { api.kbList() } }
@@ -115,6 +116,7 @@ fun OpenRDRUI(handler: Handler) {
                 }
 
                 override suspend fun selectCornerstone(index: Int) = api.selectCornerstone(index)
+                override fun exemptCornerstone(index: Int) = runBlocking { api.exemptCornerstone(index) }
             })
         }
     }

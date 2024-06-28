@@ -34,9 +34,10 @@ class KBExemptCornerstoneTest {
         withClue("sanity check") {
             kb.cornerstoneStatus(vcc1) shouldBe currentCCStatus
         }
+        val ccStatus = kb.exemptCornerstone(0)
 
         //Then
-        kb.exemptCornerstone(currentCCStatus) shouldBe CornerstoneStatus()
+        ccStatus shouldBe CornerstoneStatus()
     }
 
     @Test
@@ -56,9 +57,10 @@ class KBExemptCornerstoneTest {
         withClue("sanity check") {
             kb.cornerstoneStatus(vcc1) shouldBe currentCCStatus
         }
+        val ccStatus = kb.exemptCornerstone(0)
 
         //Then
-        kb.exemptCornerstone(currentCCStatus) shouldBe CornerstoneStatus(vcc2, 0, 2)
+        ccStatus shouldBe CornerstoneStatus(vcc2, 0, 2)
     }
 
     @Test
@@ -79,9 +81,10 @@ class KBExemptCornerstoneTest {
         withClue("sanity check") {
             kb.cornerstoneStatus(vcc3) shouldBe currentCCStatus
         }
+        val ccStatus = kb.exemptCornerstone(2)
 
         //Then
-        kb.exemptCornerstone(currentCCStatus) shouldBe CornerstoneStatus(vcc2, 1, 2)
+        ccStatus shouldBe CornerstoneStatus(vcc2, 1, 2)
     }
 
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")

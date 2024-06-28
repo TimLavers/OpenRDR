@@ -6,7 +6,7 @@ import io.rippledown.constants.kb.KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION
 import io.rippledown.constants.kb.KB_CONTROL_DROPDOWN_DESCRIPTION
 import io.rippledown.constants.main.*
 import io.rippledown.integration.utils.*
-import io.rippledown.integration.waitUntilAssertedOnEventThread
+import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleRole
@@ -15,11 +15,11 @@ import javax.swing.SwingUtilities
 class KbControlsPO(private val contextProvider: () -> AccessibleContext) {
 
     fun requireKbControlsToBeHidden() {
-        waitUntilAssertedOnEventThread { contextProvider().find(KB_CONTROL_DROPDOWN_DESCRIPTION) shouldBe null }
+        waitUntilAsserted { contextProvider().find(KB_CONTROL_DROPDOWN_DESCRIPTION) shouldBe null }
     }
 
     fun requireKbControlsToBeShown() {
-        waitUntilAssertedOnEventThread { contextProvider().find(KB_CONTROL_DROPDOWN_DESCRIPTION) shouldNotBe null }
+        waitUntilAsserted { contextProvider().find(KB_CONTROL_DROPDOWN_DESCRIPTION) shouldNotBe null }
     }
 
     fun currentKB(): String {

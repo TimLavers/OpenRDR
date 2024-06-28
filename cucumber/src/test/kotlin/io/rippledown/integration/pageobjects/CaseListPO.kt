@@ -6,7 +6,7 @@ import io.rippledown.constants.caseview.CASELIST_ID
 import io.rippledown.constants.caseview.CASE_NAME_PREFIX
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findLabelChildren
-import io.rippledown.integration.waitUntilAssertedOnEventThread
+import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
@@ -16,17 +16,14 @@ import javax.accessibility.AccessibleRole.SCROLL_PANE
 
 class CaseListPO(private val contextProvider: () -> AccessibleContext) {
     private fun casesListed(): List<String> {
-            waitTillCaseListContextIsAccessible()
+        waitTillCaseListContextIsAccessible()
         return execute<List<String>> { caseListContext()?.findLabelChildren() ?: emptyList() }
     }
 
     private fun waitTillCaseListContextIsAccessible() =
-        waitUntilAssertedOnEventThread {
-            caseListContext() shouldNotBe null
-        }
+        waitUntilAsserted { caseListContext() shouldNotBe null }
 
-    private fun caseListContext() = contextProvider().find(CASELIST_ID, SCROLL_PANE)
-
+    private fun caseListContext() = execute<AccessibleContext?> { contextProvider().find(CASELIST_ID, SCROLL_PANE) }
 
     fun requireCaseNamesToBe(expectedCaseNames: List<String>) {
         casesListed() shouldBe expectedCaseNames
@@ -46,10 +43,10 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun requireCaseListToBeHidden() {
-        waitUntilAssertedOnEventThread { caseListContext() shouldBe null }
+        waitUntilAsserted { caseListContext() shouldBe null }
     }
 
     fun requireCaseListToBeShown() {
-        waitUntilAssertedOnEventThread { caseListContext() shouldNotBe null }
+        waitUntilAsserted { caseListContext() shouldNotBe null }
     }
 }

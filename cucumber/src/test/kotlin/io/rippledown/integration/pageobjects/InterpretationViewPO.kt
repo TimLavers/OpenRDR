@@ -8,8 +8,9 @@ import io.rippledown.constants.interpretation.*
 import io.rippledown.constants.rule.FINISH_RULE_BUTTON
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
+import io.rippledown.integration.utils.waitForContextToBeNotNull
 import io.rippledown.integration.waitForDebounce
-import io.rippledown.integration.waitUntilAssertedOnEventThread
+import io.rippledown.integration.waitUntilAsserted
 import io.rippledown.interpretation.CHANGED_PREFIX
 import io.rippledown.interpretation.DIFF_ROW_PREFIX
 import io.rippledown.interpretation.ICON_PREFIX
@@ -25,18 +26,19 @@ import javax.accessibility.AccessibleState
 class InterpretationViewPO(private val contextProvider: () -> AccessibleContext) {
 
     fun setVerifiedText(text: String): InterpretationViewPO {
+        selectOriginalTab()
         waitForTextFieldToBeAccessible()
-        execute { interpretationTextContext()?.accessibleEditableText?.setTextContents(text) }
+        val interpretationTextContext = interpretationTextContext()
+        execute { interpretationTextContext?.accessibleEditableText?.setTextContents(text) }
         waitForDebounce()
         return this
     }
 
-    private fun interpretationTextContext() = contextProvider().find(INTERPRETATION_TEXT_FIELD, TEXT)
+    private fun interpretationTextContext() =
+        execute<AccessibleContext?> { contextProvider().find(INTERPRETATION_TEXT_FIELD, TEXT) }
 
     private fun waitForTextFieldToBeAccessible() {
-        waitUntilAssertedOnEventThread {
-            interpretationTextContext() shouldNotBe null
-        }
+        waitUntilAsserted { interpretationTextContext() shouldNotBe null }
     }
 
     fun addVerifiedTextAtEndOfCurrentInterpretation(text: String): InterpretationViewPO {
@@ -86,21 +88,38 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
 
     fun waitForNoBadgeCount() {
         waitForDebounce()
-        waitUntilAssertedOnEventThread { requireNoBadgeCount() }
+        waitUntilAsserted { requireNoBadgeCount() }
     }
 
     fun waitForBadgeCount(expected: Int) {
         waitForDebounce()
-        waitUntilAssertedOnEventThread { requireBadgeCount(expected) }
+        waitUntilAsserted { requireBadgeCount(expected) }
     }
 
-    private fun interpretationTabProvider() = contextProvider().find(INTERPRETATION_TAB_ORIGINAL)!!
-    private fun diffTabProvider() = contextProvider().find(INTERPRETATION_TAB_CHANGES)!!
-    private fun conclusionsTabProvider() = contextProvider().find(INTERPRETATION_TAB_CONCLUSIONS)!!
+    private fun interpretationTabProvider() =
+        execute<AccessibleContext?> { contextProvider().find(INTERPRETATION_TAB_ORIGINAL) }
 
-    fun selectOriginalTab() = execute { interpretationTabProvider().accessibleAction.doAccessibleAction(0) }
-    fun selectConclusionsTab() = execute { conclusionsTabProvider().accessibleAction.doAccessibleAction(0) }
-    fun selectDifferencesTab() = execute { diffTabProvider().accessibleAction.doAccessibleAction(0) }
+    private fun diffTabProvider() = execute<AccessibleContext?> { contextProvider().find(INTERPRETATION_TAB_CHANGES) }
+    private fun conclusionsTabProvider() =
+        execute<AccessibleContext?> { contextProvider().find(INTERPRETATION_TAB_CONCLUSIONS) }
+
+    fun selectOriginalTab() {
+        waitForContextToBeNotNull(contextProvider, INTERPRETATION_TAB_ORIGINAL)
+        val context = interpretationTabProvider()
+        execute { context?.accessibleAction?.doAccessibleAction(0) }
+    }
+
+    fun selectConclusionsTab() {
+        waitForContextToBeNotNull(contextProvider, INTERPRETATION_TAB_CONCLUSIONS)
+        val context = conclusionsTabProvider()
+        execute { context?.accessibleAction?.doAccessibleAction(0) }
+    }
+
+    fun selectDifferencesTab() {
+        waitForContextToBeNotNull(contextProvider, INTERPRETATION_TAB_CHANGES)
+        val context = diffTabProvider()
+        execute { context?.accessibleAction?.doAccessibleAction(0) }
+    }
 
     fun requireOriginalTextInRow(row: Int, text: String) = requireTextInCellInRowWithPrefix(ORIGINAL_PREFIX, row, text)
 
@@ -108,7 +127,7 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
 
     fun numberOfRows() = execute<Int> { contextProvider().findAllByDescriptionPrefix(DIFF_ROW_PREFIX).size }
 
-    fun waitForNumberOfRowsToBeAtLeast(rows: Int) = waitUntilAssertedOnEventThread {
+    fun waitForNumberOfRowsToBeAtLeast(rows: Int) = waitUntilAsserted {
         numberOfRows() shouldBeGreaterThanOrEqualTo rows
     }
 
@@ -158,7 +177,7 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
     }
 
     private fun waitForFinishButtonToBeShowing() {
-        waitUntilAssertedOnEventThread {
+        waitUntilAsserted {
             contextProvider().find(FINISH_RULE_BUTTON)?.accessibleStateSet?.contains(AccessibleState.SHOWING) shouldBe true
         }
     }
@@ -175,7 +194,7 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
     }
 
     private fun waitForBuildIconToBeShowing(row: Int) {
-        waitUntilAssertedOnEventThread {
+        waitUntilAsserted {
             buildIconContext(row) shouldNotBe null
         }
     }

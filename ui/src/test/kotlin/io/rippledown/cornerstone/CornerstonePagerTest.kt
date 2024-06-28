@@ -1,14 +1,11 @@
 package io.rippledown.cornerstone
 
-import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import io.rippledown.constants.cornerstone.CORNERSTONE_CASE_NAME_ID
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.createCase
 import io.rippledown.model.rule.CornerstoneStatus
@@ -50,8 +47,8 @@ class CornerstonePagerTest {
             }
 
             //Then
-            onNodeWithContentDescription(CORNERSTONE_CASE_NAME_ID)
-                .assertTextEquals("$caseNamePrefix$index")
+            requireCornerstoneCase("$caseNamePrefix$index")
+
         }
     }
 
@@ -81,8 +78,8 @@ class CornerstonePagerTest {
             clickNext()
 
             //Then
-            onNodeWithContentDescription(CORNERSTONE_CASE_NAME_ID)
-                .assertTextEquals("$caseNamePrefix${index + 1}")
+            requireCornerstoneCase("$caseNamePrefix${index + 1}")
+
         }
     }
 
@@ -99,8 +96,23 @@ class CornerstonePagerTest {
             clickPrevious()
 
             //Then
-            onNodeWithContentDescription(CORNERSTONE_CASE_NAME_ID)
-                .assertTextEquals("$caseNamePrefix${index - 1}")
+            requireCornerstoneCase("$caseNamePrefix${index - 1}")
+        }
+    }
+
+    @Test
+    fun `clicking exempt should call the handler`() {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                CornerstonePager(cornerstoneStatus, handler)
+            }
+
+            //When
+            clickExempt()
+
+            //Then
+            coVerify { handler.exemptCornerstone(index) }
         }
     }
 
@@ -150,7 +162,6 @@ class CornerstonePagerTest {
             requireIndexAndTotalToBeDisplayed(index - 1, total)
         }
     }
-
 }
 
 fun main() {
@@ -163,6 +174,10 @@ fun main() {
                 CornerstoneStatus(createCase("Greta"), 2, 5), object : CornerstonePagerHandler {
                     override suspend fun selectCornerstone(index: Int): ViewableCase {
                         return createCase("Greta ${index + 1}")
+                    }
+
+                    override fun exemptCornerstone(index: Int): CornerstoneStatus {
+                        TODO("Not yet implemented")
                     }
                 })
         }

@@ -110,7 +110,12 @@ fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseCont
                 handler.setInfoMessage(NO_CORNERSTONES_TO_REVIEW_MSG)
             } else {
                 handler.setInfoMessage("")
-                CornerstonePager(cornerstoneStatus, handler)
+                CornerstonePager(cornerstoneStatus, object : CornerstonePagerHandler by handler {
+                    override fun exemptCornerstone(index: Int): CornerstoneStatus {
+                        cornerstoneStatus = handler.exemptCornerstone(index)
+                        return cornerstoneStatus
+                    }
+                })
             }
 
             Spacer(modifier = Modifier.width(10.dp))

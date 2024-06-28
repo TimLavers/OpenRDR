@@ -1,35 +1,49 @@
-package navigation
+package io.rippledown.cornerstone
 
 import androidx.compose.ui.test.assertIsNotEnabled
-import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import io.mockk.mockk
 import io.mockk.verify
-import io.rippledown.constants.navigation.INDEX_AND_TOTAL_ID
+import io.rippledown.constants.cornerstone.EXEMPT_BUTTON
 import io.rippledown.constants.navigation.NEXT_BUTTON
-import io.rippledown.constants.navigation.OF
 import io.rippledown.constants.navigation.PREVIOUS_BUTTON
-import io.rippledown.cornerstone.clickNext
-import io.rippledown.cornerstone.clickPrevious
-import io.rippledown.navigation.NextPreviousControl
-import io.rippledown.navigation.NextPreviousControlHandler
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-class NextPreviousControlTest {
+class CornerstoneControlTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    val handler = mockk<NextPreviousControlHandler>(relaxed = true)
+    private lateinit var handler: CornerstoneControlHandler
+
+    @Before
+    fun setUp() {
+        handler = mockk(relaxed = true)
+    }
 
     @Test
-    fun `should call handler when next is clicked`() {
+    fun `should show the current index and total`() {
         with(composeTestRule) {
             //Given
             setContent {
-                NextPreviousControl(3, 42, handler)
+                CornerstoneControl(0, 1, handler)
             }
+
+            //Then
+            requireIndexAndTotalToBeDisplayed(0, 1)
+        }
+    }
+
+    @Test
+    fun `clicking next should call the handler`() {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                CornerstoneControl(1, 3, handler)
+            }
+            requireIndexAndTotalToBeDisplayed(1, 3)
 
             //When
             clickNext()
@@ -40,12 +54,13 @@ class NextPreviousControlTest {
     }
 
     @Test
-    fun `should call handler when previous is clicked`() {
+    fun `clicking previous should call the handler`() {
         with(composeTestRule) {
             //Given
             setContent {
-                NextPreviousControl(3, 42, handler)
+                CornerstoneControl(1, 3, handler)
             }
+            requireIndexAndTotalToBeDisplayed(1, 3)
 
             //When
             clickPrevious()
@@ -56,16 +71,18 @@ class NextPreviousControlTest {
     }
 
     @Test
-    fun `should show index and total`() {
+    fun `clicking exempt should call the handler`() {
         with(composeTestRule) {
             //Given
             setContent {
-                NextPreviousControl(3, 42, handler)
+                CornerstoneControl(0, 3, handler)
             }
 
+            //When
+            clickExempt()
+
             //Then
-            //Note the 1-based index for the display
-            onNodeWithContentDescription(INDEX_AND_TOTAL_ID).assertTextEquals("4 $OF 42")
+            verify { handler.exempt() }
         }
     }
 
@@ -74,7 +91,7 @@ class NextPreviousControlTest {
         with(composeTestRule) {
             //Given
             setContent {
-                NextPreviousControl(41, 42, handler)
+                CornerstoneControl(41, 42, handler)
             }
 
             //Then
@@ -87,11 +104,23 @@ class NextPreviousControlTest {
         with(composeTestRule) {
             //Given
             setContent {
-                NextPreviousControl(0, 42, handler)
+                CornerstoneControl(0, 42, handler)
             }
 
             //Then
             onNodeWithContentDescription(PREVIOUS_BUTTON).assertIsNotEnabled()
+        }
+    }
+    @Test
+    fun `exempt button should be disabled if there are no cornerstones`() {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                CornerstoneControl(-1, 0, handler)
+            }
+
+            //Then
+            onNodeWithContentDescription(EXEMPT_BUTTON).assertIsNotEnabled()
         }
     }
 }

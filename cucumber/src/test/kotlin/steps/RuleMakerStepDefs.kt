@@ -100,8 +100,6 @@ class RuleMakerStepDefs : En {
 
         }
 
-        When("I approve the cornerstone case {word}") { caseName: String ->
-            TODO("Not yet implemented")
-        }
+
     }
 }

@@ -64,3 +64,6 @@ To run a single cucumber test or feature file, add the @single annotation at the
 
 <a href="https://www.flaticon.com/free-icons/arrow-symbol" title="arrow symbol icons">Arrow symbol icons created by
 Steven Edward Simanjuntak - Flaticon</a>
+
+<a href="https://www.flaticon.com/free-icons/tick" title="tick icons">Tick icons created by Maxim Basinski Premium -
+Flaticon</a>

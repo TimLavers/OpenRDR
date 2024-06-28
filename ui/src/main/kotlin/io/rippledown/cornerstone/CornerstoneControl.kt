@@ -1,4 +1,4 @@
-package io.rippledown.navigation
+package io.rippledown.cornerstone
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
@@ -13,19 +13,21 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import io.rippledown.constants.cornerstone.EXEMPT_BUTTON
 import io.rippledown.constants.navigation.INDEX_AND_TOTAL_ID
 import io.rippledown.constants.navigation.NEXT_BUTTON
 import io.rippledown.constants.navigation.OF
 import io.rippledown.constants.navigation.PREVIOUS_BUTTON
 import io.rippledown.decoration.ItalicGrey
 
-interface NextPreviousControlHandler {
+interface CornerstoneControlHandler {
     fun next(): Unit
     fun previous(): Unit
+    fun exempt(): Unit
 }
 
 @Composable
-fun NextPreviousControl(currentIndex: Int, total: Int, handler: NextPreviousControlHandler) {
+fun CornerstoneControl(currentIndex: Int, total: Int, handler: CornerstoneControlHandler) {
     Row(
         verticalAlignment = CenterVertically,
         modifier = Modifier.height(40.dp)
@@ -50,7 +52,6 @@ fun NextPreviousControl(currentIndex: Int, total: Int, handler: NextPreviousCont
                 .semantics { contentDescription = INDEX_AND_TOTAL_ID }
         )
         IconButton(
-
             onClick = {
                 handler.next()
             },
@@ -59,6 +60,17 @@ fun NextPreviousControl(currentIndex: Int, total: Int, handler: NextPreviousCont
             Icon(
                 painter = painterResource("right-arrow_24.png"),
                 contentDescription = NEXT_BUTTON
+            )
+        }
+        IconButton(
+            onClick = {
+                handler.exempt()
+            },
+            enabled = total > 0
+        ) {
+            Icon(
+                painter = painterResource("check_24.png"),
+                contentDescription = EXEMPT_BUTTON
             )
         }
     }

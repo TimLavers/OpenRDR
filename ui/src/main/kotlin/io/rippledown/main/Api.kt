@@ -187,14 +187,14 @@ class Api(private val engine: HttpClientEngine = CIO.create()) {
     }
 
     /**
-     * Exempts the cornerstone defined by CornerstoneStatus for the current rule session
+     * Exempts the cornerstone at the specified index for the current rule session
      *
      * @return the updated CornerstoneStatus
      */
-    suspend fun exemptCornerstoneStatus(currentCornerstoneStatus: CornerstoneStatus): CornerstoneStatus {
+    suspend fun exemptCornerstone(index: Int): CornerstoneStatus {
         return client.post("$API_URL$EXEMPT_CORNERSTONE") {
             contentType(ContentType.Application.Json)
-            setBody(currentCornerstoneStatus)
+            setBody(index)
             setKBParameter()
         }.body()
     }
@@ -209,7 +209,7 @@ class Api(private val engine: HttpClientEngine = CIO.create()) {
     }
 
     /**
-     * Retrieves the specified cornerstone for current the rule session
+     * Retrieves the specified cornerstone for the current rule session
      *
      * @param index the 0-based index of the cornerstone to retrieve. See CornerstoneStatus
      * @return the cornerstone
@@ -219,6 +219,5 @@ class Api(private val engine: HttpClientEngine = CIO.create()) {
             setKBParameter()
         }.body()
     }
-
 }
 

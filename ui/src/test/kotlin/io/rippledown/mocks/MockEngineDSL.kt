@@ -39,7 +39,7 @@ class EngineConfig {
     var expectedSessionStartRequest: SessionStartRequest? = null
     var expectedCornerstoneSelection: Int? = -1
     var expectedUpdateCornerstoneRequest: UpdateCornerstoneRequest? = null
-    var expectedCurrentCornerstoneStatus: CornerstoneStatus? = null
+    var expectedCornerstoneIndex: Int? = null
     var expectedUpdatedCornerstoneStatus: CornerstoneStatus? = null
 
     var expectedMovedAttributeId: Int? = null
@@ -112,11 +112,10 @@ private class EngineBuilder(private val config: EngineConfig) {
 
             EXEMPT_CORNERSTONE -> {
                 val body = request.body as TextContent
-                val bodyAsUpdatedCornerstoneStatus =
-                    json.decodeFromString(CornerstoneStatus.serializer(), body.text)
+                val bodyAsCornerstoneIndex = json.decodeFromString<Int>(body.text)
 
-                if (config.expectedUpdatedCornerstoneStatus != null) {
-                    bodyAsUpdatedCornerstoneStatus shouldBe config.expectedUpdatedCornerstoneStatus
+                if (config.expectedCornerstoneIndex != null) {
+                    bodyAsCornerstoneIndex shouldBe config.expectedCornerstoneIndex
                 }
                 httpResponseData(json.encodeToString(config.returnCornerstoneStatus))
             }

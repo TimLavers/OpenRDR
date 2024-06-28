@@ -204,14 +204,13 @@ class ApiTest {
 
     @Test
     fun `should exempt a cornerstone case`() = runTest {
-        val currentCornerstoneStatus = CornerstoneStatus()
         val updatedCornerstoneStatus = CornerstoneStatus(createCase("Bondi"), 42, 100)
 
         val config = config {
-            expectedCurrentCornerstoneStatus = currentCornerstoneStatus
+            expectedCornerstoneIndex = 42
             returnCornerstoneStatus = updatedCornerstoneStatus
         }
-        Api(mock(config)).exemptCornerstoneStatus(currentCornerstoneStatus) shouldBe config.returnCornerstoneStatus
+        Api(mock(config)).exemptCornerstone(42) shouldBe config.returnCornerstoneStatus
     }
 
     @Test

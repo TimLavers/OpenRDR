@@ -159,5 +159,5 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
     }
 
     fun updateCornerstone(request: UpdateCornerstoneRequest) = kb.updateCornerstone(request)
-    fun exemptCornerstone(currentCornerstoneStatus: CornerstoneStatus) = kb.exemptCornerstone(currentCornerstoneStatus)
+    fun exemptCornerstone(index: Int) = kb.exemptCornerstone(index)
 }

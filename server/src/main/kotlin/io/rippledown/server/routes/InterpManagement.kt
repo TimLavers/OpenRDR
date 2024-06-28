@@ -7,7 +7,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.rippledown.constants.api.*
 import io.rippledown.model.caseview.ViewableCase
-import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
@@ -41,8 +40,8 @@ fun Application.interpManagement(application: ServerApplication) {
         }
 
         post(EXEMPT_CORNERSTONE) {
-            val currentCornerstoneStatus = call.receive<CornerstoneStatus>()
-            val updatedCornerstoneStatus = kbEndpoint(application).exemptCornerstone(currentCornerstoneStatus)
+            val index = call.receive<Int>()
+            val updatedCornerstoneStatus = kbEndpoint(application).exemptCornerstone(index)
             call.respond(HttpStatusCode.OK, updatedCornerstoneStatus)
         }
 

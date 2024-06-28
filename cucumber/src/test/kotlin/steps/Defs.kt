@@ -9,7 +9,7 @@ import io.rippledown.integration.memUsage
 import io.rippledown.integration.pause
 import io.rippledown.integration.proxy.ConfiguredTestData
 import io.rippledown.integration.utils.Cyborg
-import io.rippledown.integration.waitUntilAssertedOnEventThread
+import io.rippledown.integration.waitUntilAsserted
 import org.awaitility.Awaitility
 import steps.StepsInfrastructure.cleanup
 import steps.StepsInfrastructure.reStartWithPostgres
@@ -154,7 +154,7 @@ class Defs : En {
         }
 
         Then("the displayed KB name is (now ){word}") { kbName: String ->
-            waitUntilAssertedOnEventThread {
+            waitUntilAsserted {
                 kbControlsPO().currentKB() shouldBe kbName
             }
         }

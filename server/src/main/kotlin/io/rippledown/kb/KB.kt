@@ -166,15 +166,16 @@ class KB(persistentKB: PersistentKB) {
     }
 
     /**
-     * @param cornerstoneStatus the current cornerstone status
+     * @param index the index of the cornerstone to be exempted
      *
-     * @return the CornerstoneStatus for the current session after the cornerstone specified in cornerstoneStatus has been exempted
+     * @return the CornerstoneStatus for the current session after the specified cornerstone has been exempted
      */
-    fun exemptCornerstone(ccStatus: CornerstoneStatus): CornerstoneStatus {
+    fun exemptCornerstone(index: Int): CornerstoneStatus {
         checkSession()
 
-        ruleSession!!.exemptCornerstone(ccStatus.cornerstoneToReview!!.case)
-        val index = ccStatus.indexOfCornerstoneToReview
+        val toExempt = ruleSession!!.cornerstoneCases()[index]
+        ruleSession!!.exemptCornerstone(toExempt)
+
         val cornerstones = ruleSession!!.cornerstoneCases()
         return if (cornerstones.isEmpty()) {
             CornerstoneStatus()
@@ -216,7 +217,6 @@ class KB(persistentKB: PersistentKB) {
 
         val verifiedText = interp.verifiedText!!
         val caseId = interp.caseId().id!!
-        println("verifiedText = '${verifiedText}'")
         verifiedTextStore.put(caseId, verifiedText)
         saveConclusions(verifiedText)
     }
