@@ -67,3 +67,16 @@ Steven Edward Simanjuntak - Flaticon</a>
 
 <a href="https://www.flaticon.com/free-icons/tick" title="tick icons">Tick icons created by Maxim Basinski Premium -
 Flaticon</a>
+
+<a href="https://www.flaticon.com/free-icons/delete-file" title="delete file icons">Delete file icons created by
+yaicon - Flaticon</a>
+
+<a href="https://www.flaticon.com/free-icons/paper" title="paper icons">Paper icons created by SeyfDesigner -
+Flaticon</a>
+
+<a href="https://www.flaticon.com/free-icons/files-and-folders" title="files and folders icons">Files and folders icons
+created by SeyfDesigner - Flaticon</a>
+
+<a href="https://www.flaticon.com/free-icons/replace" title="replace icons">Replace icons created by Delwar018 -
+Flaticon</a>
+

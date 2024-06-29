@@ -12,6 +12,7 @@ import io.rippledown.casecontrol.CaseControl
 import io.rippledown.casecontrol.CaseControlHandler
 import io.rippledown.casecontrol.CasePoller
 import io.rippledown.casecontrol.CasePollerHandler
+import io.rippledown.interpretation.Actions
 import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
@@ -68,7 +69,11 @@ fun OpenRDRUI(handler: Handler) {
             {
                 InformationPanel(infoMessage)
             }
-        })
+        },
+        floatingActionButton = {
+            Actions()
+        }
+    )
     {
         CasePoller(object : CasePollerHandler {
             override var onUpdate: (updated: CasesInfo) -> Unit = {
