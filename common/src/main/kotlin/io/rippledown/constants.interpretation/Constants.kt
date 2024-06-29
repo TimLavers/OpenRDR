@@ -18,11 +18,23 @@ const val INTERPRETATION_TEXT_FIELD = "interpretation_text_area"
 const val INTERPRETATION_VIEW_LABEL = "Report for this case"
 const val DEBOUNCE_WAIT_PERIOD_MILLIS = 1_000L
 
-const val DIFF_VIEWER_TABLE = "diff_viewer_table"
-const val DIFF_VIEWER_ROW = "diff_viewer_row_"
-const val DIFF_VIEWER_BUILD_ICON = "diff_viewer_build_icon_"
-const val DIFF_VIEWER_ORIGINAL = "diff_viewer_original_"
-const val DIFF_VIEWER_CHANGED = "diff_viewer_changed_"
+const val CHANGE_INTERPRETATION_BUTTON = "CHANGE_INTERPRETATION_BUTTON"
+const val CHANGE_INTERPRETATION_DROPDOWN = "CHANGE_INTERPRETATION_DROPDOWN"
+const val CHANGE_INTERPRETATION = "Change interpretation"
 
-const val CASE_VIEW_CONTAINER = "case_view_container"
+const val ADD_COMMENT_MENU = "ADD_COMMENT_MENU"
+const val REPLACE_COMMENT_MENU = "REPLACE_COMMENT_MENU"
+const val REMOVE_COMMENT_MENU = "REMOVE_COMMENT_MENU"
+
+const val ADD_COMMENT = "Add a comment"
+const val NEW_COMMENT = "New comment"
+const val REPLACE_COMMENT = "Replace a comment"
+const val REMOVE_COMMENT = "Remove a comment"
+const val NEW_COMMENT_TEXT_FIELD = "ADD_COMMENT_TEXT_FIELD"
+
+const val OK = "OK"
+const val OK_BUTTON = "OK_BUTTON"
+const val CANCEL_BUTTON = "CANCEL_BUTTON"
+
+
 

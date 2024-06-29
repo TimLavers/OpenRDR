@@ -15,6 +15,7 @@ Feature: The user can make rules that change the interpretive report
       | Wave is not blank |
     And stop the client application
 
+  @ignore
   Scenario: The user should be able to build a rule to add a comment
     Given a list of cases with the following names is stored on the server:
       | Case1 |
@@ -30,6 +31,22 @@ Feature: The user can make rules that change the interpretive report
     And  the interpretation field should contain the text "Go to Bondi."
     And select the case Case2
     And  the interpretation field should contain the text "Go to Bondi."
+    And stop the client application
+
+  @single
+  Scenario: The user should be able to build a rule to add a comment
+    Given a list of cases with the following names is stored on the server:
+      | Case1 |
+      | Case2 |
+    And I start the client application
+    And I should see the case Case1 as the current case
+    And I build a rule to add a comment "Go to Bondi."
+    And I select the comments tab
+    Then the following comment is shown:
+      | Go to Bondi. |
+    And select the case Case2
+    Then the following comment is shown:
+      | Go to Bondi. |
     And stop the client application
 
   Scenario: The user should be able to build rules to add several comments
@@ -97,7 +114,7 @@ Feature: The user can make rules that change the interpretive report
       | Sun  | hot       |
       | Wave | excellent |
     And I build a rule to add the comment "Go to the beach." with the condition "Sun is not blank"
-    And I select the conclusions tab
+    And I select the comments tab
     Then I should see the condition for each comment as follows:
       | Comment          | Condition        |
       | Go to the beach. | Sun is not blank |
@@ -163,7 +180,7 @@ Feature: The user can make rules that change the interpretive report
     And I build a rule to add the comment "Go to Bondi." with the condition "Wave is not blank"
     And  the interpretation field should contain the text "Go to Bondi."
     And I build a rule to replace the interpretation by "Go to Manly." with the condition "Sun is not blank"
-    When I select the conclusions tab
+    When I select the comments tab
     And click the comment "Go to Manly."
     Then the conditions showing are:
       | Wave is not blank |

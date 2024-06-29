@@ -3,7 +3,7 @@ package io.rippledown.integration.interp
 import io.rippledown.integration.UITestBase
 import io.rippledown.integration.pageobjects.CaseQueuePO
 import io.rippledown.integration.pageobjects.CaseViewPO
-import io.rippledown.integration.pageobjects.InterpretationViewPO
+import io.rippledown.integration.pageobjects.InterpretationPO
 import io.rippledown.integration.restclient.RESTClient
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.episodic.predicate.LessThanOrEquals
@@ -16,7 +16,7 @@ internal class ShowInterpretationDifference : UITestBase() {
 
     private lateinit var caseQueuePO: CaseQueuePO
     private lateinit var caseViewPO: CaseViewPO
-    private lateinit var interpretationViewPO: InterpretationViewPO
+    private lateinit var interpretationViewPO: InterpretationPO
     private val caseName = "Case1"
     private val tshComment = "Your patient has a normal TSH."
 
@@ -26,10 +26,6 @@ internal class ShowInterpretationDifference : UITestBase() {
         resetKB()
         setupCase()
         buildRuleForTSHComment()
-//        setupWebDriver()
-//        caseQueuePO = CaseQueuePO(driver).apply { waitForNumberOfCasesToBe(1) }
-//        caseViewPO = CaseViewPO(driver)
-//        interpretationViewPO = InterpretationViewPO(driver)
     }
 
     @AfterTest

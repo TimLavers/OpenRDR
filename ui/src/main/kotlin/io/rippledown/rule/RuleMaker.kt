@@ -59,7 +59,9 @@ fun RuleMaker(allConditions: List<Condition>, handler: RuleMakerHandler) {
             override var cancel = {
                 handler.onCancel()
             }
-            override var finish = { handler.onDone(selectedConditions) }
+            override var finish = {
+                handler.onDone(selectedConditions)
+            }
         })
     }
 }

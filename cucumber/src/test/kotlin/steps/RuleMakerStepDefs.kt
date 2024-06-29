@@ -100,6 +100,16 @@ class RuleMakerStepDefs : En {
 
         }
 
+        And("I build a rule to add a comment {string}") { comment: String ->
+            with(interpretationViewPO()) {
+                clickChangeInterpretationButton()
+                clickAddCommentMenu()
+                setAddCommentTextAndClickOK(comment)
+            }
+            with(ruleMakerPO()) {
+                clickDoneButton()
+            }
 
+        }
     }
 }

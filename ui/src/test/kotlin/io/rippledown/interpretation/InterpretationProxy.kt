@@ -52,3 +52,19 @@ fun ComposeTestRule.requireDifferencesTabToBeNotShowing() {
 fun ComposeTestRule.requireDifferencesTabToBeShowing() {
     onNodeWithContentDescription(INTERPRETATION_PANEL_CHANGES).assertExists()
 }
+
+fun ComposeTestRule.requireInterpretationActionsDropdownMenu() {
+    onNodeWithContentDescription(CHANGE_INTERPRETATION_BUTTON).assertIsDisplayed()
+}
+
+fun ComposeTestRule.clickChangeInterpretationButton() =
+    onNodeWithContentDescription(CHANGE_INTERPRETATION_BUTTON).performClick()
+
+fun ComposeTestRule.clickAddCommentMenu() = onNodeWithContentDescription(ADD_COMMENT_MENU).performClick()
+
+fun ComposeTestRule.clickReplaceCommentMenu() = onNodeWithContentDescription(REPLACE_COMMENT_MENU).performClick()
+
+fun ComposeTestRule.clickRemoveCommentMenu() = onNodeWithContentDescription(REMOVE_COMMENT_MENU).performClick()
+
+
+
