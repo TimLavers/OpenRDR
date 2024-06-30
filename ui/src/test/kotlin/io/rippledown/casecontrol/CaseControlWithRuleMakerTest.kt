@@ -36,7 +36,8 @@ class CaseControlWithRuleMakerTest {
     lateinit var condition: Condition
 
     val caseName = "Bondi"
-    val caseId = CaseId(45L, caseName)
+    val id = 45L
+    val caseId = CaseId(id, caseName)
     val beachComment = "Enjoy the beach!"
     val bondiComment = "Go to Bondi now!"
     val diffList = DiffList(
@@ -47,7 +48,7 @@ class CaseControlWithRuleMakerTest {
     )
     val viewableCase = createCaseWithInterpretation(
         name = caseName,
-        id = 1,
+        id = id,
         conclusionTexts = listOf(bondiComment),
         diffs = diffList
     )
@@ -57,30 +58,11 @@ class CaseControlWithRuleMakerTest {
         handler = mockk<CaseControlHandler>(relaxed = true)
 
         condition = hasCurrentValue(1, Attribute(2, "surf"))
-        coEvery { handler.buildRule(any()) } returns viewableCase
-        coEvery { handler.getCase(any()) } returns viewableCase
+//        coEvery { handler.buildRule(any()) } returns viewableCase
+//        coEvery { handler.getCase(any()) } returns viewableCase
         coEvery { handler.saveCase(any()) } answers { firstArg() }
         coEvery { handler.conditionHintsForCase(any()) } returns listOf(condition)
         coEvery { handler.selectCornerstone(any()) } returns viewableCase
-    }
-
-    @Test
-    fun `should call handler to set the rule in progress flag when a rule session is started`() = runTest {
-        with(composeTestRule) {
-            setContent {
-                CaseControl(currentCase = null, casesInfo = CasesInfo(listOf(caseId)), handler = handler)
-            }
-            //Given
-            waitForCaseToBeShowing(caseName)
-            selectDifferencesTab()
-            requireNumberOfDiffRows(2)
-
-            //When
-            clickBuildIconForRow(1)
-
-            //Then
-            coVerify { handler.setRuleInProgress(true) }
-        }
     }
 
     @Test
@@ -103,27 +85,15 @@ class CaseControlWithRuleMakerTest {
     }
 
     @Test
-    fun `should call handler to finish rule session`() = runTest {
-        with(composeTestRule) {
-            setContent {
-                CaseControl(currentCase = null, casesInfo = CasesInfo(listOf(caseId)), handler = handler)
-            }
-            //Given
-            waitForCaseToBeShowing(caseName)
-
-            //When
-            clickFinishRuleButton()
-
-            //Then
-            coVerify { handler.setRuleInProgress(false) }
-        }
-    }
-
-    @Test
     fun `should call handler to build a rule with the appropriate rule request`() = runTest {
         with(composeTestRule) {
             setContent {
-                CaseControl(currentCase = null, casesInfo = CasesInfo(listOf(caseId)), handler = handler)
+                CaseControl(
+                    currentCase = viewableCase,
+                    cornerstoneStatus = CornerstoneStatus(),
+                    casesInfo = CasesInfo(listOf(caseId)),
+                    handler = handler
+                )
             }
             //Given
             waitForCaseToBeShowing(caseName)
@@ -132,7 +102,7 @@ class CaseControlWithRuleMakerTest {
             clickFinishRuleButton()
 
             //Then
-            val expectedRuleRequest = RuleRequest(1, ConditionList())
+            val expectedRuleRequest = RuleRequest(id, ConditionList())
             coVerify { handler.buildRule(expectedRuleRequest) }
         }
     }
@@ -141,7 +111,12 @@ class CaseControlWithRuleMakerTest {
     fun `should call handler when a rule session is cancelled`() = runTest {
         with(composeTestRule) {
             setContent {
-                CaseControl(currentCase = null, casesInfo = CasesInfo(listOf(caseId)), handler = handler)
+                CaseControl(
+                    currentCase = viewableCase,
+                    cornerstoneStatus = CornerstoneStatus(),
+                    casesInfo = CasesInfo(listOf(caseId)),
+                    handler = handler
+                )
             }
             //Given
             waitForCaseToBeShowing(caseName)
@@ -150,7 +125,7 @@ class CaseControlWithRuleMakerTest {
             clickCancelRuleButton()
 
             //Then
-            coVerify { handler.setRuleInProgress(false) }
+            coVerify { handler.endRuleSession() }
         }
     }
 
@@ -169,29 +144,16 @@ class CaseControlWithRuleMakerTest {
     }
 
     @Test
-    fun `should call handler to set rule in progress when a rule session is started`() = runTest {
-        with(composeTestRule) {
-            setContent {
-                CaseControl(currentCase = null, casesInfo = CasesInfo(listOf(caseId)), handler = handler)
-            }
-            //Given
-            waitForCaseToBeShowing(caseName)
-            selectDifferencesTab()
-            requireNumberOfDiffRows(2)
-
-            //When
-            clickBuildIconForRow(1)
-
-            //Then
-            coVerify { handler.setRuleInProgress(true) }
-        }
-    }
-
-    @Test
     fun `should set the 'no cornerstones to review' message when there are no cornerstones`() {
         with(composeTestRule) {
             setContent {
-                CaseControl(currentCase = null, casesInfo = CasesInfo(), handler = handler)
+                CaseControl(
+                    currentCase = viewableCase,
+                    cornerstoneStatus = CornerstoneStatus(),
+                    casesInfo = CasesInfo(listOf(caseId)),
+                    handler = handler
+                )
+
             }
             verify { handler.setInfoMessage(NO_CORNERSTONES_TO_REVIEW_MSG) }
         }
@@ -199,11 +161,17 @@ class CaseControlWithRuleMakerTest {
 
     @Test
     fun `should remove the 'no cornerstones to review' message when there are cornerstones`() {
-//        every { handler.startRuleSession(any()) } returns CornerstoneStatus(viewableCase, 42, 84)
+        val ccStatus = CornerstoneStatus(viewableCase, 42, 84)
 
         with(composeTestRule) {
             setContent {
-                CaseControl(currentCase = null, casesInfo = CasesInfo(listOf(caseId)), handler = handler)
+                CaseControl(
+                    currentCase = viewableCase,
+                    cornerstoneStatus = ccStatus,
+                    casesInfo = CasesInfo(listOf(caseId)),
+                    handler = handler
+                )
+
             }
             //Given
             waitForCaseToBeShowing(caseName)
@@ -221,11 +189,15 @@ class CaseControlWithRuleMakerTest {
     @Test
     fun `should call handler to update the cornerstone status when a condition is added to the rule`() {
         val ccStatus = CornerstoneStatus(viewableCase, 42, 84)
-//        every { handler.startRuleSession(any()) } returns ccStatus
 
         with(composeTestRule) {
             setContent {
-                CaseControl(currentCase = null, casesInfo = CasesInfo(listOf(caseId)), handler = handler)
+                CaseControl(
+                    currentCase = viewableCase,
+                    cornerstoneStatus = ccStatus,
+                    casesInfo = CasesInfo(listOf(caseId)),
+                    handler = handler
+                )
             }
             //Given
             waitForCaseToBeShowing(caseName)

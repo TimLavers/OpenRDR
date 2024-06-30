@@ -25,7 +25,9 @@ fun CaseSelectorHeader(numberOfCases: Int) {
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.Bottom,
-        modifier = Modifier.width(100.dp)
+        modifier = Modifier
+            .width(100.dp)
+            .padding(top = 10.dp)
     )
     {
         Text(

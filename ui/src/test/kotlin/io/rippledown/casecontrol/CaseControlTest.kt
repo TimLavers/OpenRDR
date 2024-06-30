@@ -107,7 +107,7 @@ class CaseControlTest {
 
         with(composeTestRule) {
             setContent {
-                CaseControl(currentCase = null, casesInfo = CasesInfo(caseIds), handler = handler)
+                CaseControl(currentCase = case, casesInfo = CasesInfo(caseIds), handler = handler)
             }
             //Given
             requireNumberOfCasesOnCaseList(2)
@@ -293,7 +293,7 @@ class CaseControlTest {
 
     @Test
     fun `should show case list for several cases`() = runTest {
-
+// TODO() MOVE THIS TEST
         val caseIds = (1..10).map { i ->
             val caseId = CaseId(id = i.toLong(), name = "case $i")
 //            coEvery { handler.getCase(caseId.id!!) } returns createCase(caseId)

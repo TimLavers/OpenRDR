@@ -2,16 +2,19 @@
 
 package io.rippledown.main
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.material.BottomAppBar
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import io.rippledown.appbar.AppBarHandler
 import io.rippledown.appbar.ApplicationBar
-import io.rippledown.casecontrol.CaseControl
-import io.rippledown.casecontrol.CaseControlHandler
-import io.rippledown.casecontrol.CasePoller
-import io.rippledown.casecontrol.CasePollerHandler
+import io.rippledown.casecontrol.*
 import io.rippledown.interpretation.InterpretationActions
 import io.rippledown.interpretation.InterpretationActionsHandler
 import io.rippledown.model.Attribute
@@ -77,11 +80,11 @@ fun OpenRDRUI(handler: Handler) {
             }
         },
         floatingActionButton = {
-            if (!ruleInProgress) {
+            if (!ruleInProgress && currentCase != null) {
                 InterpretationActions(object : InterpretationActionsHandler {
                     override fun startRuleToAddComment(comment: String) {
                         val sessionStartRequest = SessionStartRequest(
-                            caseId = casesInfo.caseIds.first().id!!,
+                            caseId = currentCase!!.id!!,
                             diff = Addition(comment)
                         )
                         cornerstoneStatus = runBlocking { api.startRuleSession(sessionStartRequest) }
@@ -103,57 +106,73 @@ fun OpenRDRUI(handler: Handler) {
         })
 
         if (casesInfo.count > 0) {
-            CaseControl(
-                currentCase = currentCase,
-                cornerstoneStatus = cornerstoneStatus,
-                casesInfo = casesInfo,
-                handler = object : CaseControlHandler, Handler by handler {
-                    override var setRuleInProgress = { inProgress: Boolean ->
-                        ruleInProgress = inProgress
-                    }
-
-                    override fun onStartRule(selectedDiff: Diff) {}//todo remove
-                    override fun buildRule(ruleRequest: RuleRequest) = runBlocking {
-                        currentCase = api.buildRule(ruleRequest)
-                        cornerstoneStatus = null
-                    }
-
-                    override fun updateCornerstoneStatus(cornerstoneRequest: UpdateCornerstoneRequest) = runBlocking {
-                        cornerstoneStatus = api.updateCornerstoneStatus(cornerstoneRequest)
-                    }
-
-                    override fun startRuleSession(sessionStartRequest: SessionStartRequest) = runBlocking {
-                        cornerstoneStatus = api.startRuleSession(sessionStartRequest)
-                    }
-
-                    override var onInterpretationEdited: (text: String) -> Unit = { }
-                    override var isCornerstone: Boolean = false
-                    override var updateCase: (Long) -> Unit = { }
-                    override var caseEdited: () -> Unit = {}
-                    override fun getCase(caseId: Long) = runBlocking { currentCase = api.getCase(caseId) }
-
-                    override fun saveCase(case: ViewableCase) = runBlocking {
-                        currentCase = api.saveVerifiedInterpretation(case)
-                    }
-
-                    override var isClosing = { false }
-
-                    override fun swapAttributes(moved: Attribute, target: Attribute) {
-                        runBlocking {
-                            api.moveAttribute(moved.id, target.id)
-                        }
-                    }
-
-                    override suspend fun conditionHintsForCase(caseId: Long): List<Condition> {
-                        return api.conditionHints(caseId).conditions
-                    }
-
-                    override suspend fun selectCornerstone(index: Int) = api.selectCornerstone(index)
-                    override fun exemptCornerstone(index: Int) = runBlocking {
-                        cornerstoneStatus = api.exemptCornerstone(index)
+            Row {
+                if (!ruleInProgress) {
+                    handler.setInfoMessage("")
+                    Column {
+                        CaseSelectorHeader(casesInfo.caseIds.size)
+                        Spacer(modifier = Modifier.height(10.dp))
+                        CaseSelector(casesInfo.caseIds, object : CaseSelectorHandler, Handler by handler {
+                            override var selectCase = { id: Long ->
+                                currentCase = runBlocking { handler.api.getCase(id) }
+                            }
+                        })
                     }
                 }
-            )
+
+                CaseControl(
+                    currentCase = currentCase,
+                    cornerstoneStatus = cornerstoneStatus,
+                    casesInfo = casesInfo,
+                    handler = object : CaseControlHandler, Handler by handler {
+                        override fun endRuleSession() {
+                            cornerstoneStatus = null
+                        }
+
+                        override fun onStartRule(selectedDiff: Diff) {}//todo remove
+                        override fun buildRule(ruleRequest: RuleRequest) = runBlocking {
+                            currentCase = api.buildRule(ruleRequest)
+                            cornerstoneStatus = null
+                        }
+
+                        override fun updateCornerstoneStatus(cornerstoneRequest: UpdateCornerstoneRequest) =
+                            runBlocking {
+                                cornerstoneStatus = api.updateCornerstoneStatus(cornerstoneRequest)
+                            }
+
+                        override fun startRuleSession(sessionStartRequest: SessionStartRequest) = runBlocking {
+                            cornerstoneStatus = api.startRuleSession(sessionStartRequest)
+                        }
+
+                        override var onInterpretationEdited: (text: String) -> Unit = { }
+                        override var isCornerstone: Boolean = false
+                        override var updateCase: (Long) -> Unit = { }
+                        override var caseEdited: () -> Unit = {}
+                        override fun getCase(caseId: Long) = runBlocking { currentCase = api.getCase(caseId) }
+
+                        override fun saveCase(case: ViewableCase) = runBlocking {
+                            currentCase = api.saveVerifiedInterpretation(case)
+                        }
+
+                        override var isClosing = { false }
+
+                        override fun swapAttributes(moved: Attribute, target: Attribute) {
+                            runBlocking {
+                                api.moveAttribute(moved.id, target.id)
+                            }
+                        }
+
+                        override suspend fun conditionHintsForCase(caseId: Long): List<Condition> {
+                            return api.conditionHints(caseId).conditions
+                        }
+
+                        override suspend fun selectCornerstone(index: Int) = api.selectCornerstone(index)
+                        override fun exemptCornerstone(index: Int) = runBlocking {
+                            cornerstoneStatus = api.exemptCornerstone(index)
+                        }
+                    }
+                )
+            }
         }
     }
 }

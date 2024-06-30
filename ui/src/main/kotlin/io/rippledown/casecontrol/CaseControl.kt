@@ -1,7 +1,10 @@
 package io.rippledown.casecontrol
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -25,11 +28,11 @@ import io.rippledown.rule.RuleMakerHandler
 import kotlinx.coroutines.delay
 
 interface CaseControlHandler : Handler, CaseInspectionHandler, CornerstonePagerHandler {
-    var setRuleInProgress: (_: Boolean) -> Unit
     fun getCase(caseId: Long)
     fun saveCase(case: ViewableCase)
     suspend fun conditionHintsForCase(caseId: Long): List<Condition>
     fun startRuleSession(sessionStartRequest: SessionStartRequest)
+    fun endRuleSession()
     fun buildRule(ruleRequest: RuleRequest)
     fun updateCornerstoneStatus(cornerstoneRequest: UpdateCornerstoneRequest)
 }
@@ -72,34 +75,21 @@ fun CaseControl(
             .width(1800.dp)
     )
     {
-        if (!ruleInProgress) {
-            handler.setInfoMessage("")
-            Column {
-                CaseSelectorHeader(casesInfo.caseIds.size)
-                Spacer(modifier = Modifier.height(10.dp))
-                CaseSelector(casesInfo.caseIds, object : CaseSelectorHandler, Handler by handler {
-                    override var selectCase = { id: Long ->
-                        currentCaseId = id
-                    }
-                })
-            }
-        }
 
         if (currentCase != null) {
-            CaseInspection(currentCase!!, ruleInProgress, object : CaseInspectionHandler, Handler by handler {
+            CaseInspection(currentCase, ruleInProgress, object : CaseInspectionHandler, Handler by handler {
                 override var updateCase = { id: Long ->
                     currentCaseId = id
                 }
 
                 override fun onStartRule(selectedDiff: Diff) {
                     handler.startRuleSession(SessionStartRequest(currentCaseId!!, selectedDiff))
-                    handler.setRuleInProgress(true)//todo remove
                 }
 
                 override var onInterpretationEdited: (text: String) -> Unit = {
                     verifiedText = it
-                    val updatedCase = currentCase!!.copy(
-                        viewableInterpretation = currentCase!!.viewableInterpretation
+                    val updatedCase = currentCase.copy(
+                        viewableInterpretation = currentCase.viewableInterpretation
                             .copy(verifiedText = verifiedText)
                     )
                     handler.saveCase(updatedCase)
@@ -126,17 +116,13 @@ fun CaseControl(
             Spacer(modifier = Modifier.width(10.dp))
             RuleMaker(conditionHintsForCase, object : RuleMakerHandler, Handler by handler {
                 override var onDone = { conditions: List<Condition> ->
-                    handler.setRuleInProgress(false)
                     val ruleRequest = RuleRequest(currentCase!!.id!!, ConditionList(conditions))
                     handler.buildRule(ruleRequest)
                 }
 
-                override var onCancel = {
-                    handler.setRuleInProgress(false)
-                }
+                override var onCancel = { handler.endRuleSession() }
 
                 override var onUpdateConditions = { conditions: List<Condition> ->
-                    Unit
                     val ccUpdateRequest = UpdateCornerstoneRequest(cornerstoneStatus, ConditionList(conditions))
                     handler.updateCornerstoneStatus(ccUpdateRequest)
                 }

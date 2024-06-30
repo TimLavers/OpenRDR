@@ -53,6 +53,7 @@ fun AvailableConditions(conditions: List<Condition>, handler: AvailableCondition
                             if (cursorOnRow == index) Color.LightGray else Color.Transparent
                         )
                         .clickable {
+                            println("Adding condition: $condition")
                             handler.onAddCondition(condition)
                         }
                         .padding(start = 10.dp)
