@@ -26,6 +26,7 @@ Feature: A sample KB can be created that has the Zoo Animals cases.
       | catsize  | true  |  |
 
     When I select case catfish
+    And pause for 1 second
     Then I see these case values:
       | hair     | false |  |
       | feathers | false |  |

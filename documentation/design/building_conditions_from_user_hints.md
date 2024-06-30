@@ -6,7 +6,7 @@ There are two basic approaches that could be used to allow users to build condit
 
 1. Provide a graphical user interface (GUI) that allows the user to build conditions by selecting from a list of
    available attributes, operators or other expressions.
-   This approach is user-friendly, especially for new users, but requires but requires the development of custom GUI
+   This approach is user-friendly, especially for new users, but requires the development of custom GUI
    components for each type of possible condition.
 2. Provide a text-based interface that allows the user to enter conditions in a textual format. The system would then
    generate the appropriate condition from the text in one of two ways:

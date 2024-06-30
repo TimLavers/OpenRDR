@@ -96,6 +96,7 @@ Feature: The user can make rules that change the interpretive report
     And case Bondi is provided having data:
       | Sun  | hot       |
       | Wave | excellent |
+    And I select the case Bondi
     And I build a rule to add the comment "Go to the beach." with the condition "Sun is not blank"
     And I select the conclusions tab
     Then I should see the condition for each comment as follows:

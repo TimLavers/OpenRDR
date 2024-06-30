@@ -13,7 +13,7 @@ import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.defaultDate
 import kotlin.test.Test
 
-class TabularConditionTest: ConditionTestBase() {
+class EpisodicConditionTest: ConditionTestBase() {
 
     private val tshLow = EpisodicCondition(123, tsh, Low, Current)
 

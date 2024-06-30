@@ -16,6 +16,7 @@ class CornerstoneStepDefs : En {
             cornerstonePO().requireIndexAndNumberOfCornerstones(index, numberOfCornerstoneCases)
         }
         When("I click the {word} cornerstone case button") { direction: String ->
+            pause(1000)
             when (direction) {
                 "previous" -> cornerstonePO().selectPreviousCornerstoneCase()
                 "next" -> cornerstonePO().selectNextCornerstoneCase()
