@@ -6,7 +6,6 @@ Feature: The cases described in the TSH paper are present in a KB built from the
   Scenario: TSH KB cases
     Given I start the client application
     And I create a Knowledge Base with the name TSHCases based on the "Thyroid Stimulating Hormone - cases only" sample
-    And pause for 2 seconds
     Then the count of the number of cases is 34
 
     When I select case 1.4.1

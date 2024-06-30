@@ -5,7 +5,6 @@ Feature: The knowledge base described in the TSH paper is implemented by a KB bu
   Scenario: TSH KB rules
     Given I start the client application
     And I create a Knowledge Base with the name TSHNew based on the "Thyroid Stimulating Hormone" sample
-    And pause for 2 seconds
 
     Then the count of the number of cases is 34
 

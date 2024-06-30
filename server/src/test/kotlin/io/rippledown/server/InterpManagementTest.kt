@@ -96,6 +96,22 @@ class InterpManagementTest : OpenRDRServerTestBase() {
     }
 
     @Test
+    fun `should delegate exempting cornerstone to server application`() = testApplication {
+        setup()
+        val updatedCornerstoneStatus = CornerstoneStatus(createCase("Bondi"), 42, 100)
+        every { kbEndpoint.exemptCornerstone(any()) } returns updatedCornerstoneStatus
+
+        val result = httpClient.post(EXEMPT_CORNERSTONE) {
+            parameter(KB_ID, kbId)
+            contentType(ContentType.Application.Json)
+            setBody(42)
+        }
+        result.status shouldBe OK
+        result.body<CornerstoneStatus>() shouldBe updatedCornerstoneStatus
+        verify { kbEndpoint.exemptCornerstone(42) }
+    }
+
+    @Test
     fun `should delegate building a rule to server application`() = testApplication {
         setup()
 

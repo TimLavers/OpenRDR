@@ -7,11 +7,10 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.rule.CornerstoneStatus
-import io.rippledown.navigation.NextPreviousControl
-import io.rippledown.navigation.NextPreviousControlHandler
 
 interface CornerstonePagerHandler {
     suspend fun selectCornerstone(index: Int): ViewableCase
+    fun exemptCornerstone(index: Int): CornerstoneStatus
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -30,26 +29,36 @@ fun CornerstonePager(cornerstoneStatus: CornerstoneStatus, handler: CornerstoneP
     }
 
     LaunchedEffect(currentIndex.value) {
-        case = handler.selectCornerstone(currentIndex.value)
-        pagerState.animateScrollToPage(currentIndex.value)
+        val index = cornerstoneStatus.indexOfCornerstoneToReview
+        if (index > -1) {
+            case = handler.selectCornerstone(currentIndex.value)
+            pagerState.animateScrollToPage(currentIndex.value)
+        }
     }
 
     LaunchedEffect(pagerState.currentPage) {
-        case = handler.selectCornerstone(pagerState.currentPage)
-        pagerState.animateScrollToPage(pagerState.currentPage)
+        val index = pagerState.currentPage
+        if (index > -1) {
+            case = handler.selectCornerstone(index)
+            pagerState.animateScrollToPage(index)
+        }
     }
 
     Column {
-        NextPreviousControl(
+        CornerstoneControl(
             pagerState.currentPage,
             cornerstoneStatus.numberOfCornerstones,
-            object : NextPreviousControlHandler {
+            object : CornerstoneControlHandler {
                 override fun next() {
                     currentIndex.value = pagerState.currentPage + 1
                 }
 
                 override fun previous() {
                     currentIndex.value = pagerState.currentPage - 1
+                }
+
+                override fun exempt() {
+                    handler.exemptCornerstone(currentIndex.value)
                 }
             })
 

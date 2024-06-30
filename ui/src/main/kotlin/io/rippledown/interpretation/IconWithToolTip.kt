@@ -51,16 +51,13 @@ fun IconWithToolTip(
             offset = DpOffset(0.dp, 5.dp)
         ),
         content = {
-
             Icon(
                 painter = icon,
                 contentDescription = iconContentDescription,
                 tint = Color.Black,
                 modifier = Modifier
-                    .background(Color.LightGray)
                     .height(20.dp)
-//                        .width(10.dp)
-//                        .padding(5.dp)
+                    .onClick { onClick() }
             )
         }
     )

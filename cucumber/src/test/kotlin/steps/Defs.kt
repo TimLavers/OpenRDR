@@ -5,11 +5,10 @@ import io.cucumber.datatable.DataTable
 import io.cucumber.docstring.DocString
 import io.cucumber.java8.En
 import io.kotest.matchers.shouldBe
-import io.rippledown.integration.memUsage
 import io.rippledown.integration.pause
 import io.rippledown.integration.proxy.ConfiguredTestData
 import io.rippledown.integration.utils.Cyborg
-import io.rippledown.integration.waitUntilAssertedOnEventThread
+import io.rippledown.integration.waitUntilAsserted
 import org.awaitility.Awaitility
 import steps.StepsInfrastructure.cleanup
 import steps.StepsInfrastructure.reStartWithPostgres
@@ -41,7 +40,7 @@ class Defs : En {
         After { scenario ->
             stopwatch.stop()
             cleanup()
-            println("After scenario  '${scenario.name}', duration:${stopwatch.elapsed(SECONDS)} seconds, Mem usage ${memUsage()}\n")
+            println("After scenario  '${scenario.name}', duration: ${stopwatch.elapsed(SECONDS)} seconds")
         }
 
         When("A Knowledge Base called {word} has been created") { name: String ->
@@ -154,7 +153,7 @@ class Defs : En {
         }
 
         Then("the displayed KB name is (now ){word}") { kbName: String ->
-            waitUntilAssertedOnEventThread {
+            waitUntilAsserted {
                 kbControlsPO().currentKB() shouldBe kbName
             }
         }

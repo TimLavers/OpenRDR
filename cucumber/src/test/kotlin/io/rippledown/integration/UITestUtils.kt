@@ -1,8 +1,8 @@
 package io.rippledown.integration
 
 import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
-import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
+import org.awaitility.core.ThrowingRunnable
 import java.lang.Runtime.getRuntime
 import java.time.Duration.ofSeconds
 
@@ -19,11 +19,8 @@ fun pause(millis: Long) {
 fun waitForDebounce() {
     pause(DEBOUNCE_WAIT_PERIOD_MILLIS + 100)
 }
-
-fun waitUntilAssertedOnEventThread(seconds: Long = 10, assertion: () -> Unit) {
-    await().atMost(ofSeconds(seconds)).untilAsserted {
-        execute { assertion() }
-    }
+fun waitUntilAsserted(seconds: Long = 10, assertion: ThrowingRunnable) {
+    await().atMost(ofSeconds(seconds)).untilAsserted(assertion)
 }
 
 fun memUsage(): String {
