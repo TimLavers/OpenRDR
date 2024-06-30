@@ -60,11 +60,33 @@ fun ComposeTestRule.requireInterpretationActionsDropdownMenu() {
 fun ComposeTestRule.clickChangeInterpretationButton() =
     onNodeWithContentDescription(CHANGE_INTERPRETATION_BUTTON).performClick()
 
-fun ComposeTestRule.clickAddCommentMenu() = onNodeWithContentDescription(ADD_COMMENT_MENU).performClick()
+fun ComposeTestRule.clickAddCommentMenu() = onNodeWithContentDescription(ADD_COMMENT_MENU)
+    .assertIsDisplayed()
+    .performClick()
 
-fun ComposeTestRule.clickReplaceCommentMenu() = onNodeWithContentDescription(REPLACE_COMMENT_MENU).performClick()
+fun ComposeTestRule.clickReplaceCommentMenu() = onNodeWithContentDescription(REPLACE_COMMENT_MENU)
+    .assertIsDisplayed()
+    .performClick()
 
-fun ComposeTestRule.clickRemoveCommentMenu() = onNodeWithContentDescription(REMOVE_COMMENT_MENU).performClick()
+fun ComposeTestRule.clickRemoveCommentMenu() = onNodeWithContentDescription(REMOVE_COMMENT_MENU)
+    .assertIsDisplayed()
+    .performClick()
+
+fun ComposeTestRule.addNewComment(comment: String) {
+    onNodeWithContentDescription(NEW_COMMENT_TEXT_FIELD)
+        .assertIsDisplayed()
+        .performTextInput(comment)
+    waitForIdle()
+}
+
+fun ComposeTestRule.clickOKToAddNewComment() {
+    onNodeWithContentDescription(OK_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+    waitForIdle()
+}
+
+
 
 
 

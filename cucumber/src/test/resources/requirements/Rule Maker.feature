@@ -33,7 +33,6 @@ Feature: The user can make rules that change the interpretive report
     And  the interpretation field should contain the text "Go to Bondi."
     And stop the client application
 
-  @single
   Scenario: The user should be able to build a rule to add a comment
     Given a list of cases with the following names is stored on the server:
       | Case1 |

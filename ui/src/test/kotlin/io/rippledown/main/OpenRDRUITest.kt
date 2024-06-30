@@ -5,6 +5,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import androidx.compose.ui.window.rememberWindowState
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -12,8 +13,7 @@ import io.rippledown.appbar.assertKbNameIs
 import io.rippledown.casecontrol.*
 import io.rippledown.constants.main.APPLICATION_BAR_ID
 import io.rippledown.constants.main.TITLE
-import io.rippledown.interpretation.replaceInterpretationBy
-import io.rippledown.interpretation.requireInterpretation
+import io.rippledown.interpretation.*
 import io.rippledown.model.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
@@ -112,12 +112,12 @@ class OpenRDRUITest {
         val caseIds = listOf(caseId1, caseId2)
         val bondiComment = "Go to Bondi"
         val case = createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
-//        coEvery { handler.getCase(1) } returns case
-//        coEvery { handler.saveCase(any()) } answers { firstArg() }
+        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { handler.api.getCase(1) } returns case
 
         with(composeTestRule) {
             setContent {
-//                CaseControl(currentCase = case, casesInfo = CasesInfo(caseIds), handler = handler)
+                OpenRDRUI(handler)
             }
             //Given
             requireNumberOfCasesOnCaseList(2)
@@ -133,24 +133,18 @@ class OpenRDRUITest {
 
     @Test
     fun `should show case list for several cases`() = runTest {
-// TODO() MOVE THIS TEST
         val caseIds = (1..10).map { i ->
             val caseId = CaseId(id = i.toLong(), name = "case $i")
-//            coEvery { handler.getCase(caseId.id!!) } returns createCase(caseId)
+            coEvery { handler.api.getCase(caseId.id!!) } returns createCase(caseId)
             caseId
         }
-//        coEvery { handler.saveCase(any()) } answers { firstArg() }
+        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(caseIds)
 
         val caseName1 = "case 1"
         val caseName10 = "case 10"
         with(composeTestRule) {
             setContent {
-//                CaseControl(
-//                    currentCase = null,
-//                    conditionHints = listOf(),
-//                    casesInfo = CasesInfo(caseIds),
-//                    handler = handler
-//                )
+                OpenRDRUI(handler)
             }
             //Given
             waitForCaseToBeShowing(caseName1)
@@ -175,18 +169,13 @@ class OpenRDRUITest {
         val caseA = createCase(caseId1)
         val caseB = createCase(caseId2)
 
-//        coEvery { handler.getCase(1) } returns caseA
-//        coEvery { handler.getCase(2) } returns caseB
-//        coEvery { handler.saveCase(any()) } answers { firstArg() }
+        coEvery { handler.api.getCase(1) } returns caseA
+        coEvery { handler.api.getCase(2) } returns caseB
+        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(threeCaseIds)
 
         with(composeTestRule) {
             setContent {
-//                CaseControl(
-//                    currentCase = null,
-//                    conditionHints = listOf(),
-//                    casesInfo = CasesInfo(threeCaseIds),
-//                    handler = handler
-//                )
+                OpenRDRUI(handler)
             }
             //Given
             requireNumberOfCasesOnCaseList(3)
@@ -211,17 +200,12 @@ class OpenRDRUITest {
             caseId1, caseId2
         )
         val case = createCase(caseId1)
-//        coEvery { handler.getCase(1) } returns case
-//        coEvery { handler.saveCase(any()) } answers { firstArg() }
+        coEvery { handler.api.getCase(1) } returns case
+        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(twoCaseIds)
 
         with(composeTestRule) {
             setContent {
-//                CaseControl(
-//                    currentCase = null,
-//                    conditionHints = listOf(),
-//                    casesInfo = CasesInfo(twoCaseIds),
-//                    handler = handler
-//                )
+                OpenRDRUI(handler)
             }
             requireNumberOfCasesOnCaseList(2)
             requireNamesToBeShowingOnCaseList(caseA, caseB)
@@ -248,20 +232,14 @@ class OpenRDRUITest {
             id = 2,
             conclusionTexts = listOf(malabarComment)
         )
-//        coEvery { handler.getCase(caseId1.id!!) } returns viewableCaseA
-//        coEvery { handler.getCase(caseId2.id!!) } returns viewableCaseB
-//        coEvery { handler.saveCase(any()) } answers { firstArg() }
+        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(caseIds)
+
+        coEvery { handler.api.getCase(caseId1.id!!) } returns viewableCaseA
+        coEvery { handler.api.getCase(caseId2.id!!) } returns viewableCaseB
 
         with(composeTestRule) {
             setContent {
-/*
-                CaseControl(
-                    currentCase = null,
-                    conditionHints = listOf(),
-                    casesInfo = CasesInfo(caseIds),
-                    handler = handler
-                )
-*/
+                OpenRDRUI(handler)
             }
             //Given
             requireNumberOfCasesOnCaseList(2)
@@ -280,19 +258,24 @@ class OpenRDRUITest {
 
     @Test
     fun `should not show case selector when a rule session is started`() = runTest {
+        val caseName = "case a"
+        val caseId = CaseId(id = 1, name = caseName)
+        val case = createCase(caseId)
+        coEvery { handler.api.getCase(1) } returns case
+        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         with(composeTestRule) {
             setContent {
-/*
-                CaseControl(
-                    currentCase = null,
-                    conditionHints = listOf(),
-                    casesInfo = CasesInfo(listOf(caseId)),
-                    handler = handler
-                )
-*/
+                OpenRDRUI(handler)
             }
             //Given
-//            waitForCaseToBeShowing(caseName)
+            waitForCaseToBeShowing(caseName)
+            requireCaseSelectorToBeDisplayed()
+            clickChangeInterpretationButton()
+
+            //When
+            clickAddCommentMenu()
+            addNewComment("Go to Bondi")
+            clickOKToAddNewComment()
 
             //Then
             requireCaseSelectorNotToBeDisplayed()
@@ -319,53 +302,10 @@ fun main() {
         Window(
             onCloseRequest = ::exitApplication,
             icon = painterResource("water-wave-icon.png"),
-            title = TITLE
+            title = TITLE,
+            state = rememberWindowState(size = DEFAULT_WINDOW_SIZE)
         ) {
             OpenRDRUI(handler)
         }
     }
 }
-/*
-
-    @Test
-    fun shouldNotShowEmptyCaseQueueTest(): TestResult {
-        val fc = FC {
-            OpenRDRUI {
-                scope = MainScope()
-                api = Api(defaultMock)
-            }
-        }
-        return runReactTest(fc) { container ->
-            container.requireNumberOfCasesNotToBeShowing()
-        }
-    }
-
-    @Test
-    fun caseViewShouldBeInitialisedWithTheCasesFromTheServer(): TestResult {
-        val config = config {
-            val caseId1 = CaseId(1, "case 1")
-            val caseId2 = CaseId(2, "case 2")
-            val caseId3 = CaseId(3, "case 3")
-            returnCasesInfo = CasesInfo(
-                listOf(
-                    caseId1,
-                    caseId2,
-                    caseId3
-                )
-            )
-            returnCase = createCase(caseId1)
-        }
-        val fc = FC {
-            OpenRDRUI {
-                scope = MainScope()
-                api = Api(mock(config))
-            }
-        }
-        return runReactTest(fc) { container ->
-            with(container) {
-                waitForNextPoll()
-                findById(NUMBER_OF_CASES_ID).textContent shouldBe "$CASES 3"
-            }
-        }
-    }
-*/

@@ -46,7 +46,7 @@ fun AvailableConditions(conditions: List<Condition>, handler: AvailableCondition
                     Text(
                         text = condition.asText(),
                         modifier = Modifier
-                            .onClick {
+                            .clickable {
                                 handler.onAddCondition(condition)
                             }
                             .onPointerEvent(Enter) {

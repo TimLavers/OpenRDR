@@ -37,6 +37,10 @@ fun ComposeTestRule.waitForNumberOfCases(expected: Int) {
     waitUntilExactlyOneExists(hasText(expected.toString()), timeoutMillis = 2_000)
 }
 
+fun ComposeTestRule.requireCaseSelectorToBeDisplayed() {
+    onNodeWithContentDescription(CASELIST_ID).assertIsDisplayed()
+}
+
 fun ComposeTestRule.requireCaseSelectorNotToBeDisplayed() {
     onNodeWithContentDescription(CASELIST_ID).assertDoesNotExist()
 }

@@ -29,11 +29,6 @@ fun AddCommentDialog(isShowing: Boolean, handler: AddCommentHandler) {
 
     var textValue by remember { mutableStateOf("") }
 
-    val focusRequester = remember { FocusRequester() }
-    LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
-    }
-
     DialogWindow(
         title = ADD_COMMENT,
         icon = painterResource("add_comment_24.png"),
@@ -43,6 +38,10 @@ fun AddCommentDialog(isShowing: Boolean, handler: AddCommentHandler) {
             handler.cancel()
         }
     ) {
+        val focusRequester = remember { FocusRequester() }
+        LaunchedEffect(Unit) {
+            focusRequester.requestFocus()
+        }
         Column {
             OutlinedTextField(
                 value = textValue,

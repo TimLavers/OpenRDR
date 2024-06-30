@@ -35,7 +35,7 @@ class InterpretationActionsTest {
     }
 
     @Test
-    fun `should handler when the user clicks on the add comment button`() {
+    fun `should handler when the user clicks on the add comment button, adds a comment and presses OK`() {
         with(composeTestRule) {
             //Given
             setContent {
@@ -45,10 +45,12 @@ class InterpretationActionsTest {
 
             //When
             clickAddCommentMenu()
+            addNewComment("Bondi")
+            clickOKToAddNewComment()
+
 
             //Then
-            TODO()
-            verify { handler.startRuleToAddComment("") }
+            verify { handler.startRuleToAddComment("Bondi") }
         }
     }
 
