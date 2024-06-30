@@ -43,10 +43,12 @@ interface Handler {
 fun OpenRDRUI(handler: Handler) {
     val api = handler.api
     var currentCase by remember { mutableStateOf<ViewableCase?>(null) }
+    var currentCaseId by remember { mutableStateOf<Long?>(null) }
     var cornerstoneStatus: CornerstoneStatus? by remember { mutableStateOf(null) }
     var casesInfo by remember { mutableStateOf(CasesInfo()) }
     var kbInfo: KBInfo? by remember { mutableStateOf(null) }
     var infoMessage by remember { mutableStateOf("") }
+    var conditionHints by remember { mutableStateOf(listOf<Condition>()) }
 
     LaunchedEffect(Unit) {
         kbInfo = api.kbList().firstOrNull()
@@ -56,7 +58,17 @@ fun OpenRDRUI(handler: Handler) {
         infoMessage = it
     }
 
-    var ruleInProgress = cornerstoneStatus != null
+    LaunchedEffect(casesInfo, currentCaseId) {
+        if (casesInfo.caseIds.isNotEmpty()) {
+            if (currentCaseId == null || currentCaseId !in casesInfo.caseIds.map { it.id }) {
+                //No initial case, or it's now been deleted
+                currentCaseId = casesInfo.caseIds[0].id!!
+            }
+            currentCase = runBlocking { handler.api.getCase(currentCaseId!!) }
+            conditionHints = runBlocking { handler.api.conditionHints(currentCaseId!!).conditions }
+        }
+    }
+    val ruleInProgress = cornerstoneStatus != null
 
     Scaffold(
         topBar = {
@@ -65,7 +77,11 @@ fun OpenRDRUI(handler: Handler) {
                 override var selectKB: (id: String) -> Unit = { runBlocking { kbInfo = api.selectKB(it) } }
                 override var createKB: (name: String) -> Unit = { runBlocking { kbInfo = api.createKB(it) } }
                 override var createKBFromSample: (name: String, sample: SampleKB) -> Unit =
-                    { name: String, sample: SampleKB -> runBlocking { kbInfo = api.createKBFromSample(name, sample) } }
+                    { name: String, sample: SampleKB ->
+                        runBlocking {
+                            kbInfo = api.createKBFromSample(name, sample)
+                        }
+                    }
                 override var importKB: (data: File) -> Unit = { runBlocking { kbInfo = api.importKBFromZip(it) } }
                 override var exportKB: (data: File) -> Unit = { runBlocking { api.exportKBToZip(it) } }
                 override val kbList: () -> List<KBInfo> = { runBlocking { api.kbList() } }
@@ -90,8 +106,13 @@ fun OpenRDRUI(handler: Handler) {
                         cornerstoneStatus = runBlocking { api.startRuleSession(sessionStartRequest) }
                     }
 
-                    override fun replaceComment() {}
-                    override fun removeComment() {}
+                    override fun replaceComment() {
+                        TODO("Not yet implemented")
+                    }
+
+                    override fun removeComment() {
+                        TODO("Not yet implemented")
+                    }
                 })
             }
         }
@@ -123,7 +144,7 @@ fun OpenRDRUI(handler: Handler) {
                 CaseControl(
                     currentCase = currentCase,
                     cornerstoneStatus = cornerstoneStatus,
-                    casesInfo = casesInfo,
+                    conditionHints = conditionHints,
                     handler = object : CaseControlHandler, Handler by handler {
                         override fun endRuleSession() {
                             cornerstoneStatus = null
@@ -146,8 +167,6 @@ fun OpenRDRUI(handler: Handler) {
 
                         override var onInterpretationEdited: (text: String) -> Unit = { }
                         override var isCornerstone: Boolean = false
-                        override var updateCase: (Long) -> Unit = { }
-                        override var caseEdited: () -> Unit = {}
                         override fun getCase(caseId: Long) = runBlocking { currentCase = api.getCase(caseId) }
 
                         override fun saveCase(case: ViewableCase) = runBlocking {
@@ -160,10 +179,6 @@ fun OpenRDRUI(handler: Handler) {
                             runBlocking {
                                 api.moveAttribute(moved.id, target.id)
                             }
-                        }
-
-                        override suspend fun conditionHintsForCase(caseId: Long): List<Condition> {
-                            return api.conditionHints(caseId).conditions
                         }
 
                         override suspend fun selectCornerstone(index: Int) = api.selectCornerstone(index)

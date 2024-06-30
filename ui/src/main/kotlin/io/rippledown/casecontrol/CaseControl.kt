@@ -14,7 +14,6 @@ import io.rippledown.cornerstone.CornerstonePager
 import io.rippledown.cornerstone.CornerstonePagerHandler
 import io.rippledown.main.Handler
 import io.rippledown.model.Attribute
-import io.rippledown.model.CasesInfo
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
@@ -30,7 +29,6 @@ import kotlinx.coroutines.delay
 interface CaseControlHandler : Handler, CaseInspectionHandler, CornerstonePagerHandler {
     fun getCase(caseId: Long)
     fun saveCase(case: ViewableCase)
-    suspend fun conditionHintsForCase(caseId: Long): List<Condition>
     fun startRuleSession(sessionStartRequest: SessionStartRequest)
     fun endRuleSession()
     fun buildRule(ruleRequest: RuleRequest)
@@ -42,30 +40,22 @@ interface CaseControlHandler : Handler, CaseInspectionHandler, CornerstonePagerH
 fun CaseControl(
     currentCase: ViewableCase?,
     cornerstoneStatus: CornerstoneStatus? = null,
-    casesInfo: CasesInfo,
+    conditionHints: List<Condition>,
     handler: CaseControlHandler
 ) {
-    var currentCaseId: Long? by remember { mutableStateOf(null) }
     var verifiedText: String? by remember { mutableStateOf(null) }
     val indexOfSelectedDiff: Int by remember { mutableStateOf(-1) }
-    var conditionHintsForCase by remember { mutableStateOf(listOf<Condition>()) }
 
     val ruleInProgress = cornerstoneStatus != null
 
-    LaunchedEffect(casesInfo, currentCaseId) {
-        if (casesInfo.caseIds.isNotEmpty()) {
-            if (currentCaseId == null || currentCaseId !in casesInfo.caseIds.map { it.id }) {
-                //No initial case, or it's now been deleted
-                currentCaseId = casesInfo.caseIds[0].id!!
-            }
-            handler.getCase(currentCaseId!!)
-            conditionHintsForCase = handler.conditionHintsForCase(currentCaseId!!)
-        }
-    }
     LaunchedEffect(verifiedText, indexOfSelectedDiff) {
         if (verifiedText != null || indexOfSelectedDiff != -1) {
             delay(DEBOUNCE_WAIT_PERIOD_MILLIS)
-            handler.saveCase(currentCase!!)
+            val updatedCase = currentCase!!.copy(
+                viewableInterpretation = currentCase.viewableInterpretation
+                    .copy(verifiedText = verifiedText)
+            )
+            handler.saveCase(updatedCase)
         }
     }
 
@@ -78,24 +68,15 @@ fun CaseControl(
 
         if (currentCase != null) {
             CaseInspection(currentCase, ruleInProgress, object : CaseInspectionHandler, Handler by handler {
-                override var updateCase = { id: Long ->
-                    currentCaseId = id
-                }
-
                 override fun onStartRule(selectedDiff: Diff) {
-                    handler.startRuleSession(SessionStartRequest(currentCaseId!!, selectedDiff))
+                    handler.startRuleSession(SessionStartRequest(currentCase.id!!, selectedDiff))
                 }
 
                 override var onInterpretationEdited: (text: String) -> Unit = {
                     verifiedText = it
-                    val updatedCase = currentCase.copy(
-                        viewableInterpretation = currentCase.viewableInterpretation
-                            .copy(verifiedText = verifiedText)
-                    )
-                    handler.saveCase(updatedCase)
+
                 }
                 override var isCornerstone: Boolean = false
-                override var caseEdited: () -> Unit = {}
                 override fun swapAttributes(moved: Attribute, target: Attribute) {
                     handler.swapAttributes(moved, target)
                 }
@@ -113,8 +94,8 @@ fun CaseControl(
                 })
             }
 
-            Spacer(modifier = Modifier.width(10.dp))
-            RuleMaker(conditionHintsForCase, object : RuleMakerHandler, Handler by handler {
+            Spacer(modifier = Modifier.width(5.dp))
+            RuleMaker(conditionHints, object : RuleMakerHandler, Handler by handler {
                 override var onDone = { conditions: List<Condition> ->
                     val ruleRequest = RuleRequest(currentCase!!.id!!, ConditionList(conditions))
                     handler.buildRule(ruleRequest)

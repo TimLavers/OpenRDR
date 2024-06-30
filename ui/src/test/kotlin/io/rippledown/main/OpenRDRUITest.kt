@@ -9,16 +9,12 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.rippledown.appbar.assertKbNameIs
-import io.rippledown.casecontrol.waitForCaseToBeShowing
-import io.rippledown.casecontrol.waitForNumberOfCases
+import io.rippledown.casecontrol.*
 import io.rippledown.constants.main.APPLICATION_BAR_ID
 import io.rippledown.constants.main.TITLE
 import io.rippledown.interpretation.replaceInterpretationBy
 import io.rippledown.interpretation.requireInterpretation
-import io.rippledown.model.CaseId
-import io.rippledown.model.CasesInfo
-import io.rippledown.model.KBInfo
-import io.rippledown.model.createCaseWithInterpretation
+import io.rippledown.model.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
@@ -106,6 +102,205 @@ class OpenRDRUITest {
             assertKbNameIs("Bondi")
         }
     }
+
+    @Test
+    fun `should show the interpretation of the first case`() = runTest {
+        val caseA = "case A"
+        val caseB = "case B"
+        val caseId1 = CaseId(id = 1, name = caseA)
+        val caseId2 = CaseId(id = 2, name = caseB)
+        val caseIds = listOf(caseId1, caseId2)
+        val bondiComment = "Go to Bondi"
+        val case = createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
+//        coEvery { handler.getCase(1) } returns case
+//        coEvery { handler.saveCase(any()) } answers { firstArg() }
+
+        with(composeTestRule) {
+            setContent {
+//                CaseControl(currentCase = case, casesInfo = CasesInfo(caseIds), handler = handler)
+            }
+            //Given
+            requireNumberOfCasesOnCaseList(2)
+            requireNamesToBeShowingOnCaseList(caseA, caseB)
+
+            //When
+            waitForCaseToBeShowing(caseA)
+
+            //Then
+            requireInterpretation(bondiComment)
+        }
+    }
+
+    @Test
+    fun `should show case list for several cases`() = runTest {
+// TODO() MOVE THIS TEST
+        val caseIds = (1..10).map { i ->
+            val caseId = CaseId(id = i.toLong(), name = "case $i")
+//            coEvery { handler.getCase(caseId.id!!) } returns createCase(caseId)
+            caseId
+        }
+//        coEvery { handler.saveCase(any()) } answers { firstArg() }
+
+        val caseName1 = "case 1"
+        val caseName10 = "case 10"
+        with(composeTestRule) {
+            setContent {
+//                CaseControl(
+//                    currentCase = null,
+//                    conditionHints = listOf(),
+//                    casesInfo = CasesInfo(caseIds),
+//                    handler = handler
+//                )
+            }
+            //Given
+            waitForCaseToBeShowing(caseName1)
+
+            //When
+            selectCaseByName(caseName10)
+
+            //Then
+            waitForCaseToBeShowing(caseName10)
+        }
+    }
+
+    @Test
+    fun `should show a case when its case name is clicked`() = runTest {
+        val caseNameA = "case A"
+        val caseNameB = "case B"
+        val caseNameC = "case C"
+        val caseId1 = CaseId(id = 1, name = caseNameA)
+        val caseId2 = CaseId(id = 2, name = caseNameB)
+        val caseId3 = CaseId(id = 3, name = caseNameC)
+        val threeCaseIds = listOf(caseId1, caseId2, caseId3)
+        val caseA = createCase(caseId1)
+        val caseB = createCase(caseId2)
+
+//        coEvery { handler.getCase(1) } returns caseA
+//        coEvery { handler.getCase(2) } returns caseB
+//        coEvery { handler.saveCase(any()) } answers { firstArg() }
+
+        with(composeTestRule) {
+            setContent {
+//                CaseControl(
+//                    currentCase = null,
+//                    conditionHints = listOf(),
+//                    casesInfo = CasesInfo(threeCaseIds),
+//                    handler = handler
+//                )
+            }
+            //Given
+            requireNumberOfCasesOnCaseList(3)
+            requireNamesToBeShowingOnCaseList(caseNameA, caseNameB, caseNameC)
+
+            //When
+            selectCaseByName(caseNameB)
+
+            //Then
+            waitForCaseToBeShowing(caseNameB)
+
+        }
+    }
+
+    @Test
+    fun `should list case names`() = runTest {
+        val caseA = "case a"
+        val caseB = "case b"
+        val caseId1 = CaseId(id = 1, name = caseA)
+        val caseId2 = CaseId(id = 2, name = caseB)
+        val twoCaseIds = listOf(
+            caseId1, caseId2
+        )
+        val case = createCase(caseId1)
+//        coEvery { handler.getCase(1) } returns case
+//        coEvery { handler.saveCase(any()) } answers { firstArg() }
+
+        with(composeTestRule) {
+            setContent {
+//                CaseControl(
+//                    currentCase = null,
+//                    conditionHints = listOf(),
+//                    casesInfo = CasesInfo(twoCaseIds),
+//                    handler = handler
+//                )
+            }
+            requireNumberOfCasesOnCaseList(2)
+            requireNamesToBeShowingOnCaseList(caseA, caseB)
+        }
+    }
+
+    @Test
+    fun `should update the interpretation when a case is selected`() = runTest {
+        val caseA = "case A"
+        val caseB = "case B"
+        val caseId1 = CaseId(id = 1, name = caseA)
+        val caseId2 = CaseId(id = 2, name = caseB)
+        val caseIds = listOf(caseId1, caseId2)
+        val bondiComment = "Go to Bondi"
+        val malabarComment = "Go to Malabar"
+
+        val viewableCaseA = createCaseWithInterpretation(
+            name = caseA,
+            id = 1,
+            conclusionTexts = listOf(bondiComment)
+        )
+        val viewableCaseB = createCaseWithInterpretation(
+            name = caseB,
+            id = 2,
+            conclusionTexts = listOf(malabarComment)
+        )
+//        coEvery { handler.getCase(caseId1.id!!) } returns viewableCaseA
+//        coEvery { handler.getCase(caseId2.id!!) } returns viewableCaseB
+//        coEvery { handler.saveCase(any()) } answers { firstArg() }
+
+        with(composeTestRule) {
+            setContent {
+/*
+                CaseControl(
+                    currentCase = null,
+                    conditionHints = listOf(),
+                    casesInfo = CasesInfo(caseIds),
+                    handler = handler
+                )
+*/
+            }
+            //Given
+            requireNumberOfCasesOnCaseList(2)
+            requireNamesToBeShowingOnCaseList(caseA, caseB)
+            waitForCaseToBeShowing(caseA)
+            requireInterpretation(bondiComment)
+
+            //When
+            selectCaseByName(caseB)
+
+            //Then
+            waitForCaseToBeShowing(caseB)
+            requireInterpretation(malabarComment)
+        }
+    }
+
+    @Test
+    fun `should not show case selector when a rule session is started`() = runTest {
+        with(composeTestRule) {
+            setContent {
+/*
+                CaseControl(
+                    currentCase = null,
+                    conditionHints = listOf(),
+                    casesInfo = CasesInfo(listOf(caseId)),
+                    handler = handler
+                )
+*/
+            }
+            //Given
+//            waitForCaseToBeShowing(caseName)
+
+            //Then
+            requireCaseSelectorNotToBeDisplayed()
+        }
+    }
+
+
+
 }
 
 fun main() {

@@ -21,7 +21,7 @@ import io.rippledown.constants.rule.AVAILABLE_CONDITION_PREFIX
 import io.rippledown.model.condition.Condition
 
 interface AvailableConditionsHandler {
-    var onAddCondition: (condition: Condition) -> Unit
+    fun onAddCondition(condition: Condition)
 }
 
 @Composable
@@ -32,7 +32,7 @@ fun AvailableConditions(conditions: List<Condition>, handler: AvailableCondition
 
     Box(
         modifier = Modifier
-            .height(100.dp)
+            .height(200.dp)
     ) {
         Column(
             modifier = Modifier
@@ -43,24 +43,23 @@ fun AvailableConditions(conditions: List<Condition>, handler: AvailableCondition
             conditions
                 .sortedWith(compareBy { it.asText() })
                 .forEachIndexed { index, condition ->
-                Text(
-                    text = condition.asText(),
-                    modifier = Modifier
-                        .onPointerEvent(Enter) {
-                            cursorOnRow = index
-                        }
-                        .background(
-                            if (cursorOnRow == index) Color.LightGray else Color.Transparent
-                        )
-                        .clickable {
-                            println("Adding condition: $condition")
-                            handler.onAddCondition(condition)
-                        }
-                        .padding(start = 10.dp)
-                        .semantics { contentDescription = "$AVAILABLE_CONDITION_PREFIX$index" }
+                    Text(
+                        text = condition.asText(),
+                        modifier = Modifier
+                            .onClick {
+                                handler.onAddCondition(condition)
+                            }
+                            .onPointerEvent(Enter) {
+                                cursorOnRow = index
+                            }
+                            .background(
+                                if (cursorOnRow == index) Color.LightGray else Color.Transparent
+                            )
+                            .padding(start = 10.dp)
+                            .semantics { contentDescription = "$AVAILABLE_CONDITION_PREFIX$index" }
 
-                )
-            }
+                    )
+                }
         }
         VerticalScrollbar(
             modifier = Modifier

@@ -56,6 +56,22 @@ class RuleMakerTest {
     }
 
     @Test
+    fun `selecting an available condition with text should append it to the list of selected conditions`() {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                RuleMaker(allConditions, mockk(relaxed = true))
+            }
+
+            //When
+            clickAvailableConditionWithText(allConditions[2].asText())
+
+            //Then
+            requireSelectedConditionsToBeDisplayed(listOf(allConditions[2].asText()))
+        }
+    }
+
+    @Test
     fun `should call handler when the done button is clicked`() {
         val handler = mockk<RuleMakerHandler>(relaxed = true)
         with(composeTestRule) {
