@@ -9,31 +9,33 @@ import io.rippledown.constants.rule.FINISH_RULE_BUTTON
 import io.rippledown.constants.rule.SELECTED_CONDITION_PREFIX
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
-import io.rippledown.integration.waitUntilAssertedOnEventThread
+import io.rippledown.integration.utils.waitForContextToBeNotNull
+import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import javax.accessibility.AccessibleContext
 
 class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
 
     private fun waitForAvailableConditionContextForIndex(index: Int) {
-        waitUntilAssertedOnEventThread {
+        waitUntilAsserted {
             availableConditionContextForIndex(index) shouldNotBe null
         }
     }
+
     private fun waitForSelectedConditionsContextForIndex(index: Int) {
-        waitUntilAssertedOnEventThread {
+        waitUntilAsserted {
             selectedConditionsContextForIndex(index) shouldNotBe null
         }
     }
 
     private fun waitForAvailableConditionsContext() {
-        waitUntilAssertedOnEventThread {
+        waitUntilAsserted {
             availableConditionsContext().size shouldBeGreaterThanOrEqualTo 1
         }
     }
 
     private fun waitForSelectedConditionsContext() {
-        waitUntilAssertedOnEventThread {
+        waitUntilAsserted {
             selectedConditionsContext().size shouldBeGreaterThanOrEqualTo 1
         }
     }
@@ -41,7 +43,6 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
     fun clickAvailableCondition(index: Int) {
         waitForAvailableConditionContextForIndex(index)
         execute { availableConditionContextForIndex(index)?.accessibleAction?.doAccessibleAction(0) }
-
     }
 
     fun clickSelectedCondition(index: Int) {
@@ -50,26 +51,32 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     private fun availableConditionContextForIndex(index: Int) =
-        contextProvider().find("$AVAILABLE_CONDITION_PREFIX$index")
+        execute<AccessibleContext?> { contextProvider().find("$AVAILABLE_CONDITION_PREFIX$index") }
 
     private fun selectedConditionsContextForIndex(index: Int) =
-        contextProvider().find("$SELECTED_CONDITION_PREFIX$index")
+        execute<AccessibleContext?> { contextProvider().find("$SELECTED_CONDITION_PREFIX$index") }
 
     private fun availableConditionsContext() =
-        contextProvider().findAllByDescriptionPrefix(AVAILABLE_CONDITION_PREFIX)
+        execute<Set<AccessibleContext>> { contextProvider().findAllByDescriptionPrefix(AVAILABLE_CONDITION_PREFIX) }
 
     private fun selectedConditionsContext() =
-        contextProvider().findAllByDescriptionPrefix(SELECTED_CONDITION_PREFIX)
+        execute<Set<AccessibleContext>> { contextProvider().findAllByDescriptionPrefix(SELECTED_CONDITION_PREFIX) }
 
-    fun clickDoneButton() =
+    fun clickDoneButton() {
+        waitForContextToBeNotNull(contextProvider, FINISH_RULE_BUTTON)
         execute { contextProvider().find(FINISH_RULE_BUTTON)!!.accessibleAction!!.doAccessibleAction(0) }
+    }
 
-    fun clickCancelButton() =
+    fun clickCancelButton() {
+        waitForContextToBeNotNull(contextProvider, CANCEL_RULE_BUTTON)
         execute { contextProvider().find(CANCEL_RULE_BUTTON)!!.accessibleAction!!.doAccessibleAction(0) }
+    }
 
     fun requireAvailableConditions(expectedConditions: List<String>) {
         waitForAvailableConditionContextForIndex(expectedConditions.size - 1)
-        val found = contextProvider().findAllByDescriptionPrefix(AVAILABLE_CONDITION_PREFIX).map { it.accessibleName }
+        val contexts =
+            execute<Set<AccessibleContext>> { contextProvider().findAllByDescriptionPrefix(AVAILABLE_CONDITION_PREFIX) }
+        val found = contexts.map { it.accessibleName }
         found shouldBe expectedConditions
     }
 

@@ -3,6 +3,7 @@ Feature: Reviewing cornerstone cases
   Scenario: A user message should be shown if there are no cornerstone cases
     Given a new case with the name Case1 is stored on the server
     And I start the client application
+    And I see the case Case1 as the current case
     And I enter the text "Go to Bondi." in the interpretation field
     And I select the changes tab
     When I start to build a rule for the change on row 0
@@ -53,6 +54,7 @@ Feature: Reviewing cornerstone cases
     And I see the case Case1 as the current case
     And I enter the text " Comment 4." in the interpretation field
     And I start to build a rule for the change on row 0
+    And the cornerstone case indicator shows 1 of 2
     And I click the next cornerstone case button
     And the case Case3 is shown as the cornerstone case
     When I click the previous cornerstone case button
@@ -140,4 +142,17 @@ Feature: Reviewing cornerstone cases
     Then the cornerstone case indicator should show 2 of 3
     And the case Case3 is still shown as the cornerstone case
 
+  Scenario: Ignoring a cornerstone case should remove it from the list of cornerstone cases to review
+    Given a list of cases with the following names is stored on the server:
+      | Case1 |
+      | Case2 |
+    And I start the client application
+    And I see the case Case1 as the current case
+    And I build a rule to add the comment "Comment 1." for case Case1
+    And I start to build a rule to add the comment "Comment 2." for case Case2
+    And the case Case1 is shown as the cornerstone case
+
+    When I approve the cornerstone case
+    Then the case Case1 is no longer shown as the cornerstone case
+    And the message "No cornerstone cases to review" should be shown
 

@@ -3,9 +3,7 @@ Feature: A sample KB can be created that has the Zoo Animals cases.
   Scenario: Zoo KB cases
     Given I start the client application
     And I create a Knowledge Base with the name ZooCases based on the "Zoo Animals - cases only" sample
-    And pause for 2 seconds
     Then the count of the number of cases is 101
-    And pause for 1 second
     When I select case aardvark
     Then I see these case values:
       | hair     | true  |  |

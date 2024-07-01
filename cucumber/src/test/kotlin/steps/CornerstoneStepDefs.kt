@@ -11,8 +11,11 @@ class CornerstoneStepDefs : En {
         Then("the case {word} is (still )shown as the cornerstone case") { ccName: String ->
             cornerstonePO().requireCornerstoneCase(ccName)
         }
+        Then("the case {word} is no longer shown as the cornerstone case") { ccName: String ->
+            cornerstonePO().requireCornerstoneCaseNotToBeShowing(ccName)
+        }
 
-        Then("the cornerstone case indicator should show {int} of {int}") { index: Int, numberOfCornerstoneCases: Int ->
+        Then("the cornerstone case indicator (should )show(s) {int} of {int}") { index: Int, numberOfCornerstoneCases: Int ->
             cornerstonePO().requireIndexAndNumberOfCornerstones(index, numberOfCornerstoneCases)
         }
         When("I click the {word} cornerstone case button") { direction: String ->
@@ -27,6 +30,10 @@ class CornerstoneStepDefs : En {
 
         Then("the message indicating no cornerstone cases to review should be shown") {
             cornerstonePO().requireMessageForNoCornerstones()
+        }
+
+        When("I approve the cornerstone case") {
+            cornerstonePO().exemptCornerstoneCase()
         }
     }
 }

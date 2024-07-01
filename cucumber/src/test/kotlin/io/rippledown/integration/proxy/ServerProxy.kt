@@ -7,7 +7,6 @@ import org.awaitility.Awaitility.await
 import java.io.File
 import java.nio.file.Paths
 import java.time.Duration
-import java.util.*
 
 class ServerProxy {
     private lateinit var process: Process
@@ -29,7 +28,7 @@ class ServerProxy {
     fun reStartWithPostgres() = start(false, cleanup = false)
 
     fun start(inMemory: Boolean, cleanup: Boolean = true) {
-        println("START: inMemory = [${inMemory}], cleanup = [${cleanup}]")
+//        println("START: inMemory = [${inMemory}], cleanup = [${cleanup}]")
         findJar()
         if (cleanup) {
             dirProxy.createAndCleanManagedDirectories()
@@ -48,7 +47,7 @@ class ServerProxy {
         val rootDirectory = dirProxy.userDir()
         val serverLibsDir = Paths.get(rootDirectory.path, "server", "build", "libs").toFile()
         jarFile = serverLibsDir.listFiles { it -> it.name == "server-all.jar" }!![0]
-        println("jar ${jarFile.absolutePath}, modified: ${Date(jarFile.lastModified())}")
+//        println("jar: ${jarFile.absolutePath}, modified: ${Date(jarFile.lastModified())}")
     }
 
     private fun waitForServerToStart() {

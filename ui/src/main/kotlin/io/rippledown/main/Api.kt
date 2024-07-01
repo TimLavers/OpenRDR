@@ -187,6 +187,19 @@ class Api(private val engine: HttpClientEngine = CIO.create()) {
     }
 
     /**
+     * Exempts the cornerstone at the specified index for the current rule session
+     *
+     * @return the updated CornerstoneStatus
+     */
+    suspend fun exemptCornerstone(index: Int): CornerstoneStatus {
+        return client.post("$API_URL$EXEMPT_CORNERSTONE") {
+            contentType(ContentType.Application.Json)
+            setBody(index)
+            setKBParameter()
+        }.body()
+    }
+
+    /**
      * @return the conditions that are suggested for building a rule for the selected Diff in the case's interpretation
      */
     suspend fun conditionHints(caseId: Long): ConditionList {
@@ -196,7 +209,7 @@ class Api(private val engine: HttpClientEngine = CIO.create()) {
     }
 
     /**
-     * Retrieves the specified cornerstone for current the rule session
+     * Retrieves the specified cornerstone for the current rule session
      *
      * @param index the 0-based index of the cornerstone to retrieve. See CornerstoneStatus
      * @return the cornerstone
@@ -206,6 +219,5 @@ class Api(private val engine: HttpClientEngine = CIO.create()) {
             setKBParameter()
         }.body()
     }
-
 }
 

@@ -89,12 +89,14 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
     private fun extractMatchingValuesInOrderShown(
         descriptionPrefix: String,
         contextToPO: (AccessibleContext) -> CellPO
-    ): List<String> = contextProvider()
-        .find(CASE_VIEW_TABLE)!!//narrow down the context to the table
-        .findAllByDescriptionPrefix(descriptionPrefix)
-        .map { contextToPO(it) }
-        .sorted()
-        .map { it.text() }
+    ): List<String> = execute<List<String>> {
+        contextProvider()
+            .find(CASE_VIEW_TABLE)!!//narrow down the context to the table
+            .findAllByDescriptionPrefix(descriptionPrefix)
+            .map { contextToPO(it) }
+            .sorted()
+            .map { it.text() }
+    }
 
     private fun attributeCellId(attributeName: String?) = "attribute_name_cell_$attributeName"
 

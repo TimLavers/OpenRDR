@@ -73,7 +73,6 @@ class KB(persistentKB: PersistentKB) {
 
     fun processCase(externalCase: ExternalCase): RDRCase {
         val case = createRDRCase(externalCase)
-        println("processing case, RDRCase is: $case")
         val stored = caseManager.add(case)
         interpret(stored)
         return stored
@@ -175,6 +174,26 @@ class KB(persistentKB: PersistentKB) {
     }
 
     /**
+     * @param index the index of the cornerstone to be exempted
+     *
+     * @return the CornerstoneStatus for the current session after the specified cornerstone has been exempted
+     */
+    fun exemptCornerstone(index: Int): CornerstoneStatus {
+        checkSession()
+
+        val toExempt = ruleSession!!.cornerstoneCases()[index]
+        ruleSession!!.exemptCornerstone(toExempt)
+
+        val cornerstones = ruleSession!!.cornerstoneCases()
+        return if (cornerstones.isEmpty()) {
+            CornerstoneStatus()
+        } else {
+            val newCC = cornerstones[index.coerceAtMost(cornerstones.size - 1)]
+            cornerstoneStatus(viewableCase(newCC))
+        }
+    }
+
+    /**
      * @return the CornerstoneStatus for the current session where the specified cornerstone should remain selected if it is still in the list of cornerstones
      */
     internal fun cornerstoneStatus(currentCornerstone: ViewableCase?): CornerstoneStatus {
@@ -206,7 +225,6 @@ class KB(persistentKB: PersistentKB) {
 
         val verifiedText = interp.verifiedText!!
         val caseId = interp.caseId().id!!
-        println("verifiedText = '${verifiedText}'")
         verifiedTextStore.put(caseId, verifiedText)
         saveConclusions(verifiedText)
     }

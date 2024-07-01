@@ -1,6 +1,10 @@
 package io.rippledown.integration.utils
+
 import androidx.compose.ui.awt.ComposeDialog
 import androidx.compose.ui.awt.ComposeWindow
+import io.kotest.matchers.shouldNotBe
+import io.rippledown.integration.waitUntilAsserted
+import org.assertj.swing.edt.GuiActionRunner.execute
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleRole
 
@@ -12,22 +16,10 @@ fun AccessibleContext.find(description: String, role: AccessibleRole): Accessibl
     return find(matcher)
 }
 
-/*
-fun AccessibleContext.find(description: String, role: AccessibleRole): AccessibleContext? {
-//    println("find, this.name: ${this.accessibleName}, this.descr: ${this.accessibleDescription}, this.role: ${this.accessibleRole}")
-    val nameMatch = description == this.accessibleDescription
-//    println("nameMatch: $nameMatch")
-    if (nameMatch && role == this.accessibleRole) return this
-    val childCount = accessibleChildrenCount
-    for (i in 0..<childCount) {
-        val child = getAccessibleChild(i).accessibleContext.find(description, role)
-        if (child != null) return child
-    }
-    return null
+
+fun waitForContextToBeNotNull(contextProvider: () -> AccessibleContext, description: String) {
+    waitUntilAsserted { execute<AccessibleContext?> { contextProvider().find(description) } shouldNotBe null }
 }
-*/
-
-
 
 fun AccessibleContext.find(description: String, debug: Boolean = false): AccessibleContext? {
     val matcher = { context: AccessibleContext ->
@@ -59,6 +51,7 @@ fun AccessibleContext.find(matcher: (AccessibleContext) -> Boolean, debug: Boole
     }
     return null
 }
+
 fun AccessibleContext.findAllByDescriptionPrefix(prefix: String): Set<AccessibleContext> {
     val matcher = { context: AccessibleContext ->
         if (context.accessibleDescription == null) false else {
@@ -67,12 +60,18 @@ fun AccessibleContext.findAllByDescriptionPrefix(prefix: String): Set<Accessible
     }
     return findAll(matcher)
 }
+
 fun AccessibleContext.findAll(matcher: (AccessibleContext) -> Boolean, debug: Boolean = false): Set<AccessibleContext> {
     val result = mutableSetOf<AccessibleContext>()
     this.findAll(result, matcher, debug)
     return result
 }
-fun AccessibleContext.findAll(holder: MutableSet<AccessibleContext>, matcher: (AccessibleContext) -> Boolean, debug: Boolean = false) {
+
+fun AccessibleContext.findAll(
+    holder: MutableSet<AccessibleContext>,
+    matcher: (AccessibleContext) -> Boolean,
+    debug: Boolean = false
+) {
     if (matcher(this)) {
         holder.add(this)
     }
@@ -99,6 +98,7 @@ fun AccessibleContext.findLabelChildren(): List<String> {
     }
     return result
 }
+
 fun AccessibleContext.dumpToText(index: Int = 0, componentDepth: Int = 0, ignoreNulls: Boolean = true) {
     val childCount = accessibleChildrenCount
     val name = accessibleName
@@ -112,16 +112,19 @@ fun AccessibleContext.dumpToText(index: Int = 0, componentDepth: Int = 0, ignore
         getAccessibleChild(i).accessibleContext.dumpToText(i, componentDepth + 1, ignoreNulls)
     }
 }
+
 fun AccessibleContext.findAndClick(description: String) {
     val expandDropdownButton = find(description, AccessibleRole.PUSH_BUTTON)
     val action = expandDropdownButton!!.accessibleAction
     action.doAccessibleAction(0)
 }
+
 fun AccessibleContext.findAndClickRadioButton(description: String) {
     val button = find(description, AccessibleRole.RADIO_BUTTON)
     val action = button!!.accessibleAction
     action.doAccessibleAction(0)
 }
+
 fun AccessibleContext.printActions() {
     val actions = this.accessibleAction
     if (actions == null) {
@@ -138,6 +141,7 @@ fun AccessibleContext.printActions() {
 fun ComposeWindow.isReadyForTesting(): Boolean {
     return this.isActive && this.isEnabled && this.isFocusable
 }
+
 fun ComposeWindow.waitForWindowToShow() {
     var loop = 0
     while (!isReadyForTesting() && loop++ < 50) {
@@ -147,7 +151,7 @@ fun ComposeWindow.waitForWindowToShow() {
 
 fun findComposeDialogThatIsShowing(): ComposeDialog? {
     val allWindows = java.awt.Window.getWindows()
-    val d = allWindows.firstOrNull{w -> w is ComposeDialog && w.isShowing}
+    val d = allWindows.firstOrNull { w -> w is ComposeDialog && w.isShowing }
     return if (d == null) null else d as ComposeDialog
 }
 

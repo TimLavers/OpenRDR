@@ -20,7 +20,7 @@ import io.rippledown.sample.SampleKB
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-fun mock(config: EngineConfig)  = EngineBuilder(config).build()
+fun mock(config: EngineConfig) = EngineBuilder(config).build()
 
 fun config(block: EngineConfig.() -> Unit) = EngineConfig().apply(block)
 
@@ -39,6 +39,8 @@ class EngineConfig {
     var expectedSessionStartRequest: SessionStartRequest? = null
     var expectedCornerstoneSelection: Int? = -1
     var expectedUpdateCornerstoneRequest: UpdateCornerstoneRequest? = null
+    var expectedCornerstoneIndex: Int? = null
+    var expectedUpdatedCornerstoneStatus: CornerstoneStatus? = null
 
     var expectedMovedAttributeId: Int? = null
     var expectedTargetAttributeId: Int? = null
@@ -55,11 +57,9 @@ private class EngineBuilder(private val config: EngineConfig) {
         allowStructuredMapKeys = true
     }
 
-    fun build()  = MockEngine { request ->
-//        println("MockEngine called with ${request.url.fullPath}")
+    fun build() = MockEngine { request ->
         when (request.url.encodedPath) {
             WAITING_CASES -> {
-//                println("api call to WAITING_CASES with ${request.url.parameters} will return ${config.returnCasesInfo}")
                 httpResponseData(json.encodeToString(config.returnCasesInfo))
             }
 
@@ -106,6 +106,16 @@ private class EngineBuilder(private val config: EngineConfig) {
 
                 if (config.expectedUpdateCornerstoneRequest != null) {
                     bodyAsUpdateCornerstoneRequest shouldBe config.expectedUpdateCornerstoneRequest
+                }
+                httpResponseData(json.encodeToString(config.returnCornerstoneStatus))
+            }
+
+            EXEMPT_CORNERSTONE -> {
+                val body = request.body as TextContent
+                val bodyAsCornerstoneIndex = json.decodeFromString<Int>(body.text)
+
+                if (config.expectedCornerstoneIndex != null) {
+                    bodyAsCornerstoneIndex shouldBe config.expectedCornerstoneIndex
                 }
                 httpResponseData(json.encodeToString(config.returnCornerstoneStatus))
             }
