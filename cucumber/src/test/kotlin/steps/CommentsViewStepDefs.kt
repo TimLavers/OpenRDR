@@ -26,5 +26,8 @@ class CommentsViewStepDefs : En {
                 conclusionsViewPO().requireCommentAtIndex(index, comment)
             }
         }
+        Then("no comments are shown") {
+            conclusionsViewPO().requireNoComments()
+        }
     }
 }

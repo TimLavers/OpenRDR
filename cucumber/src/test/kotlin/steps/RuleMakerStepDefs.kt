@@ -111,5 +111,8 @@ class RuleMakerStepDefs : En {
             }
 
         }
+        When("I build a rule to remove the comment \"Go to Bondi.\"") {
+            TODO("Not yet implemented")
+        }
     }
 }
