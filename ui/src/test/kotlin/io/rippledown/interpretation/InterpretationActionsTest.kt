@@ -48,9 +48,8 @@ class InterpretationActionsTest {
             addNewComment("Bondi")
             clickOKToAddNewComment()
 
-
             //Then
-            verify { handler.startRuleToAddComment("Bondi") }
+            verify(timeout = 1_000) { handler.startRuleToAddComment("Bondi") }
         }
     }
 

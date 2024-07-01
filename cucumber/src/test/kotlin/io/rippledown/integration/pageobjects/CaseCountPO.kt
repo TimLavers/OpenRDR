@@ -25,8 +25,8 @@ class CaseCountPO(private val contextProvider: () -> AccessibleContext) {
         return execute<Int> { contextForCaseCount()?.accessibleName?.toInt() ?: 0 }
     }
 
-    private fun contextForCaseCount() = contextProvider().find(NUMBER_OF_CASES_ID)
-    private fun contextForCasesLabel() = contextProvider().find(NUMBER_OF_CASES_LABEL)
+    private fun contextForCaseCount() = execute<AccessibleContext?> { contextProvider().find(NUMBER_OF_CASES_ID) }
+    private fun contextForCasesLabel() = execute<AccessibleContext?> { contextProvider().find(NUMBER_OF_CASES_LABEL) }
 
     fun requireCaseCountToBeHidden() {
         waitUntilAsserted { contextForCaseCount() shouldBe null }

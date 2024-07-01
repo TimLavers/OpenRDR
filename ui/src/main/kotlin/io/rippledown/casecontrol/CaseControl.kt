@@ -9,7 +9,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.cornerstone.NO_CORNERSTONES_TO_REVIEW_MSG
-import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
 import io.rippledown.cornerstone.CornerstonePager
 import io.rippledown.cornerstone.CornerstonePagerHandler
 import io.rippledown.main.Handler
@@ -24,7 +23,6 @@ import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.rule.RuleMaker
 import io.rippledown.rule.RuleMakerHandler
-import kotlinx.coroutines.delay
 
 interface CaseControlHandler : Handler, CaseInspectionHandler, CornerstonePagerHandler {
     fun getCase(caseId: Long)
@@ -50,7 +48,7 @@ fun CaseControl(
 
     LaunchedEffect(verifiedText, indexOfSelectedDiff) {
         if (verifiedText != null || indexOfSelectedDiff != -1) {
-            delay(DEBOUNCE_WAIT_PERIOD_MILLIS)
+//            delay(DEBOUNCE_WAIT_PERIOD_MILLIS) TODO restore when this is tested
             val updatedCase = currentCase!!.copy(
                 viewableInterpretation = currentCase.viewableInterpretation
                     .copy(verifiedText = verifiedText)

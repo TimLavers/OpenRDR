@@ -136,6 +136,7 @@ fun OpenRDRUI(handler: Handler) {
                         CaseSelector(casesInfo.caseIds, object : CaseSelectorHandler, Handler by handler {
                             override var selectCase = { id: Long ->
                                 currentCase = runBlocking { handler.api.getCase(id) }
+                                currentCaseId = id
                             }
                         })
                     }

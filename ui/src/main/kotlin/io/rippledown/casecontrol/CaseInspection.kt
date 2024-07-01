@@ -12,8 +12,7 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.diff.Diff
 
-interface CaseInspectionHandler : CaseViewHandler, InterpretationTabsHandler {
-}
+interface CaseInspectionHandler : CaseViewHandler, InterpretationTabsHandler
 
 @Composable
 fun CaseInspection(case: ViewableCase, isRuleBuilding: Boolean, handler: CaseInspectionHandler) {

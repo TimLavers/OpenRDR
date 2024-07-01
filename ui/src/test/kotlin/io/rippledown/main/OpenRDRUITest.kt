@@ -15,6 +15,10 @@ import io.rippledown.constants.main.APPLICATION_BAR_ID
 import io.rippledown.constants.main.TITLE
 import io.rippledown.interpretation.*
 import io.rippledown.model.*
+import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.condition.EpisodicCondition
+import io.rippledown.model.condition.episodic.predicate.Normal
+import io.rippledown.model.condition.episodic.signature.Current
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
@@ -253,6 +257,54 @@ class OpenRDRUITest {
             //Then
             waitForCaseToBeShowing(caseB)
             requireInterpretation(malabarComment)
+        }
+    }
+
+    @Test
+    fun `should update the condition hints when a case is selected`() = runTest {
+        val caseA = "case A"
+        val caseB = "case B"
+        val caseId1 = CaseId(id = 1, name = caseA)
+        val caseId2 = CaseId(id = 2, name = caseB)
+        val caseIds = listOf(caseId1, caseId2)
+        val bondiComment = "Go to Bondi"
+        val malabarComment = "Go to Malabar"
+
+        val viewableCaseA = createCaseWithInterpretation(
+            name = caseA,
+            id = 1,
+            conclusionTexts = listOf(bondiComment)
+        )
+        val viewableCaseB = createCaseWithInterpretation(
+            name = caseB,
+            id = 2,
+            conclusionTexts = listOf(malabarComment)
+        )
+        val normalTSH = EpisodicCondition(null, Attribute(1, "tsh"), Normal, Current)
+        val normalFT3 = EpisodicCondition(null, Attribute(2, "ft3"), Normal, Current)
+
+        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(caseIds)
+
+        coEvery { handler.api.getCase(caseId1.id!!) } returns viewableCaseA
+        coEvery { handler.api.getCase(caseId2.id!!) } returns viewableCaseB
+        coEvery { handler.api.conditionHints(caseId1.id!!) } returns ConditionList(listOf(normalTSH))
+        coEvery { handler.api.conditionHints(caseId2.id!!) } returns ConditionList(listOf(normalFT3))
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler)
+            }
+            //Given
+            requireNumberOfCasesOnCaseList(2)
+            requireNamesToBeShowingOnCaseList(caseA, caseB)
+            waitForCaseToBeShowing(caseA)
+            coVerify { handler.api.conditionHints(caseId1.id!!) }
+
+            //When
+            selectCaseByName(caseB)
+
+            //Then
+            coVerify { handler.api.conditionHints(caseId2.id!!) }
         }
     }
 
