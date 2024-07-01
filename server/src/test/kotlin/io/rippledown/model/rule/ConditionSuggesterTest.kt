@@ -39,14 +39,6 @@ internal class ConditionSuggesterTest {
         checkContainsCondition(suggestions, isPresent(b))
     }
 
-    private fun case(vararg pairs: Pair<Attribute, String>, name: String = "SessionCase"): RDRCase {
-        val builder = RDRCaseBuilder()
-        pairs.forEach {
-            builder.addValue(it.first, defaultDate, it.second)
-        }
-        return builder.build(name)
-    }
-
     private fun checkContainsCondition(conditions: Collection<Condition>, expected: Condition) {
         var found = false
         conditions.forEach {

@@ -138,6 +138,8 @@ data class RDRCase(
         return dateToEpisode[dates.last()]!![attribute]
     }
 
+    fun latestValue(attribute: Attribute) = getLatest(attribute)?.value?.text
+
     fun resetInterpretation() {
         interpretation.reset()
     }

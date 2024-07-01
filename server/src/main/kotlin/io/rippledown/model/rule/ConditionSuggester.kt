@@ -4,6 +4,9 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.CaseStructureCondition
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.EpisodicCondition
+import io.rippledown.model.condition.episodic.predicate.Is
+import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.structural.IsAbsentFromCase
 import io.rippledown.model.condition.structural.IsPresentInCase
 
@@ -13,11 +16,18 @@ class ConditionSuggester(private val attributes: Set<Attribute>,
     private val attributesNotInCase = attributes - attributesInCase
 
     fun suggestions(): List<Condition> {
-        return caseStructureSuggestions().toList().sortedWith(Sorter())
+        return (caseStructureSuggestions() + episodicConditionSuggestions()).toList().sortedWith(Sorter())
     }
 
-    private fun episodicConditionSuggestions() {
-
+    private fun episodicConditionSuggestions(): Set<Condition> {
+        val result = mutableSetOf<Condition>()
+        attributesInCase.forEach {
+            val currentValue = sessionCase.latestValue(it)
+            if (currentValue != null) {
+                result.add(EpisodicCondition(it, Is(currentValue), Current))
+            }
+        }
+        return result
     }
 
     private fun caseStructureSuggestions() = attributeInCaseConditions() + attributeNotInCaseConditions()
