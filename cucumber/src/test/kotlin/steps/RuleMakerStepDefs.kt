@@ -5,11 +5,7 @@ import io.cucumber.java8.En
 import io.rippledown.integration.pause
 
 class RuleMakerStepDefs : En {
-    fun addConditionsAndFinishRule(dataTable: DataTable) {
-        pause(1000)
-        interpretationViewPO().selectDifferencesTab()
-        pause(1000)
-        interpretationViewPO().clickBuildIconOnRow(0)
+    private fun addConditionsAndFinishRule(dataTable: DataTable) {
         dataTable.asList().forEach { condition ->
             pause(1000)
             ruleMakerPO().clickConditionWithText(condition)
@@ -18,9 +14,17 @@ class RuleMakerStepDefs : En {
         ruleMakerPO().clickDoneButton()
     }
 
+    private fun startRuleBuildingSessionToAddComment(comment: String) {
+        with(interpretationViewPO()) {
+            clickChangeInterpretationButton()
+            clickAddCommentMenu()
+            setAddCommentTextAndClickOK(comment)
+        }
+    }
+
     init {
         When("I build a rule to add the comment {string} with conditions") {comment: String, conditions: DataTable ->
-            interpretationViewPO().setVerifiedText(comment)
+            startRuleBuildingSessionToAddComment(comment)
             pause(1000)
             addConditionsAndFinishRule(conditions)
         }
@@ -124,19 +128,13 @@ class RuleMakerStepDefs : En {
                 selectDifferencesTab()
                 clickBuildIconOnRow(0)
             }
-
         }
 
         And("I build a rule to add a comment {string}") { comment: String ->
-            with(interpretationViewPO()) {
-                clickChangeInterpretationButton()
-                clickAddCommentMenu()
-                setAddCommentTextAndClickOK(comment)
-            }
+            startRuleBuildingSessionToAddComment(comment)
             with(ruleMakerPO()) {
                 clickDoneButton()
             }
-
         }
     }
 }

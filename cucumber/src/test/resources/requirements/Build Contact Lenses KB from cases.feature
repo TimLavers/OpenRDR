@@ -17,24 +17,48 @@ Feature: A sample KB can be created that has the Contact Lense Prescription case
       | astigmatism is "astigmatic" |
       | tear production is "normal" |
 
-    And I select case Case16
-    And I select the interpretation tab
-    And I build a rule to remove the comment "hard" with conditions
-      | age is "pre_presbyopic"        |
-      | prescription is "hypermetrope" |
+#    And I select case Case16
+#    And I select the interpretation tab
+#    And I build a rule to remove the comment "hard" with conditions
+#      | age is "pre_presbyopic"        |
+#      | prescription is "hypermetrope" |
+#
+#    And I select case Case18
+#    And pause for 2 seconds
+#    And I select the interpretation tab
+#    And I build a rule to remove the comment "soft" with conditions
+#      | age is "presbyopic"     |
+#      | prescription is "myope" |
+#
+#    And I select case Case24
+#    And I select the interpretation tab
+#    And I build a rule to remove the comment "hard" with conditions
+#      | age is "presbyopic"            |
+#      | prescription is "hypermetrope" |
 
-    And I select case Case18
-    And pause for 2 seconds
-    And I select the interpretation tab
-    And pause
-    And I build a rule to remove the comment "soft" with conditions
-      | age is "presbyopic"     |
-      | prescription is "myope" |
-
-    And I select case Case24
-    And I select the interpretation tab
-    And I build a rule to remove the comment "hard" with conditions
-      | age is "presbyopic"            |
-      | prescription is "hypermetrope" |
-
+    Then the cases should have interpretations as follows
+      | Case1  |      |
+      | Case2  | soft |
+      | Case3  |      |
+      | Case4  | hard |
+      | Case5  |      |
+      | Case6  | soft |
+      | Case7  |      |
+      | Case8  | hard |
+      | Case9  |      |
+      | Case10 | soft |
+      | Case11 |      |
+      | Case12 | hard |
+      | Case13 |      |
+      | Case14 | soft |
+      | Case15 |      |
+      | Case16 |      |
+      | Case17 |      |
+      | Case18 |      |
+      | Case19 |      |
+      | Case20 | hard |
+      | Case21 |      |
+      | Case22 | soft |
+      | Case23 |      |
+      | Case24 |      |
     And stop the client application

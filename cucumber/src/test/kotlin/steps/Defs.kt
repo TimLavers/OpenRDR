@@ -80,6 +80,17 @@ class Defs : En {
             caseListPO().select("CaseABC")
         }
 
+
+        Then("the cases should have interpretations as follows") { dataTable: DataTable ->
+            dataTable.asLists().forEach {
+                println("checking interpretation for case ${it[0]}")
+                caseListPO().select(it[0])
+                interpretationViewPO().selectOriginalTab()
+                val expectedText = it[1]?: ""
+                interpretationViewPO().waitForInterpretationText(expectedText)
+            }
+        }
+
         When("a new case with the name {word} is stored on the server") { caseName: String ->
             labProxy().provideCase(caseName)
         }
