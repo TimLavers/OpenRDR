@@ -82,7 +82,7 @@ fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
         }
     }
     if (createKbFromSampleDialogShowing) {
-        val dialogState = rememberDialogState(size = DpSize(640.dp, 460.dp))
+        val dialogState = rememberDialogState(size = DpSize(640.dp, 500.dp))
         DialogWindow(
             onCloseRequest = {createKbFromSampleDialogShowing = false},
             title = "Create KB from Template",

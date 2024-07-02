@@ -5,20 +5,20 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import androidx.compose.ui.window.rememberWindowState
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.rippledown.appbar.assertKbNameIs
-import io.rippledown.casecontrol.waitForCaseToBeShowing
-import io.rippledown.casecontrol.waitForNumberOfCases
+import io.rippledown.casecontrol.*
 import io.rippledown.constants.main.APPLICATION_BAR_ID
 import io.rippledown.constants.main.TITLE
-import io.rippledown.interpretation.replaceInterpretationBy
-import io.rippledown.interpretation.requireInterpretation
-import io.rippledown.model.CaseId
-import io.rippledown.model.CasesInfo
-import io.rippledown.model.KBInfo
-import io.rippledown.model.createCaseWithInterpretation
+import io.rippledown.interpretation.*
+import io.rippledown.model.*
+import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.condition.EpisodicCondition
+import io.rippledown.model.condition.episodic.predicate.Normal
+import io.rippledown.model.condition.episodic.signature.Current
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
@@ -106,6 +106,236 @@ class OpenRDRUITest {
             assertKbNameIs("Bondi")
         }
     }
+
+    @Test
+    fun `should show the interpretation of the first case`() = runTest {
+        val caseA = "case A"
+        val caseB = "case B"
+        val caseId1 = CaseId(id = 1, name = caseA)
+        val caseId2 = CaseId(id = 2, name = caseB)
+        val caseIds = listOf(caseId1, caseId2)
+        val bondiComment = "Go to Bondi"
+        val case = createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
+        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { handler.api.getCase(1) } returns case
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler)
+            }
+            //Given
+            requireNumberOfCasesOnCaseList(2)
+            requireNamesToBeShowingOnCaseList(caseA, caseB)
+
+            //When
+            waitForCaseToBeShowing(caseA)
+
+            //Then
+            requireInterpretation(bondiComment)
+        }
+    }
+
+    @Test
+    fun `should show case list for several cases`() = runTest {
+        val caseIds = (1..10).map { i ->
+            val caseId = CaseId(id = i.toLong(), name = "case $i")
+            coEvery { handler.api.getCase(caseId.id!!) } returns createCase(caseId)
+            caseId
+        }
+        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(caseIds)
+
+        val caseName1 = "case 1"
+        val caseName10 = "case 10"
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler)
+            }
+            //Given
+            waitForCaseToBeShowing(caseName1)
+
+            //When
+            selectCaseByName(caseName10)
+
+            //Then
+            waitForCaseToBeShowing(caseName10)
+        }
+    }
+
+    @Test
+    fun `should show a case when its case name is clicked`() = runTest {
+        val caseNameA = "case A"
+        val caseNameB = "case B"
+        val caseNameC = "case C"
+        val caseId1 = CaseId(id = 1, name = caseNameA)
+        val caseId2 = CaseId(id = 2, name = caseNameB)
+        val caseId3 = CaseId(id = 3, name = caseNameC)
+        val threeCaseIds = listOf(caseId1, caseId2, caseId3)
+        val caseA = createCase(caseId1)
+        val caseB = createCase(caseId2)
+
+        coEvery { handler.api.getCase(1) } returns caseA
+        coEvery { handler.api.getCase(2) } returns caseB
+        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(threeCaseIds)
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler)
+            }
+            //Given
+            requireNumberOfCasesOnCaseList(3)
+            requireNamesToBeShowingOnCaseList(caseNameA, caseNameB, caseNameC)
+
+            //When
+            selectCaseByName(caseNameB)
+
+            //Then
+            waitForCaseToBeShowing(caseNameB)
+
+        }
+    }
+
+    @Test
+    fun `should list case names`() = runTest {
+        val caseA = "case a"
+        val caseB = "case b"
+        val caseId1 = CaseId(id = 1, name = caseA)
+        val caseId2 = CaseId(id = 2, name = caseB)
+        val twoCaseIds = listOf(
+            caseId1, caseId2
+        )
+        val case = createCase(caseId1)
+        coEvery { handler.api.getCase(1) } returns case
+        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(twoCaseIds)
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler)
+            }
+            requireNumberOfCasesOnCaseList(2)
+            requireNamesToBeShowingOnCaseList(caseA, caseB)
+        }
+    }
+
+    @Test
+    fun `should update the interpretation when a case is selected`() = runTest {
+        val caseA = "case A"
+        val caseB = "case B"
+        val caseId1 = CaseId(id = 1, name = caseA)
+        val caseId2 = CaseId(id = 2, name = caseB)
+        val caseIds = listOf(caseId1, caseId2)
+        val bondiComment = "Go to Bondi"
+        val malabarComment = "Go to Malabar"
+
+        val viewableCaseA = createCaseWithInterpretation(
+            name = caseA,
+            id = 1,
+            conclusionTexts = listOf(bondiComment)
+        )
+        val viewableCaseB = createCaseWithInterpretation(
+            name = caseB,
+            id = 2,
+            conclusionTexts = listOf(malabarComment)
+        )
+        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(caseIds)
+
+        coEvery { handler.api.getCase(caseId1.id!!) } returns viewableCaseA
+        coEvery { handler.api.getCase(caseId2.id!!) } returns viewableCaseB
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler)
+            }
+            //Given
+            requireNumberOfCasesOnCaseList(2)
+            requireNamesToBeShowingOnCaseList(caseA, caseB)
+            waitForCaseToBeShowing(caseA)
+            requireInterpretation(bondiComment)
+
+            //When
+            selectCaseByName(caseB)
+
+            //Then
+            waitForCaseToBeShowing(caseB)
+            requireInterpretation(malabarComment)
+        }
+    }
+
+    @Test
+    fun `should update the condition hints when a case is selected`() = runTest {
+        val caseA = "case A"
+        val caseB = "case B"
+        val caseId1 = CaseId(id = 1, name = caseA)
+        val caseId2 = CaseId(id = 2, name = caseB)
+        val caseIds = listOf(caseId1, caseId2)
+        val bondiComment = "Go to Bondi"
+        val malabarComment = "Go to Malabar"
+
+        val viewableCaseA = createCaseWithInterpretation(
+            name = caseA,
+            id = 1,
+            conclusionTexts = listOf(bondiComment)
+        )
+        val viewableCaseB = createCaseWithInterpretation(
+            name = caseB,
+            id = 2,
+            conclusionTexts = listOf(malabarComment)
+        )
+        val normalTSH = EpisodicCondition(null, Attribute(1, "tsh"), Normal, Current)
+        val normalFT3 = EpisodicCondition(null, Attribute(2, "ft3"), Normal, Current)
+
+        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(caseIds)
+
+        coEvery { handler.api.getCase(caseId1.id!!) } returns viewableCaseA
+        coEvery { handler.api.getCase(caseId2.id!!) } returns viewableCaseB
+        coEvery { handler.api.conditionHints(caseId1.id!!) } returns ConditionList(listOf(normalTSH))
+        coEvery { handler.api.conditionHints(caseId2.id!!) } returns ConditionList(listOf(normalFT3))
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler)
+            }
+            //Given
+            requireNumberOfCasesOnCaseList(2)
+            requireNamesToBeShowingOnCaseList(caseA, caseB)
+            waitForCaseToBeShowing(caseA)
+            coVerify { handler.api.conditionHints(caseId1.id!!) }
+
+            //When
+            selectCaseByName(caseB)
+
+            //Then
+            coVerify { handler.api.conditionHints(caseId2.id!!) }
+        }
+    }
+
+    @Test
+    fun `should not show case selector when a rule session is started`() = runTest {
+        val caseName = "case a"
+        val caseId = CaseId(id = 1, name = caseName)
+        val case = createCase(caseId)
+        coEvery { handler.api.getCase(1) } returns case
+        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler)
+            }
+            //Given
+            waitForCaseToBeShowing(caseName)
+            requireCaseSelectorToBeDisplayed()
+            clickChangeInterpretationButton()
+
+            //When
+            clickAddCommentMenu()
+            addNewComment("Go to Bondi")
+            clickOKToAddNewComment()
+
+            //Then
+            requireCaseSelectorNotToBeDisplayed()
+        }
+    }
+
+
+
 }
 
 fun main() {
@@ -124,53 +354,10 @@ fun main() {
         Window(
             onCloseRequest = ::exitApplication,
             icon = painterResource("water-wave-icon.png"),
-            title = TITLE
+            title = TITLE,
+            state = rememberWindowState(size = DEFAULT_WINDOW_SIZE)
         ) {
             OpenRDRUI(handler)
         }
     }
 }
-/*
-
-    @Test
-    fun shouldNotShowEmptyCaseQueueTest(): TestResult {
-        val fc = FC {
-            OpenRDRUI {
-                scope = MainScope()
-                api = Api(defaultMock)
-            }
-        }
-        return runReactTest(fc) { container ->
-            container.requireNumberOfCasesNotToBeShowing()
-        }
-    }
-
-    @Test
-    fun caseViewShouldBeInitialisedWithTheCasesFromTheServer(): TestResult {
-        val config = config {
-            val caseId1 = CaseId(1, "case 1")
-            val caseId2 = CaseId(2, "case 2")
-            val caseId3 = CaseId(3, "case 3")
-            returnCasesInfo = CasesInfo(
-                listOf(
-                    caseId1,
-                    caseId2,
-                    caseId3
-                )
-            )
-            returnCase = createCase(caseId1)
-        }
-        val fc = FC {
-            OpenRDRUI {
-                scope = MainScope()
-                api = Api(mock(config))
-            }
-        }
-        return runReactTest(fc) { container ->
-            with(container) {
-                waitForNextPoll()
-                findById(NUMBER_OF_CASES_ID).textContent shouldBe "$CASES 3"
-            }
-        }
-    }
-*/

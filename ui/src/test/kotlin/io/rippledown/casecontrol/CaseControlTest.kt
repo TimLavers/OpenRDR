@@ -3,21 +3,23 @@ package io.rippledown.casecontrol
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import androidx.compose.ui.window.rememberWindowState
 import io.kotest.matchers.shouldBe
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.mockk
-import io.mockk.slot
+import io.mockk.*
 import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
 import io.rippledown.interpretation.*
+import io.rippledown.main.DEFAULT_WINDOW_SIZE
+import io.rippledown.model.Attribute
 import io.rippledown.model.CaseId
-import io.rippledown.model.CasesInfo
 import io.rippledown.model.caseview.ViewableCase
-import io.rippledown.model.createCase
+import io.rippledown.model.condition.hasCurrentValue
 import io.rippledown.model.createCaseWithInterpretation
+import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.diff.Replacement
+import io.rippledown.model.diff.Unchanged
 import io.rippledown.model.interpretationview.ViewableInterpretation
+import io.rippledown.model.rule.CornerstoneStatus
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
@@ -38,86 +40,55 @@ class CaseControlTest {
         handler = mockk<CaseControlHandler>(relaxed = true)
     }
 
-    @Test
-    fun `should list case names`() = runTest {
-        val caseA = "case a"
-        val caseB = "case b"
-        val caseId1 = CaseId(id = 1, name = caseA)
-        val caseId2 = CaseId(id = 2, name = caseB)
-        val twoCaseIds = listOf(
-            caseId1, caseId2
-        )
-        val case = createCase(caseId1)
-        coEvery { handler.getCase(1) } returns case
-        coEvery { handler.saveCase(any()) } answers { firstArg() }
-
-        with(composeTestRule) {
-            setContent {
-                CaseControl(false, CasesInfo(twoCaseIds), handler)
-            }
-            requireNumberOfCasesOnCaseList(2)
-            requireNamesToBeShowingOnCaseList(caseA, caseB)
-        }
-    }
 
     @Test
-    fun `should show a case when its case name is clicked`() = runTest {
-        val caseNameA = "case A"
-        val caseNameB = "case B"
-        val caseNameC = "case C"
-        val caseId1 = CaseId(id = 1, name = caseNameA)
-        val caseId2 = CaseId(id = 2, name = caseNameB)
-        val caseId3 = CaseId(id = 3, name = caseNameC)
-        val threeCaseIds = listOf(caseId1, caseId2, caseId3)
-        val caseA = createCase(caseId1)
-        val caseB = createCase(caseId2)
-
-        coEvery { handler.getCase(1) } returns caseA
-        coEvery { handler.getCase(2) } returns caseB
-        coEvery { handler.saveCase(any()) } answers { firstArg() }
+    fun `should show the interpretative report of the case`() = runTest {
+        val name = "case A"
+        val bondiComment = "Go to Bondi"
+        val case = createCaseWithInterpretation(name, 1, listOf(bondiComment))
 
         with(composeTestRule) {
-            setContent {
-                CaseControl(false, CasesInfo(threeCaseIds), handler)
-            }
             //Given
-            requireNumberOfCasesOnCaseList(3)
-            requireNamesToBeShowingOnCaseList(caseNameA, caseNameB, caseNameC)
-
-            //When
-            selectCaseByName(caseNameB)
+            setContent {
+                CaseControl(
+                    currentCase = case,
+                    conditionHints = listOf(),
+                    handler = handler
+                )
+            }
 
             //Then
-            waitForCaseToBeShowing(caseNameB)
-
+            requireInterpretation(bondiComment)
         }
     }
 
     @Test
-    fun `should show the interpretation of the first case`() = runTest {
+    fun `should show the comments of the case`() = runTest {
         val caseA = "case A"
         val caseB = "case B"
         val caseId1 = CaseId(id = 1, name = caseA)
         val caseId2 = CaseId(id = 2, name = caseB)
         val caseIds = listOf(caseId1, caseId2)
         val bondiComment = "Go to Bondi"
-        val case = createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
-        coEvery { handler.getCase(1) } returns case
+        val coogeeComment = "Go to Coogee"
+        val case = createCaseWithInterpretation(caseA, 1, listOf(bondiComment, coogeeComment))
         coEvery { handler.saveCase(any()) } answers { firstArg() }
 
         with(composeTestRule) {
-            setContent {
-                CaseControl(false, CasesInfo(caseIds), handler)
-            }
             //Given
-            requireNumberOfCasesOnCaseList(2)
-            requireNamesToBeShowingOnCaseList(caseA, caseB)
-
+            setContent {
+                CaseControl(
+                    currentCase = case,
+                    conditionHints = listOf(),
+                    handler = handler
+                )
+            }
             //When
-            waitForCaseToBeShowing(caseA)
+            selectConclusionsTab()
 
             //Then
-            requireInterpretation(bondiComment)
+            requireComment(0, bondiComment)
+            requireComment(1, coogeeComment)
         }
     }
 
@@ -128,18 +99,18 @@ class CaseControlTest {
         val caseIds = listOf(caseId)
         val bondiComment = "Go to Bondi"
         val manlyComment = "Go to Manly"
-        val originalCase = createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
-        coEvery { handler.getCase(1) } returns originalCase
+        val case = createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
         val slot = slot<ViewableCase>()
-        coEvery { handler.saveCase(capture(slot)) } answers { firstArg() }
+        every { handler.saveCase(capture(slot)) } answers { Unit }
         with(composeTestRule) {
             setContent {
-                CaseControl(false, CasesInfo(caseIds), handler)
+                CaseControl(
+                    currentCase = case,
+                    conditionHints = listOf(),
+                    handler = handler
+                )
             }
             //Given
-            requireNumberOfCasesOnCaseList(1)
-            requireNamesToBeShowingOnCaseList(caseA)
-            waitForCaseToBeShowing(caseA)
             requireInterpretation(bondiComment)
             waitForIdle()
 
@@ -162,14 +133,18 @@ class CaseControlTest {
         val bondiComment = "Go to Bondi"
         val bronteComment = "Go to Bronte"
         val originalCase = createCaseWithInterpretation(caseA, 1)
-        coEvery { handler.getCase(1) } returns originalCase
+//        coEvery { handler.getCase(1) } returns originalCase
 
         val slot = slot<ViewableCase>()
         coEvery { handler.saveCase(capture(slot)) } answers { firstArg() }
 
         with(composeTestRule) {
             setContent {
-                CaseControl(false, CasesInfo(caseIds), handler)
+                CaseControl(
+                    currentCase = null,
+                    conditionHints = listOf(),
+                    handler = handler
+                )
             }
             //Given
             requireNumberOfCasesOnCaseList(1)
@@ -196,7 +171,7 @@ class CaseControlTest {
         val bondiComment = "Go to Bondi"
         val manlyComment = "Go to Manly"
         val originalCase = createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
-        val updatedCase = ViewableCase(
+        val caseWithDiff = ViewableCase(
             case = originalCase.case,
             viewableInterpretation = ViewableInterpretation(originalCase.case.interpretation).apply {
                 verifiedText = manlyComment
@@ -204,628 +179,79 @@ class CaseControlTest {
             },
             viewProperties = originalCase.viewProperties
         )
-        coEvery { handler.getCase(1) } returns originalCase
-        coEvery { handler.saveCase(any()) } returns updatedCase
 
         with(composeTestRule) {
-            setContent {
-                CaseControl(false, CasesInfo(caseIds), handler)
-            }
             //Given
-            requireInterpretation(bondiComment)
-            requireBadgeOnDifferencesTabNotToBeShowing()
+            setContent {
+                CaseControl(
+                    currentCase = caseWithDiff,
+                    conditionHints = listOf(),
+                    handler = handler
+                )
+            }
+            requireInterpretation(manlyComment)
 
-            //When
-            replaceInterpretationBy(manlyComment)
-            waitForIdle()
-
-            //Then the badge count should indicate 1 change (i.e. replacement)
+            //Then
             requireBadgeOnDifferencesTabToShow(1)
         }
     }
 
-
     @Test
-    fun `should update the interpretation when a case is selected`() = runTest {
-        val caseA = "case A"
-        val caseB = "case B"
-        val caseId1 = CaseId(id = 1, name = caseA)
-        val caseId2 = CaseId(id = 2, name = caseB)
-        val caseIds = listOf(caseId1, caseId2)
-        val bondiComment = "Go to Bondi"
-        val malabarComment = "Go to Malabar"
-
-        val viewableCaseA = createCaseWithInterpretation(
-            name = caseA,
+    fun `should show case view`() = runTest {
+        val viewableCase = createCaseWithInterpretation(
+            name = "case 1",
             id = 1,
-            conclusionTexts = listOf(bondiComment)
-        )
-        val viewableCaseB = createCaseWithInterpretation(
-            name = caseB,
-            id = 2,
-            conclusionTexts = listOf(malabarComment)
-        )
-        coEvery { handler.getCase(caseId1.id!!) } returns viewableCaseA
-        coEvery { handler.getCase(caseId2.id!!) } returns viewableCaseB
-        coEvery { handler.saveCase(any()) } answers { firstArg() }
-
-        with(composeTestRule) {
-            setContent {
-                CaseControl(false, CasesInfo(caseIds), handler)
-            }
-            //Given
-            requireNumberOfCasesOnCaseList(2)
-            requireNamesToBeShowingOnCaseList(caseA, caseB)
-            waitForCaseToBeShowing(caseA)
-            requireInterpretation(bondiComment)
-
-            //When
-            selectCaseByName(caseB)
-
-            //Then
-            waitForCaseToBeShowing(caseB)
-            requireInterpretation(malabarComment)
-        }
-    }
-
-    @Test
-    fun `should show case view for the first case`() = runTest {
-        val caseName1 = "case 1"
-        val caseName2 = "case 2"
-        val caseId1 = CaseId(1, caseName1)
-        val caseId2 = CaseId(2, caseName2)
-        val twoCaseIds = listOf(
-            caseId1, caseId2
-        )
-        coEvery { handler.getCase(1) } returns createCaseWithInterpretation(
-            name = caseName1,
-            id = 1
+            conclusionTexts = listOf()
         )
         coEvery { handler.saveCase(any()) } answers { firstArg() }
 
         with(composeTestRule) {
             setContent {
-                CaseControl(false, CasesInfo(twoCaseIds), handler)
+                CaseControl(
+                    currentCase = viewableCase,
+                    conditionHints = listOf(),
+                    handler = handler
+                )
             }
-            waitForCaseToBeShowing(caseName1)
+            waitForCaseToBeShowing("case 1")
         }
     }
 
-    @Test
-    fun `should show case list for several cases`() = runTest {
 
-        val caseIds = (1..10).map { i ->
-            val caseId = CaseId(id = i.toLong(), name = "case $i")
-            coEvery { handler.getCase(caseId.id!!) } returns createCase(caseId)
-            caseId
-        }
-        coEvery { handler.saveCase(any()) } answers { firstArg() }
-
-        val caseName1 = "case 1"
-        val caseName10 = "case 10"
-        with(composeTestRule) {
-            setContent {
-                CaseControl(false, CasesInfo(caseIds), handler)
-            }
-            //Given
-            waitForCaseToBeShowing(caseName1)
-
-            //When
-            selectCaseByName(caseName10)
-
-            //Then
-            waitForCaseToBeShowing(caseName10)
-        }
-    }
-
-    /*
-@Test
-    fun diffPanelShouldUpdateWhenTheInterpretationIsEdited(): TestResult {
-        val addedText = "Bring your flippers!"
-        val diffListToReturn = DiffList(
-            listOf(
-                Addition(addedText),
-            )
-        )
-        val interpretationWithDiffs = ViewableInterpretation().apply { diffList = diffListToReturn }
-        val config = config {
-            returnInterpretationAfterSavingInterpretation = interpretationWithDiffs
-        }
-
-        val fc = FC {
-            InterpretationTabs {
-                scope = MainScope()
-                api = Api(mock(config))
-                interpretation = ViewableInterpretation()
-            }
-        }
-        return runReactTest(fc) { container ->
-            with(container) {
-                requireInterpretation("")
-                enterInterpretation(addedText)
-                waitForDebounce()
-                selectChangesTab()
-                requireNumberOfRows(1)
-                requireChangedTextInRow(0, addedText)
-            }
-        }
-    }
-
-        @Test
-        fun shouldNotShowCornerstoneViewIfNoCornerstone(): TestResult {
-            val id = 1L
-            val caseName = "Bondi"
-            val caseIdList = listOf(CaseId(id, caseName))
-            val bondiComment = "Go to Bondi now!"
-            val diffList = DiffList(
-                listOf(
-                    Addition(bondiComment),
-                )
-            )
-            val caseWithInterp = createCaseWithInterpretation(
-                id = id,
-                name = caseName,
-                diffs = diffList
-            )
-            val config = config {
-                expectedCaseId = id
-                returnCasesInfo = CasesInfo(caseIdList)
-                returnCase = caseWithInterp
-            }
-
-            val fc = FC {
-                CaseControl {
-                    caseIds = caseIdList
-                    api = Api(mock(config))
-                    scope = MainScope()
-                    ruleSessionInProgress = { _ -> }
-                }
-            }
-            return runReactTest(fc) { container ->
-                with(container) {
-                    waitForEvents()
-                    requireCaseToBeShowing(caseName)
-
-                    //start to build a rule for the Addition
-                    selectChangesTab()
-                    waitForEvents()
-                    requireNumberOfRows(1)
-                    moveMouseOverRow(0)
-                    waitForEvents()
-                    clickBuildIconForRow(0)
-                    requireCornerstoneCaseNotToBeShowing()
-                }
-            }
-        }
-
-        @Test
-        fun shouldShowConditionHintsWhenRuleSessionIsStarted(): TestResult {
-            val caseId = 45L
-            val caseName = "Bondi"
-            val caseIdList = listOf(CaseId(caseId, caseName))
-            val beachComment = "Enjoy the beach!"
-            val bondiComment = "Go to Bondi now!"
-            val diffList = DiffList(
-                listOf(
-                    Unchanged(beachComment),
-                    Addition(bondiComment),
-                )
-            )
-            val caseWithInterp = createCaseWithInterpretation(
-                name = caseName,
-                id = caseId,
-                conclusionTexts = listOf(beachComment, bondiComment),
-                diffs = diffList
-            )
-            val condition = hasCurrentValue(1, Attribute(2, "surf"))
-            val config = config {
-                expectedCaseId = caseId
-                returnCasesInfo = CasesInfo(caseIdList)
-                returnCase = caseWithInterp
-                returnConditionList = ConditionList(listOf(condition))
-            }
-
-            val fc = FC {
-                CaseControl {
-                    caseIds = caseIdList
-                    api = Api(mock(config))
-                    scope = MainScope()
-                    ruleSessionInProgress = { _ -> }
-                }
-            }
-            return runReactTest(fc) { container ->
-                with(container) {
-                    //Given
-                    waitForEvents()
-                    requireCaseToBeShowing(caseName)
-                    selectChangesTab()
-                    waitForEvents()
-                    requireNumberOfRows(2)
-                    moveMouseOverRow(1)
-                    waitForEvents()
-
-                    //When
-                    clickBuildIconForRow(1)
-                    waitForEvents()
-
-                    //Then
-                    waitForEvents()
-                    waitForEvents()
-                    waitForEvents()
-                    requireDoneButtonShowing()
-                    requireConditions(listOf(condition.asText()))
-                }
-            }
-        }
-
-        @Test
-        fun shouldCancelConditionSelector(): TestResult {
-            val caseName = "Bondi"
-            val caseId = 45L
-            val caseIdList = listOf(CaseId(caseId, caseName))
-            val bondiComment = "Go to Bondi now!"
-            val manlyComment = "Go to Manly now!"
-            val beachComment = "Enjoy the beach!"
-            val diffList = DiffList(
-                listOf(
-                    Unchanged(beachComment),
-                    Removal(manlyComment),
-                    Addition(bondiComment),
-                    Replacement(manlyComment, bondiComment)
-                )
-            )
-            val caseWithInterp = createCaseWithInterpretation(
-                name = caseName,
-                id = caseId,
-                conclusionTexts = listOf(beachComment, manlyComment, bondiComment),
-                diffs = diffList
-            )
-            val config = config {
-                expectedCaseId = caseId
-                returnCasesInfo = CasesInfo(caseIdList)
-                returnCase = caseWithInterp
-            }
-
-            val fc = FC {
-                CaseControl {
-                    caseIds = caseIdList
-                    api = Api(mock(config))
-                    scope = MainScope()
-                    ruleSessionInProgress = { _ -> }
-                }
-            }
-            return runReactTest(fc) { container ->
-                with(container) {
-                    waitForEvents()
-                    requireCaseToBeShowing(caseName)
-                    //start to build a rule for the Addition
-                    selectChangesTab()
-                    waitForEvents()
-                    requireNumberOfRows(4)
-                    moveMouseOverRow(2)
-                    waitForEvents()
-                    clickBuildIconForRow(2)
-                    requireCancelButtonShowing()
-                    //cancel the condition selector
-                    clickCancelButton()
-                    waitForEvents()
-                    requireDoneButtonNotShowing()
-                }
-            }
-        }
-
-        @Test
-        fun shouldShowCornerstoneWhenBuildingARule(): TestResult {
-            val caseId = 1L
-            val cornerstoneId = 2L
-            val caseName = "Manly"
-            val cornerstoneCaseName = "Bondi"
-            val caseIdList = listOf(CaseId(caseId, caseName))
-            val bondiComment = "Go to Bondi now!"
-            val beachComment = "Enjoy the beach!"
-            val diffList = DiffList(listOf(Addition(bondiComment)))
-            val caseWithInterp = createCaseWithInterpretation(
-                id = caseId,
-                name = caseName,
-                conclusionTexts = listOf(beachComment),
-                diffs = diffList
-            )
-            val cornerstoneCase = createCaseWithInterpretation(
-                id = cornerstoneId,
-                name = cornerstoneCaseName,
-                conclusionTexts = listOf(beachComment),
-                diffs = diffList
-            )
-            val config = config {
-                expectedCaseId = caseId
-                returnCasesInfo = CasesInfo(caseIdList)
-                returnCase = caseWithInterp
-                returnCornerstoneStatus = CornerstoneStatus(cornerstoneCase, 42, 84)
-            }
-
-            val fc = FC {
-                CaseControl {
-                    caseIds = caseIdList
-                    api = Api(mock(config))
-                    scope = MainScope()
-                    ruleSessionInProgress = { _ -> }
-                }
-            }
-            return runReactTest(fc) { container ->
-                with(container) {
-                    waitForEvents()
-                    requireCaseToBeShowing(caseName)
-                    //start to build a rule for the Addition
-                    selectChangesTab()
-                    waitForEvents()
-                    requireNumberOfRows(1)
-                    moveMouseOverRow(0)
-                    waitForEvents()
-                    clickBuildIconForRow(0)
-                    requireCornerstoneCaseToBeShowing(cornerstoneCaseName)
-                }
-            }
-        }
-
-        @Test
-        fun shouldNotShowCornerstoneAfterBuildingARule(): TestResult {
-            val caseId = 1L
-            val cornerstoneId = 2L
-            val caseName = "Manly"
-            val cornerstoneCaseName = "Bondi"
-            val caseIdList = listOf(CaseId(caseId, caseName))
-            val bondiComment = "Go to Bondi now!"
-            val beachComment = "Enjoy the beach!"
-            val diffList = DiffList(listOf(Addition(bondiComment)))
-            val caseWithInterp = createCaseWithInterpretation(
-                id = caseId,
-                name = caseName,
-                conclusionTexts = listOf(beachComment),
-                diffs = diffList
-            )
-            val cornerstoneCase = createCaseWithInterpretation(
-                id = cornerstoneId,
-                name = cornerstoneCaseName,
-                conclusionTexts = listOf(beachComment),
-                diffs = diffList
-            )
-            val config = config {
-                expectedCaseId = caseId
-                returnCasesInfo = CasesInfo(caseIdList)
-                returnCase = caseWithInterp
-                returnCornerstoneStatus = CornerstoneStatus(cornerstoneCase, 42, 84)
-            }
-
-            val fc = FC {
-                CaseControl {
-                    caseIds = caseIdList
-                    api = Api(mock(config))
-                    scope = MainScope()
-                    ruleSessionInProgress = { _ -> }
-                }
-            }
-            return runReactTest(fc) { container ->
-                with(container) {
-                    //Given
-                    waitForEvents()
-                    requireCaseToBeShowing(caseName)
-
-                    //start to build a rule for the Addition
-                    selectChangesTab()
-                    waitForEvents()
-                    requireNumberOfRows(1)
-                    moveMouseOverRow(0)
-                    waitForEvents()
-                    clickBuildIconForRow(0)
-                    requireCornerstoneCaseToBeShowing(cornerstoneCaseName)
-
-                    //When
-                    clickDoneButton()
-                    waitForEvents()
-
-                    //Then
-                    requireCornerstoneCaseNotToBeShowing()
-                }
-            }
-        }
-
-        @Test
-        fun shouldNotShowCornerstoneAfterCancellingARuleBuildingSession(): TestResult {
-            val caseId = 1L
-            val cornerstoneId = 2L
-            val caseName = "Manly"
-            val cornerstoneCaseName = "Bondi"
-            val caseIdList = listOf(CaseId(caseId, caseName))
-            val bondiComment = "Go to Bondi now!"
-            val beachComment = "Enjoy the beach!"
-            val diffList = DiffList(listOf(Addition(bondiComment)))
-            val caseWithInterp = createCaseWithInterpretation(
-                id = caseId,
-                name = caseName,
-                conclusionTexts = listOf(beachComment),
-                diffs = diffList
-            )
-            val cornerstoneCase = createCaseWithInterpretation(
-                id = cornerstoneId,
-                name = cornerstoneCaseName,
-                conclusionTexts = listOf(beachComment),
-                diffs = diffList
-            )
-            val config = config {
-                expectedCaseId = caseId
-                returnCasesInfo = CasesInfo(caseIdList)
-                returnCase = caseWithInterp
-                returnCornerstoneStatus = CornerstoneStatus(cornerstoneCase, 42, 84)
-            }
-
-            val fc = FC {
-                CaseControl {
-                    caseIds = caseIdList
-                    api = Api(mock(config))
-                    scope = MainScope()
-                    ruleSessionInProgress = { _ -> }
-                }
-            }
-            return runReactTest(fc) { container ->
-                with(container) {
-                    //Given
-                    waitForEvents()
-                    requireCaseToBeShowing(caseName)
-                    //start to build a rule for the Addition
-                    selectChangesTab()
-                    waitForEvents()
-                    requireNumberOfRows(1)
-                    moveMouseOverRow(0)
-                    waitForEvents()
-                    clickBuildIconForRow(0)
-                    requireCornerstoneCaseToBeShowing(cornerstoneCaseName)
-
-                    //When
-                    clickCancelButton()
-                    waitForEvents()
-
-                    //Then
-                    requireCornerstoneCaseNotToBeShowing()
-                }
-            }
-        }
-
-        @Test
-        fun shouldNotShowCaseSelectorWhenBuildingARule(): TestResult {
-            val caseId = 1L
-            val cornerstoneId = 2L
-            val caseName = "Manly"
-            val cornerstoneCaseName = "Bondi"
-            val caseIdList = listOf(CaseId(caseId, caseName))
-            val bondiComment = "Go to Bondi now!"
-            val beachComment = "Enjoy the beach!"
-            val diffList = DiffList(listOf(Addition(bondiComment)))
-            val caseWithInterp = createCaseWithInterpretation(
-                id = caseId,
-                name = caseName,
-                conclusionTexts = listOf(beachComment),
-                diffs = diffList
-            )
-            val cornerstoneCase = createCaseWithInterpretation(
-                id = cornerstoneId,
-                name = cornerstoneCaseName,
-                conclusionTexts = listOf(beachComment),
-                diffs = diffList
-            )
-            val config = config {
-                expectedCaseId = caseId
-                returnCasesInfo = CasesInfo(caseIdList)
-                returnCase = caseWithInterp
-                returnCornerstoneStatus = CornerstoneStatus(cornerstoneCase, 42, 84)
-            }
-
-            val fc = FC {
-                CaseControl {
-                    caseIds = caseIdList
-                    api = Api(mock(config))
-                    scope = MainScope()
-                    ruleSessionInProgress = { _ -> }
-                }
-            }
-            return runReactTest(fc) { container ->
-                with(container) {
-                    //Given
-                    waitForEvents()
-                    requireCaseSelectorToBeShowing()
-                    requireCaseToBeShowing(caseName)
-                    //start to build a rule for the Addition
-                    selectChangesTab()
-                    waitForEvents()
-                    requireNumberOfRows(1)
-                    moveMouseOverRow(0)
-                    waitForEvents()
-
-                    //When
-                    clickBuildIconForRow(0)
-                    waitForEvents()
-
-                    //Then
-                    waitForEvents()
-                    waitForEvents()
-                    waitForEvents()
-                    requireCaseSelectorNotToBeShowing()
-                }
-            }
-        }
-
-        @Test
-        fun shoulCallHandlerMethodWhenStartingToBuildARule(): TestResult {
-            val caseId = 1L
-            val caseName = "Manly"
-            val caseIdList = listOf(CaseId(caseId, caseName))
-            val bondiComment = "Go to Bondi now!"
-            val beachComment = "Enjoy the beach!"
-            val diffList = DiffList(listOf(Addition(bondiComment)))
-            val caseWithInterp = createCaseWithInterpretation(
-                id = caseId,
-                name = caseName,
-                conclusionTexts = listOf(beachComment),
-                diffs = diffList
-            )
-            val config = config {
-                expectedCaseId = caseId
-                returnCasesInfo = CasesInfo(caseIdList)
-                returnCase = caseWithInterp
-                returnCornerstoneStatus = CornerstoneStatus()
-            }
-            var isInProgress = false
-
-            val fc = FC {
-                CaseControl {
-                    caseIds = caseIdList
-                    api = Api(mock(config))
-                    scope = MainScope()
-                    ruleSessionInProgress = { inProgress ->
-                        isInProgress = inProgress
-                    }
-                }
-            }
-            return runReactTest(fc) { container ->
-                with(container) {
-                    //Given
-                    isInProgress shouldBe false
-                    requireCaseSelectorToBeShowing()
-                    requireCaseToBeShowing(caseName)
-                    //start to build a rule for the Addition
-                    selectChangesTab()
-                    requireNumberOfRows(1)
-                    moveMouseOverRow(0)
-
-                    //When
-                    clickBuildIconForRow(0)
-                    waitForEvents()
-
-                    //Then
-                    isInProgress shouldBe true
-                }
-            }
-        }
-
-     */
 }
 
 fun main() {
     application {
         Window(
             onCloseRequest = ::exitApplication,
+            state = rememberWindowState(size = DEFAULT_WINDOW_SIZE)
         ) {
             val handler = mockk<CaseControlHandler>(relaxed = true)
-            val caseNames = (0..100).map { "case $it" }
-            val caseIds = caseNames.mapIndexed { index, name ->
-                CaseId(id = index.toLong(), name = name)
-            }
-            caseIds.map { caseId ->
-                createCaseWithInterpretation(caseId.name, caseId.id, listOf("Go to Bondi ${caseId.id}."))
-            }.forEach {
-                coEvery { handler.getCase(it.case.caseId.id!!) } returns it
-            }
-            coEvery { handler.saveCase(any()) } answers { firstArg() }
-            CaseControl(false, CasesInfo(caseIds), handler)
+
+            val caseName = "Bondi"
+            val id = 45L
+            val beachComment = "Enjoy the beach."
+            val bondiComment = "Go to Bondi now!"
+            val diffList = DiffList(
+                listOf(
+                    Unchanged(beachComment),
+                    Addition(bondiComment),
+                )
+            )
+            val viewableCase = createCaseWithInterpretation(
+                name = caseName,
+                id = id,
+                conclusionTexts = listOf(bondiComment),
+                diffs = diffList
+            )
+            coEvery { handler.selectCornerstone(any()) } returns viewableCase
+            val condition = hasCurrentValue(1, Attribute(2, "Surf 1"))
+            CaseControl(
+                currentCase = viewableCase,
+                conditionHints = listOf(condition),
+                cornerstoneStatus = CornerstoneStatus(viewableCase, 42, 84),
+                handler = handler
+            )
         }
     }
 }

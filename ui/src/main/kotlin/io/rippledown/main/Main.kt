@@ -12,6 +12,8 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import io.rippledown.constants.main.TITLE
 
+val DEFAULT_WINDOW_SIZE = DpSize(1_800.dp, 800.dp)
+
 fun main() = application {
     var closing by remember { mutableStateOf(false) }
     Window(
@@ -21,7 +23,7 @@ fun main() = application {
         },
         icon = painterResource("water-wave-icon.png"),
         title = TITLE,
-        state = rememberWindowState(size = DpSize(1200.dp, 800.dp))
+        state = rememberWindowState(size = DEFAULT_WINDOW_SIZE)
     ) {
         OpenRDRUI(object : Handler {
             override var isClosing = { closing }

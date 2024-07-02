@@ -1,7 +1,7 @@
 package io.rippledown.rule
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -21,7 +21,7 @@ interface RuleMakerHandler {
 @Composable
 fun RuleMaker(allConditions: List<Condition>, handler: RuleMakerHandler) {
     var selectedConditions by remember { mutableStateOf(listOf<Condition>()) }
-    var availableConditions: List<Condition> by remember { mutableStateOf(listOf()) }
+    var availableConditions by remember { mutableStateOf(listOf<Condition>()) }
     var filterText by remember { mutableStateOf("") }
 
     LaunchedEffect(allConditions) {
@@ -29,7 +29,7 @@ fun RuleMaker(allConditions: List<Condition>, handler: RuleMakerHandler) {
     }
     Column(
         modifier = Modifier
-            .width(300.dp)
+            .requiredWidth(400.dp)
             .semantics { contentDescription = RULE_MAKER }
     ) {
         SelectedConditions(selectedConditions, object : SelectedConditionsHandler {
@@ -48,7 +48,7 @@ fun RuleMaker(allConditions: List<Condition>, handler: RuleMakerHandler) {
         })
 
         AvailableConditions(availableConditions, object : AvailableConditionsHandler {
-            override var onAddCondition = { condition: Condition ->
+            override fun onAddCondition(condition: Condition) {
                 selectedConditions = selectedConditions + condition
                 availableConditions = availableConditions - condition
                 handler.onUpdateConditions(selectedConditions)
@@ -59,7 +59,9 @@ fun RuleMaker(allConditions: List<Condition>, handler: RuleMakerHandler) {
             override var cancel = {
                 handler.onCancel()
             }
-            override var finish = { handler.onDone(selectedConditions) }
+            override var finish = {
+                handler.onDone(selectedConditions)
+            }
         })
     }
 }

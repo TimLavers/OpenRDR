@@ -18,5 +18,13 @@ class CommentsViewStepDefs : En {
                 conclusionsViewPO().requireConditionAtIndex(index, 0, condition)
             }
         }
+
+        Then("the following comment is shown:") { dataTable: DataTable ->
+            val expected = dataTable.asLists()
+            expected.forEachIndexed { index, row ->
+                val comment = row[0]
+                conclusionsViewPO().requireCommentAtIndex(index, comment)
+            }
+        }
     }
 }

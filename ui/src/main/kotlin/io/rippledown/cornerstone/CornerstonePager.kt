@@ -10,7 +10,7 @@ import io.rippledown.model.rule.CornerstoneStatus
 
 interface CornerstonePagerHandler {
     suspend fun selectCornerstone(index: Int): ViewableCase
-    fun exemptCornerstone(index: Int): CornerstoneStatus
+    fun exemptCornerstone(index: Int)
 }
 
 @OptIn(ExperimentalFoundationApi::class)

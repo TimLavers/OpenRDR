@@ -1,6 +1,5 @@
 package io.rippledown.casecontrol
 
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import io.rippledown.model.CasesInfo
@@ -16,7 +15,6 @@ interface CasePollerHandler {
 val POLL_PERIOD = 2.seconds
 
 @Composable
-@Preview
 fun CasePoller(handler: CasePollerHandler) {
     LaunchedEffect(Unit) {
         queryForCases(handler = handler)

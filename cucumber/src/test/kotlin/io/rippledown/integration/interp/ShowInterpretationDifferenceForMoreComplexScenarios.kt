@@ -5,7 +5,7 @@ import io.rippledown.integration.UITestBase
 import io.rippledown.integration.pageobjects.CaseListPO
 import io.rippledown.integration.pageobjects.CaseQueuePO
 import io.rippledown.integration.pageobjects.CaseViewPO
-import io.rippledown.integration.pageobjects.InterpretationViewPO
+import io.rippledown.integration.pageobjects.InterpretationPO
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -16,17 +16,12 @@ internal class ShowInterpretationDifferenceForMoreComplexScenarios : UITestBase(
     private lateinit var caseQueuePO: CaseQueuePO
     private lateinit var caseListPO: CaseListPO
     private lateinit var caseViewPO: CaseViewPO
-    private lateinit var interpretationViewPO: InterpretationViewPO
+    private lateinit var interpretationViewPO: InterpretationPO
 
     @BeforeTest
     fun setup() {
         serverProxy.start()
         resetKB()
-//        setupWebDriver()
-//        caseQueuePO = CaseQueuePO(driver)
-//        caseListPO = CaseListPO(driver)
-//        caseViewPO = CaseViewPO(driver)
-//        interpretationViewPO = InterpretationViewPO(driver)
     }
 
     @AfterTest

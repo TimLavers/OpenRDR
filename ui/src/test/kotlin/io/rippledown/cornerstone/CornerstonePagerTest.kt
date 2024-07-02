@@ -176,7 +176,7 @@ fun main() {
                         return createCase("Greta ${index + 1}")
                     }
 
-                    override fun exemptCornerstone(index: Int): CornerstoneStatus {
+                    override fun exemptCornerstone(index: Int) {
                         TODO("Not yet implemented")
                     }
                 })

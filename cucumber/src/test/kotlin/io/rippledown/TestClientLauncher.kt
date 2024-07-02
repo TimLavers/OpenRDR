@@ -4,14 +4,13 @@ package io.rippledown
 
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import io.ktor.client.engine.cio.*
 import io.rippledown.constants.main.TITLE
 import io.rippledown.main.Api
+import io.rippledown.main.DEFAULT_WINDOW_SIZE
 import io.rippledown.main.Handler
 import io.rippledown.main.OpenRDRUI
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -44,7 +43,7 @@ class TestClientLauncher {
                     },
                     icon = painterResource("water-wave-icon.png"),
                     title = TITLE,
-                    state = rememberWindowState(size = DpSize(1_400.dp, 800.dp))
+                    state = rememberWindowState(size = DEFAULT_WINDOW_SIZE)
                 ) {
                     composeWindow = this.window
                     OpenRDRUI(handler)

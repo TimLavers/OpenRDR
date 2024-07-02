@@ -18,7 +18,10 @@ fun ComposeTestRule.requireNamesToBeShowingOnCaseList(vararg caseNames: String) 
 
 fun ComposeTestRule.selectCaseByName(caseName: String) {
     waitUntilExactlyOneExists(caseMatcher(caseName))
-    onNode(caseMatcher(caseName)).performClick()
+    onNode(caseMatcher(caseName))
+        .assertIsDisplayed()
+        .performClick()
+    waitForIdle()
 }
 
 fun ComposeTestRule.requireCaseToBeFocused(caseName: String) {
@@ -35,6 +38,10 @@ fun ComposeTestRule.requireNumberOfCasesOnCaseList(expected: Int) {
 @OptIn(ExperimentalTestApi::class)
 fun ComposeTestRule.waitForNumberOfCases(expected: Int) {
     waitUntilExactlyOneExists(hasText(expected.toString()), timeoutMillis = 2_000)
+}
+
+fun ComposeTestRule.requireCaseSelectorToBeDisplayed() {
+    onNodeWithContentDescription(CASELIST_ID).assertIsDisplayed()
 }
 
 fun ComposeTestRule.requireCaseSelectorNotToBeDisplayed() {

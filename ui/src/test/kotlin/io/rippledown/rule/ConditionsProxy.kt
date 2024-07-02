@@ -19,23 +19,36 @@ fun ComposeTestRule.requireRuleMakerNotToBeDisplayed() {
 fun ComposeTestRule.requireAvailableConditionsToBeDisplayed(conditions: List<String>) {
     onNodeWithContentDescription(AVAILABLE_CONDITIONS).onChildren().assertCountEquals(conditions.size)
     conditions.forEachIndexed { index, condition ->
-        onNodeWithContentDescription("$AVAILABLE_CONDITION_PREFIX$index").assertTextEquals(condition)
+        onNodeWithContentDescription("$AVAILABLE_CONDITION_PREFIX$index")
+            .assertTextEquals(condition)
+            .assertIsDisplayed()
     }
+}
+
+fun ComposeTestRule.requireNoAvailableConditionsToBeDisplayed() {
+    onNodeWithContentDescription(AVAILABLE_CONDITIONS).onChildren().assertCountEquals(0)
 }
 
 fun ComposeTestRule.requireSelectedConditionsToBeDisplayed(conditions: List<String>) {
     onNodeWithContentDescription(SELECTED_CONDITIONS).onChildren().assertCountEquals(conditions.size)
     conditions.forEachIndexed { index, condition ->
-        onNodeWithContentDescription("$SELECTED_CONDITION_PREFIX$index").assertTextEquals(condition)
+        onNodeWithContentDescription("$SELECTED_CONDITION_PREFIX$index")
+            .assertTextEquals(condition)
+            .assertIsDisplayed()
     }
 }
 
 fun ComposeTestRule.clickAvailableCondition(index: Int) {
-    onNodeWithContentDescription("$AVAILABLE_CONDITION_PREFIX$index").performClick()
+    onNodeWithContentDescription("$AVAILABLE_CONDITION_PREFIX$index")
+        .assertIsDisplayed()
+        .performClick()
 }
+
 fun ComposeTestRule.clickAvailableConditionWithText(text: String) {
     onNodeWithContentDescription(AVAILABLE_CONDITIONS)
-        .onChildren().filterToOne(hasText(text)).performClick()
+        .onChildren().filterToOne(hasText(text))
+        .assertIsDisplayed()
+        .performClick()
     waitForIdle()
 }
 
@@ -65,16 +78,21 @@ fun ComposeTestRule.hoverOverSelectedCondition(index: Int) {
 }
 
 fun ComposeTestRule.removeSelectedCondition(index: Int) {
-    onNodeWithContentDescription("$REMOVE_CONDITION_ICON_PREFIX$index").performClick()
+    onNodeWithContentDescription("$REMOVE_CONDITION_ICON_PREFIX$index")
+        .assertIsDisplayed()
+        .performClick()
 }
 
 fun ComposeTestRule.clickFinishRuleButton() {
-    onNodeWithContentDescription(FINISH_RULE_BUTTON).assertIsDisplayed()
-    onNodeWithContentDescription(FINISH_RULE_BUTTON).performClick()
+    onNodeWithContentDescription(FINISH_RULE_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
     waitForIdle()
 }
 
 fun ComposeTestRule.clickCancelRuleButton() {
-    onNodeWithContentDescription(CANCEL_RULE_BUTTON).performClick()
+    onNodeWithContentDescription(CANCEL_RULE_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
     waitForIdle()
 }

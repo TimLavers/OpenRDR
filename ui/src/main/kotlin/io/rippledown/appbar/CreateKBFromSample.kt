@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -99,7 +100,8 @@ fun TemplateChooser(onSelect: (SampleKB) -> Unit) {
     Column {
         SampleKB.entries.forEach {
             Row(
-                Modifier
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
                     .fillMaxWidth()
                     .selectable(
                         selected = (it == selectedSampleKB),
@@ -112,7 +114,8 @@ fun TemplateChooser(onSelect: (SampleKB) -> Unit) {
             ) {
                 RadioButton(
                     selected = (it == selectedSampleKB),
-                    onClick = { onSelect(it)
+                    onClick = {
+                        onSelect(it)
                         selectedSampleKB = it
                     },
                     modifier = Modifier.semantics {
@@ -128,4 +131,5 @@ fun TemplateChooser(onSelect: (SampleKB) -> Unit) {
         }
     }
 }
+
 fun SampleKB.radioButtonDescription() = "select ${title()}"
