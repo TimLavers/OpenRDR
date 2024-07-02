@@ -286,7 +286,7 @@ class Defs : En {
         And("I select the {word} tab") { tabName: String ->
             when (tabName) {
                 "interpretation" -> interpretationViewPO().selectOriginalTab()
-                "conclusions" -> interpretationViewPO().selectConclusionsTab()
+                "comments" -> interpretationViewPO().selectConclusionsTab()
                 "changes" -> interpretationViewPO().selectDifferencesTab()
                 else -> throw IllegalArgumentException("Unknown tab name: $tabName")
             }

@@ -1,17 +1,18 @@
 package io.rippledown.casecontrol
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.cornerstone.NO_CORNERSTONES_TO_REVIEW_MSG
-import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
 import io.rippledown.cornerstone.CornerstonePager
 import io.rippledown.cornerstone.CornerstonePagerHandler
 import io.rippledown.main.Handler
 import io.rippledown.model.Attribute
-import io.rippledown.model.CasesInfo
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
@@ -22,42 +23,37 @@ import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.rule.RuleMaker
 import io.rippledown.rule.RuleMakerHandler
-import kotlinx.coroutines.delay
 
 interface CaseControlHandler : Handler, CaseInspectionHandler, CornerstonePagerHandler {
-    var setRuleInProgress: (_: Boolean) -> Unit
-    var getCase: (caseId: Long) -> ViewableCase?
-    suspend fun saveCase(case: ViewableCase): ViewableCase
-    suspend fun conditionHintsForCase(caseId: Long): List<Condition>
-    fun startRuleSession(sessionStartRequest: SessionStartRequest): CornerstoneStatus
-    fun buildRule(ruleRequest: RuleRequest): ViewableCase
-    fun updateCornerstoneStatus(cornerstoneRequest: UpdateCornerstoneRequest): CornerstoneStatus
+    fun getCase(caseId: Long)
+    fun saveCase(case: ViewableCase)
+    fun startRuleSession(sessionStartRequest: SessionStartRequest)
+    fun endRuleSession()
+    fun buildRule(ruleRequest: RuleRequest)
+    fun updateCornerstoneStatus(cornerstoneRequest: UpdateCornerstoneRequest)
 }
 
 @Composable
 @Preview
-fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseControlHandler) {
-    var currentCase: ViewableCase? by remember { mutableStateOf(null) }
-    var currentCaseId: Long? by remember { mutableStateOf(null) }
+fun CaseControl(
+    currentCase: ViewableCase?,
+    cornerstoneStatus: CornerstoneStatus? = null,
+    conditionHints: List<Condition>,
+    handler: CaseControlHandler
+) {
     var verifiedText: String? by remember { mutableStateOf(null) }
     val indexOfSelectedDiff: Int by remember { mutableStateOf(-1) }
-    var conditionHintsForCase by remember { mutableStateOf(listOf<Condition>()) }
-    var cornerstoneStatus: CornerstoneStatus by remember { mutableStateOf(CornerstoneStatus()) }
 
-    LaunchedEffect(casesInfo, currentCaseId) {
-        if (casesInfo.caseIds.isNotEmpty()) {
-            if (currentCaseId == null || currentCaseId !in casesInfo.caseIds.map { it.id }) {
-                //No initial case, or it's now been deleted
-                currentCaseId = casesInfo.caseIds[0].id!!
-            }
-            currentCase = handler.getCase(currentCaseId!!)
-            conditionHintsForCase = handler.conditionHintsForCase(currentCaseId!!)
-        }
-    }
+    val ruleInProgress = cornerstoneStatus != null
+
     LaunchedEffect(verifiedText, indexOfSelectedDiff) {
         if (verifiedText != null || indexOfSelectedDiff != -1) {
-            delay(DEBOUNCE_WAIT_PERIOD_MILLIS)
-            currentCase = handler.saveCase(currentCase!!)
+//            delay(DEBOUNCE_WAIT_PERIOD_MILLIS) TODO restore when this is tested
+            val updatedCase = currentCase!!.copy(
+                viewableInterpretation = currentCase.viewableInterpretation
+                    .copy(verifiedText = verifiedText)
+            )
+            handler.saveCase(updatedCase)
         }
     }
 
@@ -67,73 +63,47 @@ fun CaseControl(ruleInProgress: Boolean, casesInfo: CasesInfo, handler: CaseCont
             .width(1800.dp)
     )
     {
-        if (!ruleInProgress) {
-            handler.setInfoMessage("")
-            Column {
-                CaseSelectorHeader(casesInfo.caseIds.size)
-                Spacer(modifier = Modifier.height(10.dp))
-                CaseSelector(casesInfo.caseIds, object : CaseSelectorHandler, Handler by handler {
-                    override var selectCase = { id: Long ->
-                        currentCaseId = id
-                    }
-                })
-            }
-        }
 
         if (currentCase != null) {
-            CaseInspection(currentCase!!, ruleInProgress, object : CaseInspectionHandler, Handler by handler {
-                override var updateCase = { id: Long ->
-                    currentCaseId = id
-                }
-
+            CaseInspection(currentCase, ruleInProgress, object : CaseInspectionHandler, Handler by handler {
                 override fun onStartRule(selectedDiff: Diff) {
-                    cornerstoneStatus = handler.startRuleSession(SessionStartRequest(currentCaseId!!, selectedDiff))
-                    handler.setRuleInProgress(true)//todo remove
+                    handler.startRuleSession(SessionStartRequest(currentCase.id!!, selectedDiff))
                 }
 
                 override var onInterpretationEdited: (text: String) -> Unit = {
                     verifiedText = it
-                    currentCase = currentCase!!.copy(
-                        viewableInterpretation = currentCase!!.viewableInterpretation
-                            .copy(verifiedText = verifiedText)
-                    )
+
                 }
                 override var isCornerstone: Boolean = false
-                override var caseEdited: () -> Unit = {}
                 override fun swapAttributes(moved: Attribute, target: Attribute) {
                     handler.swapAttributes(moved, target)
                 }
             })
         }
         if (ruleInProgress) {
-            if (cornerstoneStatus.cornerstoneToReview == null) {
+            if (cornerstoneStatus!!.cornerstoneToReview == null) {
                 handler.setInfoMessage(NO_CORNERSTONES_TO_REVIEW_MSG)
             } else {
                 handler.setInfoMessage("")
                 CornerstonePager(cornerstoneStatus, object : CornerstonePagerHandler by handler {
-                    override fun exemptCornerstone(index: Int): CornerstoneStatus {
-                        cornerstoneStatus = handler.exemptCornerstone(index)
-                        return cornerstoneStatus
+                    override fun exemptCornerstone(index: Int) {
+                        handler.exemptCornerstone(index)
                     }
                 })
             }
 
-            Spacer(modifier = Modifier.width(10.dp))
-            RuleMaker(conditionHintsForCase, object : RuleMakerHandler, Handler by handler {
+            Spacer(modifier = Modifier.width(5.dp))
+            RuleMaker(conditionHints, object : RuleMakerHandler, Handler by handler {
                 override var onDone = { conditions: List<Condition> ->
-                    handler.setRuleInProgress(false)
                     val ruleRequest = RuleRequest(currentCase!!.id!!, ConditionList(conditions))
-                    currentCase = handler.buildRule(ruleRequest)
+                    handler.buildRule(ruleRequest)
                 }
 
-                override var onCancel = {
-                    handler.setRuleInProgress(false)
-                }
+                override var onCancel = { handler.endRuleSession() }
 
                 override var onUpdateConditions = { conditions: List<Condition> ->
-                    Unit
                     val ccUpdateRequest = UpdateCornerstoneRequest(cornerstoneStatus, ConditionList(conditions))
-                    cornerstoneStatus = handler.updateCornerstoneStatus(ccUpdateRequest)
+                    handler.updateCornerstoneStatus(ccUpdateRequest)
                 }
             })
         }

@@ -12,6 +12,8 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
 import io.rippledown.constants.interpretation.INTERPRETATION_VIEW_LABEL
@@ -33,9 +35,9 @@ fun InterpretationView(text: String, handler: InterpretationViewHandler) {
                 text = INTERPRETATION_VIEW_LABEL,
                 modifier = Modifier.semantics { contentDescription = "Interpretation label" })
         },
-        value = text,
+        value = TextFieldValue(text, selection = TextRange(text.length)),
         onValueChange = {
-            handler.onEdited(it)
+            handler.onEdited(it.text)
         },
         modifier = Modifier
             .semantics {

@@ -18,7 +18,6 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.caseview.ViewableCase
 
 interface CaseViewHandler {
-    var caseEdited: () -> Unit
     fun swapAttributes(moved: Attribute, target: Attribute)
 }
 

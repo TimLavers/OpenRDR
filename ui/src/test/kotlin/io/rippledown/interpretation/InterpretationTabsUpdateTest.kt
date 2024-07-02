@@ -51,6 +51,7 @@ class InterpretationTabsUpdateTest {
 
             //When
             onNodeWithTag("buttonTag").performClick()
+            waitForIdle()
 
             //Then
             requireInterpretation(textB)

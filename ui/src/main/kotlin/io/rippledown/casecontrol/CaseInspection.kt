@@ -12,22 +12,19 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.diff.Diff
 
-interface CaseInspectionHandler : CaseViewHandler, InterpretationTabsHandler {
-    var updateCase: (Long) -> Unit
-}
+interface CaseInspectionHandler : CaseViewHandler, InterpretationTabsHandler
 
 @Composable
 fun CaseInspection(case: ViewableCase, isRuleBuilding: Boolean, handler: CaseInspectionHandler) {
     Column(
         verticalArrangement = Arrangement.Top,
-        modifier = androidx.compose.ui.Modifier
+        modifier = Modifier
             .fillMaxHeight()
             .padding(start = 5.dp)
             .width(500.dp)
     ) {
         if (isRuleBuilding) Spacer(modifier = Modifier.height(40.dp))
         CaseView(case, handler = object : CaseViewHandler {
-            override var caseEdited = {} //TODO
             override fun swapAttributes(moved: Attribute, target: Attribute) {
                 handler.swapAttributes(moved, target)
             }

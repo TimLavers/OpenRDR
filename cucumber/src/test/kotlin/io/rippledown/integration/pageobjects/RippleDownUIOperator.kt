@@ -10,19 +10,19 @@ class RippleDownUIOperator(private val window: ComposeWindow) {
 
     fun context() = window.accessibleContext
 
-    fun applicationBarOperator(): ApplicationBarOperator {
-        return ApplicationBarOperator {
-            context()
-        }
+    fun applicationBarOperator() = ApplicationBarOperator {
+        context()
     }
 
     fun caseListPO() = CaseListPO {
         context()
     }
+
     fun caseCountPO() = CaseCountPO {
         context()
     }
-    fun kbControlsPO(): KbControlsPO = KbControlsPO {
+
+    fun kbControlsPO() = KbControlsPO {
         context()
     }
 
@@ -34,9 +34,10 @@ class RippleDownUIOperator(private val window: ComposeWindow) {
         context()
     }
 
-    fun interpretationViewPO() = InterpretationViewPO {
+    fun interpretationViewPO() = InterpretationPO {
         context()
     }
+
     fun conclusionsViewPO() = ConclusionsViewPO {
         context()
     }

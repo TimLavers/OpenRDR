@@ -4,11 +4,11 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.integration.UITestBase
 import io.rippledown.integration.pageobjects.CaseListPO
 import io.rippledown.integration.pageobjects.CaseQueuePO
-import io.rippledown.integration.pageobjects.InterpretationViewPO
+import io.rippledown.integration.pageobjects.InterpretationPO
 import io.rippledown.integration.restclient.RESTClient
 import io.rippledown.model.condition.EpisodicCondition
-import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.episodic.predicate.Normal
+import io.rippledown.model.condition.episodic.signature.Current
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -18,7 +18,7 @@ internal class ShowCaseInterpretation : UITestBase() {
 
     private lateinit var caseQueuePO: CaseQueuePO
     private lateinit var caseListPO: CaseListPO
-    private lateinit var interpretationViewPO: InterpretationViewPO
+    private lateinit var interpretationViewPO: InterpretationPO
     private val comment = "Normal TSH."
 
     @BeforeTest
@@ -27,11 +27,6 @@ internal class ShowCaseInterpretation : UITestBase() {
         resetKB()
         setupCases()
         buildRule()
-//        setupWebDriver()
-//        caseQueuePO = CaseQueuePO(driver)
-//        caseQueuePO.waitForNumberOfCasesToBe(3)
-//        caseListPO = CaseListPO(driver)
-//        interpretationViewPO = InterpretationViewPO(driver)
     }
 
     @AfterTest

@@ -1,5 +1,6 @@
 package io.rippledown.integration.pageobjects
 
+import androidx.compose.ui.awt.ComposeDialog
 import io.kotest.assertions.withClue
 import io.kotest.matchers.comparables.shouldBeGreaterThanOrEqualTo
 import io.kotest.matchers.shouldBe
@@ -8,6 +9,7 @@ import io.rippledown.constants.interpretation.*
 import io.rippledown.constants.rule.FINISH_RULE_BUTTON
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
+import io.rippledown.integration.utils.findComposeDialogThatIsShowing
 import io.rippledown.integration.utils.waitForContextToBeNotNull
 import io.rippledown.integration.waitForDebounce
 import io.rippledown.integration.waitUntilAsserted
@@ -21,11 +23,12 @@ import java.time.Duration.ofSeconds
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleRole.TEXT
 import javax.accessibility.AccessibleState
+import javax.swing.SwingUtilities.invokeLater
 
 // ORD2
-class InterpretationViewPO(private val contextProvider: () -> AccessibleContext) {
+class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
 
-    fun setVerifiedText(text: String): InterpretationViewPO {
+    fun setVerifiedText(text: String): InterpretationPO {
         selectOriginalTab()
         waitForTextFieldToBeAccessible()
         val interpretationTextContext = interpretationTextContext()
@@ -41,7 +44,7 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
         waitUntilAsserted { interpretationTextContext() shouldNotBe null }
     }
 
-    fun addVerifiedTextAtEndOfCurrentInterpretation(text: String): InterpretationViewPO {
+    fun addVerifiedTextAtEndOfCurrentInterpretation(text: String): InterpretationPO {
         val newVerifiedText = interpretationText() + " $text"
         setVerifiedText(newVerifiedText)
         waitForDebounce()
@@ -52,7 +55,7 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
         contextProvider().find(INTERPRETATION_TEXT_FIELD, TEXT)!!.accessibleName ?: ""
     }
 
-    fun waitForInterpretationText(expected: String): InterpretationViewPO {
+    fun waitForInterpretationText(expected: String): InterpretationPO {
         await()
             .atMost(ofSeconds(5))
             .until {
@@ -160,12 +163,12 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
 
     fun deleteAllText() = setVerifiedText("")
 
-    fun requireChangesLabel(expected: String): InterpretationViewPO {
+    fun requireChangesLabel(expected: String): InterpretationPO {
 //        driver.findElement(By.id(INTERPRETATION_TAB_CHANGES)).text shouldBe expected
         return this
     }
 
-    fun requireNoBadge(): InterpretationViewPO {
+    fun requireNoBadge(): InterpretationPO {
 //        driver.findElement(By.className(BADGE_INVISIBLE_CLASS)) shouldNotBe null
         return this
     }
@@ -192,6 +195,26 @@ class InterpretationViewPO(private val contextProvider: () -> AccessibleContext)
         waitForBuildIconToBeShowing(row)
         val buildIconContext = buildIconContext(row)
         execute { buildIconContext?.accessibleAction?.doAccessibleAction(0) }
+    }
+
+    fun clickChangeInterpretationButton() =
+        execute { contextProvider().find(CHANGE_INTERPRETATION_BUTTON)!!.accessibleAction.doAccessibleAction(0) }
+
+
+    fun clickAddCommentMenu() {
+        waitUntilAsserted {
+            execute<AccessibleContext?> { contextProvider().find(ADD_COMMENT_MENU) } shouldNotBe null
+        }
+        invokeLater { contextProvider().find(ADD_COMMENT_MENU)!!.accessibleAction.doAccessibleAction(0) }
+    }
+
+    fun setAddCommentTextAndClickOK(comment: String) {
+        waitUntilAsserted {
+            execute<ComposeDialog> { findComposeDialogThatIsShowing() } shouldNotBe null
+        }
+        val dialog = execute<ComposeDialog> { findComposeDialogThatIsShowing() }
+        execute { dialog.accessibleContext.find(NEW_COMMENT_TEXT_FIELD)!!.accessibleEditableText.setTextContents(comment) }
+        execute { dialog.accessibleContext.find(OK_BUTTON)!!.accessibleAction.doAccessibleAction(0) }
     }
 
     private fun waitForBuildIconToBeShowing(row: Int) {

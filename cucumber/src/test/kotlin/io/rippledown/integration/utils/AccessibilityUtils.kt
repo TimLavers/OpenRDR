@@ -29,7 +29,6 @@ fun AccessibleContext.find(description: String, debug: Boolean = false): Accessi
 }
 
 fun AccessibleContext.findByName(name: String, role: AccessibleRole): AccessibleContext? {
-    println("Find by name: '$name', role: '$role'")
     val matcher = { context: AccessibleContext ->
         (name == context.accessibleName && role == context.accessibleRole)
     }

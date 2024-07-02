@@ -21,7 +21,6 @@ Feature: The knowledge base described in the TSH paper is implemented by a KB bu
       """
       Normal T4 and TSH are consistent with a euthyroid state.
       """
-
     When I select case 1.4.2
     Then I see these case values:
       | Sex               | F                 |            |
