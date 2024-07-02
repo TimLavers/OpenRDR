@@ -78,16 +78,36 @@ fun ComposeTestRule.addNewComment(comment: String) {
         .performTextInput(comment)
     waitForIdle()
 }
+fun ComposeTestRule.selectCommentToRemove(comment: String) {
+    onNodeWithContentDescription(REMOVE_COMMENT_TEXT_FIELD)
+        .assertIsDisplayed()
+        .performTextInput(comment)
+    waitForIdle()
+}
 
 fun ComposeTestRule.clickOKToAddNewComment() {
-    onNodeWithContentDescription(OK_BUTTON)
+    onNodeWithContentDescription(OK_BUTTON_FOR_ADD_COMMENT)
+        .assertIsDisplayed()
+        .performClick()
+    waitForIdle()
+}
+
+fun ComposeTestRule.clickOKToRemoveComment() {
+    onNodeWithContentDescription(OK_BUTTON_FOR_REMOVE_COMMENT)
         .assertIsDisplayed()
         .performClick()
     waitForIdle()
 }
 
 fun ComposeTestRule.clickCancelAddNewComment() {
-    onNodeWithContentDescription(CANCEL_BUTTON)
+    onNodeWithContentDescription(CANCEL_BUTTON_FOR_ADD_COMMENT)
+        .assertIsDisplayed()
+        .performClick()
+    waitForIdle()
+}
+
+fun ComposeTestRule.clickCancelRemoveComment() {
+    onNodeWithContentDescription(CANCEL_BUTTON_FOR_REMOVE_COMMENT)
         .assertIsDisplayed()
         .performClick()
     waitForIdle()

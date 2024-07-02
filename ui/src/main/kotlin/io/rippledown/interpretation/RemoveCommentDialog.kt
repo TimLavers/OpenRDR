@@ -2,8 +2,11 @@ package io.rippledown.interpretation
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
+import androidx.compose.material.Icon
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -18,20 +21,20 @@ import androidx.compose.ui.window.rememberDialogState
 import io.rippledown.constants.interpretation.*
 import io.rippledown.constants.main.CANCEL
 
-interface AddCommentHandler {
-    fun startRuleToAddComment(comment: String)
+interface RemoveCommentHandler {
+    fun startRuleToRemoveComment(comment: String)
     fun cancel()
 }
 
 @Composable
-fun AddCommentDialog(isShowing: Boolean, handler: AddCommentHandler) {
+fun RemoveCommentDialog(isShowing: Boolean, handler: RemoveCommentHandler) {
     val dialogState = rememberDialogState(size = DpSize(640.dp, 200.dp))
 
     var textValue by remember { mutableStateOf("") }
 
     DialogWindow(
-        title = ADD_COMMENT,
-        icon = painterResource("add_comment_24.png"),
+        title = REMOVE_COMMENT,
+        icon = painterResource("remove_comment_24.png"),
         state = dialogState,
         visible = isShowing,
         onCloseRequest = {
@@ -54,11 +57,18 @@ fun AddCommentDialog(isShowing: Boolean, handler: AddCommentHandler) {
                 onValueChange = { s ->
                     textValue = s
                 },
-                label = { Text(text = NEW_COMMENT) },
+                label = { Text(text = COMMENT_TO_BE_REMOVED) },
+                trailingIcon = {
+                    Icon(
+                        imageVector = Icons.Filled.Search,
+                        contentDescription = "Search",
+                        modifier = Modifier.padding(start = 10.dp)
+                    )
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .semantics {
-                        contentDescription = NEW_COMMENT_TEXT_FIELD
+                        contentDescription = REMOVE_COMMENT_TEXT_FIELD
                     }
                     .focusRequester(focusRequester)
             )
@@ -73,7 +83,7 @@ fun AddCommentDialog(isShowing: Boolean, handler: AddCommentHandler) {
                         handler.cancel()
                     },
                     modifier = buttonModifier.then(Modifier.semantics {
-                        contentDescription = CANCEL_BUTTON_FOR_ADD_COMMENT
+                        contentDescription = CANCEL_BUTTON_FOR_REMOVE_COMMENT
                     })
                 ) {
                     Text(CANCEL)
@@ -81,11 +91,11 @@ fun AddCommentDialog(isShowing: Boolean, handler: AddCommentHandler) {
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
                     onClick = {
-                        handler.startRuleToAddComment(textValue)
+                        handler.startRuleToRemoveComment(textValue)
                     },
                     enabled = textValue.isNotBlank(),
                     modifier = buttonModifier.then(Modifier.semantics {
-                        contentDescription = OK_BUTTON_FOR_ADD_COMMENT
+                        contentDescription = OK_BUTTON_FOR_REMOVE_COMMENT
                     })
                 ) {
                     Text(OK)

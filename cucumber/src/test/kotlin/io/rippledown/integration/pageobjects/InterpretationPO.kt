@@ -221,7 +221,7 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         }
         val dialog = execute<ComposeDialog> { findComposeDialogThatIsShowing() }
         execute { dialog.accessibleContext.find(NEW_COMMENT_TEXT_FIELD)!!.accessibleEditableText.setTextContents(comment) }
-        execute { dialog.accessibleContext.find(OK_BUTTON)!!.accessibleAction.doAccessibleAction(0) }
+        execute { dialog.accessibleContext.find(OK_BUTTON_FOR_ADD_COMMENT)!!.accessibleAction.doAccessibleAction(0) }
     }
 
     private fun waitForBuildIconToBeShowing(row: Int) {

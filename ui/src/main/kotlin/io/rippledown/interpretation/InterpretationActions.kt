@@ -17,6 +17,7 @@ import io.rippledown.constants.interpretation.*
 
 interface InterpretationActionsHandler {
     fun startRuleToAddComment(comment: String)
+    fun startRuleToRemoveComment(comment: String)
     fun replaceComment()
     fun removeComment()
 }
@@ -24,6 +25,7 @@ interface InterpretationActionsHandler {
 @Composable
 fun InterpretationActions(handler: InterpretationActionsHandler) {
     var addCommentDialogShowing by remember { mutableStateOf(false) }
+    var removeCommentDialogShowing by remember { mutableStateOf(false) }
 
     var expanded by remember { mutableStateOf(false) }
     Box(
@@ -73,6 +75,16 @@ fun InterpretationActions(handler: InterpretationActionsHandler) {
 
         override fun cancel() {
             addCommentDialogShowing = false
+        }
+    })
+    RemoveCommentDialog(isShowing = addCommentDialogShowing, handler = object : RemoveCommentHandler {
+        override fun startRuleToRemoveComment(comment: String) {
+            removeCommentDialogShowing = false
+            handler.startRuleToAddComment(comment)
+        }
+
+        override fun cancel() {
+            removeCommentDialogShowing = false
         }
     })
 }
