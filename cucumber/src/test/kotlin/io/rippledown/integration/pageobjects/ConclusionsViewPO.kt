@@ -3,6 +3,7 @@ package io.rippledown.integration.pageobjects
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.constants.interpretation.INTERPRETATION_PANEL_CONCLUSIONS
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CONCLUSIONS
+import io.rippledown.constants.interpretation.NO_CONCLUSIONS
 import io.rippledown.integration.utils.find
 import io.rippledown.interpretation.textContentDescription
 import org.assertj.swing.edt.GuiActionRunner.execute
@@ -35,6 +36,6 @@ class ConclusionsViewPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun requireNoComments() {
-        TODO("Not yet implemented")
+        execute<AccessibleContext?> { contextProvider().find(NO_CONCLUSIONS) } shouldNotBe null
     }
 }

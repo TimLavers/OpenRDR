@@ -208,6 +208,13 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         invokeLater { contextProvider().find(ADD_COMMENT_MENU)!!.accessibleAction.doAccessibleAction(0) }
     }
 
+    fun clickRemoveCommentMenu() {
+        waitUntilAsserted {
+            execute<AccessibleContext?> { contextProvider().find(REMOVE_COMMENT_MENU) } shouldNotBe null
+        }
+        invokeLater { contextProvider().find(REMOVE_COMMENT_MENU)!!.accessibleAction.doAccessibleAction(0) }
+    }
+
     fun setAddCommentTextAndClickOK(comment: String) {
         waitUntilAsserted {
             execute<ComposeDialog> { findComposeDialogThatIsShowing() } shouldNotBe null
@@ -223,5 +230,8 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         }
     }
 
+    fun selectCommentToRemoveAndClickOK(comment: String) {
+        TODO()
+    }
     private fun buildIconContext(row: Int) = execute<AccessibleContext?> { contextProvider().find("$ICON_PREFIX$row") }
 }

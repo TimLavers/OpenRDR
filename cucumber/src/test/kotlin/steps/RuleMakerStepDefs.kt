@@ -111,8 +111,15 @@ class RuleMakerStepDefs : En {
             }
 
         }
-        When("I build a rule to remove the comment \"Go to Bondi.\"") {
-            TODO("Not yet implemented")
+        When("I build a rule to remove the comment {string}") { comment: String ->
+            with(interpretationViewPO()) {
+                clickChangeInterpretationButton()
+                clickRemoveCommentMenu()
+                selectCommentToRemoveAndClickOK(comment)
+            }
+            with(ruleMakerPO()) {
+                clickDoneButton()
+            }
         }
     }
 }
