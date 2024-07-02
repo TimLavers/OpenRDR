@@ -86,6 +86,13 @@ fun ComposeTestRule.clickOKToAddNewComment() {
     waitForIdle()
 }
 
+fun ComposeTestRule.clickCancelAddNewComment() {
+    onNodeWithContentDescription(CANCEL_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+    waitForIdle()
+}
+
 
 
 

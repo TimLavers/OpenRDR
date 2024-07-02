@@ -36,5 +36,7 @@ const val OK = "OK"
 const val OK_BUTTON = "OK_BUTTON"
 const val CANCEL_BUTTON = "CANCEL_BUTTON"
 
+const val COMMENT_SELECTOR_PREFIX = "COMMENT_SELECTOR_"
+
 
 

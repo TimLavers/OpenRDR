@@ -42,7 +42,11 @@ fun AddCommentDialog(isShowing: Boolean, handler: AddCommentHandler) {
         LaunchedEffect(Unit) {
             focusRequester.requestFocus()
         }
-        Column {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp)
+        ) {
             OutlinedTextField(
                 value = textValue,
                 enabled = true,
@@ -62,27 +66,29 @@ fun AddCommentDialog(isShowing: Boolean, handler: AddCommentHandler) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
+                // Define a common minimum width for buttons
+                val buttonModifier = Modifier.widthIn(min = 100.dp).semantics { }
+                Button(
+                    onClick = {
+                        handler.cancel()
+                    },
+                    modifier = buttonModifier.then(Modifier.semantics {
+                        contentDescription = CANCEL_BUTTON
+                    })
+                ) {
+                    Text(CANCEL)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
                 Button(
                     onClick = {
                         handler.startRuleToAddComment(textValue)
                     },
                     enabled = textValue.isNotBlank(),
-                    modifier = Modifier.semantics {
+                    modifier = buttonModifier.then(Modifier.semantics {
                         contentDescription = OK_BUTTON
-                    }
+                    })
                 ) {
                     Text(OK)
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Button(
-                    onClick = {
-                        handler.cancel()
-                    },
-                    modifier = Modifier.semantics {
-                        contentDescription = CANCEL_BUTTON
-                    }
-                ) {
-                    Text(CANCEL)
                 }
             }
         }
