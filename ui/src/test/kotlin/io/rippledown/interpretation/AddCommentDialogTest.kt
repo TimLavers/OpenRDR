@@ -1,10 +1,9 @@
 package io.rippledown.interpretation
 
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.application
 import io.mockk.mockk
 import io.mockk.verify
+import io.rippledown.utils.applicationFor
 import org.junit.Before
 import org.junit.Rule
 import kotlin.test.Test
@@ -55,11 +54,7 @@ class AddCommentDialogTest {
 }
 
 fun main() {
-    application {
-        Window(
-            onCloseRequest = ::exitApplication,
-        ) {
-            AddCommentDialog(true, mockk())
-        }
+    applicationFor {
+        AddCommentDialog(true, mockk())
     }
 }
