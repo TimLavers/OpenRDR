@@ -149,10 +149,10 @@ class KB(persistentKB: PersistentKB) {
 
     fun conditionHintsForCase(case: RDRCase): ConditionList {
 //        checkSession() TODO re-instate and get rid of the if-block below
-        if (ruleSession == null) {
-            return ConditionList()
-        }
-        val suggester = ConditionSuggester(attributeManager.all(), ruleSession!!.case)
+//        if (ruleSession == null) {
+//            return ConditionList()
+//        }
+        val suggester = ConditionSuggester(attributeManager.all(), case)
         return ConditionList(suggester.suggestions())
     }
 

@@ -45,15 +45,26 @@ class RuleManager(
     fun ruleTree() = ruleTree
 
     override fun createRuleAndAddToParent(parent: Rule, conclusion: Conclusion?, conditions: Set<Condition>): Rule {
+        println("--- create rule and add to parent ---")
+        println("parent: $parent")
+        println("conclusion: $conclusion")
+        println("conditions: $conditions")
         val parentInTree = ruleTree.rulesMatching { it.id == parent.id }.firstOrNull()
         require(parentInTree != null) {
             "Parent rule not in tree."
         }
-        val conditionIds = conditions.map { it.id!! }.toSet()
+        // Some of the conditions may not yet exist in the KB, for example
+        // if they were created as suggestions. We need to store such conditions.
+        val storedConditions = conditions.map {
+            if (it.id != null) it else conditionManager.getOrCreate(it)
+        }.toSet()
+        println("stored conditions: $storedConditions")
+        val conditionIds = storedConditions.map { it.id!! }.toSet()
         val toStore = PersistentRule(null, parent.id, conclusion?.id, conditionIds)
         val stored = ruleStore.create(toStore)
-        val newRule = Rule(stored.id!!, parent, conclusion, conditions)
+        val newRule = Rule(stored.id!!, parent, conclusion, storedConditions)
         parent.addChild(newRule)
+        println("--- rule created ---")
         return newRule
     }
 

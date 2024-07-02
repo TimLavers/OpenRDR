@@ -5,7 +5,34 @@ import io.cucumber.java8.En
 import io.rippledown.integration.pause
 
 class RuleMakerStepDefs : En {
+    fun addConditionsAndFinishRule(dataTable: DataTable) {
+        pause(1000)
+        interpretationViewPO().selectDifferencesTab()
+        pause(1000)
+        interpretationViewPO().clickBuildIconOnRow(0)
+        dataTable.asList().forEach { condition ->
+            pause(1000)
+            ruleMakerPO().clickConditionWithText(condition)
+        }
+        pause(1000)
+        ruleMakerPO().clickDoneButton()
+    }
+
     init {
+        When("I build a rule to add the comment {string} with conditions") {comment: String, conditions: DataTable ->
+            interpretationViewPO().setVerifiedText(comment)
+            pause(1000)
+            addConditionsAndFinishRule(conditions)
+        }
+
+        When("I build a rule to remove the comment {string} with conditions") {comment: String, conditions: DataTable ->
+
+            val currentInterpretation = interpretationViewPO().interpretationText()
+            val withCommentRemoved = currentInterpretation.replace(comment, "")
+            interpretationViewPO().setVerifiedText(withCommentRemoved)
+            addConditionsAndFinishRule(conditions)
+        }
+
         When("I build a rule for the change on row {int}") { row: Int ->
             interpretationViewPO().selectDifferencesTab()
             interpretationViewPO().buildRule(row)
