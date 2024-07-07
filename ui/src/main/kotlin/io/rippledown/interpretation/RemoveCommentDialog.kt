@@ -2,15 +2,9 @@ package io.rippledown.interpretation
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
-import androidx.compose.material.Icon
-import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -27,10 +21,10 @@ interface RemoveCommentHandler {
 }
 
 @Composable
-fun RemoveCommentDialog(isShowing: Boolean, handler: RemoveCommentHandler) {
-    val dialogState = rememberDialogState(size = DpSize(640.dp, 200.dp))
+fun RemoveCommentDialog(isShowing: Boolean, availableComments: List<String>, handler: RemoveCommentHandler) {
+    val dialogState = rememberDialogState(size = DpSize(600.dp, 400.dp))
 
-    var textValue by remember { mutableStateOf("") }
+    var selectedComment by remember { mutableStateOf("") }
 
     DialogWindow(
         title = REMOVE_COMMENT,
@@ -41,37 +35,22 @@ fun RemoveCommentDialog(isShowing: Boolean, handler: RemoveCommentHandler) {
             handler.cancel()
         }
     ) {
-        val focusRequester = remember { FocusRequester() }
-        LaunchedEffect(Unit) {
-            focusRequester.requestFocus()
-        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(8.dp)
         ) {
-            OutlinedTextField(
-                value = textValue,
-                enabled = true,
-                maxLines = 4,
-                onValueChange = { s ->
-                    textValue = s
-                },
-                label = { Text(text = COMMENT_TO_BE_REMOVED) },
-                trailingIcon = {
-                    Icon(
-                        imageVector = Icons.Filled.Search,
-                        contentDescription = "Search",
-                        modifier = Modifier.padding(start = 10.dp)
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics {
-                        contentDescription = REMOVE_COMMENT_TEXT_FIELD
+            val options = availableComments - selectedComment
+            CommentSelector(
+                selectedComment,
+                options,
+                "",
+                REMOVE_COMMENT_SELECTOR_PREFIX,
+                object : CommentSelectorHandler {
+                    override fun onCommentSelected(comment: String) {
+                        selectedComment = comment
                     }
-                    .focusRequester(focusRequester)
-            )
+                })
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
@@ -91,12 +70,12 @@ fun RemoveCommentDialog(isShowing: Boolean, handler: RemoveCommentHandler) {
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
                     onClick = {
-                        handler.startRuleToRemoveComment(textValue)
+                        handler.startRuleToRemoveComment(selectedComment)
                     },
-                    enabled = textValue.isNotBlank(),
-                    modifier = buttonModifier.then(Modifier.semantics {
+                    enabled = selectedComment.isNotBlank(),
+                    modifier = Modifier.semantics {
                         contentDescription = OK_BUTTON_FOR_REMOVE_COMMENT
-                    })
+                    }
                 ) {
                     Text(OK)
                 }

@@ -3,6 +3,7 @@ package io.rippledown.interpretation
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import io.rippledown.constants.interpretation.*
+import io.rippledown.utils.dump
 
 @OptIn(ExperimentalTestApi::class)
 fun ComposeTestRule.requireInterpretation(text: String) {
@@ -58,7 +59,9 @@ fun ComposeTestRule.requireInterpretationActionsDropdownMenu() {
 }
 
 fun ComposeTestRule.clickChangeInterpretationButton() =
-    onNodeWithContentDescription(CHANGE_INTERPRETATION_BUTTON).performClick()
+    onNodeWithContentDescription(CHANGE_INTERPRETATION_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
 
 fun ComposeTestRule.clickAddCommentMenu() = onNodeWithContentDescription(ADD_COMMENT_MENU)
     .assertIsDisplayed()
@@ -78,10 +81,42 @@ fun ComposeTestRule.addNewComment(comment: String) {
         .performTextInput(comment)
     waitForIdle()
 }
+
 fun ComposeTestRule.selectCommentToRemove(comment: String) {
-    onNodeWithContentDescription(REMOVE_COMMENT_TEXT_FIELD)
+    clickCommentDropDownMenu()
+    clickCommentToRemove(comment)
+    waitForIdle()
+}
+
+fun ComposeTestRule.clickCommentToRemove(comment: String) =
+    clickComment(REMOVE_COMMENT_SELECTOR_PREFIX, comment)
+
+fun ComposeTestRule.clickComment(prefix: String, comment: String) = clickCommentWithPrefix(prefix, comment)
+
+fun ComposeTestRule.clickCommentWithPrefix(prefix: String, comment: String) {
+    onNodeWithContentDescription("$prefix$comment")
         .assertIsDisplayed()
-        .performTextInput(comment)
+        .performClick()
+}
+
+fun ComposeTestRule.requireCommentSelectorOptionsToBeDisplayed(prefix: String, options: List<String>) {
+    requireDropDownMenuToBeDisplayed()
+    options.forEach { option ->
+        onNodeWithContentDescription("$prefix$option")
+            .assertIsDisplayed()
+    }
+}
+
+private fun ComposeTestRule.requireDropDownMenuToBeDisplayed() {
+    onNodeWithContentDescription(DROP_DOWN_TEXT_FIELD, useUnmergedTree = true)
+        .assertIsDisplayed()
+}
+
+fun ComposeTestRule.clickCommentDropDownMenu() {
+    onNodeWithContentDescription(DROP_DOWN_TEXT_FIELD).dump()
+    onNodeWithContentDescription(DROP_DOWN_TEXT_FIELD, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .performClick()
     waitForIdle()
 }
 
@@ -93,6 +128,7 @@ fun ComposeTestRule.clickOKToAddNewComment() {
 }
 
 fun ComposeTestRule.clickOKToRemoveComment() {
+    onNodeWithContentDescription(OK_BUTTON_FOR_REMOVE_COMMENT).dump()
     onNodeWithContentDescription(OK_BUTTON_FOR_REMOVE_COMMENT)
         .assertIsDisplayed()
         .performClick()
@@ -111,6 +147,18 @@ fun ComposeTestRule.clickCancelRemoveComment() {
         .assertIsDisplayed()
         .performClick()
     waitForIdle()
+}
+
+fun ComposeTestRule.requireCommentSelectorWithSelectedLabel(expected: String) {
+    onNodeWithContentDescription(COMMENT_SELECTOR_LABEL, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .assertTextEquals(expected)
+}
+
+fun ComposeTestRule.requireCommentSelectorWithSelectedComment(expected: String) {
+    onNodeWithContentDescription(DROP_DOWN_TEXT_FIELD, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .assertTextEquals(expected)
 }
 
 

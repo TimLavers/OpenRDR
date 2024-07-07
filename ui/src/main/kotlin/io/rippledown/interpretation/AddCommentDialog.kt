@@ -38,10 +38,12 @@ fun AddCommentDialog(isShowing: Boolean, handler: AddCommentHandler) {
             handler.cancel()
         }
     ) {
+
         val focusRequester = remember { FocusRequester() }
         LaunchedEffect(Unit) {
             focusRequester.requestFocus()
         }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()

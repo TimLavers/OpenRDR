@@ -29,6 +29,7 @@ const val REMOVE_COMMENT_MENU = "REMOVE_COMMENT_MENU"
 const val ADD_COMMENT = "Add a comment"
 const val NEW_COMMENT = "New comment"
 const val COMMENT_TO_BE_REMOVED = "Comment to be removed"
+const val NO_COMMENTS = "There are no comments given for this case"
 
 const val REPLACE_COMMENT = "Replace a comment"
 const val REMOVE_COMMENT = "Remove a comment"
@@ -42,7 +43,9 @@ const val CANCEL_BUTTON_FOR_ADD_COMMENT = "CANCEL_BUTTON_FOR_ADD_COMMENT"
 const val OK_BUTTON_FOR_REMOVE_COMMENT = "OK_BUTTON_FOR_REMOVE_COMMENT"
 const val CANCEL_BUTTON_FOR_REMOVE_COMMENT = "CANCEL_BUTTON_FOR_REMOVE_COMMENT"
 
-const val COMMENT_SELECTOR_PREFIX = "COMMENT_SELECTOR_"
+const val REMOVE_COMMENT_SELECTOR_PREFIX = "REMOVE_COMMENT_SELECTOR_"
+const val DROP_DOWN_TEXT_FIELD = "DROP_DOWN_TEXT_FIELD"
+const val COMMENT_SELECTOR_LABEL = "COMMENT_SELECTOR_LABEL"
 
 
 

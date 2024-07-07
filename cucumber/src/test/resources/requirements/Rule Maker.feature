@@ -88,11 +88,12 @@ Feature: The user can make rules that change the interpretive report
     And  the interpretation field should be empty
     And stop the client application
 
+  @single
   Scenario: The user should be able to build a rule to remove a comment
-    Given a case with name Bondi is stored on the server:
-    And the interpretation of the case Bondi is "Go to Bondi."
+    Given a case with name Case1 is stored on the server:
+    And the interpretation of the case Case1 is "Go to Bondi."
     And I start the client application
-    And I should see the case Bondi as the current case
+    And I should see the case Case1 as the current case
     And  the interpretation field should contain the text "Go to Bondi."
     When I build a rule to remove the comment "Go to Bondi."
     And I select the comments tab
