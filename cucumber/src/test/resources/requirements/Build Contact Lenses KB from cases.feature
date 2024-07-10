@@ -1,7 +1,6 @@
-Feature: A sample KB can be created that has the Contact Lense Prescription cases.
-
-  @single
-  Scenario: Build Contact Lenses KB from cases
+Feature: The Contact Lense Prescription KB can be built.
+@single
+  Scenario: Build the Contact Lenses KB from cases
     Given I start the client application
     And I create a Knowledge Base with the name ContactLenses based on the "Contact Lense Prescription - cases only" sample
     And pause for 2 seconds
@@ -17,24 +16,23 @@ Feature: A sample KB can be created that has the Contact Lense Prescription case
       | astigmatism is "astigmatic" |
       | tear production is "normal" |
 
-#    And I select case Case16
-#    And I select the interpretation tab
-#    And I build a rule to remove the comment "hard" with conditions
-#      | age is "pre_presbyopic"        |
-#      | prescription is "hypermetrope" |
-#
-#    And I select case Case18
-#    And pause for 2 seconds
-#    And I select the interpretation tab
-#    And I build a rule to remove the comment "soft" with conditions
-#      | age is "presbyopic"     |
-#      | prescription is "myope" |
-#
-#    And I select case Case24
-#    And I select the interpretation tab
-#    And I build a rule to remove the comment "hard" with conditions
-#      | age is "presbyopic"            |
-#      | prescription is "hypermetrope" |
+    And I select case Case16
+    And I select the interpretation tab
+    And I build a rule to remove the comment "hard" with conditions
+      | age is "pre_presbyopic"        |
+      | prescription is "hypermetrope" |
+
+    And I select case Case18
+    And I select the interpretation tab
+    And I build a rule to remove the comment "soft" with conditions
+      | age is "presbyopic"     |
+      | prescription is "myope" |
+
+    And I select case Case24
+    And I select the interpretation tab
+    And I build a rule to remove the comment "hard" with conditions
+      | age is "presbyopic"            |
+      | prescription is "hypermetrope" |
 
     Then the cases should have interpretations as follows
       | Case1  |      |

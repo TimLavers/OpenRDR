@@ -42,4 +42,7 @@ The user is most likely to pick suggested conditions that:
 - are false for as many other cornerstone cases as possible
 - have previously been used in a rule
 - use an attribute that has previously been used in a condition
-- are suggested by the rule action.
+- are suggested by the rule action
+- previously used in a rule with a similar action (high priority for this)
+- in a rule building session some conflicting cornerstones get exempted (the user has indicated that the change is good 
+for the case). We should give precedence to conditions that are true for these.

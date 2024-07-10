@@ -30,10 +30,17 @@ class RuleMakerStepDefs : En {
         }
 
         When("I build a rule to remove the comment {string} with conditions") {comment: String, conditions: DataTable ->
-
+            pause(1000)
             val currentInterpretation = interpretationViewPO().interpretationText()
+            println("------- removing comment '$comment' ----------")
+            println("current interp: '$currentInterpretation'")
             val withCommentRemoved = currentInterpretation.replace(comment, "")
+            println("with comment removed = '$withCommentRemoved'")
             interpretationViewPO().setVerifiedText(withCommentRemoved)
+            pause(1000)
+            interpretationViewPO().selectDifferencesTab()
+            pause(1000)
+            interpretationViewPO().clickBuildIconOnRow(0)
             addConditionsAndFinishRule(conditions)
         }
 
