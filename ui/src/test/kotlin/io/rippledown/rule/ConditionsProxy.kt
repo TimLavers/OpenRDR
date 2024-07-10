@@ -4,11 +4,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import io.rippledown.constants.rule.*
-import io.rippledown.utils.print
+import io.rippledown.utils.dump
 
 fun ComposeTestRule.requireRuleMakerToBeDisplayed() {
     val onNodeWithContentDescription = onNodeWithContentDescription(RULE_MAKER)
-    onNodeWithContentDescription.print()
+    onNodeWithContentDescription.dump()
     onNodeWithContentDescription.assertIsDisplayed()
 }
 

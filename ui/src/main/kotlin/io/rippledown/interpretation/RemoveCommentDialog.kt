@@ -2,12 +2,9 @@ package io.rippledown.interpretation
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
-import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -18,52 +15,42 @@ import androidx.compose.ui.window.rememberDialogState
 import io.rippledown.constants.interpretation.*
 import io.rippledown.constants.main.CANCEL
 
-interface AddCommentHandler {
-    fun startRuleToAddComment(comment: String)
+interface RemoveCommentHandler {
+    fun startRuleToRemoveComment(comment: String)
     fun cancel()
 }
 
 @Composable
-fun AddCommentDialog(isShowing: Boolean, handler: AddCommentHandler) {
-    val dialogState = rememberDialogState(size = DpSize(640.dp, 200.dp))
+fun RemoveCommentDialog(isShowing: Boolean, availableComments: List<String>, handler: RemoveCommentHandler) {
+    val dialogState = rememberDialogState(size = DpSize(600.dp, 400.dp))
 
-    var textValue by remember { mutableStateOf("") }
+    var selectedComment by remember { mutableStateOf("") }
 
     DialogWindow(
-        title = ADD_COMMENT,
-        icon = painterResource("add_comment_24.png"),
+        title = REMOVE_COMMENT,
+        icon = painterResource("remove_comment_24.png"),
         state = dialogState,
         visible = isShowing,
         onCloseRequest = {
             handler.cancel()
         }
     ) {
-
-        val focusRequester = remember { FocusRequester() }
-        LaunchedEffect(Unit) {
-            focusRequester.requestFocus()
-        }
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(8.dp)
         ) {
-            OutlinedTextField(
-                value = textValue,
-                enabled = true,
-                maxLines = 4,
-                onValueChange = { s ->
-                    textValue = s
-                },
-                label = { Text(text = NEW_COMMENT) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics {
-                        contentDescription = NEW_COMMENT_TEXT_FIELD
+            val options = availableComments - selectedComment
+            CommentSelector(
+                selectedComment,
+                options,
+                "",
+                REMOVE_COMMENT_SELECTOR_PREFIX,
+                object : CommentSelectorHandler {
+                    override fun onCommentSelected(comment: String) {
+                        selectedComment = comment
                     }
-                    .focusRequester(focusRequester)
-            )
+                })
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
@@ -75,7 +62,7 @@ fun AddCommentDialog(isShowing: Boolean, handler: AddCommentHandler) {
                         handler.cancel()
                     },
                     modifier = buttonModifier.then(Modifier.semantics {
-                        contentDescription = CANCEL_BUTTON_FOR_ADD_COMMENT
+                        contentDescription = CANCEL_BUTTON_FOR_REMOVE_COMMENT
                     })
                 ) {
                     Text(CANCEL)
@@ -83,12 +70,12 @@ fun AddCommentDialog(isShowing: Boolean, handler: AddCommentHandler) {
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
                     onClick = {
-                        handler.startRuleToAddComment(textValue)
+                        handler.startRuleToRemoveComment(selectedComment)
                     },
-                    enabled = textValue.isNotBlank(),
-                    modifier = buttonModifier.then(Modifier.semantics {
-                        contentDescription = OK_BUTTON_FOR_ADD_COMMENT
-                    })
+                    enabled = selectedComment.isNotBlank(),
+                    modifier = Modifier.semantics {
+                        contentDescription = OK_BUTTON_FOR_REMOVE_COMMENT
+                    }
                 ) {
                     Text(OK)
                 }

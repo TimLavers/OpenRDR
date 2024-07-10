@@ -3,6 +3,7 @@ package io.rippledown.interpretation
 import androidx.compose.ui.test.junit4.createComposeRule
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import kotlin.test.Test
@@ -23,7 +24,7 @@ class InterpretationActionsTest {
         with(composeTestRule) {
             //Given
             setContent {
-                InterpretationActions(handler)
+                InterpretationActions(listOf(), handler)
             }
 
             //When
@@ -39,7 +40,7 @@ class InterpretationActionsTest {
         with(composeTestRule) {
             //Given
             setContent {
-                InterpretationActions(handler)
+                InterpretationActions(listOf(), handler)
             }
             clickChangeInterpretationButton()
 
@@ -58,7 +59,7 @@ class InterpretationActionsTest {
         with(composeTestRule) {
             //Given
             setContent {
-                InterpretationActions(handler)
+                InterpretationActions(listOf(), handler)
             }
             clickChangeInterpretationButton()
 
@@ -71,19 +72,22 @@ class InterpretationActionsTest {
     }
 
     @Test
-    fun `should handler when the user clicks on the remove comment button`() {
+    fun `should handler when the user clicks on the remove comment button`() = runTest {
+        val comments = listOf("Bondi", "Manly", "Coogee")
         with(composeTestRule) {
             //Given
             setContent {
-                InterpretationActions(handler)
+                InterpretationActions(comments, handler)
             }
             clickChangeInterpretationButton()
 
             //When
             clickRemoveCommentMenu()
 
+            selectCommentToRemove("Manly")
+
             //Then
-            verify { handler.removeComment() }
+            verify { handler.startRuleToRemoveComment("Manly") }
         }
     }
 }

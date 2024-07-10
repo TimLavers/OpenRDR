@@ -1,24 +1,20 @@
 package io.rippledown.main
 
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.application
-import androidx.compose.ui.window.rememberWindowState
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.rippledown.appbar.assertKbNameIs
 import io.rippledown.casecontrol.*
 import io.rippledown.constants.main.APPLICATION_BAR_ID
-import io.rippledown.constants.main.TITLE
 import io.rippledown.interpretation.*
 import io.rippledown.model.*
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.episodic.predicate.Normal
 import io.rippledown.model.condition.episodic.signature.Current
+import io.rippledown.utils.applicationFor
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
@@ -350,14 +346,7 @@ fun main() {
     coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
     coEvery { api.getCase(any()) } returns createCaseWithInterpretation("case A", 1, listOf("Go to Bondi"))
 
-    application {
-        Window(
-            onCloseRequest = ::exitApplication,
-            icon = painterResource("water-wave-icon.png"),
-            title = TITLE,
-            state = rememberWindowState(size = DEFAULT_WINDOW_SIZE)
-        ) {
+    applicationFor {
             OpenRDRUI(handler)
-        }
     }
 }

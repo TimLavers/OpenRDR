@@ -7,6 +7,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.constants.interpretation.*
 import io.rippledown.constants.rule.FINISH_RULE_BUTTON
+import io.rippledown.integration.pause
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
 import io.rippledown.integration.utils.findComposeDialogThatIsShowing
@@ -208,13 +209,20 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         invokeLater { contextProvider().find(ADD_COMMENT_MENU)!!.accessibleAction.doAccessibleAction(0) }
     }
 
+    fun clickRemoveCommentMenu() {
+        waitUntilAsserted {
+            execute<AccessibleContext?> { contextProvider().find(REMOVE_COMMENT_MENU) } shouldNotBe null
+        }
+        invokeLater { contextProvider().find(REMOVE_COMMENT_MENU)!!.accessibleAction.doAccessibleAction(0) }
+    }
+
     fun setAddCommentTextAndClickOK(comment: String) {
         waitUntilAsserted {
             execute<ComposeDialog> { findComposeDialogThatIsShowing() } shouldNotBe null
         }
         val dialog = execute<ComposeDialog> { findComposeDialogThatIsShowing() }
         execute { dialog.accessibleContext.find(NEW_COMMENT_TEXT_FIELD)!!.accessibleEditableText.setTextContents(comment) }
-        execute { dialog.accessibleContext.find(OK_BUTTON)!!.accessibleAction.doAccessibleAction(0) }
+        execute { dialog.accessibleContext.find(OK_BUTTON_FOR_ADD_COMMENT)!!.accessibleAction.doAccessibleAction(0) }
     }
 
     private fun waitForBuildIconToBeShowing(row: Int) {
@@ -223,5 +231,20 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         }
     }
 
+    fun selectCommentToRemoveAndClickOK(comment: String) {
+        waitUntilAsserted {
+            execute<ComposeDialog> { findComposeDialogThatIsShowing() } shouldNotBe null
+        }
+        val dialog = execute<ComposeDialog> { findComposeDialogThatIsShowing() }
+        pause(2000)
+        execute { dialog.accessibleContext.find(DROP_DOWN_TEXT_FIELD)!!.accessibleAction.doAccessibleAction(0) }
+        pause(2000)
+        execute {
+            dialog.accessibleContext.find("$REMOVE_COMMENT_SELECTOR_PREFIX$comment")!!.accessibleAction.doAccessibleAction(
+                0
+            )
+        }
+        execute { dialog.accessibleContext.find(OK_BUTTON_FOR_REMOVE_COMMENT)!!.accessibleAction.doAccessibleAction(0) }
+    }
     private fun buildIconContext(row: Int) = execute<AccessibleContext?> { contextProvider().find("$ICON_PREFIX$row") }
 }
