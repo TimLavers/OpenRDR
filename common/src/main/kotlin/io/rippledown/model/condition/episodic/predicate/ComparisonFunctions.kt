@@ -1,6 +1,8 @@
 package io.rippledown.model.condition.episodic.predicate
 
+import io.rippledown.model.Attribute
 import io.rippledown.model.TestResult
+import io.rippledown.model.condition.EpisodicCondition
 
 import kotlinx.serialization.Serializable
 
