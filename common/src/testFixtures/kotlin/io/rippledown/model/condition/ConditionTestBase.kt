@@ -22,6 +22,12 @@ fun slightlyLow(id: Int? = null, attribute: Attribute, cutoff: Int) = EpisodicCo
 fun isPresent(attribute: Attribute, id: Int? = null ) = CaseStructureCondition(id, IsPresentInCase(attribute))
 fun isAbsent(attribute: Attribute, id: Int? = null) = CaseStructureCondition(id, IsAbsentFromCase(attribute))
 
+fun rr(low: String?, high: String?) = ReferenceRange(low, high)
+fun tr(value: String) = TestResult(value, null, null)
+fun tr(value: String, referenceRange: ReferenceRange) = TestResult(value, referenceRange)
+fun tr(value: String, units: String) = TestResult(value, null, units)
+fun tr(value: String, referenceRange: ReferenceRange,units: String) = TestResult(value, referenceRange, units)
+
 open class ConditionTestBase {
 
     val tsh = Attribute(0, "TSH")

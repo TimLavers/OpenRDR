@@ -1,4 +1,4 @@
-Feature: A Zoo KB can be built.
+Feature: The Zoo KB can be built with the user interface.
 
 #  @single
   Scenario: Build the Zoo KB from cases

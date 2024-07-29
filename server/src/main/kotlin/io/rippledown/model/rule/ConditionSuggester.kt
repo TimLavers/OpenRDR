@@ -25,22 +25,18 @@ class ConditionSuggester(private val attributes: Set<Attribute>,
     }
 
     private fun episodicConditionSuggestions(): Set<Condition> {
-        val predicateClasses = TestResultPredicate::class.sealedSubclasses
-        val result = mutableSetOf<Condition>()
-        attributesInCase.forEach {
-            val currentValue = sessionCase.latestValue(it)
-            if (currentValue != null) {
-                result.add(EpisodicCondition(it, Is(currentValue), Current))
+        val firstCut = mutableSetOf<Condition>()
+        attributesInCase.forEach {attribute ->
+            val currentValue = sessionCase.getLatest(attribute)
+            predicates(currentValue).forEach {predicate ->
+                firstCut.add(EpisodicCondition(attribute, predicate, Current))
             }
         }
-        return result
+        return firstCut.filter { it.holds(sessionCase) }.toSet()
     }
 
     fun predicates(testResult: TestResult?): List<TestResultPredicate> {
         return factories(testResult).mapNotNull { it.createFor() }
-//        predicateClass
-//        println(mams)
-//        predicateClass.co
     }
 
     private fun caseStructureSuggestions() = attributeInCaseConditions() + attributeNotInCaseConditions()
@@ -62,7 +58,6 @@ sealed class PredicateFactory {
     fun stringValue() = if (testResult?.value == null) null else testResult!!.value.text
     fun doubleValue() = if (testResult?.value?.realReal == null) null else testResult!!.value.text.toDoubleOrNull()
 }
-
 data class GTEFactory(override val testResult: TestResult?) : PredicateFactory() {
     override fun createFor(): GreaterThanOrEquals? {
         val cutoff = doubleValue()
@@ -85,6 +80,29 @@ data class ContainsFactory(override val testResult: TestResult?): PredicateFacto
         return if (stringValue() == null) null else Contains(stringValue()!!)
     }
 }
+data class LowFactory(override val testResult: TestResult?): PredicateFactory() {
+    override fun createFor(): TestResultPredicate? {
+        return if (testResult?.referenceRange == null) null else Low
+    }
+}
+data class NormalFactory(override val testResult: TestResult?): PredicateFactory() {
+    override fun createFor(): TestResultPredicate? {
+        return if (testResult?.referenceRange == null) null else Normal
+    }
+}
+data class HighFactory(override val testResult: TestResult?): PredicateFactory() {
+    override fun createFor(): TestResultPredicate? {
+        return if (testResult?.referenceRange == null) null else High
+    }
+}
 fun factories(testResult: TestResult?): List<PredicateFactory> {
-    return listOf(GTEFactory(testResult), LTEFactory(testResult), IsFactory(testResult), ContainsFactory(testResult))
+    return listOf(
+        GTEFactory(testResult),
+        LTEFactory(testResult),
+        IsFactory(testResult),
+        ContainsFactory(testResult),
+        LowFactory(testResult),
+        NormalFactory(testResult),
+        HighFactory(testResult)
+    )
 }
