@@ -123,5 +123,18 @@ class RuleMakerStepDefs : En {
                 clickDoneButton()
             }
         }
+        When("I build a rule to replace the comment {string} with {string}") { toBeReplaced: String, replacement: String ->
+            with(interpretationViewPO()) {
+                clickChangeInterpretationButton()
+                clickReplaceCommentMenu()
+                pause(2000) //TODO remove
+                selectCommentToReplaceAndEnterItsReplacementAndClickOK(toBeReplaced, replacement)
+                pause(2000) //TODO remove
+            }
+            with(ruleMakerPO()) {
+                clickDoneButton()
+            }
+        }
+
     }
 }

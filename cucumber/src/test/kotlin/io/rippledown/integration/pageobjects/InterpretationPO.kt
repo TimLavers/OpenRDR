@@ -212,6 +212,12 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         }
         invokeLater { contextProvider().find(REMOVE_COMMENT_MENU)!!.accessibleAction.doAccessibleAction(0) }
     }
+    fun clickReplaceCommentMenu() {
+        waitUntilAsserted {
+            execute<AccessibleContext?> { contextProvider().find(REPLACE_COMMENT_MENU) } shouldNotBe null
+        }
+        invokeLater { contextProvider().find(REPLACE_COMMENT_MENU)!!.accessibleAction.doAccessibleAction(0) }
+    }
 
     fun setAddCommentTextAndClickOK(comment: String) {
         waitUntilAsserted {
@@ -239,6 +245,25 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
             execute { findAndClick("$REMOVE_COMMENT_SELECTOR_PREFIX$comment") }
             execute {
                 find(OK_BUTTON_FOR_REMOVE_COMMENT)!!.accessibleAction.doAccessibleAction(0)
+            }
+        }
+    }
+    fun selectCommentToReplaceAndEnterItsReplacementAndClickOK(comment: String, replacement: String) {
+        waitUntilAsserted {
+            execute<ComposeDialog> { findComposeDialogThatIsShowing() } shouldNotBe null
+        }
+        val dialog = execute<ComposeDialog> { findComposeDialogThatIsShowing() }
+        with(dialog.accessibleContext) {
+            execute { findAndClick(DROP_DOWN_TEXT_FIELD) }
+            pause(1_000)
+            execute { findAndClick("$REPLACE_COMMENT_SELECTOR_PREFIX$comment") }
+            execute {
+                findAndClick(REPLACE_COMMENT_MENU)
+            }
+            pause(1_000)
+            execute { find(NEW_COMMENT_TEXT_FIELD)!!.accessibleEditableText.setTextContents(replacement) }
+            execute {
+                find(OK_BUTTON_FOR_REPLACE_COMMENT)!!.accessibleAction.doAccessibleAction(0)
             }
         }
     }

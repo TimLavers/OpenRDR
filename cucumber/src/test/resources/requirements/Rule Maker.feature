@@ -89,7 +89,7 @@ Feature: The user can make rules that change the interpretive report
     And stop the client application
 
   Scenario: The user should be able to build a rule to remove a comment
-    Given a case with name Case1 is stored on the server:
+    Given a case with name Case1 is stored on the server
     And the interpretation of the case Case1 is "Go to Bondi."
     And I start the client application
     And I should see the case Case1 as the current case
@@ -101,7 +101,7 @@ Feature: The user can make rules that change the interpretive report
     And  the interpretation field should be empty
     And stop the client application
 
-  Scenario: The user should be able to build a rule to replace a comment
+  Scenario: DEPRECATED - The user should be able to build a rule to replace a comment
     Given a list of cases with the following names is stored on the server:
       | Case1 |
       | Case2 |
@@ -118,6 +118,20 @@ Feature: The user can make rules that change the interpretive report
     And  the interpretation field should contain the text "Go to Maroubra."
     And select the case Case2
     And  the interpretation field should contain the text "Go to Maroubra."
+    And stop the client application
+
+  @single
+  Scenario: The user should be able to build a rule to replace a comment
+    Given a case with name Case1 is stored on the server
+    And the interpretation of the case Case1 is "Go to Bondi."
+    And I start the client application
+    And I should see the case Case1 as the current case
+    And  the interpretation field should contain the text "Go to Bondi."
+    When I build a rule to replace the comment "Go to Bondi." with "Go to Maroubra."
+    And  the interpretation field should contain the text "Go to Maroubra."
+    And I select the comments tab
+    Then the following comment is shown:
+      | Go to Maroubra. |
     And stop the client application
 
   Scenario: The user should be able to build a rule to add a comment with a condition they have selected
