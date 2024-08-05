@@ -2,6 +2,7 @@ package steps
 
 import io.cucumber.datatable.DataTable
 import io.cucumber.java8.En
+import io.rippledown.integration.pause
 
 class CommentsViewStepDefs : En {
     init {
@@ -27,6 +28,7 @@ class CommentsViewStepDefs : En {
             }
         }
         Then("no comments are shown") {
+            pause(2000)
             conclusionsViewPO().requireNoComments()
         }
     }

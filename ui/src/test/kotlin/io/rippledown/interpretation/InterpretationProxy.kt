@@ -3,7 +3,7 @@ package io.rippledown.interpretation
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import io.rippledown.constants.interpretation.*
-import io.rippledown.utils.dump
+import java.lang.Thread.sleep
 
 @OptIn(ExperimentalTestApi::class)
 fun ComposeTestRule.requireInterpretation(text: String) {
@@ -63,9 +63,11 @@ fun ComposeTestRule.clickChangeInterpretationButton() =
         .assertIsDisplayed()
         .performClick()
 
-fun ComposeTestRule.clickAddCommentMenu() = onNodeWithContentDescription(ADD_COMMENT_MENU)
-    .assertIsDisplayed()
-    .performClick()
+fun ComposeTestRule.clickAddCommentMenu() {
+    onNodeWithContentDescription(ADD_COMMENT_MENU)
+        .assertIsDisplayed()
+        .performClick()
+}
 
 fun ComposeTestRule.clickReplaceCommentMenu() = onNodeWithContentDescription(REPLACE_COMMENT_MENU)
     .assertIsDisplayed()
@@ -79,24 +81,19 @@ fun ComposeTestRule.addNewComment(comment: String) {
     onNodeWithContentDescription(NEW_COMMENT_TEXT_FIELD)
         .assertIsDisplayed()
         .performTextInput(comment)
-    waitForIdle()
+    sleep(1_000) //TODO remove this sleep
+    clickOKToAddNewComment()
+    sleep(1_000) //TODO remove this sleep
 }
 
-fun ComposeTestRule.selectCommentToRemove(comment: String) {
-    clickCommentDropDownMenu()
-    clickCommentToRemove(comment)
-    waitForIdle()
-}
-
-fun ComposeTestRule.clickCommentToRemove(comment: String) =
+fun ComposeTestRule.clickCommentToRemove(comment: String) {
     clickComment(REMOVE_COMMENT_SELECTOR_PREFIX, comment)
+}
 
-fun ComposeTestRule.clickComment(prefix: String, comment: String) = clickCommentWithPrefix(prefix, comment)
-
-fun ComposeTestRule.clickCommentWithPrefix(prefix: String, comment: String) {
-    onNodeWithContentDescription("$prefix$comment")
-        .assertIsDisplayed()
-        .performClick()
+fun ComposeTestRule.clickComment(prefix: String, comment: String) {
+    onNodeWithContentDescription("$prefix$comment").performClick()
+    waitForIdle()
+    sleep(1_000) //TODO remove this sleep
 }
 
 fun ComposeTestRule.requireCommentSelectorOptionsToBeDisplayed(prefix: String, options: List<String>) {
@@ -107,17 +104,30 @@ fun ComposeTestRule.requireCommentSelectorOptionsToBeDisplayed(prefix: String, o
     }
 }
 
-private fun ComposeTestRule.requireDropDownMenuToBeDisplayed() {
-    onNodeWithContentDescription(DROP_DOWN_TEXT_FIELD, useUnmergedTree = true)
+fun ComposeTestRule.requireCommentSelectorOptionsNotToBeDisplayed(prefix: String, options: List<String>) {
+    requireDropDownMenuToBeDisplayed()
+    options.forEach { option ->
+        onNodeWithContentDescription("$prefix$option")
+            .assertDoesNotExist()
+    }
+}
+
+fun ComposeTestRule.requireDropDownMenuToBeDisplayed() {
+    onNodeWithContentDescription(DROP_DOWN_TEXT_FIELD)
+        .assertIsDisplayed()
+}
+
+fun ComposeTestRule.requireDropDownMenuForRemoveCommentToBeDisplayed() {
+    onNodeWithContentDescription("$REMOVE_COMMENT_SELECTOR_PREFIX$DROP_DOWN_TEXT_FIELD", useUnmergedTree = true)
         .assertIsDisplayed()
 }
 
 fun ComposeTestRule.clickCommentDropDownMenu() {
-    onNodeWithContentDescription(DROP_DOWN_TEXT_FIELD).dump()
-    onNodeWithContentDescription(DROP_DOWN_TEXT_FIELD, useUnmergedTree = true)
+    onNodeWithContentDescription(DROP_DOWN_TEXT_FIELD)
         .assertIsDisplayed()
         .performClick()
     waitForIdle()
+    sleep(1_000) //TODO remove this sleep
 }
 
 fun ComposeTestRule.clickOKToAddNewComment() {
@@ -128,7 +138,6 @@ fun ComposeTestRule.clickOKToAddNewComment() {
 }
 
 fun ComposeTestRule.clickOKToRemoveComment() {
-    onNodeWithContentDescription(OK_BUTTON_FOR_REMOVE_COMMENT).dump()
     onNodeWithContentDescription(OK_BUTTON_FOR_REMOVE_COMMENT)
         .assertIsDisplayed()
         .performClick()
@@ -155,10 +164,9 @@ fun ComposeTestRule.requireCommentSelectorWithSelectedLabel(expected: String) {
         .assertTextEquals(expected)
 }
 
-fun ComposeTestRule.requireCommentSelectorWithSelectedComment(expected: String) {
-    onNodeWithContentDescription(DROP_DOWN_TEXT_FIELD, useUnmergedTree = true)
+fun ComposeTestRule.requireCommentSelectorForPrefixWithSelectedComment(prefix: String, expected: String) {
+    onNodeWithContentDescription("$prefix$expected", useUnmergedTree = true)
         .assertIsDisplayed()
-        .assertTextEquals(expected)
 }
 
 

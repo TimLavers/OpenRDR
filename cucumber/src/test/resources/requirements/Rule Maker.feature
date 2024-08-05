@@ -88,7 +88,6 @@ Feature: The user can make rules that change the interpretive report
     And  the interpretation field should be empty
     And stop the client application
 
-  @single
   Scenario: The user should be able to build a rule to remove a comment
     Given a case with name Case1 is stored on the server:
     And the interpretation of the case Case1 is "Go to Bondi."
