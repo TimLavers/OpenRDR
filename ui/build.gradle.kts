@@ -16,7 +16,7 @@ dependencies {
 
     testImplementation(compose.desktop.uiTestJUnit4)
     testImplementation(testFixtures(project(":common")))
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
 
 }
 

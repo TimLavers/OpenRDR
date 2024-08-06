@@ -3,7 +3,11 @@ package io.rippledown.interpretation
 import androidx.compose.ui.test.junit4.createComposeRule
 import io.mockk.mockk
 import io.mockk.verify
+import io.rippledown.constants.interpretation.REMOVE_COMMENT_SELECTOR_PREFIX
+import io.rippledown.utils.applicationFor
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import kotlin.test.Test
 
@@ -23,7 +27,7 @@ class InterpretationActionsTest {
         with(composeTestRule) {
             //Given
             setContent {
-                InterpretationActions(handler)
+                InterpretationActions(listOf(), handler)
             }
 
             //When
@@ -35,18 +39,17 @@ class InterpretationActionsTest {
     }
 
     @Test
-    fun `should handler when the user clicks on the add comment button, adds a comment and presses OK`() {
+    fun `should call handler when the user clicks on the add comment button, adds a new comment and presses OK`() {
         with(composeTestRule) {
             //Given
             setContent {
-                InterpretationActions(handler)
+                InterpretationActions(listOf(), handler)
             }
             clickChangeInterpretationButton()
 
             //When
             clickAddCommentMenu()
             addNewComment("Bondi")
-            clickOKToAddNewComment()
 
             //Then
             verify(timeout = 1_000) { handler.startRuleToAddComment("Bondi") }
@@ -54,37 +57,39 @@ class InterpretationActionsTest {
     }
 
     @Test
-    fun `should handler when the user clicks on the replace comment button`() {
-        with(composeTestRule) {
-            //Given
-            setContent {
-                InterpretationActions(handler)
-            }
-            clickChangeInterpretationButton()
-
-            //When
-            clickReplaceCommentMenu()
-
-            //Then
-            verify { handler.replaceComment() }
-        }
+    @Ignore
+    fun `should handler when the user clicks on the replace comment button, selects an existing comment, adds a replacement comment and presses OK`() {
+        //TODO: Implement this test
     }
 
     @Test
-    fun `should handler when the user clicks on the remove comment button`() {
+    fun `should call handler when the user clicks on the remove comment button, selects a comment and presses OK`() =
+        runTest {
+        val comments = listOf("Bondi", "Manly", "Coogee")
         with(composeTestRule) {
             //Given
             setContent {
-                InterpretationActions(handler)
+                InterpretationActions(comments, handler)
             }
             clickChangeInterpretationButton()
 
             //When
             clickRemoveCommentMenu()
+            clickCommentDropDownMenu()
+            requireCommentSelectorOptionsToBeDisplayed(REMOVE_COMMENT_SELECTOR_PREFIX, comments)
+            clickCommentToRemove("Manly")
+            clickOKToRemoveComment()
 
             //Then
-            verify { handler.removeComment() }
+            verify(timeout = 1_000) { handler.startRuleToRemoveComment("Manly") }
         }
+        }
+}
+
+fun main() {
+    val handler = mockk<InterpretationActionsHandler>(relaxed = true)
+    applicationFor {
+        InterpretationActions(listOf("Bondi", "Malabar"), handler)
     }
 }
 

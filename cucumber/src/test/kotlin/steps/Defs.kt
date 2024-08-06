@@ -63,6 +63,10 @@ class Defs : En {
                 labProxy().provideCase(caseName)
             }
         }
+        Given("a case with name {word} is stored on the server:") { caseName: String ->
+            labProxy().provideCase(caseName)
+        }
+
         Given("a list of {long} cases is stored on the server") { numberOfCases: Long ->
             (1..numberOfCases).forEach { i ->
                 val padded = i.toString().padStart(3, '0')

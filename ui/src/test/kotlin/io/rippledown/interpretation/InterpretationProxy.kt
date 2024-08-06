@@ -3,6 +3,7 @@ package io.rippledown.interpretation
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import io.rippledown.constants.interpretation.*
+import java.lang.Thread.sleep
 
 @OptIn(ExperimentalTestApi::class)
 fun ComposeTestRule.requireInterpretation(text: String) {
@@ -58,11 +59,15 @@ fun ComposeTestRule.requireInterpretationActionsDropdownMenu() {
 }
 
 fun ComposeTestRule.clickChangeInterpretationButton() =
-    onNodeWithContentDescription(CHANGE_INTERPRETATION_BUTTON).performClick()
+    onNodeWithContentDescription(CHANGE_INTERPRETATION_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
 
-fun ComposeTestRule.clickAddCommentMenu() = onNodeWithContentDescription(ADD_COMMENT_MENU)
-    .assertIsDisplayed()
-    .performClick()
+fun ComposeTestRule.clickAddCommentMenu() {
+    onNodeWithContentDescription(ADD_COMMENT_MENU)
+        .assertIsDisplayed()
+        .performClick()
+}
 
 fun ComposeTestRule.clickReplaceCommentMenu() = onNodeWithContentDescription(REPLACE_COMMENT_MENU)
     .assertIsDisplayed()
@@ -76,14 +81,92 @@ fun ComposeTestRule.addNewComment(comment: String) {
     onNodeWithContentDescription(NEW_COMMENT_TEXT_FIELD)
         .assertIsDisplayed()
         .performTextInput(comment)
-    waitForIdle()
+    sleep(1_000) //TODO remove this sleep
+    clickOKToAddNewComment()
+    sleep(1_000) //TODO remove this sleep
 }
 
-fun ComposeTestRule.clickOKToAddNewComment() {
-    onNodeWithContentDescription(OK_BUTTON)
+fun ComposeTestRule.clickCommentToRemove(comment: String) {
+    clickComment(REMOVE_COMMENT_SELECTOR_PREFIX, comment)
+}
+
+fun ComposeTestRule.clickComment(prefix: String, comment: String) {
+    onNodeWithContentDescription("$prefix$comment").performClick()
+    waitForIdle()
+    sleep(1_000) //TODO remove this sleep
+}
+
+fun ComposeTestRule.requireCommentSelectorOptionsToBeDisplayed(prefix: String, options: List<String>) {
+    requireDropDownMenuToBeDisplayed()
+    options.forEach { option ->
+        onNodeWithContentDescription("$prefix$option")
+            .assertIsDisplayed()
+    }
+}
+
+fun ComposeTestRule.requireCommentSelectorOptionsNotToBeDisplayed(prefix: String, options: List<String>) {
+    requireDropDownMenuToBeDisplayed()
+    options.forEach { option ->
+        onNodeWithContentDescription("$prefix$option")
+            .assertDoesNotExist()
+    }
+}
+
+fun ComposeTestRule.requireDropDownMenuToBeDisplayed() {
+    onNodeWithContentDescription(DROP_DOWN_TEXT_FIELD)
+        .assertIsDisplayed()
+}
+
+fun ComposeTestRule.requireDropDownMenuForRemoveCommentToBeDisplayed() {
+    onNodeWithContentDescription("$REMOVE_COMMENT_SELECTOR_PREFIX$DROP_DOWN_TEXT_FIELD", useUnmergedTree = true)
+        .assertIsDisplayed()
+}
+
+fun ComposeTestRule.clickCommentDropDownMenu() {
+    onNodeWithContentDescription(DROP_DOWN_TEXT_FIELD)
         .assertIsDisplayed()
         .performClick()
     waitForIdle()
+    sleep(1_000) //TODO remove this sleep
+}
+
+fun ComposeTestRule.clickOKToAddNewComment() {
+    onNodeWithContentDescription(OK_BUTTON_FOR_ADD_COMMENT)
+        .assertIsDisplayed()
+        .performClick()
+    waitForIdle()
+}
+
+fun ComposeTestRule.clickOKToRemoveComment() {
+    onNodeWithContentDescription(OK_BUTTON_FOR_REMOVE_COMMENT)
+        .assertIsDisplayed()
+        .performClick()
+    waitForIdle()
+}
+
+fun ComposeTestRule.clickCancelAddNewComment() {
+    onNodeWithContentDescription(CANCEL_BUTTON_FOR_ADD_COMMENT)
+        .assertIsDisplayed()
+        .performClick()
+    waitForIdle()
+}
+
+fun ComposeTestRule.clickCancelRemoveComment() {
+    onNodeWithContentDescription(CANCEL_BUTTON_FOR_REMOVE_COMMENT)
+        .assertIsDisplayed()
+        .performClick()
+    waitForIdle()
+}
+
+fun ComposeTestRule.requireCommentSelectorWithSelectedLabel(expected: String) {
+    onNodeWithContentDescription(COMMENT_SELECTOR_LABEL, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .assertTextEquals(expected)
+}
+
+fun ComposeTestRule.requireCommentSelectorForPrefixWithSelectedComment(prefix: String, expected: String) {
+    onNodeWithContentDescription("$prefix$expected", useUnmergedTree = true)
+        .assertIsDisplayed()
 }
 
 

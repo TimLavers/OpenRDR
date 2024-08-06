@@ -38,7 +38,7 @@ subprojects {
 
     dependencies {
         implementation("org.jetbrains.kotlin:kotlin-stdlib:${Version.kotlin}")
-        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
         implementation(project.dependencies.enforcedPlatform("io.ktor:ktor-bom:${Version.ktor}"))
         implementation("io.ktor:ktor-client-core")
         implementation("io.ktor:ktor-client-cio")

@@ -24,6 +24,7 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Diff
+import io.rippledown.model.diff.Removal
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
@@ -97,7 +98,8 @@ fun OpenRDRUI(handler: Handler) {
         },
         floatingActionButton = {
             if (!ruleInProgress && currentCase != null) {
-                InterpretationActions(object : InterpretationActionsHandler {
+                val comments = currentCase!!.viewableInterpretation.conclusions().map { it.text }
+                InterpretationActions(comments, object : InterpretationActionsHandler {
                     override fun startRuleToAddComment(comment: String) {
                         val sessionStartRequest = SessionStartRequest(
                             caseId = currentCase!!.id!!,
@@ -110,8 +112,12 @@ fun OpenRDRUI(handler: Handler) {
                         TODO("Not yet implemented")
                     }
 
-                    override fun removeComment() {
-                        TODO("Not yet implemented")
+                    override fun startRuleToRemoveComment(comment: String) {
+                        val sessionStartRequest = SessionStartRequest(
+                            caseId = currentCase!!.id!!,
+                            diff = Removal(comment)
+                        )
+                        cornerstoneStatus = runBlocking { api.startRuleSession(sessionStartRequest) }
                     }
                 })
             }

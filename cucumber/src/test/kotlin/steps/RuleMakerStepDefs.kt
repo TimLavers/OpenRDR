@@ -111,5 +111,17 @@ class RuleMakerStepDefs : En {
             }
 
         }
+        When("I build a rule to remove the comment {string}") { comment: String ->
+            with(interpretationViewPO()) {
+                clickChangeInterpretationButton()
+                clickRemoveCommentMenu()
+                pause(2000) //TODO remove
+                selectCommentToRemoveAndClickOK(comment)
+                pause(2000) //TODO remove
+            }
+            with(ruleMakerPO()) {
+                clickDoneButton()
+            }
+        }
     }
 }

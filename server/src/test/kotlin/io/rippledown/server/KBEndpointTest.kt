@@ -19,7 +19,6 @@ import io.rippledown.model.diff.DiffList
 import io.rippledown.model.diff.Unchanged
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
-import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.supplyCaseFromFile
 import io.rippledown.util.EntityRetrieval
@@ -395,13 +394,13 @@ internal class KBEndpointTest {
 
             val viewableCase1 = endpoint.viewableCase(kb.allCornerstoneCases().first().id!!)
             startRuleSessionToAddConclusion(id2, conclusion2)
-            cornerstoneForIndex(0) shouldBe CornerstoneStatus(viewableCase1, 0, 1)
+            cornerstoneForIndex(0) shouldBe viewableCase1
             commitCurrentRuleSession()
             kb.allCornerstoneCases() shouldHaveSize 2
 
             val viewableCase2 = endpoint.viewableCase(kb.allCornerstoneCases()[1].id!!)
             startRuleSessionToAddConclusion(id3, conclusion3)
-            cornerstoneForIndex(1) shouldBe CornerstoneStatus(viewableCase2, 1, 2)
+            cornerstoneForIndex(1) shouldBe viewableCase2
         }
     }
   

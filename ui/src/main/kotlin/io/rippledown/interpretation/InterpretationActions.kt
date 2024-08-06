@@ -17,13 +17,16 @@ import io.rippledown.constants.interpretation.*
 
 interface InterpretationActionsHandler {
     fun startRuleToAddComment(comment: String)
+    fun startRuleToRemoveComment(comment: String)
     fun replaceComment()
-    fun removeComment()
 }
 
 @Composable
-fun InterpretationActions(handler: InterpretationActionsHandler) {
+fun InterpretationActions(comments: List<String>, handler: InterpretationActionsHandler) {
     var addCommentDialogShowing by remember { mutableStateOf(false) }
+    var replaceCommentDialogShowing by remember { mutableStateOf(false) }
+    var removeCommentDialogShowing by remember { mutableStateOf(false) }
+    val noDialogsShowing = !(addCommentDialogShowing || replaceCommentDialogShowing || removeCommentDialogShowing)
 
     var expanded by remember { mutableStateOf(false) }
     Box(
@@ -34,7 +37,7 @@ fun InterpretationActions(handler: InterpretationActionsHandler) {
             text = { Text(text = CHANGE_INTERPRETATION) },
             icon = { Icon(Icons.Filled.Edit, CHANGE_INTERPRETATION_BUTTON) }
         )
-        if (!addCommentDialogShowing) {
+        if (noDialogsShowing) {
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
@@ -48,33 +51,62 @@ fun InterpretationActions(handler: InterpretationActionsHandler) {
                     text = ADD_COMMENT,
                     contentDescription = ADD_COMMENT_MENU,
                     iconResource = "add_comment_24.png",
-                    onClick = { addCommentDialogShowing = true }
+                    enabled = true,
+                    onClick = {
+                        addCommentDialogShowing = true
+                    }
                 )
                 InterpretationActionMenu(
                     text = REPLACE_COMMENT,
                     contentDescription = REPLACE_COMMENT_MENU,
                     iconResource = "replace_comment_24.png",
-                    onClick = { handler.replaceComment() }
+                    enabled = comments.isNotEmpty(),
+                    onClick = {
+                        replaceCommentDialogShowing = true
+                    }
                 )
                 InterpretationActionMenu(
                     text = REMOVE_COMMENT,
                     contentDescription = REMOVE_COMMENT_MENU,
                     iconResource = "remove_comment_24.png",
-                    onClick = { handler.removeComment() }
+                    enabled = comments.isNotEmpty(),
+                    onClick = {
+                        removeCommentDialogShowing = true
+                    }
                 )
             }
         }
     }
-    AddCommentDialog(isShowing = addCommentDialogShowing, handler = object : AddCommentHandler {
-        override fun startRuleToAddComment(comment: String) {
-            addCommentDialogShowing = false
-            handler.startRuleToAddComment(comment)
-        }
+    if (addCommentDialogShowing) {
+        AddCommentDialog(handler = object : AddCommentHandler {
+            override fun startRuleToAddComment(comment: String) {
+                addCommentDialogShowing = false
+                handler.startRuleToAddComment(comment)
+            }
 
-        override fun cancel() {
-            addCommentDialogShowing = false
-        }
-    })
+            override fun cancel() {
+                addCommentDialogShowing = false
+            }
+        })
+    }
+    if (replaceCommentDialogShowing) {
+        //TODO implement ReplaceCommentDialog
+    }
+
+    if (removeCommentDialogShowing) {
+        RemoveCommentDialog(
+            availableComments = comments,
+            handler = object : RemoveCommentHandler {
+                override fun startRuleToRemoveComment(comment: String) {
+                    removeCommentDialogShowing = false
+                    handler.startRuleToRemoveComment(comment)
+                }
+
+                override fun cancel() {
+                    removeCommentDialogShowing = false
+                }
+            })
+    }
 }
 
 @Composable
@@ -82,10 +114,12 @@ private fun InterpretationActionMenu(
     text: String,
     contentDescription: String,
     iconResource: String,
+    enabled: Boolean,
     onClick: () -> Unit
 ) {
     DropdownMenuItem(
         onClick = onClick,
+        enabled = enabled,
     ) {
         Row(verticalAlignment = CenterVertically) {
             Icon(
@@ -93,7 +127,9 @@ private fun InterpretationActionMenu(
                 painter = painterResource(iconResource),
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text)
+            Text(
+                text = text,
+            )
         }
     }
 }
