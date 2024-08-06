@@ -29,6 +29,10 @@ class RuleMakerStepDefs : En {
             addConditionsAndFinishRule(conditions)
         }
 
+        When("I start building a rule to add the comment {string}") {comment: String ->
+            startRuleBuildingSessionToAddComment(comment)
+        }
+
         When("I build a rule to remove the comment {string} with conditions") {comment: String, conditions: DataTable ->
             pause(1000)
             val currentInterpretation = interpretationViewPO().interpretationText()
@@ -37,6 +41,21 @@ class RuleMakerStepDefs : En {
             val withCommentRemoved = currentInterpretation.replace(comment, "")
             println("with comment removed = '$withCommentRemoved'")
             interpretationViewPO().setVerifiedText(withCommentRemoved)
+            pause(1000)
+            interpretationViewPO().selectDifferencesTab()
+            pause(1000)
+            interpretationViewPO().clickBuildIconOnRow(0)
+            addConditionsAndFinishRule(conditions)
+        }
+
+        When("I build a rule to replace the comment {string} with the comment {string} with conditions") {toGo: String, replacement: String, conditions: DataTable ->
+            pause(1000)
+            val currentInterpretation = interpretationViewPO().interpretationText()
+            println("------- replacing comment '$toGo' with '$replacement' ----------")
+            println("current interp: '$currentInterpretation'")
+            val withCommentReplaced = currentInterpretation.replace(toGo, replacement)
+            println("with comment replaced = '$withCommentReplaced'")
+            interpretationViewPO().setVerifiedText(withCommentReplaced)
             pause(1000)
             interpretationViewPO().selectDifferencesTab()
             pause(1000)

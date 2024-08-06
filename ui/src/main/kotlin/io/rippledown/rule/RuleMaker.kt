@@ -7,7 +7,16 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogWindow
+import androidx.compose.ui.window.rememberDialogState
+import io.rippledown.appbar.TextInputHandler
+import io.rippledown.appbar.TextInputWithCancel
+import io.rippledown.constants.main.CREATE
+import io.rippledown.constants.main.CREATE_KB_NAME
+import io.rippledown.constants.main.CREATE_KB_NAME_FIELD_DESCRIPTION
+import io.rippledown.constants.main.CREATE_KB_OK_BUTTON_DESCRIPTION
 import io.rippledown.constants.rule.RULE_MAKER
 import io.rippledown.model.condition.Condition
 
@@ -23,6 +32,32 @@ fun RuleMaker(allConditions: List<Condition>, handler: RuleMakerHandler) {
     var selectedConditions by remember { mutableStateOf(listOf<Condition>()) }
     var availableConditions by remember { mutableStateOf(listOf<Condition>()) }
     var filterText by remember { mutableStateOf("") }
+    var editConditionDialogShowing by remember { mutableStateOf(false) }
+    var conditionToBeEdited by remember { mutableStateOf<Condition?>(null) }
+
+    if (editConditionDialogShowing) {
+        val dialogState = rememberDialogState(size = DpSize(420.dp, 160.dp))
+        DialogWindow(
+            onCloseRequest = { editConditionDialogShowing = false },
+            title = "Edit Condition",
+            state = dialogState,
+        ) {
+            ConditionEditor(object : ConditionEditHandler {
+                override fun editableCondition(): Condition {
+                    return conditionToBeEdited!!
+                }
+
+                override fun editingFinished(condition: Condition) {
+                    selectedConditions = selectedConditions + condition
+                    editConditionDialogShowing = false
+                }
+
+                override fun cancel() {
+                    editConditionDialogShowing = false
+                }
+            })
+        }
+    }
 
     LaunchedEffect(allConditions) {
         availableConditions = allConditions.sortedWith(compareBy { it.asText() })
@@ -52,6 +87,12 @@ fun RuleMaker(allConditions: List<Condition>, handler: RuleMakerHandler) {
                 selectedConditions = selectedConditions + condition
                 availableConditions = availableConditions - condition
                 handler.onUpdateConditions(selectedConditions)
+            }
+
+            override fun onEditThenAdd(condition: Condition) {
+                conditionToBeEdited = condition
+                editConditionDialogShowing = true
+                availableConditions = availableConditions - condition
             }
         })
 

@@ -11,7 +11,7 @@ import io.rippledown.model.condition.isAbsent
 import io.rippledown.model.condition.isPresent
 import kotlin.test.Test
 
-internal class PredicateFactoryTest {
+internal class EpisodicSuggestedConditionFactoryTest {
     val a = Attribute(0, "A")
     val b = Attribute(1, "B")
 

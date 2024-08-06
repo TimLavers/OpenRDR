@@ -13,17 +13,24 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventType.Companion.Enter
 import androidx.compose.ui.input.pointer.PointerEventType.Companion.Exit
 import androidx.compose.ui.input.pointer.onPointerEvent
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.isSecondaryPressed
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.rule.AVAILABLE_CONDITIONS
 import io.rippledown.constants.rule.AVAILABLE_CONDITION_PREFIX
 import io.rippledown.model.condition.Condition
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 interface AvailableConditionsHandler {
     fun onAddCondition(condition: Condition)
+    fun onEditThenAdd(condition: Condition)
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun AvailableConditions(conditions: List<Condition>, handler: AvailableConditionsHandler) {
     var cursorOnRow: Int by remember { mutableStateOf(-1) }
@@ -51,6 +58,21 @@ fun AvailableConditions(conditions: List<Condition>, handler: AvailableCondition
                             }
                             .onPointerEvent(Enter) {
                                 cursorOnRow = index
+                            }
+                            .pointerInput(Unit) {
+                                coroutineScope {
+                                    launch {
+                                        awaitPointerEventScope {
+                                            while (true) {
+                                                val event = awaitPointerEvent()
+                                                if (event.type == PointerEventType.Press && event.buttons.isSecondaryPressed) {
+                                                    println("Right click!!!!!!")
+                                                    handler.onEditThenAdd(condition)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                             .background(
                                 if (cursorOnRow == index) Color.LightGray else Color.Transparent
