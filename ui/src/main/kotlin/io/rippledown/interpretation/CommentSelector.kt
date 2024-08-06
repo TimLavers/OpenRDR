@@ -1,8 +1,8 @@
 package io.rippledown.interpretation
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.onClick
 import androidx.compose.material.*
 import androidx.compose.material.ExposedDropdownMenuDefaults.TrailingIcon
 import androidx.compose.runtime.*
@@ -28,11 +28,12 @@ fun CommentSelector(
     handler: CommentSelectorHandler
 ) {
     var expanded by remember { mutableStateOf(false) }
-    println("CommentSelector: selectedComment: $selectedComment, options: $options, label: $label, prefix: $prefix, expanded: $expanded")
 
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = { expanded = it },
+        onExpandedChange = {
+            expanded = it
+        },
     ) {
         TextField(
             value = selectedComment,
@@ -49,11 +50,8 @@ fun CommentSelector(
             trailingIcon = { TrailingIcon(expanded = expanded) },
             modifier = Modifier
                 .fillMaxWidth()
-                .onClick {
-                    println("clicked text field to expand dropdown")
-                    expanded = true
-                }
                 .semantics { contentDescription = DROP_DOWN_TEXT_FIELD }
+                .clickable { expanded = true } //required for accessibility!
         )
         ExposedDropdownMenu(
             expanded = expanded,
@@ -62,15 +60,13 @@ fun CommentSelector(
             options.forEach { option ->
                 DropdownMenuItem(
                     onClick = {
-                        println("clicked option: $option")
-                        expanded = false
                         handler.onCommentSelected(option)
+                        expanded = false
                     },
+                    modifier = Modifier.semantics { contentDescription = "$prefix$option" },
                 ) {
-
                     Text(
                         text = option,
-                        modifier = Modifier.semantics { contentDescription = "$prefix$option" },
                     )
                 }
             }

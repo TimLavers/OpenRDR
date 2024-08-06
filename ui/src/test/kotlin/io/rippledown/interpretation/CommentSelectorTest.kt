@@ -18,7 +18,7 @@ class CommentSelectorTest {
 
     private val comments = listOf("Bondi", "Malabar", "Coogee")
     private val label = "Select a comment"
-    private val prefix = "PREFIX"
+    private val prefix = "PREFIX_"
 
     @Before
     fun setUp() {
@@ -32,6 +32,7 @@ class CommentSelectorTest {
             setContent {
                 CommentSelector("", comments, label, prefix, handler)
             }
+            requireDropDownMenuToBeDisplayed()
 
             //Then
             requireCommentSelectorWithSelectedLabel(label)
@@ -45,9 +46,13 @@ class CommentSelectorTest {
             setContent {
                 CommentSelector("Bondi", comments, label, prefix, handler)
             }
+            requireDropDownMenuToBeDisplayed()
+
+            //When
+            clickCommentDropDownMenu()
 
             //Then
-            requireCommentSelectorWithSelectedComment("Bondi")
+            requireCommentSelectorForPrefixWithSelectedComment(prefix, "Bondi")
         }
     }
 
@@ -58,6 +63,7 @@ class CommentSelectorTest {
             setContent {
                 CommentSelector("", comments, label, prefix, handler)
             }
+            requireCommentSelectorOptionsNotToBeDisplayed(prefix, comments)
 
             //When
             clickCommentDropDownMenu()
@@ -74,6 +80,7 @@ class CommentSelectorTest {
             setContent {
                 CommentSelector("", comments, label, prefix, handler)
             }
+            requireCommentSelectorOptionsNotToBeDisplayed(prefix, comments)
 
             //When
             clickCommentDropDownMenu()
@@ -82,6 +89,9 @@ class CommentSelectorTest {
 
             //Then
             verify { handler.onCommentSelected(comments[1]) }
+            verify(exactly = 0) { handler.onCommentSelected(comments[0]) }
+            verify(exactly = 1) { handler.onCommentSelected(comments[1]) }
+            verify(exactly = 0) { handler.onCommentSelected(comments[2]) }
         }
     }
 }
@@ -90,6 +100,6 @@ class CommentSelectorTest {
 fun main() {
     val handler = mockk<CommentSelectorHandler>(relaxed = true)
     applicationFor {
-        CommentSelector("Bondi", listOf("Bondi", "Malabar"), "", "PREFIX", handler)
+        CommentSelector("Bondi", listOf("Bondi", "Malabar"), "please select a beach", "PREFIX", handler)
     }
 }

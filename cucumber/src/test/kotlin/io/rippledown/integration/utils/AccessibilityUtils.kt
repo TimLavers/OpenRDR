@@ -32,7 +32,7 @@ fun AccessibleContext.findByName(name: String, role: AccessibleRole): Accessible
     val matcher = { context: AccessibleContext ->
         (name == context.accessibleName && role == context.accessibleRole)
     }
-    return find(matcher, true)
+    return find(matcher)
 }
 
 fun AccessibleContext.find(matcher: (AccessibleContext) -> Boolean, debug: Boolean = false): AccessibleContext? {
@@ -113,9 +113,8 @@ fun AccessibleContext.dumpToText(index: Int = 0, componentDepth: Int = 0, ignore
 }
 
 fun AccessibleContext.findAndClick(description: String) {
-    val expandDropdownButton = find(description, AccessibleRole.PUSH_BUTTON)
-    val action = expandDropdownButton!!.accessibleAction
-    action.doAccessibleAction(0)
+    val expandDropdownButton = find(description)
+    expandDropdownButton!!.accessibleAction.doAccessibleAction(0)
 }
 
 fun AccessibleContext.findAndClickRadioButton(description: String) {
@@ -160,7 +159,14 @@ fun AccessibleContext.dumpToText(componentDepth: Int = 0, showNulls: Boolean = f
     val role = this.accessibleRole.toDisplayString()
     val description = this.accessibleDescription
     if (showNulls || name != null || description != null) {
-        println("Name: $name, role: $role, description: $description, componentDepth: $componentDepth, child count: $childCount ")
+        println("\nName: $name, role: $role, description: $description, componentDepth: $componentDepth, child count: $childCount ")
+    }
+    this.accessibleAction?.let {
+        val count = it.accessibleActionCount
+        println("Number of actions: $count")
+        for (i in 0..<count) {
+            println("Action $i: ${it.getAccessibleActionDescription(i)}")
+        }
     }
     for (i in 0..<childCount) {
         getAccessibleChild(i).accessibleContext.dumpToText(componentDepth + 1, showNulls)

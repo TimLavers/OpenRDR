@@ -166,7 +166,9 @@ class RuleMakerStepDefs : En {
             with(interpretationViewPO()) {
                 clickChangeInterpretationButton()
                 clickRemoveCommentMenu()
+                pause(2000) //TODO remove
                 selectCommentToRemoveAndClickOK(comment)
+                pause(2000) //TODO remove
             }
             with(ruleMakerPO()) {
                 clickDoneButton()

@@ -24,7 +24,7 @@ interface AddCommentHandler {
 }
 
 @Composable
-fun AddCommentDialog(isShowing: Boolean, handler: AddCommentHandler) {
+fun AddCommentDialog(handler: AddCommentHandler) {
     val dialogState = rememberDialogState(size = DpSize(640.dp, 200.dp))
 
     var textValue by remember { mutableStateOf("") }
@@ -33,12 +33,10 @@ fun AddCommentDialog(isShowing: Boolean, handler: AddCommentHandler) {
         title = ADD_COMMENT,
         icon = painterResource("add_comment_24.png"),
         state = dialogState,
-        visible = isShowing,
         onCloseRequest = {
             handler.cancel()
         }
     ) {
-
         val focusRequester = remember { FocusRequester() }
         LaunchedEffect(Unit) {
             focusRequester.requestFocus()
@@ -69,7 +67,7 @@ fun AddCommentDialog(isShowing: Boolean, handler: AddCommentHandler) {
                 horizontalArrangement = Arrangement.End
             ) {
                 // Define a common minimum width for buttons
-                val buttonModifier = Modifier.widthIn(min = 100.dp).semantics { }
+                val buttonModifier = Modifier.widthIn(min = 100.dp)
                 Button(
                     onClick = {
                         handler.cancel()

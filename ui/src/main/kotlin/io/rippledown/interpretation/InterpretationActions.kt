@@ -24,7 +24,9 @@ interface InterpretationActionsHandler {
 @Composable
 fun InterpretationActions(comments: List<String>, handler: InterpretationActionsHandler) {
     var addCommentDialogShowing by remember { mutableStateOf(false) }
+    var replaceCommentDialogShowing by remember { mutableStateOf(false) }
     var removeCommentDialogShowing by remember { mutableStateOf(false) }
+    val noDialogsShowing = !(addCommentDialogShowing || replaceCommentDialogShowing || removeCommentDialogShowing)
 
     var expanded by remember { mutableStateOf(false) }
     Box(
@@ -35,7 +37,7 @@ fun InterpretationActions(comments: List<String>, handler: InterpretationActions
             text = { Text(text = CHANGE_INTERPRETATION) },
             icon = { Icon(Icons.Filled.Edit, CHANGE_INTERPRETATION_BUTTON) }
         )
-        if (!addCommentDialogShowing && !removeCommentDialogShowing) {
+        if (noDialogsShowing) {
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
@@ -60,7 +62,7 @@ fun InterpretationActions(comments: List<String>, handler: InterpretationActions
                     iconResource = "replace_comment_24.png",
                     enabled = comments.isNotEmpty(),
                     onClick = {
-                        handler.replaceComment()
+                        replaceCommentDialogShowing = true
                     }
                 )
                 InterpretationActionMenu(
@@ -69,36 +71,42 @@ fun InterpretationActions(comments: List<String>, handler: InterpretationActions
                     iconResource = "remove_comment_24.png",
                     enabled = comments.isNotEmpty(),
                     onClick = {
-                        println("remove action clicked - about to show dialog")
                         removeCommentDialogShowing = true
                     }
                 )
             }
         }
     }
-    AddCommentDialog(isShowing = addCommentDialogShowing, handler = object : AddCommentHandler {
-        override fun startRuleToAddComment(comment: String) {
-            addCommentDialogShowing = false
-            handler.startRuleToAddComment(comment)
-        }
+    if (addCommentDialogShowing) {
+        AddCommentDialog(handler = object : AddCommentHandler {
+            override fun startRuleToAddComment(comment: String) {
+                addCommentDialogShowing = false
+                handler.startRuleToAddComment(comment)
+            }
 
-        override fun cancel() {
-            addCommentDialogShowing = false
-        }
-    })
-    RemoveCommentDialog(
-        isShowing = removeCommentDialogShowing,
-        availableComments = comments,
-        handler = object : RemoveCommentHandler {
-        override fun startRuleToRemoveComment(comment: String) {
-            removeCommentDialogShowing = false
-            handler.startRuleToRemoveComment(comment)
-        }
+            override fun cancel() {
+                addCommentDialogShowing = false
+            }
+        })
+    }
+    if (replaceCommentDialogShowing) {
+        //TODO implement ReplaceCommentDialog
+    }
 
-        override fun cancel() {
-            removeCommentDialogShowing = false
-        }
-    })
+    if (removeCommentDialogShowing) {
+        RemoveCommentDialog(
+            availableComments = comments,
+            handler = object : RemoveCommentHandler {
+                override fun startRuleToRemoveComment(comment: String) {
+                    removeCommentDialogShowing = false
+                    handler.startRuleToRemoveComment(comment)
+                }
+
+                override fun cancel() {
+                    removeCommentDialogShowing = false
+                }
+            })
+    }
 }
 
 @Composable
@@ -121,8 +129,7 @@ private fun InterpretationActionMenu(
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = text,
-
-                )
+            )
         }
     }
 }

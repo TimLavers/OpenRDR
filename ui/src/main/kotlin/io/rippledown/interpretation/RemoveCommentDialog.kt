@@ -21,7 +21,7 @@ interface RemoveCommentHandler {
 }
 
 @Composable
-fun RemoveCommentDialog(isShowing: Boolean, availableComments: List<String>, handler: RemoveCommentHandler) {
+fun RemoveCommentDialog(availableComments: List<String>, handler: RemoveCommentHandler) {
     val dialogState = rememberDialogState(size = DpSize(600.dp, 400.dp))
 
     var selectedComment by remember { mutableStateOf("") }
@@ -30,7 +30,6 @@ fun RemoveCommentDialog(isShowing: Boolean, availableComments: List<String>, han
         title = REMOVE_COMMENT,
         icon = painterResource("remove_comment_24.png"),
         state = dialogState,
-        visible = isShowing,
         onCloseRequest = {
             handler.cancel()
         }

@@ -27,16 +27,16 @@ class RemoveCommentDialogTest {
         with(composeTestRule) {
             //Given
             setContent {
-                RemoveCommentDialog(true, listOf(bondi, maroubra), handler)
-                waitForIdle()
+                RemoveCommentDialog(listOf(bondi, maroubra), handler)
             }
 
             //When
-            selectCommentToRemove(bondi)
+            clickCommentDropDownMenu()
+            clickCommentToRemove(bondi)
             clickOKToRemoveComment()
 
             //Then
-            verify(timeout = 1_000) { handler.startRuleToRemoveComment(bondi) }
+            verify { handler.startRuleToRemoveComment(bondi) }
         }
     }
 
@@ -45,8 +45,7 @@ class RemoveCommentDialogTest {
         with(composeTestRule) {
             //Given
             setContent {
-                RemoveCommentDialog(true, listOf(), handler)
-                waitForIdle()
+                RemoveCommentDialog(listOf(), handler)
             }
 
             //When
@@ -59,7 +58,18 @@ class RemoveCommentDialogTest {
 }
 
 fun main() {
+    val bondi = "Bondi"
+    val maroubra = "Maroubra"
+    val handler = object : RemoveCommentHandler {
+        override fun startRuleToRemoveComment(comment: String) {
+            println("startRuleToRemoveComment: $comment")
+        }
+
+        override fun cancel() {
+            println("cancel")
+        }
+    }
     applicationFor {
-        RemoveCommentDialog(true, listOf(), mockk())
+        RemoveCommentDialog(listOf(bondi, maroubra), handler)
     }
 }

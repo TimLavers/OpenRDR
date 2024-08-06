@@ -1,8 +1,6 @@
 package io.rippledown.interpretation
 
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
 import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.utils.applicationFor
@@ -27,41 +25,37 @@ class AddCommentDialogTest {
         with(composeTestRule) {
             //Given
             setContent {
-                AddCommentDialog(true, handler)
-                waitForIdle()
+                AddCommentDialog(handler)
             }
 
             //When
             addNewComment("Bondi")
-            onNodeWithText("OK").performClick()
+            clickOKToAddNewComment()
 
             //Then
-            verify(timeout = 2_000) { handler.startRuleToAddComment("Bondi") }
+            verify { handler.startRuleToAddComment("Bondi") }
         }
     }
 
-    /*
-        @Test
-        fun `should call handler to cancel when Cancel is pressed`()= runTest {
-            with(composeTestRule) {
-                //Given
-                setContent {
-                    AddCommentDialog(true, handler)
-                    waitForIdle()
-                }
-
-                //When
-                clickCancelAddNewComment()
-
-                //Then
-                verify { handler.cancel() }
+    @Test
+    fun `should call handler to cancel when Cancel is pressed`() = runTest {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                AddCommentDialog(handler)
             }
+
+            //When
+            clickCancelAddNewComment()
+
+            //Then
+            verify { handler.cancel() }
         }
-    */
+    }
 }
 
 fun main() {
     applicationFor {
-        AddCommentDialog(true, mockk())
+        AddCommentDialog(mockk())
     }
 }

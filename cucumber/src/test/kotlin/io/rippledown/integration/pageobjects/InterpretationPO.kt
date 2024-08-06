@@ -8,10 +8,7 @@ import io.kotest.matchers.shouldNotBe
 import io.rippledown.constants.interpretation.*
 import io.rippledown.constants.rule.FINISH_RULE_BUTTON
 import io.rippledown.integration.pause
-import io.rippledown.integration.utils.find
-import io.rippledown.integration.utils.findAllByDescriptionPrefix
-import io.rippledown.integration.utils.findComposeDialogThatIsShowing
-import io.rippledown.integration.utils.waitForContextToBeNotNull
+import io.rippledown.integration.utils.*
 import io.rippledown.integration.waitForDebounce
 import io.rippledown.integration.waitUntilAsserted
 import io.rippledown.interpretation.CHANGED_PREFIX
@@ -236,15 +233,15 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
             execute<ComposeDialog> { findComposeDialogThatIsShowing() } shouldNotBe null
         }
         val dialog = execute<ComposeDialog> { findComposeDialogThatIsShowing() }
-        pause(2000)
-        execute { dialog.accessibleContext.find(DROP_DOWN_TEXT_FIELD)!!.accessibleAction.doAccessibleAction(0) }
-        pause(2000)
-        execute {
-            dialog.accessibleContext.find("$REMOVE_COMMENT_SELECTOR_PREFIX$comment")!!.accessibleAction.doAccessibleAction(
-                0
-            )
+        with(dialog.accessibleContext) {
+            execute { findAndClick(DROP_DOWN_TEXT_FIELD) }
+            pause(1_000)
+            execute { findAndClick("$REMOVE_COMMENT_SELECTOR_PREFIX$comment") }
+            execute {
+                find(OK_BUTTON_FOR_REMOVE_COMMENT)!!.accessibleAction.doAccessibleAction(0)
+            }
         }
-        execute { dialog.accessibleContext.find(OK_BUTTON_FOR_REMOVE_COMMENT)!!.accessibleAction.doAccessibleAction(0) }
     }
+
     private fun buildIconContext(row: Int) = execute<AccessibleContext?> { contextProvider().find("$ICON_PREFIX$row") }
 }

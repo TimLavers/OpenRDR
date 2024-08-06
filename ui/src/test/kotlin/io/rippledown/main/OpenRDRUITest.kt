@@ -323,7 +323,6 @@ class OpenRDRUITest {
             //When
             clickAddCommentMenu()
             addNewComment("Go to Bondi")
-            clickOKToAddNewComment()
 
             //Then
             requireCaseSelectorNotToBeDisplayed()
