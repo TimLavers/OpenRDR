@@ -25,6 +25,7 @@ import io.rippledown.model.condition.Condition
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.diff.Removal
+import io.rippledown.model.diff.Replacement
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
@@ -108,8 +109,12 @@ fun OpenRDRUI(handler: Handler) {
                         cornerstoneStatus = runBlocking { api.startRuleSession(sessionStartRequest) }
                     }
 
-                    override fun replaceComment() {
-                        TODO("Not yet implemented")
+                    override fun startRuleToReplaceComment(toBeReplaced: String, replacement: String) {
+                        val sessionStartRequest = SessionStartRequest(
+                            caseId = currentCase!!.id!!,
+                            diff = Replacement(toBeReplaced, replacement)
+                        )
+                        cornerstoneStatus = runBlocking { api.startRuleSession(sessionStartRequest) }
                     }
 
                     override fun startRuleToRemoveComment(comment: String) {

@@ -77,17 +77,40 @@ fun ComposeTestRule.clickRemoveCommentMenu() = onNodeWithContentDescription(REMO
     .assertIsDisplayed()
     .performClick()
 
-fun ComposeTestRule.addNewComment(comment: String) {
+private fun ComposeTestRule.enterCommentToBeAdded(comment: String) {
     onNodeWithContentDescription(NEW_COMMENT_TEXT_FIELD)
         .assertIsDisplayed()
         .performTextInput(comment)
+}
+
+private fun ComposeTestRule.enterCommentToBeTheReplacement(comment: String) {
+    onNodeWithContentDescription(REPLACEMENT_COMMENT_TEXT_FIELD)
+        .assertIsDisplayed()
+        .performTextInput(comment)
+}
+
+fun ComposeTestRule.addNewComment(comment: String) {
+    enterCommentToBeAdded(comment)
     sleep(1_000) //TODO remove this sleep
     clickOKToAddNewComment()
     sleep(1_000) //TODO remove this sleep
 }
 
+fun ComposeTestRule.replaceComment(toBeReplaced: String, replacement: String) {
+    clickCommentToBeReplaced(toBeReplaced)
+    sleep(1_000) //TODO remove this sleep
+    enterCommentToBeTheReplacement(replacement)
+    sleep(1_000) //TODO remove this sleep
+    clickOKToReplaceComment()
+    sleep(1_000) //TODO remove this sleep
+}
+
 fun ComposeTestRule.clickCommentToRemove(comment: String) {
     clickComment(REMOVE_COMMENT_SELECTOR_PREFIX, comment)
+}
+
+fun ComposeTestRule.clickCommentToBeReplaced(comment: String) {
+    clickComment(REPLACE_COMMENT_SELECTOR_PREFIX, comment)
 }
 
 fun ComposeTestRule.clickComment(prefix: String, comment: String) {
@@ -137,6 +160,13 @@ fun ComposeTestRule.clickOKToAddNewComment() {
     waitForIdle()
 }
 
+fun ComposeTestRule.clickOKToReplaceComment() {
+    onNodeWithContentDescription(OK_BUTTON_FOR_REPLACE_COMMENT)
+        .assertIsDisplayed()
+        .performClick()
+    waitForIdle()
+}
+
 fun ComposeTestRule.clickOKToRemoveComment() {
     onNodeWithContentDescription(OK_BUTTON_FOR_REMOVE_COMMENT)
         .assertIsDisplayed()
@@ -146,6 +176,13 @@ fun ComposeTestRule.clickOKToRemoveComment() {
 
 fun ComposeTestRule.clickCancelAddNewComment() {
     onNodeWithContentDescription(CANCEL_BUTTON_FOR_ADD_COMMENT)
+        .assertIsDisplayed()
+        .performClick()
+    waitForIdle()
+}
+
+fun ComposeTestRule.clickCancelReplaceComment() {
+    onNodeWithContentDescription(CANCEL_BUTTON_FOR_REPLACE_COMMENT)
         .assertIsDisplayed()
         .performClick()
     waitForIdle()

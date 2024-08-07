@@ -63,7 +63,7 @@ class Defs : En {
                 labProxy().provideCase(caseName)
             }
         }
-        Given("a case with name {word} is stored on the server:") { caseName: String ->
+        Given("a case with name {word} is stored on the server") { caseName: String ->
             labProxy().provideCase(caseName)
         }
 
