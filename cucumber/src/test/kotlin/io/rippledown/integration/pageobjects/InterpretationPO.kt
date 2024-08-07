@@ -257,11 +257,8 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
             execute { findAndClick(DROP_DOWN_TEXT_FIELD) }
             pause(1_000)
             execute { findAndClick("$REPLACE_COMMENT_SELECTOR_PREFIX$comment") }
-            execute {
-                findAndClick(REPLACE_COMMENT_MENU)
-            }
             pause(1_000)
-            execute { find(NEW_COMMENT_TEXT_FIELD)!!.accessibleEditableText.setTextContents(replacement) }
+            execute { find(REPLACEMENT_COMMENT_TEXT_FIELD)!!.accessibleEditableText.setTextContents(replacement) }
             execute {
                 find(OK_BUTTON_FOR_REPLACE_COMMENT)!!.accessibleAction.doAccessibleAction(0)
             }

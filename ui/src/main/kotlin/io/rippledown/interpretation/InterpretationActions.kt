@@ -17,8 +17,8 @@ import io.rippledown.constants.interpretation.*
 
 interface InterpretationActionsHandler {
     fun startRuleToAddComment(comment: String)
+    fun startRuleToReplaceComment(toBeReplaced: String, replacement: String)
     fun startRuleToRemoveComment(comment: String)
-    fun replaceComment()
 }
 
 @Composable
@@ -90,7 +90,18 @@ fun InterpretationActions(comments: List<String>, handler: InterpretationActions
         })
     }
     if (replaceCommentDialogShowing) {
-        //TODO implement ReplaceCommentDialog
+        ReplaceCommentDialog(
+            availableComments = comments,
+            handler = object : ReplaceCommentHandler {
+                override fun startRuleToReplaceComment(toBeReplaced: String, replacement: String) {
+                    replaceCommentDialogShowing = false
+                    handler.startRuleToReplaceComment(toBeReplaced, replacement)
+                }
+
+                override fun cancel() {
+                    replaceCommentDialogShowing = false
+                }
+            })
     }
 
     if (removeCommentDialogShowing) {

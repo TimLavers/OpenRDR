@@ -7,7 +7,6 @@ import io.rippledown.constants.interpretation.REMOVE_COMMENT_SELECTOR_PREFIX
 import io.rippledown.utils.applicationFor
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import kotlin.test.Test
 
@@ -57,9 +56,27 @@ class InterpretationActionsTest {
     }
 
     @Test
-    @Ignore
     fun `should handler when the user clicks on the replace comment button, selects an existing comment, adds a replacement comment and presses OK`() {
-        //TODO: Implement this test
+        with(composeTestRule) {
+            //Given
+            val bondi = "Bondi"
+            val maroubra = "Maroubra"
+            val coogee = "Coogee"
+            val comments = listOf(bondi, maroubra)
+
+            setContent {
+                InterpretationActions(comments, handler)
+            }
+            clickChangeInterpretationButton()
+
+            //When
+            clickReplaceCommentMenu()
+            clickCommentDropDownMenu()
+            replaceComment(bondi, coogee)
+
+            //Then
+            verify(timeout = 1_000) { handler.startRuleToReplaceComment(bondi, coogee) }
+        }
     }
 
     @Test
