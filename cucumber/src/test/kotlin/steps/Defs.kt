@@ -3,6 +3,9 @@ package steps
 import com.google.common.base.Stopwatch
 import io.cucumber.datatable.DataTable
 import io.cucumber.docstring.DocString
+import io.cucumber.java.After
+import io.cucumber.java.Before
+import io.cucumber.java.Scenario
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
@@ -28,24 +31,21 @@ class Defs {
     private var exportedZip: File? = null
     private lateinit var stopwatch: Stopwatch
 
-    Before("not @database")
-    {
-        scenario ->
+    @Before("not @database")
+    fun before(scenario: Scenario) {
         println("\nBefore scenario '${scenario.name}'")
         stopwatch = Stopwatch.createStarted()
         startServerWithInMemoryDatabase()
     }
 
-    Before("@database")
-    {
-        scenario ->
+    @Before("@database")
+    fun beforeWithDatabase(scenario: Scenario) {
         println("\nDB Before. Scenario: '${scenario.name}'")
         startServerWithPostgresDatabase()
     }
 
-    After
-    {
-        scenario ->
+    @After
+    fun after(scenario: Scenario) {
         stopwatch.stop()
         cleanup()
         println("After scenario  '${scenario.name}', duration: ${stopwatch.elapsed(SECONDS)} seconds")
