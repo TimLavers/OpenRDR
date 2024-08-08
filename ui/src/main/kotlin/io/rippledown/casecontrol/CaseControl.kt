@@ -16,7 +16,6 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
-import io.rippledown.model.diff.Diff
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
@@ -66,15 +65,6 @@ fun CaseControl(
 
         if (currentCase != null) {
             CaseInspection(currentCase, ruleInProgress, object : CaseInspectionHandler, Handler by handler {
-                override fun onStartRule(selectedDiff: Diff) {
-                    handler.startRuleSession(SessionStartRequest(currentCase.id!!, selectedDiff))
-                }
-
-                override var onInterpretationEdited: (text: String) -> Unit = {
-                    verifiedText = it
-
-                }
-                override var isCornerstone: Boolean = false
                 override fun swapAttributes(moved: Attribute, target: Attribute) {
                     handler.swapAttributes(moved, target)
                 }

@@ -23,7 +23,6 @@ import io.rippledown.model.KBInfo
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.diff.Addition
-import io.rippledown.model.diff.Diff
 import io.rippledown.model.diff.Removal
 import io.rippledown.model.diff.Replacement
 import io.rippledown.model.rule.CornerstoneStatus
@@ -162,7 +161,6 @@ fun OpenRDRUI(handler: Handler) {
                             cornerstoneStatus = null
                         }
 
-                        override fun onStartRule(selectedDiff: Diff) {}//todo remove
                         override fun buildRule(ruleRequest: RuleRequest) = runBlocking {
                             currentCase = api.buildRule(ruleRequest)
                             cornerstoneStatus = null
@@ -177,8 +175,6 @@ fun OpenRDRUI(handler: Handler) {
                             cornerstoneStatus = api.startRuleSession(sessionStartRequest)
                         }
 
-                        override var onInterpretationEdited: (text: String) -> Unit = { }
-                        override var isCornerstone: Boolean = false
                         override fun getCase(caseId: Long) = runBlocking { currentCase = api.getCase(caseId) }
 
                         override fun saveCase(case: ViewableCase) = runBlocking {

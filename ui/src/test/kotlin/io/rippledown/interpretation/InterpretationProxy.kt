@@ -23,14 +23,6 @@ fun ComposeTestRule.selectConclusionsTab() {
     onNodeWithContentDescription(INTERPRETATION_TAB_CONCLUSIONS).performClick()
 }
 
-fun ComposeTestRule.selectDifferencesTab() {
-    onNodeWithContentDescription(INTERPRETATION_TAB_CHANGES).performClick()
-}
-
-fun ComposeTestRule.requireNoDifferencesTab() {
-    onNodeWithContentDescription(INTERPRETATION_TAB_CHANGES).assertDoesNotExist()
-}
-
 fun ComposeTestRule.requireConclusionsPanelToBeShowing() {
     onNodeWithContentDescription(INTERPRETATION_PANEL_CONCLUSIONS).assertIsDisplayed()
 }
@@ -44,14 +36,6 @@ fun ComposeTestRule.requireBadgeOnDifferencesTabToShow(expected: Int) {
         BADGE_CONTENT_DESCRIPTION,
         useUnmergedTree = true
     ).assertTextEquals(expected.toString())
-}
-
-fun ComposeTestRule.requireDifferencesTabToBeNotShowing() {
-    onNodeWithContentDescription(INTERPRETATION_PANEL_CHANGES).assertDoesNotExist()
-}
-
-fun ComposeTestRule.requireDifferencesTabToBeShowing() {
-    onNodeWithContentDescription(INTERPRETATION_PANEL_CHANGES).assertExists()
 }
 
 fun ComposeTestRule.requireInterpretationActionsDropdownMenu() {

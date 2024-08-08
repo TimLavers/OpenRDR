@@ -12,30 +12,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import io.rippledown.constants.interpretation.*
-import io.rippledown.interpretation.*
-import io.rippledown.model.diff.Diff
+import io.rippledown.constants.interpretation.INTERPRETATION_TABS
+import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CONCLUSIONS_LABEL
+import io.rippledown.constants.interpretation.INTERPRETATION_TAB_ORIGINAL_LABEL
+import io.rippledown.constants.interpretation.INTERPRETATION_TAB_PREFIX
+import io.rippledown.interpretation.ConclusionsView
+import io.rippledown.interpretation.InterpretationView
+import io.rippledown.interpretation.ToolTipForIconAndLabel
 import io.rippledown.model.interpretationview.ViewableInterpretation
 
-interface InterpretationTabsHandler {
-    fun onStartRule(selectedDiff: Diff)
-    var onInterpretationEdited: (text: String) -> Unit
-    var isCornerstone: Boolean
-}
 
 @Composable
-fun InterpretationTabs(viewableInterpretation: ViewableInterpretation, handler: InterpretationTabsHandler) {
+fun InterpretationTabs(viewableInterpretation: ViewableInterpretation) {
     val titles = buildList {
         add(INTERPRETATION_TAB_ORIGINAL_LABEL)
         add(INTERPRETATION_TAB_CONCLUSIONS_LABEL)
-        if (!handler.isCornerstone) {
-            add(INTERPRETATION_TAB_CHANGES_LABEL)
-        }
     }
 
     var tabPage by remember { mutableStateOf(0) }
@@ -88,46 +83,21 @@ fun InterpretationTabs(viewableInterpretation: ViewableInterpretation, handler: 
             }
         }
         when (tabPage) {
-            0 -> {
-                InterpretationView(
-                    text = viewableInterpretation.latestText(),
-                    handler = object : InterpretationViewHandler {
-                        override var onEdited: (text: String) -> Unit = { editedText ->
-                            handler.onInterpretationEdited(editedText)
-                        }
-                        override var isCornertone: Boolean = false
-                    })
-            }
-
-            1 -> {
-                ConclusionsView(viewableInterpretation)
-            }
-
-            2 -> {
-                DifferencesView(viewableInterpretation.diffList,
-                    handler = object : DifferencesViewHandler {
-                        override fun onStartRule(selectedDiff: Diff) {
-                            handler.onStartRule(selectedDiff)
-                        }
-                    })
-            }
+            0 -> InterpretationView(viewableInterpretation.latestText())
+            1 -> ConclusionsView(viewableInterpretation)
         }
     }
 }
 
 @Composable
-fun painterForIndex(index: Int): Painter {
-    return when (index) {
+fun painterForIndex(index: Int) =
+    when (index) {
         0 -> painterResource("write_24.png")
-        1 -> painterResource("paragraph_24.png")
-        else -> painterResource("plus-minus_24.png")
+        else -> painterResource("paragraph_24.png")
     }
-}
 
-fun toolTipTextForIndex(index: Int): String {
-    return when (index) {
-        0 -> "The report given by the rules in the project.\nEdit it if not appropriate for this case."
-        1 -> "The comments comprising the report\nand the reasons why each comment is present."
-        else -> "The differences between the original report and the one you edited.\nYou can build a rule for each difference."
+fun toolTipTextForIndex(index: Int) =
+    when (index) {
+        0 -> "The report given by the rules in the project."
+        else -> "The comments comprising the report\nand the reasons why each comment is present."
     }
-}
