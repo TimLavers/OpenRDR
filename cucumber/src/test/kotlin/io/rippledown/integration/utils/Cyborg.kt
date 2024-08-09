@@ -1,6 +1,5 @@
 package io.rippledown.integration.utils
 
-import io.rippledown.integration.waitForDebounce
 import java.awt.Robot
 import java.awt.event.KeyEvent
 
@@ -19,11 +18,6 @@ class Cyborg {
 
     fun type(text: String) = text.forEach {
         typeChar(it)
-    }
-
-    fun typeSlowly(text: String) = text.forEach {
-        typeChar(it)
-        waitForDebounce()
     }
 
     private fun typeChar(key: Char) {

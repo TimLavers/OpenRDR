@@ -17,7 +17,7 @@ Feature: The cases described in the TSH paper are present in a KB built from the
       | Patient Location  | General Practice. |            |
       | Tests             | TFTs              |            |
       | Clinical Notes    | Lethargy.         |            |
-    And the interpretation field should be empty
+    And the interpretation should be empty
 
     When I select case 1.4.2
     Then I see these case values:
@@ -27,7 +27,7 @@ Feature: The cases described in the TSH paper are present in a KB built from the
       | Patient Location  | General Practice. |            |
       | Tests             | TFTs              |            |
       | Clinical Notes    | Lethargy.         |            |
-    And the interpretation field should be empty
+    And the interpretation should be empty
 
     When I select case 1.4.3
     Then I see these case values:
@@ -38,7 +38,7 @@ Feature: The cases described in the TSH paper are present in a KB built from the
       | Patient Location  | General Practice. |            |
       | Tests             | TFTs              |            |
       | Clinical Notes    | Weight loss.      |            |
-    And the interpretation field should be empty
+    And the interpretation should be empty
 
     When I select case 1.4.4
     Then I see these case values:

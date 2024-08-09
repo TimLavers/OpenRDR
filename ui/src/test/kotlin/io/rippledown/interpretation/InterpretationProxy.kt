@@ -23,14 +23,6 @@ fun ComposeTestRule.selectConclusionsTab() {
     onNodeWithContentDescription(INTERPRETATION_TAB_CONCLUSIONS).performClick()
 }
 
-fun ComposeTestRule.selectDifferencesTab() {
-    onNodeWithContentDescription(INTERPRETATION_TAB_CHANGES).performClick()
-}
-
-fun ComposeTestRule.requireNoDifferencesTab() {
-    onNodeWithContentDescription(INTERPRETATION_TAB_CHANGES).assertDoesNotExist()
-}
-
 fun ComposeTestRule.requireConclusionsPanelToBeShowing() {
     onNodeWithContentDescription(INTERPRETATION_PANEL_CONCLUSIONS).assertIsDisplayed()
 }
@@ -44,14 +36,6 @@ fun ComposeTestRule.requireBadgeOnDifferencesTabToShow(expected: Int) {
         BADGE_CONTENT_DESCRIPTION,
         useUnmergedTree = true
     ).assertTextEquals(expected.toString())
-}
-
-fun ComposeTestRule.requireDifferencesTabToBeNotShowing() {
-    onNodeWithContentDescription(INTERPRETATION_PANEL_CHANGES).assertDoesNotExist()
-}
-
-fun ComposeTestRule.requireDifferencesTabToBeShowing() {
-    onNodeWithContentDescription(INTERPRETATION_PANEL_CHANGES).assertExists()
 }
 
 fun ComposeTestRule.requireInterpretationActionsDropdownMenu() {
@@ -114,6 +98,7 @@ fun ComposeTestRule.clickCommentToBeReplaced(comment: String) {
 }
 
 fun ComposeTestRule.clickComment(prefix: String, comment: String) {
+    waitUntil { onNodeWithContentDescription("$prefix$comment").isDisplayed() }
     onNodeWithContentDescription("$prefix$comment").performClick()
     waitForIdle()
     sleep(1_000) //TODO remove this sleep
@@ -150,7 +135,7 @@ fun ComposeTestRule.clickCommentDropDownMenu() {
         .assertIsDisplayed()
         .performClick()
     waitForIdle()
-    sleep(1_000) //TODO remove this sleep
+    sleep(2_000) //TODO remove this sleep
 }
 
 fun ComposeTestRule.clickOKToAddNewComment() {

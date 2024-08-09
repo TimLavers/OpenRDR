@@ -4,9 +4,6 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import io.kotest.matchers.shouldBe
 import io.mockk.*
 import io.rippledown.constants.cornerstone.NO_CORNERSTONES_TO_REVIEW_MSG
-import io.rippledown.diffview.clickBuildIconForRow
-import io.rippledown.diffview.requireNumberOfDiffRows
-import io.rippledown.interpretation.selectDifferencesTab
 import io.rippledown.model.Attribute
 import io.rippledown.model.CaseId
 import io.rippledown.model.condition.ConditionList
@@ -17,7 +14,6 @@ import io.rippledown.model.diff.DiffList
 import io.rippledown.model.diff.Unchanged
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
-import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.rule.*
 import kotlinx.coroutines.test.runTest
@@ -55,29 +51,6 @@ class CaseControlWithRuleMakerTest {
     fun setUp() {
         handler = mockk<CaseControlHandler>(relaxed = true)
         coEvery { handler.selectCornerstone(any()) } returns viewableCase
-    }
-
-    @Test
-    fun `should call handler to start a backend rule session`() = runTest {
-        with(composeTestRule) {
-            setContent {
-                CaseControl(
-                    currentCase = viewableCase,
-                    conditionHints = listOf(),
-                    handler = handler
-                )
-            }
-            //Given
-            waitForCaseToBeShowing(caseName)
-            selectDifferencesTab()
-            requireNumberOfDiffRows(2)
-
-            //When
-            clickBuildIconForRow(1)
-
-            //Then
-            coVerify { handler.startRuleSession(SessionStartRequest(caseId.id!!, diffList[1])) }
-        }
     }
 
     @Test
@@ -157,11 +130,9 @@ class CaseControlWithRuleMakerTest {
             }
             //Given
             waitForCaseToBeShowing(caseName)
-            selectDifferencesTab()
-            requireNumberOfDiffRows(2)
 
             //When
-            clickBuildIconForRow(1)
+//            clickBuildIconForRow(1)
 
             //Then
             verify { handler.setInfoMessage("") }

@@ -14,7 +14,7 @@ object Version {
     const val kotlinxCoroutinesTestVersion = "1.7.3"
     const val kotlinxDateTimeVersion = "0.4.0"
     const val logbackVersion = "1.4.11"
-    const val cucumber = "7.14.0"
+    const val cucumber = "7.18.1"
     const val commonsIo = "2.14.0"
     const val commonsLang3 = "3.14.0"
     const val exposed = "0.42.0"
