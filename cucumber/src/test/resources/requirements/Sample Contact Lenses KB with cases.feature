@@ -19,7 +19,7 @@ Feature: A sample KB can be created that has the Contact Lense Prescription case
       | prescription    | myope          |  |
       | astigmatism     | not_astigmatic |  |
       | tear production | normal         |  |
-    And the interpretation field should be empty
+    And the interpretation should be empty
 
     When I select case Case3
     Then I see these case values:
@@ -27,7 +27,7 @@ Feature: A sample KB can be created that has the Contact Lense Prescription case
       | prescription    | myope      |  |
       | astigmatism     | astigmatic |  |
       | tear production | reduced    |  |
-    And the interpretation field should be empty
+    And the interpretation should be empty
 
     When I select case Case4
     Then I see these case values:

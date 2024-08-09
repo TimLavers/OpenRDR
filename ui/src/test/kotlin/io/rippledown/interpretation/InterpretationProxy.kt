@@ -98,6 +98,7 @@ fun ComposeTestRule.clickCommentToBeReplaced(comment: String) {
 }
 
 fun ComposeTestRule.clickComment(prefix: String, comment: String) {
+    waitUntil { onNodeWithContentDescription("$prefix$comment").isDisplayed() }
     onNodeWithContentDescription("$prefix$comment").performClick()
     waitForIdle()
     sleep(1_000) //TODO remove this sleep
@@ -134,7 +135,7 @@ fun ComposeTestRule.clickCommentDropDownMenu() {
         .assertIsDisplayed()
         .performClick()
     waitForIdle()
-    sleep(1_000) //TODO remove this sleep
+    sleep(2_000) //TODO remove this sleep
 }
 
 fun ComposeTestRule.clickOKToAddNewComment() {

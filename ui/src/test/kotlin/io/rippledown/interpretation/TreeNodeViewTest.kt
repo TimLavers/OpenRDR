@@ -2,8 +2,7 @@ package io.rippledown.interpretation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.application
+import io.rippledown.utils.applicationFor
 import org.junit.Rule
 import org.junit.Test
 
@@ -92,11 +91,7 @@ fun treeNodeView() = TreeNodeView(
 )
 
 fun main() {
-    application {
-        Window(
-            onCloseRequest = ::exitApplication,
-        ) {
+    applicationFor {
             treeNodeView()
-        }
     }
 }

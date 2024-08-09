@@ -13,7 +13,6 @@ import io.cucumber.java.en.When
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.pause
 import io.rippledown.integration.proxy.ConfiguredTestData
-import io.rippledown.integration.utils.Cyborg
 import io.rippledown.integration.waitUntilAsserted
 import org.awaitility.Awaitility
 import steps.StepsInfrastructure.cleanup
@@ -105,6 +104,11 @@ class Defs {
     @When("a new case with the name {word} is stored on the server")
     fun aNewCaseWithTheNameWordIsStoredOnTheServer(caseName: String) {
         labProxy().provideCase(caseName)
+    }
+
+    @When("a new case is stored on the server")
+    fun caseWithDefaultNameIsStoredOnTheServer() {
+        labProxy().provideCase("Case1")
     }
 
     @Given("the configured case {word} is stored on the server")
@@ -277,42 +281,15 @@ class Defs {
         caseListPO().select(caseName2)
     }
 
-    @When("I delete all the text in the interpretation field")
-    fun IDeleteAllTheTextInTheInterpretationField() {
-        interpretationViewPO().deleteAllText()
-    }
-
-    @And("I enter the text {string} in the interpretation field")
-    fun IEnterTheTextStringInTheInterpretationField(text: String) {
-        interpretationViewPO().setVerifiedText(text)
-    }
-
-    @And("I add the text {string} at the end of the current interpretation")
-    fun IAddTheTextStringAtTheEndOfTheCurrentInterpretation(text: String) {
-        interpretationViewPO().addVerifiedTextAtEndOfCurrentInterpretation(text)
-    }
-
-    @And("I slowly type the text {string} in the interpretation field")
-    fun ISlowlyTypeTheTextStringInTheInterpretationField(text: String) {
-        with(Cyborg()) {
-            typeSlowly(text)
-        }
-    }
-
-    @And("I build a rule to add the conclusion {string} with no conditions")
-    fun IBuildARuleToAddTheConclusionStringWithNoConditions(text: String) {
-        TODO()
-    }
-
     @When("I replace the text in the interpretation field with {string}")
     fun IReplaceTheTextInTheInterpretationFieldWithString(text: String) {
         interpretationViewPO().selectOriginalTab()
         interpretationViewPO().setVerifiedText(text)
     }
 
-    @Then("the interpretation field should contain the text {string}")
-    fun theInterpretationFieldShouldContainTheTextString(text: String) {
-        interpretationViewPO().selectOriginalTab()
+    @Then("the interpretation should contain the text {string}")
+    fun theInterpretationFieldShouldContainTheText(text: String) {
+        selectTheTab("interpretation")
         interpretationViewPO().waitForInterpretationTextToContain(text)
     }
 
@@ -328,7 +305,7 @@ class Defs {
         interpretationViewPO().waitForInterpretationText(text.content)
     }
 
-    @Then("the interpretation field should be empty")
+    @Then("the interpretation should be empty")
     fun theInterpretationFieldShouldBeEmpty() {
         interpretationViewPO().selectOriginalTab()
         interpretationViewPO().waitForInterpretationText("")
@@ -358,57 +335,11 @@ class Defs {
     }
 
     @And("I select the {word} tab")
-    fun ISelectTheWordTab(tabName: String) {
+    fun selectTheTab(tabName: String) {
         when (tabName) {
             "interpretation" -> interpretationViewPO().selectOriginalTab()
             "comments" -> interpretationViewPO().selectConclusionsTab()
-            "changes" -> interpretationViewPO().selectDifferencesTab()
             else -> throw IllegalArgumentException("Unknown tab name: $tabName")
-        }
-    }
-
-    @And("the changes badge indicates that there is/are {int} change(s)")
-    fun theChangesBadgeIndicatesThatThereIsareIntChanges(numberOfChanges: Int) {
-        interpretationViewPO().waitForBadgeCount(numberOfChanges)
-    }
-
-    @And("the changes badge indicates that there is no change")
-    fun theChangesBadgeIndicatesThatThereIsNoChange() {
-        interpretationViewPO().waitForNoBadgeCount()
-    }
-
-    @When("I select the condition in position {int}")
-    fun ISelectTheConditionInPositionInt(index: Int) {
-        TODO()
-//        conditionSelectorPO.clickConditionWithIndex(index)
-    }
-
-    @Then("the following conditions (are )(should be )selected:")
-    fun theFollowingConditionsAreShouldBeSelected(dataTable: DataTable) {
-        TODO()
-        val expectedConditions = dataTable.asList()
-//        conditionSelectorPO.requireConditionsToBeSelected(expectedConditions)
-    }
-
-    @And("I build a rule to replace the interpretation by {string} with the condition {string}")
-    fun IBuildARuleToReplaceTheInterpretationByStringWithTheConditionString(replacement: String, condition: String) {
-        with(interpretationViewPO()) {
-            deleteAllText()
-            setVerifiedText(replacement)
-            selectDifferencesTab()
-            clickBuildIconOnRow(0)
-        }
-        with(ruleMakerPO()) {
-            clickConditionWithText(condition)
-            clickDoneButton()
-        }
-    }
-
-    @Then("the conditions showing are:")
-    fun theConditionsShowingAre(dataTable: DataTable) {
-        val expectedConditions = dataTable.asList()
-        expectedConditions.forEachIndexed { index, condition ->
-            conclusionsViewPO().requireConditionAtIndex(0, index, condition)
         }
     }
 

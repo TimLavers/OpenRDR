@@ -6,12 +6,10 @@ Feature: The user should be able to see the conditions that are used to determin
       | UV   | high      |
     And the interpretation of the case Bondi includes "Go to Bondi." because of condition "Wave is not blank"
     And the interpretation of the case Bondi includes "Wear sunscreen." because of condition "UV is not blank"
-    And I start the client application
+    When I start the client application
     And I should see the case Bondi as the current case
-    And the interpretation field should contain the text "Go to Bondi. Wear sunscreen."
-    When I click on the Comments tab
-    Then I should see the condition for each comment as follows:
+    Then the interpretation should contain the text "Go to Bondi. Wear sunscreen."
+    And I should see the condition for each comment as follows:
       | Comment         | Condition         |
       | Go to Bondi.    | Wave is not blank |
       | Wear sunscreen. | UV is not blank   |
-    And stop the client application
