@@ -14,10 +14,8 @@ import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.model.condition.hasCurrentValue
 import io.rippledown.model.condition.isCondition
-import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.DiffList
 import io.rippledown.model.diff.Unchanged
-import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.supplyCaseFromFile
@@ -105,22 +103,6 @@ internal class KBEndpointTest {
             textGivenByRules() shouldBe text
             diffList() shouldBe DiffList(listOf(Unchanged(text)))
         }
-    }
-
-    @Test
-    fun `should update a case's verified interpretation and return an interpretation containing a DiffList`() {
-        val caseId = supplyCaseFromFile("Case1", endpoint).caseId
-        val id = caseId.id!!
-        val original = endpoint.viewableCase(id)
-        original.verifiedText() shouldBe null
-        original.diffList() shouldBe DiffList()
-
-        val verified = "Verified."
-        original.viewableInterpretation.apply { verifiedText = verified }
-        val returnedCase = endpoint.saveInterpretation(original)
-        returnedCase.id shouldBe original.id
-        returnedCase.verifiedText() shouldBe verified
-        returnedCase.diffList() shouldBe DiffList(listOf(Addition(verified)))
     }
 
     @Test
@@ -308,64 +290,6 @@ internal class KBEndpointTest {
         endpoint.startRuleSessionToReplaceConclusion(id, conclusion1, conclusion2)
         endpoint.commitCurrentRuleSession()
         endpoint.case(id).interpretation.conclusionTexts() shouldBe setOf(conclusion2.text)
-    }
-
-    @Test
-    fun `when saving a viewableCase, an interpretation with diffs should be returned`() {
-        val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
-        val conclusion = endpoint.kb.conclusionManager.getOrCreate("Go to Bondi.")
-        with(endpoint) {
-            startRuleSessionToAddConclusion(id, conclusion)
-            commitCurrentRuleSession()
-            val case = case(id)
-            case.interpretation.conclusionTexts() shouldBe setOf(conclusion.text)
-
-            val verifiedInterpretation = ViewableInterpretation(case.interpretation).apply {
-                verifiedText = "Go to Bondi. Bring 2 sets of flippers. And bring sunscreen."
-            }
-            val viewableCase = viewableCase(id).apply {
-                viewableInterpretation = verifiedInterpretation
-            }
-            val caseReturned = endpoint.saveInterpretation(viewableCase)
-            caseReturned.diffList() shouldBe DiffList(
-                listOf(
-                    Unchanged("Go to Bondi."),
-                    Addition("Bring 2 sets of flippers."),
-                    Addition("And bring sunscreen."),
-                )
-            )
-        }
-    }
-
-    @Test
-    fun `when saving an interpretation, the conclusions corresponding to the verified text should be saved in order`() {
-        // given
-        val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
-        val case = endpoint.viewableCase(id)
-        val comment1 = "Go to Bondi."
-        val comment2 = "Bring 2 sets of flippers."
-        val comment3 = "And bring sunscreen."
-        val interp = case.viewableInterpretation.apply {
-            verifiedText = "$comment1 $comment2 $comment3"
-        }
-        val viewableCase = case.apply {
-            viewableInterpretation = interp
-        }
-
-        // when
-        val savedCase = endpoint.saveInterpretation(viewableCase)
-
-        // then
-        endpoint.kb.interpretationViewManager.allInOrder()
-            .map { it.text } shouldBe setOf(comment1, comment2, comment3)
-
-        savedCase.diffList() shouldBe DiffList(
-            listOf(
-                Addition(comment1),
-                Addition(comment2),
-                Addition(comment3),
-            )
-        )
     }
 
     @Test

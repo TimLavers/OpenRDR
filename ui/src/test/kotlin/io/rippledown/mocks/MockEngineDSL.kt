@@ -69,16 +69,6 @@ private class EngineBuilder(private val config: EngineConfig) {
                 httpResponseData(json.encodeToString(config.returnCase))
             }
 
-            VERIFIED_INTERPRETATION_SAVED -> {
-                val body = request.body as TextContent
-                val bodyAsCase = json.decodeFromString(ViewableCase.serializer(), body.text)
-
-                if (config.expectedCase != null) {
-                    bodyAsCase shouldBe config.expectedCase
-                }
-                httpResponseData(json.encodeToString(config.returnCase))
-            }
-
             BUILD_RULE -> {
                 val body = request.body as TextContent
                 val bodyAsRuleRequest = json.decodeFromString(RuleRequest.serializer(), body.text)

@@ -6,7 +6,6 @@ import io.rippledown.kb.KB
 import io.rippledown.kb.KBManager
 import io.rippledown.model.COMMENT_SEPARATOR
 import io.rippledown.model.diff.*
-import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
@@ -53,47 +52,6 @@ internal class RuleBuildingFromDiffListTest {
         val diff = Addition("Go to Bondi")
         val cornerstoneStatus = kbEndpoint.startRuleSession(SessionStartRequest(id2, diff))
         cornerstoneStatus shouldBe CornerstoneStatus(viewableCase, 0, 1)
-    }
-
-    @Test
-    fun `should build a rule and return an case containing an updated DiffList when a comment is added`() {
-        val id = supplyCaseFromFile("Case1", kbEndpoint).caseId.id!!
-        val interp = kbEndpoint.case(id).interpretation
-        val v1 = "Verified 1."
-        val v2 = "Verified 2."
-        val viewableInterpretation = ViewableInterpretation(interp, verifiedText = "$v1 $v2")
-        viewableInterpretation.latestText() shouldBe "$v1 $v2"
-        val viewableCase = kbEndpoint.viewableCase(id)
-        viewableCase.viewableInterpretation = viewableInterpretation
-
-        //save the interpretation so that the verified text is persisted
-        kbEndpoint.saveInterpretation(viewableCase)
-
-        val diffList = DiffList(
-            diffs = listOf(
-                Addition(v1),
-                Addition(v2)
-            ),
-            selected = 0 // The first addition is what we want the rule to be built from.
-        )
-
-        kbEndpoint.startRuleSession(SessionStartRequest(id, diffList.selectedChange()))
-        val ruleRequest = RuleRequest(id)
-        val updatedCase = kbEndpoint.commitRuleSession(ruleRequest)
-
-        withClue("the latest text should be unchanged") {
-            updatedCase.latestText() shouldBe "$v1 $v2"
-        }
-
-        withClue("The returned DiffList should be updated to reflect the new rule.") {
-            updatedCase.diffList() shouldBe DiffList(
-                diffs = listOf(
-                    Unchanged(v1),
-                    Addition(v2)
-                ),
-                selected = -1
-            )
-        }
     }
 
     @Test

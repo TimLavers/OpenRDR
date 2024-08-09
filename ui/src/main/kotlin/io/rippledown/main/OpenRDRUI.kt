@@ -177,10 +177,6 @@ fun OpenRDRUI(handler: Handler) {
 
                         override fun getCase(caseId: Long) = runBlocking { currentCase = api.getCase(caseId) }
 
-                        override fun saveCase(case: ViewableCase) = runBlocking {
-                            currentCase = api.saveVerifiedInterpretation(case)
-                        }
-
                         override var isClosing = { false }
 
                         override fun swapAttributes(moved: Attribute, target: Attribute) {

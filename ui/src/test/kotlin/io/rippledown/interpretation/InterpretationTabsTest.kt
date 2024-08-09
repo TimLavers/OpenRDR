@@ -6,9 +6,8 @@ import io.mockk.every
 import io.mockk.mockk
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
-import io.rippledown.model.diff.Addition
-import io.rippledown.model.diff.DiffList
 import io.rippledown.model.interpretationview.ViewableInterpretation
+import io.rippledown.model.rule.RuleSummary
 import io.rippledown.utils.applicationFor
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
@@ -32,7 +31,8 @@ class InterpretationTabsTest {
     @Test
     fun `the latest text of the interpretation should be showing by default`() = runTest {
         val text = "Go to Bondi now!"
-        val viewableInterpretation = ViewableInterpretation(Interpretation()).apply { verifiedText = text }
+        val ruleSummary = RuleSummary(conclusion = Conclusion(1, text))
+        val viewableInterpretation = ViewableInterpretation(Interpretation().apply { add(ruleSummary) })
         with(composeTestRule) {
             setContent {
                 InterpretationTabs(viewableInterpretation)
@@ -77,20 +77,6 @@ private fun interpretationWithConclusions(): ViewableInterpretation {
         every { conditionsForConclusion(c21) } returns listOf("Condition 211", "Condition 212")
         every { conditionsForConclusion(c22) } returns listOf("Condition 221", "Condition 222")
         every { latestText() } returns "Go to Bondi"
-        every { numberOfChanges() } returns 0
-    }
-    return interpretation
-}
-
-private fun interpretationWithDifferences(numberOfDiffs: Int): ViewableInterpretation {
-    val interpretation = mockk<ViewableInterpretation>()
-    with(interpretation) {
-        every { latestText() } returns "Go to Malabar"
-        every { numberOfChanges() } returns numberOfDiffs
-        every { diffList } returns DiffList((0..numberOfDiffs - 1).map {
-            Addition("Addition $it")
-        }
-        )
     }
     return interpretation
 }

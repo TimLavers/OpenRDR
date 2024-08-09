@@ -81,12 +81,13 @@ fun ComposeTestRule.addNewComment(comment: String) {
 }
 
 fun ComposeTestRule.replaceComment(toBeReplaced: String, replacement: String) {
+    sleep(500) //TODO remove this sleep
     clickCommentToBeReplaced(toBeReplaced)
-    sleep(1_000) //TODO remove this sleep
+    sleep(500) //TODO remove this sleep
     enterCommentToBeTheReplacement(replacement)
-    sleep(1_000) //TODO remove this sleep
+    sleep(500) //TODO remove this sleep
     clickOKToReplaceComment()
-    sleep(1_000) //TODO remove this sleep
+    sleep(500) //TODO remove this sleep
 }
 
 fun ComposeTestRule.clickCommentToRemove(comment: String) {
@@ -98,7 +99,7 @@ fun ComposeTestRule.clickCommentToBeReplaced(comment: String) {
 }
 
 fun ComposeTestRule.clickComment(prefix: String, comment: String) {
-    waitUntil { onNodeWithContentDescription("$prefix$comment").isDisplayed() }
+    waitUntil(2_000) { onNodeWithContentDescription("$prefix$comment").isDisplayed() }
     onNodeWithContentDescription("$prefix$comment").performClick()
     waitForIdle()
     sleep(1_000) //TODO remove this sleep

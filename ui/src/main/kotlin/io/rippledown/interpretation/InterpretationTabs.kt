@@ -73,10 +73,7 @@ fun InterpretationTabs(viewableInterpretation: ViewableInterpretation) {
                             icon = painterForIndex(index),
                             onClick = {
                                 tabPage = index
-                            },
-                            badgeCount = if (index == 2) {
-                                viewableInterpretation.numberOfChanges()
-                            } else 0
+                            }
                         )
                     }
                 }

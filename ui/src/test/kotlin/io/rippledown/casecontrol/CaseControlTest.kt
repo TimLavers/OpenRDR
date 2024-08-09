@@ -7,7 +7,6 @@ import io.rippledown.interpretation.requireComment
 import io.rippledown.interpretation.requireInterpretation
 import io.rippledown.interpretation.selectConclusionsTab
 import io.rippledown.model.Attribute
-import io.rippledown.model.CaseId
 import io.rippledown.model.condition.hasCurrentValue
 import io.rippledown.model.createCaseWithInterpretation
 import io.rippledown.model.diff.Addition
@@ -57,14 +56,9 @@ class CaseControlTest {
     @Test
     fun `should show the comments of the case`() = runTest {
         val caseA = "case A"
-        val caseB = "case B"
-        val caseId1 = CaseId(id = 1, name = caseA)
-        val caseId2 = CaseId(id = 2, name = caseB)
-        val caseIds = listOf(caseId1, caseId2)
         val bondiComment = "Go to Bondi"
         val coogeeComment = "Go to Coogee"
         val case = createCaseWithInterpretation(caseA, 1, listOf(bondiComment, coogeeComment))
-        coEvery { handler.saveCase(any()) } answers { firstArg() }
 
         with(composeTestRule) {
             //Given
@@ -91,7 +85,6 @@ class CaseControlTest {
             id = 1,
             conclusionTexts = listOf()
         )
-        coEvery { handler.saveCase(any()) } answers { firstArg() }
 
         with(composeTestRule) {
             setContent {
