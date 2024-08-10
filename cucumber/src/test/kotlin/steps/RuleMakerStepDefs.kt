@@ -94,6 +94,14 @@ class RuleMakerStepDefs : En {
             }
         }
 
+        When("I click the suggested condition {string}") { text: String ->
+            ruleMakerPO().clickConditionWithText(text)
+        }
+
+        When("I set the editable value to be {string} and click ok") { text: String ->
+            ruleMakerPO().setEditableValue(text)
+        }
+
         When("I add the condition {string}") { text: String ->
             ruleMakerPO().clickConditionWithText(text)
         }
@@ -105,6 +113,15 @@ class RuleMakerStepDefs : En {
         Then("the conditions showing should be:") { dataTable: DataTable ->
             val expectedConditions = dataTable.asList()
             ruleMakerPO().requireAvailableConditions(expectedConditions)
+        }
+
+        Then("the suggested conditions should not contain:") { dataTable: DataTable ->
+            val absentConditions = dataTable.asList().toSet()
+            ruleMakerPO().requireAvailableConditionsDoesNotContain(absentConditions)
+        }
+
+        Then("the selected conditions should be:") { dataTable: DataTable ->
+            ruleMakerPO().requireSelectedConditions(dataTable.asList())
         }
 
         And("I build a rule to add the comment {string} with the condition {string}") { comment: String, condition: String ->
@@ -173,6 +190,10 @@ class RuleMakerStepDefs : En {
             with(ruleMakerPO()) {
                 clickDoneButton()
             }
+        }
+        Then("the condition editor is launched and shows") { dataTable: DataTable ->
+
+            TODO("Not yet implemented")
         }
     }
 }

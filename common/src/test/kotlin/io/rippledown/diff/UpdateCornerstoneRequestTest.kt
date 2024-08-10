@@ -2,6 +2,7 @@ package io.rippledown.diff
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.condition.RuleConditionList
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import kotlinx.serialization.encodeToString
@@ -14,7 +15,7 @@ class UpdateCornerstoneRequestTest {
 
         val request = UpdateCornerstoneRequest(
             CornerstoneStatus(),
-            conditionList = ConditionList(listOf())
+            conditionList = RuleConditionList()
         )
         val json = Json { allowStructuredMapKeys = true }
         val serialized = json.encodeToString(request)

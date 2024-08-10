@@ -21,18 +21,18 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.rule.AVAILABLE_CONDITIONS
 import io.rippledown.constants.rule.AVAILABLE_CONDITION_PREFIX
-import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.edit.SuggestedCondition
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 interface AvailableConditionsHandler {
-    fun onAddCondition(condition: Condition)
-    fun onEditThenAdd(condition: Condition)
+    fun onAddCondition(suggestedCondition: SuggestedCondition)
+    fun onEditThenAdd(suggestedCondition: SuggestedCondition)
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun AvailableConditions(conditions: List<Condition>, handler: AvailableConditionsHandler) {
+fun AvailableConditions(conditions: List<SuggestedCondition>, handler: AvailableConditionsHandler) {
     var cursorOnRow: Int by remember { mutableStateOf(-1) }
     val scrollState = rememberScrollState()
     val hoverOverScroll = remember { mutableStateOf(false) }
@@ -54,7 +54,11 @@ fun AvailableConditions(conditions: List<Condition>, handler: AvailableCondition
                         text = condition.asText(),
                         modifier = Modifier
                             .clickable {
-                                handler.onAddCondition(condition)
+                                if (condition.isEditable()) {
+                                    handler.onEditThenAdd(condition)
+                                } else {
+                                    handler.onAddCondition(condition)
+                                }
                             }
                             .onPointerEvent(Enter) {
                                 cursorOnRow = index
@@ -67,7 +71,9 @@ fun AvailableConditions(conditions: List<Condition>, handler: AvailableCondition
                                                 val event = awaitPointerEvent()
                                                 if (event.type == PointerEventType.Press && event.buttons.isSecondaryPressed) {
                                                     println("Right click!!!!!!")
-                                                    handler.onEditThenAdd(condition)
+//                                                    if (condition.isEditable()) {
+//                                                        handler.onEditThenAdd(condition.editableCondition()!!)
+//                                                    }
                                                 }
                                             }
                                         }

@@ -13,7 +13,7 @@ data class GreaterThanOrEquals(val d: Double): TestResultPredicate {
         return real >= d
     }
 
-    override fun description(plural: Boolean) = " ≥ $d"
+    override fun description(plural: Boolean) = "≥ $d"
 }
 @Serializable
 data class LessThanOrEquals(val d: Double): TestResultPredicate {
@@ -22,5 +22,5 @@ data class LessThanOrEquals(val d: Double): TestResultPredicate {
         return real <= d
     }
 
-    override fun description(plural: Boolean) = " ≤ $d"
+    override fun description(plural: Boolean) = "≤ $d"
 }

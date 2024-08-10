@@ -14,7 +14,7 @@ import kotlin.test.Test
 class RuleRequestTest {
     @Test
     fun checkSerialization() {
-        val conditionList = ConditionList(
+        val conditionList = RuleConditionList(
             listOf(
                 hasCurrentValue(1, Attribute(1, "a")),
                 hasNoCurrentValue(2, Attribute(2, "b")),

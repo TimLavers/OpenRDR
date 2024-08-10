@@ -8,7 +8,9 @@ sealed interface SuggestedCondition {
     fun initialSuggestion(): Condition
     fun isEditable(): Boolean
     fun editableCondition(): EditableCondition?
+    fun asText() = initialSuggestion().asText()
 }
+@Serializable
 data class FixedSuggestedCondition(val initialSuggestion: Condition): SuggestedCondition {
     override fun initialSuggestion(): Condition {
         return initialSuggestion
@@ -20,6 +22,7 @@ data class FixedSuggestedCondition(val initialSuggestion: Condition): SuggestedC
 
     override fun editableCondition(): EditableCondition? = null
 }
+@Serializable
 data class EditableSuggestedCondition(val initialSuggestion: Condition, val editableCondition: EditableCondition): SuggestedCondition {
     override fun initialSuggestion() = initialSuggestion
 

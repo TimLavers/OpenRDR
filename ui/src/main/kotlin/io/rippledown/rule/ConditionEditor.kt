@@ -9,6 +9,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import io.rippledown.constants.main.*
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.edit.EditableCondition
 
@@ -36,16 +37,30 @@ fun ConditionEditor(handler: ConditionEditHandler) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(text = handler.editableCondition().fixedTextPart1())
+                    Text(
+                        text = handler.editableCondition().fixedTextPart1(),
+                        modifier = Modifier.semantics {
+                            contentDescription = EDIT_CONDITION_TEXT_1_DESCRIPTION
+                        }
+                    )
                     OutlinedTextField(
                         value = enteredValue,
                         enabled = true,
                         onValueChange = {
                             enteredValue = it
                         },
-                        modifier = Modifier.focusRequester(focusRequester)
+                        modifier = Modifier
+                            .focusRequester(focusRequester)
+                            .semantics {
+                                contentDescription = EDIT_CONDITION_FIELD_DESCRIPTION
+                            }
                     )
-                    Text(text = handler.editableCondition().fixedTextPart2())
+                    Text(
+                        text = handler.editableCondition().fixedTextPart2(),
+                        modifier = Modifier.semantics {
+                            contentDescription = EDIT_CONDITION_TEXT_2_DESCRIPTION
+                        }
+                    )
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -57,7 +72,7 @@ fun ConditionEditor(handler: ConditionEditHandler) {
                         },
 //                        enabled = handler.isValidInput(textValue),
                         modifier = Modifier.semantics {
-                            contentDescription = "content description"
+                            contentDescription = EDIT_CONDITION_OK_BUTTON_DESCRIPTION
                         }
                     ) {
                         Text("OK")
@@ -67,6 +82,9 @@ fun ConditionEditor(handler: ConditionEditHandler) {
                         onClick = {
                             handler.cancel()
                         },
+                        modifier = Modifier.semantics {
+                            contentDescription = EDIT_CONDITION_CANCEL_BUTTON_DESCRIPTION
+                        }
                     ) {
                         Text("Cancel")
                     }

@@ -19,6 +19,8 @@ import io.rippledown.constants.main.CREATE_KB_NAME_FIELD_DESCRIPTION
 import io.rippledown.constants.main.CREATE_KB_OK_BUTTON_DESCRIPTION
 import io.rippledown.constants.rule.RULE_MAKER
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.edit.EditableCondition
+import io.rippledown.model.condition.edit.SuggestedCondition
 
 interface RuleMakerHandler {
     var onDone: (conditions: List<Condition>) -> Unit
@@ -28,12 +30,13 @@ interface RuleMakerHandler {
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun RuleMaker(allConditions: List<Condition>, handler: RuleMakerHandler) {
+fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler) {
     var selectedConditions by remember { mutableStateOf(listOf<Condition>()) }
-    var availableConditions by remember { mutableStateOf(listOf<Condition>()) }
+    var availableConditions by remember { mutableStateOf(listOf<SuggestedCondition>()) }
+    var suggestionsUsed by remember { mutableStateOf(mapOf<Condition, SuggestedCondition>()) }
     var filterText by remember { mutableStateOf("") }
     var editConditionDialogShowing by remember { mutableStateOf(false) }
-    var conditionToBeEdited by remember { mutableStateOf<Condition?>(null) }
+    var conditionToBeEdited by remember { mutableStateOf<EditableCondition?>(null) }
 
     if (editConditionDialogShowing) {
         val dialogState = rememberDialogState(size = DpSize(420.dp, 160.dp))
@@ -43,7 +46,7 @@ fun RuleMaker(allConditions: List<Condition>, handler: RuleMakerHandler) {
             state = dialogState,
         ) {
             ConditionEditor(object : ConditionEditHandler {
-                override fun editableCondition(): Condition {
+                override fun editableCondition(): EditableCondition {
                     return conditionToBeEdited!!
                 }
 
@@ -70,7 +73,9 @@ fun RuleMaker(allConditions: List<Condition>, handler: RuleMakerHandler) {
         SelectedConditions(selectedConditions, object : SelectedConditionsHandler {
             override var onRemoveCondition = { condition: Condition ->
                 selectedConditions = selectedConditions - condition
-                availableConditions = availableConditions + condition
+                val correspondingSuggestion = suggestionsUsed[condition]!!
+                suggestionsUsed = suggestionsUsed - condition
+                availableConditions = availableConditions + correspondingSuggestion
                 handler.onUpdateConditions(selectedConditions)
             }
         })
@@ -78,21 +83,23 @@ fun RuleMaker(allConditions: List<Condition>, handler: RuleMakerHandler) {
         ConditionFilter(filterText, object : ConditionFilterHandler {
             override var onFilterChange = { filter: String ->
                 filterText = filter
-                availableConditions = allConditions.filterConditions(filter) - selectedConditions
+                availableConditions = allConditions.filterConditions(filter) - suggestionsUsed.values.toSet()
             }
         })
 
         AvailableConditions(availableConditions, object : AvailableConditionsHandler {
-            override fun onAddCondition(condition: Condition) {
-                selectedConditions = selectedConditions + condition
-                availableConditions = availableConditions - condition
+            override fun onAddCondition(suggestedCondition: SuggestedCondition) {
+                selectedConditions = selectedConditions + suggestedCondition.initialSuggestion()
+                availableConditions = availableConditions - suggestedCondition
                 handler.onUpdateConditions(selectedConditions)
             }
 
-            override fun onEditThenAdd(condition: Condition) {
-                conditionToBeEdited = condition
+            override fun onEditThenAdd(suggestedCondition: SuggestedCondition) {
+                conditionToBeEdited = suggestedCondition.editableCondition()
                 editConditionDialogShowing = true
-                availableConditions = availableConditions - condition
+                // Don't remove the suggestion from the available list yet.
+                // We will remove it if and when editing results in a new condition being added.
+//                availableConditions = availableConditions - suggestedCondition
             }
         })
 
@@ -107,4 +114,4 @@ fun RuleMaker(allConditions: List<Condition>, handler: RuleMakerHandler) {
     }
 }
 
-fun List<Condition>.filterConditions(filter: String) = filter { it.asText().contains(filter, ignoreCase = true) }
+fun List<SuggestedCondition>.filterConditions(filter: String) = filter { it.asText().contains(filter, ignoreCase = true) }

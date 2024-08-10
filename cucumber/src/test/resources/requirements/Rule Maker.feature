@@ -274,12 +274,3 @@ Feature: The user can make rules that change the interpretive report
     Then the KB controls should be shown
     And the case list should be shown
     And stop the client application
-
-  @ignore
-  Scenario: A suggestion condition can be modified and added during rule building
-    Given case Bondi is provided having data:
-      | Sun   | hot       |
-      | Waves | 1.5 |
-    And I start the client application
-    And I start building a rule to add the comment "Beach time!"
-    And pause

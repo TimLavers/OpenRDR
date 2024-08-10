@@ -21,7 +21,7 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.caseview.ViewableCase
-import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.edit.SuggestedCondition
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.diff.Removal
@@ -49,7 +49,7 @@ fun OpenRDRUI(handler: Handler) {
     var casesInfo by remember { mutableStateOf(CasesInfo()) }
     var kbInfo: KBInfo? by remember { mutableStateOf(null) }
     var infoMessage by remember { mutableStateOf("") }
-    var conditionHints by remember { mutableStateOf(listOf<Condition>()) }
+    var conditionHints by remember { mutableStateOf(listOf<SuggestedCondition>()) }
 
     LaunchedEffect(Unit) {
         kbInfo = api.kbList().firstOrNull()
@@ -66,7 +66,7 @@ fun OpenRDRUI(handler: Handler) {
                 currentCaseId = casesInfo.caseIds[0].id!!
             }
             currentCase = runBlocking { handler.api.getCase(currentCaseId!!) }
-            conditionHints = runBlocking { handler.api.conditionHints(currentCaseId!!).conditions }
+            conditionHints = runBlocking { handler.api.conditionHints(currentCaseId!!).suggestions }
         }
     }
     val ruleInProgress = cornerstoneStatus != null

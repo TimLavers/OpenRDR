@@ -38,7 +38,7 @@ sealed interface EditableCondition {
     fun condition(value: String): Condition
 }
 @Serializable
-class EditableGTECondition(val attribute: Attribute,
+data class EditableGTECondition(val attribute: Attribute,
                              val initialEditableValue: EditableValue): EditableCondition {
 
     override fun fixedTextPart1(): String {

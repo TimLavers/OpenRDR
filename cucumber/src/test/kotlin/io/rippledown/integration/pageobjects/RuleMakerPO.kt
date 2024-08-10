@@ -1,5 +1,6 @@
 package io.rippledown.integration.pageobjects
 
+import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.comparables.shouldBeGreaterThanOrEqualTo
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -9,6 +10,7 @@ import io.rippledown.constants.rule.FINISH_RULE_BUTTON
 import io.rippledown.constants.rule.SELECTED_CONDITION_PREFIX
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
+import io.rippledown.integration.utils.findComposeDialogThatIsShowing
 import io.rippledown.integration.utils.waitForContextToBeNotNull
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
@@ -80,12 +82,44 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
         found shouldBe expectedConditions
     }
 
+    fun requireAvailableConditionsDoesNotContain(absentConditions: Set<String>) {
+        val allShowing = allSuggestedConditions()
+        absentConditions.forEach {
+            allShowing shouldNotContain it
+        }
+    }
+
+    fun requireSelectedConditions(selectedConditions: List<String>) {
+        waitForSelectedConditionsContext()
+        val found = execute<Set<AccessibleContext>> {
+            contextProvider().findAllByDescriptionPrefix(SELECTED_CONDITION_PREFIX)
+        }.map { it.accessibleName }
+        found shouldBe selectedConditions
+    }
+
     fun clickConditionWithText(condition: String) {
         waitForAvailableConditionsContext()
         execute {
-            availableConditionsContext().first {
+            val ctxt = availableConditionsContext().firstOrNull { it ->
+//                println("Checking '$condition'")
+//                println("    with '${it.accessibleName}'")
+//                val match = it.accessibleName == condition
                 it.accessibleName == condition
-            }.accessibleAction?.doAccessibleAction(0)
+//                println("match: $match")
+//                match
+            }
+            println("ctxt: $ctxt")
+            ctxt?.accessibleAction?.doAccessibleAction(0)
+        }
+    }
+
+    fun setEditableValue(value: String) {
+//        clickConditionWithText(condition)
+
+        val dialog = findComposeDialogThatIsShowing()
+        with(EditConditionOperator(dialog!!)) {
+            enterValue(value)
+            clickOkButton()
         }
     }
 
@@ -98,4 +132,9 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
         }
     }
 
+    private fun allSuggestedConditions(): List<String> {
+        return execute<Set<AccessibleContext>> {
+            contextProvider().findAllByDescriptionPrefix(AVAILABLE_CONDITION_PREFIX)
+        }.map { it.accessibleName }
+    }
 }
