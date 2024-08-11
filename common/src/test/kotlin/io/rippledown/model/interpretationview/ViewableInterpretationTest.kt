@@ -8,7 +8,6 @@ import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.condition.containsText
 import io.rippledown.model.condition.isCondition
-import io.rippledown.model.diff.*
 import io.rippledown.model.rule.Rule
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -30,8 +29,6 @@ class ViewableInterpretationTest {
     fun constructorWithNoViewFields() {
         with(ViewableInterpretation(interp)) {
             interpretation shouldBe interpretation
-            verifiedText shouldBe null
-            diffList shouldBe DiffList()
             latestText() shouldBe ""
             textGivenByRules shouldBe ""
         }
@@ -100,14 +97,6 @@ class ViewableInterpretationTest {
     }
 
     @Test
-    fun serialisationWithVerifiedText() {
-        val verified = "I can verify that is true."
-        val view = ViewableInterpretation(interp).apply { verifiedText = verified }
-        val restored = serializeDeserialize(view)
-        restored.verifiedText shouldBe verified
-    }
-
-    @Test
     fun serialisationWithInterpretation() {
         val conclusion = Conclusion(1, "First conc")
         val conditions = setOf(
@@ -137,60 +126,6 @@ class ViewableInterpretationTest {
         val restored = serializeDeserialize(view)
         restored.interpretation shouldBe interp
         restored.textGivenByRules shouldBe conclusion.text
-    }
-
-    @Test
-    fun serialisationWithDiffList() {
-        val diffList = DiffList(
-            listOf(
-                Addition("I can verify that is true."),
-                Removal("I can verify that is false."),
-                Replacement("I can verify that is false.", "I can verify that is true."),
-                Unchanged("I can verify that is true or false.")
-            )
-        )
-        val view = ViewableInterpretation(interp)
-        view.apply { this.diffList = diffList }
-        val restored = serializeDeserialize(view)
-        restored.diffList shouldBe diffList
-    }
-
-    @Test
-    fun serialisationWithAllFields() {
-        val verified = "I can verify that is true."
-        val diffList = DiffList(
-            listOf(
-                Addition(verified),
-                Removal("I can verify that is false."),
-                Replacement("I can verify that is false.", verified),
-                Unchanged("I can verify that is true or false.")
-            )
-        )
-        val view = ViewableInterpretation(interp)
-        view.apply {
-            this.diffList = diffList
-            this.verifiedText = verified
-        }
-        val restored = serializeDeserialize(view)
-        restored.diffList shouldBe diffList
-        restored.verifiedText shouldBe verified
-        restored.latestText() shouldBe verified
-    }
-
-    @Test
-    fun serialisationWithDiffListModifiedAfterInterpretationIsConstructed() {
-        val diffList = DiffList(
-            listOf(
-                Addition("I can verify that is true."),
-                Removal("I can verify that is false."),
-                Replacement("I can verify that is false.", "I can verify that is true."),
-                Unchanged("I can verify that is true or false.")
-            )
-        )
-        val view = ViewableInterpretation(interp)
-        view.apply { this.diffList = diffList }
-        val restored = serializeDeserialize(view)
-        restored.diffList shouldBe diffList
     }
 
     @Test
@@ -275,46 +210,7 @@ class ViewableInterpretationTest {
     }
 
     @Test
-    fun resettingTheInterpretationShouldNotChangeTheVerifiedText() {
-        val verifiedText = "I can verify that is true."
-        val view = ViewableInterpretation(interp)
-        view.verifiedText = verifiedText
-        interp.reset()
-        view.verifiedText shouldBe verifiedText
-    }
-
-    @Test
-    fun resettingTheInterpretationShouldNotChangeTheDiffList() {
-        val diffList = DiffList(
-            listOf(
-                Addition("I can verify that is true."),
-                Removal("I can verify that is false."),
-                Replacement("I can verify that is false.", "I can verify that is true."),
-                Unchanged("I can verify that is true or false.")
-            )
-        )
-        val view = ViewableInterpretation(interp)
-        view.diffList = diffList
-        interp.reset()
-        view.diffList shouldBe diffList
-    }
-
-    @Test
-    fun latestTextShouldBeTheVerifiedTextIfNotNull() {
-        val verifiedText = "I can verify that is true."
-        val conclusion = Conclusion(1, "First conc")
-        val conditions = setOf(
-            isCondition(1, Attribute(1, "x"), "1"),
-        )
-        val rule0 = Rule(10, null, conclusion, conditions)
-        val interp = Interpretation(caseId)
-        interp.add(rule0)
-        val updatedView = ViewableInterpretation(interp, verifiedText = verifiedText)
-        updatedView.latestText() shouldBe verifiedText
-    }
-
-    @Test
-    fun latestTextShouldBeTheInterpretationIfNoVerifiedText() {
+    fun latestTextShouldBeTheInterpretationText() {
         val conclusion = Conclusion(1, "First conc")
         val conditions = setOf(
             isCondition(1, Attribute(1, "x"), "1"),
@@ -326,26 +222,7 @@ class ViewableInterpretationTest {
         updatedView.latestText() shouldBe conclusion.text
     }
 
-    @Test
-    fun serializedWithDiffList() {
-        val diffList = DiffList(listOf(Addition("Coffee is very good")))
-        val view = ViewableInterpretation(interp)
-        view.diffList = diffList
 
-        val sd = serializeDeserialize(view)
-        sd shouldBe view
-        sd.diffList shouldBe diffList
-    }
-
-    @Test
-    fun serializedWithVerifiedText() {
-        val text = "Coffee is very good"
-        val view = ViewableInterpretation(interp)
-        view.verifiedText = text
-        val sd = serializeDeserialize(view)
-        sd shouldBe view
-        sd.verifiedText shouldBe text
-    }
 
     private fun containsText(attribute: Attribute, match: String) = containsText(conditionId++, attribute, match)
 

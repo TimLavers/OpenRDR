@@ -6,8 +6,6 @@ import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -37,11 +35,6 @@ fun ReplaceCommentDialog(availableComments: List<String>, handler: ReplaceCommen
             handler.cancel()
         }
     ) {
-        val focusRequester = remember { FocusRequester() }
-        LaunchedEffect(Unit) {
-            focusRequester.requestFocus()
-        }
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -72,7 +65,6 @@ fun ReplaceCommentDialog(availableComments: List<String>, handler: ReplaceCommen
                     .semantics {
                         contentDescription = REPLACEMENT_COMMENT_TEXT_FIELD
                     }
-                    .focusRequester(focusRequester)
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),

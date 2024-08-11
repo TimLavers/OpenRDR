@@ -1,7 +1,10 @@
 package io.rippledown.caseview
 
-import androidx.compose.ui.test.*
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.dp
 import io.kotest.matchers.shouldBe
 import io.mockk.every
@@ -53,7 +56,6 @@ class BodyRowTest {
                 BodyRow(5, "Bondi", attribute, columnWidths, results, 123F)
             }
             val boundsWithDisplacement = onNodeWithText(attribute.name).getBoundsInRoot()
-            println("bounds: $boundsWithDisplacement")
             boundsWithDisplacement.top  - boundsNoDisplacement.top shouldBe 123.dp
         }
     }

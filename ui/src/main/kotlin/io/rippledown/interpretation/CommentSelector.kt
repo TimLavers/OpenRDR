@@ -34,6 +34,7 @@ fun CommentSelector(
         onExpandedChange = {
             expanded = it
         },
+        modifier = Modifier.semantics { contentDescription = "EXPOSED_DROPDOWN_MENU_BOX" },
     ) {
         TextField(
             value = selectedComment,
@@ -55,7 +56,9 @@ fun CommentSelector(
         )
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.semantics { contentDescription = "EXPOSED_DROPDOWN_MENU" },
+
         ) {
             options.forEach { option ->
                 DropdownMenuItem(

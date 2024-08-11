@@ -93,29 +93,6 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
     fun getOrCreateCondition(condition: Condition) = kb.conditionManager.getOrCreate(condition)
 
     /**
-     * Save the verified text.
-     *
-     * @return a ViewableCase with a re-calculated list of Diffs
-     * corresponding to difference between the current interpretation and the verified text
-     */
-    fun saveInterpretation(case: ViewableCase): ViewableCase {
-        require(case.viewableInterpretation.verifiedText != null) { "Cannot save an unverified interpretation." }
-
-        //persist the verified text and corresponding conclusions associated with the interpretation
-        kb.saveInterpretation(case.viewableInterpretation)
-
-        //reset the case's viewable interpretation including diff list
-        val updated = kb.interpretationViewManager.viewableInterpretation(case.viewableInterpretation.interpretation)
-
-        //update the case in the KB
-        case.viewableInterpretation = updated
-        //kb.putCase(case) TODO test this for the case where we are using the Postgres persistence provider
-
-        //return the updated case
-        return case
-    }
-
-    /**
      * Start a rule session for the given case and difference.
      *
      * @return a CornerstoneStatus providing the first cornerstone and the number of cornerstones that will be affected by the diff

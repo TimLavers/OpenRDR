@@ -6,7 +6,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.rippledown.constants.api.*
-import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
@@ -14,12 +13,6 @@ import io.rippledown.server.ServerApplication
 
 fun Application.interpManagement(application: ServerApplication) {
     routing {
-
-        post(VERIFIED_INTERPRETATION_SAVED) {
-            val viewableCase = call.receive<ViewableCase>()
-            val updated = kbEndpoint(application).saveInterpretation(viewableCase)
-            call.respond(HttpStatusCode.OK, updated)
-        }
 
         post(BUILD_RULE) {
             val ruleRequest = call.receive<RuleRequest>()

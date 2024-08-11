@@ -73,10 +73,7 @@ fun InterpretationTabs(viewableInterpretation: ViewableInterpretation) {
                             icon = painterForIndex(index),
                             onClick = {
                                 tabPage = index
-                            },
-                            badgeCount = if (index == 2) {
-                                viewableInterpretation.numberOfChanges()
-                            } else 0
+                            }
                         )
                     }
                 }
@@ -92,7 +89,7 @@ fun InterpretationTabs(viewableInterpretation: ViewableInterpretation) {
 @Composable
 fun painterForIndex(index: Int) =
     when (index) {
-        0 -> painterResource("write_24.png")
+        0 -> painterResource("layout_24.png")
         else -> painterResource("paragraph_24.png")
     }
 

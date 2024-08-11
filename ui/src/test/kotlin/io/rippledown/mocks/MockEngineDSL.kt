@@ -65,17 +65,6 @@ private class EngineBuilder(private val config: EngineConfig) {
 
             CASE -> {
                 if (config.expectedCaseId != null) request.url.parameters["id"] shouldBe config.expectedCaseId.toString()
-                println("api call to CASE with ${request.url.parameters} will return ${config.returnCase}")
-                httpResponseData(json.encodeToString(config.returnCase))
-            }
-
-            VERIFIED_INTERPRETATION_SAVED -> {
-                val body = request.body as TextContent
-                val bodyAsCase = json.decodeFromString(ViewableCase.serializer(), body.text)
-
-                if (config.expectedCase != null) {
-                    bodyAsCase shouldBe config.expectedCase
-                }
                 httpResponseData(json.encodeToString(config.returnCase))
             }
 

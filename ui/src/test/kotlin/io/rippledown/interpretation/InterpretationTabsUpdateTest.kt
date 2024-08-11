@@ -48,27 +48,6 @@ class InterpretationTabsUpdateTest {
         }
     }
 
-    @Test
-    fun `should update interpretation when the verified text is changed`() = runTest {
-        val original = ViewableInterpretation().apply { verifiedText = textA }
-        val changed = ViewableInterpretation().apply { verifiedText = textB }
-
-        println("The same? ${original == changed}")
-        with(composeTestRule) {
-            setContent {
-                InterpretationTabsWithButton(original, changed)
-            }
-            //Given
-            requireInterpretation(textA)
-
-            //When
-            onNodeWithTag("buttonTag").performClick()
-
-            //Then
-            requireInterpretation(textB)
-        }
-    }
-
     @Composable
     fun InterpretationTabsWithButton(original: ViewableInterpretation, changed: ViewableInterpretation) {
         var viewableInterpretation: ViewableInterpretation by remember { mutableStateOf(original) }

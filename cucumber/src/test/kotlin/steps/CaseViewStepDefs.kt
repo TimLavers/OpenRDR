@@ -6,29 +6,29 @@ import io.kotest.matchers.shouldBe
 
 class CaseViewStepDefs {
     @Then("I (should )see these episode dates:")
-    fun IShouldSeeTheseEpisodeDates(dataTable: DataTable) {
+    fun requireEpisodeDates(dataTable: DataTable) {
         val expectedDates = dataTable.asList()
         caseViewPO().datesShown() shouldBe expectedDates
     }
 
     @Then("I (should )see these attributes:")
-    fun IShouldSeeTheseAttributes(dataTable: DataTable) {
+    fun requireAttributes(dataTable: DataTable) {
         val expectedNames = dataTable.asList()
         caseViewPO().attributeNames() shouldBe expectedNames
     }
 
     @Then("I (should )see these values for {string}:")
-    fun IShouldSeeTheseValuesForString(attribute: String, dataTable: DataTable) {
+    fun requireAttributeValues(attribute: String, dataTable: DataTable) {
         caseViewPO().valuesForAttribute(attribute) shouldBe dataTable.asList()
     }
 
     @Then("I (should )see {string} as reference range for {string}")
-    fun IShouldSeeStringAsReferenceRangeForString(range: String, attribute: String) {
+    fun requireReferenceRange(range: String, attribute: String) {
         caseViewPO().referenceRange(attribute) shouldBe range
     }
 
     @Then("I (should )see these case values:")
-    fun IShouldSeeTheseCaseValues(dataTable: DataTable) {
+    fun requireCaseValues(dataTable: DataTable) {
         val caseViewPO = caseViewPO()
         val valuesShown = caseViewPO.valuesShown()
         val rowCount = valuesShown.size
@@ -51,7 +51,7 @@ class CaseViewStepDefs {
     }
 
     @Then("the case should show the attributes in order:")
-    fun theCaseShouldShowTheAttributesInOrder(dataTable: DataTable) {
+    fun requireAttributesInOrder(dataTable: DataTable) {
         val caseViewPO = caseViewPO()
         val valuesShown = caseViewPO.attributeNames()
         // Check the number of rows is correct.

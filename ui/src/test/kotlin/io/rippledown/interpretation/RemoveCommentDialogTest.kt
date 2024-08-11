@@ -32,8 +32,7 @@ class RemoveCommentDialogTest {
 
             //When
             clickCommentDropDownMenu()
-            clickCommentToRemove(bondi)
-            clickOKToRemoveComment()
+            removeComment(bondi)
 
             //Then
             verify { handler.startRuleToRemoveComment(bondi) }
