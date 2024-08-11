@@ -80,3 +80,4 @@ created by SeyfDesigner - Flaticon</a>
 <a href="https://www.flaticon.com/free-icons/replace" title="replace icons">Replace icons created by Delwar018 -
 Flaticon</a>
 
+<a href="https://www.flaticon.com/free-icons/text" title="text icons">Text icons created by DinosoftLabs - Flaticon</a>
