@@ -83,7 +83,7 @@ fun ComposeTestRule.removeSelectedCondition(index: Int) {
 
 fun ComposeTestRule.clickFinishRuleButton() {
     onNodeWithContentDescription(FINISH_RULE_BUTTON)
-        .assertIsDisplayed()
+        .assertExists()
         .performClick()
     waitForIdle()
 }

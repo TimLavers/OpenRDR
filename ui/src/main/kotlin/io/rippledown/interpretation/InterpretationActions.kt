@@ -82,7 +82,6 @@ fun InterpretationActions(comments: List<String>, handler: InterpretationActions
             override fun startRuleToAddComment(comment: String) {
                 addCommentDialogShowing = false
                 handler.startRuleToAddComment(comment)
-                println("start rule to add comment: $comment")
             }
 
             override fun cancel() {

@@ -18,6 +18,8 @@ import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.episodic.predicate.Normal
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.rule.clickCancelRuleButton
+import io.rippledown.rule.clickFinishRuleButton
 import io.rippledown.utils.applicationFor
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -290,7 +292,7 @@ class OpenRDRUITest {
     }
 
     @Test
-    fun `should call handler to resize the window when a rule session is started`() = runTest {
+    fun `should call handler to widen the window when a cornerstone case is shown`() = runTest {
         val caseName = "case a"
         val cornerstoneName = "case b"
         val caseId = CaseId(id = 1, name = caseName)
@@ -319,7 +321,69 @@ class OpenRDRUITest {
         }
     }
 
+    @Test
+    fun `should call handler to set the window to default size when a rule session is cancelled`() = runTest {
+        val caseName = "case a"
+        val cornerstoneName = "case b"
+        val caseId = CaseId(id = 1, name = caseName)
+        val cornerstoneId = CaseId(id = 2, name = cornerstoneName)
+        val case = createCase(caseId)
+        val cornerstone = createCase(cornerstoneId)
+        coEvery { handler.api.getCase(1) } returns case
+        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { handler.api.startRuleSession(any()) } returns CornerstoneStatus(cornerstone, 0, 1)
+        coEvery { handler.api.selectCornerstone(any()) } returns cornerstone
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler)
+            }
+            //Given
+            waitForCaseToBeShowing(caseName)
+            clickChangeInterpretationButton()
+            clickAddCommentMenu()
+            addNewComment("Go to Bondi")
+            coVerify { handler.showingCornerstone(true) }
 
+            //When
+            clickCancelRuleButton()
+
+            //Then
+            coVerify { handler.showingCornerstone(false) }
+        }
+    }
+
+    @Test
+    fun `should call handler to set the window to default size when a rule session is finished`() = runTest {
+        val caseName = "case a"
+        val cornerstoneName = "case b"
+        val caseId = CaseId(id = 1, name = caseName)
+        val cornerstoneId = CaseId(id = 2, name = cornerstoneName)
+        val case = createCase(caseId)
+        val cornerstone = createCase(cornerstoneId)
+        coEvery { handler.api.getCase(1) } returns case
+        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { handler.api.startRuleSession(any()) } returns CornerstoneStatus(cornerstone, 0, 1)
+        coEvery { handler.api.selectCornerstone(any()) } returns cornerstone
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler)
+            }
+            //Given
+            waitForCaseToBeShowing(caseName)
+            clickChangeInterpretationButton()
+            clickAddCommentMenu()
+            addNewComment("Go to Bondi")
+            waitForIdle()
+            coVerify { handler.showingCornerstone(true) }
+
+            //When
+            Thread.sleep(1000)
+            clickFinishRuleButton()
+
+            //Then
+            coVerify { handler.showingCornerstone(false) }
+        }
+    }
 }
 
 fun main() {
