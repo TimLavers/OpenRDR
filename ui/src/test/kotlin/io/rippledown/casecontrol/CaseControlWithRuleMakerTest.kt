@@ -9,9 +9,6 @@ import io.rippledown.model.CaseId
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.hasCurrentValue
 import io.rippledown.model.createCaseWithInterpretation
-import io.rippledown.model.diff.Addition
-import io.rippledown.model.diff.DiffList
-import io.rippledown.model.diff.Unchanged
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
@@ -31,20 +28,13 @@ class CaseControlWithRuleMakerTest {
     val caseName = "Bondi"
     val id = 45L
     val caseId = CaseId(id, caseName)
-    val beachComment = "Enjoy the beach!"
     val bondiComment = "Go to Bondi now!"
-    val diffList = DiffList(
-        listOf(
-            Unchanged(beachComment),
-            Addition(bondiComment),
-        )
-    )
+
     val condition = hasCurrentValue(1, Attribute(2, "surf"))
     val viewableCase = createCaseWithInterpretation(
         name = caseName,
         id = id,
-        conclusionTexts = listOf(bondiComment),
-        diffs = diffList
+        conclusionTexts = listOf(bondiComment)
     )
 
     @Before
@@ -130,9 +120,6 @@ class CaseControlWithRuleMakerTest {
             }
             //Given
             waitForCaseToBeShowing(caseName)
-
-            //When
-//            clickBuildIconForRow(1)
 
             //Then
             verify { handler.setInfoMessage("") }

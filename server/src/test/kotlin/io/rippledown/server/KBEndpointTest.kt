@@ -14,8 +14,6 @@ import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.model.condition.hasCurrentValue
 import io.rippledown.model.condition.isCondition
-import io.rippledown.model.diff.DiffList
-import io.rippledown.model.diff.Unchanged
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.supplyCaseFromFile
@@ -77,32 +75,6 @@ internal class KBEndpointTest {
         val retrieved = endpoint.case(id)
         val retrievedAgain = endpoint.case(id)
         retrievedAgain shouldBeSameInstanceAs retrieved
-    }
-
-    @Test
-    fun `should set the interpretation's DiffList to be empty when retrieving a case with a blank interpretation`() {
-        val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
-
-        val case = endpoint.viewableCase(id)
-        case.verifiedText() shouldBe null
-        case.textGivenByRules() shouldBe ""
-        case.diffList() shouldBe DiffList(emptyList())
-    }
-
-    @Test
-    fun `the DiffList should have an unchanged fragment when retrieving a case with a non-blank interpretation`() {
-        val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
-        val case = endpoint.case(id)
-        val text = "ABC ok."
-        val conclusion = endpoint.kb.conclusionManager.getOrCreate(text)
-        endpoint.kb.startRuleSession(case, ChangeTreeToAddConclusion(conclusion))
-        endpoint.kb.commitCurrentRuleSession()
-
-        with(endpoint.viewableCase(id)) {
-            verifiedText() shouldBe null
-            textGivenByRules() shouldBe text
-            diffList() shouldBe DiffList(listOf(Unchanged(text)))
-        }
     }
 
     @Test

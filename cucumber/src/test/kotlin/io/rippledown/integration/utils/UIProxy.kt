@@ -9,18 +9,6 @@ import io.rippledown.main.Api
 import io.rippledown.main.Handler
 import io.rippledown.main.OpenRDRUI
 
-fun findById(id : String) {
-    println("findById")
-}
-
-
-//TODO: remove this
-suspend fun <T> act(
-    block: () -> T,
-): T {
-    return block()
-}
-
 class OpenRdUIProxy() {
     lateinit var appWindow: ComposeWindow
 
@@ -39,6 +27,7 @@ class OpenRdUIProxy() {
                             override var api = Api()
                             override var isClosing: () -> Boolean = { false }
                             override var setInfoMessage: (String) -> Unit = {}
+                            override fun showingCornerstone(isShowingCornerstone: Boolean) {}
                         })
                     }
                 }
@@ -46,16 +35,12 @@ class OpenRdUIProxy() {
             appWindow.setVisible(true)
         }
         Thread(runnable, "App Runner").start()
-//        }
         Thread.sleep(1000)
         val accessibleContext = appWindow.accessibleContext
-        println("accessibleContext: $accessibleContext")
         val name = accessibleContext.accessibleName
-        println("------- name: $name")
         val childCount = accessibleContext.accessibleChildrenCount
         println(childCount)
         val child0 = accessibleContext.getAccessibleChild(0)
-        println(child0)
         accessibleContext.dumpToText(0)
     }
 }

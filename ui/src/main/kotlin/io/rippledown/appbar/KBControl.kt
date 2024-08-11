@@ -90,7 +90,6 @@ fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
         ) {
             CreateKBFromSample(object : CreateKBFromSampleHandler {
                 override fun createKB(name: String, sample: SampleKB) {
-                    println("Create KB from sample....name: $name, sample: $sample")
                     handler.createKBFromSample(name, sample)
                     createKbFromSampleDialogShowing = false
                 }

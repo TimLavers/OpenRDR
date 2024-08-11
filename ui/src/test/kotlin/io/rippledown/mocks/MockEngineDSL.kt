@@ -65,7 +65,6 @@ private class EngineBuilder(private val config: EngineConfig) {
 
             CASE -> {
                 if (config.expectedCaseId != null) request.url.parameters["id"] shouldBe config.expectedCaseId.toString()
-                println("api call to CASE with ${request.url.parameters} will return ${config.returnCase}")
                 httpResponseData(json.encodeToString(config.returnCase))
             }
 

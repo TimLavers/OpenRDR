@@ -38,6 +38,7 @@ interface Handler {
     var api: Api
     var isClosing: () -> Boolean
     var setInfoMessage: (String) -> Unit
+    fun showingCornerstone(isShowingCornerstone: Boolean)
 }
 
 @Composable
@@ -70,6 +71,8 @@ fun OpenRDRUI(handler: Handler) {
         }
     }
     val ruleInProgress = cornerstoneStatus != null
+    val isShowingCornerstone = cornerstoneStatus?.cornerstoneToReview != null
+    handler.showingCornerstone(isShowingCornerstone)
 
     Scaffold(
         topBar = {

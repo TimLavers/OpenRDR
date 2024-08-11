@@ -9,9 +9,6 @@ import io.rippledown.interpretation.selectConclusionsTab
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.hasCurrentValue
 import io.rippledown.model.createCaseWithInterpretation
-import io.rippledown.model.diff.Addition
-import io.rippledown.model.diff.DiffList
-import io.rippledown.model.diff.Unchanged
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.utils.applicationFor
 import kotlinx.coroutines.test.runTest
@@ -107,19 +104,11 @@ fun main() {
 
         val caseName = "Bondi"
         val id = 45L
-        val beachComment = "Enjoy the beach."
         val bondiComment = "Go to Bondi now!"
-        val diffList = DiffList(
-            listOf(
-                Unchanged(beachComment),
-                Addition(bondiComment),
-            )
-        )
         val viewableCase = createCaseWithInterpretation(
             name = caseName,
             id = id,
-            conclusionTexts = listOf(bondiComment),
-            diffs = diffList
+            conclusionTexts = listOf(bondiComment)
         )
         coEvery { handler.selectCornerstone(any()) } returns viewableCase
         val condition = hasCurrentValue(1, Attribute(2, "Surf 1"))

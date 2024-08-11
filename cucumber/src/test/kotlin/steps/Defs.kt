@@ -51,22 +51,16 @@ class Defs {
     }
 
     @When("A Knowledge Base called {word} has been created")
-    fun AKnowledgeBaseCalledWordHasBeenCreated(name: String) {
+    fun createKnowledgeBase(name: String) {
         restClient().createKB(name)
     }
 
     @When("I start the client application")
-    fun IStartTheClientApplication() {
-        startClient()
-    }
+    fun startClientApplication() = startClient()
 
-    @When("stop the client application")
+    @When("(I )stop the client application")
     fun stopTheClientApplication() {
         //client application is stopped in the After hook
-    }
-
-    @When("I stop the client application")
-    fun IStopTheClientApplication() {
     }
 
     @Given("a list of cases with the following names is stored on the server:")
@@ -77,7 +71,7 @@ class Defs {
     }
 
     @Given("a case with name {word} is stored on the server")
-    fun aCaseWithNameWordIsStoredOnTheServer(caseName: String) {
+    fun aCaseWithNameIsStoredOnTheServer(caseName: String) {
         labProxy().provideCase(caseName)
     }
 
@@ -90,19 +84,19 @@ class Defs {
     }
 
     @And("I re-start the server application")
-    fun IRestartTheServerApplication() {
+    fun restartTheServerApplication() {
         stopServer()
         pause(3000)
         reStartWithPostgres()
     }
 
     @And("I select a case with all three attributes")
-    fun ISelectACaseWithAllThreeAttributes() {
+    fun selectACaseWithAllThreeAttributes() {
         caseListPO().select("CaseABC")
     }
 
     @When("a new case with the name {word} is stored on the server")
-    fun aNewCaseWithTheNameWordIsStoredOnTheServer(caseName: String) {
+    fun aNewCaseIsStoredOnTheServer(caseName: String) {
         labProxy().provideCase(caseName)
     }
 
@@ -112,7 +106,7 @@ class Defs {
     }
 
     @Given("the configured case {word} is stored on the server")
-    fun theConfiguredCaseWordIsStoredOnTheServer(caseName: String) {
+    fun theConfiguredCaseIsStoredOnTheServer(caseName: String) {
         labProxy().provideCase(caseName)
     }
 
@@ -124,17 +118,17 @@ class Defs {
     }
 
     @When("the case with the name {word} is deleted on the server")
-    fun theCaseWithTheNameWordIsDeletedOnTheServer(caseName: String) {
+    fun theCaseWithTheNameIsDeletedOnTheServer(caseName: String) {
         labProxy().restProxy.deleteProcessedCaseWithName(caseName)
     }
 
     @And("I select case {word}")
-    fun ISelectCaseWord(caseName: String) {
+    fun selectCase(caseName: String) {
         caseListPO().select(caseName)
     }
 
     @And("I move attribute {word} below attribute {word}")
-    fun IMoveAttributeWordBelowAttributeWord(moved: String, target: String) {
+    fun moveAttributeBelowAttribute(moved: String, target: String) {
         caseViewPO().dragAttribute(moved, target)
         Thread.sleep(1000)
     }
@@ -147,36 +141,30 @@ class Defs {
 
         // The attributes are created when the cases are parsed, so select them in the right order.
         caseCountPO().waitForCountOfNumberOfCasesToBe(3)
-//        with(caseListPO()) {
-//             The attributes are created when the cases are parsed, so select them in the right order.
-//            select("Case1")
-//            select("Case2")
-//            select("Case3")
-//        }
     }
 
     @Given("I import the configured zipped Knowledge Base {word}")
-    fun IImportTheConfiguredZippedKnowledgeBaseWord(toImport: String) {
+    fun importConfiguredZippedKnowledgeBase(toImport: String) {
         val zipFile = ConfiguredTestData.kbZipFile(toImport)
         pause(10_000)
         kbControlsPO().importKB(zipFile.absolutePath)
     }
 
     @And("I export the current Knowledge Base")
-    fun IExportTheCurrentKnowledgeBase() {
+    fun exportTheCurrentKnowledgeBase() {
         exportedZip = File.createTempFile("Exported", ".zip")
         kbControlsPO().exportKB(exportedZip!!.absolutePath)
     }
 
     @Then("there is a file called {word} in my downloads directory")
-    fun thereIsAFileCalledWordInMyDownloadsDirectory(fileName: String) {
+    fun requireFileInMyDownloadsDirectory(fileName: String) {
         Awaitility.await().atMost(Duration.ofSeconds(5)).until {
             File(StepsInfrastructure.uiTestBase.downloadsDir(), fileName).exists()
         }
     }
 
     @Given("I import the previously exported Knowledge Base")
-    fun IImportThePreviouslyExportedKnowledgeBase() {
+    fun importThePreviouslyExportedKnowledgeBase() {
         require(exportedZip != null) {
             "Import of previously exported KB attempted but exported KB is null."
         }
@@ -184,52 +172,52 @@ class Defs {
     }
 
     @Given("case {word} is provided having data:")
-    fun caseWordIsProvidedHavingData(caseName: String, dataTable: DataTable) {
+    fun provideCaseWithData(caseName: String, dataTable: DataTable) {
         val attributeNameToValue = mutableMapOf<String, String>()
         dataTable.asMap().forEach { (t, u) -> attributeNameToValue[t] = u }
         labProxy().provideCase(caseName, attributeNameToValue)
     }
 
     @Then("the displayed KB name is (now ){word}")
-    fun theDisplayedKBNameIsNowWord(kbName: String) {
+    fun theDisplayedKBNameIsNow(kbName: String) {
         waitUntilAsserted {
             kbControlsPO().currentKB() shouldBe kbName
         }
     }
 
     @Then("I activate the KB management control")
-    fun IActivateTheKBManagementControl() {
+    fun activateTheKBManagementControl() {
         kbControlsPO().expandDropdownMenu()
     }
 
     @Then("I (should )see this list of available KBs:")
-    fun IShouldSeeThisListOfAvailableKBs(dataTable: DataTable) {
+    fun requireListOfAvailableKBs(dataTable: DataTable) {
         val expectedKBs = dataTable.asList()
         kbControlsPO().availableKBs() shouldBe expectedKBs
     }
 
     @Then("the displayed product name is 'Open RippleDown'")
-    fun theDisplayedProductNameIsOpenRippleDown() {
+    fun requireProductNameIsOpenRippleDown() {
         applicationBarPO().title() shouldBe "Open RippleDown"
     }
 
     @Then("I create a Knowledge Base with the name {word}")
-    fun ICreateAKnowledgeBaseWithTheNameWord(kbName: String) {
+    fun createAKnowledgeBaseWithTheName(kbName: String) {
         kbControlsPO().createKB(kbName)
     }
 
     @Then("I create a Knowledge Base with the name {word} based on the {string} sample")
-    fun ICreateAKnowledgeBaseWithTheNameWordBasedOnTheStringSample(kbName: String, sampleTitle: String) {
+    fun createAKnowledgeBaseWithTheNameBasedOnSample(kbName: String, sampleTitle: String) {
         kbControlsPO().createKBFromSample(kbName, sampleTitle)
     }
 
     @Then("I select the Knowledge Base named {word}")
-    fun ISelectTheKnowledgeBaseNamedWord(kbName: String) {
+    fun selectTheKnowledgeBaseNamed(kbName: String) {
         kbControlsPO().selectKB(kbName)
     }
 
     @And("pause for {long} second(s)")
-    fun pauseForLongSeconds(seconds: Long) {
+    fun pauseSeconds(seconds: Long) {
         Thread.sleep(SECONDS.toMillis(seconds))
     }
 

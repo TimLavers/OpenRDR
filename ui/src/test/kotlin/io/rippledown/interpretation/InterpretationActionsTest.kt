@@ -3,7 +3,6 @@ package io.rippledown.interpretation
 import androidx.compose.ui.test.junit4.createComposeRule
 import io.mockk.mockk
 import io.mockk.verify
-import io.rippledown.constants.interpretation.REMOVE_COMMENT_SELECTOR_PREFIX
 import io.rippledown.utils.applicationFor
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -56,7 +55,8 @@ class InterpretationActionsTest {
     }
 
     @Test
-    fun `should handler when the user clicks on the replace comment button, selects an existing comment, adds a replacement comment and presses OK`() {
+    fun `should handler when the user clicks on the replace comment button, selects an existing comment, adds a replacement comment and presses OK`() =
+        runTest {
         with(composeTestRule) {
             //Given
             val bondi = "Bondi"
@@ -93,9 +93,8 @@ class InterpretationActionsTest {
             //When
             clickRemoveCommentMenu()
             clickCommentDropDownMenu()
-            requireCommentSelectorOptionsToBeDisplayed(REMOVE_COMMENT_SELECTOR_PREFIX, comments)
-            clickCommentToRemove("Manly")
-            clickOKToRemoveComment()
+            awaitIdle()
+            removeComment("Manly")
 
             //Then
             verify(timeout = 1_000) { handler.startRuleToRemoveComment("Manly") }

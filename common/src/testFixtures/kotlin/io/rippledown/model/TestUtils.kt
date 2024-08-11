@@ -5,7 +5,6 @@ import io.kotest.matchers.MatcherResult
 import io.rippledown.model.caseview.CaseViewProperties
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
-import io.rippledown.model.diff.DiffList
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.RuleSummary
 import kotlin.system.measureTimeMillis
@@ -62,7 +61,6 @@ fun createCaseWithInterpretation(
     name: String = "",
     id: Long? = null,
     conclusionTexts: List<String> = listOf(),
-    diffs: DiffList = DiffList()
 ): ViewableCase {
     val case = createCase(name, id, listOf(AttributeWithValue()))
     var conclusionId = 10
@@ -73,7 +71,7 @@ fun createCaseWithInterpretation(
     }
     val text = interp.conclusionTexts().joinToString(" ")
     val viewableInterp =
-        ViewableInterpretation(interpretation = interp, verifiedText = null, diffList = diffs, textGivenByRules = text)
+        ViewableInterpretation(interpretation = interp, textGivenByRules = text)
     case.viewableInterpretation = viewableInterp
     return case
 }
