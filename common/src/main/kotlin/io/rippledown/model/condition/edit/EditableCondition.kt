@@ -3,6 +3,7 @@ package io.rippledown.model.condition.edit
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.EpisodicCondition
+import io.rippledown.model.condition.episodic.predicate.Contains
 import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals
 import io.rippledown.model.condition.episodic.signature.Current
 import kotlinx.serialization.Serializable
@@ -55,5 +56,25 @@ data class EditableGTECondition(val attribute: Attribute,
 
     override fun condition(value: String): Condition {
         return EpisodicCondition(attribute, GreaterThanOrEquals(value.toDouble()), Current)
+    }
+}
+@Serializable
+data class EditableContainsCondition(val attribute: Attribute,
+                             val initialEditableValue: EditableValue): EditableCondition {
+
+    override fun fixedTextPart1(): String {
+        return "${attribute.name} contains "
+    }
+
+    override fun fixedTextPart2(): String {
+        return ""
+    }
+
+    override fun editableValue(): EditableValue {
+        return initialEditableValue
+    }
+
+    override fun condition(value: String): Condition {
+        return EpisodicCondition(attribute, Contains(value), Current)
     }
 }

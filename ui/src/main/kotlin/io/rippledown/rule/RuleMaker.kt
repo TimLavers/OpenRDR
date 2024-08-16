@@ -91,6 +91,7 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
             override fun onAddCondition(suggestedCondition: SuggestedCondition) {
                 selectedConditions = selectedConditions + suggestedCondition.initialSuggestion()
                 availableConditions = availableConditions - suggestedCondition
+                suggestionsUsed = suggestionsUsed + mapOf(suggestedCondition.initialSuggestion() to suggestedCondition)
                 handler.onUpdateConditions(selectedConditions)
             }
 

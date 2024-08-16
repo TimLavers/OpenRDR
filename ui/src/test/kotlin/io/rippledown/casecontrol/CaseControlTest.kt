@@ -12,6 +12,8 @@ import io.rippledown.main.DEFAULT_WINDOW_SIZE
 import io.rippledown.model.Attribute
 import io.rippledown.model.CaseId
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.condition.edit.FixedSuggestedCondition
+import io.rippledown.model.condition.edit.SuggestedCondition
 import io.rippledown.model.condition.hasCurrentValue
 import io.rippledown.model.createCaseWithInterpretation
 import io.rippledown.model.diff.Addition
@@ -246,9 +248,10 @@ fun main() {
             )
             coEvery { handler.selectCornerstone(any()) } returns viewableCase
             val condition = hasCurrentValue(1, Attribute(2, "Surf 1"))
+            val suggestedCondition = FixedSuggestedCondition(condition)
             CaseControl(
                 currentCase = viewableCase,
-                conditionHints = listOf(condition),
+                conditionHints = listOf(suggestedCondition),
                 cornerstoneStatus = CornerstoneStatus(viewableCase, 42, 84),
                 handler = handler
             )

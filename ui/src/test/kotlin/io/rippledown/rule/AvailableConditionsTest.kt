@@ -7,6 +7,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.EpisodicCondition
+import io.rippledown.model.condition.edit.FixedSuggestedCondition
 import io.rippledown.model.condition.episodic.predicate.Low
 import io.rippledown.model.condition.episodic.signature.Current
 import org.junit.Rule
@@ -16,13 +17,13 @@ class AvailableConditionsTest {
     @get:Rule
     var composeTestRule = createComposeRule()
 
+    private val conditions = (0..9).map { index ->
+        val attribute = Attribute(index, "Surf $index")
+        FixedSuggestedCondition(EpisodicCondition(attribute, Low, Current))
+    }
+
     @Test
     fun `should show the available conditions`() {
-        val conditions = (0..9).map { index ->
-            val attribute = Attribute(index, "Surf $index")
-            EpisodicCondition(attribute, Low, Current)
-        }
-
         with(composeTestRule) {
             //Given
             setContent {
@@ -36,10 +37,6 @@ class AvailableConditionsTest {
 
     @Test
     fun `should call the handler when an available condition is clicked by index`() {
-        val conditions = (0..9).map { index ->
-            val attribute = Attribute(index, "Surf $index")
-            EpisodicCondition(attribute, Low, Current)
-        }
         val handler = mockk<AvailableConditionsHandler>(relaxed = true)
 
         with(composeTestRule) {
@@ -58,10 +55,6 @@ class AvailableConditionsTest {
 
     @Test
     fun `should call the handler when an available condition is clicked by text`() {
-        val conditions = (0..9).map { index ->
-            val attribute = Attribute(index, "Surf $index")
-            EpisodicCondition(attribute, Low, Current)
-        }
         val handler = mockk<AvailableConditionsHandler>(relaxed = true)
 
         with(composeTestRule) {
@@ -79,17 +72,17 @@ class AvailableConditionsTest {
     }
 }
 
-fun main() {
-    val handler = mockk<AvailableConditionsHandler>(relaxed = true)
-    application {
-        Window(
-            onCloseRequest = ::exitApplication,
-        ) {
-            val conditions = (1..100).map { index ->
-                val attribute = Attribute(index, "Surf $index")
-                EpisodicCondition(attribute, Low, Current)
-            }
-            AvailableConditions(conditions, handler)
-        }
-    }
-}
+//fun main() {
+//    val handler = mockk<AvailableConditionsHandler>(relaxed = true)
+//    application {
+//        Window(
+//            onCloseRequest = ::exitApplication,
+//        ) {
+//            val conditions = (1..100).map { index ->
+//                val attribute = Attribute(index, "Surf $index")
+//                EpisodicCondition(attribute, Low, Current)
+//            }
+//            AvailableConditions(conditions, handler)
+//        }
+//    }
+//}

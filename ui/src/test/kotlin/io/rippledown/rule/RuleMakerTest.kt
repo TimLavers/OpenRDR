@@ -6,7 +6,10 @@ import androidx.compose.ui.window.application
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import io.rippledown.model.Attribute
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.containsText
+import io.rippledown.model.condition.edit.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -15,15 +18,18 @@ class RuleMakerTest {
     @get:Rule
     var composeTestRule = createComposeRule()
 
-    lateinit var allConditions: List<Condition>
+    private lateinit var allSuggestions: List<SuggestedCondition>
+    private lateinit var conditionsShown: List<String>
+    private lateinit var suggestionConditions: List<Condition>
+    private val notes = Attribute(99, "Notes")
 
     @Before
     fun setUp() {
-        allConditions = (1..5).map { index ->
-            val condition = mockk<Condition>(relaxed = true)
-            every { condition.asText() } returns "Condition $index"
-            condition
+        allSuggestions = (1..5).map { index ->
+            nonEditableSuggestion(index, notes, "$index")
         }
+        conditionsShown = allSuggestions.map { it.asText() }
+        suggestionConditions = allSuggestions.map { it.initialSuggestion() }
     }
 
     @Test
@@ -31,11 +37,11 @@ class RuleMakerTest {
         with(composeTestRule) {
             //Given
             setContent {
-                RuleMaker(allConditions, mockk(relaxed = true))
+                RuleMaker(allSuggestions, mockk(relaxed = true))
             }
 
             //Then
-            requireAvailableConditionsToBeDisplayed(allConditions.map { it.asText() })
+            requireAvailableConditionsToBeDisplayed(conditionsShown)
         }
     }
 
@@ -44,14 +50,14 @@ class RuleMakerTest {
         with(composeTestRule) {
             //Given
             setContent {
-                RuleMaker(allConditions, mockk(relaxed = true))
+                RuleMaker(allSuggestions, mockk(relaxed = true))
             }
 
             //When
             clickAvailableCondition(2)
 
             //Then
-            requireSelectedConditionsToBeDisplayed(listOf(allConditions[2].asText()))
+            requireSelectedConditionsToBeDisplayed(listOf(suggestionConditions[2].asText()))
         }
     }
 
@@ -60,14 +66,14 @@ class RuleMakerTest {
         with(composeTestRule) {
             //Given
             setContent {
-                RuleMaker(allConditions, mockk(relaxed = true))
+                RuleMaker(allSuggestions, mockk(relaxed = true))
             }
 
             //When
-            clickAvailableConditionWithText(allConditions[2].asText())
+            clickAvailableConditionWithText(conditionsShown[2])
 
             //Then
-            requireSelectedConditionsToBeDisplayed(listOf(allConditions[2].asText()))
+            requireSelectedConditionsToBeDisplayed(listOf(suggestionConditions[2].asText()))
         }
     }
 
@@ -77,7 +83,7 @@ class RuleMakerTest {
         with(composeTestRule) {
             //Given
             setContent {
-                RuleMaker(allConditions, handler)
+                RuleMaker(allSuggestions, handler)
             }
             clickAvailableCondition(2)
 
@@ -85,7 +91,7 @@ class RuleMakerTest {
             clickFinishRuleButton()
 
             //Then
-            verify { handler.onDone(listOf(allConditions[2])) }
+            verify { handler.onDone(listOf(suggestionConditions[2])) }
         }
     }
 
@@ -95,14 +101,14 @@ class RuleMakerTest {
         with(composeTestRule) {
             //Given
             setContent {
-                RuleMaker(allConditions, handler)
+                RuleMaker(allSuggestions, handler)
             }
 
             //When
-            clickAvailableConditions(listOf(allConditions[1].asText(), allConditions[2].asText()))
+            clickAvailableConditions(listOf(conditionsShown[1], conditionsShown[2]))
 
             //Then
-            verify { handler.onUpdateConditions(listOf(allConditions[1], allConditions[2])) }
+            verify { handler.onUpdateConditions(listOf(suggestionConditions[1], suggestionConditions[2])) }
         }
     }
 
@@ -112,26 +118,32 @@ class RuleMakerTest {
         with(composeTestRule) {
             //Given
             setContent {
-                RuleMaker(allConditions, handler)
+                RuleMaker(allSuggestions, handler)
             }
-            clickAvailableConditions(allConditions.map { it.asText() })
+            clickAvailableConditions(conditionsShown)
 
             //When
-            clickSelectedConditions(listOf(allConditions[1].asText(), allConditions[2].asText()))
+            clickSelectedConditions(listOf(allSuggestions[1].asText(), allSuggestions[2].asText()))
 
             //Then
-            verify { handler.onUpdateConditions(listOf(allConditions[0], allConditions[3], allConditions[4])) }
+            verify { handler.onUpdateConditions(listOf(suggestionConditions[0], suggestionConditions[3], suggestionConditions[4])) }
         }
     }
-
 }
-
+fun editableSuggestion(id: Int?, attribute: Attribute, text: String): EditableSuggestedCondition {
+    val initialSuggestion = containsText(id, attribute, text)
+    val editableCondition = EditableContainsCondition(attribute, EditableValue(text, Type.Text))
+    return EditableSuggestedCondition(initialSuggestion, editableCondition)
+}
+fun nonEditableSuggestion(id: Int?, attribute: Attribute, text: String): FixedSuggestedCondition {
+    val initialSuggestion = containsText(id, attribute, text)
+    return FixedSuggestedCondition(initialSuggestion)
+}
 fun main() {
+    val notes = Attribute(99, "Notes")
     val handler = mockk<RuleMakerHandler>(relaxed = true)
     val conditions = (1..10).map { index ->
-        val condition = mockk<Condition>(relaxed = true)
-        every { condition.asText() } returns "This is condition $index"
-        condition
+       nonEditableSuggestion(index, notes,"condition $index")
     }
     application {
         Window(

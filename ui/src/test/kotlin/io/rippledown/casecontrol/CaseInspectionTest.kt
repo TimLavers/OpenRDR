@@ -356,20 +356,20 @@ class CaseInspectionTest {
         }*/
 }
 
-fun main() {
-    val case = createCase(name = "Bondi", id = 45L)
-    application {
-        Window(
-            onCloseRequest = ::exitApplication,
-        ) {
-            CaseInspection(case, false, object : CaseInspectionHandler {
-                override var caseEdited: () -> Unit = {}
-                override var updateCase: (Long) -> Unit = { }
-                override fun onStartRule(selectedDiff: Diff) {}
-                override var isCornerstone = false
-                override var onInterpretationEdited: (text: String) -> Unit = { }
-                override fun swapAttributes(moved: Attribute, target: Attribute) {}
-            })
-        }
-    }
-}
+//fun main() {
+//    val case = createCase(name = "Bondi", id = 45L)
+//    application {
+//        Window(
+//            onCloseRequest = ::exitApplication,
+//        ) {
+//            CaseInspection(case, false, object : CaseInspectionHandler {
+//                override var caseEdited: () -> Unit = {}
+//                override var updateCase: (Long) -> Unit = { }
+//                override fun onStartRule(selectedDiff: Diff) {}
+//                override var isCornerstone = false
+//                override var onInterpretationEdited: (text: String) -> Unit = { }
+//                override fun swapAttributes(moved: Attribute, target: Attribute) {}
+//            })
+//        }
+//    }
+//}
