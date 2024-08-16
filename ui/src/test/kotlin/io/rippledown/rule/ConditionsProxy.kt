@@ -3,6 +3,9 @@ package io.rippledown.rule
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
+import io.rippledown.constants.main.CREATE_KB_NAME_FIELD_DESCRIPTION
+import io.rippledown.constants.main.EDIT_CONDITION_FIELD_DESCRIPTION
+import io.rippledown.constants.main.EDIT_CONDITION_OK_BUTTON_DESCRIPTION
 import io.rippledown.constants.rule.*
 import io.rippledown.utils.dump
 
@@ -96,3 +99,16 @@ fun ComposeTestRule.clickCancelRuleButton() {
         .performClick()
     waitForIdle()
 }
+
+fun ComposeTestRule.enterNewVariableValueInConditionEditor(text: String) {
+    onNodeWithContentDescription(EDIT_CONDITION_FIELD_DESCRIPTION).performTextClearance()
+    onNodeWithContentDescription(EDIT_CONDITION_FIELD_DESCRIPTION).performTextInput(text)
+}
+
+fun ComposeTestRule.clickConditionEditorOkButton() {
+    onNodeWithContentDescription(EDIT_CONDITION_OK_BUTTON_DESCRIPTION)
+        .assertIsDisplayed()
+        .performClick()
+    waitForIdle()
+}
+

@@ -37,6 +37,7 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
     var filterText by remember { mutableStateOf("") }
     var editConditionDialogShowing by remember { mutableStateOf(false) }
     var conditionToBeEdited by remember { mutableStateOf<EditableCondition?>(null) }
+    var suggestionBeingEdited by remember { mutableStateOf<SuggestedCondition?>(null) }
 
     if (editConditionDialogShowing) {
         val dialogState = rememberDialogState(size = DpSize(420.dp, 160.dp))
@@ -51,12 +52,24 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
                 }
 
                 override fun editingFinished(condition: Condition) {
+                    // Remove the originating suggestion from the list of available suggestions.
+                    availableConditions = availableConditions - suggestionBeingEdited!!
+                    // Associate the created condition with the suggestion
+                    suggestionsUsed = suggestionsUsed + mapOf(condition to suggestionBeingEdited!!)
+                    // Update the handler with the suggestions.
                     selectedConditions = selectedConditions + condition
-                    editConditionDialogShowing = false
+                    handler.onUpdateConditions(selectedConditions)
+                    // Clear the current editing suggestion, and hide the dialog.
+                    clearAndHide()
                 }
 
                 override fun cancel() {
+                    clearAndHide()
+                }
+
+                private fun clearAndHide() {
                     editConditionDialogShowing = false
+                    suggestionBeingEdited = null
                 }
             })
         }
@@ -96,11 +109,11 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
             }
 
             override fun onEditThenAdd(suggestedCondition: SuggestedCondition) {
+                suggestionBeingEdited = suggestedCondition
                 conditionToBeEdited = suggestedCondition.editableCondition()
                 editConditionDialogShowing = true
                 // Don't remove the suggestion from the available list yet.
                 // We will remove it if and when editing results in a new condition being added.
-//                availableConditions = availableConditions - suggestedCondition
             }
         })
 

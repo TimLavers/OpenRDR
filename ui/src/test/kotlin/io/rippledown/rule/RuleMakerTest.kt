@@ -3,7 +3,6 @@ package io.rippledown.rule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.model.Attribute
@@ -130,11 +129,144 @@ class RuleMakerTest {
         }
     }
 }
-fun editableSuggestion(id: Int?, attribute: Attribute, text: String): EditableSuggestedCondition {
-    val initialSuggestion = containsText(id, attribute, text)
+class RuleMakerWithEditableSuggestionsTest {
+    @get:Rule
+    var composeTestRule = createComposeRule()
+
+    private lateinit var allSuggestions: List<SuggestedCondition>
+    private lateinit var conditionsShown: List<String>
+    private lateinit var suggestionConditions: List<Condition>
+    private val notes = Attribute(99, "Notes")
+
+    @Before
+    fun setUp() {
+        allSuggestions = (1..5).map { index ->
+            editableSuggestion(notes, "$index")
+        }
+        conditionsShown = allSuggestions.map { it.asText() }
+        suggestionConditions = allSuggestions.map { it.initialSuggestion() }
+    }
+
+    @Test
+    fun `editable conditions are correctly displayed`() {
+        with(composeTestRule) {
+            setContent {
+                RuleMaker(allSuggestions, mockk(relaxed = true))
+            }
+            requireAvailableConditionsToBeDisplayed(conditionsShown)
+        }
+    }
+
+    @Test
+    fun `clicking an editable condition launches the condition editor`() {
+        val handler = mockk<RuleMakerHandler>(relaxed = true)
+        with(composeTestRule) {
+            setContent {
+                RuleMaker(allSuggestions, handler)
+            }
+            clickAvailableCondition(2)
+            val newValue = "new value"
+            enterNewVariableValueInConditionEditor(newValue)
+            clickConditionEditorOkButton()
+
+            val editResult = allSuggestions[2].editableCondition()!!.condition(newValue)
+            verify { handler.onUpdateConditions(listOf(editResult)) }
+            requireSelectedConditionsToBeDisplayed(listOf( editResult.asText()))
+        }
+    }
+
+    @Test
+    fun `an editable condition can be used without alteration`() {
+        val handler = mockk<RuleMakerHandler>(relaxed = true)
+        with(composeTestRule) {
+            setContent {
+                RuleMaker(allSuggestions, handler)
+            }
+            clickAvailableCondition(1)
+            clickConditionEditorOkButton()
+            verify { handler.onUpdateConditions(listOf( suggestionConditions[1])) }
+            requireSelectedConditionsToBeDisplayed(listOf( conditionsShown[1]))
+        }
+    }
+
+    @Test
+    fun `using an editable condition without alteration removes the original suggestion`() {
+        val handler = mockk<RuleMakerHandler>(relaxed = true)
+        with(composeTestRule) {
+            setContent {
+                RuleMaker(allSuggestions, handler)
+            }
+            clickAvailableCondition(0)
+            clickConditionEditorOkButton()
+            requireAvailableConditionsToBeDisplayed(conditionsShown.takeLast(conditionsShown.size - 1))
+        }
+    }
+
+    @Test
+    fun `using an editable condition with alteration removes the original suggestion`() {
+        val handler = mockk<RuleMakerHandler>(relaxed = true)
+        with(composeTestRule) {
+            setContent {
+                RuleMaker(allSuggestions, handler)
+            }
+            clickAvailableCondition(0)
+            enterNewVariableValueInConditionEditor("whatever")
+            clickConditionEditorOkButton()
+
+            requireAvailableConditionsToBeDisplayed(conditionsShown.takeLast(conditionsShown.size - 1))
+        }
+    }
+
+    @Test
+    fun `removing an editable condition that was added unaltered re-instates the original suggestion`() {
+        val handler = mockk<RuleMakerHandler>(relaxed = true)
+        with(composeTestRule) {
+            setContent {
+                RuleMaker(allSuggestions, handler)
+            }
+            // Select the first and use it without editing
+            clickAvailableCondition(0)
+            clickConditionEditorOkButton()
+            verify { handler.onUpdateConditions(listOf( suggestionConditions[0])) }
+
+            // Remove the added condition
+            clickSelectedConditions(listOf(conditionsShown[0]))
+
+            verify { handler.onUpdateConditions(listOf()) }
+            requireAvailableConditionsToBeDisplayed(conditionsShown)
+        }
+    }
+
+    @Test
+    fun `removing an editable condition that was added after alteration re-instates the original suggestion`() {
+        val handler = mockk<RuleMakerHandler>(relaxed = true)
+        with(composeTestRule) {
+            setContent {
+                RuleMaker(allSuggestions, handler)
+            }
+            // Select the first and use it after editing
+            clickAvailableCondition(0)
+            val newValue = "new value"
+            enterNewVariableValueInConditionEditor(newValue)
+            clickConditionEditorOkButton()
+            val editResult = allSuggestions[2].editableCondition()!!.condition(newValue)
+            verify { handler.onUpdateConditions(listOf( editResult)) }
+
+            // Remove the added condition
+            clickSelectedConditions(listOf( editResult.asText()))
+
+            verify { handler.onUpdateConditions(listOf()) }
+            requireAvailableConditionsToBeDisplayed(conditionsShown)
+        }
+    }
+}
+
+fun editableSuggestion(attribute: Attribute, text: String): EditableSuggestedCondition {
+    val initialSuggestion = containsText(null, attribute, text)
     val editableCondition = EditableContainsCondition(attribute, EditableValue(text, Type.Text))
     return EditableSuggestedCondition(initialSuggestion, editableCondition)
 }
+
 fun nonEditableSuggestion(id: Int?, attribute: Attribute, text: String): FixedSuggestedCondition {
     val initialSuggestion = containsText(id, attribute, text)
     return FixedSuggestedCondition(initialSuggestion)
