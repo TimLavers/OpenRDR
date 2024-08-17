@@ -137,6 +137,7 @@ class RuleMakerWithEditableSuggestionsTest {
     private lateinit var conditionsShown: List<String>
     private lateinit var suggestionConditions: List<Condition>
     private val notes = Attribute(99, "Notes")
+    private lateinit var handler: RuleMakerHandler
 
     @Before
     fun setUp() {
@@ -145,13 +146,14 @@ class RuleMakerWithEditableSuggestionsTest {
         }
         conditionsShown = allSuggestions.map { it.asText() }
         suggestionConditions = allSuggestions.map { it.initialSuggestion() }
+        handler = mockk<RuleMakerHandler>(relaxed = true)
     }
 
     @Test
     fun `editable conditions are correctly displayed`() {
         with(composeTestRule) {
             setContent {
-                RuleMaker(allSuggestions, mockk(relaxed = true))
+                RuleMaker(allSuggestions, handler)
             }
             requireAvailableConditionsToBeDisplayed(conditionsShown)
         }
@@ -159,7 +161,6 @@ class RuleMakerWithEditableSuggestionsTest {
 
     @Test
     fun `clicking an editable condition launches the condition editor`() {
-        val handler = mockk<RuleMakerHandler>(relaxed = true)
         with(composeTestRule) {
             setContent {
                 RuleMaker(allSuggestions, handler)
@@ -177,7 +178,6 @@ class RuleMakerWithEditableSuggestionsTest {
 
     @Test
     fun `an editable condition can be used without alteration`() {
-        val handler = mockk<RuleMakerHandler>(relaxed = true)
         with(composeTestRule) {
             setContent {
                 RuleMaker(allSuggestions, handler)
@@ -191,7 +191,6 @@ class RuleMakerWithEditableSuggestionsTest {
 
     @Test
     fun `using an editable condition without alteration removes the original suggestion`() {
-        val handler = mockk<RuleMakerHandler>(relaxed = true)
         with(composeTestRule) {
             setContent {
                 RuleMaker(allSuggestions, handler)
@@ -204,7 +203,6 @@ class RuleMakerWithEditableSuggestionsTest {
 
     @Test
     fun `using an editable condition with alteration removes the original suggestion`() {
-        val handler = mockk<RuleMakerHandler>(relaxed = true)
         with(composeTestRule) {
             setContent {
                 RuleMaker(allSuggestions, handler)
@@ -219,7 +217,6 @@ class RuleMakerWithEditableSuggestionsTest {
 
     @Test
     fun `removing an editable condition that was added unaltered re-instates the original suggestion`() {
-        val handler = mockk<RuleMakerHandler>(relaxed = true)
         with(composeTestRule) {
             setContent {
                 RuleMaker(allSuggestions, handler)
@@ -239,7 +236,6 @@ class RuleMakerWithEditableSuggestionsTest {
 
     @Test
     fun `removing an editable condition that was added after alteration re-instates the original suggestion`() {
-        val handler = mockk<RuleMakerHandler>(relaxed = true)
         with(composeTestRule) {
             setContent {
                 RuleMaker(allSuggestions, handler)
@@ -257,6 +253,20 @@ class RuleMakerWithEditableSuggestionsTest {
 
             verify { handler.onUpdateConditions(listOf()) }
             requireAvailableConditionsToBeDisplayed(conditionsShown)
+        }
+    }
+
+    @Test
+    fun `condition editing can be cancelled`() {
+        with(composeTestRule) {
+            setContent {
+                RuleMaker(allSuggestions, handler)
+            }
+            clickAvailableCondition(0)
+            clickConditionEditorCancelButton()
+            requireAvailableConditionsToBeDisplayed(conditionsShown)
+            requireSelectedConditionsToBeDisplayed(listOf())
+
         }
     }
 }

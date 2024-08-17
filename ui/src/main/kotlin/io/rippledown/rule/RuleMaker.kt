@@ -11,12 +11,6 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
-import io.rippledown.appbar.TextInputHandler
-import io.rippledown.appbar.TextInputWithCancel
-import io.rippledown.constants.main.CREATE
-import io.rippledown.constants.main.CREATE_KB_NAME
-import io.rippledown.constants.main.CREATE_KB_NAME_FIELD_DESCRIPTION
-import io.rippledown.constants.main.CREATE_KB_OK_BUTTON_DESCRIPTION
 import io.rippledown.constants.rule.RULE_MAKER
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.edit.EditableCondition
@@ -35,14 +29,13 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
     var availableConditions by remember { mutableStateOf(listOf<SuggestedCondition>()) }
     var suggestionsUsed by remember { mutableStateOf(mapOf<Condition, SuggestedCondition>()) }
     var filterText by remember { mutableStateOf("") }
-    var editConditionDialogShowing by remember { mutableStateOf(false) }
     var conditionToBeEdited by remember { mutableStateOf<EditableCondition?>(null) }
     var suggestionBeingEdited by remember { mutableStateOf<SuggestedCondition?>(null) }
 
-    if (editConditionDialogShowing) {
+    if (suggestionBeingEdited != null) {
         val dialogState = rememberDialogState(size = DpSize(420.dp, 160.dp))
         DialogWindow(
-            onCloseRequest = { editConditionDialogShowing = false },
+            onCloseRequest = { suggestionBeingEdited = null },
             title = "Edit Condition",
             state = dialogState,
         ) {
@@ -68,7 +61,6 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
                 }
 
                 private fun clearAndHide() {
-                    editConditionDialogShowing = false
                     suggestionBeingEdited = null
                 }
             })
@@ -111,7 +103,6 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
             override fun onEditThenAdd(suggestedCondition: SuggestedCondition) {
                 suggestionBeingEdited = suggestedCondition
                 conditionToBeEdited = suggestedCondition.editableCondition()
-                editConditionDialogShowing = true
                 // Don't remove the suggestion from the available list yet.
                 // We will remove it if and when editing results in a new condition being added.
             }
