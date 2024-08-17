@@ -60,7 +60,8 @@ data class EditableGTECondition(val attribute: Attribute,
 }
 @Serializable
 data class EditableContainsCondition(val attribute: Attribute,
-                             val initialEditableValue: EditableValue): EditableCondition {
+                             val initialValue: String): EditableCondition {
+    private val initialEditableValue = EditableValue(initialValue, Type.Text)
 
     override fun fixedTextPart1(): String {
         return "${attribute.name} contains "

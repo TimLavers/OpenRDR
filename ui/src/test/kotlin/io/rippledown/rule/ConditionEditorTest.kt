@@ -22,7 +22,7 @@ class ConditionEditorTest {
 
     @Before
     fun setUp() {
-        conditionBeingEdited = EditableContainsCondition(notes, EditableValue("whatever", Type.Text))
+        conditionBeingEdited = EditableContainsCondition(notes, "whatever")
         handler = mockk(relaxed = true)
         every {
             handler.editableCondition()

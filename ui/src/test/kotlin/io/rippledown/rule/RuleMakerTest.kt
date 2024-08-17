@@ -273,7 +273,7 @@ class RuleMakerWithEditableSuggestionsTest {
 
 fun editableSuggestion(attribute: Attribute, text: String): EditableSuggestedCondition {
     val initialSuggestion = containsText(null, attribute, text)
-    val editableCondition = EditableContainsCondition(attribute, EditableValue(text, Type.Text))
+    val editableCondition = EditableContainsCondition(attribute, text)
     return EditableSuggestedCondition(initialSuggestion, editableCondition)
 }
 
