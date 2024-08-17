@@ -225,12 +225,6 @@ class KBTest {
         val coffeeComment = "Coffee time!"
         val teaComment = "Tea time!"
         val chocComment = "Chocolate time!"
-        kb.saveConclusions("$teaComment $coffeeComment $chocComment")
-        kb.conclusionManager.all().map { it.text } shouldBe setOf(
-            teaComment,
-            coffeeComment,
-            chocComment
-        )
         buildRuleToAddAComment(kb, coffeeComment)
         buildRuleToAddAComment(kb, teaComment)
         buildRuleToAddAComment(kb, chocComment)
@@ -240,8 +234,8 @@ class KBTest {
         //When the case is interpreted
         val viewableCase = kb.viewableCase(case)
 
-        //Then the comments should be in the order specified by the InterpretationViewManager
-        viewableCase.textGivenByRules() shouldBe "$teaComment $coffeeComment $chocComment"
+        //Then the comments should be in the order in which they were added to the interpretation
+        viewableCase.textGivenByRules() shouldBe "$coffeeComment $teaComment $chocComment"
     }
 
     @Test
@@ -692,37 +686,7 @@ class KBTest {
         ccStatus shouldBe CornerstoneStatus(vcc2, 1, 3)
     }
 
-    @Test
-    fun `should create and save the conclusions corresponding to the sentences in the specified text`() {
-        val bondi = "Go to Bondi."
-        val flippers = "Bring your flippers."
-        val sunScreen = "And your sunscreen."
-        kb.saveConclusions("$bondi $flippers $sunScreen")
-        kb.conclusionManager.all().map { it.text } shouldBe setOf(bondi, flippers, sunScreen)
-        kb.interpretationViewManager.allInOrder().map { it.text } shouldBe listOf(bondi, flippers, sunScreen)
-    }
 
-    @Test
-    fun `should save and insert a new conclusion in the specified text`() {
-        // Given
-        val bondi = "Go to Bondi."
-        val flippers = "Bring your flippers."
-        val sunScreen = "And your sunscreen."
-        kb.saveConclusions("$bondi $flippers $sunScreen")
-
-        // When
-        val newConclusion = "And towel."
-        kb.saveConclusions("$newConclusion $flippers")
-
-        // Then
-        kb.conclusionManager.all().map { it.text }.toSet() shouldBe setOf(bondi, newConclusion, flippers, sunScreen)
-        kb.interpretationViewManager.allInOrder().map { it.text } shouldBe listOf(
-            bondi,
-            newConclusion,
-            flippers,
-            sunScreen
-        )
-    }
 
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")
 

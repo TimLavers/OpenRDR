@@ -9,8 +9,7 @@ import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.RuleConditionList
 import io.rippledown.model.condition.edit.FixedSuggestedCondition
 import io.rippledown.model.condition.hasCurrentValue
-import io.rippledown.model.diff.*
-import io.rippledown.model.interpretationview.ViewableInterpretation
+import io.rippledown.model.diff.Addition
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
@@ -112,28 +111,6 @@ class ApiTest {
     @Test
     fun kbList() = runTest {
         Api(mock(config {})).kbList().map { it.name } shouldBe listOf("Glucose", "Lipids", "Thyroids")
-    }
-
-    @Test
-    fun theReturnedInterpretationShouldContainTheDiffList() = runTest {
-        val expectedDiffList = DiffList(
-            listOf(
-                Addition("This comment was added."),
-                Removal("This comment was removed."),
-                Replacement("This comment was replaced.", "This is the new comment."),
-                Unchanged("This comment was left alone."),
-            )
-        )
-        val interpretation = ViewableInterpretation()
-        val originalCase = createCase(CaseId())
-        val interpToReturn = interpretation.copy(diffList = expectedDiffList)
-        val updatedCase = originalCase.copy().apply { viewableInterpretation = interpToReturn }
-
-        val config = config {
-            expectedCase = originalCase
-            returnCase = updatedCase
-        }
-        Api(mock(config)).saveVerifiedInterpretation(originalCase) shouldBe updatedCase
     }
 
     @Test

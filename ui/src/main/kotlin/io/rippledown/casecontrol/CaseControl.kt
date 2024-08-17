@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.cornerstone.NO_CORNERSTONES_TO_REVIEW_MSG
@@ -27,7 +27,6 @@ import io.rippledown.rule.RuleMakerHandler
 
 interface CaseControlHandler : Handler, CaseInspectionHandler, CornerstonePagerHandler {
     fun getCase(caseId: Long)
-    fun saveCase(case: ViewableCase)
     fun startRuleSession(sessionStartRequest: SessionStartRequest)
     fun endRuleSession()
     fun buildRule(ruleRequest: RuleRequest)
@@ -42,21 +41,7 @@ fun CaseControl(
     conditionHints: List<SuggestedCondition>,
     handler: CaseControlHandler
 ) {
-    var verifiedText: String? by remember { mutableStateOf(null) }
-    val indexOfSelectedDiff: Int by remember { mutableStateOf(-1) }
-
     val ruleInProgress = cornerstoneStatus != null
-
-    LaunchedEffect(verifiedText, indexOfSelectedDiff) {
-        if (verifiedText != null || indexOfSelectedDiff != -1) {
-//            delay(DEBOUNCE_WAIT_PERIOD_MILLIS) TODO restore when this is tested
-            val updatedCase = currentCase!!.copy(
-                viewableInterpretation = currentCase.viewableInterpretation
-                    .copy(verifiedText = verifiedText)
-            )
-            handler.saveCase(updatedCase)
-        }
-    }
 
     Row(
         modifier = Modifier
@@ -64,18 +49,8 @@ fun CaseControl(
             .width(1800.dp)
     )
     {
-
         if (currentCase != null) {
             CaseInspection(currentCase, ruleInProgress, object : CaseInspectionHandler, Handler by handler {
-                override fun onStartRule(selectedDiff: Diff) {
-                    handler.startRuleSession(SessionStartRequest(currentCase.id!!, selectedDiff))
-                }
-
-                override var onInterpretationEdited: (text: String) -> Unit = {
-                    verifiedText = it
-
-                }
-                override var isCornerstone: Boolean = false
                 override fun swapAttributes(moved: Attribute, target: Attribute) {
                     handler.swapAttributes(moved, target)
                 }

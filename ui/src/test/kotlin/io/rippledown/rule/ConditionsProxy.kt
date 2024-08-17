@@ -5,11 +5,9 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import io.rippledown.constants.main.*
 import io.rippledown.constants.rule.*
-import io.rippledown.utils.dump
 
 fun ComposeTestRule.requireRuleMakerToBeDisplayed() {
     val onNodeWithContentDescription = onNodeWithContentDescription(RULE_MAKER)
-    onNodeWithContentDescription.dump()
     onNodeWithContentDescription.assertIsDisplayed()
 }
 
@@ -86,7 +84,7 @@ fun ComposeTestRule.removeSelectedCondition(index: Int) {
 
 fun ComposeTestRule.clickFinishRuleButton() {
     onNodeWithContentDescription(FINISH_RULE_BUTTON)
-        .assertIsDisplayed()
+        .assertExists()
         .performClick()
     waitForIdle()
 }

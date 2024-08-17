@@ -1,7 +1,6 @@
 package io.rippledown.casecontrol
 
 import InterpretationTabs
-import InterpretationTabsHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -10,9 +9,8 @@ import io.rippledown.caseview.CaseView
 import io.rippledown.caseview.CaseViewHandler
 import io.rippledown.model.Attribute
 import io.rippledown.model.caseview.ViewableCase
-import io.rippledown.model.diff.Diff
 
-interface CaseInspectionHandler : CaseViewHandler, InterpretationTabsHandler
+interface CaseInspectionHandler : CaseViewHandler
 
 @Composable
 fun CaseInspection(case: ViewableCase, isRuleBuilding: Boolean, handler: CaseInspectionHandler) {
@@ -29,12 +27,6 @@ fun CaseInspection(case: ViewableCase, isRuleBuilding: Boolean, handler: CaseIns
                 handler.swapAttributes(moved, target)
             }
         })
-        InterpretationTabs(case.viewableInterpretation, object : InterpretationTabsHandler {
-            override fun onStartRule(selectedDiff: Diff) = handler.onStartRule(selectedDiff)
-            override var isCornerstone: Boolean = false
-            override var onInterpretationEdited: (text: String) -> Unit = {
-                handler.onInterpretationEdited(it)
-            }
-        })
+        InterpretationTabs(case.viewableInterpretation)
     }
 }

@@ -8,10 +8,8 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.external.ExternalCase
-import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistentKB
-import io.rippledown.textdiff.splitIntoSentences
 
 class KB(persistentKB: PersistentKB) {
 
@@ -29,8 +27,7 @@ class KB(persistentKB: PersistentKB) {
     val interpretationViewManager: InterpretationViewManager =
         InterpretationViewManager(
             persistentKB.conclusionOrderStore(),
-            conclusionManager,
-            verifiedTextStore
+            conclusionManager
         )
 
     fun containsCornerstoneCaseWithName(caseName: String): Boolean {
@@ -210,22 +207,5 @@ class KB(persistentKB: PersistentKB) {
         val cornerstone = cornerstones[index]
         val viewableCornerstone = viewableCase(cornerstone)
         return CornerstoneStatus(viewableCornerstone, index, cornerstones.size)
-    }
-
-    fun saveConclusions(text: String) {
-        val conclusionList = text.splitIntoSentences().map {
-            conclusionManager.getOrCreate(it)
-        }
-        interpretationViewManager.insert(conclusionList)
-    }
-
-    fun saveInterpretation(interp: ViewableInterpretation) {
-        require(interp.verifiedText != null)
-        require(interp.caseId().id != null)
-
-        val verifiedText = interp.verifiedText!!
-        val caseId = interp.caseId().id!!
-        verifiedTextStore.put(caseId, verifiedText)
-        saveConclusions(verifiedText)
     }
 }

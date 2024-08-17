@@ -1,20 +1,50 @@
 package steps
 
 import io.cucumber.datatable.DataTable
-import io.cucumber.java8.En
+import io.cucumber.java.en.And
+import io.cucumber.java.en.Then
+import io.cucumber.java.en.When
 import io.rippledown.integration.pause
 
-class RuleMakerStepDefs : En {
-    private fun addConditionsAndFinishRule(dataTable: DataTable) {
-        dataTable.asList().forEach { condition ->
-            pause(1000)
-            ruleMakerPO().clickConditionWithText(condition)
-        }
-        pause(1000)
+class RuleMakerStepDefs {
+
+    @When("I complete the rule")
+    fun completeRule() {
         ruleMakerPO().clickDoneButton()
     }
 
-    private fun startRuleBuildingSessionToAddComment(comment: String) {
+    @When("(I )cancel the rule")
+    fun cancelTheRule() {
+        ruleMakerPO().clickCancelButton()
+    }
+
+    @When("I select the {word} condition")
+    fun selectTheCondition(position: String) {
+        when (position) {
+            "first" -> ruleMakerPO().clickAvailableCondition(0)
+            "second" -> ruleMakerPO().clickAvailableCondition(1)
+            "third" -> ruleMakerPO().clickAvailableCondition(2)
+        }
+    }
+
+    @When("I add the condition {string}")
+    fun addTheCondition(text: String) {
+        ruleMakerPO().clickConditionWithText(text)
+    }
+
+    @When("I remove the condition {string}")
+    fun removeTheConditionString(text: String) {
+        ruleMakerPO().removeConditionWithText(text)
+    }
+
+    @Then("the conditions showing should be:")
+    fun theConditionsShowingShouldBe(dataTable: DataTable) {
+        val expectedConditions = dataTable.asList()
+        ruleMakerPO().requireAvailableConditions(expectedConditions)
+    }
+
+    @And("I start to build a rule to add the comment {string}")
+    fun startRuleToAddComment(comment: String) {
         with(interpretationViewPO()) {
             clickChangeInterpretationButton()
             clickAddCommentMenu()
@@ -22,178 +52,91 @@ class RuleMakerStepDefs : En {
         }
     }
 
-    init {
-        When("I build a rule to add the comment {string} with conditions") {comment: String, conditions: DataTable ->
-            startRuleBuildingSessionToAddComment(comment)
-            pause(1000)
-            addConditionsAndFinishRule(conditions)
+    @And("I start to build a rule to add the comment {string} for case {word}")
+    fun startToBuildARuleToAddTheCommentForCase(comment: String, caseName: String) {
+        caseListPO().select(caseName)
+        startRuleToAddComment(comment)
+    }
+
+    @And("I build a rule to add the comment {string} for case {word}")
+    fun buildARuleToAddCommentForCase(comment: String, caseName: String) {
+        caseListPO().select(caseName)
+        buildRuleToAddComment(comment)
+    }
+
+    @And("I build another rule to append the comment {string}")
+    fun buildAnotherRuleToAppendTheComment(comment: String) {
+        buildRuleToAddComment(comment)
+    }
+
+    @And("I build a rule to add the comment {string} with the condition {string}")
+    fun buildARuleToAddCommentWithCondition(comment: String, condition: String) {
+        startRuleToAddComment(comment)
+        with(ruleMakerPO()) {
+            clickConditionWithText(condition)
+            clickDoneButton()
         }
+    }
 
-        When("I start building a rule to add the comment {string}") {comment: String ->
-            startRuleBuildingSessionToAddComment(comment)
-        }
+    @And("I build a rule to add a comment {string}")
+    fun buildRuleToAddComment(comment: String) {
+        startRuleToAddComment(comment)
+        completeRule()
+    }
 
-        When("I build a rule to remove the comment {string} with conditions") {comment: String, conditions: DataTable ->
-            pause(1000)
-            val currentInterpretation = interpretationViewPO().interpretationText()
-            println("------- removing comment '$comment' ----------")
-            println("current interp: '$currentInterpretation'")
-            val withCommentRemoved = currentInterpretation.replace(comment, "")
-            println("with comment removed = '$withCommentRemoved'")
-            interpretationViewPO().setVerifiedText(withCommentRemoved)
-            pause(1000)
-            interpretationViewPO().selectDifferencesTab()
-            pause(1000)
-            interpretationViewPO().clickBuildIconOnRow(0)
-            addConditionsAndFinishRule(conditions)
-        }
+    @When("I build a rule to remove the comment {string}")
+    fun buildARuleToRemoveTheComment(comment: String) {
+        startRuleToRemoveComment(comment)
+        completeRule()
+    }
 
-        When("I build a rule to replace the comment {string} with the comment {string} with conditions") {toGo: String, replacement: String, conditions: DataTable ->
-            pause(1000)
-            val currentInterpretation = interpretationViewPO().interpretationText()
-            println("------- replacing comment '$toGo' with '$replacement' ----------")
-            println("current interp: '$currentInterpretation'")
-            val withCommentReplaced = currentInterpretation.replace(toGo, replacement)
-            println("with comment replaced = '$withCommentReplaced'")
-            interpretationViewPO().setVerifiedText(withCommentReplaced)
-            pause(1000)
-            interpretationViewPO().selectDifferencesTab()
-            pause(1000)
-            interpretationViewPO().clickBuildIconOnRow(0)
-            addConditionsAndFinishRule(conditions)
-        }
+    @When("I build a rule to remove the comment {string} with the condition {string}")
+    fun buildARuleToRemoveTheCommentWithCondition(comment: String, condition: String) {
+        startRuleToRemoveComment(comment)
+        completeRuleWithCondition(condition)
+    }
 
-        When("I build a rule for the change on row {int}") { row: Int ->
-            interpretationViewPO().selectDifferencesTab()
-            interpretationViewPO().buildRule(row)
-        }
+    @When("I start to build a rule to replace the comment {string} by {string}")
+    fun startRuleToReplaceCommentBy(toBeReplaced: String, replacement: String) {
+        startRuleToReplaceComment(toBeReplaced, replacement)
+    }
 
-        When("I build a rule for this change") {
-            interpretationViewPO().selectDifferencesTab()
-            interpretationViewPO().buildRule(0)
-        }
+    @When("I build a rule to replace the comment {string} by {string}")
+    fun buildARuleToReplaceTheComment(toBeReplaced: String, replacement: String) {
+        startRuleToReplaceComment(toBeReplaced, replacement)
+        completeRule()
+    }
 
-        When("I complete the rule") {
-            ruleMakerPO().clickDoneButton()
-        }
+    @When("I build a rule to replace the comment {string} by {string} with the condition {string}")
+    fun buildARuleToReplaceTheCommentWithConditions(toBeReplaced: String, replacement: String, condition: String) {
+        startRuleToReplaceComment(toBeReplaced, replacement)
+        completeRuleWithCondition(condition)
+    }
+}
 
-        When("(I )cancel the rule") {
-            ruleMakerPO().clickCancelButton()
-        }
+fun startRuleToReplaceComment(toBeReplaced: String, replacement: String) {
+    with(interpretationViewPO()) {
+        clickChangeInterpretationButton()
+        clickReplaceCommentMenu()
+        pause(1000) //TODO remove
+        selectCommentToReplaceAndEnterItsReplacementAndClickOK(toBeReplaced, replacement)
+        pause(1000) //TODO remove
+    }
+}
 
-        When("I start to build a rule for the change on row {int}") { row: Int ->
-            interpretationViewPO().selectDifferencesTab()
-            interpretationViewPO().clickBuildIconOnRow(row)
-        }
+fun startRuleToRemoveComment(comment: String) {
+    with(interpretationViewPO()) {
+        clickChangeInterpretationButton()
+        clickRemoveCommentMenu()
+        pause(1000) //TODO remove
+        selectCommentToRemoveAndClickOK(comment)
+        pause(1000) //TODO remove
+    }
+}
 
-        When("I select the {word} condition") { position: String ->
-            when (position) {
-                "first" -> ruleMakerPO().clickAvailableCondition(0)
-                "second" -> ruleMakerPO().clickAvailableCondition(1)
-                "third" -> ruleMakerPO().clickAvailableCondition(2)
-            }
-        }
-
-        When("I click the suggested condition {string}") { text: String ->
-            ruleMakerPO().clickConditionWithText(text)
-        }
-
-        When("I set the editable value to be {string} and click ok") { text: String ->
-            ruleMakerPO().setEditableValue(text)
-        }
-
-        When("I add the condition {string}") { text: String ->
-            ruleMakerPO().clickConditionWithText(text)
-        }
-
-        When("I remove the condition {string}") { text: String ->
-            ruleMakerPO().removeConditionWithText(text)
-        }
-
-        Then("the conditions showing should be:") { dataTable: DataTable ->
-            val expectedConditions = dataTable.asList()
-            ruleMakerPO().requireAvailableConditions(expectedConditions)
-        }
-
-        Then("the suggested conditions should not contain:") { dataTable: DataTable ->
-            val absentConditions = dataTable.asList().toSet()
-            ruleMakerPO().requireAvailableConditionsDoesNotContain(absentConditions)
-        }
-
-        Then("the selected conditions should be:") { dataTable: DataTable ->
-            ruleMakerPO().requireSelectedConditions(dataTable.asList())
-        }
-
-        And("I build a rule to add the comment {string} with the condition {string}") { comment: String, condition: String ->
-            with(interpretationViewPO()) {
-                setVerifiedText(comment)
-                selectDifferencesTab()
-                clickBuildIconOnRow(0)
-            }
-            with(ruleMakerPO()) {
-                clickConditionWithText(condition)
-                clickDoneButton()
-            }
-        }
-
-        And("I build a rule to add the comment {string} for case {word}") { comment: String, caseName: String ->
-            caseListPO().select(caseName)
-
-            with(interpretationViewPO()) {
-                selectOriginalTab()
-                setVerifiedText(comment)
-                selectDifferencesTab()
-                clickBuildIconOnRow(0)
-            }
-            with(ruleMakerPO()) {
-                clickDoneButton()
-            }
-        }
-
-        And("I build another rule to append the comment {string}") { comment: String ->
-            with(interpretationViewPO()) {
-                selectOriginalTab()
-                pause() //TODO remove this
-                addVerifiedTextAtEndOfCurrentInterpretation(comment)
-                selectDifferencesTab()
-
-                //The first row has the unchanged comment
-                //The second row is the new comment
-                buildRule(row = 1)
-            }
-        }
-
-        And("I start to build a rule to add the comment {string} for case {word}") { comment: String, caseName: String ->
-            caseListPO().select(caseName)
-
-            with(interpretationViewPO()) {
-                setVerifiedText(comment)
-                selectDifferencesTab()
-                clickBuildIconOnRow(0)
-            }
-        }
-
-        And("I build a rule to add a comment {string}") { comment: String ->
-            startRuleBuildingSessionToAddComment(comment)
-            with(ruleMakerPO()) {
-                clickDoneButton()
-            }
-        }
-        When("I build a rule to remove the comment {string}") { comment: String ->
-            with(interpretationViewPO()) {
-                clickChangeInterpretationButton()
-                clickRemoveCommentMenu()
-                pause(2000) //TODO remove
-                selectCommentToRemoveAndClickOK(comment)
-                pause(2000) //TODO remove
-            }
-            with(ruleMakerPO()) {
-                clickDoneButton()
-            }
-        }
-        Then("the condition editor is launched and shows") { dataTable: DataTable ->
-
-            TODO("Not yet implemented")
-        }
+fun completeRuleWithCondition(condition: String) {
+    with(ruleMakerPO()) {
+        clickConditionWithText(condition)
+        clickDoneButton()
     }
 }

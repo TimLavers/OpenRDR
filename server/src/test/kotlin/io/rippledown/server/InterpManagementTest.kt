@@ -11,12 +11,11 @@ import io.mockk.verify
 import io.rippledown.constants.api.*
 import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.CaseId
-import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.RuleConditionList
 import io.rippledown.model.createCase
-import io.rippledown.model.diff.*
+import io.rippledown.model.diff.Addition
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
@@ -24,40 +23,6 @@ import io.rippledown.model.rule.UpdateCornerstoneRequest
 import kotlin.test.Test
 
 class InterpManagementTest : OpenRDRServerTestBase() {
-
-    @Test
-    fun `should delegate saving an Interpretation to server application`() = testApplication {
-        setup()
-        val rdrCase = RDRCase(CaseId(100, "Case1"))
-        val viewableCase = ViewableCase(rdrCase)
-        val interpretationToSave = viewableCase.viewableInterpretation.apply { verifiedText = "Verified text" }
-
-        val diffs = DiffList(
-            listOf(
-                Unchanged("Go to Bondi Beach."),
-                Addition("Bring your handboard."),
-                Removal("Don't forget your towel."),
-                Replacement("And have fun.", "And have lots of fun.")
-            )
-        )
-
-        val interpretationToReturn = interpretationToSave.apply {
-            diffList = diffs
-        }
-        val caseToReturn = viewableCase.apply {
-            viewableInterpretation = interpretationToReturn
-        }
-        every { kbEndpoint.saveInterpretation(viewableCase) } returns caseToReturn
-
-        val result = httpClient.post(VERIFIED_INTERPRETATION_SAVED) {
-            parameter(KB_ID, kbId)
-            contentType(ContentType.Application.Json)
-            setBody(viewableCase)
-        }
-        result.status shouldBe OK
-        result.body<ViewableCase>() shouldBe caseToReturn
-        verify { kbEndpoint.saveInterpretation(viewableCase) }
-    }
 
     @Test
     fun `should delegate starting a rule session to server application`() = testApplication {

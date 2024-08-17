@@ -23,8 +23,8 @@ import io.rippledown.model.KBInfo
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.edit.SuggestedCondition
 import io.rippledown.model.diff.Addition
-import io.rippledown.model.diff.Diff
 import io.rippledown.model.diff.Removal
+import io.rippledown.model.diff.Replacement
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
@@ -38,6 +38,7 @@ interface Handler {
     var api: Api
     var isClosing: () -> Boolean
     var setInfoMessage: (String) -> Unit
+    fun showingCornerstone(isShowingCornerstone: Boolean)
 }
 
 @Composable
@@ -70,6 +71,8 @@ fun OpenRDRUI(handler: Handler) {
         }
     }
     val ruleInProgress = cornerstoneStatus != null
+    val isShowingCornerstone = cornerstoneStatus?.cornerstoneToReview != null
+    handler.showingCornerstone(isShowingCornerstone)
 
     Scaffold(
         topBar = {
@@ -108,8 +111,12 @@ fun OpenRDRUI(handler: Handler) {
                         cornerstoneStatus = runBlocking { api.startRuleSession(sessionStartRequest) }
                     }
 
-                    override fun replaceComment() {
-                        TODO("Not yet implemented")
+                    override fun startRuleToReplaceComment(toBeReplaced: String, replacement: String) {
+                        val sessionStartRequest = SessionStartRequest(
+                            caseId = currentCase!!.id!!,
+                            diff = Replacement(toBeReplaced, replacement)
+                        )
+                        cornerstoneStatus = runBlocking { api.startRuleSession(sessionStartRequest) }
                     }
 
                     override fun startRuleToRemoveComment(comment: String) {
@@ -157,7 +164,6 @@ fun OpenRDRUI(handler: Handler) {
                             cornerstoneStatus = null
                         }
 
-                        override fun onStartRule(selectedDiff: Diff) {}//todo remove
                         override fun buildRule(ruleRequest: RuleRequest) = runBlocking {
                             currentCase = api.buildRule(ruleRequest)
                             cornerstoneStatus = null
@@ -172,13 +178,7 @@ fun OpenRDRUI(handler: Handler) {
                             cornerstoneStatus = api.startRuleSession(sessionStartRequest)
                         }
 
-                        override var onInterpretationEdited: (text: String) -> Unit = { }
-                        override var isCornerstone: Boolean = false
                         override fun getCase(caseId: Long) = runBlocking { currentCase = api.getCase(caseId) }
-
-                        override fun saveCase(case: ViewableCase) = runBlocking {
-                            currentCase = api.saveVerifiedInterpretation(case)
-                        }
 
                         override var isClosing = { false }
 

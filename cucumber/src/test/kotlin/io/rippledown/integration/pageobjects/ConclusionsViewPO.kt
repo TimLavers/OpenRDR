@@ -5,6 +5,7 @@ import io.rippledown.constants.interpretation.INTERPRETATION_PANEL_CONCLUSIONS
 import io.rippledown.constants.interpretation.INTERPRETATION_TAB_CONCLUSIONS
 import io.rippledown.constants.interpretation.NO_CONCLUSIONS
 import io.rippledown.integration.utils.find
+import io.rippledown.integration.waitUntilAsserted
 import io.rippledown.interpretation.textContentDescription
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
@@ -35,7 +36,20 @@ class ConclusionsViewPO(private val contextProvider: () -> AccessibleContext) {
         execute<AccessibleContext?> { contextProvider().find(contentDescription) } shouldNotBe null
     }
 
+    fun clickCommentAtIndex(comment: String, index: Int) {
+        waitForConclusionsToShow()
+        val contentDescription = textContentDescription(2, 0, index, comment)
+        waitUntilAsserted {
+            execute<AccessibleContext?> { contextProvider().find(contentDescription) } shouldNotBe null
+        }
+        execute<AccessibleContext?> { contextProvider().find(contentDescription) }!!.accessibleAction.doAccessibleAction(
+            0
+        )
+    }
+
     fun requireNoComments() {
-        execute<AccessibleContext?> { contextProvider().find(NO_CONCLUSIONS) } shouldNotBe null
+        waitUntilAsserted {
+            execute<AccessibleContext?> { contextProvider().find(NO_CONCLUSIONS) } shouldNotBe null
+        }
     }
 }

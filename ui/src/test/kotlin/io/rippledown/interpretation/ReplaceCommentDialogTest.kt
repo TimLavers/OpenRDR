@@ -9,11 +9,15 @@ import org.junit.Before
 import org.junit.Rule
 import kotlin.test.Test
 
-class RemoveCommentDialogTest {
+class ReplaceCommentDialogTest {
     @get:Rule
     var composeTestRule = createComposeRule()
 
-    private lateinit var handler: RemoveCommentHandler
+    private lateinit var handler: ReplaceCommentHandler
+
+    val bondi = "Bondi"
+    val maroubra = "Maroubra"
+    val availableComments = listOf(bondi, maroubra)
 
     @Before
     fun init() {
@@ -22,20 +26,19 @@ class RemoveCommentDialogTest {
 
     @Test
     fun `should call handler to start rule when OK is pressed`() = runTest {
-        val bondi = "Bondi"
-        val maroubra = "Maroubra"
         with(composeTestRule) {
             //Given
             setContent {
-                RemoveCommentDialog(listOf(bondi, maroubra), handler)
+                ReplaceCommentDialog(availableComments, handler)
             }
 
             //When
             clickCommentDropDownMenu()
-            removeComment(bondi)
+            replaceComment(bondi, maroubra)
+            clickOKToReplaceComment()
 
             //Then
-            verify { handler.startRuleToRemoveComment(bondi) }
+            verify { handler.startRuleToReplaceComment(bondi, maroubra) }
         }
     }
 
@@ -44,11 +47,11 @@ class RemoveCommentDialogTest {
         with(composeTestRule) {
             //Given
             setContent {
-                RemoveCommentDialog(listOf(), handler)
+                ReplaceCommentDialog(availableComments, handler)
             }
 
             //When
-            clickCancelRemoveComment()
+            clickCancelReplaceComment()
 
             //Then
             verify { handler.cancel() }
@@ -59,9 +62,9 @@ class RemoveCommentDialogTest {
 fun main() {
     val bondi = "Bondi"
     val maroubra = "Maroubra"
-    val handler = object : RemoveCommentHandler {
-        override fun startRuleToRemoveComment(comment: String) {
-            println("startRuleToRemoveComment: $comment")
+    val handler = object : ReplaceCommentHandler {
+        override fun startRuleToReplaceComment(toBeReplaced: String, replacement: String) {
+            println("startRuleToReplaceComment")
         }
 
         override fun cancel() {
@@ -69,6 +72,6 @@ fun main() {
         }
     }
     applicationFor {
-        RemoveCommentDialog(listOf(bondi, maroubra), handler)
+        ReplaceCommentDialog(listOf(bondi, maroubra), handler)
     }
 }

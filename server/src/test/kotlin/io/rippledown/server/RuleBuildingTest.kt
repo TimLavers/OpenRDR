@@ -5,8 +5,8 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.kb.KB
 import io.rippledown.kb.KBManager
 import io.rippledown.model.COMMENT_SEPARATOR
-import io.rippledown.model.diff.*
-import io.rippledown.model.interpretationview.ViewableInterpretation
+import io.rippledown.model.diff.Addition
+import io.rippledown.model.diff.Removal
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
@@ -18,7 +18,7 @@ import java.io.File
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-internal class RuleBuildingFromDiffListTest {
+internal class RuleBuildingTest {
     private val kbName = "KBEndpointTest"
     private val persistenceProvider = InMemoryPersistenceProvider()
     private val kbManager = KBManager(persistenceProvider)
@@ -56,48 +56,8 @@ internal class RuleBuildingFromDiffListTest {
     }
 
     @Test
-    fun `should build a rule and return an case containing an updated DiffList when a comment is added`() {
-        val id = supplyCaseFromFile("Case1", kbEndpoint).caseId.id!!
-        val interp = kbEndpoint.case(id).interpretation
-        val v1 = "Verified 1."
-        val v2 = "Verified 2."
-        val viewableInterpretation = ViewableInterpretation(interp, verifiedText = "$v1 $v2")
-        viewableInterpretation.latestText() shouldBe "$v1 $v2"
-        val viewableCase = kbEndpoint.viewableCase(id)
-        viewableCase.viewableInterpretation = viewableInterpretation
-
-        //save the interpretation so that the verified text is persisted
-        kbEndpoint.saveInterpretation(viewableCase)
-
-        val diffList = DiffList(
-            diffs = listOf(
-                Addition(v1),
-                Addition(v2)
-            ),
-            selected = 0 // The first addition is what we want the rule to be built from.
-        )
-
-        kbEndpoint.startRuleSession(SessionStartRequest(id, diffList.selectedChange()))
-        val ruleRequest = RuleRequest(id)
-        val updatedCase = kbEndpoint.commitRuleSession(ruleRequest)
-
-        withClue("the latest text should be unchanged") {
-            updatedCase.latestText() shouldBe "$v1 $v2"
-        }
-
-        withClue("The returned DiffList should be updated to reflect the new rule.") {
-            updatedCase.diffList() shouldBe DiffList(
-                diffs = listOf(
-                    Unchanged(v1),
-                    Addition(v2)
-                ),
-                selected = -1
-            )
-        }
-    }
-
-    @Test
-    fun `should build a rule and return an interpretation containing an updated DiffList when a comment is removed`() {
+    fun `should build a rule and return an interpretation when a comment is removed`() {
+        //Given
         val id = supplyCaseFromFile("Case1", kbEndpoint).caseId.id!!
         val comment1 = "Bondi or bust."
         val comment2 = "Bring your flippers."
@@ -109,65 +69,14 @@ internal class RuleBuildingFromDiffListTest {
             viewableCase(id).latestText() shouldBe "$comment1${COMMENT_SEPARATOR}$comment2" //sanity check
         }
 
-        val diffList = DiffList(
-            diffs = listOf(
-                Unchanged(comment1),
-                Removal(comment2)
-            ),
-            selected = 1 // We want the rule to be built for the removal
-        )
-
-        kbEndpoint.startRuleSession(SessionStartRequest(id, diffList.selectedChange()))
+        //When
+        kbEndpoint.startRuleSession(SessionStartRequest(id, Removal(comment2)))
         val ruleRequest = RuleRequest(id)
         kbEndpoint.commitRuleSession(ruleRequest)
+
+        //Then
         val updatedInterpretation = kbEndpoint.viewableCase(id).viewableInterpretation
-
-        withClue("The returned DiffList should be updated to reflect the new rule.") {
-            updatedInterpretation.diffList shouldBe DiffList(
-                diffs = listOf(
-                    Unchanged(comment1)
-                ),
-                selected = -1
-            )
-        }
-    }
-
-    @Test
-    fun `should build a rule and return an interpretation containing an updated DiffList when a comment is replaced`() {
-        val caseId = supplyCaseFromFile("Case1", kbEndpoint).caseId
-        val id = caseId.id!!
-        val comment1 = "Bondi or bust."
-        val comment2 = "Bring your flippers."
-        val comment3 = "Bring your snorkel."
-        with(kbEndpoint) {
-            startRuleSessionToAddConclusion(id, kbEndpoint.getOrCreateConclusion(comment1))
-            commitCurrentRuleSession()
-            startRuleSessionToAddConclusion(id, kbEndpoint.getOrCreateConclusion(comment2))
-            commitCurrentRuleSession()
-            viewableCase(id).latestText() shouldBe "$comment1${COMMENT_SEPARATOR}$comment2" //sanity check
-        }
-
-        val diffList = DiffList(
-            diffs = listOf(
-                Unchanged(comment1),
-                Replacement(comment2, comment3)
-            ),
-            selected = 1 // We want the rule to be built for the removal
-        )
-        kbEndpoint.startRuleSession(SessionStartRequest(id, diffList.selectedChange()))
-        val ruleRequest = RuleRequest(id)
-        kbEndpoint.commitRuleSession(ruleRequest)
-        val updatedInterpretation = kbEndpoint.viewableCase(id).viewableInterpretation
-
-        withClue("The returned DiffList should be updated to reflect the new rule.") {
-            updatedInterpretation.diffList shouldBe DiffList(
-                diffs = listOf(
-                    Unchanged(comment1),
-                    Unchanged(comment3)
-                ),
-                selected = -1
-            )
-        }
+        updatedInterpretation.latestText() shouldBe comment1
     }
 
     @Test

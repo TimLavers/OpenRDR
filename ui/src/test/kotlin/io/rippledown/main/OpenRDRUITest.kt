@@ -8,19 +8,23 @@ import io.mockk.mockk
 import io.rippledown.appbar.assertKbNameIs
 import io.rippledown.casecontrol.*
 import io.rippledown.constants.main.APPLICATION_BAR_ID
-import io.rippledown.interpretation.*
+import io.rippledown.interpretation.addNewComment
+import io.rippledown.interpretation.clickAddCommentMenu
+import io.rippledown.interpretation.clickChangeInterpretationButton
+import io.rippledown.interpretation.requireInterpretation
 import io.rippledown.model.*
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.edit.FixedSuggestedCondition
 import io.rippledown.model.condition.episodic.predicate.Normal
 import io.rippledown.model.condition.episodic.signature.Current
+import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.rule.clickCancelRuleButton
+import io.rippledown.rule.clickFinishRuleButton
 import io.rippledown.utils.applicationFor
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import kotlin.test.Test
 
@@ -38,48 +42,6 @@ class OpenRDRUITest {
         handler = mockk<Handler>(relaxed = true)
         coEvery { handler.api } returns api
         coEvery { handler.isClosing } returns { true }
-    }
-
-    @Test
-    @Ignore("TODO: Fix this test")
-    fun `should debounce the saving of a case when its interpretation changes`() {
-        val bondiKBInfo = KBInfo("Bondi")
-
-        runBlocking {
-            val caseA = "case A"
-            val caseId1 = CaseId(id = 1, name = caseA)
-            val caseIds = listOf(caseId1)
-            val bondiComment = "Go to Bondi"
-            val manlyComment = "Go to Manly"
-            val bronteComment = "Go to Bronte"
-            val viewableCase = createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
-            with(handler.api) {
-                coEvery { kbList() } returns listOf(bondiKBInfo)
-                coEvery { kbInfo() } returns bondiKBInfo
-                coEvery { getCase(1) } returns viewableCase
-                coEvery { waitingCasesInfo() } returns CasesInfo(caseIds)
-                coEvery { saveVerifiedInterpretation(any()) } answers { firstArg() }
-            }
-
-            with(composeTestRule) {
-                setContent {
-                    OpenRDRUI(handler)
-                }
-
-                //Given
-                waitForNumberOfCases(1)
-                waitForCaseToBeShowing(caseA)
-                requireInterpretation(bondiComment)
-
-                //When a second change is made quickly after the first
-                replaceInterpretationBy(manlyComment)
-                replaceInterpretationBy(bronteComment)
-                waitForIdle()
-
-                //Then only the last change is saved
-                coVerify(exactly = 1) { api.saveVerifiedInterpretation(any()) }
-            }
-        }
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -330,8 +292,99 @@ class OpenRDRUITest {
         }
     }
 
+    @Test
+    fun `should call handler to widen the window when a cornerstone case is shown`() = runTest {
+        val caseName = "case a"
+        val cornerstoneName = "case b"
+        val caseId = CaseId(id = 1, name = caseName)
+        val cornerstoneId = CaseId(id = 2, name = cornerstoneName)
+        val case = createCase(caseId)
+        val cornerstone = createCase(cornerstoneId)
+        coEvery { handler.api.getCase(1) } returns case
+        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { handler.api.startRuleSession(any()) } returns CornerstoneStatus(cornerstone, 0, 1)
+        coEvery { handler.api.selectCornerstone(any()) } returns cornerstone
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler)
+            }
+            //Given
+            waitForCaseToBeShowing(caseName)
+            clickChangeInterpretationButton()
+            coVerify { handler.showingCornerstone(false) }
 
+            //When
+            clickAddCommentMenu()
+            addNewComment("Go to Bondi")
 
+            //Then
+            coVerify { handler.showingCornerstone(true) }
+        }
+    }
+
+    @Test
+    fun `should call handler to set the window to default size when a rule session is cancelled`() = runTest {
+        val caseName = "case a"
+        val cornerstoneName = "case b"
+        val caseId = CaseId(id = 1, name = caseName)
+        val cornerstoneId = CaseId(id = 2, name = cornerstoneName)
+        val case = createCase(caseId)
+        val cornerstone = createCase(cornerstoneId)
+        coEvery { handler.api.getCase(1) } returns case
+        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { handler.api.startRuleSession(any()) } returns CornerstoneStatus(cornerstone, 0, 1)
+        coEvery { handler.api.selectCornerstone(any()) } returns cornerstone
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler)
+            }
+            //Given
+            waitForCaseToBeShowing(caseName)
+            clickChangeInterpretationButton()
+            clickAddCommentMenu()
+            addNewComment("Go to Bondi")
+            coVerify { handler.showingCornerstone(true) }
+
+            //When
+            clickCancelRuleButton()
+
+            //Then
+            coVerify { handler.showingCornerstone(false) }
+        }
+    }
+
+    @Test
+    fun `should call handler to set the window to default size when a rule session is finished`() = runTest {
+        val caseName = "case a"
+        val cornerstoneName = "case b"
+        val caseId = CaseId(id = 1, name = caseName)
+        val cornerstoneId = CaseId(id = 2, name = cornerstoneName)
+        val case = createCase(caseId)
+        val cornerstone = createCase(cornerstoneId)
+        coEvery { handler.api.getCase(1) } returns case
+        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { handler.api.startRuleSession(any()) } returns CornerstoneStatus(cornerstone, 0, 1)
+        coEvery { handler.api.selectCornerstone(any()) } returns cornerstone
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler)
+            }
+            //Given
+            waitForCaseToBeShowing(caseName)
+            clickChangeInterpretationButton()
+            clickAddCommentMenu()
+            addNewComment("Go to Bondi")
+            waitForIdle()
+            coVerify { handler.showingCornerstone(true) }
+
+            //When
+            Thread.sleep(1000)
+            clickFinishRuleButton()
+
+            //Then
+            coVerify { handler.showingCornerstone(false) }
+        }
+    }
 }
 
 fun main() {
@@ -347,6 +400,6 @@ fun main() {
     coEvery { api.getCase(any()) } returns createCaseWithInterpretation("case A", 1, listOf("Go to Bondi"))
 
     applicationFor {
-            OpenRDRUI(handler)
+        OpenRDRUI(handler)
     }
 }

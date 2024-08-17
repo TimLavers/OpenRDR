@@ -132,19 +132,6 @@ class Api(private val engine: HttpClientEngine = CIO.create()) {
     }
 
     /**
-     * @return the interpretation containing the DiffList of the original and verified interpretation
-     */
-    suspend fun saveVerifiedInterpretation(case: ViewableCase): ViewableCase {
-        val returned = client.post("$API_URL$VERIFIED_INTERPRETATION_SAVED") {
-            contentType(ContentType.Application.Json)
-            setBody(case)
-            setKBParameter()
-        }.body<ViewableCase>()
-        return returned
-    }
-
-
-    /**
      * Build a rule for the selected Diff in the interpretation
      *
      * @param ruleRequest the information needed to build the rule

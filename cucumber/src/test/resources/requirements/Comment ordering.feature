@@ -7,8 +7,6 @@ Feature: The user should be able to determine the order of comments in a report
     Given I start the client application
     And I build a rule to add the comment "Go to the beach." for case Case1
     When I build another rule to append the comment "And bring your flippers."
-    Then the interpretation field should contain the text "Go to the beach. And bring your flippers."
-    And the changes badge indicates that there is no change
+    Then the interpretation should contain the text "Go to the beach. And bring your flippers."
     And I select the case Case2
-    And the interpretation field should contain the text "Go to the beach. And bring your flippers."
-    And stop the client application
+    And the interpretation should contain the text "Go to the beach. And bring your flippers."

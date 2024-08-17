@@ -20,7 +20,9 @@ dependencies {
     testImplementation("org.jetbrains.compose.ui:ui-tooling-preview-desktop:${Version.compose}")
 
     testImplementation(project.dependencies.enforcedPlatform("io.cucumber:cucumber-bom:$cucumber"))
-    testImplementation("io.cucumber:cucumber-java8")
+    testImplementation("io.cucumber:cucumber-java")
+    testImplementation("io.cucumber:cucumber-junit-platform-engine")
+
     testImplementation("io.cucumber:cucumber-junit")
     testImplementation("io.cucumber:cucumber-picocontainer")
     testImplementation("io.kotest:kotest-assertions-core:$kotest")

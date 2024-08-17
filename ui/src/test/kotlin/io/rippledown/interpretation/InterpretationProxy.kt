@@ -11,47 +11,12 @@ fun ComposeTestRule.requireInterpretation(text: String) {
     onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD, useUnmergedTree = true).assertTextEquals(text)
 }
 
-fun ComposeTestRule.enterInterpretation(enteredText: String) {
-    onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD).performTextInput(enteredText)
-}
-
-fun ComposeTestRule.replaceInterpretationBy(enteredText: String) {
-    onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD).performTextReplacement(enteredText)
-}
-
 fun ComposeTestRule.selectConclusionsTab() {
     onNodeWithContentDescription(INTERPRETATION_TAB_CONCLUSIONS).performClick()
 }
 
-fun ComposeTestRule.selectDifferencesTab() {
-    onNodeWithContentDescription(INTERPRETATION_TAB_CHANGES).performClick()
-}
-
-fun ComposeTestRule.requireNoDifferencesTab() {
-    onNodeWithContentDescription(INTERPRETATION_TAB_CHANGES).assertDoesNotExist()
-}
-
 fun ComposeTestRule.requireConclusionsPanelToBeShowing() {
     onNodeWithContentDescription(INTERPRETATION_PANEL_CONCLUSIONS).assertIsDisplayed()
-}
-
-fun ComposeTestRule.requireBadgeOnDifferencesTabNotToBeShowing() {
-    onNodeWithContentDescription(BADGE_CONTENT_DESCRIPTION).assertDoesNotExist()
-}
-
-fun ComposeTestRule.requireBadgeOnDifferencesTabToShow(expected: Int) {
-    onNodeWithContentDescription(
-        BADGE_CONTENT_DESCRIPTION,
-        useUnmergedTree = true
-    ).assertTextEquals(expected.toString())
-}
-
-fun ComposeTestRule.requireDifferencesTabToBeNotShowing() {
-    onNodeWithContentDescription(INTERPRETATION_PANEL_CHANGES).assertDoesNotExist()
-}
-
-fun ComposeTestRule.requireDifferencesTabToBeShowing() {
-    onNodeWithContentDescription(INTERPRETATION_PANEL_CHANGES).assertExists()
 }
 
 fun ComposeTestRule.requireInterpretationActionsDropdownMenu() {
@@ -63,11 +28,10 @@ fun ComposeTestRule.clickChangeInterpretationButton() =
         .assertIsDisplayed()
         .performClick()
 
-fun ComposeTestRule.clickAddCommentMenu() {
-    onNodeWithContentDescription(ADD_COMMENT_MENU)
-        .assertIsDisplayed()
-        .performClick()
-}
+fun ComposeTestRule.clickAddCommentMenu() = onNodeWithContentDescription(ADD_COMMENT_MENU)
+    .assertIsDisplayed()
+    .performClick()
+
 
 fun ComposeTestRule.clickReplaceCommentMenu() = onNodeWithContentDescription(REPLACE_COMMENT_MENU)
     .assertIsDisplayed()
@@ -77,23 +41,52 @@ fun ComposeTestRule.clickRemoveCommentMenu() = onNodeWithContentDescription(REMO
     .assertIsDisplayed()
     .performClick()
 
-fun ComposeTestRule.addNewComment(comment: String) {
+private fun ComposeTestRule.enterCommentToBeAdded(comment: String) {
     onNodeWithContentDescription(NEW_COMMENT_TEXT_FIELD)
         .assertIsDisplayed()
         .performTextInput(comment)
-    sleep(1_000) //TODO remove this sleep
+}
+
+private fun ComposeTestRule.enterCommentToBeTheReplacement(comment: String) {
+    onNodeWithContentDescription(REPLACEMENT_COMMENT_TEXT_FIELD)
+        .assertIsDisplayed()
+        .performTextInput(comment)
+}
+
+fun ComposeTestRule.addNewComment(comment: String) {
+    enterCommentToBeAdded(comment)
+    sleep(500) //TODO remove this sleep
     clickOKToAddNewComment()
-    sleep(1_000) //TODO remove this sleep
+}
+
+fun ComposeTestRule.replaceComment(toBeReplaced: String, replacement: String) {
+    sleep(500) //TODO remove this sleep
+    clickCommentToBeReplaced(toBeReplaced)
+    sleep(500) //TODO remove this sleep
+    enterCommentToBeTheReplacement(replacement)
+    sleep(500) //TODO remove this sleep
+    clickOKToReplaceComment()
+}
+
+fun ComposeTestRule.removeComment(comment: String) {
+    sleep(500) //TODO remove this sleep
+    clickCommentToRemove(comment)
+    sleep(500) //TODO remove this sleep
+    clickOKToRemoveComment()
 }
 
 fun ComposeTestRule.clickCommentToRemove(comment: String) {
     clickComment(REMOVE_COMMENT_SELECTOR_PREFIX, comment)
 }
 
+fun ComposeTestRule.clickCommentToBeReplaced(comment: String) {
+    clickComment(REPLACE_COMMENT_SELECTOR_PREFIX, comment)
+}
+
 fun ComposeTestRule.clickComment(prefix: String, comment: String) {
+    waitUntil { onNodeWithContentDescription("$prefix$comment").isDisplayed() }
     onNodeWithContentDescription("$prefix$comment").performClick()
     waitForIdle()
-    sleep(1_000) //TODO remove this sleep
 }
 
 fun ComposeTestRule.requireCommentSelectorOptionsToBeDisplayed(prefix: String, options: List<String>) {
@@ -117,21 +110,22 @@ fun ComposeTestRule.requireDropDownMenuToBeDisplayed() {
         .assertIsDisplayed()
 }
 
-fun ComposeTestRule.requireDropDownMenuForRemoveCommentToBeDisplayed() {
-    onNodeWithContentDescription("$REMOVE_COMMENT_SELECTOR_PREFIX$DROP_DOWN_TEXT_FIELD", useUnmergedTree = true)
-        .assertIsDisplayed()
-}
-
 fun ComposeTestRule.clickCommentDropDownMenu() {
     onNodeWithContentDescription(DROP_DOWN_TEXT_FIELD)
         .assertIsDisplayed()
         .performClick()
     waitForIdle()
-    sleep(1_000) //TODO remove this sleep
 }
 
 fun ComposeTestRule.clickOKToAddNewComment() {
     onNodeWithContentDescription(OK_BUTTON_FOR_ADD_COMMENT)
+        .assertIsDisplayed()
+        .performClick()
+    waitForIdle()
+}
+
+fun ComposeTestRule.clickOKToReplaceComment() {
+    onNodeWithContentDescription(OK_BUTTON_FOR_REPLACE_COMMENT)
         .assertIsDisplayed()
         .performClick()
     waitForIdle()
@@ -146,6 +140,13 @@ fun ComposeTestRule.clickOKToRemoveComment() {
 
 fun ComposeTestRule.clickCancelAddNewComment() {
     onNodeWithContentDescription(CANCEL_BUTTON_FOR_ADD_COMMENT)
+        .assertIsDisplayed()
+        .performClick()
+    waitForIdle()
+}
+
+fun ComposeTestRule.clickCancelReplaceComment() {
+    onNodeWithContentDescription(CANCEL_BUTTON_FOR_REPLACE_COMMENT)
         .assertIsDisplayed()
         .performClick()
     waitForIdle()

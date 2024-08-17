@@ -4,9 +4,7 @@ Feature: Reviewing cornerstone cases
     Given a new case with the name Case1 is stored on the server
     And I start the client application
     And I see the case Case1 as the current case
-    And I enter the text "Go to Bondi." in the interpretation field
-    And I select the changes tab
-    When I start to build a rule for the change on row 0
+    When I start to build a rule to add the comment "Go to Bondi."
     Then the message indicating no cornerstone cases to review should be shown
 
   Scenario: The first cornerstone case should be shown to the user
@@ -15,11 +13,9 @@ Feature: Reviewing cornerstone cases
       | Case2 |
     And I start the client application
     And I see the case Case1 as the current case
-    And I enter the text "Go to Bondi." in the interpretation field
-    And I build a rule for this change
+    And I build a rule to add a comment "Go to Bondi."
     And I select the case Case2
-    And I replace the text in the interpretation field with "Go to Bondi. Grow some trees."
-    When I start to build a rule for the change on row 1
+    When I start to build a rule to replace the comment "Go to Bondi." by "Go to Maroubra."
     Then the case Case1 is shown as the cornerstone case
 
   Scenario: The user should be able to switch to the next cornerstone case
@@ -34,8 +30,7 @@ Feature: Reviewing cornerstone cases
     And the interpretation of the case Case3 includes "Comment 3." because of condition "x is not blank"
     And I start the client application
     And I see the case Case1 as the current case
-    And I enter the text " Comment 4." in the interpretation field
-    And I start to build a rule for the change on row 0
+    And I start to build a rule to add the comment "Comment 4."
     And the case Case2 is shown as the cornerstone case
     When I click the next cornerstone case button
     Then the case Case3 is shown as the cornerstone case
@@ -52,8 +47,7 @@ Feature: Reviewing cornerstone cases
     And the interpretation of the case Case3 includes "Comment 3." because of condition "x is not blank"
     And I start the client application
     And I see the case Case1 as the current case
-    And I enter the text " Comment 4." in the interpretation field
-    And I start to build a rule for the change on row 0
+    And I start to build a rule to add the comment "Comment 4."
     And the cornerstone case indicator shows 1 of 2
     And I click the next cornerstone case button
     And the case Case3 is shown as the cornerstone case
@@ -73,9 +67,7 @@ Feature: Reviewing cornerstone cases
     And the interpretation of the case Case3 includes "Comment 3." because of condition "x is not blank"
     And I start the client application
     And I see the case Case1 as the current case
-    And I enter the text " Comment 4." in the interpretation field
-    And I select the changes tab
-    And I start to build a rule for the change on row 0
+    And I start to build a rule to add the comment "Comment 4."
     And the case Case2 is shown as the cornerstone case
     And the conditions showing should be:
       | x is not blank |
@@ -102,9 +94,7 @@ Feature: Reviewing cornerstone cases
       | Case4 | Comment 4.    | x is not blank |
     And I start the client application
     And I see the case Case1 as the current case
-    And I enter the text " Comment 5." in the interpretation field
-    And I select the changes tab
-    And I start to build a rule for the change on row 0
+    And I start to build a rule to add the comment "Comment 5."
     And I click the next cornerstone case button
     And the case Case3 is shown as the cornerstone case
     And the cornerstone case indicator should show 2 of 3
@@ -131,8 +121,7 @@ Feature: Reviewing cornerstone cases
       | Case4 | Comment 4.    | x is not blank |
     And I start the client application
     And I see the case Case1 as the current case
-    And I enter the text " Comment 5." in the interpretation field
-    And I start to build a rule for the change on row 0
+    And I start to build a rule to add the comment "Comment 5."
     And I click the next cornerstone case button
     And the cornerstone case indicator should show 2 of 3
     And the case Case3 is shown as the cornerstone case
@@ -151,7 +140,6 @@ Feature: Reviewing cornerstone cases
     And I build a rule to add the comment "Comment 1." for case Case1
     And I start to build a rule to add the comment "Comment 2." for case Case2
     And the case Case1 is shown as the cornerstone case
-
     When I approve the cornerstone case
     Then the case Case1 is no longer shown as the cornerstone case
     And the message "No cornerstone cases to review" should be shown

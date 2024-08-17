@@ -101,7 +101,6 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
     private fun attributeCellId(attributeName: String?) = "attribute_name_cell_$attributeName"
 
     fun dragAttribute(draggedAttribute: String, targetAttribute: String) {
-        println("draggedAttribute = [${draggedAttribute}], targetAttribute = [${targetAttribute}]")
         val allAttributeCells = getAttributeCellsInOrderShown()
         fun cellPosition(attribute: String): Point {
             val draggedCell = allAttributeCells.find { it.text() == attribute }!!
