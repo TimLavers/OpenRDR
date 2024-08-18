@@ -135,6 +135,15 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         execute { dialog.accessibleContext.find(NEW_COMMENT_TEXT_FIELD)!!.accessibleEditableText.setTextContents(comment) }
         execute { dialog.accessibleContext.find(OK_BUTTON_FOR_ADD_COMMENT)!!.accessibleAction.doAccessibleAction(0) }
     }
+    fun selectCommentAndClickOK(comment: String) {
+        waitUntilAsserted {
+            execute<ComposeDialog> { findComposeDialogThatIsShowing() } shouldNotBe null
+        }
+        val dialog = execute<ComposeDialog> { findComposeDialogThatIsShowing() }
+        //TODO PICK EXISTING COMMENT
+//        execute { dialog.accessibleContext.find(NEW_COMMENT_TEXT_FIELD)!!.accessibleEditableText.setTextContents(comment) }
+        execute { dialog.accessibleContext.find(OK_BUTTON_FOR_ADD_COMMENT)!!.accessibleAction.doAccessibleAction(0) }
+    }
 
     fun selectCommentToRemoveAndClickOK(comment: String) {
         waitUntilAsserted {
@@ -144,9 +153,9 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         with(dialog.accessibleContext) {
             execute { findAndClick(DROP_DOWN_TEXT_FIELD) }
             waitUntilAsserted {
-                find("$REMOVE_COMMENT_SELECTOR_PREFIX$comment") shouldNotBe null
+                find("$REMOVE_COMMENT_PREFIX$comment") shouldNotBe null
             }
-            execute { findAndClick("$REMOVE_COMMENT_SELECTOR_PREFIX$comment") }
+            execute { findAndClick("$REMOVE_COMMENT_PREFIX$comment") }
             execute {
                 find(OK_BUTTON_FOR_REMOVE_COMMENT)!!.accessibleAction.doAccessibleAction(0)
             }
@@ -163,9 +172,9 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
 
             //Click comment to be replaced
             waitUntilAsserted {
-                find("$REPLACE_COMMENT_SELECTOR_PREFIX$comment") shouldNotBe null
+                find("$REPLACE_COMMENT_PREFIX$comment") shouldNotBe null
             }
-            execute { findAndClick("$REPLACE_COMMENT_SELECTOR_PREFIX$comment") }
+            execute { findAndClick("$REPLACE_COMMENT_PREFIX$comment") }
 
             //Enter replacement comment
             execute { find(REPLACEMENT_COMMENT_TEXT_FIELD)!!.accessibleEditableText.setTextContents(replacement) }

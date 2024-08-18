@@ -12,7 +12,7 @@ Feature: The user can make rules that change the interpretive report
       | Wave is not blank |
     And stop the client application
 
-  Scenario: The user should be able to build a rule to add a comment
+  Scenario: The user should be able to build a rule to add a new comment
     Given a list of cases with the following names is stored on the server:
       | Case1 |
       | Case2 |
@@ -27,6 +27,19 @@ Feature: The user can make rules that change the interpretive report
       | Go to Bondi. |
     And the interpretation should contain the text "Go to Bondi."
     And stop the client application
+
+  Scenario: The user should be able to build a rule to add an existing comment
+    Given the configured case Case1 is stored on the server
+    And the following comments have been defined in the project:
+      | Go to Bondi.   |
+      | Go to Malabar. |
+      | Go to Coogee.  |
+    And I start the client application
+    And I should see the case Case1 as the current case
+    And I build a rule to add the existing comment "Go to Malabar."
+    Then the following comment is shown:
+      | Go to Malabar. |
+    And the interpretation should contain the text "Go to Malabar."
 
   Scenario: The user should be able to build a rule to add a comment with a condition they have selected
     Given I start the client application
@@ -45,8 +58,8 @@ Feature: The user can make rules that change the interpretive report
       | Case2 |
     And I start the client application
     And I should see the case Case1 as the current case
-    When I build a rule to add a comment "Go to Bondi."
-    And I build a rule to add a comment "Grow some trees."
+    When I build a rule to add a new comment "Go to Bondi."
+    And I build a rule to add a new comment "Grow some trees."
     Then  the interpretation should contain the text "Go to Bondi. Grow some trees."
     And select the case Case2
     And  the interpretation should contain the text "Go to Bondi. Grow some trees."

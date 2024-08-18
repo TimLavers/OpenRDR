@@ -42,15 +42,17 @@ fun ReplaceCommentDialog(availableComments: List<String>, handler: ReplaceCommen
         ) {
             val options = availableComments - replacedText
             CommentSelector(
+                false,
                 replacedText,
                 options,
                 COMMENT_TO_BE_REPLACED,
-                REPLACE_COMMENT_SELECTOR_PREFIX,
+                REPLACE_COMMENT_PREFIX,
                 object : CommentSelectorHandler {
-                    override fun onCommentSelected(comment: String) {
+                    override fun onCommentChanged(comment: String) {
                         replacedText = comment
                     }
-                })
+                }
+            )
             Spacer(modifier = Modifier.height(20.dp))
             OutlinedTextField(
                 value = replacementText,

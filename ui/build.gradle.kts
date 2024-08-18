@@ -10,6 +10,7 @@ dependencies {
     implementation(project(":common"))
     implementation(compose.desktop.currentOs)
     implementation(compose.preview)
+    implementation(compose.material3)
     implementation("org.jetbrains.compose.ui:ui-tooling-preview-desktop:${Version.compose}")
     implementation("ch.qos.logback:logback-classic:${Version.logback}")
     implementation("com.darkrockstudios:mpfilepicker:3.1.0")

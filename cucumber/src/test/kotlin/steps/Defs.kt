@@ -359,4 +359,11 @@ class Defs {
     fun theCountOfTheNumberOfCasesIsInt(numberOfCases: Int) {
         caseCountPO().waitForCountOfNumberOfCasesToBe(numberOfCases)
     }
+
+    @And("the following comments have been defined in the project:")
+    fun createComments(dataTable: DataTable) {
+        dataTable.asList().forEach { comment ->
+            restClient().getOrCreateConclusion(comment)
+        }
+    }
 }
