@@ -2,6 +2,7 @@ package io.rippledown.model.condition.episodic.predicate
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.TestResult
+import io.rippledown.model.serializeDeserialize
 import kotlin.test.Test
 
 class IsNotBlankTest: Base() {

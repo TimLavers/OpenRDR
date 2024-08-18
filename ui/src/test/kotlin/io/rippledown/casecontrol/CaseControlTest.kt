@@ -7,6 +7,10 @@ import io.rippledown.interpretation.requireComment
 import io.rippledown.interpretation.requireInterpretation
 import io.rippledown.interpretation.selectConclusionsTab
 import io.rippledown.model.Attribute
+import io.rippledown.model.CaseId
+import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.condition.edit.FixedSuggestedCondition
+import io.rippledown.model.condition.edit.SuggestedCondition
 import io.rippledown.model.condition.hasCurrentValue
 import io.rippledown.model.createCaseWithInterpretation
 import io.rippledown.model.rule.CornerstoneStatus
@@ -112,9 +116,10 @@ fun main() {
         )
         coEvery { handler.selectCornerstone(any()) } returns viewableCase
         val condition = hasCurrentValue(1, Attribute(2, "Surf 1"))
-        CaseControl(
-            currentCase = viewableCase,
-            conditionHints = listOf(condition),
+        val suggestedCondition = FixedSuggestedCondition(condition)
+            CaseControl(
+                currentCase = viewableCase,
+                conditionHints = listOf(suggestedCondition),
             cornerstoneStatus = CornerstoneStatus(viewableCase, 42, 84),
             handler = handler
         )

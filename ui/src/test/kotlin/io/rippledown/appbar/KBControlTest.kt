@@ -62,7 +62,7 @@ class KBControlTest {
     }
 
     @Test
-    fun `should not include in the dropdown the current KB`() = runTest {
+    fun `should not include the current KB in the dropdown`() = runTest {
         val glucose = "Glucose"
         val glucoseInfo = KBInfo(glucose)
         every { handler.kbList } returns { listOf(lipidsInfo, glucoseInfo) }

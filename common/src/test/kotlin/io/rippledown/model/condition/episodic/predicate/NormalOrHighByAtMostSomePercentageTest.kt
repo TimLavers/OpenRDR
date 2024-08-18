@@ -7,6 +7,7 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.startWith
 import io.rippledown.model.ReferenceRange
 import io.rippledown.model.TestResult
+import io.rippledown.model.serializeDeserialize
 import kotlin.test.Test
 
 class NormalOrHighByAtMostSomePercentageTest: Base() {

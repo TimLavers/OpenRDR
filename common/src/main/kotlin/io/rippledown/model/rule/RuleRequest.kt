@@ -1,6 +1,7 @@
 package io.rippledown.model.rule
 
 import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.condition.RuleConditionList
 import kotlinx.serialization.Serializable
 
 /**
@@ -10,5 +11,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class RuleRequest(
     val caseId: Long,
-    val conditions: ConditionList = ConditionList()
+    val conditions: RuleConditionList = RuleConditionList()
 )

@@ -157,28 +157,6 @@ class ConditionManagerTest {
         }
     }
 
-    @Test
-    fun `should return NotBlank for every attribute that is in the current episode`() {
-        val a1 = attributeManager.getOrCreate("A1")
-        val a2 = attributeManager.getOrCreate("A2")
-
-        val caseAttributes = listOf(a1, a2)
-        val viewableCase = createCase(caseAttributes)
-        val conditionHints = conditionManager.conditionHintsForCase(viewableCase)
-        conditionHints.conditions shouldHaveSize 2
-        conditionHints.conditions[0].asText() shouldBe "A1 is not blank"
-        conditionHints.conditions[1].asText() shouldBe "A2 is not blank"
-    }
-
-    @Test
-    fun `every condition returned in the condition hints should have an id`() {
-        val a1 = attributeManager.getOrCreate("A1")
-        val caseAttributes = listOf(a1)
-        val viewableCase = createCase(caseAttributes)
-        val conditionHints = conditionManager.conditionHintsForCase(viewableCase)
-        conditionHints.conditions.forEach { condition -> condition.id shouldNotBe null }
-    }
-
     private fun createCase(attributes: List<Attribute>): RDRCase {
         val date = Instant.now()
         val builder = RDRCaseBuilder()

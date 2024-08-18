@@ -38,15 +38,5 @@ class ConditionManager(private val attributeManager: AttributeManager,
 
     fun all() = idToCondition.values.toSet()
 
-    fun conditionHintsForCase(case: RDRCase): ConditionList {
-        val conditions = case.attributes.map { attribute ->
-            val condition = EpisodicCondition(null,attribute, IsNotBlank, Current)
-            getOrCreate(condition)
-        }.filter {
-            it.holds(case)
-        }
-        return ConditionList(conditions)
-    }
-
     private fun attributeForId(id: Int) = attributeManager.getById(id)
 }

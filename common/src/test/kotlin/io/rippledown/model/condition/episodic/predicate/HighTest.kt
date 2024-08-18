@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.model.ReferenceRange
 import io.rippledown.model.TestResult
 import io.rippledown.model.Value
+import io.rippledown.model.serializeDeserialize
 import kotlin.test.Test
 
 class HighTest : Base() {
