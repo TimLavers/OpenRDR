@@ -13,6 +13,7 @@ import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.CaseId
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.condition.RuleConditionList
 import io.rippledown.model.createCase
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.rule.CornerstoneStatus
@@ -46,7 +47,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
     @Test
     fun `should delegate updating the cornerstone status of a rule session to server application`() = testApplication {
         setup()
-        val request = UpdateCornerstoneRequest(CornerstoneStatus(), ConditionList())
+        val request = UpdateCornerstoneRequest(CornerstoneStatus(), RuleConditionList())
         val cornerstoneStatus = CornerstoneStatus()
         every { kbEndpoint.updateCornerstone(request) } returns cornerstoneStatus
 

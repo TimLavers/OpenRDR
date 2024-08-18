@@ -4,6 +4,8 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.episodic.predicate.*
+import io.rippledown.model.condition.structural.IsAbsentFromCase
+import io.rippledown.model.condition.structural.IsPresentInCase
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -17,6 +19,14 @@ fun hasNoCurrentValue(id: Int? = null, attribute: Attribute) = EpisodicCondition
 fun greaterThanOrEqualTo(id: Int? = null, attribute: Attribute, d: Double) = EpisodicCondition(id, attribute, GreaterThanOrEquals(d), Current)
 fun lessThanOrEqualTo(id: Int? = null, attribute: Attribute, d: Double) = EpisodicCondition(id, attribute, LessThanOrEquals(d), Current)
 fun slightlyLow(id: Int? = null, attribute: Attribute, cutoff: Int) = EpisodicCondition(id, attribute, HighByAtMostSomePercentage(cutoff), Current)
+fun isPresent(attribute: Attribute, id: Int? = null ) = CaseStructureCondition(id, IsPresentInCase(attribute))
+fun isAbsent(attribute: Attribute, id: Int? = null) = CaseStructureCondition(id, IsAbsentFromCase(attribute))
+
+fun rr(low: String?, high: String?) = ReferenceRange(low, high)
+fun tr(value: String) = TestResult(value, null, null)
+fun tr(value: String, referenceRange: ReferenceRange) = TestResult(value, referenceRange)
+fun tr(value: String, units: String) = TestResult(value, null, units)
+fun tr(value: String, referenceRange: ReferenceRange,units: String) = TestResult(value, referenceRange, units)
 
 open class ConditionTestBase {
 

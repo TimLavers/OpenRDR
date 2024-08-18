@@ -15,7 +15,9 @@ import io.rippledown.main.Handler
 import io.rippledown.model.Attribute
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.condition.RuleConditionList
+import io.rippledown.model.condition.edit.SuggestedCondition
+import io.rippledown.model.diff.Diff
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
@@ -36,7 +38,7 @@ interface CaseControlHandler : Handler, CaseInspectionHandler, CornerstonePagerH
 fun CaseControl(
     currentCase: ViewableCase?,
     cornerstoneStatus: CornerstoneStatus? = null,
-    conditionHints: List<Condition>,
+    conditionHints: List<SuggestedCondition>,
     handler: CaseControlHandler
 ) {
     val ruleInProgress = cornerstoneStatus != null
@@ -69,14 +71,14 @@ fun CaseControl(
             Spacer(modifier = Modifier.width(5.dp))
             RuleMaker(conditionHints, object : RuleMakerHandler, Handler by handler {
                 override var onDone = { conditions: List<Condition> ->
-                    val ruleRequest = RuleRequest(currentCase!!.id!!, ConditionList(conditions))
+                    val ruleRequest = RuleRequest(currentCase!!.id!!, RuleConditionList(conditions))
                     handler.buildRule(ruleRequest)
                 }
 
                 override var onCancel = { handler.endRuleSession() }
 
                 override var onUpdateConditions = { conditions: List<Condition> ->
-                    val ccUpdateRequest = UpdateCornerstoneRequest(cornerstoneStatus, ConditionList(conditions))
+                    val ccUpdateRequest = UpdateCornerstoneRequest(cornerstoneStatus, RuleConditionList(conditions))
                     handler.updateCornerstoneStatus(ccUpdateRequest)
                 }
             })

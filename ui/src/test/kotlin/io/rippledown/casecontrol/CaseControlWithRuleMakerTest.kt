@@ -7,6 +7,8 @@ import io.rippledown.constants.cornerstone.NO_CORNERSTONES_TO_REVIEW_MSG
 import io.rippledown.model.Attribute
 import io.rippledown.model.CaseId
 import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.condition.RuleConditionList
+import io.rippledown.model.condition.edit.FixedSuggestedCondition
 import io.rippledown.model.condition.hasCurrentValue
 import io.rippledown.model.createCaseWithInterpretation
 import io.rippledown.model.rule.CornerstoneStatus
@@ -31,6 +33,7 @@ class CaseControlWithRuleMakerTest {
     val bondiComment = "Go to Bondi now!"
 
     val condition = hasCurrentValue(1, Attribute(2, "surf"))
+    val suggestedCondition = FixedSuggestedCondition(condition)
     val viewableCase = createCaseWithInterpretation(
         name = caseName,
         id = id,
@@ -61,7 +64,7 @@ class CaseControlWithRuleMakerTest {
             clickFinishRuleButton()
 
             //Then
-            val expectedRuleRequest = RuleRequest(id, ConditionList())
+            val expectedRuleRequest = RuleRequest(id, RuleConditionList())
             coVerify { handler.buildRule(expectedRuleRequest) }
         }
     }
@@ -135,7 +138,7 @@ class CaseControlWithRuleMakerTest {
                 CaseControl(
                     currentCase = viewableCase,
                     cornerstoneStatus = ccStatus,
-                    conditionHints = listOf(condition),
+                    conditionHints = listOf(suggestedCondition),
                     handler = handler
                 )
             }
@@ -152,7 +155,7 @@ class CaseControlWithRuleMakerTest {
             //Then
             val slot = slot<UpdateCornerstoneRequest>()
             verify { handler.updateCornerstoneStatus(capture(slot)) }
-            slot.captured.conditionList shouldBe ConditionList(listOf(condition))
+            slot.captured.conditionList shouldBe ConditionList(listOf(suggestedCondition))
         }
     }
 
@@ -165,7 +168,7 @@ class CaseControlWithRuleMakerTest {
                 CaseControl(
                     currentCase = viewableCase,
                     cornerstoneStatus = ccStatus,
-                    conditionHints = listOf(condition),
+                    conditionHints = listOf(suggestedCondition),
                     handler = handler
                 )
             }
@@ -183,7 +186,7 @@ class CaseControlWithRuleMakerTest {
             val capturedRequests = mutableListOf<UpdateCornerstoneRequest>()
             verify { handler.updateCornerstoneStatus(capture(capturedRequests)) }
             capturedRequests.size shouldBe 2
-            capturedRequests[0].conditionList shouldBe ConditionList(listOf(condition))
+            capturedRequests[0].conditionList shouldBe ConditionList(listOf(suggestedCondition))
             capturedRequests[1].conditionList shouldBe ConditionList(listOf())
         }
     }

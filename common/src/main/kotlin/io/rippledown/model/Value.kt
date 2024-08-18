@@ -7,4 +7,7 @@ import kotlinx.serialization.Transient
 data class Value(val text: String) {
     @Transient
     val real = text.toFloatOrNull()
+
+    @Transient
+    val realReal = text.toDoubleOrNull()
 }

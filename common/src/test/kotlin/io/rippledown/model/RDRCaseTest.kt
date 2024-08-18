@@ -58,6 +58,26 @@ class RDRCaseTest {
     }
 
     @Test
+    fun getLatest() {
+        val builder = RDRCaseBuilder()
+        builder.addValue(tsh, defaultDate, "0.667")
+        val case = builder.build("Case1")
+        case.getLatest(tsh) shouldBe TestResult("0.667")
+        case.getLatest(ft4) shouldBe null
+    }
+
+    @Test
+    fun latestValue() {
+        val builder = RDRCaseBuilder()
+        builder.addValue(tsh, defaultDate, "0.667")
+        builder.addResult(ft4, defaultDate, TestResult("", ft4Range, "kilos"))
+        val case = builder.build("Case1")
+        case.latestValue(tsh) shouldBe "0.667"
+        case.latestValue(ft4) shouldBe ""
+        case.latestValue(age) shouldBe null
+    }
+
+    @Test
     fun buildWithId() {
         val builder1 = RDRCaseBuilder()
         builder1.addValue(tsh, defaultDate, "0.667")

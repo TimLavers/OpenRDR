@@ -4,7 +4,10 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.mocks.config
 import io.rippledown.mocks.mock
 import io.rippledown.model.*
+import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.condition.RuleConditionList
+import io.rippledown.model.condition.edit.FixedSuggestedCondition
 import io.rippledown.model.condition.hasCurrentValue
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.rule.CornerstoneStatus
@@ -112,7 +115,7 @@ class ApiTest {
 
     @Test
     fun conditionHints() = runTest {
-        val conditionList = ConditionList(
+        val conditionList = conditionList(
             listOf(
                 hasCurrentValue(1, Attribute(1, "A")),
                 hasCurrentValue(2, Attribute(2, "B"))
@@ -124,12 +127,15 @@ class ApiTest {
         Api(mock(config)).conditionHints(6) shouldBe conditionList
     }
 
+    private fun conditionList(conditions: List<Condition>) = ConditionList(conditions.map { FixedSuggestedCondition(it) })
+    private fun ruleConditionList(conditions: List<Condition>) = RuleConditionList(conditions)
+
     @Test
     fun shouldBuildRule() = runTest {
         val id = 1L
         val ruleRequest = RuleRequest(
             caseId = id,
-            conditions = ConditionList(
+            conditions = ruleConditionList(
                 listOf(
                     hasCurrentValue(1, Attribute(1, "A")),
                     hasCurrentValue(2, Attribute(2, "B"))
@@ -163,7 +169,7 @@ class ApiTest {
     fun shouldUpdateCornerstones() = runTest {
         val request = UpdateCornerstoneRequest(
             cornerstoneStatus = CornerstoneStatus(),
-            conditionList = ConditionList(
+            conditionList = ruleConditionList(
                 listOf(
                     hasCurrentValue(1, Attribute(1, "A")),
                     hasCurrentValue(2, Attribute(2, "B"))
@@ -200,5 +206,4 @@ class ApiTest {
         }
         Api(mock(config)).selectCornerstone(selectedCornerstoneIndex) shouldBe case
     }
-
 }

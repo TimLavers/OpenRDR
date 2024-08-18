@@ -6,6 +6,7 @@ import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistentKB
@@ -143,7 +144,14 @@ class KB(persistentKB: PersistentKB) {
 
     override fun hashCode() = kbInfo.hashCode()
 
-    fun conditionHintsForCase(case: RDRCase) = conditionManager.conditionHintsForCase(case)
+    fun conditionHintsForCase(case: RDRCase): ConditionList {
+//        checkSession() TODO re-instate and get rid of the if-block below
+//        if (ruleSession == null) {
+//            return ConditionList()
+//        }
+        val suggester = ConditionSuggester(attributeManager.all(), case)
+        return ConditionList(suggester.suggestions())
+    }
 
     /**
      * @param request the request containing the currently selected cornerstone and an updated list of conditions
