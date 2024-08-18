@@ -1,5 +1,6 @@
 package io.rippledown.integration.pageobjects
 
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.comparables.shouldBeGreaterThanOrEqualTo
 import io.kotest.matchers.shouldBe
@@ -82,6 +83,13 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
         found shouldBe expectedConditions
     }
 
+    fun requireAvailableConditionsContains(conditions: Set<String>) {
+        val allShowing = allSuggestedConditions()
+        conditions.forEach {
+            allShowing shouldContain it
+        }
+    }
+
     fun requireAvailableConditionsDoesNotContain(absentConditions: Set<String>) {
         val allShowing = allSuggestedConditions()
         absentConditions.forEach {
@@ -89,12 +97,23 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
         }
     }
 
-    fun requireSelectedConditions(selectedConditions: List<String>) {
+    private fun selectedConditions(): List<String> {
         waitForSelectedConditionsContext()
-        val found = execute<Set<AccessibleContext>> {
+        return execute<Set<AccessibleContext>> {
             contextProvider().findAllByDescriptionPrefix(SELECTED_CONDITION_PREFIX)
         }.map { it.accessibleName }
-        found shouldBe selectedConditions
+    }
+
+    fun requireSelectedConditions(selectedConditions: List<String>) {
+        selectedConditions() shouldBe selectedConditions
+    }
+
+    fun requireSelectedConditionsDoesNotContain(selectedConditions: Set<String>) {
+        selectedConditions() shouldNotContain selectedConditions
+    }
+
+    fun requireSelectedConditionsContains(selectedConditions: Set<String>) {
+        selectedConditions() shouldContain selectedConditions
     }
 
     fun clickConditionWithText(condition: String) {
