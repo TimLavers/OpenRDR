@@ -30,9 +30,8 @@ class CommentSelectorTest {
         with(composeTestRule) {
             //Given
             setContent {
-                CommentSelector(false, "", options, label, prefix, handler)
+                CommentSelector("", options, label, prefix, handler)
             }
-            requireDropDownMenuToBeDisplayed()
 
             //Then
             requireCommentSelectorLabel(label)
@@ -40,15 +39,12 @@ class CommentSelectorTest {
     }
 
     @Test
-    fun `should show all the options if the text field is blank and then is clicked`() {
+    fun `should show all the options if the text field is blank`() {
         with(composeTestRule) {
             //Given
             setContent {
-                CommentSelector(false, "", options, label, prefix, handler)
+                CommentSelector("", options, label, prefix, handler)
             }
-
-            //When
-            clickCommentDropDownMenu()
 
             //Then
             requireCommentOptionsToBeDisplayed(prefix, options)
@@ -60,12 +56,10 @@ class CommentSelectorTest {
         with(composeTestRule) {
             //Given
             setContent {
-                CommentSelector(false, "", options, label, prefix, handler)
+                CommentSelector("", options, label, prefix, handler)
             }
-            requireCommentOptionsNotToExist(prefix, options)
 
             //When
-            clickCommentDropDownMenu()
             requireCommentOptionsToBeDisplayed(prefix, options)
             clickComment(prefix, options[1])
 
@@ -82,11 +76,8 @@ class CommentSelectorTest {
         with(composeTestRule) {
             //Given
             setContent {
-                CommentSelector(false, "Mal", options, label, prefix, handler)
+                CommentSelector("Mal", options, label, prefix, handler)
             }
-
-            //When
-            clickCommentDropDownMenu()
 
             //Then
             requireCommentOptionsToBeDisplayed(prefix, listOf("Malabar"))
@@ -98,33 +89,15 @@ class CommentSelectorTest {
         with(composeTestRule) {
             //Given
             setContent {
-                CommentSelector(true, "", options, label, prefix, handler)
+                CommentSelector("", options, label, prefix, handler)
             }
 
             //When
             val newComment = "Go to Bronte"
-            enterTextIntoTheCommentSelector(newComment)
+            enterTextIntoTheCommentSelector(prefix, newComment)
 
             //Then
             verify { handler.onCommentChanged(newComment) }
-        }
-    }
-
-    @Test
-    fun `entering text with the options showing should filter the options`() = runTest {
-        with(composeTestRule) {
-            //Given
-            setContent {
-                CommentSelector(true, "", options, label, prefix, handler)
-            }
-
-            //When
-            clickCommentDropDownMenu()
-            requireCommentOptionsToBeDisplayed(prefix, options)
-            enterTextIntoTheCommentSelector("mal")
-
-            //Then
-            requireCommentOptionsToBeDisplayed(prefix, listOf("Malabar"))
         }
     }
 
@@ -134,11 +107,10 @@ class CommentSelectorTest {
         with(composeTestRule) {
             //Given
             setContent {
-                CommentSelector(false, "", options, label, prefix, handler)
+                CommentSelector("", options, label, prefix, handler)
             }
 
             //When
-            clickCommentDropDownMenu()
             requireCommentOptionsNotToBeDisplayed(prefix, options.subList(95, 99))
             scrollToOption(prefix, options[99])
 
@@ -155,6 +127,6 @@ fun main() {
         "Option $it"
     }
     applicationFor {
-        CommentSelector(true, "", options, "please select a beach", "PREFIX", handler)
+        CommentSelector("", options, "please select a beach", "PREFIX", handler)
     }
 }

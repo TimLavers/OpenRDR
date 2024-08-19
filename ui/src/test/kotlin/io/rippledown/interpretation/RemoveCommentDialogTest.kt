@@ -22,7 +22,7 @@ class RemoveCommentDialogTest {
     }
 
     @Test
-    fun `should show the options when the text field is clicked`() {
+    fun `should show the options`() {
         val bondi = "Bondi"
         val maroubra = "Maroubra"
         with(composeTestRule) {
@@ -30,14 +30,6 @@ class RemoveCommentDialogTest {
             setContent {
                 RemoveCommentDialog(listOf(bondi, maroubra), handler)
             }
-
-            //When
-            println("sleeping 1")
-            Thread.sleep(1000)
-            println("clicking")
-            clickCommentDropDownMenu()
-            println("sleeping 2")
-            Thread.sleep(100000)
 
             //Then
             requireCommentOptionsToBeDisplayed(REMOVE_COMMENT_PREFIX, listOf(bondi, maroubra))
@@ -55,17 +47,11 @@ class RemoveCommentDialogTest {
             }
 
             //When
-            println("sleeping 1")
-            Thread.sleep(1000)
-            println("clicking")
-            clickCommentDropDownMenu()
-            println("sleeping 2")
-            Thread.sleep(2000)
-//            requireCommentOptionsToBeDisplayed(REMOVE_COMMENT_PREFIX, listOf(bondi, maroubra))
-//            removeComment(bondi)
+            requireCommentOptionsToBeDisplayed(REMOVE_COMMENT_PREFIX, listOf(bondi, maroubra))
+            removeComment(bondi)
 
             //Then
-//            verify { handler.startRuleToRemoveComment(bondi) }
+            verify { handler.startRuleToRemoveComment(bondi) }
         }
     }
 

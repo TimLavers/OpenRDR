@@ -151,7 +151,7 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         }
         val dialog = execute<ComposeDialog> { findComposeDialogThatIsShowing() }
         with(dialog.accessibleContext) {
-            execute { findAndClick(DROP_DOWN_TEXT_FIELD) }
+            execute { findAndClick(COMMENT_SELECTOR_TEXT_FIELD) }
             waitUntilAsserted {
                 find("$REMOVE_COMMENT_PREFIX$comment") shouldNotBe null
             }
@@ -168,7 +168,7 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         }
         val dialog = execute<ComposeDialog> { findComposeDialogThatIsShowing() }
         with(dialog.accessibleContext) {
-            execute { findAndClick(DROP_DOWN_TEXT_FIELD) }
+            execute { findAndClick(COMMENT_SELECTOR_TEXT_FIELD) }
 
             //Click comment to be replaced
             waitUntilAsserted {

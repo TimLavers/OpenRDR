@@ -71,7 +71,6 @@ class InterpretationActionsTest {
 
             //When
             clickReplaceCommentMenu()
-            clickCommentDropDownMenu()
             replaceComment(bondi, coogee)
 
             //Then
@@ -92,8 +91,6 @@ class InterpretationActionsTest {
 
             //When
             clickRemoveCommentMenu()
-            clickCommentDropDownMenu()
-            awaitIdle()
             removeComment("Manly")
 
             //Then
