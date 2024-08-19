@@ -42,7 +42,7 @@ fun ComposeTestRule.clickRemoveCommentMenu() = onNodeWithContentDescription(REMO
     .performClick()
 
 private fun ComposeTestRule.enterCommentToBeAdded(comment: String) {
-    onNodeWithContentDescription(NEW_COMMENT_TEXT_FIELD)
+    onNodeWithContentDescription(ADD_COMMENT_TEXT_FIELD)
         .assertIsDisplayed()
         .performTextInput(comment)
 }
@@ -55,7 +55,6 @@ private fun ComposeTestRule.enterCommentToBeTheReplacement(comment: String) {
 
 fun ComposeTestRule.addNewComment(comment: String) {
     enterCommentToBeAdded(comment)
-    sleep(500) //TODO remove this sleep
     clickOKToAddNewComment()
 }
 

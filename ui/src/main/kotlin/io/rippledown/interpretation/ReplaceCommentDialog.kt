@@ -53,7 +53,7 @@ fun ReplaceCommentDialog(availableComments: List<String>, handler: ReplaceCommen
                 CommentSelector(
                     replacedText,
                     options,
-                    COMMENT_TO_BE_REPLACED,
+                    REPLACED_COMMENT_LABEL,
                     REPLACE_COMMENT_PREFIX,
                     object : CommentSelectorHandler {
                         override fun onCommentChanged(comment: String) {
@@ -67,7 +67,7 @@ fun ReplaceCommentDialog(availableComments: List<String>, handler: ReplaceCommen
                 CommentSelector(
                     replacementText,
                     options,
-                    COMMENT_TO_BE_THE_REPLACEMENT,
+                    REPLACEMENT_COMMENT_LABEL,
                     REPLACEMENT_COMMENT_PREFIX,
                     object : CommentSelectorHandler {
                         override fun onCommentChanged(comment: String) {

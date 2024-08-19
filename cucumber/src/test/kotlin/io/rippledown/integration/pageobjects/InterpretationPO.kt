@@ -132,7 +132,7 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
             execute<ComposeDialog> { findComposeDialogThatIsShowing() } shouldNotBe null
         }
         val dialog = execute<ComposeDialog> { findComposeDialogThatIsShowing() }
-        execute { dialog.accessibleContext.find(NEW_COMMENT_TEXT_FIELD)!!.accessibleEditableText.setTextContents(comment) }
+        execute { dialog.accessibleContext.find(ADD_COMMENT_TEXT_FIELD)!!.accessibleEditableText.setTextContents(comment) }
         execute { dialog.accessibleContext.find(OK_BUTTON_FOR_ADD_COMMENT)!!.accessibleAction.doAccessibleAction(0) }
     }
     fun selectCommentAndClickOK(comment: String) {

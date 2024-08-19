@@ -12,6 +12,7 @@ import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
 import io.rippledown.components.OKCancelButtons
 import io.rippledown.constants.interpretation.REMOVE_COMMENT
+import io.rippledown.constants.interpretation.REMOVE_COMMENT_LABEL
 import io.rippledown.constants.interpretation.REMOVE_COMMENT_PREFIX
 
 interface RemoveCommentHandler {
@@ -43,14 +44,13 @@ fun RemoveCommentDialog(availableComments: List<String>, handler: RemoveCommentH
                     prefix = REMOVE_COMMENT_PREFIX
                 )
             }
-
         ) { paddingValues ->
             val options = availableComments - selectedComment
             Column(Modifier.padding(paddingValues)) {
                 CommentSelector(
                     selectedComment,
                     options,
-                    "",
+                    REMOVE_COMMENT_LABEL,
                     REMOVE_COMMENT_PREFIX,
                     object : CommentSelectorHandler {
                         override fun onCommentChanged(comment: String) {
