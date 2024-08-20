@@ -44,7 +44,7 @@ class RuleMakerStepDefs {
     }
 
     @And("I start to build a rule to add the comment {string}")
-    fun startRuleToAddComment(comment: String) {
+    fun startRuleToAddNewComment(comment: String) {
         with(interpretationViewPO()) {
             clickChangeInterpretationButton()
             clickAddCommentMenu()
@@ -55,32 +55,32 @@ class RuleMakerStepDefs {
     @And("I start to build a rule to add the comment {string} for case {word}")
     fun startToBuildARuleToAddTheCommentForCase(comment: String, caseName: String) {
         caseListPO().select(caseName)
-        startRuleToAddComment(comment)
+        startRuleToAddNewComment(comment)
     }
 
     @And("I build a rule to add the comment {string} for case {word}")
     fun buildARuleToAddCommentForCase(comment: String, caseName: String) {
         caseListPO().select(caseName)
-        buildRuleToAddComment(comment)
+        buildRuleToAddNewComment(comment)
     }
 
     @And("I build another rule to append the comment {string}")
     fun buildAnotherRuleToAppendTheComment(comment: String) {
-        buildRuleToAddComment(comment)
+        buildRuleToAddNewComment(comment)
     }
 
     @And("I build a rule to add the comment {string} with the condition {string}")
     fun buildARuleToAddCommentWithCondition(comment: String, condition: String) {
-        startRuleToAddComment(comment)
+        startRuleToAddNewComment(comment)
         with(ruleMakerPO()) {
             clickConditionWithText(condition)
             clickDoneButton()
         }
     }
 
-    @And("I build a rule to add a comment {string}")
-    fun buildRuleToAddComment(comment: String) {
-        startRuleToAddComment(comment)
+    @And("I build a rule to add the comment {string}")
+    fun buildRuleToAddNewComment(comment: String) {
+        startRuleToAddNewComment(comment)
         completeRule()
     }
 
@@ -167,9 +167,7 @@ fun startRuleToRemoveComment(comment: String) {
     with(interpretationViewPO()) {
         clickChangeInterpretationButton()
         clickRemoveCommentMenu()
-        pause(1000) //TODO remove
         selectCommentToRemoveAndClickOK(comment)
-        pause(1000) //TODO remove
     }
 }
 

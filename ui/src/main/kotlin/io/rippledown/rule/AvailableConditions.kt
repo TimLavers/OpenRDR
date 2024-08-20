@@ -10,15 +10,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.PointerEventType.Companion.Enter
-import androidx.compose.ui.input.pointer.PointerEventType.Companion.Exit
-import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.PointerEventType.Companion.Enter
 import androidx.compose.ui.input.pointer.isSecondaryPressed
+import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import io.rippledown.components.Scrollbar
 import io.rippledown.constants.rule.AVAILABLE_CONDITIONS
 import io.rippledown.constants.rule.AVAILABLE_CONDITION_PREFIX
 import io.rippledown.model.condition.edit.SuggestedCondition
@@ -35,7 +35,6 @@ interface AvailableConditionsHandler {
 fun AvailableConditions(conditions: List<SuggestedCondition>, handler: AvailableConditionsHandler) {
     var cursorOnRow: Int by remember { mutableStateOf(-1) }
     val scrollState = rememberScrollState()
-    val hoverOverScroll = remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -89,17 +88,6 @@ fun AvailableConditions(conditions: List<SuggestedCondition>, handler: Available
                     )
                 }
         }
-        VerticalScrollbar(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .onPointerEvent(Enter) {
-                    hoverOverScroll.value = true
-                }
-                .onPointerEvent(Exit) {
-                    hoverOverScroll.value = false
-                }
-                .requiredWidth(if (hoverOverScroll.value) 10.dp else 5.dp),
-            adapter = rememberScrollbarAdapter(scrollState)
-        )
+        Scrollbar(scrollState, modifier = Modifier.align(Alignment.CenterEnd))
     }
 }

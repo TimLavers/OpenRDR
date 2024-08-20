@@ -33,7 +33,6 @@ class ReplaceCommentDialogTest {
             }
 
             //When
-            clickCommentDropDownMenu()
             replaceComment(bondi, maroubra)
             clickOKToReplaceComment()
 

@@ -13,7 +13,7 @@ Feature: Reviewing cornerstone cases
       | Case2 |
     And I start the client application
     And I see the case Case1 as the current case
-    And I build a rule to add a comment "Go to Bondi."
+    And I build a rule to add the comment "Go to Bondi."
     And I select the case Case2
     When I start to build a rule to replace the comment "Go to Bondi." by "Go to Maroubra."
     Then the case Case1 is shown as the cornerstone case

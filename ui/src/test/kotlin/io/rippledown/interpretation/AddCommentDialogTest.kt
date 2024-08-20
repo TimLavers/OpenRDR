@@ -25,7 +25,7 @@ class AddCommentDialogTest {
         with(composeTestRule) {
             //Given
             setContent {
-                AddCommentDialog(handler)
+                AddCommentDialog(listOf(), handler)
             }
 
             //When
@@ -42,7 +42,7 @@ class AddCommentDialogTest {
         with(composeTestRule) {
             //Given
             setContent {
-                AddCommentDialog(handler)
+                AddCommentDialog(listOf(), handler)
             }
 
             //When
@@ -56,6 +56,6 @@ class AddCommentDialogTest {
 
 fun main() {
     applicationFor {
-        AddCommentDialog(mockk())
+        AddCommentDialog(listOf(), mockk())
     }
 }
