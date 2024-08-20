@@ -10,10 +10,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.PointerEventType.Companion.Enter
-import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.PointerEventType.Companion.Enter
 import androidx.compose.ui.input.pointer.isSecondaryPressed
+import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -35,7 +35,6 @@ interface AvailableConditionsHandler {
 fun AvailableConditions(conditions: List<SuggestedCondition>, handler: AvailableConditionsHandler) {
     var cursorOnRow: Int by remember { mutableStateOf(-1) }
     val scrollState = rememberScrollState()
-    val hoverOverScroll = remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier

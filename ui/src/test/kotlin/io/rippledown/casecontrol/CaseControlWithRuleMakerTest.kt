@@ -6,7 +6,6 @@ import io.mockk.*
 import io.rippledown.constants.cornerstone.NO_CORNERSTONES_TO_REVIEW_MSG
 import io.rippledown.model.Attribute
 import io.rippledown.model.CaseId
-import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.RuleConditionList
 import io.rippledown.model.condition.edit.FixedSuggestedCondition
 import io.rippledown.model.condition.hasCurrentValue
@@ -155,7 +154,7 @@ class CaseControlWithRuleMakerTest {
             //Then
             val slot = slot<UpdateCornerstoneRequest>()
             verify { handler.updateCornerstoneStatus(capture(slot)) }
-            slot.captured.conditionList shouldBe ConditionList(listOf(suggestedCondition))
+            slot.captured.conditionList shouldBe RuleConditionList(listOf(suggestedCondition.initialSuggestion))
         }
     }
 
@@ -186,8 +185,8 @@ class CaseControlWithRuleMakerTest {
             val capturedRequests = mutableListOf<UpdateCornerstoneRequest>()
             verify { handler.updateCornerstoneStatus(capture(capturedRequests)) }
             capturedRequests.size shouldBe 2
-            capturedRequests[0].conditionList shouldBe ConditionList(listOf(suggestedCondition))
-            capturedRequests[1].conditionList shouldBe ConditionList(listOf())
+            capturedRequests[0].conditionList shouldBe RuleConditionList(listOf(suggestedCondition.initialSuggestion))
+            capturedRequests[1].conditionList shouldBe RuleConditionList(listOf())
         }
     }
 }
