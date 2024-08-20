@@ -18,7 +18,7 @@ Feature: The user can make rules that change the interpretive report
       | Case2 |
     And I start the client application
     And I should see the case Case1 as the current case
-    And I build a rule to add a comment "Go to Bondi."
+    And I build a rule to add the comment "Go to Bondi."
     Then the following comment is shown:
       | Go to Bondi. |
     And the interpretation should contain the text "Go to Bondi."
@@ -36,7 +36,7 @@ Feature: The user can make rules that change the interpretive report
       | Go to Coogee.  |
     And I start the client application
     And I should see the case Case1 as the current case
-    And I build a rule to add the existing comment "Go to Malabar."
+    And I build a rule to add the comment "Go to Malabar."
     Then the following comment is shown:
       | Go to Malabar. |
     And the interpretation should contain the text "Go to Malabar."
@@ -58,8 +58,8 @@ Feature: The user can make rules that change the interpretive report
       | Case2 |
     And I start the client application
     And I should see the case Case1 as the current case
-    When I build a rule to add a new comment "Go to Bondi."
-    And I build a rule to add a new comment "Grow some trees."
+    When I build a rule to add the comment "Go to Bondi."
+    And I build a rule to add the comment "Grow some trees."
     Then  the interpretation should contain the text "Go to Bondi. Grow some trees."
     And select the case Case2
     And  the interpretation should contain the text "Go to Bondi. Grow some trees."
