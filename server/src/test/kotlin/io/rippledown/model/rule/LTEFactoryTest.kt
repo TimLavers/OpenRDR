@@ -1,19 +1,22 @@
 package io.rippledown.model.rule
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.ReferenceRange
-import io.rippledown.model.TestResult
-import io.rippledown.model.condition.episodic.predicate.LessThanOrEquals
+import io.rippledown.model.condition.edit.EditableLTECondition
+import io.rippledown.model.condition.edit.EditableValue
+import io.rippledown.model.condition.edit.Type
+import io.rippledown.model.condition.lessThanOrEqualTo
+import io.rippledown.model.condition.tr
 import kotlin.test.Test
 
-class LTEFactoryTest {
+class LTEFactoryTest: ConditionFactoryTestBase() {
     @Test
-    fun createFor() {
-        LTEFactory(null).createFor() shouldBe null
-        LTEFactory(TestResult("whatever")).createFor() shouldBe null
-        LTEFactory(TestResult("1.0")).createFor() shouldBe LessThanOrEquals(1.0)
-        LTEFactory(TestResult("10.01")).createFor() shouldBe LessThanOrEquals(10.01)
-        LTEFactory(TestResult("10.01", ReferenceRange("5.0", "15.0"))).createFor() shouldBe LessThanOrEquals(10.01)
-        LTEFactory(TestResult("10.01", ReferenceRange("5.0", "15.0"), "m/s")).createFor() shouldBe LessThanOrEquals(10.01)
+    fun suggestion() {
+        LteSuggestion.invoke(tsh, null) shouldBe null
+        LteSuggestion.invoke(tsh, tr("whatever")) shouldBe null
+        with(LteSuggestion.invoke(tsh, tr("1.0"))!!) {
+            initialSuggestion() shouldBe lessThanOrEqualTo(null, tsh, 1.0)
+            isEditable() shouldBe true
+            editableCondition()shouldBe EditableLTECondition(tsh, EditableValue("1.0", Type.Real))
+        }
     }
 }

@@ -1,19 +1,22 @@
 package io.rippledown.model.rule
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.ReferenceRange
-import io.rippledown.model.TestResult
-import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals
+import io.rippledown.model.condition.edit.EditableGTECondition
+import io.rippledown.model.condition.edit.EditableValue
+import io.rippledown.model.condition.edit.Type
+import io.rippledown.model.condition.greaterThanOrEqualTo
+import io.rippledown.model.condition.tr
 import kotlin.test.Test
 
-class GTEFactoryTest {
+class GTEFactoryTest: ConditionFactoryTestBase() {
     @Test
-    fun createFor() {
-        GTEFactory(null).createFor() shouldBe null
-        GTEFactory(TestResult("whatever")).createFor() shouldBe null
-        GTEFactory(TestResult("1.0")).createFor() shouldBe GreaterThanOrEquals(1.0)
-        GTEFactory(TestResult("10.01")).createFor() shouldBe GreaterThanOrEquals(10.01)
-        GTEFactory(TestResult("10.01", ReferenceRange("5.0", "15.0"))).createFor() shouldBe GreaterThanOrEquals(10.01)
-        GTEFactory(TestResult("10.01", ReferenceRange("5.0", "15.0"), "m/s")).createFor() shouldBe GreaterThanOrEquals(10.01)
+    fun suggestion() {
+        GteSuggestion.invoke(tsh, null) shouldBe null
+        GteSuggestion.invoke(tsh, tr("whatever")) shouldBe null
+        with(GteSuggestion.invoke(tsh, tr("1.0"))!!) {
+            initialSuggestion() shouldBe greaterThanOrEqualTo(null, tsh, 1.0)
+            isEditable() shouldBe true
+            editableCondition()shouldBe EditableGTECondition(tsh, EditableValue("1.0", Type.Real))
+        }
     }
 }

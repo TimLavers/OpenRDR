@@ -106,13 +106,16 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
     }
 
     fun commitRuleSession(ruleRequest: RuleRequest): ViewableCase {
+        logger.info("Committing rule session for $ruleRequest")
         val caseId = ruleRequest.caseId
         val case = viewableCase(caseId)
 
         ruleRequest.conditions.conditions.forEach { condition ->
+            logger.info("adding condition: $condition")
             addConditionToCurrentRuleBuildingSession(condition)
         }
         commitCurrentRuleSession()
+        logger.info("rule session committed")
 
         //re-interpret the case
         val updatedInterpretation = kb.interpret(case.case)

@@ -9,30 +9,30 @@ import io.rippledown.model.serializeDeserialize
 import kotlin.test.Test
 
 class EditableGTEConditionTest: ConditionTestBase() {
-    val editableGTECondition = EditableGTECondition(tsh, EditableValue("0.67", Type.Real))
+    private val gte = EditableGTECondition(tsh, EditableValue("0.67", Type.Real))
 
     @Test
     fun serializationTest() {
-        serializeDeserialize(editableGTECondition) shouldBe editableGTECondition
+        serializeDeserialize(gte) shouldBe gte
     }
 
     @Test
     fun fixedTextPart1() {
-        editableGTECondition.fixedTextPart1() shouldBe "${tsh.name} ≥ "
+        gte.fixedTextPart1() shouldBe "${tsh.name} ≥ "
     }
 
     @Test
     fun fixedTextPart2() {
-        editableGTECondition.fixedTextPart2() shouldBe ""
+        gte.fixedTextPart2() shouldBe ""
     }
 
     @Test
     fun editableValue() {
-        editableGTECondition.editableValue() shouldBe EditableValue("0.67", Type.Real)
+        gte.editableValue() shouldBe EditableValue("0.67", Type.Real)
     }
 
     @Test
     fun condition() {
-        editableGTECondition.condition("123") shouldBe EpisodicCondition(null, tsh, GreaterThanOrEquals(123.0), Current)
+        gte.condition("123") shouldBe EpisodicCondition(null, tsh, GreaterThanOrEquals(123.0), Current)
     }
 }

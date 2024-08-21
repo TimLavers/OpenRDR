@@ -23,8 +23,8 @@ data class FixedSuggestedCondition(val initialSuggestion: Condition): SuggestedC
     override fun editableCondition(): EditableCondition? = null
 }
 @Serializable
-data class EditableSuggestedCondition(val initialSuggestion: Condition, val editableCondition: EditableCondition): SuggestedCondition {
-    override fun initialSuggestion() = initialSuggestion
+data class EditableSuggestedCondition(val editableCondition: EditableCondition): SuggestedCondition {
+    override fun initialSuggestion() = editableCondition.condition(editableCondition.editableValue().value)
 
     override fun isEditable() = true
 

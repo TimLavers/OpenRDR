@@ -11,8 +11,12 @@ import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.structural.IsAbsentFromCase
 import io.rippledown.model.condition.structural.IsPresentInCase
 
-class ConditionSuggester(private val attributes: Set<Attribute>,
-                         private val sessionCase: RDRCase) {
+typealias SuggestionFunction = (Attribute, TestResult?) -> SuggestedCondition?
+
+class ConditionSuggester(
+    attributes: Set<Attribute>,
+    private val sessionCase: RDRCase
+) {
     private val attributesInCase = sessionCase.attributes
     private val attributesNotInCase = attributes - attributesInCase
 
@@ -22,10 +26,10 @@ class ConditionSuggester(private val attributes: Set<Attribute>,
 
     private fun episodicConditionSuggestions(): Set<SuggestedCondition> {
         val firstCut = mutableSetOf<SuggestedCondition>()
-        attributesInCase.forEach {attribute ->
+        attributesInCase.forEach { attribute ->
             val currentValue = sessionCase.getLatest(attribute)
-            factories(currentValue).forEach {
-                val suggestedCondition = it.suggestion(attribute)
+            suggestionFactories().forEach {
+                val suggestedCondition = it(attribute, currentValue)
                 if (suggestedCondition != null) {
                     firstCut.add(suggestedCondition)
                 }
@@ -34,93 +38,80 @@ class ConditionSuggester(private val attributes: Set<Attribute>,
         return firstCut.filter { it.initialSuggestion().holds(sessionCase) }.toSet()
     }
 
-    fun predicates(testResult: TestResult?): List<TestResultPredicate> {
-        return factories(testResult).mapNotNull { it.createFor() }
-    }
-
     private fun caseStructureSuggestions() = attributeInCaseConditions() + attributeNotInCaseConditions()
 
     private fun attributeInCaseConditions() = attributesInCase
         .map { presentAttributeCondition(it) }
         .map { FixedSuggestedCondition(it) }
         .toSet()
+
     private fun attributeNotInCaseConditions() = attributesNotInCase
         .map { absentAttributeCondition(it) }
         .map { FixedSuggestedCondition(it) }
         .toSet()
 
-    private fun presentAttributeCondition(attribute: Attribute) = CaseStructureCondition(null, IsPresentInCase(attribute))
-    private fun absentAttributeCondition(attribute: Attribute) = CaseStructureCondition(null, IsAbsentFromCase(attribute))
+    private fun presentAttributeCondition(attribute: Attribute) =
+        CaseStructureCondition(null, IsPresentInCase(attribute))
+
+    private fun absentAttributeCondition(attribute: Attribute) =
+        CaseStructureCondition(null, IsAbsentFromCase(attribute))
 }
-class Sorter: Comparator<SuggestedCondition> {
+
+class Sorter : Comparator<SuggestedCondition> {
     override fun compare(o1: SuggestedCondition?, o2: SuggestedCondition?): Int {
         return o1!!.initialSuggestion().asText().compareTo(o2!!.initialSuggestion().asText())
     }
 }
-sealed class EpisodicSuggestedConditionFactory {
-    abstract val testResult: TestResult?
-    abstract fun createFor(): TestResultPredicate?
-    open fun suggestion(attribute: Attribute): SuggestedCondition? = null
-    fun stringValue() = if (testResult?.value == null) null else testResult!!.value.text
-    fun doubleValue() = if (testResult?.value?.realReal == null) null else testResult!!.value.text.toDoubleOrNull()
+fun editableReal(testResult: TestResult?): EditableValue? {
+    val cutoff = testResult?.value?.real
+    return if (cutoff == null) null else EditableValue(testResult.value.text, Type.Real)
 }
-data class GTEFactory(override val testResult: TestResult?) : EpisodicSuggestedConditionFactory() {
-    override fun createFor(): GreaterThanOrEquals? {
-        val cutoff = doubleValue()
-        return if (cutoff == null) null else GreaterThanOrEquals(cutoff)
+abstract class CutoffSuggestion: SuggestionFunction {
+    abstract fun createEditableCondition(attribute: Attribute, editableValue: EditableValue): EditableCondition
+    override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
+        val editableValue = editableReal(testResult) ?: return null
+        return EditableSuggestedCondition(createEditableCondition(attribute, editableValue))
     }
+}
+object GteSuggestion: CutoffSuggestion() {
+    override fun createEditableCondition(attribute: Attribute, editableValue: EditableValue): EditableCondition {
+        return EditableGTECondition(attribute, editableValue)
+    }
+}
+object LteSuggestion: CutoffSuggestion(){
+    override fun createEditableCondition(attribute: Attribute, editableValue: EditableValue): EditableCondition {
+        return EditableLTECondition(attribute, editableValue)
+    }
+}
 
-    override fun suggestion(attribute: Attribute): SuggestedCondition? {
-        val cutoff = doubleValue() ?: return null
-        val editableCondition = EditableGTECondition(attribute, EditableValue(stringValue()!!, Type.Real),)
-        return EditableSuggestedCondition(editableCondition.condition(stringValue()!!), editableCondition)
+object ContainsSuggestion: SuggestionFunction {
+    override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
+        val value = testResult?.value?.text ?: return null
+        return EditableSuggestedCondition(EditableContainsCondition(attribute, value))
     }
 }
-data class LTEFactory(override val testResult: TestResult?): EpisodicSuggestedConditionFactory() {
-    override fun createFor(): LessThanOrEquals? {
-        val cutoff = doubleValue()
-        return if (cutoff == null) null else LessThanOrEquals(cutoff)
+object IsSuggestion: SuggestionFunction {
+    override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
+        val value = testResult?.value?.text ?: return null
+        return FixedSuggestedCondition(EpisodicCondition(attribute, Is(value), Current))
     }
 }
-data class IsFactory(override val testResult: TestResult?): EpisodicSuggestedConditionFactory() {
-    override fun createFor(): TestResultPredicate? {
-        return if (stringValue() == null) null else Is(stringValue()!!)
-    }
-
-    override fun suggestion(attribute: Attribute): SuggestedCondition? {
-        val argument = stringValue() ?: return null
-        val suggestion = EpisodicCondition(attribute, Is(argument), Current)
-        return FixedSuggestedCondition(suggestion)
+class RangeConditionSuggester(val predicate: TestResultPredicate): SuggestionFunction {
+    override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
+        return if (hasRange(testResult)) FixedSuggestedCondition(EpisodicCondition(attribute, predicate, Current)) else null
     }
 }
-data class ContainsFactory(override val testResult: TestResult?): EpisodicSuggestedConditionFactory() {
-    override fun createFor(): TestResultPredicate? {
-        return if (stringValue() == null) null else Contains(stringValue()!!)
-    }
-}
-data class LowFactory(override val testResult: TestResult?): EpisodicSuggestedConditionFactory() {
-    override fun createFor(): TestResultPredicate? {
-        return if (testResult?.referenceRange == null) null else Low
-    }
-}
-data class NormalFactory(override val testResult: TestResult?): EpisodicSuggestedConditionFactory() {
-    override fun createFor(): TestResultPredicate? {
-        return if (testResult?.referenceRange == null) null else Normal
-    }
-}
-data class HighFactory(override val testResult: TestResult?): EpisodicSuggestedConditionFactory() {
-    override fun createFor(): TestResultPredicate? {
-        return if (testResult?.referenceRange == null) null else High
-    }
-}
-fun factories(testResult: TestResult?): List<EpisodicSuggestedConditionFactory> {
+fun suggestionFactories(): List<SuggestionFunction> {
     return listOf(
-        GTEFactory(testResult),
-        LTEFactory(testResult),
-        IsFactory(testResult),
-        ContainsFactory(testResult),
-        LowFactory(testResult),
-        NormalFactory(testResult),
-        HighFactory(testResult)
-    )
+        GteSuggestion,
+        LteSuggestion,
+        ContainsSuggestion,
+        IsSuggestion,
+        RangeConditionSuggester(Low),
+        RangeConditionSuggester(Normal),
+        RangeConditionSuggester(High),
+        )
+}
+fun hasRange(testResult: TestResult?): Boolean {
+    return testResult?.referenceRange != null
 }

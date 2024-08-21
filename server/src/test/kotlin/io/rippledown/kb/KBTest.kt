@@ -530,7 +530,7 @@ class KBTest {
             kb.cornerstoneStatus(vcc1) shouldBe currentCCStatus
         }
         val condition = lessThanOrEqualTo(null, glucose(), 0.5) //false for the cornerstone
-        val updateRequest = UpdateCornerstoneRequest(currentCCStatus, ConditionList(listOf(condition)))
+        val updateRequest = UpdateCornerstoneRequest(currentCCStatus, RuleConditionList(listOf(condition)))
         kb.updateCornerstone(updateRequest) shouldBe CornerstoneStatus()
     }
 
@@ -546,7 +546,7 @@ class KBTest {
             kb.cornerstoneStatus(vcc1) shouldBe currentCCStatus
         }
         val condition = lessThanOrEqualTo(null, glucose(), 1.0) //true for the cornerstone
-        val updateRequest = UpdateCornerstoneRequest(currentCCStatus, ConditionList(listOf(condition)))
+        val updateRequest = UpdateCornerstoneRequest(currentCCStatus, RuleConditionList(listOf(condition)))
         kb.updateCornerstone(updateRequest) shouldBe currentCCStatus
     }
 
@@ -565,7 +565,7 @@ class KBTest {
             kb.cornerstoneStatus(vcc1) shouldBe currentCCStatus
         }
         val condition = greaterThanOrEqualTo(null, glucose(), 1.5) //false for the current cornerstone
-        val updateRequest = UpdateCornerstoneRequest(currentCCStatus, ConditionList(listOf(condition)))
+        val updateRequest = UpdateCornerstoneRequest(currentCCStatus, RuleConditionList(listOf(condition)))
         val expected = CornerstoneStatus(vcc2, 0, 2)
         kb.updateCornerstone(updateRequest) shouldBe expected
     }
@@ -584,7 +584,7 @@ class KBTest {
             kb.cornerstoneStatus(vcc1) shouldBe currentCCStatus
         }
         val condition = lessThanOrEqualTo(null, glucose(), 2.5) //true for the current cornerstone and cc2
-        val updateRequest = UpdateCornerstoneRequest(currentCCStatus, ConditionList(listOf(condition)))
+        val updateRequest = UpdateCornerstoneRequest(currentCCStatus, RuleConditionList(listOf(condition)))
         val expected = CornerstoneStatus(vcc1, 0, 2)
         kb.updateCornerstone(updateRequest) shouldBe expected
     }
@@ -592,7 +592,7 @@ class KBTest {
     @Test
     fun `should restore the index of the current cornerstone case if it has not been removed by the condition change`() {
         //Given
-        val cc1 = kb.addCornerstoneCase(createCase("Case1", "1.0"))
+        kb.addCornerstoneCase(createCase("Case1", "1.0"))
         val cc2 = kb.addCornerstoneCase(createCase("Case2", "2.0"))
         kb.addCornerstoneCase(createCase("Case3", "3.0"))
         val vcc2 = kb.viewableCase(cc2)
@@ -607,13 +607,13 @@ class KBTest {
             kb.cornerstoneStatus(vcc2) shouldBe originalCCStatus
         }
         val condition = lessThanOrEqualTo(null, glucose(), 2.5) //true for cc1 and the current cornerstone cc2
-        var updateRequest = UpdateCornerstoneRequest(originalCCStatus, ConditionList(listOf(condition)))
+        var updateRequest = UpdateCornerstoneRequest(originalCCStatus, RuleConditionList(listOf(condition)))
         val expected = CornerstoneStatus(vcc2, 1, 2)
         kb.updateCornerstone(updateRequest) shouldBe expected
         kb.cornerstoneStatus(vcc2) shouldBe expected
 
         //Remove the condition that was added
-        updateRequest = UpdateCornerstoneRequest(expected, ConditionList(emptyList()))
+        updateRequest = UpdateCornerstoneRequest(expected, RuleConditionList(emptyList()))
 
         //Then
         kb.updateCornerstone(updateRequest) shouldBe originalCCStatus
@@ -637,7 +637,7 @@ class KBTest {
 
         val condition =
             lessThanOrEqualTo(null, glucose(), 2.5) //true for cc1 and the current cornerstone. false for cc3
-        val updateRequest = UpdateCornerstoneRequest(currentCCStatus, ConditionList(listOf(condition)))
+        val updateRequest = UpdateCornerstoneRequest(currentCCStatus, RuleConditionList(listOf(condition)))
         val expected = CornerstoneStatus(vcc2, 1, 2)
         kb.updateCornerstone(updateRequest) shouldBe expected
     }
