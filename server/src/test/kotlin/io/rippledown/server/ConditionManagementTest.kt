@@ -12,6 +12,7 @@ import io.rippledown.constants.api.GET_OR_CREATE_CONDITION
 import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.*
+import io.rippledown.model.condition.edit.FixedSuggestedCondition
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 
@@ -42,7 +43,7 @@ class ConditionManagementTest: OpenRDRServerTestBase() {
             listOf(
                 isNormal(1, Attribute(1, "WaveHeight")),
                 isLow(2, Attribute(2, "SeaTemp"))
-            )
+            ).map { FixedSuggestedCondition(it) }
         )
         every { kbEndpoint.conditionHintsForCase(caseId) } returns conditionList
 

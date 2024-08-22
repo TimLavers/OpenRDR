@@ -32,14 +32,16 @@ class ConclusionManagementTest: OpenRDRServerTestBase() {
     @Test
     fun `should return all conclusions`() = testApplication {
         setup()
-        val text = "Glucose is high."
-        val conclusion = Conclusion(8, text)
-        every { kbEndpoint.allConclusions() } returns setOf(conclusion)
+        val text1 = "Glucose is high."
+        val text2 = "Fructose is high."
+        val conclusion1 = Conclusion(8, text1)
+        val conclusion2 = Conclusion(9, text2)
+        every { kbEndpoint.allConclusions() } returns setOf(conclusion1, conclusion2)
         val result = httpClient.get(ALL_CONCLUSIONS) {
             parameter(KB_ID, kbId)
         }
         result.status shouldBe HttpStatusCode.OK
-        result.body<Set<Conclusion>>() shouldBe setOf(conclusion)
+        result.body<Set<Conclusion>>() shouldBe setOf(conclusion1, conclusion2)
         verify { kbEndpoint.allConclusions() }
     }
  }
