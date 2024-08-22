@@ -7,6 +7,7 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.verify
+import io.rippledown.constants.api.ALL_CONCLUSIONS
 import io.rippledown.constants.api.GET_OR_CREATE_CONCLUSION
 import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.Conclusion
@@ -26,5 +27,19 @@ class ConclusionManagementTest: OpenRDRServerTestBase() {
         result.status shouldBe HttpStatusCode.OK
         result.body<Conclusion>() shouldBe conclusion
         verify { kbEndpoint.getOrCreateConclusion(text) }
+    }
+
+    @Test
+    fun `should return all conclusions`() = testApplication {
+        setup()
+        val text = "Glucose is high."
+        val conclusion = Conclusion(8, text)
+        every { kbEndpoint.allConclusions() } returns setOf(conclusion)
+        val result = httpClient.get(ALL_CONCLUSIONS) {
+            parameter(KB_ID, kbId)
+        }
+        result.status shouldBe HttpStatusCode.OK
+        result.body<Set<Conclusion>>() shouldBe setOf(conclusion)
+        verify { kbEndpoint.allConclusions() }
     }
  }
