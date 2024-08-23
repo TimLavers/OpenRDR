@@ -29,6 +29,7 @@ class ApiTest {
         }
         Api(mock(config)).getCase(1) shouldBe case
     }
+
     @Test
     fun `should allow the returned case to be null`() = runTest {
         val config = config {
@@ -69,6 +70,20 @@ class ApiTest {
         }
 
         Api(mock(config)).waitingCasesInfo() shouldBe expected
+    }
+
+    @Test
+    fun `should retrieve all conclusions for the specified kb`() = runTest {
+        val expected = setOf(
+            Conclusion(1, "A"),
+            Conclusion(2, "B")
+        )
+
+        val config = config {
+            returnConclusions = expected
+        }
+
+        Api(mock(config)).allConclusions() shouldBe expected
     }
 
     @Test
@@ -127,7 +142,9 @@ class ApiTest {
         Api(mock(config)).conditionHints(6) shouldBe conditionList
     }
 
-    private fun conditionList(conditions: List<Condition>) = ConditionList(conditions.map { FixedSuggestedCondition(it) })
+    private fun conditionList(conditions: List<Condition>) =
+        ConditionList(conditions.map { FixedSuggestedCondition(it) })
+
     private fun ruleConditionList(conditions: List<Condition>) = RuleConditionList(conditions)
 
     @Test
