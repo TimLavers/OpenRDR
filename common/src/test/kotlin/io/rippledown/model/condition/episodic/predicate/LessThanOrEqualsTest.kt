@@ -47,7 +47,7 @@ class LessThanOrEqualsTest: Base() {
 
     @Test
     fun description() {
-        lte.description(false) shouldBe " ≤ 1.5"
-        lte.description(true) shouldBe " ≤ 1.5"
+        lte.description(false) shouldBe "≤ 1.5"
+        lte.description(true) shouldBe "≤ 1.5"
     }
 }

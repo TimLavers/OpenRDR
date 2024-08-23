@@ -41,9 +41,9 @@ class ConditionManagementTest: OpenRDRServerTestBase() {
         val caseId = 42L
         val conditionList = ConditionList(
             listOf(
-                isNormal(1, Attribute(1, "WaveHeight")),
-                isLow(2, Attribute(2, "SeaTemp"))
-            ).map { FixedSuggestedCondition(it) }
+                FixedSuggestedCondition(isNormal(1, Attribute(1, "WaveHeight"))),
+                FixedSuggestedCondition(isLow(2, Attribute(2, "SeaTemp")))
+            )
         )
         every { kbEndpoint.conditionHintsForCase(caseId) } returns conditionList
 
