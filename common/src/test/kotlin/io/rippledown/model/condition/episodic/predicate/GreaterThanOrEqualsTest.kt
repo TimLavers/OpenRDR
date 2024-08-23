@@ -47,7 +47,7 @@ class GreaterThanOrEqualsTest : Base() {
 
     @Test
     fun description() {
-        gte.description(false) shouldBe " ≥ 1.2"
-        gte.description(true) shouldBe " ≥ 1.2"
+        gte.description(false) shouldBe "≥ 1.2"
+        gte.description(true) shouldBe "≥ 1.2"
     }
 }

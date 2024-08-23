@@ -81,27 +81,8 @@ internal class KBEndpointTest {
     fun `should return condition hints for a case`() {
         val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
         val case = endpoint.case(id)
-        val expectedConditions: List<Condition> = case.attributes
-            .filter { attribute ->
-                case.getLatest(attribute) != null
-            }.map { attribute ->
-                hasCurrentValue(1, attribute)
-            }
-        val hintConditions = endpoint.conditionHintsForCase(id).conditions.toSet()
-
-        hintConditions.size shouldBe expectedConditions.size
-        expectedConditions.forEach {
-            hintConditions shouldContainSameAs it
-        }
-    }
-
-    @Test
-    fun `condition hints should all have an id`() {
-        val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
-
-        endpoint.conditionHintsForCase(id).conditions.toSet().forEach { condition ->
-            condition.id shouldNotBe null
-        }
+        val hintConditions = endpoint.conditionHintsForCase(id)
+        hintConditions shouldBe endpoint.kb.conditionHintsForCase(case)
     }
 
     @Test

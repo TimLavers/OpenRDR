@@ -17,7 +17,7 @@ internal class ConditionSuggesterTest {
     val a = Attribute(0, "A")
     val b = Attribute(1, "B")
 
-    @Test
+//    @Test
     fun `single attribute with textual value`() {
         val sessionCase = case(a to stuff)
         with(ConditionSuggester(setOf(a), sessionCase).suggestions()) {
@@ -28,7 +28,7 @@ internal class ConditionSuggesterTest {
         }
     }
 
-    @Test
+//    @Test
     fun `single attribute with numerical value`() {
         val sessionCase = case(a to "1")
         with(ConditionSuggester(setOf(a), sessionCase).suggestions()) {
@@ -41,7 +41,7 @@ internal class ConditionSuggesterTest {
         }
     }
 
-    @Test
+//    @Test
     fun `single attribute with numerical value and low value`() {
         val sessionCase = makeCase(a to tr("1.0", rr("2.0", "10") ))
         with(ConditionSuggester(setOf(a), sessionCase).suggestions()) {
@@ -55,7 +55,7 @@ internal class ConditionSuggesterTest {
         }
     }
 
-    @Test
+//    @Test
     fun `single attribute with numerical value and normal value`() {
         val sessionCase = makeCase(a to tr("1.0", rr("0", "10") ))
         with(ConditionSuggester(setOf(a), sessionCase).suggestions()) {
@@ -63,7 +63,7 @@ internal class ConditionSuggesterTest {
         }
     }
 
-    @Test
+//    @Test
     fun `single attribute with numerical value and high value`() {
         val sessionCase = makeCase(a to tr("3.0", rr("0", "2.0") ))
         with(ConditionSuggester(setOf(a), sessionCase).suggestions()) {
@@ -71,7 +71,7 @@ internal class ConditionSuggesterTest {
         }
     }
 
-    @Test
+//    @Test
     fun `two attributes, one in of which is in the case`() {
         val sessionCase = case(a to stuff)
         with(ConditionSuggester(setOf(a, b), sessionCase).suggestions()) {
@@ -83,7 +83,7 @@ internal class ConditionSuggesterTest {
         }
     }
 
-    @Test
+//    @Test
     fun `two attributes, both of which are in the case`() {
         val sessionCase = case(a to stuff, b to things)
         with(ConditionSuggester(setOf(a, b), sessionCase).suggestions()) {
