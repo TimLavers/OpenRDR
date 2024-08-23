@@ -304,6 +304,20 @@ class Defs {
         restClient().createRuleToAddText(caseName, text)
     }
 
+//    Given("a case with name {word} is stored on the server:") { caseName: String ->
+//        labProxy().provideCase(caseName)
+//    }
+
+    @Then("the cases should have interpretations as follows")
+    fun theCasesShouldHaveInterpretationsAsFollows( dataTable: DataTable) {
+        dataTable.asLists().forEach {
+            println("checking interpretation for case ${it[0]}")
+            caseListPO().select(it[0])
+            interpretationViewPO().selectOriginalTab()
+            val expectedText = it[1]?: ""
+            interpretationViewPO().waitForInterpretationText(expectedText)
+        }
+    }
     @And("the interpretation of the case {word} includes {string} because of condition {string}")
     fun theInterpretationOfTheCaseWordIncludesStringBecauseOfConditionString(
         caseName: String,

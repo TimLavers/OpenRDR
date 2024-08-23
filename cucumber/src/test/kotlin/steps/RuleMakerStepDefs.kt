@@ -167,6 +167,13 @@ class RuleMakerStepDefs {
         addConditionsAndFinishRule(conditions)
     }
 
+    @And("I build a rule to remove the comment {string} with conditions")
+    fun buildARuleToRemoveTheCommentWithConditions(comment: String, conditions: DataTable) {
+        startRuleToRemoveComment(comment)
+        pause(10000)
+        addConditionsAndFinishRule(conditions)
+    }
+
 
 }
 

@@ -10,14 +10,17 @@ import io.rippledown.model.Conclusion
 import io.rippledown.model.OperationResult
 import io.rippledown.model.condition.Condition
 import io.rippledown.server.ServerApplication
+import io.rippledown.server.logger
 import kotlinx.serialization.json.Json
 
 fun Application.ruleSession(application: ServerApplication) {
     routing {
         post(START_SESSION_TO_ADD_CONCLUSION) {
+            logger.info("START_SESSION_TO_ADD_CONCLUSION")
             val id = longId()
             val conclusion = call.receive<Conclusion>()
             kbEndpoint(application).startRuleSessionToAddConclusion(id, conclusion)
+            logger.info("session started to add conclusion $conclusion")
             call.respond(HttpStatusCode.OK, OperationResult("Session started"))
         }
         post(START_SESSION_TO_REMOVE_CONCLUSION) {
@@ -37,7 +40,9 @@ fun Application.ruleSession(application: ServerApplication) {
             call.respond(HttpStatusCode.OK, OperationResult("Condition added"))
         }
         post(COMMIT_SESSION) {
+            logger.info("COMMIT_SESSION")
             kbEndpoint(application).commitCurrentRuleSession()
+            logger.info("session committed")
             call.respond(HttpStatusCode.OK, OperationResult("Session committed"))
         }
     }

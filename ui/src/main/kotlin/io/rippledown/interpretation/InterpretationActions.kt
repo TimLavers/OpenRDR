@@ -80,6 +80,7 @@ fun InterpretationActions(comments: List<String>, handler: InterpretationActions
     if (addCommentDialogShowing) {
         AddCommentDialog(handler = object : AddCommentHandler {
             override fun startRuleToAddComment(comment: String) {
+                println("GUI starting rule to add comment $comment")
                 addCommentDialogShowing = false
                 handler.startRuleToAddComment(comment)
             }

@@ -152,6 +152,7 @@ class Api(private val engine: HttpClientEngine = CIO.create()) {
      * @return the first cornerstone, its index and the total number of cornerstones
      */
     suspend fun startRuleSession(sessionStartRequest: SessionStartRequest): CornerstoneStatus {
+        println("API startRuleSession with request data $sessionStartRequest")
         val body = client.post("$API_URL$START_RULE_SESSION") {
             contentType(ContentType.Application.Json)
             setBody(sessionStartRequest)
