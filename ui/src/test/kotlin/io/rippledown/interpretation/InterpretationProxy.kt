@@ -42,7 +42,7 @@ fun ComposeTestRule.clickRemoveCommentMenu() = onNodeWithContentDescription(REMO
     .performClick()
 
 private fun ComposeTestRule.enterCommentToBeAdded(comment: String) {
-    onNodeWithContentDescription(NEW_COMMENT_TEXT_FIELD)
+    onNodeWithContentDescription(ADD_COMMENT_TEXT_FIELD)
         .assertIsDisplayed()
         .performTextInput(comment)
 }
@@ -55,16 +55,12 @@ private fun ComposeTestRule.enterCommentToBeTheReplacement(comment: String) {
 
 fun ComposeTestRule.addNewComment(comment: String) {
     enterCommentToBeAdded(comment)
-    sleep(500) //TODO remove this sleep
     clickOKToAddNewComment()
 }
 
 fun ComposeTestRule.replaceComment(toBeReplaced: String, replacement: String) {
-    sleep(500) //TODO remove this sleep
     clickCommentToBeReplaced(toBeReplaced)
-    sleep(500) //TODO remove this sleep
     enterCommentToBeTheReplacement(replacement)
-    sleep(500) //TODO remove this sleep
     clickOKToReplaceComment()
 }
 
@@ -76,44 +72,16 @@ fun ComposeTestRule.removeComment(comment: String) {
 }
 
 fun ComposeTestRule.clickCommentToRemove(comment: String) {
-    clickComment(REMOVE_COMMENT_SELECTOR_PREFIX, comment)
+    clickComment(REMOVE_COMMENT_PREFIX, comment)
 }
 
 fun ComposeTestRule.clickCommentToBeReplaced(comment: String) {
-    clickComment(REPLACE_COMMENT_SELECTOR_PREFIX, comment)
+    clickComment(REPLACE_COMMENT_PREFIX, comment)
 }
 
 fun ComposeTestRule.clickComment(prefix: String, comment: String) {
     waitUntil { onNodeWithContentDescription("$prefix$comment").isDisplayed() }
     onNodeWithContentDescription("$prefix$comment").performClick()
-    waitForIdle()
-}
-
-fun ComposeTestRule.requireCommentSelectorOptionsToBeDisplayed(prefix: String, options: List<String>) {
-    requireDropDownMenuToBeDisplayed()
-    options.forEach { option ->
-        onNodeWithContentDescription("$prefix$option")
-            .assertIsDisplayed()
-    }
-}
-
-fun ComposeTestRule.requireCommentSelectorOptionsNotToBeDisplayed(prefix: String, options: List<String>) {
-    requireDropDownMenuToBeDisplayed()
-    options.forEach { option ->
-        onNodeWithContentDescription("$prefix$option")
-            .assertDoesNotExist()
-    }
-}
-
-fun ComposeTestRule.requireDropDownMenuToBeDisplayed() {
-    onNodeWithContentDescription(DROP_DOWN_TEXT_FIELD)
-        .assertIsDisplayed()
-}
-
-fun ComposeTestRule.clickCommentDropDownMenu() {
-    onNodeWithContentDescription(DROP_DOWN_TEXT_FIELD)
-        .assertIsDisplayed()
-        .performClick()
     waitForIdle()
 }
 
@@ -159,16 +127,46 @@ fun ComposeTestRule.clickCancelRemoveComment() {
     waitForIdle()
 }
 
-fun ComposeTestRule.requireCommentSelectorWithSelectedLabel(expected: String) {
+fun ComposeTestRule.requireCommentSelectorLabel(expected: String) {
     onNodeWithContentDescription(COMMENT_SELECTOR_LABEL, useUnmergedTree = true)
         .assertIsDisplayed()
         .assertTextEquals(expected)
 }
 
-fun ComposeTestRule.requireCommentSelectorForPrefixWithSelectedComment(prefix: String, expected: String) {
-    onNodeWithContentDescription("$prefix$expected", useUnmergedTree = true)
-        .assertIsDisplayed()
+fun ComposeTestRule.requireCommentOptionsToBeDisplayed(prefix: String, options: List<String>) {
+    options.forEach { option ->
+        println("CommentSelectorTest: looking for option $option")
+        onNodeWithContentDescription(prefix + option, useUnmergedTree = true)
+            .assertIsDisplayed()
+    }
 }
+
+fun ComposeTestRule.requireCommentOptionsNotToExist(prefix: String, options: List<String>) {
+    options.forEach { option ->
+        onNodeWithContentDescription("$prefix$option", useUnmergedTree = true)
+            .assertDoesNotExist()
+    }
+}
+
+fun ComposeTestRule.requireCommentOptionsNotToBeDisplayed(prefix: String, options: List<String>) {
+    options.forEach { option ->
+        onNodeWithContentDescription("$prefix$option")
+            .assertIsNotDisplayed()
+    }
+}
+
+fun ComposeTestRule.enterTextIntoTheCommentSelector(prefix: String, text: String) {
+    onNodeWithContentDescription(prefix + COMMENT_SELECTOR_TEXT_FIELD)
+        .assertIsDisplayed()
+        .performTextInput(text)
+    waitForIdle()
+}
+
+fun ComposeTestRule.scrollToOption(prefix: String, option: String) {
+    onNodeWithContentDescription("$prefix$option")
+        .performScrollTo()
+}
+
 
 
 

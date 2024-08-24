@@ -6,7 +6,6 @@ import io.kotest.matchers.shouldNotBe
 import io.rippledown.constants.interpretation.*
 import io.rippledown.constants.rule.FINISH_RULE_BUTTON
 import io.rippledown.integration.utils.find
-import io.rippledown.integration.utils.findAndClick
 import io.rippledown.integration.utils.findComposeDialogThatIsShowing
 import io.rippledown.integration.utils.waitForContextToBeNotNull
 import io.rippledown.integration.waitForDebounce
@@ -132,7 +131,7 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
             execute<ComposeDialog> { findComposeDialogThatIsShowing() } shouldNotBe null
         }
         val dialog = execute<ComposeDialog> { findComposeDialogThatIsShowing() }
-        execute { dialog.accessibleContext.find(NEW_COMMENT_TEXT_FIELD)!!.accessibleEditableText.setTextContents(comment) }
+        execute { dialog.accessibleContext.find(ADD_COMMENT_TEXT_FIELD)!!.accessibleEditableText.setTextContents(comment) }
         execute { dialog.accessibleContext.find(OK_BUTTON_FOR_ADD_COMMENT)!!.accessibleAction.doAccessibleAction(0) }
     }
 
@@ -142,11 +141,11 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         }
         val dialog = execute<ComposeDialog> { findComposeDialogThatIsShowing() }
         with(dialog.accessibleContext) {
-            execute { findAndClick(DROP_DOWN_TEXT_FIELD) }
-            waitUntilAsserted {
-                find("$REMOVE_COMMENT_SELECTOR_PREFIX$comment") shouldNotBe null
+            execute {
+                dialog.accessibleContext.find(REMOVE_COMMENT_TEXT_FIELD)!!.accessibleEditableText.setTextContents(
+                    comment
+                )
             }
-            execute { findAndClick("$REMOVE_COMMENT_SELECTOR_PREFIX$comment") }
             execute {
                 find(OK_BUTTON_FOR_REMOVE_COMMENT)!!.accessibleAction.doAccessibleAction(0)
             }
@@ -159,13 +158,9 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         }
         val dialog = execute<ComposeDialog> { findComposeDialogThatIsShowing() }
         with(dialog.accessibleContext) {
-            execute { findAndClick(DROP_DOWN_TEXT_FIELD) }
 
-            //Click comment to be replaced
-            waitUntilAsserted {
-                find("$REPLACE_COMMENT_SELECTOR_PREFIX$comment") shouldNotBe null
-            }
-            execute { findAndClick("$REPLACE_COMMENT_SELECTOR_PREFIX$comment") }
+            //Enter the comment to be replaced
+            execute { find(REPLACE_COMMENT_TEXT_FIELD)!!.accessibleEditableText.setTextContents(comment) }
 
             //Enter replacement comment
             execute { find(REPLACEMENT_COMMENT_TEXT_FIELD)!!.accessibleEditableText.setTextContents(replacement) }

@@ -13,6 +13,7 @@ import io.rippledown.model.condition.*
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.external.MeasurementEvent
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
+import io.rippledown.model.rule.ConditionSuggester
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.persistence.inmemory.InMemoryKB
@@ -489,10 +490,8 @@ class KBTest {
     @Test
     fun `should return condition hints for case`() {
         val caseWithGlucoseAttribute = createCase("A", "1.0")
-        val expectedCondition = kb.conditionManager.getOrCreate(hasCurrentValue(null, glucose()))
         val conditionList = kb.conditionHintsForCase(caseWithGlucoseAttribute)
-        conditionList.conditions.size shouldBe 1
-        conditionList.conditions[0] should beSameAs(expectedCondition)
+        conditionList.suggestions.toSet() shouldBe ConditionSuggester(kb.attributeManager.all(), caseWithGlucoseAttribute).suggestions().toSet()
     }
 
     @Test // Conc-4

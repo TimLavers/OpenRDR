@@ -10,7 +10,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventType.Companion.Enter
-import androidx.compose.ui.input.pointer.PointerEventType.Companion.Exit
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
@@ -19,6 +18,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.rippledown.components.Scrollbar
 import io.rippledown.constants.rule.REMOVE_CONDITION_ICON_PREFIX
 import io.rippledown.constants.rule.SELECTED_CONDITIONS
 import io.rippledown.constants.rule.SELECTED_CONDITION_PREFIX
@@ -32,7 +32,6 @@ interface SelectedConditionsHandler {
 @Composable
 fun SelectedConditions(conditions: List<Condition>, handler: SelectedConditionsHandler) {
     val scrollState = rememberScrollState()
-    val hoverOverScroll = remember { mutableStateOf(false) }
     var cursorOnRow: Int by remember { mutableStateOf(-1) }
     Text(
         text = "Selected conditions",
@@ -85,17 +84,7 @@ fun SelectedConditions(conditions: List<Condition>, handler: SelectedConditionsH
                     }
                 }
         }
-        VerticalScrollbar(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .onPointerEvent(Enter) {
-                    hoverOverScroll.value = true
-                }
-                .onPointerEvent(Exit) {
-                    hoverOverScroll.value = false
-                }
-                .requiredWidth(if (hoverOverScroll.value) 10.dp else 5.dp),
-            adapter = rememberScrollbarAdapter(scrollState)
-        )
+        Scrollbar(scrollState = scrollState, modifier = Modifier.align(Alignment.CenterEnd))
     }
 }
+

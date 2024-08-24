@@ -3,6 +3,7 @@ package io.rippledown.interpretation
 import androidx.compose.ui.test.junit4.createComposeRule
 import io.mockk.mockk
 import io.mockk.verify
+import io.rippledown.constants.interpretation.REMOVE_COMMENT_PREFIX
 import io.rippledown.utils.applicationFor
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -21,7 +22,22 @@ class RemoveCommentDialogTest {
     }
 
     @Test
-    fun `should call handler to start rule when OK is pressed`() = runTest {
+    fun `should show the options`() {
+        val bondi = "Bondi"
+        val maroubra = "Maroubra"
+        with(composeTestRule) {
+            //Given
+            setContent {
+                RemoveCommentDialog(listOf(bondi, maroubra), handler)
+            }
+
+            //Then
+            requireCommentOptionsToBeDisplayed(REMOVE_COMMENT_PREFIX, listOf(bondi, maroubra))
+        }
+    }
+
+    @Test
+    fun `should call handler to start rule when OK is pressed`() {
         val bondi = "Bondi"
         val maroubra = "Maroubra"
         with(composeTestRule) {
@@ -31,7 +47,7 @@ class RemoveCommentDialogTest {
             }
 
             //When
-            clickCommentDropDownMenu()
+            requireCommentOptionsToBeDisplayed(REMOVE_COMMENT_PREFIX, listOf(bondi, maroubra))
             removeComment(bondi)
 
             //Then
