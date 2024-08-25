@@ -16,7 +16,6 @@ const val START_SESSION_TO_REMOVE_CONCLUSION = "/api/startSessionToRemoveConclus
 const val START_SESSION_TO_REPLACE_CONCLUSION = "/api/startSessionToReplaceConclusion"
 const val ADD_CONDITION = "/api/addCondition"
 const val COMMIT_SESSION = "/api/commitSession"
-const val VERIFIED_INTERPRETATION_SAVED = "/api/verifiedInterpretationSaved"
 const val BUILD_RULE = "/api/buildRule"
 const val START_RULE_SESSION = "/api/startRuleSession"
 const val SELECT_CORNERSTONE = "/api/selectCornerstone"

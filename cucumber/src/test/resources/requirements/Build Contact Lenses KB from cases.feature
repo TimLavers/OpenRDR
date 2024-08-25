@@ -13,6 +13,7 @@ Feature: The Contact Lense Prescription KB can be built with the user interface.
       | tear production is "normal"     |
 
     And I select case Case4
+    And pause
     And I build a rule to add the comment "hard" with conditions
       | astigmatism is "astigmatic" |
       | tear production is "normal" |

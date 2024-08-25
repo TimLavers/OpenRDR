@@ -1,5 +1,7 @@
 package io.rippledown.main
 
+import androidx.compose.runtime.InternalComposeApi
+import androidx.compose.runtime.identityHashCode
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -25,6 +27,11 @@ import java.io.File
 
 
 class Api(private val engine: HttpClientEngine = CIO.create()) {
+    init {
+        println("------- creating API --------")
+        Thread.dumpStack()
+        println("------- created API! --------")
+    }
     private var currentKB: KBInfo? = null
     private val client = HttpClient(engine) {
         install(ContentNegotiation) {
@@ -65,7 +72,9 @@ class Api(private val engine: HttpClientEngine = CIO.create()) {
         return currentKB!!
     }
 
+    @OptIn(InternalComposeApi::class)
     suspend fun kbInfo(): KBInfo {
+        println("API kbInfo(). This is ${identityHashCode(this)}. currentKB is $currentKB")
         if (currentKB == null) {
             currentKB = client.get("$API_URL$DEFAULT_KB").body<KBInfo>()
         }
@@ -158,6 +167,7 @@ class Api(private val engine: HttpClientEngine = CIO.create()) {
             setBody(sessionStartRequest)
             setKBParameter()
         }.body<CornerstoneStatus>()
+        println("Cornerstone status result at session start: $body")
         return body
     }
 
@@ -167,6 +177,7 @@ class Api(private val engine: HttpClientEngine = CIO.create()) {
      * @return the updated CornerstoneStatus
      */
     suspend fun updateCornerstoneStatus(updateCornerstoneRequest: UpdateCornerstoneRequest): CornerstoneStatus {
+        println("API update cornerstoneStatus: $updateCornerstoneRequest")
         return client.post("$API_URL$UPDATE_CORNERSTONES") {
             contentType(ContentType.Application.Json)
             setBody(updateCornerstoneRequest)
