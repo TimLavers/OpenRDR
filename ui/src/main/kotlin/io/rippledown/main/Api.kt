@@ -26,12 +26,7 @@ import io.rippledown.sample.SampleKB
 import java.io.File
 
 
-class Api(private val engine: HttpClientEngine = CIO.create()) {
-    init {
-        println("------- creating API --------")
-        Thread.dumpStack()
-        println("------- created API! --------")
-    }
+class Api(engine: HttpClientEngine = CIO.create()) {
     private var currentKB: KBInfo? = null
     private val client = HttpClient(engine) {
         install(ContentNegotiation) {

@@ -155,22 +155,22 @@ class RuleMakerStepDefs {
     @And("I build a rule to add the comment {string} with conditions")
     fun buildARuleToAddCommentWithConditions(comment: String, conditions: DataTable) {
         startRuleBuildingSessionToAddComment(comment)
-        pause(1000)
+        pause(100)
         addConditionsAndFinishRule(conditions)
     }
 
     @And("I build a rule to replace the comment {string} with the comment {string} with conditions")
     fun buildARuleToReplaceTheCommentWithTheCommentWithConditions(toBeReplaced: String, replacement: String, conditions: DataTable ) {
-        pause(1000)
+        pause(100)
         startRuleToReplaceComment(toBeReplaced, replacement)
-        pause(10000)
+        pause(100)
         addConditionsAndFinishRule(conditions)
     }
 
     @And("I build a rule to remove the comment {string} with conditions")
     fun buildARuleToRemoveTheCommentWithConditions(comment: String, conditions: DataTable) {
         startRuleToRemoveComment(comment)
-        pause(10000)
+        pause(100)
         addConditionsAndFinishRule(conditions)
     }
 
@@ -189,17 +189,17 @@ fun startRuleToReplaceComment(toBeReplaced: String, replacement: String) {
     with(interpretationViewPO()) {
         clickChangeInterpretationButton()
         clickReplaceCommentMenu()
-        pause(1000) //TODO remove
+        pause(100) //TODO remove
         selectCommentToReplaceAndEnterItsReplacementAndClickOK(toBeReplaced, replacement)
-        pause(1000) //TODO remove
+        pause(100) //TODO remove
     }
 }
 fun addConditionsAndFinishRule(dataTable: DataTable) {
     dataTable.asList().forEach { condition ->
-        pause(1000)
+        pause(100)
         ruleMakerPO().clickConditionWithText(condition)
     }
-    pause(10000)
+    pause(100)
     ruleMakerPO().clickDoneButton()
 }
 

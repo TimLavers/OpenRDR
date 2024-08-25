@@ -46,7 +46,9 @@ fun Application.interpManagement(application: ServerApplication) {
         }
 
         get(SELECT_CORNERSTONE) {
+            logger.info(SELECT_CORNERSTONE)
             val cornerstoneIndex = call.parameters[INDEX_PARAMETER]?.toInt() ?: error("Invalid cornerstone index.")
+            logger.info("selecting cornerstone for index $cornerstoneIndex")
             val cornerstone = kbEndpoint(application).cornerstoneForIndex(cornerstoneIndex)
             call.respond(cornerstone)
         }
