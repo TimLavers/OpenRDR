@@ -1,5 +1,3 @@
-@file:OptIn(DelicateCoroutinesApi::class)
-
 package io.rippledown
 
 import androidx.compose.runtime.getValue
@@ -15,7 +13,6 @@ import androidx.compose.ui.window.application
 import io.ktor.client.engine.cio.*
 import io.rippledown.constants.main.TITLE
 import io.rippledown.main.*
-import kotlinx.coroutines.DelicateCoroutinesApi
 import java.awt.event.WindowEvent
 import java.awt.event.WindowEvent.WINDOW_CLOSING
 import java.lang.Thread.sleep
@@ -29,7 +26,7 @@ class TestClientLauncher {
     private lateinit var thread: Thread
 
     fun launchClient(): ComposeWindow {
-        val api = Api()
+        val api = Api(clientCIO)
         thread = Thread {
             application(exitProcessOnExit = false) {
                 var windowSize by remember { mutableStateOf(DEFAULT_WINDOW_SIZE) }
@@ -38,7 +35,7 @@ class TestClientLauncher {
                 }
 
                 val handler = object : Handler {
-                    override var api = Api(clientCIO)
+                    override var api = api
                     override var isClosing: () -> Boolean = { false }
                     override var setInfoMessage: (String) -> Unit = {}
                     override fun showingCornerstone(isShowingCornerstone: Boolean) {
