@@ -1,6 +1,6 @@
 Feature: The Zoo KB can be built with the user interface.
 
-#  @single
+  @single
   Scenario: Build the Zoo KB from cases
     Given I start the client application
     And I create a Knowledge Base with the name Zoo based on the "Zoo Animals - cases only" sample
@@ -24,6 +24,70 @@ Feature: The Zoo KB can be built with the user interface.
       | backbone is "false" |
       | breathes is "false" |
       | legs is "0"         |
+
+    And I select case crab
+    And I build a rule to replace the comment "fish" with the comment "mollusc" with conditions
+      | backbone is "false" |
+      | fins is "false" |
+
+    And I select case dolphin
+    And I build a rule to remove the comment "fish" with conditions
+      | milk is "true" |
+
+    And I select case duck
+    And I build a rule to remove the comment "fish" with conditions
+      | feathers is "true" |
+
+    And I select case flea
+    And I build a rule to add the comment "insect" with conditions
+      | eggs is "true"      |
+      | breathes is "true"  |
+      | backbone is "false" |
+
+    And I select case frog
+    And I build a rule to replace the comment "fish" with the comment "amphibian" with conditions
+      | milk is "false" |
+      | breathes is "true" |
+      | feathers is "false" |
+
+    And I select case pitviper
+    And I build a rule to add the comment "reptile" with conditions
+      | backbone is "true" |
+      | breathes is "true" |
+      | legs is "0"        |
+
+    And I select case dolphin
+    And I build a rule to remove the comment "reptile" with conditions
+      | milk is "true" |
+
+    And I select case scorpion
+    And I build a rule to add the comment "mollusc" with conditions
+      | backbone is "false" |
+      | breathes is "true"  |
+      | legs is "8"         |
+
+    And I select case seasnake
+    And I build a rule to replace the comment "fish" with the comment "reptile" with conditions
+      | backbone is "true"  |
+      | feathers is "false" |
+      | fins is "false"     |
+      | legs is "0"         |
+
+    And I select case slug
+    And I build a rule to replace the comment "insect" with the comment "mollusc" with conditions
+      | legs is "0" |
+
+    And I select case tortoise
+    And I build a rule to add the comment "reptile" with conditions
+      | backbone is "true" |
+      | eggs is "true"     |
+      | tail is "true"     |
+      | legs is "4"         |
+
+    And I select case newt
+    And I build a rule to remove the comment "reptile" with conditions
+      | aquatic is "true" |
+      | legs is "4"        |
 
     Then the cases should have interpretations as follows
       | aardvark | mammal    |
@@ -78,7 +142,7 @@ Feature: The Zoo KB can be built with the user interface.
       | mole     | mammal    |
       | mongoose | mammal    |
       | moth     | insect    |
-      | newt     | mammal    |
+      | newt     | amphibian |
       | octopus  | mollusc   |
       | oryx     | mammal    |
       | parakeet | bird      |
@@ -108,8 +172,8 @@ Feature: The Zoo KB can be built with the user interface.
       | slug     | mollusc   |
       | sole     | fish      |
       | sparrow  | bird      |
-      | squirrel | mollusc   |
-      | slug     | mammal    |
+      | squirrel | mammal   |
+      | slug     | mollusc    |
       | starfish | mollusc   |
       | stingray | fish      |
       | swan     | bird      |

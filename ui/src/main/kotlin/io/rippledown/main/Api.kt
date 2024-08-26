@@ -69,7 +69,6 @@ class Api(engine: HttpClientEngine = CIO.create()) {
 
     @OptIn(InternalComposeApi::class)
     suspend fun kbInfo(): KBInfo {
-        println("API kbInfo(). This is ${identityHashCode(this)}. currentKB is $currentKB")
         if (currentKB == null) {
             currentKB = client.get("$API_URL$DEFAULT_KB").body<KBInfo>()
         }
@@ -156,13 +155,11 @@ class Api(engine: HttpClientEngine = CIO.create()) {
      * @return the first cornerstone, its index and the total number of cornerstones
      */
     suspend fun startRuleSession(sessionStartRequest: SessionStartRequest): CornerstoneStatus {
-        println("API startRuleSession with request data $sessionStartRequest")
         val body = client.post("$API_URL$START_RULE_SESSION") {
             contentType(ContentType.Application.Json)
             setBody(sessionStartRequest)
             setKBParameter()
         }.body<CornerstoneStatus>()
-        println("Cornerstone status result at session start: $body")
         return body
     }
 
@@ -172,7 +169,6 @@ class Api(engine: HttpClientEngine = CIO.create()) {
      * @return the updated CornerstoneStatus
      */
     suspend fun updateCornerstoneStatus(updateCornerstoneRequest: UpdateCornerstoneRequest): CornerstoneStatus {
-        println("API update cornerstoneStatus: $updateCornerstoneRequest")
         return client.post("$API_URL$UPDATE_CORNERSTONES") {
             contentType(ContentType.Application.Json)
             setBody(updateCornerstoneRequest)
