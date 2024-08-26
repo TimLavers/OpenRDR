@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 data object IsNotBlank: TestResultPredicate {
     override fun evaluate(result: TestResult) = result.value.text.isNotBlank()
 
-    override fun description(plural: Boolean) = if (plural) "are not blank" else "is not blank"
+    override fun description(plural: Boolean) = if (plural) "are in case" else "is in case"
 }
 
 @Serializable

@@ -22,7 +22,11 @@ interface InterpretationActionsHandler {
 }
 
 @Composable
-fun InterpretationActions(comments: List<String>, handler: InterpretationActionsHandler) {
+fun InterpretationActions(
+    commentsGivenForCase: List<String>,
+    allComments: Set<String>,
+    handler: InterpretationActionsHandler
+) {
     var addCommentDialogShowing by remember { mutableStateOf(false) }
     var replaceCommentDialogShowing by remember { mutableStateOf(false) }
     var removeCommentDialogShowing by remember { mutableStateOf(false) }
@@ -60,7 +64,7 @@ fun InterpretationActions(comments: List<String>, handler: InterpretationActions
                     text = REPLACE_COMMENT,
                     contentDescription = REPLACE_COMMENT_MENU,
                     iconResource = "replace_comment_24.png",
-                    enabled = comments.isNotEmpty(),
+                    enabled = commentsGivenForCase.isNotEmpty(),
                     onClick = {
                         replaceCommentDialogShowing = true
                     }
@@ -69,7 +73,7 @@ fun InterpretationActions(comments: List<String>, handler: InterpretationActions
                     text = REMOVE_COMMENT,
                     contentDescription = REMOVE_COMMENT_MENU,
                     iconResource = "remove_comment_24.png",
-                    enabled = comments.isNotEmpty(),
+                    enabled = commentsGivenForCase.isNotEmpty(),
                     onClick = {
                         removeCommentDialogShowing = true
                     }
@@ -78,7 +82,7 @@ fun InterpretationActions(comments: List<String>, handler: InterpretationActions
         }
     }
     if (addCommentDialogShowing) {
-        AddCommentDialog(availableComments = listOf(), handler = object : AddCommentHandler {
+        AddCommentDialog(availableComments = allComments.toList(), handler = object : AddCommentHandler {
             override fun startRuleToAddComment(comment: String) {
                 addCommentDialogShowing = false
                 handler.startRuleToAddComment(comment)
@@ -91,7 +95,8 @@ fun InterpretationActions(comments: List<String>, handler: InterpretationActions
     }
     if (replaceCommentDialogShowing) {
         ReplaceCommentDialog(
-            availableComments = comments,
+            givenComments = commentsGivenForCase,
+            availableComments = allComments.toList(),
             handler = object : ReplaceCommentHandler {
                 override fun startRuleToReplaceComment(toBeReplaced: String, replacement: String) {
                     replaceCommentDialogShowing = false
@@ -106,7 +111,7 @@ fun InterpretationActions(comments: List<String>, handler: InterpretationActions
 
     if (removeCommentDialogShowing) {
         RemoveCommentDialog(
-            availableComments = comments,
+            availableComments = commentsGivenForCase,
             handler = object : RemoveCommentHandler {
                 override fun startRuleToRemoveComment(comment: String) {
                     removeCommentDialogShowing = false

@@ -17,7 +17,10 @@ class ReplaceCommentDialogTest {
 
     val bondi = "Bondi"
     val maroubra = "Maroubra"
-    val availableComments = listOf(bondi, maroubra)
+    val coogee = "Coogee"
+    val bronte = "Bronte"
+    val givenComments = listOf(bondi, maroubra)
+    val availableComments = listOf(bondi, maroubra, coogee, bronte)
 
     @Before
     fun init() {
@@ -29,15 +32,15 @@ class ReplaceCommentDialogTest {
         with(composeTestRule) {
             //Given
             setContent {
-                ReplaceCommentDialog(availableComments, handler)
+                ReplaceCommentDialog(givenComments, availableComments, handler)
             }
 
             //When
-            replaceComment(bondi, maroubra)
+            replaceComment(bondi, coogee)
             clickOKToReplaceComment()
 
             //Then
-            verify { handler.startRuleToReplaceComment(bondi, maroubra) }
+            verify { handler.startRuleToReplaceComment(bondi, coogee) }
         }
     }
 
@@ -46,7 +49,7 @@ class ReplaceCommentDialogTest {
         with(composeTestRule) {
             //Given
             setContent {
-                ReplaceCommentDialog(availableComments, handler)
+                ReplaceCommentDialog(listOf(), availableComments, handler)
             }
 
             //When
@@ -71,6 +74,6 @@ fun main() {
         }
     }
     applicationFor {
-        ReplaceCommentDialog(listOf(bondi, maroubra), handler)
+        ReplaceCommentDialog(listOf(), listOf(bondi, maroubra), handler)
     }
 }

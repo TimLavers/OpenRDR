@@ -22,7 +22,7 @@ interface RemoveCommentHandler {
 
 @Composable
 fun RemoveCommentDialog(availableComments: List<String>, handler: RemoveCommentHandler) {
-    val dialogState = rememberDialogState(size = DpSize(600.dp, 400.dp))
+    val dialogState = rememberDialogState(size = DpSize(640.dp, 400.dp))
     var selectedComment by remember { mutableStateOf("") }
     DialogWindow(
         title = REMOVE_COMMENT,
@@ -52,12 +52,13 @@ fun RemoveCommentDialog(availableComments: List<String>, handler: RemoveCommentH
                     options,
                     REMOVE_COMMENT_LABEL,
                     REMOVE_COMMENT_PREFIX,
+                    200.dp,
+                    modifier = Modifier,
                     object : CommentSelectorHandler {
                         override fun onCommentChanged(comment: String) {
                             selectedComment = comment
                         }
-                    }
-                )
+                    })
             }
         }
     }

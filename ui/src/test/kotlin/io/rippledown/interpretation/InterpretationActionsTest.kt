@@ -3,6 +3,7 @@ package io.rippledown.interpretation
 import androidx.compose.ui.test.junit4.createComposeRule
 import io.mockk.mockk
 import io.mockk.verify
+import io.rippledown.constants.interpretation.ADD_COMMENT_PREFIX
 import io.rippledown.utils.applicationFor
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -25,7 +26,7 @@ class InterpretationActionsTest {
         with(composeTestRule) {
             //Given
             setContent {
-                InterpretationActions(listOf(), handler)
+                InterpretationActions(listOf(), setOf(), handler)
             }
 
             //When
@@ -41,7 +42,7 @@ class InterpretationActionsTest {
         with(composeTestRule) {
             //Given
             setContent {
-                InterpretationActions(listOf(), handler)
+                InterpretationActions(listOf(), setOf(), handler)
             }
             clickChangeInterpretationButton()
 
@@ -55,54 +56,94 @@ class InterpretationActionsTest {
     }
 
     @Test
-    fun `should handler when the user clicks on the replace comment button, selects an existing comment, adds a replacement comment and presses OK`() =
-        runTest {
+    fun `should show all available comments when the user clicks on the add comment button if there are no comments given for the case`() {
         with(composeTestRule) {
             //Given
-            val bondi = "Bondi"
-            val maroubra = "Maroubra"
-            val coogee = "Coogee"
-            val comments = listOf(bondi, maroubra)
-
+            val allComments = setOf("Go to Bondi", "Go to Manly", "Go to Coogee")
             setContent {
-                InterpretationActions(comments, handler)
+                InterpretationActions(listOf(), allComments, handler)
             }
-            clickChangeInterpretationButton()
 
             //When
-            clickReplaceCommentMenu()
-            replaceComment(bondi, coogee)
+            clickChangeInterpretationButton()
+            clickAddCommentMenu()
 
             //Then
-            verify(timeout = 1_000) { handler.startRuleToReplaceComment(bondi, coogee) }
+            requireCommentOptionsToBeDisplayed(ADD_COMMENT_PREFIX, allComments.toList())
         }
     }
 
     @Test
-    fun `should call handler when the user clicks on the remove comment button, selects a comment and presses OK`() =
-        runTest {
-        val comments = listOf("Bondi", "Manly", "Coogee")
+    fun `should show all available comments when the user clicks on the add comment button, apart from those given for the case`() {
         with(composeTestRule) {
             //Given
+            val givenComments = listOf("Go to Manly")
+            val allComments = setOf("Go to Bondi", "Go to Manly", "Go to Coogee")
             setContent {
-                InterpretationActions(comments, handler)
+                InterpretationActions(givenComments, allComments, handler)
             }
-            clickChangeInterpretationButton()
 
             //When
-            clickRemoveCommentMenu()
-            removeComment("Manly")
+            clickChangeInterpretationButton()
+            clickAddCommentMenu()
 
             //Then
-            verify(timeout = 1_000) { handler.startRuleToRemoveComment("Manly") }
+            requireCommentOptionsToBeDisplayed(ADD_COMMENT_PREFIX, allComments.toList() - givenComments)
         }
+    }
+
+    @Test
+    fun `should call handler when the user clicks on the replace comment button, selects an existing comment, adds a replacement comment and presses OK`() =
+        runTest {
+            with(composeTestRule) {
+                //Given
+                val bondi = "Bondi"
+                val maroubra = "Maroubra"
+                val coogee = "Coogee"
+                val commentsForCase = listOf(bondi, maroubra)
+                val allComments = listOf(bondi, maroubra, coogee)
+
+                setContent {
+                    InterpretationActions(commentsForCase, setOf(), handler)
+                }
+                clickChangeInterpretationButton()
+
+                //When
+                clickReplaceCommentMenu()
+                replaceComment(bondi, coogee)
+
+                //Then
+                verify { handler.startRuleToReplaceComment(bondi, coogee) }
+            }
+        }
+
+    @Test
+    fun `should call handler when the user clicks on the remove comment button, selects a comment and presses OK`() =
+        runTest {
+            val comments = listOf("Bondi", "Manly", "Coogee")
+            with(composeTestRule) {
+                //Given
+                setContent {
+                    InterpretationActions(comments, setOf(), handler)
+                }
+                clickChangeInterpretationButton()
+
+                //When
+                clickRemoveCommentMenu()
+                removeComment("Manly")
+
+                //Then
+                verify(timeout = 1_000) { handler.startRuleToRemoveComment("Manly") }
+            }
         }
 }
 
 fun main() {
     val handler = mockk<InterpretationActionsHandler>(relaxed = true)
+    val givenComments = listOf("Bondi", "Manly", "Coogee")
+    val allComments = givenComments.toSet() + setOf("Maroubra", "Bronte", "Tamarama")
     applicationFor {
-        InterpretationActions(listOf("Bondi", "Malabar"), handler)
+        InterpretationActions(givenComments, allComments, handler)
     }
 }
 
