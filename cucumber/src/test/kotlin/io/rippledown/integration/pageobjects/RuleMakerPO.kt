@@ -15,6 +15,8 @@ import io.rippledown.integration.utils.findComposeDialogThatIsShowing
 import io.rippledown.integration.utils.waitForContextToBeNotNull
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
+import org.awaitility.kotlin.await
+import java.time.Duration.ofSeconds
 import javax.accessibility.AccessibleContext
 
 class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
@@ -84,16 +86,20 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun requireAvailableConditionsContains(conditions: Set<String>) {
-        val allShowing = allSuggestedConditions()
-        conditions.forEach {
-            allShowing shouldContain it
+        await.atMost(ofSeconds(2)).untilAsserted {
+            val allShowing = allSuggestedConditions()
+            conditions.forEach {
+                allShowing shouldContain it
+            }
         }
     }
 
     fun requireAvailableConditionsDoesNotContain(absentConditions: Set<String>) {
-        val allShowing = allSuggestedConditions()
-        absentConditions.forEach {
-            allShowing shouldNotContain it
+        await.atMost(ofSeconds(2)).untilAsserted {
+            val allShowing = allSuggestedConditions()
+            absentConditions.forEach {
+                allShowing shouldNotContain it
+            }
         }
     }
 

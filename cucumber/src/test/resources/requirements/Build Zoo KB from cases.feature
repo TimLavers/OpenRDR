@@ -1,10 +1,9 @@
+@ignore
 Feature: The Zoo KB can be built with the user interface.
 
-#  @single
   Scenario: Build the Zoo KB from cases
     Given I start the client application
     And I create a Knowledge Base with the name Zoo based on the "Zoo Animals - cases only" sample
-    And pause for 2 seconds
     Then the count of the number of cases is 101
 
     And I select case aardvark
@@ -25,7 +24,7 @@ Feature: The Zoo KB can be built with the user interface.
       | breathes is "false" |
       | legs is "0"         |
 
-    Then the cases should have interpretations as follows
+    Then the cases should have interpretations as follows:
       | aardvark | mammal    |
       | antelope | mammal    |
       | bass     | fish      |

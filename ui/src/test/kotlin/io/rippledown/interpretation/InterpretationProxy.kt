@@ -3,6 +3,7 @@ package io.rippledown.interpretation
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import io.rippledown.constants.interpretation.*
+import io.rippledown.utils.dump
 import java.lang.Thread.sleep
 
 @OptIn(ExperimentalTestApi::class)
@@ -76,7 +77,7 @@ fun ComposeTestRule.clickCommentToRemove(comment: String) {
 }
 
 fun ComposeTestRule.clickCommentToBeReplaced(comment: String) {
-    clickComment(REPLACE_COMMENT_PREFIX, comment)
+    clickComment(REPLACED_COMMENT_PREFIX, comment)
 }
 
 fun ComposeTestRule.clickComment(prefix: String, comment: String) {
@@ -135,9 +136,18 @@ fun ComposeTestRule.requireCommentSelectorLabel(expected: String) {
 
 fun ComposeTestRule.requireCommentOptionsToBeDisplayed(prefix: String, options: List<String>) {
     options.forEach { option ->
-        println("CommentSelectorTest: looking for option $option")
         onNodeWithContentDescription(prefix + option, useUnmergedTree = true)
             .assertIsDisplayed()
+    }
+}
+
+fun ComposeTestRule.requireCommentOptionsToExist(prefix: String, options: List<String>) {
+    onNodeWithContentDescription("Options").dump()
+    options.forEach { option ->
+        println("CommentSelectorTest: looking for option $option")
+        onNodeWithContentDescription(prefix + option, useUnmergedTree = true)
+            .assertExists()
+        println("CommentSelectorTest: found       option $option")
     }
 }
 

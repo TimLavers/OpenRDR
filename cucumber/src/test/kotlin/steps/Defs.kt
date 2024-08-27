@@ -304,6 +304,16 @@ class Defs {
         restClient().createRuleToAddText(caseName, text)
     }
 
+    @Then("the cases should have interpretations as follows:")
+    fun requireInterpretations(dataTable: DataTable) {
+        dataTable.cells().forEach { row ->
+            val case = row[0]
+            val expectedInterpretation = row[1]
+            caseListPO().select(case)
+            interpretationViewPO().waitForInterpretationText(expectedInterpretation)
+        }
+    }
+
     @And("the interpretation of the case {word} includes {string} because of condition {string}")
     fun theInterpretationOfTheCaseWordIncludesStringBecauseOfConditionString(
         caseName: String,

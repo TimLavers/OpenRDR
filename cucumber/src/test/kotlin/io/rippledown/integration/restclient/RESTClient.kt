@@ -193,8 +193,8 @@ class RESTClient {
         val firstWord = conditionText.split(" ")[0]
         val attribute = getOrCreateAttribute(firstWord)
         val remainderOfExpression = conditionText.substring(firstWord.length + 1)
-        if (remainderOfExpression != "is not blank") {
-            throw IllegalArgumentException("Only 'is not blank' is supported")
+        if (remainderOfExpression != "is in case") {
+            throw IllegalArgumentException("Only 'is in case' is supported")
         }
         return EpisodicCondition(null, attribute, IsNotBlank, Current)
     }

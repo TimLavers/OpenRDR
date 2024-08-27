@@ -7,11 +7,12 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.rippledown.appbar.assertKbNameIs
 import io.rippledown.casecontrol.*
+import io.rippledown.constants.interpretation.ADD_COMMENT_PREFIX
+import io.rippledown.constants.interpretation.REMOVE_COMMENT_PREFIX
+import io.rippledown.constants.interpretation.REPLACED_COMMENT_PREFIX
+import io.rippledown.constants.interpretation.REPLACEMENT_COMMENT_PREFIX
 import io.rippledown.constants.main.APPLICATION_BAR_ID
-import io.rippledown.interpretation.addNewComment
-import io.rippledown.interpretation.clickAddCommentMenu
-import io.rippledown.interpretation.clickChangeInterpretationButton
-import io.rippledown.interpretation.requireInterpretation
+import io.rippledown.interpretation.*
 import io.rippledown.model.*
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.EpisodicCondition
@@ -57,7 +58,7 @@ class OpenRDRUITest {
 
     @Test
     fun `should show the first project if there is one`() = runTest {
-        coEvery { handler.api.kbList() } returns listOf(KBInfo("Bondi"), KBInfo("Malabar"))
+        coEvery { api.kbList() } returns listOf(KBInfo("Bondi"), KBInfo("Malabar"))
         with(composeTestRule) {
             setContent {
                 OpenRDRUI(handler)
@@ -75,8 +76,8 @@ class OpenRDRUITest {
         val caseIds = listOf(caseId1, caseId2)
         val bondiComment = "Go to Bondi"
         val case = createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
-        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(caseIds)
-        coEvery { handler.api.getCase(1) } returns case
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.getCase(1) } returns case
 
         with(composeTestRule) {
             setContent {
@@ -98,10 +99,10 @@ class OpenRDRUITest {
     fun `should show case list for several cases`() = runTest {
         val caseIds = (1..10).map { i ->
             val caseId = CaseId(id = i.toLong(), name = "case $i")
-            coEvery { handler.api.getCase(caseId.id!!) } returns createCase(caseId)
+            coEvery { api.getCase(caseId.id!!) } returns createCase(caseId)
             caseId
         }
-        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
 
         val caseName1 = "case 1"
         val caseName10 = "case 10"
@@ -132,9 +133,9 @@ class OpenRDRUITest {
         val caseA = createCase(caseId1)
         val caseB = createCase(caseId2)
 
-        coEvery { handler.api.getCase(1) } returns caseA
-        coEvery { handler.api.getCase(2) } returns caseB
-        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(threeCaseIds)
+        coEvery { api.getCase(1) } returns caseA
+        coEvery { api.getCase(2) } returns caseB
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(threeCaseIds)
 
         with(composeTestRule) {
             setContent {
@@ -163,8 +164,8 @@ class OpenRDRUITest {
             caseId1, caseId2
         )
         val case = createCase(caseId1)
-        coEvery { handler.api.getCase(1) } returns case
-        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(twoCaseIds)
+        coEvery { api.getCase(1) } returns case
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(twoCaseIds)
 
         with(composeTestRule) {
             setContent {
@@ -195,10 +196,9 @@ class OpenRDRUITest {
             id = 2,
             conclusionTexts = listOf(malabarComment)
         )
-        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(caseIds)
-
-        coEvery { handler.api.getCase(caseId1.id!!) } returns viewableCaseA
-        coEvery { handler.api.getCase(caseId2.id!!) } returns viewableCaseB
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.getCase(caseId1.id!!) } returns viewableCaseA
+        coEvery { api.getCase(caseId2.id!!) } returns viewableCaseB
 
         with(composeTestRule) {
             setContent {
@@ -242,12 +242,11 @@ class OpenRDRUITest {
         val normalTSH = EpisodicCondition(null, Attribute(1, "tsh"), Normal, Current)
         val normalFT3 = EpisodicCondition(null, Attribute(2, "ft3"), Normal, Current)
 
-        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(caseIds)
-
-        coEvery { handler.api.getCase(caseId1.id!!) } returns viewableCaseA
-        coEvery { handler.api.getCase(caseId2.id!!) } returns viewableCaseB
-        coEvery { handler.api.conditionHints(caseId1.id!!) } returns ConditionList(listOf(FixedSuggestedCondition(normalTSH)))
-        coEvery { handler.api.conditionHints(caseId2.id!!) } returns ConditionList(listOf(FixedSuggestedCondition(normalFT3)))
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.getCase(caseId1.id!!) } returns viewableCaseA
+        coEvery { api.getCase(caseId2.id!!) } returns viewableCaseB
+        coEvery { api.conditionHints(caseId1.id!!) } returns ConditionList(listOf(FixedSuggestedCondition(normalTSH)))
+        coEvery { api.conditionHints(caseId2.id!!) } returns ConditionList(listOf(FixedSuggestedCondition(normalFT3)))
 
         with(composeTestRule) {
             setContent {
@@ -257,13 +256,13 @@ class OpenRDRUITest {
             requireNumberOfCasesOnCaseList(2)
             requireNamesToBeShowingOnCaseList(caseA, caseB)
             waitForCaseToBeShowing(caseA)
-            coVerify { handler.api.conditionHints(caseId1.id!!) }
+            coVerify { api.conditionHints(caseId1.id!!) }
 
             //When
             selectCaseByName(caseB)
 
             //Then
-            coVerify { handler.api.conditionHints(caseId2.id!!) }
+            coVerify { api.conditionHints(caseId2.id!!) }
         }
     }
 
@@ -272,8 +271,8 @@ class OpenRDRUITest {
         val caseName = "case a"
         val caseId = CaseId(id = 1, name = caseName)
         val case = createCase(caseId)
-        coEvery { handler.api.getCase(1) } returns case
-        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.getCase(1) } returns case
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         with(composeTestRule) {
             setContent {
                 OpenRDRUI(handler)
@@ -300,18 +299,18 @@ class OpenRDRUITest {
         val cornerstoneId = CaseId(id = 2, name = cornerstoneName)
         val case = createCase(caseId)
         val cornerstone = createCase(cornerstoneId)
-        coEvery { handler.api.getCase(1) } returns case
-        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
-        coEvery { handler.api.startRuleSession(any()) } returns CornerstoneStatus(cornerstone, 0, 1)
-        coEvery { handler.api.selectCornerstone(any()) } returns cornerstone
+        coEvery { api.getCase(1) } returns case
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.startRuleSession(any()) } returns CornerstoneStatus(cornerstone, 0, 1)
+        coEvery { api.selectCornerstone(any()) } returns cornerstone
         with(composeTestRule) {
             setContent {
                 OpenRDRUI(handler)
             }
             //Given
             waitForCaseToBeShowing(caseName)
-            clickChangeInterpretationButton()
             coVerify { handler.showingCornerstone(false) }
+            clickChangeInterpretationButton()
 
             //When
             clickAddCommentMenu()
@@ -330,10 +329,10 @@ class OpenRDRUITest {
         val cornerstoneId = CaseId(id = 2, name = cornerstoneName)
         val case = createCase(caseId)
         val cornerstone = createCase(cornerstoneId)
-        coEvery { handler.api.getCase(1) } returns case
-        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
-        coEvery { handler.api.startRuleSession(any()) } returns CornerstoneStatus(cornerstone, 0, 1)
-        coEvery { handler.api.selectCornerstone(any()) } returns cornerstone
+        coEvery { api.getCase(1) } returns case
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.startRuleSession(any()) } returns CornerstoneStatus(cornerstone, 0, 1)
+        coEvery { api.selectCornerstone(any()) } returns cornerstone
         with(composeTestRule) {
             setContent {
                 OpenRDRUI(handler)
@@ -361,10 +360,10 @@ class OpenRDRUITest {
         val cornerstoneId = CaseId(id = 2, name = cornerstoneName)
         val case = createCase(caseId)
         val cornerstone = createCase(cornerstoneId)
-        coEvery { handler.api.getCase(1) } returns case
-        coEvery { handler.api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
-        coEvery { handler.api.startRuleSession(any()) } returns CornerstoneStatus(cornerstone, 0, 1)
-        coEvery { handler.api.selectCornerstone(any()) } returns cornerstone
+        coEvery { api.getCase(1) } returns case
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.startRuleSession(any()) } returns CornerstoneStatus(cornerstone, 0, 1)
+        coEvery { api.selectCornerstone(any()) } returns cornerstone
         with(composeTestRule) {
             setContent {
                 OpenRDRUI(handler)
@@ -385,6 +384,136 @@ class OpenRDRUITest {
             coVerify { handler.showingCornerstone(false) }
         }
     }
+
+    @Test
+    fun `should call handler to retrieve all comments`() = runTest {
+        val caseName = "case a"
+        val caseId = CaseId(id = 1, name = caseName)
+        val case = createCase(caseId)
+        coEvery { api.getCase(1) } returns case
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        with(composeTestRule) {
+            //Given
+            setContent {
+                OpenRDRUI(handler)
+            }
+
+            //Then
+            coVerify { api.allConclusions() }
+        }
+    }
+
+    @Test
+    fun `the dialog to add a comment to a case with no given comments should show all available comments`() = runTest {
+        val caseName = "case a"
+        val caseId = CaseId(id = 1, name = caseName)
+        val case = createCase(caseId)
+        coEvery { api.getCase(1) } returns case
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+
+        val commentA = "A"
+        val commentB = "B"
+        val conclusionA = Conclusion(1, commentA)
+        val conclusionB = Conclusion(2, commentB)
+        coEvery { api.allConclusions() } returns setOf(conclusionA, conclusionB)
+        with(composeTestRule) {
+            //Given
+            setContent {
+                OpenRDRUI(handler)
+            }
+
+            //When
+            clickChangeInterpretationButton()
+            clickAddCommentMenu()
+
+            //Then
+            requireCommentOptionsToBeDisplayed(ADD_COMMENT_PREFIX, listOf(commentA, commentB))
+        }
+    }
+
+    @Test
+    fun `the dialog to add a comment should not show any comment already given for the case`() = runTest {
+        val commentA = "A"
+        val commentB = "B"
+        val conclusionA = Conclusion(1, commentA)
+        val conclusionB = Conclusion(2, commentB)
+        val caseName = "case a"
+        val caseId = CaseId(id = 1, name = caseName)
+        val case = createCaseWithInterpretation(caseId.name, caseId.id, listOf(commentA))
+        coEvery { api.getCase(1) } returns case
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.allConclusions() } returns setOf(conclusionA, conclusionB)
+        with(composeTestRule) {
+            //Given
+            setContent {
+                OpenRDRUI(handler)
+            }
+
+            //When
+            clickChangeInterpretationButton()
+            clickAddCommentMenu()
+
+            //Then
+            requireCommentOptionsToBeDisplayed(ADD_COMMENT_PREFIX, listOf(commentB))
+        }
+    }
+
+    @Test
+    fun `the dialog to replace a comment should not show any comment already given for the case as a replacement`() =
+        runTest {
+            val commentA = "A"
+            val commentB = "B"
+            val conclusionA = Conclusion(1, commentA)
+            val conclusionB = Conclusion(2, commentB)
+            val caseName = "case a"
+            val caseId = CaseId(id = 1, name = caseName)
+            val case = createCaseWithInterpretation(caseId.name, caseId.id, listOf(commentA))
+            coEvery { api.getCase(1) } returns case
+            coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+            coEvery { api.allConclusions() } returns setOf(conclusionA, conclusionB)
+            with(composeTestRule) {
+                //Given
+                setContent {
+                    OpenRDRUI(handler)
+                }
+
+                //When
+                clickChangeInterpretationButton()
+                clickReplaceCommentMenu()
+
+                //Then
+                requireCommentOptionsToBeDisplayed(REPLACED_COMMENT_PREFIX, listOf(commentA))
+                requireCommentOptionsToBeDisplayed(REPLACEMENT_COMMENT_PREFIX, listOf(commentB))
+            }
+        }
+
+    @Test
+    fun `the dialog to remove a comment should only show the comments already given for the case`() = runTest {
+        val commentA = "A"
+        val commentB = "B"
+        val conclusionA = Conclusion(1, commentA)
+        val conclusionB = Conclusion(2, commentB)
+        val caseName = "case a"
+        val caseId = CaseId(id = 1, name = caseName)
+        val case = createCaseWithInterpretation(caseId.name, caseId.id, listOf(commentA))
+        coEvery { api.getCase(1) } returns case
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.allConclusions() } returns setOf(conclusionA, conclusionB)
+        with(composeTestRule) {
+            //Given
+            setContent {
+                OpenRDRUI(handler)
+            }
+
+            //When
+            clickChangeInterpretationButton()
+            clickRemoveCommentMenu()
+
+            //Then
+            requireCommentOptionsToBeDisplayed(REMOVE_COMMENT_PREFIX, listOf(commentA))
+        }
+    }
+
 }
 
 fun main() {

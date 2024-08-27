@@ -12,6 +12,7 @@ import io.ktor.serialization.kotlinx.json.*
 import io.rippledown.constants.api.*
 import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.CasesInfo
+import io.rippledown.model.Conclusion
 import io.rippledown.model.KBInfo
 import io.rippledown.model.OperationResult
 import io.rippledown.model.caseview.ViewableCase
@@ -24,7 +25,7 @@ import io.rippledown.sample.SampleKB
 import java.io.File
 
 
-class Api(private val engine: HttpClientEngine = CIO.create()) {
+class Api(engine: HttpClientEngine = CIO.create()) {
     private var currentKB: KBInfo? = null
     private val client = HttpClient(engine) {
         install(ContentNegotiation) {
@@ -120,6 +121,10 @@ class Api(private val engine: HttpClientEngine = CIO.create()) {
     }
 
     suspend fun waitingCasesInfo(): CasesInfo = client.get("$API_URL$WAITING_CASES") {
+        setKBParameter()
+    }.body()
+
+    suspend fun allConclusions(): Set<Conclusion> = client.get("$API_URL$ALL_CONCLUSIONS") {
         setKBParameter()
     }.body()
 

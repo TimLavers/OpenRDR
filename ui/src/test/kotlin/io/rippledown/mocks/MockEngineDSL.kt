@@ -6,12 +6,9 @@ import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.utils.io.*
 import io.rippledown.constants.api.*
-import io.rippledown.model.CasesInfo
-import io.rippledown.model.KBInfo
-import io.rippledown.model.OperationResult
+import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
-import io.rippledown.model.createCase
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
@@ -50,6 +47,7 @@ class EngineConfig {
     val defaultKB = KBInfo("Thyroids")
     var returnKBInfo = defaultKB
     val returnKBList = listOf(KBInfo("Glucose"), KBInfo("Lipids"), defaultKB)
+    lateinit var returnConclusions: Set<Conclusion>
 }
 
 private class EngineBuilder(private val config: EngineConfig) {
@@ -59,6 +57,10 @@ private class EngineBuilder(private val config: EngineConfig) {
 
     fun build() = MockEngine { request ->
         when (request.url.encodedPath) {
+            ALL_CONCLUSIONS -> {
+                httpResponseData(json.encodeToString(config.returnConclusions))
+            }
+
             WAITING_CASES -> {
                 httpResponseData(json.encodeToString(config.returnCasesInfo))
             }
