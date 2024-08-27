@@ -3,6 +3,7 @@ package io.rippledown.interpretation
 import androidx.compose.ui.test.junit4.createComposeRule
 import io.mockk.mockk
 import io.mockk.verify
+import io.rippledown.constants.interpretation.ADD_COMMENT_PREFIX
 import io.rippledown.utils.applicationFor
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -38,6 +39,20 @@ class AddCommentDialogTest {
     }
 
     @Test
+    fun `should initially display all available comments`() = runTest {
+        with(composeTestRule) {
+            //Given
+            val availableComments = listOf("Bondi", "Manly", "Coogee")
+            setContent {
+                AddCommentDialog(availableComments, handler)
+            }
+
+            //Then
+            requireCommentOptionsToBeDisplayed(ADD_COMMENT_PREFIX, availableComments)
+        }
+    }
+
+    @Test
     fun `should call handler to cancel when Cancel is pressed`() = runTest {
         with(composeTestRule) {
             //Given
@@ -55,7 +70,8 @@ class AddCommentDialogTest {
 }
 
 fun main() {
+    val availableComments = listOf("Bondi", "Manly", "Coogee")
     applicationFor {
-        AddCommentDialog(listOf(), mockk())
+        AddCommentDialog(availableComments, mockk())
     }
 }

@@ -22,7 +22,7 @@ interface AddCommentHandler {
 
 @Composable
 fun AddCommentDialog(availableComments: List<String>, handler: AddCommentHandler) {
-    val dialogState = rememberDialogState(size = DpSize(640.dp, 200.dp))
+    val dialogState = rememberDialogState(size = DpSize(640.dp, 400.dp))
     var selectedComment by remember { mutableStateOf("") }
 
     DialogWindow(
@@ -54,12 +54,13 @@ fun AddCommentDialog(availableComments: List<String>, handler: AddCommentHandler
                     options,
                     ADD_COMMENT_LABEL,
                     ADD_COMMENT_PREFIX,
+                    200.dp,
+                    modifier = Modifier,
                     object : CommentSelectorHandler {
                         override fun onCommentChanged(comment: String) {
                             selectedComment = comment
                         }
-                    }
-                )
+                    })
             }
         }
     }

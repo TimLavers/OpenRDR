@@ -90,6 +90,8 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
 
     fun getOrCreateConclusion(text: String) = kb.conclusionManager.getOrCreate(text)
 
+    fun allConclusions() = kb.conclusionManager.all()
+
     fun getOrCreateCondition(condition: Condition) = kb.conditionManager.getOrCreate(condition)
 
     /**

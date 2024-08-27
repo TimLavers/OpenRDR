@@ -28,11 +28,8 @@ Feature: When building a rule, the user is provided with candidate conditions th
       | Sun | hot |
     And I start the client application
     And I start to build a rule to add the comment "Beach time!"
-    And pause for 1 seconds
     And I click the suggested condition "Sun is \"hot\""
-    And pause for 10 seconds
     And I remove the condition "Sun is \"hot\""
-    And pause for 1 seconds
     Then the suggested conditions should contain:
       | Sun is "hot" |
     And stop the client application
@@ -43,9 +40,7 @@ Feature: When building a rule, the user is provided with candidate conditions th
       | Waves | 1.5 |
     And I start the client application
     And I start to build a rule to add the comment "Beach time!"
-    And pause for 1 seconds
     And I click the suggested condition "Waves ≥ 1.5"
-    And pause for 1 seconds
     And I set the editable value to be "1.2" and click ok
     Then the selected conditions should be:
       | Waves ≥ 1.2 |
@@ -57,11 +52,9 @@ Feature: When building a rule, the user is provided with candidate conditions th
       | Waves | 1.5 |
     And I start the client application
     And I start to build a rule to add the comment "Beach time!"
-    And pause for 1 seconds
     And I click the suggested condition "Waves ≥ 1.5"
     And pause for 1 seconds
     And I set the editable value to be "1.2" and click ok
-    And pause for 10 seconds
     Then the suggested conditions should not contain:
       | Waves ≥ 1.5 |
     And the selected conditions should be:

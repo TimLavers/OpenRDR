@@ -30,7 +30,7 @@ class CommentSelectorTest {
         with(composeTestRule) {
             //Given
             setContent {
-                CommentSelector("", options, label, prefix, handler)
+                CommentSelector("", options, label, prefix, handler = handler)
             }
 
             //Then
@@ -43,7 +43,7 @@ class CommentSelectorTest {
         with(composeTestRule) {
             //Given
             setContent {
-                CommentSelector("", options, label, prefix, handler)
+                CommentSelector("", options, label, prefix, handler = handler)
             }
 
             //Then
@@ -56,7 +56,7 @@ class CommentSelectorTest {
         with(composeTestRule) {
             //Given
             setContent {
-                CommentSelector("", options, label, prefix, handler)
+                CommentSelector("", options, label, prefix, handler = handler)
             }
 
             //When
@@ -76,7 +76,7 @@ class CommentSelectorTest {
         with(composeTestRule) {
             //Given
             setContent {
-                CommentSelector("Mal", options, label, prefix, handler)
+                CommentSelector("Mal", options, label, prefix, handler = handler)
             }
 
             //Then
@@ -89,7 +89,7 @@ class CommentSelectorTest {
         with(composeTestRule) {
             //Given
             setContent {
-                CommentSelector("", options, label, prefix, handler)
+                CommentSelector("", options, label, prefix, handler = handler)
             }
 
             //When
@@ -107,7 +107,7 @@ class CommentSelectorTest {
         with(composeTestRule) {
             //Given
             setContent {
-                CommentSelector("", options, label, prefix, handler)
+                CommentSelector("", options, label, prefix, handler = handler)
             }
 
             //When
@@ -127,6 +127,6 @@ fun main() {
         "Option $it"
     }
     applicationFor {
-        CommentSelector("", options, "please select a beach", "PREFIX", handler)
+        CommentSelector("", options, "please select a beach", "PREFIX", handler = handler)
     }
 }

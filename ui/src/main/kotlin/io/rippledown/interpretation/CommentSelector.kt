@@ -2,8 +2,10 @@
 
 package io.rippledown.interpretation
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Chip
@@ -23,6 +25,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.rippledown.components.Scrollbar
 import io.rippledown.constants.interpretation.COMMENT_SELECTOR_LABEL
@@ -32,13 +35,15 @@ interface CommentSelectorHandler {
     fun onCommentChanged(comment: String)
 }
 
-@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun CommentSelector(
     currentText: String,
     options: List<String>,
     label: String,
     prefix: String,
+    optionHeight: Dp = 200.dp,
+    modifier: Modifier = Modifier,
     handler: CommentSelectorHandler
 ) {
     val displayedOptions = options.filteredBy(currentText)
@@ -47,7 +52,7 @@ fun CommentSelector(
     /**
      * @see <a href=https://stackoverflow.com/questions/67493387/detect-click-in-compose-textfield>StackOverflow: Detect click in compose TextField</a>
      */
-    Column(modifier = Modifier.padding(10.dp)) {
+    Column(modifier = modifier) {
         OutlinedTextField(
             value = currentText,
             onValueChange = {
@@ -68,9 +73,10 @@ fun CommentSelector(
                 .semantics { contentDescription = prefix + COMMENT_SELECTOR_TEXT_FIELD }
         )
 
-        Box(modifier = Modifier.height(200.dp)) {
+        Box(modifier = Modifier.height(optionHeight)) {
             Column(
                 modifier = Modifier
+                    .semantics { contentDescription = "Options" }
                     .verticalScroll(scrollState)
             ) {
                 displayedOptions.forEach { option ->

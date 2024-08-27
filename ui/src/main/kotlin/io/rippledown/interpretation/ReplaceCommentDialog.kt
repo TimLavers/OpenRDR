@@ -21,7 +21,7 @@ interface ReplaceCommentHandler {
 }
 
 @Composable
-fun ReplaceCommentDialog(availableComments: List<String>, handler: ReplaceCommentHandler) {
+fun ReplaceCommentDialog(givenComments: List<String>, availableComments: List<String>, handler: ReplaceCommentHandler) {
     val dialogState = rememberDialogState(size = DpSize(640.dp, 600.dp))
     var replacedText by remember { mutableStateOf("") }
     var replacementText by remember { mutableStateOf("") }
@@ -43,38 +43,41 @@ fun ReplaceCommentDialog(availableComments: List<String>, handler: ReplaceCommen
                     onCancel = {
                         handler.cancel()
                     },
-                    prefix = REPLACE_COMMENT_PREFIX
+                    prefix = REPLACEMENT_COMMENT_PREFIX
                 )
             }
 
         ) { paddingValues ->
-            val options = availableComments - replacedText
+            val optionsForCommentToBeReplaced = givenComments - replacedText
             Column(Modifier.padding(paddingValues)) {
                 CommentSelector(
                     replacedText,
-                    options,
+                    options = optionsForCommentToBeReplaced,
                     REPLACED_COMMENT_LABEL,
-                    REPLACE_COMMENT_PREFIX,
+                    REPLACED_COMMENT_PREFIX,
+                    optionHeight = 100.dp,
+                    modifier = Modifier.padding(all = 10.dp),
                     object : CommentSelectorHandler {
                         override fun onCommentChanged(comment: String) {
                             replacedText = comment
                         }
-                    }
-                )
+                    })
 
                 Spacer(modifier = Modifier.height(10.dp))
 
+                val optionsForReplacementComment = availableComments - replacementText - givenComments
                 CommentSelector(
                     replacementText,
-                    options,
+                    options = optionsForReplacementComment,
                     REPLACEMENT_COMMENT_LABEL,
                     REPLACEMENT_COMMENT_PREFIX,
+                    optionHeight = 200.dp,
+                    modifier = Modifier.padding(all = 10.dp),
                     object : CommentSelectorHandler {
                         override fun onCommentChanged(comment: String) {
                             replacementText = comment
                         }
-                    }
-                )
+                    })
             }
         }
     }

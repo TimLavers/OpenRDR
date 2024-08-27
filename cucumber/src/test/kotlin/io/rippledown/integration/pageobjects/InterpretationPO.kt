@@ -135,6 +135,20 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         execute { dialog.accessibleContext.find(OK_BUTTON_FOR_ADD_COMMENT)!!.accessibleAction.doAccessibleAction(0) }
     }
 
+    fun selectExistingCommentToAddClickOK(comment: String) {
+        waitUntilAsserted {
+            execute<ComposeDialog> { findComposeDialogThatIsShowing() } shouldNotBe null
+        }
+        val dialog = execute<ComposeDialog> { findComposeDialogThatIsShowing() }
+        with(dialog.accessibleContext) {
+            execute {
+                find(ADD_COMMENT_PREFIX + comment)!!.accessibleAction.doAccessibleAction(0)
+            }
+            execute { find(OK_BUTTON_FOR_ADD_COMMENT)!!.accessibleAction.doAccessibleAction(0) }
+
+        }
+    }
+
     fun selectCommentToRemoveAndClickOK(comment: String) {
         waitUntilAsserted {
             execute<ComposeDialog> { findComposeDialogThatIsShowing() } shouldNotBe null
@@ -158,9 +172,8 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         }
         val dialog = execute<ComposeDialog> { findComposeDialogThatIsShowing() }
         with(dialog.accessibleContext) {
-
             //Enter the comment to be replaced
-            execute { find(REPLACE_COMMENT_TEXT_FIELD)!!.accessibleEditableText.setTextContents(comment) }
+            execute { find(REPLACED_COMMENT_TEXT_FIELD)!!.accessibleEditableText.setTextContents(comment) }
 
             //Enter replacement comment
             execute { find(REPLACEMENT_COMMENT_TEXT_FIELD)!!.accessibleEditableText.setTextContents(replacement) }

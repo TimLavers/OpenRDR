@@ -66,8 +66,8 @@ fun OpenRDRUI(handler: Handler) {
                 //No initial case, or it's now been deleted
                 currentCaseId = casesInfo.caseIds[0].id!!
             }
-            currentCase = runBlocking { handler.api.getCase(currentCaseId!!) }
-            conditionHints = runBlocking { handler.api.conditionHints(currentCaseId!!).suggestions }
+            currentCase = runBlocking { api.getCase(currentCaseId!!) }
+            conditionHints = runBlocking { api.conditionHints(currentCaseId!!).suggestions }
         }
     }
     val ruleInProgress = cornerstoneStatus != null
@@ -101,8 +101,9 @@ fun OpenRDRUI(handler: Handler) {
         },
         floatingActionButton = {
             if (!ruleInProgress && currentCase != null) {
-                val comments = currentCase!!.viewableInterpretation.conclusions().map { it.text }
-                InterpretationActions(comments, object : InterpretationActionsHandler {
+                val commentsGivenForCase = currentCase!!.viewableInterpretation.conclusions().map { it.text }
+                val allComments = runBlocking { api.allConclusions() }.map { it.text }.toSet()
+                InterpretationActions(commentsGivenForCase, allComments, object : InterpretationActionsHandler {
                     override fun startRuleToAddComment(comment: String) {
                         val sessionStartRequest = SessionStartRequest(
                             caseId = currentCase!!.id!!,
@@ -148,7 +149,7 @@ fun OpenRDRUI(handler: Handler) {
                         Spacer(modifier = Modifier.height(10.dp))
                         CaseSelector(casesInfo.caseIds, object : CaseSelectorHandler, Handler by handler {
                             override var selectCase = { id: Long ->
-                                currentCase = runBlocking { handler.api.getCase(id) }
+                                currentCase = runBlocking { api.getCase(id) }
                                 currentCaseId = id
                             }
                         })

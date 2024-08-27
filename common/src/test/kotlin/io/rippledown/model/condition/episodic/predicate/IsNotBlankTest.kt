@@ -41,7 +41,7 @@ class IsNotBlankTest: Base() {
 
     @Test
     fun description() {
-        notBlank.description(false) shouldBe "is not blank"
-        notBlank.description(true) shouldBe "are not blank"
+        notBlank.description(false) shouldBe "is in case"
+        notBlank.description(true) shouldBe "are in case"
     }
 }
