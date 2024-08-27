@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTestApi::class)
+
 package io.rippledown.interpretation
 
 import androidx.compose.ui.test.*
