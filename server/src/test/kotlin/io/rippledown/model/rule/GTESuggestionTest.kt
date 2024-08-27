@@ -8,7 +8,7 @@ import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.model.condition.tr
 import kotlin.test.Test
 
-class GTEFactoryTest: ConditionFactoryTestBase() {
+class GTESuggestionTest: ConditionFactoryTestBase() {
     @Test
     fun suggestion() {
         GteSuggestion.invoke(tsh, null) shouldBe null

@@ -1,6 +1,5 @@
 Feature: The Zoo KB can be built with the user interface.
 
-  @single
   Scenario: Build the Zoo KB from cases
     Given I start the client application
     And I create a Knowledge Base with the name Zoo based on the "Zoo Animals - cases only" sample
@@ -46,8 +45,8 @@ Feature: The Zoo KB can be built with the user interface.
 
     And I select case frog
     And I build a rule to replace the comment "fish" with the comment "amphibian" with conditions
-      | milk is "false" |
-      | breathes is "true" |
+      | milk is "false"     |
+      | breathes is "true"  |
       | feathers is "false" |
 
     And I select case pitviper
@@ -82,12 +81,12 @@ Feature: The Zoo KB can be built with the user interface.
       | backbone is "true" |
       | eggs is "true"     |
       | tail is "true"     |
-      | legs is "4"         |
+      | legs is "4"        |
 
     And I select case newt
     And I build a rule to remove the comment "reptile" with conditions
       | aquatic is "true" |
-      | legs is "4"        |
+      | legs is "4"       |
 
     Then the cases should have interpretations as follows
       | aardvark | mammal    |
@@ -172,8 +171,8 @@ Feature: The Zoo KB can be built with the user interface.
       | slug     | mollusc   |
       | sole     | fish      |
       | sparrow  | bird      |
-      | squirrel | mammal   |
-      | slug     | mollusc    |
+      | squirrel | mammal    |
+      | slug     | mollus    |
       | starfish | mollusc   |
       | stingray | fish      |
       | swan     | bird      |
