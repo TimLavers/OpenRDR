@@ -182,16 +182,40 @@ class RuleMakerStepDefs {
         val conditions = dataTable.asList().toSet()
         ruleMakerPO().requireSelectedConditionsContains(conditions)
     }
+
+    @And("I build a rule to replace the comment {string} with the comment {string} with conditions")
+    fun buildARuleToReplaceTheCommentWithTheCommentWithConditions(toBeReplaced: String, replacement: String, conditions: DataTable ) {
+        pause(100)
+        startRuleToReplaceComment(toBeReplaced, replacement)
+        pause(100)
+        addConditionsAndFinishRule(conditions)
+    }
+}
+
+fun startRuleBuildingSessionToAddComment(comment: String) {
+    with(interpretationViewPO()) {
+        clickChangeInterpretationButton()
+        clickAddCommentMenu()
+        setAddCommentTextAndClickOK(comment)
+    }
 }
 
 fun startRuleToReplaceComment(toBeReplaced: String, replacement: String) {
     with(interpretationViewPO()) {
         clickChangeInterpretationButton()
         clickReplaceCommentMenu()
-        pause(1000) //TODO remove
+        pause(100) //TODO remove
         selectCommentToReplaceAndEnterItsReplacementAndClickOK(toBeReplaced, replacement)
-        pause(1000) //TODO remove
+        pause(100) //TODO remove
     }
+}
+fun addConditionsAndFinishRule(dataTable: DataTable) {
+    dataTable.asList().forEach { condition ->
+        pause(100)
+        ruleMakerPO().clickConditionWithText(condition)
+    }
+    pause(100)
+    ruleMakerPO().clickDoneButton()
 }
 
 fun startRuleToRemoveComment(comment: String) {
@@ -205,16 +229,6 @@ fun startRuleToRemoveComment(comment: String) {
 fun completeRuleWithCondition(condition: String) {
     with(ruleMakerPO()) {
         clickConditionWithText(condition)
-        clickDoneButton()
-    }
-}
-
-
-private fun addConditionsAndFinishRule(dataTable: DataTable) {
-    with(ruleMakerPO()) {
-        dataTable.asList().forEach { condition ->
-            clickConditionWithText(condition)
-        }
         clickDoneButton()
     }
 }

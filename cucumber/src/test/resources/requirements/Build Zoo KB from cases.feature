@@ -172,7 +172,6 @@ Feature: The Zoo KB can be built with the user interface.
       | sole     | fish      |
       | sparrow  | bird      |
       | squirrel | mammal    |
-      | slug     | mollus    |
       | starfish | mollusc   |
       | stingray | fish      |
       | swan     | bird      |

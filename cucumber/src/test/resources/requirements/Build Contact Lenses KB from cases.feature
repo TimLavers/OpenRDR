@@ -1,5 +1,5 @@
 Feature: The Contact Lense Prescription KB can be built with the user interface.
-#@single
+#  @single
   Scenario: Build the Contact Lenses KB from cases
     Given I start the client application
     And I create a Knowledge Base with the name ContactLenses based on the "Contact Lense Prescription - cases only" sample
