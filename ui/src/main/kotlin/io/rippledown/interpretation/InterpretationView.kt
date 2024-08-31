@@ -13,16 +13,15 @@ import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
 
 @Composable
 fun InterpretationView(text: String) {
-    OutlinedCard(
-    ) {
-            Text(
-                text = text,
-                modifier = Modifier.padding(10.dp)
-                    .fillMaxWidth()
-                    .semantics {
-                        contentDescription = INTERPRETATION_TEXT_FIELD
-                    }
-
-            )
+    OutlinedCard(modifier = Modifier.padding(vertical = 10.dp)) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(10.dp)
+                .fillMaxWidth()
+                .semantics {
+                    contentDescription = INTERPRETATION_TEXT_FIELD
+                }
+        )
     }
+
 }

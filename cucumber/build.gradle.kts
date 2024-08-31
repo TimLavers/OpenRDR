@@ -8,7 +8,8 @@ apply(from = "../repositories.gradle.kts")
 
 plugins {
     java
-    id("org.jetbrains.compose") version "1.6.11"
+    alias(libs.plugins.compose)
+    alias(libs.plugins.composeCompiler)
 }
 
 dependencies {

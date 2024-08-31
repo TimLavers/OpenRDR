@@ -3,7 +3,7 @@ import org.gradle.api.JavaVersion
 object Version {
     val java = JavaVersion.VERSION_21
     const val compose = "1.6.11"
-    const val kotlin = "1.9.23"
+    const val kotlin = "2.0.20"
     const val ktor = "2.3.7"
     const val kotest = "5.7.2"
     const val assertjSwing = "3.17.1"
@@ -13,6 +13,7 @@ object Version {
     const val cucumberShortSummary = "1.0.14"
     const val kotlinxCoroutinesTestVersion = "1.7.3"
     const val kotlinxDateTimeVersion = "0.4.0"
+    const val kotlinxSerialization = "1.5.1"
     const val logbackVersion = "1.4.11"
     const val cucumber = "7.18.1"
     const val commonsIo = "2.14.0"

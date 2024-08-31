@@ -1,0 +1,34 @@
+[versions]
+kotlin = "2.0.20"
+compose = "1.6.11"
+skikoVersion = "0.8.4"
+ktor = "2.3.7"
+
+kotlinx = "1.8.0"
+kotlinx_serialization = "1.7.1"
+kotlinx_datetime = "0.6.0"
+
+junitSuite = "1.10.3"
+cucumber = "7.18.1"
+
+[plugins]
+compose = { id = "org.jetbrains.compose", version.ref = "compose" }
+composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+
+#kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+#ktorPlugin = { id = "io.ktor.plugin", version.ref = "ktor" }
+
+
+[libraries]
+#cucumberJava = { module = "io.cucumber:cucumber-java", version.ref = "cucumber" }
+#cucumberJunitPlatformEngine = { module = "io.cucumber:cucumber-junit-platform-engine", version.ref = "cucumber" }
+#cucumberPicocontainer = { module = "io.cucumber:cucumber-picocontainer", version.ref = "cucumber" }
+#junit-platformSuite = { module = "org.junit.platform:junit-platform-suite", version.ref = "junitSuite" }
+#kotlinxCoroutinesCore = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx" }
+#kotlinxSerializationCore = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx_serialization" }
+#kotlinxSerializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx_serialization" }
+#kotlinxDateTime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx_datetime" }
+
+
+[bundles]
+

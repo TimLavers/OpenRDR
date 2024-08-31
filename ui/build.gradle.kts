@@ -3,7 +3,8 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 apply(from = "../repositories.gradle.kts")
 
 plugins {
-    id("org.jetbrains.compose") version "1.6.11"
+    alias(libs.plugins.compose)
+    alias(libs.plugins.composeCompiler)
 }
 
 dependencies {

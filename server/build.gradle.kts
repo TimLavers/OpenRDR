@@ -7,7 +7,7 @@ import Version.logback
 apply(from = "../repositories.gradle.kts")
 plugins {
     id("io.ktor.plugin") version "2.3.5"
-    kotlin("plugin.serialization") version "1.9.23"
+    kotlin("plugin.serialization")
     id("org.gretty") version "4.1.0"
 }
 
