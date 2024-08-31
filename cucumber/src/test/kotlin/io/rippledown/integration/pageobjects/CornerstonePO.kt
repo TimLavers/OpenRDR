@@ -14,7 +14,7 @@ import io.rippledown.integration.utils.waitForContextToBeNotNull
 import io.rippledown.integration.waitUntilAsserted
 import io.rippledown.main.INFO_MESSAGE_ID
 import org.assertj.swing.edt.GuiActionRunner.execute
-import org.awaitility.kotlin.await
+import org.awaitility.Awaitility.await
 import java.time.Duration
 import javax.accessibility.AccessibleContext
 
@@ -28,7 +28,7 @@ class CornerstonePO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun requireCornerstoneCase(expectedCaseName: String) {
-        await.atMost(Duration.ofSeconds(5)).untilAsserted {
+        await().atMost(Duration.ofSeconds(5)).untilAsserted {
             val ccName = execute<String> { contextProvider().find(CORNERSTONE_CASE_NAME_ID)?.accessibleName }
             ccName shouldBe expectedCaseName
         }

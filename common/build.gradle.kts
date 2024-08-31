@@ -3,9 +3,13 @@ plugins {
     `java-test-fixtures`
 }
 dependencies {
+    implementation(libs.bundles.kotlinx)
+    testImplementation(libs.bundles.ktor)
+    testImplementation(libs.kotestAssertions)
     testFixturesImplementation(kotlin("test"))
     testFixturesImplementation(libs.kotlinxSerializationJson)
-    testFixturesImplementation(libs.assertionsCore)
+    testFixturesImplementation(libs.kotestAssertions)
+    testFixturesImplementation(libs.bundles.ktor)
 
 }
 sourceSets {

@@ -1,5 +1,3 @@
-import Version.awaitility
-import Version.mockk
 import org.gradle.jvm.toolchain.JavaLanguageVersion.of
 
 apply(from = "repositories.gradle.kts")
@@ -39,25 +37,8 @@ subprojects {
     }
 
     dependencies {
-        implementation("org.jetbrains.kotlin:kotlin-stdlib:${Version.kotlin}")
-        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
-        implementation(project.dependencies.enforcedPlatform("io.ktor:ktor-bom:${Version.ktor}"))
-        implementation("io.ktor:ktor-client-core")
-        implementation("io.ktor:ktor-client-cio")
-        implementation("io.ktor:ktor-client-content-negotiation")
-        implementation("io.ktor:ktor-serialization")
-        implementation("io.ktor:ktor-serialization-kotlinx-json")
-
-        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${Version.kotlinxSerialization}")
-        implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:${Version.kotlinxSerialization}")
-        implementation("org.jetbrains.kotlinx:kotlinx-datetime:${Version.kotlinxDateTimeVersion}")
-
         testImplementation(kotlin("test"))
-        testImplementation("io.kotest:kotest-assertions-core:${Version.kotest}")
         testImplementation("io.ktor:ktor-client-mock")
-        testImplementation("io.mockk:mockk:${mockk}")
-        testImplementation("org.awaitility:awaitility-kotlin:$awaitility")
-
     }
 
     tasks.test {
