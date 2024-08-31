@@ -8,12 +8,12 @@ import io.rippledown.model.condition.lessThanOrEqualTo
 import io.rippledown.model.condition.tr
 import kotlin.test.Test
 
-class LTEFactoryTest: ConditionFactoryTestBase() {
+class LTESuggestionTest: ConditionFactoryTestBase() {
     @Test
     fun suggestion() {
-        LteSuggestion.invoke(tsh, null) shouldBe null
-        LteSuggestion.invoke(tsh, tr("whatever")) shouldBe null
-        with(LteSuggestion.invoke(tsh, tr("1.0"))!!) {
+        LessThanOrEqualsSuggestion.invoke(tsh, null) shouldBe null
+        LessThanOrEqualsSuggestion.invoke(tsh, tr("whatever")) shouldBe null
+        with(LessThanOrEqualsSuggestion.invoke(tsh, tr("1.0"))!!) {
             initialSuggestion() shouldBe lessThanOrEqualTo(null, tsh, 1.0)
             isEditable() shouldBe true
             editableCondition()shouldBe EditableLTECondition(tsh, EditableValue("1.0", Type.Real))

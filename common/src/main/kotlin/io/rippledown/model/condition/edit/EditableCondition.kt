@@ -6,32 +6,16 @@ import kotlinx.serialization.Serializable
 @Serializable
 enum class Type {
     Text {
-        override fun convert(value: String): Any? {
-            TODO("Not yet implemented")
-        }
-
-        override fun valid(value: String): Boolean {
-            TODO("Not yet implemented")
-        }
+        override fun convert(value: String) = value
     },
     Integer {
-        override fun convert(value: String): Any? {
-            TODO("Not yet implemented")
-        }
-
-        override fun valid(value: String): Boolean {
-            TODO("Not yet implemented")
-        }
+        override fun convert(value: String) = value.toIntOrNull()
     },
     Real {
-        override fun convert(value: String): Double? {
-            return value.toDoubleOrNull()
-        }
-
-        override fun valid(value: String) = value.toDoubleOrNull() != null
+        override fun convert(value: String) = value.toDoubleOrNull()
     };
 
-    abstract fun valid(value: String): Boolean
+    fun valid(value: String) = convert(value) != null
     abstract fun convert(value: String): Any?
 }
 @Serializable

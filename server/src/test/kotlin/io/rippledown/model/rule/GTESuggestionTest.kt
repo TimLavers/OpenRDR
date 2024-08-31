@@ -11,9 +11,9 @@ import kotlin.test.Test
 class GTESuggestionTest: ConditionFactoryTestBase() {
     @Test
     fun suggestion() {
-        GteSuggestion.invoke(tsh, null) shouldBe null
-        GteSuggestion.invoke(tsh, tr("whatever")) shouldBe null
-        with(GteSuggestion.invoke(tsh, tr("1.0"))!!) {
+        GreaterThanOrEqualsSuggestion.invoke(tsh, null) shouldBe null
+        GreaterThanOrEqualsSuggestion.invoke(tsh, tr("whatever")) shouldBe null
+        with(GreaterThanOrEqualsSuggestion.invoke(tsh, tr("1.0"))!!) {
             initialSuggestion() shouldBe greaterThanOrEqualTo(null, tsh, 1.0)
             isEditable() shouldBe true
             editableCondition()shouldBe EditableGTECondition(tsh, EditableValue("1.0", Type.Real))

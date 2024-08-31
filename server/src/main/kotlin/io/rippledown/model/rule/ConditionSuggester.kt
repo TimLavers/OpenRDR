@@ -1,8 +1,6 @@
 package io.rippledown.model.rule
 
-import io.rippledown.model.Attribute
-import io.rippledown.model.RDRCase
-import io.rippledown.model.TestResult
+import io.rippledown.model.*
 import io.rippledown.model.condition.CaseStructureCondition
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.edit.*
@@ -35,7 +33,7 @@ class ConditionSuggester(
                 }
             }
         }
-        return firstCut.filter { it.initialSuggestion().holds(sessionCase) }.toSet()
+        return firstCut.filter { it.shouldBeSuggestedForCase(sessionCase) }.toSet()
     }
 
     private fun caseStructureSuggestions() = attributeInCaseConditions() + attributeNotInCaseConditions()
@@ -73,14 +71,31 @@ abstract class CutoffSuggestion: SuggestionFunction {
         return EditableSuggestedCondition(createEditableCondition(attribute, editableValue))
     }
 }
-object GteSuggestion: CutoffSuggestion() {
+object GreaterThanOrEqualsSuggestion: CutoffSuggestion() {
     override fun createEditableCondition(attribute: Attribute, editableValue: EditableValue): EditableCondition {
         return EditableGTECondition(attribute, editableValue)
     }
 }
-object LteSuggestion: CutoffSuggestion(){
+object LessThanOrEqualsSuggestion: CutoffSuggestion(){
     override fun createEditableCondition(attribute: Attribute, editableValue: EditableValue): EditableCondition {
         return EditableLTECondition(attribute, editableValue)
+    }
+}
+abstract class ExtendedRangeSuggestion: SuggestionFunction {
+    abstract fun createEditableCondition(attribute: Attribute): EditableCondition
+    abstract fun rangeAndValueSuitable(referenceRange: ReferenceRange, value: Value): Boolean
+    override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
+        val referenceRange = testResult?.referenceRange ?: return null
+        return if (rangeAndValueSuitable(referenceRange, testResult.value)) EditableSuggestedCondition(createEditableCondition(attribute)) else null
+    }
+}
+object ExtendedLowRangeSuggestion: ExtendedRangeSuggestion() {
+    override fun createEditableCondition(attribute: Attribute): EditableCondition {
+        return EditableExtendedLowRangeCondition(attribute)
+    }
+
+    override fun rangeAndValueSuitable(referenceRange: ReferenceRange, value: Value): Boolean {
+        return referenceRange.isLow(value)
     }
 }
 
@@ -96,20 +111,21 @@ object IsSuggestion: SuggestionFunction {
         return FixedSuggestedCondition(EpisodicCondition(attribute, Is(value), Current))
     }
 }
-class RangeConditionSuggester(val predicate: TestResultPredicate): SuggestionFunction {
+class RangeConditionSuggester(private val predicate: TestResultPredicate): SuggestionFunction {
     override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
         return if (hasRange(testResult)) FixedSuggestedCondition(EpisodicCondition(attribute, predicate, Current)) else null
     }
 }
 fun suggestionFactories(): List<SuggestionFunction> {
     return listOf(
-        GteSuggestion,
-        LteSuggestion,
-        ContainsSuggestion,
-        IsSuggestion,
-        RangeConditionSuggester(Low),
-        RangeConditionSuggester(Normal),
-        RangeConditionSuggester(High),
+            GreaterThanOrEqualsSuggestion,
+            LessThanOrEqualsSuggestion,
+            ContainsSuggestion,
+            IsSuggestion,
+            RangeConditionSuggester(Low),
+            RangeConditionSuggester(Normal),
+            RangeConditionSuggester(High),
+            ExtendedLowRangeSuggestion
         )
 }
 fun hasRange(testResult: TestResult?): Boolean {

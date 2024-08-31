@@ -3,7 +3,6 @@ package io.rippledown.model.condition.edit
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.EpisodicCondition
-import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals
 import io.rippledown.model.condition.episodic.predicate.LessThanOrEquals
 import io.rippledown.model.condition.episodic.signature.Current
 import kotlinx.serialization.Serializable
@@ -13,10 +12,6 @@ data class EditableLTECondition(val attribute: Attribute, val initialCutoff: Edi
 
     override fun fixedTextPart1(): String {
         return "${attribute.name} ≤ "
-    }
-
-    override fun fixedTextPart2(): String {
-        return ""
     }
 
     override fun editableValue(): EditableValue {

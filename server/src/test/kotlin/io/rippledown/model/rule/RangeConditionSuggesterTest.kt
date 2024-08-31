@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.model.TestResult
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.episodic.predicate.High
+import io.rippledown.model.condition.episodic.predicate.Low
 import io.rippledown.model.condition.episodic.predicate.Normal
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.rr
@@ -26,6 +27,9 @@ class RangeConditionSuggesterTest: ConditionFactoryTestBase()  {
             isEditable() shouldBe false
             initialSuggestion() shouldBe EpisodicCondition(tsh, Normal, Current)
             editableCondition() shouldBe null
+        }
+        with(RangeConditionSuggester(Low).invoke(tsh, TestResult("", rr(null,"2.0"), "m/L"))!!) {
+            initialSuggestion() shouldBe EpisodicCondition(tsh, Low, Current)
         }
     }
 }

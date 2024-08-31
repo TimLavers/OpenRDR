@@ -1,5 +1,6 @@
 package io.rippledown.model.condition.edit
 
+import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
 import kotlinx.serialization.Serializable
 
@@ -9,6 +10,7 @@ sealed interface SuggestedCondition {
     fun isEditable(): Boolean
     fun editableCondition(): EditableCondition?
     fun asText() = initialSuggestion().asText()
+    fun shouldBeSuggestedForCase(case: RDRCase) = isEditable() || initialSuggestion().holds(case)
 }
 @Serializable
 data class FixedSuggestedCondition(val initialSuggestion: Condition): SuggestedCondition {

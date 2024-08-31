@@ -1,6 +1,6 @@
 Feature: The TSH KB can be built with the user interface.
 
-#  @single
+  @single
   Scenario: Build the TSH KB from cases
     Given I start the client application
     And I create a Knowledge Base with the name TSH based on the "Thyroid Stimulating Hormone - cases only" sample
@@ -18,6 +18,7 @@ Feature: The TSH KB can be built with the user interface.
 
 #        replaceCommentForCase("1.4.3", report1b, report2, ft4SlightlyLow)
     And I select case 1.4.3
+    And pause
     And I build a rule to replace the comment "Normal TSH is consistent with a euthyroid state." with the comment "A mildly reduced FT4 with a normal TSH may be due to non-thyroidal illness or pituitary hypothyroidism." with conditions
       | Free T4 is normal |
 
