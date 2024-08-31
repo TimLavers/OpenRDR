@@ -1,11 +1,13 @@
 [versions]
 kotlin = "2.0.20"
 compose = "1.6.11"
+kotest = "5.7.2"
+
 skikoVersion = "0.8.4"
 ktor = "2.3.7"
 
 kotlinx = "1.8.0"
-kotlinx_serialization = "1.7.1"
+kotlinx_serialization = "1.5.1"
 kotlinx_datetime = "0.6.0"
 
 junitSuite = "1.10.3"
@@ -20,13 +22,15 @@ composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "k
 
 
 [libraries]
+assertionsCore = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+
 #cucumberJava = { module = "io.cucumber:cucumber-java", version.ref = "cucumber" }
 #cucumberJunitPlatformEngine = { module = "io.cucumber:cucumber-junit-platform-engine", version.ref = "cucumber" }
 #cucumberPicocontainer = { module = "io.cucumber:cucumber-picocontainer", version.ref = "cucumber" }
 #junit-platformSuite = { module = "org.junit.platform:junit-platform-suite", version.ref = "junitSuite" }
 #kotlinxCoroutinesCore = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx" }
 #kotlinxSerializationCore = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx_serialization" }
-#kotlinxSerializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx_serialization" }
+kotlinxSerializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx_serialization" }
 #kotlinxDateTime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx_datetime" }
 
 

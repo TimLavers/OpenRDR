@@ -139,8 +139,6 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun setEditableValue(value: String) {
-//        clickConditionWithText(condition)
-
         val dialog = findComposeDialogThatIsShowing()
         with(EditConditionOperator(dialog!!)) {
             enterValue(value)

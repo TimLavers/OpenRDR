@@ -3,10 +3,9 @@ plugins {
     `java-test-fixtures`
 }
 dependencies {
-    testFixturesImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${Version.kotlinxSerialization}")
-
     testFixturesImplementation(kotlin("test"))
-    testFixturesImplementation("io.kotest:kotest-assertions-core:${Version.kotest}")
+    testFixturesImplementation(libs.kotlinxSerializationJson)
+    testFixturesImplementation(libs.assertionsCore)
 
 }
 sourceSets {
