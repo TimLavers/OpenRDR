@@ -47,3 +47,12 @@ Feature: The user can make a rule that replaces a comment the interpretive repor
       | Sun is in case  |
     And stop the client application
 
+  Scenario: A comment given for the case must be selected before the user can start a rule to replace it
+    Given a case with name Case1 is stored on the server
+    And the interpretation of the case Case1 is "Go to Bondi."
+    And I start the client application
+    And I should see the case Case1 as the current case
+    And I start to build a rule to replace a comment
+    When I enter "Maroubra" as the filter to select a comment to replace
+    Then the OK button to start the rule to replace the comment should be disabled
+    And stop the client application

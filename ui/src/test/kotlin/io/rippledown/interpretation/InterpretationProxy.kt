@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTestApi::class)
+
 package io.rippledown.interpretation
 
 import androidx.compose.ui.test.*
@@ -48,7 +50,7 @@ private fun ComposeTestRule.enterCommentToBeAdded(comment: String) {
         .performTextInput(comment)
 }
 
-private fun ComposeTestRule.enterCommentToBeTheReplacement(comment: String) {
+fun ComposeTestRule.enterCommentToBeTheReplacement(comment: String) {
     onNodeWithContentDescription(REPLACEMENT_COMMENT_TEXT_FIELD)
         .assertIsDisplayed()
         .performTextInput(comment)
@@ -94,10 +96,21 @@ fun ComposeTestRule.clickOKToAddNewComment() {
 }
 
 fun ComposeTestRule.clickOKToReplaceComment() {
+    waitTillButtonIsEnabled(OK_BUTTON_FOR_REPLACE_COMMENT)
     onNodeWithContentDescription(OK_BUTTON_FOR_REPLACE_COMMENT)
-        .assertIsDisplayed()
+        .assertIsEnabled()
         .performClick()
-    waitForIdle()
+}
+
+private fun ComposeTestRule.waitTillButtonIsEnabled(contentDescriptionForButton: String) {
+    waitUntil(2_000) {
+        try {
+            onNodeWithContentDescription(contentDescriptionForButton).assertIsEnabled()
+            true
+        } catch (e: Throwable) {
+            false
+        }
+    }
 }
 
 fun ComposeTestRule.clickOKToRemoveComment() {
@@ -105,6 +118,16 @@ fun ComposeTestRule.clickOKToRemoveComment() {
         .assertIsDisplayed()
         .performClick()
     waitForIdle()
+}
+
+fun ComposeTestRule.requireOKButtonOnRemoveCommentDialogToBeDisabled() {
+    onNodeWithContentDescription(OK_BUTTON_FOR_REMOVE_COMMENT)
+        .assertIsNotEnabled()
+}
+
+fun ComposeTestRule.requireOKButtonOnReplaceCommentDialogToBeDisabled() {
+    onNodeWithContentDescription(OK_BUTTON_FOR_REPLACE_COMMENT)
+        .assertIsNotEnabled()
 }
 
 fun ComposeTestRule.clickCancelAddNewComment() {

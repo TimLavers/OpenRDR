@@ -56,6 +56,43 @@ class RemoveCommentDialogTest {
     }
 
     @Test
+    fun `should disable the OK button until a comment is selected`() {
+        val bondi = "Bondi"
+        val maroubra = "Maroubra"
+        with(composeTestRule) {
+            //Given
+            setContent {
+                RemoveCommentDialog(listOf(bondi, maroubra), handler)
+            }
+
+            //When
+            requireCommentOptionsToBeDisplayed(REMOVE_COMMENT_PREFIX, listOf(bondi, maroubra))
+            enterTextIntoTheCommentSelector(REMOVE_COMMENT_PREFIX, "Coogee")
+
+            //Then
+            requireOKButtonOnRemoveCommentDialogToBeDisabled()
+        }
+    }
+
+    @Test
+    fun `should disable the OK button if no comment is selected`() {
+        val bondi = "Bondi"
+        val maroubra = "Maroubra"
+        with(composeTestRule) {
+            //Given
+            setContent {
+                RemoveCommentDialog(listOf(bondi, maroubra), handler)
+            }
+
+            //When
+            requireCommentOptionsToBeDisplayed(REMOVE_COMMENT_PREFIX, listOf(bondi, maroubra))
+
+            //Then
+            requireOKButtonOnRemoveCommentDialogToBeDisabled()
+        }
+    }
+
+    @Test
     fun `should call handler to cancel when Cancel is pressed`() = runTest {
         with(composeTestRule) {
             //Given

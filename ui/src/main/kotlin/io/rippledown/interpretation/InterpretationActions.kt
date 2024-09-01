@@ -82,7 +82,9 @@ fun InterpretationActions(
         }
     }
     if (addCommentDialogShowing) {
-        AddCommentDialog(availableComments = allComments.toList(), handler = object : AddCommentHandler {
+        AddCommentDialog(
+            availableComments = allComments.toList() - commentsGivenForCase,
+            handler = object : AddCommentHandler {
             override fun startRuleToAddComment(comment: String) {
                 addCommentDialogShowing = false
                 handler.startRuleToAddComment(comment)
@@ -111,7 +113,7 @@ fun InterpretationActions(
 
     if (removeCommentDialogShowing) {
         RemoveCommentDialog(
-            availableComments = commentsGivenForCase,
+            givenComments = commentsGivenForCase,
             handler = object : RemoveCommentHandler {
                 override fun startRuleToRemoveComment(comment: String) {
                     removeCommentDialogShowing = false

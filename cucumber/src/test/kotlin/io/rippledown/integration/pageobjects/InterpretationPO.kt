@@ -45,7 +45,7 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun interpretationText(): String = execute<String> {
-        contextProvider().find(INTERPRETATION_TEXT_FIELD, TEXT)!!.accessibleName ?: ""
+        contextProvider().find(INTERPRETATION_TEXT_FIELD)!!.accessibleName ?: ""
     }
 
     fun waitForInterpretationText(expected: String): InterpretationPO {
@@ -58,7 +58,7 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun waitForInterpretationTextToContain(expected: String) {
-        await().atMost(ofSeconds(5)).until {
+        await().atMost(ofSeconds(2)).until {
             interpretationText().contains(expected)
         }
     }

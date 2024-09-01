@@ -36,13 +36,14 @@ fun AddCommentDialog(availableComments: List<String>, handler: AddCommentHandler
         Scaffold(
             bottomBar = {
                 OKCancelButtons(
+                    prefix = ADD_COMMENT_PREFIX,
+                    oKButtonEnabled = true,
                     onOK = {
                         handler.startRuleToAddComment(selectedComment)
                     },
                     onCancel = {
                         handler.cancel()
-                    },
-                    prefix = ADD_COMMENT_PREFIX
+                    }
                 )
             }
         ) { paddingValues ->

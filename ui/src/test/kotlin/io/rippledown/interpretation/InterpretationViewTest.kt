@@ -40,6 +40,6 @@ class InterpretationViewTest {
 
 fun main() {
     applicationFor {
-        InterpretationView("Surf's up!")
+        InterpretationView("Surf's up!\nGo to Bondi now!")
     }
 }

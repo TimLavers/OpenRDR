@@ -1,15 +1,19 @@
-
 plugins {
     kotlin("plugin.serialization")
-    id("java-test-fixtures")
+    `java-test-fixtures`
 }
 dependencies {
+    implementation(libs.bundles.kotlinx)
+    testImplementation(libs.bundles.ktor)
+    testImplementation(libs.kotestAssertions)
     testFixturesImplementation(kotlin("test"))
-    testFixturesImplementation("io.kotest:kotest-assertions-core:${Version.kotest}")
+    testFixturesImplementation(libs.kotlinxSerializationJson)
+    testFixturesImplementation(libs.kotestAssertions)
+    testFixturesImplementation(libs.bundles.ktor)
 
 }
 sourceSets {
-    testFixtures{
+    testFixtures {
         kotlin.srcDir("src/testFixtures/kotlin")
     }
 }
