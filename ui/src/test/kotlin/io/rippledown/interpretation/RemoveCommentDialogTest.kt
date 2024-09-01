@@ -70,7 +70,7 @@ class RemoveCommentDialogTest {
             enterTextIntoTheCommentSelector(REMOVE_COMMENT_PREFIX, "Coogee")
 
             //Then
-            requireOKButtonOnRemoveDialogToBeDisabled()
+            requireOKButtonOnRemoveCommentDialogToBeDisabled()
         }
     }
 
@@ -88,7 +88,7 @@ class RemoveCommentDialogTest {
             requireCommentOptionsToBeDisplayed(REMOVE_COMMENT_PREFIX, listOf(bondi, maroubra))
 
             //Then
-            requireOKButtonOnRemoveDialogToBeDisabled()
+            requireOKButtonOnRemoveCommentDialogToBeDisabled()
         }
     }
 

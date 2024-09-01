@@ -21,10 +21,10 @@ interface RemoveCommentHandler {
 }
 
 @Composable
-fun RemoveCommentDialog(availableComments: List<String>, handler: RemoveCommentHandler) {
+fun RemoveCommentDialog(givenComments: List<String>, handler: RemoveCommentHandler) {
     val dialogState = rememberDialogState(size = DpSize(640.dp, 400.dp))
     var selectedComment by remember { mutableStateOf("") }
-    val okButtonEnabled = availableComments.contains(selectedComment)
+    val okButtonEnabled = givenComments.contains(selectedComment)
 
     DialogWindow(
         title = REMOVE_COMMENT,
@@ -48,7 +48,7 @@ fun RemoveCommentDialog(availableComments: List<String>, handler: RemoveCommentH
                 )
             }
         ) { paddingValues ->
-            val options = availableComments - selectedComment
+            val options = givenComments - selectedComment
             Column(Modifier.padding(paddingValues)) {
                 CommentSelector(
                     selectedComment,

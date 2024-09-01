@@ -25,6 +25,7 @@ fun ReplaceCommentDialog(givenComments: List<String>, availableComments: List<St
     val dialogState = rememberDialogState(size = DpSize(640.dp, 600.dp))
     var replacedText by remember { mutableStateOf("") }
     var replacementText by remember { mutableStateOf("") }
+    val okButtonEnabled = givenComments.contains(replacedText)
 
     DialogWindow(
         title = REPLACE_COMMENT,
@@ -38,7 +39,7 @@ fun ReplaceCommentDialog(givenComments: List<String>, availableComments: List<St
             bottomBar = {
                 OKCancelButtons(
                     prefix = REPLACEMENT_COMMENT_PREFIX,
-                    oKButtonEnabled = true,
+                    oKButtonEnabled = okButtonEnabled,
                     onOK = {
                         handler.startRuleToReplaceComment(replacedText, replacementText)
                     },

@@ -8,7 +8,9 @@ import io.cucumber.java.en.When
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.constants.interpretation.OK_BUTTON_FOR_REMOVE_COMMENT
+import io.rippledown.constants.interpretation.OK_BUTTON_FOR_REPLACE_COMMENT
 import io.rippledown.constants.interpretation.REMOVE_COMMENT_TEXT_FIELD
+import io.rippledown.constants.interpretation.REPLACED_COMMENT_TEXT_FIELD
 import io.rippledown.integration.pause
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findComposeDialogThatIsShowing
@@ -62,6 +64,7 @@ class RuleMakerStepDefs {
             setAddCommentTextAndClickOK(comment)
         }
     }
+
     fun startRuleToAddExistingComment(comment: String) {
         with(interpretationViewPO()) {
             clickChangeInterpretationButton()
@@ -143,26 +146,52 @@ class RuleMakerStepDefs {
 
     @And("I enter {string} as the filter to select a comment to remove")
     fun enterFilterTextIntoTheRemoveCommentToRemove(filterText: String) {
+        enterFilterText(filterText, REMOVE_COMMENT_TEXT_FIELD)
+    }
+
+    @And("I enter {string} as the filter to select a comment to replace")
+    fun enterFilterTextIntoTheRemoveCommentToReplace(filterText: String) {
+        enterFilterText(filterText, REPLACED_COMMENT_TEXT_FIELD)
+    }
+
+    private fun enterFilterText(filterText: String, contentDescriptionForTextField: String) {
         waitUntilAsserted {
             execute<ComposeDialog> { findComposeDialogThatIsShowing() } shouldNotBe null
         }
         val dialog = execute<ComposeDialog> { findComposeDialogThatIsShowing() }
         with(dialog.accessibleContext) {
             //Enter the filter text
-            execute { find(REMOVE_COMMENT_TEXT_FIELD)!!.accessibleEditableText.setTextContents(filterText) }
+            execute { find(contentDescriptionForTextField)!!.accessibleEditableText.setTextContents(filterText) }
         }
     }
 
     @Then("the OK button to start the rule to remove the comment should be disabled")
     fun theOKButtonToStartTheRuleToRemoveTheCommentShouldBeDisabled() {
+        requireButtonToBeDisabled(OK_BUTTON_FOR_REMOVE_COMMENT)
+    }
+
+    @Then("the OK button to start the rule to replace the comment should be disabled")
+    fun theOKButtonToStartTheRuleToReplaceTheCommentShouldBeDisabled() {
+        requireButtonToBeDisabled(OK_BUTTON_FOR_REPLACE_COMMENT)
+    }
+
+    private fun requireButtonToBeDisabled(contentDescriptionForButton: String) {
         waitUntilAsserted {
             execute<ComposeDialog> { findComposeDialogThatIsShowing() } shouldNotBe null
         }
         val dialog = execute<ComposeDialog> { findComposeDialogThatIsShowing() }
         with(dialog.accessibleContext) {
             val accessibleStateSet =
-                execute<AccessibleStateSet> { find(OK_BUTTON_FOR_REMOVE_COMMENT)!!.accessibleStateSet }
+                execute<AccessibleStateSet> { find(contentDescriptionForButton)!!.accessibleStateSet }
             accessibleStateSet.contains(AccessibleState.ENABLED) shouldBe false
+        }
+    }
+
+    @When("I start to build a rule to replace a comment")
+    fun startRuleToReplaceAComment() {
+        with(interpretationViewPO()) {
+            clickChangeInterpretationButton()
+            clickReplaceCommentMenu()
         }
     }
 
@@ -196,35 +225,35 @@ class RuleMakerStepDefs {
     }
 
     @And("the suggested conditions should not contain:")
-    fun theSuggestedConditionsShouldNotContain( dataTable: DataTable) {
+    fun theSuggestedConditionsShouldNotContain(dataTable: DataTable) {
         val absentConditions = dataTable.asList().toSet()
         ruleMakerPO().requireAvailableConditionsDoesNotContain(absentConditions)
     }
 
     @And("the suggested conditions should contain:")
-    fun theSuggestedConditionsShouldContain( dataTable: DataTable) {
+    fun theSuggestedConditionsShouldContain(dataTable: DataTable) {
         val absentConditions = dataTable.asList().toSet()
         ruleMakerPO().requireAvailableConditionsContains(absentConditions)
     }
 
     @And("the selected conditions should be:")
-    fun theSelectedConditionsShouldBe(dataTable: DataTable){
+    fun theSelectedConditionsShouldBe(dataTable: DataTable) {
         ruleMakerPO().requireSelectedConditions(dataTable.asList())
     }
 
     @When("I set the editable value to be {string} and click ok")
-    fun setTheEditableValueToBe( text: String) {
+    fun setTheEditableValueToBe(text: String) {
         ruleMakerPO().setEditableValue(text)
     }
 
     @And("the selected conditions should not contain:")
-    fun theSelectedConditionsShouldNotContain( dataTable: DataTable) {
+    fun theSelectedConditionsShouldNotContain(dataTable: DataTable) {
         val conditions = dataTable.asList().toSet()
         ruleMakerPO().requireSelectedConditionsDoesNotContain(conditions)
     }
 
     @And("the selected conditions should contain:")
-    fun theSelectedConditionsShouldContain( dataTable: DataTable) {
+    fun theSelectedConditionsShouldContain(dataTable: DataTable) {
         val conditions = dataTable.asList().toSet()
         ruleMakerPO().requireSelectedConditionsContains(conditions)
     }

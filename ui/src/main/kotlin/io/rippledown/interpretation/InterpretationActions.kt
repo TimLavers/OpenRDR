@@ -113,7 +113,7 @@ fun InterpretationActions(
 
     if (removeCommentDialogShowing) {
         RemoveCommentDialog(
-            availableComments = commentsGivenForCase,
+            givenComments = commentsGivenForCase,
             handler = object : RemoveCommentHandler {
                 override fun startRuleToRemoveComment(comment: String) {
                     removeCommentDialogShowing = false
