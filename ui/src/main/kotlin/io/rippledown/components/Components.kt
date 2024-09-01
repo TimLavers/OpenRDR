@@ -41,9 +41,10 @@ fun Scrollbar(scrollState: ScrollState, modifier: Modifier) {
 
 @Composable
 fun OKCancelButtons(
+    prefix: String,
+    oKButtonEnabled: Boolean,
     onOK: () -> Unit,
-    onCancel: () -> Unit,
-    prefix: String
+    onCancel: () -> Unit
 ) {
     Row(
         horizontalArrangement = Arrangement.End,
@@ -59,6 +60,7 @@ fun OKCancelButtons(
         }
         Spacer(modifier = Modifier.width(8.dp))
         TextButton(
+            enabled = oKButtonEnabled,
             onClick = onOK,
             modifier = Modifier.semantics { contentDescription = "$prefix$OK" }
         ) {

@@ -37,13 +37,14 @@ fun ReplaceCommentDialog(givenComments: List<String>, availableComments: List<St
         Scaffold(
             bottomBar = {
                 OKCancelButtons(
+                    prefix = REPLACEMENT_COMMENT_PREFIX,
+                    oKButtonEnabled = true,
                     onOK = {
                         handler.startRuleToReplaceComment(replacedText, replacementText)
                     },
                     onCancel = {
                         handler.cancel()
-                    },
-                    prefix = REPLACEMENT_COMMENT_PREFIX
+                    }
                 )
             }
 

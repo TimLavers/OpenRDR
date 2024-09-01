@@ -108,6 +108,10 @@ fun ComposeTestRule.clickOKToRemoveComment() {
         .performClick()
     waitForIdle()
 }
+fun ComposeTestRule.requireOKButtonOnRemoveDialogToBeDisabled() {
+    onNodeWithContentDescription(OK_BUTTON_FOR_REMOVE_COMMENT)
+        .assertIsNotEnabled()
+}
 
 fun ComposeTestRule.clickCancelAddNewComment() {
     onNodeWithContentDescription(CANCEL_BUTTON_FOR_ADD_COMMENT)

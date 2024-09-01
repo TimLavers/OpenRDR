@@ -1,10 +1,21 @@
 package steps
 
+import androidx.compose.ui.awt.ComposeDialog
 import io.cucumber.datatable.DataTable
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.rippledown.constants.interpretation.OK_BUTTON_FOR_REMOVE_COMMENT
+import io.rippledown.constants.interpretation.REMOVE_COMMENT_TEXT_FIELD
 import io.rippledown.integration.pause
+import io.rippledown.integration.utils.find
+import io.rippledown.integration.utils.findComposeDialogThatIsShowing
+import io.rippledown.integration.waitUntilAsserted
+import org.assertj.swing.edt.GuiActionRunner.execute
+import javax.accessibility.AccessibleState
+import javax.accessibility.AccessibleStateSet
 
 class RuleMakerStepDefs {
 
@@ -103,10 +114,19 @@ class RuleMakerStepDefs {
         completeRule()
     }
 
+
     @When("I build a rule to remove the comment {string}")
     fun buildARuleToRemoveTheComment(comment: String) {
         startRuleToRemoveComment(comment)
         completeRule()
+    }
+
+    @When("I start to build a rule to remove a comment")
+    fun startRuleToRemoveAComment() {
+        with(interpretationViewPO()) {
+            clickChangeInterpretationButton()
+            clickRemoveCommentMenu()
+        }
     }
 
     @When("I build a rule to remove the comment {string} with the condition {string}")
@@ -120,6 +140,32 @@ class RuleMakerStepDefs {
         startRuleToRemoveComment(comment)
         addConditionsAndFinishRule(conditions)
     }
+
+    @And("I enter {string} as the filter to select a comment to remove")
+    fun enterFilterTextIntoTheRemoveCommentToRemove(filterText: String) {
+        waitUntilAsserted {
+            execute<ComposeDialog> { findComposeDialogThatIsShowing() } shouldNotBe null
+        }
+        val dialog = execute<ComposeDialog> { findComposeDialogThatIsShowing() }
+        with(dialog.accessibleContext) {
+            //Enter the filter text
+            execute { find(REMOVE_COMMENT_TEXT_FIELD)!!.accessibleEditableText.setTextContents(filterText) }
+        }
+    }
+
+    @Then("the OK button to start the rule to remove the comment should be disabled")
+    fun theOKButtonToStartTheRuleToRemoveTheCommentShouldBeDisabled() {
+        waitUntilAsserted {
+            execute<ComposeDialog> { findComposeDialogThatIsShowing() } shouldNotBe null
+        }
+        val dialog = execute<ComposeDialog> { findComposeDialogThatIsShowing() }
+        with(dialog.accessibleContext) {
+            val accessibleStateSet =
+                execute<AccessibleStateSet> { find(OK_BUTTON_FOR_REMOVE_COMMENT)!!.accessibleStateSet }
+            accessibleStateSet.contains(AccessibleState.ENABLED) shouldBe false
+        }
+    }
+
 
     @When("I start to build a rule to replace the comment {string} by {string}")
     fun startRuleToReplaceCommentBy(toBeReplaced: String, replacement: String) {
