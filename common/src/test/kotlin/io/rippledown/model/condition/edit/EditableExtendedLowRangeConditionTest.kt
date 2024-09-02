@@ -35,4 +35,17 @@ class EditableExtendedLowRangeConditionTest: ConditionTestBase() {
     fun condition() {
         ercLow.condition("12") shouldBe EpisodicCondition(null, tsh, LowByAtMostSomePercentage(12), Current)
     }
+
+    @Test
+    fun equalsTest() {
+        ercLow.equals(null) shouldBe false
+        ercLow.equals(tsh) shouldBe false
+        ercLow.equals(EditableExtendedLowRangeCondition(glucose)) shouldBe false
+        ercLow.equals(EditableExtendedLowRangeCondition(tsh)) shouldBe true
+    }
+
+    @Test
+    fun hashCodeTest() {
+        ercLow.hashCode() shouldBe EditableExtendedLowRangeCondition(tsh).hashCode()
+    }
 }

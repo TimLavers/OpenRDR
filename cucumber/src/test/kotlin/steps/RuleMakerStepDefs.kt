@@ -97,6 +97,12 @@ class RuleMakerStepDefs {
         addConditionsAndFinishRule(conditions)
     }
 
+    @When("^I build a rule to add the long comment")
+    fun buildRuleToAddLongCommentWithConditions(comment: String) {
+        startRuleToAddNewComment(comment)
+//        addConditionsAndFinishRule(conditions)
+    }
+
     @And("I build a rule to add the existing comment {string}")
     fun buildRuleToAddExistingComment(comment: String) {
         startRuleToAddExistingComment(comment)

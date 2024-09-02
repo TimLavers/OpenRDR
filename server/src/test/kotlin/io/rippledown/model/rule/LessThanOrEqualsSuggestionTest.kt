@@ -8,7 +8,7 @@ import io.rippledown.model.condition.lessThanOrEqualTo
 import io.rippledown.model.condition.tr
 import kotlin.test.Test
 
-class LTESuggestionTest: ConditionFactoryTestBase() {
+class LessThanOrEqualsSuggestionTest: ConditionFactoryTestBase() {
     @Test
     fun suggestion() {
         LessThanOrEqualsSuggestion.invoke(tsh, null) shouldBe null

@@ -53,6 +53,21 @@ class ConditionSuggester(
 
     private fun absentAttributeCondition(attribute: Attribute) =
         CaseStructureCondition(null, IsAbsentFromCase(attribute))
+    private fun suggestionFactories(): List<SuggestionFunction> {
+        return listOf(
+            GreaterThanOrEqualsSuggestion,
+            LessThanOrEqualsSuggestion,
+            ContainsSuggestion,
+            IsSuggestion,
+            RangeConditionSuggester(Low),
+            RangeConditionSuggester(Normal),
+            RangeConditionSuggester(High),
+            ExtendedLowRangeSuggestion,
+            ExtendedLowNormalRangeSuggestion,
+            ExtendedHighNormalRangeSuggestion,
+            ExtendedHighRangeSuggestion
+        )
+    }
 }
 
 class Sorter : Comparator<SuggestedCondition> {
@@ -90,13 +105,20 @@ abstract class ExtendedRangeSuggestion: SuggestionFunction {
     }
 }
 object ExtendedLowRangeSuggestion: ExtendedRangeSuggestion() {
-    override fun createEditableCondition(attribute: Attribute): EditableCondition {
-        return EditableExtendedLowRangeCondition(attribute)
-    }
-
-    override fun rangeAndValueSuitable(referenceRange: ReferenceRange, value: Value): Boolean {
-        return referenceRange.isLow(value)
-    }
+    override fun createEditableCondition(attribute: Attribute) = EditableExtendedLowRangeCondition(attribute)
+    override fun rangeAndValueSuitable(referenceRange: ReferenceRange, value: Value) = referenceRange.isLow(value)
+}
+object ExtendedLowNormalRangeSuggestion: ExtendedRangeSuggestion() {
+    override fun createEditableCondition(attribute: Attribute) = EditableExtendedLowNormalRangeCondition(attribute)
+    override fun rangeAndValueSuitable(referenceRange: ReferenceRange, value: Value) = referenceRange.isLow(value) || referenceRange.isNormal(value)
+}
+object ExtendedHighNormalRangeSuggestion: ExtendedRangeSuggestion() {
+    override fun createEditableCondition(attribute: Attribute) = EditableExtendedHighNormalRangeCondition(attribute)
+    override fun rangeAndValueSuitable(referenceRange: ReferenceRange, value: Value) = referenceRange.isHigh(value) || referenceRange.isNormal(value)
+}
+object ExtendedHighRangeSuggestion: ExtendedRangeSuggestion() {
+    override fun createEditableCondition(attribute: Attribute) = EditableExtendedHighRangeCondition(attribute)
+    override fun rangeAndValueSuitable(referenceRange: ReferenceRange, value: Value) = referenceRange.isHigh(value)
 }
 
 object ContainsSuggestion: SuggestionFunction {
@@ -115,18 +137,6 @@ class RangeConditionSuggester(private val predicate: TestResultPredicate): Sugge
     override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
         return if (hasRange(testResult)) FixedSuggestedCondition(EpisodicCondition(attribute, predicate, Current)) else null
     }
-}
-fun suggestionFactories(): List<SuggestionFunction> {
-    return listOf(
-            GreaterThanOrEqualsSuggestion,
-            LessThanOrEqualsSuggestion,
-            ContainsSuggestion,
-            IsSuggestion,
-            RangeConditionSuggester(Low),
-            RangeConditionSuggester(Normal),
-            RangeConditionSuggester(High),
-            ExtendedLowRangeSuggestion
-        )
 }
 fun hasRange(testResult: TestResult?): Boolean {
     return testResult?.referenceRange != null
