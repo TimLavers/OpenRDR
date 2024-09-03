@@ -16,7 +16,7 @@ import io.rippledown.interpretation.*
 import io.rippledown.model.*
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.EpisodicCondition
-import io.rippledown.model.condition.edit.FixedSuggestedCondition
+import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
 import io.rippledown.model.condition.episodic.predicate.Normal
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.rule.CornerstoneStatus
@@ -245,8 +245,8 @@ class OpenRDRUITest {
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
         coEvery { api.getCase(caseId1.id!!) } returns viewableCaseA
         coEvery { api.getCase(caseId2.id!!) } returns viewableCaseB
-        coEvery { api.conditionHints(caseId1.id!!) } returns ConditionList(listOf(FixedSuggestedCondition(normalTSH)))
-        coEvery { api.conditionHints(caseId2.id!!) } returns ConditionList(listOf(FixedSuggestedCondition(normalFT3)))
+        coEvery { api.conditionHints(caseId1.id!!) } returns ConditionList(listOf(NonEditableSuggestedCondition(normalTSH)))
+        coEvery { api.conditionHints(caseId2.id!!) } returns ConditionList(listOf(NonEditableSuggestedCondition(normalFT3)))
 
         with(composeTestRule) {
             setContent {

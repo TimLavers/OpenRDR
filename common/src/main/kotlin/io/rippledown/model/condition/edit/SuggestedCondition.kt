@@ -13,7 +13,7 @@ sealed interface SuggestedCondition {
     fun shouldBeSuggestedForCase(case: RDRCase) = isEditable() || initialSuggestion().holds(case)
 }
 @Serializable
-data class FixedSuggestedCondition(val initialSuggestion: Condition): SuggestedCondition {
+data class NonEditableSuggestedCondition(val initialSuggestion: Condition): SuggestedCondition {
     override fun initialSuggestion(): Condition {
         return initialSuggestion
     }

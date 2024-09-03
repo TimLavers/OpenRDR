@@ -97,12 +97,6 @@ class RuleMakerStepDefs {
         addConditionsAndFinishRule(conditions)
     }
 
-    @When("^I build a rule to add the long comment")
-    fun buildRuleToAddLongCommentWithConditions(comment: String) {
-        startRuleToAddNewComment(comment)
-//        addConditionsAndFinishRule(conditions)
-    }
-
     @And("I build a rule to add the existing comment {string}")
     fun buildRuleToAddExistingComment(comment: String) {
         startRuleToAddExistingComment(comment)
@@ -216,7 +210,28 @@ fun startRuleToReplaceComment(toBeReplaced: String, replacement: String) {
     }
 }
 fun addConditionsAndFinishRule(dataTable: DataTable) {
-    dataTable.asList().forEach { condition ->
+    if (dataTable.width() == 1) {
+        addNonEditableConditionsAndFinishRule(dataTable.asList())
+    } else {
+        addEditableConditionsAndFinishRule(dataTable.asLists())
+    }
+}
+
+fun addEditableConditionsAndFinishRule(conditionsWithHints: List<List<String>>) {
+    conditionsWithHints.forEach { conditionWithHints ->
+        pause(100)
+        ruleMakerPO().clickConditionStartingWithText(conditionWithHints[1])
+        pause(100)
+        ruleMakerPO().setEditableValue(conditionWithHints[2])
+        pause(100)
+        ruleMakerPO().requireSelectedConditionsContains(conditionWithHints[0])
+    }
+    pause(100)
+    ruleMakerPO().clickDoneButton()
+}
+
+fun addNonEditableConditionsAndFinishRule(conditions: List<String>) {
+    conditions.forEach { condition ->
         pause(100)
         ruleMakerPO().clickConditionWithText(condition)
     }

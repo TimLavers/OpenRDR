@@ -17,6 +17,7 @@ import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.kotlin.await
 import java.time.Duration.ofSeconds
+import java.util.function.BiPredicate
 import javax.accessibility.AccessibleContext
 
 class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
@@ -114,24 +115,45 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
         selectedConditions() shouldBe selectedConditions
     }
 
-    fun requireSelectedConditionsDoesNotContain(selectedConditions: Set<String>) {
-        selectedConditions() shouldNotContain selectedConditions
+    fun requireSelectedConditionsDoesNotContain(conditions: Set<String>) {
+        conditions.forEach {
+            requireSelectedConditionsDoesNotContain(it)
+        }
     }
 
-    fun requireSelectedConditionsContains(selectedConditions: Set<String>) {
-        selectedConditions() shouldContain selectedConditions
+    private fun requireSelectedConditionsDoesNotContain(condition: String) {
+        selectedConditions() shouldNotContain condition
+    }
+
+    fun requireSelectedConditionsContains(conditions: Set<String>) {
+        conditions.forEach {
+            requireSelectedConditionsContains(it)
+        }
+    }
+
+    fun requireSelectedConditionsContains(condition: String) {
+        selectedConditions() shouldContain condition
     }
 
     fun clickConditionWithText(condition: String) {
+        clickConditionMatchingText(condition) { t, u -> t == u }
+    }
+
+    fun clickConditionStartingWithText(condition: String) {
+        clickConditionMatchingText(condition) { t, u -> t.startsWith(u) }
+    }
+
+    private fun clickConditionMatchingText(condition: String, matcher: BiPredicate<String, String>) {
         waitForAvailableConditionsContext()
         execute {
             val ctxt = availableConditionsContext().firstOrNull { it ->
 //                println("Checking '$condition'")
 //                println("    with '${it.accessibleName}'")
 //                val match = it.accessibleName == condition
-                it.accessibleName == condition
+                val match = matcher.test(it.accessibleName, condition)
+//                it.accessibleName == condition
 //                println("match: $match")
-//                match
+                match
             }
             println("ctxt: $ctxt")
             ctxt?.accessibleAction?.doAccessibleAction(0)

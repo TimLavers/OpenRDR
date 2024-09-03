@@ -277,9 +277,9 @@ fun editableSuggestion(attribute: Attribute, text: String): EditableSuggestedCon
     return EditableSuggestedCondition(initialSuggestion, editableCondition)
 }
 
-fun nonEditableSuggestion(id: Int?, attribute: Attribute, text: String): FixedSuggestedCondition {
+fun nonEditableSuggestion(id: Int?, attribute: Attribute, text: String): NonEditableSuggestedCondition {
     val initialSuggestion = containsText(id, attribute, text)
-    return FixedSuggestedCondition(initialSuggestion)
+    return NonEditableSuggestedCondition(initialSuggestion)
 }
 fun main() {
     val notes = Attribute(99, "Notes")

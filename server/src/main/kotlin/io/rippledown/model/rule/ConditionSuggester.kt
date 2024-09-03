@@ -40,12 +40,12 @@ class ConditionSuggester(
 
     private fun attributeInCaseConditions() = attributesInCase
         .map { presentAttributeCondition(it) }
-        .map { FixedSuggestedCondition(it) }
+        .map { NonEditableSuggestedCondition(it) }
         .toSet()
 
     private fun attributeNotInCaseConditions() = attributesNotInCase
         .map { absentAttributeCondition(it) }
-        .map { FixedSuggestedCondition(it) }
+        .map { NonEditableSuggestedCondition(it) }
         .toSet()
 
     private fun presentAttributeCondition(attribute: Attribute) =
@@ -130,12 +130,12 @@ object ContainsSuggestion: SuggestionFunction {
 object IsSuggestion: SuggestionFunction {
     override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
         val value = testResult?.value?.text ?: return null
-        return FixedSuggestedCondition(EpisodicCondition(attribute, Is(value), Current))
+        return NonEditableSuggestedCondition(EpisodicCondition(attribute, Is(value), Current))
     }
 }
 class RangeConditionSuggester(private val predicate: TestResultPredicate): SuggestionFunction {
     override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
-        return if (hasRange(testResult)) FixedSuggestedCondition(EpisodicCondition(attribute, predicate, Current)) else null
+        return if (hasRange(testResult)) NonEditableSuggestedCondition(EpisodicCondition(attribute, predicate, Current)) else null
     }
 }
 fun hasRange(testResult: TestResult?): Boolean {

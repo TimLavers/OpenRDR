@@ -12,6 +12,7 @@ import io.rippledown.integration.waitForDebounce
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
+import org.awaitility.core.ConditionEvaluationListener
 import java.time.Duration.ofSeconds
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleRole.TEXT
@@ -51,6 +52,12 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
     fun waitForInterpretationText(expected: String): InterpretationPO {
         await()
             .atMost(ofSeconds(5))
+            .with().conditionEvaluationListener { condition ->
+                if (!condition.isSatisfied) {
+                    println("Waiting for text: '$expected'")
+                    println("    but got text: '${interpretationText()}'")
+                }
+            }
             .until {
                 interpretationText() == expected
             }

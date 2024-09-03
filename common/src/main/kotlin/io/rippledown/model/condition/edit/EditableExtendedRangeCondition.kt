@@ -13,7 +13,7 @@ import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.*
 
 @Serializable
-abstract class EditableExtendedRangeCondition(val attribute: Attribute): EditableCondition {
+sealed class EditableExtendedRangeCondition(val attribute: Attribute): EditableCondition {
     override fun fixedTextPart1() = condition("1").asText().dropLast(2)
     override fun fixedTextPart2() = "%"
     override fun editableValue() = EditableValue("10", Integer)
