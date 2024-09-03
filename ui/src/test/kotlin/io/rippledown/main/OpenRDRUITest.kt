@@ -322,7 +322,7 @@ class OpenRDRUITest {
     }
 
     @Test
-    fun `should call handler to set the window to default size when a rule session is cancelled`() = runTest {
+    fun `should call handler to stop showing cornerstone when a rule session is cancelled`() = runTest {
         val caseName = "case a"
         val cornerstoneName = "case b"
         val caseId = CaseId(id = 1, name = caseName)
@@ -353,7 +353,7 @@ class OpenRDRUITest {
     }
 
     @Test
-    fun `should call handler to set the window to default size when a rule session is finished`() = runTest {
+    fun `should call handler to stop showing cornerstone when a rule session is finished`() = runTest {
         val caseName = "case a"
         val cornerstoneName = "case b"
         val caseId = CaseId(id = 1, name = caseName)
@@ -377,7 +377,6 @@ class OpenRDRUITest {
             coVerify { handler.showingCornerstone(true) }
 
             //When
-            Thread.sleep(1000)
             clickFinishRuleButton()
 
             //Then

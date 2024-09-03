@@ -1,14 +1,10 @@
-import Version.assertjSwing
-import Version.cucumber
-import Version.guava
-import Version.kotest
-import Version.ktor
 
 apply(from = "../repositories.gradle.kts")
 
 plugins {
     java
-    id("org.jetbrains.compose") version "1.6.11"
+    alias(libs.plugins.compose)
+    alias(libs.plugins.composeCompiler)
 }
 
 dependencies {
@@ -16,25 +12,18 @@ dependencies {
     testImplementation(testFixtures(project(":common")))
     testImplementation(compose.desktop.currentOs)
     testImplementation(compose.preview)
-
-    testImplementation("org.jetbrains.compose.ui:ui-tooling-preview-desktop:${Version.compose}")
-
-    testImplementation(project.dependencies.enforcedPlatform("io.cucumber:cucumber-bom:$cucumber"))
-    testImplementation("io.cucumber:cucumber-java")
-    testImplementation("io.cucumber:cucumber-junit-platform-engine")
-
-    testImplementation("io.cucumber:cucumber-junit")
-    testImplementation("io.cucumber:cucumber-picocontainer")
-    testImplementation("io.kotest:kotest-assertions-core:$kotest")
-    testImplementation("org.assertj:assertj-swing:$assertjSwing")
-    testImplementation(project.dependencies.enforcedPlatform("io.ktor:ktor-bom:$ktor"))
-    testImplementation("io.ktor:ktor-client-core")
-    testImplementation("io.ktor:ktor-client-cio")
-    testImplementation("io.ktor:ktor-client-content-negotiation")
-    testImplementation("io.ktor:ktor-serialization-kotlinx-json")
+    testImplementation(libs.composePreviewDesktop)
+    testImplementation(libs.bundles.ktor)
+    testImplementation(libs.logback)
+    testImplementation(libs.bundles.kotlinx)
+    testImplementation(libs.bundles.cucumber)
+    testImplementation(libs.kotestAssertions)
+    testImplementation(libs.assertJSwing)
+    testImplementation(libs.bundles.ktor)
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("com.google.guava:guava:$guava")
+    testImplementation(libs.guava)
+    testImplementation(libs.awaitility)
 }
 
 val cukeClassPath =

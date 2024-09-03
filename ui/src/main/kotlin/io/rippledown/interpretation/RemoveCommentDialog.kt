@@ -21,9 +21,11 @@ interface RemoveCommentHandler {
 }
 
 @Composable
-fun RemoveCommentDialog(availableComments: List<String>, handler: RemoveCommentHandler) {
+fun RemoveCommentDialog(givenComments: List<String>, handler: RemoveCommentHandler) {
     val dialogState = rememberDialogState(size = DpSize(640.dp, 400.dp))
     var selectedComment by remember { mutableStateOf("") }
+    val okButtonEnabled = givenComments.contains(selectedComment)
+
     DialogWindow(
         title = REMOVE_COMMENT,
         icon = painterResource("remove_comment_24.png"),
@@ -35,17 +37,18 @@ fun RemoveCommentDialog(availableComments: List<String>, handler: RemoveCommentH
         Scaffold(
             bottomBar = {
                 OKCancelButtons(
+                    prefix = REMOVE_COMMENT_PREFIX,
+                    oKButtonEnabled = okButtonEnabled,
                     onOK = {
                         handler.startRuleToRemoveComment(selectedComment)
                     },
                     onCancel = {
                         handler.cancel()
-                    },
-                    prefix = REMOVE_COMMENT_PREFIX
+                    }
                 )
             }
         ) { paddingValues ->
-            val options = availableComments - selectedComment
+            val options = givenComments - selectedComment
             Column(Modifier.padding(paddingValues)) {
                 CommentSelector(
                     selectedComment,

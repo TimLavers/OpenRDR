@@ -11,7 +11,7 @@ import io.rippledown.integration.pause
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
 import org.assertj.swing.edt.GuiActionRunner.execute
-import org.awaitility.kotlin.await
+import org.awaitility.Awaitility.await
 import java.awt.Point
 import java.time.Duration.ofSeconds
 import javax.accessibility.AccessibleContext
@@ -31,13 +31,13 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun waitForNoNameShowing() {
-        await.atMost(ofSeconds(5)).until {
+        await().atMost(ofSeconds(5)).until {
             contextProvider().find(CASEVIEW_CASE_NAME_ID, LABEL) == null
         }
     }
 
     fun waitForNameToShow(name: String) {
-        await.atMost(ofSeconds(10)).until {
+        await().atMost(ofSeconds(10)).until {
             nameShown() != null && nameShown() == name
         }
     }
