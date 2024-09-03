@@ -56,6 +56,12 @@ class RuleMakerStepDefs {
         ruleMakerPO().requireAvailableConditions(expectedConditions)
     }
 
+    @Then("the conditions showing should include:")
+    fun theConditionsShowingShouldInclude(dataTable: DataTable) {
+        val expectedConditions = dataTable.asList().toSet()
+        ruleMakerPO().requireAvailableConditionsContains(expectedConditions)
+    }
+
     @And("I start to build a rule to add the comment {string}")
     fun startRuleToAddNewComment(comment: String) {
         with(interpretationViewPO()) {
@@ -243,7 +249,9 @@ class RuleMakerStepDefs {
 
     @When("I set the editable value to be {string} and click ok")
     fun setTheEditableValueToBe(text: String) {
+        pause(100)
         ruleMakerPO().setEditableValue(text)
+        pause(100)
     }
 
     @And("the selected conditions should not contain:")
