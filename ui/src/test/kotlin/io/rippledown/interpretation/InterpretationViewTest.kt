@@ -1,6 +1,7 @@
 package io.rippledown.interpretation
 
 import androidx.compose.ui.test.junit4.createComposeRule
+import io.rippledown.model.Conclusion
 import io.rippledown.utils.applicationFor
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -21,7 +22,7 @@ class InterpretationViewTest {
         val text = "Go to Bondi now!"
         with(composeTestRule) {
             setContent {
-                InterpretationView(text)
+                InterpretationView(listOf(Conclusion(0, text)))
             }
             requireInterpretation(text)
         }
@@ -31,7 +32,7 @@ class InterpretationViewTest {
     fun `should show a blank interpretation`() = runTest {
         with(composeTestRule) {
             setContent {
-                InterpretationView("")
+                InterpretationView(listOf())
             }
             requireInterpretation("")
         }
@@ -40,6 +41,11 @@ class InterpretationViewTest {
 
 fun main() {
     applicationFor {
-        InterpretationView("Surf's up!\nGo to Bondi now!")
+        InterpretationView(
+            listOf(
+                Conclusion(0, "Surf's up!"),
+                Conclusion(1, "Go to Bondi now!")
+            )
+        )
     }
 }

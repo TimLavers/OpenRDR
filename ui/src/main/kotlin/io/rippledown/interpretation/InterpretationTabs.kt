@@ -80,7 +80,7 @@ fun InterpretationTabs(viewableInterpretation: ViewableInterpretation) {
             }
         }
         when (tabPage) {
-            0 -> InterpretationView(viewableInterpretation.latestText())
+            0 -> InterpretationView(viewableInterpretation.conclusions().toList())
             1 -> ConclusionsView(viewableInterpretation)
         }
     }

@@ -10,9 +10,11 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
+import io.rippledown.model.Conclusion
 
 @Composable
-fun InterpretationView(text: String) {
+fun InterpretationView(conclusions: List<Conclusion>) {
+    val text = conclusions.joinToString(" ") { it.text }
     OutlinedCard(modifier = Modifier.padding(vertical = 10.dp)) {
         Text(
             text = text,
