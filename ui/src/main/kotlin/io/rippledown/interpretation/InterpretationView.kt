@@ -42,9 +42,9 @@ fun InterpretationView(conclusions: List<Conclusion>) {
                             val event = awaitPointerEvent()
                             val position = event.changes.first().position
                             textLayoutResult?.let { layoutResult ->
-                                val characterOffset = layoutResult.getOffsetForPosition(position)
-                                val commentIndex = commentList.commentIndexForOffset(characterOffset)
                                 if (pointerEnter) {
+                                    val characterOffset = layoutResult.getOffsetForPosition(position)
+                                    val commentIndex = commentList.commentIndexForOffset(characterOffset)
                                     styledText = commentList.highlightItem(commentIndex)
                                 } else {
                                     styledText = unstyledText
