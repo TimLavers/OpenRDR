@@ -37,6 +37,26 @@ class InterpretationViewTest {
             requireInterpretation("")
         }
     }
+
+    @Test
+    fun `should highlight the conclusion under the pointer`() = runTest {
+        //Given
+        val text = "aaaaa"
+        with(composeTestRule) {
+            setContent {
+                InterpretationView(listOf(Conclusion(0, text)))
+            }
+            requireInterpretation(text)
+
+            //When
+//            movePointerOverText(text)
+            movePointerOverWord(text, "")
+
+            //Then
+//            requireTextToBeHighlighted(text)
+        }
+    }
+
 }
 
 fun main() {
@@ -44,7 +64,8 @@ fun main() {
         InterpretationView(
             listOf(
                 Conclusion(0, "Surf's up!"),
-                Conclusion(1, "Go to Bondi now!")
+                Conclusion(1, "Go to Bondi now!"),
+                Conclusion(2, "Bring your flippers.")
             )
         )
     }

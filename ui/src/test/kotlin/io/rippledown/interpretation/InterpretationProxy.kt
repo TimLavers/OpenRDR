@@ -2,6 +2,8 @@
 
 package io.rippledown.interpretation
 
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import io.rippledown.constants.interpretation.*
@@ -199,6 +201,33 @@ fun ComposeTestRule.scrollToOption(prefix: String, option: String) {
     onNodeWithContentDescription("$prefix$option")
         .performScrollTo()
 }
+
+fun ComposeTestRule.requireTextToBeHighlighted(text: String) {
+    TODO("Not yet implemented")
+}
+
+fun ComposeTestRule.movePointerOverText(text: String) {
+    val node = onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD)
+    onRoot().dump()
+
+    val bounds = node.fetchSemanticsNode().boundsInRoot
+    val center = bounds.center
+    println("bounds = ${bounds}, center = $center")
+
+    onRoot().performMouseInput {
+        moveTo(center)
+    }
+}
+
+fun ComposeTestRule.movePointerOverWord(text: String, word: String) {
+    onRoot().dump()
+    val node = onNodeWithText(text, useUnmergedTree = true)
+    val semanticsNode = node.fetchSemanticsNode()
+    val styles = semanticsNode.config.getOrNull(SemanticsProperties.Text)?.firstOrNull()?.spanStyles
+    println("styles = $styles")
+
+}
+
 
 
 
