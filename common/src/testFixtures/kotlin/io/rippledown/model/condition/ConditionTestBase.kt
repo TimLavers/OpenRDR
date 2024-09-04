@@ -4,6 +4,8 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.episodic.predicate.*
+import io.rippledown.model.condition.series.Decreasing
+import io.rippledown.model.condition.series.Increasing
 import io.rippledown.model.condition.structural.IsAbsentFromCase
 import io.rippledown.model.condition.structural.IsPresentInCase
 import kotlinx.serialization.encodeToString
@@ -24,6 +26,8 @@ fun normalOrSlightlyHigh(id: Int? = null, attribute: Attribute, cutoff: Int) = E
 fun slightlyHigh(id: Int? = null, attribute: Attribute, cutoff: Int) = EpisodicCondition(id, attribute, HighByAtMostSomePercentage(cutoff), Current)
 fun isPresent(attribute: Attribute, id: Int? = null ) = CaseStructureCondition(id, IsPresentInCase(attribute))
 fun isAbsent(attribute: Attribute, id: Int? = null) = CaseStructureCondition(id, IsAbsentFromCase(attribute))
+fun increasing(attribute: Attribute, id: Int? = null) = SeriesCondition(id, attribute, Increasing)
+fun decreasing(attribute: Attribute, id: Int? = null) = SeriesCondition(id, attribute, Decreasing)
 
 fun rr(low: String?, high: String?) = ReferenceRange(low, high)
 fun tr(value: String) = TestResult(value, null, null)

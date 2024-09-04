@@ -3,9 +3,13 @@ package io.rippledown.model.rule
 import io.rippledown.model.*
 import io.rippledown.model.condition.CaseStructureCondition
 import io.rippledown.model.condition.EpisodicCondition
+import io.rippledown.model.condition.SeriesCondition
 import io.rippledown.model.condition.edit.*
 import io.rippledown.model.condition.episodic.predicate.*
 import io.rippledown.model.condition.episodic.signature.Current
+import io.rippledown.model.condition.series.Decreasing
+import io.rippledown.model.condition.series.Increasing
+import io.rippledown.model.condition.series.Trend
 import io.rippledown.model.condition.structural.IsAbsentFromCase
 import io.rippledown.model.condition.structural.IsPresentInCase
 
@@ -48,11 +52,10 @@ class ConditionSuggester(
         .map { NonEditableSuggestedCondition(it) }
         .toSet()
 
-    private fun presentAttributeCondition(attribute: Attribute) =
-        CaseStructureCondition(null, IsPresentInCase(attribute))
+    private fun presentAttributeCondition(attribute: Attribute) = CaseStructureCondition(null, IsPresentInCase(attribute))
 
-    private fun absentAttributeCondition(attribute: Attribute) =
-        CaseStructureCondition(null, IsAbsentFromCase(attribute))
+    private fun absentAttributeCondition(attribute: Attribute) = CaseStructureCondition(null, IsAbsentFromCase(attribute))
+
     private fun suggestionFactories(): List<SuggestionFunction> {
         return listOf(
             GreaterThanOrEqualsSuggestion,
@@ -65,7 +68,9 @@ class ConditionSuggester(
             ExtendedLowRangeSuggestion,
             ExtendedLowNormalRangeSuggestion,
             ExtendedHighNormalRangeSuggestion,
-            ExtendedHighRangeSuggestion
+            ExtendedHighRangeSuggestion,
+            TrendSuggestion(Increasing),
+            TrendSuggestion(Decreasing)
         )
     }
 }
@@ -140,4 +145,10 @@ class RangeConditionSuggester(private val predicate: TestResultPredicate): Sugge
 }
 fun hasRange(testResult: TestResult?): Boolean {
     return testResult?.referenceRange != null
+}
+class TrendSuggestion(private val trend: Trend): SuggestionFunction {
+    override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
+        testResult?.value?.real ?: return null
+        return NonEditableSuggestedCondition(SeriesCondition(null, attribute, trend))
+    }
 }
