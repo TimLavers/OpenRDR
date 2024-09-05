@@ -29,10 +29,10 @@ The class `SuggestedCondition` handles these situations.
 | Method             | Return value         | Notes                                                                 |
 |--------------------|----------------------|-----------------------------------------------------------------------|
 | `initialCondition` | `Condition`          | This is the suggestion shown to the user.                             |
-| `editable`         | `Bool`               | Can adjustments be made to the suggestion.                            |
+| `editable`         | `Boolean`            | Can adjustments be made to the suggestion.                            |
 | `editableCondition`| `EditableCondition?` | Used to construct an editor popup, if not null. Null if not editable. |
 
-## `EditableCondition`  class
+## `EditableCondition` class
 As shown above, a `SuggestedCondition` for which `editable` returns `true` can provide
 an `EditableCondition` which is used to construct a user interface for adjusting the suggestion.
 At the time of writing, all of the conditions that can be edited are of the form
@@ -52,4 +52,6 @@ Here's a first-cut for `EditableCondition`:
 | `variablePosition` | `Int`          | Where the parameter fits into the fixed text                     |
 | `parameterType`    | Class or enum. | What kind of value the variable must be                          |
 | `editedCondition`  | `Condition`    | The condition corresponding to the current value of the parameter|
+
+## Which 
 

@@ -56,6 +56,12 @@ class RuleMakerStepDefs {
         ruleMakerPO().requireAvailableConditions(expectedConditions)
     }
 
+    @Then("the conditions showing should include:")
+    fun theConditionsShowingShouldInclude(dataTable: DataTable) {
+        val expectedConditions = dataTable.asList().toSet()
+        ruleMakerPO().requireAvailableConditionsContains(expectedConditions)
+    }
+
     @And("I start to build a rule to add the comment {string}")
     fun startRuleToAddNewComment(comment: String) {
         with(interpretationViewPO()) {
@@ -243,7 +249,9 @@ class RuleMakerStepDefs {
 
     @When("I set the editable value to be {string} and click ok")
     fun setTheEditableValueToBe(text: String) {
+        pause(100)
         ruleMakerPO().setEditableValue(text)
+        pause(100)
     }
 
     @And("the selected conditions should not contain:")
@@ -257,16 +265,61 @@ class RuleMakerStepDefs {
         val conditions = dataTable.asList().toSet()
         ruleMakerPO().requireSelectedConditionsContains(conditions)
     }
+
+    @And("I build a rule to replace the comment {string} with the comment {string} with conditions")
+    fun buildARuleToReplaceTheCommentWithTheCommentWithConditions(toBeReplaced: String, replacement: String, conditions: DataTable ) {
+        pause(100)
+        startRuleToReplaceComment(toBeReplaced, replacement)
+        pause(100)
+        addConditionsAndFinishRule(conditions)
+    }
+}
+
+fun startRuleBuildingSessionToAddComment(comment: String) {
+    with(interpretationViewPO()) {
+        clickChangeInterpretationButton()
+        clickAddCommentMenu()
+        setAddCommentTextAndClickOK(comment)
+    }
 }
 
 fun startRuleToReplaceComment(toBeReplaced: String, replacement: String) {
     with(interpretationViewPO()) {
         clickChangeInterpretationButton()
         clickReplaceCommentMenu()
-        pause(1000) //TODO remove
+        pause(100) //TODO remove
         selectCommentToReplaceAndEnterItsReplacementAndClickOK(toBeReplaced, replacement)
-        pause(1000) //TODO remove
+        pause(100) //TODO remove
     }
+}
+fun addConditionsAndFinishRule(dataTable: DataTable) {
+    if (dataTable.width() == 1) {
+        addNonEditableConditionsAndFinishRule(dataTable.asList())
+    } else {
+        addEditableConditionsAndFinishRule(dataTable.asLists())
+    }
+}
+
+fun addEditableConditionsAndFinishRule(conditionsWithHints: List<List<String>>) {
+    conditionsWithHints.forEach { conditionWithHints ->
+        pause(100)
+        ruleMakerPO().clickConditionStartingWithText(conditionWithHints[1])
+        pause(100)
+        ruleMakerPO().setEditableValue(conditionWithHints[2])
+        pause(100)
+        ruleMakerPO().requireSelectedConditionsContains(conditionWithHints[0])
+    }
+    pause(100)
+    ruleMakerPO().clickDoneButton()
+}
+
+fun addNonEditableConditionsAndFinishRule(conditions: List<String>) {
+    conditions.forEach { condition ->
+        pause(100)
+        ruleMakerPO().clickConditionWithText(condition)
+    }
+    pause(100)
+    ruleMakerPO().clickDoneButton()
 }
 
 fun startRuleToRemoveComment(comment: String) {
@@ -280,16 +333,6 @@ fun startRuleToRemoveComment(comment: String) {
 fun completeRuleWithCondition(condition: String) {
     with(ruleMakerPO()) {
         clickConditionWithText(condition)
-        clickDoneButton()
-    }
-}
-
-
-private fun addConditionsAndFinishRule(dataTable: DataTable) {
-    with(ruleMakerPO()) {
-        dataTable.asList().forEach { condition ->
-            clickConditionWithText(condition)
-        }
         clickDoneButton()
     }
 }

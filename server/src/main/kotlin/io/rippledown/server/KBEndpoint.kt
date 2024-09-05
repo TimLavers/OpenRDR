@@ -100,21 +100,24 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
      * @return a CornerstoneStatus providing the first cornerstone and the number of cornerstones that will be affected by the diff
      */
     fun startRuleSession(sessionStartRequest: SessionStartRequest): CornerstoneStatus {
+        logger.info("startRuleSession with data $sessionStartRequest")
         val caseId = sessionStartRequest.caseId
         val diff = sessionStartRequest.diff
         startRuleSessionForDifference(caseId, diff)
         return kb.cornerstoneStatus(null)
-
     }
 
     fun commitRuleSession(ruleRequest: RuleRequest): ViewableCase {
+        logger.info("Committing rule session for $ruleRequest")
         val caseId = ruleRequest.caseId
         val case = viewableCase(caseId)
 
         ruleRequest.conditions.conditions.forEach { condition ->
+            logger.info("adding condition: $condition")
             addConditionToCurrentRuleBuildingSession(condition)
         }
         commitCurrentRuleSession()
+        logger.info("rule session committed")
 
         //re-interpret the case
         val updatedInterpretation = kb.interpret(case.case)

@@ -46,3 +46,24 @@ The user is most likely to pick suggested conditions that:
 - previously used in a rule with a similar action (high priority for this)
 - in a rule building session some conflicting cornerstones get exempted (the user has indicated that the change is good 
 for the case). We should give precedence to conditions that are true for these.
+
+## Which conditions should be suggested?
+In a rule session the user is adding conditions to a rule that describe the
+kinds of cases for which the change defined by the rule is to apply.
+These conditions need to be true for the case for which the rule is being built.
+Some suggested conditions cannot be changed by the user. For example, `TSH is high`
+can not be edited at all, whereas `Notes is "On Amiodarone"` can be edited but
+not in a way that makes it applicable to the session case.
+
+On the other hand, if a suggestion is editable, for example `TSH is low by at most _%`,
+then whether it applies to the session case depends on what the user sets the
+variable to be. 
+
+Therefore, our algorithm for deciding whether a condition should be made is:
+- if it is not editable, suggest it if it applies to the session case
+- if it is editable, suggest it if there's the possibility of
+  the user editing it in such a way that it applies to the session case.
+
+If the session case has a current `TSH` value that has no reference range, 
+then conditions such as `TSH is low by at most _%` should not
+be suggested.

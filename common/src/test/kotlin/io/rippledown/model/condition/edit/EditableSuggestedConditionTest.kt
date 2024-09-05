@@ -8,31 +8,25 @@ import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.serializeDeserialize
 import kotlin.test.Test
 
-class EditableGTEConditionTest: ConditionTestBase() {
+class EditableSuggestedConditionTest: ConditionTestBase() {
     private val gte = EditableGTECondition(tsh, EditableValue("0.67", Type.Real))
+    private val esc = EditableSuggestedCondition(gte)
 
     @Test
     fun serializationTest() {
-        serializeDeserialize(gte) shouldBe gte
+        serializeDeserialize(esc) shouldBe esc
+        val ehn = EditableExtendedHighNormalRangeCondition(tsh)
+        val esc2 = EditableSuggestedCondition(ehn)
+        serializeDeserialize(esc2) shouldBe esc2
     }
 
     @Test
-    fun fixedTextPart1() {
-        gte.fixedTextPart1() shouldBe "${tsh.name} ≥ "
+    fun isEditableTest() {
+        esc.isEditable() shouldBe true
     }
 
     @Test
-    fun fixedTextPart2() {
-        gte.fixedTextPart2() shouldBe ""
-    }
-
-    @Test
-    fun editableValue() {
-        gte.editableValue() shouldBe EditableValue("0.67", Type.Real)
-    }
-
-    @Test
-    fun condition() {
-        gte.condition("123") shouldBe EpisodicCondition(null, tsh, GreaterThanOrEquals(123.0), Current)
+    fun editableConditionTest() {
+        esc.editableCondition() shouldBe EditableGTECondition(tsh, EditableValue("0.67", Type.Real))
     }
 }
