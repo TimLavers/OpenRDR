@@ -9,10 +9,8 @@ import io.rippledown.constants.rule.AVAILABLE_CONDITION_PREFIX
 import io.rippledown.constants.rule.CANCEL_RULE_BUTTON
 import io.rippledown.constants.rule.FINISH_RULE_BUTTON
 import io.rippledown.constants.rule.SELECTED_CONDITION_PREFIX
-import io.rippledown.integration.utils.find
-import io.rippledown.integration.utils.findAllByDescriptionPrefix
-import io.rippledown.integration.utils.findComposeDialogThatIsShowing
-import io.rippledown.integration.utils.waitForContextToBeNotNull
+import io.rippledown.integration.pause
+import io.rippledown.integration.utils.*
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
@@ -161,9 +159,11 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun setEditableValue(value: String) {
-        val dialog = findComposeDialogThatIsShowing()
-        with(EditConditionOperator(dialog!!)) {
+        val dialog = waitForComposeDialogToShow()
+        with(EditConditionOperator(dialog)) {
+            pause(100)
             enterValue(value)
+            pause(100)
             clickOkButton()
         }
     }

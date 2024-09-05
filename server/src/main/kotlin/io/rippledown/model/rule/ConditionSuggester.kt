@@ -23,14 +23,18 @@ class ConditionSuggester(
     private val attributesNotInCase = attributes - attributesInCase
 
     fun suggestions(): List<SuggestedCondition> {
-        return (caseStructureSuggestions() + episodicConditionSuggestions()).toList().sortedWith(Sorter())
+        return (caseStructureSuggestions() + episodicConditionSuggestions() + seriesConditionSuggestions()).toList().sortedWith(Sorter())
     }
 
-    private fun episodicConditionSuggestions(): Set<SuggestedCondition> {
+    private fun episodicConditionSuggestions() = createSuggestions(episodicFactories())
+
+    private fun seriesConditionSuggestions() = createSuggestions(trendFactories())
+
+    private fun createSuggestions(factories: List<SuggestionFunction>): Set<SuggestedCondition> {
         val firstCut = mutableSetOf<SuggestedCondition>()
         attributesInCase.forEach { attribute ->
             val currentValue = sessionCase.getLatest(attribute)
-            suggestionFactories().forEach {
+            factories.forEach {
                 val suggestedCondition = it(attribute, currentValue)
                 if (suggestedCondition != null) {
                     firstCut.add(suggestedCondition)
@@ -56,7 +60,7 @@ class ConditionSuggester(
 
     private fun absentAttributeCondition(attribute: Attribute) = CaseStructureCondition(null, IsAbsentFromCase(attribute))
 
-    private fun suggestionFactories(): List<SuggestionFunction> {
+    private fun episodicFactories(): List<SuggestionFunction> {
         return listOf(
             GreaterThanOrEqualsSuggestion,
             LessThanOrEqualsSuggestion,
@@ -69,6 +73,10 @@ class ConditionSuggester(
             ExtendedLowNormalRangeSuggestion,
             ExtendedHighNormalRangeSuggestion,
             ExtendedHighRangeSuggestion,
+        )
+    }
+    private fun trendFactories(): List<SuggestionFunction> {
+        return listOf(
             TrendSuggestion(Increasing),
             TrendSuggestion(Decreasing)
         )

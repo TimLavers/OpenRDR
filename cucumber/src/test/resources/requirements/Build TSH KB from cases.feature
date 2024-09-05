@@ -1,5 +1,6 @@
 Feature: The TSH KB can be built with the user interface.
 
+  @single
   Scenario: Build the TSH KB from cases
     Given I start the client application
     And I create a Knowledge Base with the name TSH based on the "Thyroid Stimulating Hormone - cases only" sample
@@ -50,18 +51,44 @@ Feature: The TSH KB can be built with the user interface.
     And I build a rule to replace the comment "Mildly increased TSH with a normal FT4 may be found in patients with subclinical hypothyroidism or sick euthyroid syndrome. Suggest repeat measurement with TPO antibodies in 6 weeks." with the comment "The mildly increased TSH and raised TPO antibodies indicate subclinical hypothyroidism due to autoimmune thyroid disease. Suggest confirming subclinical hypothyroidism by repeat testing. Poor pregnancy outcomes have been described in women with a raised TSH. If raised TSH confirmed, consider thyroxine replacement." with conditions
       | Clinical Notes contains "Trying for a baby" | Clinical Notes contains | Trying for a baby |
 
+#            addCommentForCase("1.4.10", report8, tshLow, fT4Normal, tiredness) // tiredness needed to exclude 1.4.8
+    And I select case 1.4.10
+    And I build a rule to add the comment "The suppressed TSH and normal FT4 are consistent with subclinical hyperthyroidism. Suggest measure free triiodothyronine (FT3)." with conditions
+      | TSH is low | | |
+      | Free T4 is normal | | |
+      | Clinical Notes contains "very tired" | Clinical Notes contains | very tired |
+
+#        addCommentForCase("1.4.11", report8b, ft3High, tshLow, fT4Normal)
+    And I select case 1.4.11
+    And I build a rule to add the comment "The increased FT3 and suppressed TSH (with a normal FT4) are consistent with T3 toxicosis. Suggest measure TSH-receptor antibodies (TRAb)." with conditions
+      | TSH is low |
+      | Free T3 is high |
+      | Free T4 is normal |
+
+  #        replaceCommentForCase("1.4.12", report3, report9, tshVeryHigh, ft4VeryLow)
+    And I select case 1.4.12
+    And I build a rule to replace the comment "Mildly increased TSH may be found in patients with subclinical hypothyroidism or sick euthyroid syndrome. Suggest measurement of FT4, TSH and thyroperoxidase (TPO) antibodies in 6 weeks." with the comment "The severely increased TSH with a very low FT4 is consistent with primary hypothyroidism. Suggest measure TPO antibodies." with conditions
+      | TSH ≥ 40.0 | TSH ≥ | 40.0 |
+      | Free Tt is "<5" | | |
+
+#        replaceCommentForCase("1.4.13", report3, report9b, thyroxineReplacement1Week)
+#        replaceCommentForCase("1.4.14", report1, report10, t4Replacement)
+#        replaceCommentForCase("1.4.15", report3b, report11, t4Replacement)
+
 #        ""
     Then the cases should have interpretations as follows
-      | 1.4.1 | Normal T4 and TSH are consistent with a euthyroid state. |
-      | 1.4.2 | Normal TSH is consistent with a euthyroid state. |
-      | 1.4.3 | A mildly reduced FT4 with a normal TSH may be due to non-thyroidal illness or pituitary hypothyroidism. |
-      | 1.4.4 | Mildly increased TSH may be found in patients with subclinical hypothyroidism or sick euthyroid syndrome. Suggest measurement of FT4, TSH and thyroperoxidase (TPO) antibodies in 6 weeks. |
-      | 1.4.5 | Mildly increased TSH with a normal FT4 may be found in patients with subclinical hypothyroidism or sick euthyroid syndrome. Suggest repeat measurement with TPO antibodies in 6 weeks. |
-      | 1.4.6 | Mildly increased TSH with a normal FT4 can be seen in the euthyroid elderly. |
-      | 1.4.7 | A moderately increased TSH with a normal FT4 is consistent with (mild) primary hypothyroidism. |
-      | 1.4.8 | TSH reference intervals in pregnancy: 1st trimester 0.02–2.5, 2nd and 3rd trimester 0.30–3.0 |
-      | 1.4.9 | The mildly increased TSH and raised TPO antibodies indicate subclinical hypothyroidism due to autoimmune thyroid disease. Suggest confirming subclinical hypothyroidism by repeat testing. Poor pregnancy outcomes have been described in women with a raised TSH. If raised TSH confirmed, consider thyroxine replacement. |
-#      | 1.4.9 |  |
+      | 1.4.1  | Normal T4 and TSH are consistent with a euthyroid state. |
+      | 1.4.2  | Normal TSH is consistent with a euthyroid state. |
+      | 1.4.3  | A mildly reduced FT4 with a normal TSH may be due to non-thyroidal illness or pituitary hypothyroidism. |
+      | 1.4.4  | Mildly increased TSH may be found in patients with subclinical hypothyroidism or sick euthyroid syndrome. Suggest measurement of FT4, TSH and thyroperoxidase (TPO) antibodies in 6 weeks. |
+      | 1.4.5  | Mildly increased TSH with a normal FT4 may be found in patients with subclinical hypothyroidism or sick euthyroid syndrome. Suggest repeat measurement with TPO antibodies in 6 weeks. |
+      | 1.4.6  | Mildly increased TSH with a normal FT4 can be seen in the euthyroid elderly. |
+      | 1.4.7  | A moderately increased TSH with a normal FT4 is consistent with (mild) primary hypothyroidism. |
+      | 1.4.8  | TSH reference intervals in pregnancy: 1st trimester 0.02–2.5, 2nd and 3rd trimester 0.30–3.0 |
+      | 1.4.9  | The mildly increased TSH and raised TPO antibodies indicate subclinical hypothyroidism due to autoimmune thyroid disease. Suggest confirming subclinical hypothyroidism by repeat testing. Poor pregnancy outcomes have been described in women with a raised TSH. If raised TSH confirmed, consider thyroxine replacement. |
+      | 1.4.10 | The suppressed TSH and normal FT4 are consistent with subclinical hyperthyroidism. Suggest measure free triiodothyronine (FT3). |
+      | 1.4.11 | The increased FT3 and suppressed TSH (with a normal FT4) are consistent with T3 toxicosis. Suggest measure TSH-receptor antibodies (TRAb). |
+      | 1.4.12 | The severely increased TSH with a very low FT4 is consistent with primary hypothyroidism. Suggest measure TPO antibodies. |
 
 
     And stop the client application
