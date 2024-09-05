@@ -48,7 +48,7 @@ fun Application.applicationModule() {
         json()
     }
     install(CallLogging) {
-        level = Level.INFO
+        level = Level.DEBUG
         filter { call -> call.request.path().startsWith("/") }
         format { call ->
             val status = call.response.status()

@@ -113,6 +113,7 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
                 handler.onCancel()
             }
             override var finish = {
+                println("rule finishing, selected conditions: $selectedConditions")
                 handler.onDone(selectedConditions)
             }
         })

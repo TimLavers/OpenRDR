@@ -7,7 +7,7 @@ import io.rippledown.model.*
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.RuleConditionList
-import io.rippledown.model.condition.edit.FixedSuggestedCondition
+import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
 import io.rippledown.model.condition.hasCurrentValue
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.rule.CornerstoneStatus
@@ -143,7 +143,7 @@ class ApiTest {
     }
 
     private fun conditionList(conditions: List<Condition>) =
-        ConditionList(conditions.map { FixedSuggestedCondition(it) })
+        ConditionList(conditions.map { NonEditableSuggestedCondition(it) })
 
     private fun ruleConditionList(conditions: List<Condition>) = RuleConditionList(conditions)
 

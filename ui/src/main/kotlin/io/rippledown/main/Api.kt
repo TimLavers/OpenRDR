@@ -1,5 +1,7 @@
 package io.rippledown.main
 
+import androidx.compose.runtime.InternalComposeApi
+import androidx.compose.runtime.identityHashCode
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -66,6 +68,7 @@ class Api(engine: HttpClientEngine = CIO.create()) {
         return currentKB!!
     }
 
+    @OptIn(InternalComposeApi::class)
     suspend fun kbInfo(): KBInfo {
         if (currentKB == null) {
             currentKB = client.get("$API_URL$DEFAULT_KB").body<KBInfo>()

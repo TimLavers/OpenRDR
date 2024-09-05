@@ -7,7 +7,7 @@ import io.rippledown.constants.cornerstone.NO_CORNERSTONES_TO_REVIEW_MSG
 import io.rippledown.model.Attribute
 import io.rippledown.model.CaseId
 import io.rippledown.model.condition.RuleConditionList
-import io.rippledown.model.condition.edit.FixedSuggestedCondition
+import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
 import io.rippledown.model.condition.hasCurrentValue
 import io.rippledown.model.createCaseWithInterpretation
 import io.rippledown.model.rule.CornerstoneStatus
@@ -32,7 +32,7 @@ class CaseControlWithRuleMakerTest {
     val bondiComment = "Go to Bondi now!"
 
     val condition = hasCurrentValue(1, Attribute(2, "surf"))
-    val suggestedCondition = FixedSuggestedCondition(condition)
+    val suggestedCondition = NonEditableSuggestedCondition(condition)
     val viewableCase = createCaseWithInterpretation(
         name = caseName,
         id = id,

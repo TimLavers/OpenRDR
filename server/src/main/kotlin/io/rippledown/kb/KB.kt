@@ -10,6 +10,7 @@ import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistentKB
+import io.rippledown.server.logger
 
 class KB(persistentKB: PersistentKB) {
 
@@ -85,10 +86,12 @@ class KB(persistentKB: PersistentKB) {
     }
 
     fun startRuleSession(case: RDRCase, action: RuleTreeChange) {
+        logger.info("KB starting rule session for case ${case.name} and action $action")
         check(ruleSession == null) { "Session already in progress." }
         check(action.isApplicable(ruleTree, case)) { "Action $action is not applicable to case ${case.name}" }
         val alignedAction = action.alignWith(conclusionManager)
         ruleSession = RuleBuildingSession(ruleManager, ruleTree, case, alignedAction, allCornerstoneCases())
+        logger.info("KB rule session created")
     }
 
     fun conflictingCasesInCurrentRuleSession(): List<RDRCase> {
@@ -122,6 +125,7 @@ class KB(persistentKB: PersistentKB) {
     }
 
     private fun checkSession() {
+        logger.info("checking session in KB ${this.kbInfo}")
         check(ruleSession != null) { "Rule session not started." }
     }
 
