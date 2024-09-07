@@ -18,6 +18,8 @@ data class EditableContainsCondition(val attribute: Attribute,
 
     override fun fixedTextPart2() = ""
 
+    override fun shouldBeUsedAtMostOncePerRule() = false
+
     override fun editableValue(): EditableValue {
         return initialEditableValue
     }

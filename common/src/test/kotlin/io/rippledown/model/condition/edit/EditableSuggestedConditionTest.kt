@@ -2,9 +2,6 @@ package io.rippledown.model.condition.edit
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.condition.ConditionTestBase
-import io.rippledown.model.condition.EpisodicCondition
-import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals
-import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.serializeDeserialize
 import kotlin.test.Test
 
@@ -23,6 +20,13 @@ class EditableSuggestedConditionTest: ConditionTestBase() {
     @Test
     fun isEditableTest() {
         esc.isEditable() shouldBe true
+    }
+
+    @Test
+    fun shouldBeUsedAtMostOncePerRuleTes() {
+        esc.shouldBeUsedAtMostOncePerRule() shouldBe true
+        val contains = EditableContainsCondition(tsh, "blah")
+        EditableSuggestedCondition(contains).shouldBeUsedAtMostOncePerRule() shouldBe false
     }
 
     @Test

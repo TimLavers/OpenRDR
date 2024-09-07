@@ -137,7 +137,10 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
         logger.info("about to get cc for index $cornerstoneIndex")
         val cornerstones = kb.conflictingCasesInCurrentRuleSession()
         logger.info("got cc for index          $cornerstoneIndex")
-        return kb.viewableCase(cornerstones[cornerstoneIndex])
+        // TODO the copy() here is to prevent one thread overriding the
+        // interpretation while another is serializing the case
+        // in a client method. Need to fix this by perhaps making case immutable.
+        return kb.viewableCase(cornerstones[cornerstoneIndex].copy())
     }
 
     fun updateCornerstone(request: UpdateCornerstoneRequest) = kb.updateCornerstone(request)

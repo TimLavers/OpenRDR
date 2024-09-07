@@ -69,13 +69,43 @@ Feature: The TSH KB can be built with the user interface.
     And I select case 1.4.12
     And I build a rule to replace the comment "Mildly increased TSH may be found in patients with subclinical hypothyroidism or sick euthyroid syndrome. Suggest measurement of FT4, TSH and thyroperoxidase (TPO) antibodies in 6 weeks." with the comment "The severely increased TSH with a very low FT4 is consistent with primary hypothyroidism. Suggest measure TPO antibodies." with conditions
       | TSH ≥ 40.0 | TSH ≥ | 40.0 |
-      | Free Tt is "<5" | | |
+      | Free T4 is "<5" | | |
 
 #        replaceCommentForCase("1.4.13", report3, report9b, thyroxineReplacement1Week)
-#        replaceCommentForCase("1.4.14", report1, report10, t4Replacement)
-#        replaceCommentForCase("1.4.15", report3b, report11, t4Replacement)
+    And I select case 1.4.13
+    And I build a rule to replace the comment "Mildly increased TSH may be found in patients with subclinical hypothyroidism or sick euthyroid syndrome. Suggest measurement of FT4, TSH and thyroperoxidase (TPO) antibodies in 6 weeks." with the comment "The severely increased TSH with a very low FT4 is consistent with primary hypothyroidism. Suggest measure TPO antibodies." with conditions
+      | Clinical Notes contains "started T4 replacement 1 week ago" | Clinical Notes contains | started T4 replacement 1 week ago |
 
-#        ""
+  #        replaceCommentForCase("1.4.14", report1, report10, t4Replacement)
+    And I select case 1.4.14
+    And I build a rule to replace the comment "Normal T4 and TSH are consistent with a euthyroid state." with the comment "The normal TSH and FT4 are consistent with adequate thyroid hormone replacement." with conditions
+      | Clinical Notes contains "On T4 replacement" | Clinical Notes contains | On T4 replacement |
+
+  #        replaceCommentForCase("1.4.15", report3b, report11, t4Replacement)
+    And I select case 1.4.15
+    And I build a rule to replace the comment "Mildly increased TSH with a normal FT4 may be found in patients with subclinical hypothyroidism or sick euthyroid syndrome. Suggest repeat measurement with TPO antibodies in 6 weeks." with the comment "Increased TSH suggests inadequate thyroid hormone replacement if the dose has not been changed for at least 6 weeks and patient has been taking the medication regularly. Suggest review dose and repeat TFTs in 6 weeks." with conditions
+      | Clinical Notes contains "On T4 replacement" | Clinical Notes contains | On T4 replacement |
+
+#           addCommentForCase("1.4.16", report12, tshVeryLow, t4Replacement)
+    And I select case 1.4.16
+    And I build a rule to add the comment "Suppressed TSH is consistent with excessive thyroid hormone replacement." with conditions
+      | TSH ≤ 0.1 | TSH ≤ | 0.1 |
+      | Clinical Notes contains "On T4 replacement" | Clinical Notes contains | On T4 replacement |
+
+#        addCommentForCase("1.4.17", report13, tshLow, onThyroxine, historyThyroidCancer)
+    And I select case 1.4.17
+    And I build a rule to add the comment "Previous history of thyroid cancer noted. Low TSH may be appropriate depending on treatment targets for this patient." with conditions
+      | Clinical Notes contains "thyroid cancer" | Clinical Notes contains | thyroid cancer |
+      | Clinical Notes contains "On thyroxine" | Clinical Notes contains | On thyroxine |
+      | TSH is low                             |                         |              |
+
+#        replaceCommentForCase("1.4.18", report1, report14, borderline10HighTSH, atLeastTwoTSH)
+#
+#        // We are assuming that the absence of "/40" means the patient is not pregnant.
+#        addCommentForCase("1.4.19", report15, female, olderThan14, youngerThan44, borderlineHighFT4, tshLow, notesDoesNotMentionPregnancy)
+#
+#        // Not sure if olderThan44 is needed.
+#        addCommentForCase("1.4.20", report16, tshBelowDetection, borderlineHighFT3, fT4Normal, olderThan44)
     Then the cases should have interpretations as follows
       | 1.4.1  | Normal T4 and TSH are consistent with a euthyroid state. |
       | 1.4.2  | Normal TSH is consistent with a euthyroid state. |
@@ -89,6 +119,11 @@ Feature: The TSH KB can be built with the user interface.
       | 1.4.10 | The suppressed TSH and normal FT4 are consistent with subclinical hyperthyroidism. Suggest measure free triiodothyronine (FT3). |
       | 1.4.11 | The increased FT3 and suppressed TSH (with a normal FT4) are consistent with T3 toxicosis. Suggest measure TSH-receptor antibodies (TRAb). |
       | 1.4.12 | The severely increased TSH with a very low FT4 is consistent with primary hypothyroidism. Suggest measure TPO antibodies. |
+      | 1.4.13 | The severely increased TSH with a very low FT4 is consistent with primary hypothyroidism. Suggest measure TPO antibodies. |
+      | 1.4.14 | The normal TSH and FT4 are consistent with adequate thyroid hormone replacement. |
+      | 1.4.15 | Increased TSH suggests inadequate thyroid hormone replacement if the dose has not been changed for at least 6 weeks and patient has been taking the medication regularly. Suggest review dose and repeat TFTs in 6 weeks. |
+      | 1.4.16 | Suppressed TSH is consistent with excessive thyroid hormone replacement. |
+      | 1.4.17 | Previous history of thyroid cancer noted. Low TSH may be appropriate depending on treatment targets for this patient. |
 
 
     And stop the client application

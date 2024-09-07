@@ -27,5 +27,6 @@ sealed interface EditableCondition {
     fun fixedTextPart2(): String = ""
     fun editableValue(): EditableValue
     fun condition(value: String): Condition
+    fun shouldBeUsedAtMostOncePerRule() = true
 }
 

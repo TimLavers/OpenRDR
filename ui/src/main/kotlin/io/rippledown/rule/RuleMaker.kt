@@ -46,7 +46,9 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
 
                 override fun editingFinished(condition: Condition) {
                     // Remove the originating suggestion from the list of available suggestions.
-                    availableConditions = availableConditions - suggestionBeingEdited!!
+                    if (suggestionBeingEdited!!.shouldBeUsedAtMostOncePerRule()) {
+                        availableConditions = availableConditions - suggestionBeingEdited!!
+                    }
                     // Associate the created condition with the suggestion
                     suggestionsUsed = suggestionsUsed + mapOf(condition to suggestionBeingEdited!!)
                     // Update the handler with the suggestions.
@@ -80,7 +82,9 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
                 selectedConditions = selectedConditions - condition
                 val correspondingSuggestion = suggestionsUsed[condition]!!
                 suggestionsUsed = suggestionsUsed - condition
-                availableConditions = availableConditions + correspondingSuggestion
+                if (correspondingSuggestion.shouldBeUsedAtMostOncePerRule()) {
+                    availableConditions = availableConditions + correspondingSuggestion
+                }
                 handler.onUpdateConditions(selectedConditions)
             }
         })
@@ -95,7 +99,9 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
         AvailableConditions(availableConditions, object : AvailableConditionsHandler {
             override fun onAddCondition(suggestedCondition: SuggestedCondition) {
                 selectedConditions = selectedConditions + suggestedCondition.initialSuggestion()
-                availableConditions = availableConditions - suggestedCondition
+                if (suggestedCondition.shouldBeUsedAtMostOncePerRule()) {
+                    availableConditions = availableConditions - suggestedCondition
+                }
                 suggestionsUsed = suggestionsUsed + mapOf(suggestedCondition.initialSuggestion() to suggestedCondition)
                 handler.onUpdateConditions(selectedConditions)
             }

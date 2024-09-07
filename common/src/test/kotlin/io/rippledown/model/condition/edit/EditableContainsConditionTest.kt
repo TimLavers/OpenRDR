@@ -35,6 +35,11 @@ class EditableContainsConditionTest: ConditionTestBase() {
     }
 
     @Test
+    fun shouldBeUsedAtMostOncePerRule() {
+        currentValueCondition.shouldBeUsedAtMostOncePerRule() shouldBe false
+    }
+
+    @Test
     fun editableValue() {
         currentValueCondition.editableValue() shouldBe EditableValue("stuff", Type.Text)
     }
