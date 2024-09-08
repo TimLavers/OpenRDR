@@ -6,6 +6,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
 import io.kotest.assertions.withClue
 import io.kotest.matchers.ints.shouldBeLessThanOrEqual
@@ -207,16 +208,24 @@ fun ComposeTestRule.scrollToOption(prefix: String, option: String) {
         .performScrollTo()
 }
 
-fun ComposeTestRule.requireCommentToBeHighlighted(comment: String, layoutResult: TextLayoutResult) {
+fun requireCommentToBeHighlighted(comment: String, layoutResult: TextLayoutResult) {
     requireStyleForCommentToHaveBackground(layoutResult, comment, BACKGROUND_COLOR)
 }
 
-fun ComposeTestRule.requireCommentToBeNotHighlighted(comment: String, layoutResult: TextLayoutResult) {
+fun requireCommentToBeNotHighlighted(comment: String, layoutResult: TextLayoutResult) {
     requireStyleForCommentToHaveBackground(layoutResult, comment, Color.Unspecified)
 }
 
-private fun requireStyleForCommentToHaveBackground(layoutResult: TextLayoutResult, comment: String, color: Color) {
+fun requireStyleForCommentToHaveBackground(layoutResult: TextLayoutResult, comment: String, color: Color) {
     val annotatedString = layoutResult.layoutInput.text
+    requireStyleForCommentInAnnotatedStringToHaveBackground(annotatedString, comment, color)
+}
+
+fun requireStyleForCommentInAnnotatedStringToHaveBackground(
+    annotatedString: AnnotatedString,
+    comment: String,
+    color: Color
+) {
     val startIndex = annotatedString.text.indexOf(comment)
     for (spanStyle in annotatedString.spanStyles) {
         if (startIndex == spanStyle.start) {

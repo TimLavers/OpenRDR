@@ -1,7 +1,9 @@
 package io.rippledown.interpretation
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.text.TextLayoutResult
+import io.kotest.matchers.shouldBe
 import io.rippledown.model.Conclusion
 import io.rippledown.utils.applicationFor
 import kotlinx.coroutines.test.runTest
@@ -65,6 +67,38 @@ class InterpretationViewTest {
             //Then
             requireCommentToBeNotHighlighted(bondiComment, textLayoutResult!!)
             requireCommentToBeHighlighted(malabarComment, textLayoutResult!!)
+        }
+    }
+
+    @Test
+    fun `should identify the comment index for a given offset`() {
+        with(listOf("01234", "56789")) {
+            for (i in 0..4) {
+                commentIndexForOffset(i) shouldBe 0
+            }
+            for (i in 5..9) {
+                commentIndexForOffset(i) shouldBe 1
+            }
+            commentIndexForOffset(10) shouldBe -1
+            commentIndexForOffset(-1) shouldBe -1
+        }
+    }
+
+    @Test
+    fun `should highlight the first comment`() {
+        with(listOf("01234", "56789")) {
+            val annotatedString = highlightItem(0)
+            requireStyleForCommentInAnnotatedStringToHaveBackground(annotatedString, this[0], BACKGROUND_COLOR)
+            requireStyleForCommentInAnnotatedStringToHaveBackground(annotatedString, this[1], Color.Unspecified)
+        }
+    }
+
+    @Test
+    fun `should highlight the second comment`() {
+        with(listOf("01234", "56789")) {
+            val annotatedString = highlightItem(1)
+            requireStyleForCommentInAnnotatedStringToHaveBackground(annotatedString, this[0], Color.Unspecified)
+            requireStyleForCommentInAnnotatedStringToHaveBackground(annotatedString, this[1], BACKGROUND_COLOR)
         }
     }
 

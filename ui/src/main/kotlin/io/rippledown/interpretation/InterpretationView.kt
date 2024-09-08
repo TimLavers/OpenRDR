@@ -78,10 +78,10 @@ fun InterpretationView(conclusions: List<Conclusion>, handler: InterpretationVie
 fun List<String>.commentIndexForOffset(offset: Int): Int {
     var currentOffset = 0
     forEachIndexed { i, comment ->
-        if (offset < currentOffset + comment.length) {
+        if (offset in currentOffset until currentOffset + comment.length) {
             return i
         }
-        currentOffset += comment.length + 1
+        currentOffset += comment.length
     }
     return -1
 }
