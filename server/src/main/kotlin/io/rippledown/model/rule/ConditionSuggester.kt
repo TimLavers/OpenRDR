@@ -6,7 +6,7 @@ import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.SeriesCondition
 import io.rippledown.model.condition.edit.*
 import io.rippledown.model.condition.episodic.predicate.*
-import io.rippledown.model.condition.episodic.signature.Current
+import io.rippledown.model.condition.episodic.signature.*
 import io.rippledown.model.condition.series.Decreasing
 import io.rippledown.model.condition.series.Increasing
 import io.rippledown.model.condition.series.Trend
@@ -61,6 +61,23 @@ class ConditionSuggester(
     private fun absentAttributeCondition(attribute: Attribute) = CaseStructureCondition(null, IsAbsentFromCase(attribute))
 
     private fun episodicFactories(): List<SuggestionFunction> {
+        val signaturesToUse = mutableListOf<Signature>(Current)
+        if (sessionCase.numberOfEpisodes() > 1) {
+            signaturesToUse.add(All)
+            signaturesToUse.add(AtMost(1))
+            signaturesToUse.add(AtMost(2))
+            signaturesToUse.add(AtMost(3))
+            signaturesToUse.add(AtLeast(1))
+            signaturesToUse.add(AtLeast(2))
+            signaturesToUse.add(AtLeast(3))
+            signaturesToUse.add(No)
+        }
+        val result = mutableListOf<SuggestionFunction>()
+         signaturesToUse.forEach { result.addAll(episodicFactoriesForSignature(it))}
+        return result
+    }
+    private fun episodicFactoriesForSignature(signature: Signature): List<SuggestionFunction> {
+        if (signature == Current) {
         return listOf(
             GreaterThanOrEqualsSuggestion,
             LessThanOrEqualsSuggestion,
@@ -73,7 +90,10 @@ class ConditionSuggester(
             ExtendedLowNormalRangeSuggestion,
             ExtendedHighNormalRangeSuggestion,
             ExtendedHighRangeSuggestion,
-        )
+            IsNumericSuggestion(signature)
+        )} else {
+            return listOf(IsNumericSuggestion(signature))
+        }
     }
     private fun trendFactories(): List<SuggestionFunction> {
         return listOf(
@@ -91,6 +111,11 @@ class Sorter : Comparator<SuggestedCondition> {
 fun editableReal(testResult: TestResult?): EditableValue? {
     val cutoff = testResult?.value?.real
     return if (cutoff == null) null else EditableValue(testResult.value.text, Type.Real)
+}
+class IsNumericSuggestion(private val signature: Signature = Current): SuggestionFunction {
+    override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
+        return if (testResult?.value?.real == null) null else NonEditableSuggestedCondition(EpisodicCondition(attribute, IsNumeric, signature))
+    }
 }
 abstract class CutoffSuggestion: SuggestionFunction {
     abstract fun createEditableCondition(attribute: Attribute, editableValue: EditableValue): EditableCondition

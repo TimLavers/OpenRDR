@@ -2,8 +2,8 @@ package io.rippledown.model.condition
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
-import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.episodic.predicate.*
+import io.rippledown.model.condition.episodic.signature.*
 import io.rippledown.model.condition.series.Decreasing
 import io.rippledown.model.condition.series.Increasing
 import io.rippledown.model.condition.structural.IsAbsentFromCase
@@ -26,15 +26,19 @@ fun normalOrSlightlyHigh(id: Int? = null, attribute: Attribute, cutoff: Int) = E
 fun slightlyHigh(id: Int? = null, attribute: Attribute, cutoff: Int) = EpisodicCondition(id, attribute, HighByAtMostSomePercentage(cutoff), Current)
 fun isPresent(attribute: Attribute, id: Int? = null ) = CaseStructureCondition(id, IsPresentInCase(attribute))
 fun isAbsent(attribute: Attribute, id: Int? = null) = CaseStructureCondition(id, IsAbsentFromCase(attribute))
+fun isNumeric(attribute: Attribute, id: Int? = null) = EpisodicCondition(id, attribute, IsNumeric, Current)
 fun increasing(attribute: Attribute, id: Int? = null) = SeriesCondition(id, attribute, Increasing)
 fun decreasing(attribute: Attribute, id: Int? = null) = SeriesCondition(id, attribute, Decreasing)
+fun allNumeric(attribute: Attribute, id: Int? = null) = EpisodicCondition(id, attribute, IsNumeric, All)
+fun noneNumeric(attribute: Attribute, id: Int? = null) = EpisodicCondition(id, attribute, IsNumeric, No)
+fun atLeastNumeric(count: Int, attribute: Attribute, id: Int? = null) = EpisodicCondition(id, attribute, IsNumeric, AtLeast(count))
+fun atMostNumeric(count: Int, attribute: Attribute, id: Int? = null) = EpisodicCondition(id, attribute, IsNumeric, AtMost(count))
 
 fun rr(low: String?, high: String?) = ReferenceRange(low, high)
 fun tr(value: String) = TestResult(value, null, null)
 fun tr(value: String, referenceRange: ReferenceRange) = TestResult(value, referenceRange)
 fun tr(value: String, units: String) = TestResult(value, null, units)
 fun tr(value: String, referenceRange: ReferenceRange,units: String) = TestResult(value, referenceRange, units)
-
 fun v(value: String) = Value(value)
 
 open class ConditionTestBase {

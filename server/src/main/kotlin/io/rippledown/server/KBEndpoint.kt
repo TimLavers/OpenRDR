@@ -140,7 +140,11 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
         // TODO the copy() here is to prevent one thread overriding the
         // interpretation while another is serializing the case
         // in a client method. Need to fix this by perhaps making case immutable.
-        return kb.viewableCase(cornerstones[cornerstoneIndex].copy())
+        val cc = cornerstones[cornerstoneIndex]
+        logger.info("Original cc: ${System.identityHashCode(cc)}")
+        val copy = cc.copy()
+        logger.info("Copy cc: ${System.identityHashCode(copy)}")
+        return kb.viewableCase(copy)
     }
 
     fun updateCornerstone(request: UpdateCornerstoneRequest) = kb.updateCornerstone(request)

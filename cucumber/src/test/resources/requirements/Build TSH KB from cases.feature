@@ -100,8 +100,13 @@ Feature: The TSH KB can be built with the user interface.
       | TSH is low                             |                         |              |
 
 #        replaceCommentForCase("1.4.18", report1, report14, borderline10HighTSH, atLeastTwoTSH)
-#
-#        // We are assuming that the absence of "/40" means the patient is not pregnant.
+    And I select case 1.4.18
+    And I build a rule to replace the comment "Normal T4 and TSH are consistent with a euthyroid state." with the comment "Borderline TSH persists. Suggest repeat in one year with thyroid autoantibodies (TPO antibodies)." with conditions
+      | TSH is normal or high by at most 10% | TSH is normal or high | 10 |
+      | at least 2 TSH are numeric           |                       |    |
+
+
+  #        // We are assuming that the absence of "/40" means the patient is not pregnant.
 #        addCommentForCase("1.4.19", report15, female, olderThan14, youngerThan44, borderlineHighFT4, tshLow, notesDoesNotMentionPregnancy)
 #
 #        // Not sure if olderThan44 is needed.
@@ -124,6 +129,7 @@ Feature: The TSH KB can be built with the user interface.
       | 1.4.15 | Increased TSH suggests inadequate thyroid hormone replacement if the dose has not been changed for at least 6 weeks and patient has been taking the medication regularly. Suggest review dose and repeat TFTs in 6 weeks. |
       | 1.4.16 | Suppressed TSH is consistent with excessive thyroid hormone replacement. |
       | 1.4.17 | Previous history of thyroid cancer noted. Low TSH may be appropriate depending on treatment targets for this patient. |
+      | 1.4.18 | Borderline TSH persists. Suggest repeat in one year with thyroid autoantibodies (TPO antibodies). |
 
 
     And stop the client application

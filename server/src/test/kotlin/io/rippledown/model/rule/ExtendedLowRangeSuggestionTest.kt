@@ -29,7 +29,7 @@ class ExtendedLowRangeSuggestionTest: ConditionFactoryTestBase() {
         with(invoke(tsh, tr("1.2", rr("1.5", null)))!!) {
             initialSuggestion() shouldBe slightlyLow(null, tsh,  10)
             isEditable() shouldBe true
-            editableCondition()shouldBe EditableExtendedLowRangeCondition(tsh)
+            editableCondition() shouldBe EditableExtendedLowRangeCondition(tsh)
         }
     }
 

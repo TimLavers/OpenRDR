@@ -6,6 +6,10 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.*
 import io.rippledown.model.condition.edit.*
+import io.rippledown.model.condition.episodic.signature.All
+import io.rippledown.model.condition.episodic.signature.AtLeast
+import io.rippledown.model.condition.episodic.signature.AtMost
+import io.rippledown.model.condition.episodic.signature.No
 import kotlin.test.Test
 
 internal class ConditionSuggesterTest {
@@ -15,12 +19,17 @@ internal class ConditionSuggesterTest {
     val b = Attribute(1, "B")
 
     private fun containsTextSuggestion(attribute: Attribute, text: String) = EditableSuggestedCondition(EditableContainsCondition(attribute, text))
+    private fun atLeastContainsTextSuggestion(attribute: Attribute, text: String, count: Int) = EditableSuggestedCondition(EditableContainsCondition(attribute, text, AtLeast(count)))
+    private fun atMostContainsTextSuggestion(attribute: Attribute, text: String, count: Int) = EditableSuggestedCondition(EditableContainsCondition(attribute, text, AtMost(count)))
+    private fun allContainsTextSuggestion(attribute: Attribute, text: String, count: Int) = EditableSuggestedCondition(EditableContainsCondition(attribute, text, All))
+    private fun noneContainsTextSuggestion(attribute: Attribute, text: String, count: Int) = EditableSuggestedCondition(EditableContainsCondition(attribute, text, No))
     private fun isPresentSuggestion(attribute: Attribute) = NonEditableSuggestedCondition(isPresent(attribute))
     private fun isAbsentSuggestion(attribute: Attribute) = NonEditableSuggestedCondition(isAbsent(attribute))
     private fun isLowSuggestion(attribute: Attribute) = NonEditableSuggestedCondition(isLow(null, attribute))
     private fun isNormalSuggestion(attribute: Attribute) = NonEditableSuggestedCondition(isNormal(null, attribute))
     private fun isHighSuggestion(attribute: Attribute) = NonEditableSuggestedCondition(isHigh(null, attribute))
     private fun isValueSuggestion(attribute: Attribute, value: String) = NonEditableSuggestedCondition(isCondition(null, attribute, value))
+    private fun isNumericSuggestion(attribute: Attribute) = NonEditableSuggestedCondition(isNumeric( attribute))
     private fun greaterThanOrEqualsSuggestion(attribute: Attribute, value: String) = EditableSuggestedCondition(EditableGTECondition(attribute, EditableValue(value, Type.Real)))
     private fun lessThanOrEqualsSuggestion(attribute: Attribute, value: String) = EditableSuggestedCondition(EditableLTECondition(attribute, EditableValue(value, Type.Real)))
     private fun lowByAtMostSuggestion(attribute: Attribute) = EditableSuggestedCondition(EditableExtendedLowRangeCondition(attribute))
@@ -30,6 +39,8 @@ internal class ConditionSuggesterTest {
     private fun allValuesContainTextSuggestion(attribute: Attribute, text: String) = EditableSuggestedCondition(EditableContainsCondition(attribute, text))
     private fun valuesIncreasingSuggestion(attribute: Attribute) = NonEditableSuggestedCondition(increasing(attribute))
     private fun valuesDecreasingSuggestion(attribute: Attribute) = NonEditableSuggestedCondition(decreasing(attribute))
+    private fun allNumericSuggestion(attribute: Attribute) = NonEditableSuggestedCondition(allNumeric(attribute))
+    private fun noneNumericSuggestion(attribute: Attribute) = NonEditableSuggestedCondition(noneNumeric(attribute))
 
     @Test
     fun `single attribute single episode with textual value`() {
@@ -38,7 +49,13 @@ internal class ConditionSuggesterTest {
             this shouldHaveSize 3
             this shouldContain isPresentSuggestion(a)
             this shouldContain isValueSuggestion( a, stuff)
+            this shouldContain noneNumericSuggestion(a)
             this shouldContain containsTextSuggestion(a, stuff)
+            this shouldContain allContainsTextSuggestion(a, stuff, 1)
+            this shouldContain atLeastContainsTextSuggestion(a, stuff, 1)
+            this shouldContain atMostContainsTextSuggestion(a, stuff, 1)
+            this shouldContain atMostContainsTextSuggestion(a, stuff, 2)
+            this shouldContain atMostContainsTextSuggestion(a, stuff, 3)
         }
     }
 
@@ -56,8 +73,8 @@ internal class ConditionSuggesterTest {
     @Test
     fun `single attribute multiple episodes with increasing numerical values`() {
         with(ConditionSuggester(setOf(a), multiEpisodeCase(a, "1", "2", "3")).suggestions()) {
-            this.size shouldBe 6
-            checkContainsStandard5ForNumericValue(this,a, "3")
+            this.size shouldBe 7
+            checkContainsStandard6ForNumericValue(this, a, "3")
             this shouldContain valuesIncreasingSuggestion(a)
         }
     }
@@ -65,16 +82,17 @@ internal class ConditionSuggesterTest {
     @Test
     fun `single attribute multiple episodes with mixed numerical values`() {
         with(ConditionSuggester(setOf(a), multiEpisodeCase(a, "1", "5", "3")).suggestions()) {
-            this.size shouldBe 5
-            checkContainsStandard5ForNumericValue(this,a, "3")
+            this.size shouldBe 6
+            checkContainsStandard6ForNumericValue(this, a, "3")
+
         }
     }
 
     @Test
     fun `single attribute multiple episodes with decreasing numerical values`() {
         with(ConditionSuggester(setOf(a), multiEpisodeCase(a, "10", "5", "3")).suggestions()) {
-            this.size shouldBe 6
-            checkContainsStandard5ForNumericValue(this,a, "3")
+            this.size shouldBe 7
+            checkContainsStandard6ForNumericValue(this,a, "3")
             this shouldContain valuesDecreasingSuggestion(a)
         }
     }
@@ -83,8 +101,8 @@ internal class ConditionSuggesterTest {
     fun `single attribute single episode with numerical value`() {
         val sessionCase = case(a to "1")
         with(ConditionSuggester(setOf(a), sessionCase).suggestions()) {
-            this.size shouldBe 5
-            checkContainsStandard5ForNumericValue(this,a, "1")
+            this.size shouldBe 6
+            checkContainsStandard6ForNumericValue(this,a, "1")
         }
     }
 
@@ -92,8 +110,8 @@ internal class ConditionSuggesterTest {
     fun `single attribute single episode with low value`() {
         val sessionCase = makeCase(a to tr("1.0", rr("2.0", "10") ))
         with(ConditionSuggester(setOf(a), sessionCase).suggestions()) {
-            this.size shouldBe 8
-            checkContainsStandard5ForNumericValue(this,a, "1.0")
+            this.size shouldBe 9
+            checkContainsStandard6ForNumericValue(this,a, "1.0")
             this shouldContain isLowSuggestion(a)
             this shouldContain lowByAtMostSuggestion(a)
             this shouldContain normalOrLowByAtMostSuggestion(a)
@@ -104,8 +122,8 @@ internal class ConditionSuggesterTest {
     fun `single attribute single episode with normal value`() {
         val sessionCase = makeCase(a to tr("1.0", rr("0", "10") ))
         with(ConditionSuggester(setOf(a), sessionCase).suggestions()) {
-            this.size shouldBe 8
-            checkContainsStandard5ForNumericValue(this,a, "1.0")
+            this.size shouldBe 9
+            checkContainsStandard6ForNumericValue(this,a, "1.0")
             this shouldContain isNormalSuggestion(a)
             this shouldContain normalOrLowByAtMostSuggestion(a)
             this shouldContain normalOrHighByAtMostSuggestion(a)
@@ -116,8 +134,8 @@ internal class ConditionSuggesterTest {
     fun `single attribute single episode with high value`() {
         val sessionCase = makeCase(a to tr("3.0", rr("0", "2.0") ))
         with(ConditionSuggester(setOf(a), sessionCase).suggestions()) {
-            this.size shouldBe 8
-            checkContainsStandard5ForNumericValue(this,a, "3.0")
+            this.size shouldBe 9
+            checkContainsStandard6ForNumericValue(this,a, "3.0")
             this shouldContain isHighSuggestion(a)
             this shouldContain normalOrHighByAtMostSuggestion(a)
             this shouldContain highByAtMostSuggestion(a)
@@ -160,13 +178,14 @@ internal class ConditionSuggesterTest {
 
     private fun checkContainsStandard3(conditions: List<SuggestedCondition>, attribute: Attribute, value: String) {
         conditions shouldContain isPresentSuggestion(attribute)
-        conditions shouldContain isValueSuggestion( attribute, value)
-        conditions shouldContain containsTextSuggestion( attribute, value)
+        conditions shouldContain isValueSuggestion(attribute, value)
+        conditions shouldContain containsTextSuggestion(attribute, value)
     }
 
-    private fun checkContainsStandard5ForNumericValue(conditions: List<SuggestedCondition>, attribute: Attribute, value: String) {
+    private fun checkContainsStandard6ForNumericValue(conditions: List<SuggestedCondition>, attribute: Attribute, value: String) {
         checkContainsStandard3(conditions, attribute, value)
         conditions shouldContain greaterThanOrEqualsSuggestion( attribute, value)
         conditions shouldContain lessThanOrEqualsSuggestion( attribute, value)
+        conditions shouldContain isNumericSuggestion( attribute)
     }
 }

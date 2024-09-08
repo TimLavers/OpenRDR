@@ -127,6 +127,8 @@ data class RDRCase(
         return result
     }
 
+    fun numberOfEpisodes() = dates.size
+
     fun resultsFor(attribute: Attribute): ResultsList? {
         if (!attributes.contains(attribute)) {
             return null
