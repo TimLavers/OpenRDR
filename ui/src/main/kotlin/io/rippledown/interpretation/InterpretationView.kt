@@ -21,9 +21,15 @@ import androidx.compose.ui.unit.dp
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
 import io.rippledown.model.Conclusion
 
+val BACKGROUND_COLOR = Color.LightGray
+
+interface InterpretationViewHandler {
+    fun onTextLayoutResult(layoutResult: TextLayoutResult)
+}
+
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun InterpretationView(conclusions: List<Conclusion>) {
+fun InterpretationView(conclusions: List<Conclusion>, handler: InterpretationViewHandler? = null) {
     val commentList = conclusions.map { it.text }
     val unstyledText = commentList.unhighlighted()
 
@@ -63,6 +69,7 @@ fun InterpretationView(conclusions: List<Conclusion>) {
                 },
             onTextLayout = { layoutResult ->
                 textLayoutResult = layoutResult
+                handler?.onTextLayoutResult(layoutResult)
             }
         )
     }
@@ -86,7 +93,7 @@ fun List<String>.highlightItem(index: Int) = buildAnnotatedString {
         if (i == index) {
             addStyle(
                 style = SpanStyle(
-                    background = Color.Yellow
+                    background = BACKGROUND_COLOR
                 ),
                 start = length,
                 end = length + text.length

@@ -1,6 +1,7 @@
 package io.rippledown.interpretation
 
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.text.TextLayoutResult
 import io.rippledown.model.Conclusion
 import io.rippledown.utils.applicationFor
 import kotlinx.coroutines.test.runTest
@@ -41,19 +42,29 @@ class InterpretationViewTest {
     @Test
     fun `should highlight the conclusion under the pointer`() = runTest {
         //Given
-        val text = "aaaaa"
+        val bondiComment = "Best surf in the world!"
+        val malabarComment = "Great for a swim!"
+        val conclusions = listOf(Conclusion(0, bondiComment), Conclusion(1, malabarComment))
+        val conclusionTexts = conclusions.map { it.text }
+        val unhighlighted = conclusionTexts.unhighlighted().text
+        var textLayoutResult: TextLayoutResult? = null
+        val handler = object : InterpretationViewHandler {
+            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
+                textLayoutResult = layoutResult
+            }
+        }
         with(composeTestRule) {
             setContent {
-                InterpretationView(listOf(Conclusion(0, text)))
+                InterpretationView(conclusions, handler)
             }
-            requireInterpretation(text)
+            requireInterpretation(unhighlighted)
 
             //When
-//            movePointerOverText(text)
-            movePointerOverWord(text, "")
+            movePointerOverComment(malabarComment, textLayoutResult!!)
 
             //Then
-//            requireTextToBeHighlighted(text)
+            requireCommentToBeNotHighlighted(bondiComment, textLayoutResult!!)
+            requireCommentToBeHighlighted(malabarComment, textLayoutResult!!)
         }
     }
 
@@ -66,7 +77,7 @@ fun main() {
                 Conclusion(0, "Surf's up!"),
                 Conclusion(1, "Go to Bondi now!"),
                 Conclusion(2, "Bring your flippers.")
-            )
+            ),
         )
     }
 }

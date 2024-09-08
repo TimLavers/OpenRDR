@@ -2,13 +2,18 @@
 
 package io.rippledown.interpretation
 
-import androidx.compose.ui.semantics.SemanticsProperties
-import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.text.TextLayoutResult
+import io.kotest.assertions.withClue
+import io.kotest.matchers.ints.shouldBeLessThanOrEqual
+import io.kotest.matchers.shouldBe
 import io.rippledown.constants.interpretation.*
 import io.rippledown.utils.dump
 import java.lang.Thread.sleep
+
 
 @OptIn(ExperimentalTestApi::class)
 fun ComposeTestRule.requireInterpretation(text: String) {
@@ -202,30 +207,51 @@ fun ComposeTestRule.scrollToOption(prefix: String, option: String) {
         .performScrollTo()
 }
 
-fun ComposeTestRule.requireTextToBeHighlighted(text: String) {
-    TODO("Not yet implemented")
+fun ComposeTestRule.requireCommentToBeHighlighted(comment: String, layoutResult: TextLayoutResult) {
+    requireStyleForCommentToHaveBackground(layoutResult, comment, BACKGROUND_COLOR)
 }
 
-fun ComposeTestRule.movePointerOverText(text: String) {
-    val node = onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD)
-    onRoot().dump()
+fun ComposeTestRule.requireCommentToBeNotHighlighted(comment: String, layoutResult: TextLayoutResult) {
+    requireStyleForCommentToHaveBackground(layoutResult, comment, Color.Unspecified)
+}
 
-    val bounds = node.fetchSemanticsNode().boundsInRoot
-    val center = bounds.center
-    println("bounds = ${bounds}, center = $center")
+private fun requireStyleForCommentToHaveBackground(layoutResult: TextLayoutResult, comment: String, color: Color) {
+    val annotatedString = layoutResult.layoutInput.text
+    val startIndex = annotatedString.text.indexOf(comment)
+    for (spanStyle in annotatedString.spanStyles) {
+        if (startIndex == spanStyle.start) {
+            withClue("check that background color is set for the first character of the comment") {
+                spanStyle.item.background shouldBe color
+            }
 
-    onRoot().performMouseInput {
-        moveTo(center)
+            withClue("check that the same style is used for all characters") {
+                startIndex + comment.length shouldBeLessThanOrEqual spanStyle.end
+            }
+        }
     }
 }
 
-fun ComposeTestRule.movePointerOverWord(text: String, word: String) {
-    onRoot().dump()
-    val node = onNodeWithText(text, useUnmergedTree = true)
-    val semanticsNode = node.fetchSemanticsNode()
-    val styles = semanticsNode.config.getOrNull(SemanticsProperties.Text)?.firstOrNull()?.spanStyles
-    println("styles = $styles")
 
+fun ComposeTestRule.movePointerOverCharacter(charIndex: Int, layoutResult: TextLayoutResult) {
+    val allTextInLayout = layoutResult.layoutInput.text.text
+    val node = onNodeWithText(allTextInLayout, useUnmergedTree = true)
+    val bounds = node.fetchSemanticsNode().boundsInRoot
+    val charPositionInLayout = layoutResult.getBoundingBox(charIndex)
+    val charPositionAbsolute = Offset(bounds.left + charPositionInLayout.left, bounds.top)
+    println(
+        "char index: $charIndex, position: $charPositionInLayout, bounds: $bounds, charPosition" +
+                " = $charPositionAbsolute"
+    )
+
+    onRoot().performMouseInput {
+        moveTo(charPositionAbsolute)
+    }
+}
+
+fun ComposeTestRule.movePointerOverComment(comment: String, layoutResult: TextLayoutResult) {
+    val textInLayout = layoutResult.layoutInput.text.text
+    val charIndex = textInLayout.indexOf(comment)
+    movePointerOverCharacter(charIndex, layoutResult)
 }
 
 
