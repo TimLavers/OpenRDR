@@ -25,6 +25,8 @@ class InterpretationTabsUpdateTest {
 
     val textA = "text for case A"
     val textB = "text for case B"
+    val buttonTag = "buttonTag"
+
 
     @Test
     fun `should update interpretation when the interpretation text is changed`() = runTest {
@@ -40,8 +42,7 @@ class InterpretationTabsUpdateTest {
             requireInterpretation(textA)
 
             //When
-            onNodeWithTag("buttonTag").performClick()
-            waitForIdle()
+            onNodeWithTag(buttonTag).performClick()
 
             //Then
             requireInterpretation(textB)
@@ -58,9 +59,9 @@ class InterpretationTabsUpdateTest {
             onClick = {
                 viewableInterpretation = changed
             },
-            modifier = Modifier.testTag("buttonTag")
+            modifier = Modifier.testTag(buttonTag)
         ) {
-            //Button
+            // Button text
         }
     }
 }

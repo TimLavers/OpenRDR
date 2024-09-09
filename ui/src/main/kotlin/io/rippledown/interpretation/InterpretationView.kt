@@ -37,6 +37,11 @@ fun InterpretationView(conclusions: List<Conclusion>, handler: InterpretationVie
     var styledText by remember { mutableStateOf(unstyledText) }
     var pointerEnter by remember { mutableStateOf(false) }
 
+    // Initialise styledText whenever the unstyledText changes, i.e. when the conclusions change
+    LaunchedEffect(unstyledText) {
+        styledText = unstyledText
+    }
+
     OutlinedCard(modifier = Modifier.padding(vertical = 10.dp)) {
         Text(
             text = styledText,
