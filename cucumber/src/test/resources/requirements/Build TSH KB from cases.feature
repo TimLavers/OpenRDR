@@ -108,9 +108,36 @@ Feature: The TSH KB can be built with the user interface.
 
   #        // We are assuming that the absence of "/40" means the patient is not pregnant.
 #        addCommentForCase("1.4.19", report15, female, olderThan14, youngerThan44, borderlineHighFT4, tshLow, notesDoesNotMentionPregnancy)
-#
-#        // Not sure if olderThan44 is needed.
-#        addCommentForCase("1.4.20", report16, tshBelowDetection, borderlineHighFT3, fT4Normal, olderThan44)
+    And I select case 1.4.19
+    And I build a rule to add the comment "The suppressed TSH and high-normal FT4 may suggest hyperthyroidism. FT3 and TRAb may be useful. However, low TSH may be seen in pregnancy which should be excluded. These results are within reference intervals for first trimester. If pregnant, repeat TFTs in 6 weeks." with conditions
+      | Sex is "female" | | |
+      | Age ≥ 14.0 | Age ≥ | 14 |
+      | Age ≤ 44.0 | Age ≤ | 44 |
+      | Free T4 is normal or high by at most 10% | Free T4 is normal or high        |  10 |
+      | TSH is low                               |                                  |     |
+      | Clinical Notes does not contain "/40"    |  Clinical Notes does not contain | /40 |
+
+#  addCommentForCase("1.4.20", report16, tshBelowDetection, borderlineHighFT3, fT4Normal, olderThan44)
+    And I select case 1.4.20
+    And I build a rule to add the comment "Clinical conditions associated with a suppressed TSH include non-toxic goitre, subclinical hyperthyroidism and glucocorticoid therapy. Suggest repeat TFTs in six weeks’ time. Other causes of this pattern include: Excessive T4 therapy for hypothyroidism, treated primary hyperthyroidism. Acute psychiatric illness may raise FT4 and/or lower TSH." with conditions
+      | TSH is "<0.01" | | |
+      | Free T3 is normal or high by at most 10% | Free T3 is normal or high        |  10 |
+      | Free T4 is normal |                                  |     |
+      | Age ≥ 44.0 | Age ≥ | 44 |
+
+#  addCommentForCase("1.4.21", report16b, tshBelowDetection, ft3Increasing, ft3High )
+    And I select case 1.4.21
+    And I build a rule to add the comment "The increased FT3 and suppressed TSH are consistent with T3 toxicosis. Suggest measure TRAb." with conditions
+      | TSH is "<0.01"        |
+      | Free T3 is increasing |
+      | Free T3 is high       |
+
+#  addCommentForCase("1.4.22", report17, tshBelowDetection, severelyHighFT4, severelyHighFT3 )
+#  addCommentForCase("1.4.23", report18, tshBelowDetection, ft4Low)
+#  replaceCommentForCase("1.4.24", report3, report19, tshProfoundlyHigh, preI131Therapy)
+#  addCommentForCase("1.4.25", report20, thyroglobulinAvailable, antiThyroglobulinAvailable, onlyOneThyroglobulin)
+
+
     Then the cases should have interpretations as follows
       | 1.4.1  | Normal T4 and TSH are consistent with a euthyroid state. |
       | 1.4.2  | Normal TSH is consistent with a euthyroid state. |
@@ -130,6 +157,9 @@ Feature: The TSH KB can be built with the user interface.
       | 1.4.16 | Suppressed TSH is consistent with excessive thyroid hormone replacement. |
       | 1.4.17 | Previous history of thyroid cancer noted. Low TSH may be appropriate depending on treatment targets for this patient. |
       | 1.4.18 | Borderline TSH persists. Suggest repeat in one year with thyroid autoantibodies (TPO antibodies). |
+      | 1.4.19 | The suppressed TSH and high-normal FT4 may suggest hyperthyroidism. FT3 and TRAb may be useful. However, low TSH may be seen in pregnancy which should be excluded. These results are within reference intervals for first trimester. If pregnant, repeat TFTs in 6 weeks. |
+      | 1.4.20 | Clinical conditions associated with a suppressed TSH include non-toxic goitre, subclinical hyperthyroidism and glucocorticoid therapy. Suggest repeat TFTs in six weeks’ time. Other causes of this pattern include: Excessive T4 therapy for hypothyroidism, treated primary hyperthyroidism. Acute psychiatric illness may raise FT4 and/or lower TSH. |
+      | 1.4.21 | The increased FT3 and suppressed TSH are consistent with T3 toxicosis. Suggest measure TRAb. |
 
 
     And stop the client application

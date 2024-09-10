@@ -16,6 +16,8 @@ fun isNormal(id: Int? = null,attribute: Attribute) = EpisodicCondition(id, attri
 fun isHigh(id: Int? = null, attribute: Attribute) = EpisodicCondition(id, attribute, High, Current)
 fun isCondition(id: Int? = null, attribute: Attribute, text: String) = EpisodicCondition(id, attribute, Is(text), Current)
 fun containsText(id: Int? = null, attribute: Attribute, text: String) = EpisodicCondition(id, attribute, Contains(text), Current)
+fun doesNotContainText(id: Int? = null, attribute: Attribute, text: String) = EpisodicCondition(id, attribute, DoesNotContain(text), Current)
+fun allDoNotContainText(id: Int? = null, attribute: Attribute, text: String) = EpisodicCondition(id, attribute, DoesNotContain(text), All)
 fun hasCurrentValue(id: Int? = null, attribute: Attribute) = EpisodicCondition(id, attribute, IsNotBlank, Current)
 fun hasNoCurrentValue(id: Int? = null, attribute: Attribute) = EpisodicCondition(id, attribute, IsBlank, Current)
 fun greaterThanOrEqualTo(id: Int? = null, attribute: Attribute, d: Double) = EpisodicCondition(id, attribute, GreaterThanOrEquals(d), Current)

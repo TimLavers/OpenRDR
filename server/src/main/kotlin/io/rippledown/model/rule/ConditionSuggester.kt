@@ -90,9 +90,13 @@ class ConditionSuggester(
             ExtendedLowNormalRangeSuggestion,
             ExtendedHighNormalRangeSuggestion,
             ExtendedHighRangeSuggestion,
-            IsNumericSuggestion(signature)
+            IsNumericSuggestion(signature),
+            DoesNotContainSuggestion(signature),
         )} else {
-            return listOf(IsNumericSuggestion(signature))
+            return listOf(
+                IsNumericSuggestion(signature),
+                DoesNotContainSuggestion(signature),
+                )
         }
     }
     private fun trendFactories(): List<SuggestionFunction> {
@@ -163,6 +167,11 @@ object ContainsSuggestion: SuggestionFunction {
     override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
         val value = testResult?.value?.text ?: return null
         return EditableSuggestedCondition(EditableContainsCondition(attribute, value))
+    }
+}
+class DoesNotContainSuggestion(private val signature: Signature): SuggestionFunction {
+    override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
+        return if (testResult == null) null else EditableSuggestedCondition(EditableDoesNotContainCondition(attribute, signature))
     }
 }
 object IsSuggestion: SuggestionFunction {
