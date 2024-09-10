@@ -68,7 +68,12 @@ fun createCaseWithInterpretation(
     var conclusionId = 10
     val interp = Interpretation(case.case.caseId).apply {
         conclusionTexts.forEach { text ->
-            add(RuleSummary(conclusion = Conclusion(conclusionId++, text)))
+            add(
+                RuleSummary(
+                    conclusion = Conclusion(conclusionId++, text),
+                    conditionTextsFromRoot = listOf("Condition 1 for $text", "Condition 2 for $text")
+                )
+            )
         }
     }
     val text = interp.conclusionTexts().joinToString(" ")
@@ -76,6 +81,24 @@ fun createCaseWithInterpretation(
         ViewableInterpretation(interpretation = interp, textGivenByRules = text)
     case.viewableInterpretation = viewableInterp
     return case
+}
+
+fun createInterpretation(
+    commentToConditions: Map<String, List<String>> = mapOf(),
+): ViewableInterpretation {
+    var conclusionId = 0
+    val interp = Interpretation().apply {
+        commentToConditions.forEach { comment, conditions ->
+            add(
+                RuleSummary(
+                    conclusion = Conclusion(conclusionId++, comment),
+                    conditionTextsFromRoot = conditions
+                )
+            )
+        }
+    }
+    val text = interp.conclusionTexts().joinToString(" ")
+    return ViewableInterpretation(interpretation = interp, textGivenByRules = text)
 }
 
 fun beSameAs(other: Condition) = Matcher<Condition> { value ->

@@ -263,9 +263,9 @@ fun ComposeTestRule.movePointerOverComment(comment: String, layoutResult: TextLa
     movePointerOverCharacter(charIndex, layoutResult)
 }
 
-
-
-
-
-
-
+fun ComposeTestRule.requireConditionsToBeShowing(conditions: List<String>) {
+    conditions.forEach { condition ->
+        onNodeWithContentDescription("$CONDITION_PREFIX$condition")
+            .assertIsDisplayed()
+    }
+}

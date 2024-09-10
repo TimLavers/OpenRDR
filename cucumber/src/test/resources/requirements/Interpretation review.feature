@@ -21,5 +21,14 @@ Feature: Reviewing the interpretation of a case
     When I select the case Manly
     Then the interpretation should contain the text "Go to Manly."
 
-
+  @single
+  Scenario: The user should be able to highlight a comment in the interpretation
+    Given case Bondi is provided having data:
+      | Wave | excellent |
+    And the interpretation of the case Bondi is "Go to Bondi."
+    When I start the client application
+    Then I should see the case Bondi as the current case
+    And the interpretation should contain the text "Go to Bondi."
+    And move pointer to the comment "Go to Bondi."
+    And pause
 

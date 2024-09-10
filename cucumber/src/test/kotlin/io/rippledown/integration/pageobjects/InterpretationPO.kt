@@ -12,10 +12,10 @@ import io.rippledown.integration.waitForDebounce
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
-import org.awaitility.core.ConditionEvaluationListener
+import java.awt.Rectangle
+import java.awt.Robot
 import java.time.Duration.ofSeconds
 import javax.accessibility.AccessibleContext
-import javax.accessibility.AccessibleRole.TEXT
 import javax.accessibility.AccessibleState
 import javax.swing.SwingUtilities.invokeLater
 
@@ -32,17 +32,35 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     private fun interpretationTextContext() =
-        execute<AccessibleContext?> { contextProvider().find(INTERPRETATION_TEXT_FIELD, TEXT) }
+        execute<AccessibleContext?> { contextProvider().find(INTERPRETATION_TEXT_FIELD) }
 
     private fun waitForTextFieldToBeAccessible() {
         waitUntilAsserted { interpretationTextContext() shouldNotBe null }
     }
 
-    fun addVerifiedTextAtEndOfCurrentInterpretation(text: String): InterpretationPO {
-        val newVerifiedText = interpretationText() + " $text"
-        setVerifiedText(newVerifiedText)
-        waitForDebounce()
-        return this
+    fun movePointerToComment(comment: String) {
+        val interpretation = interpretationText()
+        val index = interpretation.indexOf(comment)
+        println("index = ${index}")
+        movePointerToCharacterPosition(index)
+    }
+
+    fun movePointerToCharacterPosition(characterPosition: Int) {
+        println("interpretationText() = ${interpretationText()}")
+        println("to string: ${interpretationTextContext()}")
+        val rectangle =
+            execute<Rectangle> { interpretationTextContext()?.accessibleText?.getCharacterBounds(characterPosition) }
+        println("rectangle = ${rectangle}")
+        val loc = interpretationTextContext().accessibleComponent.locationOnScreen
+        println(
+            "character attributes = ${
+                interpretationTextContext()?.accessibleText?.getCharacterAttribute(
+                    characterPosition
+                )
+            }"
+        )
+
+        Robot().mouseMove(loc.x + rectangle.x, loc.y)
     }
 
     fun interpretationText(): String = execute<String> {
@@ -86,12 +104,6 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         waitForContextToBeNotNull(contextProvider, INTERPRETATION_TAB_CONCLUSIONS)
         val context = conclusionsTabProvider()
         execute { context?.accessibleAction?.doAccessibleAction(0) }
-    }
-
-    fun deleteAllText() = setVerifiedText("")
-
-    fun buildRule(row: Int) {
-        clickFinishRuleButton()
     }
 
     private fun waitForFinishButtonToBeShowing() {

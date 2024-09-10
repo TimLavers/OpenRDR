@@ -4,7 +4,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.text.TextLayoutResult
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.Conclusion
+import io.rippledown.model.createCaseWithInterpretation
+import io.rippledown.model.createInterpretation
 import io.rippledown.utils.applicationFor
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -25,7 +26,7 @@ class InterpretationViewTest {
         val text = "Go to Bondi now!"
         with(composeTestRule) {
             setContent {
-                InterpretationView(listOf(Conclusion(0, text)))
+                InterpretationView(createInterpretation(mapOf(text to emptyList())))
             }
             requireInterpretation(text)
         }
@@ -35,7 +36,7 @@ class InterpretationViewTest {
     fun `should show a blank interpretation`() = runTest {
         with(composeTestRule) {
             setContent {
-                InterpretationView(listOf())
+                InterpretationView(createInterpretation())
             }
             requireInterpretation("")
         }
@@ -46,8 +47,8 @@ class InterpretationViewTest {
         //Given
         val bondiComment = "Best surf in the world!"
         val malabarComment = "Great for a swim!"
-        val conclusions = listOf(Conclusion(0, bondiComment), Conclusion(1, malabarComment))
-        val conclusionTexts = conclusions.map { it.text }
+        val interpretation = createInterpretation(mapOf(bondiComment to emptyList(), malabarComment to emptyList()))
+        val conclusionTexts = interpretation.conclusions().map { it.text }
         val unhighlighted = conclusionTexts.unhighlighted().text
         var textLayoutResult: TextLayoutResult? = null
         val handler = object : InterpretationViewHandler {
@@ -57,7 +58,7 @@ class InterpretationViewTest {
         }
         with(composeTestRule) {
             setContent {
-                InterpretationView(conclusions, handler)
+                InterpretationView(interpretation, handler)
             }
             requireInterpretation(unhighlighted)
 
@@ -67,6 +68,38 @@ class InterpretationViewTest {
             //Then
             requireCommentToBeNotHighlighted(bondiComment, textLayoutResult!!)
             requireCommentToBeHighlighted(malabarComment, textLayoutResult!!)
+        }
+    }
+
+    @Test
+    fun `should show the conditions for the conclusion under the pointer`() = runTest {
+        //Given
+        val bondiComment = "Best surf in the world!"
+        val malabarComment = "Great for a swim!"
+        val bondiConditions = listOf("Bring your flippers.", "And your suncreeen.")
+        val malabarConditions = listOf("Great for a swim!", "And a picnic.")
+        val interpretation = createInterpretation(
+            mapOf(
+                bondiComment to bondiConditions,
+                malabarComment to malabarConditions
+            )
+        )
+        var textLayoutResult: TextLayoutResult? = null
+        val handler = object : InterpretationViewHandler {
+            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
+                textLayoutResult = layoutResult
+            }
+        }
+        with(composeTestRule) {
+            setContent {
+                InterpretationView(interpretation, handler)
+            }
+
+            //When
+            movePointerOverComment(malabarComment, textLayoutResult!!)
+
+            //Then
+            requireConditionsToBeShowing(malabarConditions)
         }
     }
 
@@ -104,14 +137,12 @@ class InterpretationViewTest {
 
 }
 
+
 fun main() {
+    val interpretation = createCaseWithInterpretation(
+        conclusionTexts = listOf("Surf's up!", "Go to Bondi now!", "Bring your flippers.")
+    ).viewableInterpretation
     applicationFor {
-        InterpretationView(
-            listOf(
-                Conclusion(0, "Surf's up!"),
-                Conclusion(1, "Go to Bondi now!"),
-                Conclusion(2, "Bring your flippers.")
-            ),
-        )
+        InterpretationView(interpretation)
     }
 }
