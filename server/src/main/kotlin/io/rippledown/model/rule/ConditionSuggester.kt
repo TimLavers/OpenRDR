@@ -12,6 +12,7 @@ import io.rippledown.model.condition.series.Increasing
 import io.rippledown.model.condition.series.Trend
 import io.rippledown.model.condition.structural.IsAbsentFromCase
 import io.rippledown.model.condition.structural.IsPresentInCase
+import io.rippledown.model.condition.structural.IsSingleEpisodeCase
 
 typealias SuggestionFunction = (Attribute, TestResult?) -> SuggestedCondition?
 
@@ -44,7 +45,11 @@ class ConditionSuggester(
         return firstCut.filter { it.shouldBeSuggestedForCase(sessionCase) }.toSet()
     }
 
-    private fun caseStructureSuggestions() = attributeInCaseConditions() + attributeNotInCaseConditions()
+    private fun caseStructureSuggestions() = attributeInCaseConditions()+ attributeNotInCaseConditions() + episodeCountConditions()
+
+    private fun episodeCountConditions(): List<SuggestedCondition> {
+        return listOf(NonEditableSuggestedCondition(CaseStructureCondition(IsSingleEpisodeCase)))
+    }
 
     private fun attributeInCaseConditions() = attributesInCase
         .map { presentAttributeCondition(it) }

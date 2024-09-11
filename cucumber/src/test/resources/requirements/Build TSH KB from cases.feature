@@ -96,8 +96,8 @@ Feature: The TSH KB can be built with the user interface.
     And I select case 1.4.17
     And I build a rule to add the comment "Previous history of thyroid cancer noted. Low TSH may be appropriate depending on treatment targets for this patient." with conditions
       | Clinical Notes contains "thyroid cancer" | Clinical Notes contains | thyroid cancer |
-      | Clinical Notes contains "On thyroxine" | Clinical Notes contains | On thyroxine |
-      | TSH is low                             |                         |              |
+      | Clinical Notes contains "On thyroxine"   | Clinical Notes contains | On thyroxine   |
+      | TSH is low                               |                         |                |
 
 #        replaceCommentForCase("1.4.18", report1, report14, borderline10HighTSH, atLeastTwoTSH)
     And I select case 1.4.18
@@ -105,8 +105,7 @@ Feature: The TSH KB can be built with the user interface.
       | TSH is normal or high by at most 10% | TSH is normal or high | 10 |
       | at least 2 TSH are numeric           |                       |    |
 
-
-  #        // We are assuming that the absence of "/40" means the patient is not pregnant.
+#        We are assuming that the absence of "/40" means the patient is not pregnant.
 #        addCommentForCase("1.4.19", report15, female, olderThan14, youngerThan44, borderlineHighFT4, tshLow, notesDoesNotMentionPregnancy)
     And I select case 1.4.19
     And I build a rule to add the comment "The suppressed TSH and high-normal FT4 may suggest hyperthyroidism. FT3 and TRAb may be useful. However, low TSH may be seen in pregnancy which should be excluded. These results are within reference intervals for first trimester. If pregnant, repeat TFTs in 6 weeks." with conditions
@@ -129,14 +128,51 @@ Feature: The TSH KB can be built with the user interface.
     And I select case 1.4.21
     And I build a rule to add the comment "The increased FT3 and suppressed TSH are consistent with T3 toxicosis. Suggest measure TRAb." with conditions
       | TSH is "<0.01"        |
-      | Free T3 is increasing |
+      | Free T3 increasing |
       | Free T3 is high       |
 
 #  addCommentForCase("1.4.22", report17, tshBelowDetection, severelyHighFT4, severelyHighFT3 )
-#  addCommentForCase("1.4.23", report18, tshBelowDetection, ft4Low)
-#  replaceCommentForCase("1.4.24", report3, report19, tshProfoundlyHigh, preI131Therapy)
-#  addCommentForCase("1.4.25", report20, thyroglobulinAvailable, antiThyroglobulinAvailable, onlyOneThyroglobulin)
+    And I select case 1.4.22
+    And I build a rule to add the comment "The severely increased FT4 and FT3 and suppressed TSH are consistent with thyrotoxicosis. These results together with the clinical presentation may indicate thyroid storm. Suggest measure TRAb." with conditions
+      | TSH is "<0.01"   | | |
+      | Free T3 ≥ 10.0 | Free T3 ≥ | 10.0 |
+      | Free T4 ≥ 40.0 | Free T4 ≥ | 40.0 |
 
+#  addCommentForCase("1.4.23", report18, tshBelowDetection, ft4Low)
+    And I select case 1.4.23
+    And I build a rule to add the comment "The reduced FT4 is consistent with excessive anti-thyroid treatment. The suppressed TSH may take many months to normalise following commencement of ant-thyroid treatment." with conditions
+      | TSH is "<0.01" |
+      | Free T4 is low |
+
+#  replaceCommentForCase("1.4.24", report3, report19, tshProfoundlyHigh, preI131Therapy)
+    And I select case 1.4.24
+    And I build a rule to replace the comment "Mildly increased TSH may be found in patients with subclinical hypothyroidism or sick euthyroid syndrome. Suggest measurement of FT4, TSH and thyroperoxidase (TPO) antibodies in 6 weeks." with the comment "Thyrogen [thyrotropin alpha (recombinant human TSH)] in blood is measured by the TSH assay." with conditions
+      | TSH ≥ 100.0 | TSH ≥ | 100.0 |
+      | Clinical Notes contains "Pre I-131 Thyrogen therapy"   | Clinical Notes contains | Pre I-131 Thyrogen therapy |
+
+#  addCommentForCase("1.4.25", report20, thyroglobulinAvailable, antiThyroglobulinAvailable, onlyOneThyroglobulin)
+    And I select case 1.4.25
+    And I build a rule to add the comment "Results should be interpreted in the context of serial measurement." with conditions
+      | Thyroglobulin is in case      |
+      | Anti-Thyroglobulin is in case |
+      | case is for a single date     |
+
+#  replaceCommentForCase("1.4.26", report20, report20b, thyroglobulinBelowDetection, antiThyroglobulinHigh)
+    And I select case 1.4.26
+    And I build a rule to replace the comment "Results should be interpreted in the context of serial measurement." with the comment "The positive anti thyroglobulin antibodies may interfere with this thyroglobulin immunometric assay and cause a falsely low result making the thyroglobulin result unreliable. Anti-Tg Ab trends may be used as a surrogate tumour marker for monitoring." with conditions
+      | Thyroglobulin is "<0.01"   |
+      | Anti-Thyroglobulin is high |
+
+#  replaceCommentForCase("1.4.27", report3b, report21, borderline10HighTSH, fT4Normal, tpoHigh, ft3Available)
+    And I select case 1.4.27
+    And I build a rule to replace the comment "Mildly increased TSH with a normal FT4 may be found in patients with subclinical hypothyroidism or sick euthyroid syndrome. Suggest repeat measurement with TPO antibodies in 6 weeks." with the comment "The mildly increased TSH with normal FT4 and raised TPO antibodies indicate subclinical hypothyroidism due to autoimmune thyroid disease. FT3 measurement is helpful only in diagnosing hyperthyroidism (or in monitoring FT3 supplementation)." with conditions
+      | TSH is normal or high by at most 10% | TSH is normal or high | 10 |
+      | Free T4 is normal |                                          |    |
+      | TPO Antibodies is high |                                     |    |
+      | Free T3 is in case      |                                    |    |
+
+
+#  addCommentForCase("1.4.28", report22, tshBelowDetection, ft4High, onAmiodarone)
 
     Then the cases should have interpretations as follows
       | 1.4.1  | Normal T4 and TSH are consistent with a euthyroid state. |
@@ -160,6 +196,12 @@ Feature: The TSH KB can be built with the user interface.
       | 1.4.19 | The suppressed TSH and high-normal FT4 may suggest hyperthyroidism. FT3 and TRAb may be useful. However, low TSH may be seen in pregnancy which should be excluded. These results are within reference intervals for first trimester. If pregnant, repeat TFTs in 6 weeks. |
       | 1.4.20 | Clinical conditions associated with a suppressed TSH include non-toxic goitre, subclinical hyperthyroidism and glucocorticoid therapy. Suggest repeat TFTs in six weeks’ time. Other causes of this pattern include: Excessive T4 therapy for hypothyroidism, treated primary hyperthyroidism. Acute psychiatric illness may raise FT4 and/or lower TSH. |
       | 1.4.21 | The increased FT3 and suppressed TSH are consistent with T3 toxicosis. Suggest measure TRAb. |
+      | 1.4.22 | The severely increased FT4 and FT3 and suppressed TSH are consistent with thyrotoxicosis. These results together with the clinical presentation may indicate thyroid storm. Suggest measure TRAb. |
+      | 1.4.23 | The reduced FT4 is consistent with excessive anti-thyroid treatment. The suppressed TSH may take many months to normalise following commencement of ant-thyroid treatment. |
+      | 1.4.24 | Thyrogen [thyrotropin alpha (recombinant human TSH)] in blood is measured by the TSH assay. |
+      | 1.4.25 | Results should be interpreted in the context of serial measurement. |
+      | 1.4.26 | The positive anti thyroglobulin antibodies may interfere with this thyroglobulin immunometric assay and cause a falsely low result making the thyroglobulin result unreliable. Anti-Tg Ab trends may be used as a surrogate tumour marker for monitoring. |
+      | 1.4.27 | The mildly increased TSH with normal FT4 and raised TPO antibodies indicate subclinical hypothyroidism due to autoimmune thyroid disease. FT3 measurement is helpful only in diagnosing hyperthyroidism (or in monitoring FT3 supplementation). |
 
 
     And stop the client application
