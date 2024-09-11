@@ -1,6 +1,5 @@
 Feature: The TSH KB can be built with the user interface.
 
-  @single
   Scenario: Build the TSH KB from cases
     Given I start the client application
     And I create a Knowledge Base with the name TSH based on the "Thyroid Stimulating Hormone - cases only" sample
@@ -128,13 +127,13 @@ Feature: The TSH KB can be built with the user interface.
     And I select case 1.4.21
     And I build a rule to add the comment "The increased FT3 and suppressed TSH are consistent with T3 toxicosis. Suggest measure TRAb." with conditions
       | TSH is "<0.01"        |
-      | Free T3 increasing |
+      | Free T3 increasing    |
       | Free T3 is high       |
 
 #  addCommentForCase("1.4.22", report17, tshBelowDetection, severelyHighFT4, severelyHighFT3 )
     And I select case 1.4.22
     And I build a rule to add the comment "The severely increased FT4 and FT3 and suppressed TSH are consistent with thyrotoxicosis. These results together with the clinical presentation may indicate thyroid storm. Suggest measure TRAb." with conditions
-      | TSH is "<0.01"   | | |
+      | TSH is "<0.01" |           |      |
       | Free T3 ≥ 10.0 | Free T3 ≥ | 10.0 |
       | Free T4 ≥ 40.0 | Free T4 ≥ | 40.0 |
 
@@ -171,8 +170,45 @@ Feature: The TSH KB can be built with the user interface.
       | TPO Antibodies is high |                                     |    |
       | Free T3 is in case      |                                    |    |
 
-
 #  addCommentForCase("1.4.28", report22, tshBelowDetection, ft4High, onAmiodarone)
+    And I select case 1.4.28
+    And I build a rule to add the comment "Amiodarone inhibits T4 to T3 conversion as well as presenting the thyroid with a large iodine load. The suppressed TSH and raised FT4 may suggest amiodarone-induced hyperthyroidism but should be interpreted in the light of clinical findings." with conditions
+      | TSH is "<0.01"                            |                         |               |
+      | Free T4 is high                           |                         |               |
+      | Clinical Notes contains "On amiodarone"   | Clinical Notes contains | On amiodarone |
+
+#            replaceCommentForCase("1.4.29", report1b, report23, tshNormal, ft4High, ft3NotAvailable)
+    And I select case 1.4.29
+    And I build a rule to replace the comment "Normal TSH is consistent with a euthyroid state." with the comment "Normal TSH indicates a euthyroid state. Causes of a raised FT4 with reduced T4/T3 conversion include non-thyroidal illness, drugs (beta-blockers, amiodarone, heparin, radiocontrast) and treated thyroid disease. Suggest measure FT3 if not on treatment." with conditions
+      | TSH is normal          |
+      | Free T4 is high        |
+      | Free T3 is not in case |
+
+#        replaceCommentForCase("1.4.31", report17, report24, severelyHighFT4, severelyHighFT3, tshBelowDetection, lowPotassium)
+    And I select case 1.4.31
+    And I build a rule to replace the comment "The severely increased FT4 and FT3 and suppressed TSH are consistent with thyrotoxicosis. These results together with the clinical presentation may indicate thyroid storm. Suggest measure TRAb." with the comment "The raised FT4 and FT3 with suppressed TSH are consistent with thyrotoxicosis. Hyperthyroidism with hypokalaemia and muscle weakness may be consistent with thyrotoxic periodic paralysis." with conditions
+      | TSH is "<0.01"   |           |      |
+      | Free T3 ≥ 10.0   | Free T3 ≥ | 10.0 |
+      | Free T4 ≥ 40.0   | Free T4 ≥ | 40.0 |
+      | Potassium is low |           |      |
+
+#        replaceCommentForCase("1.4.32", report3, report25, ft4Low, borderline20HighTSH)
+    And I select case 1.4.32
+    And I build a rule to replace the comment "Mildly increased TSH may be found in patients with subclinical hypothyroidism or sick euthyroid syndrome. Suggest measurement of FT4, TSH and thyroperoxidase (TPO) antibodies in 6 weeks." with the comment "The presence of a low FT4 with only a marginal increase in TSH may suggest pituitary insufficiency, although these results may also be seen in non-thyroidal illness. Suggest further pituitary investigations or Specialist Endocrine referral if abnormalities persist." with conditions
+      | TSH is normal or high by at most 20% | TSH is normal or high | 20 |
+      | Free T4 is low                       |                       |    |
+
+#        addCommentForCase("1.4.33", report26, ft4Low, onT4)
+    And I select case 1.4.33
+    And I build a rule to add the comment "Amiodarone inhibits T4 to T3 conversion as well as presenting the thyroid with a large iodine load. The suppressed TSH and raised FT4 may suggest amiodarone-induced hyperthyroidism but should be interpreted in the light of clinical findings." with conditions
+      | Clinical Notes contains "On T4" | Clinical Notes contains | On T4 |
+      | Free T4 is low                  |                         |       |
+
+#        replaceCommentForCase("1.4.35", report3, report27b, ft4Low, tshProfoundlyHigh)
+    And I select case 1.4.35
+    And I build a rule to replace the comment "Mildly increased TSH may be found in patients with subclinical hypothyroidism or sick euthyroid syndrome. Suggest measurement of FT4, TSH and thyroperoxidase (TPO) antibodies in 6 weeks." with the comment "The low FT4 and profoundly raised TSH are in keeping with severe hypothyroidism." with conditions
+      | TSH ≥ 100.0    | TSH ≥ | 100.0 |
+      | Free T4 is low |       |       |
 
     Then the cases should have interpretations as follows
       | 1.4.1  | Normal T4 and TSH are consistent with a euthyroid state. |
@@ -202,6 +238,11 @@ Feature: The TSH KB can be built with the user interface.
       | 1.4.25 | Results should be interpreted in the context of serial measurement. |
       | 1.4.26 | The positive anti thyroglobulin antibodies may interfere with this thyroglobulin immunometric assay and cause a falsely low result making the thyroglobulin result unreliable. Anti-Tg Ab trends may be used as a surrogate tumour marker for monitoring. |
       | 1.4.27 | The mildly increased TSH with normal FT4 and raised TPO antibodies indicate subclinical hypothyroidism due to autoimmune thyroid disease. FT3 measurement is helpful only in diagnosing hyperthyroidism (or in monitoring FT3 supplementation). |
-
+      | 1.4.28 | Amiodarone inhibits T4 to T3 conversion as well as presenting the thyroid with a large iodine load. The suppressed TSH and raised FT4 may suggest amiodarone-induced hyperthyroidism but should be interpreted in the light of clinical findings. |
+      | 1.4.29 | Normal TSH indicates a euthyroid state. Causes of a raised FT4 with reduced T4/T3 conversion include non-thyroidal illness, drugs (beta-blockers, amiodarone, heparin, radiocontrast) and treated thyroid disease. Suggest measure FT3 if not on treatment. |
+      | 1.4.31 | The raised FT4 and FT3 with suppressed TSH are consistent with thyrotoxicosis. Hyperthyroidism with hypokalaemia and muscle weakness may be consistent with thyrotoxic periodic paralysis. |
+      | 1.4.32 | The presence of a low FT4 with only a marginal increase in TSH may suggest pituitary insufficiency, although these results may also be seen in non-thyroidal illness. Suggest further pituitary investigations or Specialist Endocrine referral if abnormalities persist. |
+      | 1.4.33 | Amiodarone inhibits T4 to T3 conversion as well as presenting the thyroid with a large iodine load. The suppressed TSH and raised FT4 may suggest amiodarone-induced hyperthyroidism but should be interpreted in the light of clinical findings. |
+      | 1.4.35 | The low FT4 and profoundly raised TSH are in keeping with severe hypothyroidism. |
 
     And stop the client application
