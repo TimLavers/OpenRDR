@@ -269,12 +269,6 @@ class Defs {
         caseListPO().select(caseName2)
     }
 
-    @When("I replace the text in the interpretation field with {string}")
-    fun IReplaceTheTextInTheInterpretationFieldWithString(text: String) {
-        interpretationViewPO().selectOriginalTab()
-        interpretationViewPO().setVerifiedText(text)
-    }
-
     @Then("the interpretation should contain the text {string}")
     fun theInterpretationFieldShouldContainTheText(text: String) {
         selectTheTab("interpretation")
@@ -299,14 +293,16 @@ class Defs {
         interpretationViewPO().waitForInterpretationText("")
     }
 
+    @And("a rule exists to add the comment {string} to case {word} for the following conditions:")
+    fun `add rule to give comment for conditions`(commentText: String, caseName: String, dataTable: DataTable) {
+        val conditions = dataTable.asList()
+        restClient().createRuleToAddText(caseName, commentText, *conditions.toTypedArray())
+    }
+
     @And("the interpretation of the case {word} is {string}")
     fun theInterpretationOfTheCaseWordIsString(caseName: String, text: String) {
         restClient().createRuleToAddText(caseName, text)
     }
-
-//    Given("a case with name {word} is stored on the server:") { caseName: String ->
-//        labProxy().provideCase(caseName)
-//    }
 
     @Then("the cases should have interpretations as follows")
     fun theCasesShouldHaveInterpretationsAsFollows( dataTable: DataTable) {
@@ -343,7 +339,11 @@ class Defs {
         dataTable.cells()
             .drop(1) // Drop the header row
             .forEach { row ->
-                restClient().createRuleToAddText(row[0], row[1], row[2])
+                restClient().createRuleToAddText(
+                    caseName = row[0],
+                    text = row[1],
+                    conditions = arrayOf(row[2])
+                )
             }
     }
 

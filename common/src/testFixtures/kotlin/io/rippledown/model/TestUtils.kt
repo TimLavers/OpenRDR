@@ -71,7 +71,11 @@ fun createCaseWithInterpretation(
             add(
                 RuleSummary(
                     conclusion = Conclusion(conclusionId++, text),
-                    conditionTextsFromRoot = listOf("Condition 1 for $text", "Condition 2 for $text")
+                    conditionTextsFromRoot = listOf(
+                        "Condition 1 for $text",
+                        "Condition 2 for $text",
+                        "Condition 3 for $text"
+                    )
                 )
             )
         }

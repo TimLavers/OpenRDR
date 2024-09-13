@@ -49,22 +49,23 @@ fun InterpretationView(interpretation: ViewableInterpretation, handler: Interpre
     LaunchedEffect(unstyledText) {
         styledText = unstyledText
     }
-
-    TooltipArea(
-        tooltip = {
-            Column {
-                interpretation.conditionsForConclusion(conclusionList[commentIndex]).forEach { condition ->
-                    Text(text = condition,
-                        modifier = Modifier.padding(4.dp)
-                            .semantics {
-                                contentDescription = "$CONDITION_PREFIX$condition"
-                            }
-                    )
+    OutlinedCard(modifier = Modifier.padding(vertical = 10.dp)) {
+        TooltipArea(
+            tooltip = {
+                Column {
+                    if (pointerEnter) {
+                        interpretation.conditionsForConclusion(conclusionList[commentIndex]).forEach { condition ->
+                            Text(text = condition,
+                                modifier = Modifier.padding(4.dp)
+                                    .semantics {
+                                        contentDescription = "$CONDITION_PREFIX$condition"
+                                    }
+                            )
+                        }
+                    }
                 }
             }
-        }
-    ) {
-        OutlinedCard(modifier = Modifier.padding(vertical = 10.dp)) {
+        ) {
             Text(
                 text = styledText,
                 modifier = Modifier.padding(10.dp)
@@ -100,26 +101,6 @@ fun InterpretationView(interpretation: ViewableInterpretation, handler: Interpre
                 }
             )
         }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun ConditionsForComment(conditions: List<String>) {
-    TooltipArea(
-        tooltip = {
-            Text(text = "Conditions:")
-            conditions.forEach {
-                Text(text = it)
-            }
-        }
-    ) {
-        Text(text = "Conditions:")
-    }
-    Text(text = "Conditions:")
-
-    conditions.forEach {
-        Text(text = it)
     }
 }
 

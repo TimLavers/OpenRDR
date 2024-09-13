@@ -76,7 +76,7 @@ class InterpretationViewTest {
         //Given
         val bondiComment = "Best surf in the world!"
         val malabarComment = "Great for a swim!"
-        val bondiConditions = listOf("Bring your flippers.", "And your suncreeen.")
+        val bondiConditions = listOf("Bring your flippers.", "And your sunscreeen.")
         val malabarConditions = listOf("Great for a swim!", "And a picnic.")
         val interpretation = createInterpretation(
             mapOf(
@@ -100,6 +100,32 @@ class InterpretationViewTest {
 
             //Then
             requireConditionsToBeShowing(malabarConditions)
+        }
+    }
+
+    @Test
+    fun `should not show any conditions for the conclusion under the pointer if there are none`() = runTest {
+        //Given
+        val bondiComment = "Best surf in the world!"
+        val interpretation = createInterpretation(
+            mapOf(bondiComment to listOf())
+        )
+        var textLayoutResult: TextLayoutResult? = null
+        val handler = object : InterpretationViewHandler {
+            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
+                textLayoutResult = layoutResult
+            }
+        }
+        with(composeTestRule) {
+            setContent {
+                InterpretationView(interpretation, handler)
+            }
+
+            //When
+            movePointerOverComment(bondiComment, textLayoutResult!!)
+
+            //Then
+            requireNoConditionsToBeShowing()
         }
     }
 

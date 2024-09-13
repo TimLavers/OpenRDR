@@ -240,18 +240,12 @@ fun requireStyleForCommentInAnnotatedStringToHaveBackground(
     }
 }
 
-
 fun ComposeTestRule.movePointerOverCharacter(charIndex: Int, layoutResult: TextLayoutResult) {
     val allTextInLayout = layoutResult.layoutInput.text.text
     val node = onNodeWithText(allTextInLayout, useUnmergedTree = true)
     val bounds = node.fetchSemanticsNode().boundsInRoot
     val charPositionInLayout = layoutResult.getBoundingBox(charIndex)
     val charPositionAbsolute = Offset(bounds.left + charPositionInLayout.left, bounds.top)
-    println(
-        "char index: $charIndex, position: $charPositionInLayout, bounds: $bounds, charPosition" +
-                " = $charPositionAbsolute"
-    )
-
     onRoot().performMouseInput {
         moveTo(charPositionAbsolute)
     }
@@ -268,4 +262,7 @@ fun ComposeTestRule.requireConditionsToBeShowing(conditions: List<String>) {
         onNodeWithContentDescription("$CONDITION_PREFIX$condition")
             .assertIsDisplayed()
     }
+}
+fun ComposeTestRule.requireNoConditionsToBeShowing() {
+    onAllNodesWithContentDescription(label = CONDITION_PREFIX, substring = true).assertCountEquals(0)
 }

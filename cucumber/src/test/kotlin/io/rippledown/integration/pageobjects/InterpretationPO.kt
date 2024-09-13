@@ -1,14 +1,11 @@
 package io.rippledown.integration.pageobjects
 
 import androidx.compose.ui.awt.ComposeDialog
-import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.constants.interpretation.*
-import io.rippledown.constants.rule.FINISH_RULE_BUTTON
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findComposeDialogThatIsShowing
 import io.rippledown.integration.utils.waitForContextToBeNotNull
-import io.rippledown.integration.waitForDebounce
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
@@ -16,50 +13,25 @@ import java.awt.Rectangle
 import java.awt.Robot
 import java.time.Duration.ofSeconds
 import javax.accessibility.AccessibleContext
-import javax.accessibility.AccessibleState
 import javax.swing.SwingUtilities.invokeLater
 
 // ORD2
 class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
 
-    fun setVerifiedText(text: String): InterpretationPO {
-        selectOriginalTab()
-        waitForTextFieldToBeAccessible()
-        val interpretationTextContext = interpretationTextContext()
-        execute { interpretationTextContext?.accessibleEditableText?.setTextContents(text) }
-        waitForDebounce()
-        return this
-    }
-
     private fun interpretationTextContext() =
         execute<AccessibleContext?> { contextProvider().find(INTERPRETATION_TEXT_FIELD) }
-
-    private fun waitForTextFieldToBeAccessible() {
-        waitUntilAsserted { interpretationTextContext() shouldNotBe null }
-    }
 
     fun movePointerToComment(comment: String) {
         val interpretation = interpretationText()
         val index = interpretation.indexOf(comment)
-        println("index = ${index}")
         movePointerToCharacterPosition(index)
     }
 
     fun movePointerToCharacterPosition(characterPosition: Int) {
-        println("interpretationText() = ${interpretationText()}")
-        println("to string: ${interpretationTextContext()}")
+        val interpretationTextContext = interpretationTextContext()
         val rectangle =
-            execute<Rectangle> { interpretationTextContext()?.accessibleText?.getCharacterBounds(characterPosition) }
-        println("rectangle = ${rectangle}")
-        val loc = interpretationTextContext().accessibleComponent.locationOnScreen
-        println(
-            "character attributes = ${
-                interpretationTextContext()?.accessibleText?.getCharacterAttribute(
-                    characterPosition
-                )
-            }"
-        )
-
+            execute<Rectangle> { interpretationTextContext?.accessibleText?.getCharacterBounds(characterPosition) }
+        val loc = interpretationTextContext.accessibleComponent.locationOnScreen
         Robot().mouseMove(loc.x + rectangle.x, loc.y)
     }
 
@@ -106,17 +78,6 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         execute { context?.accessibleAction?.doAccessibleAction(0) }
     }
 
-    private fun waitForFinishButtonToBeShowing() {
-        waitUntilAsserted {
-            contextProvider().find(FINISH_RULE_BUTTON)?.accessibleStateSet?.contains(AccessibleState.SHOWING) shouldBe true
-        }
-    }
-
-    private fun clickFinishRuleButton() {
-        waitForFinishButtonToBeShowing()
-        execute { contextProvider().find(FINISH_RULE_BUTTON)?.accessibleAction?.doAccessibleAction(0) }
-    }
-
     fun clickChangeInterpretationButton() {
         waitUntilAsserted {
             execute<AccessibleContext?> { contextProvider().find(CHANGE_INTERPRETATION_BUTTON) } shouldNotBe null
@@ -152,6 +113,14 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         val dialog = execute<ComposeDialog> { findComposeDialogThatIsShowing() }
         execute { dialog.accessibleContext.find(ADD_COMMENT_TEXT_FIELD)!!.accessibleEditableText.setTextContents(comment) }
         execute { dialog.accessibleContext.find(OK_BUTTON_FOR_ADD_COMMENT)!!.accessibleAction.doAccessibleAction(0) }
+    }
+
+    fun waitForConditionsToBeShowing(conditions: List<String>) {
+        waitUntilAsserted {
+            conditions.forEach { condition ->
+                execute<AccessibleContext?> { contextProvider().find(CONDITION_PREFIX + condition) } shouldNotBe null
+            }
+        }
     }
 
     fun selectExistingCommentToAddClickOK(comment: String) {
