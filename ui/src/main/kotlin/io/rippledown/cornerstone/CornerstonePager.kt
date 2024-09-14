@@ -9,14 +9,13 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.rule.CornerstoneStatus
 
 interface CornerstonePagerHandler {
-    suspend fun selectCornerstone(index: Int): ViewableCase
+    fun selectCornerstone(index: Int): ViewableCase
     fun exemptCornerstone(index: Int)
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CornerstonePager(cornerstoneStatus: CornerstoneStatus, handler: CornerstonePagerHandler) {
-    val currentIndex = remember { mutableStateOf(cornerstoneStatus.indexOfCornerstoneToReview) }
     var case: ViewableCase? by remember { mutableStateOf(cornerstoneStatus.cornerstoneToReview) }
 
     val pagerState = rememberPagerState(
@@ -26,14 +25,6 @@ fun CornerstonePager(cornerstoneStatus: CornerstoneStatus, handler: CornerstoneP
 
     LaunchedEffect(cornerstoneStatus) {
         pagerState.animateScrollToPage(cornerstoneStatus.indexOfCornerstoneToReview)
-    }
-
-    LaunchedEffect(currentIndex.value) {
-        val index = cornerstoneStatus.indexOfCornerstoneToReview
-        if (index > -1) {
-            case = handler.selectCornerstone(currentIndex.value)
-            pagerState.animateScrollToPage(currentIndex.value)
-        }
     }
 
     LaunchedEffect(pagerState.currentPage) {
@@ -50,15 +41,15 @@ fun CornerstonePager(cornerstoneStatus: CornerstoneStatus, handler: CornerstoneP
             cornerstoneStatus.numberOfCornerstones,
             object : CornerstoneControlHandler {
                 override fun next() {
-                    currentIndex.value = pagerState.currentPage + 1
+                    handler.selectCornerstone(pagerState.currentPage + 1)
                 }
 
                 override fun previous() {
-                    currentIndex.value = pagerState.currentPage - 1
+                    handler.selectCornerstone(pagerState.currentPage - 1)
                 }
 
                 override fun exempt() {
-                    handler.exemptCornerstone(currentIndex.value)
+                    handler.exemptCornerstone(pagerState.currentPage)
                 }
             })
 

@@ -189,7 +189,7 @@ fun OpenRDRUI(handler: Handler) {
                             }
                         }
 
-                        override suspend fun selectCornerstone(index: Int) = api.selectCornerstone(index)
+                        override fun selectCornerstone(index: Int) = runBlocking { api.selectCornerstone(index) }
                         override fun exemptCornerstone(index: Int) = runBlocking {
                             cornerstoneStatus = api.exemptCornerstone(index)
                         }

@@ -38,4 +38,3 @@ Feature: Reviewing the interpretation of a case
     And move pointer to the comment "Bring sunscreen."
     And the condition showing in the interpretation view is:
       | Sun is in case |
-    And pause
