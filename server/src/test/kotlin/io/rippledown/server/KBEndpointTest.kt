@@ -242,6 +242,15 @@ internal class KBEndpointTest {
     }
 
     @Test
+    fun `should cancel a rule session`() {
+        val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
+        val conclusion = endpoint.kb.conclusionManager.getOrCreate("Whatever")
+        endpoint.startRuleSessionToAddConclusion(id, conclusion)
+        endpoint.cancelRuleSession()
+        endpoint.kb.conflictingCasesInCurrentRuleSession() shouldHaveSize 0
+    }
+
+    @Test
     fun `After committing a rule the session case should be a cornerstone`() {
         val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
         val conclusion = endpoint.kb.conclusionManager.getOrCreate("Whatever")

@@ -56,6 +56,8 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
         kb.startRuleSession(case(caseId), ChangeTreeToReplaceConclusion(toGo, replacement))
     }
 
+    fun cancelRuleSession() = kb.cancelRuleSession()
+
     fun addConditionToCurrentRuleBuildingSession(condition: Condition) {
         kb.addConditionToCurrentRuleSession(condition)
     }

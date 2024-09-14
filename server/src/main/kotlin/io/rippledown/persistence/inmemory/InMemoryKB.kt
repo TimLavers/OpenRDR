@@ -29,6 +29,4 @@ class InMemoryKB(val kbInfo: KBInfo): PersistentKB {
     override fun ruleStore() = ruleStore
 
     override fun caseStore() = cornerstoneCasesStore
-
-    override fun verifiedTextStore() = verifiedTextStore
 }

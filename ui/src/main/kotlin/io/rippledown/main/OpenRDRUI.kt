@@ -162,6 +162,7 @@ fun OpenRDRUI(handler: Handler) {
                     conditionHints = conditionHints,
                     handler = object : CaseControlHandler, Handler by handler {
                         override fun endRuleSession() {
+                            runBlocking { api.cancelRuleSession() }
                             cornerstoneStatus = null
                         }
 

@@ -72,8 +72,6 @@ class PostgresKB internal constructor(private val dbName: String): PersistentKB 
     override fun ruleStore() = ruleStore
 
     override fun caseStore() = caseStore
-
-    override fun verifiedTextStore() = verifiedTextStore
 }
 object PKBInfos: LongIdTable(name = KB_INFO_TABLE) {
     val kbId = varchar("kb_id", 128)

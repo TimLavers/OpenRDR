@@ -24,7 +24,6 @@ class KB(persistentKB: PersistentKB) {
     private var ruleSession: RuleBuildingSession? = null
     internal val caseViewManager: CaseViewManager =
         CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
-    private val verifiedTextStore = persistentKB.verifiedTextStore()
     val interpretationViewManager: InterpretationViewManager =
         InterpretationViewManager(
             persistentKB.conclusionOrderStore(),
@@ -92,6 +91,10 @@ class KB(persistentKB: PersistentKB) {
         val alignedAction = action.alignWith(conclusionManager)
         ruleSession = RuleBuildingSession(ruleManager, ruleTree, case, alignedAction, allCornerstoneCases())
         logger.info("KB rule session created")
+    }
+    fun cancelRuleSession() {
+        check(ruleSession != null) { "No rule session in progress." }
+        ruleSession = null
     }
 
     fun conflictingCasesInCurrentRuleSession(): List<RDRCase> {

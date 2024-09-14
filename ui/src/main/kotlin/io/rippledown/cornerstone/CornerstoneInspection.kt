@@ -1,6 +1,5 @@
 package io.rippledown.cornerstone
 
-import InterpretationTabs
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -16,6 +15,7 @@ import io.rippledown.constants.cornerstone.CORNERSTONE_CASE_NAME_ID
 import io.rippledown.constants.cornerstone.CORNERSTONE_ID
 import io.rippledown.constants.cornerstone.CORNERSTONE_TITLE
 import io.rippledown.decoration.ItalicGrey
+import io.rippledown.interpretation.InterpretationView
 import io.rippledown.model.caseview.ViewableCase
 
 @Composable
@@ -54,6 +54,6 @@ fun CornerstoneInspection(case: ViewableCase) {
         }
         Spacer(modifier = Modifier.height(10.dp))
         CaseTable(case)
-        InterpretationTabs(case.viewableInterpretation)
+        InterpretationView(case.viewableInterpretation, true)
     }
 }

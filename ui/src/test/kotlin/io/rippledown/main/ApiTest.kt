@@ -183,6 +183,14 @@ class ApiTest {
     }
 
     @Test
+    fun `should cancel the current rule session`() = runTest {
+        val config = config {
+            expectedSessionCancel = true
+        }
+        Api(mock(config)).cancelRuleSession()
+    }
+
+    @Test
     fun shouldUpdateCornerstones() = runTest {
         val request = UpdateCornerstoneRequest(
             cornerstoneStatus = CornerstoneStatus(),

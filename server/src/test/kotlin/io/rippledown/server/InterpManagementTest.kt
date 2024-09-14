@@ -12,7 +12,6 @@ import io.rippledown.constants.api.*
 import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.CaseId
 import io.rippledown.model.caseview.ViewableCase
-import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.RuleConditionList
 import io.rippledown.model.createCase
 import io.rippledown.model.diff.Addition
@@ -111,5 +110,20 @@ class InterpManagementTest : OpenRDRServerTestBase() {
         result.body<ViewableCase>() shouldBe cc
         result.status shouldBe OK
         verify { kbEndpoint.cornerstoneForIndex(index) }
+    }
+
+    @Test
+    fun `should delegate cancelling a rule session to the server application`() = testApplication {
+        // Given
+        setup()
+
+        // When
+        val result = httpClient.post(CANCEL_RULE_SESSION) {
+            parameter(KB_ID, kbId)
+        }
+
+        // Then
+        result.status shouldBe OK
+        verify { kbEndpoint.cancelRuleSession() }
     }
 }

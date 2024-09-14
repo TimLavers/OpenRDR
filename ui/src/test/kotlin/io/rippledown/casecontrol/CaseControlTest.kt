@@ -2,15 +2,17 @@ package io.rippledown.casecontrol
 
 import androidx.compose.ui.test.junit4.createComposeRule
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
-import io.rippledown.interpretation.requireComment
+import io.mockk.verify
 import io.rippledown.interpretation.requireInterpretation
-import io.rippledown.interpretation.selectConclusionsTab
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
 import io.rippledown.model.condition.hasCurrentValue
 import io.rippledown.model.createCaseWithInterpretation
 import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.rule.clickCancelRuleButton
+import io.rippledown.rule.requireRuleMakerToBeDisplayed
 import io.rippledown.utils.applicationFor
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -52,31 +54,6 @@ class CaseControlTest {
     }
 
     @Test
-    fun `should show the comments of the case`() = runTest {
-        val caseA = "case A"
-        val bondiComment = "Go to Bondi"
-        val coogeeComment = "Go to Coogee"
-        val case = createCaseWithInterpretation(caseA, 1, listOf(bondiComment, coogeeComment))
-
-        with(composeTestRule) {
-            //Given
-            setContent {
-                CaseControl(
-                    currentCase = case,
-                    conditionHints = listOf(),
-                    handler = handler
-                )
-            }
-            //When
-            selectConclusionsTab()
-
-            //Then
-            requireComment(0, bondiComment)
-            requireComment(1, coogeeComment)
-        }
-    }
-
-    @Test
     fun `should show case view`() = runTest {
         val viewableCase = createCaseWithInterpretation(
             name = "case 1",
@@ -96,6 +73,57 @@ class CaseControlTest {
         }
     }
 
+    @Test
+    fun `should show rule builder if the cornerstone status is not null`() = runTest {
+        val name = "Bondi"
+        val bondiComment = "Go to Bondi"
+        val case = createCaseWithInterpretation(name, 1, listOf(bondiComment))
+        val cornerstone = createCaseWithInterpretation("Malabar", 1, listOf(bondiComment))
+        every { handler.selectCornerstone(any()) } returns cornerstone
+
+        with(composeTestRule) {
+            //Given
+            setContent {
+                CaseControl(
+                    currentCase = case,
+                    cornerstoneStatus = CornerstoneStatus(cornerstone, 42, 84),
+                    conditionHints = listOf(),
+                    handler = handler
+                )
+            }
+            requireInterpretation(bondiComment)
+
+            //Then
+            requireRuleMakerToBeDisplayed()
+        }
+    }
+    @Test
+    fun `should call handler when the rule session is cancelled`() = runTest {
+        val name = "Bondi"
+        val bondiComment = "Go to Bondi"
+        val case = createCaseWithInterpretation(name, 1, listOf(bondiComment))
+
+        with(composeTestRule) {
+            //Given
+            setContent {
+                CaseControl(
+                    currentCase = case,
+                    cornerstoneStatus = CornerstoneStatus(null, 42, 84),
+                    conditionHints = listOf(),
+                    handler = handler
+                )
+            }
+            requireInterpretation(bondiComment)
+            requireRuleMakerToBeDisplayed()
+
+            //when
+            clickCancelRuleButton()
+
+            // Then
+            verify { handler.endRuleSession() }
+
+        }
+    }
 
 }
 
@@ -114,9 +142,9 @@ fun main() {
         coEvery { handler.selectCornerstone(any()) } returns viewableCase
         val condition = hasCurrentValue(1, Attribute(2, "Surf 1"))
         val suggestedCondition = NonEditableSuggestedCondition(condition)
-            CaseControl(
-                currentCase = viewableCase,
-                conditionHints = listOf(suggestedCondition),
+        CaseControl(
+            currentCase = viewableCase,
+            conditionHints = listOf(suggestedCondition),
             cornerstoneStatus = CornerstoneStatus(viewableCase, 42, 84),
             handler = handler
         )

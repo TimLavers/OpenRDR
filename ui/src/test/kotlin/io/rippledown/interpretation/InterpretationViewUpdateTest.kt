@@ -1,6 +1,5 @@
 package io.rippledown.interpretation
 
-import InterpretationTabs
 import androidx.compose.material.Button
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -19,7 +18,7 @@ import kotlin.test.Test
 /**
  * Tests of the key function
  */
-class InterpretationTabsUpdateTest {
+class InterpretationViewUpdateTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -53,7 +52,7 @@ class InterpretationTabsUpdateTest {
     fun InterpretationTabsWithButton(original: ViewableInterpretation, changed: ViewableInterpretation) {
         var viewableInterpretation: ViewableInterpretation by remember { mutableStateOf(original) }
 
-        InterpretationTabs(viewableInterpretation)
+        InterpretationView(viewableInterpretation, false)
 
         Button(
             onClick = {

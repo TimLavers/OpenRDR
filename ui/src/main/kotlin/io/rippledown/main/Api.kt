@@ -1,7 +1,6 @@
 package io.rippledown.main
 
 import androidx.compose.runtime.InternalComposeApi
-import androidx.compose.runtime.identityHashCode
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -166,6 +165,16 @@ class Api(engine: HttpClientEngine = CIO.create()) {
             setKBParameter()
         }.body<CornerstoneStatus>()
         return body
+    }
+
+    /**
+     * Cancels the current rule session
+     */
+    suspend fun cancelRuleSession(): HttpStatusCode {
+        client.post("$API_URL$CANCEL_RULE_SESSION") {
+            setKBParameter()
+        }
+        return HttpStatusCode.OK
     }
 
     /**

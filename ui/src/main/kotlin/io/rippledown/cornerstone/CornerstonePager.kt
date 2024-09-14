@@ -54,7 +54,9 @@ fun CornerstonePager(cornerstoneStatus: CornerstoneStatus, handler: CornerstoneP
             })
 
         VerticalPager(state = pagerState) {
-            if (case != null) CornerstoneInspection(case!!)
+            if (case != null) {
+                CornerstoneInspection(case!!)
+            }
         }
     }
 }

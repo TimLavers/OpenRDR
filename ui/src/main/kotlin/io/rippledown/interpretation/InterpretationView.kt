@@ -25,6 +25,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.interpretation.CONDITION_PREFIX
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
+import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE
 import io.rippledown.model.interpretationview.ViewableInterpretation
 
 val BACKGROUND_COLOR = Color.LightGray
@@ -35,7 +36,11 @@ interface InterpretationViewHandler {
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun InterpretationView(interpretation: ViewableInterpretation, handler: InterpretationViewHandler? = null) {
+fun InterpretationView(
+    interpretation: ViewableInterpretation,
+    isCornerstone: Boolean,
+    handler: InterpretationViewHandler? = null
+) {
     val conclusionList = interpretation.conclusions().toList()
     val commentList = interpretation.conclusions().map { it.text }
     val unstyledText = commentList.unhighlighted()
@@ -93,7 +98,9 @@ fun InterpretationView(interpretation: ViewableInterpretation, handler: Interpre
                         pointerEnter = false
                     }
                     .semantics {
-                        contentDescription = INTERPRETATION_TEXT_FIELD
+                        contentDescription =
+                            if (isCornerstone) INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE else INTERPRETATION_TEXT_FIELD
+
                     },
                 onTextLayout = { layoutResult ->
                     textLayoutResult = layoutResult

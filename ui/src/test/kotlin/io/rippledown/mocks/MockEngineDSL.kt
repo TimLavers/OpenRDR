@@ -34,6 +34,7 @@ class EngineConfig {
     var expectedCase: ViewableCase? = null
     var expectedRuleRequest: RuleRequest? = null
     var expectedSessionStartRequest: SessionStartRequest? = null
+    var expectedSessionCancel: Boolean? = false
     var expectedCornerstoneSelection: Int? = -1
     var expectedUpdateCornerstoneRequest: UpdateCornerstoneRequest? = null
     var expectedCornerstoneIndex: Int? = null
@@ -88,6 +89,13 @@ private class EngineBuilder(private val config: EngineConfig) {
                     bodyAsSessionStartRequest shouldBe config.expectedSessionStartRequest
                 }
                 httpResponseData(json.encodeToString(config.returnCornerstoneStatus))
+            }
+
+            CANCEL_RULE_SESSION -> {
+                if (config.expectedSessionCancel != null) {
+                    config.expectedSessionCancel shouldBe true
+                }
+                httpResponseData(HttpStatusCode.OK.toString())
             }
 
             UPDATE_CORNERSTONES -> {

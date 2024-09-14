@@ -56,6 +56,30 @@ Feature: The user can make rules that change the interpretive report
     And the interpretation should be empty
     And stop the client application
 
+  @single
+  Scenario: The user should be able to add a rule after cancelling the previous rule building session
+    Given case Bondi is provided having data:
+      | Sun  | hot       |
+      | Wave | excellent |
+    And case Manly is provided having data:
+      | Sun      | hot      |
+      | Swimming | pleasant |
+    Given I start the client application
+    And I should see the case Bondi as the current case
+    And I start to build a rule to add the comment "Let's surf"
+    And the conditions showing should include:
+      | Sun is "hot"            |
+      | Sun is in case          |
+      | Swimming is not in case |
+      | Wave is "excellent"     |
+      | Wave is in case         |
+    And I select the first condition
+    When I cancel the rule
+    And the interpretation should be empty
+    When I build a rule to add the comment "Go for a surf." with the condition "Sun is in case"
+    Then the interpretation should be "Go for a surf."
+    And stop the client application
+
   Scenario: The KB controls and case list should be disabled when building a rule
     Given a new case is stored on the server
     And I start the client application

@@ -11,5 +11,4 @@ interface PersistentKB {
     fun conditionStore(): ConditionStore
     fun ruleStore(): RuleStore
     fun caseStore(): CaseStore
-    fun verifiedTextStore(): VerifiedTextStore
 }

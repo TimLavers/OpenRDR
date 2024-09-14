@@ -26,7 +26,7 @@ class InterpretationViewTest {
         val text = "Go to Bondi now!"
         with(composeTestRule) {
             setContent {
-                InterpretationView(createInterpretation(mapOf(text to emptyList())))
+                InterpretationView(createInterpretation(mapOf(text to emptyList())), false)
             }
             requireInterpretation(text)
         }
@@ -36,7 +36,7 @@ class InterpretationViewTest {
     fun `should show a blank interpretation`() = runTest {
         with(composeTestRule) {
             setContent {
-                InterpretationView(createInterpretation())
+                InterpretationView(createInterpretation(), false)
             }
             requireInterpretation("")
         }
@@ -58,7 +58,7 @@ class InterpretationViewTest {
         }
         with(composeTestRule) {
             setContent {
-                InterpretationView(interpretation, handler)
+                InterpretationView(interpretation, false, handler)
             }
             requireInterpretation(unhighlighted)
 
@@ -92,7 +92,7 @@ class InterpretationViewTest {
         }
         with(composeTestRule) {
             setContent {
-                InterpretationView(interpretation, handler)
+                InterpretationView(interpretation, false, handler)
             }
 
             //When
@@ -118,7 +118,7 @@ class InterpretationViewTest {
         }
         with(composeTestRule) {
             setContent {
-                InterpretationView(interpretation, handler)
+                InterpretationView(interpretation, false, handler)
             }
 
             //When
@@ -169,6 +169,6 @@ fun main() {
         conclusionTexts = listOf("Surf's up!", "Go to Bondi now!", "Bring your flippers.")
     ).viewableInterpretation
     applicationFor {
-        InterpretationView(interpretation)
+        InterpretationView(interpretation, false)
     }
 }

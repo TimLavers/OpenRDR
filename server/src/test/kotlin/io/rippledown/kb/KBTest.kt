@@ -418,6 +418,14 @@ class KBTest {
     }
 
     @Test
+    fun `rule session must be started before it can be cancelled`() {
+        val noSessionMessage = "No rule session in progress."
+        shouldThrow<IllegalStateException> {
+            kb.cancelRuleSession()
+        }.message shouldBe noSessionMessage
+    }
+
+    @Test
     fun `cannot start a rule session if one is already started`() {
         val sessionCase = createCase("Case1")
         val conclusion = kb.conclusionManager.getOrCreate("Whatever.")

@@ -52,5 +52,11 @@ fun Application.interpManagement(application: ServerApplication) {
             val cornerstone = kbEndpoint(application).cornerstoneForIndex(cornerstoneIndex)
             call.respond(cornerstone)
         }
+
+        post(CANCEL_RULE_SESSION) {
+            logger.info(CANCEL_RULE_SESSION)
+            kbEndpoint(application).cancelRuleSession()
+            call.respond(HttpStatusCode.OK)
+        }
     }
 }
