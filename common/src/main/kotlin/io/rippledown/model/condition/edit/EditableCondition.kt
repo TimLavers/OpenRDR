@@ -1,6 +1,7 @@
 package io.rippledown.model.condition.edit
 
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.True
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -27,6 +28,7 @@ sealed interface EditableCondition {
     fun fixedTextPart2(): String = ""
     fun editableValue(): EditableValue
     fun condition(value: String): Condition
+    fun prerequisite(): Condition = True
     fun shouldBeUsedAtMostOncePerRule() = true
 }
 

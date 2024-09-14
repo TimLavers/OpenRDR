@@ -55,9 +55,11 @@ open class ConditionTestBase {
         return attributesById[id]!!
     }
 
-    fun glucoseOnlyCase(): RDRCase {
+    fun glucoseOnlyCase() = glucoseOnlyCase("0.667")
+
+    fun glucoseOnlyCase(value: String): RDRCase {
         val builder1 = RDRCaseBuilder()
-        builder1.addValue(glucose, defaultDate,"0.667")
+        builder1.addValue(glucose, defaultDate,value)
         return builder1.build("Glucose Only")
     }
 
@@ -70,6 +72,7 @@ open class ConditionTestBase {
     fun multiEpisodeClinicalNotesCase(vararg notes: String) = multiEpisodeCase(clinicalNotes, *notes)
 
     fun multiEpisodeTSHCase(vararg values: String) = multiEpisodeCase(tsh, *values)
+    fun multiEpisodeGlucoseCase(vararg values: String) = multiEpisodeCase(glucose, *values)
 
     private fun multiEpisodeCase(attribute: Attribute, vararg values: String): RDRCase {
         val builder1 = RDRCaseBuilder()

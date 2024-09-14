@@ -69,23 +69,21 @@ class ConditionSuggester(
         val signaturesToUse = mutableListOf<Signature>(Current)
         if (sessionCase.numberOfEpisodes() > 1) {
             signaturesToUse.add(All)
-            signaturesToUse.add(AtMost(1))
-            signaturesToUse.add(AtMost(2))
-            signaturesToUse.add(AtMost(3))
-            signaturesToUse.add(AtLeast(1))
-            signaturesToUse.add(AtLeast(2))
-            signaturesToUse.add(AtLeast(3))
+            for (i in 1..3) {
+                signaturesToUse.add(AtMost(i))
+                signaturesToUse.add(AtLeast(i))
+            }
             signaturesToUse.add(No)
         }
-        val result = mutableListOf<SuggestionFunction>()
-         signaturesToUse.forEach { result.addAll(episodicFactoriesForSignature(it))}
-        return result
+        return signaturesToUse.flatMap { episodicFactoriesForSignature(it) }
+//        val result = mutableListOf<SuggestionFunction>()
+//        signaturesToUse.forEach { result.addAll(episodicFactoriesForSignature(it))}
+//        return result
     }
+
     private fun episodicFactoriesForSignature(signature: Signature): List<SuggestionFunction> {
         if (signature == Current) {
         return listOf(
-            GreaterThanOrEqualsSuggestion,
-            LessThanOrEqualsSuggestion,
             ContainsSuggestion,
             IsSuggestion,
             RangeConditionSuggester(Low),
@@ -99,6 +97,8 @@ class ConditionSuggester(
             DoesNotContainSuggestion(signature),
         )} else {
             return listOf(
+                GreaterThanOrEqualsSuggestion(signature),
+                LessThanOrEqualsSuggestion(signature),
                 IsNumericSuggestion(signature),
                 DoesNotContainSuggestion(signature),
                 )
@@ -126,19 +126,19 @@ class IsNumericSuggestion(private val signature: Signature = Current): Suggestio
         return if (testResult?.value?.real == null) null else NonEditableSuggestedCondition(EpisodicCondition(attribute, IsNumeric, signature))
     }
 }
-abstract class CutoffSuggestion: SuggestionFunction {
+abstract class CutoffSuggestion(val signature: Signature): SuggestionFunction {
     abstract fun createEditableCondition(attribute: Attribute, editableValue: EditableValue): EditableCondition
     override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
         val editableValue = editableReal(testResult) ?: return null
         return EditableSuggestedCondition(createEditableCondition(attribute, editableValue))
     }
 }
-object GreaterThanOrEqualsSuggestion: CutoffSuggestion() {
+class GreaterThanOrEqualsSuggestion(signature: Signature): CutoffSuggestion(signature) {
     override fun createEditableCondition(attribute: Attribute, editableValue: EditableValue): EditableCondition {
-        return EditableGTECondition(attribute, editableValue)
+        return EditableGreaterThanEqualsCondition(attribute, editableValue, signature)
     }
 }
-object LessThanOrEqualsSuggestion: CutoffSuggestion(){
+class LessThanOrEqualsSuggestion(signature: Signature): CutoffSuggestion(signature) {
     override fun createEditableCondition(attribute: Attribute, editableValue: EditableValue): EditableCondition {
         return EditableLTECondition(attribute, editableValue)
     }

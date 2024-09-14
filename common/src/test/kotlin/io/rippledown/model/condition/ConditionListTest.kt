@@ -14,7 +14,7 @@ class ConditionListTest: ConditionTestBase() {
 
     @Test
     fun serialization() {
-        val gte = EditableGTECondition(tsh, EditableValue("0.67", Type.Real))
+        val gte = EditableGreaterThanEqualsCondition(tsh, EditableValue("0.67", Type.Real), Current)
         val esc0 = EditableSuggestedCondition(gte)
         val normal = EpisodicCondition(tsh, Normal, Current)
         val esc1 = NonEditableSuggestedCondition(normal)
