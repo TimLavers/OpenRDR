@@ -1,9 +1,9 @@
 package io.rippledown.model.condition.edit
 
 import io.rippledown.model.Attribute
-import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.episodic.predicate.Contains
+import io.rippledown.model.condition.episodic.predicate.IsNotBlank
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.episodic.signature.Signature
 import kotlinx.serialization.Serializable
@@ -18,11 +18,9 @@ data class EditableContainsCondition(val attribute: Attribute,
 
     override fun shouldBeUsedAtMostOncePerRule() = false
 
-    override fun editableValue(): EditableValue {
-        return initialEditableValue
-    }
+    override fun editableValue() = initialEditableValue
 
-    override fun condition(value: String): Condition {
-        return EpisodicCondition(attribute, Contains(value), signature)
-    }
+    override fun condition(value: String) = EpisodicCondition(attribute, Contains(value), signature)
+
+    override fun prerequisite() = EpisodicCondition(attribute, IsNotBlank, signature)
 }

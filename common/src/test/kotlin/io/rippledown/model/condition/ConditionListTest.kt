@@ -1,13 +1,10 @@
 package io.rippledown.model.condition
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.Attribute
 import io.rippledown.model.condition.edit.*
 import io.rippledown.model.condition.episodic.predicate.Normal
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.serializeDeserialize
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import kotlin.test.Test
 
 class ConditionListTest: ConditionTestBase() {

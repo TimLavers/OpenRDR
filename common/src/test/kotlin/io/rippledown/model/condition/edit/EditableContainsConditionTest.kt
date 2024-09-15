@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.model.condition.ConditionTestBase
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.episodic.predicate.Contains
+import io.rippledown.model.condition.episodic.predicate.IsNotBlank
 import io.rippledown.model.condition.episodic.signature.All
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.episodic.signature.No
@@ -48,5 +49,29 @@ class EditableContainsConditionTest: ConditionTestBase() {
     fun condition() {
         currentValueCondition.condition("things") shouldBe EpisodicCondition(null, clinicalNotes, Contains("things"), Current)
         allValuesCondition.condition("things") shouldBe EpisodicCondition(null, clinicalNotes, Contains("things"), All)
+    }
+
+    @Test
+    fun prerequisite() {
+        with(currentValueCondition.prerequisite()) {
+            attribute shouldBe clinicalNotes
+            signature shouldBe Current
+            predicate shouldBe IsNotBlank
+            holds(clinicalNotesCase("present")) shouldBe true
+            holds(clinicalNotesCase("")) shouldBe false
+            holds(glucoseOnlyCase()) shouldBe false
+        }
+
+        with(allValuesCondition.prerequisite()) {
+            attribute shouldBe clinicalNotes
+            signature shouldBe All
+            predicate shouldBe IsNotBlank
+            holds(clinicalNotesCase("present")) shouldBe true
+            holds(clinicalNotesCase("")) shouldBe false
+            holds(multiEpisodeClinicalNotesCase("yes", "maybe", "no")) shouldBe true
+            holds(multiEpisodeClinicalNotesCase("yes", "", "no")) shouldBe false
+            holds(glucoseOnlyCase()) shouldBe false
+        }
+
     }
 }

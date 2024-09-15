@@ -6,10 +6,7 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.*
 import io.rippledown.model.condition.edit.*
-import io.rippledown.model.condition.episodic.signature.All
-import io.rippledown.model.condition.episodic.signature.AtLeast
-import io.rippledown.model.condition.episodic.signature.AtMost
-import io.rippledown.model.condition.episodic.signature.No
+import io.rippledown.model.condition.episodic.signature.*
 import kotlin.test.Test
 
 internal class ConditionSuggesterTest {
@@ -30,7 +27,7 @@ internal class ConditionSuggesterTest {
     private fun isHighSuggestion(attribute: Attribute) = NonEditableSuggestedCondition(isHigh(null, attribute))
     private fun isValueSuggestion(attribute: Attribute, value: String) = NonEditableSuggestedCondition(isCondition(null, attribute, value))
     private fun isNumericSuggestion(attribute: Attribute) = NonEditableSuggestedCondition(isNumeric( attribute))
-    private fun greaterThanOrEqualsSuggestion(attribute: Attribute, value: String) = EditableSuggestedCondition(EditableGTECondition(attribute, EditableValue(value, Type.Real)))
+    private fun greaterThanOrEqualsSuggestion(attribute: Attribute, value: String) = EditableSuggestedCondition(EditableGreaterThanEqualsCondition(attribute, EditableValue(value, Type.Real), Current))
     private fun lessThanOrEqualsSuggestion(attribute: Attribute, value: String) = EditableSuggestedCondition(EditableLTECondition(attribute, EditableValue(value, Type.Real)))
     private fun lowByAtMostSuggestion(attribute: Attribute) = EditableSuggestedCondition(EditableExtendedLowRangeCondition(attribute))
     private fun normalOrLowByAtMostSuggestion(attribute: Attribute) = EditableSuggestedCondition(EditableExtendedLowNormalRangeCondition(attribute))

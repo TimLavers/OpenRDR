@@ -84,22 +84,20 @@ class ConditionSuggester(
     private fun episodicFactoriesForSignature(signature: Signature): List<SuggestionFunction> {
         if (signature == Current) {
         return listOf(
-            ContainsSuggestion,
-            IsSuggestion,
-            RangeConditionSuggester(Low),
-            RangeConditionSuggester(Normal),
-            RangeConditionSuggester(High),
             ExtendedLowRangeSuggestion,
             ExtendedLowNormalRangeSuggestion,
             ExtendedHighNormalRangeSuggestion,
             ExtendedHighRangeSuggestion,
-            IsNumericSuggestion(signature),
-            DoesNotContainSuggestion(signature),
         )} else {
             return listOf(
+                IsSuggestion(signature),
+                NonEditableConditionSuggester(IsNumeric, signature),
+                NonEditableConditionSuggester(Low, signature),
+                NonEditableConditionSuggester(Normal, signature),
+                NonEditableConditionSuggester(High, signature),
                 GreaterThanOrEqualsSuggestion(signature),
                 LessThanOrEqualsSuggestion(signature),
-                IsNumericSuggestion(signature),
+                ContainsSuggestion(signature),
                 DoesNotContainSuggestion(signature),
                 )
         }
@@ -168,10 +166,10 @@ object ExtendedHighRangeSuggestion: ExtendedRangeSuggestion() {
     override fun rangeAndValueSuitable(referenceRange: ReferenceRange, value: Value) = referenceRange.isHigh(value)
 }
 
-object ContainsSuggestion: SuggestionFunction {
+class ContainsSuggestion(private val signature: Signature): SuggestionFunction {
     override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
         val value = testResult?.value?.text ?: return null
-        return EditableSuggestedCondition(EditableContainsCondition(attribute, value))
+        return EditableSuggestedCondition(EditableContainsCondition(attribute, value, signature))
     }
 }
 class DoesNotContainSuggestion(private val signature: Signature): SuggestionFunction {
@@ -179,15 +177,15 @@ class DoesNotContainSuggestion(private val signature: Signature): SuggestionFunc
         return if (testResult == null) null else EditableSuggestedCondition(EditableDoesNotContainCondition(attribute, signature))
     }
 }
-object IsSuggestion: SuggestionFunction {
+class IsSuggestion(private val signature: Signature): SuggestionFunction {
     override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
         val value = testResult?.value?.text ?: return null
-        return NonEditableSuggestedCondition(EpisodicCondition(attribute, Is(value), Current))
+        return NonEditableSuggestedCondition(EpisodicCondition(attribute, Is(value), signature))
     }
 }
-class RangeConditionSuggester(private val predicate: TestResultPredicate): SuggestionFunction {
+class NonEditableConditionSuggester(private val predicate: TestResultPredicate, private val signature: Signature): SuggestionFunction {
     override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
-        return if (hasRange(testResult)) NonEditableSuggestedCondition(EpisodicCondition(attribute, predicate, Current)) else null
+        return if (testResult != null) NonEditableSuggestedCondition(EpisodicCondition(attribute, predicate, signature)) else null
     }
 }
 fun hasRange(testResult: TestResult?): Boolean {
