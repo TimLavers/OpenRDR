@@ -13,7 +13,7 @@ class EditableSuggestedConditionTest: ConditionTestBase() {
     @Test
     fun serializationTest() {
         serializeDeserialize(esc) shouldBe esc
-        val ehn = EditableExtendedHighNormalRangeCondition(tsh)
+        val ehn = EditableExtendedHighNormalRangeCondition(tsh, Current)
         val esc2 = EditableSuggestedCondition(ehn)
         serializeDeserialize(esc2) shouldBe esc2
     }

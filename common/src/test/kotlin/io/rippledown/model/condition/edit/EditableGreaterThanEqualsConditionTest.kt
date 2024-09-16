@@ -43,8 +43,8 @@ class EditableGreaterThanEqualsConditionTest: ConditionTestBase() {
 
     @Test
     fun fixedTextPart1() {
-        gteCurrent.fixedTextPart1() shouldBe "${tsh.name} ≥ "
-        gteAtMost3.fixedTextPart1() shouldBe "${tsh.name} ≥ "
+        gteCurrent.fixedTextPart1() shouldBe "${glucose.name} ≥ "
+        gteAtMost3.fixedTextPart1() shouldBe "${glucose.name} ≥ "
     }
 
     @Test
@@ -59,6 +59,7 @@ class EditableGreaterThanEqualsConditionTest: ConditionTestBase() {
 
     @Test
     fun condition() {
-        gteCurrent.condition("123") shouldBe EpisodicCondition(null, tsh, GreaterThanOrEquals(123.0), Current)
+        gteCurrent.condition("123") shouldBe EpisodicCondition(null, glucose, GreaterThanOrEquals(123.0), Current)
+        gteAtLeast3.condition("123") shouldBe EpisodicCondition(null, glucose, GreaterThanOrEquals(123.0), AtLeast(3))
     }
 }

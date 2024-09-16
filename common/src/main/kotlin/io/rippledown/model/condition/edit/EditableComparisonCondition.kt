@@ -5,8 +5,8 @@ import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals
 import io.rippledown.model.condition.episodic.predicate.IsNumeric
+import io.rippledown.model.condition.episodic.predicate.LessThanOrEquals
 import io.rippledown.model.condition.episodic.predicate.TestResultPredicate
-import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.episodic.signature.Signature
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -26,7 +26,7 @@ sealed class EditableComparisonCondition(val attribute: Attribute, val initialCu
     override fun condition(value: String): Condition {
         require(initialCutoff.type.valid(value))
         val cutoff = initialCutoff.type.convert(value) as Double
-        return EpisodicCondition(attribute, predicate(cutoff), Current)
+        return EpisodicCondition(attribute, predicate(cutoff), signature)
     }
 
     override fun prerequisite(): Condition {
@@ -103,4 +103,17 @@ class EditableGreaterThanEqualsCondition(attribute: Attribute, initialCutoff: Ed
     override fun predicate(double: Double) = GreaterThanOrEquals(double)
 
     override fun symbol() = "≥"
+}
+class EditableLessThanEqualsConditionSerializer:
+    EditableComparisonConditionSerializer<EditableLessThanEqualsCondition>() {
+    override fun serialName() = "EditableLessThanEqualsCondition"
+    override fun build(attribute: Attribute, initialCutoff: EditableValue, signature: Signature) = EditableLessThanEqualsCondition(attribute, initialCutoff, signature)
+}
+
+@Serializable(with = EditableLessThanEqualsConditionSerializer::class)
+class EditableLessThanEqualsCondition(attribute: Attribute, initialCutoff: EditableValue, signature: Signature): EditableComparisonCondition(attribute, initialCutoff, signature) {
+
+    override fun predicate(double: Double) = LessThanOrEquals(double)
+
+    override fun symbol() = "≤"
 }

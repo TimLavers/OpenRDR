@@ -1,7 +1,7 @@
 package io.rippledown.model.rule
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.condition.edit.EditableLTECondition
+import io.rippledown.model.condition.edit.EditableLessThanEqualsCondition
 import io.rippledown.model.condition.edit.EditableValue
 import io.rippledown.model.condition.edit.Type
 import io.rippledown.model.condition.episodic.signature.Current
@@ -17,7 +17,7 @@ class LessThanOrEqualsSuggestionTest: ConditionFactoryTestBase() {
         with(LessThanOrEqualsSuggestion(Current).invoke(tsh, tr("1.0"))!!) {
             initialSuggestion() shouldBe lessThanOrEqualTo(null, tsh, 1.0)
             isEditable() shouldBe true
-            editableCondition() shouldBe EditableLTECondition(tsh, EditableValue("1.0", Type.Real))
+            editableCondition() shouldBe EditableLessThanEqualsCondition(tsh, EditableValue("1.0", Type.Real))
         }
     }
 }

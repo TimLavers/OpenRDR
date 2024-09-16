@@ -28,7 +28,7 @@ internal class ConditionSuggesterTest {
     private fun isValueSuggestion(attribute: Attribute, value: String) = NonEditableSuggestedCondition(isCondition(null, attribute, value))
     private fun isNumericSuggestion(attribute: Attribute) = NonEditableSuggestedCondition(isNumeric( attribute))
     private fun greaterThanOrEqualsSuggestion(attribute: Attribute, value: String) = EditableSuggestedCondition(EditableGreaterThanEqualsCondition(attribute, EditableValue(value, Type.Real), Current))
-    private fun lessThanOrEqualsSuggestion(attribute: Attribute, value: String) = EditableSuggestedCondition(EditableLTECondition(attribute, EditableValue(value, Type.Real)))
+    private fun lessThanOrEqualsSuggestion(attribute: Attribute, value: String) = EditableSuggestedCondition(EditableLessThanEqualsCondition(attribute, EditableValue(value, Type.Real)))
     private fun lowByAtMostSuggestion(attribute: Attribute) = EditableSuggestedCondition(EditableExtendedLowRangeCondition(attribute))
     private fun normalOrLowByAtMostSuggestion(attribute: Attribute) = EditableSuggestedCondition(EditableExtendedLowNormalRangeCondition(attribute))
     private fun normalOrHighByAtMostSuggestion(attribute: Attribute) = EditableSuggestedCondition(EditableExtendedHighNormalRangeCondition(attribute))

@@ -20,12 +20,27 @@ data object Normal: TestResultPredicate {
 }
 
 @Serializable
+data object LowOrNormal: TestResultPredicate {
+    override fun evaluate(result: TestResult) = result.isLow() || result.isNormal()
+
+    override fun description(plural: Boolean) = "${isOrAre(plural)} low or normal"
+
+}
+
+@Serializable
 data object High: TestResultPredicate {
     override fun evaluate(result: TestResult) = result.isHigh()
 
     override fun description(plural: Boolean) = "${isOrAre(plural)} high"
 }
 
+@Serializable
+data object HighOrNormal: TestResultPredicate {
+    override fun evaluate(result: TestResult) = result.isHigh() || result.isNormal()
+
+    override fun description(plural: Boolean) = "${isOrAre(plural)} high or normal"
+
+}
 @Serializable
 sealed class ExtendedRangeFunction(private val rangeComparison: ExpandedRangeComparison): TestResultPredicate {
     override fun evaluate(result: TestResult) = rangeComparison.evaluate(result)

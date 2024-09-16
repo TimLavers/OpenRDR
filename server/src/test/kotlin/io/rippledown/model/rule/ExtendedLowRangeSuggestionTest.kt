@@ -2,12 +2,8 @@ package io.rippledown.model.rule
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.rippledown.model.Value
 import io.rippledown.model.condition.*
 import io.rippledown.model.condition.edit.EditableExtendedLowRangeCondition
-import io.rippledown.model.condition.edit.EditableLTECondition
-import io.rippledown.model.condition.edit.EditableValue
-import io.rippledown.model.condition.edit.Type
 import io.rippledown.model.rule.ExtendedLowRangeSuggestion.createEditableCondition
 import io.rippledown.model.rule.ExtendedLowRangeSuggestion.invoke
 import io.rippledown.model.rule.ExtendedLowRangeSuggestion.rangeAndValueSuitable

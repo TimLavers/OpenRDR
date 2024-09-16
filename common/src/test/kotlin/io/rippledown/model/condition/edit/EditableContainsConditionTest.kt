@@ -72,6 +72,5 @@ class EditableContainsConditionTest: ConditionTestBase() {
             holds(multiEpisodeClinicalNotesCase("yes", "", "no")) shouldBe false
             holds(glucoseOnlyCase()) shouldBe false
         }
-
     }
 }

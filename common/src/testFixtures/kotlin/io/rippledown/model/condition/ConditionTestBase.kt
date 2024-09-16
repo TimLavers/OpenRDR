@@ -99,7 +99,13 @@ open class ConditionTestBase {
     fun lowTSHCase(): RDRCase {
         val builder1 = RDRCaseBuilder()
         builder1.addResult(tsh, defaultDate , TestResult("0.30", tshRange, "pmol/L"))
-        return builder1.build("HighTSHCase")
+        return builder1.build("LowTSHCase")
+    }
+
+    fun normalTSHCase(): RDRCase {
+        val builder1 = RDRCaseBuilder()
+        builder1.addResult(tsh, defaultDate , TestResult("1.30", tshRange, "pmol/L"))
+        return builder1.build("NormalTSHCase")
     }
 
     fun tshValueNonNumericCase(): RDRCase {

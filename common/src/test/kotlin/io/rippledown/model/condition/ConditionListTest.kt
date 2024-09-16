@@ -15,7 +15,7 @@ class ConditionListTest: ConditionTestBase() {
         val esc0 = EditableSuggestedCondition(gte)
         val normal = EpisodicCondition(tsh, Normal, Current)
         val esc1 = NonEditableSuggestedCondition(normal)
-        val ehn = EditableExtendedHighNormalRangeCondition(tsh)
+        val ehn = EditableExtendedHighNormalRangeCondition(tsh, Current)
         val esc2 = EditableSuggestedCondition(ehn)
 
         val conditionList = ConditionList(listOf(esc0, esc1, esc2))
