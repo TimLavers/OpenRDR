@@ -43,7 +43,6 @@ fun InterpretationView(
     var unstyledText by remember { mutableStateOf(comments.unhighlighted()) }
     var styledText by remember { mutableStateOf(unstyledText) }
     var commentIndex by remember { mutableStateOf(-1) }
-    println("\nInterpretationView: interp=$interpretation, comments=$comments, styledText=$styledText, styles=${styledText.spanStyles.size}")
 
     LaunchedEffect(interpretation) {
         comments = interpretation.conclusions().map { it.text }
