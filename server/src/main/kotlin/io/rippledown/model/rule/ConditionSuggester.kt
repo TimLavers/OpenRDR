@@ -80,18 +80,16 @@ class ConditionSuggester(
             signaturesToUse.add(No)
         }
         return signaturesToUse.flatMap { episodicFactoriesForSignature(it) }
-//        val result = mutableListOf<SuggestionFunction>()
-//        signaturesToUse.forEach { result.addAll(episodicFactoriesForSignature(it))}
-//        return result
     }
 
     private fun episodicFactoriesForSignature(signature: Signature): List<SuggestionFunction> {
         return listOf(
             IsSuggestion(signature),
             NonEditableConditionSuggester(IsNumeric, signature),
-            NonEditableConditionSuggester(Low, signature),
-            NonEditableConditionSuggester(Normal, signature),
-            NonEditableConditionSuggester(High, signature),
+            NonEditableConditionSuggester(IsNotNumeric, signature),
+            RangeConditionSuggester(Low, signature),
+            RangeConditionSuggester(Normal, signature),
+            RangeConditionSuggester(High, signature),
             ExtendedLowRangeSuggestion(signature),
             ExtendedLowNormalRangeSuggestion(signature),
             ExtendedHighNormalRangeSuggestion(signature),
@@ -156,43 +154,31 @@ class LessThanOrEqualsSuggestion(signature: Signature) : CutoffSuggestion(signat
 
 abstract class ExtendedRangeSuggestion : SuggestionFunction {
     abstract fun createEditableCondition(attribute: Attribute): EditableCondition
-    abstract fun rangeAndValueSuitable(referenceRange: ReferenceRange, value: Value): Boolean
+//    abstract fun rangeAndValueSuitable(referenceRange: ReferenceRange, value: Value): Boolean
     override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
-        val referenceRange = testResult?.referenceRange ?: return null
-        return if (rangeAndValueSuitable(referenceRange, testResult.value)) EditableSuggestedCondition(
-            createEditableCondition(attribute)
-        ) else null
+        if (testResult == null) return null
+        return EditableSuggestedCondition(createEditableCondition(attribute))
     }
 }
 
 class ExtendedLowRangeSuggestion(private val signature: Signature) : ExtendedRangeSuggestion() {
     override fun createEditableCondition(attribute: Attribute) = EditableExtendedLowRangeCondition(attribute, signature)
-    override fun rangeAndValueSuitable(referenceRange: ReferenceRange, value: Value) = referenceRange.isLow(value)
 }
 
 class ExtendedLowNormalRangeSuggestion(private val signature: Signature) : ExtendedRangeSuggestion() {
     override fun createEditableCondition(attribute: Attribute) =
         EditableExtendedLowNormalRangeCondition(attribute, signature)
-
-    override fun rangeAndValueSuitable(referenceRange: ReferenceRange, value: Value) =
-        referenceRange.isLow(value) || referenceRange.isNormal(value)
 }
 
 class ExtendedHighNormalRangeSuggestion(private val signature: Signature) : ExtendedRangeSuggestion() {
     override fun createEditableCondition(attribute: Attribute) =
         EditableExtendedHighNormalRangeCondition(attribute, signature)
-
-    override fun rangeAndValueSuitable(referenceRange: ReferenceRange, value: Value) =
-        referenceRange.isHigh(value) || referenceRange.isNormal(value)
 }
 
 class ExtendedHighRangeSuggestion(private val signature: Signature) : ExtendedRangeSuggestion() {
     override fun createEditableCondition(attribute: Attribute) =
         EditableExtendedHighRangeCondition(attribute, signature)
-
-    override fun rangeAndValueSuitable(referenceRange: ReferenceRange, value: Value) = referenceRange.isHigh(value)
 }
-
 class ContainsSuggestion(private val signature: Signature) : SuggestionFunction {
     override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
         val value = testResult?.value?.text ?: return null
@@ -228,6 +214,14 @@ class NonEditableConditionSuggester(private val predicate: TestResultPredicate, 
                 signature
             )
         ) else null
+    }
+}
+class RangeConditionSuggester(private val predicate: TestResultPredicate, private val signature: Signature) :
+    SuggestionFunction {
+    override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
+        if (testResult == null) return null
+        val filter = EpisodicCondition(attribute, HighOrNormalOrLow, AtLeast(1))
+        return NonEditableSuggestedCondition(EpisodicCondition(attribute, predicate, signature), filter)
     }
 }
 

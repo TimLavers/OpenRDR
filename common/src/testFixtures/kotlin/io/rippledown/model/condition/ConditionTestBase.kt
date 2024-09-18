@@ -8,14 +8,15 @@ import io.rippledown.model.condition.series.Decreasing
 import io.rippledown.model.condition.series.Increasing
 import io.rippledown.model.condition.structural.IsAbsentFromCase
 import io.rippledown.model.condition.structural.IsPresentInCase
+import io.rippledown.model.condition.structural.IsSingleEpisodeCase
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 fun isLow(id: Int? = null,attribute: Attribute) = EpisodicCondition(id, attribute, Low, Current)
 fun isNormal(id: Int? = null,attribute: Attribute) = EpisodicCondition(id, attribute, Normal, Current)
 fun isHigh(id: Int? = null, attribute: Attribute) = EpisodicCondition(id, attribute, High, Current)
-fun isCondition(id: Int? = null, attribute: Attribute, text: String) = EpisodicCondition(id, attribute, Is(text), Current)
-fun containsText(id: Int? = null, attribute: Attribute, text: String) = EpisodicCondition(id, attribute, Contains(text), Current)
+fun isCondition(id: Int? = null, attribute: Attribute, text: String, signature: Signature = Current) = EpisodicCondition(id, attribute, Is(text), signature)
+fun containsText(id: Int? = null, attribute: Attribute, text: String, signature: Signature = Current) = EpisodicCondition(id, attribute, Contains(text), signature)
 fun doesNotContainText(id: Int? = null, attribute: Attribute, text: String) = EpisodicCondition(id, attribute, DoesNotContain(text), Current)
 fun allDoNotContainText(id: Int? = null, attribute: Attribute, text: String) = EpisodicCondition(id, attribute, DoesNotContain(text), All)
 fun hasCurrentValue(id: Int? = null, attribute: Attribute) = EpisodicCondition(id, attribute, IsNotBlank, Current)
@@ -26,6 +27,7 @@ fun slightlyLow(id: Int? = null, attribute: Attribute, cutoff: Int) = EpisodicCo
 fun normalOrSlightlyLow(id: Int? = null, attribute: Attribute, cutoff: Int) = EpisodicCondition(id, attribute, NormalOrLowByAtMostSomePercentage(cutoff), Current)
 fun normalOrSlightlyHigh(id: Int? = null, attribute: Attribute, cutoff: Int) = EpisodicCondition(id, attribute, NormalOrHighByAtMostSomePercentage(cutoff), Current)
 fun slightlyHigh(id: Int? = null, attribute: Attribute, cutoff: Int) = EpisodicCondition(id, attribute, HighByAtMostSomePercentage(cutoff), Current)
+fun isSingleEpisodeCase(id: Int? = null ) = CaseStructureCondition(id, IsSingleEpisodeCase)
 fun isPresent(attribute: Attribute, id: Int? = null ) = CaseStructureCondition(id, IsPresentInCase(attribute))
 fun isAbsent(attribute: Attribute, id: Int? = null) = CaseStructureCondition(id, IsAbsentFromCase(attribute))
 fun isNumeric(attribute: Attribute, id: Int? = null) = EpisodicCondition(id, attribute, IsNumeric, Current)

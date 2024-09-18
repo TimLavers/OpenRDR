@@ -14,10 +14,10 @@ sealed interface SuggestedCondition {
     fun shouldBeUsedAtMostOncePerRule() = true
 }
 @Serializable
-data class NonEditableSuggestedCondition(val initialSuggestion: Condition): SuggestedCondition {
+data class NonEditableSuggestedCondition(val initialSuggestion: Condition, val filter: Condition = initialSuggestion): SuggestedCondition {
     override fun initialSuggestion() = initialSuggestion
 
-    override fun shouldBeSuggestedForCase(case: RDRCase) = initialSuggestion().holds(case)
+    override fun shouldBeSuggestedForCase(case: RDRCase) = filter.holds(case)
 
     override fun isEditable() = false
 

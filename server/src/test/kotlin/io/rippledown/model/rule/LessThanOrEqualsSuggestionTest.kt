@@ -17,7 +17,7 @@ class LessThanOrEqualsSuggestionTest: ConditionFactoryTestBase() {
         with(LessThanOrEqualsSuggestion(Current).invoke(tsh, tr("1.0"))!!) {
             initialSuggestion() shouldBe lessThanOrEqualTo(null, tsh, 1.0)
             isEditable() shouldBe true
-            editableCondition() shouldBe EditableLessThanEqualsCondition(tsh, EditableValue("1.0", Type.Real))
+            editableCondition() shouldBe EditableLessThanEqualsCondition(tsh, EditableValue("1.0", Type.Real), Current)
         }
     }
 }
