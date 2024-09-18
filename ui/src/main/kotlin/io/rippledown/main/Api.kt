@@ -1,7 +1,6 @@
 package io.rippledown.main
 
 import androidx.compose.runtime.InternalComposeApi
-import androidx.compose.runtime.identityHashCode
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -169,6 +168,16 @@ class Api(engine: HttpClientEngine = CIO.create()) {
     }
 
     /**
+     * Cancels the current rule session
+     */
+    suspend fun cancelRuleSession(): HttpStatusCode {
+        client.post("$API_URL$CANCEL_RULE_SESSION") {
+            setKBParameter()
+        }
+        return HttpStatusCode.OK
+    }
+
+    /**
      * Updates the CornerstoneStatus for the current rule session when the conditions are changed
      *
      * @return the updated CornerstoneStatus
@@ -177,6 +186,19 @@ class Api(engine: HttpClientEngine = CIO.create()) {
         return client.post("$API_URL$UPDATE_CORNERSTONES") {
             contentType(ContentType.Application.Json)
             setBody(updateCornerstoneRequest)
+            setKBParameter()
+        }.body()
+    }
+
+    /**
+     * Retrieves the updated cornerstone status for the current rule session
+     *
+     * @param index the 0-based index of the cornerstone that has been selected.
+     */
+    suspend fun selectCornerstone(index: Int): CornerstoneStatus {
+        return client.get("$API_URL$SELECT_CORNERSTONE") {
+            contentType(ContentType.Application.Json)
+            setBody(index)
             setKBParameter()
         }.body()
     }
@@ -199,18 +221,6 @@ class Api(engine: HttpClientEngine = CIO.create()) {
      */
     suspend fun conditionHints(caseId: Long): ConditionList {
         return client.get("$API_URL$CONDITION_HINTS?id=$caseId") {
-            setKBParameter()
-        }.body()
-    }
-
-    /**
-     * Retrieves the specified cornerstone for the current rule session
-     *
-     * @param index the 0-based index of the cornerstone to retrieve. See CornerstoneStatus
-     * @return the cornerstone
-     */
-    suspend fun selectCornerstone(index: Int): ViewableCase {
-        return client.get("$API_URL$SELECT_CORNERSTONE?$INDEX_PARAMETER=$index") {
             setKBParameter()
         }.body()
     }

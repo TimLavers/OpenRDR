@@ -162,6 +162,7 @@ fun OpenRDRUI(handler: Handler) {
                     conditionHints = conditionHints,
                     handler = object : CaseControlHandler, Handler by handler {
                         override fun endRuleSession() {
+                            runBlocking { api.cancelRuleSession() }
                             cornerstoneStatus = null
                         }
 
@@ -189,7 +190,9 @@ fun OpenRDRUI(handler: Handler) {
                             }
                         }
 
-                        override suspend fun selectCornerstone(index: Int) = api.selectCornerstone(index)
+                        override fun selectCornerstone(index: Int) = runBlocking {
+                            cornerstoneStatus = api.selectCornerstone(index)
+                        }
                         override fun exemptCornerstone(index: Int) = runBlocking {
                             cornerstoneStatus = api.exemptCornerstone(index)
                         }

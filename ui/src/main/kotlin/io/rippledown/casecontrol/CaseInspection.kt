@@ -1,12 +1,12 @@
 package io.rippledown.casecontrol
 
-import InterpretationTabs
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.rippledown.caseview.CaseView
 import io.rippledown.caseview.CaseViewHandler
+import io.rippledown.interpretation.InterpretationView
 import io.rippledown.model.Attribute
 import io.rippledown.model.caseview.ViewableCase
 
@@ -27,6 +27,6 @@ fun CaseInspection(case: ViewableCase, isRuleBuilding: Boolean, handler: CaseIns
                 handler.swapAttributes(moved, target)
             }
         })
-        InterpretationTabs(case.viewableInterpretation)
+        InterpretationView(case.viewableInterpretation, false)
     }
 }

@@ -15,8 +15,6 @@ class LaunchedClient {
     fun cornerstonePO() = rdUiOperator.cornerstonePO()
     fun interpretationViewPO() = rdUiOperator.interpretationViewPO()
     fun ruleMakerPO() = rdUiOperator.ruleMakerPO()
-    fun conclusionsViewPO() = rdUiOperator.conclusionsViewPO()
-
     fun stopClient() {
         testClientLauncher.stopClient()
     }

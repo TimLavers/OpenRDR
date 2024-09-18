@@ -34,6 +34,7 @@ class EngineConfig {
     var expectedCase: ViewableCase? = null
     var expectedRuleRequest: RuleRequest? = null
     var expectedSessionStartRequest: SessionStartRequest? = null
+    var expectedSessionCancel: Boolean? = false
     var expectedCornerstoneSelection: Int? = -1
     var expectedUpdateCornerstoneRequest: UpdateCornerstoneRequest? = null
     var expectedCornerstoneIndex: Int? = null
@@ -90,6 +91,13 @@ private class EngineBuilder(private val config: EngineConfig) {
                 httpResponseData(json.encodeToString(config.returnCornerstoneStatus))
             }
 
+            CANCEL_RULE_SESSION -> {
+                if (config.expectedSessionCancel != null) {
+                    config.expectedSessionCancel shouldBe true
+                }
+                httpResponseData(HttpStatusCode.OK.toString())
+            }
+
             UPDATE_CORNERSTONES -> {
                 val body = request.body as TextContent
                 val bodyAsUpdateCornerstoneRequest =
@@ -101,7 +109,7 @@ private class EngineBuilder(private val config: EngineConfig) {
                 httpResponseData(json.encodeToString(config.returnCornerstoneStatus))
             }
 
-            EXEMPT_CORNERSTONE -> {
+            EXEMPT_CORNERSTONE, SELECT_CORNERSTONE -> {
                 val body = request.body as TextContent
                 val bodyAsCornerstoneIndex = json.decodeFromString<Int>(body.text)
 
@@ -109,11 +117,6 @@ private class EngineBuilder(private val config: EngineConfig) {
                     bodyAsCornerstoneIndex shouldBe config.expectedCornerstoneIndex
                 }
                 httpResponseData(json.encodeToString(config.returnCornerstoneStatus))
-            }
-
-            SELECT_CORNERSTONE -> {
-                if (config.expectedCornerstoneSelection != -1) request.url.parameters[INDEX_PARAMETER] shouldBe config.expectedCornerstoneSelection.toString()
-                httpResponseData(json.encodeToString(config.returnCornerstone))
             }
 
             MOVE_ATTRIBUTE -> {

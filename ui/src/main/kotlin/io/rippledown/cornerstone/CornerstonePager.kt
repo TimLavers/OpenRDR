@@ -4,20 +4,19 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.runtime.*
-import io.rippledown.model.caseview.ViewableCase
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import io.rippledown.model.rule.CornerstoneStatus
 
 interface CornerstonePagerHandler {
-    suspend fun selectCornerstone(index: Int): ViewableCase
+    fun selectCornerstone(index: Int)
     fun exemptCornerstone(index: Int)
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CornerstonePager(cornerstoneStatus: CornerstoneStatus, handler: CornerstonePagerHandler) {
-    val currentIndex = remember { mutableStateOf(cornerstoneStatus.indexOfCornerstoneToReview) }
-    var case: ViewableCase? by remember { mutableStateOf(cornerstoneStatus.cornerstoneToReview) }
+    val case = cornerstoneStatus.cornerstoneToReview
 
     val pagerState = rememberPagerState(
         initialPage = cornerstoneStatus.indexOfCornerstoneToReview,
@@ -28,18 +27,10 @@ fun CornerstonePager(cornerstoneStatus: CornerstoneStatus, handler: CornerstoneP
         pagerState.animateScrollToPage(cornerstoneStatus.indexOfCornerstoneToReview)
     }
 
-    LaunchedEffect(currentIndex.value) {
-        val index = cornerstoneStatus.indexOfCornerstoneToReview
-        if (index > -1) {
-            case = handler.selectCornerstone(currentIndex.value)
-            pagerState.animateScrollToPage(currentIndex.value)
-        }
-    }
-
     LaunchedEffect(pagerState.currentPage) {
         val index = pagerState.currentPage
         if (index > -1) {
-            case = handler.selectCornerstone(index)
+            handler.selectCornerstone(index)
             pagerState.animateScrollToPage(index)
         }
     }
@@ -50,20 +41,22 @@ fun CornerstonePager(cornerstoneStatus: CornerstoneStatus, handler: CornerstoneP
             cornerstoneStatus.numberOfCornerstones,
             object : CornerstoneControlHandler {
                 override fun next() {
-                    currentIndex.value = pagerState.currentPage + 1
+                    handler.selectCornerstone(pagerState.currentPage + 1)
                 }
 
                 override fun previous() {
-                    currentIndex.value = pagerState.currentPage - 1
+                    handler.selectCornerstone(pagerState.currentPage - 1)
                 }
 
                 override fun exempt() {
-                    handler.exemptCornerstone(currentIndex.value)
+                    handler.exemptCornerstone(pagerState.currentPage)
                 }
             })
 
         VerticalPager(state = pagerState) {
-            if (case != null) CornerstoneInspection(case!!)
+            if (case != null) {
+                CornerstoneInspection(case)
+            }
         }
     }
 }

@@ -2,6 +2,7 @@ package io.rippledown.main
 
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import io.ktor.http.*
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -23,7 +24,6 @@ import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.rule.clickCancelRuleButton
 import io.rippledown.rule.clickFinishRuleButton
 import io.rippledown.utils.applicationFor
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -45,7 +45,6 @@ class OpenRDRUITest {
         coEvery { handler.isClosing } returns { true }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `should show OpenRDR UI`() = runTest {
         with(composeTestRule) {
@@ -299,10 +298,11 @@ class OpenRDRUITest {
         val cornerstoneId = CaseId(id = 2, name = cornerstoneName)
         val case = createCase(caseId)
         val cornerstone = createCase(cornerstoneId)
+        val cornerstoneStatus = CornerstoneStatus(cornerstone, 0, 1)
         coEvery { api.getCase(1) } returns case
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         coEvery { api.startRuleSession(any()) } returns CornerstoneStatus(cornerstone, 0, 1)
-        coEvery { api.selectCornerstone(any()) } returns cornerstone
+        coEvery { api.selectCornerstone(any()) } returns cornerstoneStatus
         with(composeTestRule) {
             setContent {
                 OpenRDRUI(handler)
@@ -329,10 +329,11 @@ class OpenRDRUITest {
         val cornerstoneId = CaseId(id = 2, name = cornerstoneName)
         val case = createCase(caseId)
         val cornerstone = createCase(cornerstoneId)
+        val cornerstoneStatus = CornerstoneStatus(cornerstone, 0, 1)
         coEvery { api.getCase(1) } returns case
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         coEvery { api.startRuleSession(any()) } returns CornerstoneStatus(cornerstone, 0, 1)
-        coEvery { api.selectCornerstone(any()) } returns cornerstone
+        coEvery { api.selectCornerstone(any()) } returns cornerstoneStatus
         with(composeTestRule) {
             setContent {
                 OpenRDRUI(handler)
@@ -353,6 +354,33 @@ class OpenRDRUITest {
     }
 
     @Test
+    fun `should call handler to cancel the rule session when a rule session is cancelled`() = runTest {
+        val caseName = "case a"
+        val caseId = CaseId(id = 1, name = caseName)
+        val case = createCase(caseId)
+        coEvery { api.getCase(1) } returns case
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.startRuleSession(any()) } returns CornerstoneStatus()
+        coEvery { api.cancelRuleSession() } returns HttpStatusCode.OK
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler)
+            }
+            //Given
+            waitForCaseToBeShowing(caseName)
+            clickChangeInterpretationButton()
+            clickAddCommentMenu()
+            addNewComment("Go to Bondi")
+
+            //When
+            clickCancelRuleButton()
+
+            //Then
+            coVerify { api.cancelRuleSession() }
+        }
+    }
+
+    @Test
     fun `should call handler to stop showing cornerstone when a rule session is finished`() = runTest {
         val caseName = "case a"
         val cornerstoneName = "case b"
@@ -360,10 +388,11 @@ class OpenRDRUITest {
         val cornerstoneId = CaseId(id = 2, name = cornerstoneName)
         val case = createCase(caseId)
         val cornerstone = createCase(cornerstoneId)
+        val cornerstoneStatus = CornerstoneStatus(cornerstone, 0, 1)
         coEvery { api.getCase(1) } returns case
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         coEvery { api.startRuleSession(any()) } returns CornerstoneStatus(cornerstone, 0, 1)
-        coEvery { api.selectCornerstone(any()) } returns cornerstone
+        coEvery { api.selectCornerstone(any()) } returns cornerstoneStatus
         with(composeTestRule) {
             setContent {
                 OpenRDRUI(handler)
@@ -378,6 +407,7 @@ class OpenRDRUITest {
 
             //When
             clickFinishRuleButton()
+            waitForIdle()
 
             //Then
             coVerify { handler.showingCornerstone(false) }

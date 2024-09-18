@@ -1,6 +1,5 @@
 package io.rippledown.interpretation
 
-import InterpretationTabs
 import androidx.compose.material.Button
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -8,6 +7,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.text.TextLayoutResult
+import io.kotest.assertions.withClue
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.interpretationview.ViewableInterpretation
@@ -19,12 +20,14 @@ import kotlin.test.Test
 /**
  * Tests of the key function
  */
-class InterpretationTabsUpdateTest {
+class InterpretationViewUpdateTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
     val textA = "text for case A"
     val textB = "text for case B"
+    val buttonTag = "buttonTag"
+
 
     @Test
     fun `should update interpretation when the interpretation text is changed`() = runTest {
@@ -32,35 +35,50 @@ class InterpretationTabsUpdateTest {
         val i2 = Interpretation().apply { add(RuleSummary(conclusion = Conclusion(2, textB))) }
         val original = ViewableInterpretation(i1)
         val changed = ViewableInterpretation(i2)
+
+        lateinit var textLayoutResult: TextLayoutResult
+        val handler = object : InterpretationViewHandler {
+            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
+                textLayoutResult = layoutResult
+            }
+        }
         with(composeTestRule) {
             setContent {
-                InterpretationTabsWithButton(original, changed)
+                InterpretationViewWithButton(original, changed, handler)
             }
             //Given
             requireInterpretation(textA)
 
             //When
-            onNodeWithTag("buttonTag").performClick()
-            waitForIdle()
+            onNodeWithTag(buttonTag).performClick()
 
             //Then
             requireInterpretation(textB)
+            withClue("check the interpretation is still being displayed when the pointer is moved over the comment") {
+                requireInterpretation(textB)
+                movePointerOverComment(textB, textLayoutResult)
+                requireInterpretation(textB)
+            }
         }
     }
 
     @Composable
-    fun InterpretationTabsWithButton(original: ViewableInterpretation, changed: ViewableInterpretation) {
+    fun InterpretationViewWithButton(
+        original: ViewableInterpretation,
+        changed: ViewableInterpretation,
+        handler: InterpretationViewHandler
+    ) {
         var viewableInterpretation: ViewableInterpretation by remember { mutableStateOf(original) }
 
-        InterpretationTabs(viewableInterpretation)
+        InterpretationView(viewableInterpretation, false, handler)
 
         Button(
             onClick = {
                 viewableInterpretation = changed
             },
-            modifier = Modifier.testTag("buttonTag")
+            modifier = Modifier.testTag(buttonTag)
         ) {
-            //Button
+            // Button text
         }
     }
 }

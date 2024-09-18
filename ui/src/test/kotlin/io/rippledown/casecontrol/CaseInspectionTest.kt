@@ -6,6 +6,7 @@ import io.rippledown.interpretation.requireInterpretation
 import io.rippledown.model.Attribute
 import io.rippledown.model.CaseId
 import io.rippledown.model.createCase
+import io.rippledown.model.createCaseWithInterpretation
 import io.rippledown.utils.applicationFor
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -40,9 +41,7 @@ class CaseInspectionTest {
     @Test
     fun `should show interpretation`() = runTest {
         val text = "Go to Bondi now!"
-        val case = createCase(name = "case a", id = 1L)
-        case.viewableInterpretation.textGivenByRules = text
-
+        val case = createCaseWithInterpretation(name = "case a", id = 1L, conclusionTexts = listOf(text))
         with(composeTestRule) {
             setContent {
                 CaseInspection(case, false, handler)
@@ -50,7 +49,6 @@ class CaseInspectionTest {
             requireInterpretation(text)
         }
     }
-
 }
 
 fun main() {

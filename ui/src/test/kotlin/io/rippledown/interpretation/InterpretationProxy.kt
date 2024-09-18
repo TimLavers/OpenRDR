@@ -2,24 +2,23 @@
 
 package io.rippledown.interpretation
 
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextLayoutResult
+import io.kotest.assertions.withClue
+import io.kotest.matchers.ints.shouldBeLessThanOrEqual
+import io.kotest.matchers.shouldBe
 import io.rippledown.constants.interpretation.*
 import io.rippledown.utils.dump
 import java.lang.Thread.sleep
 
+
 @OptIn(ExperimentalTestApi::class)
 fun ComposeTestRule.requireInterpretation(text: String) {
-    //need to set useUnmergedTree to true to avoid the issue of the text field being merged with the label
     onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD, useUnmergedTree = true).assertTextEquals(text)
-}
-
-fun ComposeTestRule.selectConclusionsTab() {
-    onNodeWithContentDescription(INTERPRETATION_TAB_CONCLUSIONS).performClick()
-}
-
-fun ComposeTestRule.requireConclusionsPanelToBeShowing() {
-    onNodeWithContentDescription(INTERPRETATION_PANEL_CONCLUSIONS).assertIsDisplayed()
 }
 
 fun ComposeTestRule.requireInterpretationActionsDropdownMenu() {
@@ -200,8 +199,95 @@ fun ComposeTestRule.scrollToOption(prefix: String, option: String) {
         .performScrollTo()
 }
 
+fun requireCommentToBeHighlighted(comment: String, layoutResult: TextLayoutResult) {
+    requireStyleForCommentToHaveBackground(layoutResult, comment, BACKGROUND_COLOR)
+}
 
+fun requireCommentToBeNotHighlighted(comment: String, layoutResult: TextLayoutResult) {
+    val annotatedString = layoutResult.layoutInput.text
+    annotatedString.spanStyles.size shouldBe 0
+}
 
+fun requireStyleForCommentToHaveBackground(layoutResult: TextLayoutResult, comment: String, color: Color) {
+    val annotatedString = layoutResult.layoutInput.text
+    requireStyleForCommentInAnnotatedStringToHaveBackground(annotatedString, comment, color)
+}
 
+fun requireStyleForCommentInAnnotatedStringToHaveBackground(
+    annotatedString: AnnotatedString,
+    comment: String,
+    color: Color
+) {
+    annotatedString.spanStyles.size shouldBe 1
+    val startIndex = annotatedString.text.indexOf(comment)
+    for (spanStyle in annotatedString.spanStyles) {
+        if (startIndex == spanStyle.start) {
+            withClue("check that background color is set for the first character of the comment") {
+                spanStyle.item.background shouldBe color
+            }
 
+            withClue("check that the same style is used for all characters") {
+                startIndex + comment.length shouldBeLessThanOrEqual spanStyle.end
+            }
+        }
+    }
+}
 
+private fun ComposeTestRule.performMouseInput(action: MouseInjectionScope.() -> Unit) {
+    onAllNodes(isRoot())[0].performMouseInput { action() }
+}
+
+fun ComposeTestRule.movePointerOverCharacter(charIndex: Int, layoutResult: TextLayoutResult) {
+    val charPositionAbsolute = absoluteCharacterPosition(layoutResult, charIndex)
+    performMouseInput {
+        moveTo(charPositionAbsolute)
+    }
+}
+
+fun ComposeTestRule.movePointerToTheRightOfTheCharacter(charIndex: Int, layoutResult: TextLayoutResult) {
+    val charPositionAbsolute = absoluteCharacterPosition(layoutResult, charIndex)
+    performMouseInput {
+        moveTo(charPositionAbsolute + Offset(10f, 0f))
+    }
+}
+
+private fun ComposeTestRule.absoluteCharacterPosition(
+    layoutResult: TextLayoutResult,
+    charIndex: Int
+): Offset {
+    val allTextInLayout = layoutResult.layoutInput.text.text
+    val node = onNodeWithText(allTextInLayout, useUnmergedTree = true)
+    val bounds = node.fetchSemanticsNode().boundsInRoot
+    val charPositionInLayout = layoutResult.getBoundingBox(charIndex)
+    val charPositionAbsolute = Offset(bounds.left + charPositionInLayout.left, bounds.top)
+    return charPositionAbsolute
+}
+
+fun ComposeTestRule.movePointerOverComment(comment: String, layoutResult: TextLayoutResult) {
+    val textInLayout = layoutResult.layoutInput.text.text
+    val charIndex = textInLayout.indexOf(comment)
+    movePointerOverCharacter(charIndex, layoutResult)
+}
+
+fun ComposeTestRule.movePointerToTheRightOfTheComment(comment: String, layoutResult: TextLayoutResult) {
+    val textInLayout = layoutResult.layoutInput.text.text
+    val charIndexAtTheEndOfTheComment = textInLayout.indexOf(comment) + comment.length - 1
+    movePointerToTheRightOfTheCharacter(charIndexAtTheEndOfTheComment, layoutResult)
+}
+
+fun ComposeTestRule.movePointerBelowTheText(layoutResult: TextLayoutResult) {
+    val lineBottom = layoutResult.getLineBottom(0)
+    performMouseInput {
+        moveTo(Offset(0f, lineBottom + 10f))
+    }
+}
+
+fun ComposeTestRule.requireConditionsToBeShowing(conditions: List<String>) {
+    conditions.forEach { condition ->
+        onNodeWithContentDescription("$CONDITION_PREFIX$condition")
+            .assertIsDisplayed()
+    }
+}
+fun ComposeTestRule.requireNoConditionsToBeShowing() {
+    onAllNodesWithContentDescription(label = CONDITION_PREFIX, substring = true).assertCountEquals(0)
+}

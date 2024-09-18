@@ -4,7 +4,6 @@ package io.rippledown.interpretation
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -14,12 +13,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -37,7 +34,6 @@ fun ToolTipForIconAndLabel(
     isSelected: Boolean,
     icon: Painter,
     onClick: () -> Unit,
-    badgeCount: Int = 0,
     iconContentDescription: String = ""
 ) {
     TooltipArea(
@@ -82,21 +78,6 @@ fun ToolTipForIconAndLabel(
                             .width(30.dp)
                             .padding(5.dp)
                     )
-                    //the optional badge.
-                    if (badgeCount > 0) {
-                        Text(
-                            text = badgeCount.toString(),
-                            color = Color.White,
-                            style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 10.sp),
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .offset(x = 10.dp, y = -10.dp)
-                                .clip(CircleShape)
-                                .background(Color.Red)
-                                .padding(horizontal = 4.dp, vertical = 2.dp)
-                                .semantics { contentDescription = BADGE_CONTENT_DESCRIPTION }
-                        )
-                    }
                 }
                 Text(
                     text = labelText,
