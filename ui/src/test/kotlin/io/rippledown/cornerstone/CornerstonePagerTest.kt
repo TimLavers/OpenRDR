@@ -7,7 +7,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.verify
-import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.createCase
 import io.rippledown.model.rule.CornerstoneStatus
 import org.junit.Before
@@ -48,7 +47,7 @@ class CornerstonePagerTest {
             }
 
             //Then
-            requireCornerstoneCase("$caseNamePrefix$index")
+            requireCornerstoneCase("${cornerstoneStatus.cornerstoneToReview?.name}")
 
         }
     }
@@ -137,12 +136,10 @@ fun main() {
 
             CornerstonePager(
                 CornerstoneStatus(createCase("Greta"), 2, 5), object : CornerstonePagerHandler {
-                    override fun selectCornerstone(index: Int): ViewableCase {
-                        return createCase("Greta ${index + 1}")
+                    override fun selectCornerstone(index: Int) {
                     }
 
                     override fun exemptCornerstone(index: Int) {
-                        TODO("Not yet implemented")
                     }
                 })
         }

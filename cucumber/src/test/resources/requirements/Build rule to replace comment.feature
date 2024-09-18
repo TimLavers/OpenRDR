@@ -9,13 +9,9 @@ Feature: The user can make a rule that replaces a comment the interpretive repor
     And I should see the case Case1 as the current case
     And  the interpretation should contain the text "Go to Bondi."
     When I build a rule to replace the comment "Go to Bondi." by "Go to Maroubra."
-    And  the interpretation should contain the text "Go to Maroubra."
-    Then the following comment is shown:
-      | Go to Maroubra. |
+    Then the interpretation should be "Go to Maroubra."
     And select the case Case2
-    And  the interpretation should contain the text "Go to Maroubra."
-    And the following comment is shown:
-      | Go to Maroubra. |
+    And  the interpretation should be "Go to Maroubra."
     And stop the client application
 
   Scenario: The user should be able to build a rule to replace a comment with a condition they have selected
@@ -35,14 +31,15 @@ Feature: The user can make a rule that replaces a comment the interpretive repor
     And stop the client application
 
   Scenario: The conditions shown for a comment that is a replacement should include the conditions for the comment that has been replaced
-    Given case Bondi is provided having data:
+    Given case Beach is provided having data:
       | Sun  | too hot |
       | Wave | poor    |
     And I start the client application
     And I build a rule to add the comment "Go to Bondi." with the condition "Wave is in case"
-    And I build a rule to replace the comment "Go to Bondi." by "Go to Manly." with the condition "Sun is in case"
-    And click on the Comments tab
-    Then the conditions showing are:
+    And  the interpretation should be "Go to Bondi."
+    When I build a rule to replace the comment "Go to Bondi." by "Go to Manly." with the condition "Sun is in case"
+    Then the interpretation should be "Go to Manly."
+    And the conditions showing for the comment "Go to Manly." are:
       | Wave is in case |
       | Sun is in case  |
     And stop the client application

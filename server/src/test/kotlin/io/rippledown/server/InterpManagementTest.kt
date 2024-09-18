@@ -77,6 +77,27 @@ class InterpManagementTest : OpenRDRServerTestBase() {
     }
 
     @Test
+    fun `should delegate selecting a cornerstone case to server application`() = testApplication {
+        // Given
+        setup()
+        val index = 42
+        val updatedCornerstoneStatus = CornerstoneStatus(createCase("Bondi"), index, 100)
+        every { kbEndpoint.selectCornerstone(any()) } returns updatedCornerstoneStatus
+
+        // When
+        val result = httpClient.get(SELECT_CORNERSTONE) {
+            parameter(KB_ID, kbId)
+            setBody(index)
+            contentType(ContentType.Application.Json)
+        }
+
+        // Then
+        result.status shouldBe OK
+        result.body<CornerstoneStatus>() shouldBe updatedCornerstoneStatus
+        verify { kbEndpoint.selectCornerstone(index) }
+    }
+
+    @Test
     fun `should delegate building a rule to server application`() = testApplication {
         setup()
 
@@ -94,23 +115,6 @@ class InterpManagementTest : OpenRDRServerTestBase() {
         verify { kbEndpoint.commitRuleSession(ruleRequest) }
     }
 
-    @Test
-    fun `should delegate selecting a cornerstone case to server application`() = testApplication {
-        setup()
-
-        val index = 42
-        val cc = createCase("bondi")
-        every { kbEndpoint.cornerstoneForIndex(index) } returns cc
-
-        val result = httpClient.get(SELECT_CORNERSTONE) {
-            parameter(KB_ID, kbId)
-            parameter(INDEX_PARAMETER, index)
-        }
-        result.status shouldBe OK
-        result.body<ViewableCase>() shouldBe cc
-        result.status shouldBe OK
-        verify { kbEndpoint.cornerstoneForIndex(index) }
-    }
 
     @Test
     fun `should delegate cancelling a rule session to the server application`() = testApplication {

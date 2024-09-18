@@ -1,11 +1,10 @@
-@file:OptIn(ExperimentalFoundationApi::class)
+@file:OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 
 package io.rippledown.interpretation
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.TooltipArea
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.material3.OutlinedCard
@@ -13,10 +12,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.PointerEventType.Companion.Enter
-import androidx.compose.ui.input.pointer.PointerEventType.Companion.Exit
-import androidx.compose.ui.input.pointer.onPointerEvent
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
@@ -42,70 +37,64 @@ fun InterpretationView(
     handler: InterpretationViewHandler? = null
 ) {
     val conclusionList = interpretation.conclusions().toList()
-    val commentList = interpretation.conclusions().map { it.text }
-    val unstyledText = commentList.unhighlighted()
-
-    var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
+    var comments by remember {
+        mutableStateOf(interpretation.conclusions().map { it.text })
+    }
+    var unstyledText by remember { mutableStateOf(comments.unhighlighted()) }
     var styledText by remember { mutableStateOf(unstyledText) }
-    var pointerEnter by remember { mutableStateOf(false) }
     var commentIndex by remember { mutableStateOf(-1) }
+    println("\nInterpretationView: interp=$interpretation, comments=$comments, styledText=$styledText, styles=${styledText.spanStyles.size}")
 
-    // Initialise styledText whenever the unstyledText changes, i.e. when the conclusions change
-    LaunchedEffect(unstyledText) {
+    LaunchedEffect(interpretation) {
+        comments = interpretation.conclusions().map { it.text }
+        unstyledText = comments.unhighlighted()
         styledText = unstyledText
     }
+
     OutlinedCard(modifier = Modifier.padding(vertical = 10.dp)) {
         TooltipArea(
             tooltip = {
-                Column {
-                    if (pointerEnter) {
-                        interpretation.conditionsForConclusion(conclusionList[commentIndex]).forEach { condition ->
-                            Text(text = condition,
-                                modifier = Modifier.padding(4.dp)
-                                    .semantics {
-                                        contentDescription = "$CONDITION_PREFIX$condition"
-                                    }
-                            )
-                        }
-                    }
+                val showToolTip = commentIndex != -1
+                if (showToolTip) {
+                    ConditionTooltip(interpretation.conditionsForConclusion(conclusionList[commentIndex]))
                 }
-            }
-        ) {
-            Text(
-                text = styledText,
-                modifier = Modifier.padding(10.dp)
-                    .fillMaxWidth()
-                    .pointerInput(Unit) {
-                        awaitPointerEventScope {
-                            while (true) {
-                                val event = awaitPointerEvent()
-                                val position = event.changes.first().position
-                                textLayoutResult?.let { layoutResult ->
-                                    if (pointerEnter) {
-                                        val characterOffset = layoutResult.getOffsetForPosition(position)
-                                        commentIndex = commentList.commentIndexForOffset(characterOffset)
-                                        styledText = commentList.highlightItem(commentIndex)
-                                    } else {
-                                        styledText = unstyledText
-                                    }
-                                }
-                            }
+            },
+            content = {
+                AnnotatedTextView(
+                    text = if (commentIndex == -1) unstyledText else styledText,
+                    description = if (isCornerstone) INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE else INTERPRETATION_TEXT_FIELD,
+                    handler = object : AnnotatedTextViewHandler {
+                        override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
+                            handler?.onTextLayoutResult(layoutResult)
                         }
-                    }
-                    .onPointerEvent(Enter) {
-                        pointerEnter = true
-                    }.onPointerEvent(Exit) {
-                        pointerEnter = false
-                    }
-                    .semantics {
-                        contentDescription =
-                            if (isCornerstone) INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE else INTERPRETATION_TEXT_FIELD
 
-                    },
-                onTextLayout = { layoutResult ->
-                    textLayoutResult = layoutResult
-                    handler?.onTextLayoutResult(layoutResult)
-                }
+                        override fun onPointerEnter(characterOffset: Int) {
+                            commentIndex = comments.commentIndexForOffset(characterOffset)
+                            styledText = comments.highlightItem(commentIndex)
+                        }
+
+                        override fun onPointerExit() {
+                            commentIndex = -1
+                        }
+                    }
+                )
+            }
+        )
+    }
+}
+
+@Composable
+fun ConditionTooltip(
+    conditions: List<String>,
+) {
+    Column {
+        conditions.forEach { condition ->
+            Text(
+                text = condition,
+                modifier = Modifier.padding(4.dp)
+                    .semantics {
+                        contentDescription = "$CONDITION_PREFIX$condition"
+                    }
             )
         }
     }

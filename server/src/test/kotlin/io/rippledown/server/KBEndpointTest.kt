@@ -1,5 +1,6 @@
 package io.rippledown.server
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
@@ -242,12 +243,19 @@ internal class KBEndpointTest {
     }
 
     @Test
-    fun `should cancel a rule session`() {
+    fun `should be able to cancel a rule session after it is started`() {
+        //Given
         val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
         val conclusion = endpoint.kb.conclusionManager.getOrCreate("Whatever")
         endpoint.startRuleSessionToAddConclusion(id, conclusion)
+
+        //When
         endpoint.cancelRuleSession()
-        endpoint.kb.conflictingCasesInCurrentRuleSession() shouldHaveSize 0
+
+        //Then
+        shouldThrow<IllegalStateException> {
+            endpoint.kb.conflictingCasesInCurrentRuleSession()
+        }.message shouldBe "Rule session not started."
     }
 
     @Test
@@ -276,13 +284,13 @@ internal class KBEndpointTest {
 
             val viewableCase1 = endpoint.viewableCase(kb.allCornerstoneCases().first().id!!)
             startRuleSessionToAddConclusion(id2, conclusion2)
-            cornerstoneForIndex(0) shouldBe viewableCase1
+            selectCornerstone(0).cornerstoneToReview shouldBe viewableCase1
             commitCurrentRuleSession()
             kb.allCornerstoneCases() shouldHaveSize 2
 
             val viewableCase2 = endpoint.viewableCase(kb.allCornerstoneCases()[1].id!!)
             startRuleSessionToAddConclusion(id3, conclusion3)
-            cornerstoneForIndex(1) shouldBe viewableCase2
+            selectCornerstone(1).cornerstoneToReview shouldBe viewableCase2
         }
     }
   

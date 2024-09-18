@@ -38,10 +38,6 @@ class RippleDownUIOperator(private val window: ComposeWindow) {
         context()
     }
 
-    fun conclusionsViewPO() = ConclusionsViewPO {
-        context()
-    }
-
     fun ruleMakerPO() = RuleMakerPO {
         context()
     }

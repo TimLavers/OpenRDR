@@ -191,6 +191,19 @@ class Api(engine: HttpClientEngine = CIO.create()) {
     }
 
     /**
+     * Retrieves the updated cornerstone status for the current rule session
+     *
+     * @param index the 0-based index of the cornerstone that has been selected.
+     */
+    suspend fun selectCornerstone(index: Int): CornerstoneStatus {
+        return client.get("$API_URL$SELECT_CORNERSTONE") {
+            contentType(ContentType.Application.Json)
+            setBody(index)
+            setKBParameter()
+        }.body()
+    }
+
+    /**
      * Exempts the cornerstone at the specified index for the current rule session
      *
      * @return the updated CornerstoneStatus
@@ -208,18 +221,6 @@ class Api(engine: HttpClientEngine = CIO.create()) {
      */
     suspend fun conditionHints(caseId: Long): ConditionList {
         return client.get("$API_URL$CONDITION_HINTS?id=$caseId") {
-            setKBParameter()
-        }.body()
-    }
-
-    /**
-     * Retrieves the specified cornerstone for the current rule session
-     *
-     * @param index the 0-based index of the cornerstone to retrieve. See CornerstoneStatus
-     * @return the cornerstone
-     */
-    suspend fun selectCornerstone(index: Int): ViewableCase {
-        return client.get("$API_URL$SELECT_CORNERSTONE?$INDEX_PARAMETER=$index") {
             setKBParameter()
         }.body()
     }

@@ -1,11 +1,12 @@
 package io.rippledown.integration.pageobjects
 
 import androidx.compose.ui.awt.ComposeDialog
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.constants.interpretation.*
 import io.rippledown.integration.utils.find
+import io.rippledown.integration.utils.findAllByDescriptionPrefix
 import io.rippledown.integration.utils.findComposeDialogThatIsShowing
-import io.rippledown.integration.utils.waitForContextToBeNotNull
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
@@ -60,24 +61,6 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         }
     }
 
-    private fun interpretationTabProvider() =
-        execute<AccessibleContext?> { contextProvider().find(INTERPRETATION_TAB_ORIGINAL) }
-
-    private fun conclusionsTabProvider() =
-        execute<AccessibleContext?> { contextProvider().find(INTERPRETATION_TAB_CONCLUSIONS) }
-
-    fun selectOriginalTab() {
-        waitForContextToBeNotNull(contextProvider, INTERPRETATION_TAB_ORIGINAL)
-        val context = interpretationTabProvider()
-        execute { context?.accessibleAction?.doAccessibleAction(0) }
-    }
-
-    fun selectConclusionsTab() {
-        waitForContextToBeNotNull(contextProvider, INTERPRETATION_TAB_CONCLUSIONS)
-        val context = conclusionsTabProvider()
-        execute { context?.accessibleAction?.doAccessibleAction(0) }
-    }
-
     fun clickChangeInterpretationButton() {
         waitUntilAsserted {
             execute<AccessibleContext?> { contextProvider().find(CHANGE_INTERPRETATION_BUTTON) } shouldNotBe null
@@ -121,6 +104,10 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
                 execute<AccessibleContext?> { contextProvider().find(CONDITION_PREFIX + condition) } shouldNotBe null
             }
         }
+    }
+
+    fun requireNoConditionsToBeShowing() {
+        execute<Set<AccessibleContext>> { contextProvider().findAllByDescriptionPrefix(CONDITION_PREFIX) } shouldHaveSize 0
     }
 
     fun selectExistingCommentToAddClickOK(comment: String) {

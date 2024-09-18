@@ -92,6 +92,7 @@ class KB(persistentKB: PersistentKB) {
         ruleSession = RuleBuildingSession(ruleManager, ruleTree, case, alignedAction, allCornerstoneCases())
         logger.info("KB rule session created")
     }
+
     fun cancelRuleSession() {
         check(ruleSession != null) { "No rule session in progress." }
         ruleSession = null
@@ -195,6 +196,17 @@ class KB(persistentKB: PersistentKB) {
             val newCC = cornerstones[index.coerceAtMost(cornerstones.size - 1)]
             cornerstoneStatus(viewableCase(newCC))
         }
+    }
+
+    /**
+     * @param index the index of the cornerstone to be selected
+     * @return the CornerstoneStatus for the current session after the specified cornerstone has been selected
+     */
+    fun selectCornerstone(index: Int): CornerstoneStatus {
+        checkSession()
+        val cornerstones = ruleSession!!.cornerstoneCases()
+        val newCC = cornerstones[index]
+        return CornerstoneStatus(viewableCase(newCC), index, cornerstones.size)
     }
 
     /**

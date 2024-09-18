@@ -1,8 +1,6 @@
 package io.rippledown.casecontrol
 
 import androidx.compose.ui.test.junit4.createComposeRule
-import io.mockk.coEvery
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.interpretation.requireInterpretation
@@ -79,14 +77,14 @@ class CaseControlTest {
         val bondiComment = "Go to Bondi"
         val case = createCaseWithInterpretation(name, 1, listOf(bondiComment))
         val cornerstone = createCaseWithInterpretation("Malabar", 1, listOf(bondiComment))
-        every { handler.selectCornerstone(any()) } returns cornerstone
+        val cornerstoneStatus = CornerstoneStatus(cornerstone, 42, 84)
 
         with(composeTestRule) {
             //Given
             setContent {
                 CaseControl(
                     currentCase = case,
-                    cornerstoneStatus = CornerstoneStatus(cornerstone, 42, 84),
+                    cornerstoneStatus = cornerstoneStatus,
                     conditionHints = listOf(),
                     handler = handler
                 )
@@ -139,7 +137,6 @@ fun main() {
             id = id,
             conclusionTexts = listOf(bondiComment)
         )
-        coEvery { handler.selectCornerstone(any()) } returns viewableCase
         val condition = hasCurrentValue(1, Attribute(2, "Surf 1"))
         val suggestedCondition = NonEditableSuggestedCondition(condition)
         CaseControl(

@@ -4,19 +4,19 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.runtime.*
-import io.rippledown.model.caseview.ViewableCase
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import io.rippledown.model.rule.CornerstoneStatus
 
 interface CornerstonePagerHandler {
-    fun selectCornerstone(index: Int): ViewableCase
+    fun selectCornerstone(index: Int)
     fun exemptCornerstone(index: Int)
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CornerstonePager(cornerstoneStatus: CornerstoneStatus, handler: CornerstonePagerHandler) {
-    var case: ViewableCase? by remember { mutableStateOf(cornerstoneStatus.cornerstoneToReview) }
+    val case = cornerstoneStatus.cornerstoneToReview
 
     val pagerState = rememberPagerState(
         initialPage = cornerstoneStatus.indexOfCornerstoneToReview,
@@ -30,7 +30,7 @@ fun CornerstonePager(cornerstoneStatus: CornerstoneStatus, handler: CornerstoneP
     LaunchedEffect(pagerState.currentPage) {
         val index = pagerState.currentPage
         if (index > -1) {
-            case = handler.selectCornerstone(index)
+            handler.selectCornerstone(index)
             pagerState.animateScrollToPage(index)
         }
     }
@@ -55,7 +55,7 @@ fun CornerstonePager(cornerstoneStatus: CornerstoneStatus, handler: CornerstoneP
 
         VerticalPager(state = pagerState) {
             if (case != null) {
-                CornerstoneInspection(case!!)
+                CornerstoneInspection(case)
             }
         }
     }

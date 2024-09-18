@@ -109,7 +109,7 @@ private class EngineBuilder(private val config: EngineConfig) {
                 httpResponseData(json.encodeToString(config.returnCornerstoneStatus))
             }
 
-            EXEMPT_CORNERSTONE -> {
+            EXEMPT_CORNERSTONE, SELECT_CORNERSTONE -> {
                 val body = request.body as TextContent
                 val bodyAsCornerstoneIndex = json.decodeFromString<Int>(body.text)
 
@@ -117,11 +117,6 @@ private class EngineBuilder(private val config: EngineConfig) {
                     bodyAsCornerstoneIndex shouldBe config.expectedCornerstoneIndex
                 }
                 httpResponseData(json.encodeToString(config.returnCornerstoneStatus))
-            }
-
-            SELECT_CORNERSTONE -> {
-                if (config.expectedCornerstoneSelection != -1) request.url.parameters[INDEX_PARAMETER] shouldBe config.expectedCornerstoneSelection.toString()
-                httpResponseData(json.encodeToString(config.returnCornerstone))
             }
 
             MOVE_ATTRIBUTE -> {

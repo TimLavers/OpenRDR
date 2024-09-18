@@ -56,7 +56,6 @@ Feature: The user can make rules that change the interpretive report
     And the interpretation should be empty
     And stop the client application
 
-  @single
   Scenario: The user should be able to add a rule after cancelling the previous rule building session
     Given case Bondi is provided having data:
       | Sun  | hot       |

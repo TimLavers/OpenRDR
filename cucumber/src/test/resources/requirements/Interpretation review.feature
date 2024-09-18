@@ -32,9 +32,33 @@ Feature: Reviewing the interpretation of a case
     And I start the client application
     And I should see the case Bondi as the current case
     And the interpretation should contain the text "Go to Bondi. Bring sunscreen."
-    When move pointer to the comment "Go to Bondi."
-    Then the condition showing in the interpretation view is:
+    Then the condition showing for the comment "Go to Bondi" is:
       | Waves is in case |
-    And move pointer to the comment "Bring sunscreen."
-    And the condition showing in the interpretation view is:
+    Then the condition showing for the comment "Bring sunscreen." is:
       | Sun is in case |
+
+  Scenario: No conditions should be shown for a comment that is given with no conditions
+    And case Bondi is provided having data:
+      | Waves | excellent |
+      | Sun   | shining   |
+    And a rule exists to add the comment "Go to Bondi." to case Bondi with no conditions
+    When I start the client application
+    And I should see the case Bondi as the current case
+    And the interpretation should contain the text "Go to Bondi."
+    And move pointer to the comment "Go to Bondi."
+    And pause for 1 second
+    And the interpretation should be "Go to Bondi."
+    Then no conditions should be showing for the comment "Go to Bondi."
+
+  Scenario: No conditions should be shown after building a rule with no conditions to give a comment
+    And case Bondi is provided having data:
+      | Waves | excellent |
+      | Sun   | shining   |
+    And I start the client application
+    And I should see the case Bondi as the current case
+    When I build a rule to add the comment "Go to Bondi."
+    And move pointer to the comment "Go to Bondi."
+    And pause for 1 second
+    And the interpretation should be "Go to Bondi."
+    Then no conditions should be showing for the comment "Go to Bondi."
+

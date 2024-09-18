@@ -18,16 +18,7 @@ import java.lang.Thread.sleep
 
 @OptIn(ExperimentalTestApi::class)
 fun ComposeTestRule.requireInterpretation(text: String) {
-    //need to set useUnmergedTree to true to avoid the issue of the text field being merged with the label
     onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD, useUnmergedTree = true).assertTextEquals(text)
-}
-
-fun ComposeTestRule.selectConclusionsTab() {
-    onNodeWithContentDescription(INTERPRETATION_TAB_CONCLUSIONS).performClick()
-}
-
-fun ComposeTestRule.requireConclusionsPanelToBeShowing() {
-    onNodeWithContentDescription(INTERPRETATION_PANEL_CONCLUSIONS).assertIsDisplayed()
 }
 
 fun ComposeTestRule.requireInterpretationActionsDropdownMenu() {
@@ -213,7 +204,8 @@ fun requireCommentToBeHighlighted(comment: String, layoutResult: TextLayoutResul
 }
 
 fun requireCommentToBeNotHighlighted(comment: String, layoutResult: TextLayoutResult) {
-    requireStyleForCommentToHaveBackground(layoutResult, comment, Color.Unspecified)
+    val annotatedString = layoutResult.layoutInput.text
+    annotatedString.spanStyles.size shouldBe 0
 }
 
 fun requireStyleForCommentToHaveBackground(layoutResult: TextLayoutResult, comment: String, color: Color) {
@@ -226,6 +218,7 @@ fun requireStyleForCommentInAnnotatedStringToHaveBackground(
     comment: String,
     color: Color
 ) {
+    annotatedString.spanStyles.size shouldBe 1
     val startIndex = annotatedString.text.indexOf(comment)
     for (spanStyle in annotatedString.spanStyles) {
         if (startIndex == spanStyle.start) {
@@ -240,21 +233,53 @@ fun requireStyleForCommentInAnnotatedStringToHaveBackground(
     }
 }
 
+private fun ComposeTestRule.performMouseInput(action: MouseInjectionScope.() -> Unit) {
+    onAllNodes(isRoot())[0].performMouseInput { action() }
+}
+
 fun ComposeTestRule.movePointerOverCharacter(charIndex: Int, layoutResult: TextLayoutResult) {
+    val charPositionAbsolute = absoluteCharacterPosition(layoutResult, charIndex)
+    performMouseInput {
+        moveTo(charPositionAbsolute)
+    }
+}
+
+fun ComposeTestRule.movePointerToTheRightOfTheCharacter(charIndex: Int, layoutResult: TextLayoutResult) {
+    val charPositionAbsolute = absoluteCharacterPosition(layoutResult, charIndex)
+    performMouseInput {
+        moveTo(charPositionAbsolute + Offset(10f, 0f))
+    }
+}
+
+private fun ComposeTestRule.absoluteCharacterPosition(
+    layoutResult: TextLayoutResult,
+    charIndex: Int
+): Offset {
     val allTextInLayout = layoutResult.layoutInput.text.text
     val node = onNodeWithText(allTextInLayout, useUnmergedTree = true)
     val bounds = node.fetchSemanticsNode().boundsInRoot
     val charPositionInLayout = layoutResult.getBoundingBox(charIndex)
     val charPositionAbsolute = Offset(bounds.left + charPositionInLayout.left, bounds.top)
-    onRoot().performMouseInput {
-        moveTo(charPositionAbsolute)
-    }
+    return charPositionAbsolute
 }
 
 fun ComposeTestRule.movePointerOverComment(comment: String, layoutResult: TextLayoutResult) {
     val textInLayout = layoutResult.layoutInput.text.text
     val charIndex = textInLayout.indexOf(comment)
     movePointerOverCharacter(charIndex, layoutResult)
+}
+
+fun ComposeTestRule.movePointerToTheRightOfTheComment(comment: String, layoutResult: TextLayoutResult) {
+    val textInLayout = layoutResult.layoutInput.text.text
+    val charIndexAtTheEndOfTheComment = textInLayout.indexOf(comment) + comment.length - 1
+    movePointerToTheRightOfTheCharacter(charIndexAtTheEndOfTheComment, layoutResult)
+}
+
+fun ComposeTestRule.movePointerBelowTheText(layoutResult: TextLayoutResult) {
+    val lineBottom = layoutResult.getLineBottom(0)
+    performMouseInput {
+        moveTo(Offset(0f, lineBottom + 10f))
+    }
 }
 
 fun ComposeTestRule.requireConditionsToBeShowing(conditions: List<String>) {

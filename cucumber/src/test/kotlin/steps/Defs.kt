@@ -271,25 +271,21 @@ class Defs {
 
     @Then("the interpretation should contain the text {string}")
     fun theInterpretationFieldShouldContainTheText(text: String) {
-        selectTheTab("interpretation")
         interpretationViewPO().waitForInterpretationTextToContain(text)
     }
 
     @Then("the interpretation should be {string}")
     fun theInterpretationShouldBeString(text: String) {
-        interpretationViewPO().selectOriginalTab()
         interpretationViewPO().waitForInterpretationText(text)
     }
 
     @Then("the interpretation should be this:")
     fun theInterpretationShouldBeThis(text: DocString) {
-        interpretationViewPO().selectOriginalTab()
         interpretationViewPO().waitForInterpretationText(text.content)
     }
 
     @Then("the interpretation should be empty")
     fun theInterpretationFieldShouldBeEmpty() {
-        interpretationViewPO().selectOriginalTab()
         interpretationViewPO().waitForInterpretationText("")
     }
 
@@ -297,6 +293,11 @@ class Defs {
     fun `add rule to give comment for conditions`(commentText: String, caseName: String, dataTable: DataTable) {
         val conditions = dataTable.asList()
         restClient().createRuleToAddText(caseName, commentText, *conditions.toTypedArray())
+    }
+
+    @And("a rule exists to add the comment {string} to case {word} with no conditions")
+    fun `add rule to give comment with no conditions`(commentText: String, caseName: String) {
+        restClient().createRuleToAddText(caseName, commentText)
     }
 
     @And("the interpretation of the case {word} is {string}")
@@ -309,7 +310,6 @@ class Defs {
         dataTable.asLists().forEach {
             println("checking interpretation for case ${it[0]}")
             caseListPO().select(it[0])
-            interpretationViewPO().selectOriginalTab()
             val expectedText = it[1]?: ""
             interpretationViewPO().waitForInterpretationText(expectedText)
         }
@@ -345,15 +345,6 @@ class Defs {
                     conditions = arrayOf(row[2])
                 )
             }
-    }
-
-    @And("I select the {word} tab")
-    fun selectTheTab(tabName: String) {
-        when (tabName) {
-            "interpretation" -> interpretationViewPO().selectOriginalTab()
-            "comments" -> interpretationViewPO().selectConclusionsTab()
-            else -> throw IllegalArgumentException("Unknown tab name: $tabName")
-        }
     }
 
     @Then("the KB controls (are )(should be )hidden")

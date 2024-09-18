@@ -2,7 +2,6 @@ package io.rippledown.casecontrol
 
 import androidx.compose.ui.test.junit4.createComposeRule
 import io.kotest.matchers.shouldBe
-import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.verify
@@ -38,11 +37,12 @@ class CaseControlWithRuleMakerTest {
         id = id,
         conclusionTexts = listOf(bondiComment)
     )
+    val cornerstoneStatus = CornerstoneStatus(viewableCase, 42, 84)
 
     @Before
     fun setUp() {
         handler = mockk<CaseControlHandler>(relaxed = true)
-        coEvery { handler.selectCornerstone(any()) } returns viewableCase
+//        coEvery { handler.selectCornerstone(any()) } returns cornerstoneStatus
     }
 
     @Test

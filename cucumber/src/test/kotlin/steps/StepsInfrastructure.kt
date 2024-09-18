@@ -39,8 +39,6 @@ object StepsInfrastructure {
         if (::launchedClient.isInitialized) launchedClient.stopClient()
         uiTestBase.serverProxy.shutdown()
     }
-
-
 }
 
 fun labProxy() = uiTestBase.labProxy
@@ -53,4 +51,3 @@ fun caseViewPO() = client().caseViewPO()
 fun cornerstonePO() = client().cornerstonePO()
 fun interpretationViewPO() = client().interpretationViewPO()
 fun ruleMakerPO() = client().ruleMakerPO()
-fun conclusionsViewPO() = client().conclusionsViewPO()

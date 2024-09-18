@@ -43,10 +43,36 @@ class InterpretationViewTest {
     }
 
     @Test
-    fun `should highlight the conclusion under the pointer`() = runTest {
+    fun `should highlight comment under the pointer`() = runTest {
         //Given
-        val bondiComment = "Best surf in the world!"
-        val malabarComment = "Great for a swim!"
+        val bondiComment = "Bondi."
+        val interpretation = createInterpretation(mapOf(bondiComment to emptyList()))
+        var textLayoutResult: TextLayoutResult? = null
+        val handler = object : InterpretationViewHandler {
+            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
+                textLayoutResult = layoutResult
+            }
+        }
+        with(composeTestRule) {
+            setContent {
+                InterpretationView(interpretation, false, handler)
+            }
+            requireInterpretation(bondiComment)
+
+            //When
+            movePointerOverComment(bondiComment, textLayoutResult!!)
+            waitForIdle()
+
+            //Then
+            requireCommentToBeHighlighted(bondiComment, textLayoutResult!!)
+        }
+    }
+
+    @Test
+    fun `should highlight comment under the pointer when showing two comments`() = runTest {
+        //Given
+        val bondiComment = "Bondi."
+        val malabarComment = "Malabar."
         val interpretation = createInterpretation(mapOf(bondiComment to emptyList(), malabarComment to emptyList()))
         val conclusionTexts = interpretation.conclusions().map { it.text }
         val unhighlighted = conclusionTexts.unhighlighted().text
@@ -64,10 +90,41 @@ class InterpretationViewTest {
 
             //When
             movePointerOverComment(malabarComment, textLayoutResult!!)
+            waitForIdle()
+
+            //Then
+            requireCommentToBeHighlighted(malabarComment, textLayoutResult!!)
+        }
+    }
+
+    @Test
+    fun `should not highlight a comment if the pointer is not over it`() = runTest {
+        //Given
+        val bondiComment = "Bondi."
+        val interpretation = createInterpretation(mapOf(bondiComment to emptyList()))
+        val conclusionTexts = interpretation.conclusions().map { it.text }
+        val unhighlighted = conclusionTexts.unhighlighted().text
+        var textLayoutResult: TextLayoutResult? = null
+        val handler = object : InterpretationViewHandler {
+            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
+                textLayoutResult = layoutResult
+            }
+        }
+        with(composeTestRule) {
+            setContent {
+                InterpretationView(interpretation, false, handler)
+            }
+            requireInterpretation(unhighlighted)
+            movePointerOverComment(bondiComment, textLayoutResult!!)
+            waitForIdle()
+            requireCommentToBeHighlighted(bondiComment, textLayoutResult!!)
+
+            //When
+            movePointerToTheRightOfTheComment(bondiComment, textLayoutResult!!)
+            waitForIdle()
 
             //Then
             requireCommentToBeNotHighlighted(bondiComment, textLayoutResult!!)
-            requireCommentToBeHighlighted(malabarComment, textLayoutResult!!)
         }
     }
 
@@ -76,6 +133,7 @@ class InterpretationViewTest {
         //Given
         val bondiComment = "Best surf in the world!"
         val malabarComment = "Great for a swim!"
+        val interpretationText = "$bondiComment $malabarComment"
         val bondiConditions = listOf("Bring your flippers.", "And your sunscreeen.")
         val malabarConditions = listOf("Great for a swim!", "And a picnic.")
         val interpretation = createInterpretation(
@@ -94,17 +152,49 @@ class InterpretationViewTest {
             setContent {
                 InterpretationView(interpretation, false, handler)
             }
+            requireInterpretation(interpretationText)
 
             //When
             movePointerOverComment(malabarComment, textLayoutResult!!)
 
             //Then
             requireConditionsToBeShowing(malabarConditions)
+            requireInterpretation(interpretationText)
         }
     }
 
     @Test
-    fun `should not show any conditions for the conclusion under the pointer if there are none`() = runTest {
+    fun `should show comment but not show any conditions for the conclusion under the pointer if there are none`() =
+        runTest {
+            //Given
+            val bondiComment = "Best surf in the world!"
+            val interpretation = createInterpretation(
+                mapOf(bondiComment to listOf())
+            )
+            var textLayoutResult: TextLayoutResult? = null
+            val handler = object : InterpretationViewHandler {
+                override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
+                    textLayoutResult = layoutResult
+                }
+            }
+            with(composeTestRule) {
+                setContent {
+                    InterpretationView(interpretation, false, handler)
+                }
+                requireInterpretation(bondiComment)
+
+                //When
+                movePointerOverComment(bondiComment, textLayoutResult!!)
+
+                //Then
+                requireNoConditionsToBeShowing()
+                requireInterpretation(bondiComment)
+            }
+        }
+
+
+    @Test
+    fun `should show comment but not show any conditions if the pointer is not over a comment`() = runTest {
         //Given
         val bondiComment = "Best surf in the world!"
         val interpretation = createInterpretation(
@@ -120,12 +210,14 @@ class InterpretationViewTest {
             setContent {
                 InterpretationView(interpretation, false, handler)
             }
+            requireInterpretation(bondiComment)
 
             //When
-            movePointerOverComment(bondiComment, textLayoutResult!!)
+            movePointerToTheRightOfTheComment(bondiComment, textLayoutResult!!)
 
             //Then
             requireNoConditionsToBeShowing()
+            requireInterpretation(bondiComment)
         }
     }
 

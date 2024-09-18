@@ -58,11 +58,7 @@ fun CaseControl(
                 handler.setInfoMessage(NO_CORNERSTONES_TO_REVIEW_MSG)
             } else {
                 handler.setInfoMessage("")
-                CornerstonePager(cornerstoneStatus, object : CornerstonePagerHandler by handler {
-                    override fun exemptCornerstone(index: Int) {
-                        handler.exemptCornerstone(index)
-                    }
-                })
+                CornerstonePager(cornerstoneStatus, handler)
             }
 
             Spacer(modifier = Modifier.width(5.dp))

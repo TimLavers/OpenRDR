@@ -1,5 +1,4 @@
-Feature: The Contact Lense Prescription KB can be built with the user interface.
-#  @single
+Feature: The Contact Lenses Prescription KB can be built with the user interface.
   Scenario: Build the Contact Lenses KB from cases
     Given I start the client application
     And I create a Knowledge Base with the name ContactLenses based on the "Contact Lense Prescription - cases only" sample
@@ -17,19 +16,16 @@ Feature: The Contact Lense Prescription KB can be built with the user interface.
       | tear production is "normal" |
 
     And I select case Case16
-    And I select the interpretation tab
     And I build a rule to remove the comment "hard" with conditions
       | age is "pre_presbyopic"        |
       | prescription is "hypermetrope" |
 
     And I select case Case18
-    And I select the interpretation tab
     And I build a rule to remove the comment "soft" with conditions
       | age is "presbyopic"     |
       | prescription is "myope" |
 
     And I select case Case24
-    And I select the interpretation tab
     And I build a rule to remove the comment "hard" with conditions
       | age is "presbyopic"            |
       | prescription is "hypermetrope" |

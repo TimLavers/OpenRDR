@@ -13,7 +13,6 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import io.mockk.coEvery
 import io.mockk.mockk
 import io.rippledown.model.createCase
 import io.rippledown.model.rule.CornerstoneStatus
@@ -30,7 +29,6 @@ class CornerstonePagerUpdateTest {
     @Before
     fun setUp() {
         handler = mockk(relaxed = true)
-        coEvery { handler.selectCornerstone(any()) } returns createCase("Greta")
     }
 
     @Test
@@ -78,8 +76,6 @@ fun main() {
             onCloseRequest = ::exitApplication,
         ) {
             val handler = mockk<CornerstonePagerHandler>(relaxed = true)
-            coEvery { handler.selectCornerstone(any()) } returns createCase("Greta")
-
             CornerstonePagerWithButton(handler)
         }
     }
