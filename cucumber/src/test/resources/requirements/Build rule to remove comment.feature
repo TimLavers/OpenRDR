@@ -8,8 +8,7 @@ Feature: The user can make a rule that removes a comment from the interpretive r
     And I should see the case Case1 as the current case
     And  the interpretation should contain the text "Go to Bondi."
     When I build a rule to remove the comment "Go to Bondi."
-    Then no comments are shown
-    And  the interpretation should be empty
+    Then  the interpretation should be empty
     And select the case Case2
     And  the interpretation should be empty
     And stop the client application
@@ -24,7 +23,6 @@ Feature: The user can make a rule that removes a comment from the interpretive r
     And I start the client application
     And I select case Bondi
     When I build a rule to remove the comment "Go to the beach." with the condition "Sun is in case"
-    Then no comments are shown
     And  the interpretation should be empty
     And select the case Manly
     And  the interpretation should contain the text "Go to the beach."

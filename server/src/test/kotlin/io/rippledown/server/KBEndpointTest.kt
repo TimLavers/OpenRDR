@@ -1,24 +1,21 @@
 package io.rippledown.server
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.rippledown.CaseTestUtils
 import io.rippledown.kb.KB
 import io.rippledown.kb.KBManager
 import io.rippledown.model.beSameAs
-import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.greaterThanOrEqualTo
-import io.rippledown.model.condition.hasCurrentValue
 import io.rippledown.model.condition.isCondition
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.supplyCaseFromFile
 import io.rippledown.util.EntityRetrieval
-import io.rippledown.util.shouldContainSameAs
 import org.apache.commons.io.FileUtils
 import java.io.File
 import kotlin.test.AfterTest
@@ -246,6 +243,22 @@ internal class KBEndpointTest {
     }
 
     @Test
+    fun `should be able to cancel a rule session after it is started`() {
+        //Given
+        val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
+        val conclusion = endpoint.kb.conclusionManager.getOrCreate("Whatever")
+        endpoint.startRuleSessionToAddConclusion(id, conclusion)
+
+        //When
+        endpoint.cancelRuleSession()
+
+        //Then
+        shouldThrow<IllegalStateException> {
+            endpoint.kb.conflictingCasesInCurrentRuleSession()
+        }.message shouldBe "Rule session not started."
+    }
+
+    @Test
     fun `After committing a rule the session case should be a cornerstone`() {
         val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
         val conclusion = endpoint.kb.conclusionManager.getOrCreate("Whatever")
@@ -271,13 +284,13 @@ internal class KBEndpointTest {
 
             val viewableCase1 = endpoint.viewableCase(kb.allCornerstoneCases().first().id!!)
             startRuleSessionToAddConclusion(id2, conclusion2)
-            cornerstoneForIndex(0) shouldBe viewableCase1
+            selectCornerstone(0).cornerstoneToReview shouldBe viewableCase1
             commitCurrentRuleSession()
             kb.allCornerstoneCases() shouldHaveSize 2
 
             val viewableCase2 = endpoint.viewableCase(kb.allCornerstoneCases()[1].id!!)
             startRuleSessionToAddConclusion(id3, conclusion3)
-            cornerstoneForIndex(1) shouldBe viewableCase2
+            selectCornerstone(1).cornerstoneToReview shouldBe viewableCase2
         }
     }
   

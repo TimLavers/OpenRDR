@@ -8,7 +8,10 @@ import io.mockk.verify
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.containsText
-import io.rippledown.model.condition.edit.*
+import io.rippledown.model.condition.edit.EditableContainsCondition
+import io.rippledown.model.condition.edit.EditableSuggestedCondition
+import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
+import io.rippledown.model.condition.edit.SuggestedCondition
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -20,6 +23,7 @@ class RuleMakerTest {
     private lateinit var allSuggestions: List<SuggestedCondition>
     private lateinit var conditionsShown: List<String>
     private lateinit var suggestionConditions: List<Condition>
+    private lateinit var handler: RuleMakerHandler
     private val notes = Attribute(99, "Notes")
 
     @Before
@@ -29,6 +33,8 @@ class RuleMakerTest {
         }
         conditionsShown = allSuggestions.map { it.asText() }
         suggestionConditions = allSuggestions.map { it.initialSuggestion() }
+        handler = mockk<RuleMakerHandler>(relaxed = true)
+
     }
 
     @Test
@@ -36,7 +42,7 @@ class RuleMakerTest {
         with(composeTestRule) {
             //Given
             setContent {
-                RuleMaker(allSuggestions, mockk(relaxed = true))
+                RuleMaker(allSuggestions, handler)
             }
 
             //Then
@@ -49,7 +55,7 @@ class RuleMakerTest {
         with(composeTestRule) {
             //Given
             setContent {
-                RuleMaker(allSuggestions, mockk(relaxed = true))
+                RuleMaker(allSuggestions, handler)
             }
 
             //When
@@ -65,7 +71,7 @@ class RuleMakerTest {
         with(composeTestRule) {
             //Given
             setContent {
-                RuleMaker(allSuggestions, mockk(relaxed = true))
+                RuleMaker(allSuggestions, handler)
             }
 
             //When
@@ -78,7 +84,6 @@ class RuleMakerTest {
 
     @Test
     fun `should call handler when the done button is clicked`() {
-        val handler = mockk<RuleMakerHandler>(relaxed = true)
         with(composeTestRule) {
             //Given
             setContent {
@@ -95,8 +100,24 @@ class RuleMakerTest {
     }
 
     @Test
+    fun `should call handler when the cancel button is clicked`() {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                RuleMaker(allSuggestions, handler)
+            }
+            clickAvailableCondition(2)
+
+            //When
+            clickCancelRuleButton()
+
+            //Then
+            verify { handler.onCancel() }
+        }
+    }
+
+    @Test
     fun `should call handler when conditions are added`() {
-        val handler = mockk<RuleMakerHandler>(relaxed = true)
         with(composeTestRule) {
             //Given
             setContent {
@@ -113,7 +134,6 @@ class RuleMakerTest {
 
     @Test
     fun `should call handler when conditions are removed`() {
-        val handler = mockk<RuleMakerHandler>(relaxed = true)
         with(composeTestRule) {
             //Given
             setContent {

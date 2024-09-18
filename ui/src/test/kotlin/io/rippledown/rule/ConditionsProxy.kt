@@ -3,7 +3,10 @@ package io.rippledown.rule
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
-import io.rippledown.constants.main.*
+import io.rippledown.constants.main.EDIT_CONDITION_CANCEL_BUTTON_DESCRIPTION
+import io.rippledown.constants.main.EDIT_CONDITION_FIELD_DESCRIPTION
+import io.rippledown.constants.main.EDIT_CONDITION_OK_BUTTON_DESCRIPTION
+import io.rippledown.constants.main.EDIT_CONDITION_TEXT_1_DESCRIPTION
 import io.rippledown.constants.rule.*
 
 fun ComposeTestRule.requireRuleMakerToBeDisplayed() {
@@ -89,7 +92,9 @@ fun ComposeTestRule.clickFinishRuleButton() {
     waitForIdle()
 }
 
+@OptIn(ExperimentalTestApi::class)
 fun ComposeTestRule.clickCancelRuleButton() {
+    waitUntil { onNodeWithContentDescription(CANCEL_RULE_BUTTON).isDisplayed() }
     onNodeWithContentDescription(CANCEL_RULE_BUTTON)
         .assertIsDisplayed()
         .performClick()

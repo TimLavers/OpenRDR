@@ -6,7 +6,7 @@ import androidx.compose.ui.window.application
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import io.rippledown.model.caseview.ViewableCase
+import io.mockk.verify
 import io.rippledown.model.createCase
 import io.rippledown.model.rule.CornerstoneStatus
 import org.junit.Before
@@ -47,7 +47,7 @@ class CornerstonePagerTest {
             }
 
             //Then
-            requireCornerstoneCase("$caseNamePrefix$index")
+            requireCornerstoneCase("${cornerstoneStatus.cornerstoneToReview?.name}")
 
         }
     }
@@ -67,7 +67,7 @@ class CornerstonePagerTest {
     }
 
     @Test
-    fun `clicking next should show the next cornerstone`() {
+    fun `clicking next should show call the handler with the index of the next cornerstone`() {
         with(composeTestRule) {
             //Given
             setContent {
@@ -78,14 +78,13 @@ class CornerstonePagerTest {
             clickNext()
 
             //Then
-            requireCornerstoneCase("$caseNamePrefix${index + 1}")
-
+            verify { handler.selectCornerstone(index + 1) }
         }
     }
 
 
     @Test
-    fun `clicking previous should show the previous cornerstone`() {
+    fun `clicking previous should show call the handler with the index of the previous cornerstone`() {
         with(composeTestRule) {
             //Given
             setContent {
@@ -96,7 +95,7 @@ class CornerstonePagerTest {
             clickPrevious()
 
             //Then
-            requireCornerstoneCase("$caseNamePrefix${index - 1}")
+            verify { handler.selectCornerstone(index - 1) }
         }
     }
 
@@ -112,7 +111,7 @@ class CornerstonePagerTest {
             clickExempt()
 
             //Then
-            coVerify { handler.exemptCornerstone(index) }
+            verify { handler.exemptCornerstone(index) }
         }
     }
 
@@ -127,41 +126,6 @@ class CornerstonePagerTest {
             requireIndexAndTotalToBeDisplayed(index, total)
         }
     }
-
-    @Test
-    fun `clicking next should update the navigation status`() {
-        with(composeTestRule) {
-            //Given
-            setContent {
-                CornerstonePager(cornerstoneStatus, handler)
-            }
-            requireIndexAndTotalToBeDisplayed(index, total)
-
-
-            //When
-            clickNext()
-
-            //Then
-            requireIndexAndTotalToBeDisplayed(index + 1, total)
-        }
-    }
-
-    @Test
-    fun `clicking previous should update the navigation status`() {
-        with(composeTestRule) {
-            //Given
-            setContent {
-                CornerstonePager(cornerstoneStatus, handler)
-            }
-            requireIndexAndTotalToBeDisplayed(index, total)
-
-            //When
-            clickPrevious()
-
-            //Then
-            requireIndexAndTotalToBeDisplayed(index - 1, total)
-        }
-    }
 }
 
 fun main() {
@@ -172,12 +136,10 @@ fun main() {
 
             CornerstonePager(
                 CornerstoneStatus(createCase("Greta"), 2, 5), object : CornerstonePagerHandler {
-                    override suspend fun selectCornerstone(index: Int): ViewableCase {
-                        return createCase("Greta ${index + 1}")
+                    override fun selectCornerstone(index: Int) {
                     }
 
                     override fun exemptCornerstone(index: Int) {
-                        TODO("Not yet implemented")
                     }
                 })
         }

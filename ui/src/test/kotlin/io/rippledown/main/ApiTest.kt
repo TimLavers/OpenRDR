@@ -183,6 +183,14 @@ class ApiTest {
     }
 
     @Test
+    fun `should cancel the current rule session`() = runTest {
+        val config = config {
+            expectedSessionCancel = true
+        }
+        Api(mock(config)).cancelRuleSession()
+    }
+
+    @Test
     fun shouldUpdateCornerstones() = runTest {
         val request = UpdateCornerstoneRequest(
             cornerstoneStatus = CornerstoneStatus(),
@@ -215,12 +223,12 @@ class ApiTest {
 
     @Test
     fun shouldSelectCornerstone() = runTest {
-        val selectedCornerstoneIndex = 42
+        val updatedCornerstoneStatus = CornerstoneStatus(createCase("Bondi"), 42, 100)
 
         val config = config {
-            expectedCornerstoneSelection = selectedCornerstoneIndex
-            returnCornerstone = case
+            expectedCornerstoneIndex = 42
+            returnCornerstoneStatus = updatedCornerstoneStatus
         }
-        Api(mock(config)).selectCornerstone(selectedCornerstoneIndex) shouldBe case
+        Api(mock(config)).selectCornerstone(42) shouldBe config.returnCornerstoneStatus
     }
 }

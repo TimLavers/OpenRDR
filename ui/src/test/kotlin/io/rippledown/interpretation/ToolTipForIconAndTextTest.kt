@@ -19,18 +19,16 @@ class ToolTipForIconAndTextTest {
 
     val toolTipText = "Go to Bondi Beach"
     val labelText = "Bondi"
-    val iconContentDescription = "Icon"
     val isSelected = false
 
     @Composable
-    private fun BondiToolTipAndText(badgeCount: Int = 0) {
+    private fun BondiToolTipAndText() {
         ToolTipForIconAndLabel(
             toolTipText = toolTipText,
             labelText = labelText,
             isSelected = isSelected,
             icon = painterResource("plus-minus_24.png"),
-            onClick = { },
-            badgeCount = badgeCount
+            onClick = { }
         )
     }
 
@@ -86,17 +84,6 @@ class ToolTipForIconAndTextTest {
             onNodeWithContentDescription(BADGE_CONTENT_DESCRIPTION).assertDoesNotExist()
         }
     }
-
-    @Test
-    fun `should show the badge if the count is greater than zero`() = runTest {
-        with(composeTestRule) {
-            //Given
-            setContent { BondiToolTipAndText(42) }
-
-            //Then
-            onNodeWithContentDescription(BADGE_CONTENT_DESCRIPTION, useUnmergedTree = true).assertTextEquals("42")
-        }
-    }
 }
 
 fun main() {
@@ -109,8 +96,7 @@ fun main() {
                 labelText = "Bondi",
                 isSelected = true,
                 icon = painterResource("plus-minus_24.png"),
-                onClick = { },
-                badgeCount = 42
+                onClick = { }
             )
         }
     }

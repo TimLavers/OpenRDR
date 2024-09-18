@@ -56,6 +56,8 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
         kb.startRuleSession(case(caseId), ChangeTreeToReplaceConclusion(toGo, replacement))
     }
 
+    fun cancelRuleSession() = kb.cancelRuleSession()
+
     fun addConditionToCurrentRuleBuildingSession(condition: Condition) {
         kb.addConditionToCurrentRuleSession(condition)
     }
@@ -130,23 +132,7 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
 
     private fun uninterpretedCase(id: Long) = kb.getProcessedCase(id)!!
 
-    /**
-     * @param cornerstoneIndex the 0-based index of the cornerstone to return
-     */
-    fun cornerstoneForIndex(cornerstoneIndex: Int): ViewableCase {
-        logger.info("about to get cc for index $cornerstoneIndex")
-        val cornerstones = kb.conflictingCasesInCurrentRuleSession()
-        logger.info("got cc for index          $cornerstoneIndex")
-        // TODO the copy() here is to prevent one thread overriding the
-        // interpretation while another is serializing the case
-        // in a client method. Need to fix this by perhaps making case immutable.
-        val cc = cornerstones[cornerstoneIndex]
-        logger.info("Original cc: ${System.identityHashCode(cc)}")
-        val copy = cc.copy()
-        logger.info("Copy cc: ${System.identityHashCode(copy)}")
-        return kb.viewableCase(copy)
-    }
-
     fun updateCornerstone(request: UpdateCornerstoneRequest) = kb.updateCornerstone(request)
+    fun selectCornerstone(index: Int) = kb.selectCornerstone(index)
     fun exemptCornerstone(index: Int) = kb.exemptCornerstone(index)
 }

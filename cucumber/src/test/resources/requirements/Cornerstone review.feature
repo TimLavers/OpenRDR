@@ -49,6 +49,7 @@ Feature: Reviewing cornerstone cases
     And I see the case Case1 as the current case
     And I start to build a rule to add the comment "Comment 4."
     And the cornerstone case indicator shows 1 of 2
+    And the case Case2 is shown as the cornerstone case
     And I click the next cornerstone case button
     And the case Case3 is shown as the cornerstone case
     When I click the previous cornerstone case button
@@ -84,7 +85,7 @@ Feature: Reviewing cornerstone cases
     And case Case4 is provided having data:
       | x | 1 |
     And the following rules have been defined:
-      | CASE  | COMMENT ADDED | CONDITION      |
+      | CASE  | COMMENT ADDED | CONDITION    |
       | Case1 | Comment 1.    | x is in case |
       | Case2 | Comment 2.    | x is in case |
       | Case3 | Comment 3.    | x is in case |
@@ -111,7 +112,7 @@ Feature: Reviewing cornerstone cases
     And case Case4 is provided having data:
       | x | 1 |
     And the following rules have been defined:
-      | CASE  | COMMENT ADDED | CONDITION      |
+      | CASE  | COMMENT ADDED | CONDITION    |
       | Case1 | Comment 1.    | x is in case |
       | Case2 | Comment 2.    | x is in case |
       | Case3 | Comment 3.    | x is in case |

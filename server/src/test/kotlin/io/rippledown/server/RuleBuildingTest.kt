@@ -100,7 +100,7 @@ internal class RuleBuildingTest {
         withClue("There are 3 cornerstones showing, so index 1 0-based corresponds to case3") {
 
         }
-        val cornerstone = kbEndpoint.cornerstoneForIndex(1) //0-based index
+        val cornerstone = kbEndpoint.selectCornerstone(1).cornerstoneToReview //0-based index
         cornerstone shouldBe kbEndpoint.viewableCase(cc3Id)
     }
 }

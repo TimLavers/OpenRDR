@@ -176,12 +176,12 @@ class RESTClient {
         return result
     }
 
-    fun createRuleToAddText(caseName: String, text: String, conditionText: String = ""): OperationResult {
+    fun createRuleToAddText(caseName: String, text: String, vararg conditions: String = arrayOf()): OperationResult {
         getCaseWithName(caseName)
         val conclusion = getOrCreateConclusion(text)
         startSessionToAddConclusionForCurrentCase(conclusion)
 
-        if (conditionText.isNotBlank()) {
+        conditions.forEach { conditionText ->
             addConditionForCurrentSession(
                 getOrCreateCondition(parseToCondition(conditionText))
             )

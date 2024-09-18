@@ -153,7 +153,6 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
 //                println("match: $match")
                 match
             }
-            println("ctxt: $ctxt")
             ctxt?.accessibleAction?.doAccessibleAction(0)
         }
     }

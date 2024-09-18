@@ -4,7 +4,6 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
@@ -415,6 +414,14 @@ class KBTest {
 
         shouldThrow<IllegalStateException> {
             kb.commitCurrentRuleSession()
+        }.message shouldBe noSessionMessage
+    }
+
+    @Test
+    fun `rule session must be started before it can be cancelled`() {
+        val noSessionMessage = "No rule session in progress."
+        shouldThrow<IllegalStateException> {
+            kb.cancelRuleSession()
         }.message shouldBe noSessionMessage
     }
 

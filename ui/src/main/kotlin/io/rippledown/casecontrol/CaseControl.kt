@@ -1,6 +1,5 @@
 package io.rippledown.casecontrol
 
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
@@ -17,7 +16,6 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.RuleConditionList
 import io.rippledown.model.condition.edit.SuggestedCondition
-import io.rippledown.model.diff.Diff
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
@@ -34,7 +32,6 @@ interface CaseControlHandler : Handler, CaseInspectionHandler, CornerstonePagerH
 }
 
 @Composable
-@Preview
 fun CaseControl(
     currentCase: ViewableCase?,
     cornerstoneStatus: CornerstoneStatus? = null,
@@ -61,11 +58,7 @@ fun CaseControl(
                 handler.setInfoMessage(NO_CORNERSTONES_TO_REVIEW_MSG)
             } else {
                 handler.setInfoMessage("")
-                CornerstonePager(cornerstoneStatus, object : CornerstonePagerHandler by handler {
-                    override fun exemptCornerstone(index: Int) {
-                        handler.exemptCornerstone(index)
-                    }
-                })
+                CornerstonePager(cornerstoneStatus, handler)
             }
 
             Spacer(modifier = Modifier.width(5.dp))
@@ -75,7 +68,9 @@ fun CaseControl(
                     handler.buildRule(ruleRequest)
                 }
 
-                override var onCancel = { handler.endRuleSession() }
+                override var onCancel = {
+                    handler.endRuleSession()
+                }
 
                 override var onUpdateConditions = { conditions: List<Condition> ->
                     val ccUpdateRequest = UpdateCornerstoneRequest(cornerstoneStatus, RuleConditionList(conditions))
