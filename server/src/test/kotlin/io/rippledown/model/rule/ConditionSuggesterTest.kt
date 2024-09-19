@@ -29,7 +29,8 @@ internal class ConditionSuggesterTest {
     private fun isNormalSuggestion(attribute: Attribute) = NonEditableSuggestedCondition(isNormal(null, attribute))
     private fun isHighSuggestion(attribute: Attribute) = NonEditableSuggestedCondition(isHigh(null, attribute))
     private fun isValueSuggestion(attribute: Attribute, value: String, signature: Signature = Current) = NonEditableSuggestedCondition(isCondition(null, attribute, value, signature))
-    private fun isNumericSuggestion(attribute: Attribute) = NonEditableSuggestedCondition(isNumeric( attribute))
+    private fun isNumericSuggestion(attribute: Attribute, signature: Signature) = NonEditableSuggestedCondition(isNumeric( attribute,null, signature))
+    private fun notNumericSuggestion(attribute: Attribute, signature: Signature) = NonEditableSuggestedCondition(notNumeric( attribute, null, signature))
     private fun greaterThanOrEqualsSuggestion(attribute: Attribute, value: String) = EditableSuggestedCondition(EditableGreaterThanEqualsCondition(attribute, EditableValue(value, Type.Real), Current))
     private fun lessThanOrEqualsSuggestion(attribute: Attribute, value: String) = EditableSuggestedCondition(EditableLessThanEqualsCondition(attribute, EditableValue(value, Type.Real), Current))
     private fun lowByAtMostSuggestion(attribute: Attribute) = EditableSuggestedCondition(EditableExtendedLowRangeCondition(attribute, Current))
@@ -59,7 +60,7 @@ internal class ConditionSuggesterTest {
     fun `single attribute multiple episodes with two identical textual values`() {
         val sessionCase = multiEpisodeCase(a, things, things)
         with(ConditionSuggester(setOf(a), sessionCase).suggestions()) {
-            this.size shouldBe 22
+            this.size shouldBe 27
             this shouldContain isPresentSuggestion(a)
 
             this shouldContain isValueSuggestion( a, things, Current)
@@ -67,16 +68,13 @@ internal class ConditionSuggesterTest {
             this shouldContain isValueSuggestion( a, things, AtLeast(1))
             this shouldContain isValueSuggestion( a, things, AtLeast(2))
             this shouldContain isValueSuggestion( a, things, AtMost(2))
-            this shouldContain isValueSuggestion( a, things, AtMost(3))
 
             this shouldContain doesNotContainTextSuggestion(a, Current)
             this shouldContain doesNotContainTextSuggestion(a, All)
             this shouldContain doesNotContainTextSuggestion(a, AtLeast(1))
             this shouldContain doesNotContainTextSuggestion(a, AtLeast(2))
-            this shouldContain doesNotContainTextSuggestion(a, AtLeast(3))
             this shouldContain doesNotContainTextSuggestion(a, AtMost(1))
             this shouldContain doesNotContainTextSuggestion(a, AtMost(2))
-            this shouldContain doesNotContainTextSuggestion(a, AtMost(3))
             this shouldContain doesNotContainTextSuggestion(a, No)
 
             this shouldContain containsTextSuggestion(a, things, Current)
@@ -84,9 +82,21 @@ internal class ConditionSuggesterTest {
             this shouldContain containsTextSuggestion(a, things, AtLeast(1))
             this shouldContain containsTextSuggestion(a, things, AtLeast(2))
             this shouldContain containsTextSuggestion(a, things, AtMost(2))
-            this shouldContain containsTextSuggestion(a, things, AtMost(3))
+
+            this shouldContain notNumericSuggestion(a, Current)
+            this shouldContain notNumericSuggestion(a, All)
+            this shouldContain notNumericSuggestion(a, AtLeast(1))
+            this shouldContain notNumericSuggestion(a, AtLeast(2))
+            this shouldContain notNumericSuggestion(a, AtMost(2))
+
+            this shouldContain isNumericSuggestion(a, AtMost(1))
+            this shouldContain isNumericSuggestion(a, AtMost(2))
+            this shouldContain isNumericSuggestion(a, No)
+
+            this shouldContain isSingleEpisodeCaseSuggestion()
         }
     }
+
     @Test
     fun `single attribute multiple episodes with three textual values`() {
         val sessionCase = multiEpisodeCase(a, "first", "second", "third")
@@ -96,8 +106,9 @@ internal class ConditionSuggesterTest {
             this shouldContain containsTextSuggestion(a, "third")
         }
     }
+
     @Test
-    fun `single attribute multiple episodes with manyu textual values`() {
+    fun `single attribute multiple episodes with many textual values`() {
         val sessionCase = multiEpisodeCase(a, "first", "second", "third")
         with(ConditionSuggester(setOf(a), sessionCase).suggestions()) {
             this shouldContain isPresentSuggestion(a)
@@ -222,6 +233,6 @@ internal class ConditionSuggesterTest {
         checkContainsStandard3(conditions, attribute, value)
         conditions shouldContain greaterThanOrEqualsSuggestion( attribute, value)
         conditions shouldContain lessThanOrEqualsSuggestion( attribute, value)
-        conditions shouldContain isNumericSuggestion( attribute)
+        conditions shouldContain isNumericSuggestion( attribute, Current)
     }
 }

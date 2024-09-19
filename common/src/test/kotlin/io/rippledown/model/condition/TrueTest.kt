@@ -6,12 +6,12 @@ import kotlin.test.Test
 class TrueTest: ConditionTestBase() {
 
     @Test
-    public fun serialiazationTest() {
+    fun serializationTest() {
         serializeDeserialize(True) shouldBe True
     }
 
     @Test
-    public fun holdsForCaseTest() {
+    fun holdsForCaseTest() {
         True.holds(clinicalNotesCase("stuff")) shouldBe true
     }
 

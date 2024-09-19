@@ -1,10 +1,12 @@
 package io.rippledown.model.condition.edit
 
 import io.rippledown.model.*
+import io.rippledown.model.condition.And
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.edit.Type.Integer
 import io.rippledown.model.condition.episodic.predicate.*
+import io.rippledown.model.condition.episodic.signature.AtLeast
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.episodic.signature.Signature
 import kotlinx.serialization.KSerializer
@@ -25,7 +27,11 @@ sealed class EditableExtendedRangeCondition(val attribute: Attribute, val signat
         return EpisodicCondition(attribute, createRangePredicate(limit), signature)
     }
 
-    override fun prerequisite() = EpisodicCondition(attribute, prerequisitePredicate(), signature)
+    override fun prerequisite(): Condition {
+        val someResultHasARange = EpisodicCondition(attribute, HighOrNormalOrLow, AtLeast(1))
+        val rangesMatch = EpisodicCondition(attribute, prerequisitePredicate(), signature)
+        return And(someResultHasARange, rangesMatch)
+    }
 
     abstract fun createRangePredicate(limit: Int): ExtendedRangeFunction
     abstract fun prerequisitePredicate(): TestResultPredicate

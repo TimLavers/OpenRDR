@@ -54,29 +54,31 @@ class ConditionSuggester(
     }
 
     private fun attributeInCaseConditions() = attributesInCase
-        .map { presentAttributeCondition(it) }
+        .map { isInCase(it) }
         .map { NonEditableSuggestedCondition(it) }
         .toSet()
 
     private fun attributeNotInCaseConditions() = attributesNotInCase
-        .map { absentAttributeCondition(it) }
+        .map { isNotInCase(it) }
         .map { NonEditableSuggestedCondition(it) }
         .toSet()
 
-    private fun presentAttributeCondition(attribute: Attribute) =
-        CaseStructureCondition(null, IsPresentInCase(attribute))
+    private fun isInCase(attribute: Attribute) = CaseStructureCondition(null, IsPresentInCase(attribute))
 
-    private fun absentAttributeCondition(attribute: Attribute) =
-        CaseStructureCondition(null, IsAbsentFromCase(attribute))
+    private fun isNotInCase(attribute: Attribute) = CaseStructureCondition(null, IsAbsentFromCase(attribute))
 
     private fun episodicFactories(): List<SuggestionFunction> {
         val signaturesToUse = mutableListOf<Signature>(Current)
+        if (sessionCase.numberOfEpisodes() > 2) {
+            signaturesToUse.add(AtMost(3))
+            signaturesToUse.add(AtLeast(3))
+        }
         if (sessionCase.numberOfEpisodes() > 1) {
             signaturesToUse.add(All)
-            for (i in 1..3) {
-                signaturesToUse.add(AtMost(i))
-                signaturesToUse.add(AtLeast(i))
-            }
+            signaturesToUse.add(AtMost(1))
+            signaturesToUse.add(AtLeast(1))
+            signaturesToUse.add(AtMost(2))
+            signaturesToUse.add(AtLeast(2))
             signaturesToUse.add(No)
         }
         return signaturesToUse.flatMap { episodicFactoriesForSignature(it) }
@@ -154,7 +156,6 @@ class LessThanOrEqualsSuggestion(signature: Signature) : CutoffSuggestion(signat
 
 abstract class ExtendedRangeSuggestion : SuggestionFunction {
     abstract fun createEditableCondition(attribute: Attribute): EditableCondition
-//    abstract fun rangeAndValueSuitable(referenceRange: ReferenceRange, value: Value): Boolean
     override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
         if (testResult == null) return null
         return EditableSuggestedCondition(createEditableCondition(attribute))
