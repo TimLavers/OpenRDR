@@ -50,7 +50,9 @@ class ConditionSuggester(
         attributeInCaseConditions() + attributeNotInCaseConditions() + episodeCountConditions()
 
     private fun episodeCountConditions(): List<SuggestedCondition> {
-        return listOf(NonEditableSuggestedCondition(CaseStructureCondition(IsSingleEpisodeCase)))
+        return if (sessionCase.numberOfEpisodes() == 1) {
+            listOf(NonEditableSuggestedCondition(CaseStructureCondition(IsSingleEpisodeCase)))
+        } else emptyList()
     }
 
     private fun attributeInCaseConditions() = attributesInCase
@@ -208,13 +210,8 @@ class IsSuggestion(private val signature: Signature) : SuggestionFunction {
 class NonEditableConditionSuggester(private val predicate: TestResultPredicate, private val signature: Signature) :
     SuggestionFunction {
     override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
-        return if (testResult != null) NonEditableSuggestedCondition(
-            EpisodicCondition(
-                attribute,
-                predicate,
-                signature
-            )
-        ) else null
+        if (testResult == null) return null
+        return NonEditableSuggestedCondition(EpisodicCondition(attribute, predicate, signature))
     }
 }
 class RangeConditionSuggester(private val predicate: TestResultPredicate, private val signature: Signature) :

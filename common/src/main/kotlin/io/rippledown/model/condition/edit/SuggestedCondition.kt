@@ -2,6 +2,7 @@ package io.rippledown.model.condition.edit
 
 import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.True
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -14,10 +15,10 @@ sealed interface SuggestedCondition {
     fun shouldBeUsedAtMostOncePerRule() = true
 }
 @Serializable
-data class NonEditableSuggestedCondition(val initialSuggestion: Condition, val filter: Condition = initialSuggestion): SuggestedCondition {
+data class NonEditableSuggestedCondition(val initialSuggestion: Condition, val filter: Condition = True): SuggestedCondition {
     override fun initialSuggestion() = initialSuggestion
 
-    override fun shouldBeSuggestedForCase(case: RDRCase) = filter.holds(case)
+    override fun shouldBeSuggestedForCase(case: RDRCase) = filter.holds(case) && initialSuggestion.holds(case)
 
     override fun isEditable() = false
 
