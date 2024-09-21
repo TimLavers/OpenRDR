@@ -13,18 +13,16 @@ class ExtendedHighRangeSuggestionTest: ConditionFactoryTestBase() {
     fun suggestion() {
         with(ExtendedHighRangeSuggestion(Current)) {
             invoke(tsh, null) shouldBe null
-            invoke(tsh, tr("whatever")) shouldBe null
-            invoke(tsh, tr("1.9")) shouldBe null
-            invoke(tsh, tr("1.9", rr(null, "10.0"))) shouldBe null
-            invoke(tsh, tr("1.9", rr("4.0", "10.0"))) shouldBe null
-            invoke(tsh, tr("6.9", rr("4.0", "10.0"))) shouldBe null
-            invoke(tsh, tr("1.9", rr("4.0", null))) shouldBe null
+            invoke(tsh, tr("1.9", rr(null, "10.0"))) shouldNotBe null
+            invoke(tsh, tr("1.9", rr("4.0", "10.0"))) shouldNotBe null
+            invoke(tsh, tr("6.9", rr("4.0", "10.0"))) shouldNotBe null
+            invoke(tsh, tr("1.9", rr("4.0", null))) shouldNotBe null
             invoke(tsh, tr("10.9", rr("4.0", "10.0"), "mg/L")) shouldNotBe null
-            invoke(tsh, tr("na", rr("4.0", "5.9"), "mg/L")) shouldBe null
+            invoke(tsh, tr("na", rr("4.0", "5.9"), "mg/L")) shouldNotBe null
         }
 
         with(ExtendedHighRangeSuggestion(All).invoke(tsh, tr("5.8", rr("1.5", "5.0")))!!) {
-            initialSuggestion() shouldBe slightlyHigh(null, tsh,  10)
+            initialSuggestion() shouldBe slightlyHigh(null, tsh,  10, All)
             isEditable() shouldBe true
             editableCondition() shouldBe EditableExtendedHighRangeCondition(tsh, All)
         }

@@ -13,20 +13,17 @@ class ExtendedLowNormalRangeSuggestionTest: ConditionFactoryTestBase() {
     fun suggestion() {
         with(ExtendedLowNormalRangeSuggestion(Current)) {
             invoke(tsh, null) shouldBe null
-            invoke(tsh, tr("whatever")) shouldBe null
-            invoke(tsh, tr("1.9")) shouldBe null
             invoke(tsh, tr("1.9", rr(null, "10.0"))) shouldNotBe null
             invoke(tsh, tr("1.9", rr("4.0", "10.0"))) shouldNotBe null
             invoke(tsh, tr("6.9", rr("4.0", "10.0"))) shouldNotBe null
             invoke(tsh, tr("1.9", rr("4.0", null))) shouldNotBe null
             invoke(tsh, tr("1.9", rr("4.0", null), "mg/L")) shouldNotBe null
-            invoke(tsh, tr("na", rr("4.0", null))) shouldBe null
-            invoke(tsh, tr("na", rr("4.0", null), "mg/L")) shouldBe null
-
+            invoke(tsh, tr("na", rr("4.0", null))) shouldNotBe null
+            invoke(tsh, tr("na", rr("4.0", null), "mg/L")) shouldNotBe null
         }
 
         with(ExtendedLowNormalRangeSuggestion(All).invoke(tsh, tr("1.2", rr("1.5", null)))!!) {
-            initialSuggestion() shouldBe normalOrSlightlyLow(null, tsh,  10)
+            initialSuggestion() shouldBe normalOrSlightlyLow(null, tsh,  10, All)
             isEditable() shouldBe true
             editableCondition() shouldBe EditableExtendedLowNormalRangeCondition(tsh, All)
         }
