@@ -23,6 +23,12 @@ data object IsNumeric: TestResultPredicate {
 
     override fun description(plural: Boolean) = if (plural) "are numeric" else "is numeric"
 }
+@Serializable
+data object IsNotNumeric: TestResultPredicate {
+    override fun evaluate(result: TestResult) = result.value.real == null
+
+    override fun description(plural: Boolean) = if (plural) "are not numeric" else "is not numeric"
+}
 
 @Serializable
 data class Contains(val toFind: String): TestResultPredicate {

@@ -14,9 +14,9 @@ class CreateKbFromSampleOperator(dialog: ComposeDialog) : CreateKbBaseOperator(d
 
     fun createKbFromSample(name: String, sampleTitle: String) {
         dialog.accessibleContext.findAndClickRadioButton("select $sampleTitle")
-        Thread.sleep(100)
+        Thread.sleep(1000)
         enterName(name)
-        Thread.sleep(100)
+        Thread.sleep(1000)
         clickCreateButton()
         Thread.sleep(1000)
     }

@@ -42,8 +42,8 @@ class KbControlsPO(private val contextProvider: () -> AccessibleContext) {
         Thread.sleep(1_000)
         clickDropdownItem(CREATE_KB_FROM_SAMPLE_TEXT)
         Thread.sleep(1_000)
-        val dialog = findComposeDialogThatIsShowing()
-        val createKbOperator = CreateKbFromSampleOperator(dialog!!)
+        val dialog = waitForComposeDialogToShow()
+        val createKbOperator = CreateKbFromSampleOperator(dialog)
         createKbOperator.createKbFromSample(name, sampleTitle)
     }
 

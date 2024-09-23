@@ -13,3 +13,4 @@ sealed class Condition {
     abstract fun alignAttributes(idToAttribute: (Int) -> Attribute): Condition
     abstract fun sameAs(other: Condition): Boolean
 }
+

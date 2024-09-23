@@ -161,6 +161,21 @@ class RDRCaseTest {
     }
 
     @Test
+    fun numberOfEpisodes() {
+        RDRCase(CaseId(8, "Empty"), emptyMap()).numberOfEpisodes() shouldBe 0
+
+        val builder1 = RDRCaseBuilder()
+        builder1.addResult(tsh, yesterday, TestResult("9.4"))
+        builder1.build("1").numberOfEpisodes() shouldBe 1
+
+        val builder2 = RDRCaseBuilder()
+        builder2.addResult(tsh, yesterday, TestResult("9.4"))
+        builder2.addResult(tsh, lastWeek, TestResult("9.4"))
+        builder2.addResult(tsh, today, TestResult("9.9"))
+        builder2.build("3").numberOfEpisodes() shouldBe 3
+    }
+
+    @Test
     fun attributes() {
         assertEquals(0, RDRCase(CaseId(77, "Empty"), emptyMap()).attributes.size)
 

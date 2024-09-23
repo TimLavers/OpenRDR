@@ -2,35 +2,48 @@ package io.rippledown.model.condition
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
-import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.episodic.predicate.*
+import io.rippledown.model.condition.episodic.signature.*
+import io.rippledown.model.condition.series.Decreasing
+import io.rippledown.model.condition.series.Increasing
 import io.rippledown.model.condition.structural.IsAbsentFromCase
 import io.rippledown.model.condition.structural.IsPresentInCase
+import io.rippledown.model.condition.structural.IsSingleEpisodeCase
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 fun isLow(id: Int? = null,attribute: Attribute) = EpisodicCondition(id, attribute, Low, Current)
 fun isNormal(id: Int? = null,attribute: Attribute) = EpisodicCondition(id, attribute, Normal, Current)
 fun isHigh(id: Int? = null, attribute: Attribute) = EpisodicCondition(id, attribute, High, Current)
-fun isCondition(id: Int? = null, attribute: Attribute, text: String) = EpisodicCondition(id, attribute, Is(text), Current)
-fun containsText(id: Int? = null, attribute: Attribute, text: String) = EpisodicCondition(id, attribute, Contains(text), Current)
+fun isCondition(id: Int? = null, attribute: Attribute, text: String, signature: Signature = Current) = EpisodicCondition(id, attribute, Is(text), signature)
+fun containsText(id: Int? = null, attribute: Attribute, text: String, signature: Signature = Current) = EpisodicCondition(id, attribute, Contains(text), signature)
+fun doesNotContainText(id: Int? = null, attribute: Attribute, text: String) = EpisodicCondition(id, attribute, DoesNotContain(text), Current)
+fun allDoNotContainText(id: Int? = null, attribute: Attribute, text: String) = EpisodicCondition(id, attribute, DoesNotContain(text), All)
 fun hasCurrentValue(id: Int? = null, attribute: Attribute) = EpisodicCondition(id, attribute, IsNotBlank, Current)
 fun hasNoCurrentValue(id: Int? = null, attribute: Attribute) = EpisodicCondition(id, attribute, IsBlank, Current)
 fun greaterThanOrEqualTo(id: Int? = null, attribute: Attribute, d: Double) = EpisodicCondition(id, attribute, GreaterThanOrEquals(d), Current)
 fun lessThanOrEqualTo(id: Int? = null, attribute: Attribute, d: Double) = EpisodicCondition(id, attribute, LessThanOrEquals(d), Current)
-fun slightlyLow(id: Int? = null, attribute: Attribute, cutoff: Int) = EpisodicCondition(id, attribute, LowByAtMostSomePercentage(cutoff), Current)
-fun normalOrSlightlyLow(id: Int? = null, attribute: Attribute, cutoff: Int) = EpisodicCondition(id, attribute, NormalOrLowByAtMostSomePercentage(cutoff), Current)
-fun normalOrSlightlyHigh(id: Int? = null, attribute: Attribute, cutoff: Int) = EpisodicCondition(id, attribute, NormalOrHighByAtMostSomePercentage(cutoff), Current)
-fun slightlyHigh(id: Int? = null, attribute: Attribute, cutoff: Int) = EpisodicCondition(id, attribute, HighByAtMostSomePercentage(cutoff), Current)
+fun slightlyLow(id: Int? = null, attribute: Attribute, cutoff: Int, signature: Signature=Current) = EpisodicCondition(id, attribute, LowByAtMostSomePercentage(cutoff), signature)
+fun normalOrSlightlyLow(id: Int? = null, attribute: Attribute, cutoff: Int, signature: Signature=Current) = EpisodicCondition(id, attribute, NormalOrLowByAtMostSomePercentage(cutoff), signature)
+fun normalOrSlightlyHigh(id: Int? = null, attribute: Attribute, cutoff: Int, signature: Signature=Current) = EpisodicCondition(id, attribute, NormalOrHighByAtMostSomePercentage(cutoff), signature)
+fun slightlyHigh(id: Int? = null, attribute: Attribute, cutoff: Int, signature: Signature=Current) = EpisodicCondition(id, attribute, HighByAtMostSomePercentage(cutoff), signature)
+fun isSingleEpisodeCase(id: Int? = null ) = CaseStructureCondition(id, IsSingleEpisodeCase)
 fun isPresent(attribute: Attribute, id: Int? = null ) = CaseStructureCondition(id, IsPresentInCase(attribute))
 fun isAbsent(attribute: Attribute, id: Int? = null) = CaseStructureCondition(id, IsAbsentFromCase(attribute))
+fun isNumeric(attribute: Attribute, id: Int? = null, signature: Signature = Current) = EpisodicCondition(id, attribute, IsNumeric, signature)
+fun notNumeric(attribute: Attribute, id: Int? = null, signature: Signature = Current) = EpisodicCondition(id, attribute, IsNotNumeric, signature)
+fun increasing(attribute: Attribute, id: Int? = null) = SeriesCondition(id, attribute, Increasing)
+fun decreasing(attribute: Attribute, id: Int? = null) = SeriesCondition(id, attribute, Decreasing)
+fun allNumeric(attribute: Attribute, id: Int? = null) = EpisodicCondition(id, attribute, IsNumeric, All)
+fun noneNumeric(attribute: Attribute, id: Int? = null) = EpisodicCondition(id, attribute, IsNumeric, No)
+fun atLeastNumeric(count: Int, attribute: Attribute, id: Int? = null) = EpisodicCondition(id, attribute, IsNumeric, AtLeast(count))
+fun atMostNumeric(count: Int, attribute: Attribute, id: Int? = null) = EpisodicCondition(id, attribute, IsNumeric, AtMost(count))
 
 fun rr(low: String?, high: String?) = ReferenceRange(low, high)
 fun tr(value: String) = TestResult(value, null, null)
 fun tr(value: String, referenceRange: ReferenceRange) = TestResult(value, referenceRange)
 fun tr(value: String, units: String) = TestResult(value, null, units)
 fun tr(value: String, referenceRange: ReferenceRange,units: String) = TestResult(value, referenceRange, units)
-
 fun v(value: String) = Value(value)
 
 open class ConditionTestBase {
@@ -45,9 +58,11 @@ open class ConditionTestBase {
         return attributesById[id]!!
     }
 
-    fun glucoseOnlyCase(): RDRCase {
+    fun glucoseOnlyCase() = glucoseOnlyCase("0.667")
+
+    fun glucoseOnlyCase(value: String): RDRCase {
         val builder1 = RDRCaseBuilder()
-        builder1.addValue(glucose, defaultDate,"0.667")
+        builder1.addValue(glucose, defaultDate,value)
         return builder1.build("Glucose Only")
     }
 
@@ -60,6 +75,7 @@ open class ConditionTestBase {
     fun multiEpisodeClinicalNotesCase(vararg notes: String) = multiEpisodeCase(clinicalNotes, *notes)
 
     fun multiEpisodeTSHCase(vararg values: String) = multiEpisodeCase(tsh, *values)
+    fun multiEpisodeGlucoseCase(vararg values: String) = multiEpisodeCase(glucose, *values)
 
     private fun multiEpisodeCase(attribute: Attribute, vararg values: String): RDRCase {
         val builder1 = RDRCaseBuilder()
@@ -86,7 +102,13 @@ open class ConditionTestBase {
     fun lowTSHCase(): RDRCase {
         val builder1 = RDRCaseBuilder()
         builder1.addResult(tsh, defaultDate , TestResult("0.30", tshRange, "pmol/L"))
-        return builder1.build("HighTSHCase")
+        return builder1.build("LowTSHCase")
+    }
+
+    fun normalTSHCase(): RDRCase {
+        val builder1 = RDRCaseBuilder()
+        builder1.addResult(tsh, defaultDate , TestResult("1.30", tshRange, "pmol/L"))
+        return builder1.build("NormalTSHCase")
     }
 
     fun tshValueNonNumericCase(): RDRCase {
