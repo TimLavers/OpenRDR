@@ -3,14 +3,12 @@ package io.rippledown.model.condition
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.kotest.matchers.types.shouldNotBeSameInstanceAs
-import io.rippledown.model.RDRCaseBuilder
-import io.rippledown.model.TestResult
+import io.rippledown.model.*
 import io.rippledown.model.condition.episodic.predicate.Contains
 import io.rippledown.model.condition.episodic.predicate.Low
 import io.rippledown.model.condition.episodic.predicate.Normal
 import io.rippledown.model.condition.episodic.signature.All
 import io.rippledown.model.condition.episodic.signature.Current
-import io.rippledown.model.defaultDate
 import kotlin.test.Test
 
 class EpisodicConditionTest: ConditionTestBase() {
@@ -86,6 +84,8 @@ class EpisodicConditionTest: ConditionTestBase() {
         // One without an id.
         val idLess = EpisodicCondition(null, tsh, Low, Current)
         serializeDeserialize(idLess) shouldBe idLess
+
+        checkSerializationIsThreadSafe(tshLow)
     }
 
     @Test

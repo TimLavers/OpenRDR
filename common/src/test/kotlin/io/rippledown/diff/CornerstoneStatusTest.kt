@@ -1,12 +1,9 @@
 package io.rippledown.diff
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.Attribute
-import io.rippledown.model.RDRCase
-import io.rippledown.model.RDRCaseBuilder
+import io.rippledown.model.*
 import io.rippledown.model.caseview.CaseViewProperties
 import io.rippledown.model.caseview.ViewableCase
-import io.rippledown.model.defaultDate
 import io.rippledown.model.rule.CornerstoneStatus
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -26,10 +23,10 @@ class CornerstoneStatusTest {
             indexOfCornerstoneToReview = 42,
             numberOfCornerstones = 99
         )
-        val json = Json { allowStructuredMapKeys = true }
-        val serialized = json.encodeToString(cornerstoneStatus)
-        val deserialized = json.decodeFromString<CornerstoneStatus>(serialized)
+        val deserialized = serializeDeserialize(cornerstoneStatus)
         deserialized shouldBe cornerstoneStatus
+
+        checkSerializationIsThreadSafe(cornerstoneStatus)
     }
 
     private fun caseViewProperties() = CaseViewProperties(listOf(abc, tsh, xyz))

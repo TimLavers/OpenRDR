@@ -43,12 +43,7 @@ object RDRCaseSerializer : KSerializer<RDRCase> {
         encoder.encodeStructure(descriptor) {
             encodeSerializableElement(descriptor, 0, idSerializer, value.caseId)
             encodeSerializableElement(descriptor, 1, mapSerializer, value.data)
-            encodeSerializableElement(
-                descriptor,
-                2,
-                interpretationRulesSerializer,
-                value.interpretation.ruleSummaries
-            )
+            encodeSerializableElement(descriptor,2, interpretationRulesSerializer, value.interpretation.ruleSummaries)
         }
     }
 
