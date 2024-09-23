@@ -23,6 +23,11 @@ class NonEditableSuggestedConditionTest: ConditionTestBase() {
     }
 
     @Test
+    fun shouldBeUsedAtMostOncePerRuleTes() {
+        nonEditableSuggestedCondition.shouldBeUsedAtMostOncePerRule() shouldBe true
+    }
+
+    @Test
     fun editableConditionTest() {
         nonEditableSuggestedCondition.editableCondition() shouldBe null
     }

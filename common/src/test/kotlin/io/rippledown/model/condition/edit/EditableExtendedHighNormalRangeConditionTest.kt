@@ -3,39 +3,52 @@ package io.rippledown.model.condition.edit
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.condition.ConditionTestBase
 import io.rippledown.model.condition.EpisodicCondition
+import io.rippledown.model.condition.episodic.predicate.HighOrNormal
 import io.rippledown.model.condition.episodic.predicate.NormalOrHighByAtMostSomePercentage
+import io.rippledown.model.condition.episodic.signature.All
 import io.rippledown.model.condition.episodic.signature.Current
+import io.rippledown.model.condition.episodic.signature.No
 import io.rippledown.model.serializeDeserialize
 import kotlin.test.Test
 
 class EditableExtendedHighNormalRangeConditionTest: ConditionTestBase() {
-    private val ercHighNormal = EditableExtendedHighNormalRangeCondition(tsh)
+    private val ercHighNormalCurrent = EditableExtendedHighNormalRangeCondition(tsh, Current)
+    private val ercHighNormalAll = EditableExtendedHighNormalRangeCondition(tsh, All)
 
     @Test
     fun serializationTest() {
-        serializeDeserialize(ercHighNormal) shouldBe ercHighNormal
+        serializeDeserialize(ercHighNormalCurrent) shouldBe ercHighNormalCurrent
+        serializeDeserialize(ercHighNormalAll) shouldBe ercHighNormalAll
     }
 
     @Test
     fun fixedTextPart1() {
-        ercHighNormal.fixedTextPart1() shouldBe "${tsh.name} is normal or high by at most "
+        ercHighNormalCurrent.fixedTextPart1() shouldBe "${tsh.name} is normal or high by at most "
     }
 
     @Test
     fun condition() {
-        ercHighNormal.condition("12") shouldBe EpisodicCondition(null, tsh, NormalOrHighByAtMostSomePercentage(12), Current)
+        ercHighNormalCurrent.condition("12") shouldBe EpisodicCondition(null, tsh, NormalOrHighByAtMostSomePercentage(12), Current)
+        ercHighNormalAll.condition("12") shouldBe EpisodicCondition(null, tsh, NormalOrHighByAtMostSomePercentage(12), All)
     }
 
     @Test
     fun equalsTest() {
-        ercHighNormal.equals(null) shouldBe false
-        ercHighNormal.equals(tsh) shouldBe false
-        ercHighNormal.equals(EditableExtendedHighNormalRangeCondition(glucose)) shouldBe false
-        ercHighNormal.equals(EditableExtendedHighNormalRangeCondition(tsh)) shouldBe true
+        ercHighNormalCurrent.equals(null) shouldBe false
+        ercHighNormalCurrent.equals(tsh) shouldBe false
+        ercHighNormalCurrent.equals(EditableExtendedHighNormalRangeCondition(glucose, Current)) shouldBe false
+        ercHighNormalCurrent.equals(EditableExtendedHighNormalRangeCondition(tsh, No)) shouldBe false
+        ercHighNormalCurrent.equals(EditableExtendedHighNormalRangeCondition(tsh, Current)) shouldBe true
     }
 
     @Test
     fun hashCodeTest() {
-        ercHighNormal.hashCode() shouldBe EditableExtendedHighNormalRangeCondition(tsh).hashCode()
+        ercHighNormalCurrent.hashCode() shouldBe EditableExtendedHighNormalRangeCondition(tsh, Current).hashCode()
+    }
+
+    @Test
+    fun prerequisitePredicate() {
+        ercHighNormalCurrent.prerequisitePredicate() shouldBe HighOrNormal
+        ercHighNormalAll.prerequisitePredicate() shouldBe HighOrNormal
     }
 }

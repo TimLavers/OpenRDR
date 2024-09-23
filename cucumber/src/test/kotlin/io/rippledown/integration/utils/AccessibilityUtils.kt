@@ -147,6 +147,19 @@ fun ComposeWindow.waitForWindowToShow() {
     }
 }
 
+fun waitForComposeDialogToShow(): ComposeDialog {
+    var loop = 0
+    var dialog: ComposeDialog? = null
+    while (dialog == null && loop++ < 50) {
+        Thread.sleep(100)
+        dialog = findComposeDialogThatIsShowing()
+    }
+    require(dialog != null) {
+        "No dialog found"
+    }
+    return dialog
+}
+
 fun findComposeDialogThatIsShowing(): ComposeDialog? {
     val allWindows = java.awt.Window.getWindows()
     val d = allWindows.firstOrNull { w -> w is ComposeDialog && w.isShowing }

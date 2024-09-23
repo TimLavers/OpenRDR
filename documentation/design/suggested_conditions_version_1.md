@@ -4,13 +4,11 @@ we would like the user experience of building
 rules to include accurate suggestions for conditions based on the change being made to the case,
 the values in the case, and the values in the cornerstone case, if there is one.
 
-A first step towards this is a system that generates conditions based on what is in the
-case for which the rule is being written and the cornerstone.
-
 ## Basic approach
 The first approach we will take will work by:
  - enumerating all possible conditions that include the attributes present in the session case
  - excluding those that are not true for the session case
+ - excluding those that are true for trivial reasons or that are otherwise irrelevant
  - sorting the remaining conditions
 
 ### Enumeration of all conditions
@@ -22,8 +20,9 @@ enumerate all of the possible conditions that use the attributes available in a 
 An episodic condition consists of an attribute, a predicate and a signature.
 We can build episodic conditions by enumerating across the attributes
  in the session case, the known predicates and the known signatures.
-If the session case has just one episode, then it makes sense to restrict
-our enumeration of signatures to `current` alone.
+We can restrict the list of signatures to match the number of episodes in the case.
+For example, if the session case has just one episode, then it makes sense to restrict
+the signatures to `current` alone.
 
 #### Series conditions
 A series condition consists of an attribute and a series predicate.
@@ -48,22 +47,29 @@ The user is most likely to pick suggested conditions that:
 for the case). We should give precedence to conditions that are true for these.
 
 ## Which conditions should be suggested?
-In a rule session the user is adding conditions to a rule that describe the
-kinds of cases for which the change defined by the rule is to apply.
+In a rule session, the user adds conditions that describe the
+kinds of cases for which the rule is to apply.
 These conditions need to be true for the case for which the rule is being built.
-Some suggested conditions cannot be changed by the user. For example, `TSH is high`
-can not be edited at all, whereas `Notes is "On Amiodarone"` can be edited but
-not in a way that makes it applicable to the session case.
+Some suggested conditions cannot be changed by the user, for example, `TSH is high`.
+These should be provided as suggestions if and only if they are true 
+for the case.
+Other conditions can be edited, for example `Notes is "_"`.
+We should provide these as suggestions if they can be edited
+in a way that makes them true for the session case.
 
-On the other hand, if a suggestion is editable, for example `TSH is low by at most _%`,
-then whether it applies to the session case depends on what the user sets the
-variable to be. 
+There are some potential suggestions that, though editable, could never
+result in a condition that is true for the case.
+If the session case has a current `TSH` value that is not a number,
+then `TSH ≥ _` should not be suggested. 
 
-Therefore, our algorithm for deciding whether a condition should be made is:
+Therefore, our algorithm for deciding whether a condition should be suggested is:
 - if it is not editable, suggest it if it applies to the session case
-- if it is editable, suggest it if there's the possibility of
-  the user editing it in such a way that it applies to the session case.
+- if it is editable, suggest it unless we know that there is no way of editing it so that it applies to the session case.
 
-If the session case has a current `TSH` value that has no reference range, 
-then conditions such as `TSH is low by at most _%` should not
-be suggested.
+## Editable suggested conditions
+For a condition like `TSH ≥ _`, it only makes sense for one version of that
+condition to be used in a rule. By contrast, we might add both
+`Clinical Notes contains "Emergency Room"` and 
+`Clinical Notes contains "mania"` in a rule.
+Editable suggestions get treated differently depending
+on this property.

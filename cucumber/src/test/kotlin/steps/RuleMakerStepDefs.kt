@@ -296,18 +296,23 @@ fun addConditionsAndFinishRule(dataTable: DataTable) {
     if (dataTable.width() == 1) {
         addNonEditableConditionsAndFinishRule(dataTable.asList())
     } else {
-        addEditableConditionsAndFinishRule(dataTable.asLists())
+        addConditionsThatMayBeEditable(dataTable.asLists())
     }
 }
 
-fun addEditableConditionsAndFinishRule(conditionsWithHints: List<List<String>>) {
+fun addConditionsThatMayBeEditable(conditionsWithHints: List<List<String>>) {
     conditionsWithHints.forEach { conditionWithHints ->
         pause(100)
-        ruleMakerPO().clickConditionStartingWithText(conditionWithHints[1])
-        pause(100)
-        ruleMakerPO().setEditableValue(conditionWithHints[2])
-        pause(100)
-        ruleMakerPO().requireSelectedConditionsContains(conditionWithHints[0])
+        if (conditionWithHints[1] != null && conditionWithHints[1].isNotBlank()) {
+            ruleMakerPO().clickConditionStartingWithText(conditionWithHints[1])
+            pause(200)
+            ruleMakerPO().setEditableValue(conditionWithHints[2])
+            pause(100)
+            ruleMakerPO().requireSelectedConditionsContains(conditionWithHints[0])
+        } else {
+            ruleMakerPO().clickConditionStartingWithText(conditionWithHints[0])
+            pause(100)
+        }
     }
     pause(100)
     ruleMakerPO().clickDoneButton()
