@@ -72,12 +72,12 @@ class ViewableCaseTest {
         withClue("sanity check") {
             viewableCase.latestText() shouldBe surfComment
         }
-        val format = Json { allowStructuredMapKeys = true }
-        val serialized = format.encodeToString(viewableCase)
 
-        val deserialized = format.decodeFromString<ViewableCase>(serialized)
+        val deserialized = serializeDeserialize(viewableCase)
         deserialized shouldBe viewableCase
         deserialized.latestText() shouldBe surfComment
+
+        checkSerializationIsThreadSafe(viewableCase)
     }
 
     private fun caseViewProperties() = CaseViewProperties(listOf(abc, tsh, xyz))

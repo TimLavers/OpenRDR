@@ -7,6 +7,9 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.RuleSummary
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.system.measureTimeMillis
@@ -114,6 +117,19 @@ fun beSameAs(other: Condition) = Matcher<Condition> { value ->
 }
 
 inline fun <reified T> serializeDeserialize(t: T): T {
-    val serialized = Json.encodeToString(t)
-    return Json.decodeFromString(serialized)
+    val json =Json {
+        allowStructuredMapKeys = true
+    }
+    val serialized = json.encodeToString(t)
+    return json.decodeFromString(serialized)
+}
+
+inline fun <reified T> checkSerializationIsThreadSafe(t: T) {
+    runBlocking {
+        repeat(10000) {
+            launch(Dispatchers.Default) {
+                serializeDeserialize(t)
+            }
+        }
+    }
 }

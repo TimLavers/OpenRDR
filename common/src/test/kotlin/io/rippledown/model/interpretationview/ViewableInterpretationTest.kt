@@ -2,10 +2,7 @@ package io.rippledown.model.interpretationview
 
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.Attribute
-import io.rippledown.model.CaseId
-import io.rippledown.model.Conclusion
-import io.rippledown.model.Interpretation
+import io.rippledown.model.*
 import io.rippledown.model.condition.containsText
 import io.rippledown.model.condition.isCondition
 import io.rippledown.model.rule.Rule
@@ -108,6 +105,8 @@ class ViewableInterpretationTest {
         val restored = serializeDeserialize(view)
         restored.interpretation shouldBe interp
         restored.latestText() shouldBe conclusion.text
+
+        checkSerializationIsThreadSafe(interp)
     }
 
     @Test
@@ -126,6 +125,8 @@ class ViewableInterpretationTest {
         val restored = serializeDeserialize(view)
         restored.interpretation shouldBe interp
         restored.textGivenByRules shouldBe conclusion.text
+
+        checkSerializationIsThreadSafe(interp)
     }
 
     @Test
@@ -222,16 +223,5 @@ class ViewableInterpretationTest {
         updatedView.latestText() shouldBe conclusion.text
     }
 
-
-
     private fun containsText(attribute: Attribute, match: String) = containsText(conditionId++, attribute, match)
-
-    private fun serializeDeserialize(viewableInterpretation: ViewableInterpretation): ViewableInterpretation {
-        val format = Json {
-            allowStructuredMapKeys = true
-            prettyPrint = true
-        }
-        val serialized = format.encodeToString(viewableInterpretation)
-        return format.decodeFromString(serialized)
-    }
 }

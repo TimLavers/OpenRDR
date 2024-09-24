@@ -9,8 +9,6 @@ import io.rippledown.model.condition.series.Increasing
 import io.rippledown.model.condition.structural.IsAbsentFromCase
 import io.rippledown.model.condition.structural.IsPresentInCase
 import io.rippledown.model.condition.structural.IsSingleEpisodeCase
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 
 fun isLow(id: Int? = null,attribute: Attribute) = EpisodicCondition(id, attribute, Low, Current)
 fun isNormal(id: Int? = null,attribute: Attribute) = EpisodicCondition(id, attribute, Normal, Current)
@@ -244,22 +242,6 @@ open class ConditionTestBase {
         builder.addResult(tsh, yesterday, tshResult0)
         return builder.build("Case")
     }
-
-    fun serializeDeserialize(condition: Condition): Condition {
-        val serialized = Json.encodeToString(condition)
-        return Json.decodeFromString(serialized)
-    }
-    fun serializeDeserialize(condition: CaseStructureCondition): CaseStructureCondition {
-        val serialized = Json.encodeToString(condition)
-        return Json.decodeFromString(serialized)
-    }
-
-    fun serializeDeserialize(condition: EpisodicCondition): EpisodicCondition {
-        val serialized = Json.encodeToString(condition)
-        return Json.decodeFromString(serialized)
-    }
-
-    fun serializeDeserialize(condition: SeriesCondition): SeriesCondition = Json.decodeFromString(Json.encodeToString(condition))
 
     fun checkConditionCanBeSerialized( condition: Condition) {
         val writtenAndRead = serializeDeserialize(condition)

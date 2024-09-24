@@ -1,9 +1,6 @@
 package io.rippledown.kb
 
-import io.rippledown.model.CaseType
-import io.rippledown.model.KBInfo
-import io.rippledown.model.RDRCase
-import io.rippledown.model.RDRCaseBuilder
+import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
@@ -205,7 +202,11 @@ class KB(persistentKB: PersistentKB) {
     fun selectCornerstone(index: Int): CornerstoneStatus {
         checkSession()
         val cornerstones = ruleSession!!.cornerstoneCases()
-        val newCC = cornerstones[index]
+        val caseInstance = cornerstones[index]
+        // Because Interpretation is not immutable, we need to copy
+        // the case with a new interpretation (copy is not deep)
+        // to make this thread safe.
+        val newCC = caseInstance.copy(interpretation = Interpretation(caseInstance.caseId))
         return CornerstoneStatus(viewableCase(newCC), index, cornerstones.size)
     }
 

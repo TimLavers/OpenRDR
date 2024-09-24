@@ -4,8 +4,6 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.rippledown.model.condition.containsText
 import io.rippledown.model.rule.Rule
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -264,7 +262,9 @@ class RDRCaseTest {
 
         // Check serialisation.
         val sd = serializeDeserialize(case)
-        assertEquals(sd, case)
+        sd shouldBe case
+
+        checkSerializationIsThreadSafe(case)
     }
 
     @Test
@@ -423,15 +423,6 @@ class RDRCaseTest {
         val builder1 = RDRCaseBuilder()
         builder1.addValue(tsh, defaultDate, "0.667")
         return builder1.build("Case1")
-    }
-
-    private fun serializeDeserialize(rdrCase: RDRCase): RDRCase {
-        val format = Json {
-            prettyPrint = true
-            allowStructuredMapKeys = true
-        }
-        val serialized = format.encodeToString(rdrCase)
-        return format.decodeFromString(serialized)
     }
 
     private fun checkValues(case: RDRCase, attribute: Attribute, vararg expectedValues: String) {
