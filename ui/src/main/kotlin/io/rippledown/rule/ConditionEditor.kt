@@ -3,15 +3,18 @@ package io.rippledown.rule
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.main.*
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.edit.EditableCondition
+import io.rippledown.model.condition.edit.Type
 
 interface ConditionEditHandler {
     fun editableCondition(): EditableCondition
@@ -28,7 +31,6 @@ fun ConditionEditor(handler: ConditionEditHandler) {
         focusRequester.requestFocus()
     }
 
-
     Surface {
         Box {
             Column(
@@ -36,6 +38,9 @@ fun ConditionEditor(handler: ConditionEditHandler) {
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End
+
                 ) {
                     Text(
                         text = handler.editableCondition().fixedTextPart1(),
@@ -46,6 +51,7 @@ fun ConditionEditor(handler: ConditionEditHandler) {
                     OutlinedTextField(
                         value = enteredValue,
                         enabled = true,
+                        maxLines = 1,
                         onValueChange = {
                             enteredValue = it
                         },
@@ -54,6 +60,9 @@ fun ConditionEditor(handler: ConditionEditHandler) {
                             .semantics {
                                 contentDescription = EDIT_CONDITION_FIELD_DESCRIPTION
                             }
+                            .defaultMinSize(handler.editableCondition().editableValue().type.width())
+                            .padding(2.dp)
+
                     )
                     Text(
                         text = handler.editableCondition().fixedTextPart2(),
@@ -70,7 +79,7 @@ fun ConditionEditor(handler: ConditionEditHandler) {
                         onClick = {
                             handler.editingFinished(handler.editableCondition().condition(enteredValue))
                         },
-//                        enabled = handler.isValidInput(textValue),
+                        enabled = handler.editableCondition().editableValue().type.valid(enteredValue),
                         modifier = Modifier.semantics {
                             contentDescription = EDIT_CONDITION_OK_BUTTON_DESCRIPTION
                         }
@@ -91,5 +100,12 @@ fun ConditionEditor(handler: ConditionEditHandler) {
                 }
             }
         }
+    }
+}
+fun Type.width(): Dp {
+    return when(this) {
+        Type.Integer -> 15.dp
+        Type.Real -> 20.dp
+        Type.Text -> 400.dp
     }
 }
