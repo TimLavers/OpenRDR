@@ -4,8 +4,8 @@ package io.rippledown.rule
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Button
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -28,7 +28,7 @@ fun RuleControlButtons(handler: RuleControlButtonsHandler) {
             .fillMaxWidth()
     )
     {
-        Button(
+        TextButton(
             onClick = {
                 handler.cancel()
             },
@@ -37,7 +37,7 @@ fun RuleControlButtons(handler: RuleControlButtonsHandler) {
             Text("Cancel rule")
         }
         Spacer(modifier = Modifier.width(10.dp))
-        Button(
+        TextButton(
             onClick = {
                 handler.finish()
             },

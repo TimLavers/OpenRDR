@@ -99,3 +99,35 @@ Feature: The user can make rules that change the interpretive report
     Then the KB controls should be shown
     And the case list should be shown
     And stop the client application
+
+  Scenario: When the user starts to build a rule to add a comment, the rule action should be shown
+    Given case Bondi is provided having data:
+      | Wave | excellent |
+      | Sun  | hot       |
+    And I start the client application
+    And I see the case Bondi as the current case
+    When I start to build a rule to add the comment "Let's surf."
+    Then the message indicating the comment "Let's surf." is being added should be shown
+    And stop the client application
+
+  Scenario: When the user starts to build a rule to remove a comment, the rule action should be shown
+    Given case Bondi is provided having data:
+      | Wave | excellent |
+      | Sun  | hot       |
+    And the interpretation of the case Bondi includes "Let's surf." because of condition "Wave is in case"
+    And I start the client application
+    And I see the case Bondi as the current case
+    When I start to build a rule to remove the comment "Let's surf."
+    Then the message indicating the comment "Let's surf." is being removed should be shown
+    And stop the client application
+
+  Scenario: When the user starts to build a rule to replace a comment, the rule action should be shown
+    Given case Bondi is provided having data:
+      | Wave | excellent |
+      | Sun  | hot       |
+    And the interpretation of the case Bondi includes "Let's surf." because of condition "Wave is in case"
+    And I start the client application
+    And I see the case Bondi as the current case
+    When I start to build a rule to replace the comment "Let's surf." by "Let's swim."
+    Then the message indicating the comment "Let's surf." is being replaced by "Let's swim." should be shown
+    And stop the client application

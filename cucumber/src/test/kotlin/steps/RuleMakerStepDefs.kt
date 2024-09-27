@@ -71,6 +71,15 @@ class RuleMakerStepDefs {
         }
     }
 
+    @And("I start to build a rule to remove the comment {string}")
+    fun startRuleToRemoveComment(comment: String) {
+        with(interpretationViewPO()) {
+            clickChangeInterpretationButton()
+            clickRemoveCommentMenu()
+            selectCommentToRemoveAndClickOK(comment)
+        }
+    }
+
     fun startRuleToAddExistingComment(comment: String) {
         with(interpretationViewPO()) {
             clickChangeInterpretationButton()
@@ -267,19 +276,30 @@ class RuleMakerStepDefs {
     }
 
     @And("I build a rule to replace the comment {string} with the comment {string} with conditions")
-    fun buildARuleToReplaceTheCommentWithTheCommentWithConditions(toBeReplaced: String, replacement: String, conditions: DataTable ) {
+    fun buildARuleToReplaceTheCommentWithTheCommentWithConditions(
+        toBeReplaced: String,
+        replacement: String,
+        conditions: DataTable
+    ) {
         pause(100)
         startRuleToReplaceComment(toBeReplaced, replacement)
         pause(100)
         addConditionsAndFinishRule(conditions)
     }
-}
 
-fun startRuleBuildingSessionToAddComment(comment: String) {
-    with(interpretationViewPO()) {
-        clickChangeInterpretationButton()
-        clickAddCommentMenu()
-        setAddCommentTextAndClickOK(comment)
+    @Then("the message indicating the comment {string} is being added should be shown")
+    fun `require message indicating comment is being added`(addedComment: String) {
+        ruleMakerPO().requireMessageForAddingComment(addedComment)
+    }
+
+    @Then("the message indicating the comment {string} is being removed should be shown")
+    fun `require message indicating comment is being removed`(removedComment: String) {
+        ruleMakerPO().requireMessageForRemovingComment(removedComment)
+    }
+
+    @Then("the message indicating the comment {string} is being replaced by {string} should be shown")
+    fun `require message indicating comment is being replaced`(replacedComment: String, replacementComment: String) {
+        ruleMakerPO().requireMessageForReplacingComment(replacedComment, replacementComment)
     }
 }
 
@@ -292,6 +312,7 @@ fun startRuleToReplaceComment(toBeReplaced: String, replacement: String) {
         pause(100) //TODO remove
     }
 }
+
 fun addConditionsAndFinishRule(dataTable: DataTable) {
     if (dataTable.width() == 1) {
         addNonEditableConditionsAndFinishRule(dataTable.asList())

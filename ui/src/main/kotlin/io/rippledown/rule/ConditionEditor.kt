@@ -1,7 +1,10 @@
 package io.rippledown.rule
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -66,7 +69,18 @@ fun ConditionEditor(handler: ConditionEditHandler) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    Button(
+                    TextButton(
+                        onClick = {
+                            handler.cancel()
+                        },
+                        modifier = Modifier.semantics {
+                            contentDescription = EDIT_CONDITION_CANCEL_BUTTON_DESCRIPTION
+                        }
+                    ) {
+                        Text("Cancel")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TextButton(
                         onClick = {
                             handler.editingFinished(handler.editableCondition().condition(enteredValue))
                         },
@@ -77,17 +91,7 @@ fun ConditionEditor(handler: ConditionEditHandler) {
                     ) {
                         Text("OK")
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(
-                        onClick = {
-                            handler.cancel()
-                        },
-                        modifier = Modifier.semantics {
-                            contentDescription = EDIT_CONDITION_CANCEL_BUTTON_DESCRIPTION
-                        }
-                    ) {
-                        Text("Cancel")
-                    }
+
                 }
             }
         }

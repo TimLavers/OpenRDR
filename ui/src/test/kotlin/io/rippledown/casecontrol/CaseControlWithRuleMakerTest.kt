@@ -102,7 +102,7 @@ class CaseControlWithRuleMakerTest {
                 )
 
             }
-            verify { handler.setInfoMessage(NO_CORNERSTONES_TO_REVIEW_MSG) }
+            verify { handler.setRightInfoMessage(NO_CORNERSTONES_TO_REVIEW_MSG) }
         }
     }
 
@@ -124,7 +124,7 @@ class CaseControlWithRuleMakerTest {
             waitForCaseToBeShowing(caseName)
 
             //Then
-            verify { handler.setInfoMessage("") }
+            verify { handler.setRightInfoMessage("") }
         }
     }
 

@@ -17,7 +17,11 @@ const val ADD_COMMENT_LABEL = "Select or create a comment to be added"
 const val REPLACED_COMMENT_LABEL = "Select the comment to be replaced"
 const val REPLACEMENT_COMMENT_LABEL = "Select or create a comment to be the replacement"
 const val REMOVE_COMMENT_LABEL = "Select the comment to be removed"
-const val NO_COMMENTS = "There are no comments given for this case"
+
+const val ADDING = "Adding "
+const val REPLACING = "Replacing "
+const val BY = " by "
+const val REMOVING = "Removing "
 
 const val REPLACE_COMMENT = "Replace a comment"
 const val REMOVE_COMMENT = "Remove a comment"
