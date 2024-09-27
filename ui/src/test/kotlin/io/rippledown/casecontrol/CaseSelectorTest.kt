@@ -87,6 +87,8 @@ class CaseSelectorTest {
 
             //Then
             requireCaseToBeFocused(case1)
+
+            verify { handler.selectCase(caseIds[1].id!!) }
         }
     }
 
@@ -111,6 +113,8 @@ class CaseSelectorTest {
 
             //Then
             requireCaseToBeFocused(case0)
+
+            verify { handler.selectCase(caseIds[0].id!!) }
         }
     }
 
@@ -178,7 +182,6 @@ class CaseSelectorTest {
 
     private fun contentDescription(i: Int) = "${CASE_NAME_PREFIX}case $i"
 }
-
 
 fun main() = application {
     Window(

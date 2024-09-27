@@ -24,8 +24,6 @@ import io.rippledown.constants.caseview.CASE_NAME_PREFIX
 import io.rippledown.model.CaseId
 import java.awt.event.KeyEvent.VK_DOWN
 import java.awt.event.KeyEvent.VK_UP
-import kotlin.math.max
-import kotlin.math.min
 
 interface CaseSelectorHandler {
     var selectCase: (id: Long) -> Unit
@@ -35,11 +33,23 @@ interface CaseSelectorHandler {
 @Composable
 @Preview
 fun CaseSelector(caseIds: List<CaseId>, handler: CaseSelectorHandler) {
-    val count = caseIds.size
     val scrollState = rememberScrollState()
     val hoverOverScroll = remember { mutableStateOf(false) }
     var selectedCaseIndex by remember { mutableStateOf(0) }
     val focusRequestors = mutableListOf<FocusRequester>()
+
+    fun indexSelected(index: Int) {
+        selectedCaseIndex = if (index < 1) { // Arrow up at top.
+            0
+        } else if (index >= caseIds.size) { // Arrow down at bottom.
+            caseIds.size - 1
+        } else {
+            index
+        }
+        val caseId = caseIds[selectedCaseIndex]
+        handler.selectCase(caseId.id!!)
+        focusRequestors[selectedCaseIndex].requestFocus()
+    }
     Box(
         modifier = Modifier
             .height(800.dp)
@@ -55,31 +65,26 @@ fun CaseSelector(caseIds: List<CaseId>, handler: CaseSelectorHandler) {
                 }
         ) {
             caseIds.forEachIndexed { index, caseId ->
-                focusRequestors.add(FocusRequester())
-                Text(
-                    text = caseId.name,
-                    modifier = Modifier
-                        .focusRequester(focusRequestors[index])
-                        .clickable {
-                            selectedCaseIndex = index
-                            handler.selectCase(caseId.id!!)
-                        }
-                        .background(if (index == selectedCaseIndex) Color.LightGray else Color.White)
-                        .onKeyEvent { keyEvent ->
-                            if (downArrowKeyWasPressed(keyEvent)) {
-                                val nextIndex = min(count - 1, selectedCaseIndex + 1)
-                                focusRequestors[nextIndex].requestFocus()
-                                selectedCaseIndex = nextIndex
-                            } else if (upArrowKeyWasPressed(keyEvent)) {
-                                val nextIndex = max(0, selectedCaseIndex - 1)
-                                focusRequestors[nextIndex].requestFocus()
-                                selectedCaseIndex = nextIndex
+                    focusRequestors.add(FocusRequester())
+                    Text(
+                        text = caseId.name,
+                        modifier = Modifier
+                            .focusRequester(focusRequestors[index])
+                            .clickable {
+                                indexSelected(index)
                             }
-                            false
-                        }
-                        .semantics { contentDescription = "$CASE_NAME_PREFIX${caseId.name}" }
-                )
-            }
+                            .background(if (index == selectedCaseIndex) Color.LightGray else Color.White)
+                            .onKeyEvent { keyEvent ->
+                                if (downArrowKeyWasPressed(keyEvent)) {
+                                    indexSelected(index + 1)
+                                } else if (upArrowKeyWasPressed(keyEvent)) {
+                                    indexSelected(index - 1)
+                                }
+                                false
+                            }
+                            .semantics { contentDescription = "$CASE_NAME_PREFIX${caseId.name}" }
+                    )
+                }
         }
         VerticalScrollbar(
             modifier = Modifier
