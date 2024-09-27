@@ -11,18 +11,21 @@ import androidx.compose.material.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import io.rippledown.appbar.AppBarHandler
 import io.rippledown.appbar.ApplicationBar
 import io.rippledown.casecontrol.*
 import io.rippledown.interpretation.InterpretationActions
 import io.rippledown.interpretation.InterpretationActionsHandler
+import io.rippledown.interpretation.toAnnotatedString
 import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.edit.SuggestedCondition
 import io.rippledown.model.diff.Addition
+import io.rippledown.model.diff.Diff
 import io.rippledown.model.diff.Removal
 import io.rippledown.model.diff.Replacement
 import io.rippledown.model.rule.CornerstoneStatus
@@ -37,7 +40,7 @@ import java.io.File
 interface Handler {
     var api: Api
     var isClosing: () -> Boolean
-    var setInfoMessage: (String) -> Unit
+    var setRightInfoMessage: (message: String) -> Unit
     fun showingCornerstone(isShowingCornerstone: Boolean)
 }
 
@@ -49,15 +52,16 @@ fun OpenRDRUI(handler: Handler) {
     var cornerstoneStatus: CornerstoneStatus? by remember { mutableStateOf(null) }
     var casesInfo by remember { mutableStateOf(CasesInfo()) }
     var kbInfo: KBInfo? by remember { mutableStateOf(null) }
-    var infoMessage by remember { mutableStateOf("") }
+    var rightInformationMessage by remember { mutableStateOf("") }
+    var ruleAction: Diff? by remember { mutableStateOf(null) }
     var conditionHints by remember { mutableStateOf(listOf<SuggestedCondition>()) }
 
     LaunchedEffect(Unit) {
         kbInfo = api.kbList().firstOrNull()
     }
 
-    handler.setInfoMessage = {
-        infoMessage = it
+    handler.setRightInfoMessage = { it ->
+        rightInformationMessage = it
     }
 
     LaunchedEffect(casesInfo, currentCaseId) {
@@ -96,7 +100,9 @@ fun OpenRDRUI(handler: Handler) {
                 backgroundColor = Color.White,
             )
             {
-                InformationPanel(infoMessage)
+                val leftMessage = ruleAction?.toAnnotatedString() ?: AnnotatedString("")
+                val rightMessage = AnnotatedString(rightInformationMessage)
+                InformationPanel(leftMessage, rightMessage)
             }
         },
         floatingActionButton = {
@@ -105,25 +111,28 @@ fun OpenRDRUI(handler: Handler) {
                 val allComments = runBlocking { api.allConclusions() }.map { it.text }.toSet()
                 InterpretationActions(commentsGivenForCase, allComments, object : InterpretationActionsHandler {
                     override fun startRuleToAddComment(comment: String) {
+                        ruleAction = Addition(comment)
                         val sessionStartRequest = SessionStartRequest(
                             caseId = currentCase!!.id!!,
-                            diff = Addition(comment)
+                            diff = ruleAction as Addition
                         )
                         cornerstoneStatus = runBlocking { api.startRuleSession(sessionStartRequest) }
                     }
 
                     override fun startRuleToReplaceComment(toBeReplaced: String, replacement: String) {
+                        ruleAction = Replacement(toBeReplaced, replacement)
                         val sessionStartRequest = SessionStartRequest(
                             caseId = currentCase!!.id!!,
-                            diff = Replacement(toBeReplaced, replacement)
+                            diff = ruleAction as Replacement
                         )
                         cornerstoneStatus = runBlocking { api.startRuleSession(sessionStartRequest) }
                     }
 
                     override fun startRuleToRemoveComment(comment: String) {
+                        ruleAction = Removal(comment)
                         val sessionStartRequest = SessionStartRequest(
                             caseId = currentCase!!.id!!,
-                            diff = Removal(comment)
+                            diff = ruleAction as Removal
                         )
                         cornerstoneStatus = runBlocking { api.startRuleSession(sessionStartRequest) }
                     }
@@ -143,7 +152,8 @@ fun OpenRDRUI(handler: Handler) {
         if (casesInfo.count > 0) {
             Row {
                 if (!ruleInProgress) {
-                    handler.setInfoMessage("")
+                    ruleAction = null
+                    handler.setRightInfoMessage("")
                     Column {
                         CaseSelectorHeader(casesInfo.caseIds.size)
                         Spacer(modifier = Modifier.height(10.dp))
@@ -193,6 +203,7 @@ fun OpenRDRUI(handler: Handler) {
                         override fun selectCornerstone(index: Int) = runBlocking {
                             cornerstoneStatus = api.selectCornerstone(index)
                         }
+
                         override fun exemptCornerstone(index: Int) = runBlocking {
                             cornerstoneStatus = api.exemptCornerstone(index)
                         }

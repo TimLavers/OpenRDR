@@ -55,9 +55,9 @@ fun CaseControl(
         }
         if (ruleInProgress) {
             if (cornerstoneStatus!!.cornerstoneToReview == null) {
-                handler.setInfoMessage(NO_CORNERSTONES_TO_REVIEW_MSG)
+                handler.setRightInfoMessage(NO_CORNERSTONES_TO_REVIEW_MSG)
             } else {
-                handler.setInfoMessage("")
+                handler.setRightInfoMessage("")
                 CornerstonePager(cornerstoneStatus, handler)
             }
 

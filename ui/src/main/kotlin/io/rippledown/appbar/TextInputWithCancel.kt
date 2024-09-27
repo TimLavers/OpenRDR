@@ -1,10 +1,10 @@
 package io.rippledown.appbar
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Button
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -57,7 +57,15 @@ fun TextInputWithCancel(handler: TextInputHandler) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    Button(
+                    TextButton(
+                        onClick = {
+                            handler.cancel()
+                        },
+                    ) {
+                        Text(handler.cancelButtonText())
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TextButton(
                         onClick = {
                             handler.handleInput(textValue)
                         },
@@ -67,14 +75,6 @@ fun TextInputWithCancel(handler: TextInputHandler) {
                         }
                     ) {
                         Text(handler.confirmButtonText())
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(
-                        onClick = {
-                            handler.cancel()
-                        },
-                    ) {
-                        Text(handler.cancelButtonText())
                     }
                 }
             }

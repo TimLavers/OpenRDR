@@ -68,7 +68,15 @@ fun CreateKBFromSample(handler: CreateKBFromSampleHandler) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    Button(
+                    TextButton(
+                        onClick = {
+                            handler.cancel()
+                        },
+                    ) {
+                        Text(CANCEL)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TextButton(
                         onClick = {
                             handler.createKB(textValue, selectedSampleKB)
                         },
@@ -78,14 +86,6 @@ fun CreateKBFromSample(handler: CreateKBFromSampleHandler) {
                         }
                     ) {
                         Text(CREATE)
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(
-                        onClick = {
-                            handler.cancel()
-                        },
-                    ) {
-                        Text(CANCEL)
                     }
                 }
             }

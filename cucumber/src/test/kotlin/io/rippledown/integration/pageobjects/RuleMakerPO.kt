@@ -5,13 +5,21 @@ import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.comparables.shouldBeGreaterThanOrEqualTo
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.rippledown.constants.interpretation.ADDING
+import io.rippledown.constants.interpretation.BY
+import io.rippledown.constants.interpretation.REMOVING
+import io.rippledown.constants.interpretation.REPLACING
 import io.rippledown.constants.rule.AVAILABLE_CONDITION_PREFIX
 import io.rippledown.constants.rule.CANCEL_RULE_BUTTON
 import io.rippledown.constants.rule.FINISH_RULE_BUTTON
 import io.rippledown.constants.rule.SELECTED_CONDITION_PREFIX
 import io.rippledown.integration.pause
-import io.rippledown.integration.utils.*
+import io.rippledown.integration.utils.find
+import io.rippledown.integration.utils.findAllByDescriptionPrefix
+import io.rippledown.integration.utils.waitForComposeDialogToShow
+import io.rippledown.integration.utils.waitForContextToBeNotNull
 import io.rippledown.integration.waitUntilAsserted
+import io.rippledown.main.LEFT_INFO_MESSAGE_ID
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
@@ -180,5 +188,29 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
         return execute<Set<AccessibleContext>> {
             contextProvider().findAllByDescriptionPrefix(AVAILABLE_CONDITION_PREFIX)
         }.map { it.accessibleName }
+    }
+
+    fun requireMessageForAddingComment(newComment: String) {
+        waitUntilAsserted {
+            execute<String?> {
+                contextProvider().find(LEFT_INFO_MESSAGE_ID)?.accessibleName
+            } shouldBe "$ADDING$newComment"
+        }
+    }
+
+    fun requireMessageForRemovingComment(originalComment: String) {
+        waitUntilAsserted {
+            execute<String?> {
+                contextProvider().find(LEFT_INFO_MESSAGE_ID)?.accessibleName
+            } shouldBe "$REMOVING$originalComment"
+        }
+    }
+
+    fun requireMessageForReplacingComment(replacedComment: String, replacementComment: String) {
+        waitUntilAsserted {
+            execute<String?> {
+                contextProvider().find(LEFT_INFO_MESSAGE_ID)?.accessibleName
+            } shouldBe "$REPLACING$replacedComment$BY$replacementComment"
+        }
     }
 }

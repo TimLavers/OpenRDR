@@ -8,16 +8,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 
-const val INFO_MESSAGE_ID = "INFO_MESSAGE_ID"
+const val LEFT_INFO_MESSAGE_ID = "LEFT_INFO_MESSAGE_ID"
+const val RIGHT_INFO_MESSAGE_ID = "RIGHT_INFO_MESSAGE_ID"
 
 @Composable
-fun InformationPanel(message: String) {
+fun InformationPanel(leftMessage: AnnotatedString, rightMessage: AnnotatedString) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.End
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = message,
-            modifier = Modifier.semantics { contentDescription = INFO_MESSAGE_ID })
+        Text(text = leftMessage,
+            modifier = Modifier.semantics { contentDescription = LEFT_INFO_MESSAGE_ID })
+
+        Text(text = rightMessage,
+            modifier = Modifier.semantics { contentDescription = RIGHT_INFO_MESSAGE_ID })
     }
 }

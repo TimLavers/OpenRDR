@@ -8,10 +8,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.rippledown.appbar.assertKbNameIs
 import io.rippledown.casecontrol.*
-import io.rippledown.constants.interpretation.ADD_COMMENT_PREFIX
-import io.rippledown.constants.interpretation.REMOVE_COMMENT_PREFIX
-import io.rippledown.constants.interpretation.REPLACED_COMMENT_PREFIX
-import io.rippledown.constants.interpretation.REPLACEMENT_COMMENT_PREFIX
+import io.rippledown.constants.interpretation.*
 import io.rippledown.constants.main.APPLICATION_BAR_ID
 import io.rippledown.interpretation.*
 import io.rippledown.model.*
@@ -244,8 +241,20 @@ class OpenRDRUITest {
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
         coEvery { api.getCase(caseId1.id!!) } returns viewableCaseA
         coEvery { api.getCase(caseId2.id!!) } returns viewableCaseB
-        coEvery { api.conditionHints(caseId1.id!!) } returns ConditionList(listOf(NonEditableSuggestedCondition(normalTSH)))
-        coEvery { api.conditionHints(caseId2.id!!) } returns ConditionList(listOf(NonEditableSuggestedCondition(normalFT3)))
+        coEvery { api.conditionHints(caseId1.id!!) } returns ConditionList(
+            listOf(
+                NonEditableSuggestedCondition(
+                    normalTSH
+                )
+            )
+        )
+        coEvery { api.conditionHints(caseId2.id!!) } returns ConditionList(
+            listOf(
+                NonEditableSuggestedCondition(
+                    normalFT3
+                )
+            )
+        )
 
         with(composeTestRule) {
             setContent {
@@ -287,6 +296,85 @@ class OpenRDRUITest {
 
             //Then
             requireCaseSelectorNotToBeDisplayed()
+        }
+    }
+
+    @Test
+    fun `should show rule action to add a comment`() = runTest {
+        val addedComment = "Go to Bondi"
+        val caseName = "case a"
+        val caseId = CaseId(id = 1, name = caseName)
+        val case = createCase(caseId)
+        coEvery { api.getCase(1) } returns case
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler)
+            }
+            //Given
+            waitForCaseToBeShowing(caseName)
+            requireCaseSelectorToBeDisplayed()
+            clickChangeInterpretationButton()
+
+            //When
+            clickAddCommentMenu()
+            addNewComment(addedComment)
+
+            //Then
+            requireLeftInformationMessage("$ADDING$addedComment")
+        }
+    }
+
+    @Test
+    fun `should show rule action to replace a comment`() = runTest {
+        val originalComment = "Go to Bondi"
+        val replacementComment = "Go to Malabar"
+        val caseName = "case a"
+        val caseId = CaseId(id = 1, name = caseName)
+        val case = createCaseWithInterpretation(caseId.name, caseId.id, listOf(originalComment))
+        coEvery { api.getCase(1) } returns case
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler)
+            }
+            //Given
+            waitForCaseToBeShowing(caseName)
+            requireCaseSelectorToBeDisplayed()
+            clickChangeInterpretationButton()
+
+            //When
+            clickReplaceCommentMenu()
+            replaceComment(originalComment, replacementComment)
+
+            //Then
+            requireLeftInformationMessage("$REPLACING$originalComment$BY$replacementComment")
+        }
+    }
+
+    @Test
+    fun `should show rule action to remove a comment`() = runTest {
+        val originalComment = "Go to Bondi"
+        val caseName = "case a"
+        val caseId = CaseId(id = 1, name = caseName)
+        val case = createCaseWithInterpretation(caseId.name, caseId.id, listOf(originalComment))
+        coEvery { api.getCase(1) } returns case
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler)
+            }
+            //Given
+            waitForCaseToBeShowing(caseName)
+            requireCaseSelectorToBeDisplayed()
+            clickChangeInterpretationButton()
+
+            //When
+            clickRemoveCommentMenu()
+            removeComment(originalComment)
+
+            //Then
+            requireLeftInformationMessage("$REMOVING$originalComment")
         }
     }
 

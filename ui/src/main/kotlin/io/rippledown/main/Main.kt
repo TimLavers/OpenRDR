@@ -34,7 +34,7 @@ fun main() = application {
         OpenRDRUI(object : Handler {
             override var isClosing = { closing }
             override var api: Api = Api()
-            override var setInfoMessage: (String) -> Unit = {}
+            override var setRightInfoMessage: (message: String) -> Unit = {}
             override fun showingCornerstone(isShowingCornerstone: Boolean) {
                 if (isShowingCornerstone) resizeWindow(EXPANDED_WINDOW_SIZE) else resizeWindow(DEFAULT_WINDOW_SIZE)
             }

@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.text.TextLayoutResult
 import io.kotest.matchers.shouldBe
+import io.rippledown.decoration.BACKGROUND_COLOR
 import io.rippledown.model.createCaseWithInterpretation
 import io.rippledown.model.createInterpretation
 import io.rippledown.utils.applicationFor
@@ -252,7 +253,6 @@ class InterpretationViewTest {
             requireStyleForCommentInAnnotatedStringToHaveBackground(annotatedString, this[1], BACKGROUND_COLOR)
         }
     }
-
 }
 
 
