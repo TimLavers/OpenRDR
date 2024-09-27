@@ -17,12 +17,6 @@ sealed interface Diff {
 }
 
 @Serializable
-data class Unchanged(val originalText: String = "") : Diff {
-    override fun left() = originalText
-    override fun right() = originalText
-}
-
-@Serializable
 data class Replacement(val originalText: String = "", val replacementText: String = "") : Diff {
     override fun left() = originalText
     override fun right() = replacementText

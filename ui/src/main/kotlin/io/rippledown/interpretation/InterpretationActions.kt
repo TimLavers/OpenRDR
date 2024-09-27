@@ -86,7 +86,6 @@ fun InterpretationActions(
             availableComments = allComments.toList() - commentsGivenForCase,
             handler = object : AddCommentHandler {
             override fun startRuleToAddComment(comment: String) {
-                println("GUI starting rule to add comment $comment")
                 addCommentDialogShowing = false
                 handler.startRuleToAddComment(comment)
             }

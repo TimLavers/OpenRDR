@@ -7,7 +7,10 @@ import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
-import io.rippledown.model.diff.*
+import io.rippledown.model.diff.Addition
+import io.rippledown.model.diff.Diff
+import io.rippledown.model.diff.Removal
+import io.rippledown.model.diff.Replacement
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.rule.*
 import java.io.File
@@ -31,7 +34,6 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
                 kb.conclusionManager.getOrCreate(diff.left()),
                 kb.conclusionManager.getOrCreate(diff.right())
             )
-            is Unchanged -> {}
         }
     }
 

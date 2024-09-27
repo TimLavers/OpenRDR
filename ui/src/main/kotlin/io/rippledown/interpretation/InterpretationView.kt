@@ -11,7 +11,6 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
@@ -22,8 +21,6 @@ import io.rippledown.constants.interpretation.CONDITION_PREFIX
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE
 import io.rippledown.model.interpretationview.ViewableInterpretation
-
-val BACKGROUND_COLOR = Color.LightGray
 
 interface InterpretationViewHandler {
     fun onTextLayoutResult(layoutResult: TextLayoutResult)
@@ -117,7 +114,7 @@ fun List<String>.highlightItem(index: Int) = buildAnnotatedString {
         if (i == index) {
             addStyle(
                 style = SpanStyle(
-                    background = BACKGROUND_COLOR
+                    background = io.rippledown.decoration.BACKGROUND_COLOR
                 ),
                 start = length,
                 end = length + text.length

@@ -37,7 +37,7 @@ class TestClientLauncher {
                 val handler = object : Handler {
                     override var api = api
                     override var isClosing: () -> Boolean = { false }
-                    override var setInfoMessage: (String) -> Unit = {}
+                    override var setRightInfoMessage: (String) -> Unit = {}
                     override fun showingCornerstone(isShowingCornerstone: Boolean) {
                         if (isShowingCornerstone) resizeWindow(EXPANDED_WINDOW_SIZE) else resizeWindow(
                             DEFAULT_WINDOW_SIZE
