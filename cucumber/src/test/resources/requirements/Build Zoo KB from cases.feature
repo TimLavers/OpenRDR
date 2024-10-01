@@ -88,7 +88,7 @@ Feature: The Zoo KB can be built with the user interface.
       | aquatic is "true" |
       | legs is "4"       |
 
-    Then the cases should have interpretations as follows
+    Then the cases should have interpretations as follows:
       | aardvark | mammal    |
       | antelope | mammal    |
       | bass     | fish      |

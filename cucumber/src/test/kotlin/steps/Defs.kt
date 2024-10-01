@@ -305,16 +305,6 @@ class Defs {
         restClient().createRuleToAddText(caseName, text)
     }
 
-    @Then("the cases should have interpretations as follows")
-    fun theCasesShouldHaveInterpretationsAsFollows( dataTable: DataTable) {
-        dataTable.asLists().forEach {
-            println("checking interpretation for case ${it[0]}")
-            caseListPO().select(it[0])
-            val expectedText = it[1]?: ""
-            interpretationViewPO().waitForInterpretationText(expectedText)
-        }
-    }
-
     @Then("the cases should have interpretations as follows:")
     fun requireInterpretations(dataTable: DataTable) {
         dataTable.cells().forEach { row ->
