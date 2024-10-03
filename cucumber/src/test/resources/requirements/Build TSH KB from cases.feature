@@ -210,7 +210,7 @@ Feature: The TSH KB can be built with the user interface.
       | TSH ≥ 100.0    | TSH ≥ | 100.0 |
       | Free T4 is low |       |       |
 
-    Then the cases should have interpretations as follows
+    Then the cases should have interpretations as follows:
       | 1.4.1  | Normal T4 and TSH are consistent with a euthyroid state. |
       | 1.4.2  | Normal TSH is consistent with a euthyroid state. |
       | 1.4.3  | A mildly reduced FT4 with a normal TSH may be due to non-thyroidal illness or pituitary hypothyroidism. |

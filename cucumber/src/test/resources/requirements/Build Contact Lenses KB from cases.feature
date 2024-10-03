@@ -30,7 +30,7 @@ Feature: The Contact Lenses Prescription KB can be built with the user interface
       | age is "presbyopic"            |
       | prescription is "hypermetrope" |
 
-    Then the cases should have interpretations as follows
+    Then the cases should have interpretations as follows:
       | Case1  |      |
       | Case2  | soft |
       | Case3  |      |

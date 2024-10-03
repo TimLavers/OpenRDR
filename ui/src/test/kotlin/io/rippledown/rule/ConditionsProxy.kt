@@ -3,9 +3,7 @@ package io.rippledown.rule
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
-import io.rippledown.constants.main.EDIT_CONDITION_CANCEL_BUTTON_DESCRIPTION
-import io.rippledown.constants.main.EDIT_CONDITION_FIELD_DESCRIPTION
-import io.rippledown.constants.main.EDIT_CONDITION_OK_BUTTON_DESCRIPTION
+import io.rippledown.constants.main.*
 import io.rippledown.constants.main.EDIT_CONDITION_TEXT_1_DESCRIPTION
 import io.rippledown.constants.rule.*
 
@@ -112,6 +110,16 @@ fun ComposeTestRule.clickConditionEditorOkButton() {
         .performClick()
     waitForIdle()
 }
+
+fun ComposeTestRule.requireConditionEditorOkButtonDisabled() {
+    onNodeWithContentDescription(EDIT_CONDITION_OK_BUTTON_DESCRIPTION)
+        .assertIsNotEnabled()
+}
+fun ComposeTestRule.requireConditionEditorOkButtonEnabled() {
+    onNodeWithContentDescription(EDIT_CONDITION_OK_BUTTON_DESCRIPTION)
+        .assertIsEnabled()
+}
+
 fun ComposeTestRule.clickConditionEditorCancelButton() {
     onNodeWithContentDescription(EDIT_CONDITION_CANCEL_BUTTON_DESCRIPTION)
         .assertIsDisplayed()
@@ -121,6 +129,16 @@ fun ComposeTestRule.clickConditionEditorCancelButton() {
 
 fun ComposeTestRule.requireConditionConstantTextFirstPartToBe(expected: String) {
     onNodeWithContentDescription(EDIT_CONDITION_TEXT_1_DESCRIPTION)
+        .assertIsDisplayed()
+        .assertTextEquals(expected)
+}
+fun ComposeTestRule.requireConditionConstantTextSecondPartToBe(expected: String) {
+    onNodeWithContentDescription(EDIT_CONDITION_TEXT_2_DESCRIPTION)
+        .assertIsDisplayed()
+        .assertTextEquals(expected)
+}
+fun ComposeTestRule.requireConditionEditableTextToBe(expected: String) {
+    onNodeWithContentDescription(EDIT_CONDITION_FIELD_DESCRIPTION)
         .assertIsDisplayed()
         .assertTextEquals(expected)
 }
