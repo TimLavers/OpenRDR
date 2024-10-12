@@ -17,6 +17,8 @@ val generativeModel = GenerativeModel(
     safetySettings = noSafetySettings()
 )
 
+val trainingSet = trainingSet(File("src/main/resources/training_set.txt"))
+
 fun noSafetySettings() =
     HarmCategory.entries
         .filter { harmCategory -> harmCategory != HarmCategory.UNKNOWN } //Invalid safety setting
@@ -27,13 +29,11 @@ fun noSafetySettings() =
             )
         }
 
-fun trainingSet() = File("src/main/resources/training_set.txt").readText()
-
-fun conditionTipFor(input: String): String {
+fun suggestionFor(input: String): String {
     val prompt = content {
         text("Perform a task that replaces x with a particular string.")
         text("Here are some examples:")
-        text(trainingSet())
+        text(trainingSet)
         text("Here is the user input: $input")
         text("Generate output without additional string.")
     }
@@ -41,5 +41,5 @@ fun conditionTipFor(input: String): String {
     val response = runBlocking {
         generativeModel.generateContent(prompt)
     }
-    return response.text!!
+    return response.text!!.trim()
 }

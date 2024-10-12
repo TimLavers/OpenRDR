@@ -18,7 +18,7 @@ class GeminiTest {
         val expected = "x is high"
         for (entered in expressions) {
             // When
-            val actual = conditionTipFor(entered).trim()
+            val actual = suggestionFor(entered)
 
             // Then
             actual shouldBe expected
@@ -36,7 +36,7 @@ class GeminiTest {
         val expected = "x is low"
         for (entered in expressions) {
             // When
-            val actual = conditionTipFor(entered).trim()
+            val actual = suggestionFor(entered)
 
             // Then
             actual shouldBe expected
@@ -54,7 +54,7 @@ class GeminiTest {
         val expected = "x is normal"
         for (entered in expressions) {
             // When
-            val actual = conditionTipFor(entered).trim()
+            val actual = suggestionFor(entered)
 
             // Then
             actual shouldBe expected
@@ -66,14 +66,17 @@ class GeminiTest {
         // Given
         val expressions = listOf(
             "x equals 10" to "x is 10",
+            "x = 3.1" to "x is 3.1",
+            "x == 3.1" to "x is 3.1",
             "x is the same as y" to "x is y",
             "x is equal to y" to "x is y",
             "x identical to y" to "x is y",
-            "x equals \"abc\"" to "x is \"abc\""
+            "x equals \"abc\"" to "x is \"abc\"",
+            "x equals abc" to "x is \"abc\""
         )
         for ((entered, expected) in expressions) {
             // When
-            val actual = conditionTipFor(entered).trim()
+            val actual = suggestionFor(entered)
 
             // Then
             actual shouldBe expected
@@ -90,7 +93,7 @@ class GeminiTest {
         )
         for ((entered, expected) in expressions) {
             // When
-            val actual = conditionTipFor(entered).trim()
+            val actual = suggestionFor(entered)
 
             // Then
             actual shouldBe expected
@@ -107,7 +110,7 @@ class GeminiTest {
         )
         for ((entered, expected) in expressions) {
             // When
-            val actual = conditionTipFor(entered).trim()
+            val actual = suggestionFor(entered)
 
             // Then
             actual shouldBe expected
@@ -126,7 +129,7 @@ class GeminiTest {
         val expected = "x is in case"
         for (entered in expressions) {
             // When
-            val actual = conditionTipFor(entered).trim()
+            val actual = suggestionFor(entered)
 
             // Then
             actual shouldBe expected
@@ -149,7 +152,7 @@ class GeminiTest {
         val expected = "x increasing"
         for (entered in expressions) {
             // When
-            val actual = conditionTipFor(entered).trim()
+            val actual = suggestionFor(entered)
 
             // Then
             actual shouldBe expected
