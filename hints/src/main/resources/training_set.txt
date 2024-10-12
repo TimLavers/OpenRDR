@@ -1,0 +1,29 @@
+
+input: elevated x
+output: x is high
+input: excessive x
+output: x is high
+
+input: reduced x
+output: x is low
+input: lowered x
+output: x is low
+
+input: x is within range
+output: x is normal
+
+input: x is equal to y
+output: x is y
+input: x is the same as y
+output: x is y
+
+input: x is less than or equal to y
+output: x <= y
+
+input: x is present
+output: x is in case
+input: x detected
+output: x is in case
+
+input: x is increasing
+output: x increasing
