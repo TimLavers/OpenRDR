@@ -6,10 +6,10 @@ pluginManagement {
 }
 
 include("common")
-include("cucumber")
 include("server")
-include("hints")
 include("ui")
+include("cucumber")
+include("hints")
 
 dependencyResolutionManagement {
     versionCatalogs {

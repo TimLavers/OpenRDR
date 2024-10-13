@@ -1,11 +1,12 @@
 package io.rippledown
 
 import io.kotest.matchers.shouldBe
+import org.junit.jupiter.api.Test
 import kotlin.io.path.createTempFile
 import kotlin.io.path.writeText
 
 class TrainingSetGeneratorTest {
-    @org.junit.jupiter.api.Test
+    @Test
     fun `should generate a training set`() {
         // Given
         val fileContents =
