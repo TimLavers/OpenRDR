@@ -301,6 +301,11 @@ class RuleMakerStepDefs {
     fun `require message indicating comment is being replaced`(replacedComment: String, replacementComment: String) {
         ruleMakerPO().requireMessageForReplacingComment(replacedComment, replacementComment)
     }
+
+    @Then("I enter the expression {string}")
+    fun `enter expression`(expression: String) {
+        println("Expression: $expression")
+    }
 }
 
 fun startRuleToReplaceComment(toBeReplaced: String, replacement: String) {
