@@ -83,6 +83,12 @@ internal class KBEndpointTest {
     }
 
     @Test
+    fun `should return a tip for an expression`() {
+        val tip = endpoint.tipForExpression("elevated waves", "Sun, Waves, UV index")
+        tip shouldBe "Waves is high"
+    }
+
+    @Test
     fun processCase() {
         endpoint.kb.allProcessedCases() shouldBe emptyList()
         val externalCase1 = CaseTestUtils.getCase("Case1")

@@ -11,6 +11,8 @@ import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.rippledown.constants.api.*
+import io.rippledown.constants.server.ATTRIBUTE_NAMES
+import io.rippledown.constants.server.EXPRESSION
 import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.Conclusion
@@ -223,6 +225,17 @@ class Api(engine: HttpClientEngine = CIO.create()) {
         return client.get("$API_URL$CONDITION_HINTS?id=$caseId") {
             setKBParameter()
         }.body()
+    }
+
+    /**
+     * @return a tip for a condition that corresponds to the specified expression
+     */
+    suspend fun tipForExpression(expression: String, attributeNames: Collection<String>): String {
+        return client.get("$API_URL$TIP_FOR_EXPRESSION") {
+            parameter(EXPRESSION, expression)
+            parameter(ATTRIBUTE_NAMES, attributeNames.joinToString(","))
+            setKBParameter()
+        }.body<String>()
     }
 }
 

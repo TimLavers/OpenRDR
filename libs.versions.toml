@@ -7,6 +7,7 @@ guava = "33.2.1-jre"
 mockk = "1.13.8"
 logback = "1.5.7"
 ktor = "2.3.12"
+ktor300 = "3.0.0"
 kotlinx_coroutines = "1.8.1"
 kotlinx_serialization = "1.7.2"
 kotlinx_datetime = "0.6.1"
@@ -36,7 +37,7 @@ kotlinxSerializationCore = { module = "org.jetbrains.kotlinx:kotlinx-serializati
 kotlinxSerializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx_serialization" }
 kotlinxDateTime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx_datetime" }
 
-ktorClientCore = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktorClientCore = { module = "io.ktor:ktor-client-core", version.ref = "ktor300" }
 ktorClientCio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktorClientMock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 ktorClientContentNegotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }

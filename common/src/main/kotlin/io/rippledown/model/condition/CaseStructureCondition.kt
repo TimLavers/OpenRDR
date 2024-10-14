@@ -33,6 +33,8 @@ data class CaseStructureCondition(override val id: Int? = null,
             other.predicate == predicate
         } else false
     }
+
+    override fun attributeNames() = predicate.attributeNames()
 }
 
 object CaseStructureConditionSerializer: KSerializer<CaseStructureCondition> {

@@ -16,6 +16,11 @@ class AndTest: ConditionTestBase() {
     private val bondiBronte = And(bondi, bronte)
 
     @Test
+    fun attributeNamesTest() {
+        bondiLow.attributeNames() shouldBe setOf(tshLow.attribute.name, bondi.attribute.name)
+    }
+
+    @Test
     fun serializationTest() {
         serializeDeserialize(bondiLow) shouldBe bondiLow
     }

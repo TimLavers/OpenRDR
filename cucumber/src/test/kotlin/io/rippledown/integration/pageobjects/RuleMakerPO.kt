@@ -9,10 +9,7 @@ import io.rippledown.constants.interpretation.ADDING
 import io.rippledown.constants.interpretation.BY
 import io.rippledown.constants.interpretation.REMOVING
 import io.rippledown.constants.interpretation.REPLACING
-import io.rippledown.constants.rule.AVAILABLE_CONDITION_PREFIX
-import io.rippledown.constants.rule.CANCEL_RULE_BUTTON
-import io.rippledown.constants.rule.FINISH_RULE_BUTTON
-import io.rippledown.constants.rule.SELECTED_CONDITION_PREFIX
+import io.rippledown.constants.rule.*
 import io.rippledown.integration.pause
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
@@ -211,6 +208,14 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
             execute<String?> {
                 contextProvider().find(LEFT_INFO_MESSAGE_ID)?.accessibleName
             } shouldBe "$REPLACING$replacedComment$BY$replacementComment"
+        }
+    }
+
+    fun enterExpressionIntoSearchField(expression: String) {
+        execute {
+            contextProvider().find(CURRENT_CONDITION)?.accessibleEditableText?.also {
+                it.setTextContents(expression)
+            }
         }
     }
 }

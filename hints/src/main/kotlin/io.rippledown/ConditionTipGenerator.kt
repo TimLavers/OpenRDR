@@ -1,6 +1,6 @@
 package io.rippledown
 
-class ConditionTipGenerator(attributeNames: Set<String>) {
+class ConditionTipGenerator(attributeNames: Collection<String>) {
 
     private val expressionConverter = ExpressionConverter(attributeNames)
 

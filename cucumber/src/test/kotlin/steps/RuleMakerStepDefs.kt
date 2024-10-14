@@ -304,7 +304,7 @@ class RuleMakerStepDefs {
 
     @Then("I enter the expression {string}")
     fun `enter expression`(expression: String) {
-        println("Expression: $expression")
+        ruleMakerPO().enterExpressionIntoSearchField(expression)
     }
 }
 

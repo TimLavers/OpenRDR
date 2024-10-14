@@ -34,6 +34,8 @@ data class SeriesCondition(override val id: Int? = null,
             other.attribute.isEquivalent(attribute) && other.seriesPredicate == seriesPredicate
         } else false
     }
+
+    override fun attributeNames() = setOf(attribute.name)
 }
 object SeriesConditionSerializer: KSerializer<SeriesCondition> {
     private val attributeSerializer = Attribute.serializer()

@@ -34,7 +34,7 @@ fun ConditionFilter(filter: String, handler: ConditionFilterHandler) {
         OutlinedTextField(
             label = {
                 Text(
-                    text = "Select a condition for making this change",
+                    text = "Enter a condition for making this change",
                     style = TextStyle(
                         fontStyle = Italic
                     )

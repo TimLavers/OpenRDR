@@ -4,7 +4,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import io.rippledown.constants.main.*
-import io.rippledown.constants.main.EDIT_CONDITION_TEXT_1_DESCRIPTION
 import io.rippledown.constants.rule.*
 
 fun ComposeTestRule.requireRuleMakerToBeDisplayed() {
@@ -141,4 +140,15 @@ fun ComposeTestRule.requireConditionEditableTextToBe(expected: String) {
     onNodeWithContentDescription(EDIT_CONDITION_FIELD_DESCRIPTION)
         .assertIsDisplayed()
         .assertTextEquals(expected)
+}
+
+fun ComposeTestRule.requireConditionFilterText(expected: String) {
+    onNodeWithContentDescription(CURRENT_CONDITION, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .assertTextEquals(expected)
+}
+
+fun ComposeTestRule.enterTextIntoConditionFilter(text: String) {
+    onNodeWithContentDescription(CURRENT_CONDITION, useUnmergedTree = true)
+        .performTextInput(text)
 }

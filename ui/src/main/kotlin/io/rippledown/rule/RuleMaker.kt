@@ -20,6 +20,7 @@ interface RuleMakerHandler {
     var onDone: (conditions: List<Condition>) -> Unit
     var onCancel: () -> Unit
     var onUpdateConditions: (conditions: List<Condition>) -> Unit
+    fun tipForExpression(expression: String): String
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -69,8 +70,11 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
         }
     }
 
-    LaunchedEffect(allConditions) {
-        availableConditions = allConditions.sortedWith(compareBy { it.asText() })
+    LaunchedEffect(allConditions, filterText) {
+        val conditions = allConditions.sortedWith(compareBy { it.asText() })
+        val tip = handler.tipForExpression(filterText)
+        availableConditions = conditions.filterConditions(filterText, tip) - suggestionsUsed.values.toSet()
+
     }
     Column(
         modifier = Modifier
@@ -92,7 +96,6 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
         ConditionFilter(filterText, object : ConditionFilterHandler {
             override var onFilterChange = { filter: String ->
                 filterText = filter
-                availableConditions = allConditions.filterConditions(filter) - suggestionsUsed.values.toSet()
             }
         })
 
@@ -126,4 +129,6 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
     }
 }
 
-fun List<SuggestedCondition>.filterConditions(filter: String) = filter { it.asText().contains(filter, ignoreCase = true) }
+fun List<SuggestedCondition>.filterConditions(filter: String, tip: String) = filter {
+    it.asText().contains(filter, ignoreCase = true) || it.asText().equals(tip, ignoreCase = true)
+}

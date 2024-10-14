@@ -6,6 +6,8 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.rippledown.constants.api.*
+import io.rippledown.constants.server.ATTRIBUTE_NAMES
+import io.rippledown.constants.server.EXPRESSION
 import io.rippledown.model.Conclusion
 import io.rippledown.model.OperationResult
 import io.rippledown.model.condition.Condition
@@ -44,6 +46,13 @@ fun Application.ruleSession(application: ServerApplication) {
             kbEndpoint(application).commitCurrentRuleSession()
             logger.info("session committed")
             call.respond(HttpStatusCode.OK, OperationResult("Session committed"))
+        }
+        get(TIP_FOR_EXPRESSION) {
+            val expression = call.parameters[EXPRESSION] ?: error("Invalid expression.")
+            val attributeNames = call.parameters[ATTRIBUTE_NAMES] ?: error("Invalid expression.")
+            val tip = kbEndpoint(application).tipForExpression(expression, attributeNames)
+            logger.info("tip for expression '$expression' and attributes '$attributeNames' was '$tip'")
+            call.respond(HttpStatusCode.OK, tip)
         }
     }
 }

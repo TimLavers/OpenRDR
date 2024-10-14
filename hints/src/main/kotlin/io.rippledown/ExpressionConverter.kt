@@ -1,6 +1,6 @@
 package io.rippledown
 
-class ExpressionConverter(private val attributeNames: Set<String>) {
+class ExpressionConverter(private val attributeNames: Collection<String>) {
 
     fun insertPlaceholder(ce: Expression) = attributeNames.fold(ce) { acc, attribute ->
         if (acc.text.contains(attribute, ignoreCase = true)) {

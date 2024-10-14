@@ -1,5 +1,6 @@
 package io.rippledown.server
 
+import io.rippledown.ConditionTipGenerator
 import io.rippledown.kb.KB
 import io.rippledown.kb.export.KBExporter
 import io.rippledown.kb.export.util.Zipper
@@ -137,4 +138,9 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
     fun updateCornerstone(request: UpdateCornerstoneRequest) = kb.updateCornerstone(request)
     fun selectCornerstone(index: Int) = kb.selectCornerstone(index)
     fun exemptCornerstone(index: Int) = kb.exemptCornerstone(index)
+
+    fun tipForExpression(expression: String, attributeNames: String): String {
+        val attributes = attributeNames.split(",")
+        return ConditionTipGenerator(attributes).conditionTip(expression)
+    }
 }
