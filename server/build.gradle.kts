@@ -7,7 +7,7 @@ plugins {
 
 dependencies {
     implementation(project(":common"))
-    implementation(project(":hints"))
+//    implementation(project(":hints"))
 
     implementation(libs.bundles.ktor)
     implementation(libs.bundles.kotlinx)
@@ -17,7 +17,6 @@ dependencies {
     implementation("io.ktor:ktor-server-core-jvm")
     implementation("io.ktor:ktor-server-call-logging")
     implementation("io.ktor:ktor-server-netty")
-    implementation("io.ktor:ktor-client-core:3.0.0") //needed by generativeai
     implementation(libs.logback)
     implementation(libs.commonsIo)
     implementation(libs.bundles.exposed)
