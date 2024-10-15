@@ -3,32 +3,33 @@ elevated x
 excessive x
 
 EXPECTED: x is low
-input: reduced x
-input: lowered x
+reduced x
+lowered x
 
 EXPECTED: x is normal
-input: x is within range
+x is within range
+x is fine
 
 EXPECTED: x is y
-input: x is equal to y
-input: x is the same as y
+x is equal to y
+x is the same as y
 
 EXPECTED: x is 1.5
-input: x = 1.5
-input: x == 1.5
+x = 1.5
+x == 1.5
 
 EXPECTED: x is "abc"
-input: x is abc
+x is abc
 
 EXPECTED: x is "pending"
-input: x equals pending
+x equals pending
 
 EXPECTED: x <= y
-input: x is less than or equal to y
+x is less than or equal to y
 
 EXPECTED: x is in case
-input: x is present
-input: x detected
+x is present
+x detected
 
 EXPECTED: x increasing
-input: x is increasing
+x is increasing
