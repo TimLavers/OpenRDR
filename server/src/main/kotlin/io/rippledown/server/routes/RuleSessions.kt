@@ -18,12 +18,11 @@ import kotlinx.serialization.json.Json
 fun Application.ruleSession(application: ServerApplication) {
     routing {
         post(START_SESSION_TO_ADD_CONCLUSION) {
-            logger.info("START_SESSION_TO_ADD_CONCLUSION")
             val id = longId()
             val conclusion = call.receive<Conclusion>()
             kbEndpoint(application).startRuleSessionToAddConclusion(id, conclusion)
-            logger.info("session started to add conclusion $conclusion")
             call.respond(HttpStatusCode.OK, OperationResult("Session started"))
+            logger.info("session started to add conclusion $conclusion")
         }
         post(START_SESSION_TO_REMOVE_CONCLUSION) {
             val conclusion = call.receive<Conclusion>()
@@ -42,17 +41,16 @@ fun Application.ruleSession(application: ServerApplication) {
             call.respond(HttpStatusCode.OK, OperationResult("Condition added"))
         }
         post(COMMIT_SESSION) {
-            logger.info("COMMIT_SESSION")
             kbEndpoint(application).commitCurrentRuleSession()
-            logger.info("session committed")
             call.respond(HttpStatusCode.OK, OperationResult("Session committed"))
+            logger.info("session committed")
         }
         get(TIP_FOR_EXPRESSION) {
             val expression = call.parameters[EXPRESSION] ?: error("Invalid expression.")
             val attributeNames = call.parameters[ATTRIBUTE_NAMES] ?: error("Invalid expression.")
             val tip = kbEndpoint(application).tipForExpression(expression, attributeNames)
-            logger.info("tip for expression '$expression' and attributes '$attributeNames' was '$tip'")
             call.respond(HttpStatusCode.OK, tip)
+            logger.info("tip for expression '$expression' and attributes '$attributeNames' was '$tip'")
         }
     }
 }

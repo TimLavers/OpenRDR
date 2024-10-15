@@ -15,6 +15,7 @@ import io.rippledown.constants.rule.RULE_MAKER
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.edit.EditableCondition
 import io.rippledown.model.condition.edit.SuggestedCondition
+import kotlinx.coroutines.delay
 
 interface RuleMakerHandler {
     var onDone: (conditions: List<Condition>) -> Unit
@@ -22,6 +23,8 @@ interface RuleMakerHandler {
     var onUpdateConditions: (conditions: List<Condition>) -> Unit
     fun tipForExpression(expression: String): String
 }
+
+const val DEBOUNCE: Long = 1_000
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -32,6 +35,7 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
     var filterText by remember { mutableStateOf("") }
     var conditionToBeEdited by remember { mutableStateOf<EditableCondition?>(null) }
     var suggestionBeingEdited by remember { mutableStateOf<SuggestedCondition?>(null) }
+    var showWaitingIndicator by remember { mutableStateOf(false) }
 
     if (suggestionBeingEdited != null) {
         val dialogState = rememberDialogState(size = DpSize(420.dp, 160.dp))
@@ -69,10 +73,16 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
             })
         }
     }
+    LaunchedEffect(filterText) {
+        showWaitingIndicator = true
+    }
 
     LaunchedEffect(allConditions, filterText) {
+        delay(DEBOUNCE)
         val conditions = allConditions.sortedWith(compareBy { it.asText() })
-        val tip = handler.tipForExpression(filterText)
+        val tip = if (filterText.isNotBlank()) handler.tipForExpression(filterText) else ""
+        println("Expression: '$filterText', Tip: '$tip'")
+        showWaitingIndicator = false
         availableConditions = conditions.filterConditions(filterText, tip) - suggestionsUsed.values.toSet()
 
     }
@@ -93,7 +103,7 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
             }
         })
 
-        ConditionFilter(filterText, object : ConditionFilterHandler {
+        ConditionFilter(filterText, showWaitingIndicator, object : ConditionFilterHandler {
             override var onFilterChange = { filter: String ->
                 filterText = filter
             }
@@ -122,7 +132,6 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
                 handler.onCancel()
             }
             override var finish = {
-                println("rule finishing, selected conditions: $selectedConditions")
                 handler.onDone(selectedConditions)
             }
         })

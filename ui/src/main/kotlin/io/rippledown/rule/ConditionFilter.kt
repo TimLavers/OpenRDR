@@ -1,7 +1,7 @@
 package io.rippledown.rule
 
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -25,12 +26,16 @@ interface ConditionFilterHandler {
 }
 
 @Composable
-fun ConditionFilter(filter: String, handler: ConditionFilterHandler) {
-        val focusRequester = remember { FocusRequester() }
+fun ConditionFilter(filter: String, showWaitingIndicator: Boolean, handler: ConditionFilterHandler) {
+    val focusRequester = remember { FocusRequester() }
 
-        LaunchedEffect(Unit) {
-            focusRequester.requestFocus()
-        }
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         OutlinedTextField(
             label = {
                 Text(
@@ -52,12 +57,24 @@ fun ConditionFilter(filter: String, handler: ConditionFilterHandler) {
                 )
             },
             modifier = Modifier
-                .fillMaxWidth()
+
                 .focusRequester(focusRequester)
                 .semantics {
                     contentDescription = CURRENT_CONDITION
                 }
         )
+        Spacer(modifier = Modifier.width(10.dp))
 
+        if (showWaitingIndicator) {
+            CircularProgressIndicator(
+                strokeWidth = 1.dp,
+                modifier = Modifier
+                    .size(25.dp)
+            )
+        }
     }
+
+}
+
+
 

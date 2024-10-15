@@ -83,6 +83,19 @@ class RuleMakerTest {
     }
 
     @Test
+    fun `should not generate a tip if the entered expression is blank`() {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                RuleMaker(allSuggestions, handler)
+            }
+
+            //Then
+            verify(exactly = 0) { handler.tipForExpression(any()) }
+        }
+    }
+
+    @Test
     fun `if the tip is not an available condition, then it should not be included`() {
         every { handler.tipForExpression(any()) } returns "not a known condition"
         with(composeTestRule) {
@@ -488,6 +501,10 @@ fun nonEditableSuggestion(id: Int?, attribute: Attribute, text: String): NonEdit
 fun main() {
     val notes = Attribute(99, "Notes")
     val handler = mockk<RuleMakerHandler>(relaxed = true)
+    every { handler.tipForExpression(any()) } answers {
+        Thread.sleep(1000)
+        "Notes contains \"condition 3\""
+    }
     val conditions = (1..10).map { index ->
         nonEditableSuggestion(index, notes, "condition $index")
     }

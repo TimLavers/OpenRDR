@@ -7,8 +7,8 @@ Feature: When entering an expression to be used as a condition, the user is prov
       | UV        | 4.5   |     | 2.6  |        |
     And I start the client application
     And I start to build a rule to add the comment "Beach time!"
-    And I enter the expression "waves are large"
+    And I enter the expression "elevated waves"
     Then the suggested conditions should contain:
-      | Waves ia high |
+      | Waves is high |
     And stop the client application
 

@@ -17,7 +17,7 @@ class ConditionFilterTest {
             //Given
             val filter = "Waves are high"
             setContent {
-                ConditionFilter(filter, mockk())
+                ConditionFilter(filter, false, mockk())
             }
 
             //Then
@@ -32,7 +32,7 @@ class ConditionFilterTest {
             val filter = "Waves are high"
             val handler = mockk<ConditionFilterHandler>(relaxed = true)
             setContent {
-                ConditionFilter("", handler)
+                ConditionFilter("", false, handler)
             }
 
             //When

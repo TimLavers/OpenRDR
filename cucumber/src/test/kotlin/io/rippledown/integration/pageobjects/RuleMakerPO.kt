@@ -90,7 +90,7 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun requireAvailableConditionsContains(conditions: Set<String>) {
-        await().atMost(ofSeconds(2)).untilAsserted {
+        await().atMost(ofSeconds(5)).untilAsserted {
             val allShowing = allSuggestedConditions()
             conditions.forEach {
                 allShowing shouldContain it

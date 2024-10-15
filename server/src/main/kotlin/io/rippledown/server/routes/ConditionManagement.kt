@@ -8,7 +8,6 @@ import io.ktor.server.routing.*
 import io.rippledown.constants.api.CONDITION_HINTS
 import io.rippledown.constants.api.GET_OR_CREATE_CONDITION
 import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.ConditionList
 import io.rippledown.server.ServerApplication
 import io.rippledown.server.logger
 import kotlinx.serialization.encodeToString
@@ -19,10 +18,8 @@ fun Application.conditionManagement(application: ServerApplication) {
         get(CONDITION_HINTS) {
             val id = longId() // todo test
             val conditionHints = kbEndpoint(application).conditionHintsForCase(id)
-            logger.info("$CONDITION_HINTS, suggestions: $conditionHints")
             try {
-                val encodedSuggestions = Json.encodeToString(conditionHints)
-                logger.info("$CONDITION_HINTS, encoded suggestions: $encodedSuggestions")
+                Json.encodeToString(conditionHints)
             } catch (e: Exception) {
                 e.printStackTrace()
                 logger.error("COULD NOT SERIALISE HINTS", e)
