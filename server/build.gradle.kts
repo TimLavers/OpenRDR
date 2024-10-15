@@ -7,7 +7,7 @@ plugins {
 
 dependencies {
     implementation(project(":common"))
-//    implementation(project(":hints"))
+    implementation(project(":hints"))
 
     implementation(libs.bundles.ktor)
     implementation(libs.bundles.kotlinx)

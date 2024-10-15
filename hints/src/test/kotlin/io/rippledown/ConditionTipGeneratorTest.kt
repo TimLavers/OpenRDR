@@ -10,7 +10,7 @@ class ConditionTipGeneratorTest {
 
     @BeforeEach
     fun setUp() {
-        conditionTipGenerator = ConditionTipGenerator(setOf("Glucose", "TSH", "XYZ"))
+        conditionTipGenerator = ConditionTipGenerator(setOf("Glucose", "TSH", "XYZ", "Waves"))
     }
 
     @Test
@@ -19,5 +19,6 @@ class ConditionTipGeneratorTest {
         conditionTipGenerator.conditionTip("tsh is below the normal range") shouldBe "TSH is low"
         conditionTipGenerator.conditionTip("xyz = 3.14159") shouldBe "XYZ is 3.14159"
         conditionTipGenerator.conditionTip("glucose is pending") shouldBe "Glucose is \"pending\""
+        conditionTipGenerator.conditionTip("elevated waves") shouldBe "Waves is high"
     }
 }

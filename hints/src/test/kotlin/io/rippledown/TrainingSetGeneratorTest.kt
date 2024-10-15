@@ -2,30 +2,12 @@ package io.rippledown
 
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
-import kotlin.io.path.createTempFile
-import kotlin.io.path.writeText
 
 class TrainingSetGeneratorTest {
     @Test
     fun `should generate a training set`() {
         // Given
-        val fileContents =
-            """
-                EXPECTED: x is high
-                elevated x
-                excessive x
-                
-                expected: x is low
-                reduced x
-                lowered x
-            
-            """.trimIndent()
-        val file = createTempFile().apply {
-            writeText(fileContents)
-        }.toFile()
-
-        // When
-        val trainingSet = trainingSet(file)
+        val trainingSet = trainingSet("/training_set_for_testing.txt")
 
         // Then
         trainingSet shouldBe """

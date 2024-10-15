@@ -6,10 +6,10 @@ import dev.shreyaspatil.ai.client.generativeai.type.HarmCategory
 import dev.shreyaspatil.ai.client.generativeai.type.SafetySetting
 import dev.shreyaspatil.ai.client.generativeai.type.content
 import kotlinx.coroutines.runBlocking
-import java.io.File
 import java.lang.System.getenv
 
 const val GEMINI_MODEL = "gemini-1.5-flash"
+const val TRAINING_SET_FILE = "/training_set.txt"
 
 val generativeModel = GenerativeModel(
     modelName = GEMINI_MODEL,
@@ -17,7 +17,7 @@ val generativeModel = GenerativeModel(
     safetySettings = noSafetySettings()
 )
 
-val trainingSet = trainingSet(File("src/main/resources/training_set.txt"))
+val trainingSet = trainingSet(TRAINING_SET_FILE)
 
 fun noSafetySettings() =
     HarmCategory.entries
