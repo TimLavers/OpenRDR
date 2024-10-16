@@ -103,9 +103,28 @@ fun ComposeTestRule.enterNewVariableValueInConditionEditor(text: String) {
     onNodeWithContentDescription(EDIT_CONDITION_FIELD_DESCRIPTION).performTextInput(text)
 }
 
+fun ComposeTestRule.waitUntilAsserted(timeoutMillis: Long = 1_000, block: () -> Unit) {
+    waitUntil(timeoutMillis) {
+        try {
+            block()
+            true
+        } catch (e: Error) {
+            false
+        }
+    }
+}
+
+private fun ComposeTestRule.waitForConditionEditorToBeDisplayed() {
+    waitUntilAsserted {
+        onNodeWithContentDescription(EDIT_CONDITION_OK_BUTTON_DESCRIPTION).assertIsEnabled()
+    }
+}
+
 fun ComposeTestRule.clickConditionEditorOkButton() {
+    waitForConditionEditorToBeDisplayed()
     onNodeWithContentDescription(EDIT_CONDITION_OK_BUTTON_DESCRIPTION)
         .assertIsDisplayed()
+        .assertIsEnabled()
         .performClick()
     waitForIdle()
 }
@@ -114,6 +133,7 @@ fun ComposeTestRule.requireConditionEditorOkButtonDisabled() {
     onNodeWithContentDescription(EDIT_CONDITION_OK_BUTTON_DESCRIPTION)
         .assertIsNotEnabled()
 }
+
 fun ComposeTestRule.requireConditionEditorOkButtonEnabled() {
     onNodeWithContentDescription(EDIT_CONDITION_OK_BUTTON_DESCRIPTION)
         .assertIsEnabled()
@@ -131,11 +151,13 @@ fun ComposeTestRule.requireConditionConstantTextFirstPartToBe(expected: String) 
         .assertIsDisplayed()
         .assertTextEquals(expected)
 }
+
 fun ComposeTestRule.requireConditionConstantTextSecondPartToBe(expected: String) {
     onNodeWithContentDescription(EDIT_CONDITION_TEXT_2_DESCRIPTION)
         .assertIsDisplayed()
         .assertTextEquals(expected)
 }
+
 fun ComposeTestRule.requireConditionEditableTextToBe(expected: String) {
     onNodeWithContentDescription(EDIT_CONDITION_FIELD_DESCRIPTION)
         .assertIsDisplayed()

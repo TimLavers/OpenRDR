@@ -2,7 +2,9 @@ package io.rippledown
 
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
+import kotlin.test.Ignore
 
+@Ignore("Run these tests individually - the free version of the Gemini API has a rate limit of 15 / minute")
 class GeminiTest {
 
     @Test
