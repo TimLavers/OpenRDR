@@ -152,3 +152,12 @@ fun ComposeTestRule.enterTextIntoConditionFilter(text: String) {
     onNodeWithContentDescription(CURRENT_CONDITION, useUnmergedTree = true)
         .performTextInput(text)
 }
+
+fun ComposeTestRule.requireWaitingIndicatorToBeShowing() {
+    onNodeWithContentDescription(WAITING_INDICATOR)
+        .assertIsDisplayed()
+}
+
+fun ComposeTestRule.requireWaitingIndicatorNotToBeShowing() {
+    onNodeWithContentDescription(WAITING_INDICATOR).assertDoesNotExist()
+}

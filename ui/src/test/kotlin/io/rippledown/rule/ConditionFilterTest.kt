@@ -42,6 +42,34 @@ class ConditionFilterTest {
             verify { handler.onFilterChange(filter) }
         }
     }
+
+    @Test
+    fun `should show the waiting indicator if specified`() {
+        with(composeTestRule) {
+            //Given
+            val handler = mockk<ConditionFilterHandler>(relaxed = true)
+            setContent {
+                ConditionFilter("", true, handler)
+            }
+
+            //Then
+            requireWaitingIndicatorToBeShowing()
+        }
+    }
+
+    @Test
+    fun `should not show the waiting indicator if it is not specified`() {
+        with(composeTestRule) {
+            //Given
+            val handler = mockk<ConditionFilterHandler>(relaxed = true)
+            setContent {
+                ConditionFilter("", false, handler)
+            }
+
+            //Then
+            requireWaitingIndicatorNotToBeShowing()
+        }
+    }
 }
 
 

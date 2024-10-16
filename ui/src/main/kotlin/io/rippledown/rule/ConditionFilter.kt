@@ -25,6 +25,7 @@ interface ConditionFilterHandler {
     var onFilterChange: (filter: String) -> Unit
 }
 
+const val WAITING_INDICATOR = "WAITING_INDICATOR"
 @Composable
 fun ConditionFilter(filter: String, showWaitingIndicator: Boolean, handler: ConditionFilterHandler) {
     val focusRequester = remember { FocusRequester() }
@@ -70,6 +71,9 @@ fun ConditionFilter(filter: String, showWaitingIndicator: Boolean, handler: Cond
                 strokeWidth = 1.dp,
                 modifier = Modifier
                     .size(25.dp)
+                    .semantics {
+                        contentDescription = WAITING_INDICATOR
+                    }
             )
         }
     }

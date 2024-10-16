@@ -212,6 +212,7 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun enterExpressionIntoSearchField(expression: String) {
+        waitForContextToBeNotNull(contextProvider, CURRENT_CONDITION)
         execute {
             contextProvider().find(CURRENT_CONDITION)?.accessibleEditableText?.also {
                 it.setTextContents(expression)
