@@ -20,5 +20,6 @@ class ConditionTipGeneratorTest {
         conditionTipGenerator.conditionTip("xyz = 3.14159") shouldBe "XYZ is 3.14159"
         conditionTipGenerator.conditionTip("glucose is pending") shouldBe "Glucose is \"pending\""
         conditionTipGenerator.conditionTip("elevated waves") shouldBe "Waves is high"
+        conditionTipGenerator.conditionTip("very tall waves") shouldBe "Waves is high"
     }
 }
