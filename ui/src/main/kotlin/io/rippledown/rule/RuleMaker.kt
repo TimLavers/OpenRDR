@@ -81,7 +81,6 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
         delay(DEBOUNCE)
         val conditions = allConditions.sortedWith(compareBy { it.asText() })
         val tip = if (filterText.isNotBlank()) handler.tipForExpression(filterText) else ""
-        println("Expression: '$filterText', Tip: '$tip'")
         showWaitingIndicator = false
         availableConditions = conditions.filterConditions(filterText, tip) - suggestionsUsed.values.toSet()
 
