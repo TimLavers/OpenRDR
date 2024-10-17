@@ -6,6 +6,8 @@ import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.utils.io.*
 import io.rippledown.constants.api.*
+import io.rippledown.constants.server.ATTRIBUTE_NAMES
+import io.rippledown.constants.server.EXPRESSION
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
@@ -29,6 +31,7 @@ class EngineConfig {
     var returnCornerstone: ViewableCase = createCase("The Case")
     var returnCornerstoneStatus: CornerstoneStatus = CornerstoneStatus()
     var returnConditionList: ConditionList = ConditionList()
+    var returnTip: String = ""
 
     var expectedCaseId: Long? = null
     var expectedCase: ViewableCase? = null
@@ -39,6 +42,8 @@ class EngineConfig {
     var expectedUpdateCornerstoneRequest: UpdateCornerstoneRequest? = null
     var expectedCornerstoneIndex: Int? = null
     var expectedUpdatedCornerstoneStatus: CornerstoneStatus? = null
+    var expectedExpression: String = ""
+    var expectedAttributeNames: Collection<String> = emptyList()
 
     var expectedMovedAttributeId: Int? = null
     var expectedTargetAttributeId: Int? = null
@@ -155,6 +160,12 @@ private class EngineBuilder(private val config: EngineConfig) {
             CONDITION_HINTS -> {
                 if (config.expectedCaseId != null) request.url.parameters["id"] shouldBe config.expectedCaseId.toString()
                 httpResponseData(json.encodeToString(config.returnConditionList))
+            }
+
+            TIP_FOR_EXPRESSION -> {
+                request.url.parameters[EXPRESSION] shouldBe config.expectedExpression
+                request.url.parameters[ATTRIBUTE_NAMES] shouldBe config.expectedAttributeNames.joinToString(",")
+                httpResponseData(json.encodeToString(config.returnTip))
             }
 
             DEFAULT_KB -> {

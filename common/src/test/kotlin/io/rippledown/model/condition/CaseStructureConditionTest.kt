@@ -14,6 +14,11 @@ class CaseStructureConditionTest: ConditionTestBase() {
     private val tshAbsent = CaseStructureCondition(123, IsAbsentFromCase(tsh))
 
     @Test
+    fun attributeNames() {
+        tshAbsent.attributeNames() shouldBe setOf(tsh.name)
+    }
+
+    @Test
     fun holds() {
         tshAbsent.holds(multiEpisodeTSHCase("1", "2", "3")) shouldBe false
         tshAbsent.holds(multiEpisodeTSHCase("1", "2", "0")) shouldBe false

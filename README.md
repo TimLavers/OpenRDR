@@ -33,7 +33,6 @@ There are four types of tests:
 | Test type         | Gradle verification task | 
 |-------------------|--------------------------|
 | jvm unit tests    | jvmTest                  |    
-| js unit tests     | jsTest                   |   
 | integration tests | integrationTest          |    
 | cucumber tests    | cucumberTest             | 
 

@@ -1,8 +1,9 @@
 package io.rippledown.model.condition
 
-import io.rippledown.model.*
-import io.rippledown.model.condition.episodic.signature.Signature
+import io.rippledown.model.Attribute
+import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.episodic.predicate.TestResultPredicate
+import io.rippledown.model.condition.episodic.signature.Signature
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.nullable
@@ -38,6 +39,8 @@ data class EpisodicCondition(override val id: Int? = null,
             other.attribute.isEquivalent(attribute) && other.predicate == predicate && other.signature == signature
         } else false
     }
+
+    override fun attributeNames() = setOf(attribute.name)
 }
 
 object EpisodicConditionSerializer: KSerializer<EpisodicCondition> {

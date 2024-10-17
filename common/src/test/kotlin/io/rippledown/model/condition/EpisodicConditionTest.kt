@@ -16,6 +16,11 @@ class EpisodicConditionTest: ConditionTestBase() {
     private val tshLow = EpisodicCondition(123, tsh, Low, Current)
 
     @Test
+    fun attributeNames() {
+        tshLow.attributeNames() shouldBe setOf(tsh.name)
+    }
+
+    @Test
     fun secondaryConstructor() {
         val nullId = EpisodicCondition(tsh, Low, Current)
         nullId.id shouldBe null

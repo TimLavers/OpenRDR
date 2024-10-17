@@ -39,6 +39,7 @@ open class OpenRDRServerTestBase {
             attributeManagement(serverApplication)
             conclusionManagement(serverApplication)
             conditionManagement(serverApplication)
+            ruleSession(serverApplication)
         }
     }
 }

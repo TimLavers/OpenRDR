@@ -22,4 +22,6 @@ data class And(val left: Condition, val right: Condition): Condition() {
             is And -> left.sameAs(other.left) && right.sameAs(other.right)
             else -> false
         }
+
+    override fun attributeNames() = left.attributeNames() + right.attributeNames()
 }

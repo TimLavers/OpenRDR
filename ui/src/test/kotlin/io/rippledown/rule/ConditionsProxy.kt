@@ -4,7 +4,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import io.rippledown.constants.main.*
-import io.rippledown.constants.main.EDIT_CONDITION_TEXT_1_DESCRIPTION
 import io.rippledown.constants.rule.*
 
 fun ComposeTestRule.requireRuleMakerToBeDisplayed() {
@@ -104,9 +103,28 @@ fun ComposeTestRule.enterNewVariableValueInConditionEditor(text: String) {
     onNodeWithContentDescription(EDIT_CONDITION_FIELD_DESCRIPTION).performTextInput(text)
 }
 
+fun ComposeTestRule.waitUntilAsserted(timeoutMillis: Long = 1_000, block: () -> Unit) {
+    waitUntil(timeoutMillis) {
+        try {
+            block()
+            true
+        } catch (e: Error) {
+            false
+        }
+    }
+}
+
+private fun ComposeTestRule.waitForConditionEditorToBeDisplayed() {
+    waitUntilAsserted {
+        onNodeWithContentDescription(EDIT_CONDITION_OK_BUTTON_DESCRIPTION).assertIsEnabled()
+    }
+}
+
 fun ComposeTestRule.clickConditionEditorOkButton() {
+    waitForConditionEditorToBeDisplayed()
     onNodeWithContentDescription(EDIT_CONDITION_OK_BUTTON_DESCRIPTION)
         .assertIsDisplayed()
+        .assertIsEnabled()
         .performClick()
     waitForIdle()
 }
@@ -115,6 +133,7 @@ fun ComposeTestRule.requireConditionEditorOkButtonDisabled() {
     onNodeWithContentDescription(EDIT_CONDITION_OK_BUTTON_DESCRIPTION)
         .assertIsNotEnabled()
 }
+
 fun ComposeTestRule.requireConditionEditorOkButtonEnabled() {
     onNodeWithContentDescription(EDIT_CONDITION_OK_BUTTON_DESCRIPTION)
         .assertIsEnabled()
@@ -132,13 +151,35 @@ fun ComposeTestRule.requireConditionConstantTextFirstPartToBe(expected: String) 
         .assertIsDisplayed()
         .assertTextEquals(expected)
 }
+
 fun ComposeTestRule.requireConditionConstantTextSecondPartToBe(expected: String) {
     onNodeWithContentDescription(EDIT_CONDITION_TEXT_2_DESCRIPTION)
         .assertIsDisplayed()
         .assertTextEquals(expected)
 }
+
 fun ComposeTestRule.requireConditionEditableTextToBe(expected: String) {
     onNodeWithContentDescription(EDIT_CONDITION_FIELD_DESCRIPTION)
         .assertIsDisplayed()
         .assertTextEquals(expected)
+}
+
+fun ComposeTestRule.requireConditionFilterText(expected: String) {
+    onNodeWithContentDescription(CURRENT_CONDITION, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .assertTextEquals(expected)
+}
+
+fun ComposeTestRule.enterTextIntoConditionFilter(text: String) {
+    onNodeWithContentDescription(CURRENT_CONDITION, useUnmergedTree = true)
+        .performTextInput(text)
+}
+
+fun ComposeTestRule.requireWaitingIndicatorToBeShowing() {
+    onNodeWithContentDescription(WAITING_INDICATOR)
+        .assertIsDisplayed()
+}
+
+fun ComposeTestRule.requireWaitingIndicatorNotToBeShowing() {
+    onNodeWithContentDescription(WAITING_INDICATOR).assertDoesNotExist()
 }

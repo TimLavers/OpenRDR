@@ -15,12 +15,16 @@ import io.rippledown.constants.rule.RULE_MAKER
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.edit.EditableCondition
 import io.rippledown.model.condition.edit.SuggestedCondition
+import kotlinx.coroutines.delay
 
 interface RuleMakerHandler {
     var onDone: (conditions: List<Condition>) -> Unit
     var onCancel: () -> Unit
     var onUpdateConditions: (conditions: List<Condition>) -> Unit
+    fun tipForExpression(expression: String): String
 }
+
+const val DEBOUNCE: Long = 1_000
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -31,6 +35,7 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
     var filterText by remember { mutableStateOf("") }
     var conditionToBeEdited by remember { mutableStateOf<EditableCondition?>(null) }
     var suggestionBeingEdited by remember { mutableStateOf<SuggestedCondition?>(null) }
+    var showWaitingIndicator by remember { mutableStateOf(false) }
 
     if (suggestionBeingEdited != null) {
         val dialogState = rememberDialogState(size = DpSize(420.dp, 160.dp))
@@ -68,9 +73,17 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
             })
         }
     }
+    LaunchedEffect(filterText) {
+        showWaitingIndicator = true
+    }
 
-    LaunchedEffect(allConditions) {
-        availableConditions = allConditions.sortedWith(compareBy { it.asText() })
+    LaunchedEffect(allConditions, filterText) {
+        delay(DEBOUNCE)
+        val conditions = allConditions.sortedWith(compareBy { it.asText() })
+        val tip = if (filterText.isNotBlank()) handler.tipForExpression(filterText) else ""
+        showWaitingIndicator = false
+        availableConditions = conditions.filterConditions(filterText, tip) - suggestionsUsed.values.toSet()
+
     }
     Column(
         modifier = Modifier
@@ -89,10 +102,9 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
             }
         })
 
-        ConditionFilter(filterText, object : ConditionFilterHandler {
+        ConditionFilter(filterText, showWaitingIndicator, object : ConditionFilterHandler {
             override var onFilterChange = { filter: String ->
                 filterText = filter
-                availableConditions = allConditions.filterConditions(filter) - suggestionsUsed.values.toSet()
             }
         })
 
@@ -119,11 +131,12 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
                 handler.onCancel()
             }
             override var finish = {
-                println("rule finishing, selected conditions: $selectedConditions")
                 handler.onDone(selectedConditions)
             }
         })
     }
 }
 
-fun List<SuggestedCondition>.filterConditions(filter: String) = filter { it.asText().contains(filter, ignoreCase = true) }
+fun List<SuggestedCondition>.filterConditions(filter: String, tip: String) = filter {
+    it.asText().contains(filter, ignoreCase = true) || it.asText().equals(tip, ignoreCase = true)
+}

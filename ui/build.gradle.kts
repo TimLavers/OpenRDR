@@ -11,6 +11,7 @@ dependencies {
     implementation(project(":common"))
     implementation(compose.desktop.currentOs)
     implementation(compose.preview)
+    implementation(compose.material)
     implementation(compose.material3)
     implementation(libs.composePreviewDesktop)
     implementation(libs.logback)

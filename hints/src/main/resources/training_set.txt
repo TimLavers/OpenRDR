@@ -1,0 +1,35 @@
+EXPECTED: x is high
+elevated x
+excessive x
+
+EXPECTED: x is low
+reduced x
+lowered x
+
+EXPECTED: x is normal
+x is within range
+x is fine
+
+EXPECTED: x is y
+x is equal to y
+x is the same as y
+
+EXPECTED: x is 1.5
+x = 1.5
+x == 1.5
+
+EXPECTED: x is "abc"
+x is abc
+
+EXPECTED: x is "pending"
+x equals pending
+
+EXPECTED: x <= y
+x is less than or equal to y
+
+EXPECTED: x is in case
+x is present
+x detected
+
+EXPECTED: x increasing
+x is increasing

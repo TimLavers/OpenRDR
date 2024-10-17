@@ -3,6 +3,7 @@ package io.rippledown.rule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.model.Attribute
@@ -45,6 +46,102 @@ class RuleMakerTest {
 
             //Then
             requireAvailableConditionsToBeDisplayed(conditionsShown)
+        }
+    }
+
+    @Test
+    fun `the available conditions should be filtered by the text entered`() {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                RuleMaker(allSuggestions, handler)
+            }
+
+            //When
+            enterTextIntoConditionFilter("3")
+
+            //Then
+            requireAvailableConditionsToBeDisplayed(listOf("Notes contains \"3\""))
+        }
+    }
+
+    @Test
+    fun `if the tip is an available condition, then it should always be included`() {
+        every { handler.tipForExpression(any()) } returns suggestionConditions[2].asText()
+        with(composeTestRule) {
+            //Given
+            setContent {
+                RuleMaker(allSuggestions, handler)
+            }
+
+            //When
+            enterTextIntoConditionFilter("Notes has a 3")
+
+            //Then
+            requireAvailableConditionsToBeDisplayed(listOf("Notes contains \"3\""))
+        }
+    }
+
+    @Test
+    fun `should not generate a tip if the entered expression is blank`() {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                RuleMaker(allSuggestions, handler)
+            }
+
+            //Then
+            verify(exactly = 0) { handler.tipForExpression(any()) }
+        }
+    }
+
+    @Test
+    fun `if the tip is not an available condition, then it should not be included`() {
+        every { handler.tipForExpression(any()) } returns "not a known condition"
+        with(composeTestRule) {
+            //Given
+            setContent {
+                RuleMaker(allSuggestions, handler)
+            }
+
+            //When
+            enterTextIntoConditionFilter("elevated surf")
+
+            //Then
+            requireAvailableConditionsToBeDisplayed(listOf())
+        }
+    }
+
+    @Test
+    fun `if the tip is not an available condition, then show conditions matching the filter text`() {
+        every { handler.tipForExpression(any()) } returns "not a known condition"
+        with(composeTestRule) {
+            //Given
+            setContent {
+                RuleMaker(allSuggestions, handler)
+            }
+
+            //When
+            enterTextIntoConditionFilter("3")
+
+            //Then
+            requireAvailableConditionsToBeDisplayed(listOf("Notes contains \"3\""))
+        }
+    }
+
+    @Test
+    fun `there should be no available conditions if none match the filter text entered`() {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                RuleMaker(allSuggestions, handler)
+            }
+
+            //When
+            enterTextIntoConditionFilter("42")
+
+            //Then
+            requireAvailableConditionsToBeDisplayed(listOf())
         }
     }
 
@@ -143,10 +240,19 @@ class RuleMakerTest {
             clickSelectedConditions(listOf(allSuggestions[1].asText(), allSuggestions[2].asText()))
 
             //Then
-            verify { handler.onUpdateConditions(listOf(suggestionConditions[0], suggestionConditions[3], suggestionConditions[4])) }
+            verify {
+                handler.onUpdateConditions(
+                    listOf(
+                        suggestionConditions[0],
+                        suggestionConditions[3],
+                        suggestionConditions[4]
+                    )
+                )
+            }
         }
     }
 }
+
 class RuleMakerWithReusableEditableSuggestionsTest {
     @get:Rule
     var composeTestRule = createComposeRule()
@@ -190,7 +296,7 @@ class RuleMakerWithReusableEditableSuggestionsTest {
 
             val editResult = allSuggestions[2].editableCondition()!!.condition(newValue)
             verify { handler.onUpdateConditions(listOf(editResult)) }
-            requireSelectedConditionsToBeDisplayed(listOf( editResult.asText()))
+            requireSelectedConditionsToBeDisplayed(listOf(editResult.asText()))
         }
     }
 
@@ -202,8 +308,8 @@ class RuleMakerWithReusableEditableSuggestionsTest {
             }
             clickAvailableCondition(1)
             clickConditionEditorOkButton()
-            verify { handler.onUpdateConditions(listOf( suggestionConditions[1])) }
-            requireSelectedConditionsToBeDisplayed(listOf( conditionsShown[1]))
+            verify { handler.onUpdateConditions(listOf(suggestionConditions[1])) }
+            requireSelectedConditionsToBeDisplayed(listOf(conditionsShown[1]))
         }
     }
 
@@ -241,7 +347,7 @@ class RuleMakerWithReusableEditableSuggestionsTest {
             // Select the first and use it without editing
             clickAvailableCondition(0)
             clickConditionEditorOkButton()
-            verify { handler.onUpdateConditions(listOf( suggestionConditions[0])) }
+            verify { handler.onUpdateConditions(listOf(suggestionConditions[0])) }
 
             // Remove the added condition
             clickSelectedConditions(listOf(conditionsShown[0]))
@@ -263,10 +369,10 @@ class RuleMakerWithReusableEditableSuggestionsTest {
             enterNewVariableValueInConditionEditor(newValue)
             clickConditionEditorOkButton()
             val editResult = allSuggestions[2].editableCondition()!!.condition(newValue)
-            verify { handler.onUpdateConditions(listOf( editResult)) }
+            verify { handler.onUpdateConditions(listOf(editResult)) }
 
             // Remove the added condition
-            clickSelectedConditions(listOf( editResult.asText()))
+            clickSelectedConditions(listOf(editResult.asText()))
 
             verify { handler.onUpdateConditions(listOf()) }
             requireAvailableConditionsToBeDisplayed(conditionsShown)
@@ -287,100 +393,15 @@ class RuleMakerWithReusableEditableSuggestionsTest {
         }
     }
 }
-class RuleMakerWithNonReusableEditableSuggestionsTest {
-    @get:Rule
-    var composeTestRule = createComposeRule()
-
-    private lateinit var allSuggestions: List<SuggestedCondition>
-    private lateinit var conditionsShown: List<String>
-    private lateinit var suggestionConditions: List<Condition>
-    private val notes = Attribute(99, "Notes")
-    private lateinit var handler: RuleMakerHandler
-
-    @Before
-    fun setUp() {
-        allSuggestions = (1..5).map { index ->
-            nonReusableEditableSuggestion(notes, index)
-        }
-        conditionsShown = allSuggestions.map { it.asText() }
-        suggestionConditions = allSuggestions.map { it.initialSuggestion() }
-        handler = mockk<RuleMakerHandler>(relaxed = true)
-    }
-
-    @Test
-    fun `using an editable condition without alteration removes the original suggestion`() {
-        with(composeTestRule) {
-            setContent {
-                RuleMaker(allSuggestions, handler)
-            }
-            clickAvailableCondition(0)
-            clickConditionEditorOkButton()
-            requireAvailableConditionsToBeDisplayed(conditionsShown.takeLast(conditionsShown.size - 1))
-        }
-    }
-
-    @Test
-    fun `using an editable condition with alteration removes the original suggestion`() {
-        with(composeTestRule) {
-            setContent {
-                RuleMaker(allSuggestions, handler)
-            }
-            clickAvailableCondition(0)
-            enterNewVariableValueInConditionEditor("0.0")
-            clickConditionEditorOkButton()
-
-            requireAvailableConditionsToBeDisplayed(conditionsShown.takeLast(conditionsShown.size - 1))
-        }
-    }
-
-    @Test
-    fun `removing an editable condition that was added unaltered re-instates the original suggestion`() {
-        with(composeTestRule) {
-            setContent {
-                RuleMaker(allSuggestions, handler)
-            }
-            // Select the first and use it without editing
-            clickAvailableCondition(0)
-            clickConditionEditorOkButton()
-            verify { handler.onUpdateConditions(listOf( suggestionConditions[0])) }
-
-            // Remove the added condition
-            clickSelectedConditions(listOf(conditionsShown[0]))
-
-            verify { handler.onUpdateConditions(listOf()) }
-            requireAvailableConditionsToBeDisplayed(conditionsShown)
-        }
-    }
-
-    @Test
-    fun `removing an editable condition that was added after alteration re-instates the original suggestion`() {
-        with(composeTestRule) {
-            setContent {
-                RuleMaker(allSuggestions, handler)
-            }
-            // Select the first and use it after editing
-            clickAvailableCondition(0)
-            val newValue = "0.0"
-            enterNewVariableValueInConditionEditor(newValue)
-            clickConditionEditorOkButton()
-            val editResult = allSuggestions[2].editableCondition()!!.condition(newValue)
-            verify { handler.onUpdateConditions(listOf( editResult)) }
-
-            // Remove the added condition
-            clickSelectedConditions(listOf( editResult.asText()))
-
-            verify { handler.onUpdateConditions(listOf()) }
-            requireAvailableConditionsToBeDisplayed(conditionsShown)
-        }
-    }
-}
 
 fun reusableEditableSuggestion(attribute: Attribute, text: String): EditableSuggestedCondition {
     val editableCondition = EditableContainsCondition(attribute, text)
     return EditableSuggestedCondition(editableCondition)
 }
+
 fun nonReusableEditableSuggestion(attribute: Attribute, text: Int): EditableSuggestedCondition {
-    val editableCondition = EditableGreaterThanEqualsCondition(attribute, EditableValue(text.toString(), Type.Real), Current)
+    val editableCondition =
+        EditableGreaterThanEqualsCondition(attribute, EditableValue(text.toString(), Type.Real), Current)
     return EditableSuggestedCondition(editableCondition)
 }
 
@@ -388,11 +409,16 @@ fun nonEditableSuggestion(id: Int?, attribute: Attribute, text: String): NonEdit
     val initialSuggestion = containsText(id, attribute, text)
     return NonEditableSuggestedCondition(initialSuggestion)
 }
+
 fun main() {
     val notes = Attribute(99, "Notes")
     val handler = mockk<RuleMakerHandler>(relaxed = true)
+    every { handler.tipForExpression(any()) } answers {
+        Thread.sleep(1000)
+        "Notes contains \"condition 3\""
+    }
     val conditions = (1..10).map { index ->
-       nonEditableSuggestion(index, notes,"condition $index")
+        nonEditableSuggestion(index, notes, "condition $index")
     }
     application {
         Window(

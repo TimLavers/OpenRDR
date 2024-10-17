@@ -207,6 +207,13 @@ fun OpenRDRUI(handler: Handler) {
                         override fun exemptCornerstone(index: Int) = runBlocking {
                             cornerstoneStatus = api.exemptCornerstone(index)
                         }
+
+                        override fun tipForExpression(
+                            conditionText: String,
+                            attributeNames: Collection<String>
+                        ) = runBlocking {
+                            api.tipForExpression(conditionText, attributeNames)
+                        }
                     }
                 )
             }

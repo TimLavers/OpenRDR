@@ -9,4 +9,5 @@ sealed interface CaseStructurePredicate {
     fun evaluate(case: RDRCase): Boolean
     fun description(): String
     fun alignAttributes(idToAttribute: (Int) -> Attribute): CaseStructurePredicate
+    fun attributeNames(): Collection<String> = emptySet()
 }

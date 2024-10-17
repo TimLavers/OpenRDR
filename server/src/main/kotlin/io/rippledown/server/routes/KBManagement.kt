@@ -24,27 +24,25 @@ fun Application.kbManagement(application: ServerApplication) {
             logger.info("KBManagement, import kb...")
 
             val multipart = call.receiveMultipart()
-            val allParts = multipart.readAllParts()
-            logger.info("KBManagement, import case, parts: ${allParts.size}")
-
-            require(allParts.size == 1) {
-                "Zip import takes a single file."
+            multipart.forEachPart {
+                logger.info("KBManagement, import kb, part: $it")
+                if (it is PartData.FileItem) {
+                    val partReader = ByteArrayOutputStream()
+                    val buffered = BufferedOutputStream(partReader)
+                    it.streamProvider().use { inputStream ->
+                        inputStream.copyTo(buffered)
+                        inputStream.close()
+                    }
+                    withContext(Dispatchers.IO) {
+                        buffered.flush()
+                    }
+                    val bytes = partReader.toByteArray()
+                    val kbInfo = application.importKBFromZip(bytes)
+                    call.respond(OK, kbInfo)
+                }
             }
-            val part = allParts[0]
-            val partReader = ByteArrayOutputStream()
-            val buffered = BufferedOutputStream(partReader)
-            val fileItem = part as PartData.FileItem
-            fileItem.streamProvider().use {
-                it.copyTo(buffered)
-                it.close()
-            }
-            withContext(Dispatchers.IO) {
-                buffered.flush()
-            }
-            val bytes = partReader.toByteArray()
-            val kbInfo = application.importKBFromZip(bytes)
-            call.respond(OK, kbInfo)
         }
+
         get(EXPORT_KB) {
             val kbEndpoint = kbEndpoint(application)
             val file = kbEndpoint.exportKBToZip()
