@@ -321,7 +321,7 @@ class Defs {
     fun requireInterpretations(dataTable: DataTable) {
         dataTable.cells().forEach { row ->
             val case = row[0]
-            val expectedInterpretation = row[1]
+            val expectedInterpretation = row[1] ?: ""
             caseListPO().select(case)
             caseViewPO().waitForNameToShow(case)
             interpretationViewPO().waitForInterpretationText(expectedInterpretation)
