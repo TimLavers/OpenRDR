@@ -2,13 +2,14 @@ package io.rippledown.integration.proxy
 
 import io.rippledown.integration.restclient.RESTClient
 import io.rippledown.model.RDRCase
+import io.rippledown.model.ReferenceRange
 import io.rippledown.model.TestResult
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.external.MeasurementEvent
 import kotlinx.serialization.json.Json
 //import org.apache.commons.io.FileUtils
 import java.io.File
-import java.time.Instant
+import java.time.Instant.now
 
 class LabProxy(tempDir: File, val restProxy: RESTClient) {
     private val inputDir = File(tempDir, "cases")
@@ -48,10 +49,29 @@ class LabProxy(tempDir: File, val restProxy: RESTClient) {
     }
 
     fun provideCase(name: String, attributeNameToValue: Map<String, String>) {
-        val now = Instant.now().toEpochMilli()
+        val now = now().toEpochMilli()
         val data = mutableMapOf<MeasurementEvent, TestResult>()
         attributeNameToValue.forEach { data[MeasurementEvent(it.key, now)] = TestResult(it.value) }
         val case = ExternalCase(name, data)
         restProxy.provideCase(case)
     }
+
+    fun provideCase(caseName: String, details: List<TestResultDetail>) {
+        val now = now().toEpochMilli()
+        val data = details.map {
+            val referenceRange = ReferenceRange(it.lowReferenceRange, it.highReferenceRange)
+            MeasurementEvent(it.attributeName, now) to TestResult(it.result, referenceRange, it.units)
+        }.toMap()
+        val case = ExternalCase(caseName, data)
+        restProxy.provideCase(case)
+    }
+
 }
+
+data class TestResultDetail(
+    val attributeName: String,
+    val result: String,
+    val lowReferenceRange: String?,
+    val highReferenceRange: String?,
+    val units: String?
+)

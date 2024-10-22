@@ -7,6 +7,11 @@ import kotlin.test.Test
 class TrueTest: ConditionTestBase() {
 
     @Test
+    fun attributeNamesTest() {
+        True.attributeNames() shouldBe emptySet()
+    }
+
+    @Test
     fun serializationTest() {
         serializeDeserialize(True) shouldBe True
     }

@@ -13,6 +13,7 @@ import io.cucumber.java.en.When
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.pause
 import io.rippledown.integration.proxy.ConfiguredTestData
+import io.rippledown.integration.proxy.TestResultDetail
 import io.rippledown.integration.waitUntilAsserted
 import org.awaitility.Awaitility
 import steps.StepsInfrastructure.cleanup
@@ -178,6 +179,17 @@ class Defs {
         labProxy().provideCase(caseName, attributeNameToValue)
     }
 
+    @Given("case {word} is provided with the following values, reference ranges and units:")
+    fun provideCaseWithDataIncludingReferenceRangesAndUnits(caseName: String, dataTable: DataTable) {
+        //| attribute | value | lower reference range| upper reference range | units |
+        val details = dataTable.cells()
+            .drop(1) // Drop the header row
+            .map {
+                TestResultDetail(it[0], it[1], it[2], it[3], it[4])
+            }
+        labProxy().provideCase(caseName, details)
+    }
+
     @Then("the displayed KB name is (now ){word}")
     fun theDisplayedKBNameIsNow(kbName: String) {
         waitUntilAsserted {
@@ -309,7 +321,7 @@ class Defs {
     fun requireInterpretations(dataTable: DataTable) {
         dataTable.cells().forEach { row ->
             val case = row[0]
-            val expectedInterpretation = row[1]
+            val expectedInterpretation = row[1] ?: ""
             caseListPO().select(case)
             caseViewPO().waitForNameToShow(case)
             interpretationViewPO().waitForInterpretationText(expectedInterpretation)

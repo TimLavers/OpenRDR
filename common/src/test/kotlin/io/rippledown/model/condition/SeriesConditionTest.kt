@@ -14,6 +14,11 @@ class SeriesConditionTest: ConditionTestBase() {
     private val tshIncreasing = SeriesCondition(123, tsh, Increasing)
 
     @Test
+    fun attributeNames() {
+        tshIncreasing.attributeNames() shouldBe setOf(tsh.name)
+    }
+
+    @Test
     fun holds() {
         tshIncreasing.holds(multiEpisodeTSHCase("1", "2", "3")) shouldBe true
         tshIncreasing.holds(multiEpisodeTSHCase("1", "2", "0")) shouldBe false

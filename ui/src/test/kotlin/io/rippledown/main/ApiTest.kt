@@ -16,6 +16,7 @@ import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.sample.SampleKB.TSH_CASES
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
 import kotlin.test.Test
 
 class ApiTest {
@@ -230,5 +231,20 @@ class ApiTest {
             returnCornerstoneStatus = updatedCornerstoneStatus
         }
         Api(mock(config)).selectCornerstone(42) shouldBe config.returnCornerstoneStatus
+    }
+
+    @Test
+    fun `should return a tip for the specified expression`() = runTest {
+        val config = config {
+            expectedExpression = "Great surf"
+            expectedAttributeNames = listOf("Surf", "Sun")
+            returnTip = "Bondi"
+        }
+        val returned = Api(mock(config)).tipForExpression(config.expectedExpression, config.expectedAttributeNames)
+
+        val json = Json {
+            allowStructuredMapKeys = true
+        }
+        json.decodeFromString(returned) as String shouldBe config.returnTip
     }
 }

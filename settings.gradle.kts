@@ -9,6 +9,7 @@ include("common")
 include("server")
 include("ui")
 include("cucumber")
+include("hints")
 
 dependencyResolutionManagement {
     versionCatalogs {
