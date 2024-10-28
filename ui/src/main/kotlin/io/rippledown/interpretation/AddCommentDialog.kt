@@ -56,7 +56,7 @@ fun AddCommentDialog(availableComments: List<String>, handler: AddCommentHandler
                     ADD_COMMENT_LABEL,
                     ADD_COMMENT_PREFIX,
                     200.dp,
-                    modifier = Modifier,
+                    modifier = Modifier.padding(all = 10.dp),
                     object : CommentSelectorHandler {
                         override fun onCommentChanged(comment: String) {
                             selectedComment = comment

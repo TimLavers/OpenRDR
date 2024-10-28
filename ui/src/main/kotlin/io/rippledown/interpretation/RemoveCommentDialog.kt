@@ -56,7 +56,7 @@ fun RemoveCommentDialog(givenComments: List<String>, handler: RemoveCommentHandl
                     REMOVE_COMMENT_LABEL,
                     REMOVE_COMMENT_PREFIX,
                     200.dp,
-                    modifier = Modifier,
+                    modifier = Modifier.padding(all = 10.dp),
                     object : CommentSelectorHandler {
                         override fun onCommentChanged(comment: String) {
                             selectedComment = comment
