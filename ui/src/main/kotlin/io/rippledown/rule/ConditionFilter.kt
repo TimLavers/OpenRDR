@@ -58,7 +58,6 @@ fun ConditionFilter(filter: String, showWaitingIndicator: Boolean, handler: Cond
                 )
             },
             modifier = Modifier
-
                 .focusRequester(focusRequester)
                 .semantics {
                     contentDescription = CURRENT_CONDITION
