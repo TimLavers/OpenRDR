@@ -333,7 +333,6 @@ fun addConditionsThatMayBeEditable(conditionsWithHints: List<List<String>>) {
             ruleMakerPO().clickConditionStartingWithText(conditionWithHints[1])
             pause(200)
             ruleMakerPO().setEditableValue(conditionWithHints[2])
-            pause(100)
             ruleMakerPO().requireSelectedConditionsContains(conditionWithHints[0])
         } else {
             ruleMakerPO().clickConditionStartingWithText(conditionWithHints[0])
