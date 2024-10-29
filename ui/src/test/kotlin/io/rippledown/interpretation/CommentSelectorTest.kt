@@ -111,11 +111,12 @@ class CommentSelectorTest {
             }
 
             //When
-            requireCommentOptionsNotToBeDisplayed(prefix, options.subList(95, 99))
-            scrollToOption(prefix, options[99])
+            requireCommentOptionsNotToBeDisplayed(prefix, options.subList(90, 95))
+
+            scrollToOption(prefix, options[95])
 
             //Then
-            requireCommentOptionsToBeDisplayed(prefix, options.subList(95, 99))
+            requireCommentOptionsToBeDisplayed(prefix, options.subList(90, 95))
         }
     }
 }
