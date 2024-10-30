@@ -165,7 +165,7 @@ class ApiTest {
             expectedRuleRequest = ruleRequest
             returnCaseAfterBuildingRule = caseToReturn
         }
-        Api(mock(config)).buildRule(ruleRequest) shouldBe caseToReturn
+        Api(mock(config)).commitSession(ruleRequest) shouldBe caseToReturn
     }
 
     @Test

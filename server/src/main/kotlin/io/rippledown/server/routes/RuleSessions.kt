@@ -8,43 +8,57 @@ import io.ktor.server.routing.*
 import io.rippledown.constants.api.*
 import io.rippledown.constants.server.ATTRIBUTE_NAMES
 import io.rippledown.constants.server.EXPRESSION
-import io.rippledown.model.Conclusion
-import io.rippledown.model.OperationResult
-import io.rippledown.model.condition.Condition
+import io.rippledown.model.rule.RuleRequest
+import io.rippledown.model.rule.SessionStartRequest
+import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.server.ServerApplication
 import io.rippledown.server.logger
-import kotlinx.serialization.json.Json
 
 fun Application.ruleSession(application: ServerApplication) {
     routing {
-        post(START_SESSION_TO_ADD_CONCLUSION) {
-            val id = longId()
-            val conclusion = call.receive<Conclusion>()
-            kbEndpoint(application).startRuleSessionToAddConclusion(id, conclusion)
-            call.respond(HttpStatusCode.OK, OperationResult("Session started"))
-            logger.info("session started to add conclusion $conclusion")
+
+        post(START_RULE_SESSION) {
+            logger.info(START_RULE_SESSION)
+            val sessionStartRequest = call.receive<SessionStartRequest>()
+            logger.info("session start request: $sessionStartRequest")
+            val cornerstoneStatus = kbEndpoint(application).startRuleSession(sessionStartRequest)
+            call.respond(HttpStatusCode.OK, cornerstoneStatus)
+            logger.info("start rule session returned with OK")
         }
-        post(START_SESSION_TO_REMOVE_CONCLUSION) {
-            val conclusion = call.receive<Conclusion>()
-            kbEndpoint(application).startRuleSessionToRemoveConclusion(longId(), conclusion)
-            call.respond(HttpStatusCode.OK, OperationResult("Session started"))
+
+        post(COMMIT_RULE_SESSION) {
+            logger.info(COMMIT_RULE_SESSION)
+            val ruleRequest = call.receive<RuleRequest>()
+            logger.info("commit session request: $ruleRequest")
+            val viewableCase = kbEndpoint(application).commitRuleSession(ruleRequest)
+            call.respond(HttpStatusCode.OK, viewableCase)
         }
-        post(START_SESSION_TO_REPLACE_CONCLUSION) {
-            val conclusionPair = call.receive<List<Conclusion>>()
-            kbEndpoint(application).startRuleSessionToReplaceConclusion(longId(), conclusionPair[0], conclusionPair[1])
-            call.respond(HttpStatusCode.OK, OperationResult("Session started"))
+
+        post(CANCEL_RULE_SESSION) {
+            logger.info(CANCEL_RULE_SESSION)
+            kbEndpoint(application).cancelRuleSession()
+            call.respond(HttpStatusCode.OK)
         }
-        post(ADD_CONDITION) {
-            val str = call.receiveText()
-            val condition = Json.decodeFromString(Condition.serializer(), str)
-            kbEndpoint(application).addConditionToCurrentRuleBuildingSession(condition)
-            call.respond(HttpStatusCode.OK, OperationResult("Condition added"))
+
+        post(UPDATE_CORNERSTONES) {
+            logger.info(UPDATE_CORNERSTONES)
+            val request = call.receive<UpdateCornerstoneRequest>()
+            val cornerstoneStatus = kbEndpoint(application).updateCornerstone(request)
+            call.respond(HttpStatusCode.OK, cornerstoneStatus)
         }
-        post(COMMIT_SESSION) {
-            kbEndpoint(application).commitCurrentRuleSession()
-            call.respond(HttpStatusCode.OK, OperationResult("Session committed"))
-            logger.info("session committed")
+
+        post(EXEMPT_CORNERSTONE) {
+            val index = call.receive<Int>()
+            val updatedCornerstoneStatus = kbEndpoint(application).exemptCornerstone(index)
+            call.respond(HttpStatusCode.OK, updatedCornerstoneStatus)
         }
+
+        get(SELECT_CORNERSTONE) {
+            val index = call.receive<Int>()
+            val updatedCornerstoneStatus = kbEndpoint(application).selectCornerstone(index)
+            call.respond(HttpStatusCode.OK, updatedCornerstoneStatus)
+        }
+
         get(TIP_FOR_EXPRESSION) {
             val expression = call.parameters[EXPRESSION] ?: error("Invalid expression.")
             val attributeNames = call.parameters[ATTRIBUTE_NAMES] ?: error("Invalid expression.")

@@ -16,9 +16,13 @@ import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.EpisodicCondition
+import io.rippledown.model.condition.RuleConditionList
 import io.rippledown.model.condition.episodic.predicate.IsNotBlank
 import io.rippledown.model.condition.episodic.signature.Current
+import io.rippledown.model.diff.Addition
 import io.rippledown.model.external.ExternalCase
+import io.rippledown.model.rule.RuleRequest
+import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import java.util.concurrent.atomic.AtomicReference
@@ -80,14 +84,6 @@ class RESTClient {
         }.body()
     }
 
-    fun setAttributeOrder(attributesInOrder: List<Attribute>) = runBlocking {
-        jsonClient.post(endpoint + SET_ATTRIBUTE_ORDER) {
-            contentType(ContentType.Application.Json)
-            setBody(attributesInOrder)
-            parameter(KB_ID, currentKB.get().id)
-        }
-    }
-
     fun getOrCreateConclusion(text: String): Conclusion = runBlocking {
         jsonClient.post(endpoint + GET_OR_CREATE_CONCLUSION) {
             setBody(text)
@@ -114,79 +110,17 @@ class RESTClient {
         return result
     }
 
-    fun startSessionToAddConclusionForCurrentCase(conclusion: Conclusion): OperationResult {
-        require(currentCase != null)
-        var result = OperationResult("")
-        runBlocking {
-            result = jsonClient.post(endpoint + START_SESSION_TO_ADD_CONCLUSION + "?id=${currentCase!!.id}") {
-                contentType(ContentType.Application.Json)
-                setBody(conclusion)
-                parameter(KB_ID, currentKB.get().id)
-            }.body()
-        }
-        return result
-    }
+    fun createRuleToAddText(caseName: String, text: String, vararg conditions: String = arrayOf()): ViewableCase {
+        val currentCase = getCaseWithName(caseName)!!
+        val sessionStartRequest = SessionStartRequest(currentCase.id!!, Addition(text))
+        runBlocking { api.startRuleSession(sessionStartRequest) }
 
-    fun startSessionToRemoveConclusionForCurrentCase(toGo: Conclusion): OperationResult {
-        require(currentCase != null)
-        var result = OperationResult("")
-        runBlocking {
-            result = jsonClient.post(endpoint + START_SESSION_TO_REMOVE_CONCLUSION + "?id=${currentCase!!.id}") {
-                contentType(ContentType.Application.Json)
-                setBody(toGo)
-                parameter(KB_ID, currentKB.get().id)
-            }.body()
-        }
-        return result
-    }
-
-    fun startSessionToReplaceConclusionForCurrentCase(toGo: Conclusion, replacement: Conclusion): OperationResult {
-        require(currentCase != null)
-        var result = OperationResult("")
-        runBlocking {
-            result = jsonClient.post(endpoint + START_SESSION_TO_REPLACE_CONCLUSION + "?id=${currentCase!!.id}") {
-                contentType(ContentType.Application.Json)
-                setBody(listOf(toGo, replacement))
-                parameter(KB_ID, currentKB.get().id)
-            }.body()
-        }
-        return result
-    }
-
-    fun addConditionForCurrentSession(condition: Condition): OperationResult {
-        var result = OperationResult("")
-        val data = Json.encodeToJsonElement(Condition.serializer(), condition)
-        runBlocking {
-            result = jsonClient.post(endpoint + ADD_CONDITION) {
-                contentType(ContentType.Application.Json)
-                setBody(data)
-                parameter(KB_ID, currentKB.get().id)
-            }.body()
-        }
-        return result
-    }
-
-    fun commitCurrentSession(): OperationResult {
-        var result = OperationResult("")
-        runBlocking {
-            result = jsonClient.post(endpoint + COMMIT_SESSION) {
-                parameter(KB_ID, currentKB.get().id)
-            }.body()
-        }
-        return result
-    }
-
-    fun createRuleToAddText(caseName: String, text: String, vararg conditions: String = arrayOf()): OperationResult {
-        getCaseWithName(caseName)
-        val conclusion = getOrCreateConclusion(text)
-        startSessionToAddConclusionForCurrentCase(conclusion)
-
-        conditions.forEach { conditionText ->
-            addConditionForCurrentSession(
+        val listOfConditions = conditions.map { conditionText ->
                 getOrCreateCondition(parseToCondition(conditionText))
-            )
         }
-        return commitCurrentSession()
+
+        val ruleRequest = RuleRequest(currentCase.id!!, RuleConditionList(listOfConditions))
+        return runBlocking { api.commitSession(ruleRequest) }
     }
 
     private fun parseToCondition(conditionText: String): Condition {

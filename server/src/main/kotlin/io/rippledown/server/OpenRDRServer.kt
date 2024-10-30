@@ -83,7 +83,6 @@ fun Application.applicationModule() {
     attributeManagement(application)
     conclusionManagement(application)
     conditionManagement(application)
-    interpManagement(application)
     ruleSession(application)
     conditionManagement(application)
 }

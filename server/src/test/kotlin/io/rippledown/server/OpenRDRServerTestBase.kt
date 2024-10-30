@@ -35,7 +35,6 @@ open class OpenRDRServerTestBase {
             serverManagement()
             kbManagement(serverApplication)
             caseManagement(serverApplication)
-            interpManagement(serverApplication)
             attributeManagement(serverApplication)
             conclusionManagement(serverApplication)
             conditionManagement(serverApplication)
