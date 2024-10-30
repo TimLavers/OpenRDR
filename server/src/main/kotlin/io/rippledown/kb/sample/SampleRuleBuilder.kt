@@ -7,6 +7,10 @@ import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.episodic.predicate.*
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.structural.IsAbsentFromCase
+import io.rippledown.model.diff.Addition
+import io.rippledown.model.diff.Removal
+import io.rippledown.model.diff.Replacement
+import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.server.KBEndpoint
 
 open class SampleRuleBuilder(val kbe: KBEndpoint) {
@@ -26,8 +30,8 @@ open class SampleRuleBuilder(val kbe: KBEndpoint) {
 
     fun addCommentForCase(caseName: String, comment: String, vararg conditions: Condition) {
         val case = kbe.kb.getCaseByName(caseName)
-        val conclusion = kbe.getOrCreateConclusion(comment)
-        kbe.startRuleSessionToAddConclusion(case.id!!, conclusion)
+        val sessionStartRequest = SessionStartRequest(case.id!!, Addition(comment))
+        kbe.startRuleSession(sessionStartRequest)
         addConditionsAndCommitRule(*conditions)
     }
 
@@ -38,9 +42,8 @@ open class SampleRuleBuilder(val kbe: KBEndpoint) {
         vararg conditions: Condition
     ) {
         val case = kbe.kb.getCaseByName(caseName)
-        val conclusionToGo = kbe.getOrCreateConclusion(toGo)
-        val replacementConclusion = kbe.getOrCreateConclusion(replacement)
-        kbe.startRuleSessionToReplaceConclusion(case.id!!, conclusionToGo, replacementConclusion)
+        val sessionStartRequest = SessionStartRequest(case.id!!, Replacement(toGo, replacement))
+        kbe.startRuleSession(sessionStartRequest)
         addConditionsAndCommitRule(*conditions)
     }
 
@@ -50,8 +53,8 @@ open class SampleRuleBuilder(val kbe: KBEndpoint) {
         vararg conditions: Condition
     ) {
         val case = kbe.kb.getCaseByName(caseName)
-        val conclusionToGo = kbe.getOrCreateConclusion(toGo)
-        kbe.startRuleSessionToRemoveConclusion(case.id!!, conclusionToGo)
+        val sessionStartRequest = SessionStartRequest(case.id!!, Removal(toGo))
+        kbe.startRuleSession(sessionStartRequest)
         addConditionsAndCommitRule(*conditions)
     }
 

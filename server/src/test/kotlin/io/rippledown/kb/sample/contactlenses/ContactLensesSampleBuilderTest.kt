@@ -3,6 +3,10 @@ package io.rippledown.kb.sample.contactlenses
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.rippledown.kb.sample.SampleBuilderTest
+import io.rippledown.kb.sample.contactlenses.ContactLensesRulesBuilder.Companion.AgeName
+import io.rippledown.kb.sample.contactlenses.ContactLensesRulesBuilder.Companion.AstigmatismName
+import io.rippledown.kb.sample.contactlenses.ContactLensesRulesBuilder.Companion.PrescriptionName
+import io.rippledown.kb.sample.contactlenses.ContactLensesRulesBuilder.Companion.TearProductionName
 import kotlin.test.Test
 
 class ContactLensesSampleBuilderTest: SampleBuilderTest() {
@@ -34,7 +38,7 @@ class ContactLensesSampleBuilderTest: SampleBuilderTest() {
 
     private fun checkAttributes() {
         val attributesInOrder = endpoint.kb.caseViewManager.allInOrder().map { it.name }
-        attributesInOrder shouldBe listOf("age", "prescription", "astigmatism", "tearProduction")
+        attributesInOrder shouldBe listOf(AgeName, PrescriptionName, AstigmatismName, TearProductionName)
     }
 
     private fun checkCases() {
