@@ -125,7 +125,7 @@ class InterpretationViewTest {
             waitForIdle()
 
             //Then
-            requireCommentToBeNotHighlighted(bondiComment, textLayoutResult!!)
+            requireCommentToBeNotHighlighted(textLayoutResult!!)
         }
     }
 

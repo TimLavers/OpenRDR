@@ -101,10 +101,10 @@ class InterpretationActionsTest {
                 val maroubra = "Maroubra"
                 val coogee = "Coogee"
                 val commentsForCase = listOf(bondi, maroubra)
-                val allComments = listOf(bondi, maroubra, coogee)
+                val allComments = setOf(bondi, maroubra, coogee)
 
                 setContent {
-                    InterpretationActions(commentsForCase, setOf(), handler)
+                    InterpretationActions(commentsForCase, allComments, handler)
                 }
                 clickChangeInterpretationButton()
 
@@ -120,20 +120,24 @@ class InterpretationActionsTest {
     @Test
     fun `should call handler when the user clicks on the remove comment button, selects a comment and presses OK`() =
         runTest {
-            val comments = listOf("Bondi", "Manly", "Coogee")
+            val bondi = "Bondi"
+            val maroubra = "Maroubra"
+            val coogee = "Coogee"
+            val commentsForCase = listOf(bondi, maroubra)
+            val allComments = setOf(bondi, maroubra, coogee)
             with(composeTestRule) {
                 //Given
                 setContent {
-                    InterpretationActions(comments, setOf(), handler)
+                    InterpretationActions(commentsForCase, allComments, handler)
                 }
                 clickChangeInterpretationButton()
 
                 //When
                 clickRemoveCommentMenu()
-                removeComment("Manly")
+                removeComment(maroubra)
 
                 //Then
-                verify(timeout = 1_000) { handler.startRuleToRemoveComment("Manly") }
+                verify(timeout = 1_000) { handler.startRuleToRemoveComment(maroubra) }
             }
         }
 }

@@ -7,13 +7,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
 import io.rippledown.components.OKCancelButtons
 import io.rippledown.constants.interpretation.*
+import openrdr.ui.generated.resources.Res.drawable
+import openrdr.ui.generated.resources.replace_comment_24
+import org.jetbrains.compose.resources.painterResource
+
 
 interface ReplaceCommentHandler {
     fun startRuleToReplaceComment(toBeReplaced: String, replacement: String)
@@ -29,7 +32,7 @@ fun ReplaceCommentDialog(givenComments: List<String>, availableComments: List<St
 
     DialogWindow(
         title = REPLACE_COMMENT,
-        icon = painterResource("replace_comment_24.png"),
+        icon = painterResource(drawable.replace_comment_24),
         state = dialogState,
         onCloseRequest = {
             handler.cancel()
