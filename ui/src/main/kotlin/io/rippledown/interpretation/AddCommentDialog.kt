@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
@@ -14,6 +13,9 @@ import io.rippledown.components.OKCancelButtons
 import io.rippledown.constants.interpretation.ADD_COMMENT
 import io.rippledown.constants.interpretation.ADD_COMMENT_LABEL
 import io.rippledown.constants.interpretation.ADD_COMMENT_PREFIX
+import openrdr.ui.generated.resources.Res
+import openrdr.ui.generated.resources.add_comment_24
+import org.jetbrains.compose.resources.painterResource
 
 interface AddCommentHandler {
     fun startRuleToAddComment(comment: String)
@@ -27,7 +29,7 @@ fun AddCommentDialog(availableComments: List<String>, handler: AddCommentHandler
 
     DialogWindow(
         title = ADD_COMMENT,
-        icon = painterResource("add_comment_24.png"),
+        icon = painterResource(Res.drawable.add_comment_24),
         state = dialogState,
         onCloseRequest = {
             handler.cancel()

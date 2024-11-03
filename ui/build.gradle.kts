@@ -13,6 +13,7 @@ dependencies {
     implementation(compose.preview)
     implementation(compose.material)
     implementation(compose.material3)
+    implementation(compose.components.resources)
     implementation(libs.composePreviewDesktop)
     implementation(libs.logback)
     implementation("com.darkrockstudios:mpfilepicker:3.1.0")
@@ -25,6 +26,7 @@ dependencies {
     testImplementation(libs.kotestAssertions)
     testImplementation(libs.mockk)
     testImplementation(libs.awaitility)
+    testImplementation(libs.assertJSwing)
 }
 
 compose.desktop {
@@ -37,4 +39,7 @@ compose.desktop {
             packageVersion = "1.0.0"
         }
     }
+}
+compose.resources {
+    generateResClass = always
 }

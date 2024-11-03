@@ -105,7 +105,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
         val viewableCase = createCase(CaseId(1, "Bondi"))
         every { kbEndpoint.commitRuleSession(ruleRequest) } returns viewableCase
 
-        val result = httpClient.post(BUILD_RULE) {
+        val result = httpClient.post(COMMIT_RULE_SESSION) {
             parameter(KB_ID, kbId)
             contentType(ContentType.Application.Json)
             setBody(ruleRequest)

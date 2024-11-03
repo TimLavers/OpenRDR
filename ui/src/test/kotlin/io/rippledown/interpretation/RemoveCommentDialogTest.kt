@@ -40,14 +40,15 @@ class RemoveCommentDialogTest {
     fun `should call handler to start rule when OK is pressed`() {
         val bondi = "Bondi"
         val maroubra = "Maroubra"
+        val givenComments = listOf(bondi, maroubra)
         with(composeTestRule) {
             //Given
             setContent {
-                RemoveCommentDialog(listOf(bondi, maroubra), handler)
+                RemoveCommentDialog(givenComments, handler)
             }
 
             //When
-            requireCommentOptionsToBeDisplayed(REMOVE_COMMENT_PREFIX, listOf(bondi, maroubra))
+            requireCommentOptionsToBeDisplayed(REMOVE_COMMENT_PREFIX, givenComments)
             removeComment(bondi)
 
             //Then

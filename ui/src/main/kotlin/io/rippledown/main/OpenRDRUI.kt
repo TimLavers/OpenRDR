@@ -177,7 +177,7 @@ fun OpenRDRUI(handler: Handler) {
                         }
 
                         override fun buildRule(ruleRequest: RuleRequest) = runBlocking {
-                            currentCase = api.buildRule(ruleRequest)
+                            currentCase = api.commitSession(ruleRequest)
                             cornerstoneStatus = null
                         }
 

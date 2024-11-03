@@ -26,6 +26,7 @@ import io.rippledown.constants.main.TITLE
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.takeWhile
+import org.assertj.swing.edt.GuiActionRunner.execute
 import org.jetbrains.skiko.MainUIDispatcher
 import org.junit.Assume.assumeFalse
 import org.junit.Before
@@ -94,31 +95,30 @@ class MainApplicationTest {
         val createKBItem = dropDown!!.find(CREATE_KB_TEXT, AccessibleRole.PUSH_BUTTON)
         val createKBActionCount = createKBItem!!.accessibleAction.accessibleActionCount
         createKBActionCount shouldBe 1
-        createKBItem.accessibleAction.doAccessibleAction(0)
+        Thread(runnable, "App Runner").join()
+
     }
 
     @Test
-    fun `run RD`() = runApplicationTest {
+    fun `should find the window title`() = runApplicationTest {
         lateinit var window: ComposeWindow
 
         SwingUtilities.invokeLater {
             launchTestApplication {
                 Window(
+                    title = "RD",
                     onCloseRequest = {},
                     state = rememberWindowState(
                         size = DpSize(300.dp, 300.dp),
                     )
                 ) {
                     window = this.window
-
                     OpenRDRUI(handler)
                 }
             }
         }
         awaitIdle()
-        val name = window.accessibleContext.accessibleName
-        println("------- name: $name")
-        awaitIdle()
+        execute { window.accessibleContext.accessibleName shouldBe "RD" }
     }
 
     @Test

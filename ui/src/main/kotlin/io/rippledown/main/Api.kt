@@ -146,8 +146,8 @@ class Api(engine: HttpClientEngine = CIO.create()) {
      * @param ruleRequest the information needed to build the rule
      * @return the updated case
      */
-    suspend fun buildRule(ruleRequest: RuleRequest): ViewableCase {
-        return client.post("$API_URL$BUILD_RULE") {
+    suspend fun commitSession(ruleRequest: RuleRequest): ViewableCase {
+        return client.post("$API_URL$COMMIT_RULE_SESSION") {
             contentType(ContentType.Application.Json)
             setBody(ruleRequest)
             setKBParameter()

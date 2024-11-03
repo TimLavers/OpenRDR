@@ -16,7 +16,6 @@ import io.rippledown.decoration.BACKGROUND_COLOR
 import io.rippledown.main.LEFT_INFO_MESSAGE_ID
 import io.rippledown.main.RIGHT_INFO_MESSAGE_ID
 import io.rippledown.utils.dump
-import java.lang.Thread.sleep
 
 
 @OptIn(ExperimentalTestApi::class)
@@ -33,18 +32,27 @@ fun ComposeTestRule.clickChangeInterpretationButton() =
         .assertIsDisplayed()
         .performClick()
 
-fun ComposeTestRule.clickAddCommentMenu() = onNodeWithContentDescription(ADD_COMMENT_MENU)
-    .assertIsDisplayed()
-    .performClick()
+fun ComposeTestRule.clickAddCommentMenu() {
+    waitTillButtonIsEnabled(ADD_COMMENT_MENU)
+    onNodeWithContentDescription(ADD_COMMENT_MENU)
+        .assertIsDisplayed()
+        .performClick()
+}
 
 
-fun ComposeTestRule.clickReplaceCommentMenu() = onNodeWithContentDescription(REPLACE_COMMENT_MENU)
-    .assertIsDisplayed()
-    .performClick()
+fun ComposeTestRule.clickReplaceCommentMenu() {
+    waitTillButtonIsEnabled(REPLACE_COMMENT_MENU)
+    onNodeWithContentDescription(REPLACE_COMMENT_MENU)
+        .assertIsDisplayed()
+        .performClick()
+}
 
-fun ComposeTestRule.clickRemoveCommentMenu() = onNodeWithContentDescription(REMOVE_COMMENT_MENU)
-    .assertIsDisplayed()
-    .performClick()
+fun ComposeTestRule.clickRemoveCommentMenu() {
+    waitTillButtonIsEnabled(REMOVE_COMMENT_MENU)
+    onNodeWithContentDescription(REMOVE_COMMENT_MENU)
+        .assertIsDisplayed()
+        .performClick()
+}
 
 private fun ComposeTestRule.enterCommentToBeAdded(comment: String) {
     onNodeWithContentDescription(ADD_COMMENT_TEXT_FIELD)
@@ -70,9 +78,7 @@ fun ComposeTestRule.replaceComment(toBeReplaced: String, replacement: String) {
 }
 
 fun ComposeTestRule.removeComment(comment: String) {
-    sleep(500) //TODO remove this sleep
     clickCommentToRemove(comment)
-    sleep(500) //TODO remove this sleep
     clickOKToRemoveComment()
 }
 
@@ -91,6 +97,7 @@ fun ComposeTestRule.clickComment(prefix: String, comment: String) {
 }
 
 fun ComposeTestRule.clickOKToAddNewComment() {
+    waitTillButtonIsEnabled(OK_BUTTON_FOR_ADD_COMMENT)
     onNodeWithContentDescription(OK_BUTTON_FOR_ADD_COMMENT)
         .assertIsDisplayed()
         .performClick()
@@ -102,6 +109,7 @@ fun ComposeTestRule.clickOKToReplaceComment() {
     onNodeWithContentDescription(OK_BUTTON_FOR_REPLACE_COMMENT)
         .assertIsEnabled()
         .performClick()
+    waitForIdle()
 }
 
 private fun ComposeTestRule.waitTillButtonIsEnabled(contentDescriptionForButton: String) {
@@ -116,8 +124,8 @@ private fun ComposeTestRule.waitTillButtonIsEnabled(contentDescriptionForButton:
 }
 
 fun ComposeTestRule.clickOKToRemoveComment() {
+    waitTillButtonIsEnabled(OK_BUTTON_FOR_REMOVE_COMMENT)
     onNodeWithContentDescription(OK_BUTTON_FOR_REMOVE_COMMENT)
-        .assertIsDisplayed()
         .performClick()
     waitForIdle()
 }
@@ -206,7 +214,7 @@ fun requireCommentToBeHighlighted(comment: String, layoutResult: TextLayoutResul
     requireStyleForCommentToHaveBackground(layoutResult, comment, BACKGROUND_COLOR)
 }
 
-fun requireCommentToBeNotHighlighted(comment: String, layoutResult: TextLayoutResult) {
+fun requireCommentToBeNotHighlighted(layoutResult: TextLayoutResult) {
     val annotatedString = layoutResult.layoutInput.text
     annotatedString.spanStyles.size shouldBe 0
 }
@@ -237,6 +245,7 @@ fun requireStyleForCommentInAnnotatedStringToHaveBackground(
 }
 
 fun ComposeTestRule.requireLeftInformationMessage(message: String) {
+    waitUntil { onNodeWithContentDescription(LEFT_INFO_MESSAGE_ID).isDisplayed() }
     onNodeWithContentDescription(LEFT_INFO_MESSAGE_ID)
         .assertIsDisplayed()
         .assertTextEquals(message)
@@ -303,6 +312,7 @@ fun ComposeTestRule.requireConditionsToBeShowing(conditions: List<String>) {
             .assertIsDisplayed()
     }
 }
+
 fun ComposeTestRule.requireNoConditionsToBeShowing() {
     onAllNodesWithContentDescription(label = CONDITION_PREFIX, substring = true).assertCountEquals(0)
 }

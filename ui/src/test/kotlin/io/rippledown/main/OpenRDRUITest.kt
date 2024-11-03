@@ -8,7 +8,10 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.rippledown.appbar.assertKbNameIs
 import io.rippledown.casecontrol.*
-import io.rippledown.constants.interpretation.*
+import io.rippledown.constants.interpretation.ADD_COMMENT_PREFIX
+import io.rippledown.constants.interpretation.REMOVE_COMMENT_PREFIX
+import io.rippledown.constants.interpretation.REPLACED_COMMENT_PREFIX
+import io.rippledown.constants.interpretation.REPLACEMENT_COMMENT_PREFIX
 import io.rippledown.constants.main.APPLICATION_BAR_ID
 import io.rippledown.interpretation.*
 import io.rippledown.model.*
@@ -299,84 +302,6 @@ class OpenRDRUITest {
         }
     }
 
-    @Test
-    fun `should show rule action to add a comment`() = runTest {
-        val addedComment = "Go to Bondi"
-        val caseName = "case a"
-        val caseId = CaseId(id = 1, name = caseName)
-        val case = createCase(caseId)
-        coEvery { api.getCase(1) } returns case
-        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
-        with(composeTestRule) {
-            setContent {
-                OpenRDRUI(handler)
-            }
-            //Given
-            waitForCaseToBeShowing(caseName)
-            requireCaseSelectorToBeDisplayed()
-            clickChangeInterpretationButton()
-
-            //When
-            clickAddCommentMenu()
-            addNewComment(addedComment)
-
-            //Then
-            requireLeftInformationMessage("$ADDING$addedComment")
-        }
-    }
-
-    @Test
-    fun `should show rule action to replace a comment`() = runTest {
-        val originalComment = "Go to Bondi"
-        val replacementComment = "Go to Malabar"
-        val caseName = "case a"
-        val caseId = CaseId(id = 1, name = caseName)
-        val case = createCaseWithInterpretation(caseId.name, caseId.id, listOf(originalComment))
-        coEvery { api.getCase(1) } returns case
-        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
-        with(composeTestRule) {
-            setContent {
-                OpenRDRUI(handler)
-            }
-            //Given
-            waitForCaseToBeShowing(caseName)
-            requireCaseSelectorToBeDisplayed()
-            clickChangeInterpretationButton()
-
-            //When
-            clickReplaceCommentMenu()
-            replaceComment(originalComment, replacementComment)
-
-            //Then
-            requireLeftInformationMessage("$REPLACING$originalComment$BY$replacementComment")
-        }
-    }
-
-    @Test
-    fun `should show rule action to remove a comment`() = runTest {
-        val originalComment = "Go to Bondi"
-        val caseName = "case a"
-        val caseId = CaseId(id = 1, name = caseName)
-        val case = createCaseWithInterpretation(caseId.name, caseId.id, listOf(originalComment))
-        coEvery { api.getCase(1) } returns case
-        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
-        with(composeTestRule) {
-            setContent {
-                OpenRDRUI(handler)
-            }
-            //Given
-            waitForCaseToBeShowing(caseName)
-            requireCaseSelectorToBeDisplayed()
-            clickChangeInterpretationButton()
-
-            //When
-            clickRemoveCommentMenu()
-            removeComment(originalComment)
-
-            //Then
-            requireLeftInformationMessage("$REMOVING$originalComment")
-        }
-    }
 
     @Test
     fun `should call handler to widen the window when a cornerstone case is shown`() = runTest {

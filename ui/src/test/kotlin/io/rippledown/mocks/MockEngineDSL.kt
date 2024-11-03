@@ -76,7 +76,7 @@ private class EngineBuilder(private val config: EngineConfig) {
                 httpResponseData(json.encodeToString(config.returnCase))
             }
 
-            BUILD_RULE -> {
+            COMMIT_RULE_SESSION -> {
                 val body = request.body as TextContent
                 val bodyAsRuleRequest = json.decodeFromString(RuleRequest.serializer(), body.text)
 
