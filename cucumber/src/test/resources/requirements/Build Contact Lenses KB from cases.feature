@@ -9,7 +9,7 @@ Feature: The Contact Lenses Prescription KB can be built with the user interface
     And I build a rule to add the comment "soft" with conditions
       | astigmatism is "not_astigmatic" |
       | tear production is "normal"     |
-
+And pause
     And I select case Case4
     And I build a rule to add the comment "hard" with conditions
       | astigmatism is "astigmatic" |

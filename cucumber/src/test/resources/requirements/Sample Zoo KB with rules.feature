@@ -1,5 +1,6 @@
 Feature: A sample KB can be created that has the Zoo Animals cases and rules.
-   Scenario: Single classification Zoo KB
+#  @single
+  Scenario: Single classification Zoo KB
     Given I start the client application
     And I create a Knowledge Base with the name Zoo based on the "Zoo Animals" sample
     Then the count of the number of cases is 101
@@ -9,7 +10,7 @@ Feature: A sample KB can be created that has the Zoo Animals cases and rules.
 
     When I select case antelope
     Then the interpretation should be "mammal"
-
+And pause
     When I select case bass
     Then the interpretation should be "fish"
 

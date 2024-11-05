@@ -5,7 +5,9 @@ import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
 import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
@@ -23,14 +25,24 @@ import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.sample.SampleKB
+import org.jetbrains.skiko.currentNanoTime
 import java.io.File
 
 
-class Api(engine: HttpClientEngine = CIO.create()) {
+class Api(val engine: HttpClientEngine = CIO.create()) {
     private var currentKB: KBInfo? = null
     private val client = HttpClient(engine) {
         install(ContentNegotiation) {
             json()
+        }
+        install(HttpTimeout) {
+            socketTimeoutMillis = 10000
+            requestTimeoutMillis = 10000
+            connectTimeoutMillis = 10000
+        }
+        install(Logging) {
+            logger = Logger.DEFAULT
+            level = LogLevel.INFO
         }
     }
 
@@ -39,8 +51,8 @@ class Api(engine: HttpClientEngine = CIO.create()) {
     }
 
     fun shutdown() {
-//        client.close()
-//        engine.close()
+        client.close()
+        engine.close()
     }
 
     suspend fun createKB(name: String): KBInfo {
@@ -70,6 +82,7 @@ class Api(engine: HttpClientEngine = CIO.create()) {
     @OptIn(InternalComposeApi::class)
     suspend fun kbInfo(): KBInfo {
         if (currentKB == null) {
+            println("Getting kbInfo from server...")
             currentKB = client.get("$API_URL$DEFAULT_KB").body<KBInfo>()
         }
         return currentKB!!
@@ -105,10 +118,14 @@ class Api(engine: HttpClientEngine = CIO.create()) {
     }
 
     suspend fun getCase(id: Long): ViewableCase? {
+        println("Getting case: $id")
+        val now = currentNanoTime()
         return try {
             val result: ViewableCase = client.get("$API_URL$CASE?id=$id") {
                 setKBParameter()
             }.body()
+            val timeTaken = (currentNanoTime() - now)/1000000
+            println("Case retrieval time: $timeTaken")
             result
         } catch (e: Exception) {
             null
@@ -122,9 +139,13 @@ class Api(engine: HttpClientEngine = CIO.create()) {
         }
     }
 
-    suspend fun waitingCasesInfo(): CasesInfo = client.get("$API_URL$WAITING_CASES") {
-        setKBParameter()
-    }.body()
+    suspend fun waitingCasesInfo(): CasesInfo {
+        println("Getting list of cases from server...")
+
+        return client.get("$API_URL$WAITING_CASES") {
+            setKBParameter()
+        }.body()
+    }
 
     suspend fun allConclusions(): Set<Conclusion> = client.get("$API_URL$ALL_CONCLUSIONS") {
         setKBParameter()

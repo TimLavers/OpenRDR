@@ -31,6 +31,7 @@ object StepsInfrastructure {
     }
 
     fun startClient() {
+        println("launching client from thread ${Thread.currentThread().name}")
         launchedClient = LaunchedClient()
     }
     fun client() = launchedClient

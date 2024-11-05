@@ -16,6 +16,7 @@ dependencies {
     implementation(libs.logback)
     implementation("com.darkrockstudios:mpfilepicker:3.1.0")
     implementation(libs.bundles.ktor)
+    implementation("io.ktor:ktor-client-logging:2.3.5")
     implementation(libs.bundles.kotlinx)
 
     testImplementation(compose.desktop.uiTestJUnit4)
