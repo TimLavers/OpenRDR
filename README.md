@@ -9,9 +9,11 @@ The background, requirements, design principles, and so on to the project are do
 documentation is [OpenRDR](./documentation/openrdr.md).
 
 ## Setup
+### Platform
+OpenRDR is written in Kotlin and built with Gradle. 
+Java version 21 and Gradle need to be installed for OpenRDR development.
 
-Install Java 17 and Gradle.
-
+### Database
 OpenRDR uses Postgres as its persistence provider. The following environment variables are required in order to
 allow connection to the Postgres server:
 
@@ -22,24 +24,33 @@ allow connection to the Postgres server:
 The default values for the Postgres parameters are `jdbc:postgresql://localhost:5432/postgres`, `postgres`
 and `postgres`.
 
-## Development
+### Google Gemini
+OpenRDR uses Google Gemini to generate natural language hints for the conditions used in rules.
+For this feature to work, and for the associated tests to pass, an API key is required and needs to be set
+as the vale of an environment variable named `GEMINI_API_KEY`.
 
+## Development
 Import the Gradle project into IntelliJ.
 
 ## Running the tests
-
-There are four types of tests:
+There are two layers of tests:
 
 | Test type         | Gradle verification task | 
 |-------------------|--------------------------|
-| jvm unit tests    | jvmTest                  |    
-| integration tests | integrationTest          |    
+| jvm unit tests    | test                     |    
 | cucumber tests    | cucumberTest             | 
 
-The integration and cucumber tests build a fat jar and run it in a separate JVM to the client. The client is controlled
-by Selenium.
+To run the unit tests, call the `test` task for each of the subprojects: 
+- `./gradlew common:test`
+- `./gradlew hints:test`
+- `./gradlew sesrver:test`
+- `./gradlew ui:test`
 
-To run a single cucumber test or feature file, add the @single annotation at the start of the scenario or feature file and run the `cucumberSingleTest` task.
+The cucumber tests build a fat jar and run it in a separate JVM to the client. The client is controlled
+and interrogated by the test code using the accessibility API. To run the cucumber tests 
+call `./gradlew cucumber:cucumberTest`.
+To run a single cucumber test or feature file, add the @single annotation at the start of the 
+scenario or feature file and run the `cucumberSingleTest` task.
 
 ## Acknowledgements
 
