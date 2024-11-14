@@ -15,11 +15,25 @@ class ConditionTipGeneratorTest {
 
     @Test
     fun `should suggest syntactically valid conditions`() {
-        conditionTipGenerator.conditionTip("elevated glucose") shouldBe "Glucose is high"
-        conditionTipGenerator.conditionTip("tsh is below the normal range") shouldBe "TSH is low"
-        conditionTipGenerator.conditionTip("xyz = 3.14159") shouldBe "XYZ is 3.14159"
-        conditionTipGenerator.conditionTip("glucose is pending") shouldBe "Glucose is \"pending\""
-        conditionTipGenerator.conditionTip("elevated waves") shouldBe "Waves is high"
-        conditionTipGenerator.conditionTip("very tall waves") shouldBe "Waves is high"
+        // Given
+        val expectations = """
+            elevated glucose -> Glucose is high
+            tsh is below the normal range -> TSH is low
+            xyz = 3.14159 -> XYZ is 3.14159
+            xyz equals 3.14159 -> XYZ is 3.14159
+            xyz is no more than 3.14159 -> XYZ <= 3.14159
+            xyz is at least 3.14159 -> XYZ >= 3.14159
+            xyz is a number -> XYZ is numeric
+            xyz is available -> XYZ is in case
+            glucose is pending -> Glucose is "pending"
+            elevated waves -> Waves is high
+            very tall waves -> Waves is high
+        """.trimIndent()
+
+        // Then
+        expectations.split("\n").forEach { pair ->
+            val (input, expected) = pair.split(" -> ")
+            conditionTipGenerator.conditionTip(input) shouldBe expected
+        }
     }
 }

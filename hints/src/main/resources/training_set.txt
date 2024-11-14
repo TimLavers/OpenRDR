@@ -33,3 +33,7 @@ x detected
 
 EXPECTED: x increasing
 x is increasing
+
+EXPECTED: x is numeric
+x is a number
+x is an integer
