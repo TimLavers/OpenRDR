@@ -12,8 +12,9 @@ import io.rippledown.model.condition.episodic.signature.Current
 import kotlin.test.Test
 
 class EpisodicConditionTest: ConditionTestBase() {
+    private val userExpression = "TSH is below the normal range"
 
-    private val tshLow = EpisodicCondition(123, tsh, Low, Current)
+    private val tshLow = EpisodicCondition(123, tsh, Low, Current, userExpression)
 
     @Test
     fun attributeNames() {
@@ -99,6 +100,11 @@ class EpisodicConditionTest: ConditionTestBase() {
     }
 
     @Test
+    fun userExpresson() {
+        tshLow.userExpression shouldBe userExpression
+    }
+
+    @Test
     fun alignAttributes() {
         val conditionCopy = serializeDeserialize(tshLow)
         conditionCopy.attribute shouldNotBeSameInstanceAs tshLow.attribute
@@ -112,18 +118,54 @@ class EpisodicConditionTest: ConditionTestBase() {
         tshLow.sameAs(tshLow) shouldBe true
 
         // Same but for id.
-        tshLow.sameAs(EpisodicCondition(null, tsh, Low, Current)) shouldBe true
-        tshLow.sameAs(EpisodicCondition(88, tsh, Low, Current)) shouldBe true
-        EpisodicCondition(88, tsh, Low, Current).sameAs(EpisodicCondition(88, tsh, Low, Current)) shouldBe true
-        EpisodicCondition(123, tsh, Low, Current).sameAs(EpisodicCondition(88, tsh, Low, Current)) shouldBe true
+        tshLow.sameAs(EpisodicCondition(null, tsh, Low, Current, userExpression)) shouldBe true
+        tshLow.sameAs(EpisodicCondition(88, tsh, Low, Current, userExpression)) shouldBe true
+        EpisodicCondition(88, tsh, Low, Current).sameAs(
+            EpisodicCondition(
+                88,
+                tsh,
+                Low,
+                Current,
+                userExpression
+            )
+        ) shouldBe true
+        EpisodicCondition(123, tsh, Low, Current).sameAs(
+            EpisodicCondition(
+                88,
+                tsh,
+                Low,
+                Current,
+                userExpression
+            )
+        ) shouldBe true
+
+        // Same but for user expression.
+        tshLow.sameAs(EpisodicCondition(null, tsh, Low, Current, "depressed tsh")) shouldBe true
+        tshLow.sameAs(EpisodicCondition(88, tsh, Low, Current, "depressed tsh")) shouldBe true
+        EpisodicCondition(88, tsh, Low, Current, "depressed tsh").sameAs(
+            EpisodicCondition(
+                88,
+                tsh,
+                Low,
+                Current
+            )
+        ) shouldBe true
+        EpisodicCondition(123, tsh, Low, Current, "depressed tsh").sameAs(
+            EpisodicCondition(
+                88,
+                tsh,
+                Low,
+                Current
+            )
+        ) shouldBe true
 
         // Attribute different.
-        tshLow.sameAs(EpisodicCondition(null, clinicalNotes, Low, Current)) shouldBe false
+        tshLow.sameAs(EpisodicCondition(null, clinicalNotes, Low, Current, userExpression)) shouldBe false
 
         // Predicate different.
-        tshLow.sameAs(EpisodicCondition(null, tsh, Normal, Current)) shouldBe false
+        tshLow.sameAs(EpisodicCondition(null, tsh, Normal, Current, userExpression)) shouldBe false
 
         // Chain different.
-        tshLow.sameAs(EpisodicCondition(null, tsh, Low, All)) shouldBe false
+        tshLow.sameAs(EpisodicCondition(null, tsh, Low, All, userExpression)) shouldBe false
     }
 }

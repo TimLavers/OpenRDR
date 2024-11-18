@@ -21,13 +21,13 @@ class ConditionExporterTest {
 
     @Test
     fun exportToString() {
-        val glucoseHigh = isHigh(99, glucose)
+        val glucoseHigh = isHigh(99, glucose, "")
         ConditionExporter().exportToString(glucoseHigh) shouldContain glucose.id.toString()
     }
 
     @Test
     fun importFromString() {
-        exportImport(isHigh(99, glucose))
+        exportImport(isHigh(99, glucose, ""))
         exportImport(greaterThanOrEqualTo(99, ft4, 3.0))
     }
 
@@ -51,7 +51,7 @@ class ConditionSourceTest {
         glucose = attributeManager.getOrCreate("Glucose")
         ft4 = attributeManager.getOrCreate("FT4")
         conditionManager = ConditionManager(attributeManager, InMemoryConditionStore())
-        glucoseHigh = conditionManager.getOrCreate(isHigh(null, glucose))
+        glucoseHigh = conditionManager.getOrCreate(isHigh(null, glucose, ""))
         ft4Low = conditionManager.getOrCreate(isLow(null, ft4))
     }
 

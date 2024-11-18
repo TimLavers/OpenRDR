@@ -1,39 +1,44 @@
-EXPECTED: x is high
+EXPECTED: High
+x is high
+x is elevated
 elevated x
 excessive x
 
-EXPECTED: x is low
+EXPECTED: Low
 reduced x
 lowered x
 
-EXPECTED: x is normal
+EXPECTED: Normal
 x is within range
 x is fine
+x is normal
+x is not high and not low
 
-EXPECTED: x is y
+EXPECTED: Is, y
 x is equal to y
 x is the same as y
 
-EXPECTED: x is 1.5
+EXPECTED: Is, 1.5
 x = 1.5
 x == 1.5
 
-EXPECTED: x is "abc"
+EXPECTED: Is, "abc"
 x is abc
+x is "abc"
 
-EXPECTED: x is "pending"
+EXPECTED: Is, "pending"
 x equals pending
 
-EXPECTED: x <= y
+EXPECTED: LessThanOrEqualTo, y
 x is less than or equal to y
 
-EXPECTED: x is in case
+EXPECTED: Present
 x is present
 x detected
 
-EXPECTED: x increasing
+EXPECTED: Increasing
 x is increasing
 
-EXPECTED: x is numeric
+EXPECTED: Numeric
 x is a number
 x is an integer

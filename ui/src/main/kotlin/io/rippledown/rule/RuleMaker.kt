@@ -21,7 +21,7 @@ interface RuleMakerHandler {
     var onDone: (conditions: List<Condition>) -> Unit
     var onCancel: () -> Unit
     var onUpdateConditions: (conditions: List<Condition>) -> Unit
-    fun tipForExpression(expression: String): String
+    fun conditionForExpression(expression: String): Condition?
 }
 
 const val DEBOUNCE: Long = 1_000
@@ -80,10 +80,17 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
     LaunchedEffect(allConditions, filterText) {
         delay(DEBOUNCE)
         val conditions = allConditions.sortedWith(compareBy { it.asText() })
-        val tip = if (filterText.isNotBlank()) handler.tipForExpression(filterText) else ""
+        val condition = if (filterText.isNotBlank()) handler.conditionForExpression(filterText) else null
         showWaitingIndicator = false
-        availableConditions = conditions.filterConditions(filterText, tip) - suggestionsUsed.values.toSet()
+        val ac = conditions.filterConditions(filterText, condition) - suggestionsUsed.values.toSet()
+        if (condition != null && ac.size == 1) {
 
+            val original = ac[0]
+//            original.initialSuggestion().setUserExpression(filterText)
+            availableConditions = listOf(original)
+        } else {
+            availableConditions = ac
+        }
     }
     Column(
         modifier = Modifier
@@ -110,6 +117,7 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
 
         AvailableConditions(availableConditions, object : AvailableConditionsHandler {
             override fun onAddCondition(suggestedCondition: SuggestedCondition) {
+//                println("Adding condition: ${suggestedCondition.asText()} with user expression: ${suggestedCondition.initialSuggestion().userExpresson}")
                 selectedConditions = selectedConditions + suggestedCondition.initialSuggestion()
                 if (suggestedCondition.shouldBeUsedAtMostOncePerRule()) {
                     availableConditions = availableConditions - suggestedCondition
@@ -137,6 +145,6 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
     }
 }
 
-fun List<SuggestedCondition>.filterConditions(filter: String, tip: String) = filter {
-    it.asText().contains(filter, ignoreCase = true) || it.asText().equals(tip, ignoreCase = true)
+fun List<SuggestedCondition>.filterConditions(filter: String, condition: Condition?) = filter {
+    it.asText().contains(filter, ignoreCase = true) || it.asText().equals(condition?.asText(), ignoreCase = true)
 }

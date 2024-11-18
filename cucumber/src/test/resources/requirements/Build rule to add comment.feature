@@ -35,12 +35,14 @@ Feature: The user can make a rule that adds a comment to the interpretive report
 #      | Sun is in case |
     And stop the client application
 
+  @single
   Scenario: The user should be able to build rules to add several comments
     Given a list of cases with the following names is stored on the server:
       | Case1 |
       | Case2 |
     And I start the client application
     And I should see the case Case1 as the current case
+    And pause
     When I build a rule to add the comment "Go to Bondi."
     And I build a rule to add the comment "Grow some trees."
     Then  the interpretation should be "Go to Bondi. Grow some trees."

@@ -68,11 +68,19 @@ fun SelectedConditions(conditions: List<Condition>, handler: SelectedConditionsH
                             }
                             .semantics { contentDescription = "$SELECTED_CONDITION_PREFIX$index" }
                     ) {
-                        Text(
-                            text = condition.asText(),
-                            modifier = Modifier
-                                .onPointerEvent(Enter) { cursorOnRow = index }
-                        )
+                        TooltipArea(
+                            tooltip = {
+                                if (condition.userExpresson.isNotBlank()) {
+                                    Text(condition.asText())
+                                }
+                            },
+                        ) {
+                            Text(
+                                text = condition.display(),
+                                modifier = Modifier
+                                    .onPointerEvent(Enter) { cursorOnRow = index }
+                            )
+                        }
                         if (cursorOnRow == index)
                             Image(
                                 painter = painterResource("line_24.png"),
@@ -87,4 +95,11 @@ fun SelectedConditions(conditions: List<Condition>, handler: SelectedConditionsH
         Scrollbar(scrollState = scrollState, modifier = Modifier.align(Alignment.CenterEnd))
     }
 }
+
+fun Condition.display(): String = if (userExpresson.isNotBlank()) {
+    userExpresson
+} else {
+    asText()
+}
+
 

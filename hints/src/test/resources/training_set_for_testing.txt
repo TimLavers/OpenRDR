@@ -1,7 +1,0 @@
-EXPECTED: x is high
-elevated x
-excessive x
-
-expected: x is low
-reduced x
-lowered x

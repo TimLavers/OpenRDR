@@ -162,7 +162,7 @@ private class EngineBuilder(private val config: EngineConfig) {
                 httpResponseData(json.encodeToString(config.returnConditionList))
             }
 
-            TIP_FOR_EXPRESSION -> {
+            CONDITION_FOR_EXPRESSION -> {
                 request.url.parameters[EXPRESSION] shouldBe config.expectedExpression
                 request.url.parameters[ATTRIBUTE_NAMES] shouldBe config.expectedAttributeNames.joinToString(",")
                 httpResponseData(json.encodeToString(config.returnTip))

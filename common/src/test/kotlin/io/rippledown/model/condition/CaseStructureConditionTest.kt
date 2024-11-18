@@ -11,7 +11,8 @@ import kotlin.test.Test
 
 class CaseStructureConditionTest: ConditionTestBase() {
 
-    private val tshAbsent = CaseStructureCondition(123, IsAbsentFromCase(tsh))
+    val userExpression = "TSH was not tested"
+    private val tshAbsent = CaseStructureCondition(123, IsAbsentFromCase(tsh), userExpression)
 
     @Test
     fun attributeNames() {
@@ -26,8 +27,13 @@ class CaseStructureConditionTest: ConditionTestBase() {
     }
 
     @Test
-    fun description() {
+    fun asText() {
         tshAbsent.asText() shouldBe "${tsh.name} is not in case"
+    }
+
+    @Test
+    fun userExpression() {
+        tshAbsent.userExpression shouldBe userExpression
     }
 
     @Test
@@ -39,11 +45,13 @@ class CaseStructureConditionTest: ConditionTestBase() {
     fun serialization() {
         serializeDeserialize(tshAbsent) shouldBe tshAbsent
 
-        // One without an id.
+        checkSerializationIsThreadSafe(tshAbsent)
+    }
+
+    @Test
+    fun `serialization without id`() {
         val idLess = CaseStructureCondition(null, IsPresentInCase(tsh))
         serializeDeserialize(idLess) shouldBe idLess
-
-        checkSerializationIsThreadSafe(tshAbsent)
     }
 
     @Test
@@ -61,10 +69,14 @@ class CaseStructureConditionTest: ConditionTestBase() {
         tshAbsent.sameAs(tshAbsent.copy()) shouldBe true
 
         // Same but for id.
-        tshAbsent.sameAs(CaseStructureCondition(null, IsAbsentFromCase(tsh))) shouldBe true
-        tshAbsent.sameAs(CaseStructureCondition(99, IsAbsentFromCase(tsh))) shouldBe true
+        tshAbsent.sameAs(CaseStructureCondition(null, IsAbsentFromCase(tsh), userExpression)) shouldBe true
+        tshAbsent.sameAs(CaseStructureCondition(99, IsAbsentFromCase(tsh), userExpression)) shouldBe true
+
+        // Same but for user expression.
+        tshAbsent.sameAs(CaseStructureCondition(null, IsAbsentFromCase(tsh), "tsh not found")) shouldBe true
+        tshAbsent.sameAs(CaseStructureCondition(99, IsAbsentFromCase(tsh), "tsh not found")) shouldBe true
 
         // Predicate different.
-        tshAbsent.sameAs(CaseStructureCondition(99, IsPresentInCase(clinicalNotes))) shouldBe false
+        tshAbsent.sameAs(CaseStructureCondition(99, IsPresentInCase(clinicalNotes), userExpression)) shouldBe false
     }
 }

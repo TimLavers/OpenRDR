@@ -49,43 +49,51 @@ fun AvailableConditions(conditions: List<SuggestedCondition>, handler: Available
             conditions
                 .sortedWith(compareBy { it.asText() })
                 .forEachIndexed { index, condition ->
-                    Text(
-                        text = condition.asText(),
-                        modifier = Modifier
-                            .clickable {
-                                if (condition.isEditable()) {
-                                    handler.onEditThenAdd(condition)
-                                } else {
-                                    handler.onAddCondition(condition)
+                    TooltipArea(
+                        tooltip = {
+                            if (condition.initialSuggestion().userExpresson.isNotBlank()) {
+                                Text(condition.asText())
+                            }
+                        },
+                    ) {
+                        Text(
+                            text = condition.asText(),
+                            modifier = Modifier
+                                .clickable {
+                                    if (condition.isEditable()) {
+                                        handler.onEditThenAdd(condition)
+                                    } else {
+                                        handler.onAddCondition(condition)
+                                    }
                                 }
-                            }
-                            .onPointerEvent(Enter) {
-                                cursorOnRow = index
-                            }
-                            .pointerInput(Unit) {
-                                coroutineScope {
-                                    launch {
-                                        awaitPointerEventScope {
-                                            while (true) {
-                                                val event = awaitPointerEvent()
-                                                if (event.type == PointerEventType.Press && event.buttons.isSecondaryPressed) {
-                                                    println("Right click!!!!!!")
+                                .onPointerEvent(Enter) {
+                                    cursorOnRow = index
+                                }
+                                .pointerInput(Unit) {
+                                    coroutineScope {
+                                        launch {
+                                            awaitPointerEventScope {
+                                                while (true) {
+                                                    val event = awaitPointerEvent()
+                                                    if (event.type == PointerEventType.Press && event.buttons.isSecondaryPressed) {
+                                                        println("Right click!!!!!!")
 //                                                    if (condition.isEditable()) {
 //                                                        handler.onEditThenAdd(condition.editableCondition()!!)
 //                                                    }
+                                                    }
                                                 }
                                             }
                                         }
                                     }
                                 }
-                            }
-                            .background(
-                                if (cursorOnRow == index) Color.LightGray else Color.Transparent
-                            )
-                            .padding(start = 10.dp)
-                            .semantics { contentDescription = "$AVAILABLE_CONDITION_PREFIX$index" }
+                                .background(
+                                    if (cursorOnRow == index) Color.LightGray else Color.Transparent
+                                )
+                                .padding(start = 10.dp)
+                                .semantics { contentDescription = "$AVAILABLE_CONDITION_PREFIX$index" }
 
-                    )
+                        )
+                    }
                 }
         }
         Scrollbar(scrollState, modifier = Modifier.align(Alignment.CenterEnd))

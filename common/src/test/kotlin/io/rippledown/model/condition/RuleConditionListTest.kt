@@ -12,7 +12,7 @@ class RuleConditionListTest {
         val conditionList = RuleConditionList(
             listOf(
                 hasCurrentValue(1,Attribute(1, "x")),
-                isHigh(2, Attribute(2, "y"))
+                isHigh(2, Attribute(2, "y"), "X is elevated")
             )
         )
         serializeDeserialize(conditionList) shouldBe conditionList

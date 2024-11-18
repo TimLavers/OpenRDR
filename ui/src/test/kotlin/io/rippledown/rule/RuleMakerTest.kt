@@ -67,7 +67,7 @@ class RuleMakerTest {
 
     @Test
     fun `if the tip is an available condition, then it should always be included`() {
-        every { handler.tipForExpression(any()) } returns suggestionConditions[2].asText()
+        every { handler.conditionForExpression(any()) } returns suggestionConditions[2].asText()
         with(composeTestRule) {
             //Given
             setContent {
@@ -91,13 +91,13 @@ class RuleMakerTest {
             }
 
             //Then
-            verify(exactly = 0) { handler.tipForExpression(any()) }
+            verify(exactly = 0) { handler.conditionForExpression(any()) }
         }
     }
 
     @Test
     fun `if the tip is not an available condition, then it should not be included`() {
-        every { handler.tipForExpression(any()) } returns "not a known condition"
+        every { handler.conditionForExpression(any()) } returns "not a known condition"
         with(composeTestRule) {
             //Given
             setContent {
@@ -114,7 +114,7 @@ class RuleMakerTest {
 
     @Test
     fun `if the tip is not an available condition, then show conditions matching the filter text`() {
-        every { handler.tipForExpression(any()) } returns "not a known condition"
+        every { handler.conditionForExpression(any()) } returns "not a known condition"
         with(composeTestRule) {
             //Given
             setContent {
@@ -413,7 +413,7 @@ fun nonEditableSuggestion(id: Int?, attribute: Attribute, text: String): NonEdit
 fun main() {
     val notes = Attribute(99, "Notes")
     val handler = mockk<RuleMakerHandler>(relaxed = true)
-    every { handler.tipForExpression(any()) } answers {
+    every { handler.conditionForExpression(any()) } answers {
         Thread.sleep(1000)
         "Notes contains \"condition 3\""
     }

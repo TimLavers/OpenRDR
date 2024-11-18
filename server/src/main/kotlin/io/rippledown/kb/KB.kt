@@ -1,5 +1,7 @@
 package io.rippledown.kb
 
+import io.rippledown.expressionparser.AttributeFor
+import io.rippledown.expressionparser.ConditionTip
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
@@ -26,6 +28,16 @@ class KB(persistentKB: PersistentKB) {
             persistentKB.conclusionOrderStore(),
             conclusionManager
         )
+
+    //a var so it can be mocked in tests
+    private var conditionParser: ConditionParser
+
+    init {
+        conditionParser = object : ConditionParser {
+            override fun parse(expression: String, attributeNames: List<String>, attributeFor: AttributeFor) =
+                ConditionTip(attributeNames, attributeFor).conditionFor(expression)
+        }
+    }
 
     fun containsCornerstoneCaseWithName(caseName: String): Boolean {
         return caseManager.ids(CaseType.Cornerstone).find { rdrCase -> rdrCase.name == caseName } != null
@@ -228,4 +240,27 @@ class KB(persistentKB: PersistentKB) {
         val viewableCornerstone = viewableCase(cornerstone)
         return CornerstoneStatus(viewableCornerstone, index, cornerstones.size)
     }
+
+    //Allow a mock parser to be set so we can avoid connecting to Gemini for all the tests
+    fun setConditionParser(parser: ConditionParser) {
+        conditionParser = parser
+    }
+
+    fun conditionForExpression(expression: String, attributeNames: List<String>): Condition? {
+        val attributeFor: AttributeFor = { attributeManager.getOrCreate(it) }
+        val condition = conditionParser.parse(expression, attributeNames, attributeFor)
+        println("conditionForExpression parsed from '$expression' was : $condition?.asText()")
+
+        //Only return the condition if it holds for the current session case
+        if (condition == null || !holdsForSessionCase(condition)) return null
+
+        //if this a new condition, the following will store it with its user expression, else the existing condition will be returned
+        return conditionManager.getOrCreate(condition)
+    }
+
+    internal fun holdsForSessionCase(condition: Condition) = condition.holds(ruleSession!!.case)
+}
+
+interface ConditionParser {
+    fun parse(expression: String, attributeNames: List<String>, attributeFor: (String) -> Attribute): Condition? = null
 }

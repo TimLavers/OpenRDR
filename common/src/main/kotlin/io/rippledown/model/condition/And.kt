@@ -16,6 +16,8 @@ data class And(val left: Condition, val right: Condition): Condition() {
 
     override fun asText() = "${left.asText()} and ${right.asText()}"
 
+    override fun userExpression() = ""
+
     override fun alignAttributes(idToAttribute: (Int) -> Attribute) = And(left.alignAttributes(idToAttribute), right.alignAttributes(idToAttribute))
 
     override fun sameAs(other: Condition) = when(other) {

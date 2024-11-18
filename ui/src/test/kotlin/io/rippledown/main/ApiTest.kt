@@ -1,6 +1,7 @@
 package io.rippledown.main
 
 import io.kotest.matchers.shouldBe
+import io.mockk.mockk
 import io.rippledown.mocks.config
 import io.rippledown.mocks.mock
 import io.rippledown.model.*
@@ -234,17 +235,14 @@ class ApiTest {
     }
 
     @Test
-    fun `should return a tip for the specified expression`() = runTest {
+    fun `should return a condition for the specified expression`() = runTest {
         val config = config {
             expectedExpression = "Great surf"
             expectedAttributeNames = listOf("Surf", "Sun")
-            returnTip = "Bondi"
+            returnTip = mockk()
         }
-        val returned = Api(mock(config)).tipForExpression(config.expectedExpression, config.expectedAttributeNames)
-
-        val json = Json {
-            allowStructuredMapKeys = true
-        }
-        json.decodeFromString(returned) as String shouldBe config.returnTip
+        val returned =
+            Api(mock(config)).conditionForExpression(config.expectedExpression, config.expectedAttributeNames)
+        returned shouldBe config.returnTip
     }
 }

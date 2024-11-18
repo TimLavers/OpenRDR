@@ -3,7 +3,7 @@ package io.rippledown.constants.api
 const val API_URL = "http://localhost:9090"
 const val WAITING_CASES = "/api/waitingCasesInfo"
 const val CONDITION_HINTS = "/api/conditionHints"
-const val TIP_FOR_EXPRESSION = "/api/tipForExpression"
+const val CONDITION_FOR_EXPRESSION = "/api/conditionForExpression"
 const val CASE = "/api/case"
 const val PROCESS_CASE = "/api/processCase"
 const val DELETE_CASE_WITH_NAME = "/api/deleteProcessedCaseWithName"

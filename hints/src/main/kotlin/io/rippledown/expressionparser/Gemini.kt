@@ -1,11 +1,8 @@
-package io.rippledown
+package io.rippledown.expressionparser
 
 import dev.shreyaspatil.ai.client.generativeai.GenerativeModel
+import dev.shreyaspatil.ai.client.generativeai.type.*
 import dev.shreyaspatil.ai.client.generativeai.type.BlockThreshold.NONE
-import dev.shreyaspatil.ai.client.generativeai.type.GenerationConfig
-import dev.shreyaspatil.ai.client.generativeai.type.HarmCategory
-import dev.shreyaspatil.ai.client.generativeai.type.SafetySetting
-import dev.shreyaspatil.ai.client.generativeai.type.content
 import kotlinx.coroutines.runBlocking
 import java.lang.System.getenv
 
@@ -18,8 +15,8 @@ val generativeConfig = GenerationConfig.builder().apply { temperature = 0.0f }.b
 val generativeModel = GenerativeModel(
     modelName = GEMINI_MODEL,
     apiKey = getenv("GEMINI_API_KEY"),
-    generationConfig = generativeConfig,
-    safetySettings = noSafetySettings()
+    safetySettings = noSafetySettings(),
+    generationConfig = generativeConfig
 )
 
 val trainingSet = trainingSet(TRAINING_SET_FILE)
@@ -34,17 +31,18 @@ fun noSafetySettings() =
             )
         }
 
-fun suggestionFor(input: String): String {
+fun tokensFor(input: String): Array<String> {
     val prompt = content {
-        text("Perform a task that replaces x with a particular string.")
-        text("Here are some examples:")
+        text("Your task is to identify the components in an expression E.")
+        text("Output the single component, or if several components, separate them by a comma.")
+        text("Examples of expressions with the expected output are:")
         text(trainingSet)
-        text("Here is the user input: $input")
+        text("Here is the expression: $input")
         text("Generate output without additional string.")
     }
 
     val response = runBlocking {
         generativeModel.generateContent(prompt)
     }
-    return response.text!!.trim()
+    return response.text!!.trim().split(", ").toTypedArray()
 }

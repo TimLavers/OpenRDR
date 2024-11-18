@@ -26,7 +26,8 @@ internal class ConditionSuggesterTest {
     private fun rangeFilter(attribute: Attribute) = EpisodicCondition(attribute, HighOrNormalOrLow, AtLeast(1))
     private fun isLowSuggestion(attribute: Attribute) = NonEditableSuggestedCondition(isLow(null, attribute), rangeFilter(attribute))
     private fun isNormalSuggestion(attribute: Attribute) = NonEditableSuggestedCondition(isNormal(null, attribute), rangeFilter(attribute))
-    private fun isHighSuggestion(attribute: Attribute) = NonEditableSuggestedCondition(isHigh(null, attribute), rangeFilter(attribute))
+    private fun isHighSuggestion(attribute: Attribute) =
+        NonEditableSuggestedCondition(isHigh(null, attribute, ""), rangeFilter(attribute))
     private fun isValueSuggestion(attribute: Attribute, value: String, signature: Signature = Current) = NonEditableSuggestedCondition(isCondition(null, attribute, value, signature))
     private fun isNumericSuggestion(attribute: Attribute, signature: Signature) = NonEditableSuggestedCondition(isNumeric( attribute,null, signature))
     private fun notNumericSuggestion(attribute: Attribute, signature: Signature) = NonEditableSuggestedCondition(notNumeric( attribute, null, signature))

@@ -1,11 +1,14 @@
 package io.rippledown.rule
 
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.application
 import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
+import io.rippledown.model.condition.edit.SuggestedCondition
 import io.rippledown.model.condition.episodic.predicate.Low
 import io.rippledown.model.condition.episodic.signature.Current
 import org.junit.Rule
@@ -70,17 +73,17 @@ class AvailableConditionsTest {
     }
 }
 
-//fun main() {
-//    val handler = mockk<AvailableConditionsHandler>(relaxed = true)
-//    application {
-//        Window(
-//            onCloseRequest = ::exitApplication,
-//        ) {
-//            val conditions = (1..100).map { index ->
-//                val attribute = Attribute(index, "Surf $index")
-//                EpisodicCondition(attribute, Low, Current)
-//            }
-//            AvailableConditions(conditions, handler)
-//        }
-//    }
-//}
+fun main() {
+    val handler = mockk<AvailableConditionsHandler>(relaxed = true)
+    application {
+        Window(
+            onCloseRequest = ::exitApplication,
+        ) {
+            val conditions = (1..100).map { index ->
+                val attribute = Attribute(index, "Surf $index")
+                NonEditableSuggestedCondition(EpisodicCondition(attribute, Low, Current))
+            }
+            AvailableConditions(conditions, handler)
+        }
+    }
+}

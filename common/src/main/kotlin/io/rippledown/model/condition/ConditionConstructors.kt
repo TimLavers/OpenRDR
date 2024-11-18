@@ -9,56 +9,86 @@ import io.rippledown.model.condition.structural.IsAbsentFromCase
 import io.rippledown.model.condition.structural.IsPresentInCase
 import io.rippledown.model.condition.structural.IsSingleEpisodeCase
 
-fun isLow(id: Int? = null, attribute: Attribute) = EpisodicCondition(id, attribute, Low, Current)
-fun isNormal(id: Int? = null, attribute: Attribute) = EpisodicCondition(id, attribute, Normal, Current)
-fun isHigh(id: Int? = null, attribute: Attribute) = EpisodicCondition(id, attribute, High, Current)
-fun isCondition(id: Int? = null, attribute: Attribute, text: String, signature: Signature = Current) =
-    EpisodicCondition(id, attribute, Is(text), signature)
+class ConditionConstructors {
 
-fun containsText(id: Int? = null, attribute: Attribute, text: String, signature: Signature = Current) =
-    EpisodicCondition(id, attribute, Contains(text), signature)
+    //One-parameter conditions
+    fun Low(attribute: Attribute, userExpression: String) =
+        EpisodicCondition(null, attribute, Low, Current, userExpression)
 
-fun doesNotContainText(id: Int? = null, attribute: Attribute, text: String) =
-    EpisodicCondition(id, attribute, DoesNotContain(text), Current)
+    fun Normal(attribute: Attribute, userExpression: String) =
+        EpisodicCondition(null, attribute, Normal, Current, userExpression)
 
-fun allDoNotContainText(id: Int? = null, attribute: Attribute, text: String) =
-    EpisodicCondition(id, attribute, DoesNotContain(text), All)
+    fun High(attribute: Attribute, userExpression: String) =
+        EpisodicCondition(null, attribute, High, Current, userExpression)
 
-fun hasCurrentValue(id: Int? = null, attribute: Attribute) = EpisodicCondition(id, attribute, IsNotBlank, Current)
-fun hasNoCurrentValue(id: Int? = null, attribute: Attribute) = EpisodicCondition(id, attribute, IsBlank, Current)
-fun greaterThanOrEqualTo(id: Int? = null, attribute: Attribute, d: Double) =
-    EpisodicCondition(id, attribute, GreaterThanOrEquals(d), Current)
+    fun Present(attribute: Attribute, userExpression: String) =
+        CaseStructureCondition(null, IsPresentInCase(attribute), userExpression)
 
-fun lessThanOrEqualTo(id: Int? = null, attribute: Attribute, d: Double) =
-    EpisodicCondition(id, attribute, LessThanOrEquals(d), Current)
+    fun Absent(attribute: Attribute, userExpression: String) =
+        CaseStructureCondition(null, IsAbsentFromCase(attribute), userExpression)
 
-fun slightlyLow(id: Int? = null, attribute: Attribute, cutoff: Int, signature: Signature = Current) =
-    EpisodicCondition(id, attribute, LowByAtMostSomePercentage(cutoff), signature)
+    fun Numeric(attribute: Attribute, userExpression: String) =
+        EpisodicCondition(null, attribute, IsNumeric, Current, userExpression)
 
-fun normalOrSlightlyLow(id: Int? = null, attribute: Attribute, cutoff: Int, signature: Signature = Current) =
-    EpisodicCondition(id, attribute, NormalOrLowByAtMostSomePercentage(cutoff), signature)
+    fun NotNumeric(attribute: Attribute, userExpression: String) =
+        EpisodicCondition(null, attribute, IsNotNumeric, Current, userExpression)
 
-fun normalOrSlightlyHigh(id: Int? = null, attribute: Attribute, cutoff: Int, signature: Signature = Current) =
-    EpisodicCondition(id, attribute, NormalOrHighByAtMostSomePercentage(cutoff), signature)
+    fun Blank(attribute: Attribute, userExpression: String) =
+        EpisodicCondition(null, attribute, IsBlank, Current, userExpression)
 
-fun slightlyHigh(id: Int? = null, attribute: Attribute, cutoff: Int, signature: Signature = Current) =
-    EpisodicCondition(id, attribute, HighByAtMostSomePercentage(cutoff), signature)
+    fun NotBlank(attribute: Attribute, userExpression: String) =
+        EpisodicCondition(null, attribute, IsNotBlank, Current, userExpression)
 
-fun isSingleEpisodeCase(id: Int? = null) = CaseStructureCondition(id, IsSingleEpisodeCase)
-fun isPresent(attribute: Attribute, id: Int? = null) = CaseStructureCondition(id, IsPresentInCase(attribute))
-fun isAbsent(attribute: Attribute, id: Int? = null) = CaseStructureCondition(id, IsAbsentFromCase(attribute))
-fun isNumeric(attribute: Attribute, id: Int? = null, signature: Signature = Current) =
-    EpisodicCondition(id, attribute, IsNumeric, signature)
+    fun Increasing(attribute: Attribute, userExpression: String) =
+        SeriesCondition(null, attribute, Increasing, userExpression)
 
-fun notNumeric(attribute: Attribute, id: Int? = null, signature: Signature = Current) =
-    EpisodicCondition(id, attribute, IsNotNumeric, signature)
+    fun Decreasing(attribute: Attribute, userExpression: String) =
+        SeriesCondition(null, attribute, Decreasing, userExpression)
 
-fun increasing(attribute: Attribute, id: Int? = null) = SeriesCondition(id, attribute, Increasing)
-fun decreasing(attribute: Attribute, id: Int? = null) = SeriesCondition(id, attribute, Decreasing)
-fun allNumeric(attribute: Attribute, id: Int? = null) = EpisodicCondition(id, attribute, IsNumeric, All)
-fun noneNumeric(attribute: Attribute, id: Int? = null) = EpisodicCondition(id, attribute, IsNumeric, No)
-fun atLeastNumeric(count: Int, attribute: Attribute, id: Int? = null) =
-    EpisodicCondition(id, attribute, IsNumeric, AtLeast(count))
+    //Two-parameter conditions
+    fun Is(attribute: Attribute, userExpression: String, text: String) =
+        EpisodicCondition(null, attribute, Is(text), Current, userExpression)
 
-fun atMostNumeric(count: Int, attribute: Attribute, id: Int? = null) =
-    EpisodicCondition(id, attribute, IsNumeric, AtMost(count))
+    fun Contains(attribute: Attribute, userExpression: String, text: String) =
+        EpisodicCondition(null, attribute, Contains(text), Current, userExpression)
+
+    fun DoesNotContain(attribute: Attribute, userExpression: String, text: String) = EpisodicCondition(
+        null, attribute, DoesNotContain(text), Current, userExpression
+    )
+
+    fun GreaterThanOrEqualTo(attribute: Attribute, userExpression: String, d: String) =
+        EpisodicCondition(null, attribute, GreaterThanOrEquals(d.toDoubleOrNull()!!), Current, userExpression)
+
+    fun LessThanOrEqualTo(attribute: Attribute, userExpression: String, d: String) =
+        EpisodicCondition(null, attribute, LessThanOrEquals(d.toDoubleOrNull()!!), Current, userExpression)
+
+    //TODO
+    fun slightlyLow(attribute: Attribute, userExpression: String, cutoff: Int, signature: Signature = Current) =
+        EpisodicCondition(null, attribute, LowByAtMostSomePercentage(cutoff), signature)
+
+    fun normalOrSlightlyLow(attribute: Attribute, userExpression: String, cutoff: Int, signature: Signature = Current) =
+        EpisodicCondition(null, attribute, NormalOrLowByAtMostSomePercentage(cutoff), signature)
+
+    fun normalOrSlightlyHigh(
+        attribute: Attribute,
+        userExpression: String,
+        cutoff: Int,
+        signature: Signature = Current
+    ) =
+        EpisodicCondition(null, attribute, NormalOrHighByAtMostSomePercentage(cutoff), signature)
+
+    fun slightlyHigh(attribute: Attribute, userExpression: String, cutoff: Int, signature: Signature = Current) =
+        EpisodicCondition(null, attribute, HighByAtMostSomePercentage(cutoff), signature)
+
+    fun isSingleEpisodeCase(id: Int? = null) = CaseStructureCondition(null, IsSingleEpisodeCase, "")
+    fun allDoNotContainText(attribute: Attribute, userExpression: String, text: String) =
+        EpisodicCondition(null, attribute, DoesNotContain(text), All)
+
+    fun allNumeric(attribute: Attribute, userExpression: String) = EpisodicCondition(null, attribute, IsNumeric, All)
+    fun noneNumeric(attribute: Attribute, userExpression: String) = EpisodicCondition(null, attribute, IsNumeric, No)
+    fun atLeastNumeric(count: Int, attribute: Attribute, userExpression: String) =
+        EpisodicCondition(null, attribute, IsNumeric, AtLeast(count))
+
+    fun atMostNumeric(count: Int, attribute: Attribute, userExpression: String) =
+        EpisodicCondition(null, attribute, IsNumeric, AtMost(count))
+}
