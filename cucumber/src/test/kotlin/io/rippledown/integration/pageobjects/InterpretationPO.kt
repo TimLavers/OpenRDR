@@ -43,12 +43,6 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
     fun waitForInterpretationText(expected: String): InterpretationPO {
         await()
             .atMost(ofSeconds(5))
-            .with().conditionEvaluationListener { condition ->
-                if (!condition.isSatisfied) {
-                    println("Waiting for text: '$expected'")
-                    println("    but got text: '${interpretationText()}'")
-                }
-            }
             .until {
                 interpretationText() == expected
             }
