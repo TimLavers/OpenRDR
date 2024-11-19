@@ -42,7 +42,6 @@ class SelectedConditionsTest {
                 SelectedConditions(conditions, handler)
             }
             //When
-            hoverOverSelectedCondition(2)//to show the icon
             removeSelectedCondition(2)
             waitForIdle()
 

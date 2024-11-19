@@ -3,11 +3,13 @@ package io.rippledown.rule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.ConditionConstructors
 import io.rippledown.model.condition.containsText
 import io.rippledown.model.condition.edit.*
 import io.rippledown.model.condition.episodic.signature.Current
@@ -33,7 +35,7 @@ class RuleMakerTest {
         conditionsShown = allSuggestions.map { it.asText() }
         suggestionConditions = allSuggestions.map { it.initialSuggestion() }
         handler = mockk<RuleMakerHandler>(relaxed = true)
-
+        every { handler.conditionForExpression(any()) } returns null
     }
 
     @Test
@@ -67,7 +69,7 @@ class RuleMakerTest {
 
     @Test
     fun `if the tip is an available condition, then it should always be included`() {
-        every { handler.conditionForExpression(any()) } returns suggestionConditions[2].asText()
+        every { handler.conditionForExpression(any()) } returns suggestionConditions[2]
         with(composeTestRule) {
             //Given
             setContent {
@@ -97,7 +99,7 @@ class RuleMakerTest {
 
     @Test
     fun `if the tip is not an available condition, then it should not be included`() {
-        every { handler.conditionForExpression(any()) } returns "not a known condition"
+        every { handler.conditionForExpression(any()) } returns null
         with(composeTestRule) {
             //Given
             setContent {
@@ -114,7 +116,7 @@ class RuleMakerTest {
 
     @Test
     fun `if the tip is not an available condition, then show conditions matching the filter text`() {
-        every { handler.conditionForExpression(any()) } returns "not a known condition"
+        every { handler.conditionForExpression(any()) } returns null
         with(composeTestRule) {
             //Given
             setContent {
@@ -392,6 +394,61 @@ class RuleMakerWithReusableEditableSuggestionsTest {
 
         }
     }
+
+    @Test
+    fun `should filter the available conditions using the filter text if there is no condition parsed from the user expression`() {
+        // Given
+        val all = (1..5).map { index ->
+            nonEditableSuggestion(index, notes, "$index")
+        }
+        val filterTest = "3"
+        val conditionForExpression = null
+        val selectedConditions = listOf<Condition>()
+
+        // When
+        val available = refreshAvailableConditions(all, filterTest, conditionForExpression, selectedConditions)
+
+        // Then
+        available shouldBe listOf(all[2])
+
+    }
+
+    @Test
+    fun `the parsed condition should be the only available condition if no other conditions match the filter`() {
+        // Given
+        val all = (1..5).map { index ->
+            nonEditableSuggestion(index, notes, "$index")
+        }
+        val filterTest = "nothing will match this"
+        val parsed = nonEditableSuggestion(attribute = notes, text = "Bondi")
+        val conditionForExpression = parsed.initialSuggestion
+        val selectedConditions = listOf<Condition>()
+
+        // When
+        val available = refreshAvailableConditions(all, filterTest, conditionForExpression, selectedConditions)
+
+        // Then
+        available shouldBe listOf(parsed)
+
+    }
+
+    @Test
+    fun `the parsed condition should be the first available condition if other conditions match the filter`() {
+        // Given
+        val all = (1..5).map { index ->
+            nonEditableSuggestion(index, notes, "$index")
+        }
+        val filterTest = "3"
+        val parsed = nonEditableSuggestion(attribute = notes, text = "Bondi")
+        val conditionForExpression = parsed.initialSuggestion
+        val selectedConditions = listOf<Condition>()
+
+        // When
+        val available = refreshAvailableConditions(all, filterTest, conditionForExpression, selectedConditions)
+
+        // Then
+        available shouldBe listOf(parsed, all[2])
+    }
 }
 
 fun reusableEditableSuggestion(attribute: Attribute, text: String): EditableSuggestedCondition {
@@ -405,17 +462,18 @@ fun nonReusableEditableSuggestion(attribute: Attribute, text: Int): EditableSugg
     return EditableSuggestedCondition(editableCondition)
 }
 
-fun nonEditableSuggestion(id: Int?, attribute: Attribute, text: String): NonEditableSuggestedCondition {
+fun nonEditableSuggestion(id: Int? = null, attribute: Attribute, text: String): NonEditableSuggestedCondition {
     val initialSuggestion = containsText(id, attribute, text)
     return NonEditableSuggestedCondition(initialSuggestion)
 }
 
 fun main() {
-    val notes = Attribute(99, "Notes")
+    val notes = Attribute(0, "Notes")
+    val waves = Attribute(1, "Waves")
     val handler = mockk<RuleMakerHandler>(relaxed = true)
     every { handler.conditionForExpression(any()) } answers {
         Thread.sleep(1000)
-        "Notes contains \"condition 3\""
+        ConditionConstructors().High(waves, "waves look tall enough")
     }
     val conditions = (1..10).map { index ->
         nonEditableSuggestion(index, notes, "condition $index")

@@ -21,4 +21,3 @@ dependencyResolutionManagement {
         }
     }
 }
-include("parser")

@@ -8,7 +8,6 @@ import io.mockk.verify
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
-import io.rippledown.model.condition.edit.SuggestedCondition
 import io.rippledown.model.condition.episodic.predicate.Low
 import io.rippledown.model.condition.episodic.signature.Current
 import org.junit.Rule
@@ -18,7 +17,7 @@ class AvailableConditionsTest {
     @get:Rule
     var composeTestRule = createComposeRule()
 
-    private val conditions = (0..9).map { index ->
+    private val conditions = (0..2).map { index ->
         val attribute = Attribute(index, "Surf $index")
         NonEditableSuggestedCondition(EpisodicCondition(attribute, Low, Current))
     }
@@ -28,7 +27,7 @@ class AvailableConditionsTest {
         with(composeTestRule) {
             //Given
             setContent {
-                AvailableConditions(conditions, mockk())
+                AvailableConditions(conditions, mockk(relaxed = true))
             }
 
             //Then

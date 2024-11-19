@@ -2,18 +2,18 @@
 
 package io.rippledown.rule
 
-import androidx.compose.foundation.*
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
-import androidx.compose.runtime.*
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.PointerEventType.Companion.Enter
 import androidx.compose.ui.input.pointer.isSecondaryPressed
-import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -33,7 +33,6 @@ interface AvailableConditionsHandler {
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun AvailableConditions(conditions: List<SuggestedCondition>, handler: AvailableConditionsHandler) {
-    var cursorOnRow: Int by remember { mutableStateOf(-1) }
     val scrollState = rememberScrollState()
 
     Box(
@@ -41,57 +40,51 @@ fun AvailableConditions(conditions: List<SuggestedCondition>, handler: Available
             .height(200.dp)
     ) {
         Column(
+            verticalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(10.dp)
                 .verticalScroll(scrollState)
                 .semantics { contentDescription = AVAILABLE_CONDITIONS }
         ) {
             conditions
                 .sortedWith(compareBy { it.asText() })
-                .forEachIndexed { index, condition ->
-                    TooltipArea(
-                        tooltip = {
-                            if (condition.initialSuggestion().userExpresson.isNotBlank()) {
-                                Text(condition.asText())
-                            }
-                        },
-                    ) {
-                        Text(
-                            text = condition.asText(),
-                            modifier = Modifier
-                                .clickable {
-                                    if (condition.isEditable()) {
-                                        handler.onEditThenAdd(condition)
-                                    } else {
-                                        handler.onAddCondition(condition)
-                                    }
+                .forEachIndexed { index, suggestedCondition ->
+                    val condition = suggestedCondition.initialSuggestion()
+                    ConditionToolTip(condition) {
+                        SuggestionChip(
+                            onClick = {
+                                if (suggestedCondition.isEditable()) {
+                                    handler.onEditThenAdd(suggestedCondition)
+                                } else {
+                                    handler.onAddCondition(suggestedCondition)
                                 }
-                                .onPointerEvent(Enter) {
-                                    cursorOnRow = index
-                                }
-                                .pointerInput(Unit) {
-                                    coroutineScope {
-                                        launch {
-                                            awaitPointerEventScope {
-                                                while (true) {
-                                                    val event = awaitPointerEvent()
-                                                    if (event.type == PointerEventType.Press && event.buttons.isSecondaryPressed) {
-                                                        println("Right click!!!!!!")
-//                                                    if (condition.isEditable()) {
-//                                                        handler.onEditThenAdd(condition.editableCondition()!!)
+                            },
+                            modifier = Modifier.height(30.dp).width(300.dp),
+                            label = {
+                                Text(
+                                    text = condition.display(),
+                                    modifier = Modifier
+                                        .pointerInput(Unit) {
+                                            coroutineScope {
+                                                launch {
+                                                    awaitPointerEventScope {
+                                                        while (true) {
+                                                            val event = awaitPointerEvent()
+                                                            if (event.type == PointerEventType.Press && event.buttons.isSecondaryPressed) {
+                                                                println("Right click!!!!!!")
+//                                                    if (suggestedCondition.isEditable()) {
+//                                                        handler.onEditThenAdd(suggestedCondition.editableCondition()!!)
 //                                                    }
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             }
                                         }
-                                    }
-                                }
-                                .background(
-                                    if (cursorOnRow == index) Color.LightGray else Color.Transparent
+                                        .semantics { contentDescription = "$AVAILABLE_CONDITION_PREFIX$index" }
                                 )
-                                .padding(start = 10.dp)
-                                .semantics { contentDescription = "$AVAILABLE_CONDITION_PREFIX$index" }
-
+                            }
                         )
                     }
                 }

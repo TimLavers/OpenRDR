@@ -14,6 +14,7 @@ import androidx.compose.ui.window.rememberDialogState
 import io.rippledown.constants.rule.RULE_MAKER
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.edit.EditableCondition
+import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
 import io.rippledown.model.condition.edit.SuggestedCondition
 import kotlinx.coroutines.delay
 
@@ -38,7 +39,7 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
     var showWaitingIndicator by remember { mutableStateOf(false) }
 
     if (suggestionBeingEdited != null) {
-        val dialogState = rememberDialogState(size = DpSize(420.dp, 160.dp))
+        val dialogState = rememberDialogState(size = DpSize(420.dp, 200.dp))
         DialogWindow(
             onCloseRequest = { suggestionBeingEdited = null },
             title = "Edit Condition",
@@ -79,18 +80,14 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
 
     LaunchedEffect(allConditions, filterText) {
         delay(DEBOUNCE)
-        val conditions = allConditions.sortedWith(compareBy { it.asText() })
-        val condition = if (filterText.isNotBlank()) handler.conditionForExpression(filterText) else null
-        showWaitingIndicator = false
-        val ac = conditions.filterConditions(filterText, condition) - suggestionsUsed.values.toSet()
-        if (condition != null && ac.size == 1) {
-
-            val original = ac[0]
-//            original.initialSuggestion().setUserExpression(filterText)
-            availableConditions = listOf(original)
+        val conditionForExpression = if (filterText.isNotBlank()) {
+            handler.conditionForExpression(filterText)
         } else {
-            availableConditions = ac
+            null
         }
+        availableConditions =
+            refreshAvailableConditions(allConditions, filterText, conditionForExpression, selectedConditions)
+        showWaitingIndicator = false
     }
     Column(
         modifier = Modifier
@@ -117,7 +114,6 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
 
         AvailableConditions(availableConditions, object : AvailableConditionsHandler {
             override fun onAddCondition(suggestedCondition: SuggestedCondition) {
-//                println("Adding condition: ${suggestedCondition.asText()} with user expression: ${suggestedCondition.initialSuggestion().userExpresson}")
                 selectedConditions = selectedConditions + suggestedCondition.initialSuggestion()
                 if (suggestedCondition.shouldBeUsedAtMostOncePerRule()) {
                     availableConditions = availableConditions - suggestedCondition
@@ -145,6 +141,28 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
     }
 }
 
-fun List<SuggestedCondition>.filterConditions(filter: String, condition: Condition?) = filter {
-    it.asText().contains(filter, ignoreCase = true) || it.asText().equals(condition?.asText(), ignoreCase = true)
+internal fun refreshAvailableConditions(
+    allConditions: List<SuggestedCondition>,
+    filterText: String,
+    conditionForExpression: Condition?,
+    selectedConditions: List<Condition>,
+): List<SuggestedCondition> {
+    val filteredConditions = allConditions
+        .sortedWith(compareBy { it.asText() })
+        .filterConditions(filterText)
+        .toMutableList()
+
+    if (conditionForExpression != null) {
+        // Add the condition as the first available condition.
+        val nonEditableSuggestion = NonEditableSuggestedCondition(conditionForExpression)
+        filteredConditions.add(0, nonEditableSuggestion)
+    }
+
+    // Remove conditions that are already selected.
+    filteredConditions.removeAll { selectedConditions.contains(it.initialSuggestion()) }
+    return filteredConditions
+}
+
+fun List<SuggestedCondition>.filterConditions(filter: String) = filter {
+    it.asText().contains(filter, ignoreCase = true)
 }
