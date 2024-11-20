@@ -40,6 +40,19 @@ class ConditionTipTest {
     }
 
     @Test
+    fun `should retrieve a single syntactically valid condition`() {
+        // Given
+        val expression = "elevated glucose"
+
+        // When
+        val actual = conditionTipGenerator.conditionFor(expression)
+
+        // Then
+        actual shouldBe constructors.High(glucose, expression)
+        actual!!.userExpression() shouldBe expression
+    }
+
+    @Test
     fun `should suggest syntactically valid conditions`() {
         // Given
         with(constructors) {

@@ -396,17 +396,17 @@ class RuleMakerWithReusableEditableSuggestionsTest {
     }
 
     @Test
-    fun `should filter the available conditions using the filter text if there is no condition parsed from the user expression`() {
+    fun `should return any available conditions that match the filter text`() {
         // Given
         val all = (1..5).map { index ->
             nonEditableSuggestion(index, notes, "$index")
         }
         val filterTest = "3"
-        val conditionForExpression = null
+        val conditionFor = { text: String -> null }
         val selectedConditions = listOf<Condition>()
 
         // When
-        val available = refreshAvailableConditions(all, filterTest, conditionForExpression, selectedConditions)
+        val available = refreshAvailableConditions(all, filterTest, selectedConditions, conditionFor)
 
         // Then
         available shouldBe listOf(all[2])
@@ -414,40 +414,38 @@ class RuleMakerWithReusableEditableSuggestionsTest {
     }
 
     @Test
-    fun `the parsed condition should be the only available condition if no other conditions match the filter`() {
+    fun `should return the parsed condition no other conditions match the filter`() {
         // Given
         val all = (1..5).map { index ->
             nonEditableSuggestion(index, notes, "$index")
         }
         val filterTest = "nothing will match this"
         val parsed = nonEditableSuggestion(attribute = notes, text = "Bondi")
-        val conditionForExpression = parsed.initialSuggestion
+        val conditionFor = { text: String -> parsed.initialSuggestion }
         val selectedConditions = listOf<Condition>()
 
         // When
-        val available = refreshAvailableConditions(all, filterTest, conditionForExpression, selectedConditions)
+        val available = refreshAvailableConditions(all, filterTest, selectedConditions, conditionFor)
 
         // Then
         available shouldBe listOf(parsed)
-
     }
 
     @Test
-    fun `the parsed condition should be the first available condition if other conditions match the filter`() {
+    fun `should return no available conditions if none match the filter and the filter cannot be parsed to a condition`() {
         // Given
         val all = (1..5).map { index ->
             nonEditableSuggestion(index, notes, "$index")
         }
-        val filterTest = "3"
-        val parsed = nonEditableSuggestion(attribute = notes, text = "Bondi")
-        val conditionForExpression = parsed.initialSuggestion
+        val filterTest = "nothing will match this"
+        val conditionFor = { text: String -> null }
         val selectedConditions = listOf<Condition>()
 
         // When
-        val available = refreshAvailableConditions(all, filterTest, conditionForExpression, selectedConditions)
+        val available = refreshAvailableConditions(all, filterTest, selectedConditions, conditionFor)
 
         // Then
-        available shouldBe listOf(parsed, all[2])
+        available shouldBe emptyList()
     }
 }
 

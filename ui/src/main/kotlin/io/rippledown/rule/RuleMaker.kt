@@ -25,7 +25,7 @@ interface RuleMakerHandler {
     fun conditionForExpression(expression: String): Condition?
 }
 
-const val DEBOUNCE: Long = 1_000
+const val DEBOUNCE: Long = 1_500
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -80,13 +80,8 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
 
     LaunchedEffect(allConditions, filterText) {
         delay(DEBOUNCE)
-        val conditionForExpression = if (filterText.isNotBlank()) {
-            handler.conditionForExpression(filterText)
-        } else {
-            null
-        }
         availableConditions =
-            refreshAvailableConditions(allConditions, filterText, conditionForExpression, selectedConditions)
+            refreshAvailableConditions(allConditions, filterText, selectedConditions, handler::conditionForExpression)
         showWaitingIndicator = false
     }
     Column(
@@ -144,18 +139,20 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
 internal fun refreshAvailableConditions(
     allConditions: List<SuggestedCondition>,
     filterText: String,
-    conditionForExpression: Condition?,
     selectedConditions: List<Condition>,
+    conditionFor: (String) -> Condition?,
 ): List<SuggestedCondition> {
     val filteredConditions = allConditions
         .sortedWith(compareBy { it.asText() })
         .filterConditions(filterText)
         .toMutableList()
 
-    if (conditionForExpression != null) {
-        // Add the condition as the first available condition.
-        val nonEditableSuggestion = NonEditableSuggestedCondition(conditionForExpression)
-        filteredConditions.add(0, nonEditableSuggestion)
+    //If there is no matching condition, attempt to parse the filter text as a condition.
+    if (filteredConditions.isEmpty()) {
+        val parsed = conditionFor(filterText)
+        if (parsed != null) {
+            filteredConditions.add(0, NonEditableSuggestedCondition(parsed))
+        }
     }
 
     // Remove conditions that are already selected.

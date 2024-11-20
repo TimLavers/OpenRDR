@@ -249,13 +249,17 @@ class KB(persistentKB: PersistentKB) {
     fun conditionForExpression(expression: String, attributeNames: List<String>): Condition? {
         val attributeFor: AttributeFor = { attributeManager.getOrCreate(it) }
         val condition = conditionParser.parse(expression, attributeNames, attributeFor)
-        println("conditionForExpression parsed from '$expression' was : $condition?.asText()")
+        logger.info("conditionForExpression parsed from '$expression' was : '${condition?.asText()}'")
+        logger.info("holds for session case was : ${condition != null && holdsForSessionCase(condition)}")
 
-        //Only return the condition if it holds for the current session case
+        //Only return the condition if non-null and holds for the session case
         if (condition == null || !holdsForSessionCase(condition)) return null
 
         //if this a new condition, the following will store it with its user expression, else the existing condition will be returned
-        return conditionManager.getOrCreate(condition)
+        val toReturn = conditionManager.getOrCreate(condition)
+        logger.info("toReturn : ${toReturn.asText()}")
+
+        return toReturn
     }
 
     internal fun holdsForSessionCase(condition: Condition) = condition.holds(ruleSession!!.case)
