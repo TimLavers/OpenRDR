@@ -25,7 +25,7 @@ interface RuleMakerHandler {
     fun conditionForExpression(expression: String): Condition?
 }
 
-const val DEBOUNCE: Long = 1_500
+const val DEBOUNCE: Long = 1_000
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
