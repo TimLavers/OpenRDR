@@ -13,6 +13,7 @@ import io.rippledown.model.condition.ConditionConstructors
 import io.rippledown.model.condition.containsText
 import io.rippledown.model.condition.edit.*
 import io.rippledown.model.condition.episodic.signature.Current
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -396,13 +397,13 @@ class RuleMakerWithReusableEditableSuggestionsTest {
     }
 
     @Test
-    fun `should return any available conditions that match the filter text`() {
+    fun `should return any available conditions that match the filter text`() = runTest {
         // Given
         val all = (1..5).map { index ->
             nonEditableSuggestion(index, notes, "$index")
         }
         val filterTest = "3"
-        val conditionFor = { text: String -> null }
+        val conditionFor = { _: String -> null }
         val selectedConditions = listOf<Condition>()
 
         // When
@@ -414,14 +415,14 @@ class RuleMakerWithReusableEditableSuggestionsTest {
     }
 
     @Test
-    fun `should return the parsed condition no other conditions match the filter`() {
+    fun `should return the parsed condition no other conditions match the filter`() = runTest {
         // Given
         val all = (1..5).map { index ->
             nonEditableSuggestion(index, notes, "$index")
         }
         val filterTest = "nothing will match this"
         val parsed = nonEditableSuggestion(attribute = notes, text = "Bondi")
-        val conditionFor = { text: String -> parsed.initialSuggestion }
+        val conditionFor = { _: String -> parsed.initialSuggestion }
         val selectedConditions = listOf<Condition>()
 
         // When
@@ -432,13 +433,14 @@ class RuleMakerWithReusableEditableSuggestionsTest {
     }
 
     @Test
-    fun `should return no available conditions if none match the filter and the filter cannot be parsed to a condition`() {
+    fun `should return no available conditions if none match the filter and the filter cannot be parsed to a condition`() =
+        runTest {
         // Given
         val all = (1..5).map { index ->
             nonEditableSuggestion(index, notes, "$index")
         }
         val filterTest = "nothing will match this"
-        val conditionFor = { text: String -> null }
+            val conditionFor = { _: String -> null }
         val selectedConditions = listOf<Condition>()
 
         // When

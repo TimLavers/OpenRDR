@@ -79,7 +79,7 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
     }
 
     LaunchedEffect(allConditions, filterText) {
-        delay(DEBOUNCE)
+        showWaitingIndicator = true
         availableConditions =
             refreshAvailableConditions(allConditions, filterText, selectedConditions, handler::conditionForExpression)
         showWaitingIndicator = false
@@ -136,7 +136,7 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
     }
 }
 
-internal fun refreshAvailableConditions(
+internal suspend fun refreshAvailableConditions(
     allConditions: List<SuggestedCondition>,
     filterText: String,
     selectedConditions: List<Condition>,
@@ -149,6 +149,7 @@ internal fun refreshAvailableConditions(
 
     //If there is no matching condition, attempt to parse the filter text as a condition.
     if (filteredConditions.isEmpty()) {
+        delay(DEBOUNCE)
         val parsed = conditionFor(filterText)
         if (parsed != null) {
             filteredConditions.add(0, NonEditableSuggestedCondition(parsed))
