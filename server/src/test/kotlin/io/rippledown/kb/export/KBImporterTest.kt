@@ -4,17 +4,26 @@ import io.kotest.matchers.equality.shouldBeEqualToComparingFields
 import io.kotest.matchers.maps.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.rippledown.kb.KB
+import io.rippledown.kb.export.util.Unzipper
+import io.rippledown.kb.export.util.Zipper
 import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.TestResult
-import io.rippledown.model.condition.lessThanOrEqualTo
+import io.rippledown.model.condition.ConditionConstructors
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
+import java.io.File
 import java.time.Instant
 import kotlin.test.BeforeTest
 import kotlin.test.Test
+
+private const val case1 = "Case1"
+private const val case2 = "Case2"
+private const val case3 = "Case3"
+private const val userExpression = "Glucose is no more than 4.1"
+
 
 class KBImporterTest : ExporterTestBase() {
 
@@ -39,9 +48,36 @@ class KBImporterTest : ExporterTestBase() {
     }
 
     @Test
-    fun exportImport() {
+    fun `should export then import a dummy KB`() {
+        // Given a KB with some cases, a rule, and a case view.
+        val kb = buildDummyKB("Whatever")
+        KBExporter(tempDir, kb).export()
+
+        // When the KB is imported.
+        val rebuilt = KBImporter(tempDir, persistenceProvider).import()
+        rebuilt.kbInfo.name shouldBe kb.kbInfo.name
+
+        rebuilt.allCornerstoneCases().size shouldBe 1
+        rebuilt.getCornerstoneCaseByName(case1) shouldBeEqualToComparingFields kb.getCornerstoneCaseByName(case1)
+
+        rebuilt.allProcessedCases().size shouldBe 2
+        rebuilt.getProcessedCaseByName(case2) shouldBeEqualToComparingFields kb.getProcessedCaseByName(case2)
+        rebuilt.getProcessedCaseByName(case3) shouldBeEqualToComparingFields kb.getProcessedCaseByName(case3)
+
+        rebuilt.caseViewManager.allInOrder() shouldBe kb.caseViewManager.allInOrder()
+
+        rebuilt.ruleTree.size() shouldBe 2
+        val rebuiltFirstRule = rebuilt.ruleTree.root.childRules().first()
+        rebuiltFirstRule
+            .structurallyEqual(kb.ruleTree.root.childRules().first()) shouldBe true
+        rebuiltFirstRule.conditions.iterator().next().userExpression() shouldBe userExpression
+
+        persistenceProvider.idStore().data() shouldHaveSize 2
+    }
+
+    fun buildDummyKB(kbName: String): KB {
         // Create a simple KB.
-        val kbInfo = KBInfo("Whatever")
+        val kbInfo = KBInfo(kbName)
         val pKB = persistenceProvider.createKBPersistence(kbInfo)
         val kb = KB(pKB)
         // Attributes.
@@ -58,39 +94,57 @@ class KBImporterTest : ExporterTestBase() {
             return rdrCaseBuilder.build(name)
         }
 
-        val case1 = buildCase("Case1", "4.0", "2.5", "1.8")
-        val case2 = buildCase("Case2", "4.1", "2.4", "1.6")
-        val case3 = buildCase("Case3", "4.2", "2.3", "1.4")
+        val case1 = buildCase(case1, "4.0", "2.5", "1.8")
+        val case2 = buildCase(case2, "4.1", "2.4", "1.6")
+        val case3 = buildCase(case3, "4.2", "2.3", "1.4")
         kb.addProcessedCase(case2)
         kb.addProcessedCase(case3)
 
         // Add a rule.
         kb.startRuleSession(case1, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Glucose ok.")))
-        kb.addConditionToCurrentRuleSession(lessThanOrEqualTo(null, glucose, 4.1))
+        val condition = ConditionConstructors().LessThanOrEqualTo(glucose, userExpression, "4.1")
+        kb.addConditionToCurrentRuleSession(condition)
         kb.commitCurrentRuleSession()
 
         // Set up the case view.
         kb.caseViewManager.set(listOf(hdl, ldl, glucose))
+        return kb
+    }
 
-        // Export and import.
+    @Test
+    fun `should import a KB from a newly created zip file`() {
+        // Given a zipped KB
+        val kbName = "Whatever"
+        val kb = buildDummyKB(kbName)
+        println("tempDir1 = ${tempDir}")
         KBExporter(tempDir, kb).export()
+        val bytes = Zipper(tempDir).zip()
 
+        //When the file is upzipped
+        Unzipper(bytes, tempDir).unzip()
+
+        //Then the KB can be imported
         val rebuilt = KBImporter(tempDir, persistenceProvider).import()
-        rebuilt.kbInfo.name shouldBe kb.kbInfo.name
+        rebuilt.kbInfo.name shouldBe kbName
+    }
 
-        rebuilt.allCornerstoneCases().size shouldBe 1
-        rebuilt.getCornerstoneCaseByName(case1.name) shouldBeEqualToComparingFields kb.getCornerstoneCaseByName(case1.name)
+    @Test
+    fun `should import from a configured KB zip`() {
+        // Given a configured zipped KB
+        val kbName = "Whatever"
+        val file = File("src/test/resources/export/Whatever.zip")
+        val bytes = file.readBytes()
 
-        rebuilt.allProcessedCases().size shouldBe 2
-        rebuilt.getProcessedCaseByName(case2.name) shouldBeEqualToComparingFields kb.getProcessedCaseByName(case2.name)
-        rebuilt.getProcessedCaseByName(case3.name) shouldBeEqualToComparingFields kb.getProcessedCaseByName(case3.name)
+        //When the file is upzipped
+        Unzipper(bytes, tempDir).unzip()
+        val subDirectories = tempDir.listFiles()
+        require(subDirectories != null && subDirectories.size == 1) {
+            "Invalid zip for KB import."
+        }
 
-        rebuilt.caseViewManager.allInOrder() shouldBe kb.caseViewManager.allInOrder()
-
-        rebuilt.ruleTree.size() shouldBe 2
-        rebuilt.ruleTree.root.childRules().first()
-            .structurallyEqual(kb.ruleTree.root.childRules().first()) shouldBe true
-
-        persistenceProvider.idStore().data() shouldHaveSize 2
+        //Then the KB can be imported
+        val rootDir = subDirectories[0]
+        val rebuilt = KBImporter(rootDir, persistenceProvider).import()
+        rebuilt.kbInfo.name shouldBe kbName
     }
 }

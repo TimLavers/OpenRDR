@@ -147,7 +147,6 @@ class Defs {
     @Given("I import the configured zipped Knowledge Base {word}")
     fun importConfiguredZippedKnowledgeBase(toImport: String) {
         val zipFile = ConfiguredTestData.kbZipFile(toImport)
-        pause(10_000)
         kbControlsPO().importKB(zipFile.absolutePath)
     }
 
