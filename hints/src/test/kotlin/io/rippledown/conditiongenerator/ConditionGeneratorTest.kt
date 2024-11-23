@@ -63,28 +63,31 @@ class ConditionGeneratorTest {
     fun `should generate two-parameter conditions from tokens`() {
         val userExpression = "whatever the user entered"
         with(constructors) {
-            generator.conditionFor("", userExpression, "Is", "1.1") shouldBe Is(attribute, "1.1", userExpression)
+            generator.conditionFor("", userExpression, "Is", "1.1") shouldBe Is(
+                attribute,
+                userExpression = userExpression,
+                text = "1.1"
+            )
             generator.conditionFor("", userExpression, "Contains", "diabetic") shouldBe Contains(
                 attribute,
-                "diabetic",
-                userExpression
+                userExpression = userExpression,
+                text = "diabetic"
             )
             generator.conditionFor("", userExpression, "DoesNotContain", "diabetic") shouldBe DoesNotContain(
                 attribute,
-                "diabetic",
-                userExpression
+                userExpression = userExpression,
+                text = "diabetic"
             )
             generator.conditionFor("", userExpression, "GreaterThanOrEqualTo", "3.14") shouldBe GreaterThanOrEqualTo(
                 attribute,
-                "3.14",
-                userExpression
+                userExpression = userExpression,
+                d = "3.14"
             )
-            generator.conditionFor(
-                "",
-                userExpression,
-                "LessThanOrEqualTo",
-                "3.14"
-            ) shouldBe LessThanOrEqualTo(attribute, "3.14", userExpression)
+            generator.conditionFor("", userExpression, "LessThanOrEqualTo", "3.14") shouldBe LessThanOrEqualTo(
+                attribute,
+                userExpression = userExpression,
+                d = "3.14"
+            )
         }
     }
 
