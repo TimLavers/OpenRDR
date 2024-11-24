@@ -30,7 +30,7 @@ class RuleExporterTest: ExporterTestBase() {
         val conclusion = conclusionFactory.getOrCreate("More coffee needed.")
         val glucose = Attribute(9, "Glucose")
         val tsh = Attribute(10, "TSH")
-        val glucoseHigh = conditionFactory.getOrCreate(isHigh(null, glucose))
+        val glucoseHigh = conditionFactory.getOrCreate(isHigh(null, glucose, ""))
         val tshNormal = conditionFactory.getOrCreate(isNormal(null, tsh))
         val parent = Rule(0, null, null, emptySet())
         rule = Rule(8, parent, conclusion, setOf(glucoseHigh,tshNormal))

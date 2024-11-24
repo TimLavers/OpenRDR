@@ -3,34 +3,41 @@ package io.rippledown.server
 import io.kotest.matchers.shouldBe
 import io.ktor.client.call.*
 import io.ktor.client.request.*
+import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.testing.*
 import io.mockk.every
+import io.mockk.mockk
 import io.mockk.verify
-import io.rippledown.constants.api.TIP_FOR_EXPRESSION
+import io.rippledown.constants.api.CONDITION_FOR_EXPRESSION
 import io.rippledown.constants.server.ATTRIBUTE_NAMES
 import io.rippledown.constants.server.EXPRESSION
 import io.rippledown.constants.server.KB_ID
+import io.rippledown.model.Attribute
+import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.ConditionConstructors
 import kotlin.test.Test
 
 class RuleSessionsTest : OpenRDRServerTestBase() {
 
     @Test
-    fun `should delegate requesting a condition tip to the server application`() = testApplication {
+    fun `should delegate requesting a condition for an expression to the server application`() = testApplication {
         setup()
-        val tip = "tip"
         val expression = "elevated waves"
-        val attributeNames = "Sun, surf"
-        every { kbEndpoint.tipForExpression(any<String>(), any<String>()) } returns tip
+        val attributeNames = listOf("Sun, surf")
+        val waves = Attribute(0, "Waves")
+        val condition = ConditionConstructors().High(waves, expression)
+        every { kbEndpoint.conditionForExpression(any<String>(), any<List<String>>()) } returns condition
 
-        val result = httpClient.get(TIP_FOR_EXPRESSION) {
+        val result = httpClient.get(CONDITION_FOR_EXPRESSION) {
+            contentType(ContentType.Application.Json)
             parameter(EXPRESSION, expression)
-            parameter(ATTRIBUTE_NAMES, attributeNames)
             parameter(KB_ID, kbId)
+            setBody(attributeNames)
         }
         result.status shouldBe OK
-        result.body<String>() shouldBe tip
-        verify { kbEndpoint.tipForExpression(expression, attributeNames) }
+        result.body<Condition?>() shouldBe condition
+        verify { kbEndpoint.conditionForExpression(expression, attributeNames) }
     }
 
 

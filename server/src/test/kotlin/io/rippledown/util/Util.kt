@@ -14,12 +14,17 @@ fun randomString(length: Int): String {
         .map(charPool::get)
         .joinToString("")
 }
-
 fun Set<Condition>.findSameAs(condition: Condition) = this.firstOrNull { condition.sameAs(it) }
 
 fun Set<Condition>.containsSameAs(condition: Condition) = findSameAs(condition) != null
 
 fun Set<Condition>.findAbsentUsingSameAs(conditions: Set<Condition>) = conditions.filter { !this.containsSameAs(it) }.toSet()
+
+infix fun Condition.shouldBeSameAs(other: Condition) {
+    require(sameAs(other)) {
+        "Expected '${this.asText()}' to be the same as '${other.asText()}'."
+    }
+}
 
 infix fun Set<Condition>.shouldContainSameAs(it: Condition) {
     val match = this.findSameAs(it)

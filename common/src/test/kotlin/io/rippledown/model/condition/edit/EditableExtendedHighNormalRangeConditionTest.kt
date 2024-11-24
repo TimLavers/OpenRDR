@@ -28,8 +28,18 @@ class EditableExtendedHighNormalRangeConditionTest: ConditionTestBase() {
 
     @Test
     fun condition() {
-        ercHighNormalCurrent.condition("12") shouldBe EpisodicCondition(null, tsh, NormalOrHighByAtMostSomePercentage(12), Current)
-        ercHighNormalAll.condition("12") shouldBe EpisodicCondition(null, tsh, NormalOrHighByAtMostSomePercentage(12), All)
+        ercHighNormalCurrent.condition("12") shouldBe EpisodicCondition(
+            null,
+            tsh,
+            NormalOrHighByAtMostSomePercentage(12),
+            Current
+        )
+        ercHighNormalAll.condition("12") shouldBe EpisodicCondition(
+            null,
+            tsh,
+            NormalOrHighByAtMostSomePercentage(12),
+            All
+        )
     }
 
     @Test

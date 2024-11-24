@@ -18,14 +18,16 @@ internal class RuleSummaryTest: ConditionTestBase() {
         val conditions2 = mutableSetOf<Condition>()
         conditions2.add(slightlyLow(2000, glucose, 10))
         conditions2.add(isNormal(2001, tsh))
-        val conditionsFromRoot2 = mutableListOf<Condition>(isHigh(1, glucose), isHigh(2, tsh)).apply { addAll(conditions2) }
+        val conditionsFromRoot2 =
+            mutableListOf<Condition>(isHigh(1, glucose, ""), isHigh(2, tsh, "")).apply { addAll(conditions2) }
         rs2 = RuleSummary(12, null, conditions2, conditionsFromRoot2.map { it.asText() })
 
         val conditions3 = mutableSetOf<Condition>()
         conditions3.add(isNormal(3000, glucose))
         conditions3.add(isNormal(3001, tsh))
         conditions3.add(containsText(3002, clinicalNotes, "goats"))
-        val conditionsFromRoot3 = mutableListOf<Condition>(isHigh(1, glucose), isHigh(2, tsh)).apply { addAll(conditions3) }
+        val conditionsFromRoot3 =
+            mutableListOf<Condition>(isHigh(1, glucose, ""), isHigh(2, tsh, "")).apply { addAll(conditions3) }
         rs3 = RuleSummary(13, conclusion, conditions3, conditionsFromRoot3.map { it.asText() })
     }
 

@@ -6,10 +6,17 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import io.rippledown.CaseTestUtils
+import io.rippledown.expressionparser.AttributeFor
+import io.rippledown.kb.ConditionParser
 import io.rippledown.kb.KB
 import io.rippledown.kb.KBManager
 import io.rippledown.model.beSameAs
+import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.ConditionConstructors
 import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.model.condition.isCondition
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
@@ -30,12 +37,15 @@ internal class KBEndpointTest {
     private val kbManager = KBManager(persistenceProvider)
 
     private lateinit var endpoint: KBEndpoint
+    private lateinit var conditionParser: ConditionParser
 
     @BeforeTest
     fun setup() {
         val rootDir = File("kbe")
         val kbInfo = kbManager.createKB(kbName)
         val kb = (kbManager.openKB(kbInfo.id) as EntityRetrieval.Success<KB>).entity
+        conditionParser = mockk()
+        kb.setConditionParser(conditionParser)
         endpoint = KBEndpoint(kb, rootDir)
         FileUtils.cleanDirectory(endpoint.casesDir)
         FileUtils.cleanDirectory(endpoint.interpretationsDir)
@@ -44,6 +54,24 @@ internal class KBEndpointTest {
     @AfterTest
     fun cleanup() {
         kbManager.deleteKB(endpoint.kbName())
+    }
+
+    @Test
+    fun `should delegate parsing a condition to the KB`() {
+        // Given
+        val kb = mockk<KB>(relaxed = true)
+        val condition = mockk<Condition>(relaxed = true)
+        every { kb.conditionForExpression(any(), any()) } returns condition
+        val endpoint = KBEndpoint(kb, File("kbe"))
+        val userExpression = "TSH is depressed"
+        val attributeNames = listOf("TSH")
+
+        // When
+        val parsed = endpoint.conditionForExpression(userExpression, attributeNames)
+
+        // Then
+        verify { kb.conditionForExpression(userExpression, attributeNames) }
+        parsed shouldBe condition
     }
 
     @Test
@@ -80,12 +108,6 @@ internal class KBEndpointTest {
         val case = endpoint.case(id)
         val hintConditions = endpoint.conditionHintsForCase(id)
         hintConditions shouldBe endpoint.kb.conditionHintsForCase(case)
-    }
-
-    @Test
-    fun `should return a tip for an expression`() {
-        val tip = endpoint.tipForExpression("elevated waves", "Sun, Waves, UV index")
-        tip shouldBe "Waves is high"
     }
 
     @Test
@@ -299,7 +321,7 @@ internal class KBEndpointTest {
             selectCornerstone(1).cornerstoneToReview shouldBe viewableCase2
         }
     }
-  
+
     @Test
     fun exportKBToZip() {
         // Add a case and a rule to the KB.

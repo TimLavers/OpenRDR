@@ -3,7 +3,6 @@ package io.rippledown.model.condition.edit
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.condition.ConditionTestBase
 import io.rippledown.model.condition.EpisodicCondition
-import io.rippledown.model.condition.episodic.predicate.Contains
 import io.rippledown.model.condition.episodic.predicate.DoesNotContain
 import io.rippledown.model.condition.episodic.signature.All
 import io.rippledown.model.condition.episodic.signature.Current
@@ -47,7 +46,17 @@ class EditableDoesNotContainConditionTest: ConditionTestBase() {
 
     @Test
     fun condition() {
-        currentValueCondition.condition("things") shouldBe EpisodicCondition(null, clinicalNotes, DoesNotContain("things"), Current)
-        allValuesCondition.condition("things") shouldBe EpisodicCondition(null, clinicalNotes, DoesNotContain("things"), All)
+        currentValueCondition.condition("things") shouldBe EpisodicCondition(
+            null,
+            clinicalNotes,
+            DoesNotContain("things"),
+            Current
+        )
+        allValuesCondition.condition("things") shouldBe EpisodicCondition(
+            null,
+            clinicalNotes,
+            DoesNotContain("things"),
+            All
+        )
     }
 }

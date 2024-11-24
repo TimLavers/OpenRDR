@@ -1,4 +1,4 @@
-package io.rippledown
+package io.rippledown.expressionparser
 
 const val EXPECTED = "Expected: "
 const val INPUT = "Input: "

@@ -251,6 +251,17 @@ class RuleMakerStepDefs {
         ruleMakerPO().requireAvailableConditionsContains(absentConditions)
     }
 
+    @And("the available condition and its tool tip should be:")
+    fun requireAvailableConditionAndToolTip(dataTable: DataTable) {
+        val expectedConditionText = dataTable.cell(0, 0)
+        val expectedToolTip = dataTable.cell(0, 1)
+        with(ruleMakerPO()) {
+            requireAvailableConditions(listOf(expectedConditionText))
+            movePointerToFirstAvailableCondition()
+            requireFirstAvailableConditionToolTip(expectedToolTip)
+        }
+    }
+
     @And("the selected conditions should be:")
     fun theSelectedConditionsShouldBe(dataTable: DataTable) {
         ruleMakerPO().requireSelectedConditions(dataTable.asList())

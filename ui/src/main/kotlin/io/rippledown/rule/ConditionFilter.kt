@@ -1,6 +1,7 @@
 package io.rippledown.rule
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.OutlinedTextField
@@ -57,6 +58,7 @@ fun ConditionFilter(filter: String, showWaitingIndicator: Boolean, handler: Cond
                     modifier = Modifier.padding(start = 20.dp)
                 )
             },
+            shape = RoundedCornerShape(16.dp),
             modifier = Modifier
                 .focusRequester(focusRequester)
                 .semantics {

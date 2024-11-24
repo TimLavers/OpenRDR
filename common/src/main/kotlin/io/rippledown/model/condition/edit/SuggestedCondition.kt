@@ -14,8 +14,10 @@ sealed interface SuggestedCondition {
     fun shouldBeSuggestedForCase(case: RDRCase): Boolean
     fun shouldBeUsedAtMostOncePerRule() = true
 }
+
 @Serializable
-data class NonEditableSuggestedCondition(val initialSuggestion: Condition, val filter: Condition = True): SuggestedCondition {
+data class NonEditableSuggestedCondition(val initialSuggestion: Condition, val filter: Condition = True) :
+    SuggestedCondition {
     override fun initialSuggestion() = initialSuggestion
 
     override fun shouldBeSuggestedForCase(case: RDRCase) = filter.holds(case) && initialSuggestion.holds(case)
@@ -24,8 +26,9 @@ data class NonEditableSuggestedCondition(val initialSuggestion: Condition, val f
 
     override fun editableCondition(): EditableCondition? = null
 }
+
 @Serializable
-data class EditableSuggestedCondition(val editableCondition: EditableCondition): SuggestedCondition {
+data class EditableSuggestedCondition(val editableCondition: EditableCondition) : SuggestedCondition {
     override fun initialSuggestion() = editableCondition.condition(editableCondition.editableValue().value)
     override fun shouldBeSuggestedForCase(case: RDRCase) = editableCondition.prerequisite().holds(case)
     override fun isEditable() = true

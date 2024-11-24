@@ -14,6 +14,7 @@ import androidx.compose.ui.window.rememberDialogState
 import io.rippledown.constants.rule.RULE_MAKER
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.edit.EditableCondition
+import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
 import io.rippledown.model.condition.edit.SuggestedCondition
 import kotlinx.coroutines.delay
 
@@ -21,7 +22,7 @@ interface RuleMakerHandler {
     var onDone: (conditions: List<Condition>) -> Unit
     var onCancel: () -> Unit
     var onUpdateConditions: (conditions: List<Condition>) -> Unit
-    fun tipForExpression(expression: String): String
+    fun conditionForExpression(expression: String): Condition?
 }
 
 const val DEBOUNCE: Long = 1_000
@@ -38,7 +39,7 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
     var showWaitingIndicator by remember { mutableStateOf(false) }
 
     if (suggestionBeingEdited != null) {
-        val dialogState = rememberDialogState(size = DpSize(420.dp, 160.dp))
+        val dialogState = rememberDialogState(size = DpSize(420.dp, 200.dp))
         DialogWindow(
             onCloseRequest = { suggestionBeingEdited = null },
             title = "Edit Condition",
@@ -78,12 +79,10 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
     }
 
     LaunchedEffect(allConditions, filterText) {
-        delay(DEBOUNCE)
-        val conditions = allConditions.sortedWith(compareBy { it.asText() })
-        val tip = if (filterText.isNotBlank()) handler.tipForExpression(filterText) else ""
+        showWaitingIndicator = true
+        availableConditions =
+            refreshAvailableConditions(allConditions, filterText, selectedConditions, handler::conditionForExpression)
         showWaitingIndicator = false
-        availableConditions = conditions.filterConditions(filterText, tip) - suggestionsUsed.values.toSet()
-
     }
     Column(
         modifier = Modifier
@@ -137,6 +136,31 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
     }
 }
 
-fun List<SuggestedCondition>.filterConditions(filter: String, tip: String) = filter {
-    it.asText().contains(filter, ignoreCase = true) || it.asText().equals(tip, ignoreCase = true)
+internal suspend fun refreshAvailableConditions(
+    allConditions: List<SuggestedCondition>,
+    filterText: String,
+    selectedConditions: List<Condition>,
+    conditionFor: (String) -> Condition?,
+): List<SuggestedCondition> {
+    val filteredConditions = allConditions
+        .sortedWith(compareBy { it.asText() })
+        .filterConditions(filterText)
+        .toMutableList()
+
+    //If there is no matching condition, attempt to parse the filter text as a condition.
+    if (filteredConditions.isEmpty()) {
+        delay(DEBOUNCE)
+        val parsed = conditionFor(filterText)
+        if (parsed != null) {
+            filteredConditions.add(0, NonEditableSuggestedCondition(parsed))
+        }
+    }
+
+    // Remove conditions that are already selected.
+    filteredConditions.removeAll { selectedConditions.contains(it.initialSuggestion()) }
+    return filteredConditions
+}
+
+fun List<SuggestedCondition>.filterConditions(filter: String) = filter {
+    it.asText().contains(filter, ignoreCase = true)
 }

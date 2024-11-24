@@ -59,12 +59,12 @@ fun Application.ruleSession(application: ServerApplication) {
             call.respond(HttpStatusCode.OK, updatedCornerstoneStatus)
         }
 
-        get(TIP_FOR_EXPRESSION) {
+        get(CONDITION_FOR_EXPRESSION) {
             val expression = call.parameters[EXPRESSION] ?: error("Invalid expression.")
-            val attributeNames = call.parameters[ATTRIBUTE_NAMES] ?: error("Invalid expression.")
-            val tip = kbEndpoint(application).tipForExpression(expression, attributeNames)
-            call.respond(HttpStatusCode.OK, tip)
-            logger.info("tip for expression '$expression' and attributes '$attributeNames' was '$tip'")
+            val attributeNames = call.receive<List<String>>()
+            val condition = kbEndpoint(application).conditionForExpression(expression, attributeNames)
+            call.respondNullable(HttpStatusCode.OK, condition)
+            logger.info("Condition for expression '$expression' and attributes '$attributeNames' was '${condition?.asText()}'")
         }
     }
 }

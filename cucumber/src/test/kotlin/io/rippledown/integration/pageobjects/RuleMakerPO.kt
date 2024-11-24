@@ -5,10 +5,7 @@ import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.comparables.shouldBeGreaterThanOrEqualTo
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.rippledown.constants.interpretation.ADDING
-import io.rippledown.constants.interpretation.BY
-import io.rippledown.constants.interpretation.REMOVING
-import io.rippledown.constants.interpretation.REPLACING
+import io.rippledown.constants.interpretation.*
 import io.rippledown.constants.rule.*
 import io.rippledown.integration.pause
 import io.rippledown.integration.utils.find
@@ -19,6 +16,7 @@ import io.rippledown.integration.waitUntilAsserted
 import io.rippledown.main.LEFT_INFO_MESSAGE_ID
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
+import java.awt.Robot
 import java.time.Duration.ofSeconds
 import java.util.function.BiPredicate
 import javax.accessibility.AccessibleContext
@@ -82,25 +80,29 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun requireAvailableConditions(expectedConditions: List<String>) {
-        waitForAvailableConditionContextForIndex(expectedConditions.size - 1)
-        val contexts =
-            execute<Set<AccessibleContext>> { contextProvider().findAllByDescriptionPrefix(AVAILABLE_CONDITION_PREFIX) }
-        val found = contexts.map { it.accessibleName }
-        found shouldBe expectedConditions
+        await().atMost(ofSeconds(5)).untilAsserted {
+            allAvailableConditions() shouldBe expectedConditions
+        }
     }
 
     fun requireAvailableConditionsContains(conditions: Set<String>) {
         await().atMost(ofSeconds(5)).untilAsserted {
-            val allShowing = allSuggestedConditions()
+            val allShowing = allAvailableConditions()
             conditions.forEach {
                 allShowing shouldContain it
             }
         }
     }
 
+    fun requireFirstAvailableConditionToolTip(expected: String) {
+        await().atMost(ofSeconds(5)).untilAsserted {
+            execute<AccessibleContext?> { contextProvider().find("$CONDITION_PREFIX$expected") } shouldNotBe null
+        }
+    }
+
     fun requireAvailableConditionsDoesNotContain(absentConditions: Set<String>) {
         await().atMost(ofSeconds(2)).untilAsserted {
-            val allShowing = allSuggestedConditions()
+            val allShowing = allAvailableConditions()
             absentConditions.forEach {
                 allShowing shouldNotContain it
             }
@@ -181,7 +183,7 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
         }
     }
 
-    private fun allSuggestedConditions(): List<String> {
+    private fun allAvailableConditions(): List<String> {
         return execute<Set<AccessibleContext>> {
             contextProvider().findAllByDescriptionPrefix(AVAILABLE_CONDITION_PREFIX)
         }.map { it.accessibleName }
@@ -219,4 +221,12 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
             }
         }
     }
+
+    fun movePointerToFirstAvailableCondition() {
+        waitForAvailableConditionContextForIndex(0)
+        val ctx = availableConditionContextForIndex(0)!!
+        val loc = ctx.accessibleComponent.locationOnScreen
+        Robot().mouseMove(loc.x, loc.y)
+    }
+
 }

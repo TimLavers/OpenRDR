@@ -7,9 +7,6 @@ import io.rippledown.kb.AttributeManager
 import io.rippledown.kb.ConditionManager
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.*
-import io.rippledown.model.condition.greaterThanOrEqualTo
-import io.rippledown.model.condition.isHigh
-import io.rippledown.model.condition.isLow
 import io.rippledown.persistence.inmemory.InMemoryAttributeStore
 import io.rippledown.persistence.inmemory.InMemoryConditionStore
 import org.junit.jupiter.api.BeforeEach
@@ -21,14 +18,30 @@ class ConditionExporterTest {
 
     @Test
     fun exportToString() {
-        val glucoseHigh = isHigh(99, glucose)
+        val glucoseHigh = isHigh(99, glucose, "")
         ConditionExporter().exportToString(glucoseHigh) shouldContain glucose.id.toString()
     }
 
     @Test
+    fun exportToStringWithUserExpression() {
+        val userExpression = "elevated Glucose"
+        val glucoseHigh = isHigh(99, glucose, userExpression)
+        ConditionExporter().exportToString(glucoseHigh) shouldContain userExpression
+    }
+
+    @Test
     fun importFromString() {
-        exportImport(isHigh(99, glucose))
+        exportImport(isHigh(99, glucose, ""))
         exportImport(greaterThanOrEqualTo(99, ft4, 3.0))
+    }
+
+    @Test
+    fun importFromStringWithUserExpression() {
+        val userExpression = "elevated Glucose"
+        with(ConditionConstructors()) {
+            exportImport(Is(glucose, userExpression, "42"))
+            exportImport(GreaterThanOrEqualTo(glucose, userExpression, "42"))
+        }
     }
 
     private fun exportImport(condition: Condition) {
@@ -37,8 +50,9 @@ class ConditionExporterTest {
         condition shouldBe imported
     }
 }
+
 class ConditionSourceTest {
-    private lateinit var glucose : Attribute
+    private lateinit var glucose: Attribute
     private lateinit var ft4: Attribute
     private lateinit var attributeManager: AttributeManager
     private lateinit var conditionManager: ConditionManager
@@ -51,7 +65,7 @@ class ConditionSourceTest {
         glucose = attributeManager.getOrCreate("Glucose")
         ft4 = attributeManager.getOrCreate("FT4")
         conditionManager = ConditionManager(attributeManager, InMemoryConditionStore())
-        glucoseHigh = conditionManager.getOrCreate(isHigh(null, glucose))
+        glucoseHigh = conditionManager.getOrCreate(isHigh(null, glucose, ""))
         ft4Low = conditionManager.getOrCreate(isLow(null, ft4))
     }
 
