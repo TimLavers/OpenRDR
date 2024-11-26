@@ -25,9 +25,11 @@ The default values for the Postgres parameters are `jdbc:postgresql://localhost:
 and `postgres`.
 
 ### Google Gemini
-OpenRDR uses Google Gemini to generate natural language hints for the conditions used in rules.
-For this feature to work, and for the associated tests to pass, an API key is required and needs to be set
-as the vale of an environment variable named `GEMINI_API_KEY`.
+
+OpenRDR uses Google Gemini to generate rule conditions from user-entered expressions.
+For this feature to work, and for the associated tests to pass, a Google API key is required and needs to be set
+as the value of an environment variable named `GEMINI_API_KEY`. To create a Google API key, see
+<a href="https://cloud.google.com/docs/authentication/api-keys" title="close icons">Manage API keys</a>
 
 ## Development
 Import the Gradle project into IntelliJ.
@@ -91,5 +93,6 @@ created by SeyfDesigner - Flaticon</a>
 Flaticon</a>
 
 <a href="https://www.flaticon.com/free-icons/text" title="text icons">Text icons created by DinosoftLabs - Flaticon</a>
+
 <a href="https://www.flaticon.com/free-icons/close" title="close icons">Close icons created by ariefstudio -
 Flaticon</a>
