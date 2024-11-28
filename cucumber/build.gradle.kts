@@ -32,44 +32,73 @@ val cukeClassPath =
         .plus(project.sourceSets.test.get().output)
 
 val pathToRequirements = "${projectDir.path}/src/test/resources/requirements"
-val argsForCuke = mutableListOf(
+fun argsForCuke() = mutableListOf(
     "--plugin", "junit:build/test-results/junit.xml",
     "--plugin", "html:build/test-results-html",
-    "--glue", "steps",
-    pathToRequirements
+    "--glue", "steps"
 )
-
-tasks.register<JavaExec>("cucumberTest") {
-    group = LifecycleBasePlugin.VERIFICATION_GROUP
-    maxHeapSize = "24G"
-    mainClass.set("io.cucumber.core.cli.Main")
-    classpath = cukeClassPath
-    args = argsForCuke.apply {
-        add("--tags")
-        add("not @ignore")
-    }
-    dependsOn(
-        ":server:shadowJar",
-        tasks.compileTestJava,
-        tasks.processTestResources,
-        tasks.getByName("testClasses")
-    )
+val prerequisiteTasks = listOf(
+    ":server:shadowJar",
+    tasks.compileTestJava,
+    tasks.processTestResources,
+    tasks.getByName("testClasses")
+)
+tasks.register<JavaExec>("application") {
+    runCukesInDirectory(this@Build_gradle, this)
+}
+tasks.register<JavaExec>("attributes") {
+    runCukesInDirectory(this@Build_gradle, this)
+}
+tasks.register<JavaExec>("cases") {
+    runCukesInDirectory(this@Build_gradle, this)
+}
+tasks.register<JavaExec>("conditions") {
+    runCukesInDirectory(this@Build_gradle, this)
+}
+tasks.register<JavaExec>("kb") {
+    runCukesInDirectory(this@Build_gradle, this)
+}
+tasks.register<JavaExec>("rulebuilding") {
+    runCukesInDirectory(this@Build_gradle, this)
+}
+tasks.register<JavaExec>("samples") {
+    runCukesInDirectory(this@Build_gradle, this)
+}
+tasks.register("cucumberTest") {
+    dependsOn(listOf(
+        "application",
+        "attributes",
+        "cases",
+        "conditions",
+        "kb",
+        "rulebuilding",
+        "samples",
+    ))
 }
 
 tasks.register<JavaExec>("cucumberSingleTest") {
-    group = LifecycleBasePlugin.VERIFICATION_GROUP
-    maxHeapSize = "32G"
-    mainClass.set("io.cucumber.core.cli.Main")
-    classpath = cukeClassPath
-    args = argsForCuke.apply {
+    setupExec(this, this@Build_gradle)
+    args = argsForCuke().apply {
+        add(pathToRequirements)
         add("--tags")
         add("@single")
     }
-    dependsOn(
-        ":server:shadowJar",
-        tasks.compileTestJava,
-        tasks.processTestResources,
-        tasks.getByName("testClasses")
-    )
+    dependsOn(prerequisiteTasks)
 }
 
+fun setupExec(javaExec: JavaExec, buildGradle: Build_gradle) {
+    javaExec.group = LifecycleBasePlugin.VERIFICATION_GROUP
+    javaExec.maxHeapSize = "4G"
+    javaExec.mainClass.set("io.cucumber.core.cli.Main")
+    javaExec.classpath = buildGradle.cukeClassPath
+}
+
+fun runCukesInDirectory(buildGradle: Build_gradle, javaExec: JavaExec) {
+    buildGradle.setupExec(javaExec, buildGradle)
+    javaExec.args = buildGradle.argsForCuke().apply {
+        add("$pathToRequirements/${javaExec.name}")
+        add("--tags")
+        add("not @ignore")
+    }
+    javaExec.dependsOn(buildGradle.prerequisiteTasks)
+}
