@@ -10,8 +10,8 @@ import kotlin.test.Test
 
 class AndTest: ConditionTestBase() {
     private val tshLow = EpisodicCondition(123, tsh, Low, Current)
-    private val bondi = EpisodicCondition( 124, clinicalNotes, Contains("Bondi"), All)
-    private val bronte = EpisodicCondition( 125, clinicalNotes, Contains("Bronte"), All)
+    private val bondi = EpisodicCondition(124, clinicalNotes, Contains("Bondi"), All)
+    private val bronte = EpisodicCondition(125, clinicalNotes, Contains("Bronte"), All)
     private val bondiLow = And(tshLow, bondi)
     private val bondiBronte = And(bondi, bronte)
 

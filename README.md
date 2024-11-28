@@ -91,3 +91,5 @@ created by SeyfDesigner - Flaticon</a>
 Flaticon</a>
 
 <a href="https://www.flaticon.com/free-icons/text" title="text icons">Text icons created by DinosoftLabs - Flaticon</a>
+<a href="https://www.flaticon.com/free-icons/close" title="close icons">Close icons created by ariefstudio -
+Flaticon</a>

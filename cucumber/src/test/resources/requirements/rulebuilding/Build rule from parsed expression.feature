@@ -1,4 +1,4 @@
-Feature: When entering an expression to be used as a condition, the user is provided with a syntactically correct condition tip
+Feature: When entering an expression to be used in a rule, the user is provided with a syntactically correct condition
 
   Scenario: Should provide a condition tip when the user types an expression
     Given case Bondi is provided with the following values, reference ranges and units:
@@ -8,7 +8,7 @@ Feature: When entering an expression to be used as a condition, the user is prov
     And I start the client application
     And I start to build a rule to add the comment "Beach time!"
     And I enter the expression "elevated waves"
-    Then the suggested conditions should contain:
-      | Waves is high |
+    Then the available condition and its tool tip should be:
+      | elevated waves | Waves is high |
     And stop the client application
 

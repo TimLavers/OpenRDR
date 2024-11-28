@@ -16,15 +16,32 @@ import io.rippledown.server.KBEndpoint
 open class SampleRuleBuilder(val kbe: KBEndpoint) {
 
     fun isPresent(attribute: Attribute) = EpisodicCondition(null, attribute, IsNotBlank, Current)
-    fun isNotPresent(attribute: Attribute) = CaseStructureCondition(null, IsAbsentFromCase(attribute))
+    fun isNotPresent(attribute: Attribute) = CaseStructureCondition(null, IsAbsentFromCase(attribute), "")
     fun isLow(attribute: Attribute) = EpisodicCondition(null, attribute, Low, Current)
     fun isNormal(attribute: Attribute) = EpisodicCondition(null, attribute, Normal, Current)
     fun isHigh(attribute: Attribute) = EpisodicCondition(null, attribute, High, Current)
     fun isCondition(attribute: Attribute, text: String) = EpisodicCondition(null, attribute, Is(text), Current)
     fun containsText(attribute: Attribute, text: String) = EpisodicCondition(null, attribute, Contains(text), Current)
-    fun doesNotContainText(attribute: Attribute, text: String) = EpisodicCondition(null, attribute, DoesNotContain(text), Current)
-    fun greaterThanOrEqualTo(attribute: Attribute, d: Double) = EpisodicCondition(null, attribute, GreaterThanOrEquals(d), Current)
-    fun lessThanOrEqualTo(attribute: Attribute, d: Double) = EpisodicCondition(null, attribute, LessThanOrEquals(d), Current)
+    fun doesNotContainText(attribute: Attribute, text: String) = EpisodicCondition(
+        null,
+        attribute,
+        DoesNotContain(text),
+        Current
+    )
+
+    fun greaterThanOrEqualTo(attribute: Attribute, d: Double) = EpisodicCondition(
+        null,
+        attribute,
+        GreaterThanOrEquals(d),
+        Current
+    )
+
+    fun lessThanOrEqualTo(attribute: Attribute, d: Double) = EpisodicCondition(
+        null,
+        attribute,
+        LessThanOrEquals(d),
+        Current
+    )
     fun slightlyLow(attribute: Attribute, cutoff: Int) =
         EpisodicCondition(null, attribute, LowByAtMostSomePercentage(cutoff), Current)
 

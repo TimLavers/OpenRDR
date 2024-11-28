@@ -1,7 +1,7 @@
-package io.rippledown
+package io.rippledown.expressionparser
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.ExpressionConverter.Companion.placeHolder
+import io.rippledown.expressionparser.ExpressionConverter.Companion.placeHolder
 import org.junit.jupiter.api.BeforeEach
 import kotlin.test.Test
 
@@ -18,6 +18,10 @@ class ExpressionConverterTest {
     fun `should replace attribute with placeholder`() {
         expressionConverter.insertPlaceholder(Expression("ABC is high")) shouldBe Expression("$x is high", "ABC")
         expressionConverter.insertPlaceholder(Expression("elevated TSH")) shouldBe Expression("elevated $x", "TSH")
+    }
+
+    @Test
+    fun `should return blank attribute if the expression does not contain any attribute`() {
         expressionConverter.insertPlaceholder(Expression("lowered unknown")) shouldBe Expression("lowered unknown")
     }
 
@@ -25,7 +29,7 @@ class ExpressionConverterTest {
     fun `replacement should be case insensitive`() {
         expressionConverter.insertPlaceholder(Expression("abc is high")) shouldBe Expression("$x is high", "ABC")
         expressionConverter.insertPlaceholder(Expression("elevated tsh")) shouldBe Expression("elevated $x", "TSH")
-        expressionConverter.insertPlaceholder(Expression("lowered Unknown")) shouldBe Expression("lowered Unknown")
+        expressionConverter.insertPlaceholder(Expression("Lowered Unknown")) shouldBe Expression("Lowered Unknown")
     }
 
     @Test

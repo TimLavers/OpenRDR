@@ -4,11 +4,12 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.isHigh
 import io.rippledown.persistence.ConditionStore
+import io.rippledown.util.shouldBeSameAs
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-class MultipleDBsConditionStoresTest: MultipleDBsTest() {
+class MultipleDBsConditionStoresTest : MultipleDBsTest() {
     private lateinit var store1: ConditionStore
     private lateinit var store2: ConditionStore
     private val glucose1 = Attribute(1, "Glucose")
@@ -46,6 +47,32 @@ class MultipleDBsConditionStoresTest: MultipleDBsTest() {
         reload()
         store1.all() shouldBe setOf(a11, a12)
         store2.all() shouldBe setOf(a21, a22)
+    }
+
+    @Test
+    fun `a created condition should be the same as the original`() {
+        // Given
+        val original = isHigh(null, glucose1)
+
+        // When
+        val created = store1.create(original)
+
+        // Then
+        created shouldBeSameAs original
+    }
+
+    @Test
+    fun `a created condition should have the same user expression as the original`() {
+        // Given
+        val userExpression = "Elevated glucose"
+        val original = isHigh(null, glucose1, userExpression)
+
+        // When
+        val created = store1.create(original)
+
+        // Then
+        created shouldBeSameAs original
+        created.userExpression() shouldBe userExpression
     }
 
     @Test

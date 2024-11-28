@@ -71,7 +71,7 @@ class ConditionExamplesTest: ConditionTestBase() {
 
     @Test
     fun increasing() {
-        val condition = SeriesCondition(null, ft3, Increasing)
+        val condition = SeriesCondition(null, ft3, Increasing, "")
         checkConditionCanBeSerialized(condition)
 
         condition.asText() shouldBe "Free T3 increasing"

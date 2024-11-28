@@ -9,9 +9,10 @@ import io.rippledown.model.condition.series.Increasing
 import io.rippledown.model.serializeDeserialize
 import kotlin.test.Test
 
-class SeriesConditionTest: ConditionTestBase() {
+class SeriesConditionTest : ConditionTestBase() {
 
-    private val tshIncreasing = SeriesCondition(123, tsh, Increasing)
+    private val userExpression = "TSH is getting higher"
+    private val tshIncreasing = SeriesCondition(123, tsh, Increasing, userExpression)
 
     @Test
     fun attributeNames() {
@@ -44,7 +45,7 @@ class SeriesConditionTest: ConditionTestBase() {
         serializeDeserialize(tshIncreasing) shouldBe tshIncreasing
 
         // One without an id.
-        val idLess = SeriesCondition(null, tsh, Increasing)
+        val idLess = SeriesCondition(null, tsh, Increasing, userExpression)
         serializeDeserialize(idLess) shouldBe idLess
 
         checkSerializationIsThreadSafe(tshIncreasing)
@@ -53,6 +54,11 @@ class SeriesConditionTest: ConditionTestBase() {
     @Test
     fun asText() {
         tshIncreasing.asText() shouldBe "${tsh.name} increasing"
+    }
+
+    @Test
+    fun userExpression() {
+        tshIncreasing.userExpression shouldBe userExpression
     }
 
     @Test
@@ -70,13 +76,17 @@ class SeriesConditionTest: ConditionTestBase() {
         tshIncreasing.sameAs(tshIncreasing.copy()) shouldBe true
 
         // Same but for id.
-        tshIncreasing.sameAs(SeriesCondition(null, tsh, Increasing)) shouldBe true
-        tshIncreasing.sameAs(SeriesCondition(99, tsh, Increasing)) shouldBe true
+        tshIncreasing.sameAs(SeriesCondition(null, tsh, Increasing, userExpression)) shouldBe true
+        tshIncreasing.sameAs(SeriesCondition(99, tsh, Increasing, userExpression)) shouldBe true
+
+        // Same but for user expression.
+        tshIncreasing.sameAs(SeriesCondition(null, tsh, Increasing, "increasing tsh")) shouldBe true
+        tshIncreasing.sameAs(SeriesCondition(99, tsh, Increasing, "increasing tsh")) shouldBe true
 
         // Attribute different.
-        tshIncreasing.sameAs(SeriesCondition(null, clinicalNotes, Increasing)) shouldBe false
+        tshIncreasing.sameAs(SeriesCondition(null, clinicalNotes, Increasing, userExpression)) shouldBe false
 
         // Predicate different.
-        tshIncreasing.sameAs(SeriesCondition(tshIncreasing.id, tsh, Decreasing)) shouldBe false
+        tshIncreasing.sameAs(SeriesCondition(tshIncreasing.id, tsh, Decreasing, userExpression)) shouldBe false
     }
 }

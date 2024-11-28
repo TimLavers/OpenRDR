@@ -29,7 +29,7 @@ interface CaseControlHandler : Handler, CaseInspectionHandler, CornerstonePagerH
     fun endRuleSession()
     fun buildRule(ruleRequest: RuleRequest)
     fun updateCornerstoneStatus(cornerstoneRequest: UpdateCornerstoneRequest)
-    fun tipForExpression(conditionText: String, attributeNames: Collection<String>): String
+    fun conditionForExpression(conditionText: String, attributeNames: Collection<String>): Condition?
 }
 
 @Composable
@@ -79,7 +79,8 @@ fun CaseControl(
                     handler.updateCornerstoneStatus(ccUpdateRequest)
                 }
 
-                override fun tipForExpression(expression: String) = handler.tipForExpression(expression, attributeNames)
+                override fun conditionForExpression(expression: String) =
+                    handler.conditionForExpression(expression, attributeNames)
             })
         }
     }

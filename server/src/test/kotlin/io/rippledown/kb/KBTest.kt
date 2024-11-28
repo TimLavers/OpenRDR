@@ -7,6 +7,9 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import io.rippledown.model.*
 import io.rippledown.model.condition.*
 import io.rippledown.model.external.ExternalCase
@@ -16,6 +19,7 @@ import io.rippledown.model.rule.ConditionSuggester
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.persistence.inmemory.InMemoryKB
+import io.rippledown.util.shouldBeSameAs
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
@@ -242,14 +246,14 @@ class KBTest {
     fun interpretCase() {
         val comment = "Whatever."
         buildRuleToAddAComment(kb, comment)
-        val case = createCase("Case1", "1.0")
+        val case = createCase("Case1", value = "1.0")
         case.interpretation.conclusions() shouldBe emptySet()
         kb.interpret(case)
         case.interpretation.conclusions().map { it.text } shouldBe listOf(comment)
     }
 
     private fun buildRuleToAddAComment(kb: KB, comment: String) {
-        kb.addCornerstoneCase(createCase("Case1", "1.0"))
+        kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
         val sessionCase = kb.getCornerstoneCaseByName("Case1")
         val conclusion = kb.conclusionManager.getOrCreate(comment)
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(conclusion))
@@ -291,7 +295,7 @@ class KBTest {
 
     @Test
     fun getCase() {
-        kb.addCornerstoneCase(createCase("Case1", "1.2"))
+        kb.addCornerstoneCase(createCase("Case1", value = "1.2"))
         kb.addCornerstoneCase(createCase("Case2"))
         val retrieved = kb.getCornerstoneCaseByName("Case1")
         retrieved.name shouldBe "Case1"
@@ -313,7 +317,7 @@ class KBTest {
 
     @Test
     fun `add cornerstone case resets id`() {
-        val case1 = createCase("Case1", "1.2", 123)
+        val case1 = createCase("Case1", value = "1.2", id = 123)
         val added = kb.addCornerstoneCase(case1)
         added.id shouldNotBe case1.id
         added.name shouldBe case1.name
@@ -328,7 +332,7 @@ class KBTest {
 
     @Test
     fun `add cornerstone case resets type`() {
-        val case1 = createCase("Case1", "1.2").copy(caseId = CaseId(123, "Case1_CC", CaseType.Processed))
+        val case1 = createCase("Case1", value = "1.2").copy(caseId = CaseId(123, "Case1_CC", CaseType.Processed))
         val added = kb.addCornerstoneCase(case1)
         added.caseId.type shouldBe CaseType.Cornerstone
         kb.getCase(added.id!!)!!.caseId.type shouldBe CaseType.Cornerstone
@@ -338,7 +342,7 @@ class KBTest {
     fun getCornerstoneCase() {
         kb.getCase(9099999) shouldBe null
 
-        val id1 = kb.addCornerstoneCase(createCase("Case1", "1.2")).caseId.id!!
+        val id1 = kb.addCornerstoneCase(createCase("Case1", value = "1.2")).caseId.id!!
         kb.addCornerstoneCase(createCase("Case2"))
 
         kb.getCase(id1)!!.name shouldBe "Case1"
@@ -437,8 +441,8 @@ class KBTest {
 
     @Test
     fun `cannot start a rule session if action is not applicable to session case`() {
-        val sessionCase = createCase("Case1", "1.0")
-        val otherCase = createCase("Case2", "1.0")
+        val sessionCase = createCase("Case1", value = "1.0")
+        val otherCase = createCase("Case2", value = "1.0")
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
         kb.commitCurrentRuleSession()
         kb.interpret(otherCase)
@@ -462,8 +466,8 @@ class KBTest {
 
     @Test
     fun conflictingCases() {
-        val sessionCase = createCase("Case1", "1.0")
-        kb.addCornerstoneCase(createCase("Case2", "2.0"))
+        val sessionCase = createCase("Case1", value = "1.0")
+        kb.addCornerstoneCase(createCase("Case2", value = "2.0"))
         sessionCase.interpretation.conclusionTexts() shouldBe emptySet()
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
         kb.conflictingCasesInCurrentRuleSession().map { rdrCase -> rdrCase.name }.toSet() shouldBe setOf("Case2")
@@ -471,8 +475,8 @@ class KBTest {
 
     @Test
     fun addCondition() {
-        val sessionCase = createCase("Case1", "1.0")
-        kb.addCornerstoneCase(createCase("Case2", "2.0"))
+        val sessionCase = createCase("Case1", value = "1.0")
+        kb.addCornerstoneCase(createCase("Case2", value = "2.0"))
         sessionCase.interpretation.conclusionTexts() shouldBe emptySet()
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
         kb.addConditionToCurrentRuleSession(lessThanOrEqualTo(null, glucose(), 1.2))
@@ -481,8 +485,8 @@ class KBTest {
 
     @Test
     fun commitSession() {
-        val sessionCase = createCase("Case1", "1.0")
-        val otherCase = createCase("Case2", "2.0")
+        val sessionCase = createCase("Case1", value = "1.0")
+        val otherCase = createCase("Case2", value = "2.0")
         sessionCase.interpretation.conclusionTexts() shouldBe emptySet()
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
         kb.interpret(otherCase)
@@ -496,16 +500,19 @@ class KBTest {
 
     @Test
     fun `should return condition hints for case`() {
-        val caseWithGlucoseAttribute = createCase("A", "1.0")
+        val caseWithGlucoseAttribute = createCase("A", value = "1.0")
         val conditionList = kb.conditionHintsForCase(caseWithGlucoseAttribute)
-        conditionList.suggestions.toSet() shouldBe ConditionSuggester(kb.attributeManager.all(), caseWithGlucoseAttribute).suggestions().toSet()
+        conditionList.suggestions.toSet() shouldBe ConditionSuggester(
+            kb.attributeManager.all(),
+            caseWithGlucoseAttribute
+        ).suggestions().toSet()
     }
 
     @Test // Conc-4
     fun `conclusions are aligned when building rules`() {
         val conclusionToAdd = kb.conclusionManager.getOrCreate("Whatever")
         val copyOfConclusion = conclusionToAdd.copy()
-        kb.addCornerstoneCase(createCase("Case1", "1.0"))
+        kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
         val sessionCase = kb.getCornerstoneCaseByName("Case1")
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(copyOfConclusion))
         kb.commitCurrentRuleSession()
@@ -515,7 +522,7 @@ class KBTest {
 
     @Test
     fun `the session case should be stored as the cornerstone case when the rule is committed`() {
-        val sessionCase = createCase("Case1", "1.0")
+        val sessionCase = createCase("Case1", value = "1.0")
         sessionCase.interpretation.conclusionTexts() shouldBe emptySet()
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
         kb.allCornerstoneCases() shouldHaveSize 0
@@ -526,9 +533,9 @@ class KBTest {
 
     @Test
     fun `should update the cornerstone status when the conditions change`() {
-        val cc1 = kb.addCornerstoneCase(createCase("Case1", "1.0"))
+        val cc1 = kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
         val vcc1 = kb.viewableCase(cc1)
-        val sessionCase = createCase("Case3", "3.0")
+        val sessionCase = createCase("Case3", value = "3.0")
 
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
         val currentCCStatus = CornerstoneStatus(vcc1, 0, 1)
@@ -542,9 +549,9 @@ class KBTest {
 
     @Test
     fun `should not update the cornerstone status if no cornerstones are removed by the condition change`() {
-        val cc1 = kb.addCornerstoneCase(createCase("Case1", "1.0"))
+        val cc1 = kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
         val vcc1 = kb.viewableCase(cc1)
-        val sessionCase = createCase("Case3", "3.0")
+        val sessionCase = createCase("Case3", value = "3.0")
 
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
         val currentCCStatus = CornerstoneStatus(vcc1, 0, 1)
@@ -558,12 +565,12 @@ class KBTest {
 
     @Test
     fun `should reset the first cornerstone case if the current cornerstone has been removed by the condition change`() {
-        val cc1 = kb.addCornerstoneCase(createCase("Case1", "1.0"))
-        val cc2 = kb.addCornerstoneCase(createCase("Case2", "2.0"))
-        kb.addCornerstoneCase(createCase("Case3", "3.0"))
+        val cc1 = kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
+        val cc2 = kb.addCornerstoneCase(createCase("Case2", value = "2.0"))
+        kb.addCornerstoneCase(createCase("Case3", value = "3.0"))
         val vcc1 = kb.viewableCase(cc1)
         val vcc2 = kb.viewableCase(cc2)
-        val sessionCase = createCase("Case4", "4.0")
+        val sessionCase = createCase("Case4", value = "4.0")
 
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
         val currentCCStatus = CornerstoneStatus(vcc1, 0, 3)
@@ -578,11 +585,11 @@ class KBTest {
 
     @Test
     fun `should remain on the current cornerstone case if it has not been removed by the condition change`() {
-        val cc1 = kb.addCornerstoneCase(createCase("Case1", "1.0"))
-        kb.addCornerstoneCase(createCase("Case2", "2.0"))
-        kb.addCornerstoneCase(createCase("Case3", "3.0"))
+        val cc1 = kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
+        kb.addCornerstoneCase(createCase("Case2", value = "2.0"))
+        kb.addCornerstoneCase(createCase("Case3", value = "3.0"))
         val vcc1 = kb.viewableCase(cc1)
-        val sessionCase = createCase("Case4", "4.0")
+        val sessionCase = createCase("Case4", value = "4.0")
 
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
         val currentCCStatus = CornerstoneStatus(vcc1, 0, 3)
@@ -598,11 +605,11 @@ class KBTest {
     @Test
     fun `should restore the index of the current cornerstone case if it has not been removed by the condition change`() {
         //Given
-        kb.addCornerstoneCase(createCase("Case1", "1.0"))
-        val cc2 = kb.addCornerstoneCase(createCase("Case2", "2.0"))
-        kb.addCornerstoneCase(createCase("Case3", "3.0"))
+        kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
+        val cc2 = kb.addCornerstoneCase(createCase("Case2", value = "2.0"))
+        kb.addCornerstoneCase(createCase("Case3", value = "3.0"))
         val vcc2 = kb.viewableCase(cc2)
-        val sessionCase = createCase("Case4", "4.0")
+        val sessionCase = createCase("Case4", value = "4.0")
 
         //When add a condition that is true for cc1 and the current cornerstone cc2
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
@@ -628,12 +635,12 @@ class KBTest {
 
     @Test
     fun `should remain on the current cornerstone case if it has not been removed by the condition change and it is not the first one`() {
-        val cc1 = kb.addCornerstoneCase(createCase("Case1", "1.0"))
-        val cc2 = kb.addCornerstoneCase(createCase("Case2", "2.0"))
-        kb.addCornerstoneCase(createCase("Case3", "3.0"))
+        val cc1 = kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
+        val cc2 = kb.addCornerstoneCase(createCase("Case2", value = "2.0"))
+        kb.addCornerstoneCase(createCase("Case3", value = "3.0"))
         kb.viewableCase(cc1)
         val vcc2 = kb.viewableCase(cc2)
-        val sessionCase = createCase("Case4", "4.0")
+        val sessionCase = createCase("Case4", value = "4.0")
 
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
         val currentCCStatus = CornerstoneStatus(vcc2, 1, 3) //the user has skipped to the 2nd cornerstone
@@ -650,7 +657,7 @@ class KBTest {
 
     @Test
     fun `should return no cornerstones when the rule session has just started if there aren't any cornerstones`() {
-        val sessionCase = createCase("Case4", "4.0")
+        val sessionCase = createCase("Case4", value = "4.0")
         kb.startRuleSession(
             sessionCase,
             ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
@@ -661,12 +668,12 @@ class KBTest {
 
     @Test
     fun `should return all cornerstones when the rule session has just started and no cornerstone has been selected`() {
-        val cc1 = kb.addCornerstoneCase(createCase("Case1", "1.0"))
-        kb.addCornerstoneCase(createCase("Case2", "2.0"))
-        kb.addCornerstoneCase(createCase("Case3", "3.0"))
+        val cc1 = kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
+        kb.addCornerstoneCase(createCase("Case2", value = "2.0"))
+        kb.addCornerstoneCase(createCase("Case3", value = "3.0"))
         val vcc1 = kb.viewableCase(cc1)
 
-        val sessionCase = createCase("Case4", "4.0")
+        val sessionCase = createCase("Case4", value = "4.0")
         kb.startRuleSession(
             sessionCase,
             ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
@@ -677,13 +684,13 @@ class KBTest {
 
     @Test
     fun `should not change the index of the current cornerstone if it has not been removed`() {
-        val cc1 = kb.addCornerstoneCase(createCase("Case1", "1.0"))
-        val cc2 = kb.addCornerstoneCase(createCase("Case2", "2.0"))
-        kb.addCornerstoneCase(createCase("Case3", "3.0"))
+        val cc1 = kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
+        val cc2 = kb.addCornerstoneCase(createCase("Case2", value = "2.0"))
+        kb.addCornerstoneCase(createCase("Case3", value = "3.0"))
         kb.viewableCase(cc1)
         val vcc2 = kb.viewableCase(cc2)
 
-        val sessionCase = createCase("Case4", "4.0")
+        val sessionCase = createCase("Case4", value = "4.0")
         kb.startRuleSession(
             sessionCase,
             ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
@@ -692,7 +699,144 @@ class KBTest {
         ccStatus shouldBe CornerstoneStatus(vcc2, 1, 3)
     }
 
+    @Test
+    fun `should not set the user expression for a condition parsed from that expression if the condition already exists`() {
+        //Given
+        val waves = kb.attributeManager.getOrCreate("Waves")
+        val attributeNames = listOf(waves.name)
+        val height = "2" //greater than 1
+        val sessionCase = createCase("Case", attribute = waves, value = height)
+        val conditionParser = mockk<ConditionParser>()
+        val userExpression = "waves seem to be at least one metre"
+        val parsedCondition = ConditionConstructors().GreaterThanOrEqualTo(waves, userExpression, "1.0")
+        every { conditionParser.parse(any(), any(), any()) } returns parsedCondition
+        kb.setConditionParser(conditionParser)
 
+        kb.startRuleSession(
+            sessionCase,
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
+        )
+        kb.holdsForSessionCase(parsedCondition) shouldBe true
+        parsedCondition.userExpression() shouldBe userExpression
+
+        //When
+        val existingCondition = kb.conditionManager.getOrCreate(greaterThanOrEqualTo(null, waves, 1.0))
+        val returnedCondition = kb.conditionForExpression(userExpression, attributeNames)!!
+
+        //Then
+        verify { conditionParser.parse(userExpression, attributeNames, any()) }
+        returnedCondition shouldBe existingCondition
+        withClue("The user expression should not be set for an existing condition") {
+            returnedCondition.userExpression() shouldBe ""
+        }
+    }
+
+    @Test
+    fun `should set the user expression for a condition parsed from that expression if the condition does not already exist`() {
+        //Given
+        val waves = kb.attributeManager.getOrCreate("Waves")
+        val attributeNames = listOf(waves.name)
+        val height = "2" //greater than 1
+        val sessionCase = createCase("Case", attribute = waves, value = height)
+        val conditionParser = mockk<ConditionParser>()
+        val userExpression = "waves seem to be at least one metre"
+        val parsedCondition = ConditionConstructors().GreaterThanOrEqualTo(waves, userExpression, "1.0")
+        every { conditionParser.parse(any(), any(), any()) } returns parsedCondition
+        kb.setConditionParser(conditionParser)
+
+        kb.startRuleSession(
+            sessionCase,
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
+        )
+        kb.holdsForSessionCase(parsedCondition) shouldBe true
+        parsedCondition.userExpression() shouldBe userExpression
+
+        //When
+        val conditionForExpression = kb.conditionForExpression(userExpression, attributeNames)!!
+        val returnedCondition = conditionForExpression
+
+        //Then
+        verify { conditionParser.parse(userExpression, attributeNames, any()) }
+        returnedCondition shouldBeSameAs parsedCondition
+        withClue("The user expression should be set for new condition") {
+            returnedCondition.userExpression() shouldBe userExpression
+        }
+    }
+
+    @Test
+    fun `should create a condition using Gemini`() {
+        //Given
+        val waves = kb.attributeManager.getOrCreate("Waves")
+        val attributeNames = listOf(waves.name)
+        val height = "2.5" //high
+        val sessionCase = createCase("Case", attribute = waves, value = height, range = ReferenceRange("1", "2"))
+        val userExpression = "elevated waves"
+
+        kb.startRuleSession(
+            sessionCase,
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
+        )
+
+        //When
+        val returnedCondition = kb.conditionForExpression(userExpression, attributeNames)!!
+
+        //Then
+        kb.holdsForSessionCase(returnedCondition) shouldBe true
+        returnedCondition shouldBeSameAs ConditionConstructors().High(waves, userExpression)
+        returnedCondition.userExpression() shouldBe userExpression
+    }
+
+    @Test
+    fun `should return null if the parsed condition is not true for the session case`() {
+        //Given
+        val waves = kb.attributeManager.getOrCreate("Waves")
+        val attributeNames = listOf(waves.name)
+        val height = "0.5" //less than 1.0
+        val sessionCase = createCase("Case", attribute = waves, value = height)
+        val conditionParser = mockk<ConditionParser>()
+        val userExpression = "waves seem to be at least one metre"
+        val parsedCondition = ConditionConstructors().GreaterThanOrEqualTo(waves, userExpression, "1.0")
+        every { conditionParser.parse(any(), any(), any()) } returns parsedCondition
+        kb.setConditionParser(conditionParser)
+
+        kb.startRuleSession(
+            sessionCase,
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
+        )
+        kb.holdsForSessionCase(parsedCondition) shouldBe false
+
+        //When
+        val returnedCondition = kb.conditionForExpression(userExpression, attributeNames)
+
+        //Then
+        verify { conditionParser.parse(userExpression, attributeNames, any()) }
+        returnedCondition shouldBe null
+    }
+
+    @Test
+    fun `should return null if no condition can be parsed from the user expression`() {
+        //Given
+        val waves = kb.attributeManager.getOrCreate("Waves")
+        val attributeNames = listOf(waves.name)
+        val height = "0.5"
+        val sessionCase = createCase("Case", attribute = waves, value = height)
+        val conditionParser = mockk<ConditionParser>()
+        val userExpression = "waves are all over the place"
+        every { conditionParser.parse(any(), any(), any()) } returns null
+        kb.setConditionParser(conditionParser)
+
+        kb.startRuleSession(
+            sessionCase,
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
+        )
+
+        //When
+        val returnedCondition = kb.conditionForExpression(userExpression, attributeNames)
+
+        //Then
+        verify { conditionParser.parse(userExpression, attributeNames, any()) }
+        returnedCondition shouldBe null
+    }
 
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")
 
@@ -700,15 +844,22 @@ class KBTest {
         return greaterThanOrEqualTo(null, Attribute(4567, "ABC"), 5.0)
     }
 
-    private fun createCase(caseName: String, glucoseValue: String = "0.667", id: Long? = null): RDRCase {
+    private fun createCase(
+        caseName: String,
+        attribute: Attribute = glucose(),
+        value: String = "0.667",
+        range: ReferenceRange? = null,
+        id: Long? = null
+    ): RDRCase {
         with(RDRCaseBuilder()) {
-            addValue(glucose(), defaultDate, glucoseValue)
+            val testResult = TestResult(value, range)
+            addResult(attribute, defaultDate, testResult)
             return build(caseName, id)
         }
     }
 
     private fun createExternalCase(caseName: String, glucoseValue: String = "0.667"): ExternalCase {
-        val regularCase = createCase(caseName, glucoseValue)
+        val regularCase = createCase(caseName, value = glucoseValue)
         val data = regularCase.data.mapKeys { MeasurementEvent(it.key.attribute.name, it.key.date) }
         return ExternalCase(caseName, data)
     }

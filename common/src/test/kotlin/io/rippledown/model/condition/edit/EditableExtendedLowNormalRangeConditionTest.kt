@@ -3,7 +3,6 @@ package io.rippledown.model.condition.edit
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.condition.ConditionTestBase
 import io.rippledown.model.condition.EpisodicCondition
-import io.rippledown.model.condition.episodic.predicate.HighOrNormal
 import io.rippledown.model.condition.episodic.predicate.LowOrNormal
 import io.rippledown.model.condition.episodic.predicate.NormalOrLowByAtMostSomePercentage
 import io.rippledown.model.condition.episodic.signature.All
@@ -39,7 +38,12 @@ class EditableExtendedLowNormalRangeConditionTest: ConditionTestBase() {
 
     @Test
     fun condition() {
-        ercLowNormalCurrent.condition("12") shouldBe EpisodicCondition(null, tsh, NormalOrLowByAtMostSomePercentage(12), Current)
+        ercLowNormalCurrent.condition("12") shouldBe EpisodicCondition(
+            null,
+            tsh,
+            NormalOrLowByAtMostSomePercentage(12),
+            Current
+        )
     }
 
     @Test

@@ -47,7 +47,12 @@ class EditableContainsConditionTest: ConditionTestBase() {
 
     @Test
     fun condition() {
-        currentValueCondition.condition("things") shouldBe EpisodicCondition(null, clinicalNotes, Contains("things"), Current)
+        currentValueCondition.condition("things") shouldBe EpisodicCondition(
+            null,
+            clinicalNotes,
+            Contains("things"),
+            Current
+        )
         allValuesCondition.condition("things") shouldBe EpisodicCondition(null, clinicalNotes, Contains("things"), All)
     }
 

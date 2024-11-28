@@ -1,6 +1,8 @@
 package io.rippledown.rule
 
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.application
 import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.model.Attribute
@@ -15,7 +17,7 @@ class AvailableConditionsTest {
     @get:Rule
     var composeTestRule = createComposeRule()
 
-    private val conditions = (0..9).map { index ->
+    private val conditions = (0..2).map { index ->
         val attribute = Attribute(index, "Surf $index")
         NonEditableSuggestedCondition(EpisodicCondition(attribute, Low, Current))
     }
@@ -25,7 +27,7 @@ class AvailableConditionsTest {
         with(composeTestRule) {
             //Given
             setContent {
-                AvailableConditions(conditions, mockk())
+                AvailableConditions(conditions, mockk(relaxed = true))
             }
 
             //Then
@@ -70,17 +72,17 @@ class AvailableConditionsTest {
     }
 }
 
-//fun main() {
-//    val handler = mockk<AvailableConditionsHandler>(relaxed = true)
-//    application {
-//        Window(
-//            onCloseRequest = ::exitApplication,
-//        ) {
-//            val conditions = (1..100).map { index ->
-//                val attribute = Attribute(index, "Surf $index")
-//                EpisodicCondition(attribute, Low, Current)
-//            }
-//            AvailableConditions(conditions, handler)
-//        }
-//    }
-//}
+fun main() {
+    val handler = mockk<AvailableConditionsHandler>(relaxed = true)
+    application {
+        Window(
+            onCloseRequest = ::exitApplication,
+        ) {
+            val conditions = (1..100).map { index ->
+                val attribute = Attribute(index, "Surf $index")
+                NonEditableSuggestedCondition(EpisodicCondition(attribute, Low, Current))
+            }
+            AvailableConditions(conditions, handler)
+        }
+    }
+}

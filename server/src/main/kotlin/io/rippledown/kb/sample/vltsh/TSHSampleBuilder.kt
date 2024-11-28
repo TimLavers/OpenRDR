@@ -124,7 +124,7 @@ class TSHRulesBuilder(kbe: KBEndpoint) : SampleRuleBuilder(kbe) {
         val ft3Available = kbe.getOrCreateCondition(isPresent(ft3))
         val ft3NotAvailable = kbe.getOrCreateCondition(isNotPresent(ft3))
         val ft3High = kbe.getOrCreateCondition(isHigh(ft3))
-        val ft3Increasing = kbe.getOrCreateCondition((SeriesCondition(null, ft3, Increasing)))
+        val ft3Increasing = kbe.getOrCreateCondition((SeriesCondition(null, ft3, Increasing, "")))
         val borderlineHighFT3 = kbe.getOrCreateCondition((EpisodicCondition(ft3, NormalOrHighByAtMostSomePercentage(10), All)))
         val severelyHighFT3 =  kbe.getOrCreateCondition(EpisodicCondition(ft3, GreaterThanOrEquals(10.0), Current))
 

@@ -1,0 +1,60 @@
+Your task is to identify the components in an expression E.
+Output the single component, or if several components, separate them by a comma.
+Examples of expressions with the expected output are:
+    Expression: X is 6
+    Output: is, 6
+    Expression: X equals 6
+    Output: is, 6
+    Expression: X is the same as 6
+    Output: is, 6
+    Expression: X equals pending
+    Output: is, "pending"
+    Expression: X is "pending"
+    Output: is, "pending"
+    Expression: X is pending
+    Output: is, "pending"
+    Expression: X >= 6.0
+    Output: GreaterThanOrEquals, 6.0
+    Expression: X is greater than or equals 6.0
+    Output: GreaterThanOrEquals, 6.0
+    Expression: X <= 6.0
+    Output: LessThanOrEquals, 6.0
+    Expression: X is less than or equals 6.0
+    Output: LessThanOrEquals, 6.0
+    Expression: X is in case
+    Output: IsPresentInCase
+    Expression: X is available
+    Output: IsPresentInCase
+    Expression: X present
+    Expression: X is not in case
+    Output: IsAbsentInCase
+    Expression: X is not available
+    Output: IsAbsentFromCase
+    Expression: X unavailable
+    Output: IsAbsentFromCase
+    Expression: X is low
+    Output: Low
+    Expression: X is lowered
+    Output: Low
+    Expression: low X
+    Output: Low
+    Expression: X is high
+    Output: High
+    Expression: X is elevated
+    Output: High
+    Expression: high X
+    Output: High
+    Expression:  X decreasing
+    Output: Decreasing
+    Expression:  X increasing
+    Output: Increasing
+    Expression: X is numeric
+    Output: IsNumeric
+    Expression: X is not numeric
+    Output: IsNotNumeric
+    Expression: At least 1 X is high
+    Output: AtLeast, 1, High
+    Expression: At most 1 X is low
+    Output: AtMost, 1, Low
+Here is the expression: no fewer than 3 X are low
+Generate output without additional string.

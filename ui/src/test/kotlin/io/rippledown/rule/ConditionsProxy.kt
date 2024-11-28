@@ -77,7 +77,7 @@ fun ComposeTestRule.hoverOverSelectedCondition(index: Int) {
 }
 
 fun ComposeTestRule.removeSelectedCondition(index: Int) {
-    onNodeWithContentDescription("$REMOVE_CONDITION_ICON_PREFIX$index")
+    onNodeWithContentDescription("$SELECTED_CONDITION_PREFIX$index")
         .assertIsDisplayed()
         .performClick()
 }

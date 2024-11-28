@@ -18,7 +18,7 @@ class ExportedRuleTest: ExporterTestBase() {
     private val id0 = 100
     private val conclusion1 = Conclusion(1, "A trip to the beach is advised.")
     private val ft3 = Attribute(300, "FT3")
-    private val tshHigh = isHigh(100, tsh)
+    private val tshHigh = isHigh(100, tsh, "")
     private val ft3GT2 = greaterThanOrEqualTo(200, ft3, 2.0)
 
     @Test

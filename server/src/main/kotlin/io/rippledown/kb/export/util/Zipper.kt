@@ -14,13 +14,13 @@ import java.util.zip.ZipOutputStream
 class Zipper(val directoryToZip: File) {
 
     fun zip(): ByteArray {
-        val byteArrayOutputStream = ByteArrayOutputStream()
-        val zipOut = ZipOutputStream(byteArrayOutputStream)
-
-        zipFile(directoryToZip, directoryToZip.name, zipOut)
-        zipOut.close()
-        byteArrayOutputStream.close()
-        return byteArrayOutputStream.toByteArray()
+        ByteArrayOutputStream().use { baos ->
+            ZipOutputStream(baos).use { zipOut ->
+                zipFile(directoryToZip, directoryToZip.name, zipOut)
+                zipOut.close()
+            }
+            return baos.toByteArray()
+        }
     }
 
     private fun zipFile(fileToZip: File, fileName: String, zipOut: ZipOutputStream) {
@@ -38,14 +38,14 @@ class Zipper(val directoryToZip: File) {
             }
             return
         }
-        val fis = FileInputStream(fileToZip)
-        val zipEntry = ZipEntry(fileName)
-        zipOut.putNextEntry(zipEntry)
-        val bytes = ByteArray(1024)
-        var length: Int
-        while (fis.read(bytes).also { length = it } >= 0) {
-            zipOut.write(bytes, 0, length)
+        FileInputStream(fileToZip).use { fis ->
+            val zipEntry = ZipEntry(fileName)
+            zipOut.putNextEntry(zipEntry)
+            val bytes = ByteArray(1024)
+            var length: Int
+            while (fis.read(bytes).also { length = it } >= 0) {
+                zipOut.write(bytes, 0, length)
+            }
         }
-        fis.close()
     }
 }

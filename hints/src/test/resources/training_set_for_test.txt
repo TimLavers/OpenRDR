@@ -1,0 +1,12 @@
+EXPECTED: High
+elevated x
+excessive x
+
+EXPECTED: Low
+reduced x
+lowered x
+
+EXPECTED: Is, 6
+x is 6
+x equals 6
+x is the same as 6
