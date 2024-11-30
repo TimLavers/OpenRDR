@@ -2,6 +2,14 @@
 
 An open source knowledge acquisition system using the RippleDown approach.
 
+RippleDown Rules (RDR) was initially developed by [Paul Compton](https://cgi.cse.unsw.edu.au/~compton/) in the 1980s. A
+good introduction is provided in "A Philosophical Basis for Knowledge Acquisition." Compton, P and Jansen, R, 1990.
+*Knowledge Acquisition* 2:241-257.
+
+A comprehensive description is given in his
+book ["Ripple-Down Rules, the Alternative to Machine Learning"](https://www.amazon.com.au/Ripple-Down-Rules-Alternative-Machine-Learning-ebook/dp/B092KVD3HQ)
+Paul Compton and Byeong Ho Kang, 2021. CRC Press.
+
 ## Requirements documentation
 
 The background, requirements, design principles, and so on to the project are documented in the
@@ -9,8 +17,10 @@ The background, requirements, design principles, and so on to the project are do
 documentation is [OpenRDR](./documentation/openrdr.md).
 
 ## Setup
+
 ### Platform
-OpenRDR is written in Kotlin and built with Gradle. 
+
+OpenRDR is written in Kotlin and built with Gradle.
 Java version 21 and Gradle need to be installed for OpenRDR development.
 
 ### Database
@@ -25,9 +35,11 @@ The default values for the Postgres parameters are `jdbc:postgresql://localhost:
 and `postgres`.
 
 ### Google Gemini
-OpenRDR uses Google Gemini to generate natural language hints for the conditions used in rules.
-For this feature to work, and for the associated tests to pass, an API key is required and needs to be set
-as the vale of an environment variable named `GEMINI_API_KEY`.
+
+OpenRDR uses Google Gemini to generate rule conditions from user-entered expressions.
+For this feature to work, and for the associated tests to pass, a Google API key is required and needs to be set
+as the value of an environment variable named `GEMINI_API_KEY`. To create a Google API key, see
+<a href="https://cloud.google.com/docs/authentication/api-keys" title="close icons">Manage API keys</a>
 
 ## Development
 Import the Gradle project into IntelliJ.
