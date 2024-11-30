@@ -2,6 +2,14 @@
 
 An open source knowledge acquisition system using the RippleDown approach.
 
+RippleDown Rules (RDR) was initially developed by [Paul Compton](https://cgi.cse.unsw.edu.au/~compton/) in the 1980s. A
+good introduction is provided in "A Philosophical Basis for Knowledge Acquisition." Compton, P and Jansen, R, 1990.
+*Knowledge Acquisition* 2:241-257.
+
+A comprehensive description is given in his
+book ["Ripple-Down Rules, the Alternative to Machine Learning"](https://www.amazon.com.au/Ripple-Down-Rules-Alternative-Machine-Learning-ebook/dp/B092KVD3HQ)
+Paul Compton and Byeong Ho Kang, 2021. CRC Press.
+
 ## Requirements documentation
 
 The background, requirements, design principles, and so on to the project are documented in the
