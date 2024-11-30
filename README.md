@@ -18,6 +18,11 @@ documentation is [OpenRDR](./documentation/openrdr.md).
 
 ## Setup
 
+### Platform
+
+OpenRDR is written in Kotlin and built with Gradle.
+Java version 21 and Gradle need to be installed for OpenRDR development.
+
 ### Database
 OpenRDR uses Postgres as its persistence provider. The following environment variables are required in order to
 allow connection to the Postgres server:
@@ -98,6 +103,5 @@ created by SeyfDesigner - Flaticon</a>
 Flaticon</a>
 
 <a href="https://www.flaticon.com/free-icons/text" title="text icons">Text icons created by DinosoftLabs - Flaticon</a>
-
 <a href="https://www.flaticon.com/free-icons/close" title="close icons">Close icons created by ariefstudio -
 Flaticon</a>
