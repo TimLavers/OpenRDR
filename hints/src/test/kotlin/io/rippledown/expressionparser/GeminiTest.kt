@@ -93,6 +93,7 @@ class GeminiTest {
         val expressions = listOf(
             "x is less than or equal to 10" to "LessThanOrEqualTo, 10",
             "x no more than y" to "LessThanOrEqualTo, y",
+            "x no more than 5.5" to "LessThanOrEqualTo, 5.5",
             "x is smaller than or equal to y" to "LessThanOrEqualTo, y"
         )
         for ((entered, expected) in expressions) {
@@ -112,6 +113,7 @@ class GeminiTest {
         val expressions = listOf(
             "x is greater than or equal to 10" to "GreaterThanOrEqualTo, 10",
             "x no less than y" to "GreaterThanOrEqualTo, y",
+            "x no less than 5.5" to "GreaterThanOrEqualTo, 5.5",
             "x is greater than or equal to y" to "GreaterThanOrEqualTo, y"
         )
         for ((entered, expected) in expressions) {

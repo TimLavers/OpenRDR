@@ -26,7 +26,7 @@ There are several basic approaches that could be used to allow users to build co
 
 We have chosen the third approach because:
 
-- it is the most flexible and user-friendly,
+- it is the most flexible and makes the least demands on the user,
 - it avoids the need to develop a custom GUI or parser,
 - it provides internationalization with no additional software effort.
 

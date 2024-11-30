@@ -37,7 +37,7 @@ fun noSafetySettings() =
 
 fun tokensFor(input: String): Array<String> {
     val prompt = content {
-        text("Your task is to identify the components in an expression E.")
+        text("Your task is to identify the components in an expression.")
         text("Output the single component, or if several components, separate them by a comma.")
         text("Examples of expressions with the expected output are:")
         text(trainingSet)
