@@ -17,9 +17,6 @@ The background, requirements, design principles, and so on to the project are do
 documentation is [OpenRDR](./documentation/openrdr.md).
 
 ## Setup
-### Platform
-OpenRDR is written in Kotlin and built with Gradle. 
-Java version 21 and Gradle need to be installed for OpenRDR development.
 
 ### Database
 OpenRDR uses Postgres as its persistence provider. The following environment variables are required in order to
