@@ -31,6 +31,12 @@ x equals pending
 
 EXPECTED: LessThanOrEqualTo, y
 x is less than or equal to y
+x is not greater than y
+x is no more than y
+
+EXPECTED: GreaterThanOrEqualTo, y
+x is greater than or equal to y
+x is not less than y
 
 EXPECTED: Present
 x is present
@@ -42,3 +48,18 @@ x is increasing
 EXPECTED: Numeric
 x is a number
 x is an integer
+
+EXPECTED: SlightlyLow, 20
+x no more than 20 percent below normal
+x is low by no more than 20 percent
+
+EXPECTED: NormalOrSlightlyLow, 20
+x is normal or not more than 20 percent below normal
+
+EXPECTED: SlightlyHigh, 20
+x no more than 20 percent above normal
+x is high by no more than 20 percent
+
+EXPECTED: NormalOrSlightlyHigh, 20
+x is normal or not more than 20 percent above normal
+

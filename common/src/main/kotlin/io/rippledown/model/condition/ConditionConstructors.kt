@@ -63,22 +63,21 @@ class ConditionConstructors {
         EpisodicCondition(null, attribute, LessThanOrEquals(d.toDoubleOrNull()!!), Current, userExpression)
 
     //TODO
-    fun slightlyLow(attribute: Attribute, userExpression: String, cutoff: Int, signature: Signature = Current) =
-        EpisodicCondition(null, attribute, LowByAtMostSomePercentage(cutoff), signature)
+    fun SlightlyLow(attribute: Attribute, userExpression: String, cutoff: String) =
+        EpisodicCondition(null, attribute, LowByAtMostSomePercentage(cutoff.toInt()), Current, userExpression)
 
-    fun normalOrSlightlyLow(attribute: Attribute, userExpression: String, cutoff: Int, signature: Signature = Current) =
-        EpisodicCondition(null, attribute, NormalOrLowByAtMostSomePercentage(cutoff), signature)
+    fun NormalOrSlightlyLow(attribute: Attribute, userExpression: String, cutoff: String) =
+        EpisodicCondition(null, attribute, NormalOrLowByAtMostSomePercentage(cutoff.toInt()), Current, userExpression)
 
-    fun normalOrSlightlyHigh(
+    fun SlightlyHigh(attribute: Attribute, userExpression: String, cutoff: String) =
+        EpisodicCondition(null, attribute, HighByAtMostSomePercentage(cutoff.toInt()), Current, userExpression)
+
+    fun NormalOrSlightlyHigh(
         attribute: Attribute,
         userExpression: String,
-        cutoff: Int,
-        signature: Signature = Current
+        cutoff: String
     ) =
-        EpisodicCondition(null, attribute, NormalOrHighByAtMostSomePercentage(cutoff), signature)
-
-    fun slightlyHigh(attribute: Attribute, userExpression: String, cutoff: Int, signature: Signature = Current) =
-        EpisodicCondition(null, attribute, HighByAtMostSomePercentage(cutoff), signature)
+        EpisodicCondition(null, attribute, NormalOrHighByAtMostSomePercentage(cutoff.toInt()), Current, userExpression)
 
     fun isSingleEpisodeCase(id: Int? = null) = CaseStructureCondition(null, IsSingleEpisodeCase, "")
     fun allDoNotContainText(attribute: Attribute, userExpression: String, text: String) =

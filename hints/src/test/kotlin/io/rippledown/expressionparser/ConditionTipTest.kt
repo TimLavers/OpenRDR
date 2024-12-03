@@ -56,18 +56,36 @@ class ConditionTipTest {
     fun `should suggest syntactically valid conditions`() {
         // Given
         with(constructors) {
+            val elevatedWaves = "elevated waves"
+            val low = "tsh is below the normal range"
+            val isConstant = "xyz = 3.14159"
+            val equalsConstant = "xyz equals 3.14159"
+            val lte = "xyz is no more than 3.14159"
+            val gte = "xyz is at least 3.14159"
+            val numeric = "xyz is a number"
+            val present = "xyz is available"
+            val isPending = "glucose is pending"
+            val tall = "very tall waves"
+            val slightlyLow = "glucose no more than 15 percent below normal"
+            val normalOrSlightlyLow = "glucose is either normal or not more than 15 percent below normal"
+            val slightlyHigh = "glucose no more than 15 percent above normal"
+            val normalOrSlightlyHigh = "glucose is either normal or high by no more than 15 percent"
+
             val expectations = listOf(
-                "elevated glucose" to High(glucose, "elevated glucose"),
-                "tsh is below the normal range" to Low(TSH, "tsh is below the normal range"),
-                "xyz = 3.14159" to Is(XYZ, "xyz = 3.14159", "3.14159"),
-                "xyz equals 3.14159" to Is(XYZ, "xyz equals 3.14159", "3.14159"),
-                "xyz is no more than 3.14159" to LessThanOrEqualTo(XYZ, "xyz is no more than 3.14159", "3.14159"),
-                "xyz is at least 3.14159" to GreaterThanOrEqualTo(XYZ, "xyz is at least 3.14159", "3.14159"),
-                "xyz is a number" to Numeric(XYZ, "xyz is a number"),
-                "xyz is available" to Present(XYZ, "xyz is available"),
-                "glucose is pending" to Is(glucose, "glucose is pending", "\"pending\""),
-                "elevated waves" to High(Waves, "elevated waves"),
-                "very tall waves" to High(Waves, "very tall waves"),
+                low to Low(TSH, low),
+                isConstant to Is(XYZ, isConstant, "3.14159"),
+                equalsConstant to Is(XYZ, equalsConstant, "3.14159"),
+                lte to LessThanOrEqualTo(XYZ, lte, "3.14159"),
+                gte to GreaterThanOrEqualTo(XYZ, gte, "3.14159"),
+                numeric to Numeric(XYZ, numeric),
+                present to Present(XYZ, present),
+                isPending to Is(glucose, isPending, "\"pending\""),
+                elevatedWaves to High(Waves, elevatedWaves),
+                tall to High(Waves, tall),
+                slightlyLow to SlightlyLow(glucose, slightlyLow, "15"),
+                normalOrSlightlyLow to NormalOrSlightlyLow(glucose, normalOrSlightlyLow, "15"),
+                slightlyHigh to SlightlyHigh(glucose, slightlyHigh, "15"),
+                normalOrSlightlyHigh to NormalOrSlightlyHigh(glucose, normalOrSlightlyHigh, "15"),
             )
 
             expectations.forEach { (input, expected) ->
