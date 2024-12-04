@@ -63,3 +63,6 @@ x is high by no more than 20 percent
 EXPECTED: NormalOrSlightlyHigh, 20
 x is normal or not more than 20 percent above normal
 
+EXPECTED: SingleEpisodeCase
+case is for a single date
+case has one episode

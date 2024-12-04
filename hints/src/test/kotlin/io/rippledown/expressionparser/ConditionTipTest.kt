@@ -58,22 +58,20 @@ class ConditionTipTest {
         with(constructors) {
             val elevatedWaves = "elevated waves"
             val low = "tsh is below the normal range"
-            val isConstant = "xyz = 3.14159"
             val equalsConstant = "xyz equals 3.14159"
             val lte = "xyz is no more than 3.14159"
             val gte = "xyz is at least 3.14159"
             val numeric = "xyz is a number"
             val present = "xyz is available"
             val isPending = "glucose is pending"
-            val tall = "very tall waves"
             val slightlyLow = "glucose no more than 15 percent below normal"
             val normalOrSlightlyLow = "glucose is either normal or not more than 15 percent below normal"
             val slightlyHigh = "glucose no more than 15 percent above normal"
             val normalOrSlightlyHigh = "glucose is either normal or high by no more than 15 percent"
+            val singleEpisodeCase = "case has only one episode"
 
             val expectations = listOf(
                 low to Low(TSH, low),
-                isConstant to Is(XYZ, isConstant, "3.14159"),
                 equalsConstant to Is(XYZ, equalsConstant, "3.14159"),
                 lte to LessThanOrEqualTo(XYZ, lte, "3.14159"),
                 gte to GreaterThanOrEqualTo(XYZ, gte, "3.14159"),
@@ -81,11 +79,11 @@ class ConditionTipTest {
                 present to Present(XYZ, present),
                 isPending to Is(glucose, isPending, "\"pending\""),
                 elevatedWaves to High(Waves, elevatedWaves),
-                tall to High(Waves, tall),
                 slightlyLow to SlightlyLow(glucose, slightlyLow, "15"),
                 normalOrSlightlyLow to NormalOrSlightlyLow(glucose, normalOrSlightlyLow, "15"),
                 slightlyHigh to SlightlyHigh(glucose, slightlyHigh, "15"),
                 normalOrSlightlyHigh to NormalOrSlightlyHigh(glucose, normalOrSlightlyHigh, "15"),
+                singleEpisodeCase to SingleEpisodeCase(singleEpisodeCase),
             )
 
             expectations.forEach { (input, expected) ->

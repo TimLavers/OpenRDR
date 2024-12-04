@@ -3,11 +3,30 @@ package io.rippledown.expressionparser
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
-import kotlin.test.Ignore
 
-@Ignore("Run these tests individually - the free version of the Gemini API has a rate limit of 15 / minute")
+//@Ignore("Run these tests individually - the free version of the Gemini API has a rate limit of 15 / minute")
 class GeminiTest {
 
+    @Test
+    fun `should tokenise expressions using representing 'case is for a single date'`() {
+        // Given
+        val expressions = listOf(
+            "case has one date",
+            "case has only one episode",
+            "only one episode in the case",
+            "one episode only",
+            "one date only"
+        )
+        for (entered in expressions) {
+            // When
+            val actual = tokensFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual.joinToString() shouldBe "SingleEpisodeCase"
+            }
+        }
+    }
     @Test
     fun `should tokenise expressions using 'high'`() {
         // Given
@@ -24,7 +43,7 @@ class GeminiTest {
 
             // Then
             withClue("Entered '$entered'") {
-                actual.joinToString() shouldBe actual
+                actual.joinToString() shouldBe "High"
             }
         }
     }
