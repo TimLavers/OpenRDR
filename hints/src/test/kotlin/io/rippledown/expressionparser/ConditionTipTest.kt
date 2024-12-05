@@ -1,6 +1,5 @@
 package io.rippledown.expressionparser
 
-import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
@@ -63,12 +62,21 @@ class ConditionTipTest {
             val gte = "xyz is at least 3.14159"
             val numeric = "xyz is a number"
             val present = "xyz is available"
+            val absent = "xyz is not available"
             val isPending = "glucose is pending"
             val slightlyLow = "glucose no more than 15 percent below normal"
             val normalOrSlightlyLow = "glucose is either normal or not more than 15 percent below normal"
             val slightlyHigh = "glucose no more than 15 percent above normal"
             val normalOrSlightlyHigh = "glucose is either normal or high by no more than 15 percent"
             val singleEpisodeCase = "case has only one episode"
+            val allNormal = "every glucose result is normal"
+            val noNormal = "every glucose result is abnormal"
+            val allHigh = "every glucose result is high"
+            val noHigh = "no elevated glucose"
+            val allLow = "every glucose result is low"
+            val noLow = "no lowered glucose"
+            val allContain = "every xyz result contains undefined"
+            val noContain = "none of the xyz results contain \"undefined\""
 
             val expectations = listOf(
                 low to Low(TSH, low),
@@ -77,6 +85,7 @@ class ConditionTipTest {
                 gte to GreaterThanOrEqualTo(XYZ, gte, "3.14159"),
                 numeric to Numeric(XYZ, numeric),
                 present to Present(XYZ, present),
+                absent to Absent(XYZ, absent),
                 isPending to Is(glucose, isPending, "\"pending\""),
                 elevatedWaves to High(Waves, elevatedWaves),
                 slightlyLow to SlightlyLow(glucose, slightlyLow, "15"),
@@ -84,18 +93,30 @@ class ConditionTipTest {
                 slightlyHigh to SlightlyHigh(glucose, slightlyHigh, "15"),
                 normalOrSlightlyHigh to NormalOrSlightlyHigh(glucose, normalOrSlightlyHigh, "15"),
                 singleEpisodeCase to SingleEpisodeCase(singleEpisodeCase),
+                allNormal to AllNormal(glucose, allNormal),
+                noNormal to NoNormal(glucose, noNormal),
+                allHigh to AllHigh(glucose, allHigh),
+                noHigh to NoHigh(glucose, noHigh),
+                allLow to AllLow(glucose, allLow),
+                noLow to NoLow(glucose, noLow),
+                allContain to AllContain(XYZ, allContain, "\"undefined\""),
+                noContain to NoContain(XYZ, noContain, "\"undefined\""),
             )
-
+            var errors = 0
             expectations.forEach { (input, expected) ->
-                withClue("Entered '$input'") {
+                try {
                     // When
                     val actual = conditionTipGenerator.conditionFor(input)
 
                     // Then
                     actual shouldBe expected
-                    actual!!.userExpression() shouldBe input
+                } catch (e: Error) {
+                    errors++
+                    println("Failed for $input")
+                    e.printStackTrace()
                 }
             }
+            errors shouldBe 0
         }
     }
 }

@@ -8,6 +8,163 @@ import org.junit.jupiter.api.Test
 class GeminiTest {
 
     @Test
+    fun `should tokenise expressions using representing 'all contain'`() {
+        // Given
+        val expressions = listOf(
+            "all x contain pending",
+            "every x contains \"pending\""
+        )
+        for (entered in expressions) {
+            // When
+            val actual = tokensFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual.joinToString() shouldBe "AllContain, \"pending\""
+            }
+        }
+    }
+
+    @Test
+    fun `should tokenise expressions using representing 'no contain'`() {
+        // Given
+        val expressions = listOf(
+            "no x contain pending",
+            "none of the x contain \"pending\"",
+        )
+        for (entered in expressions) {
+            // When
+            val actual = tokensFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual.joinToString() shouldBe "NoContain, \"pending\""
+            }
+        }
+    }
+
+    @Test
+    fun `should tokenise expressions using representing 'all low'`() {
+        // Given
+        val expressions = listOf(
+            "all x are low",
+            "every x is low",
+            "all x are below the normal range",
+            "all x are lowered"
+        )
+        for (entered in expressions) {
+            // When
+            val actual = tokensFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual.joinToString() shouldBe "AllLow"
+            }
+        }
+    }
+
+    @Test
+    fun `should tokenise expressions using representing 'no low'`() {
+        // Given
+        val expressions = listOf(
+            "no x are low",
+            "no lowered x",
+            "none of the x are below the normal range",
+        )
+        for (entered in expressions) {
+            // When
+            val actual = tokensFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual.joinToString() shouldBe "NoLow"
+            }
+        }
+    }
+
+    @Test
+    fun `should tokenise expressions using representing 'all high'`() {
+        // Given
+        val expressions = listOf(
+            "all x are high",
+            "every x is high",
+            "all x are above the normal range",
+            "all x are elevated",
+            "all x are raised"
+        )
+        for (entered in expressions) {
+            // When
+            val actual = tokensFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual.joinToString() shouldBe "AllHigh"
+            }
+        }
+    }
+
+    @Test
+    fun `should tokenise expressions using representing 'no high'`() {
+        // Given
+        val expressions = listOf(
+            "no x are high",
+            "no elevated x",
+            "none of the x are above the normal range",
+        )
+        for (entered in expressions) {
+            // When
+            val actual = tokensFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual.joinToString() shouldBe "NoHigh"
+            }
+        }
+    }
+
+    @Test
+    fun `should tokenise expressions using representing 'all normal'`() {
+        // Given
+        val expressions = listOf(
+            "all x are normal",
+            "every x is normal",
+            "all x are within the normal range",
+            "all x are OK",
+            "all x are not high or low"
+        )
+        for (entered in expressions) {
+            // When
+            val actual = tokensFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual.joinToString() shouldBe "AllNormal"
+            }
+        }
+    }
+
+    @Test
+    fun `should tokenise expressions using representing 'no normal'`() {
+        // Given
+        val expressions = listOf(
+            "no x are normal",
+            "every x is abnormal",
+            "none of the x are within the normal range",
+            "no x are OK",
+            "all x results are abnormal"
+        )
+        for (entered in expressions) {
+            // When
+            val actual = tokensFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual.joinToString() shouldBe "NoNormal"
+            }
+        }
+    }
+
+    @Test
     fun `should tokenise expressions using representing 'case is for a single date'`() {
         // Given
         val expressions = listOf(
@@ -162,6 +319,25 @@ class GeminiTest {
             // Then
             withClue("Entered '$entered'") {
                 actual.joinToString() shouldBe "Present"
+            }
+        }
+    }
+
+    @Test
+    fun `should tokenise expressions using 'is not in case'`() {
+        // Given
+        val expressions = listOf(
+            "x is not available",
+            "there is no value for x",
+            "x is missing",
+        )
+        for (entered in expressions) {
+            // When
+            val actual = tokensFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual.joinToString() shouldBe "Absent"
             }
         }
     }

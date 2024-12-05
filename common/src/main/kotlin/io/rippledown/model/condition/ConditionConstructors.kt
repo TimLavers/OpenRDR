@@ -11,10 +11,7 @@ import io.rippledown.model.condition.structural.IsSingleEpisodeCase
 
 class ConditionConstructors {
 
-    //Zero-parameter conditions
-    fun SingleEpisodeCase(userExpression: String) = CaseStructureCondition(null, IsSingleEpisodeCase, userExpression)
 
-    //One-parameter conditions
     fun Low(attribute: Attribute, userExpression: String) =
         EpisodicCondition(null, attribute, Low, Current, userExpression)
 
@@ -48,7 +45,6 @@ class ConditionConstructors {
     fun Decreasing(attribute: Attribute, userExpression: String) =
         SeriesCondition(null, attribute, Decreasing, userExpression)
 
-    //Two-parameter conditions
     fun Is(attribute: Attribute, userExpression: String, text: String) =
         EpisodicCondition(null, attribute, Is(text), Current, userExpression)
 
@@ -79,18 +75,42 @@ class ConditionConstructors {
         cutoff: String
     ) = EpisodicCondition(null, attribute, NormalOrHighByAtMostSomePercentage(cutoff.toInt()), Current, userExpression)
 
-    fun AllDoNotContainText(attribute: Attribute, userExpression: String, text: String) =
-        EpisodicCondition(null, attribute, DoesNotContain(text), All, userExpression)
+
+    fun SingleEpisodeCase(userExpression: String) = CaseStructureCondition(null, IsSingleEpisodeCase, userExpression)
+
+    fun AllNormal(attribute: Attribute, userExpression: String) =
+        EpisodicCondition(null, attribute, Normal, All, userExpression)
+
+    fun NoNormal(attribute: Attribute, userExpression: String) =
+        EpisodicCondition(null, attribute, Normal, No, userExpression)
+
+    fun AllHigh(attribute: Attribute, userExpression: String) =
+        EpisodicCondition(null, attribute, High, All, userExpression)
+
+    fun NoHigh(attribute: Attribute, userExpression: String) =
+        EpisodicCondition(null, attribute, High, No, userExpression)
+
+    fun AllLow(attribute: Attribute, userExpression: String) =
+        EpisodicCondition(null, attribute, Low, All, userExpression)
+
+    fun NoLow(attribute: Attribute, userExpression: String) =
+        EpisodicCondition(null, attribute, Low, No, userExpression)
+
+    fun AllContain(attribute: Attribute, userExpression: String, text: String) =
+        EpisodicCondition(null, attribute, Contains(text), All, userExpression)
+
+    fun NoContain(attribute: Attribute, userExpression: String, text: String) =
+        EpisodicCondition(null, attribute, Contains(text), No, userExpression)
 
     fun AllNumeric(attribute: Attribute, userExpression: String) =
         EpisodicCondition(null, attribute, IsNumeric, All, userExpression)
 
-    fun NoneNumeric(attribute: Attribute, userExpression: String) =
+    fun NoNumeric(attribute: Attribute, userExpression: String) =
         EpisodicCondition(null, attribute, IsNumeric, No, userExpression)
 
-    fun AtLeastNumeric(attribute: Attribute, userExpression: String, count: Int) =
-        EpisodicCondition(null, attribute, IsNumeric, AtLeast(count), userExpression)
+    fun AtLeastNormal(attribute: Attribute, userExpression: String, count: Int) =
+        EpisodicCondition(null, attribute, Normal, AtLeast(count), userExpression)
 
-    fun AtMostNumeric(attribute: Attribute, userExpression: String, count: Int) =
+    fun AtMostHigh(attribute: Attribute, userExpression: String, count: Int) =
         EpisodicCondition(null, attribute, IsNumeric, AtMost(count), userExpression)
 }

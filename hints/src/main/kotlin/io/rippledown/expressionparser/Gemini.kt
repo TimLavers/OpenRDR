@@ -1,12 +1,17 @@
 package io.rippledown.expressionparser
 
 import dev.shreyaspatil.ai.client.generativeai.GenerativeModel
-import dev.shreyaspatil.ai.client.generativeai.type.*
 import dev.shreyaspatil.ai.client.generativeai.type.BlockThreshold.NONE
+import dev.shreyaspatil.ai.client.generativeai.type.GenerationConfig
+import dev.shreyaspatil.ai.client.generativeai.type.HarmCategory
+import dev.shreyaspatil.ai.client.generativeai.type.SafetySetting
+import dev.shreyaspatil.ai.client.generativeai.type.content
 import kotlinx.coroutines.runBlocking
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.lang.System.getenv
+import java.lang.Thread.sleep
+import kotlin.random.Random.Default.nextLong
 
 const val GEMINI_MODEL = "gemini-1.5-flash"
 const val TRAINING_SET_FILE = "/training_set.txt"
@@ -45,15 +50,35 @@ fun tokensFor(input: String): Array<String> {
         text("Generate output without additional string.")
     }
 
-    val tokens = runBlocking {
-        try {
+    val tokens = retry {
+        runBlocking {
             generativeModel.generateContent(prompt).text
-        } catch (e: ServerException) {
-            logger.info("Gemini unavailable: ${e.message}")
-            return@runBlocking null
         }
     }
     return if (tokens != null) {
         tokens.trim().split(", ").toTypedArray()
     } else emptyArray()
+}
+
+/**
+ * Try to get around the 503 error from the API due to rate limiting.
+ */
+fun <T> retry(
+    maxRetries: Int = 5,
+    initialDelay: Long = 1_000,
+    maxDelay: Long = 16_000,
+    block: () -> T
+): T {
+    var currentDelay = initialDelay
+    repeat(maxRetries) { attempt ->
+        try {
+            return block()
+        } catch (e: Exception) {
+            if (attempt == maxRetries - 1) throw e
+            println("Retry attempt $attempt failed. Waiting $currentDelay ms before trying again.")
+            sleep(currentDelay)
+            currentDelay = (currentDelay * 2).coerceAtMost(maxDelay) + nextLong(0, 1_000)
+        }
+    }
+    throw IllegalStateException("Should not reach here")
 }

@@ -7,6 +7,7 @@ excessive x
 EXPECTED: Low
 reduced x
 lowered x
+x is below normal
 
 EXPECTED: Normal
 x is within range
@@ -42,6 +43,12 @@ EXPECTED: Present
 x is present
 x detected
 
+EXPECTED: Absent
+x is not present
+x not detected
+x missing
+no value for x
+
 EXPECTED: Increasing
 x is increasing
 
@@ -66,3 +73,36 @@ x is normal or not more than 20 percent above normal
 EXPECTED: SingleEpisodeCase
 case is for a single date
 case has one episode
+
+EXPECTED: AllNormal
+all x are normal
+all x are within range
+
+EXPECTED: NoNormal
+no x are normal
+all x are abnormal
+
+EXPECTED: AllHigh
+all x are high
+all x are above the normal range
+
+EXPECTED: NoHigh
+no x are high
+none of the x are elevated
+
+EXPECTED: AllLow
+all x are low
+all x are below the normal range
+
+EXPECTED: NoLow
+no x are low
+none of the x are lowered
+
+EXPECTED: AllContain, "abc"
+all x contain abc
+all x contains "abc"
+every x result contains abc
+
+EXPECTED: NoContain, "abc"
+no x contain abc
+none of the x contain "abc"
