@@ -54,30 +54,35 @@ class ConditionTipTest {
     @Test
     fun `should suggest syntactically valid conditions`() {
         // Given
-        with(constructors) {
-            val elevatedWaves = "elevated waves"
-            val low = "tsh is below the normal range"
-            val equalsConstant = "xyz equals 3.14159"
-            val lte = "xyz is no more than 3.14159"
-            val gte = "xyz is at least 3.14159"
-            val numeric = "xyz is a number"
-            val present = "xyz is available"
-            val absent = "xyz is not available"
-            val isPending = "glucose is pending"
-            val slightlyLow = "glucose no more than 15 percent below normal"
-            val normalOrSlightlyLow = "glucose is either normal or not more than 15 percent below normal"
-            val slightlyHigh = "glucose no more than 15 percent above normal"
-            val normalOrSlightlyHigh = "glucose is either normal or high by no more than 15 percent"
-            val singleEpisodeCase = "case has only one episode"
-            val allNormal = "every glucose result is normal"
-            val noNormal = "every glucose result is abnormal"
-            val allHigh = "every glucose result is high"
-            val noHigh = "no elevated glucose"
-            val allLow = "every glucose result is low"
-            val noLow = "no lowered glucose"
-            val allContain = "every xyz result contains undefined"
-            val noContain = "none of the xyz results contain \"undefined\""
+        val elevatedWaves = "elevated waves"
+        val low = "tsh is below the normal range"
+        val equalsConstant = "xyz equals 3.14159"
+        val lte = "xyz is no more than 3.14159"
+        val gte = "xyz is at least 3.14159"
+        val numeric = "xyz is a number"
+        val present = "xyz is available"
+        val absent = "xyz is not available"
+        val isPending = "glucose is pending"
+        val slightlyLow = "glucose no more than 15 percent below normal"
+        val normalOrSlightlyLow = "glucose is either normal or not more than 15 percent below normal"
+        val slightlyHigh = "glucose no more than 15 percent above normal"
+        val normalOrSlightlyHigh = "glucose is either normal or high by no more than 15 percent"
+        val singleEpisodeCase = "case has only one episode"
+        val allNormal = "every glucose result is normal"
+        val noNormal = "every glucose result is abnormal"
+        val allHigh = "every glucose result is high"
+        val noHigh = "no elevated glucose"
+        val allLow = "every glucose result is low"
+        val noLow = "no lowered glucose"
+        val allContain = "every xyz result contains undefined"
+        val noContain = "none of the xyz results contain \"undefined\""
+        val allNumeric = "every xyz result is a number"
+        val noNumeric = "none of the xyz results are numeric"
+        val atMostHigh = "at most 5 glucose results are high"
+        val atMostLow = "at most 3 glucose results are below normal"
+        val atMostGreaterThanOrEqualTo = "at most 3 glucose results are greater than or equal to 5.5"
 
+        with(constructors) {
             val expectations = listOf(
                 low to Low(TSH, low),
                 equalsConstant to Is(XYZ, equalsConstant, "3.14159"),
@@ -101,6 +106,16 @@ class ConditionTipTest {
                 noLow to NoLow(glucose, noLow),
                 allContain to AllContain(XYZ, allContain, "\"undefined\""),
                 noContain to NoContain(XYZ, noContain, "\"undefined\""),
+                allNumeric to AllNumeric(XYZ, allNumeric),
+                noNumeric to NoNumeric(XYZ, noNumeric),
+                atMostHigh to AtMostHigh(glucose, atMostHigh, "5"),
+                atMostLow to AtMostLow(glucose, atMostLow, "3"),
+                atMostGreaterThanOrEqualTo to AtMostGreaterThanOrEqualTo(
+                    glucose,
+                    atMostGreaterThanOrEqualTo,
+                    "3",
+                    "5.5"
+                ),
             )
             var errors = 0
             expectations.forEach { (input, expected) ->

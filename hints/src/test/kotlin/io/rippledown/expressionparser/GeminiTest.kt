@@ -8,7 +8,97 @@ import org.junit.jupiter.api.Test
 class GeminiTest {
 
     @Test
-    fun `should tokenise expressions using representing 'all contain'`() {
+    fun `should tokenise 'at most greater than or equal to'`() {
+        // Given
+        val expressions = listOf(
+            "at most 42 x are greater than or equal to 10.1",
+            "no more than 42 x results greater than or equal to 10.1",
+        )
+        for (entered in expressions) {
+            // When
+            val actual = tokensFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual.joinToString() shouldBe "AtMostGreaterThanOrEqualTo, 42, 10.1"
+            }
+        }
+    }
+
+    @Test
+    fun `should tokenise 'at most low'`() {
+        // Given
+        val expressions = listOf(
+            "at most 42 x are low",
+            "there are at most 42 x results that are lowered",
+        )
+        for (entered in expressions) {
+            // When
+            val actual = tokensFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual.joinToString() shouldBe "AtMostLow, 42"
+            }
+        }
+    }
+
+    @Test
+    fun `should tokenise 'at most high'`() {
+        // Given
+        val expressions = listOf(
+            "at most 42 x are high",
+            "there are at most 42 x results that are elevated",
+        )
+        for (entered in expressions) {
+            // When
+            val actual = tokensFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual.joinToString() shouldBe "AtMostHigh, 42"
+            }
+        }
+    }
+
+    @Test
+    fun `should tokenise 'all numeric'`() {
+        // Given
+        val expressions = listOf(
+            "all x are numeric",
+            "every x is a number"
+        )
+        for (entered in expressions) {
+            // When
+            val actual = tokensFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual.joinToString() shouldBe "AllNumeric"
+            }
+        }
+    }
+
+    @Test
+    fun `should tokenise 'no numeric'`() {
+        // Given
+        val expressions = listOf(
+            "no x is numeric",
+            "none of the x are numbers"
+        )
+        for (entered in expressions) {
+            // When
+            val actual = tokensFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual.joinToString() shouldBe "NoNumeric"
+            }
+        }
+    }
+
+    @Test
+    fun `should tokenise 'all contain'`() {
         // Given
         val expressions = listOf(
             "all x contain pending",
@@ -26,7 +116,7 @@ class GeminiTest {
     }
 
     @Test
-    fun `should tokenise expressions using representing 'no contain'`() {
+    fun `should tokenise 'no contain'`() {
         // Given
         val expressions = listOf(
             "no x contain pending",
@@ -44,7 +134,7 @@ class GeminiTest {
     }
 
     @Test
-    fun `should tokenise expressions using representing 'all low'`() {
+    fun `should tokenise 'all low'`() {
         // Given
         val expressions = listOf(
             "all x are low",
@@ -64,7 +154,7 @@ class GeminiTest {
     }
 
     @Test
-    fun `should tokenise expressions using representing 'no low'`() {
+    fun `should tokenise 'no low'`() {
         // Given
         val expressions = listOf(
             "no x are low",
@@ -83,7 +173,7 @@ class GeminiTest {
     }
 
     @Test
-    fun `should tokenise expressions using representing 'all high'`() {
+    fun `should tokenise 'all high'`() {
         // Given
         val expressions = listOf(
             "all x are high",
@@ -104,7 +194,7 @@ class GeminiTest {
     }
 
     @Test
-    fun `should tokenise expressions using representing 'no high'`() {
+    fun `should tokenise 'no high'`() {
         // Given
         val expressions = listOf(
             "no x are high",
@@ -123,7 +213,7 @@ class GeminiTest {
     }
 
     @Test
-    fun `should tokenise expressions using representing 'all normal'`() {
+    fun `should tokenise 'all normal'`() {
         // Given
         val expressions = listOf(
             "all x are normal",
@@ -144,7 +234,7 @@ class GeminiTest {
     }
 
     @Test
-    fun `should tokenise expressions using representing 'no normal'`() {
+    fun `should tokenise 'no normal'`() {
         // Given
         val expressions = listOf(
             "no x are normal",
@@ -165,7 +255,7 @@ class GeminiTest {
     }
 
     @Test
-    fun `should tokenise expressions using representing 'case is for a single date'`() {
+    fun `should tokenise 'case is for a single date'`() {
         // Given
         val expressions = listOf(
             "case has one date",
@@ -184,8 +274,9 @@ class GeminiTest {
             }
         }
     }
+
     @Test
-    fun `should tokenise expressions using 'high'`() {
+    fun `should tokenise 'high'`() {
         // Given
         val expressions = listOf(
             "x is elevated",
@@ -206,7 +297,7 @@ class GeminiTest {
     }
 
     @Test
-    fun `should tokenise expressions using 'low'`() {
+    fun `should tokenise 'low'`() {
         // Given
         val expressions = listOf(
             "x is lowered",
@@ -223,7 +314,7 @@ class GeminiTest {
     }
 
     @Test
-    fun `should tokenise expressions using 'normal'`() {
+    fun `should tokenise 'normal'`() {
         // Given
         val expressions = listOf(
             "x is OK",
@@ -240,7 +331,7 @@ class GeminiTest {
     }
 
     @Test
-    fun `should tokenise expressions using 'is'`() {
+    fun `should tokenise 'is'`() {
         // Given
         val expressions = listOf(
             "x equals 10" to "Is, 10",
@@ -264,7 +355,7 @@ class GeminiTest {
     }
 
     @Test
-    fun `should tokenise expressions using LTE`() {
+    fun `should tokenise 'less than or equal to'`() {
         // Given
         val expressions = listOf(
             "x is less than or equal to 10" to "LessThanOrEqualTo, 10",
@@ -284,7 +375,7 @@ class GeminiTest {
     }
 
     @Test
-    fun `should tokenise expressions using GTE`() {
+    fun `should tokenise 'greater than or equal to'`() {
         // Given
         val expressions = listOf(
             "x is greater than or equal to 10" to "GreaterThanOrEqualTo, 10",
@@ -304,7 +395,7 @@ class GeminiTest {
     }
 
     @Test
-    fun `should tokenise expressions using 'is in case'`() {
+    fun `should tokenise 'is in case'`() {
         // Given
         val expressions = listOf(
             "x is available",
@@ -324,7 +415,7 @@ class GeminiTest {
     }
 
     @Test
-    fun `should tokenise expressions using 'is not in case'`() {
+    fun `should tokenise 'is not in case'`() {
         // Given
         val expressions = listOf(
             "x is not available",
@@ -343,7 +434,7 @@ class GeminiTest {
     }
 
     @Test
-    fun `should tokenise expressions using 'is increasing'`() {
+    fun `should tokenise 'is increasing'`() {
         // Given
         val expressions = listOf(
             "x is getting bigger",

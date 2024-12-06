@@ -106,3 +106,22 @@ every x result contains abc
 EXPECTED: NoContain, "abc"
 no x contain abc
 none of the x contain "abc"
+
+EXPECTED: AllNumeric
+all x are numbers
+every x result is numeric
+
+EXPECTED: NoNumeric
+no x is a number
+none of the x is numeric
+
+EXPECTED: AtMostHigh, 20
+at most 20 x are high
+no more than 20 x are elevated
+
+EXPECTED: AtMostLow, 22
+at most 2 x are low
+
+EXPECTED: AtMostGreaterThanOrEqualTo, 15, 7.5
+at most 15 x are greater than or equal to 7.5
+no more than 15 x greater than or equal to 7.5

@@ -2,7 +2,10 @@ package io.rippledown.model.condition
 
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.episodic.predicate.*
-import io.rippledown.model.condition.episodic.signature.*
+import io.rippledown.model.condition.episodic.signature.All
+import io.rippledown.model.condition.episodic.signature.AtMost
+import io.rippledown.model.condition.episodic.signature.Current
+import io.rippledown.model.condition.episodic.signature.No
 import io.rippledown.model.condition.series.Decreasing
 import io.rippledown.model.condition.series.Increasing
 import io.rippledown.model.condition.structural.IsAbsentFromCase
@@ -10,7 +13,6 @@ import io.rippledown.model.condition.structural.IsPresentInCase
 import io.rippledown.model.condition.structural.IsSingleEpisodeCase
 
 class ConditionConstructors {
-
 
     fun Low(attribute: Attribute, userExpression: String) =
         EpisodicCondition(null, attribute, Low, Current, userExpression)
@@ -75,7 +77,6 @@ class ConditionConstructors {
         cutoff: String
     ) = EpisodicCondition(null, attribute, NormalOrHighByAtMostSomePercentage(cutoff.toInt()), Current, userExpression)
 
-
     fun SingleEpisodeCase(userExpression: String) = CaseStructureCondition(null, IsSingleEpisodeCase, userExpression)
 
     fun AllNormal(attribute: Attribute, userExpression: String) =
@@ -108,9 +109,18 @@ class ConditionConstructors {
     fun NoNumeric(attribute: Attribute, userExpression: String) =
         EpisodicCondition(null, attribute, IsNumeric, No, userExpression)
 
-    fun AtLeastNormal(attribute: Attribute, userExpression: String, count: Int) =
-        EpisodicCondition(null, attribute, Normal, AtLeast(count), userExpression)
+    fun AtMostHigh(attribute: Attribute, userExpression: String, count: String) =
+        EpisodicCondition(null, attribute, High, AtMost(count.toInt()), userExpression)
 
-    fun AtMostHigh(attribute: Attribute, userExpression: String, count: Int) =
-        EpisodicCondition(null, attribute, IsNumeric, AtMost(count), userExpression)
+    fun AtMostLow(attribute: Attribute, userExpression: String, count: String) =
+        EpisodicCondition(null, attribute, Low, AtMost(count.toInt()), userExpression)
+
+    fun AtMostGreaterThanOrEqualTo(attribute: Attribute, userExpression: String, count: String, cutoff: String) =
+        EpisodicCondition(
+            null,
+            attribute,
+            GreaterThanOrEquals(cutoff.toDoubleOrNull()!!),
+            AtMost(count.toInt()),
+            userExpression
+        )
 }
