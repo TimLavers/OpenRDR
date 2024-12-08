@@ -19,18 +19,28 @@ class ConditionGeneratorTest {
     fun setUp() {
         attributeFor = mockk<AttributeFor>()
         attribute = mockk<Attribute>()
-        every { attributeFor(any()) } returns attribute
+        every { attributeFor("x") } returns attribute
         generator = ConditionGenerator(attributeFor)
     }
 
     @Test
     fun `should return null if no tokens`() {
-        generator.conditionFor("", "") shouldBe null
+        generator.conditionFor(attributeName = "x", "") shouldBe null
+    }
+
+    @Test
+    fun `should return a no-parameter condition from a token`() {
+        val userExpression = "single episode case"
+        with(constructors) {
+            generator.conditionFor(attributeName = "", userExpression, "SingleEpisodeCase") shouldBe SingleEpisodeCase(
+                userExpression
+            )
+        }
     }
 
     @Test
     fun `should generate one-parameter conditions from tokens`() {
-        val attributeName = "waves"
+        val attributeName = "x"
         val userExpression = "whatever the user entered"
         with(constructors) {
             generator.conditionFor(attributeName, userExpression, "Low") shouldBe Low(attribute, userExpression)
@@ -63,27 +73,42 @@ class ConditionGeneratorTest {
     fun `should generate two-parameter conditions from tokens`() {
         val userExpression = "whatever the user entered"
         with(constructors) {
-            generator.conditionFor("", userExpression, "Is", "1.1") shouldBe Is(
+            generator.conditionFor(attributeName = "x", userExpression, "Is", "1.1") shouldBe Is(
                 attribute,
                 userExpression = userExpression,
                 text = "1.1"
             )
-            generator.conditionFor("", userExpression, "Contains", "diabetic") shouldBe Contains(
+            generator.conditionFor(attributeName = "x", userExpression, "Contains", "diabetic") shouldBe Contains(
                 attribute,
                 userExpression = userExpression,
                 text = "diabetic"
             )
-            generator.conditionFor("", userExpression, "DoesNotContain", "diabetic") shouldBe DoesNotContain(
+            generator.conditionFor(
+                attributeName = "x",
+                userExpression,
+                "DoesNotContain",
+                "diabetic"
+            ) shouldBe DoesNotContain(
                 attribute,
                 userExpression = userExpression,
                 text = "diabetic"
             )
-            generator.conditionFor("", userExpression, "GreaterThanOrEqualTo", "3.14") shouldBe GreaterThanOrEqualTo(
+            generator.conditionFor(
+                attributeName = "x",
+                userExpression,
+                "GreaterThanOrEqualTo",
+                "3.14"
+            ) shouldBe GreaterThanOrEqualTo(
                 attribute,
                 userExpression = userExpression,
                 d = "3.14"
             )
-            generator.conditionFor("", userExpression, "LessThanOrEqualTo", "3.14") shouldBe LessThanOrEqualTo(
+            generator.conditionFor(
+                attributeName = "x",
+                userExpression,
+                "LessThanOrEqualTo",
+                "3.14"
+            ) shouldBe LessThanOrEqualTo(
                 attribute,
                 userExpression = userExpression,
                 d = "3.14"

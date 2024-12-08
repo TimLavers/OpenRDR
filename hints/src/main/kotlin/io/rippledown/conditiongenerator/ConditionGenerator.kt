@@ -1,7 +1,8 @@
 package io.rippledown.conditiongenerator
 
 import io.rippledown.expressionparser.AttributeFor
-import io.rippledown.model.condition.*
+import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.ConditionConstructors
 import kotlin.reflect.full.declaredFunctions
 
 class ConditionGenerator(private val attributeFor: AttributeFor) {
@@ -20,11 +21,15 @@ class ConditionGenerator(private val attributeFor: AttributeFor) {
     fun conditionFor(attributeName: String, userExpression: String, vararg tokens: String): Condition? {
         if (tokens.isEmpty()) return null
         val functionName = tokens[0]
-        val attribute = attributeFor(attributeName)
 
-        //Create the function's parameters by replacing the function name in the array of tokens with the attribute,
+        //Create the function's parameters by replacing the function name in the array of tokens with the attribute, if there was one,
         //followed by the user expression, followed by the rest of the tokens
-        val parameters = arrayOf(attribute, userExpression, *tokens.drop(1).toTypedArray())
+        val parameters = if (attributeName.isNotBlank()) {
+            val attribute = attributeFor(attributeName)
+            arrayOf(attribute, userExpression, *tokens.drop(1).toTypedArray())
+        } else {
+            arrayOf(userExpression, *tokens.drop(1).toTypedArray())
+        }
         return callFunctionByName(functionName, *parameters)
     }
 
