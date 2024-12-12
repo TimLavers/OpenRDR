@@ -33,20 +33,15 @@ fun ApplicationBar(kbInfo: KBInfo?, handler: AppBarHandler) {
     }.testTag(APPLICATION_BAR_ID)) {
 
         Row {
-            Text(
-                style = MaterialTheme.typography.h6,
-                text = MAIN_HEADING,
-                color = colors.onPrimary,
-                fontWeight = Bold,
-                modifier = Modifier
-                    .padding(10.dp)
-                    .testTag(MAIN_HEADING_ID)
-                    .semantics {
-                        contentDescription = MAIN_HEADING
-                    }
-            )
+            ApplicationNameDisplay()
 
-            //Simplify the ApplicationBar by removing the KBControl if a rule session is in progress
+            if (kbInfo != null) {
+                KbNameDisplay(kbInfo)
+                // Don't show menus if a rule session is in progress
+                if (!handler.isRuleSessionInProgress) {
+                    KbEditControl(kbInfo)
+                }
+            }
             if (!handler.isRuleSessionInProgress) {
                 KBControl(kbInfo, handler)
             }

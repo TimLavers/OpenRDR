@@ -1,10 +1,7 @@
 package io.rippledown.appbar
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.MaterialTheme.colors
 import androidx.compose.material.icons.Icons.Default
@@ -156,7 +153,7 @@ fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
             })
         }
     }
-    Row(
+    Box(
         Modifier
             .semantics {
                 contentDescription = KB_CONTROL_DESCRIPTION
@@ -179,17 +176,6 @@ fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
         }
 
         Spacer(Modifier.width(4.dp))
-        Text(
-            text = kbName(),
-            color = colors.onPrimary,
-            textAlign = Start,
-            modifier = Modifier
-                .weight(1f)
-                .testTag(KB_SELECTOR_ID)
-                .semantics {
-                    contentDescription = KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION
-                }
-        )
 
         DropdownMenu(
             expanded = expanded,

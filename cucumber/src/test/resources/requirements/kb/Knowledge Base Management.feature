@@ -56,3 +56,21 @@ Feature: Knowledge Base management
     Then I select the Knowledge Base named Stuff
     Then the displayed KB name is now Stuff
     And stop the client application
+
+  @single
+  Scenario: The description for a KB can be set when the KB is created
+    Given A Knowledge Base called Thyroids has been created
+    And I start the client application
+    And the displayed KB name is Thyroids
+    And pause for 40 seconds
+    When I create a Knowledge Base with the name Glucose and description:
+    """
+    Whatever
+    """
+    Then the displayed KB name is now Glucose
+    And the KB description is:
+    """
+    Whatever
+    """
+    And stop the client application
+
