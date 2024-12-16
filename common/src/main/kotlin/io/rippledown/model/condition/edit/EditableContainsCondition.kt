@@ -20,7 +20,9 @@ data class EditableContainsCondition(val attribute: Attribute,
 
     override fun editableValue() = initialEditableValue
 
-    override fun condition(value: String) = EpisodicCondition(attribute, Contains(value), signature)
+    override fun condition(value: String) =
+        EpisodicCondition(attribute = attribute, predicate = Contains(value), signature = signature)
 
-    override fun prerequisite() = EpisodicCondition(attribute, IsNotBlank, signature)
+    override fun prerequisite() =
+        EpisodicCondition(attribute = attribute, predicate = IsNotBlank, signature = signature)
 }
