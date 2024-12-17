@@ -6,6 +6,10 @@ const val EXPECTED_PREDICATE = "Expected predicate: "
 const val INPUT = "Input: "
 const val OUTPUT = "Output: "
 
+/**
+ * Generate a list of input/output examples for the LLM from a training set file where there
+ * is one expected output corresponding to several inputs.
+ */
 fun trainingSet(fileName: String): String {
     val lines = object {}.javaClass.getResourceAsStream(fileName)?.bufferedReader()!!.readLines()
     var outputLine = ""
@@ -16,7 +20,10 @@ fun trainingSet(fileName: String): String {
                     .replace(EXPECTED_PREDICATE, "", ignoreCase = true)
                     .split(",")
                     .map { it.trim() }
-                val spec = spec(predicateName = components[0], predicateParameters = components.drop(1))
+                val spec = spec(
+                    predicateName = components[0],
+                    predicateParameters = components.drop(1)
+                )
                 outputLine = OUTPUT + spec
                 null
             } else {
