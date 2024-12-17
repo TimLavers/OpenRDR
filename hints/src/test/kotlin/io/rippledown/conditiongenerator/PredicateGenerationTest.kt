@@ -1,11 +1,7 @@
 package io.rippledown.conditiongenerator
 
 import io.kotest.matchers.shouldBe
-import io.mockk.every
 import io.mockk.mockk
-import io.rippledown.expressionparser.AttributeFor
-import io.rippledown.model.Attribute
-import io.rippledown.model.condition.ConditionConstructors
 import io.rippledown.model.condition.episodic.predicate.Contains
 import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals
 import io.rippledown.model.condition.episodic.predicate.High
@@ -14,17 +10,11 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class PredicateGenerationTest {
-    private lateinit var attributeFor: AttributeFor
-    private lateinit var attribute: Attribute
     private lateinit var generator: ConditionGenerator
-    private val constructors = ConditionConstructors()
 
     @BeforeEach
     fun setUp() {
-        attributeFor = mockk<AttributeFor>()
-        attribute = mockk<Attribute>()
-        every { attributeFor("x") } returns attribute
-        generator = ConditionGenerator(attributeFor)
+        generator = ConditionGenerator(mockk())
     }
 
     @Test

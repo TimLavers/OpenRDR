@@ -1,127 +1,127 @@
-EXPECTED: High
+EXPECTED PREDICATE: High
 x is high
 x is elevated
 elevated x
 excessive x
 
-EXPECTED: Low
+EXPECTED PREDICATE: Low
 reduced x
 lowered x
 x is below normal
 
-EXPECTED: Normal
+EXPECTED PREDICATE: Normal
 x is within range
 x is fine
 x is normal
 x is not high and not low
 
-EXPECTED: Is, y
+EXPECTED PREDICATE: Is, y
 x is equal to y
 x is the same as y
 
-EXPECTED: Is, 1.5
+EXPECTED PREDICATE: Is, 1.5
 x = 1.5
 x == 1.5
 
-EXPECTED: Is, "abc"
+EXPECTED PREDICATE: Is, "abc"
 x is abc
 x is "abc"
 
-EXPECTED: Is, "pending"
+EXPECTED PREDICATE: Is, "pending"
 x equals pending
 
-EXPECTED: LessThanOrEqualTo, y
+EXPECTED PREDICATE: LessThanOrEqualTo, y
 x is less than or equal to y
 x is not greater than y
 x is no more than y
 
-EXPECTED: GreaterThanOrEqualTo, y
+EXPECTED PREDICATE: GreaterThanOrEqualTo, y
 x is greater than or equal to y
 x is not less than y
 
-EXPECTED: Present
+EXPECTED PREDICATE: Present
 x is present
 x detected
 
-EXPECTED: Absent
+EXPECTED PREDICATE: Absent
 x is not present
 x not detected
 x missing
 no value for x
 
-EXPECTED: Increasing
+EXPECTED PREDICATE: Increasing
 x is increasing
 
-EXPECTED: Numeric
+EXPECTED PREDICATE: Numeric
 x is a number
 x is an integer
 
-EXPECTED: SlightlyLow, 20
+EXPECTED PREDICATE: SlightlyLow, 20
 x no more than 20 percent below normal
 x is low by no more than 20 percent
 
-EXPECTED: NormalOrSlightlyLow, 20
+EXPECTED PREDICATE: NormalOrSlightlyLow, 20
 x is normal or not more than 20 percent below normal
 
-EXPECTED: SlightlyHigh, 20
+EXPECTED PREDICATE: SlightlyHigh, 20
 x no more than 20 percent above normal
 x is high by no more than 20 percent
 
-EXPECTED: NormalOrSlightlyHigh, 20
+EXPECTED PREDICATE: NormalOrSlightlyHigh, 20
 x is normal or not more than 20 percent above normal
 
-EXPECTED: SingleEpisodeCase
+EXPECTED PREDICATE: SingleEpisodeCase
 case is for a single date
 case has one episode
 
-EXPECTED: AllNormal
+EXPECTED PREDICATE: AllNormal
 all x are normal
 all x are within range
 
-EXPECTED: NoNormal
+EXPECTED PREDICATE: NoNormal
 no x are normal
 all x are abnormal
 
-EXPECTED: AllHigh
+EXPECTED PREDICATE: AllHigh
 all x are high
 all x are above the normal range
 
-EXPECTED: NoHigh
+EXPECTED PREDICATE: NoHigh
 no x are high
 none of the x are elevated
 
-EXPECTED: AllLow
+EXPECTED PREDICATE: AllLow
 all x are low
 all x are below the normal range
 
-EXPECTED: NoLow
+EXPECTED PREDICATE: NoLow
 no x are low
 none of the x are lowered
 
-EXPECTED: AllContain, "abc"
+EXPECTED PREDICATE: AllContain, "abc"
 all x contain abc
 all x contains "abc"
 every x result contains abc
 
-EXPECTED: NoContain, "abc"
+EXPECTED PREDICATE: NoContain, "abc"
 no x contain abc
 none of the x contain "abc"
 
-EXPECTED: AllNumeric
+EXPECTED PREDICATE: AllNumeric
 all x are numbers
 every x result is numeric
 
-EXPECTED: NoNumeric
+EXPECTED PREDICATE: NoNumeric
 no x is a number
 none of the x is numeric
 
-EXPECTED: AtMostHigh, 20
+EXPECTED PREDICATE: AtMostHigh, 20
 at most 20 x are high
 no more than 20 x are elevated
 
-EXPECTED: AtMostLow, 22
+EXPECTED PREDICATE: AtMostLow, 22
 at most 2 x are low
 
-EXPECTED: AtMostGreaterThanOrEqualTo, 15, 7.5
+EXPECTED PREDICATE: AtMostGreaterThanOrEqualTo, 15, 7.5
 at most 15 x are greater than or equal to 7.5
 no more than 15 x greater than or equal to 7.5

@@ -2,10 +2,104 @@ package io.rippledown.expressionparser
 
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
+import io.rippledown.conditiongenerator.ConditionSpecification
+import io.rippledown.conditiongenerator.FunctionSpecification
+import io.rippledown.conditiongenerator.spec
+import io.rippledown.llm.conditionSpecificationFor
+import io.rippledown.llm.tokensFor
 import org.junit.jupiter.api.Test
 
 //@Ignore("Run these tests individually - the free version of the Gemini API has a rate limit of 15 / minute")
 class GeminiTest {
+
+    @Test
+    fun `should generate 'high'`() {
+        // Given
+        val expressions = listOf(
+            "x is elevated",
+            "x is above the normal range",
+            "raised x",
+            "elevated x",
+            "high x"
+        )
+
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(predicateName = "High")
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'low'`() {
+        // Given
+        val expressions = listOf(
+            "x is lowered",
+            "low x",
+            "x is below the normal range"
+        )
+
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(predicateName = "Low")
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'normal'`() {
+        // Given
+        val expressions = listOf(
+            "x is OK",
+            "x is not high or low",
+            "x is within the normal range"
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            actual shouldBe spec(predicateName = "Normal")
+        }
+    }
+
+    //TODO.......................
+    @Test
+    fun `should generate 'Is'`() {
+        // Given
+        val expressions = listOf(
+            "x equals 10" to "Is, 10",
+            "x = 3.1" to "Is, 3.1",
+            "x == 3.1" to "Is, 3.1",
+            "x is the same as y" to "Is, y",
+            "x is equal to y" to "Is, y",
+            "x identical to y" to "Is, y",
+            "x equals \"abc\"" to "Is, \"abc\"",
+            "x equals abc" to "Is, \"abc\""
+        )
+        val spec = ConditionSpecification(
+            predicate = FunctionSpecification("Is", listOf()),
+            signature = FunctionSpecification("Current", listOf())
+        )
+
+        for ((entered, expected) in expressions) {
+            // When
+            val actual = tokensFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual.joinToString() shouldBe expected
+            }
+        }
+    }
 
     @Test
     fun `should tokenise 'at most greater than or equal to'`() {

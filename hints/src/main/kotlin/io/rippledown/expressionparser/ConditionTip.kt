@@ -14,8 +14,9 @@ class ConditionTip(attributeNames: Collection<String>, attributeFor: AttributeFo
     fun conditionFor(userText: String): Condition? {
         val expression = expressionConverter.insertPlaceholder(Expression(userText))
 
-        val tokens = tokensFor(expression.text)
-        return conditionGenerator.conditionFor(expression.attribute, userText, *tokens)
+//        val tokens = tokensFor(expression.text)
+//        return conditionGenerator.conditionFor(expression.attribute, userText, *tokens)
+        return null
     }
 
 }

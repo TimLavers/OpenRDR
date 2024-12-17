@@ -2,23 +2,17 @@ package io.rippledown.conditiongenerator
 
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
-import io.rippledown.expressionparser.AttributeFor
-import io.rippledown.model.Attribute
 import io.rippledown.model.condition.episodic.signature.AtLeast
 import io.rippledown.model.condition.episodic.signature.Current
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class SignatureGenerationTest {
-    private lateinit var attributeFor: AttributeFor
-    private lateinit var attribute: Attribute
     private lateinit var generator: ConditionGenerator
 
     @BeforeEach
     fun setUp() {
-        attributeFor = mockk<AttributeFor>()
-        attribute = mockk<Attribute>()
-        generator = ConditionGenerator(attributeFor)
+        generator = ConditionGenerator(mockk())
     }
 
     @Test

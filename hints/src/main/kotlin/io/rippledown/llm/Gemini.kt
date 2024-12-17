@@ -1,4 +1,4 @@
-package io.rippledown.expressionparser
+package io.rippledown.llm
 
 import dev.shreyaspatil.ai.client.generativeai.GenerativeModel
 import dev.shreyaspatil.ai.client.generativeai.type.BlockThreshold.NONE
@@ -6,6 +6,8 @@ import dev.shreyaspatil.ai.client.generativeai.type.GenerationConfig
 import dev.shreyaspatil.ai.client.generativeai.type.HarmCategory
 import dev.shreyaspatil.ai.client.generativeai.type.SafetySetting
 import dev.shreyaspatil.ai.client.generativeai.type.content
+import io.rippledown.conditiongenerator.ConditionSpecification
+import io.rippledown.conditiongenerator.fromJson
 import kotlinx.coroutines.runBlocking
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -40,24 +42,35 @@ fun noSafetySettings() =
             )
         }
 
-fun tokensFor(input: String): Array<String> {
+//todo remove
+fun tokensFor(input: String): List<String> {
+    return emptyList()
+}
+
+fun conditionSpecificationFor(input: String): ConditionSpecification? {
     val prompt = content {
-        text("Your task is to identify the components in an expression.")
-        text("Output the single component, or if several components, separate them by a comma.")
+        text("Your task is to create a json object from an expression.")
+        text("The json object should have two fields: predicate and signature.")
+        text("The predicate field should have two fields: name and parameters.")
+        text("The signature field should have two fields: name and parameters.")
+        text("The possible values for the predicate name are: Contains, DoesNotContain, Is, Low, High")
+        text("The possible values for the signature name are: All, Current, No, AtLeast, AtMost.")
+        text("There may be no parameter or just one parameter for the predicate.")
+        text("There may be no parameter or just one parameter for the signature.")
         text("Examples of expressions with the expected output are:")
         text(trainingSet)
         text("Here is the expression: $input")
-        text("Generate output without additional string.")
+        text("Generate output without a leading ```json or trailing ```.")
     }
 
-    val tokens = retry {
+    val json = retry {
         runBlocking {
             generativeModel.generateContent(prompt).text
         }
     }
-    return if (tokens != null) {
-        tokens.trim().split(", ").toTypedArray()
-    } else emptyArray()
+    return if (json != null) {
+        fromJson(json)
+    } else null
 }
 
 /**
