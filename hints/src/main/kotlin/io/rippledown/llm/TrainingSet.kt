@@ -8,7 +8,12 @@ const val OUTPUT = "Output: "
 
 /**
  * Generate a list of input/output examples for the LLM from a training set file where there
- * is one expected output corresponding to several inputs.
+ * is one expected output corresponding to several inputs. For example:
+ *
+ * EXPECTED PREDICATE: High
+ * elevated x
+ * excessive x
+ * x is high
  */
 fun trainingSet(fileName: String): String {
     val lines = object {}.javaClass.getResourceAsStream(fileName)?.bufferedReader()!!.readLines()
