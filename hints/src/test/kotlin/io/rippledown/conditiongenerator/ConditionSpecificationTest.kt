@@ -9,7 +9,7 @@ class ConditionSpecificationTest {
         // Given
         val json = """
             {
-              "predicate":{"name":"GreaterThanOrEqualTo","parameters":["3.14"]},
+              "predicate":{"name":"GreaterThanOrEquals","parameters":["3.14"]},
               "signature":{"name":"AtMost","parameters":["5"]}
             }
             """.trimIndent()
@@ -19,7 +19,7 @@ class ConditionSpecificationTest {
 
         // Then
         conditionStructure shouldBe ConditionSpecification(
-            FunctionSpecification("GreaterThanOrEqualTo", listOf("3.14")),
+            FunctionSpecification("GreaterThanOrEquals", listOf("3.14")),
             FunctionSpecification("AtMost", listOf("5"))
         )
     }

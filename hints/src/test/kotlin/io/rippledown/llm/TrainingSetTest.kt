@@ -1,8 +1,7 @@
-package io.rippledown.expressionparser
+package io.rippledown.llm
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.conditiongenerator.spec
-import io.rippledown.llm.trainingSet
 import org.junit.jupiter.api.Test
 
 class TrainingSetTest {

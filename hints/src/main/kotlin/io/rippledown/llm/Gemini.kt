@@ -47,13 +47,14 @@ fun tokensFor(input: String): List<String> {
     return emptyList()
 }
 
-fun conditionSpecificationFor(input: String): ConditionSpecification? {
+fun conditionSpecificationFor(input: String): ConditionSpecification {
     val prompt = content {
         text("Your task is to create a json object from an expression.")
         text("The json object should have two fields: predicate and signature.")
         text("The predicate field should have two fields: name and parameters.")
         text("The signature field should have two fields: name and parameters.")
-        text("The possible values for the predicate name are: Contains, DoesNotContain, Is, Low, High")
+        text("The possible values for the predicate name are: Contains, DoesNotContain, Is, Low, High, Normal, GreaterThanOrEquals, LessThanOrEquals.")
+        text("The predicate name should be blank if the expression does not refer to one of the possible predicates.")
         text("The possible values for the signature name are: All, Current, No, AtLeast, AtMost.")
         text("There may be no parameter or just one parameter for the predicate.")
         text("There may be no parameter or just one parameter for the signature.")
@@ -68,9 +69,7 @@ fun conditionSpecificationFor(input: String): ConditionSpecification? {
             generativeModel.generateContent(prompt).text
         }
     }
-    return if (json != null) {
-        fromJson(json)
-    } else null
+    return if (json != null) fromJson(json) else ConditionSpecification()
 }
 
 /**
