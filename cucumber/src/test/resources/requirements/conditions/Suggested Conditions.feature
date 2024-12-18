@@ -1,7 +1,6 @@
 Feature: When building a rule, the user is provided with candidate conditions that
   can either be directly added or modified and then added.
 
-  @single
   Scenario: If a suggested condition is not editable, then clicking it
   adds it to the list of conditions for the rule.
     Given case Bondi is provided having data:
@@ -12,7 +11,6 @@ Feature: When building a rule, the user is provided with candidate conditions th
     And I click the suggested condition "Sun is \"hot\""
     Then the selected conditions should be:
       | Sun is "hot" |
-    And pause
     And stop the client application
 
   Scenario: When a suggested condition is selected, it is removed from the list of suggestions.
