@@ -42,11 +42,6 @@ fun noSafetySettings() =
             )
         }
 
-//todo remove
-fun tokensFor(input: String): List<String> {
-    return emptyList()
-}
-
 fun conditionSpecificationFor(input: String): ConditionSpecification {
     val prompt = content {
         text("Your task is to create a json object from an expression.")

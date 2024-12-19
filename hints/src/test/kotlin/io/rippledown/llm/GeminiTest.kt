@@ -16,7 +16,8 @@ class GeminiTest {
             "x is above the normal range",
             "raised x",
             "elevated x",
-            "high x"
+            "high x",
+            "x es mejor que el rango normal"
         )
 
         for (entered in expressions) {
@@ -36,7 +37,9 @@ class GeminiTest {
         val expressions = listOf(
             "x is lowered",
             "low x",
-            "x is below the normal range"
+            "x is below the normal range",
+            "x es menor que el rango normal",
+            "x低於正常範圍"
         )
 
         for (entered in expressions) {
