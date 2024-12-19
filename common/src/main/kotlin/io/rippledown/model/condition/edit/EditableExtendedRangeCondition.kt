@@ -1,6 +1,6 @@
 package io.rippledown.model.condition.edit
 
-import io.rippledown.model.*
+import io.rippledown.model.Attribute
 import io.rippledown.model.condition.And
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.EpisodicCondition
@@ -24,7 +24,7 @@ sealed class EditableExtendedRangeCondition(val attribute: Attribute, val signat
     override fun condition(value: String): Condition {
         require(Integer.valid(value))
         val limit = Integer.convert(value) as Int
-        return EpisodicCondition(attribute, createRangePredicate(limit), signature)
+        return EpisodicCondition(attribute = attribute, predicate = createRangePredicate(limit), signature = signature)
     }
 
     override fun prerequisite(): Condition {

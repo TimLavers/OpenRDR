@@ -1,6 +1,7 @@
 package io.rippledown.expressionparser
 
 import io.rippledown.conditiongenerator.ConditionGenerator
+import io.rippledown.llm.conditionSpecificationFor
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.Condition
 
@@ -13,9 +14,11 @@ class ConditionTip(attributeNames: Collection<String>, attributeFor: AttributeFo
 
     fun conditionFor(userText: String): Condition? {
         val expression = expressionConverter.insertPlaceholder(Expression(userText))
-
-        val tokens = tokensFor(expression.text)
-        return conditionGenerator.conditionFor(expression.attribute, userText, *tokens)
+        val conditionSpecification = conditionSpecificationFor(expression.text)
+        return if (conditionSpecification.predicate.name.isNotBlank()) {
+            conditionGenerator.conditionFor(expression.attribute, userText, conditionSpecification)
+        } else {
+            null
+        }
     }
-
 }
