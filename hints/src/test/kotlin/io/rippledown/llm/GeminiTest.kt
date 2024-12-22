@@ -70,288 +70,458 @@ class GeminiTest {
         }
     }
 
-    //TODO.......................
+    @Test
+    fun `should generate 'Is' with number`() {
+        // Given
+        val expressions = listOf(
+            "x equals 3.1",
+            "x = 3.1",
+            "x == 3.1",
+            "x is equal to 3.1",
+        )
 
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(predicateName = "Is", predicateParameters = listOf("3.1"))
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'Is' with unquoted text parameter`() {
+        // Given
+        val param = "abc"
+        val expressions = listOf(
+            "x equals $param",
+            "x = $param",
+            "x == $param",
+            "x is the same as $param",
+            "x is equal to $param",
+            "x identical to $param",
+        )
+
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(predicateName = "Is", predicateParameters = listOf("\"$param\""))
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'Is' with quoted text parameter`() {
+        // Given
+        val param = "\"abc\""
+        val expressions = listOf(
+            "x equals $param",
+            "x = $param",
+            "x == $param",
+            "x is the same as $param",
+            "x is equal to $param",
+            "x identical to $param",
+        )
+
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(predicateName = "Is", predicateParameters = listOf(param))
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'greater than or equals'`() {
+        // Given
+        val expressions = listOf(
+            "x is greater than or equal to 10.0",
+            "x no less than 10.0",
+            "x is greater than or equal to 10.0"
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(predicateName = "GreaterThanOrEquals", predicateParameters = listOf("10.0"))
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'less than or equals'`() {
+        // Given
+        val expressions = listOf(
+            "x is less than or equal to 10.0",
+            "x no more than 10.0",
+            "x is smaller than or equal to 10.0"
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(predicateName = "LessThanOrEquals", predicateParameters = listOf("10.0"))
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'at most greater than or equals'`() {
+        // Given
+        val expressions = listOf(
+            "at most 42 x are greater than or equal to 10.1",
+            "no more than 42 x results greater than or equal to 10.1",
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(
+                    predicateName = "GreaterThanOrEquals", predicateParameters = listOf("10.1"),
+                    signatureName = "AtMost", signatureParameters = listOf("42")
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'at most less than or equals'`() {
+        // Given
+        val expressions = listOf(
+            "at most 42 x are less than or equal to 10.1",
+            "no more than 42 x results are less than or equal to 10.1",
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(
+                    predicateName = "LessThanOrEquals", predicateParameters = listOf("10.1"),
+                    signatureName = "AtMost", signatureParameters = listOf("42")
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'at most low'`() {
+        // Given
+        val expressions = listOf(
+            "at most 42 x are low",
+            "there are at most 42 x results that are lowered",
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(
+                    predicateName = "Low",
+                    signatureName = "AtMost",
+                    signatureParameters = listOf("42")
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'at most high'`() {
+        // Given
+        val expressions = listOf(
+            "at most 42 x are high",
+            "there are at most 42 x results that are elevated",
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(
+                    predicateName = "High",
+                    signatureName = "AtMost",
+                    signatureParameters = listOf("42")
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'is numeric'`() {
+        // Given
+        val expressions = listOf(
+            "x is a number",
+            "numeric x",
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(predicateName = "IsNumeric")
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'all numeric'`() {
+        // Given
+        val expressions = listOf(
+            "all x are numeric",
+            "every x is a number"
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(predicateName = "IsNumeric", signatureName = "All")
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'no numeric'`() {
+        // Given
+        val expressions = listOf(
+            "no x is numeric",
+            "none of the x are numbers"
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(predicateName = "IsNumeric", signatureName = "No")
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'contains'`() {
+        // Given
+        val expressions = listOf(
+            "x contain pending",
+            "x contains \"pending\""
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(predicateName = "Contains", predicateParameters = listOf("\"pending\""))
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'all contain'`() {
+        // Given
+        val expressions = listOf(
+            "all x contain pending",
+            "every x includes \"pending\""
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(
+                    predicateName = "Contains",
+                    predicateParameters = listOf("\"pending\""),
+                    signatureName = "All"
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'does not contain'`() {
+        // Given
+        val expressions = listOf(
+            "x does not contain pending",
+            "x does not include \"pending\""
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(predicateName = "DoesNotContain", predicateParameters = listOf("\"pending\""))
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'no contains'`() {
+        // Given
+        val expressions = listOf(
+            "no x includes pending",
+            "none of the x contain \"pending\"",
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(
+                    predicateName = "Contains", predicateParameters = listOf("\"pending\""),
+                    signatureName = "No"
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'all low'`() {
+        // Given
+        val expressions = listOf(
+            "all x are low",
+            "every x is low",
+            "all x are below the normal range",
+            "all x are lowered"
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(predicateName = "Low", signatureName = "All")
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'no low'`() {
+        // Given
+        val expressions = listOf(
+            "no x are low",
+            "no lowered x",
+            "none of the x are below the normal range",
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(predicateName = "Low", signatureName = "No")
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'all high'`() {
+        // Given
+        val expressions = listOf(
+            "all x are high",
+            "every x is high",
+            "all x are above the normal range",
+            "all x are elevated",
+            "all x are raised"
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(predicateName = "High", signatureName = "All")
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'no high'`() {
+        // Given
+        val expressions = listOf(
+            "no x are high",
+            "no elevated x",
+            "none of the x are above the normal range",
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(predicateName = "High", signatureName = "No")
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'all normal'`() {
+        // Given
+        val expressions = listOf(
+            "all x are normal",
+            "every x is normal",
+            "all x are within the normal range",
+            "all x are OK",
+            "all x are not high or low"
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(predicateName = "Normal", signatureName = "All")
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'no normal'`() {
+        // Given
+        val expressions = listOf(
+            "no x are normal",
+            "every x is abnormal",
+            "none of the x are within the normal range",
+            "no x are OK",
+            "all x results are abnormal"
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(predicateName = "Normal", signatureName = "No")
+            }
+        }
+    }
+
+    //todo .....
     /*
 
         @Test
-        fun `should generate 'Is'`() {
-            // Given
-            val expressions = listOf(
-                "x equals 10" to "Is, 10",
-                "x = 3.1" to "Is, 3.1",
-                "x == 3.1" to "Is, 3.1",
-                "x is the same as y" to "Is, y",
-                "x is equal to y" to "Is, y",
-                "x identical to y" to "Is, y",
-                "x equals \"abc\"" to "Is, \"abc\"",
-                "x equals abc" to "Is, \"abc\""
-            )
-            val spec = ConditionSpecification(
-                predicate = FunctionSpecification("Is", listOf()),
-                signature = FunctionSpecification("Current", listOf())
-            )
-
-            for ((entered, expected) in expressions) {
-                // When
-                val actual = tokensFor(entered)
-
-                // Then
-                withClue("Entered '$entered'") {
-                    actual.joinToString() shouldBe expected
-                }
-            }
-        }
-
-        @Test
-        fun `should tokenise 'at most greater than or equal to'`() {
-            // Given
-            val expressions = listOf(
-                "at most 42 x are greater than or equal to 10.1",
-                "no more than 42 x results greater than or equal to 10.1",
-            )
-            for (entered in expressions) {
-                // When
-                val actual = tokensFor(entered)
-
-                // Then
-                withClue("Entered '$entered'") {
-                    actual.joinToString() shouldBe "AtMostGreaterThanOrEqualTo, 42, 10.1"
-                }
-            }
-        }
-
-        @Test
-        fun `should tokenise 'at most low'`() {
-            // Given
-            val expressions = listOf(
-                "at most 42 x are low",
-                "there are at most 42 x results that are lowered",
-            )
-            for (entered in expressions) {
-                // When
-                val actual = tokensFor(entered)
-
-                // Then
-                withClue("Entered '$entered'") {
-                    actual.joinToString() shouldBe "AtMostLow, 42"
-                }
-            }
-        }
-
-        @Test
-        fun `should tokenise 'at most high'`() {
-            // Given
-            val expressions = listOf(
-                "at most 42 x are high",
-                "there are at most 42 x results that are elevated",
-            )
-            for (entered in expressions) {
-                // When
-                val actual = tokensFor(entered)
-
-                // Then
-                withClue("Entered '$entered'") {
-                    actual.joinToString() shouldBe "AtMostHigh, 42"
-                }
-            }
-        }
-
-        @Test
-        fun `should tokenise 'all numeric'`() {
-            // Given
-            val expressions = listOf(
-                "all x are numeric",
-                "every x is a number"
-            )
-            for (entered in expressions) {
-                // When
-                val actual = tokensFor(entered)
-
-                // Then
-                withClue("Entered '$entered'") {
-                    actual.joinToString() shouldBe "AllNumeric"
-                }
-            }
-        }
-
-        @Test
-        fun `should tokenise 'no numeric'`() {
-            // Given
-            val expressions = listOf(
-                "no x is numeric",
-                "none of the x are numbers"
-            )
-            for (entered in expressions) {
-                // When
-                val actual = tokensFor(entered)
-
-                // Then
-                withClue("Entered '$entered'") {
-                    actual.joinToString() shouldBe "NoNumeric"
-                }
-            }
-        }
-
-        @Test
-        fun `should tokenise 'all contain'`() {
-            // Given
-            val expressions = listOf(
-                "all x contain pending",
-                "every x contains \"pending\""
-            )
-            for (entered in expressions) {
-                // When
-                val actual = tokensFor(entered)
-
-                // Then
-                withClue("Entered '$entered'") {
-                    actual.joinToString() shouldBe "AllContain, \"pending\""
-                }
-            }
-        }
-
-        @Test
-        fun `should tokenise 'no contain'`() {
-            // Given
-            val expressions = listOf(
-                "no x contain pending",
-                "none of the x contain \"pending\"",
-            )
-            for (entered in expressions) {
-                // When
-                val actual = tokensFor(entered)
-
-                // Then
-                withClue("Entered '$entered'") {
-                    actual.joinToString() shouldBe "NoContain, \"pending\""
-                }
-            }
-        }
-
-        @Test
-        fun `should tokenise 'all low'`() {
-            // Given
-            val expressions = listOf(
-                "all x are low",
-                "every x is low",
-                "all x are below the normal range",
-                "all x are lowered"
-            )
-            for (entered in expressions) {
-                // When
-                val actual = tokensFor(entered)
-
-                // Then
-                withClue("Entered '$entered'") {
-                    actual.joinToString() shouldBe "AllLow"
-                }
-            }
-        }
-
-        @Test
-        fun `should tokenise 'no low'`() {
-            // Given
-            val expressions = listOf(
-                "no x are low",
-                "no lowered x",
-                "none of the x are below the normal range",
-            )
-            for (entered in expressions) {
-                // When
-                val actual = tokensFor(entered)
-
-                // Then
-                withClue("Entered '$entered'") {
-                    actual.joinToString() shouldBe "NoLow"
-                }
-            }
-        }
-
-        @Test
-        fun `should tokenise 'all high'`() {
-            // Given
-            val expressions = listOf(
-                "all x are high",
-                "every x is high",
-                "all x are above the normal range",
-                "all x are elevated",
-                "all x are raised"
-            )
-            for (entered in expressions) {
-                // When
-                val actual = tokensFor(entered)
-
-                // Then
-                withClue("Entered '$entered'") {
-                    actual.joinToString() shouldBe "AllHigh"
-                }
-            }
-        }
-
-        @Test
-        fun `should tokenise 'no high'`() {
-            // Given
-            val expressions = listOf(
-                "no x are high",
-                "no elevated x",
-                "none of the x are above the normal range",
-            )
-            for (entered in expressions) {
-                // When
-                val actual = tokensFor(entered)
-
-                // Then
-                withClue("Entered '$entered'") {
-                    actual.joinToString() shouldBe "NoHigh"
-                }
-            }
-        }
-
-        @Test
-        fun `should tokenise 'all normal'`() {
-            // Given
-            val expressions = listOf(
-                "all x are normal",
-                "every x is normal",
-                "all x are within the normal range",
-                "all x are OK",
-                "all x are not high or low"
-            )
-            for (entered in expressions) {
-                // When
-                val actual = tokensFor(entered)
-
-                // Then
-                withClue("Entered '$entered'") {
-                    actual.joinToString() shouldBe "AllNormal"
-                }
-            }
-        }
-
-        @Test
-        fun `should tokenise 'no normal'`() {
-            // Given
-            val expressions = listOf(
-                "no x are normal",
-                "every x is abnormal",
-                "none of the x are within the normal range",
-                "no x are OK",
-                "all x results are abnormal"
-            )
-            for (entered in expressions) {
-                // When
-                val actual = tokensFor(entered)
-
-                // Then
-                withClue("Entered '$entered'") {
-                    actual.joinToString() shouldBe "NoNormal"
-                }
-            }
-        }
-
-        @Test
-        fun `should tokenise 'case is for a single date'`() {
+        fun `should generate 'case is for a single date'`() {
             // Given
             val expressions = listOf(
                 "case has one date",
@@ -362,136 +532,23 @@ class GeminiTest {
             )
             for (entered in expressions) {
                 // When
-                val actual = tokensFor(entered)
+                val actual = conditionSpecificationFor(entered)
 
                 // Then
                 withClue("Entered '$entered'") {
-                    actual.joinToString() shouldBe "SingleEpisodeCase"
+                    actual shouldBe "SingleEpisodeCase"
                 }
             }
         }
 
-        @Test
-        fun `should tokenise 'high'`() {
-            // Given
-            val expressions = listOf(
-                "x is elevated",
-                "x is above the normal range",
-                "raised x",
-                "elevated x",
-                "high x"
-            )
-            for (entered in expressions) {
-                // When
-                val actual = tokensFor(entered)
 
-                // Then
-                withClue("Entered '$entered'") {
-                    actual.joinToString() shouldBe "High"
-                }
-            }
-        }
+
+
+
+
 
         @Test
-        fun `should tokenise 'low'`() {
-            // Given
-            val expressions = listOf(
-                "x is lowered",
-                "low x",
-                "x is below the normal range"
-            )
-            for (entered in expressions) {
-                // When
-                val actual = tokensFor(entered)
-
-                // Then
-                actual.joinToString() shouldBe "Low"
-            }
-        }
-
-        @Test
-        fun `should tokenise 'normal'`() {
-            // Given
-            val expressions = listOf(
-                "x is OK",
-                "x is not high or low",
-                "x is within the normal range"
-            )
-            for (entered in expressions) {
-                // When
-                val actual = tokensFor(entered)
-
-                // Then
-                actual.joinToString() shouldBe "Normal"
-            }
-        }
-
-        @Test
-        fun `should tokenise 'is'`() {
-            // Given
-            val expressions = listOf(
-                "x equals 10" to "Is, 10",
-                "x = 3.1" to "Is, 3.1",
-                "x == 3.1" to "Is, 3.1",
-                "x is the same as y" to "Is, y",
-                "x is equal to y" to "Is, y",
-                "x identical to y" to "Is, y",
-                "x equals \"abc\"" to "Is, \"abc\"",
-                "x equals abc" to "Is, \"abc\""
-            )
-            for ((entered, expected) in expressions) {
-                // When
-                val actual = tokensFor(entered)
-
-                // Then
-                withClue("Entered '$entered'") {
-                    actual.joinToString() shouldBe expected
-                }
-            }
-        }
-
-        @Test
-        fun `should tokenise 'less than or equal to'`() {
-            // Given
-            val expressions = listOf(
-                "x is less than or equal to 10" to "LessThanOrEqualTo, 10",
-                "x no more than y" to "LessThanOrEqualTo, y",
-                "x no more than 5.5" to "LessThanOrEqualTo, 5.5",
-                "x is smaller than or equal to y" to "LessThanOrEqualTo, y"
-            )
-            for ((entered, expected) in expressions) {
-                // When
-                val actual = tokensFor(entered)
-
-                // Then
-                withClue("Entered '$entered'") {
-                    actual.joinToString() shouldBe expected
-                }
-            }
-        }
-
-        @Test
-        fun `should tokenise 'greater than or equal to'`() {
-            // Given
-            val expressions = listOf(
-                "x is greater than or equal to 10" to "GreaterThanOrEqualTo, 10",
-                "x no less than y" to "GreaterThanOrEqualTo, y",
-                "x no less than 5.5" to "GreaterThanOrEqualTo, 5.5",
-                "x is greater than or equal to y" to "GreaterThanOrEqualTo, y"
-            )
-            for ((entered, expected) in expressions) {
-                // When
-                val actual = tokensFor(entered)
-
-                // Then
-                withClue("Entered '$entered'") {
-                    actual.joinToString() shouldBe expected
-                }
-            }
-        }
-
-        @Test
-        fun `should tokenise 'is in case'`() {
+        fun `should generate 'is in case'`() {
             // Given
             val expressions = listOf(
                 "x is available",
@@ -501,17 +558,17 @@ class GeminiTest {
             )
             for (entered in expressions) {
                 // When
-                val actual = tokensFor(entered)
+                val actual = conditionSpecificationFor(entered)
 
                 // Then
                 withClue("Entered '$entered'") {
-                    actual.joinToString() shouldBe "Present"
+                    actual shouldBe "Present"
                 }
             }
         }
 
         @Test
-        fun `should tokenise 'is not in case'`() {
+        fun `should generate 'is not in case'`() {
             // Given
             val expressions = listOf(
                 "x is not available",
@@ -520,17 +577,17 @@ class GeminiTest {
             )
             for (entered in expressions) {
                 // When
-                val actual = tokensFor(entered)
+                val actual = conditionSpecificationFor(entered)
 
                 // Then
                 withClue("Entered '$entered'") {
-                    actual.joinToString() shouldBe "Absent"
+                    actual shouldBe "Absent"
                 }
             }
         }
 
         @Test
-        fun `should tokenise 'is increasing'`() {
+        fun `should generate 'is increasing'`() {
             // Given
             val expressions = listOf(
                 "x is getting bigger",
@@ -544,11 +601,11 @@ class GeminiTest {
             )
             for (entered in expressions) {
                 // When
-                val actual = tokensFor(entered)
+                val actual = conditionSpecificationFor(entered)
 
                 // Then
                 withClue("Entered '$entered'") {
-                    actual.joinToString() shouldBe "Increasing"
+                    actual shouldBe "Increasing"
                 }
             }
         }
