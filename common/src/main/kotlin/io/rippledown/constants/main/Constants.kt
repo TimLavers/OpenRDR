@@ -22,6 +22,11 @@ const val IMPORT_KB_NAME_FIELD_DESCRIPTION = "Zip file path"
 const val IMPORT_KB_OK_BUTTON_DESCRIPTION = "Import KB confirmation button"
 const val IMPORT = "Import"
 
+const val EDIT_KB_DESCRIPTION_TEXT = "KB Description"
+const val EDIT_KB_DESCRIPTION_TEXT_DESCRIPTION = "KB Description"
+const val EDIT_KB_DESCRIPTION_OK_BUTTON_DESCRIPTION = "Edit KB description confirmation button"
+const val EDIT = "Edit"
+
 const val EXPORT_KB_TEXT = "Export KB"
 const val EXPORT_KB_NAME_FIELD_DESCRIPTION = "Zip file path"
 const val EXPORT_KB_OK_BUTTON_DESCRIPTION = "Export KB confirmation button"

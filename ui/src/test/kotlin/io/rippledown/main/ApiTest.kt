@@ -22,6 +22,10 @@ class ApiTest {
     val case = createCase("A", 1)
 
     @Test
+    fun kbDescriptionTest() = runTest {
+        v
+    }
+    @Test
     fun getCaseTest() = runTest {
         val config = config {
             returnCase = case

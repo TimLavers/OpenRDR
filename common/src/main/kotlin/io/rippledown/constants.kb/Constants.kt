@@ -1,8 +1,10 @@
 package io.rippledown.constants.kb
 
 
+const val KB_NAME_ID = "kb_name_id"
 const val KB_SELECTOR_ID = "kb_selector_id"
 const val KB_CONTROL_ID = "kb_control_id"
+const val NO_KB_SELECTED = "No KB selected"
 const val KB_CONTROL_DESCRIPTION = "Knowledge Base Management Controls"
 const val KB_CONTROL_DROPDOWN_DESCRIPTION = "Show controls menu"
 const val KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION = "Current Knowledge Base"
@@ -25,3 +27,11 @@ const val CANCEL_CREATE_BUTTON_ID = "cancel_kb_create"
 const val KB_IMPORT_DIALOG_CONTENT = "import_kb_dialog_content"
 const val KB_EXPORT_DIALOG_CONTENT = "export_kb_dialog_content"
 const val KB_CREATE_PROJECT_NAME_FIELD = "kb_create_project_name_field"
+
+const val EDIT_CURRENT_KB_CONTROL_DESCRIPTION = "Edit current KB Controls"
+const val EDIT_CURRENT_KB_CONTROL_DROPDOWN_DESCRIPTION = "Show edit current KB Controls"
+const val EDIT_CURRENT_KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION = "Edit Current Knowledge Base"
+
+const val EDIT_CURRENT_KB_CONTROL_ID = "edit_current_kb_control_id"
+const val EDIT_KB_DESCRIPTION_BUTTON_ID = "edit_kb_description_button_id"
+const val EDIT_KB_DESCRIPTION_BUTTON_TEXT = "KB description"

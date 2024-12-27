@@ -33,6 +33,14 @@ class KBTest {
     }
 
     @Test
+    fun descriptionTest() {
+        kb.description() shouldBe ""
+        val newDescription = "A truly fine KB!"
+        kb.setDescription(newDescription)
+        kb.description() shouldBe newDescription
+    }
+
+    @Test
     fun processCase() {
         kb.allProcessedCases() shouldBe emptyList()
         kb.attributeManager.all() shouldBe emptySet()

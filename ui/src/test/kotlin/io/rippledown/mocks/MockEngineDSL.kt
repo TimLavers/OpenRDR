@@ -24,6 +24,7 @@ fun mock(config: EngineConfig) = EngineBuilder(config).build()
 fun config(block: EngineConfig.() -> Unit) = EngineConfig().apply(block)
 
 class EngineConfig {
+    var returnedKbDescription = "A fine KB!"
     var returnCasesInfo: CasesInfo = CasesInfo(emptyList())
     var returnCase: ViewableCase? = createCase("The Case")
     var returnOperationResult: OperationResult = OperationResult()

@@ -1,7 +1,10 @@
 package io.rippledown.appbar
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.*
 import androidx.compose.material.MaterialTheme.colors
 import androidx.compose.material.icons.Icons.Default
@@ -14,12 +17,13 @@ import androidx.compose.ui.semantics.Role.Companion.DropdownList
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign.Companion.Start
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
-import io.rippledown.constants.kb.*
+import io.rippledown.constants.kb.KB_CONTROL_DESCRIPTION
+import io.rippledown.constants.kb.KB_CONTROL_DROPDOWN_DESCRIPTION
+import io.rippledown.constants.kb.KB_CONTROL_ID
 import io.rippledown.constants.main.*
 import io.rippledown.model.KBInfo
 import io.rippledown.sample.SampleKB
@@ -158,21 +162,22 @@ fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
             .semantics {
                 contentDescription = KB_CONTROL_DESCRIPTION
             }
-            .padding(16.dp)
+//            .padding(16.dp)
             .testTag(KB_CONTROL_ID)
     ) {
 
-        IconButton(
+        Button(
             onClick = { expanded = true },
             modifier = Modifier.semantics {
                 contentDescription = KB_CONTROL_DROPDOWN_DESCRIPTION
             }
         ) {
-            Icon(
-                imageVector = Default.KeyboardArrowDown,
-                contentDescription = KB_CONTROL_DROPDOWN_DESCRIPTION,
-                tint = colors.onPrimary
-            )
+//            Icon(
+//                imageVector = Default.KeyboardArrowDown,
+//                contentDescription = KB_CONTROL_DROPDOWN_DESCRIPTION,
+//                tint = colors.onPrimary
+//            )
+            Text("Knowledge Bases")
         }
 
         Spacer(Modifier.width(4.dp))
