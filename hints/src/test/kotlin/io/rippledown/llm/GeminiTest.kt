@@ -264,6 +264,92 @@ class GeminiTest {
     }
 
     @Test
+    fun `should generate 'at least greater than or equals'`() {
+        // Given
+        val expressions = listOf(
+            "at least 42 x are greater than or equal to 10.1",
+            "no fewer than 42 x results greater than or equal to 10.1",
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(
+                    predicateName = "GreaterThanOrEquals", predicateParameters = listOf("10.1"),
+                    signatureName = "AtLeast", signatureParameters = listOf("42")
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'at least less than or equals'`() {
+        // Given
+        val expressions = listOf(
+            "at least 42 x are less than or equal to 10.1",
+            "no fewer than 42 x results are less than or equal to 10.1",
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(
+                    predicateName = "LessThanOrEquals", predicateParameters = listOf("10.1"),
+                    signatureName = "AtLeast", signatureParameters = listOf("42")
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'at least low'`() {
+        // Given
+        val expressions = listOf(
+            "at least 42 x are low",
+            "there are no fewer than 42 x results that are lowered",
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(
+                    predicateName = "Low",
+                    signatureName = "AtLeast",
+                    signatureParameters = listOf("42")
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'at least high'`() {
+        // Given
+        val expressions = listOf(
+            "at least 42 x are high",
+            "there are no fewer than 42 x results that are elevated",
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(
+                    predicateName = "High",
+                    signatureName = "AtLeast",
+                    signatureParameters = listOf("42")
+                )
+            }
+        }
+    }
+
+    @Test
     fun `should generate 'is numeric'`() {
         // Given
         val expressions = listOf(
