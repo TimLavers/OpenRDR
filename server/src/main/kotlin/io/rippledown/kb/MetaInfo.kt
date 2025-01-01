@@ -8,6 +8,4 @@ class MetaInfo {
     fun setDescription(description: String) {
         this.description = description
     }
-
-
 }

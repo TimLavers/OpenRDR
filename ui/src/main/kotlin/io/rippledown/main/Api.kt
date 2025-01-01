@@ -79,9 +79,19 @@ class Api(engine: HttpClientEngine = CIO.create()) {
 
     suspend fun kbList() = client.get("$API_URL$KB_LIST").body<List<KBInfo>>()
 
-    suspend fun kbDescription() = "Whatever"
-    suspend fun setKbDescription(description: String) {
+    suspend fun kbDescription() : String {
+        return client.get("$API_URL$KB_DESCRIPTION") {
+            contentType(ContentType.Text.Plain)
+            setKBParameter()
+        }.body()
+    }
 
+    suspend fun setKbDescription(description: String) {
+        client.post("$API_URL$KB_DESCRIPTION") {
+            contentType(ContentType.Text.Plain)
+            setKBParameter()
+            setBody(description)
+        }
     }
 
     suspend fun importKBFromZip(file: File): KBInfo {

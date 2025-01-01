@@ -58,19 +58,24 @@ Feature: Knowledge Base management
     And stop the client application
 
   @single
-  Scenario: The description for a KB can be set when the KB is created
+  Scenario: The description for a KB can be edited
     Given A Knowledge Base called Thyroids has been created
     And I start the client application
     And the displayed KB name is Thyroids
-    And pause for 40 seconds
-    When I create a Knowledge Base with the name Glucose and description:
+    Then the KB description is:
     """
-    Whatever
     """
-    Then the displayed KB name is now Glucose
-    And the KB description is:
+    Given I set the KB description to:
     """
-    Whatever
+# Thyroids
+A basic TSH management KB
+See: https://tsh.rules.info/basic
+    """
+    Then the KB description is:
+    """
+# Thyroids
+A basic TSH management KB
+See: https://tsh.rules.info/basic
     """
     And stop the client application
 

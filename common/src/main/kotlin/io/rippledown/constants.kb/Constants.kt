@@ -29,7 +29,8 @@ const val KB_EXPORT_DIALOG_CONTENT = "export_kb_dialog_content"
 const val KB_CREATE_PROJECT_NAME_FIELD = "kb_create_project_name_field"
 
 const val EDIT_CURRENT_KB_CONTROL_DESCRIPTION = "Edit current KB Controls"
-const val EDIT_CURRENT_KB_CONTROL_DROPDOWN_DESCRIPTION = "Show edit current KB Controls"
+const val EDIT_CURRENT_KB_CONTROL_DROPDOWN_BUTTON_DESCRIPTION = "Show edit current KB Controls"
+const val EDIT_CURRENT_KB_CONTROL_DROPDOWN_DESCRIPTION = "Edit operations for current KB "
 const val EDIT_CURRENT_KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION = "Edit Current Knowledge Base"
 
 const val EDIT_CURRENT_KB_CONTROL_ID = "edit_current_kb_control_id"

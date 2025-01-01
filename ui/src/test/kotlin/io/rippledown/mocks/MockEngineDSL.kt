@@ -168,6 +168,15 @@ private class EngineBuilder(private val config: EngineConfig) {
                 httpResponseData(json.encodeToString(config.returnCondition))
             }
 
+            KB_DESCRIPTION -> {
+                if (request.method == HttpMethod.Get) {
+                    httpResponseData(config.returnedKbDescription)
+                } else {
+                    config.returnedKbDescription = (request.body as TextContent).text
+                    httpResponseData("OK")
+                }
+            }
+
             DEFAULT_KB -> {
                 httpResponseData(json.encodeToString(config.defaultKB))
             }

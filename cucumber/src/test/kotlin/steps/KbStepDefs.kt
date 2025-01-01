@@ -52,14 +52,16 @@ class KbStepDefs {
         kbControlsPO().requireKbControlsToBeShown()
     }
 
-    @When("I create a Knowledge Base with the name {word} and description:")
-    fun i_create_a_knowledge_base_with_the_name_glucose_and_description(kbName: String, description: DocString) {
-        kbControlsPO().createKB(kbName)
+    @When("I set the KB description to:")
+    fun i_set_the_description_to(description: DocString) {
         println("description: ${description.content}")
     }
 
     @Then("the KB description is:")
     fun the_KBDescriptionIsNow(description: DocString) {
-
+        println("description: ${description.content}")
+        val expectedText = description.content?: ""
+        println(expectedText)
+        editCurrentKbControlPO().kbDescription() shouldBe expectedText
     }
 }

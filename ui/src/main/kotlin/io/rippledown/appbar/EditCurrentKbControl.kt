@@ -76,7 +76,7 @@ fun EditCurrentKbControl(handler: KbEditControlHandler) {
         Button(
             onClick = { expanded = true },
             modifier = Modifier.semantics {
-                contentDescription = "KB Edit Control Button"
+                contentDescription = EDIT_CURRENT_KB_CONTROL_DROPDOWN_BUTTON_DESCRIPTION
             }
         ) {
 //            Icon(

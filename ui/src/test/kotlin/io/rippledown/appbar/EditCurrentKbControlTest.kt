@@ -6,13 +6,8 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.constants.main.EDIT_KB_DESCRIPTION_TEXT_DESCRIPTION
-import io.rippledown.model.KBInfo
-import io.rippledown.sample.SampleKB
-import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
-import java.io.File
-import javax.swing.SwingUtilities
 import javax.swing.SwingUtilities.invokeAndWait
 import kotlin.test.Test
 
@@ -22,7 +17,6 @@ class EditCurrentKbControlTest {
     val composeTestRule = createComposeRule()
     private val bondiDescription = "An iconic white sanded beach with a good surf in most conditions"
 
-    private val lipidsInfo = KBInfo("12345_id", "Lipids")
     private lateinit var handler: KbEditControlHandler
 
     @Before
