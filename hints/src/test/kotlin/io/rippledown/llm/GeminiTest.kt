@@ -26,7 +26,7 @@ class GeminiTest {
 
             // Then
             withClue("Entered '$entered'") {
-                actual shouldBe spec(predicateName = "High")
+                actual shouldBe spec(predicateName = "High", signatureName = "Current")
             }
         }
     }
@@ -48,7 +48,7 @@ class GeminiTest {
 
             // Then
             withClue("Entered '$entered'") {
-                actual shouldBe spec(predicateName = "Low")
+                actual shouldBe spec(predicateName = "Low", signatureName = "Current")
             }
         }
     }
@@ -66,7 +66,7 @@ class GeminiTest {
             val actual = conditionSpecificationFor(entered)
 
             // Then
-            actual shouldBe spec(predicateName = "Normal")
+            actual shouldBe spec(predicateName = "Normal", signatureName = "Current")
         }
     }
 
@@ -86,7 +86,11 @@ class GeminiTest {
 
             // Then
             withClue("Entered '$entered'") {
-                actual shouldBe spec(predicateName = "Is", predicateParameters = listOf("3.1"))
+                actual shouldBe spec(
+                    predicateName = "Is",
+                    predicateParameters = listOf("3.1"),
+                    signatureName = "Current"
+                )
             }
         }
     }
@@ -110,7 +114,11 @@ class GeminiTest {
 
             // Then
             withClue("Entered '$entered'") {
-                actual shouldBe spec(predicateName = "Is", predicateParameters = listOf("\"$param\""))
+                actual shouldBe spec(
+                    predicateName = "Is",
+                    predicateParameters = listOf("\"$param\""),
+                    signatureName = "Current"
+                )
             }
         }
     }
@@ -134,7 +142,11 @@ class GeminiTest {
 
             // Then
             withClue("Entered '$entered'") {
-                actual shouldBe spec(predicateName = "Is", predicateParameters = listOf(param))
+                actual shouldBe spec(
+                    predicateName = "Is",
+                    predicateParameters = listOf(param),
+                    signatureName = "Current"
+                )
             }
         }
     }
@@ -153,7 +165,11 @@ class GeminiTest {
 
             // Then
             withClue("Entered '$entered'") {
-                actual shouldBe spec(predicateName = "GreaterThanOrEquals", predicateParameters = listOf("10.0"))
+                actual shouldBe spec(
+                    predicateName = "GreaterThanOrEquals",
+                    predicateParameters = listOf("10.0"),
+                    signatureName = "Current"
+                )
             }
         }
     }
@@ -172,7 +188,11 @@ class GeminiTest {
 
             // Then
             withClue("Entered '$entered'") {
-                actual shouldBe spec(predicateName = "LessThanOrEquals", predicateParameters = listOf("10.0"))
+                actual shouldBe spec(
+                    predicateName = "LessThanOrEquals",
+                    predicateParameters = listOf("10.0"),
+                    signatureName = "Current"
+                )
             }
         }
     }
@@ -362,7 +382,7 @@ class GeminiTest {
 
             // Then
             withClue("Entered '$entered'") {
-                actual shouldBe spec(predicateName = "IsNumeric")
+                actual shouldBe spec(predicateName = "IsNumeric", signatureName = "Current")
             }
         }
     }
@@ -416,7 +436,11 @@ class GeminiTest {
 
             // Then
             withClue("Entered '$entered'") {
-                actual shouldBe spec(predicateName = "Contains", predicateParameters = listOf("\"pending\""))
+                actual shouldBe spec(
+                    predicateName = "Contains",
+                    predicateParameters = listOf("\"pending\""),
+                    signatureName = "Current"
+                )
             }
         }
     }
@@ -456,7 +480,11 @@ class GeminiTest {
 
             // Then
             withClue("Entered '$entered'") {
-                actual shouldBe spec(predicateName = "DoesNotContain", predicateParameters = listOf("\"pending\""))
+                actual shouldBe spec(
+                    predicateName = "DoesNotContain",
+                    predicateParameters = listOf("\"pending\""),
+                    signatureName = "Current"
+                )
             }
         }
     }
@@ -604,92 +632,108 @@ class GeminiTest {
     }
 
 
-        @Test
-        fun `should generate 'case is for a single date'`() {
-            // Given
-            val expressions = listOf(
-                "case has one date",
-                "case has only one episode",
-                "only one episode in the case",
-                "one episode only",
-                "one date only"
-            )
-            for (entered in expressions) {
-                // When
-                val actual = conditionSpecificationFor(entered)
+    @Test
+    fun `should generate 'case is for a single date'`() {
+        // Given
+        val expressions = listOf(
+            "case has one date",
+            "case has only one episode",
+            "only one episode in the case",
+            "one episode only",
+            "one date only"
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
 
-                // Then
-                withClue("Entered '$entered'") {
-                    actual shouldBe spec(predicateName = "IsSingleEpisodeCase")
-                }
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(predicateName = "IsSingleEpisodeCase", signatureName = "")
             }
         }
+    }
 
+    @Test
+    fun `should generate 'is present in case'`() {
+        // Given
+        val expressions = listOf(
+            "x is available",
+            "there is a value for x",
+            "the case contains a value for x",
+            "x has been detected"
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
 
-    /* todo .....
-
-        @Test
-        fun `should generate 'is in case'`() {
-            // Given
-            val expressions = listOf(
-                "x is available",
-                "there is a value for x",
-                "the case contains a value for x",
-                "x has been detected"
-            )
-            for (entered in expressions) {
-                // When
-                val actual = conditionSpecificationFor(entered)
-
-                // Then
-                withClue("Entered '$entered'") {
-                    actual shouldBe "Present"
-                }
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(predicateName = "IsPresentInCase", signatureName = "")
             }
         }
+    }
 
-        @Test
-        fun `should generate 'is not in case'`() {
-            // Given
-            val expressions = listOf(
-                "x is not available",
-                "there is no value for x",
-                "x is missing",
-            )
-            for (entered in expressions) {
-                // When
-                val actual = conditionSpecificationFor(entered)
+    @Test
+    fun `should generate 'is absent from case'`() {
+        // Given
+        val expressions = listOf(
+            "x is not available",
+            "there is no value for x",
+            "x is missing",
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
 
-                // Then
-                withClue("Entered '$entered'") {
-                    actual shouldBe "Absent"
-                }
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(predicateName = "IsAbsentFromCase", signatureName = "")
             }
         }
+    }
 
-        @Test
-        fun `should generate 'is increasing'`() {
-            // Given
-            val expressions = listOf(
-                "x is getting bigger",
-                "increasing x",
-                "x is on the rise",
-                "x is going up",
-                "x is rising",
-                "x is increasing",
-                "x is growing",
-                "x is getting larger"
-            )
-            for (entered in expressions) {
-                // When
-                val actual = conditionSpecificationFor(entered)
+    @Test
+    fun `should generate 'increasing'`() {
+        // Given
+        val expressions = listOf(
+            "x is getting bigger",
+            "increasing x",
+            "x is on the rise",
+            "x is going up",
+            "x is rising",
+            "x is increasing",
+            "x is growing",
+            "x is getting larger"
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
 
-                // Then
-                withClue("Entered '$entered'") {
-                    actual shouldBe "Increasing"
-                }
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(predicateName = "Increasing", signatureName = "")
             }
         }
-    */
+    }
 
+    @Test
+    fun `should generate 'decreasing'`() {
+        // Given
+        val expressions = listOf(
+            "x is getting smaller",
+            "decreasing x",
+            "x is going down",
+            "x is falling",
+            "x is decreasing",
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(predicateName = "Decreasing", signatureName = "")
+            }
+        }
+    }
 }

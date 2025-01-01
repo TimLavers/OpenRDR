@@ -34,6 +34,7 @@ fun examplesFrom(lines: List<String>): String {
             spec = spec(
                 predicateName = predicateComponents[0],
                 predicateParameters = predicateComponents.drop(1),
+                signatureName = "",
             )
         } else if (line.startsWith(EXPECTED_SIGNATURE)) {
             val signatureComponents = line

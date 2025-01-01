@@ -1,10 +1,12 @@
 EXPECTED PREDICATE: High
+EXPECTED SIGNATURE: Current
 x is high
 x is elevated
 elevated x
 excessive x
 
 EXPECTED PREDICATE: Low
+EXPECTED SIGNATURE: Current
 reduced x
 lowered x
 x is below normal
@@ -16,6 +18,7 @@ no lowered x
 no x is below the normal range
 
 EXPECTED PREDICATE: Normal
+EXPECTED SIGNATURE: Current
 x is within range
 x is fine
 x is normal
@@ -27,27 +30,33 @@ no x are normal
 all x are abnormal
 
 EXPECTED PREDICATE: Is, y
+EXPECTED SIGNATURE: Current
 x is equal to y
 x is the same as y
 
 EXPECTED PREDICATE: Is, 1.5
+EXPECTED SIGNATURE: Current
 x = 1.5
 x == 1.5
 
 EXPECTED PREDICATE: Is, "abc"
+EXPECTED SIGNATURE: Current
 x is abc
 x is "abc"
 
 EXPECTED PREDICATE: Is, "pending"
+EXPECTED SIGNATURE: Current
 x equals pending
 
 EXPECTED PREDICATE: LessThanOrEquals, 4.1
+EXPECTED SIGNATURE: Current
 x is less than or equal to 4.1
 x is not greater than 4.1
 x is no more than 4.1
 x no more than 4.1
 
 EXPECTED PREDICATE: GreaterThanOrEquals, y
+EXPECTED SIGNATURE: Current
 x is greater than or equal to y
 x is not less than y
 
@@ -57,6 +66,7 @@ at most 5 x are greater than or equal to 4.1
 no more than 5 x are larger than 4.1
 
 EXPECTED PREDICATE: IsNumeric
+EXPECTED SIGNATURE: Current
 x is a number
 x is an integer
 
@@ -71,6 +81,7 @@ no x is a number
 none of the x are numeric
 
 EXPECTED PREDICATE: Contains, "abc"
+EXPECTED SIGNATURE: Current
 x contains abc
 x contains "abc"
 x includes "abc"
@@ -81,6 +92,7 @@ all x contains abc
 every x contains "abc"
 
 EXPECTED PREDICATE: DoesNotContain, "abc"
+EXPECTED SIGNATURE: Current
 x does not contain abc
 x does not contain "abc"
 
@@ -93,3 +105,27 @@ EXPECTED PREDICATE: Contains, "abc"
 EXPECTED SIGNATURE: No
 no x contains abc
 none of the x contain "abc"
+
+EXPECTED PREDICATE: IsSingleEpisodeCase
+case is for a single date
+case has one episode
+
+EXPECTED PREDICATE: IsPresentInCase
+x is present
+x detected
+x is available
+
+EXPECTED PREDICATE: IsAbsentFromCase
+x is not present
+x not detected
+x missing
+no value for x
+x is not available
+
+EXPECTED PREDICATE: Increasing
+x is increasing
+x rising
+
+EXPECTED PREDICATE: Decreasing
+x is decreasing
+x falling

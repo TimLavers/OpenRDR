@@ -1,17 +1,3 @@
-
-EXPECTED PREDICATE: Present
-x is present
-x detected
-
-EXPECTED PREDICATE: Absent
-x is not present
-x not detected
-x missing
-no value for x
-
-EXPECTED PREDICATE: Increasing
-x is increasing
-
 EXPECTED PREDICATE: SlightlyLow, 20
 x no more than 20 percent below normal
 x is low by no more than 20 percent
@@ -26,6 +12,4 @@ x is high by no more than 20 percent
 EXPECTED PREDICATE: NormalOrSlightlyHigh, 20
 x is normal or not more than 20 percent above normal
 
-EXPECTED PREDICATE: SingleEpisodeCase
-case is for a single date
-case has one episode
+

@@ -48,9 +48,14 @@ fun conditionSpecificationFor(input: String): ConditionSpecification {
         text("The json object should have two fields: predicate and signature.")
         text("The predicate field should have two fields: name and parameters.")
         text("The signature field should have two fields: name and parameters.")
-        text("The possible values for the predicate name are: Contains, DoesNotContain, Is, Low, High, Normal, GreaterThanOrEquals, LessThanOrEquals, IsNumeric.")
+        text("There are three types of predicate names: episodic, case structure and series.")
+        text("The possible values for an episodic predicate name are: Contains, DoesNotContain, Is, Low, High, Normal, GreaterThanOrEquals, LessThanOrEquals, IsNumeric.")
+        text("The possible values for a case structure predicate name are: IsAbsentFromCase, IsPresentInCase, IsSingleEpisodeCase.")
+        text("The possible values for a series predicate name are: Increasing, Decreasing.")
         text("The predicate name should be blank if the expression does not refer to one of the possible predicates.")
-        text("The possible values for the signature name are: All, Current, No, AtLeast, AtMost.")
+        text("For an episodic predicate name, the possible values for the signature name are: All, Current, No, AtLeast, AtMost.")
+        text("For a case structure predicate name, the signature name should be blank.")
+        text("For a series predicate name, the signature name should be blank.")
         text("There may be no parameter or just one parameter for the predicate.")
         text("There may be no parameter or just one parameter for the signature.")
         text("Examples of expressions with the expected output are:")
@@ -82,7 +87,7 @@ fun <T> retry(
             return block()
         } catch (e: Exception) {
             if (attempt == maxRetries - 1) throw e
-            println("attempt $attempt failed. Waiting $currentDelay ms before trying again.")
+            println("attempt $attempt failed. Waiting $currentDelay ms before retrying")
             sleep(currentDelay)
             currentDelay = (currentDelay * 2).coerceAtMost(maxDelay) + nextLong(0, 1_000)
         }

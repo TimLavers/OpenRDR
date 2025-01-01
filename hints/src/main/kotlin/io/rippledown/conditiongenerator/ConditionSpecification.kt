@@ -19,7 +19,7 @@ data class FunctionSpecification(val name: String = "", val parameters: List<Str
 fun spec(
     predicateName: String,
     predicateParameters: List<String> = listOf(),
-    signatureName: String = "Current",
+    signatureName: String,
     signatureParameters: List<String> = listOf()
 ) =
     ConditionSpecification(

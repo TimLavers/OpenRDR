@@ -21,9 +21,9 @@ class ExamplesTest {
         // Then
         examples shouldBe """
             Input: elevated x
-            Output: ${spec(predicateName = "High")}
+            Output: ${spec(predicateName = "High", signatureName = "Current")}
             Input: excessive x
-            Output: ${spec(predicateName = "High")}
+            Output: ${spec(predicateName = "High", signatureName = "Current")}
         """.trimIndent()
     }
 
@@ -45,8 +45,8 @@ class ExamplesTest {
         val examples = examplesFrom(lines)
 
         // Then
-        val expectedSpecHigh = spec(predicateName = "High")
-        val expectedSpecLow = spec(predicateName = "Low")
+        val expectedSpecHigh = spec(predicateName = "High", signatureName = "Current")
+        val expectedSpecLow = spec(predicateName = "Low", signatureName = "Current")
         examples shouldBe """
             Input: elevated x
             Output: $expectedSpecHigh
@@ -104,8 +104,8 @@ class ExamplesTest {
         val examples = examplesFrom(lines)
 
         // Then
-        val highSpec = spec(predicateName = "High")
-        val lowSpec = spec(predicateName = "Low")
+        val highSpec = spec(predicateName = "High", signatureName = "Current")
+        val lowSpec = spec(predicateName = "Low", signatureName = "Current")
         val isSpec = spec(
             predicateName = "Is",
             predicateParameters = listOf("6"),

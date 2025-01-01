@@ -7,12 +7,14 @@ import io.rippledown.expressionparser.AttributeFor
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.CaseStructureCondition
 import io.rippledown.model.condition.EpisodicCondition
+import io.rippledown.model.condition.SeriesCondition
 import io.rippledown.model.condition.episodic.predicate.Contains
 import io.rippledown.model.condition.episodic.predicate.High
 import io.rippledown.model.condition.episodic.predicate.Is
 import io.rippledown.model.condition.episodic.predicate.Low
 import io.rippledown.model.condition.episodic.signature.AtLeast
 import io.rippledown.model.condition.episodic.signature.Current
+import io.rippledown.model.condition.series.Increasing
 import io.rippledown.model.condition.structural.IsSingleEpisodeCase
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -128,21 +130,21 @@ class ConditionGeneratorTest {
         condition shouldBe CaseStructureCondition(null, IsSingleEpisodeCase, userExpression)
     }
 
-    /*@Test
-    fun `should generate condition from ConditionStructure`() {
-        val userExpression = "whatever the user entered"
-        with(constructors) {
-            generator.conditionFor(attributeName = "x", userExpression, "All", "High") shouldBe All(
-                High(attribute, userExpression)
-            )
-            generator.conditionFor(attributeName = "x", userExpression, "AtMost", "3", "High") shouldBe AtMost(
-                3,
-                High(attribute, userExpression)
-            )
-            generator.conditionFor(attributeName = "x", userExpression, "No", "High") shouldBe No(
-                High(attribute, userExpression)
-            )
-        }
-    }*/
+    @Test
+    fun `should generate Series condition`() {
+        //Given
+        val spec = ConditionSpecification(
+            FunctionSpecification(Increasing::class.simpleName!!, listOf())
+        )
 
+        //When
+        val condition = generator.conditionFor(
+            attributeName = atttributeName,
+            userExpression = userExpression,
+            conditionSpec = spec
+        )
+
+        //Then
+        condition shouldBe SeriesCondition(null, attribute, Increasing, userExpression)
+    }
 }
