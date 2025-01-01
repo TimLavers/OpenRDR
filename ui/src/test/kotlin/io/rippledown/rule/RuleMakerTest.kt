@@ -9,7 +9,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.ConditionConstructors
+import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.containsText
 import io.rippledown.model.condition.edit.*
 import io.rippledown.model.condition.episodic.signature.Current
@@ -435,20 +435,20 @@ class RuleMakerWithReusableEditableSuggestionsTest {
     @Test
     fun `should return no available conditions if none match the filter and the filter cannot be parsed to a condition`() =
         runTest {
-        // Given
-        val all = (1..5).map { index ->
-            nonEditableSuggestion(index, notes, "$index")
-        }
-        val filterTest = "nothing will match this"
+            // Given
+            val all = (1..5).map { index ->
+                nonEditableSuggestion(index, notes, "$index")
+            }
+            val filterTest = "nothing will match this"
             val conditionFor = { _: String -> null }
-        val selectedConditions = listOf<Condition>()
+            val selectedConditions = listOf<Condition>()
 
-        // When
-        val available = refreshAvailableConditions(all, filterTest, selectedConditions, conditionFor)
+            // When
+            val available = refreshAvailableConditions(all, filterTest, selectedConditions, conditionFor)
 
-        // Then
-        available shouldBe emptyList()
-    }
+            // Then
+            available shouldBe emptyList()
+        }
 }
 
 fun reusableEditableSuggestion(attribute: Attribute, text: String): EditableSuggestedCondition {
@@ -473,7 +473,10 @@ fun main() {
     val handler = mockk<RuleMakerHandler>(relaxed = true)
     every { handler.conditionForExpression(any()) } answers {
         Thread.sleep(1000)
-        ConditionConstructors().High(waves, "waves look tall enough")
+        EpisodicCondition(
+            null, waves,
+            io.rippledown.model.condition.episodic.predicate.High, Current, "waves look tall enough"
+        )
     }
     val conditions = (1..10).map { index ->
         nonEditableSuggestion(index, notes, "condition $index")

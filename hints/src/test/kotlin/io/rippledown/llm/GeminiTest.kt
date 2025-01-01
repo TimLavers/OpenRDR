@@ -603,8 +603,6 @@ class GeminiTest {
         }
     }
 
-    //todo .....
-    /*
 
         @Test
         fun `should generate 'case is for a single date'`() {
@@ -622,16 +620,13 @@ class GeminiTest {
 
                 // Then
                 withClue("Entered '$entered'") {
-                    actual shouldBe "SingleEpisodeCase"
+                    actual shouldBe spec(predicateName = "IsSingleEpisodeCase")
                 }
             }
         }
 
 
-
-
-
-
+    /* todo .....
 
         @Test
         fun `should generate 'is in case'`() {
