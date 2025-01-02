@@ -16,7 +16,7 @@ import java.lang.Thread.sleep
 import kotlin.random.Random.Default.nextLong
 
 const val GEMINI_MODEL = "gemini-1.5-flash"
-const val TRAINING_SET_FILE = "/training_set.txt"
+const val EXAMPLES_FILE = "/examples.txt"
 
 val logger: Logger = LoggerFactory.getLogger("rdr")
 
@@ -29,8 +29,8 @@ val generativeModel = GenerativeModel(
     safetySettings = noSafetySettings(),
     generationConfig = generativeConfig
 )
-
-val trainingSet = trainingSet(TRAINING_SET_FILE)
+val lines = object {}.javaClass.getResourceAsStream(EXAMPLES_FILE)?.bufferedReader()!!.readLines()
+val examples = examplesFrom(lines)
 
 fun noSafetySettings() =
     HarmCategory.entries
@@ -42,24 +42,24 @@ fun noSafetySettings() =
             )
         }
 
-//todo remove
-fun tokensFor(input: String): List<String> {
-    return emptyList()
-}
-
 fun conditionSpecificationFor(input: String): ConditionSpecification {
     val prompt = content {
         text("Your task is to create a json object from an expression.")
         text("The json object should have two fields: predicate and signature.")
         text("The predicate field should have two fields: name and parameters.")
         text("The signature field should have two fields: name and parameters.")
-        text("The possible values for the predicate name are: Contains, DoesNotContain, Is, Low, High, Normal, GreaterThanOrEquals, LessThanOrEquals.")
+        text("There are three types of predicate names: episodic, case structure and series.")
+        text("The possible values for an episodic predicate name are: Contains, DoesNotContain, Is, Low, High, Normal, GreaterThanOrEquals, LessThanOrEquals, IsNumeric.")
+        text("The possible values for a case structure predicate name are: IsAbsentFromCase, IsPresentInCase, IsSingleEpisodeCase.")
+        text("The possible values for a series predicate name are: Increasing, Decreasing.")
         text("The predicate name should be blank if the expression does not refer to one of the possible predicates.")
-        text("The possible values for the signature name are: All, Current, No, AtLeast, AtMost.")
+        text("For an episodic predicate name, the possible values for the signature name are: All, Current, No, AtLeast, AtMost.")
+        text("For a case structure predicate name, the signature name should be blank.")
+        text("For a series predicate name, the signature name should be blank.")
         text("There may be no parameter or just one parameter for the predicate.")
         text("There may be no parameter or just one parameter for the signature.")
         text("Examples of expressions with the expected output are:")
-        text(trainingSet)
+        text(examples)
         text("Here is the expression: $input")
         text("Generate output without a leading ```json or trailing ```.")
     }
@@ -76,9 +76,9 @@ fun conditionSpecificationFor(input: String): ConditionSpecification {
  * Try to get around the 503 error from the API due to rate limiting.
  */
 fun <T> retry(
-    maxRetries: Int = 5,
+    maxRetries: Int = 10,
     initialDelay: Long = 1_000,
-    maxDelay: Long = 16_000,
+    maxDelay: Long = 32_000,
     block: () -> T
 ): T {
     var currentDelay = initialDelay
@@ -87,7 +87,7 @@ fun <T> retry(
             return block()
         } catch (e: Exception) {
             if (attempt == maxRetries - 1) throw e
-            println("Retry attempt $attempt failed. Waiting $currentDelay ms before trying again.")
+            println("attempt $attempt failed. Waiting $currentDelay ms before retrying")
             sleep(currentDelay)
             currentDelay = (currentDelay * 2).coerceAtMost(maxDelay) + nextLong(0, 1_000)
         }

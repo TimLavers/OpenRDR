@@ -1,21 +1,3 @@
-
-EXPECTED PREDICATE: Present
-x is present
-x detected
-
-EXPECTED PREDICATE: Absent
-x is not present
-x not detected
-x missing
-no value for x
-
-EXPECTED PREDICATE: Increasing
-x is increasing
-
-EXPECTED PREDICATE: Numeric
-x is a number
-x is an integer
-
 EXPECTED PREDICATE: SlightlyLow, 20
 x no more than 20 percent below normal
 x is low by no more than 20 percent
@@ -30,58 +12,4 @@ x is high by no more than 20 percent
 EXPECTED PREDICATE: NormalOrSlightlyHigh, 20
 x is normal or not more than 20 percent above normal
 
-EXPECTED PREDICATE: SingleEpisodeCase
-case is for a single date
-case has one episode
 
-EXPECTED PREDICATE: AllNormal
-all x are normal
-all x are within range
-
-EXPECTED PREDICATE: NoNormal
-no x are normal
-all x are abnormal
-
-EXPECTED PREDICATE: AllHigh
-all x are high
-all x are above the normal range
-
-EXPECTED PREDICATE: NoHigh
-no x are high
-none of the x are elevated
-
-EXPECTED PREDICATE: AllLow
-all x are low
-all x are below the normal range
-
-EXPECTED PREDICATE: NoLow
-no x are low
-none of the x are lowered
-
-EXPECTED PREDICATE: AllContain, "abc"
-all x contain abc
-all x contains "abc"
-every x result contains abc
-
-EXPECTED PREDICATE: NoContain, "abc"
-no x contain abc
-none of the x contain "abc"
-
-EXPECTED PREDICATE: AllNumeric
-all x are numbers
-every x result is numeric
-
-EXPECTED PREDICATE: NoNumeric
-no x is a number
-none of the x is numeric
-
-EXPECTED PREDICATE: AtMostHigh, 20
-at most 20 x are high
-no more than 20 x are elevated
-
-EXPECTED PREDICATE: AtMostLow, 22
-at most 2 x are low
-
-EXPECTED PREDICATE: AtMostGreaterThanOrEqualTo, 15, 7.5
-at most 15 x are greater than or equal to 7.5
-no more than 15 x greater than or equal to 7.5

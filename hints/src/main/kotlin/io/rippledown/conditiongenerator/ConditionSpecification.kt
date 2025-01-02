@@ -7,7 +7,7 @@ import kotlinx.serialization.json.Json
 @Serializable
 data class ConditionSpecification(
     val predicate: FunctionSpecification = FunctionSpecification(),
-    val signature: FunctionSpecification = FunctionSpecification()
+    var signature: FunctionSpecification = FunctionSpecification()
 ) {
 
     override fun toString() = toJson(this)
@@ -19,7 +19,7 @@ data class FunctionSpecification(val name: String = "", val parameters: List<Str
 fun spec(
     predicateName: String,
     predicateParameters: List<String> = listOf(),
-    signatureName: String = "Current",
+    signatureName: String,
     signatureParameters: List<String> = listOf()
 ) =
     ConditionSpecification(
