@@ -93,14 +93,12 @@ class ConditionGenerator(private val attributeFor: AttributeFor) {
                 "kotlin.Double" -> {
                     println("class $className has a double parameter")
                     val toDouble = arg!!.toDouble()
-                    println("toDouble = $toDouble")
                     constructor.call(toDouble) as T
                 }
 
                 "kotlin.Int" -> {
                     println("class $className has a double parameter")
                     val toInt = arg!!.toInt()
-                    println("toInt = $toInt")
                     constructor.call(toInt) as T
                 }
 

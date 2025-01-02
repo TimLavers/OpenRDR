@@ -4,9 +4,12 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.rippledown.model.Attribute
+import io.rippledown.model.condition.CaseStructureCondition
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.episodic.predicate.*
 import io.rippledown.model.condition.episodic.signature.Current
+import io.rippledown.model.condition.structural.IsAbsentFromCase
+import io.rippledown.model.condition.structural.IsPresentInCase
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -60,10 +63,10 @@ class ConditionTipTest {
         val isExpression = "xyz equals 3.14159"
         val lteExpression = "xyz is no more than 3.14159"
         val gteExpression = "xyz is at least 3.14159"
+        val numericExpression = "xyz is a number"
+        val presentExpression = "xyz is available"
+        val absentExpression = "xyz is not available"
         //todo
-        val numeric = "xyz is a number"
-        val present = "xyz is available"
-        val absent = "xyz is not available"
         val isPending = "glucose is pending"
         val slightlyLow = "glucose no more than 15 percent below normal"
         val normalOrSlightlyLow = "glucose is either normal or not more than 15 percent below normal"
@@ -91,9 +94,11 @@ class ConditionTipTest {
             isExpression to EpisodicCondition(null, XYZ, Is("3.14159"), Current, isExpression),
             lteExpression to EpisodicCondition(null, XYZ, LessThanOrEquals(3.14159), Current, lteExpression),
             gteExpression to EpisodicCondition(null, XYZ, GreaterThanOrEquals(3.14159), Current, gteExpression),
-            /* numeric to Numeric(XYZ, numeric),
-             present to Present(XYZ, present),
-             absent to Absent(XYZ, absent),
+            numericExpression to EpisodicCondition(null, XYZ, IsNumeric, Current, numericExpression),
+            presentExpression to CaseStructureCondition(null, IsPresentInCase(XYZ), presentExpression),
+            absentExpression to CaseStructureCondition(null, IsAbsentFromCase(XYZ), absentExpression),
+            /*
+             todo
              isPending to Is(glucose, isPending, "\"pending\""),
              slightlyLow to SlightlyLow(glucose, slightlyLow, "15"),
              normalOrSlightlyLow to NormalOrSlightlyLow(glucose, normalOrSlightlyLow, "15"),
