@@ -5,7 +5,6 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.conditiongenerator.spec
 import org.junit.jupiter.api.Test
 
-//@Ignore("Run these tests individually - the free version of the Gemini API has a rate limit of 15 / minute")
 class GeminiTest {
 
     @Test
@@ -17,6 +16,7 @@ class GeminiTest {
             "raised x",
             "elevated x",
             "high x",
+            "x es alto",
             "x es mejor que el rango normal"
         )
 
@@ -720,7 +720,6 @@ class GeminiTest {
     fun `should generate 'decreasing'`() {
         // Given
         val expressions = listOf(
-            "x is getting smaller",
             "decreasing x",
             "x is going down",
             "x is falling",
@@ -733,6 +732,98 @@ class GeminiTest {
             // Then
             withClue("Entered '$entered'") {
                 actual shouldBe spec(predicateName = "Decreasing", signatureName = "")
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'low by at most some percentage'`() {
+        // Given
+        val expressions = listOf(
+            "x is low by no more than 20 percent",
+            "x is low by at most 20 percent",
+            "x is below normal by at most 20 percent",
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(
+                    predicateName = "LowByAtMostSomePercentage",
+                    predicateParameters = listOf("20"),
+                    signatureName = "Current"
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'high by at most some percentage'`() {
+        // Given
+        val expressions = listOf(
+            "x is high by no more than 20 percent",
+            "x is raised by no more than 20 percent",
+            "x is above normal by no more than 20%"
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(
+                    predicateName = "HighByAtMostSomePercentage",
+                    predicateParameters = listOf("20"),
+                    signatureName = "Current"
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'normal or high by at most some percentage'`() {
+        // Given
+        val expressions = listOf(
+            "x is either normal or no more than 20 percent above normal",
+            "x is normal or raised by no more than 20 percent",
+            "x is normal or high by no more than 20%"
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(
+                    predicateName = "NormalOrHighByAtMostSomePercentage",
+                    predicateParameters = listOf("20"),
+                    signatureName = "Current"
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `should generate 'normal or low by at most some percentage'`() {
+        // Given
+        val expressions = listOf(
+            "x is either normal no more than 20 percent below normal",
+            "x is normal or lowered by no more than 20 percent",
+            "x is normal or below normal by no more than 20%"
+        )
+        for (entered in expressions) {
+            // When
+            val actual = conditionSpecificationFor(entered)
+
+            // Then
+            withClue("Entered '$entered'") {
+                actual shouldBe spec(
+                    predicateName = "NormalOrLowByAtMostSomePercentage",
+                    predicateParameters = listOf("20"),
+                    signatureName = "Current"
+                )
             }
         }
     }

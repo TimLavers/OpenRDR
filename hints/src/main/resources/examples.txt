@@ -2,8 +2,14 @@ EXPECTED PREDICATE: High
 EXPECTED SIGNATURE: Current
 x is high
 x is elevated
+x es alto
 elevated x
 excessive x
+
+EXPECTED PREDICATE: High
+EXPECTED SIGNATURE: No
+none of the x are high
+none of the x are above normal
 
 EXPECTED PREDICATE: Low
 EXPECTED SIGNATURE: Current
@@ -91,20 +97,27 @@ EXPECTED SIGNATURE: All
 all x contains abc
 every x contains "abc"
 
+EXPECTED PREDICATE: Contains, "abc"
+EXPECTED SIGNATURE: No
+no x contains abc
+none of the x results contain "abc"
+
+EXPECTED PREDICATE: Contains, "undefined"
+EXPECTED SIGNATURE: No
+none of the x results contain "undefined"
+
+EXPECTED PREDICATE: Contains, "pending"
+EXPECTED SIGNATURE: No
+no x contains "pending"
+
 EXPECTED PREDICATE: DoesNotContain, "abc"
 EXPECTED SIGNATURE: Current
 x does not contain abc
 x does not contain "abc"
 
-EXPECTED PREDICATE: DoesNotContain, "abc"
-EXPECTED SIGNATURE: No
-no x contain abc
-none of the x include "abc"
-
-EXPECTED PREDICATE: Contains, "abc"
-EXPECTED SIGNATURE: No
-no x contains abc
-none of the x contain "abc"
+EXPECTED PREDICATE: DoesNotContain, "pending"
+EXPECTED SIGNATURE: Current
+x does not contain pending
 
 EXPECTED PREDICATE: IsSingleEpisodeCase
 case is for a single date
@@ -124,8 +137,34 @@ x is not available
 
 EXPECTED PREDICATE: Increasing
 x is increasing
+x on the rise
 x rising
+x growing
 
 EXPECTED PREDICATE: Decreasing
 x is decreasing
 x falling
+
+EXPECTED PREDICATE: LowOrNormal
+EXPECTED SIGNATURE: Current
+x is low or normal
+
+EXPECTED PREDICATE: HighOrNormal
+EXPECTED SIGNATURE: Current
+x is high or normal
+
+EXPECTED PREDICATE: LowByAtMostSomePercentage, 20
+EXPECTED SIGNATURE: Current
+x is low by at most 20 percent
+
+EXPECTED PREDICATE: NormalOrLowByAtMostSomePercentage, 20
+EXPECTED SIGNATURE: Current
+x is normal or not more than 20 percent below normal
+
+EXPECTED PREDICATE: HighByAtMostSomePercentage, 20
+EXPECTED SIGNATURE: Current
+x is high by at most 20 percent
+
+EXPECTED PREDICATE: NormalOrHighByAtMostSomePercentage, 20
+EXPECTED SIGNATURE: Current
+x is normal or not more than 20 percent above normal

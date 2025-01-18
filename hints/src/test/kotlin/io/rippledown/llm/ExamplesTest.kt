@@ -21,9 +21,9 @@ class ExamplesTest {
         // Then
         examples shouldBe """
             Input: elevated x
-            Output: ${spec(predicateName = "High", signatureName = "Current")}
+            Output: ${spec(predicateName = "High", signatureName = "")}
             Input: excessive x
-            Output: ${spec(predicateName = "High", signatureName = "Current")}
+            Output: ${spec(predicateName = "High", signatureName = "")}
         """.trimIndent()
     }
 
@@ -45,8 +45,8 @@ class ExamplesTest {
         val examples = examplesFrom(lines)
 
         // Then
-        val expectedSpecHigh = spec(predicateName = "High", signatureName = "Current")
-        val expectedSpecLow = spec(predicateName = "Low", signatureName = "Current")
+        val expectedSpecHigh = spec(predicateName = "High", signatureName = "")
+        val expectedSpecLow = spec(predicateName = "Low", signatureName = "")
         examples shouldBe """
             Input: elevated x
             Output: $expectedSpecHigh
@@ -88,10 +88,12 @@ class ExamplesTest {
         // Given
         val lines = """
             EXPECTED PREDICATE: High
+            EXPECTED SIGNATURE: Current
             elevated x
             excessive x
 
             EXPECTED PREDICATE: Low
+            EXPECTED SIGNATURE: Current
             reduced x
             lowered x
 

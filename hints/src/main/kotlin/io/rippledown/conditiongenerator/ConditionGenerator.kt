@@ -1,6 +1,7 @@
 package io.rippledown.conditiongenerator
 
 import io.rippledown.expressionparser.AttributeFor
+import io.rippledown.model.Attribute
 import io.rippledown.model.condition.CaseStructureCondition
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.EpisodicCondition
@@ -25,12 +26,12 @@ val SIGNATURE_PACKAGE = All::class.java.packageName
 class ConditionGenerator(private val attributeFor: AttributeFor) {
 
     fun conditionFor(attributeName: String, userExpression: String, conditionSpec: ConditionSpecification): Condition {
-        val predicate = predicateFrom(conditionSpec.predicate)
-        val attribute = attributeFor(attributeName)
+        val attribute = if (attributeName.isNotBlank()) attributeFor(attributeName) else null
+        val predicate = predicateFrom(conditionSpec.predicate, attribute)
         return when (predicate) {
             is TestResultPredicate -> {
                 val signature = signatureFrom(conditionSpec.signature)
-                EpisodicCondition(null, attribute, predicate, signature, userExpression)
+                EpisodicCondition(null, attribute!!, predicate, signature, userExpression)
             }
 
             is CaseStructurePredicate -> {
@@ -38,7 +39,7 @@ class ConditionGenerator(private val attributeFor: AttributeFor) {
             }
 
             is SeriesPredicate -> {
-                SeriesCondition(null, attribute, predicate, userExpression)
+                SeriesCondition(null, attribute!!, predicate, userExpression)
             }
 
             else -> throw IllegalArgumentException("Unknown predicate type")
@@ -47,26 +48,42 @@ class ConditionGenerator(private val attributeFor: AttributeFor) {
 
     fun predicateFrom(
         specification: FunctionSpecification,
+        attribute: Attribute? = null,
     ): Any {
         val parameters = specification.parameters
         return try {
-            predicateFromPackage(EPISODIC_PREDICATE_PACKAGE, specification, parameters)
+            episodicPredicate(specification, parameters)
         } catch (e: ClassNotFoundException) {
             try {
-                predicateFromPackage(SERIES_PREDICATE_PACKAGE, specification, parameters)
+                seriesPredicate(specification, parameters)
             } catch (e: ClassNotFoundException) {
-                predicateFromPackage(CASE_STRUCTURE_PREDICATE_PACKAGE, specification, parameters)
+                caseStructurePredicate(specification, attribute)
             }
         }
     }
 
-    private fun predicateFromPackage(
-        packageName: String,
+    private fun episodicPredicate(
         specification: FunctionSpecification,
         parameters: List<String>
     ): Any {
-        val functionName = "$packageName.${specification.name}"
+        val functionName = "$EPISODIC_PREDICATE_PACKAGE.${specification.name}"
         return createInstance(functionName, *parameters.toTypedArray())
+    }
+
+    private fun seriesPredicate(
+        specification: FunctionSpecification,
+        parameters: List<String>
+    ): Any {
+        val functionName = "$SERIES_PREDICATE_PACKAGE.${specification.name}"
+        return createInstance(functionName, *parameters.toTypedArray())
+    }
+
+    private fun caseStructurePredicate(
+        specification: FunctionSpecification,
+        attribute: Attribute?
+    ): Any {
+        val functionName = "$CASE_STRUCTURE_PREDICATE_PACKAGE.${specification.name}"
+        return createCaseStructureInstance(functionName, attribute)
     }
 
     fun signatureFrom(specification: FunctionSpecification): Signature {
@@ -84,6 +101,7 @@ class ConditionGenerator(private val attributeFor: AttributeFor) {
             val arg = args[0]  //Assume there is only one argument
             val constructorParameter = constructor.parameters[0]
             val type = constructorParameter.type
+            println("arg: $arg, type: $type")
             when (type.toString()) {
                 "kotlin.String" -> {
                     println("class $className has a string parameter")
@@ -108,6 +126,16 @@ class ConditionGenerator(private val attributeFor: AttributeFor) {
                 }
             }
 
+        }
+    }
+
+    fun <T : Any> createCaseStructureInstance(className: String, attribute: Attribute?): T {
+        val clazz = Class.forName(className).kotlin
+        val constructor = clazz.primaryConstructor
+        return if (constructor == null) {
+            clazz.objectInstance as T
+        } else {
+            constructor.call(attribute) as T
         }
     }
 }
