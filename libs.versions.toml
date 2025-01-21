@@ -1,6 +1,6 @@
 [versions]
 kotlin = "2.0.20"
-compose = "1.7.0"
+compose = "1.7.3"
 kotest = "5.7.2"
 assertjSwing = "3.17.1"
 guava = "33.2.1-jre"
