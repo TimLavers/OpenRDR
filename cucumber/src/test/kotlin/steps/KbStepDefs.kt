@@ -2,7 +2,6 @@ package steps
 
 import io.cucumber.datatable.DataTable
 import io.cucumber.docstring.DocString
-import io.cucumber.java.PendingException
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.kotest.matchers.shouldBe
@@ -55,13 +54,18 @@ class KbStepDefs {
     @When("I set the KB description to:")
     fun i_set_the_description_to(description: DocString) {
         println("description: ${description.content}")
+        val editCurrentKbControlPO = editCurrentKbControlPO()
+        val descriptionOperator = editCurrentKbControlPO().showDescriptionOperator()
+        descriptionOperator.setDescription(description.content)
     }
 
     @Then("the KB description is:")
     fun the_KBDescriptionIsNow(description: DocString) {
         println("description: ${description.content}")
-        val expectedText = description.content?: ""
+        val expectedText = description.content ?: ""
         println(expectedText)
-        editCurrentKbControlPO().kbDescription() shouldBe expectedText
+        val descriptionOperator = editCurrentKbControlPO().showDescriptionOperator()
+        descriptionOperator.description() shouldBe expectedText
+        descriptionOperator.cancel()
     }
 }

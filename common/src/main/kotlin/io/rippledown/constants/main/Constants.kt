@@ -8,6 +8,7 @@ const val MAIN_HEADING_ID = "main_heading"
 
 const val CREATE = "Create"
 const val CANCEL = "Cancel"
+const val CANCEL_DESCRIPTION = "Cancel the operation"
 
 const val KBS_DROPDOWN_DESCRIPTION = "Knowledge Base operations"
 const val CREATE_KB_NAME_FIELD_ID = "create_kb_name"

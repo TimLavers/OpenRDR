@@ -58,6 +58,7 @@ class TextInputWithCancelTest {
                 .assertIsEnabled()
                 .assertIsDisplayed()
                 .assertTextEquals(handler.cancelButtonText())
+                .assertContentDescriptionEquals(handler.cancelButtonDescription())
         }
     }
 

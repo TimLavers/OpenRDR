@@ -77,5 +77,13 @@ See: https://tsh.rules.info/basic
 A basic TSH management KB
 See: https://tsh.rules.info/basic
     """
+    And I create a Knowledge Base with the name Whatever based on the "Contact Lense Prescription - cases only" sample
+    Then I select the Knowledge Base named Thyroids
+    Then the KB description is:
+    """
+# Thyroids
+A basic TSH management KB
+See: https://tsh.rules.info/basic
+    """
     And stop the client application
 

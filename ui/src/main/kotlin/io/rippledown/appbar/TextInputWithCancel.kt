@@ -13,6 +13,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.main.CANCEL
+import io.rippledown.constants.main.CANCEL_DESCRIPTION
 
 interface TextInputHandler {
     fun initialText() = ""
@@ -22,6 +23,7 @@ interface TextInputHandler {
     fun confirmButtonText(): String
     fun confirmButtonDescription(): String
     fun cancelButtonText() = CANCEL
+    fun cancelButtonDescription() = CANCEL_DESCRIPTION
     fun handleInput(value: String)
     fun cancel()
 }
@@ -61,8 +63,12 @@ fun TextInputWithCancel(handler: TextInputHandler) {
                 ) {
                     TextButton(
                         onClick = {
+                            println("----------- cancel ------------")
                             handler.cancel()
                         },
+                        modifier = Modifier.semantics {
+                            contentDescription = handler.cancelButtonDescription()
+                        }
                     ) {
                         Text(handler.cancelButtonText())
                     }
