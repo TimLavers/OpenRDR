@@ -15,6 +15,8 @@ import io.rippledown.model.condition.episodic.predicate.Low
 import io.rippledown.model.condition.episodic.signature.AtLeast
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.series.Increasing
+import io.rippledown.model.condition.structural.IsAbsentFromCase
+import io.rippledown.model.condition.structural.IsPresentInCase
 import io.rippledown.model.condition.structural.IsSingleEpisodeCase
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -113,10 +115,28 @@ class ConditionGeneratorTest {
     }
 
     @Test
-    fun `should generate CaseStructure condition`() {
+    fun `should generate CaseStructure condition for IsSingleEpisodeCase`() {
         //Given
         val spec = ConditionSpecification(
             FunctionSpecification(IsSingleEpisodeCase::class.simpleName!!, listOf())
+        )
+
+        //When
+        val condition = generator.conditionFor(
+            attributeName = "",
+            userExpression = userExpression,
+            conditionSpec = spec
+        )
+
+        //Then
+        condition shouldBe CaseStructureCondition(null, IsSingleEpisodeCase, userExpression)
+    }
+
+    @Test
+    fun `should generate CaseStructure condition for IsPresentInCase`() {
+        //Given
+        val spec = ConditionSpecification(
+            FunctionSpecification(IsPresentInCase::class.simpleName!!, listOf())
         )
 
         //When
@@ -127,7 +147,25 @@ class ConditionGeneratorTest {
         )
 
         //Then
-        condition shouldBe CaseStructureCondition(null, IsSingleEpisodeCase, userExpression)
+        condition shouldBe CaseStructureCondition(null, IsPresentInCase(attribute), userExpression)
+    }
+
+    @Test
+    fun `should generate CaseStructure condition for IsAbsentFromCase`() {
+        //Given
+        val spec = ConditionSpecification(
+            FunctionSpecification(IsAbsentFromCase::class.simpleName!!, listOf())
+        )
+
+        //When
+        val condition = generator.conditionFor(
+            attributeName = atttributeName,
+            userExpression = userExpression,
+            conditionSpec = spec
+        )
+
+        //Then
+        condition shouldBe CaseStructureCondition(null, IsAbsentFromCase(attribute), userExpression)
     }
 
     @Test

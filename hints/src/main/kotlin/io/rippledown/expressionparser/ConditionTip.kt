@@ -16,7 +16,7 @@ class ConditionTip(attributeNames: Collection<String>, attributeFor: AttributeFo
         val expression = expressionConverter.insertPlaceholder(Expression(userText))
         val conditionSpecification = conditionSpecificationFor(expression.text)
         return if (conditionSpecification.predicate.name.isNotBlank()) {
-            conditionGenerator.conditionFor(expression.attribute, userText, conditionSpecification)
+            conditionGenerator.conditionFor(expression.attributeName, userText, conditionSpecification)
         } else {
             null
         }
