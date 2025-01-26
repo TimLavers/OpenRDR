@@ -94,4 +94,32 @@ class InMemoryKeyValueStoreTest {
             }.message shouldBe "Load should not be called if there are already items."
         }
     }
+
+    @Test
+    fun containsKey() {
+        with(InMemoryKeyValueStore()) {
+            containsKey("beach") shouldBe false
+            containsKey("walk") shouldBe false
+            create("beach", "Bondi")
+            containsKey("beach") shouldBe true
+            containsKey("walk") shouldBe false
+        }
+    }
+
+    @Test
+    fun get() {
+        with(InMemoryKeyValueStore()) {
+            get("beach") shouldBe null
+            val beach = create("beach", "Bondi")
+            with(get("beach")!!) {
+                key shouldBe beach.key
+                value shouldBe beach.value
+            }
+            store(beach.copy(value = "Bronte"))
+            with(get("beach")!!) {
+                key shouldBe beach.key
+                value shouldBe "Bronte"
+            }
+        }
+    }
 }

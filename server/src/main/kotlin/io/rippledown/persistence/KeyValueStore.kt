@@ -7,4 +7,6 @@ interface KeyValueStore {
     fun create(key: String, value: String): KeyValue
     fun store(keyValue: KeyValue)
     fun load(data: Set<KeyValue>)
+    fun containsKey(key: String) = get(key) != null
+    fun get(key: String) = all().find { it.key == key }
 }

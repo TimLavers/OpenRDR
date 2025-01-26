@@ -9,7 +9,7 @@ class InMemoryKeyValueStore: KeyValueStore {
     override fun all(): Set<KeyValue> = data.toSet()
 
     override fun create(key: String, value: String): KeyValue {
-        findByKey(key)?.let {
+        get(key)?.let {
             throw IllegalArgumentException("Key $key already exists")
         }
         val maxById = data.maxByOrNull { it.id }
@@ -20,7 +20,7 @@ class InMemoryKeyValueStore: KeyValueStore {
     }
 
     override fun store(keyValue: KeyValue) {
-        val byKey = findByKey(keyValue.key) ?: throw IllegalArgumentException("Unknown key: ${keyValue.key}")
+        val byKey = get(keyValue.key) ?: throw IllegalArgumentException("Unknown key: ${keyValue.key}")
         if (byKey.id != keyValue.id) {
             throw IllegalArgumentException("Id of new value does not match that of existing item.")
         }
@@ -34,7 +34,4 @@ class InMemoryKeyValueStore: KeyValueStore {
         }
         this.data.addAll(data)
     }
-
-    private fun findByKey(key: String) = data.find { it.key == key }
-    private fun findById(id: Int) = data.find { it.id == id }
 }

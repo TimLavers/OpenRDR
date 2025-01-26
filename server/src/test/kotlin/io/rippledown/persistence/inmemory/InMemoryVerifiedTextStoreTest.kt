@@ -17,5 +17,4 @@ class InMemoryVerifiedTextStoreTest {
             get(0) shouldBe "text"
         }
     }
-
 }

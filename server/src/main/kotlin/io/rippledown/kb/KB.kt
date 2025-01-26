@@ -14,7 +14,7 @@ import io.rippledown.server.logger
 class KB(persistentKB: PersistentKB) {
 
     val kbInfo: KBInfo = persistentKB.kbInfo()
-    private val metaInfo = MetaInfo()
+    private val metaInfo = MetaInfo(persistentKB.metaDataStore())
     val attributeManager: AttributeManager = AttributeManager(persistentKB.attributeStore())
     val conclusionManager: ConclusionManager = ConclusionManager(persistentKB.conclusionStore())
     val conditionManager: ConditionManager = ConditionManager(attributeManager, persistentKB.conditionStore())

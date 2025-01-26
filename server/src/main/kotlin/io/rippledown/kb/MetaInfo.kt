@@ -1,11 +1,20 @@
 package io.rippledown.kb
 
-class MetaInfo {
-    private var description: String = ""
+import io.rippledown.persistence.KeyValueStore
 
-    fun getDescription() = description
+const val DESCRIPTION_KEY = "DESCRIPTION_KEY"
+
+class MetaInfo(private val keyValueStore: KeyValueStore) {
+    init {
+        if (!keyValueStore.containsKey(DESCRIPTION_KEY)) {
+            keyValueStore.create(DESCRIPTION_KEY, "")
+        }
+    }
+
+    fun getDescription() = keyValueStore.get(DESCRIPTION_KEY)!!.value
 
     fun setDescription(description: String) {
-        this.description = description
+        val existing = keyValueStore.get(DESCRIPTION_KEY)!!
+        keyValueStore.store(existing.copy(value = description))
     }
 }
