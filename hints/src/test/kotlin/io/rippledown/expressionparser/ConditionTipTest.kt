@@ -21,9 +21,6 @@ class ConditionTipTest {
 
     private lateinit var conditionTip: ConditionTip
     private lateinit var glucose: Attribute
-    private lateinit var TSH: Attribute
-    private lateinit var XYZ: Attribute
-    private lateinit var waves: Attribute
 
     @BeforeEach
     fun setUp() {
@@ -425,7 +422,7 @@ class ConditionTipTest {
     @Test
     fun `should parse expression to NormalOrHighByAtMostSomePercentage`() {
         // Given
-        val expression = "glucose is either normal or not more than 15 percent above normal"
+        val expression = "glucose is either normal or raised by not more than 15 percent"
 
         // When
         val actual = conditionTip.conditionFor(expression)
