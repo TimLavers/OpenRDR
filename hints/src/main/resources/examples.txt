@@ -127,6 +127,7 @@ EXPECTED PREDICATE: IsPresentInCase
 x is present
 x detected
 x is available
+case contains a value for x
 
 EXPECTED PREDICATE: IsAbsentFromCase
 x is not present

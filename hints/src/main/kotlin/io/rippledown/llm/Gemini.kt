@@ -15,7 +15,7 @@ import java.lang.System.getenv
 import java.lang.Thread.sleep
 import kotlin.random.Random.Default.nextLong
 
-const val GEMINI_MODEL = "gemini-1.5-flash"
+const val GEMINI_MODEL = "gemini-2.0-flash-exp"
 const val EXAMPLES_FILE = "/examples.txt"
 
 val logger: Logger = LoggerFactory.getLogger("rdr")
@@ -61,7 +61,7 @@ fun conditionSpecificationFor(input: String): ConditionSpecification {
         text("Examples of expressions with the expected output are:")
         text(examples)
         text("Here is the expression: $input")
-        text("Generate output without a leading ```json or trailing ```.")
+        text("Generate output without a leading ```json and without a trailing ```.")
     }
 
     val json = retry {
