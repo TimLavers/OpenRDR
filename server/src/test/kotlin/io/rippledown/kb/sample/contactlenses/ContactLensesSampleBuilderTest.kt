@@ -16,6 +16,7 @@ class ContactLensesSampleBuilderTest: SampleBuilderTest() {
         checkAttributes()
         checkCases()
         endpoint.kb.ruleTree.size() shouldBe 1
+        endpoint.description() shouldBe CONTACT_LENSES_CASES_DESCRIPTION
     }
 
     @Test
@@ -34,6 +35,8 @@ class ContactLensesSampleBuilderTest: SampleBuilderTest() {
         interpretationForCase(1) shouldBe "soft"
         endpoint.kb.interpret(cases[2]).conclusionTexts().size shouldBe 0
         interpretationForCase(3) shouldBe "hard"
+
+        endpoint.description() shouldBe CONTACT_LENSES_DESCRIPTION
     }
 
     private fun checkAttributes() {

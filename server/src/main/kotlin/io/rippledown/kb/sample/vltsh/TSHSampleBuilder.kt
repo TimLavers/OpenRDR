@@ -14,14 +14,36 @@ import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.series.Increasing
 import io.rippledown.server.KBEndpoint
 
+const val TSH_DESCRIPTION = """
+    ### Thyroid Stimulating Hormone
+This is based on the KB described in the paper  
+[Interpretative commenting in clinical chemistry with worked
+examples for thyroid function test reports](https://doi.org/10.1016/j.plabm.2021.e00243) 
+
+This is an example only, not to be used for advice or diagnosis.
+Any mistakes are ours, and no liability of any kind is accepted.
+"""
+
+const val TSH_CASES_DESCRIPTION = """
+    ### Thyroid Stimulating Hormone Cases
+This is based on the cases in the KB described in the paper  
+[Interpretative commenting in clinical chemistry with worked
+examples for thyroid function test reports](https://doi.org/10.1016/j.plabm.2021.e00243) 
+
+This is an example only, not to be used for advice or diagnosis.
+Any mistakes are ours, and no liability of any kind is accepted.
+"""
+
 class TSHSampleBuilder(private val kbe: KBEndpoint)  {
 
     fun buildTSHRules() {
         setupTSHSampleCases()
+        kbe.setDescription(TSH_DESCRIPTION)
         TSHRulesBuilder(kbe).buildRules()
     }
 
     fun setupTSHSampleCases() {
+        kbe.setDescription(TSH_CASES_DESCRIPTION)
         setupTSHAttributes()
         val tshCases = TSHCases(kbe.kb.attributeManager)
         kbe.kb.addProcessedCase(tshCases.TSH1)

@@ -12,11 +12,13 @@ class TSHSampleBuilderTest: SampleBuilderTest() {
         checkAttributes()
         checkCases()
         endpoint.kb.ruleTree.size() shouldBe 1
+        endpoint.description() shouldBe TSH_CASES_DESCRIPTION
     }
 
     @Test
     fun `build rules`() {
         TSHSampleBuilder(endpoint).buildTSHRules()
+        endpoint.description() shouldBe TSH_DESCRIPTION
         checkAttributes()
         checkCases()
         endpoint.kb.ruleTree.size() shouldBe 34

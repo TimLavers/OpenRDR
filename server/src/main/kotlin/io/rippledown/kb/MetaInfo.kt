@@ -4,7 +4,7 @@ import io.rippledown.persistence.KeyValueStore
 
 const val DESCRIPTION_KEY = "DESCRIPTION_KEY"
 
-class MetaInfo(private val keyValueStore: KeyValueStore) {
+class MetaInfo(val keyValueStore: KeyValueStore) {
     init {
         if (!keyValueStore.containsKey(DESCRIPTION_KEY)) {
             keyValueStore.create(DESCRIPTION_KEY, "")
@@ -17,4 +17,6 @@ class MetaInfo(private val keyValueStore: KeyValueStore) {
         val existing = keyValueStore.get(DESCRIPTION_KEY)!!
         keyValueStore.store(existing.copy(value = description))
     }
+
+    fun allMetaInfo() = keyValueStore.all()
 }

@@ -31,6 +31,7 @@ The University of New South Wales,
 https://www.cse.unsw.edu.au/~cs9416/06s1/lectures/rdr/rdr_trace.html
 
 ### Zoo KB
+Chapter 5 of RippleDown rules by 
 The cases for this come from....
 The rules are described in Chapter 5 of...
 

@@ -80,6 +80,11 @@ class ConditionSourceTest {
     }
 
     @Test
+    fun suffixType() {
+        ConditionSource(conditionManager).exportFileSuffix() shouldBe ".json"
+    }
+
+    @Test
     fun exporter() {
         ConditionSource(conditionManager).exporter().shouldBeInstanceOf<ConditionExporter>()
     }

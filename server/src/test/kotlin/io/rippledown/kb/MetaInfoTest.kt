@@ -31,4 +31,15 @@ class MetaInfoTest {
         metaInfo = MetaInfo(keyValueStore)
         metaInfo.getDescription() shouldBe newDescription
     }
+
+    @Test
+    fun `all data`() {
+        val newDescription = "A truly fine KB!"
+        metaInfo.setDescription(newDescription)
+        with(metaInfo.allMetaInfo()) {
+            size shouldBe 1
+            first().key shouldBe DESCRIPTION_KEY
+            first().value shouldBe newDescription
+        }
+    }
 }
