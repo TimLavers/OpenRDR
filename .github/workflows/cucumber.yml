@@ -28,10 +28,7 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: ${{ runner.os }}-gradle
 
-      - name: Build with Gradle
-        run: ./gradlew build
-
-      - name: Run tests
+      - name: Run cukes
         run: ./gradlew :cucumber:application
         continue-on-error: true
 
