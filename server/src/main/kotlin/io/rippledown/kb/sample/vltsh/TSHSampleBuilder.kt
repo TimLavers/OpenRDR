@@ -15,7 +15,7 @@ import io.rippledown.model.condition.series.Increasing
 import io.rippledown.server.KBEndpoint
 
 const val TSH_DESCRIPTION = """
-    ### Thyroid Stimulating Hormone
+    # Thyroid Stimulating Hormone
 This is based on the KB described in the paper  
 [Interpretative commenting in clinical chemistry with worked
 examples for thyroid function test reports](https://doi.org/10.1016/j.plabm.2021.e00243) 
@@ -25,7 +25,7 @@ Any mistakes are ours, and no liability of any kind is accepted.
 """
 
 const val TSH_CASES_DESCRIPTION = """
-    ### Thyroid Stimulating Hormone Cases
+    # Thyroid Stimulating Hormone Cases
 This is based on the cases in the KB described in the paper  
 [Interpretative commenting in clinical chemistry with worked
 examples for thyroid function test reports](https://doi.org/10.1016/j.plabm.2021.e00243) 

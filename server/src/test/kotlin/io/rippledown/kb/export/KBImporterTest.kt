@@ -130,7 +130,7 @@ class KBImporterTest : ExporterTestBase() {
         KBExporter(tempDir, kb).export()
         val bytes = Zipper(tempDir).zip()
 
-        //When the file is upzipped
+        //When the file is unzipped
         Unzipper(bytes, tempDir).unzip()
 
         //Then the KB can be imported
