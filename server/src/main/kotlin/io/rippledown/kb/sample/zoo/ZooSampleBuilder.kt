@@ -20,8 +20,8 @@ ISBN 9780367644321.
 class ZooSampleBuilder(private val kbe: KBEndpoint) {
     private val zooCases = ZooCases(kbe.kb.attributeManager)
     fun buildRules() {
-        kbe.setDescription(ZOO_SAMPLE_DESCRIPTION)
         setupCases()
+        kbe.setDescription(ZOO_SAMPLE_DESCRIPTION)
         SingleClassificationZooKBRuleBuilder(kbe).buildRules()
     }
 
