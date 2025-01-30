@@ -28,8 +28,11 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: ${{ runner.os }}-gradle
 
-      - name: Run cukes
-        run: ./gradlew :cucumber:application
+      - name: Set up Gemini access key
+        run: echo "GEMINI_ACCESS_KEY=${{ secrets.GEMINI_ACCESS_KEY }}" >> $GITHUB_ENV
+
+      - name: Run unit tests
+        run: ./gradlew build
         continue-on-error: true
 
       - name: Upload build artifacts
