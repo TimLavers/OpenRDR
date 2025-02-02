@@ -69,7 +69,6 @@ fun EditCurrentKbControl(handler: KbEditControlHandler) {
             .semantics {
                 contentDescription = EDIT_CURRENT_KB_CONTROL_DESCRIPTION
             }
-//            .padding(16.dp)
             .testTag(EDIT_CURRENT_KB_CONTROL_ID)
     ) {
 
@@ -79,11 +78,6 @@ fun EditCurrentKbControl(handler: KbEditControlHandler) {
                 contentDescription = EDIT_CURRENT_KB_CONTROL_DROPDOWN_BUTTON_DESCRIPTION
             }
         ) {
-//            Icon(
-//                imageVector = Default.Edit,
-//                contentDescription = EDIT_CURRENT_KB_CONTROL_DROPDOWN_DESCRIPTION,
-//                tint = colors.onPrimary
-//            )
             Text(text = EDIT)
         }
         DropdownMenu(

@@ -7,7 +7,7 @@ import androidx.compose.ui.test.junit4.ComposeTestRule
 import io.rippledown.constants.kb.*
 import io.rippledown.constants.main.*
 
-fun ComposeTestRule.clickEditKbDropdown() = onNodeWithContentDescription(EDIT_CURRENT_KB_CONTROL_DROPDOWN_DESCRIPTION).performClick()
+fun ComposeTestRule.clickEditKbDropdown() = onNodeWithContentDescription(EDIT_CURRENT_KB_CONTROL_DROPDOWN_BUTTON_DESCRIPTION).performClick()
 
 fun ComposeTestRule.assertEditKbDescriptionMenuItemIsShowing() {
     onNodeWithText(EDIT_KB_DESCRIPTION_BUTTON_TEXT).assertIsEnabled()

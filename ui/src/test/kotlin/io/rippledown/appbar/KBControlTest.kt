@@ -30,16 +30,6 @@ class KBControlTest {
     }
 
     @Test
-    fun `should display the KB name`() {
-        with(composeTestRule) {
-            setContent {
-                KBControl(lipidsInfo, handler)
-            }
-            assertKbNameIs(lipidsInfo.name)
-        }
-    }
-
-    @Test
     fun `should show dropdown of all available KBs if there is no current KB`() = runTest {
         val glucose = "Glucose"
         val glucoseInfo = KBInfo(glucose)
@@ -50,7 +40,6 @@ class KBControlTest {
             }
             //Given
             assertCreateKbMenuItemIsNotShowing()
-            assertKbNameIs("")
 
             //when
             clickDropdown()
@@ -72,7 +61,6 @@ class KBControlTest {
             }
             //Given
             assertCreateKbMenuItemIsNotShowing()
-            assertKbNameIs(glucose)
 
             //when
             clickDropdown()
@@ -94,7 +82,6 @@ class KBControlTest {
             }
             //Given
             assertCreateKbMenuItemIsNotShowing()
-            assertKbNameIs(glucose)
             clickDropdown()
             assertCreateKbMenuItemIsShowing()
 
@@ -121,7 +108,6 @@ class KBControlTest {
             }
             //Given
             assertCreateKbMenuItemIsNotShowing()
-            assertKbNameIs(glucose)
             clickDropdown()
             assertCreateKbFromSampleMenuItemIsShowing()
 
@@ -150,7 +136,6 @@ class KBControlTest {
             }
             //Given
             assertImportKbMenuItemIsNotShowing()
-            assertKbNameIs(glucose)
             clickDropdown()
             assertImportKbMenuItemIsShowing()
 

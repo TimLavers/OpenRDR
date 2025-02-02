@@ -3,12 +3,8 @@ package io.rippledown.appbar
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.*
-import androidx.compose.material.MaterialTheme.colors
-import androidx.compose.material.icons.Icons.Default
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -48,8 +44,6 @@ fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
     var exportKbDialogShowing by remember { mutableStateOf(false) }
     val availableKBs =
         remember { mutableStateListOf<KBInfo>() } // https://tigeroakes.com/posts/mutablestateof-list-vs-mutablestatelistof/
-
-    fun kbName() = kbInfo?.name ?: ""
 
     LaunchedEffect(Unit) {
         val kbsApartFromCurrent = handler.kbList().filter { it != kbInfo }.sorted()
@@ -162,21 +156,14 @@ fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
             .semantics {
                 contentDescription = KB_CONTROL_DESCRIPTION
             }
-//            .padding(16.dp)
             .testTag(KB_CONTROL_ID)
     ) {
-
         Button(
             onClick = { expanded = true },
             modifier = Modifier.semantics {
                 contentDescription = KB_CONTROL_DROPDOWN_DESCRIPTION
             }
         ) {
-//            Icon(
-//                imageVector = Default.KeyboardArrowDown,
-//                contentDescription = KB_CONTROL_DROPDOWN_DESCRIPTION,
-//                tint = colors.onPrimary
-//            )
             Text("Knowledge Bases")
         }
 
@@ -250,6 +237,3 @@ fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
         }
     }
 }
-
-
-

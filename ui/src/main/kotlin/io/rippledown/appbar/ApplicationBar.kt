@@ -24,7 +24,6 @@ fun ApplicationBar(kbInfo: KBInfo?, handler: AppBarHandler) {
         contentDescription = APPLICATION_BAR_DESCRIPTION
     }.testTag(APPLICATION_BAR_ID)) {
         Row {
-//            ApplicationNameDisplay()
             KbNameDisplay(kbInfo)
             // Don't show menus if a rule session is in progress
             if (!handler.isRuleSessionInProgress) {

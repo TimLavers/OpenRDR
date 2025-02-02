@@ -57,35 +57,38 @@ Feature: Knowledge Base management
     Then the displayed KB name is now Stuff
     And stop the client application
 
-  @single
   Scenario: The description for a KB can be edited
-    Given A Knowledge Base called Thyroids has been created
+    Given A Knowledge Base called Irons has been created
+    And A Knowledge Base called Glucose has been created
     And I start the client application
-    And the displayed KB name is Thyroids
+    And I select the Knowledge Base named Glucose
     Then the KB description is:
     """
     """
     Given I set the KB description to:
     """
-# Thyroids
-A basic TSH management KB
-See: https://tsh.rules.info/basic
+# Glucose
+A basic Glucose management KB
+See: https://glucose.rules.info/basic
     """
     Then the KB description is:
     """
-# Thyroids
-A basic TSH management KB
-See: https://tsh.rules.info/basic
+# Glucose
+A basic Glucose management KB
+See: https://glucose.rules.info/basic
     """
-    And pause
-
-    And I create a Knowledge Base with the name Whatever based on the "Contact Lense Prescription - cases only" sample
-    Then I select the Knowledge Base named Thyroids
+    And I select the Knowledge Base named Irons
+    And pause for 5 seconds
     Then the KB description is:
     """
-# Thyroids
-A basic TSH management KB
-See: https://tsh.rules.info/basic
+    """
+    And I select the Knowledge Base named Glucose
+    And pause for 5 seconds
+    Then the KB description is:
+    """
+# Glucose
+A basic Glucose management KB
+See: https://glucose.rules.info/basic
     """
     And stop the client application
 

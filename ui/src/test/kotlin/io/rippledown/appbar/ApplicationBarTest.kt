@@ -31,16 +31,16 @@ class ApplicationBarTest {
         every { handler.kbList } returns { emptyList() }
     }
 
-    @Test
-    fun `should show application heading`() {
-        with(composeTestRule) {
-            setContent {
-                ApplicationBar(bondiInfo, handler)
-            }
-            onNodeWithTag(testTag = MAIN_HEADING_ID).assertExists()
-        }
-    }
-
+//    @Test
+//    fun `should show application heading`() {
+//        with(composeTestRule) {
+//            setContent {
+//                ApplicationBar(bondiInfo, handler)
+//            }
+//            onNodeWithTag(testTag = MAIN_HEADING_ID).assertExists()
+//        }
+//    }
+//
     @Test
     fun `should show current KB name`() {
         with(composeTestRule) {

@@ -63,7 +63,6 @@ fun TextInputWithCancel(handler: TextInputHandler) {
                 ) {
                     TextButton(
                         onClick = {
-                            println("----------- cancel ------------")
                             handler.cancel()
                         },
                         modifier = Modifier.semantics {
