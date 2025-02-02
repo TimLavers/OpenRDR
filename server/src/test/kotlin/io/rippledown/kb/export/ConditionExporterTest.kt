@@ -7,6 +7,9 @@ import io.rippledown.kb.AttributeManager
 import io.rippledown.kb.ConditionManager
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.*
+import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals
+import io.rippledown.model.condition.episodic.predicate.Is
+import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.persistence.inmemory.InMemoryAttributeStore
 import io.rippledown.persistence.inmemory.InMemoryConditionStore
 import org.junit.jupiter.api.BeforeEach
@@ -38,10 +41,8 @@ class ConditionExporterTest {
     @Test
     fun importFromStringWithUserExpression() {
         val userExpression = "elevated Glucose"
-        with(ConditionConstructors()) {
-            exportImport(Is(glucose, userExpression, "42"))
-            exportImport(GreaterThanOrEqualTo(glucose, userExpression, "42"))
-        }
+        exportImport(EpisodicCondition(null, glucose, Is("42"), Current, userExpression))
+        exportImport(EpisodicCondition(null, glucose, GreaterThanOrEquals(42.0), Current, userExpression))
     }
 
     private fun exportImport(condition: Condition) {

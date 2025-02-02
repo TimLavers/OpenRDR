@@ -3,7 +3,6 @@ package io.rippledown.model.condition.edit
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.EpisodicCondition
-import io.rippledown.model.condition.episodic.predicate.Contains
 import io.rippledown.model.condition.episodic.predicate.DoesNotContain
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.episodic.signature.Signature
@@ -23,6 +22,6 @@ data class EditableDoesNotContainCondition(val attribute: Attribute,
     }
 
     override fun condition(value: String): Condition {
-        return EpisodicCondition(attribute, DoesNotContain(value), signature)
+        return EpisodicCondition(attribute = attribute, predicate = DoesNotContain(value), signature = signature)
     }
 }

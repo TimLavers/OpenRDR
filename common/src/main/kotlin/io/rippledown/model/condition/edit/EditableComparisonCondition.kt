@@ -26,11 +26,11 @@ sealed class EditableComparisonCondition(val attribute: Attribute, val initialCu
     override fun condition(value: String): Condition {
         require(initialCutoff.type.valid(value))
         val cutoff = initialCutoff.type.convert(value) as Double
-        return EpisodicCondition(attribute, predicate(cutoff), signature)
+        return EpisodicCondition(attribute = attribute, predicate = predicate(cutoff), signature = signature)
     }
 
     override fun prerequisite(): Condition {
-        return EpisodicCondition(attribute, IsNumeric, signature)
+        return EpisodicCondition(attribute = attribute, predicate = IsNumeric, signature = signature)
     }
 
     abstract fun predicate(double: Double): TestResultPredicate

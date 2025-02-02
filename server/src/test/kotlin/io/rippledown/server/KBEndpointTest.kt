@@ -10,13 +10,11 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.CaseTestUtils
-import io.rippledown.expressionparser.AttributeFor
 import io.rippledown.kb.ConditionParser
 import io.rippledown.kb.KB
 import io.rippledown.kb.KBManager
 import io.rippledown.model.beSameAs
 import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.ConditionConstructors
 import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.model.condition.isCondition
 import io.rippledown.model.rule.ChangeTreeToAddConclusion

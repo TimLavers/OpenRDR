@@ -12,6 +12,9 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.model.*
 import io.rippledown.model.condition.*
+import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals
+import io.rippledown.model.condition.episodic.predicate.High
+import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.external.MeasurementEvent
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
@@ -719,7 +722,7 @@ class KBTest {
         val sessionCase = createCase("Case", attribute = waves, value = height)
         val conditionParser = mockk<ConditionParser>()
         val userExpression = "waves seem to be at least one metre"
-        val parsedCondition = ConditionConstructors().GreaterThanOrEqualTo(waves, userExpression, "1.0")
+        val parsedCondition = EpisodicCondition(null, waves, GreaterThanOrEquals(1.0), Current, userExpression)
         every { conditionParser.parse(any(), any(), any()) } returns parsedCondition
         kb.setConditionParser(conditionParser)
 
@@ -751,7 +754,7 @@ class KBTest {
         val sessionCase = createCase("Case", attribute = waves, value = height)
         val conditionParser = mockk<ConditionParser>()
         val userExpression = "waves seem to be at least one metre"
-        val parsedCondition = ConditionConstructors().GreaterThanOrEqualTo(waves, userExpression, "1.0")
+        val parsedCondition = EpisodicCondition(null, waves, GreaterThanOrEquals(1.0), Current, userExpression)
         every { conditionParser.parse(any(), any(), any()) } returns parsedCondition
         kb.setConditionParser(conditionParser)
 
@@ -793,8 +796,7 @@ class KBTest {
 
         //Then
         kb.holdsForSessionCase(returnedCondition) shouldBe true
-        returnedCondition shouldBeSameAs ConditionConstructors().High(waves, userExpression)
-        returnedCondition.userExpression() shouldBe userExpression
+        returnedCondition shouldBeSameAs EpisodicCondition(null, waves, High, Current, userExpression)
     }
 
     @Test
@@ -806,7 +808,7 @@ class KBTest {
         val sessionCase = createCase("Case", attribute = waves, value = height)
         val conditionParser = mockk<ConditionParser>()
         val userExpression = "waves seem to be at least one metre"
-        val parsedCondition = ConditionConstructors().GreaterThanOrEqualTo(waves, userExpression, "1.0")
+        val parsedCondition = EpisodicCondition(null, waves, GreaterThanOrEquals(1.0), Current, userExpression)
         every { conditionParser.parse(any(), any(), any()) } returns parsedCondition
         kb.setConditionParser(conditionParser)
 

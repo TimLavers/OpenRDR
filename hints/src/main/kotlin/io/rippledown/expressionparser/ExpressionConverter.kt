@@ -2,16 +2,16 @@ package io.rippledown.expressionparser
 
 class ExpressionConverter(private val attributeNames: Collection<String>) {
 
-    fun insertPlaceholder(ce: Expression) = attributeNames.fold(ce) { acc, attribute ->
-        if (acc.text.contains(attribute, ignoreCase = true)) {
-            Expression(acc.text.replace(attribute, placeHolder, ignoreCase = true), attribute)
+    fun insertPlaceholder(expression: Expression) = attributeNames.fold(expression) { acc, attributeName ->
+        if (acc.text.contains(attributeName, ignoreCase = true)) {
+            Expression(acc.text.replace(attributeName, placeHolder, ignoreCase = true), attributeName)
         } else {
             acc
         }
     }
 
-    fun removePlaceholder(ce: Expression) = with(ce) {
-        Expression(text.replace(placeHolder, attribute), "")
+    fun removePlaceholder(expression: Expression) = with(expression) {
+        Expression(text.replace(placeHolder, attributeName), "")
     }
 
     companion object {
@@ -19,4 +19,4 @@ class ExpressionConverter(private val attributeNames: Collection<String>) {
     }
 }
 
-data class Expression(val text: String, val attribute: String = "")
+data class Expression(val text: String, val attributeName: String = "")
