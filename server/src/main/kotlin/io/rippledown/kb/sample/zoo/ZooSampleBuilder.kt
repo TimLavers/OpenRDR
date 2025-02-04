@@ -3,15 +3,31 @@ package io.rippledown.kb.sample.zoo
 import io.rippledown.kb.sample.SampleRuleBuilder
 import io.rippledown.server.KBEndpoint
 
+const val ZOO_SAMPLE_DESCRIPTION = """
+    # Zoo KB
+This is based on the cases and rules developed in Chapter 5 of 
+"Ripple-Down Rules - The Alternative to Machine Learning"
+By Paul Compton and Byeong Ho Kang, Copyright 2021, CRC Press
+ISBN 9780367644321.
+"""
+const val ZOO_CASES_SAMPLE_DESCRIPTION = """
+    # Zoo KB
+This is based on the cases developed in Chapter 5 of 
+"Ripple-Down Rules - The Alternative to Machine Learning"
+By Paul Compton and Byeong Ho Kang, Copyright 2021, CRC Press
+ISBN 9780367644321.
+"""
 class ZooSampleBuilder(private val kbe: KBEndpoint) {
     private val zooCases = ZooCases(kbe.kb.attributeManager)
     fun buildRules() {
         setupCases()
+        kbe.setDescription(ZOO_SAMPLE_DESCRIPTION)
         SingleClassificationZooKBRuleBuilder(kbe).buildRules()
     }
 
     fun setupCases() {
         createAttributes()
+        kbe.setDescription(ZOO_CASES_SAMPLE_DESCRIPTION)
         zooCases.cases().forEach {
             kbe.kb.addProcessedCase(it)
         }

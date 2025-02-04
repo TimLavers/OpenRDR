@@ -7,14 +7,41 @@ import io.rippledown.kb.sample.contactlenses.ContactLensesRulesBuilder.Companion
 import io.rippledown.kb.sample.contactlenses.ContactLensesRulesBuilder.Companion.TearProductionName
 import io.rippledown.server.KBEndpoint
 
+const val CONTACT_LENSES_DESCRIPTION = """
+    # Contact Lenses KB
+    This is a KB described in the course notes for a course in 
+    Machine Learning and RDR at The University of New South Wales.
+    See https://www.cse.unsw.edu.au/~cs9416/06s1/lectures/rdr/rdr_trace.html
+    
+    Used with permission.
+    
+    This is obviously for demonstration purposes only, and not to be used for advice or diagnosis.
+    No liability of any kind is accepted.
+"""
+
+const val CONTACT_LENSES_CASES_DESCRIPTION = """
+    # Contact Lenses KB
+    This contains cases from a KB described in the course notes for a course in 
+    Machine Learning and RDR at The University of New South Wales.
+    See https://www.cse.unsw.edu.au/~cs9416/06s1/lectures/rdr/rdr_trace.html
+    
+    Used with permission.
+    
+    This is obviously for demonstration purposes only, and not to be used for advice or diagnosis.
+    No liability of any kind is accepted.
+"""
+
+
 class ContactLensesSampleBuilder(private val kbe: KBEndpoint) {
 
     fun buildRules() {
         setupCases()
+        kbe.setDescription(CONTACT_LENSES_DESCRIPTION)
         ContactLensesRulesBuilder(kbe).buildRules()
     }
 
     fun setupCases() {
+        kbe.setDescription(CONTACT_LENSES_CASES_DESCRIPTION)
         createAttributes()
         Cases(kbe.kb.attributeManager).allCases.forEach {
             kbe.kb.addProcessedCase(it)

@@ -93,6 +93,9 @@ fun OpenRDRUI(handler: Handler) {
                 override var importKB: (data: File) -> Unit = { runBlocking { kbInfo = api.importKBFromZip(it) } }
                 override var exportKB: (data: File) -> Unit = { runBlocking { api.exportKBToZip(it) } }
                 override val kbList: () -> List<KBInfo> = { runBlocking { api.kbList() } }
+
+                override var setKbDescription: (description: String) -> Unit = { runBlocking { api.setKbDescription(it) } }
+                override var kbDescription: () -> String = { runBlocking { api.kbDescription() } }
             })
         },
         bottomBar = {

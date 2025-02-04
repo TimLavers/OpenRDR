@@ -55,6 +55,14 @@ internal class KBEndpointTest {
     }
 
     @Test
+    fun descriptionTest() {
+        endpoint.description() shouldBe ""
+        val newDescription = "lots of rules"
+        endpoint.setDescription(newDescription)
+        endpoint.description() shouldBe newDescription
+    }
+
+    @Test
     fun `should delegate parsing a condition to the KB`() {
         // Given
         val kb = mockk<KB>(relaxed = true)

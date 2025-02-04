@@ -12,6 +12,7 @@ class ZooSampleBuilderTest: SampleBuilderTest() {
         checkAttributes()
         checkCases()
         endpoint.kb.ruleTree.size() shouldBe 1
+        endpoint.description() shouldBe ZOO_CASES_SAMPLE_DESCRIPTION
     }
 
     @Test
@@ -29,6 +30,7 @@ class ZooSampleBuilderTest: SampleBuilderTest() {
         interpretationForCase(0) shouldBe "mammal"
         interpretationForCase(1) shouldBe "mammal"
         interpretationForCase(2) shouldBe "fish"
+        endpoint.description() shouldBe ZOO_SAMPLE_DESCRIPTION
     }
 
     private fun checkAttributes() {

@@ -31,6 +31,9 @@ The University of New South Wales,
 https://www.cse.unsw.edu.au/~cs9416/06s1/lectures/rdr/rdr_trace.html
 
 ### Zoo KB
-The cases for this come from....
-The rules are described in Chapter 5 of...
+This is based on the cases and rules developed in Chapter 5 of 
+"Ripple-Down Rules - The Alternative to Machine Learning"
+By Paul Compton and Byeong Ho Kang, Copyright 2021, CRC Press
+ISBN 9780367644321.
+
 
