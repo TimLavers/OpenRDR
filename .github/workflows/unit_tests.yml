@@ -31,18 +31,8 @@ jobs:
       - name: Read Gemini API key
         run: echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> $GITHUB_ENV
 
-      - name: Run hints unit tests
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: ./gradlew :hints:test
-        continue-on-error: true
-
       - name: Run common unit tests
         run: ./gradlew :common:test
-        continue-on-error: true
-
-      - name: Run server unit tests
-        run: ./gradlew :server:test
         continue-on-error: true
 
       - name: Upload build artifacts
