@@ -23,4 +23,28 @@ class ConditionSpecificationTest {
             FunctionSpecification("AtMost", listOf("5"))
         )
     }
+
+    @Test
+    fun `should ignore leading and trailing json tags`() {
+        // Given
+        val expected = """
+            {
+              "predicate":{"name":"GreaterThanOrEquals","parameters":["3.14"]},
+              "signature":{"name":"AtMost","parameters":["5"]}
+            }
+            """.trimIndent()
+
+        val expressionFromGemini = "```json$expected\n```"
+
+
+        // When
+        val conditionStructure = fromJson(expressionFromGemini)
+
+        // Then
+        conditionStructure shouldBe ConditionSpecification(
+            FunctionSpecification("GreaterThanOrEquals", listOf("3.14")),
+            FunctionSpecification("AtMost", listOf("5"))
+        )
+    }
+
 }

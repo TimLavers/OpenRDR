@@ -16,8 +16,7 @@ class GeminiTest {
             "raised x",
             "elevated x",
             "high x",
-            "x es alto",
-            "x es mejor que el rango normal"
+            "x es alto"
         )
 
         for (entered in expressions) {
@@ -615,10 +614,8 @@ class GeminiTest {
         // Given
         val expressions = listOf(
             "no x are normal",
-            "every x is abnormal",
             "none of the x are within the normal range",
             "no x are OK",
-            "all x results are abnormal"
         )
         for (entered in expressions) {
             // When

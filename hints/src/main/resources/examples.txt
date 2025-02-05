@@ -34,6 +34,7 @@ EXPECTED PREDICATE: Normal
 EXPECTED SIGNATURE: No
 no x are normal
 all x are abnormal
+all x results are abnormal
 
 EXPECTED PREDICATE: Is, y
 EXPECTED SIGNATURE: Current
@@ -65,6 +66,7 @@ EXPECTED PREDICATE: GreaterThanOrEquals, y
 EXPECTED SIGNATURE: Current
 x is greater than or equal to y
 x is not less than y
+x is at least y
 
 EXPECTED PREDICATE: GreaterThanOrEquals, 4.1
 EXPECTED SIGNATURE: AtMost, y
