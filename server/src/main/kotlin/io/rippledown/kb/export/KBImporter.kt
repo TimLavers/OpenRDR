@@ -13,6 +13,10 @@ class KBImporter(source: File, private val persistenceProvider: PersistenceProvi
         // Using the name and id, create a persistent KB.
         val persistentKB = persistenceProvider.createKBPersistence(kbInfo)
 
+        // Load the metadata.
+        val items = DirectoryImporter(metaInfoDirectory, KeyValueExporter(), true).import()
+        persistentKB.metaDataStore().load(items)
+
         // Extract the attributes and load them into the persistent attribute store.
         val idToAttribute = AttributesImporter(attributesFile).import()
         val attributeStore = persistentKB.attributeStore()

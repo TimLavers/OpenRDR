@@ -1,6 +1,5 @@
 package io.rippledown.server
 
-import io.rippledown.expressionparser.ConditionTip
 import io.rippledown.kb.KB
 import io.rippledown.kb.export.KBExporter
 import io.rippledown.kb.export.util.Zipper
@@ -36,6 +35,12 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
                 kb.conclusionManager.getOrCreate(diff.right())
             )
         }
+    }
+
+    fun description() = kb.description()
+
+    fun setDescription(newDescription: String) {
+        kb.setDescription(newDescription)
     }
 
     fun exportKBToZip(): File {

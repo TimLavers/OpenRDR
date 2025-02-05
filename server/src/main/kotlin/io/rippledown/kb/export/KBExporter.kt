@@ -5,6 +5,7 @@ import java.io.File
 
 open class KBExportImport(val destination: File) {
     val kbDetailsFile = File(destination, "Details.txt")
+    val metaInfoDirectory = File(destination, "MetaInfo")
     val attributesFile = File(destination, "Attributes.txt")
     val caseViewFile = File(destination, "CaseView.txt")
     val casesDirectory = File(destination, "CornerstoneCases")
@@ -21,6 +22,10 @@ class KBExporter(destination: File, val kb: KB): KBExportImport(destination) {
     fun export() {
         // Details of the KB.
         KBInfoExporter(ExportFile(kbDetailsFile, "KBInfo"), kb.kbInfo).export()
+
+        // MetaInfo
+        metaInfoDirectory.mkdirs()
+        IdentifiedObjectExporter(metaInfoDirectory, KeyValueSource(kb.metaInfo.keyValueStore, "MetaInfo")).export()
 
         // Attributes.
         AttributesExporter(attributesFile, kb.attributeManager.all()).export()

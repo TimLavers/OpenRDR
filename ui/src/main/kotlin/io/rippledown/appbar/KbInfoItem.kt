@@ -21,7 +21,6 @@ fun KbInfoItem(name: String, handler: KbSelectionHandler) {
             handler.onSelect()
         },
         modifier = Modifier.semantics { contentDescription = "$KB_INFO_ITEM$name" }
-
     ) {
         Text(text = name)
     }

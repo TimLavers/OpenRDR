@@ -25,7 +25,14 @@ private const val case1 = "Case1"
 private const val case2 = "Case2"
 private const val case3 = "Case3"
 private const val userExpression = "Glucose is no more than 4.1"
-
+private const val description = """
+    # KB Export test
+    This is a multi-line description.
+    
+    It includes a [link](https://en.wikipedia.org/wiki/Markdown).
+    
+    Awesome!!
+"""
 
 class KBImporterTest : ExporterTestBase() {
 
@@ -59,6 +66,8 @@ class KBImporterTest : ExporterTestBase() {
         val rebuilt = KBImporter(tempDir, persistenceProvider).import()
         rebuilt.kbInfo.name shouldBe kb.kbInfo.name
 
+        rebuilt.metaInfo.getDescription() shouldBe description
+
         rebuilt.allCornerstoneCases().size shouldBe 1
         rebuilt.getCornerstoneCaseByName(case1) shouldBeEqualToComparingFields kb.getCornerstoneCaseByName(case1)
 
@@ -77,11 +86,13 @@ class KBImporterTest : ExporterTestBase() {
         persistenceProvider.idStore().data() shouldHaveSize 2
     }
 
-    fun buildDummyKB(kbName: String): KB {
+    private fun buildDummyKB(kbName: String): KB {
         // Create a simple KB.
         val kbInfo = KBInfo(kbName)
         val pKB = persistenceProvider.createKBPersistence(kbInfo)
         val kb = KB(pKB)
+        // MetaInfo
+        kb.metaInfo.setDescription(description)
         // Attributes.
         val glucose = kb.attributeManager.getOrCreate("Glucose")
         val ldl = kb.attributeManager.getOrCreate("LDL")
@@ -118,11 +129,10 @@ class KBImporterTest : ExporterTestBase() {
         // Given a zipped KB
         val kbName = "Whatever"
         val kb = buildDummyKB(kbName)
-        println("tempDir1 = ${tempDir}")
         KBExporter(tempDir, kb).export()
         val bytes = Zipper(tempDir).zip()
 
-        //When the file is upzipped
+        //When the file is unzipped
         Unzipper(bytes, tempDir).unzip()
 
         //Then the KB can be imported

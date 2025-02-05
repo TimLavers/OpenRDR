@@ -14,6 +14,7 @@ import io.rippledown.server.logger
 class KB(persistentKB: PersistentKB) {
 
     val kbInfo: KBInfo = persistentKB.kbInfo()
+    val metaInfo = MetaInfo(persistentKB.metaDataStore())
     val attributeManager: AttributeManager = AttributeManager(persistentKB.attributeStore())
     val conclusionManager: ConclusionManager = ConclusionManager(persistentKB.conclusionStore())
     val conditionManager: ConditionManager = ConditionManager(attributeManager, persistentKB.conditionStore())
@@ -37,6 +38,12 @@ class KB(persistentKB: PersistentKB) {
             override fun parse(expression: String, attributeNames: List<String>, attributeFor: AttributeFor) =
                 ConditionTip(attributeNames, attributeFor).conditionFor(expression)
         }
+    }
+
+    fun description() = metaInfo.getDescription()
+
+    fun setDescription(description: String) {
+        metaInfo.setDescription(description)
     }
 
     fun containsCornerstoneCaseWithName(caseName: String): Boolean {

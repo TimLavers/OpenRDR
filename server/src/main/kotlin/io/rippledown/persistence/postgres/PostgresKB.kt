@@ -44,7 +44,7 @@ class PostgresKB internal constructor(private val dbName: String): PersistentKB 
     private val conditionStore = PostgresConditionStore(db)
     private val ruleStore = PostgresRuleStore(db)
     private val caseStore = PostgresCaseStore(db)
-    private val verifiedTextStore = PostgresVerifiedTextStore(db)
+    private val metaDataStore = PostgresKeyValueStore(db)
 
     override fun kbInfo(): KBInfo {
         val resultList = mutableListOf<KBInfo>()
@@ -72,6 +72,8 @@ class PostgresKB internal constructor(private val dbName: String): PersistentKB 
     override fun ruleStore() = ruleStore
 
     override fun caseStore() = caseStore
+
+    override fun metaDataStore() = metaDataStore
 }
 object PKBInfos: LongIdTable(name = KB_INFO_TABLE) {
     val kbId = varchar("kb_id", 128)

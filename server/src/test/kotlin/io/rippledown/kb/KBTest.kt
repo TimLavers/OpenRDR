@@ -27,12 +27,23 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class KBTest {
+    private lateinit var persistentKB: InMemoryKB
     private lateinit var kb: KB
 
     @BeforeTest
     fun setup() {
         val kbInfo = KBInfo("id123", "Blah")
         kb = createKB(kbInfo)
+    }
+
+    @Test
+    fun descriptionTest() {
+        kb.description() shouldBe ""
+        val newDescription = "A truly fine KB!"
+        kb.setDescription(newDescription)
+        kb.description() shouldBe newDescription
+        kb = KB(persistentKB)
+        kb.description() shouldBe newDescription
     }
 
     @Test
@@ -866,5 +877,8 @@ class KBTest {
         return ExternalCase(caseName, data)
     }
 
-    private fun createKB(kbInfo: KBInfo) = KB(InMemoryKB(kbInfo))
+    private fun createKB(kbInfo: KBInfo): KB {
+        persistentKB = InMemoryKB(kbInfo)
+        return KB(persistentKB)
+    }
 }

@@ -72,6 +72,14 @@ class PostgresKBTest {
     }
 
     @Test
+    fun metaDataStore() {
+        val beachInfo = glucoseKB.metaDataStore().create("Beach", "Bulli")
+        glucoseKB.metaDataStore().all() shouldBe setOf(beachInfo)
+        glucoseKB = PostgresKB(glucoseInfo.id)
+        glucoseKB.metaDataStore().all() shouldBe setOf(beachInfo)
+    }
+
+    @Test
     fun conditionStore() {
         glucoseKB.conditionStore().all() shouldBe emptySet()
         val glucose = glucoseKB.attributeStore().create("Glucose")

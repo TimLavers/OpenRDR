@@ -62,7 +62,7 @@ class TestClientLauncher {
         while (!::composeWindow.isInitialized) {
             sleep(100)
         }
-        composeWindow.isAlwaysOnTop = true
+//        composeWindow.isAlwaysOnTop = true
         return composeWindow
     }
 

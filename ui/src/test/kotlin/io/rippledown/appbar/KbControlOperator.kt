@@ -5,6 +5,7 @@ package io.rippledown.appbar
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import io.rippledown.constants.kb.KB_CONTROL_DROPDOWN_DESCRIPTION
+import io.rippledown.constants.kb.KB_NAME_ID
 import io.rippledown.constants.kb.KB_SELECTOR_ID
 import io.rippledown.constants.main.CREATE_KB_FROM_SAMPLE_TEXT
 import io.rippledown.constants.main.CREATE_KB_TEXT
@@ -12,7 +13,7 @@ import io.rippledown.constants.main.IMPORT_KB_TEXT
 
 fun ComposeTestRule.assertKbNameIs(expected: String) {
     waitUntilExactlyOneExists(hasText(expected))
-    onNodeWithTag(KB_SELECTOR_ID).assertTextEquals(expected)
+    onNodeWithTag(KB_NAME_ID).assertTextEquals(expected)
 }
 
 fun ComposeTestRule.clickDropdown() = onNodeWithContentDescription(KB_CONTROL_DROPDOWN_DESCRIPTION).performClick()

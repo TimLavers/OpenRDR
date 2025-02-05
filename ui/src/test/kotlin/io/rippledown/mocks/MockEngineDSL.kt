@@ -24,6 +24,7 @@ fun mock(config: EngineConfig) = EngineBuilder(config).build()
 fun config(block: EngineConfig.() -> Unit) = EngineConfig().apply(block)
 
 class EngineConfig {
+    var returnedKbDescription = "A fine KB!"
     var returnCasesInfo: CasesInfo = CasesInfo(emptyList())
     var returnCase: ViewableCase? = createCase("The Case")
     var returnOperationResult: OperationResult = OperationResult()
@@ -165,6 +166,15 @@ private class EngineBuilder(private val config: EngineConfig) {
             CONDITION_FOR_EXPRESSION -> {
                 request.url.parameters[EXPRESSION] shouldBe config.expectedExpression
                 httpResponseData(json.encodeToString(config.returnCondition))
+            }
+
+            KB_DESCRIPTION -> {
+                if (request.method == HttpMethod.Get) {
+                    httpResponseData(config.returnedKbDescription)
+                } else {
+                    config.returnedKbDescription = (request.body as TextContent).text
+                    httpResponseData("OK")
+                }
             }
 
             DEFAULT_KB -> {

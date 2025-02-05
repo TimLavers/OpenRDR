@@ -22,6 +22,24 @@ class ApiTest {
     val case = createCase("A", 1)
 
     @Test
+    fun kbDescriptionTest() = runTest {
+        val config = config {}
+        Api(mock(config)).kbDescription() shouldBe config.returnedKbDescription
+    }
+
+    @Test
+    fun kbDescriptionPostTest() = runTest {
+        val descriptionText = """
+            #OpenRDR:
+            A comprehensive description is given in
+            ["Ripple-Down Rules, the Alternative to Machine Learning"](https://www.amazon.com.au/Ripple-Down-Rules-Alternative-Machine-Learning-ebook/dp/B092KVD3HQ)
+            """.trimIndent()
+        val config = config {}
+        Api(mock(config)).setKbDescription(descriptionText)
+        config.returnedKbDescription shouldBe descriptionText
+    }
+
+    @Test
     fun getCaseTest() = runTest {
         val config = config {
             returnCase = case

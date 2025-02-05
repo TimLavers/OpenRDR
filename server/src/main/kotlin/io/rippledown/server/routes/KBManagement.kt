@@ -16,10 +16,8 @@ import kotlinx.coroutines.withContext
 import java.io.BufferedOutputStream
 import java.io.ByteArrayOutputStream
 
-
 fun Application.kbManagement(application: ServerApplication) {
     routing {
-
         post(IMPORT_KB) {
             logger.info("KBManagement, import kb...")
 
@@ -86,6 +84,16 @@ fun Application.kbManagement(application: ServerApplication) {
 
         get(KB_INFO) {
             call.respond(kbEndpoint(application).kbName())
+        }
+
+        get(KB_DESCRIPTION) {
+            call.respond(kbEndpoint(application).description())
+        }
+
+        post(KB_DESCRIPTION) {
+            val newDescription = call.receive<String>()
+            kbEndpoint(application).setDescription(newDescription)
+            call.respond(OK)
         }
 
         get(KB_LIST) {

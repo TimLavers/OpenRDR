@@ -12,6 +12,7 @@ interface IdentifiedObjectSource<T> {
     fun idFor(t:T): Int
     fun exporter(): Exporter<T>
     fun exportType(): String
+    fun exportFileSuffix(): String = ".json"
 }
 class IdentifiedObjectExporter<T>(private val destination: File, private val objectSource: IdentifiedObjectSource<T>) {
     init {
@@ -19,12 +20,12 @@ class IdentifiedObjectExporter<T>(private val destination: File, private val obj
     }
 
     fun export() {
-        val rules = objectSource.all()
-        val ruleIds = rules.map { objectSource.idFor(it).toString() }.toSet()
-        val ruleIdToFilename = FilenameMaker(ruleIds).makeUniqueNames()
+        val items = objectSource.all()
+        val ids = items.map { objectSource.idFor(it).toString() }.toSet()
+        val idToFilename = FilenameMaker(ids).makeUniqueNames()
 
-        rules.forEach{
-            val filename = ruleIdToFilename[objectSource.idFor(it).toString()]!!
+        items.forEach{
+            val filename = idToFilename[objectSource.idFor(it).toString()]!!
             val destinationFile = File(destination, filename)
             val serialized = objectSource.exporter().exportToString(it)
             FileUtils.writeStringToFile(destinationFile, serialized, Charsets.UTF_8)

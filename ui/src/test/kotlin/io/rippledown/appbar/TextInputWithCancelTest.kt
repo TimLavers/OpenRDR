@@ -10,10 +10,11 @@ import kotlin.test.Test
 @OptIn(ExperimentalTestApi::class)
 class TextInputWithCancelTest {
 
-    class TIH() : TextInputHandler {
+    class TIH : TextInputHandler {
+        var initialTextToShow = ""
         var input: String? = null
         var cancelled = false
-
+        override fun initialText() = initialTextToShow
         override fun isValidInput(input: String) = input.length > 3
         override fun labelText() = "Label"
         override fun inputFieldDescription() = "Description"
@@ -57,6 +58,22 @@ class TextInputWithCancelTest {
                 .assertIsEnabled()
                 .assertIsDisplayed()
                 .assertTextEquals(handler.cancelButtonText())
+                .assertContentDescriptionEquals(handler.cancelButtonDescription())
+        }
+    }
+
+    @Test
+    fun `initial layout with non-empty text`() {
+        handler.initialTextToShow = "Whatever"
+        with(composeTestRule) {
+            setContent {
+                TextInputWithCancel(handler)
+            }
+            waitUntilExactlyOneExists(hasContentDescription(handler.inputFieldDescription()))
+            onNodeWithContentDescription(handler.inputFieldDescription())
+                .assertIsEnabled()
+                .assertIsDisplayed()
+            waitUntilExactlyOneExists(hasText(handler.initialTextToShow))
         }
     }
 

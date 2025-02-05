@@ -13,21 +13,24 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.main.CANCEL
+import io.rippledown.constants.main.CANCEL_DESCRIPTION
 
 interface TextInputHandler {
+    fun initialText() = ""
     fun isValidInput(input: String): Boolean
     fun labelText(): String
     fun inputFieldDescription(): String
     fun confirmButtonText(): String
     fun confirmButtonDescription(): String
     fun cancelButtonText() = CANCEL
+    fun cancelButtonDescription() = CANCEL_DESCRIPTION
     fun handleInput(value: String)
     fun cancel()
 }
 
 @Composable
 fun TextInputWithCancel(handler: TextInputHandler) {
-    var textValue by remember { mutableStateOf("") }
+    var textValue by remember { mutableStateOf(handler.initialText()) }
 
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) {
@@ -48,6 +51,7 @@ fun TextInputWithCancel(handler: TextInputHandler) {
                     label = { Text(text = handler.labelText()) },
                     modifier = Modifier
                         .fillMaxWidth()
+                        .weight(0.8F, true)
                         .semantics {
                             contentDescription = handler.inputFieldDescription()
                         }
@@ -61,6 +65,9 @@ fun TextInputWithCancel(handler: TextInputHandler) {
                         onClick = {
                             handler.cancel()
                         },
+                        modifier = Modifier.semantics {
+                            contentDescription = handler.cancelButtonDescription()
+                        }
                     ) {
                         Text(handler.cancelButtonText())
                     }

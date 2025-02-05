@@ -189,42 +189,9 @@ class Defs {
         labProxy().provideCase(caseName, details)
     }
 
-    @Then("the displayed KB name is (now ){word}")
-    fun theDisplayedKBNameIsNow(kbName: String) {
-        waitUntilAsserted {
-            kbControlsPO().currentKB() shouldBe kbName
-        }
-    }
-
-    @Then("I activate the KB management control")
-    fun activateTheKBManagementControl() {
-        kbControlsPO().expandDropdownMenu()
-    }
-
-    @Then("I (should )see this list of available KBs:")
-    fun requireListOfAvailableKBs(dataTable: DataTable) {
-        val expectedKBs = dataTable.asList()
-        kbControlsPO().availableKBs() shouldBe expectedKBs
-    }
-
     @Then("the displayed product name is 'Open RippleDown'")
     fun requireProductNameIsOpenRippleDown() {
         applicationBarPO().title() shouldBe "Open RippleDown"
-    }
-
-    @Then("I create a Knowledge Base with the name {word}")
-    fun createAKnowledgeBaseWithTheName(kbName: String) {
-        kbControlsPO().createKB(kbName)
-    }
-
-    @Then("I create a Knowledge Base with the name {word} based on the {string} sample")
-    fun createAKnowledgeBaseWithTheNameBasedOnSample(kbName: String, sampleTitle: String) {
-        kbControlsPO().createKBFromSample(kbName, sampleTitle)
-    }
-
-    @Then("I select the Knowledge Base named {word}")
-    fun selectTheKnowledgeBaseNamed(kbName: String) {
-        kbControlsPO().selectKB(kbName)
     }
 
     @And("pause for {long} second(s)")
@@ -347,16 +314,6 @@ class Defs {
                     conditions = arrayOf(row[2])
                 )
             }
-    }
-
-    @Then("the KB controls (are )(should be )hidden")
-    fun theKBControlsAreShouldBeHidden() {
-        kbControlsPO().requireKbControlsToBeHidden()
-    }
-
-    @Then("the KB controls (are )(should be )shown")
-    fun theKBControlsAreShouldBeShown() {
-        kbControlsPO().requireKbControlsToBeShown()
     }
 
     @And("the case list (is )(should be )hidden")
