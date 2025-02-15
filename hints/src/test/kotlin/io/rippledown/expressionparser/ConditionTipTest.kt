@@ -422,7 +422,7 @@ class ConditionTipTest {
     @Test
     fun `should parse expression to NormalOrHighByAtMostSomePercentage`() {
         // Given
-        val expression = "glucose is either normal or raised by not more than 15 percent"
+        val expression = "glucose is either normal or not more than 15 percent above normal"
 
         // When
         val actual = conditionTip.conditionFor(expression)
