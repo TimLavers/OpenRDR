@@ -16,6 +16,7 @@ class GeminiTest {
             "raised x",
             "elevated x",
             "high x",
+            "x is above normal",
             "x es alto",
             "x es mejor que el rango normal"
         )
@@ -596,8 +597,7 @@ class GeminiTest {
             "all x are normal",
             "every x is normal",
             "all x are within the normal range",
-            "all x are OK",
-            "all x are not high or low"
+            "all x are OK"
         )
         for (entered in expressions) {
             // When

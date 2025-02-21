@@ -32,7 +32,6 @@ val episodicSignatures = linesFrom("/prompt/episodic_signatures.txt").joinToStri
 val seriesPredicates = linesFrom("/prompt/series_predicates.txt").joinToString("\n")
 val caseStructurePredicates = linesFrom("/prompt/case_structure_predicates.txt").joinToString("\n")
 val examples = examplesFrom(linesFrom("/prompt/examples.txt"))
-val outputFormat = linesFrom("/prompt/output_format.json").joinToString("\n")
 
 fun noSafetySettings() =
     HarmCategory.entries
@@ -58,8 +57,9 @@ fun conditionSpecificationFor(input: String): ConditionSpecification {
         text("The possible values for a series predicate name are: $seriesPredicates.")
         text("The predicate name should be blank if the expression does not refer to one of the possible predicates.")
         text("For an episodic predicate name, the possible values for the signature name are: $episodicSignatures.")
-        text("For a case structure predicate name, the signature name should be blank.")
-        text("For a series predicate name, the signature name should be blank.")
+        text("Depending on the predicate name, the signature may be an empty object '{}'.")
+        text("For a case structure predicate, the signature must be an empty object '{}'.")
+        text("For a series predicate, the signature must be an empty object '{}'.")
         text("There may be no parameter or just one parameter for the predicate.")
         text("There may be no parameter or just one parameter for the signature.")
         text("---EXAMPLES---")
@@ -69,10 +69,8 @@ fun conditionSpecificationFor(input: String): ConditionSpecification {
         text("Here is the expression: $input")
         text("---OUTPUT FORMAT---")
         text("Generate output without a leading ```json and without a trailing ```.")
-//        text("This is the required output format: $outputFormat")
     }
-
-    prompt.parts.forEach { System.out.println(it.asTextOrNull()) }
+    printPrompt(prompt)
     val json = retry {
         runBlocking {
             generativeModel.generateContent(prompt).text
@@ -81,11 +79,15 @@ fun conditionSpecificationFor(input: String): ConditionSpecification {
     return if (json != null) fromJson(json) else ConditionSpecification()
 }
 
+private fun printPrompt(prompt: Content) {
+    prompt.parts.forEach { System.out.println(it.asTextOrNull()) }
+}
+
 private fun linesFrom(resourceFileName: String) =
     object {}.javaClass.getResourceAsStream(resourceFileName)?.bufferedReader()!!.readLines()
 
 /**
- * Try to get around the 503 error from the API due to rate limiting.
+ * Retry when receiving the 503 error from the API due to rate limiting.
  */
 fun <T> retry(
     maxRetries: Int = 10,
@@ -104,5 +106,5 @@ fun <T> retry(
             currentDelay = (currentDelay * 2).coerceAtMost(maxDelay) + nextLong(0, 1_000)
         }
     }
-    throw IllegalStateException("Should not reach here")
+    throw IllegalStateException("Max retries of $maxRetries reached")
 }

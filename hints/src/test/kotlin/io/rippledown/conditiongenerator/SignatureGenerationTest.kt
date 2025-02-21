@@ -16,7 +16,7 @@ class SignatureGenerationTest {
     }
 
     @Test
-    fun `should generate a signature no constructor`() {
+    fun `should generate a signature that has no constructor`() {
         val spec = FunctionSpecification(Current::class.simpleName!!, listOf())
         generator.signatureFrom(spec) shouldBe Current
     }

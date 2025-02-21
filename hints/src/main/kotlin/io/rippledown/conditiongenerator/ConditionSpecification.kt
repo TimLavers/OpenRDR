@@ -9,7 +9,6 @@ data class ConditionSpecification(
     val predicate: FunctionSpecification = FunctionSpecification(),
     var signature: FunctionSpecification = FunctionSpecification()
 ) {
-
     override fun toString() = toJson(this)
 }
 
