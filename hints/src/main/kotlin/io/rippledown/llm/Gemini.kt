@@ -17,7 +17,10 @@ const val GEMINI_MODEL = "gemini-1.5-flash"
 val logger: Logger = LoggerFactory.getLogger("rdr")
 
 //Set the model to be as deterministic as possible
-val generativeConfig = GenerationConfig.builder().apply { temperature = 0.0f }.build()
+val generativeConfig = GenerationConfig.builder().apply {
+    temperature = 0.0f
+    topP = 0.995f
+}.build()
 
 val generativeModel = GenerativeModel(
     modelName = GEMINI_MODEL,
@@ -55,12 +58,10 @@ fun conditionSpecificationFor(input: String): ConditionSpecification {
         text("The possible values for a case structure predicate name are: $caseStructurePredicates.")
         text("The possible values for a series predicate name are: $seriesPredicates.")
         text("The predicate name should be blank if the expression does not refer to one of the possible predicates.")
-        text("For an episodic predicate name, the possible values for the signature name are: $episodicSignatures.")
-        text("Depending on the predicate, the signature may be an empty object '{}'.")
-        text("For a case structure predicate, the signature name should be blank.")
-        text("For a series predicate, the signature name should be blank.")
-        text("There may be no parameter or just one parameter for the predicate.")
-        text("There may be no parameter or just one parameter for the signature.")
+        text("For an episodic predicate: $episodicPredicates, the possible values for the signature name are only: $episodicSignatures.")
+        text("For a case structure predicate: ${caseStructurePredicates} or a series predicate: $seriesPredicates, there must be no signature.")
+        text("There may be no parameter or just one parameter for a predicate.")
+        text("If there is a signature, it may have either no parameter or just one parameter.")
         text("---EXAMPLES---")
         text("Examples of expressions with the expected output are:")
         text(examples)
@@ -69,7 +70,6 @@ fun conditionSpecificationFor(input: String): ConditionSpecification {
         text("---OUTPUT FORMAT---")
         text("Generate output without a leading ```json and without a trailing ```.")
     }
-    printPrompt(prompt)
     val json = retry {
         runBlocking {
             generativeModel.generateContent(prompt).text

@@ -145,10 +145,12 @@ x on the rise
 x rising
 x growing
 x is going up
+x is getting higher
 
 EXPECTED PREDICATE: Decreasing
 x is decreasing
 x falling
+x is getting lower
 
 EXPECTED PREDICATE: LowOrNormal
 EXPECTED SIGNATURE: Current
