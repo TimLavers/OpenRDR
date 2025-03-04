@@ -27,6 +27,12 @@ fun spec(
         FunctionSpecification(signatureName, signatureParameters)
     )
 
-fun fromJson(json: String) = Json.decodeFromString<ConditionSpecification>(json)
+fun fromJson(json: String): ConditionSpecification {
+    val stripped = json
+        .replace("```json", "")
+        .replace("```", "")
+        .trim()
+    return Json.decodeFromString<ConditionSpecification>(stripped)
+}
 
 fun toJson(conditionStructure: ConditionSpecification) = Json.encodeToString(conditionStructure)
