@@ -9,26 +9,23 @@ import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistentKB
+import io.rippledown.persistence.inmemory.InMemoryRuleSessionRecordStore
 import io.rippledown.server.logger
 
 class KB(persistentKB: PersistentKB) {
 
-    val kbInfo: KBInfo = persistentKB.kbInfo()
+    val kbInfo = persistentKB.kbInfo()
     val metaInfo = MetaInfo(persistentKB.metaDataStore())
-    val attributeManager: AttributeManager = AttributeManager(persistentKB.attributeStore())
-    val conclusionManager: ConclusionManager = ConclusionManager(persistentKB.conclusionStore())
-    val conditionManager: ConditionManager = ConditionManager(attributeManager, persistentKB.conditionStore())
-    private val ruleManager: RuleManager = RuleManager(conclusionManager, conditionManager, persistentKB.ruleStore())
-    val ruleTree: RuleTree = ruleManager.ruleTree()
+    val attributeManager = AttributeManager(persistentKB.attributeStore())
+    val conclusionManager = ConclusionManager(persistentKB.conclusionStore())
+    val conditionManager = ConditionManager(attributeManager, persistentKB.conditionStore())
+    private val ruleManager = RuleManager(conclusionManager, conditionManager, persistentKB.ruleStore())
+    val ruleTree = ruleManager.ruleTree()
     private val caseManager = CaseManager(persistentKB.caseStore(), attributeManager)
     private var ruleSession: RuleBuildingSession? = null
-    internal val caseViewManager: CaseViewManager =
-        CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
-    val interpretationViewManager: InterpretationViewManager =
-        InterpretationViewManager(
-            persistentKB.conclusionOrderStore(),
-            conclusionManager
-        )
+    private val ruleSessionRecorder = RuleSessionRecorder(InMemoryRuleSessionRecordStore())
+    internal val caseViewManager = CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
+    val interpretationViewManager = InterpretationViewManager(persistentKB.conclusionOrderStore(), conclusionManager)
 
     //a var so it can be mocked in tests
     private var conditionParser: ConditionParser
@@ -38,6 +35,7 @@ class KB(persistentKB: PersistentKB) {
             override fun parse(expression: String, attributeNames: List<String>, attributeFor: AttributeFor) =
                 ConditionTip(attributeNames, attributeFor).conditionFor(expression)
         }
+        checkRuleSessionHistoryConsistency()
     }
 
     fun description() = metaInfo.getDescription()
@@ -101,6 +99,7 @@ class KB(persistentKB: PersistentKB) {
     }
 
     fun startRuleSession(case: RDRCase, action: RuleTreeChange) {
+        checkRuleSessionHistoryConsistency()
         logger.info("KB starting rule session for case ${case.name} and action $action")
         check(ruleSession == null) { "Session already in progress." }
         check(action.isApplicable(ruleTree, case)) { "Action $action is not applicable to case ${case.name}" }
@@ -112,6 +111,7 @@ class KB(persistentKB: PersistentKB) {
     fun cancelRuleSession() {
         check(ruleSession != null) { "No rule session in progress." }
         ruleSession = null
+        checkRuleSessionHistoryConsistency()
     }
 
     fun conflictingCasesInCurrentRuleSession(): List<RDRCase> {
@@ -139,9 +139,17 @@ class KB(persistentKB: PersistentKB) {
 
     fun commitCurrentRuleSession() {
         checkSession()
-        ruleSession!!.commit()
+        val rulesAdded = ruleSession!!.commit()
+        ruleSessionRecorder.recordRuleSessionCommitted(rulesAdded)
         addCornerstoneCase(ruleSession!!.case)
         ruleSession = null
+        checkRuleSessionHistoryConsistency()
+    }
+
+    fun undoLastRuleSession() {
+        checkRuleSessionHistoryConsistency()
+        TODO()
+        checkRuleSessionHistoryConsistency()
     }
 
     private fun checkSession() {
@@ -169,10 +177,6 @@ class KB(persistentKB: PersistentKB) {
     override fun hashCode() = kbInfo.hashCode()
 
     fun conditionHintsForCase(case: RDRCase): ConditionList {
-//        checkSession() TODO re-instate and get rid of the if-block below
-//        if (ruleSession == null) {
-//            return ConditionList()
-//        }
         val suggester = ConditionSuggester(attributeManager.all(), case)
         return ConditionList(suggester.suggestions())
     }
@@ -262,6 +266,12 @@ class KB(persistentKB: PersistentKB) {
 
         //if this a new condition, the following will store it with its user expression, else the existing condition will be returned
         return conditionManager.getOrCreate(condition)
+    }
+
+    private fun checkRuleSessionHistoryConsistency() {
+        val idsOfNonRootRulesInTree = ruleTree.rules().filter { it.parent != null }.map { it.id }.toSet()
+//        val ruleIdsFromSessions = ruleSessionRecorder.idsOfAllSessionRules()
+//        assert(idsOfNonRootRulesInTree == ruleIdsFromSessions) {"Ids of rules in sessions don't match non-root tree rules."}
     }
 
     internal fun holdsForSessionCase(condition: Condition) = condition.holds(ruleSession!!.case)

@@ -513,6 +513,21 @@ class KBTest {
     }
 
     @Test
+    fun undoLastRuleSession() {
+        val sessionCase = createCase("Case1", value = "1.0")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
+        kb.commitCurrentRuleSession()
+
+        val otherCase = createCase("Case2", value = "2.0")
+        kb.interpret(otherCase)
+        otherCase.interpretation.conclusionTexts() shouldBe setOf("Whatever.") // Sanity
+
+        kb.undoLastRuleSession()
+        kb.interpret(otherCase)
+        otherCase.interpretation.conclusionTexts() shouldBe emptySet()
+    }
+
+    @Test
     fun `should return condition hints for case`() {
         val caseWithGlucoseAttribute = createCase("A", value = "1.0")
         val conditionList = kb.conditionHintsForCase(caseWithGlucoseAttribute)

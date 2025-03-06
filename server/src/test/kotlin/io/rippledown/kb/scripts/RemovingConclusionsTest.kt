@@ -5,7 +5,7 @@ import kotlin.test.Test
 class RemovingConclusionsTest {
 
     @Test
-    fun remove_conclusion() {
+    fun `remove conclusion`() {
         build {
             case("1", "a")
             requireInterpretation("1")
@@ -26,7 +26,7 @@ class RemovingConclusionsTest {
     }
 
     @Test
-    fun remove_conclusion_with_condition() {
+    fun `remove conclusion with condition`() {
         build {
             case("1", "a")
             case("2", "b")
@@ -79,7 +79,7 @@ class RemovingConclusionsTest {
     }
 
     @Test
-    fun remove_a_conclusion_that_is_given_by_several_rules() {
+    fun `remove a conclusion that is given by several rules`() {
         build {
             (1..4).forEach {
                 case(it)
@@ -134,7 +134,7 @@ class RemovingConclusionsTest {
     }
 
     @Test
-    fun cornerstone_not_presented_as_conflict_if_not_all_instances_of_conclusion_removed() {
+    fun `cornerstone not presented as conflict if not all instances of conclusion removed`() {
         build {
             case("1", "a")
             case("2", "b")
