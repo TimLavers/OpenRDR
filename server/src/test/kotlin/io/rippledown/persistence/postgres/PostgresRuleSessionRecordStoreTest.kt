@@ -1,4 +1,4 @@
-package io.rippledown.persistence.inmemory
+package io.rippledown.persistence.postgres
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -8,13 +8,20 @@ import io.rippledown.persistence.RuleSessionRecordStore
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-class InMemoryRuleSessionRecordStoreTest {
+class PostgresRuleSessionRecordStoreTest: PostgresStoreTest() {
     private lateinit var store: RuleSessionRecordStore
-    private var index = 0
+
+    override fun tablesInDropOrder() = listOf(RULE_SESSIONS_TABLE)
 
     @BeforeTest
     fun setup() {
-        store = InMemoryRuleSessionRecordStore()
+        dropTable()
+        store = postgresKB.ruleSessionRecordStore()
+    }
+
+    override fun reload() {
+        super.reload()
+        store = postgresKB.ruleSessionRecordStore()
     }
 
     @Test
@@ -83,11 +90,13 @@ class InMemoryRuleSessionRecordStoreTest {
     }
 
     @Test
-    fun `deleting a record that has no id does nothing`() {
+    fun `deleting a record that has no id fails`() {
         val record1 = store.create(rsr(1))
         val record2 = store.create(rsr(2))
         store.all() shouldBe listOf(record1, record2)
-        store.deleteImpl(RuleSessionRecord(null, 3, setOf(8)))
+        shouldThrow<Exception> {
+            store.deleteImpl(RuleSessionRecord(null, 3, setOf(8)))
+        }
         store.all() shouldBe listOf(record1, record2)
     }
 
@@ -136,18 +145,18 @@ class InMemoryRuleSessionRecordStoreTest {
 
     @Test
     fun `load items`() {
-        val r1 = rsr(1, 3)
-        val r2 = rsr(2, 4)
-        val r3 = rsr(5, 6)
+        val r1 = rsr(1, 3).copy(id = 7)
+        val r2 = rsr(2, 4).copy(id = 8)
+        val r3 = rsr(5, 6).copy(id = 9)
         store.load(listOf(r1, r2, r3))
         store.all() shouldBe listOf(r1, r2, r3)
     }
 
     @Test
     fun `apply delete to items that have been added by load`() {
-        val r1 = rsr(1, 3)
-        val r2 = rsr(2, 4)
-        val r3 = rsr(5, 6)
+        val r1 = rsr(1, 3).copy(id = 10)
+        val r2 = rsr(2, 4).copy(id = 20)
+        val r3 = rsr(5, 6).copy(id = 30)
         store.load(listOf(r1, r2, r3))
         store.all() shouldBe listOf(r1, r2, r3)
         store.deleteLastAdded()
@@ -155,6 +164,6 @@ class InMemoryRuleSessionRecordStoreTest {
         store.deleteLastAdded()
         store.all() shouldBe listOf(r1)
     }
-    
-    private fun rsr(vararg ruleIds: Int) = RuleSessionRecord(null, index++, ruleIds.toSet())
+
+    private fun rsr(vararg ruleIds: Int) = RuleSessionRecord(null, 0, ruleIds.toSet())
 }

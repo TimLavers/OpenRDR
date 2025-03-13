@@ -38,7 +38,6 @@ class PostgresRuleStore(private val db: Database): RuleStore {
         }
     }
 
-
     override fun load(persistentRules: Set<PersistentRule>) {
         require(all().isEmpty()) {
             "Cannot load persistent rules if there are some stored already."

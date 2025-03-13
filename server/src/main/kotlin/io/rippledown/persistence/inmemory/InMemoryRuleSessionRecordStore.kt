@@ -8,29 +8,27 @@ class InMemoryRuleSessionRecordStore : RuleSessionRecordStore {
 
     override fun all(): List<RuleSessionRecord> = data.toList()
 
-    override fun store(record: RuleSessionRecord): RuleSessionRecord {
-        all().forEach{
-            val common = record.idsOfRulesAddedInSession.intersect(it.idsOfRulesAddedInSession)
-            if (common.isNotEmpty()) {
-                throw IllegalArgumentException("New record shares ids with other rules: $common")
-            }
-        }
-        val currentMaxId = all().maxOfOrNull { it.index } ?: 0
-        val newRecord = RuleSessionRecord(currentMaxId + 1, record.idsOfRulesAddedInSession)
-        data.add(newRecord)
-        return newRecord
+    override fun createImpl(record: RuleSessionRecord): RuleSessionRecord {
+        val currentMaxId = all().maxOfOrNull { it.id?: 0 } ?: 0
+        val toStore = record.copy(id = currentMaxId + 1)
+        data.add(toStore)
+        return toStore
     }
 
-    override fun load(data: List<RuleSessionRecord>) {
-        if (this.data.isNotEmpty()) {
-            throw IllegalArgumentException("Load should not be called if there are already items stored.")
-        }
-        this.data.addAll(data)
+    override fun deleteImpl(record: RuleSessionRecord) {
+        data.remove(record)
     }
 
     override fun deleteLastAdded() {
         if (data.isNotEmpty()) {
             data.removeLast()
         }
+    }
+
+    override fun load(data: List<RuleSessionRecord>) {
+        if (all().isNotEmpty()) {
+            throw IllegalArgumentException("Load should not be called if there are already items stored.")
+        }
+        this.data.addAll(data)
     }
 }
