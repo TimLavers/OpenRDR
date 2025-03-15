@@ -59,7 +59,9 @@ fun ConditionFilter(
                 Text(
                     text = labelText,
                     style = TextStyle(fontStyle = Italic),
-                    modifier = Modifier.semantics {
+                    //mergeDescendants = true is needed to make the label's contentDescription accessible via
+                    //the Accessibility API, i.e. for cucumber tests
+                    modifier = Modifier.semantics(mergeDescendants = true) {
                         contentDescription = labelText
                     }
                 )

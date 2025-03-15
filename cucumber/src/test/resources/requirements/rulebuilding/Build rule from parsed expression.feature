@@ -12,7 +12,6 @@ Feature: When entering an expression to be used in a rule, the user is provided 
       | elevated waves | Waves is high |
     And stop the client application
 
-  @single
   Scenario: Should provide a warning when the user types an unknown expression
     Given case Bondi is provided with the following values, reference ranges and units:
       | Attribute | Value | Low | High | Units  |
@@ -21,7 +20,7 @@ Feature: When entering an expression to be used in a rule, the user is provided 
     And I start the client application
     And I start to build a rule to add the comment "Beach time!"
     And I enter the expression "below"
-    And pause for 5 seconds
+    And pause for 2 seconds
     Then an alert should be displayed with the message:
     """
     Does not correspond to a condition. Please try again.
