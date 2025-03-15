@@ -17,7 +17,7 @@ class ConditionFilterTest {
             //Given
             val filter = "Waves are high"
             setContent {
-                ConditionFilter(filter, false, mockk())
+                ConditionFilter(filter, false, handler = mockk())
             }
 
             //Then
@@ -32,7 +32,7 @@ class ConditionFilterTest {
             val filter = "Waves are high"
             val handler = mockk<ConditionFilterHandler>(relaxed = true)
             setContent {
-                ConditionFilter("", false, handler)
+                ConditionFilter("", false, handler = handler)
             }
 
             //When
@@ -49,7 +49,7 @@ class ConditionFilterTest {
             //Given
             val handler = mockk<ConditionFilterHandler>(relaxed = true)
             setContent {
-                ConditionFilter("", true, handler)
+                ConditionFilter("", true, handler = handler)
             }
 
             //Then
@@ -63,11 +63,43 @@ class ConditionFilterTest {
             //Given
             val handler = mockk<ConditionFilterHandler>(relaxed = true)
             setContent {
-                ConditionFilter("", false, handler)
+                ConditionFilter("", false, handler = handler)
             }
 
             //Then
             requireWaitingIndicatorNotToBeShowing()
+        }
+    }
+
+    @Test
+    fun `should show label to enter or select a condition if there is no error`() {
+        with(composeTestRule) {
+            //Given
+            val handler = mockk<ConditionFilterHandler>(relaxed = true)
+
+            //When
+            setContent {
+                ConditionFilter("", false, unknownExpression = false, handler = handler)
+            }
+
+            //Then
+            requireEnterConditionMessageToBeShowing()
+        }
+    }
+
+    @Test
+    fun `should show warning label if the expression cannot be parsed`() {
+        with(composeTestRule) {
+            //Given
+            val handler = mockk<ConditionFilterHandler>(relaxed = true)
+
+            //When
+            setContent {
+                ConditionFilter("", false, unknownExpression = true, handler = handler)
+            }
+
+            //Then
+            requireUnknownExpressionMessageToBeShowing()
         }
     }
 }

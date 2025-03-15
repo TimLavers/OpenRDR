@@ -37,6 +37,7 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
     var conditionToBeEdited by remember { mutableStateOf<EditableCondition?>(null) }
     var suggestionBeingEdited by remember { mutableStateOf<SuggestedCondition?>(null) }
     var showWaitingIndicator by remember { mutableStateOf(false) }
+    var unknownExpression by remember { mutableStateOf(false) }
 
     if (suggestionBeingEdited != null) {
         val dialogState = rememberDialogState(size = DpSize(420.dp, 200.dp))
@@ -82,6 +83,7 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
         showWaitingIndicator = true
         availableConditions =
             refreshAvailableConditions(allConditions, filterText, selectedConditions, handler::conditionForExpression)
+        unknownExpression = availableConditions.isEmpty()
         showWaitingIndicator = false
     }
     Column(
@@ -101,11 +103,15 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
             }
         })
 
-        ConditionFilter(filterText, showWaitingIndicator, object : ConditionFilterHandler {
-            override var onFilterChange = { filter: String ->
-                filterText = filter
-            }
-        })
+        ConditionFilter(
+            filterText,
+            showWaitingIndicator,
+            unknownExpression = unknownExpression,
+            handler = object : ConditionFilterHandler {
+                override var onFilterChange = { filter: String ->
+                    filterText = filter
+                }
+            })
 
         AvailableConditions(availableConditions, object : AvailableConditionsHandler {
             override fun onAddCondition(suggestedCondition: SuggestedCondition) {

@@ -39,6 +39,12 @@ class ConditionTipTest {
     }
 
     @Test
+    fun `should return null for valid predicate but no attribute defined`() {
+        val tip = ConditionTip(emptySet(), mockk())
+        tip.conditionFor("high") shouldBe null
+    }
+
+    @Test
     fun `should parse expression to High`() {
         // Given
         val expression = "elevated glucose"

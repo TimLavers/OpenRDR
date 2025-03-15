@@ -66,7 +66,6 @@ tasks.register<JavaExec>("samples") {
 }
 tasks.register("cucumberTest") {
     dependsOn(listOf(
-        "application",
         "attributes",
         "cases",
         "conditions",

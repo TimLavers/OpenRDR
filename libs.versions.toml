@@ -1,11 +1,11 @@
 [versions]
-kotlin = "2.0.20"
+kotlin = "2.1.10"
 compose = "1.7.3"
 kotest = "5.7.2"
 assertjSwing = "3.17.1"
 guava = "33.2.1-jre"
 mockk = "1.13.8"
-logback = "1.5.7"
+logback = "1.5.17"
 ktor = "2.3.12"
 kotlinx_coroutines = "1.8.1"
 kotlinx_serialization = "1.7.2"
@@ -22,6 +22,7 @@ composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "k
 
 [libraries]
 composePreviewDesktop = { module = "org.jetbrains.compose.ui:ui-tooling-preview-desktop", version.ref = "compose" }
+materialIcons = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "compose" }
 
 commonsIo = { module = "commons-io:commons-io", version.ref = "commonsIo" }
 commonsLang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commonsLang3" }
