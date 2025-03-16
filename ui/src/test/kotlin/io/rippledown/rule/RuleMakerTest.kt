@@ -505,15 +505,6 @@ fun main() {
     val notes = Attribute(0, "Notes")
     val waves = Attribute(1, "Waves")
     val handler = mockk<RuleMakerHandler>(relaxed = true)
-    /*
-        every { handler.conditionForExpression(any()) } answers {
-            Thread.sleep(1000)
-            EpisodicCondition(
-                null, waves,
-                io.rippledown.model.condition.episodic.predicate.High, Current, "waves look tall enough"
-            )
-        }
-    */
     every { handler.conditionForExpression(any()) } answers {
         Thread.sleep(1000)
         null
