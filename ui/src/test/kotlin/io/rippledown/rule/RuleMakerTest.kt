@@ -9,7 +9,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.containsText
 import io.rippledown.model.condition.edit.*
 import io.rippledown.model.condition.episodic.signature.Current
@@ -100,7 +99,6 @@ class RuleMakerTest {
 
     @Test
     fun `if the tip is not an available condition, then it should not be included`() {
-        every { handler.conditionForExpression(any()) } returns null
         with(composeTestRule) {
             //Given
             setContent {
@@ -112,6 +110,42 @@ class RuleMakerTest {
 
             //Then
             requireAvailableConditionsToBeDisplayed(listOf())
+        }
+    }
+
+    @Test
+    fun `if the tip is null then the condition filter should indicate an unknown expression`() {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                RuleMaker(allSuggestions, handler)
+            }
+
+            //When
+            enterTextIntoConditionFilter("below")
+
+            //Then
+            requireUnknownExpressionMessageToBeShowing()
+        }
+    }
+
+    @Test
+    fun `if there is no user expression, then the condition filter should prompt for an expression`() {
+        val text = "below"
+        with(composeTestRule) {
+            //Given
+            setContent {
+                RuleMaker(allSuggestions, handler)
+            }
+            enterTextIntoConditionFilter(text)
+            requireUnknownExpressionMessageToBeShowing()
+
+
+            //When
+            removeExpressionText(text)
+
+            //Then
+            requireEnterConditionMessageToBeShowing()
         }
     }
 
@@ -473,10 +507,7 @@ fun main() {
     val handler = mockk<RuleMakerHandler>(relaxed = true)
     every { handler.conditionForExpression(any()) } answers {
         Thread.sleep(1000)
-        EpisodicCondition(
-            null, waves,
-            io.rippledown.model.condition.episodic.predicate.High, Current, "waves look tall enough"
-        )
+        null
     }
     val conditions = (1..10).map { index ->
         nonEditableSuggestion(index, notes, "condition $index")

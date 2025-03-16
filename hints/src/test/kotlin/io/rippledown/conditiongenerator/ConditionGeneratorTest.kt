@@ -1,5 +1,6 @@
 package io.rippledown.conditiongenerator
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
@@ -185,4 +186,23 @@ class ConditionGeneratorTest {
         //Then
         condition shouldBe SeriesCondition(null, attribute, Increasing, userExpression)
     }
+
+    @Test
+    fun `should throw NPE when trying to generate an Episodic condition if the attribute is null`() {
+        //Given
+        val spec = ConditionSpecification(
+            FunctionSpecification(High::class.simpleName!!, listOf()),
+            FunctionSpecification(Current::class.simpleName!!, listOf())
+        )
+
+        //Then
+        shouldThrow<NullPointerException> {
+            generator.conditionFor(
+                attributeName = "",
+                userExpression = "elevated",
+                conditionSpec = spec
+            )
+        }
+    }
+
 }

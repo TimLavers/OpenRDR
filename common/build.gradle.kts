@@ -4,6 +4,8 @@ plugins {
 }
 dependencies {
     implementation(libs.bundles.kotlinx)
+    implementation(libs.logback)
+
     testImplementation(libs.bundles.ktor)
     testImplementation(libs.kotestAssertions)
     testFixturesImplementation(kotlin("test"))

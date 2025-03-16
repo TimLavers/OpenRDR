@@ -317,6 +317,11 @@ class RuleMakerStepDefs {
     fun `enter expression`(expression: String) {
         ruleMakerPO().enterExpressionIntoSearchField(expression)
     }
+
+    @Then("an alert should be displayed with the message:")
+    fun `require alert`(expected: String) {
+        ruleMakerPO().requireAlertToBeDisplayed()
+    }
 }
 
 fun startRuleToReplaceComment(toBeReplaced: String, replacement: String) {

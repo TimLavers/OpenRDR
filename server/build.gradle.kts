@@ -17,7 +17,6 @@ dependencies {
     implementation("io.ktor:ktor-server-core-jvm")
     implementation("io.ktor:ktor-server-call-logging")
     implementation("io.ktor:ktor-server-netty")
-    implementation(libs.logback)
     implementation(libs.commonsIo)
     implementation(libs.bundles.exposed)
     implementation("org.postgresql:postgresql:42.5.4")
