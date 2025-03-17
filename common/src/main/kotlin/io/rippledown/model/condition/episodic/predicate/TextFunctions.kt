@@ -50,3 +50,10 @@ data class Is(val toFind: String): TestResultPredicate {
 
     override fun description(plural: Boolean) = if (plural) "are \"$toFind\"" else "is \"$toFind\""
 }
+
+@Serializable
+data class IsNot(val toFind: String) : TestResultPredicate {
+    override fun evaluate(result: TestResult) = result.value.text != toFind
+
+    override fun description(plural: Boolean) = if (plural) "are not \"$toFind\"" else "is not \"$toFind\""
+}

@@ -56,6 +56,21 @@ EXPECTED PREDICATE: Is, "pending"
 EXPECTED SIGNATURE: Current
 x equals pending
 
+EXPECTED PREDICATE: IsNot, y
+EXPECTED SIGNATURE: Current
+x does not equal to y
+x is not the same as y
+
+EXPECTED PREDICATE: IsNot, 1.5
+EXPECTED SIGNATURE: Current
+x != 1.5
+
+EXPECTED PREDICATE: IsNot, "abc"
+EXPECTED SIGNATURE: Current
+x is not abc
+x is not "abc"
+x isn't abc
+
 EXPECTED PREDICATE: LessThanOrEquals, 4.1
 EXPECTED SIGNATURE: Current
 x is less than or equal to 4.1
