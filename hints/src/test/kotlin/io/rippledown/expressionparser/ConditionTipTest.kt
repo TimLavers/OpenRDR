@@ -129,6 +129,42 @@ class ConditionTipTest {
     }
 
     @Test
+    fun `should parse expression to IsNot`() {
+        // Given
+        val expression = "glucose does not equal 3.14159"
+
+        // When
+        val actual = conditionTip.conditionFor(expression)
+
+        // Then
+        actual shouldBe EpisodicCondition(null, glucose, IsNot("3.14159"), Current, expression)
+    }
+
+    @Test
+    fun `should parse expression to IsNot with value unquoted`() {
+        // Given
+        val expression = "glucose different to pending"
+
+        // When
+        val actual = conditionTip.conditionFor(expression)
+
+        // Then
+        actual shouldBe EpisodicCondition(null, glucose, IsNot("\"pending\""), Current, expression)
+    }
+
+    @Test
+    fun `should parse expression to IsNot with value quoted`() {
+        // Given
+        val expression = "glucose isn't \"pending\""
+
+        // When
+        val actual = conditionTip.conditionFor(expression)
+
+        // Then
+        actual shouldBe EpisodicCondition(null, glucose, IsNot("\"pending\""), Current, expression)
+    }
+
+    @Test
     fun `should parse expression to LessThanOrEquals`() {
         // Given
         val expression = "glucose is no more than 3.14159"
