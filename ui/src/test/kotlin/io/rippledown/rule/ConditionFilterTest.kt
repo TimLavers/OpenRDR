@@ -5,6 +5,8 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.mockk.mockk
 import io.mockk.verify
+import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
+import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
 import org.junit.Rule
 import org.junit.Test
 

@@ -14,7 +14,6 @@ import io.rippledown.integration.utils.waitForComposeDialogToShow
 import io.rippledown.integration.utils.waitForContextToBeNotNull
 import io.rippledown.integration.waitUntilAsserted
 import io.rippledown.main.LEFT_INFO_MESSAGE_ID
-import io.rippledown.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
 import java.awt.Robot

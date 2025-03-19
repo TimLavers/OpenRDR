@@ -14,6 +14,7 @@ import io.rippledown.main.Handler
 import io.rippledown.model.Attribute
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.condition.RuleConditionList
 import io.rippledown.model.condition.edit.SuggestedCondition
 import io.rippledown.model.rule.CornerstoneStatus
@@ -29,7 +30,7 @@ interface CaseControlHandler : Handler, CaseInspectionHandler, CornerstonePagerH
     fun endRuleSession()
     fun buildRule(ruleRequest: RuleRequest)
     fun updateCornerstoneStatus(cornerstoneRequest: UpdateCornerstoneRequest)
-    fun conditionForExpression(conditionText: String, attributeNames: Collection<String>): Condition?
+    fun conditionForExpression(conditionText: String, attributeNames: Collection<String>): ConditionParsingResult
 }
 
 @Composable

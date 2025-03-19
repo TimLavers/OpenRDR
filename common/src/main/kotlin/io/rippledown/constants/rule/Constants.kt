@@ -11,3 +11,6 @@ const val FINISH_RULE_BUTTON = "FINISH_RULE_BUTTON"
 const val CANCEL_RULE_BUTTON = "CANCEL_RULE_BUTTON"
 const val ADD_CONDITION_DESCRIPTION = "ADD_CONDITION_DESCRIPTION"
 const val ADD_CONDITION_TEXT = "Add this condition to the rule"
+const val DOES_NOT_CORRESPOND_TO_A_CONDITION = "This condition is not able to be recognised. Please try again."
+const val CONDITION_IS_NOT_TRUE = "This condition is not true for this case. Please try again."
+

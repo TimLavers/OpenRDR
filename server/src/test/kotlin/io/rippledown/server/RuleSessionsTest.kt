@@ -12,7 +12,7 @@ import io.rippledown.constants.api.CONDITION_FOR_EXPRESSION
 import io.rippledown.constants.server.EXPRESSION
 import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.Attribute
-import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.episodic.predicate.High
 import io.rippledown.model.condition.episodic.signature.Current
@@ -27,7 +27,9 @@ class RuleSessionsTest : OpenRDRServerTestBase() {
         val attributeNames = listOf("Sun, surf")
         val waves = Attribute(0, "Waves")
         val condition = EpisodicCondition(null, waves, High, Current, expression)
-        every { kbEndpoint.conditionForExpression(any<String>(), any<List<String>>()) } returns condition
+        every { kbEndpoint.conditionForExpression(any<String>(), any<List<String>>()) } returns ConditionParsingResult(
+            condition
+        )
 
         val result = httpClient.get(CONDITION_FOR_EXPRESSION) {
             contentType(ContentType.Application.Json)
@@ -36,7 +38,7 @@ class RuleSessionsTest : OpenRDRServerTestBase() {
             setBody(attributeNames)
         }
         result.status shouldBe OK
-        result.body<Condition?>() shouldBe condition
+        result.body<ConditionParsingResult>().condition shouldBe condition
         verify { kbEndpoint.conditionForExpression(expression, attributeNames) }
     }
 

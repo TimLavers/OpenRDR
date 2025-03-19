@@ -735,7 +735,7 @@ class KBTest {
 
         //When
         val existingCondition = kb.conditionManager.getOrCreate(greaterThanOrEqualTo(null, waves, 1.0))
-        val returnedCondition = kb.conditionForExpression(userExpression, attributeNames)!!
+        val returnedCondition = kb.conditionForExpression(userExpression, attributeNames).condition!!
 
         //Then
         verify { conditionParser.parse(userExpression, attributeNames, any()) }
@@ -766,7 +766,7 @@ class KBTest {
         parsedCondition.userExpression() shouldBe userExpression
 
         //When
-        val conditionForExpression = kb.conditionForExpression(userExpression, attributeNames)!!
+        val conditionForExpression = kb.conditionForExpression(userExpression, attributeNames).condition!!
         val returnedCondition = conditionForExpression
 
         //Then
@@ -792,7 +792,7 @@ class KBTest {
         )
 
         //When
-        val returnedCondition = kb.conditionForExpression(userExpression, attributeNames)!!
+        val returnedCondition = kb.conditionForExpression(userExpression, attributeNames).condition!!
 
         //Then
         kb.holdsForSessionCase(returnedCondition) shouldBe true
@@ -819,7 +819,7 @@ class KBTest {
         kb.holdsForSessionCase(parsedCondition) shouldBe false
 
         //When
-        val returnedCondition = kb.conditionForExpression(userExpression, attributeNames)
+        val returnedCondition = kb.conditionForExpression(userExpression, attributeNames).condition
 
         //Then
         verify { conditionParser.parse(userExpression, attributeNames, any()) }
@@ -844,7 +844,7 @@ class KBTest {
         )
 
         //When
-        val returnedCondition = kb.conditionForExpression(userExpression, attributeNames)
+        val returnedCondition = kb.conditionForExpression(userExpression, attributeNames).condition
 
         //Then
         verify { conditionParser.parse(userExpression, attributeNames, any()) }

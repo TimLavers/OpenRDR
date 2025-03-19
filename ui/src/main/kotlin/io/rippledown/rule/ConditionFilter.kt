@@ -28,8 +28,6 @@ interface ConditionFilterHandler {
 }
 
 const val WAITING_INDICATOR = "WAITING_INDICATOR"
-const val DOES_NOT_CORRESPOND_TO_A_CONDITION = "This condition is not able to be recognised. Please try again."
-const val CONDITION_IS_NOT_TRUE = "This condition is not true for this case. Please try again."
 const val ENTER_OR_SELECT_CONDITION = "Enter or select a condition for making this change"
 
 @Composable
