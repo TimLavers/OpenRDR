@@ -106,7 +106,7 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
         ConditionFilter(
             filterText,
             showWaitingIndicator,
-            unknownExpression = unknownExpression,
+            invalidExpression = null,
             handler = object : ConditionFilterHandler {
                 override var onFilterChange = { filter: String ->
                     filterText = filter
