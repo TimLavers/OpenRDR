@@ -320,7 +320,7 @@ class RuleMakerStepDefs {
 
     @Then("an alert should be displayed with the message:")
     fun `require alert`(expected: String) {
-        ruleMakerPO().requireAlertToBeDisplayed()
+        ruleMakerPO().requireAlertToBeDisplayed(expected)
     }
 }
 

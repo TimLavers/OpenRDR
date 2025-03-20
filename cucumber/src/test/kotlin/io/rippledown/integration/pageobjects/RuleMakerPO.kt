@@ -222,8 +222,8 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
         }
     }
 
-    fun requireAlertToBeDisplayed() {
-        waitForContextToBeNotNull(contextProvider, DOES_NOT_CORRESPOND_TO_A_CONDITION)
+    fun requireAlertToBeDisplayed(expected: String) {
+        waitForContextToBeNotNull(contextProvider, expected)
     }
 
     fun movePointerToFirstAvailableCondition() {

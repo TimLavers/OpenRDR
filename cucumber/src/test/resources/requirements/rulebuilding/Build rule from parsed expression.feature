@@ -26,8 +26,6 @@ Feature: When entering an expression to be used in a rule, the user is provided 
     """
     And stop the client application
 
-  @single
-#  to-do
   Scenario: Should provide a warning when the user types a valid condition but which is not true for the case
     Given case Bondi is provided with the following values, reference ranges and units:
       | Attribute | Value | Low | High | Units  |
