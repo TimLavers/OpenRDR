@@ -4,11 +4,8 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.mocks.config
 import io.rippledown.mocks.mock
 import io.rippledown.model.*
-import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.ConditionList
-import io.rippledown.model.condition.RuleConditionList
+import io.rippledown.model.condition.*
 import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
-import io.rippledown.model.condition.hasCurrentValue
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
@@ -255,10 +252,24 @@ class ApiTest {
         val config = config {
             expectedExpression = "Great surf"
             expectedAttributeNames = listOf("Surf", "Sun")
-            returnCondition = hasCurrentValue(1, Attribute(1, "Surf"))
+            val condition = hasCurrentValue(1, Attribute(1, "Surf"))
+            returnConditionParsingResult = ConditionParsingResult(condition)
         }
         val returned =
             Api(mock(config)).conditionForExpression(config.expectedExpression, config.expectedAttributeNames)
-        returned shouldBe config.returnCondition
+        returned shouldBe config.returnConditionParsingResult
+    }
+
+    @Test
+    fun `should return an error message for the specified expression`() = runTest {
+        val config = config {
+            expectedExpression = "Great surf"
+            expectedAttributeNames = listOf("Surf", "Sun")
+            val condition = hasCurrentValue(1, Attribute(1, "Surf"))
+            returnConditionParsingResult = ConditionParsingResult(errorMessage = "unknown expression")
+        }
+        val returned =
+            Api(mock(config)).conditionForExpression(config.expectedExpression, config.expectedAttributeNames)
+        returned shouldBe config.returnConditionParsingResult
     }
 }

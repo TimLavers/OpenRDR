@@ -7,7 +7,6 @@ import androidx.compose.material.Icon
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,15 +28,13 @@ interface ConditionFilterHandler {
 }
 
 const val WAITING_INDICATOR = "WAITING_INDICATOR"
-const val DOES_NOT_CORRESPOND_TO_A_CONDITION = "Does not correspond to a condition. Please try again."
 const val ENTER_OR_SELECT_CONDITION = "Enter or select a condition for making this change"
-
 
 @Composable
 fun ConditionFilter(
     filter: String,
     showWaitingIndicator: Boolean,
-    unknownExpression: Boolean = false,
+    invalidExpression: String? = null,
     handler: ConditionFilterHandler
 ) {
     val focusRequester = remember { FocusRequester() }
@@ -45,63 +42,62 @@ fun ConditionFilter(
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        OutlinedTextField(
-            label = {
-                val labelText = if (!unknownExpression) {
-                    ENTER_OR_SELECT_CONDITION
-                } else {
-                    DOES_NOT_CORRESPOND_TO_A_CONDITION
-                }
-                Text(
-                    text = labelText,
-                    style = TextStyle(fontStyle = Italic),
-                    //mergeDescendants = true is needed to make the label's contentDescription accessible via
-                    //the Accessibility API, i.e. for cucumber tests
-                    modifier = Modifier.semantics(mergeDescendants = true) {
-                        contentDescription = labelText
-                    }
-                )
-            },
-            value = filter,
-            onValueChange = {
-                handler.onFilterChange(it)
-            },
-            trailingIcon = {
-                if (unknownExpression) {
-                    Icon(
-                        imageVector = Icons.Filled.Error,
-                        contentDescription = "Error",
-                        tint = Color(0xFFB00020)
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedTextField(
+                label = {
+                    Text(
+                        text = ENTER_OR_SELECT_CONDITION,
+                        style = TextStyle(fontStyle = Italic),
+                        //mergeDescendants = true is needed to make the label's contentDescription accessible via
+                        //the Accessibility API, i.e. for cucumber tests
+                        modifier = Modifier.semantics(mergeDescendants = true) {
+                            contentDescription = ENTER_OR_SELECT_CONDITION
+                        }
                     )
-                } else {
+                },
+                value = filter,
+                onValueChange = {
+                    handler.onFilterChange(it)
+                },
+                trailingIcon = {
                     Icon(
                         imageVector = Icons.Filled.Search,
                         contentDescription = "Search",
                         modifier = Modifier.padding(start = 20.dp)
                     )
-                }
-            },
-            shape = RoundedCornerShape(16.dp),
-            isError = unknownExpression,
-            modifier = Modifier
-                .focusRequester(focusRequester)
-                .semantics {
-                    contentDescription = CURRENT_CONDITION
-                }
-        )
-        Spacer(modifier = Modifier.width(10.dp))
-
-        if (showWaitingIndicator) {
-            CircularProgressIndicator(
-                strokeWidth = 1.dp,
+                },
+                shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
-                    .size(25.dp)
+                    .focusRequester(focusRequester)
                     .semantics {
-                        contentDescription = WAITING_INDICATOR
+                        contentDescription = CURRENT_CONDITION
+                    }
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+
+            if (showWaitingIndicator) {
+                CircularProgressIndicator(
+                    strokeWidth = 1.dp,
+                    modifier = Modifier
+                        .size(25.dp)
+                        .semantics {
+                            contentDescription = WAITING_INDICATOR
+                        }
+                )
+            }
+        }
+        if (invalidExpression != null) {
+            Text(
+                text = invalidExpression,
+                style = TextStyle(fontStyle = Italic),
+                color = Color(0xFFB00020),
+                modifier = Modifier.padding(top = 5.dp, start = 10.dp)
+                    .semantics {
+                        contentDescription = invalidExpression
                     }
             )
         }

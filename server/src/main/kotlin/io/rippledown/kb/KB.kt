@@ -1,11 +1,14 @@
 package io.rippledown.kb
 
+import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
+import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
 import io.rippledown.expressionparser.AttributeFor
 import io.rippledown.expressionparser.ConditionTip
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistentKB
@@ -253,15 +256,19 @@ class KB(persistentKB: PersistentKB) {
         conditionParser = parser
     }
 
-    fun conditionForExpression(expression: String, attributeNames: List<String>): Condition? {
+    fun conditionForExpression(expression: String, attributeNames: List<String>): ConditionParsingResult {
         val attributeFor: AttributeFor = { attributeManager.getOrCreate(it) }
         val condition = conditionParser.parse(expression, attributeNames, attributeFor)
 
         //Only return the condition if non-null and holds for the session case
-        if (condition == null || !holdsForSessionCase(condition)) return null
-
-        //if this a new condition, the following will store it with its user expression, else the existing condition will be returned
-        return conditionManager.getOrCreate(condition)
+        return if (condition == null) {
+            ConditionParsingResult(errorMessage = DOES_NOT_CORRESPOND_TO_A_CONDITION)
+        } else if (!holdsForSessionCase(condition)) {
+            ConditionParsingResult(errorMessage = CONDITION_IS_NOT_TRUE)
+        } else {
+            //if this a new condition, the following will store it with its user expression, else the existing condition will be returned
+            ConditionParsingResult(conditionManager.getOrCreate(condition))
+        }
     }
 
     internal fun holdsForSessionCase(condition: Condition) = condition.holds(ruleSession!!.case)

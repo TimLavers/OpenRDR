@@ -18,8 +18,8 @@ import io.rippledown.model.Conclusion
 import io.rippledown.model.KBInfo
 import io.rippledown.model.OperationResult
 import io.rippledown.model.caseview.ViewableCase
-import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
@@ -245,13 +245,13 @@ class Api(engine: HttpClientEngine = CIO.create()) {
     /**
      * @return a condition that corresponds to the specified expression
      */
-    suspend fun conditionForExpression(expression: String, attributeNames: Collection<String>): Condition? {
+    suspend fun conditionForExpression(expression: String, attributeNames: Collection<String>): ConditionParsingResult {
         return client.get("$API_URL$CONDITION_FOR_EXPRESSION") {
             contentType(ContentType.Application.Json)
             setKBParameter()
             parameter(EXPRESSION, expression)
             setBody(attributeNames)
-        }.body<Condition?>()
+        }.body<ConditionParsingResult>()
     }
 }
 

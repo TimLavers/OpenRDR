@@ -1,8 +1,12 @@
 package io.rippledown.rule
 
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.application
 import io.mockk.mockk
 import io.mockk.verify
+import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
+import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
 import org.junit.Rule
 import org.junit.Test
 
@@ -79,7 +83,7 @@ class ConditionFilterTest {
 
             //When
             setContent {
-                ConditionFilter("", false, unknownExpression = false, handler = handler)
+                ConditionFilter("", false, handler = handler)
             }
 
             //Then
@@ -88,20 +92,51 @@ class ConditionFilterTest {
     }
 
     @Test
-    fun `should show warning label if the expression cannot be parsed`() {
+    fun `should show a warning if the expression cannot be parsed`() {
         with(composeTestRule) {
             //Given
             val handler = mockk<ConditionFilterHandler>(relaxed = true)
+            val message = DOES_NOT_CORRESPOND_TO_A_CONDITION
 
             //When
             setContent {
-                ConditionFilter("", false, unknownExpression = true, handler = handler)
+                ConditionFilter("", false, invalidExpression = message, handler = handler)
             }
 
             //Then
             requireUnknownExpressionMessageToBeShowing()
         }
     }
+
+    @Test
+    fun `should show a condition-must-be-true message if the condition is not true for the current case`() {
+        with(composeTestRule) {
+            //Given
+            val handler = mockk<ConditionFilterHandler>(relaxed = true)
+            val message = CONDITION_IS_NOT_TRUE
+
+            //When
+            setContent {
+                ConditionFilter("", false, invalidExpression = message, handler = handler)
+            }
+
+            //Then
+            requireConditionIsNotTrueMessageToBeShowing()
+        }
+    }
 }
 
-
+fun main() {
+    application {
+        Window(
+            onCloseRequest = ::exitApplication,
+        ) {
+            ConditionFilter(
+                "unrecognizable condition",
+                showWaitingIndicator = false,
+                invalidExpression = CONDITION_IS_NOT_TRUE,
+                handler = mockk(relaxed = true)
+            )
+        }
+    }
+}

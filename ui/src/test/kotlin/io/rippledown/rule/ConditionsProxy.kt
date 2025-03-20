@@ -192,6 +192,10 @@ fun ComposeTestRule.requireUnknownExpressionMessageToBeShowing() {
     onNodeWithText(DOES_NOT_CORRESPOND_TO_A_CONDITION)
         .assertIsDisplayed()
 }
+fun ComposeTestRule.requireConditionIsNotTrueMessageToBeShowing() {
+    onNodeWithText(CONDITION_IS_NOT_TRUE)
+        .assertIsDisplayed()
+}
 
 fun ComposeTestRule.requireEnterConditionMessageToBeShowing() {
     onNodeWithText(ENTER_OR_SELECT_CONDITION)
