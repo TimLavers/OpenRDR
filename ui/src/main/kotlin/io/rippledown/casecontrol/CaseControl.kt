@@ -1,11 +1,13 @@
 package io.rippledown.casecontrol
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.cornerstone.NO_CORNERSTONES_TO_REVIEW_MSG
 import io.rippledown.cornerstone.CornerstonePager
@@ -46,7 +48,8 @@ fun CaseControl(
     Row(
         modifier = Modifier
             .padding(10.dp)
-            .width(1800.dp)
+//            .width(1200.dp) todo: uncomment this line
+            .border(1.dp, Color.Red)
     )
     {
         if (currentCase != null) {

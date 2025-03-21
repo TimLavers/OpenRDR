@@ -2,6 +2,7 @@
 
 package io.rippledown.main
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import io.rippledown.appbar.AppBarHandler
 import io.rippledown.appbar.ApplicationBar
 import io.rippledown.casecontrol.*
+import io.rippledown.chat.ChatWindow
 import io.rippledown.interpretation.InterpretationActions
 import io.rippledown.interpretation.InterpretationActionsHandler
 import io.rippledown.interpretation.toAnnotatedString
@@ -94,7 +96,8 @@ fun OpenRDRUI(handler: Handler) {
                 override var exportKB: (data: File) -> Unit = { runBlocking { api.exportKBToZip(it) } }
                 override val kbList: () -> List<KBInfo> = { runBlocking { api.kbList() } }
 
-                override var setKbDescription: (description: String) -> Unit = { runBlocking { api.setKbDescription(it) } }
+                override var setKbDescription: (description: String) -> Unit =
+                    { runBlocking { api.setKbDescription(it) } }
                 override var kbDescription: () -> String = { runBlocking { api.kbDescription() } }
             })
         },
@@ -143,7 +146,7 @@ fun OpenRDRUI(handler: Handler) {
             }
         }
     )
-    {
+    { innerPadding ->
         CasePoller(object : CasePollerHandler {
             override var onUpdate: (updated: CasesInfo) -> Unit = {
                 casesInfo = it
@@ -153,7 +156,9 @@ fun OpenRDRUI(handler: Handler) {
         })
 
         if (casesInfo.count > 0) {
-            Row {
+            Row(
+                modifier = Modifier.border(1.dp, Color.Green)
+            ) {
                 if (!ruleInProgress) {
                     ruleAction = null
                     handler.setRightInfoMessage("")
@@ -219,6 +224,7 @@ fun OpenRDRUI(handler: Handler) {
                         }
                     }
                 )
+                ChatWindow()
             }
         }
     }
