@@ -6,11 +6,14 @@ import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import openrdr.ui.generated.resources.Res
+import openrdr.ui.generated.resources.icons8_collapse_30
+import openrdr.ui.generated.resources.icons8_expand_30
+import org.jetbrains.compose.resources.painterResource
 
 data class TreeNode(val name: String = "", val children: MutableList<TreeNode> = mutableListOf()) {
     fun add(node: TreeNode) {
@@ -19,10 +22,10 @@ data class TreeNode(val name: String = "", val children: MutableList<TreeNode> =
 }
 
 @Composable
-fun collapseIcon() = painterResource("icons8-collapse-30.png")
+fun collapseIcon() = painterResource(Res.drawable.icons8_collapse_30)
 
 @Composable
-fun expandIcon() = painterResource("icons8-expand-30.png")
+fun expandIcon() = painterResource(Res.drawable.icons8_expand_30)
 
 const val TREE_ICON = "tree_icon"
 const val TREE_TEXT = "tree_text"

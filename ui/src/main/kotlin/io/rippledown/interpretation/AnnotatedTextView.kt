@@ -1,8 +1,10 @@
-@file:OptIn(ExperimentalComposeUiApi::class, ExperimentalComposeUiApi::class, ExperimentalComposeUiApi::class)
+@file:OptIn(
+    ExperimentalComposeUiApi::class, ExperimentalComposeUiApi::class, ExperimentalComposeUiApi::class,
+    ExperimentalComposeUiApi::class
+)
 
 package io.rippledown.interpretation
 
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
@@ -36,7 +38,6 @@ fun AnnotatedTextView(
     Text(
         text = text,
         modifier = Modifier.padding(10.dp)
-            .fillMaxWidth()
             .pointerInput(Unit) {
                 awaitPointerEventScope {
                     while (true) {

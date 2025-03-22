@@ -26,7 +26,7 @@ fun main() = application {
     }
     Window(
         onCloseRequest = {
-            this.exitApplication()
+            exitApplication()
             closing = true
         },
         icon = painterResource(drawable.water_wave_icon),
@@ -36,7 +36,6 @@ fun main() = application {
         OpenRDRUI(object : Handler {
             override var isClosing = { closing }
             override var api: Api = Api()
-            override var setRightInfoMessage: (message: String) -> Unit = {}
             override fun showingCornerstone(isShowingCornerstone: Boolean) {
                 if (isShowingCornerstone) resizeWindow(EXPANDED_WINDOW_SIZE) else resizeWindow(DEFAULT_WINDOW_SIZE)
             }

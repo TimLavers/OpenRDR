@@ -95,7 +95,7 @@ class CaseInspectionUpdateTest {
 fun CaseInspectionWithButton(initialCase: ViewableCase, changedCase: ViewableCase) {
 
     var currentCase by remember { mutableStateOf(initialCase) }
-    val handler = mockk<CaseInspectionHandler>()
+    val handler = mockk<CaseInspectionHandler>(relaxUnitFun = true)
 
     CaseInspection(currentCase, false, handler)
 

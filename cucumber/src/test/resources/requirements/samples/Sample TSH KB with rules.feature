@@ -2,12 +2,13 @@ Feature: The knowledge base described in the TSH paper is implemented by a KB bu
 
 #  We check the interpretation of each of the cases. Just a few of
 #  the cases are checked as the other TSH sample cuke checks all of them.
+  @single
   Scenario: TSH KB rules
     Given I start the client application
     And I create a Knowledge Base with the name TSHNew based on the "Thyroid Stimulating Hormone" sample
 
     Then the count of the number of cases is 34
-
+    And pause
     When I select case 1.4.1
     Then I see these case values:
       | Sex               | F                 |            |

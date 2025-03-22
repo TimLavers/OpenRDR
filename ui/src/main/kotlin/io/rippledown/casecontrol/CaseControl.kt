@@ -24,13 +24,15 @@ import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.rule.RuleMaker
 import io.rippledown.rule.RuleMakerHandler
 
-interface CaseControlHandler : Handler, CaseInspectionHandler, CornerstonePagerHandler {
+interface CaseControlHandler : CaseInspectionHandler, CornerstonePagerHandler {
     fun getCase(caseId: Long)
     fun startRuleSession(sessionStartRequest: SessionStartRequest)
     fun endRuleSession()
     fun buildRule(ruleRequest: RuleRequest)
     fun updateCornerstoneStatus(cornerstoneRequest: UpdateCornerstoneRequest)
     fun conditionForExpression(conditionText: String, attributeNames: Collection<String>): ConditionParsingResult
+    var setRightInfoMessage: (message: String) -> Unit
+
 }
 
 @Composable
@@ -50,7 +52,7 @@ fun CaseControl(
     )
     {
         if (currentCase != null) {
-            CaseInspection(currentCase, ruleInProgress, object : CaseInspectionHandler, Handler by handler {
+            CaseInspection(currentCase, ruleInProgress, object : CaseInspectionHandler by handler {
                 override fun swapAttributes(moved: Attribute, target: Attribute) {
                     handler.swapAttributes(moved, target)
                 }

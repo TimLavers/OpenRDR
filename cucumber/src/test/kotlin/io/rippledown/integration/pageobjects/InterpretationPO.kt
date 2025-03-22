@@ -57,9 +57,9 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
 
     fun clickChangeInterpretationButton() {
         waitUntilAsserted {
-            execute<AccessibleContext?> { contextProvider().find(CHANGE_INTERPRETATION_BUTTON) } shouldNotBe null
+            execute<AccessibleContext?> { contextProvider().find(CHANGE_INTERPRETATION_ICON) } shouldNotBe null
         }
-        execute { contextProvider().find(CHANGE_INTERPRETATION_BUTTON)!!.accessibleAction.doAccessibleAction(0) }
+        execute { contextProvider().find(CHANGE_INTERPRETATION_ICON)!!.accessibleAction.doAccessibleAction(0) }
     }
 
     fun clickAddCommentMenu() {

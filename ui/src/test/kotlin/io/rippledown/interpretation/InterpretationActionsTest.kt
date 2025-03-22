@@ -33,7 +33,7 @@ class InterpretationActionsTest {
             clickChangeInterpretationButton()
 
             //Then
-            requireInterpretationActionsDropdownMenu()
+            requireChangeInterpretationIconToBeShowing()
         }
     }
 
@@ -55,7 +55,7 @@ class InterpretationActionsTest {
         }
     }
 
-//    @Test
+    @Test
     fun `should show all available comments when the user clicks on the add comment button if there are no comments given for the case`() {
         with(composeTestRule) {
             //Given
@@ -92,7 +92,7 @@ class InterpretationActionsTest {
         }
     }
 
-//    @Test
+    @Test
     fun `should call handler when the user clicks on the replace comment button, selects an existing comment, adds a replacement comment and presses OK`() =
         runTest {
             with(composeTestRule) {
@@ -117,7 +117,7 @@ class InterpretationActionsTest {
             }
         }
 
-//    @Test
+    @Test
     fun `should call handler when the user clicks on the remove comment button, selects a comment and presses OK`() =
         runTest {
             val bondi = "Bondi"

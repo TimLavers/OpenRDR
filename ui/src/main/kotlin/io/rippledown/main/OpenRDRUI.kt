@@ -16,8 +16,6 @@ import androidx.compose.ui.unit.dp
 import io.rippledown.appbar.AppBarHandler
 import io.rippledown.appbar.ApplicationBar
 import io.rippledown.casecontrol.*
-import io.rippledown.interpretation.InterpretationActions
-import io.rippledown.interpretation.InterpretationActionsHandler
 import io.rippledown.interpretation.toAnnotatedString
 import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
@@ -40,7 +38,6 @@ import java.io.File
 interface Handler {
     var api: Api
     var isClosing: () -> Boolean
-    var setRightInfoMessage: (message: String) -> Unit
     fun showingCornerstone(isShowingCornerstone: Boolean)
 }
 
@@ -58,10 +55,6 @@ fun OpenRDRUI(handler: Handler) {
 
     LaunchedEffect(Unit) {
         kbInfo = api.kbList().firstOrNull()
-    }
-
-    handler.setRightInfoMessage = { it ->
-        rightInformationMessage = it
     }
 
     LaunchedEffect(casesInfo, currentCaseId) {
@@ -108,40 +101,6 @@ fun OpenRDRUI(handler: Handler) {
                 InformationPanel(leftMessage, rightMessage)
             }
         },
-        floatingActionButton = {
-            if (!ruleInProgress && currentCase != null) {
-                val commentsGivenForCase = currentCase!!.viewableInterpretation.conclusions().map { it.text }
-                val allComments = runBlocking { api.allConclusions() }.map { it.text }.toSet()
-                InterpretationActions(commentsGivenForCase, allComments, object : InterpretationActionsHandler {
-                    override fun startRuleToAddComment(comment: String) {
-                        ruleAction = Addition(comment)
-                        val sessionStartRequest = SessionStartRequest(
-                            caseId = currentCase!!.id!!,
-                            diff = ruleAction as Addition
-                        )
-                        cornerstoneStatus = runBlocking { api.startRuleSession(sessionStartRequest) }
-                    }
-
-                    override fun startRuleToReplaceComment(toBeReplaced: String, replacement: String) {
-                        ruleAction = Replacement(toBeReplaced, replacement)
-                        val sessionStartRequest = SessionStartRequest(
-                            caseId = currentCase!!.id!!,
-                            diff = ruleAction as Replacement
-                        )
-                        cornerstoneStatus = runBlocking { api.startRuleSession(sessionStartRequest) }
-                    }
-
-                    override fun startRuleToRemoveComment(comment: String) {
-                        ruleAction = Removal(comment)
-                        val sessionStartRequest = SessionStartRequest(
-                            caseId = currentCase!!.id!!,
-                            diff = ruleAction as Removal
-                        )
-                        cornerstoneStatus = runBlocking { api.startRuleSession(sessionStartRequest) }
-                    }
-                })
-            }
-        }
     )
     {
         CasePoller(object : CasePollerHandler {
@@ -156,7 +115,7 @@ fun OpenRDRUI(handler: Handler) {
             Row {
                 if (!ruleInProgress) {
                     ruleAction = null
-                    handler.setRightInfoMessage("")
+                    rightInformationMessage = ""
                     Column {
                         CaseSelectorHeader(casesInfo.caseIds.size)
                         Spacer(modifier = Modifier.height(10.dp))
@@ -173,11 +132,40 @@ fun OpenRDRUI(handler: Handler) {
                     currentCase = currentCase,
                     cornerstoneStatus = cornerstoneStatus,
                     conditionHints = conditionHints,
-                    handler = object : CaseControlHandler, Handler by handler {
+                    handler = object : CaseControlHandler {
+                        override fun startRuleToAddComment(comment: String) {
+                            ruleAction = Addition(comment)
+                            val sessionStartRequest = SessionStartRequest(
+                                caseId = currentCase!!.id!!,
+                                diff = ruleAction as Addition
+                            )
+                            cornerstoneStatus = runBlocking { api.startRuleSession(sessionStartRequest) }
+                        }
+
+                        override fun startRuleToReplaceComment(toBeReplaced: String, replacement: String) {
+                            ruleAction = Replacement(toBeReplaced, replacement)
+                            val sessionStartRequest = SessionStartRequest(
+                                caseId = currentCase!!.id!!,
+                                diff = ruleAction as Replacement
+                            )
+                            cornerstoneStatus = runBlocking { api.startRuleSession(sessionStartRequest) }
+                        }
+
+                        override fun startRuleToRemoveComment(comment: String) {
+                            ruleAction = Removal(comment)
+                            val sessionStartRequest = SessionStartRequest(
+                                caseId = currentCase!!.id!!,
+                                diff = ruleAction as Removal
+                            )
+                            cornerstoneStatus = runBlocking { api.startRuleSession(sessionStartRequest) }
+                        }
+
                         override fun endRuleSession() {
                             runBlocking { api.cancelRuleSession() }
                             cornerstoneStatus = null
                         }
+
+                        override var setRightInfoMessage: (message: String) -> Unit = { rightInformationMessage = it }
 
                         override fun buildRule(ruleRequest: RuleRequest) = runBlocking {
                             currentCase = api.commitSession(ruleRequest)
@@ -194,8 +182,6 @@ fun OpenRDRUI(handler: Handler) {
                         }
 
                         override fun getCase(caseId: Long) = runBlocking { currentCase = api.getCase(caseId) }
-
-                        override var isClosing = { false }
 
                         override fun swapAttributes(moved: Attribute, target: Attribute) {
                             runBlocking {
