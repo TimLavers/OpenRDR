@@ -302,9 +302,8 @@ class OpenRDRUITest {
         }
     }
 
-
     @Test
-    fun `should call handler to widen the window when a cornerstone case is shown`() = runTest {
+    fun `should show cornerstone view`() = runTest {
         val caseName = "case a"
         val cornerstoneName = "case b"
         val caseId = CaseId(id = 1, name = caseName)

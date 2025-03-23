@@ -9,6 +9,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.text.TextLayoutResult
 import io.kotest.assertions.withClue
+import io.mockk.every
 import io.mockk.mockk
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
@@ -26,13 +27,12 @@ class InterpretationViewUpdateTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    interface H : InterpretationViewHandler
-
-    lateinit var h: H
+    lateinit var handler: InterpretationViewHandler
 
     @Before
     fun setUp() {
-        h = mockk(relaxUnitFun = true)
+        handler = mockk(relaxUnitFun = true)
+        every { handler.allComments() } returns emptySet()
     }
 
     val textA = "text for case A"
@@ -48,7 +48,7 @@ class InterpretationViewUpdateTest {
         val changed = ViewableInterpretation(i2)
 
         lateinit var textLayoutResult: TextLayoutResult
-        val handler = object : InterpretationViewHandler by h {
+        val handler = object : InterpretationViewHandler by handler {
             override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
                 textLayoutResult = layoutResult
             }
