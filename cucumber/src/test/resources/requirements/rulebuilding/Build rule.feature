@@ -100,7 +100,6 @@ Feature: The user can make rules that change the interpretive report
     And the case list should be shown
     And stop the client application
 
-  @single
   Scenario: The rule action dropdown should be hidden if the action is cancelled
     Given a new case is stored on the server
     And I start the client application
