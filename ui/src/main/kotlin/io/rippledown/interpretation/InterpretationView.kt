@@ -8,6 +8,7 @@ package io.rippledown.interpretation
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.material3.OutlinedCard
@@ -47,10 +48,11 @@ fun InterpretationView(
     }
 
     OutlinedCard(modifier = Modifier.padding(vertical = 10.dp)) {
-        Row {
+        Row(modifier = Modifier.fillMaxWidth()) {
             ReadonlyInterpretationView(
                 interpretation = interpretation,
                 contentDescription = INTERPRETATION_TEXT_FIELD,
+                modifier = Modifier.weight(1f), // Fill the available space, but leaving space for the icon
                 handler = handler
             )
             if (showChangeIcon) {

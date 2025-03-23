@@ -2,7 +2,9 @@ package io.rippledown.interpretation
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.TooltipArea
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextLayoutResult
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE
 import io.rippledown.model.interpretationview.ViewableInterpretation
@@ -16,6 +18,7 @@ interface ReadonlyInterpretationViewHandler {
 fun ReadonlyInterpretationView(
     interpretation: ViewableInterpretation,
     contentDescription: String = INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE,
+    modifier: Modifier,
     handler: ReadonlyInterpretationViewHandler
 ) {
     val conclusionList = interpretation.conclusions().toList()
@@ -33,6 +36,7 @@ fun ReadonlyInterpretationView(
     }
 
     TooltipArea(
+        modifier = modifier.fillMaxWidth(),
         tooltip = {
             val showToolTip = commentIndex != -1
             if (showToolTip) {

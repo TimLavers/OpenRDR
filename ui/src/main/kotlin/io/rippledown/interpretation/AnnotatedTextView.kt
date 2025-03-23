@@ -26,6 +26,7 @@ interface AnnotatedTextViewHandler {
     fun onPointerExit()
 }
 
+@ExperimentalComposeUiApi
 @Composable
 fun AnnotatedTextView(
     text: AnnotatedString,
