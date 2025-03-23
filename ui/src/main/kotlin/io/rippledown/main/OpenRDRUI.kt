@@ -133,6 +133,8 @@ fun OpenRDRUI(handler: Handler) {
                     cornerstoneStatus = cornerstoneStatus,
                     conditionHints = conditionHints,
                     handler = object : CaseControlHandler {
+                        override fun allComments() = runBlocking { api.allConclusions().map { it.text }.toSet() }
+
                         override fun startRuleToAddComment(comment: String) {
                             ruleAction = Addition(comment)
                             val sessionStartRequest = SessionStartRequest(
