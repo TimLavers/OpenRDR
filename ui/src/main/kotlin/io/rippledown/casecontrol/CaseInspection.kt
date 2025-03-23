@@ -28,6 +28,10 @@ fun CaseInspection(case: ViewableCase, isRuleBuilding: Boolean, handler: CaseIns
                 handler.swapAttributes(moved, target)
             }
         })
-        InterpretationView(case.viewableInterpretation, object : InterpretationViewHandler by handler {})
+        InterpretationView(
+            interpretation = case.viewableInterpretation,
+            showChangeIcon = !isRuleBuilding,
+            handler = handler
+        )
     }
 }

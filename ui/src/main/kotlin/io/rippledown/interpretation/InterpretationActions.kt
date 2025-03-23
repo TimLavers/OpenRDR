@@ -36,7 +36,7 @@ fun InterpretationActions(
     var addCommentDialogShowing by remember { mutableStateOf(false) }
     var replaceCommentDialogShowing by remember { mutableStateOf(false) }
     var removeCommentDialogShowing by remember { mutableStateOf(false) }
-    val noDialogsShowing = !(addCommentDialogShowing || replaceCommentDialogShowing || removeCommentDialogShowing)
+    val showDropdownMenu = !(addCommentDialogShowing || replaceCommentDialogShowing || removeCommentDialogShowing)
     var expanded by remember { mutableStateOf(false) }
     Box(
         modifier = Modifier.wrapContentSize(BottomEnd)
@@ -44,7 +44,7 @@ fun InterpretationActions(
         ChangeInterpretationIcon {
             expanded = !expanded
         }
-        if (noDialogsShowing) {
+        if (showDropdownMenu) {
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
@@ -95,6 +95,7 @@ fun InterpretationActions(
 
             override fun cancel() {
                 addCommentDialogShowing = false
+                expanded = false
             }
         })
     }
@@ -110,6 +111,7 @@ fun InterpretationActions(
 
                 override fun cancel() {
                     replaceCommentDialogShowing = false
+                    expanded = false
                 }
             })
     }
@@ -125,6 +127,7 @@ fun InterpretationActions(
 
                 override fun cancel() {
                     removeCommentDialogShowing = false
+                    expanded = false
                 }
             })
     }

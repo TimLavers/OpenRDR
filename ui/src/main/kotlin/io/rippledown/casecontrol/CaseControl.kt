@@ -52,7 +52,7 @@ fun CaseControl(
     )
     {
         if (currentCase != null) {
-            CaseInspection(currentCase, ruleInProgress, object : CaseInspectionHandler by handler {
+            CaseInspection(currentCase, isRuleBuilding = ruleInProgress, object : CaseInspectionHandler by handler {
                 override fun swapAttributes(moved: Attribute, target: Attribute) {
                     handler.swapAttributes(moved, target)
                 }

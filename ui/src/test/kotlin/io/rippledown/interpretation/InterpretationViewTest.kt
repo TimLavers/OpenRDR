@@ -26,7 +26,7 @@ class InterpretationViewTest {
     }
 
     @Test
-    fun `should show change interpretation icon by default`() = runTest {
+    fun `should show change interpretation icon if the showChangeInterpretationIcon parameter is true`() = runTest {
         //Given
         val bondiComment = "Best surf in the world!"
         val interpretation = createInterpretation(
@@ -34,7 +34,56 @@ class InterpretationViewTest {
         )
         with(composeTestRule) {
             setContent {
-                InterpretationView(interpretation = interpretation, handler)
+                InterpretationView(
+                    interpretation = interpretation,
+                    showChangeIcon = true,
+                    handler
+                )
+            }
+            requireInterpretation(bondiComment)
+
+            //Then
+            requireChangeInterpretationIconToBeShowing()
+        }
+    }
+
+    @Test
+    fun `should not show change interpretation icon if the showChangeInterpretationIcon parameter is false`() =
+        runTest {
+            //Given
+            val bondiComment = "Best surf in the world!"
+            val interpretation = createInterpretation(
+                mapOf(bondiComment to listOf())
+            )
+            with(composeTestRule) {
+                setContent {
+                    InterpretationView(
+                        interpretation = interpretation,
+                        showChangeIcon = false,
+                        handler
+                    )
+                }
+                requireInterpretation(bondiComment)
+
+                //Then
+                requireChangeInterpretationIconToBeNotShowing()
+            }
+        }
+
+    @Test
+    fun `should show change interpretation icon if not in a rule session`() = runTest {
+        //Given
+        val bondiComment = "Best surf in the world!"
+        val interpretation = createInterpretation(
+            mapOf(bondiComment to listOf())
+        )
+        with(composeTestRule) {
+            setContent {
+                InterpretationView(
+                    interpretation = interpretation,
+                    showChangeIcon = true,
+                    handler
+                )
             }
             requireInterpretation(bondiComment)
 
@@ -49,7 +98,7 @@ class InterpretationViewTest {
         val text = "Go to Bondi now!"
         with(composeTestRule) {
             setContent {
-                InterpretationView(createInterpretation(mapOf(text to emptyList())), handler)
+                InterpretationView(createInterpretation(mapOf(text to emptyList())), true, handler)
             }
             requireInterpretation(text)
 
@@ -67,7 +116,7 @@ class InterpretationViewTest {
         )
         with(composeTestRule) {
             setContent {
-                InterpretationView(interpretation = interpretation, handler)
+                InterpretationView(interpretation = interpretation, true, handler)
             }
             requireInterpretation(bondiComment)
 
@@ -75,76 +124,7 @@ class InterpretationViewTest {
             clickChangeInterpretationButton()
 
             //Then
-            requireChangeInterpretationIconToBeShowing()
-        }
-    }
-
-    @Test
-    fun `should hide the change interpretation icon when a rule session is started to add a comment`() = runTest {
-        //Given
-        val bondiComment = "Best surf in the world!"
-        val interpretation = createInterpretation(
-            mapOf(bondiComment to listOf())
-        )
-        with(composeTestRule) {
-            setContent {
-                InterpretationView(interpretation = interpretation, handler)
-            }
-            requireInterpretation(bondiComment)
-            clickChangeInterpretationButton()
-
-            //When
-            clickAddCommentMenu()
-            addNewComment("abc")
-
-            //Then
-            requireChangeInterpretationIconToBeNotShowing()
-        }
-    }
-
-    @Test
-    fun `should hide the change interpretation icon when a rule session is started to remove a comment`() = runTest {
-        //Given
-        val bondiComment = "Best surf in the world!"
-        val interpretation = createInterpretation(
-            mapOf(bondiComment to listOf())
-        )
-        with(composeTestRule) {
-            setContent {
-                InterpretationView(interpretation = interpretation, handler)
-            }
-            requireInterpretation(bondiComment)
-            clickChangeInterpretationButton()
-
-            //When
-            clickRemoveCommentMenu()
-            removeComment(bondiComment)
-
-            //Then
-            requireChangeInterpretationIconToBeNotShowing()
-        }
-    }
-
-    @Test
-    fun `should hide the change interpretation icon when a rule session is started to replace a comment`() = runTest {
-        //Given
-        val bondiComment = "Best surf in the world!"
-        val interpretation = createInterpretation(
-            mapOf(bondiComment to listOf())
-        )
-        with(composeTestRule) {
-            setContent {
-                InterpretationView(interpretation = interpretation, handler)
-            }
-            requireInterpretation(bondiComment)
-            clickChangeInterpretationButton()
-
-            //When
-            clickReplaceCommentMenu()
-            replaceComment(bondiComment, "Very best surf in the world!")
-
-            //Then
-            requireChangeInterpretationIconToBeNotShowing()
+            requireInterpretationActionsMenuToBeShowing()
         }
     }
 
@@ -157,7 +137,7 @@ class InterpretationViewTest {
         )
         with(composeTestRule) {
             setContent {
-                InterpretationView(interpretation = interpretation, handler)
+                InterpretationView(interpretation = interpretation, true, handler)
             }
             requireInterpretation(bondiComment)
             clickChangeInterpretationButton()
@@ -181,7 +161,7 @@ class InterpretationViewTest {
         )
         with(composeTestRule) {
             setContent {
-                InterpretationView(interpretation = interpretation, handler)
+                InterpretationView(interpretation = interpretation, true, handler)
             }
             requireInterpretation(bondiComment)
             clickChangeInterpretationButton()
@@ -204,7 +184,7 @@ class InterpretationViewTest {
         )
         with(composeTestRule) {
             setContent {
-                InterpretationView(interpretation = interpretation, handler)
+                InterpretationView(interpretation = interpretation, true, handler)
             }
             requireInterpretation(bondiComment)
             clickChangeInterpretationButton()
@@ -226,6 +206,6 @@ fun main() {
         conclusionTexts = listOf("Surf's up!", "Go to Bondi now!", "Bring your flippers.")
     ).viewableInterpretation
     applicationFor {
-        InterpretationView(interpretation, mockk(relaxed = true))
+        InterpretationView(interpretation, true, mockk(relaxed = true))
     }
 }

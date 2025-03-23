@@ -427,6 +427,154 @@ class OpenRDRUITest {
     }
 
     @Test
+    fun `should hide the change interpretation icon when a rule session is started to add a comment`() = runTest {
+        val caseName = "case a"
+        val caseId = CaseId(id = 1, name = caseName)
+        val case = createCase(caseId)
+        coEvery { api.getCase(1) } returns case
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.startRuleSession(any()) } returns CornerstoneStatus()
+        coEvery { api.selectCornerstone(any()) } returns CornerstoneStatus()
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler)
+            }
+            //Given
+            waitForCaseToBeShowing(caseName)
+            requireChangeInterpretationIconToBeShowing()
+            clickChangeInterpretationButton()
+            clickAddCommentMenu()
+
+            //When
+            addNewComment("Go to Bondi")
+
+            //Then
+            requireChangeInterpretationIconToBeNotShowing()
+        }
+    }
+
+    @Test
+    fun `should hide the change interpretation icon when a rule session is started to remove a comment`() = runTest {
+        //Given
+        val caseName = "case a"
+        val id = 1L
+        val caseId = CaseId(id = id, name = caseName)
+        val bondiComment = "Go to Bondi"
+        val case = createCaseWithInterpretation(caseName, id = id, conclusionTexts = listOf(bondiComment))
+        coEvery { api.getCase(1) } returns case
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.startRuleSession(any()) } returns CornerstoneStatus()
+        coEvery { api.selectCornerstone(any()) } returns CornerstoneStatus()
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler)
+            }
+            //Given
+            waitForCaseToBeShowing(caseName)
+            requireChangeInterpretationIconToBeShowing()
+            clickChangeInterpretationButton()
+            clickRemoveCommentMenu()
+
+            //When
+            removeComment(bondiComment)
+
+            //Then
+            requireChangeInterpretationIconToBeNotShowing()
+        }
+    }
+
+    @Test
+    fun `should hide the change interpretation icon when a rule session is started to replace a comment`() = runTest {
+        val caseName = "case a"
+        val id = 1L
+        val caseId = CaseId(id = id, name = caseName)
+        val bondiComment = "Go to Bondi"
+        val malabarComment = "Go to Malabar"
+        val case = createCaseWithInterpretation(caseName, id = id, conclusionTexts = listOf(bondiComment))
+        coEvery { api.getCase(1) } returns case
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.startRuleSession(any()) } returns CornerstoneStatus()
+        coEvery { api.selectCornerstone(any()) } returns CornerstoneStatus()
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler)
+            }
+            //Given
+            waitForCaseToBeShowing(caseName)
+            requireChangeInterpretationIconToBeShowing()
+            clickChangeInterpretationButton()
+            clickReplaceCommentMenu()
+
+            //When
+            replaceComment(bondiComment, malabarComment)
+
+            //Then
+            requireChangeInterpretationIconToBeNotShowing()
+        }
+    }
+
+    @Test
+    fun `should re-show the change interpretation icon when a rule session is committed`() = runTest {
+        val caseName = "case a"
+        val id = 1L
+        val caseId = CaseId(id = id, name = caseName)
+        val case = createCaseWithInterpretation(caseName, id, listOf("Go to Coogee"))
+        coEvery { api.getCase(id) } returns case
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.startRuleSession(any()) } returns CornerstoneStatus()
+        coEvery { api.commitSession(any()) } returns case
+        coEvery { api.selectCornerstone(any()) } returns CornerstoneStatus()
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler)
+            }
+            //Given
+            waitForCaseToBeShowing(caseName)
+            clickChangeInterpretationButton()
+            clickAddCommentMenu()
+            addNewComment("Go to Bondi")
+            requireChangeInterpretationIconToBeNotShowing()
+
+            //When
+            clickFinishRuleButton()
+
+            //Then
+            requireChangeInterpretationIconToBeShowing()
+        }
+    }
+
+    @Test
+    fun `should re-show the change interpretation icon when a rule session is cancelled`() = runTest {
+        val caseName = "case a"
+        val id = 1L
+        val caseId = CaseId(id = id, name = caseName)
+        val case = createCaseWithInterpretation(caseName, id, listOf("Go to Coogee"))
+        coEvery { api.getCase(id) } returns case
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.startRuleSession(any()) } returns CornerstoneStatus()
+        coEvery { api.commitSession(any()) } returns case
+        coEvery { api.selectCornerstone(any()) } returns CornerstoneStatus()
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler)
+            }
+            //Given
+            waitForCaseToBeShowing(caseName)
+            clickChangeInterpretationButton()
+            clickAddCommentMenu()
+            addNewComment("Go to Bondi")
+            requireChangeInterpretationIconToBeNotShowing()
+
+            //When
+            clickCancelRuleButton()
+
+            //Then
+            requireChangeInterpretationIconToBeShowing()
+        }
+    }
+
+
+    @Test
     fun `should call handler to retrieve all comments`() = runTest {
         val caseName = "case a"
         val caseId = CaseId(id = 1, name = caseName)

@@ -41,6 +41,9 @@ fun ComposeTestRule.requireChangeInterpretationIconToBeNotShowing() {
 fun ComposeTestRule.requireInterpretationActionsMenuToBeShowing() {
     onNodeWithContentDescription(CHANGE_INTERPRETATION_DROPDOWN).assertIsDisplayed()
 }
+fun ComposeTestRule.requireInterpretationActionsMenuToBeNotShowing() {
+    onNodeWithContentDescription(CHANGE_INTERPRETATION_DROPDOWN).assertDoesNotExist()
+}
 
 fun ComposeTestRule.clickChangeInterpretationButton() =
     onNodeWithContentDescription(CHANGE_INTERPRETATION_ICON)

@@ -31,6 +31,7 @@ interface InterpretationViewHandler : ReadonlyInterpretationViewHandler, Interpr
 @Composable
 fun InterpretationView(
     interpretation: ViewableInterpretation,
+    showChangeIcon: Boolean,
     handler: InterpretationViewHandler
 ) {
     var comments by remember {
@@ -38,7 +39,6 @@ fun InterpretationView(
     }
     var unstyledText by remember { mutableStateOf(comments.unhighlighted()) }
     var styledText by remember { mutableStateOf(unstyledText) }
-    var showChangeIcon by remember { mutableStateOf(true) }
 
     LaunchedEffect(interpretation) {
         comments = interpretation.conclusions().map { it.text }
@@ -59,17 +59,14 @@ fun InterpretationView(
                     allComments = handler.allComments(),
                     handler = object : InterpretationActionsHandler {
                         override fun startRuleToAddComment(comment: String) {
-                            showChangeIcon = false
                             handler.startRuleToAddComment(comment)
                         }
 
                         override fun startRuleToReplaceComment(toBeReplaced: String, replacement: String) {
-                            showChangeIcon = false
                             handler.startRuleToReplaceComment(toBeReplaced, replacement)
                         }
 
                         override fun startRuleToRemoveComment(comment: String) {
-                            showChangeIcon = false
                             handler.startRuleToRemoveComment(comment)
                         }
                     }

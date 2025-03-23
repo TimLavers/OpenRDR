@@ -38,6 +38,63 @@ class InterpretationActionsTest {
     }
 
     @Test
+    fun `should hide dropdown menu when the user selects the add comment menu then clicks cancel`() {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                InterpretationActions(listOf(), setOf(), handler)
+            }
+
+            clickChangeInterpretationButton()
+            clickAddCommentMenu()
+
+            //When
+            clickCancelAddNewComment()
+
+            //Then
+            requireInterpretationActionsMenuToBeNotShowing()
+        }
+    }
+
+    @Test
+    fun `should hide dropdown menu when the user selects the remove comment menu then clicks cancel`() {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                InterpretationActions(listOf("Bondi"), setOf(), handler)
+            }
+
+            clickChangeInterpretationButton()
+            clickRemoveCommentMenu()
+
+            //When
+            clickCancelRemoveComment()
+
+            //Then
+            requireInterpretationActionsMenuToBeNotShowing()
+        }
+    }
+
+    @Test
+    fun `should hide dropdown menu when the user selects the replace comment menu then clicks cancel`() {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                InterpretationActions(listOf("Bondi"), setOf(), handler)
+            }
+
+            clickChangeInterpretationButton()
+            clickReplaceCommentMenu()
+
+            //When
+            clickCancelReplaceComment()
+
+            //Then
+            requireInterpretationActionsMenuToBeNotShowing()
+        }
+    }
+
+    @Test
     fun `should call handler when the user clicks on the add comment button, adds a new comment and presses OK`() {
         with(composeTestRule) {
             //Given
