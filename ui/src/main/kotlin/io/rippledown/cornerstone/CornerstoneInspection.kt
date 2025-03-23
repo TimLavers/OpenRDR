@@ -61,7 +61,7 @@ fun CornerstoneInspection(case: ViewableCase) {
         OutlinedCard(modifier = Modifier.padding(vertical = 10.dp)) {
             ReadonlyInterpretationView(
                 case.viewableInterpretation,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.fillMaxWidth(),
                 handler = object : ReadonlyInterpretationViewHandler {}
             )
         }
