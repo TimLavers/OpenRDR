@@ -1,8 +1,10 @@
 package io.rippledown.cornerstone
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,9 +17,11 @@ import io.rippledown.constants.cornerstone.CORNERSTONE_CASE_NAME_ID
 import io.rippledown.constants.cornerstone.CORNERSTONE_ID
 import io.rippledown.constants.cornerstone.CORNERSTONE_TITLE
 import io.rippledown.decoration.ItalicGrey
-import io.rippledown.interpretation.InterpretationView
+import io.rippledown.interpretation.ReadonlyInterpretationView
+import io.rippledown.interpretation.ReadonlyInterpretationViewHandler
 import io.rippledown.model.caseview.ViewableCase
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CornerstoneInspection(case: ViewableCase) {
     Column(
@@ -54,6 +58,12 @@ fun CornerstoneInspection(case: ViewableCase) {
         }
         Spacer(modifier = Modifier.height(10.dp))
         CaseTable(case)
-        InterpretationView(case.viewableInterpretation, true)
+        OutlinedCard(modifier = Modifier.padding(vertical = 10.dp)) {
+            ReadonlyInterpretationView(
+                case.viewableInterpretation,
+                modifier = Modifier.fillMaxWidth(),
+                handler = object : ReadonlyInterpretationViewHandler {}
+            )
+        }
     }
 }

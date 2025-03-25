@@ -26,7 +26,6 @@ class OpenRdUIProxy() {
                         OpenRDRUI(object : Handler {
                             override var api = Api()
                             override var isClosing: () -> Boolean = { false }
-                            override var setRightInfoMessage: (message: String) -> Unit = {}
                             override fun showingCornerstone(isShowingCornerstone: Boolean) {}
                         })
                     }
@@ -37,7 +36,6 @@ class OpenRdUIProxy() {
         Thread(runnable, "App Runner").start()
         Thread.sleep(1000)
         val accessibleContext = appWindow.accessibleContext
-        val name = accessibleContext.accessibleName
         val childCount = accessibleContext.accessibleChildrenCount
         println(childCount)
         val child0 = accessibleContext.getAccessibleChild(0)

@@ -1,10 +1,9 @@
 package io.rippledown.interpretation
 
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.text.TextLayoutResult
-import io.kotest.matchers.shouldBe
-import io.rippledown.decoration.BACKGROUND_COLOR
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import io.rippledown.model.createCaseWithInterpretation
 import io.rippledown.model.createInterpretation
 import io.rippledown.utils.applicationFor
@@ -18,239 +17,185 @@ class InterpretationViewTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
+    lateinit var handler: InterpretationViewHandler
+
     @Before
     fun setUp() {
+        handler = mockk(relaxUnitFun = true)
+        every { handler.allComments() } returns setOf("Malabar.", "Bondi.")
     }
 
     @Test
-    fun `should show non-blank interpretation`() = runTest {
-        val text = "Go to Bondi now!"
-        with(composeTestRule) {
-            setContent {
-                InterpretationView(createInterpretation(mapOf(text to emptyList())), false)
-            }
-            requireInterpretation(text)
-        }
-    }
-
-    @Test
-    fun `should show a blank interpretation`() = runTest {
-        with(composeTestRule) {
-            setContent {
-                InterpretationView(createInterpretation(), false)
-            }
-            requireInterpretation("")
-        }
-    }
-
-    @Test
-    fun `should highlight comment under the pointer`() = runTest {
+    fun `should show change interpretation icon if the showChangeInterpretationIcon parameter is true`() = runTest {
         //Given
-        val bondiComment = "Bondi."
-        val interpretation = createInterpretation(mapOf(bondiComment to emptyList()))
-        var textLayoutResult: TextLayoutResult? = null
-        val handler = object : InterpretationViewHandler {
-            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
-                textLayoutResult = layoutResult
-            }
-        }
+        val bondiComment = "Best surf in the world!"
+        val interpretation = createInterpretation(
+            mapOf(bondiComment to listOf())
+        )
         with(composeTestRule) {
             setContent {
-                InterpretationView(interpretation, false, handler)
+                InterpretationView(
+                    interpretation = interpretation,
+                    showChangeIcon = true,
+                    handler
+                )
             }
             requireInterpretation(bondiComment)
 
-            //When
-            movePointerOverComment(bondiComment, textLayoutResult!!)
-            waitForIdle()
-
             //Then
-            requireCommentToBeHighlighted(bondiComment, textLayoutResult!!)
+            requireChangeInterpretationIconToBeShowing()
         }
     }
 
     @Test
-    fun `should highlight comment under the pointer when showing two comments`() = runTest {
-        //Given
-        val bondiComment = "Bondi."
-        val malabarComment = "Malabar."
-        val interpretation = createInterpretation(mapOf(bondiComment to emptyList(), malabarComment to emptyList()))
-        val conclusionTexts = interpretation.conclusions().map { it.text }
-        val unhighlighted = conclusionTexts.unhighlighted().text
-        var textLayoutResult: TextLayoutResult? = null
-        val handler = object : InterpretationViewHandler {
-            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
-                textLayoutResult = layoutResult
-            }
-        }
-        with(composeTestRule) {
-            setContent {
-                InterpretationView(interpretation, false, handler)
-            }
-            requireInterpretation(unhighlighted)
-
-            //When
-            movePointerOverComment(malabarComment, textLayoutResult!!)
-            waitForIdle()
-
-            //Then
-            requireCommentToBeHighlighted(malabarComment, textLayoutResult!!)
-        }
-    }
-
-    @Test
-    fun `should not highlight a comment if the pointer is not over it`() = runTest {
-        //Given
-        val bondiComment = "Bondi."
-        val interpretation = createInterpretation(mapOf(bondiComment to emptyList()))
-        val conclusionTexts = interpretation.conclusions().map { it.text }
-        val unhighlighted = conclusionTexts.unhighlighted().text
-        var textLayoutResult: TextLayoutResult? = null
-        val handler = object : InterpretationViewHandler {
-            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
-                textLayoutResult = layoutResult
-            }
-        }
-        with(composeTestRule) {
-            setContent {
-                InterpretationView(interpretation, false, handler)
-            }
-            requireInterpretation(unhighlighted)
-            movePointerOverComment(bondiComment, textLayoutResult!!)
-            waitForIdle()
-            requireCommentToBeHighlighted(bondiComment, textLayoutResult!!)
-
-            //When
-            movePointerToTheRightOfTheComment(bondiComment, textLayoutResult!!)
-            waitForIdle()
-
-            //Then
-            requireCommentToBeNotHighlighted(textLayoutResult!!)
-        }
-    }
-
-    @Test
-    fun `should show the conditions for the conclusion under the pointer`() = runTest {
-        //Given
-        val bondiComment = "Best surf in the world!"
-        val malabarComment = "Great for a swim!"
-        val interpretationText = "$bondiComment $malabarComment"
-        val bondiConditions = listOf("Bring your flippers.", "And your sunscreeen.")
-        val malabarConditions = listOf("Great for a swim!", "And a picnic.")
-        val interpretation = createInterpretation(
-            mapOf(
-                bondiComment to bondiConditions,
-                malabarComment to malabarConditions
-            )
-        )
-        var textLayoutResult: TextLayoutResult? = null
-        val handler = object : InterpretationViewHandler {
-            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
-                textLayoutResult = layoutResult
-            }
-        }
-        with(composeTestRule) {
-            setContent {
-                InterpretationView(interpretation, false, handler)
-            }
-            requireInterpretation(interpretationText)
-
-            //When
-            movePointerOverComment(malabarComment, textLayoutResult!!)
-
-            //Then
-            requireConditionsToBeShowing(malabarConditions)
-            requireInterpretation(interpretationText)
-        }
-    }
-
-    @Test
-    fun `should show comment but not show any conditions for the conclusion under the pointer if there are none`() =
+    fun `should not show change interpretation icon if the showChangeInterpretationIcon parameter is false`() =
         runTest {
             //Given
             val bondiComment = "Best surf in the world!"
             val interpretation = createInterpretation(
                 mapOf(bondiComment to listOf())
             )
-            var textLayoutResult: TextLayoutResult? = null
-            val handler = object : InterpretationViewHandler {
-                override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
-                    textLayoutResult = layoutResult
-                }
-            }
             with(composeTestRule) {
                 setContent {
-                    InterpretationView(interpretation, false, handler)
+                    InterpretationView(
+                        interpretation = interpretation,
+                        showChangeIcon = false,
+                        handler
+                    )
                 }
                 requireInterpretation(bondiComment)
 
-                //When
-                movePointerOverComment(bondiComment, textLayoutResult!!)
-
                 //Then
-                requireNoConditionsToBeShowing()
-                requireInterpretation(bondiComment)
+                requireChangeInterpretationIconToBeNotShowing()
             }
         }
 
-
     @Test
-    fun `should show comment but not show any conditions if the pointer is not over a comment`() = runTest {
+    fun `should show change interpretation icon if not in a rule session`() = runTest {
         //Given
         val bondiComment = "Best surf in the world!"
         val interpretation = createInterpretation(
             mapOf(bondiComment to listOf())
         )
-        var textLayoutResult: TextLayoutResult? = null
-        val handler = object : InterpretationViewHandler {
-            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
-                textLayoutResult = layoutResult
-            }
-        }
         with(composeTestRule) {
             setContent {
-                InterpretationView(interpretation, false, handler)
+                InterpretationView(
+                    interpretation = interpretation,
+                    showChangeIcon = true,
+                    handler
+                )
+            }
+            requireInterpretation(bondiComment)
+
+            //Then
+            requireChangeInterpretationIconToBeShowing()
+        }
+    }
+
+    @Test
+    fun `should retrieve all comments`() = runTest {
+        //Given
+        val text = "Go to Bondi now!"
+        with(composeTestRule) {
+            setContent {
+                InterpretationView(createInterpretation(mapOf(text to emptyList())), true, handler)
+            }
+            requireInterpretation(text)
+
+            //Then
+            verify { handler.allComments() }
+        }
+    }
+
+    @Test
+    fun `should show dropdown if the change interpretation icon is clicked`() = runTest {
+        //Given
+        val bondiComment = "Best surf in the world!"
+        val interpretation = createInterpretation(
+            mapOf(bondiComment to listOf())
+        )
+        with(composeTestRule) {
+            setContent {
+                InterpretationView(interpretation = interpretation, true, handler)
             }
             requireInterpretation(bondiComment)
 
             //When
-            movePointerToTheRightOfTheComment(bondiComment, textLayoutResult!!)
+            clickChangeInterpretationButton()
 
             //Then
-            requireNoConditionsToBeShowing()
+            requireInterpretationActionsMenuToBeShowing()
+        }
+    }
+
+    @Test
+    fun `should call handler when a rule session is started to add a comment`() = runTest {
+        //Given
+        val bondiComment = "Best surf in the world!"
+        val interpretation = createInterpretation(
+            mapOf(bondiComment to listOf())
+        )
+        with(composeTestRule) {
+            setContent {
+                InterpretationView(interpretation = interpretation, true, handler)
+            }
             requireInterpretation(bondiComment)
+            clickChangeInterpretationButton()
+
+            //When
+            clickAddCommentMenu()
+            val addedComment = "abc"
+            addNewComment(addedComment)
+
+            //Then
+            verify { handler.startRuleToAddComment(addedComment) }
         }
     }
 
     @Test
-    fun `should identify the comment index for a given offset`() {
-        with(listOf("01234", "56789")) {
-            for (i in 0..4) {
-                commentIndexForOffset(i) shouldBe 0
+    fun `should call handler when a rule session is started to remove a comment`() = runTest {
+        //Given
+        val bondiComment = "Best surf in the world!"
+        val interpretation = createInterpretation(
+            mapOf(bondiComment to listOf())
+        )
+        with(composeTestRule) {
+            setContent {
+                InterpretationView(interpretation = interpretation, true, handler)
             }
-            for (i in 5..9) {
-                commentIndexForOffset(i) shouldBe 1
+            requireInterpretation(bondiComment)
+            clickChangeInterpretationButton()
+
+            //When
+            clickRemoveCommentMenu()
+            removeComment(bondiComment)
+
+            //Then
+            verify { handler.startRuleToRemoveComment(bondiComment) }
+        }
+    }
+
+    @Test
+    fun `should call handler when a rule session is started to replace a comment`() = runTest {
+        //Given
+        val bondiComment = "Best surf in the world!"
+        val interpretation = createInterpretation(
+            mapOf(bondiComment to listOf())
+        )
+        with(composeTestRule) {
+            setContent {
+                InterpretationView(interpretation = interpretation, true, handler)
             }
-            commentIndexForOffset(10) shouldBe -1
-            commentIndexForOffset(-1) shouldBe -1
-        }
-    }
+            requireInterpretation(bondiComment)
+            clickChangeInterpretationButton()
 
-    @Test
-    fun `should highlight the first comment`() {
-        with(listOf("01234", "56789")) {
-            val annotatedString = highlightItem(0)
-            requireStyleForCommentInAnnotatedStringToHaveBackground(annotatedString, this[0], BACKGROUND_COLOR)
-            requireStyleForCommentInAnnotatedStringToHaveBackground(annotatedString, this[1], Color.Unspecified)
-        }
-    }
+            //When
+            clickReplaceCommentMenu()
+            val replacement = "Very best surf in the world!"
+            replaceComment(bondiComment, replacement)
 
-    @Test
-    fun `should highlight the second comment`() {
-        with(listOf("01234", "56789")) {
-            val annotatedString = highlightItem(1)
-            requireStyleForCommentInAnnotatedStringToHaveBackground(annotatedString, this[0], Color.Unspecified)
-            requireStyleForCommentInAnnotatedStringToHaveBackground(annotatedString, this[1], BACKGROUND_COLOR)
+            //Then
+            verify { handler.startRuleToReplaceComment(bondiComment, replacement) }
         }
     }
 }
@@ -261,6 +206,6 @@ fun main() {
         conclusionTexts = listOf("Surf's up!", "Go to Bondi now!", "Bring your flippers.")
     ).viewableInterpretation
     applicationFor {
-        InterpretationView(interpretation, false)
+        InterpretationView(interpretation, true, mockk(relaxed = true))
     }
 }

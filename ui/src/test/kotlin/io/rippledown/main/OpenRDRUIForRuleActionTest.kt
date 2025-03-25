@@ -60,7 +60,7 @@ class OpenRDRUIForRuleActionTest {
         }
     }
 
-//    @Test
+    @Test
     fun `should show rule action to replace a comment`() = runTest {
         val originalComment = "Go to Bondi"
         val replacementComment = "Go to Malabar"
@@ -87,7 +87,7 @@ class OpenRDRUIForRuleActionTest {
         }
     }
 
-//    @Test
+    @Test
     fun `should show rule action to remove a comment`() = runTest {
         val originalComment = "Go to Bondi"
         val caseName = "case a"

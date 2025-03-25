@@ -3,7 +3,6 @@ package io.rippledown.casecontrol
 import androidx.compose.ui.test.junit4.createComposeRule
 import io.mockk.mockk
 import io.rippledown.interpretation.requireInterpretation
-import io.rippledown.model.Attribute
 import io.rippledown.model.CaseId
 import io.rippledown.model.createCase
 import io.rippledown.model.createCaseWithInterpretation
@@ -54,8 +53,6 @@ class CaseInspectionTest {
 fun main() {
     val case = createCase(name = "Bondi", id = 45L)
     applicationFor {
-            CaseInspection(case, false, object : CaseInspectionHandler {
-                override fun swapAttributes(moved: Attribute, target: Attribute) {}
-            })
+        CaseInspection(case, false, mockk(relaxed = true))
     }
 }

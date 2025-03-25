@@ -2,6 +2,7 @@ package io.rippledown.integration.pageobjects
 
 import androidx.compose.ui.awt.ComposeDialog
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.constants.interpretation.*
 import io.rippledown.integration.utils.find
@@ -54,12 +55,35 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
             interpretationText().contains(expected)
         }
     }
+    fun requireChangeInterpretationIconToBeHidden() {
+        waitUntilAsserted {
+            execute<AccessibleContext?> { contextProvider().find(CHANGE_INTERPRETATION_ICON) } shouldBe null
+        }
+    }
+
+    fun requireChangeInterpretationIconToBeShowing() {
+        waitUntilAsserted {
+            execute<AccessibleContext?> { contextProvider().find(CHANGE_INTERPRETATION_ICON) } shouldNotBe null
+        }
+    }
+
+    fun requireChangeInterpretationDropDownMenuToBeShowing() {
+        waitUntilAsserted {
+            execute<AccessibleContext?> { contextProvider().find(CHANGE_INTERPRETATION_DROPDOWN) } shouldNotBe null
+        }
+    }
+
+    fun requireChangeInterpretationDropDownMenuToBeHidden() {
+        waitUntilAsserted {
+            execute<AccessibleContext?> { contextProvider().find(CHANGE_INTERPRETATION_DROPDOWN) } shouldBe null
+        }
+    }
 
     fun clickChangeInterpretationButton() {
         waitUntilAsserted {
-            execute<AccessibleContext?> { contextProvider().find(CHANGE_INTERPRETATION_BUTTON) } shouldNotBe null
+            execute<AccessibleContext?> { contextProvider().find(CHANGE_INTERPRETATION_ICON) } shouldNotBe null
         }
-        execute { contextProvider().find(CHANGE_INTERPRETATION_BUTTON)!!.accessibleAction.doAccessibleAction(0) }
+        execute { contextProvider().find(CHANGE_INTERPRETATION_ICON)!!.accessibleAction.doAccessibleAction(0) }
     }
 
     fun clickAddCommentMenu() {
@@ -90,6 +114,14 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         val dialog = execute<ComposeDialog> { findComposeDialogThatIsShowing() }
         execute { dialog.accessibleContext.find(ADD_COMMENT_TEXT_FIELD)!!.accessibleEditableText.setTextContents(comment) }
         execute { dialog.accessibleContext.find(OK_BUTTON_FOR_ADD_COMMENT)!!.accessibleAction.doAccessibleAction(0) }
+    }
+    fun setAddCommentTextAndClickCancel(comment: String) {
+        waitUntilAsserted {
+            execute<ComposeDialog> { findComposeDialogThatIsShowing() } shouldNotBe null
+        }
+        val dialog = execute<ComposeDialog> { findComposeDialogThatIsShowing() }
+        execute { dialog.accessibleContext.find(ADD_COMMENT_TEXT_FIELD)!!.accessibleEditableText.setTextContents(comment) }
+        execute { dialog.accessibleContext.find(CANCEL_BUTTON_FOR_ADD_COMMENT)!!.accessibleAction.doAccessibleAction(0) }
     }
 
     fun waitForConditionsToBeShowing(conditions: List<String>) {
