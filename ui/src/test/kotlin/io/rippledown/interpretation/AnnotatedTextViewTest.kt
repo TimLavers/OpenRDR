@@ -1,5 +1,8 @@
+@file:OptIn(ExperimentalComposeUiApi::class)
+
 package io.rippledown.interpretation
 
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
@@ -27,7 +30,7 @@ class AnnotatedTextViewTest {
             setContent {
                 AnnotatedTextView(
                     AnnotatedString(bondiComment),
-                    INTERPRETATION_TEXT_FIELD, ,
+                    INTERPRETATION_TEXT_FIELD,
                     mockk(relaxed = true)
                 )
             }
@@ -39,7 +42,7 @@ class AnnotatedTextViewTest {
     fun `should show a blank interpretation`() = runTest {
         with(composeTestRule) {
             setContent {
-                AnnotatedTextView(AnnotatedString(""), INTERPRETATION_TEXT_FIELD, , mockk(relaxed = true))
+                AnnotatedTextView(AnnotatedString(""), INTERPRETATION_TEXT_FIELD, mockk(relaxed = true))
             }
             requireInterpretation("")
         }

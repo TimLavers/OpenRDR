@@ -1,6 +1,8 @@
 package io.rippledown.interpretation
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.text.TextLayoutResult
@@ -20,10 +22,13 @@ class ReadonlyInterpretationViewTest {
     val composeTestRule = createComposeRule()
 
     lateinit var handler: ReadonlyInterpretationViewHandler
+    lateinit var modifier: Modifier
 
     @Before
     fun setUp() {
         handler = mockk(relaxUnitFun = true)
+        modifier = Modifier.fillMaxWidth()
+
     }
 
     @Test
@@ -31,7 +36,11 @@ class ReadonlyInterpretationViewTest {
         val text = "Go to Bondi now!"
         with(composeTestRule) {
             setContent {
-                ReadonlyInterpretationView(createInterpretation(mapOf(text to emptyList())), handler = handler)
+                ReadonlyInterpretationView(
+                    createInterpretation(mapOf(text to emptyList())),
+                    modifier = modifier,
+                    handler = handler
+                )
             }
             requireInterpretationForCornerstone(text)
         }
@@ -41,7 +50,7 @@ class ReadonlyInterpretationViewTest {
     fun `should show a blank interpretation`() = runTest {
         with(composeTestRule) {
             setContent {
-                ReadonlyInterpretationView(createInterpretation(), handler = handler)
+                ReadonlyInterpretationView(createInterpretation(), modifier = modifier, handler = handler)
             }
             requireInterpretationForCornerstone("")
         }
@@ -61,7 +70,7 @@ class ReadonlyInterpretationViewTest {
 
         with(composeTestRule) {
             setContent {
-                ReadonlyInterpretationView(interpretation, handler = handler)
+                ReadonlyInterpretationView(interpretation, modifier = modifier, handler = handler)
             }
             requireInterpretationForCornerstone(bondiComment)
 
@@ -90,7 +99,7 @@ class ReadonlyInterpretationViewTest {
         }
         with(composeTestRule) {
             setContent {
-                ReadonlyInterpretationView(interpretation, handler = handler)
+                ReadonlyInterpretationView(interpretation, modifier = modifier, handler = handler)
             }
             requireInterpretationForCornerstone(unhighlighted)
 
@@ -118,7 +127,7 @@ class ReadonlyInterpretationViewTest {
         }
         with(composeTestRule) {
             setContent {
-                ReadonlyInterpretationView(interpretation, handler = handler)
+                ReadonlyInterpretationView(interpretation, modifier = modifier, handler = handler)
             }
             requireInterpretationForCornerstone(unhighlighted)
             movePointerOverComment(bondiComment, textLayoutResult!!)
@@ -156,7 +165,7 @@ class ReadonlyInterpretationViewTest {
         }
         with(composeTestRule) {
             setContent {
-                ReadonlyInterpretationView(interpretation, handler = handler)
+                ReadonlyInterpretationView(interpretation, modifier = modifier, handler = handler)
             }
             requireInterpretationForCornerstone(interpretationText)
 
@@ -185,7 +194,7 @@ class ReadonlyInterpretationViewTest {
             }
             with(composeTestRule) {
                 setContent {
-                    ReadonlyInterpretationView(interpretation, handler = handler)
+                    ReadonlyInterpretationView(interpretation, modifier = modifier, handler = handler)
                 }
                 requireInterpretationForCornerstone(bondiComment)
 
@@ -214,7 +223,7 @@ class ReadonlyInterpretationViewTest {
         }
         with(composeTestRule) {
             setContent {
-                ReadonlyInterpretationView(interpretation, handler = handler)
+                ReadonlyInterpretationView(interpretation, modifier = modifier, handler = handler)
             }
             requireInterpretationForCornerstone(bondiComment)
 
@@ -237,7 +246,7 @@ class ReadonlyInterpretationViewTest {
         with(composeTestRule) {
             //When
             setContent {
-                ReadonlyInterpretationView(interpretation = interpretation, handler = handler)
+                ReadonlyInterpretationView(interpretation = interpretation, modifier = modifier, handler = handler)
             }
             requireInterpretationForCornerstone(bondiComment)
 
