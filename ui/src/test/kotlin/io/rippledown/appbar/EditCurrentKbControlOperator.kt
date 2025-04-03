@@ -26,4 +26,6 @@ fun ComposeTestRule.enterKbDescription(description: String) {
 }
 fun ComposeTestRule.clickConfirmDescriptionButton() = onNodeWithContentDescription(EDIT_KB_DESCRIPTION_OK_BUTTON_DESCRIPTION).performClick()
 
+fun ComposeTestRule.assertUndoLastRuleMenuItemIsNotShowing() = onAllNodesWithText(UNDO_LAST_RULE_BUTTON_TEXT).assertCountEquals(0)
 
+fun ComposeTestRule.clickUndoLastRuleMenuItem() = onNodeWithText(UNDO_LAST_RULE_BUTTON_TEXT).performClick()

@@ -43,7 +43,7 @@ class PostgresRuleSessionRecordStore(private val db: Database) : RuleSessionReco
         }
     }
 
-    override fun load(data: List<RuleSessionRecord>) {
+    override fun load(data: Set<RuleSessionRecord>) {
         if (all().isNotEmpty()) {
             throw IllegalArgumentException("Load should not be called if there are already items stored.")
         }

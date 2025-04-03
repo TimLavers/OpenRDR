@@ -10,7 +10,8 @@ open class Rule(
     var parent: Rule? = null,
     val conclusion: Conclusion? = null,
     val conditions: Set<Condition> = mutableSetOf(),
-    private val childRules: MutableSet<Rule> = mutableSetOf()) {
+    private val childRules: MutableSet<Rule> = mutableSetOf()
+) {
 
     init {
         childRules.forEach { it.parent = this }
@@ -18,6 +19,19 @@ open class Rule(
 
     fun summary(): RuleSummary {
         return RuleSummary(id, conclusion, conditions, conditionTextsFromRoot())
+    }
+
+    fun actionSummary(): String {
+        if (parent == null) {
+            return ""
+        }
+        if (parent!!.conclusion == null) {
+            return "Rule to add comment:\n${conclusion?.truncatedText()}"
+        }
+        if (conclusion == null) {
+            return "Rule to remove comment:\n${parent!!.conclusion?.truncatedText()}"
+        }
+        return "Rule to replace comment:\n${parent!!.conclusion?.truncatedText()}\nwith:\n${conclusion.truncatedText()}"
     }
 
     fun conditionTextsFromRoot(): List<String> {
@@ -50,6 +64,17 @@ open class Rule(
     fun addChild(childRule: Rule) {
         childRules.add(childRule)
         childRules.forEach { it.parent = this }
+    }
+
+    fun removeChildLeafRule(childLeafRule: Rule) {
+        require(childLeafRule.childRules().isEmpty()) {
+            "Only a leaf rule can be removed."
+        }
+        require(childLeafRule.parent == this) {
+            "Leaf rule is not a child of this rule."
+        }
+        childRules.remove(childLeafRule)
+        childLeafRule.parent = null
     }
 
     fun visit(action: (Rule) -> Unit) {

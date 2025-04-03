@@ -26,4 +26,8 @@ class InMemoryRuleStore: RuleStore {
         persistentRules.forEach { require(it.id != null) {"Cannot load a rule that has null id."} }
         rules.addAll(persistentRules)
     }
+
+    override fun remove(persistentRule: PersistentRule) {
+        rules.remove(persistentRule)
+    }
 }

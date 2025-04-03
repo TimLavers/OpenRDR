@@ -36,3 +36,5 @@ const val EDIT_CURRENT_KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION = "Edit Current K
 const val EDIT_CURRENT_KB_CONTROL_ID = "edit_current_kb_control_id"
 const val EDIT_KB_DESCRIPTION_BUTTON_ID = "edit_kb_description_button_id"
 const val EDIT_KB_DESCRIPTION_BUTTON_TEXT = "KB description"
+
+const val UNDO_LAST_RULE_BUTTON_TEXT = "Undo last rule"

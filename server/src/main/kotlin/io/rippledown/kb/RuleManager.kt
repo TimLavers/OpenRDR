@@ -68,6 +68,11 @@ class RuleManager(
         return newRule
     }
 
+    fun deleteLeafRule(rule: Rule) {
+        rule.parent!!.removeChildLeafRule(rule)
+//        ruleStore.create()
+    }
+
     private fun rebuildRuleButDoNotSetParent(persistentRule: PersistentRule): Rule {
         val conclusion = if (persistentRule.conclusionId != null) conclusionManager.getById(persistentRule.conclusionId) else null
         val conditions = persistentRule.conditionIds.map { conditionManager.getById(it)!! }.toSet()

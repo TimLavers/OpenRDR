@@ -2,7 +2,6 @@ package io.rippledown.model
 
 import kotlinx.serialization.Serializable
 
-// ORD1
 @Serializable
 data class Conclusion(val id: Int, val text: String) {
     init {
@@ -13,6 +12,8 @@ data class Conclusion(val id: Int, val text: String) {
             "Conclusions have maximum length 2048."
         }
     }
+
+    fun truncatedText() = if(text.length <= 20) text else "${text.substring(0, 20)}..."
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

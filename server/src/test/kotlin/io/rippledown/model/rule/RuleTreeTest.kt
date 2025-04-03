@@ -31,6 +31,49 @@ internal class RuleTreeTest : RuleTestBase() {
     }
 
     @Test
+    fun rulesForId() {
+        tree = ruleTree(conclusionFactory) {
+            child {
+                id = 1
+                conclusion { "ConcA" }
+                condition(conditionFactory) {
+                    attribute = clinicalNotes
+                    constant = "a"
+                }
+                child {
+                    id = 11
+                    conclusion { "ConcB" }
+                    condition(conditionFactory) {
+                        attribute = clinicalNotes
+                        constant = "b"
+                    }
+                    child {
+                        id = 111
+                        conclusion { "ConcC" }
+                        condition(conditionFactory) {
+                            attribute = clinicalNotes
+                            constant = "c"
+                        }
+                        child {
+                            id = 1111
+                            conclusion { "ConcD" }
+                            condition(conditionFactory) {
+                                attribute = clinicalNotes
+                                constant = "d"
+                            }
+                        }
+                    }
+                }
+            }
+        }.build()
+        tree.ruleForId(tree.root.id) shouldBe tree.root
+        tree.ruleForId(1).conclusion?.text shouldBe "ConcA"
+        tree.ruleForId(11).conclusion?.text shouldBe "ConcB"
+        tree.ruleForId(111).conclusion?.text shouldBe "ConcC"
+        tree.ruleForId(1111).conclusion?.text shouldBe "ConcD"
+    }
+
+    @Test
     fun size_of_a_tree_with_root_only() {
         tree.size() shouldBe 1L
     }

@@ -79,6 +79,7 @@ fun Application.applicationModule() {
     val application = ServerApplication(persistenceProvider)
     serverManagement()
     kbManagement(application)
+    kbEditing(application)
     caseManagement(application)
     attributeManagement(application)
     conclusionManagement(application)

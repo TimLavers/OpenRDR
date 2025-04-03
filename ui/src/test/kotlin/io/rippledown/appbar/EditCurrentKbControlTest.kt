@@ -63,4 +63,26 @@ class EditCurrentKbControlTest {
             verify { handler.setKbDescription(newDescription) }
         }
     }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun `undo last rule`() {
+        with(composeTestRule) {
+            setContent {
+                EditCurrentKbControl(handler)
+            }
+            assertKbDescriptionMenuItemIsNotShowing()
+            clickEditKbDropdown()
+
+            assertEditKbDescriptionMenuItemIsShowing()
+            clickKbDescriptionMenuItem()
+            assertKbDescriptionOkButtonIsEnabled()
+            onNodeWithContentDescription(EDIT_KB_DESCRIPTION_TEXT_DESCRIPTION)
+                .assertIsEnabled()
+                .assertIsDisplayed()
+            waitUntilExactlyOneExists(hasText(bondiDescription))
+
+            assertKbDescriptionMenuItemIsNotShowing()
+        }
+    }
 }

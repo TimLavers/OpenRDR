@@ -8,7 +8,6 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-// ORD1
 internal class ConclusionTest {
 
     @Test
@@ -16,6 +15,12 @@ internal class ConclusionTest {
         val conclusion = Conclusion(0,"Normal results.")
         conclusion.text shouldBe  "Normal results."
         conclusion.id shouldBe 0
+    }
+
+    @Test
+    fun truncatedText() {
+        Conclusion(0,"Normal results.").truncatedText() shouldBe "Normal results."
+        Conclusion(0,"Totally amazing results.").truncatedText() shouldBe "Totally amazing resu..."
     }
 
     @Test
@@ -27,7 +32,7 @@ internal class ConclusionTest {
         assertEquals(sd, conclusion)
     }
 
-    @Test//Conc-1
+    @Test
     fun testEquality() {
         Conclusion(1, "Blah") shouldBe Conclusion(1, "Blah")
         Conclusion(1, "Blah") shouldBe Conclusion(1, "Whatever")
@@ -35,20 +40,20 @@ internal class ConclusionTest {
         Conclusion(1, "Blah") shouldNotBe Conclusion(2, "Blah")
     }
 
-    @Test//Conc-2
+    @Test
     fun testHashCode() {
         Conclusion(1, "Blah").hashCode() shouldBe Conclusion(1, "Whatever").hashCode()
     }
 
-    @Test //Conc-2
-    fun nameNotBlank() {
+    @Test
+    fun `name cannot be blank`() {
         shouldThrow<IllegalStateException> {
             Conclusion(22,"")
         }.message shouldBe "Conclusions cannot be blank."
     }
 
-    @Test //Conc-3
-    fun nameMustBeLessThan2049CharactersInLength() {
+    @Test
+    fun `name must be less than 2049 characters in length`() {
         repeat(2047) {
             Conclusion(it, randomString(it + 1))
         }

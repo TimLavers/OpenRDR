@@ -38,30 +38,47 @@ internal class RuleSessionRecorderTest : RuleTestBase() {
     }
 
     @Test
-    fun `all known rule ids`() {
-//        recorder.idsOfAllSessionRules() shouldBe setOf()
-//
-//        val a = conclusionFactory.getOrCreate("A")
-//        val addA = Rule(5, null, a)
-//        recorder.recordRuleSessionCommitted(setOf(addA))
-//        recorder.idsOfAllSessionRules() shouldBe setOf(addA.id)
-//
-//        val b = conclusionFactory.getOrCreate("B")
-//        val addB = Rule(6, null, b)
-//        recorder.recordRuleSessionCommitted(setOf(addB))
-//        recorder.idsOfAllSessionRules() shouldBe setOf(addA.id, addB.id)
-//
-//        val removeA = Rule(7, addA,null)
-//        recorder.recordRuleSessionCommitted(setOf(removeA))
-//        recorder.idsOfAllSessionRules() shouldBe setOf(addA.id, addB.id, removeA.id)
-//
-//        val addBAgain = Rule(8, null, b)
-//        recorder.recordRuleSessionCommitted(setOf(addBAgain))
-//        recorder.idsOfAllSessionRules() shouldBe setOf(addA.id, addB.id, removeA.id, addBAgain.id)
-//
-//        val removeB1 = Rule(9, addB,null)
-//        val removeB2 = Rule(10, addBAgain,null)
-//        recorder.recordRuleSessionCommitted(setOf(removeB1, removeB2))
-//        recorder.idsOfAllSessionRules() shouldBe setOf(addA.id, addB.id, removeA.id, addBAgain.id, removeB1.id, removeB2.id)
+    fun `all rule session ids`() {
+        recorder.allRuleSessionHistories() shouldBe listOf()
+
+        val a = conclusionFactory.getOrCreate("A")
+        val addA = Rule(5, null, a)
+        recorder.recordRuleSessionCommitted(setOf(addA))
+        with(recorder.allRuleSessionHistories())
+        {
+            size shouldBe 1
+            first().idsOfRulesAddedInSession shouldBe setOf(addA.id)
+        }
+
+        val b = conclusionFactory.getOrCreate("B")
+        val addB = Rule(6, null, b)
+        recorder.recordRuleSessionCommitted(setOf(addB))
+        with(recorder.allRuleSessionHistories())
+        {
+            size shouldBe 2
+            get(0).idsOfRulesAddedInSession shouldBe setOf(addA.id)
+            get(1).idsOfRulesAddedInSession shouldBe setOf(addB.id)
+        }
+
+        val removeA = Rule(7, addA,null)
+        recorder.recordRuleSessionCommitted(setOf(removeA))
+        with(recorder.allRuleSessionHistories())
+        {
+            size shouldBe 3
+            get(0).idsOfRulesAddedInSession shouldBe setOf(addA.id)
+            get(1).idsOfRulesAddedInSession shouldBe setOf(addB.id)
+            get(2).idsOfRulesAddedInSession shouldBe setOf(removeA.id)
+        }
+
+        val addBAgain = Rule(8, null, b)
+        recorder.recordRuleSessionCommitted(setOf(addBAgain))
+        with(recorder.allRuleSessionHistories())
+        {
+            size shouldBe 4
+            get(0).idsOfRulesAddedInSession shouldBe setOf(addA.id)
+            get(1).idsOfRulesAddedInSession shouldBe setOf(addB.id)
+            get(2).idsOfRulesAddedInSession shouldBe setOf(removeA.id)
+            get(3).idsOfRulesAddedInSession shouldBe setOf(addBAgain.id)
+        }
     }
 }

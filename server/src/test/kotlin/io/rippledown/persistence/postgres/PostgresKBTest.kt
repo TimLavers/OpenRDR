@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.model.KBInfo
 import io.rippledown.model.condition.isLow
+import io.rippledown.model.rule.RuleSessionRecord
 import io.rippledown.persistence.PersistentKB
 import io.rippledown.persistence.PersistentRule
 import kotlin.test.BeforeTest
@@ -107,5 +108,14 @@ class PostgresKBTest {
 
         glucoseKB = PostgresKB(glucoseInfo.id)
         glucoseKB.ruleStore().all() shouldBe setOf(created)
+    }
+
+    @Test
+    fun ruleSessionStore() {
+        glucoseKB.ruleSessionRecordStore().all() shouldBe emptyList()
+        val rs11 = glucoseKB.ruleSessionRecordStore().create(RuleSessionRecord(null, 1, setOf(1, 3)))
+        val rs12 = glucoseKB.ruleSessionRecordStore().create(RuleSessionRecord(null, 2, setOf(4)))
+        val rs13 = glucoseKB.ruleSessionRecordStore().create(RuleSessionRecord(null, 2, setOf(5, 7)))
+        glucoseKB.ruleSessionRecordStore().all() shouldBe listOf(rs11, rs12, rs13)
     }
 }

@@ -13,8 +13,10 @@ open class KBExportImport(val destination: File) {
     val conclusionsDirectory = File(destination, "Conclusions")
     val conditionsDirectory = File(destination, "Conditions")
     val rulesDirectory = File(destination, "Rules")
+    val ruleSessionsDirectory = File(destination, "RuleSessions")
 }
-class KBExporter(destination: File, val kb: KB): KBExportImport(destination) {
+
+class KBExporter(destination: File, val kb: KB) : KBExportImport(destination) {
     init {
         checkDirectoryIsSuitableForExport(destination, "KB")
     }
@@ -50,5 +52,9 @@ class KBExporter(destination: File, val kb: KB): KBExportImport(destination) {
         // Rules.
         rulesDirectory.mkdirs()
         IdentifiedObjectExporter(rulesDirectory, RuleSource(kb.ruleTree)).export()
+
+        // Rule sessions
+        ruleSessionsDirectory.mkdirs()
+        IdentifiedObjectExporter(ruleSessionsDirectory, RuleSessionRecordsSource(kb.ruleSessionHistories())).export()
     }
 }

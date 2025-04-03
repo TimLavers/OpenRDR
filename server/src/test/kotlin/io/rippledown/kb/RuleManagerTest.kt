@@ -79,6 +79,40 @@ class RuleManagerTest {
     }
 
     @Test
+    fun deleteRule() {
+        val root = ruleManager.ruleTree().root
+
+        val coffeeRule = ruleManager.createRuleAndAddToParent(root, coffeeConclusion, setOf(normalGlucose, highTSH))
+        ruleManager.ruleTree().size() shouldBe 2
+        coffeeRule.parent shouldBe root
+        ruleManager.deleteLeafRule(coffeeRule)
+
+        // Rebuild and check.
+        ruleManager = RuleManager(conclusionManager, conditionManager, ruleStore)
+        ruleManager.ruleTree().size() shouldBe 1
+    }
+
+    @Test
+    fun cannotDeleteRuleThatIsNotALeaf() {
+        val root = ruleManager.ruleTree().root
+
+        val coffeeRule = ruleManager.createRuleAndAddToParent(root, coffeeConclusion, setOf(normalGlucose, highTSH))
+        ruleManager.ruleTree().size() shouldBe 2
+        coffeeRule.parent shouldBe root
+
+        ruleManager.createRuleAndAddToParent(coffeeRule, teaConclusion, setOf(normalGlucose))
+        ruleManager.ruleTree().size() shouldBe 3
+
+        shouldThrow<Exception> {
+            ruleManager.deleteLeafRule(coffeeRule)
+        }
+
+        // Rebuild and check.
+        ruleManager = RuleManager(conclusionManager, conditionManager, ruleStore)
+        ruleManager.ruleTree().size() shouldBe 3
+    }
+
+    @Test
     fun `create rule with no conclusion`() {
         val root = ruleManager.ruleTree().root
 

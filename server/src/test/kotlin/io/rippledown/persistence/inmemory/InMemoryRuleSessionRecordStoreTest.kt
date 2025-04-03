@@ -130,7 +130,7 @@ class InMemoryRuleSessionRecordStoreTest {
     fun `cannot load items if the store is not empty`() {
         store.create(rsr(1, 3))
         shouldThrow<IllegalArgumentException> {
-            store.load(listOf())
+            store.load(setOf())
         }.message shouldBe "Load should not be called if there are already items stored."
     }
 
@@ -139,7 +139,7 @@ class InMemoryRuleSessionRecordStoreTest {
         val r1 = rsr(1, 3)
         val r2 = rsr(2, 4)
         val r3 = rsr(5, 6)
-        store.load(listOf(r1, r2, r3))
+        store.load(setOf(r1, r2, r3))
         store.all() shouldBe listOf(r1, r2, r3)
     }
 
@@ -148,7 +148,7 @@ class InMemoryRuleSessionRecordStoreTest {
         val r1 = rsr(1, 3)
         val r2 = rsr(2, 4)
         val r3 = rsr(5, 6)
-        store.load(listOf(r1, r2, r3))
+        store.load(setOf(r1, r2, r3))
         store.all() shouldBe listOf(r1, r2, r3)
         store.deleteLastAdded()
         store.all() shouldBe listOf(r1, r2)

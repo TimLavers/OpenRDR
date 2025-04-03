@@ -24,5 +24,5 @@ interface RuleSessionRecordStore {
         }
     }
 
-    fun load(data: List<RuleSessionRecord>)
+    fun load(data: Set<RuleSessionRecord>)
 }

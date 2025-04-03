@@ -9,7 +9,6 @@ import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistentKB
-import io.rippledown.persistence.inmemory.InMemoryRuleSessionRecordStore
 import io.rippledown.server.logger
 
 class KB(persistentKB: PersistentKB) {
@@ -23,7 +22,7 @@ class KB(persistentKB: PersistentKB) {
     val ruleTree = ruleManager.ruleTree()
     private val caseManager = CaseManager(persistentKB.caseStore(), attributeManager)
     private var ruleSession: RuleBuildingSession? = null
-    private val ruleSessionRecorder = RuleSessionRecorder(InMemoryRuleSessionRecordStore())
+    val ruleSessionRecorder = RuleSessionRecorder(persistentKB.ruleSessionRecordStore())
     internal val caseViewManager = CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
     val interpretationViewManager = InterpretationViewManager(persistentKB.conclusionOrderStore(), conclusionManager)
 
@@ -146,10 +145,21 @@ class KB(persistentKB: PersistentKB) {
         checkRuleSessionHistoryConsistency()
     }
 
+    fun descriptionOfMostRecentRule(): UndoRuleDescription {
+        val record = ruleSessionRecorder.idsOfRulesAddedInMostRecentSession()
+            ?: return UndoRuleDescription("There are no more rules to undo.", false)
+        val idOfExemplar = record.idsOfRulesAddedInSession.random()
+        val exemplar = ruleTree.ruleForId(idOfExemplar)
+        return UndoRuleDescription(exemplar.actionSummary(), true);
+    }
+
+    fun ruleSessionHistories() = ruleSessionRecorder.allRuleSessionHistories()
+
     fun undoLastRuleSession() {
-        checkRuleSessionHistoryConsistency()
-        TODO()
-        checkRuleSessionHistoryConsistency()
+        val record = ruleSessionRecorder.idsOfRulesAddedInMostRecentSession()!!
+        record.idsOfRulesAddedInSession.forEach{
+//            ruleManager.createRuleAndAddToParent()
+        }
     }
 
     private fun checkSession() {

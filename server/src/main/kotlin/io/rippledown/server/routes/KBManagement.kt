@@ -82,20 +82,6 @@ fun Application.kbManagement(application: ServerApplication) {
             call.respond(application.getDefaultProject())
         }
 
-        get(KB_INFO) {
-            call.respond(kbEndpoint(application).kbName())
-        }
-
-        get(KB_DESCRIPTION) {
-            call.respond(kbEndpoint(application).description())
-        }
-
-        post(KB_DESCRIPTION) {
-            val newDescription = call.receive<String>()
-            kbEndpoint(application).setDescription(newDescription)
-            call.respond(OK)
-        }
-
         get(KB_LIST) {
             call.respond(application.kbList())
         }

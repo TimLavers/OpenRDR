@@ -139,7 +139,7 @@ class PostgresRuleSessionRecordStoreTest: PostgresStoreTest() {
     fun `cannot load items if the store is not empty`() {
         store.create(rsr(1, 3))
         shouldThrow<IllegalArgumentException> {
-            store.load(listOf())
+            store.load(setOf())
         }.message shouldBe "Load should not be called if there are already items stored."
     }
 
@@ -148,7 +148,7 @@ class PostgresRuleSessionRecordStoreTest: PostgresStoreTest() {
         val r1 = rsr(1, 3).copy(id = 7)
         val r2 = rsr(2, 4).copy(id = 8)
         val r3 = rsr(5, 6).copy(id = 9)
-        store.load(listOf(r1, r2, r3))
+        store.load(setOf(r1, r2, r3))
         store.all() shouldBe listOf(r1, r2, r3)
     }
 
@@ -157,7 +157,7 @@ class PostgresRuleSessionRecordStoreTest: PostgresStoreTest() {
         val r1 = rsr(1, 3).copy(id = 10)
         val r2 = rsr(2, 4).copy(id = 20)
         val r3 = rsr(5, 6).copy(id = 30)
-        store.load(listOf(r1, r2, r3))
+        store.load(setOf(r1, r2, r3))
         store.all() shouldBe listOf(r1, r2, r3)
         store.deleteLastAdded()
         store.all() shouldBe listOf(r1, r2)

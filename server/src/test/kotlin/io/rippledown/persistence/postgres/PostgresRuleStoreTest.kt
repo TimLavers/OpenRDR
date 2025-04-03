@@ -110,6 +110,38 @@ class PostgresRuleStoreTest: PostgresStoreTest() {
         store.all().size shouldBe 3
     }
 
+   @Test
+    fun remove() {
+        val pr1 = store.create(pr(12, 33, 8, 9, 10))
+        val pr3 = store.create(pr(12, 33, 8, 9, 10))
+        val pr2 = store.create(pr(pr1.id!!, 56, 8, 9, 5))
+       with(store.all()) {
+           this shouldContain pr1
+           this shouldContain pr2
+           this shouldContain pr3
+           size shouldBe 3
+       }
+       store.remove(pr3)
+       with(store.all()) {
+           this shouldContain pr1
+           this shouldContain pr2
+           size shouldBe 2
+       }
+       store.remove(pr2)
+       with(store.all()) {
+           this shouldContain pr1
+           size shouldBe 1
+       }
+
+        // Rebuild and check
+        reload()
+
+       with(store.all()) {
+           this shouldContain pr1
+           size shouldBe 1
+       }
+    }
+
     @Test
     fun all() {
         val rulesCreated = mutableSetOf<PersistentRule>()
