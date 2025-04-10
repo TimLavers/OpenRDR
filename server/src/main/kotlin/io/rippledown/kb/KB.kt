@@ -158,8 +158,10 @@ class KB(persistentKB: PersistentKB) {
     fun undoLastRuleSession() {
         val record = ruleSessionRecorder.idsOfRulesAddedInMostRecentSession()!!
         record.idsOfRulesAddedInSession.forEach{
-//            ruleManager.createRuleAndAddToParent()
+            val toDelete = ruleTree.ruleForId(it)
+            ruleManager.deleteLeafRule(toDelete)
         }
+        ruleSessionRecorder.delete(ruleSessionRecorder.allRuleSessionHistories().last())
     }
 
     private fun checkSession() {

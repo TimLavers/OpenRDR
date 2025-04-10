@@ -25,5 +25,5 @@ interface RuleStore {
     fun all(): Set<PersistentRule>
     fun create(prototype: PersistentRule):PersistentRule
     fun load(persistentRules: Set<PersistentRule>)
-    fun remove(persistentRule: PersistentRule)
+    fun removeById(ruleId: Int)
 }

@@ -50,8 +50,8 @@ class MultipleDBsRuleStoresTest: MultipleDBsTest() {
         val a12 = store1.create(PersistentRule(null, 0, 5, setOf(10, 11)))
         val a22 = store2.create(PersistentRule(null, 0, 6, setOf(11, 12)))
 
-        store1.remove(a12)
-        store2.remove(a22)
+        store1.removeById(a12.id!!)
+        store2.removeById(a22.id!!)
         store1.all() shouldBe setOf(a11)
         store2.all() shouldBe setOf(a21)
         reload()

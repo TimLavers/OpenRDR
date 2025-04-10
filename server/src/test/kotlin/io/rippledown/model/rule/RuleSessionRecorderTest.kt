@@ -10,7 +10,6 @@ internal class RuleSessionRecorderTest : RuleTestBase() {
     private lateinit var recorder: RuleSessionRecorder
     private lateinit var conclusionFactory: DummyConclusionFactory
 
-
     @BeforeTest
     fun setup() {
         recorder = RuleSessionRecorder(InMemoryRuleSessionRecordStore())
@@ -80,5 +79,34 @@ internal class RuleSessionRecorderTest : RuleTestBase() {
             get(2).idsOfRulesAddedInSession shouldBe setOf(removeA.id)
             get(3).idsOfRulesAddedInSession shouldBe setOf(addBAgain.id)
         }
+    }
+
+    @Test
+    fun `remove record`() {
+        recorder.allRuleSessionHistories() shouldBe listOf()
+
+        val a = conclusionFactory.getOrCreate("A")
+        val addA = Rule(5, null, a)
+        recorder.recordRuleSessionCommitted(setOf(addA))
+
+        val b = conclusionFactory.getOrCreate("B")
+        val addB = Rule(6, null, b)
+        recorder.recordRuleSessionCommitted(setOf(addB))
+        with(recorder.allRuleSessionHistories())
+        {
+            size shouldBe 2
+            get(0).idsOfRulesAddedInSession shouldBe setOf(addA.id)
+            get(1).idsOfRulesAddedInSession shouldBe setOf(addB.id)
+        }
+
+        recorder.delete(recorder.allRuleSessionHistories().get(1))
+        with(recorder.allRuleSessionHistories())
+        {
+            size shouldBe 1
+            first().idsOfRulesAddedInSession shouldBe setOf(addA.id)
+        }
+
+        recorder.delete(recorder.allRuleSessionHistories().get(0))
+        recorder.allRuleSessionHistories() shouldBe emptyList()
     }
 }

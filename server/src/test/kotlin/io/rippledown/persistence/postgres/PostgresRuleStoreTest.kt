@@ -121,13 +121,13 @@ class PostgresRuleStoreTest: PostgresStoreTest() {
            this shouldContain pr3
            size shouldBe 3
        }
-       store.remove(pr3)
+       store.removeById(pr3.id!!)
        with(store.all()) {
            this shouldContain pr1
            this shouldContain pr2
            size shouldBe 2
        }
-       store.remove(pr2)
+       store.removeById(pr2.id!!)
        with(store.all()) {
            this shouldContain pr1
            size shouldBe 1

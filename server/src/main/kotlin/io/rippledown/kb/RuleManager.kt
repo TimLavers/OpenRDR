@@ -70,7 +70,7 @@ class RuleManager(
 
     fun deleteLeafRule(rule: Rule) {
         rule.parent!!.removeChildLeafRule(rule)
-//        ruleStore.create()
+        ruleStore.removeById(rule.id)
     }
 
     private fun rebuildRuleButDoNotSetParent(persistentRule: PersistentRule): Rule {

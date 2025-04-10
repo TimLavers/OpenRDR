@@ -1,11 +1,7 @@
 package io.rippledown.persistence.inmemory
 
-import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.rule.RuleSessionRecord
 import io.rippledown.persistence.PersistentRule
-import io.rippledown.persistence.RuleSessionRecordStore
 import io.rippledown.persistence.RuleStore
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -30,9 +26,9 @@ class InMemoryRuleStoreTest {
         val pr2 = store.create(pr(prRoot.id, 10, "100,101"))
         val pr3 = store.create(pr(prRoot.id, 12, "100,103"))
         store.all() shouldBe listOf(prRoot, pr2, pr3)
-        store.remove(pr3)
+        store.removeById(pr3.id!!)
         store.all() shouldBe listOf(prRoot, pr2)
-        store.remove(pr2)
+        store.removeById(pr2.id!!)
         store.all() shouldBe listOf(prRoot)
     }
 

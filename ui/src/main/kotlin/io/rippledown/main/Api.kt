@@ -20,10 +20,7 @@ import io.rippledown.model.OperationResult
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
-import io.rippledown.model.rule.CornerstoneStatus
-import io.rippledown.model.rule.RuleRequest
-import io.rippledown.model.rule.SessionStartRequest
-import io.rippledown.model.rule.UpdateCornerstoneRequest
+import io.rippledown.model.rule.*
 import io.rippledown.sample.SampleKB
 import java.io.File
 
@@ -252,6 +249,12 @@ class Api(engine: HttpClientEngine = CIO.create()) {
             parameter(EXPRESSION, expression)
             setBody(attributeNames)
         }.body<Condition?>()
+    }
+
+    suspend fun lastRuleDescription(): UndoRuleDescription {
+        return client.get("$API_URL$LAST_RULE_DESCRIPTION") {
+            setKBParameter()
+        }.body<UndoRuleDescription>()
     }
 }
 

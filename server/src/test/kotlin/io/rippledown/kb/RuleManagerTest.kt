@@ -86,6 +86,7 @@ class RuleManagerTest {
         ruleManager.ruleTree().size() shouldBe 2
         coffeeRule.parent shouldBe root
         ruleManager.deleteLeafRule(coffeeRule)
+        ruleManager.ruleTree().size() shouldBe 1
 
         // Rebuild and check.
         ruleManager = RuleManager(conclusionManager, conditionManager, ruleStore)

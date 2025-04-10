@@ -11,4 +11,8 @@ class RuleSessionRecorder(val dataSore: RuleSessionRecordStore) {
     fun idsOfRulesAddedInMostRecentSession() = dataSore.lastAdded()
 
     fun allRuleSessionHistories() = dataSore.all()
+
+    fun delete(record: RuleSessionRecord){
+        dataSore.deleteImpl(record)
+    }
 }

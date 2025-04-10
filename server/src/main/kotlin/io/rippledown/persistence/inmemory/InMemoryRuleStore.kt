@@ -27,7 +27,7 @@ class InMemoryRuleStore: RuleStore {
         rules.addAll(persistentRules)
     }
 
-    override fun remove(persistentRule: PersistentRule) {
-        rules.remove(persistentRule)
+    override fun removeById(ruleId: Int) {
+        rules.removeIf { it.id == ruleId }
     }
 }

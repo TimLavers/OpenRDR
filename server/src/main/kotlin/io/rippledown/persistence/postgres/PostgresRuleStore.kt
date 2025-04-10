@@ -51,10 +51,10 @@ class PostgresRuleStore(private val db: Database): RuleStore {
         }
     }
 
-    override fun remove(persistentRule: PersistentRule) {
+    override fun removeById(ruleId: Int) {
         transaction(db) {
             PGRules.deleteWhere {
-                id eq persistentRule.id
+                id eq ruleId
             }
         }
     }

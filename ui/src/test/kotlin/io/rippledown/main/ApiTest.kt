@@ -261,4 +261,15 @@ class ApiTest {
             Api(mock(config)).conditionForExpression(config.expectedExpression, config.expectedAttributeNames)
         returned shouldBe config.returnCondition
     }
+
+    @Test
+    fun `should return description of most recent rule`() = runTest {
+        val config = config {
+
+        }
+        with(Api(mock(config)).lastRuleDescription()) {
+            this.description shouldBe "It was a great rule, but it has to go."
+            this.canRemove shouldBe true
+        }
+    }
 }
