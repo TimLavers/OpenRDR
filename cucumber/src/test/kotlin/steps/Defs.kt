@@ -14,7 +14,6 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.integration.pause
 import io.rippledown.integration.proxy.ConfiguredTestData
 import io.rippledown.integration.proxy.TestResultDetail
-import io.rippledown.integration.waitUntilAsserted
 import org.awaitility.Awaitility
 import steps.StepsInfrastructure.cleanup
 import steps.StepsInfrastructure.reStartWithPostgres
@@ -252,7 +251,7 @@ class Defs {
         interpretationViewPO().waitForInterpretationTextToContain(text)
     }
 
-    @Then("the interpretation should be {string}")
+    @Then("the (interpretation )(report )should be {string}")
     fun theInterpretationShouldBeString(text: String) {
         interpretationViewPO().waitForInterpretationText(text)
     }
@@ -262,7 +261,7 @@ class Defs {
         interpretationViewPO().waitForInterpretationText(text.content)
     }
 
-    @Then("the interpretation should be empty")
+    @Then("the (interpretation )(report )(should be )(is )(empty)(blank)")
     fun theInterpretationFieldShouldBeEmpty() {
         interpretationViewPO().waitForInterpretationText("")
     }
