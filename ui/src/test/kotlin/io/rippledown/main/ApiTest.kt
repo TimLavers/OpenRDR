@@ -256,7 +256,7 @@ class ApiTest {
             returnConditionParsingResult = ConditionParsingResult(condition)
         }
         val returned =
-            Api(mock(config)).conditionForExpression(config.expectedExpression, config.expectedAttributeNames)
+            Api(mock(config)).conditionFor(config.expectedExpression, config.expectedAttributeNames)
         returned shouldBe config.returnConditionParsingResult
     }
 
@@ -269,7 +269,7 @@ class ApiTest {
             returnConditionParsingResult = ConditionParsingResult(errorMessage = "unknown expression")
         }
         val returned =
-            Api(mock(config)).conditionForExpression(config.expectedExpression, config.expectedAttributeNames)
+            Api(mock(config)).conditionFor(config.expectedExpression, config.expectedAttributeNames)
         returned shouldBe config.returnConditionParsingResult
     }
 }

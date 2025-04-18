@@ -1,32 +1,53 @@
 package io.rippledown.chat
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement.End
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.ElevatedAssistChip
+import androidx.compose.material3.ElevatedSuggestionChip
+import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Black
+import androidx.compose.ui.graphics.Color.Companion.Blue
 import androidx.compose.ui.graphics.Color.Companion.White
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import io.rippledown.decoration.DARK_GREY
 import io.rippledown.decoration.LIGHT_BLUE
+import io.rippledown.decoration.LIGHT_GREY
 
-
-data class ChatMessage(
-    val text: String,
+interface ChatMessage {
+    val text: String
     val isUser: Boolean
-)
+}
+
+data class UserMessage(
+    override val text: String
+) : ChatMessage {
+    override val isUser: Boolean = true
+}
+
+data class BotMessage(
+    override val text: String
+) : ChatMessage {
+    override val isUser: Boolean = false
+}
 
 typealias OnMessageSent = (ChatMessage) -> Unit
 
@@ -42,17 +63,19 @@ fun ChatPanel(messages: List<ChatMessage> = emptyList(), onMessageSent: OnMessag
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .padding(start = 0.dp, top = 8.dp, end = 8.dp, bottom = 10.dp)
+            .widthIn(min = 300.dp)
+            .border(1.dp, Blue)
             .background(Color(0xFFF5F5F5))
-            .padding(16.dp)
     ) {
         // Chat messages area
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .padding(8.dp),
             state = listState,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.Bottom
         ) {
             itemsIndexed(messages) { index, message ->
                 if (message.isUser) {
@@ -67,7 +90,7 @@ fun ChatPanel(messages: List<ChatMessage> = emptyList(), onMessageSent: OnMessag
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 16.dp),
+                .padding(horizontal = 16.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             TextField(
@@ -76,8 +99,20 @@ fun ChatPanel(messages: List<ChatMessage> = emptyList(), onMessageSent: OnMessag
                 modifier = Modifier
                     .weight(1f)
                     .background(White, RoundedCornerShape(8.dp))
-                    .semantics { contentDescription = CHAT_TEXT_FIELD },
-                placeholder = { Text("Type your message...") },
+                    .semantics { contentDescription = CHAT_TEXT_FIELD }
+                    .onKeyEvent { event ->
+                        if (event.key == Key.Enter && event.type == KeyEventType.KeyUp) {
+                            if (inputText.text.isNotBlank()) {
+                                val messageText = inputText.text.trim()
+                                onMessageSent(UserMessage(messageText))
+                                inputText = TextFieldValue("")
+                            }
+                            true
+                        } else {
+                            false
+                        }
+                    },
+                placeholder = { Text("enter...") },
                 colors = TextFieldDefaults.textFieldColors(
                     backgroundColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent,
@@ -90,16 +125,19 @@ fun ChatPanel(messages: List<ChatMessage> = emptyList(), onMessageSent: OnMessag
             Button(
                 onClick = {
                     if (inputText.text.isNotBlank()) {
-                        onMessageSent(ChatMessage(inputText.text, true))
+                        val messageText = inputText.text.trim()
+                        onMessageSent(UserMessage(messageText))
                         inputText = TextFieldValue("")
-
-                        // Add bot message
-                        val botResponse = getLLMResponse(inputText.text) // do this elsewhere
-                        onMessageSent(ChatMessage(botResponse, false))
                     }
                 },
+                enabled = inputText.text.isNotBlank(),
                 shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(backgroundColor = LIGHT_BLUE),
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = LIGHT_BLUE,
+                    disabledBackgroundColor = LIGHT_GREY,
+                    contentColor = White,
+                    disabledContentColor = DARK_GREY
+                ),
                 modifier = Modifier.semantics { contentDescription = CHAT_SEND }
             ) {
                 Text("Send", color = White)
@@ -115,28 +153,27 @@ fun UserRow(
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = End
+        horizontalArrangement = Arrangement.End
     ) {
-        Card(
-            shape = RoundedCornerShape(12.dp),
-            backgroundColor = LIGHT_BLUE,
-            elevation = 2.dp,
+        ElevatedSuggestionChip(
+            onClick = { },
+            label = {
+                Text(
+                    text = text,
+                    color = White,
+                    style = TextStyle(fontSize = 14.sp)
+                )
+            },
+            colors = SuggestionChipDefaults.elevatedSuggestionChipColors(
+                containerColor = LIGHT_BLUE,
+                labelColor = White
+            ),
             modifier = Modifier
-                .widthIn(max = 300.dp)
-                .padding(horizontal = 8.dp)
-        ) {
-            Text(
-                text = text,
-                color = White,
-                modifier = Modifier
-                    .padding(12.dp)
-                    .semantics {
-                        contentDescription = "$USER${index}"
-                    }
-            )
-        }
+                .semantics {
+                    contentDescription = "$USER${index}"
+                }
+        )
     }
-
 }
 
 @Composable
@@ -148,31 +185,26 @@ fun BotRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Start
     ) {
-        Card(
-            shape = RoundedCornerShape(12.dp),
-            backgroundColor = White,
-            elevation = 2.dp,
+        ElevatedAssistChip(
+            onClick = { },
+            label = {
+                Text(
+                    text = text,
+                    color = Black,
+                    style = TextStyle(fontSize = 14.sp)
+                )
+            },
+            colors = AssistChipDefaults.elevatedAssistChipColors(
+                containerColor = White,
+                labelColor = Black
+            ),
             modifier = Modifier
-                .widthIn(max = 300.dp)
-                .padding(horizontal = 8.dp)
-        ) {
-            Text(
-                text = text,
-                color = Black,
-                modifier = Modifier
-                    .padding(12.dp)
-                    .semantics {
-                        contentDescription = "$BOT${index}"
-                    }
-            )
-        }
+                .semantics {
+                    contentDescription = "$BOT${index}"
+                }
+        )
     }
 }
-
-fun getLLMResponse(text: String): String {
-    return "This is a response from the LLM to your message: $text"
-}
-
 
 fun main() = application {
     Window(
@@ -180,13 +212,12 @@ fun main() = application {
         title = "Rule Builder Chat"
     ) {
         val messages = listOf(
-            ChatMessage("Hello, how can I help you?", false),
-            ChatMessage("I need help with my case.", true),
-            ChatMessage("Sure! What do you need help with?", false)
+            BotMessage("Hello, how can I help you?"),
+            UserMessage("I need help with my case."),
+            BotMessage("Sure! What do you need help with?")
         )
         MaterialTheme {
             ChatPanel(messages)
         }
     }
 }
-

@@ -1,11 +1,13 @@
 package io.rippledown.casecontrol
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color.Companion.Red
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.cornerstone.NO_CORNERSTONES_TO_REVIEW_MSG
 import io.rippledown.cornerstone.CornerstonePager
@@ -30,9 +32,8 @@ interface CaseControlHandler : CaseInspectionHandler, CornerstonePagerHandler {
     fun endRuleSession()
     fun buildRule(ruleRequest: RuleRequest)
     fun updateCornerstoneStatus(cornerstoneRequest: UpdateCornerstoneRequest)
-    fun conditionForExpression(conditionText: String, attributeNames: Collection<String>): ConditionParsingResult
+    fun conditionFor(conditionText: String, attributeNames: Collection<String>): ConditionParsingResult
     var setRightInfoMessage: (message: String) -> Unit
-
 }
 
 @Composable
@@ -48,7 +49,8 @@ fun CaseControl(
     Row(
         modifier = Modifier
             .padding(10.dp)
-            .width(1800.dp)
+//            .widthIn(min = 500.dp)
+            .border(1.dp, Red)
     )
     {
         if (currentCase != null) {
@@ -83,7 +85,7 @@ fun CaseControl(
                 }
 
                 override fun conditionForExpression(expression: String) =
-                    handler.conditionForExpression(expression, attributeNames)
+                    handler.conditionFor(expression, attributeNames)
             })
         }
     }

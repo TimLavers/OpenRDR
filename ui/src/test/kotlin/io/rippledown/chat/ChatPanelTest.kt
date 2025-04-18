@@ -25,10 +25,10 @@ class ChatPanelTest {
         with(composeTestRule) {
             // Given
             val messages = listOf(
-                ChatMessage("a", false),
-                ChatMessage("b", true),
-                ChatMessage("c", false),
-                ChatMessage("d", true)
+                BotMessage("a"),
+                UserMessage("b"),
+                BotMessage("c"),
+                UserMessage("d")
             )
             // When
             setContent {
@@ -49,10 +49,59 @@ class ChatPanelTest {
 
             // When
             val userMessage = "add a comment"
-            enterChatMessage(userMessage)
+            typeChatMessageAndClickSend(userMessage)
 
             // Then
-            val expected = ChatMessage(userMessage, true)
+            val expected = UserMessage(userMessage)
+            verify { onMessageSent.invoke(expected) }
+        }
+    }
+
+    @Test
+    fun `should not call onMessageSent if there is no user message to send`() {
+        with(composeTestRule) {
+            // Given
+            setContent {
+                ChatPanel(listOf(), onMessageSent)
+            }
+            performTextInput("add a comment")
+            requireSendButtonEnabled()
+
+            // When deleting the message
+            deleteChatMessage()
+
+            // Then
+            requireSendButtonDisabled()
+        }
+    }
+
+    @Test
+    fun `should not enable the send button if there is no user text`() {
+        with(composeTestRule) {
+            // Given
+            setContent {
+                ChatPanel(listOf(), onMessageSent)
+            }
+
+            // Then
+            requireSendButtonDisabled()
+        }
+    }
+
+    @Test
+    fun `should call onMessageSent when the user presses the Enter key`() {
+        with(composeTestRule) {
+            // Given
+            setContent {
+                ChatPanel(listOf(), onMessageSent)
+            }
+
+            // When
+            val userMessage = "add a comment"
+            typeChatMessageAndPressEnter(userMessage)
+
+            // Then
+            val expected = UserMessage(userMessage)
             verify { onMessageSent.invoke(expected) }
         }
     }
@@ -66,9 +115,10 @@ fun main() {
         ) {
             ChatPanel(
                 listOf(
-                    ChatMessage("?", false),
-                    ChatMessage("!", true)
-                ), mockk()
+                    BotMessage("Hi there"),
+                    UserMessage("Meaning of life?"),
+                    BotMessage("42")
+                ), mockk(relaxed = true)
             )
         }
     }

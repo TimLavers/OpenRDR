@@ -1,11 +1,6 @@
-@file:OptIn(FlowPreview::class)
-
 package io.rippledown.main
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.BottomAppBar
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.*
@@ -16,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import io.rippledown.appbar.AppBarHandler
 import io.rippledown.appbar.ApplicationBar
 import io.rippledown.casecontrol.*
+import io.rippledown.chat.ChatPanel
 import io.rippledown.interpretation.toAnnotatedString
 import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
@@ -31,7 +27,6 @@ import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.sample.SampleKB
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.runBlocking
 import java.io.File
 
@@ -87,7 +82,8 @@ fun OpenRDRUI(handler: Handler) {
                 override var exportKB: (data: File) -> Unit = { runBlocking { api.exportKBToZip(it) } }
                 override val kbList: () -> List<KBInfo> = { runBlocking { api.kbList() } }
 
-                override var setKbDescription: (description: String) -> Unit = { runBlocking { api.setKbDescription(it) } }
+                override var setKbDescription: (description: String) -> Unit =
+                    { runBlocking { api.setKbDescription(it) } }
                 override var kbDescription: () -> String = { runBlocking { api.kbDescription() } }
             })
         },
@@ -102,7 +98,7 @@ fun OpenRDRUI(handler: Handler) {
             }
         },
     )
-    {
+    { paddingValues ->
         CasePoller(object : CasePollerHandler {
             override var onUpdate: (updated: CasesInfo) -> Unit = {
                 casesInfo = it
@@ -112,101 +108,105 @@ fun OpenRDRUI(handler: Handler) {
         })
 
         if (casesInfo.count > 0) {
-            Row {
-                if (!ruleInProgress) {
-                    ruleAction = null
-                    rightInformationMessage = ""
-                    Column {
-                        CaseSelectorHeader(casesInfo.caseIds.size)
-                        Spacer(modifier = Modifier.height(10.dp))
-                        CaseSelector(casesInfo.caseIds, object : CaseSelectorHandler, Handler by handler {
-                            override var selectCase = { id: Long ->
-                                currentCase = runBlocking { api.getCase(id) }
-                                currentCaseId = id
-                            }
-                        })
+            Column(modifier = Modifier.padding(paddingValues)) {
+                Row(modifier = Modifier.weight(1f)) {
+                    if (!ruleInProgress) {
+                        ruleAction = null
+                        rightInformationMessage = ""
+                        Column {
+                            CaseSelectorHeader(casesInfo.caseIds.size)
+                            Spacer(modifier = Modifier.height(10.dp))
+                            CaseSelector(casesInfo.caseIds, object : CaseSelectorHandler, Handler by handler {
+                                override var selectCase = { id: Long ->
+                                    currentCase = runBlocking { api.getCase(id) }
+                                    currentCaseId = id
+                                }
+                            })
+                        }
                     }
+
+                    CaseControl(
+                        currentCase = currentCase,
+                        cornerstoneStatus = cornerstoneStatus,
+                        conditionHints = conditionHints,
+                        handler = object : CaseControlHandler {
+                            override fun allComments() = runBlocking { api.allConclusions().map { it.text }.toSet() }
+
+                            override fun startRuleToAddComment(comment: String) {
+                                ruleAction = Addition(comment)
+                                val sessionStartRequest = SessionStartRequest(
+                                    caseId = currentCase!!.id!!,
+                                    diff = ruleAction as Addition
+                                )
+                                cornerstoneStatus = runBlocking { api.startRuleSession(sessionStartRequest) }
+                            }
+
+                            override fun startRuleToReplaceComment(toBeReplaced: String, replacement: String) {
+                                ruleAction = Replacement(toBeReplaced, replacement)
+                                val sessionStartRequest = SessionStartRequest(
+                                    caseId = currentCase!!.id!!,
+                                    diff = ruleAction as Replacement
+                                )
+                                cornerstoneStatus = runBlocking { api.startRuleSession(sessionStartRequest) }
+                            }
+
+                            override fun startRuleToRemoveComment(comment: String) {
+                                ruleAction = Removal(comment)
+                                val sessionStartRequest = SessionStartRequest(
+                                    caseId = currentCase!!.id!!,
+                                    diff = ruleAction as Removal
+                                )
+                                cornerstoneStatus = runBlocking { api.startRuleSession(sessionStartRequest) }
+                            }
+
+                            override fun endRuleSession() {
+                                runBlocking { api.cancelRuleSession() }
+                                cornerstoneStatus = null
+                            }
+
+                            override var setRightInfoMessage: (message: String) -> Unit =
+                                { rightInformationMessage = it }
+
+                            override fun buildRule(ruleRequest: RuleRequest) = runBlocking {
+                                currentCase = api.commitSession(ruleRequest)
+                                cornerstoneStatus = null
+                            }
+
+                            override fun updateCornerstoneStatus(cornerstoneRequest: UpdateCornerstoneRequest) =
+                                runBlocking {
+                                    cornerstoneStatus = api.updateCornerstoneStatus(cornerstoneRequest)
+                                }
+
+                            override fun startRuleSession(sessionStartRequest: SessionStartRequest) = runBlocking {
+                                cornerstoneStatus = api.startRuleSession(sessionStartRequest)
+                            }
+
+                            override fun getCase(caseId: Long) = runBlocking { currentCase = api.getCase(caseId) }
+
+                            override fun swapAttributes(moved: Attribute, target: Attribute) {
+                                runBlocking {
+                                    api.moveAttribute(moved.id, target.id)
+                                }
+                            }
+
+                            override fun selectCornerstone(index: Int) = runBlocking {
+                                cornerstoneStatus = api.selectCornerstone(index)
+                            }
+
+                            override fun exemptCornerstone(index: Int) = runBlocking {
+                                cornerstoneStatus = api.exemptCornerstone(index)
+                            }
+
+                            override fun conditionFor(
+                                conditionText: String,
+                                attributeNames: Collection<String>
+                            ) = runBlocking {
+                                api.conditionFor(conditionText, attributeNames)
+                            }
+                        }
+                    )
+                    ChatPanel()
                 }
-
-                CaseControl(
-                    currentCase = currentCase,
-                    cornerstoneStatus = cornerstoneStatus,
-                    conditionHints = conditionHints,
-                    handler = object : CaseControlHandler {
-                        override fun allComments() = runBlocking { api.allConclusions().map { it.text }.toSet() }
-
-                        override fun startRuleToAddComment(comment: String) {
-                            ruleAction = Addition(comment)
-                            val sessionStartRequest = SessionStartRequest(
-                                caseId = currentCase!!.id!!,
-                                diff = ruleAction as Addition
-                            )
-                            cornerstoneStatus = runBlocking { api.startRuleSession(sessionStartRequest) }
-                        }
-
-                        override fun startRuleToReplaceComment(toBeReplaced: String, replacement: String) {
-                            ruleAction = Replacement(toBeReplaced, replacement)
-                            val sessionStartRequest = SessionStartRequest(
-                                caseId = currentCase!!.id!!,
-                                diff = ruleAction as Replacement
-                            )
-                            cornerstoneStatus = runBlocking { api.startRuleSession(sessionStartRequest) }
-                        }
-
-                        override fun startRuleToRemoveComment(comment: String) {
-                            ruleAction = Removal(comment)
-                            val sessionStartRequest = SessionStartRequest(
-                                caseId = currentCase!!.id!!,
-                                diff = ruleAction as Removal
-                            )
-                            cornerstoneStatus = runBlocking { api.startRuleSession(sessionStartRequest) }
-                        }
-
-                        override fun endRuleSession() {
-                            runBlocking { api.cancelRuleSession() }
-                            cornerstoneStatus = null
-                        }
-
-                        override var setRightInfoMessage: (message: String) -> Unit = { rightInformationMessage = it }
-
-                        override fun buildRule(ruleRequest: RuleRequest) = runBlocking {
-                            currentCase = api.commitSession(ruleRequest)
-                            cornerstoneStatus = null
-                        }
-
-                        override fun updateCornerstoneStatus(cornerstoneRequest: UpdateCornerstoneRequest) =
-                            runBlocking {
-                                cornerstoneStatus = api.updateCornerstoneStatus(cornerstoneRequest)
-                            }
-
-                        override fun startRuleSession(sessionStartRequest: SessionStartRequest) = runBlocking {
-                            cornerstoneStatus = api.startRuleSession(sessionStartRequest)
-                        }
-
-                        override fun getCase(caseId: Long) = runBlocking { currentCase = api.getCase(caseId) }
-
-                        override fun swapAttributes(moved: Attribute, target: Attribute) {
-                            runBlocking {
-                                api.moveAttribute(moved.id, target.id)
-                            }
-                        }
-
-                        override fun selectCornerstone(index: Int) = runBlocking {
-                            cornerstoneStatus = api.selectCornerstone(index)
-                        }
-
-                        override fun exemptCornerstone(index: Int) = runBlocking {
-                            cornerstoneStatus = api.exemptCornerstone(index)
-                        }
-
-                        override fun conditionForExpression(
-                            conditionText: String,
-                            attributeNames: Collection<String>
-                        ) = runBlocking {
-                            api.conditionForExpression(conditionText, attributeNames)
-                        }
-                    }
-                )
             }
         }
     }
