@@ -26,6 +26,11 @@ fun ComposeTestRule.requireChatMessagesShowing(expected: List<ChatMessage>) {
     }
 }
 
+fun ComposeTestRule.requireUserMessageShowing(index: Int) {
+    val expectedLabel = "$USER$index"
+    onNodeWithContentDescription(expectedLabel).assertIsDisplayed()
+}
+
 fun ComposeTestRule.deleteChatMessage() {
     onNodeWithContentDescription(CHAT_TEXT_FIELD).performTextClearance()
 }
@@ -58,4 +63,8 @@ fun ComposeTestRule.requireSendButtonDisabled() {
 
 fun ComposeTestRule.requireSendButtonEnabled() {
     onNodeWithContentDescription(CHAT_SEND).assertIsEnabled()
+}
+
+fun ComposeTestRule.requireUserTextFieldFocused() {
+    onNodeWithContentDescription(CHAT_TEXT_FIELD).assertIsFocused()
 }

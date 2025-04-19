@@ -106,6 +106,34 @@ class ChatPanelTest {
         }
     }
 
+    @Test
+    fun `should scroll to the most recent message`() {
+        val history = (1..100).map { UserMessage("message $it") }
+        val index = history.size - 1
+        with(composeTestRule) {
+            // Given
+            setContent {
+                ChatPanel(history, onMessageSent)
+            }
+
+            // Then
+            requireUserMessageShowing(index)
+        }
+    }
+
+    @Test
+    fun `should set focus on the user text field`() {
+        with(composeTestRule) {
+            // Given
+            setContent {
+                ChatPanel(listOf(), onMessageSent)
+            }
+
+            // Then
+            requireUserTextFieldFocused()
+        }
+    }
+
 }
 
 fun main() {

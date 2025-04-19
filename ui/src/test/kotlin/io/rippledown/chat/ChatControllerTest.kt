@@ -4,6 +4,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.mockk.mockk
+import io.mockk.verify
 import io.rippledown.constants.chat.CHAT_BOT_INITIAL_MESSAGE
 import org.junit.Before
 import org.junit.Rule
@@ -45,6 +46,8 @@ class ChatControllerTest {
             typeChatMessageAndClickSend(userMessage)
 
             // Then
+            verify { handler.sendUserMessage(userMessage) }
+
             val expected = listOf(
                 initialBotMessage,
                 UserMessage(userMessage)
@@ -53,7 +56,30 @@ class ChatControllerTest {
         }
     }
 
+    @Test
+    fun `should update the chat history with the bot response`() {
+        val h = object : ChatControllerHandler {
+            override fun sendUserMessage(message: String) {}
+            override var onBotMessageReceived: (String) -> Unit = {}
+        }
 
+        with(composeTestRule) {
+            // Given
+            setContent {
+                ChatController(h)
+            }
+            // When
+            val botResponse = "confirm 42?"
+            h.onBotMessageReceived(botResponse)
+
+            // Then
+            val expected = listOf(
+                initialBotMessage,
+                BotMessage(botResponse)
+            )
+            requireChatMessagesShowing(expected)
+        }
+    }
 }
 
 fun main() {
@@ -61,7 +87,7 @@ fun main() {
         Window(
             onCloseRequest = ::exitApplication,
         ) {
-            ChatController(mockk())
+            ChatController(mockk(relaxed = true))
         }
     }
 }
