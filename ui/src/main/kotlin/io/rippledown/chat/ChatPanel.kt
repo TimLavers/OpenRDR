@@ -118,16 +118,16 @@ fun ChatPanel(messages: List<ChatMessage> = emptyList(), onMessageSent: OnMessag
                     .weight(1f)
                     .background(White, RoundedCornerShape(8.dp))
                     .semantics { contentDescription = CHAT_TEXT_FIELD }
-                    .onKeyEvent { event ->
-                        if (event.key == Key.Enter && event.type == KeyEventType.KeyUp) {
+                    .onPreviewKeyEvent { event ->
+                        if (event.key == Key.Enter && event.type == KeyEventType.KeyDown) {
                             if (inputText.text.isNotBlank()) {
                                 val messageText = inputText.text.trim()
                                 onMessageSent(UserMessage(messageText))
                                 inputText = TextFieldValue("")
                             }
-                            true
+                            true // consume the event to avoid newline insertion
                         } else {
-                            false
+                            false//allow other events to be handled
                         }
                     }
                     .focusRequester(textAreaFocusRequester),

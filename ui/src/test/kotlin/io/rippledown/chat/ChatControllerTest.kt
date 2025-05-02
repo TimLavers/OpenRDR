@@ -6,6 +6,8 @@ import androidx.compose.ui.window.application
 import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.constants.chat.CHAT_BOT_INITIAL_MESSAGE
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -87,7 +89,19 @@ fun main() {
         Window(
             onCloseRequest = ::exitApplication,
         ) {
-            ChatController(mockk(relaxed = true))
+            val handler = object : ChatControllerHandler {
+                override fun sendUserMessage(message: String) {
+                    runBlocking {
+                        println("User message sent: $message")
+                        // Simulate a delay for the bot response
+                        delay(1000)
+                        onBotMessageReceived("The answer to '$message' is 42")
+                    }
+                }
+
+                override var onBotMessageReceived: (String) -> Unit = {}
+            }
+            ChatController(handler)
         }
     }
 }
