@@ -851,6 +851,23 @@ class KBTest {
         returnedCondition shouldBe null
     }
 
+    @Test
+    fun `should delegate bot response to the chat service`() {
+        //Given
+        val case = createCase("Case")
+        val userExpression = "Please add a comment to go to Bondi"
+        val botResponse = "Go to Bondi"
+        val chatService = mockk<ChatService>()
+        every { chatService.botResponse(userExpression, case) } returns botResponse
+        kb.setChatService(chatService)
+
+        //When
+        val response = kb.botResponseToUserMessage(userExpression, case)
+
+        //Then
+        response shouldBe botResponse
+    }
+
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")
 
     private fun createCondition(): Condition {

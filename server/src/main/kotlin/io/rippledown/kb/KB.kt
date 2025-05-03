@@ -1,5 +1,6 @@
 package io.rippledown.kb
 
+import io.rippledown.chat.responseFor
 import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
 import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
 import io.rippledown.expressionparser.AttributeFor
@@ -35,11 +36,16 @@ class KB(persistentKB: PersistentKB) {
 
     //a var so it can be mocked in tests
     private var conditionParser: ConditionParser
+    private var chatService: ChatService
 
     init {
         conditionParser = object : ConditionParser {
             override fun parse(expression: String, attributeNames: List<String>, attributeFor: AttributeFor) =
                 ConditionTip(attributeNames, attributeFor).conditionFor(expression)
+        }
+        chatService = object : ChatService {
+            override fun botResponse(userMessage: String, case: RDRCase): String =
+                responseFor(userMessage, case)
         }
     }
 
@@ -256,6 +262,11 @@ class KB(persistentKB: PersistentKB) {
         conditionParser = parser
     }
 
+    //Allow a mock chat service to be set so we can avoid connecting to Gemini for all the tests
+    fun setChatService(service: ChatService) {
+        chatService = service
+    }
+
     fun conditionForExpression(expression: String, attributeNames: List<String>): ConditionParsingResult {
         val attributeFor: AttributeFor = { attributeManager.getOrCreate(it) }
         val condition = conditionParser.parse(expression, attributeNames, attributeFor)
@@ -273,11 +284,13 @@ class KB(persistentKB: PersistentKB) {
 
     internal fun holdsForSessionCase(condition: Condition) = condition.holds(ruleSession!!.case)
 
-    fun botResponseToUserMessage(message: String, case: RDRCase): String {
-        return "Bot response: ${message}, case: ${case.name}"
-    }
+    fun botResponseToUserMessage(message: String, case: RDRCase) = chatService.botResponse(message, case)
 }
 
 interface ConditionParser {
     fun parse(expression: String, attributeNames: List<String>, attributeFor: (String) -> Attribute): Condition? = null
+}
+
+interface ChatService {
+    fun botResponse(userMessage: String, case: RDRCase): String = ""
 }

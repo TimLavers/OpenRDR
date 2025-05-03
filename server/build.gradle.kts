@@ -8,6 +8,7 @@ plugins {
 dependencies {
     implementation(project(":common"))
     implementation(project(":hints"))
+    implementation(project(":chat"))
 
     implementation(libs.bundles.ktor)
     implementation(libs.bundles.kotlinx)
