@@ -253,5 +253,15 @@ class Api(engine: HttpClientEngine = CIO.create()) {
             setBody(attributeNames)
         }.body<ConditionParsingResult>()
     }
+
+    suspend fun sendUserMessage(message: String): String {
+        return client.post("$API_URL$SEND_USER_MESSAGE") {
+            contentType(ContentType.Text.Plain)
+            setBody(message)
+            setKBParameter()
+        }.body()
+    }
+
+
 }
 

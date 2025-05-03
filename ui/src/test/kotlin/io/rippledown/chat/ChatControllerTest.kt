@@ -32,7 +32,7 @@ class ChatControllerTest {
                 ChatController(handler)
             }
             // Then
-            requireChatMessagesShowing(listOf(initialBotMessage))
+            requireInitialBotMessageShowing()
         }
     }
 
@@ -77,6 +77,34 @@ class ChatControllerTest {
             // Then
             val expected = listOf(
                 initialBotMessage,
+                BotMessage(botResponse)
+            )
+            requireChatMessagesShowing(expected)
+        }
+    }
+
+    @Test
+    fun `should update the chat history even if the bot response is the same`() {
+        val h = object : ChatControllerHandler {
+            override fun sendUserMessage(message: String) {}
+            override var onBotMessageReceived: (String) -> Unit = {}
+        }
+
+        with(composeTestRule) {
+            // Given
+            setContent {
+                ChatController(h)
+            }
+            val botResponse = "confirm 42?"
+            h.onBotMessageReceived(botResponse)
+
+            // When
+            h.onBotMessageReceived(botResponse)
+
+            // Then
+            val expected = listOf(
+                initialBotMessage,
+                BotMessage(botResponse),
                 BotMessage(botResponse)
             )
             requireChatMessagesShowing(expected)

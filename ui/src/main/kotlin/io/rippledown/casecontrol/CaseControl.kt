@@ -48,7 +48,7 @@ fun CaseControl(
 
     Row(
         modifier = Modifier
-            .padding(10.dp)
+            .padding(8.dp)
 //            .widthIn(min = 500.dp)
             .border(1.dp, Red)
     )

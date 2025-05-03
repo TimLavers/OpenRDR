@@ -15,7 +15,6 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons.AutoMirrored.Filled
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.ElevatedAssistChip
 import androidx.compose.material3.ElevatedSuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.runtime.*
@@ -36,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import io.rippledown.constants.chat.CHAT_BOT_PLACEHOLDER
 import io.rippledown.decoration.LIGHT_BLUE
 import io.rippledown.decoration.LIGHT_GREY
 
@@ -81,7 +81,7 @@ fun ChatPanel(messages: List<ChatMessage> = emptyList(), onMessageSent: OnMessag
 
     Column(
         modifier = Modifier
-            .padding(start = 0.dp, top = 8.dp, end = 8.dp, bottom = 10.dp)
+            .padding(start = 0.dp, top = 8.dp, end = 8.dp, bottom = 8.dp)
             .widthIn(min = 300.dp)
             .border(1.dp, Blue)
             .background(Color(0xFFF5F5F5))
@@ -91,7 +91,7 @@ fun ChatPanel(messages: List<ChatMessage> = emptyList(), onMessageSent: OnMessag
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .padding(8.dp),
+                .padding(start = 8.dp, end = 8.dp, top = 8.dp),
             state = listState,
             verticalArrangement = Arrangement.Bottom
         ) {
@@ -108,11 +108,12 @@ fun ChatPanel(messages: List<ChatMessage> = emptyList(), onMessageSent: OnMessag
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 16.dp),
+                .padding(horizontal = 8.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             TextField(
                 value = inputText,
+                textStyle = TextStyle(fontSize = 14.sp),
                 onValueChange = { inputText = it },
                 modifier = Modifier
                     .weight(1f)
@@ -131,7 +132,7 @@ fun ChatPanel(messages: List<ChatMessage> = emptyList(), onMessageSent: OnMessag
                         }
                     }
                     .focusRequester(textAreaFocusRequester),
-                placeholder = { Text("enter...") },
+                placeholder = { Text(text = CHAT_BOT_PLACEHOLDER, style = TextStyle(fontSize = 14.sp)) },
                 trailingIcon = {
                     TooltipArea(
                         tooltip = {
@@ -216,7 +217,7 @@ fun BotRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Start
     ) {
-        ElevatedAssistChip(
+        ElevatedSuggestionChip(
             onClick = { },
             label = {
                 Text(

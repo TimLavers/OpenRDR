@@ -6,6 +6,7 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import io.kotest.assertions.withClue
+import io.rippledown.constants.chat.CHAT_BOT_INITIAL_MESSAGE
 
 fun ComposeTestRule.requireChatMessagesShowing(expected: List<ChatMessage>) {
     expected.forEachIndexed { idx, message ->
@@ -15,15 +16,21 @@ fun ComposeTestRule.requireChatMessagesShowing(expected: List<ChatMessage>) {
             "$BOT$idx"
         }
         onNodeWithContentDescription(expectedLabel).assertTextEquals(message.text)
-
-        val size = expected.size
-        val unwantedUserLabel = "$USER$size"
-        val unwantedBotLabel = "$BOT$size"
-        withClue("should be no more user or bot messages") {
-            onNodeWithContentDescription(unwantedBotLabel).assertDoesNotExist()
-            onNodeWithContentDescription(unwantedUserLabel).assertDoesNotExist()
-        }
     }
+    //And no more messages should be showing
+    val size = expected.size
+    val unwantedUserLabel = "$USER$size"
+    val unwantedBotLabel = "$BOT$size"
+    withClue("should be no more user or bot messages") {
+        onNodeWithContentDescription(unwantedBotLabel).assertDoesNotExist()
+        onNodeWithContentDescription(unwantedUserLabel).assertDoesNotExist()
+    }
+
+}
+
+fun ComposeTestRule.requireInitialBotMessageShowing() {
+    val expectedLabel = "${BOT}0"
+    onNodeWithContentDescription(expectedLabel).assertTextEquals(CHAT_BOT_INITIAL_MESSAGE)
 }
 
 fun ComposeTestRule.requireUserMessageShowing(index: Int) {

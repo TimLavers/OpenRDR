@@ -11,7 +11,8 @@ import androidx.compose.ui.unit.dp
 import io.rippledown.appbar.AppBarHandler
 import io.rippledown.appbar.ApplicationBar
 import io.rippledown.casecontrol.*
-import io.rippledown.chat.ChatPanel
+import io.rippledown.chat.ChatController
+import io.rippledown.chat.ChatControllerHandler
 import io.rippledown.interpretation.toAnnotatedString
 import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
@@ -115,7 +116,7 @@ fun OpenRDRUI(handler: Handler) {
                         rightInformationMessage = ""
                         Column {
                             CaseSelectorHeader(casesInfo.caseIds.size)
-                            Spacer(modifier = Modifier.height(10.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
                             CaseSelector(casesInfo.caseIds, object : CaseSelectorHandler, Handler by handler {
                                 override var selectCase = { id: Long ->
                                     currentCase = runBlocking { api.getCase(id) }
@@ -205,7 +206,17 @@ fun OpenRDRUI(handler: Handler) {
                             }
                         }
                     )
-                    ChatPanel()
+                    ChatController(object : ChatControllerHandler {
+                        override var onBotMessageReceived: (message: String) -> Unit = { }
+                        override fun sendUserMessage(message: String) {
+                            println("User message to be sent : $message")
+                            runBlocking {
+                                val response = api.sendUserMessage(message)
+                                println("response = ${response}")
+                                onBotMessageReceived(response)
+                            }
+                        }
+                    })
                 }
             }
         }
