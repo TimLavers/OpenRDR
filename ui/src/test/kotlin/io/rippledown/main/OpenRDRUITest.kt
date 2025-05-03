@@ -123,27 +123,28 @@ class OpenRDRUITest {
 
     @Test
     fun `should call the api when a user chat message is entered`() = runTest {
-        val caseA = "case A"
-        val caseId1 = CaseId(id = 1, name = caseA)
-        val caseIds = listOf(caseId1)
+        val caseName = "case A"
+        val caseId = CaseId(id = 1234, name = caseName)
+        val id = caseId.id!!
+        val caseIds = listOf(caseId)
         val bondiComment = "Go to Bondi"
-        val case = createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
+        val case = createCaseWithInterpretation(caseName, id, listOf(bondiComment))
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
-        coEvery { api.getCase(1) } returns case
+        coEvery { api.getCase(id) } returns case
 
         with(composeTestRule) {
             //Given
             setContent {
                 OpenRDRUI(handler)
             }
-            waitForCaseToBeShowing(caseA)
+            waitForCaseToBeShowing(caseName)
 
             //When
             val userMessage = "add a comment"
             typeChatMessageAndClickSend(userMessage)
 
             //Then
-            coVerify { api.sendUserMessage(userMessage) }
+            coVerify { api.sendUserMessage(userMessage, id) }
         }
     }
 
@@ -157,7 +158,7 @@ class OpenRDRUITest {
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
         coEvery { api.getCase(1) } returns case
         val answer = "the answer is 42"
-        coEvery { api.sendUserMessage(any()) } returns answer
+        coEvery { api.sendUserMessage(any(), 0) } returns answer
 
         with(composeTestRule) {
             //Given
@@ -805,7 +806,7 @@ fun main() {
     coEvery { handler.isClosing() } returns false
     coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
     coEvery { api.getCase(any()) } returns createCaseWithInterpretation("case A", 1, listOf("Go to Bondi"))
-    coEvery { api.sendUserMessage(any()) } returns "The answer is always 42"
+    coEvery { api.sendUserMessage(any(), any()) } returns "The answer is 42"
 
     applicationFor {
         OpenRDRUI(handler)

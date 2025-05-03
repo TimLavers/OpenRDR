@@ -84,6 +84,9 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
 
     fun conditionHintsForCase(id: Long): ConditionList = kb.conditionHintsForCase(case(id))
 
+    fun botResponseToUserMessage(message: String, caseId: Long): String =
+        kb.botResponseToUserMessage(message, case(caseId))
+
     fun processCase(externalCase: ExternalCase) = kb.processCase(externalCase)
 
     fun deleteCase(name: String) = kb.deletedProcessedCaseWithName(name)

@@ -265,11 +265,23 @@ class ApiTest {
         val config = config {
             expectedExpression = "Great surf"
             expectedAttributeNames = listOf("Surf", "Sun")
-            val condition = hasCurrentValue(1, Attribute(1, "Surf"))
             returnConditionParsingResult = ConditionParsingResult(errorMessage = "unknown expression")
         }
         val returned =
             Api(mock(config)).conditionFor(config.expectedExpression, config.expectedAttributeNames)
         returned shouldBe config.returnConditionParsingResult
+    }
+
+    @Test
+    fun `should return a bot response`() = runTest {
+        val userMessage = "What is the meaning of life?"
+        val caseId = 1234L
+        val config = config {
+            expectedUserMessage = userMessage
+            expectedCaseId = caseId
+            returnBotResponse = "42"
+        }
+        val response = Api(mock(config)).sendUserMessage(userMessage, caseId)
+        response shouldBe config.returnBotResponse
     }
 }

@@ -84,5 +84,5 @@ fun Application.applicationModule() {
     conclusionManagement(application)
     conditionManagement(application)
     ruleSession(application)
-    conditionManagement(application)
+    chatManagement(application)
 }

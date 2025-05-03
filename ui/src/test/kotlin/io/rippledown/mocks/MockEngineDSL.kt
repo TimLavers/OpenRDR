@@ -32,8 +32,9 @@ class EngineConfig {
     var returnCornerstone: ViewableCase = createCase("The Case")
     var returnCornerstoneStatus: CornerstoneStatus = CornerstoneStatus()
     var returnConditionList: ConditionList = ConditionList()
-    var returnConditionParsingResult: ConditionParsingResult? = null
+    var returnBotResponse: String = ""
 
+    var returnConditionParsingResult: ConditionParsingResult? = null
     var expectedCaseId: Long? = null
     var expectedCase: ViewableCase? = null
     var expectedRuleRequest: RuleRequest? = null
@@ -44,10 +45,11 @@ class EngineConfig {
     var expectedCornerstoneIndex: Int? = null
     var expectedUpdatedCornerstoneStatus: CornerstoneStatus? = null
     var expectedExpression: String = ""
-    var expectedAttributeNames: Collection<String> = emptyList()
 
+    var expectedAttributeNames: Collection<String> = emptyList()
     var expectedMovedAttributeId: Int? = null
     var expectedTargetAttributeId: Int? = null
+    var expectedUserMessage: String = ""
     var newKbName: String? = null
     var sampleKB: SampleKB? = null
 
@@ -179,6 +181,12 @@ private class EngineBuilder(private val config: EngineConfig) {
 
             DEFAULT_KB -> {
                 httpResponseData(json.encodeToString(config.defaultKB))
+            }
+
+            SEND_USER_MESSAGE -> {
+                val body = request.body as TextContent
+                body.text shouldBe config.expectedUserMessage
+                httpResponseData(config.returnBotResponse)
             }
 
             else -> {

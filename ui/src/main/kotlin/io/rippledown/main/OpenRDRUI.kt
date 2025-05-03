@@ -210,8 +210,11 @@ fun OpenRDRUI(handler: Handler) {
                         override var onBotMessageReceived: (message: String) -> Unit = { }
                         override fun sendUserMessage(message: String) {
                             println("User message to be sent : $message")
+                            val caseId = requireNotNull(currentCaseId) {
+                                "currentCaseId should not be null when casesInfo.count > 0"
+                            }
                             runBlocking {
-                                val response = api.sendUserMessage(message)
+                                val response = api.sendUserMessage(message, caseId)
                                 println("response = ${response}")
                                 onBotMessageReceived(response)
                             }

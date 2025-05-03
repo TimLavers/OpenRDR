@@ -272,6 +272,10 @@ class KB(persistentKB: PersistentKB) {
     }
 
     internal fun holdsForSessionCase(condition: Condition) = condition.holds(ruleSession!!.case)
+
+    fun botResponseToUserMessage(message: String, case: RDRCase): String {
+        return "Bot response: ${message}, case: ${case.name}"
+    }
 }
 
 interface ConditionParser {
