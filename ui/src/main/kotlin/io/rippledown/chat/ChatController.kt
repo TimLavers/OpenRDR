@@ -2,6 +2,7 @@ package io.rippledown.chat
 
 import androidx.compose.runtime.*
 import io.rippledown.constants.chat.CHAT_BOT_INITIAL_MESSAGE
+import io.rippledown.constants.chat.CHAT_BOT_NO_RESPONSE_MESSAGE
 
 interface ChatControllerHandler {
     fun sendUserMessage(message: String)
@@ -14,7 +15,12 @@ fun ChatController(handler: ChatControllerHandler) {
     var chatHistory: List<ChatMessage> by remember { mutableStateOf(listOf(initialBotMessage)) }
 
     handler.onBotMessageReceived = { message ->
-        chatHistory = chatHistory + BotMessage(message)
+        val botMessage = if (message.isEmpty()) {
+            BotMessage(CHAT_BOT_NO_RESPONSE_MESSAGE)
+        } else {
+            BotMessage(message)
+        }
+        chatHistory = chatHistory + botMessage
     }
 
     ChatPanel(chatHistory, onMessageSent = { userMessage ->

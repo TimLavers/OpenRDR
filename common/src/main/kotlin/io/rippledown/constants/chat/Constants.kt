@@ -1,5 +1,7 @@
 package io.rippledown.constants.chat
 
+const val CHAT_BOT_NO_RESPONSE_MESSAGE = "Sorry, I don't understand. Please try again."
+
 const val CHAT_BOT_INITIAL_MESSAGE =
     """
 You've selected a new case. You have a few options:

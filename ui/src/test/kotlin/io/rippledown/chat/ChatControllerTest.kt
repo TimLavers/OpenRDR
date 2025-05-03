@@ -6,6 +6,7 @@ import androidx.compose.ui.window.application
 import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.constants.chat.CHAT_BOT_INITIAL_MESSAGE
+import io.rippledown.constants.chat.CHAT_BOT_NO_RESPONSE_MESSAGE
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
@@ -107,6 +108,35 @@ class ChatControllerTest {
                 BotMessage(botResponse),
                 BotMessage(botResponse)
             )
+            requireChatMessagesShowing(expected)
+        }
+    }
+
+    @Test
+    fun `should give an indication to the user if no bot response is received`() {
+        val h = object : ChatControllerHandler {
+            override fun sendUserMessage(message: String) {}
+            override var onBotMessageReceived: (String) -> Unit = {}
+        }
+
+        with(composeTestRule) {
+            // Given
+            setContent {
+                ChatController(h)
+            }
+            val userMessage = "add a comment"
+            typeChatMessageAndClickSend(userMessage)
+
+            // When
+            h.onBotMessageReceived("")
+
+            // Then
+            val expected = listOf(
+                initialBotMessage,
+                UserMessage(userMessage),
+                BotMessage(CHAT_BOT_NO_RESPONSE_MESSAGE),
+
+                )
             requireChatMessagesShowing(expected)
         }
     }
