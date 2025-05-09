@@ -16,7 +16,7 @@ dependencies {
     implementation(libs.bundles.kotlinx)
     implementation(libs.commonsIo)
     implementation(libs.bundles.exposed)
-//    implementation(libs.postgresql)
+    implementation(libs.postgresql)
 
     testImplementation(testFixtures(project(":common")))
     testImplementation(libs.kotlinxCoroutinesTest)
