@@ -215,7 +215,7 @@ fun OpenRDRUI(handler: Handler) {
                             }
                             runBlocking {
                                 val response = api.sendUserMessage(message, caseId)
-                                println("response = ${response}")
+                                println("response from model = '${response}'")
                                 onBotMessageReceived(response)
                             }
                         }

@@ -6,7 +6,7 @@ import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.http.content.*
 import io.ktor.server.netty.*
-import io.ktor.server.plugins.callloging.*
+import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.compression.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.*
@@ -23,7 +23,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 
-lateinit var server: NettyApplicationEngine
+lateinit var server: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>
 
 private lateinit var persistenceProvider: PersistenceProvider
 
@@ -31,19 +31,20 @@ val logger: Logger = LoggerFactory.getLogger("rdr")
 
 fun main(args: Array<String>) {
     logger.info("Starting server with args: ${args.joinToString(", ")}")
-    persistenceProvider = if (args.size > 0 && args[0] == IN_MEMORY) {
+    persistenceProvider = if (args.isNotEmpty() && args[0] == IN_MEMORY) {
         InMemoryPersistenceProvider()
     } else {
         PostgresPersistenceProvider()
     }
 
-    @Suppress("ExtractKtorModule")
-    server = embeddedServer(Netty, 9090, module = Application::applicationModule)
+    server = embeddedServer(factory = Netty, port = 9090) {
+        module()
+    }
     logger.info(STARTING_SERVER)
     server.start(wait = true)
 }
 
-fun Application.applicationModule() {
+fun Application.module() {
     install(ContentNegotiation) {
         json()
     }
@@ -52,9 +53,8 @@ fun Application.applicationModule() {
         filter { call -> call.request.path().startsWith("/") }
         format { call ->
             val status = call.response.status()
-            call.request.httpMethod
             val httpMethod = call.request.httpMethod.value
-            val userAgent = call.request.headers["User-Agent"]
+            val userAgent = call.request.header("User-Agent")
             "Status: $status, HTTP method: $httpMethod, User agent: $userAgent"
         }
     }
@@ -62,7 +62,6 @@ fun Application.applicationModule() {
         allowMethod(HttpMethod.Get)
         allowMethod(HttpMethod.Post)
         allowMethod(HttpMethod.Delete)
-        anyHost()
     }
     install(Compression) {
         gzip()
@@ -74,7 +73,7 @@ fun Application.applicationModule() {
                 ContentType.Text.Html
             )
         }
-        staticResources(remotePath = "/", basePackage = "")
+        staticResources("/", "")
     }
     val application = ServerApplication(persistenceProvider)
     serverManagement()

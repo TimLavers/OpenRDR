@@ -1,6 +1,7 @@
 package io.rippledown.server.routes
 
 import io.ktor.http.*
+import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -25,17 +26,15 @@ fun Application.caseManagement(application: ServerApplication) {
         }
         get(CASE) {
             logger.info("Getting case...")
-            val id = call.parameters["id"] ?: error("Invalid case id.")
-            val idLong = id.toLongOrNull() ?: error("Case id should be a long.") // todo test
-            logger.info("case id:  $id")
-
             val viewableCase = try {
-                kbEndpoint(application).viewableCase(idLong)
+                val kbEndpoint = kbEndpoint(application)
+                val caseId = caseId()
+                kbEndpoint.viewableCase(caseId)
             } catch (e: Exception) {
-                call.respond(HttpStatusCode.BadRequest)
+                call.respond(BadRequest, e.message.toString())
+                return@get
             }
             logger.info("viewable case retrieved")
-
             call.respond(viewableCase)
             logger.info("viewable case written")
 

@@ -5,8 +5,8 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
-import io.mockk.every
-import io.mockk.verify
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.rippledown.constants.api.SEND_USER_MESSAGE
 import io.rippledown.constants.server.CASE_ID
 import io.rippledown.constants.server.KB_ID
@@ -21,7 +21,7 @@ class ChatManagementTest : OpenRDRServerTestBase() {
         val caseId = 42L
         val userMessage = "The report should include a surfing comment"
         val botResponse = "Shall I add a surfing comment to the report?"
-        every { kbEndpoint.botResponseToUserMessage(userMessage, caseId) } returns botResponse
+        coEvery { kbEndpoint.botResponseToUserMessage(userMessage, caseId) } returns botResponse
 
         //When
         val result = httpClient.post(SEND_USER_MESSAGE) {
@@ -31,7 +31,7 @@ class ChatManagementTest : OpenRDRServerTestBase() {
         }
 
         //Then
-        verify { kbEndpoint.botResponseToUserMessage(userMessage, caseId) }
+        coVerify { kbEndpoint.botResponseToUserMessage(userMessage, caseId) }
         result.status shouldBe HttpStatusCode.OK
         result.body<String>() shouldBe botResponse
     }

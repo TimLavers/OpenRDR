@@ -1,12 +1,16 @@
 package io.rippledown.chat
 
-import io.rippledown.model.RDRCase
+import dev.shreyaspatil.ai.client.generativeai.type.content
+import io.rippledown.chat.service.ChatService
 
-fun responseFor(message: String, case: RDRCase): String {
-    return when (message) {
-        "add a comment" -> "Please provide the comment you would like to add."
-        "delete a comment" -> "Please provide the comment you would like to delete."
-        "update a comment" -> "Please provide the updated comment."
-        else -> "I'm sorry, I didn't understand that. Can you please rephrase?"
-    }
+suspend fun responseFor(message: String, systemInstruction: String): String {
+    val chatService = ChatService(systemInstruction)
+    val chat = chatService.startChat(
+        history = listOf(
+            content(role = "model") { text("Great to meet you. What would you like to know?") },
+        ),
+    )
+    val response = chat.sendMessage(content { text(message) })
+    return response.text ?: ""
+
 }

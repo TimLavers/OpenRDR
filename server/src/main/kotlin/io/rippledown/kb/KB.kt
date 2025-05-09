@@ -14,6 +14,7 @@ import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistentKB
 import io.rippledown.server.logger
+import io.rippledown.toJsonString
 
 class KB(persistentKB: PersistentKB) {
 
@@ -44,8 +45,8 @@ class KB(persistentKB: PersistentKB) {
                 ConditionTip(attributeNames, attributeFor).conditionFor(expression)
         }
         chatService = object : ChatService {
-            override fun botResponse(userMessage: String, case: RDRCase): String =
-                responseFor(userMessage, case)
+            override suspend fun botResponse(userMessage: String, case: RDRCase): String =
+                responseFor(userMessage, case.toJsonString())
         }
     }
 
@@ -284,7 +285,7 @@ class KB(persistentKB: PersistentKB) {
 
     internal fun holdsForSessionCase(condition: Condition) = condition.holds(ruleSession!!.case)
 
-    fun botResponseToUserMessage(message: String, case: RDRCase) = chatService.botResponse(message, case)
+    suspend fun botResponseToUserMessage(message: String, case: RDRCase) = chatService.botResponse(message, case)
 }
 
 interface ConditionParser {
@@ -292,5 +293,5 @@ interface ConditionParser {
 }
 
 interface ChatService {
-    fun botResponse(userMessage: String, case: RDRCase): String = ""
+    suspend fun botResponse(userMessage: String, case: RDRCase): String = ""
 }

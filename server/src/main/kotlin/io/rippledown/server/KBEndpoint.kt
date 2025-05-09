@@ -84,7 +84,7 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
 
     fun conditionHintsForCase(id: Long): ConditionList = kb.conditionHintsForCase(case(id))
 
-    fun botResponseToUserMessage(message: String, caseId: Long): String =
+    suspend fun botResponseToUserMessage(message: String, caseId: Long): String =
         kb.botResponseToUserMessage(message, case(caseId))
 
     fun processCase(externalCase: ExternalCase) = kb.processCase(externalCase)
@@ -141,7 +141,8 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
         return case
     }
 
-    private fun uninterpretedCase(id: Long) = kb.getProcessedCase(id)!!
+    fun uninterpretedCase(id: Long) =
+        kb.getProcessedCase(id) ?: throw IllegalArgumentException("Case with id $id not found")
 
     fun updateCornerstone(request: UpdateCornerstoneRequest) = kb.updateCornerstone(request)
     fun selectCornerstone(index: Int) = kb.selectCornerstone(index)

@@ -42,6 +42,9 @@ class Api(engine: HttpClientEngine = CIO.create()) {
     private suspend fun HttpRequestBuilder.setKBParameter() {
         parameter(KB_ID, kbInfo().id)
     }
+    private fun HttpRequestBuilder.setCaseIdParameter(caseId: Long) {
+        parameter(CASE_ID, caseId)
+    }
 
     fun shutdown() {
 //        client.close()
@@ -124,10 +127,11 @@ class Api(engine: HttpClientEngine = CIO.create()) {
         destination.writeBytes(bytes)
     }
 
-    suspend fun getCase(id: Long): ViewableCase? {
+    suspend fun getCase(caseId: Long): ViewableCase? {
         return try {
-            val result: ViewableCase = client.get("$API_URL$CASE?id=$id") {
+            val result: ViewableCase = client.get("$API_URL$CASE") {
                 setKBParameter()
+                setCaseIdParameter(caseId)
             }.body()
             result
         } catch (e: Exception) {
@@ -237,11 +241,12 @@ class Api(engine: HttpClientEngine = CIO.create()) {
     }
 
     /**
-     * @return the conditions that are suggested for building a rule for the selected Diff in the case's interpretation
+     * @return the conditions that are suggested for building a rule
      */
     suspend fun conditionHints(caseId: Long): ConditionList {
-        return client.get("$API_URL$CONDITION_HINTS?id=$caseId") {
+        return client.get("$API_URL$CONDITION_HINTS") {
             setKBParameter()
+            setCaseIdParameter(caseId)
         }.body()
     }
 
@@ -262,6 +267,7 @@ class Api(engine: HttpClientEngine = CIO.create()) {
             contentType(Plain)
             parameter(CASE_ID, caseId)
             setKBParameter()
+            setCaseIdParameter(caseId)
             setBody(message)
         }.body()
     }

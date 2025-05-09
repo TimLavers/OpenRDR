@@ -158,7 +158,7 @@ class OpenRDRUITest {
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
         coEvery { api.getCase(1) } returns case
         val answer = "the answer is 42"
-        coEvery { api.sendUserMessage(any(), 0) } returns answer
+        coEvery { api.sendUserMessage(any(), any<Long>()) } returns answer
 
         with(composeTestRule) {
             //Given

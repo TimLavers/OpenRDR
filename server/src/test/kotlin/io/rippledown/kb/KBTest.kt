@@ -7,6 +7,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -23,6 +24,7 @@ import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.persistence.inmemory.InMemoryKB
 import io.rippledown.util.shouldBeSameAs
+import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
@@ -852,13 +854,13 @@ class KBTest {
     }
 
     @Test
-    fun `should delegate bot response to the chat service`() {
+    fun `should delegate bot response to the chat service`() = runTest {
         //Given
         val case = createCase("Case")
         val userExpression = "Please add a comment to go to Bondi"
         val botResponse = "Go to Bondi"
         val chatService = mockk<ChatService>()
-        every { chatService.botResponse(userExpression, case) } returns botResponse
+        coEvery { chatService.botResponse(userExpression, case) } returns botResponse
         kb.setChatService(chatService)
 
         //When

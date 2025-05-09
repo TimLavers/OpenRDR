@@ -11,9 +11,9 @@ import io.rippledown.server.ServerApplication
 fun Application.chatManagement(application: ServerApplication) {
     routing {
         post(SEND_USER_MESSAGE) {
+            val kbEndpoint = kbEndpoint(application)
             val userMessage = call.receiveText()
-            val caseId = caseId()
-            val response = kbEndpoint(application).botResponseToUserMessage(userMessage, caseId)
+            val response = kbEndpoint.botResponseToUserMessage(userMessage, caseId())
             call.respond(OK, response)
         }
     }

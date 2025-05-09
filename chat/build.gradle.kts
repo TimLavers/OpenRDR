@@ -9,9 +9,11 @@ dependencies {
     implementation(kotlin("reflect"))
     implementation(libs.logback)
     implementation(libs.generativeai)
-    implementation(libs.ktorClientMock)
     implementation(libs.kotlinxSerializationJson)
+    implementation(libs.bundles.ktor)
+
+    testImplementation(testFixtures(project(":common")))
+    testImplementation(libs.kotlinxCoroutinesTest)
     testImplementation(libs.kotestAssertions)
     testImplementation(libs.mockk)
-
 }

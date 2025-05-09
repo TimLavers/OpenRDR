@@ -31,7 +31,11 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
 
     fun select(caseName: String) {
         waitForCaseListToContain(caseName)
-        execute { caseNameContext(caseName)!!.accessibleAction.doAccessibleAction(0) }
+        requireCaseToBeShown(caseName)
+        val caseNameContext = caseNameContext(caseName)!!
+        execute {
+            caseNameContext.accessibleAction.doAccessibleAction(0)
+        }
     }
 
     private fun caseNameContext(caseName: String) = contextProvider().find("$CASE_NAME_PREFIX$caseName", LABEL)
@@ -48,5 +52,8 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
 
     fun requireCaseListToBeShown() {
         waitUntilAsserted { caseListContext() shouldNotBe null }
+    }
+    fun requireCaseToBeShown(caseName: String) {
+        waitUntilAsserted { caseNameContext(caseName) shouldNotBe null }
     }
 }

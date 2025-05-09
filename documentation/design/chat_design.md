@@ -1,8 +1,85 @@
-# Prompt design for a chat facility
+## What do we want to achieve?
 
-The following design suggestions for an LLM prompt were provided by Grok in response to the task below:
+When viewing a case and its report, if the report is not appropriate for the case, the actions available to the user
+are:
 
-## Task for Grok
+- Add another comment (new or existing)
+- Remove a comment
+- Replace a comment by another one (new or existing)
+
+The user then has to provide the justification for that action which is one or more boolean expressions involving the
+case attributes and values which must evaluate as true for this case.
+
+The user then has to review the cornerstone cases and decide whether the changed report is appropriate for them. If not,
+the user can add a further condition to the current rule which will be false for the cornerstone case and so exclude
+that case from the rule action. Once this is done, the interpretive report for that cornerstone case will remain
+unchanged.
+
+GUI controls have been provided to do all this. However, I want to enhance this application by providing a more
+user-friendly interface which is a chat window. In that window the user can simply say how they want the report to
+change, and the justification for this change. The user's request will then be given to an LLM which may ask the user
+further questions to clarify exactly what is meant, and will then provide a structured output to the backend of the
+application which will then automatically add the rule that effects the report change requested by the user.
+
+This avoids the user having to learn how to use the GUI controls, which may be particularly helpful for new or
+infrequent users. It also allows the user to enter their request in their own words, which may be more natural and
+intuitive than using a formal rule-building workflow.
+
+## Design options
+
+### Multiple LLM types?
+
+We are already using the Gemini LLM to perform the task to translate a user-entered justification into a condition class
+used in the rule that is being added.
+
+The options for the chat LLM are:
+
+1. Use Gemini again, or
+2. Use a different LLM which may be better suited for the chat task
+
+We have chosen the simplest option which is to stay with Gemini as the API is already in place.
+See [Google Generative AI](https://github.com/PatilShreyas/generative-ai-kmp/).
+
+If there are problems with this approach, we can experiment with a different LLM at that time.
+
+### Combining the rule addition chat task with the condition translation task?
+
+We have chosen to keep the two tasks separate. The chat LLM will focus on gathering the rule information and structuring
+it, while the existing LLM instance will handle the translation of the justification into a formal condition.
+
+There may be some advantage for the translation task if the chat LLM is also used for the translation task, as it may be
+able to use the context of the conversation to improve its understanding of the user's intent. However, this would
+require additional complexity in the design of the system. Again, we can consider combining the two tasks if we find
+that the current approach is not working well.
+
+### Interfacing the LLM with the backend or frontend?
+
+We have chosen to interface the chat LLM with the backend, as was done with the LLM used for the translation task.
+This allows us to use the structured output from the chat LLM directly in the backend to add the rule to the knowledge
+base. This avoids complicating the frontend with additional logic and API calls to instruct the backend on how to add
+the rule.
+
+See [ChaKt-KMP]("https://github.com/PatilShreyas/ChaKt-KMP") for an example of a chat LLM interfaced directly with the
+frontend.
+
+## Prompt design for a chat facility
+
+### Information to be passed to the chat LLM
+
+The chat LLM will need to be provided with the following minimum information:
+
+- the user's request
+- the conversation history
+- the current report comments
+- all the available comments in the Knowledge Base that could be used in the report
+
+### Prompt design suggestions from an LLM
+
+--- THE FOLLOWING TO BE REMOVED ONCE THE INITIAL PROMPT DESIGN HAS BEEN FINALISED---
+
+The following design suggestions for the chat LLM prompt were provided by Grok in response to the task below:
+
+#### Task for Grok
 
 I have developed an application that allows a user to build their own knowledge base, where each knowledge base
 generates a report consisting of a set of comments appropriate for a given case.
@@ -43,14 +120,14 @@ rule that effects the report change requested by the user.
 
 So my question is, how do I engineer a set of prompts for the LLM that will do all this?
 
-## Grok's response
+#### Grok's response
 
 To enhance your TSH knowledge base application with a chat-based interface that allows users to modify report comments
 using natural language, you need to engineer a set of prompts for a Large Language Model (LLM) that can interpret user
 requests, clarify ambiguities, and generate structured outputs for your application's backend. Below is a comprehensive
 guide to designing these prompts, based on your application’s requirements and the screenshot provided.
 
-## Understanding the Goal
+#### Understanding the Goal
 
 Your application generates reports with comments (e.g., "A mildly reduced F4 with a normal TSH may be due to
 non-thyroidal illness or pituitary hypothyroidism") based on case attributes (e.g., TSH = 0.74 mU/L, Free T4 = 8 pmol/L)
@@ -71,7 +148,7 @@ most 20%") that must be true for the case. The LLM should:
 Since your system already uses an LLM (Gemini) to translate justifications into formal conditions, the conversational
 LLM can focus on gathering information and structuring it, leaving the translation to the existing functionality.
 
-## Prompt Design strategy
+#### Prompt Design strategy
 
 The LLM will operate in a multi-turn chat environment, where it must:
 
@@ -89,7 +166,7 @@ To achieve this, I’ll design a single, flexible prompt template that includes:
 The system will update the conversation history with each user message and LLM response, allowing the LLM to track
 progress and decide when to output the JSON.
 
-## The Prompt Template
+#### The Prompt Template
 
 ```plaintext
 You are an assistant helping a user modify a medical knowledge base report through a chat interface. The user is currently viewing a case and its generated report, which consists of one or more comments. The user wants to change the report by adding, removing, or replacing comments, and they must provide a justification for this change in natural language.
@@ -140,7 +217,7 @@ Based on the conversation so far, respond with either:
 - The structured JSON output if all information is complete.
 ```
 
-### Example 1: Adding a Comment
+#### Example 1: Adding a Comment
 
 - User: "I want to add another comment because the patient is young."
 - Prompt Input:
@@ -180,7 +257,7 @@ Current Report Comments:
 }
 ```
 
-### Example 2: Replacing a Comment
+#### Example 2: Replacing a Comment
 
 -User: "Replace the current comment with 'Check for secondary hypothyroidism' because TSH is normal but Free T4 is low."
 
@@ -207,7 +284,7 @@ hypothyroidism.",
 }
 ```
 
-### Example 3: Ambiguous Request
+#### Example 3: Ambiguous Request
 
 - User: "Change the report."
 - Prompt Input:
@@ -223,7 +300,7 @@ Current Report Comments:
 
 - LLM Response: "Do you want to add, remove, or replace a comment?"
 
-## Handling Edge Cases
+#### Handling Edge Cases
 
 - Multiple Comments: If the report has multiple comments (unlike the screenshot’s single comment), the LLM asks for
   clarification when the user says "the comment" (e.g., "Which comment do you want to remove?").
@@ -232,14 +309,14 @@ Current Report Comments:
 - Incorrect References: If the user tries to remove a comment not in the report, the LLM might ask, "Did you mean to add
   this comment instead?"
 
-## Integration with Your System
+#### Integration with Your System
 
 - Input: The backend provides the current report comments and updates the conversation history.
 - Output: The LLM’s JSON is sent to the backend, where the justification field is passed to the existing Gemini LLM for
   translation into formal conditions.
 - State Management: The chat system maintains the conversation history, ensuring context persists across turns.
 
-## Why This Works
+#### Why This Works
 
 - Clarity: The prompt explicitly defines actions, fields, and clarification steps.
 - Flexibility: It handles single- and multi-turn conversations.
