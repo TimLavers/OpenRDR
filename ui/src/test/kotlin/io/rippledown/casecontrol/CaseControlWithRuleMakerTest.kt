@@ -34,7 +34,7 @@ class CaseControlWithRuleMakerTest {
     val suggestedCondition = NonEditableSuggestedCondition(condition)
     val viewableCase = createCaseWithInterpretation(
         name = caseName,
-        id = id,
+        caseId = id,
         conclusionTexts = listOf(bondiComment)
     )
     val cornerstoneStatus = CornerstoneStatus(viewableCase, 42, 84)

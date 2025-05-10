@@ -55,7 +55,7 @@ class CaseControlTest {
     fun `should show case view`() = runTest {
         val viewableCase = createCaseWithInterpretation(
             name = "case 1",
-            id = 1,
+            caseId = 1,
             conclusionTexts = listOf()
         )
 
@@ -134,7 +134,7 @@ fun main() {
         val bondiComment = "Go to Bondi now!"
         val viewableCase = createCaseWithInterpretation(
             name = caseName,
-            id = id,
+            caseId = id,
             conclusionTexts = listOf(bondiComment)
         )
         val condition = hasCurrentValue(1, Attribute(2, "Surf 1"))

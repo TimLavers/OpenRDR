@@ -134,7 +134,7 @@ class Api(engine: HttpClientEngine = CIO.create()) {
                 setCaseIdParameter(caseId)
             }.body()
             result
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }

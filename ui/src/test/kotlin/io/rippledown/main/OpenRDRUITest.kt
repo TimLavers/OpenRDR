@@ -9,7 +9,6 @@ import io.mockk.mockk
 import io.rippledown.appbar.assertKbNameIs
 import io.rippledown.casecontrol.*
 import io.rippledown.chat.*
-import io.rippledown.constants.chat.CHAT_BOT_INITIAL_MESSAGE
 import io.rippledown.constants.interpretation.ADD_COMMENT_PREFIX
 import io.rippledown.constants.interpretation.REMOVE_COMMENT_PREFIX
 import io.rippledown.constants.interpretation.REPLACED_COMMENT_PREFIX
@@ -117,7 +116,7 @@ class OpenRDRUITest {
             waitForCaseToBeShowing(caseA)
 
             //Then
-            requireInitialBotMessageShowing()
+            requireEmptyChatHistory()
         }
     }
 
@@ -173,7 +172,6 @@ class OpenRDRUITest {
 
             //Then
             val expected = listOf(
-                BotMessage(CHAT_BOT_INITIAL_MESSAGE),
                 UserMessage(userMessage),
                 BotMessage(answer)
             )
@@ -275,12 +273,12 @@ class OpenRDRUITest {
 
         val viewableCaseA = createCaseWithInterpretation(
             name = caseA,
-            id = 1,
+            caseId = 1,
             conclusionTexts = listOf(bondiComment)
         )
         val viewableCaseB = createCaseWithInterpretation(
             name = caseB,
-            id = 2,
+            caseId = 2,
             conclusionTexts = listOf(malabarComment)
         )
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
@@ -318,12 +316,12 @@ class OpenRDRUITest {
 
         val viewableCaseA = createCaseWithInterpretation(
             name = caseA,
-            id = 1,
+            caseId = 1,
             conclusionTexts = listOf(bondiComment)
         )
         val viewableCaseB = createCaseWithInterpretation(
             name = caseB,
-            id = 2,
+            caseId = 2,
             conclusionTexts = listOf(malabarComment)
         )
         val normalTSH = EpisodicCondition(null, Attribute(1, "tsh"), Normal, Current)
@@ -549,7 +547,7 @@ class OpenRDRUITest {
             val id = 1L
             val caseId = CaseId(id = id, name = caseName)
             val bondiComment = "Go to Bondi"
-            val case = createCaseWithInterpretation(caseName, id = id, conclusionTexts = listOf(bondiComment))
+            val case = createCaseWithInterpretation(caseName, caseId = id, conclusionTexts = listOf(bondiComment))
             coEvery { api.getCase(1) } returns case
             coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
             coEvery { api.startRuleSession(any()) } returns CornerstoneStatus()
@@ -580,7 +578,7 @@ class OpenRDRUITest {
             val caseId = CaseId(id = id, name = caseName)
             val bondiComment = "Go to Bondi"
             val malabarComment = "Go to Malabar"
-            val case = createCaseWithInterpretation(caseName, id = id, conclusionTexts = listOf(bondiComment))
+            val case = createCaseWithInterpretation(caseName, caseId = id, conclusionTexts = listOf(bondiComment))
             coEvery { api.getCase(1) } returns case
             coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
             coEvery { api.startRuleSession(any()) } returns CornerstoneStatus()

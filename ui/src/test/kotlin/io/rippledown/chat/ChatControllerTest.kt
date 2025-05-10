@@ -33,7 +33,7 @@ class ChatControllerTest {
                 ChatController(handler)
             }
             // Then
-            requireInitialBotMessageShowing()
+            requireEmptyChatHistory()
         }
     }
 
@@ -52,7 +52,6 @@ class ChatControllerTest {
             verify { handler.sendUserMessage(userMessage) }
 
             val expected = listOf(
-                initialBotMessage,
                 UserMessage(userMessage)
             )
             requireChatMessagesShowing(expected)
@@ -77,7 +76,6 @@ class ChatControllerTest {
 
             // Then
             val expected = listOf(
-                initialBotMessage,
                 BotMessage(botResponse)
             )
             requireChatMessagesShowing(expected)
@@ -104,7 +102,6 @@ class ChatControllerTest {
 
             // Then
             val expected = listOf(
-                initialBotMessage,
                 BotMessage(botResponse),
                 BotMessage(botResponse)
             )
@@ -132,7 +129,6 @@ class ChatControllerTest {
 
             // Then
             val expected = listOf(
-                initialBotMessage,
                 UserMessage(userMessage),
                 BotMessage(CHAT_BOT_NO_RESPONSE_MESSAGE),
 

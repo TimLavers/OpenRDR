@@ -10,7 +10,6 @@ import io.rippledown.model.rule.RuleSummary
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.system.measureTimeMillis
 
@@ -50,24 +49,24 @@ fun createCase(caseId: CaseId, attributesWithValues: List<AttributeWithValue> = 
 
 fun createCase(
     name: String = "",
-    id: Long? = null,
+    caseId: Long? = null,
     attributesWithResults: List<AttributeWithValue> = listOf(AttributeWithValue())
 ): ViewableCase {
     val builder = RDRCaseBuilder()
     attributesWithResults.forEach {
         builder.addResult(it.attribute, 99994322, it.result)
     }
-    val rdrCase = builder.build(name, id)
+    val rdrCase = builder.build(name, caseId)
     val attributes = attributesWithResults.map { it.attribute }
     return ViewableCase(rdrCase, CaseViewProperties(attributes))
 }
 
 fun createCaseWithInterpretation(
     name: String = "",
-    id: Long? = null,
+    caseId: Long? = null,
     conclusionTexts: List<String> = listOf(),
 ): ViewableCase {
-    val case = createCase(name, id, listOf(AttributeWithValue()))
+    val case = createCase(name, caseId, listOf(AttributeWithValue()))
     var conclusionId = 10
     val interp = Interpretation(case.case.caseId).apply {
         conclusionTexts.forEach { text ->

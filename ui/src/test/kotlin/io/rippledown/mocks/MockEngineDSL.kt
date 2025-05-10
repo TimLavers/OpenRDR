@@ -6,6 +6,7 @@ import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.utils.io.*
 import io.rippledown.constants.api.*
+import io.rippledown.constants.server.CASE_ID
 import io.rippledown.constants.server.EXPRESSION
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
@@ -16,7 +17,6 @@ import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.sample.SampleKB
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 fun mock(config: EngineConfig) = EngineBuilder(config).build()
@@ -75,7 +75,7 @@ private class EngineBuilder(private val config: EngineConfig) {
             }
 
             CASE -> {
-                if (config.expectedCaseId != null) request.url.parameters["id"] shouldBe config.expectedCaseId.toString()
+                if (config.expectedCaseId != null) request.url.parameters[CASE_ID] shouldBe config.expectedCaseId.toString()
                 httpResponseData(json.encodeToString(config.returnCase))
             }
 

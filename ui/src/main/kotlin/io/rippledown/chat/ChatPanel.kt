@@ -12,10 +12,11 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons.AutoMirrored.Filled
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ElevatedSuggestionChip
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -148,7 +149,7 @@ fun ChatPanel(messages: List<ChatMessage> = emptyList(), onMessageSent: OnMessag
                             }
                         },
                     ) {
-                        IconButton(
+                        FilledIconButton(
                             onClick = {
                                 if (inputText.text.isNotBlank()) {
                                     val messageText = inputText.text.trim()
@@ -161,7 +162,7 @@ fun ChatPanel(messages: List<ChatMessage> = emptyList(), onMessageSent: OnMessag
                                 .semantics { contentDescription = CHAT_SEND }
                         ) {
                             Icon(
-                                imageVector = Filled.ArrowForward,
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                 contentDescription = "Send",
                                 tint = if (inputText.text.isNotBlank()) Blue else LIGHT_GREY
                             )

@@ -55,6 +55,7 @@ class ApiTest {
 
     @Test
     fun getCaseWithInterpretationTest() = runTest {
+        //Given
         val malabarComment = "go to Malabar"
         val case = createCaseWithInterpretation("A", 1, conclusionTexts = listOf(malabarComment))
 
@@ -65,8 +66,10 @@ class ApiTest {
             returnCase = case
             expectedCaseId = 1
         }
-
+        //When
         val retrieved = Api(mock(config)).getCase(1)!!
+
+        //Then
         retrieved shouldBe case
         retrieved.viewableInterpretation shouldBe case.viewableInterpretation
         retrieved.viewableInterpretation.latestText() shouldBe malabarComment

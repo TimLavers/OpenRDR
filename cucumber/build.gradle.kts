@@ -43,8 +43,9 @@ val prerequisiteTasks = listOf(
     tasks.getByName("testClasses")
 )
 
-listOf("application", "attributes", "cases", "conditions", "kb", "rulebuilding", "samples").forEach { taskName ->
-    tasks.register<JavaExec>(taskName) {
+val featureFolders = listOf("attributes", "cases", "conditions", "kb", "rulebuilding", "samples")
+featureFolders.forEach { folderName ->
+    tasks.register<JavaExec>(folderName) {
         setupExec()
         args = argsForCuke() + listOf(
             "$pathToRequirements/$name",
@@ -56,14 +57,7 @@ listOf("application", "attributes", "cases", "conditions", "kb", "rulebuilding",
 }
 
 tasks.register("cucumberTest") {
-    dependsOn(
-        "attributes",
-        "cases",
-        "conditions",
-        "kb",
-        "rulebuilding",
-        "samples"
-    )
+    dependsOn(featureFolders.map { folderName -> tasks.getByName(folderName) })
 }
 
 tasks.register<JavaExec>("cucumberSingleTest") {

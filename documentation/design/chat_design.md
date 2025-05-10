@@ -73,6 +73,22 @@ The chat LLM will need to be provided with the following minimum information:
 - the current report comments
 - all the available comments in the Knowledge Base that could be used in the report
 
+### Conversation design
+
+The chat LLM will operate in a multi-turn chat environment following the sequence below:
+
+1. the user selects a case
+2. the conversation service starts a chat with the case data as part of the system instruction
+3. the model asks the initial question to the user (e.g. "what change do you want to make to the report?")
+4. the user enters their request
+5. the model asks for confirmation of the intended report action, or else asks to clarify that action
+6. the user confirms or clarifies the action
+7. the model asks for the reason for the action (i.e. the conditions that must be true for the case)
+8. the user enters the reason
+9. the model confirms the reason, or else responds with a question to clarify that reason
+10. once both the action and reason are confirmed, the model outputs a structured JSON response to the backend
+11. the backend processes the JSON and adds the rule to the knowledge base
+
 ### Prompt design suggestions from an LLM
 
 --- THE FOLLOWING TO BE REMOVED ONCE THE INITIAL PROMPT DESIGN HAS BEEN FINALISED---
