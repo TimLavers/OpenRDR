@@ -1,5 +1,6 @@
 package io.rippledown.kb
 
+import io.rippledown.chat.conversation.ConversationService
 import io.rippledown.chat.responseFor
 import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
 import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
@@ -37,14 +38,14 @@ class KB(persistentKB: PersistentKB) {
 
     //a var so it can be mocked in tests
     private var conditionParser: ConditionParser
-    private var chatService: ChatService
+    private var chatService: ConversationService
 
     init {
         conditionParser = object : ConditionParser {
             override fun parse(expression: String, attributeNames: List<String>, attributeFor: AttributeFor) =
                 ConditionTip(attributeNames, attributeFor).conditionFor(expression)
         }
-        chatService = object : ChatService {
+        chatService = object : ConversationService {
             override suspend fun botResponse(userMessage: String, case: RDRCase): String =
                 responseFor(userMessage, case.toJsonString())
         }
@@ -264,7 +265,7 @@ class KB(persistentKB: PersistentKB) {
     }
 
     //Allow a mock chat service to be set so we can avoid connecting to Gemini for all the tests
-    fun setChatService(service: ChatService) {
+    fun setChatService(service: ConversationService) {
         chatService = service
     }
 
@@ -292,6 +293,3 @@ interface ConditionParser {
     fun parse(expression: String, attributeNames: List<String>, attributeFor: (String) -> Attribute): Condition? = null
 }
 
-interface ChatService {
-    suspend fun botResponse(userMessage: String, case: RDRCase): String = ""
-}
