@@ -264,12 +264,18 @@ class ApiTest {
 
     @Test
     fun `should return description of most recent rule`() = runTest {
-        val config = config {
-
-        }
+        val config = config {}
         with(Api(mock(config)).lastRuleDescription()) {
             this.description shouldBe "It was a great rule, but it has to go."
             this.canRemove shouldBe true
         }
+    }
+
+    @Test
+    fun `undo the last rule`() = runTest {
+        val config = config {}
+        config.lastRuleUndoCalled shouldBe false
+        Api(mock(config)).undoLastRule()
+        config.lastRuleUndoCalled shouldBe true
     }
 }

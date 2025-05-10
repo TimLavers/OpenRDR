@@ -49,6 +49,7 @@ class EngineConfig {
     var sampleKB: SampleKB? = null
 
     var undoRuleDescription: UndoRuleDescription = UndoRuleDescription("It was a great rule, but it has to go.", true)
+    var lastRuleUndoCalled = false
 
     val defaultKB = KBInfo("Thyroids")
     var returnKBInfo = defaultKB
@@ -179,8 +180,11 @@ private class EngineBuilder(private val config: EngineConfig) {
             LAST_RULE_DESCRIPTION -> {
                 if (request.method == HttpMethod.Get) {
                     httpResponseData(json.encodeToString(config.undoRuleDescription))
-                } else {
+                } else if (request.method == HttpMethod.Delete){
+                    config.lastRuleUndoCalled = true
                     httpResponseData("OK")
+                } else {
+                    httpResponseData("No way!")
                 }
             }
 

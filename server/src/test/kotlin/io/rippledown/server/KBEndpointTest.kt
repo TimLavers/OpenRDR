@@ -72,6 +72,13 @@ internal class KBEndpointTest {
     }
 
     @Test
+    fun undoLastRuleTest() {
+        val kb = mockk<KB>(relaxed = true)
+        KBEndpoint(kb, File("kbe")).undoLastRule()
+        verify { kb.undoLastRuleSession() }
+    }
+
+    @Test
     fun `should delegate parsing a condition to the KB`() {
         // Given
         val kb = mockk<KB>(relaxed = true)

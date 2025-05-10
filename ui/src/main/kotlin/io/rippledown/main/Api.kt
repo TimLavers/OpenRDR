@@ -256,5 +256,12 @@ class Api(engine: HttpClientEngine = CIO.create()) {
             setKBParameter()
         }.body<UndoRuleDescription>()
     }
+
+    suspend fun undoLastRule(): HttpStatusCode {
+        client.delete("$API_URL$LAST_RULE_DESCRIPTION") {
+            setKBParameter()
+        }
+        return HttpStatusCode.OK
+    }
 }
 

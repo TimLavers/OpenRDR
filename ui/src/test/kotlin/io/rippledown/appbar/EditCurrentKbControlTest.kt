@@ -6,6 +6,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.constants.main.EDIT_KB_DESCRIPTION_TEXT_DESCRIPTION
+import io.rippledown.model.rule.UndoRuleDescription
 import org.junit.Before
 import org.junit.Rule
 import javax.swing.SwingUtilities.invokeAndWait
@@ -16,6 +17,7 @@ class EditCurrentKbControlTest {
     @get:Rule
     val composeTestRule = createComposeRule()
     private val bondiDescription = "An iconic white sanded beach with a good surf in most conditions"
+    private val ruleDescription = UndoRuleDescription("Not a bad rule!", true)
 
     private lateinit var handler: KbEditControlHandler
 
@@ -23,6 +25,7 @@ class EditCurrentKbControlTest {
     fun setup() {
         handler = mockk<KbEditControlHandler>(relaxed = true)
         every { handler.kbDescription } returns { bondiDescription }
+        every { handler.lastRuleDescription } returns { ruleDescription }
     }
 
     @OptIn(ExperimentalTestApi::class)
@@ -71,17 +74,16 @@ class EditCurrentKbControlTest {
             setContent {
                 EditCurrentKbControl(handler)
             }
-            assertKbDescriptionMenuItemIsNotShowing()
+            assertUndoLastRuleMenuItemIsNotShowing()
             clickEditKbDropdown()
 
             assertEditKbDescriptionMenuItemIsShowing()
-            clickKbDescriptionMenuItem()
-            assertKbDescriptionOkButtonIsEnabled()
-            onNodeWithContentDescription(EDIT_KB_DESCRIPTION_TEXT_DESCRIPTION)
-                .assertIsEnabled()
-                .assertIsDisplayed()
-            waitUntilExactlyOneExists(hasText(bondiDescription))
+            clickUndoLastRuleMenuItem()
 
+            // Last rule description should show.
+            waitUntilExactlyOneExists(hasText(ruleDescription.description))
+
+            // Drop-down menu should be hidden.
             assertKbDescriptionMenuItemIsNotShowing()
         }
     }

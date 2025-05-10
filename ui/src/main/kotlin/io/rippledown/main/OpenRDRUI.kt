@@ -28,10 +28,7 @@ import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.diff.Removal
 import io.rippledown.model.diff.Replacement
-import io.rippledown.model.rule.CornerstoneStatus
-import io.rippledown.model.rule.RuleRequest
-import io.rippledown.model.rule.SessionStartRequest
-import io.rippledown.model.rule.UpdateCornerstoneRequest
+import io.rippledown.model.rule.*
 import io.rippledown.sample.SampleKB
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.runBlocking
@@ -96,6 +93,10 @@ fun OpenRDRUI(handler: Handler) {
 
                 override var setKbDescription: (description: String) -> Unit = { runBlocking { api.setKbDescription(it) } }
                 override var kbDescription: () -> String = { runBlocking { api.kbDescription() } }
+                override var lastRuleDescription: () -> UndoRuleDescription = { runBlocking { api.lastRuleDescription() } }
+                override var undoLastRule: () -> Unit = {
+                    runBlocking { api.undoLastRule() }
+                }
             })
         },
         bottomBar = {

@@ -91,4 +91,14 @@ class KBEditingTest: OpenRDRServerTestBase() {
         result.body<UndoRuleDescription>() shouldBe undoRuleDescription
         verify { kbEndpoint.descriptionOfMostRecentRule() }
     }
+
+    @Test
+    fun undoLastRule() = testApplication {
+        setup()
+        val result = httpClient.delete(LAST_RULE_DESCRIPTION) {
+            parameter(KB_ID, kbId)
+        }
+        result.status shouldBe HttpStatusCode.OK
+        verify { kbEndpoint.undoLastRule() }
+    }
  }
