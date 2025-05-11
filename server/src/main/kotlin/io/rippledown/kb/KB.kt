@@ -1,7 +1,6 @@
 package io.rippledown.kb
 
 import io.rippledown.chat.conversation.ConversationService
-import io.rippledown.chat.responseFor
 import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
 import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
 import io.rippledown.expressionparser.AttributeFor
@@ -15,7 +14,6 @@ import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistentKB
 import io.rippledown.server.logger
-import io.rippledown.toJsonString
 
 class KB(persistentKB: PersistentKB) {
 
@@ -38,17 +36,14 @@ class KB(persistentKB: PersistentKB) {
 
     //a var so it can be mocked in tests
     private var conditionParser: ConditionParser
-    private var chatService: ConversationService
+    private var conversationService: ConversationService
 
     init {
         conditionParser = object : ConditionParser {
             override fun parse(expression: String, attributeNames: List<String>, attributeFor: AttributeFor) =
                 ConditionTip(attributeNames, attributeFor).conditionFor(expression)
         }
-        chatService = object : ConversationService {
-            override suspend fun botResponse(userMessage: String, case: RDRCase): String =
-                responseFor(userMessage, case.toJsonString())
-        }
+        conversationService = io.rippledown.chat.conversation.Conversation()
     }
 
     fun description() = metaInfo.getDescription()
@@ -266,7 +261,7 @@ class KB(persistentKB: PersistentKB) {
 
     //Allow a mock chat service to be set so we can avoid connecting to Gemini for all the tests
     fun setChatService(service: ConversationService) {
-        chatService = service
+        conversationService = service
     }
 
     fun conditionForExpression(expression: String, attributeNames: List<String>): ConditionParsingResult {
@@ -286,7 +281,8 @@ class KB(persistentKB: PersistentKB) {
 
     internal fun holdsForSessionCase(condition: Condition) = condition.holds(ruleSession!!.case)
 
-    suspend fun botResponseToUserMessage(message: String, case: RDRCase) = chatService.botResponse(message, case)
+    suspend fun startConversation(case: RDRCase) = conversationService.startConversation(case)
+    suspend fun botResponseToUserMessage(message: String, case: RDRCase) = conversationService.response(message, case)
 }
 
 interface ConditionParser {

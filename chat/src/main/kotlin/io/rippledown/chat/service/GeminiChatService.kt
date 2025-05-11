@@ -35,7 +35,7 @@ import java.lang.System.getenv
  * Acknowledgement: This code is based on the work of Shreyas Patil
  * @see <a href="https://github.com/PatilShreyas/ChaKt-KMP">ChaKt-KMP</a>
  */
-class ChatService(systemInstruction: String) {
+class GeminiChatService(systemInstruction: String) {
     private val GEMINI_MODEL = "gemini-2.0-flash"
     private var GEMINI_API_KEY = getenv("GEMINI_API_KEY") ?: ""
 
@@ -66,5 +66,5 @@ class ChatService(systemInstruction: String) {
     /**
      * Creates a chat instance which internally tracks the ongoing conversation with the model
      */
-    fun startChat(history: List<Content>) = model.startChat(history)
+    fun startChat(history: List<Content> = emptyList()) = model.startChat(history)
 }

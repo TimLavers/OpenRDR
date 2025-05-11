@@ -11,6 +11,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import io.rippledown.chat.conversation.ConversationService
 import io.rippledown.model.*
 import io.rippledown.model.condition.*
 import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals
@@ -854,14 +855,30 @@ class KBTest {
     }
 
     @Test
-    fun `should delegate bot response to the chat service`() = runTest {
+    fun `should delegate starting a conversation to the conversation service`() = runTest {
+        //Given
+        val case = createCase("Case")
+        val botResponse = "Go to Bondi"
+        val conversationService = mockk<ConversationService>()
+        coEvery { conversationService.startConversation(case) } returns botResponse
+        kb.setChatService(conversationService)
+
+        //When
+        val response = kb.startConversation(case)
+
+        //Then
+        response shouldBe botResponse
+    }
+
+    @Test
+    fun `should delegate bot response to the conversation service`() = runTest {
         //Given
         val case = createCase("Case")
         val userExpression = "Please add a comment to go to Bondi"
         val botResponse = "Go to Bondi"
-        val chatService = mockk<ChatService>()
-        coEvery { chatService.botResponse(userExpression, case) } returns botResponse
-        kb.setChatService(chatService)
+        val conversationService = mockk<ConversationService>()
+        coEvery { conversationService.response(userExpression, case) } returns botResponse
+        kb.setChatService(conversationService)
 
         //When
         val response = kb.botResponseToUserMessage(userExpression, case)
