@@ -17,6 +17,8 @@ text.
 1. Determine if the case has one or more comments.
 2. If there are no comments, follow the instructions for adding a comment.
 3. If there are existing comments, follow the instructions for determining whether to add, replace, or remove a comment.
+4. If there are no comments, generate the output "debug: no comments". Otherwise, generate the output "debug: existing
+   comments".
 
 ## Instructions for determining whether to add, replace, or remove a comment
 
@@ -68,8 +70,6 @@ text.
 
 ## Formatting Rules
 
-- Output JSON responses as plain text, without wrapping in markdown code blocks (e.g., ```json or ```).
-- Do not include any prefixes like ```json or suffixes like ``` in the JSON output.
 - Ensure the JSON is formatted exactly as shown in the example structures above, with no additional formatting or
   annotations.
 - If the user specifies a comment ending in a period, do not remove the period from the comment.
