@@ -30,7 +30,6 @@ import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.sample.SampleKB
 import java.io.File
 
-
 class Api(engine: HttpClientEngine = CIO.create()) {
     private var currentKB: KBInfo? = null
     private val client = HttpClient(engine) {
@@ -39,12 +38,9 @@ class Api(engine: HttpClientEngine = CIO.create()) {
         }
     }
 
-    private suspend fun HttpRequestBuilder.setKBParameter() {
-        parameter(KB_ID, kbInfo().id)
-    }
-    private fun HttpRequestBuilder.setCaseIdParameter(caseId: Long) {
-        parameter(CASE_ID, caseId)
-    }
+    private suspend fun HttpRequestBuilder.setKBParameter() = parameter(KB_ID, kbInfo().id)
+
+    private fun HttpRequestBuilder.setCaseIdParameter(caseId: Long) = parameter(CASE_ID, caseId)
 
     fun shutdown() {
 //        client.close()
@@ -85,7 +81,7 @@ class Api(engine: HttpClientEngine = CIO.create()) {
 
     suspend fun kbList() = client.get("$API_URL$KB_LIST").body<List<KBInfo>>()
 
-    suspend fun kbDescription() : String {
+    suspend fun kbDescription(): String {
         return client.get("$API_URL$KB_DESCRIPTION") {
             contentType(Plain)
             setKBParameter()
@@ -104,7 +100,8 @@ class Api(engine: HttpClientEngine = CIO.create()) {
         val data = file.readBytes()
         currentKB = client.post("$API_URL$IMPORT_KB") {
             contentType(ContentType.Application.Zip)
-            setBody(MultiPartFormDataContent(
+            setBody(
+                MultiPartFormDataContent(
                 formData {
                     append(
                         "document",
@@ -262,10 +259,17 @@ class Api(engine: HttpClientEngine = CIO.create()) {
         }.body<ConditionParsingResult>()
     }
 
+    suspend fun startConversation(caseId: Long): String {
+        return client.post("$API_URL$START_CONVERSATION") {
+            contentType(Plain)
+            setKBParameter()
+            setCaseIdParameter(caseId)
+        }.body()
+    }
+
     suspend fun sendUserMessage(message: String, caseId: Long): String {
         return client.post("$API_URL$SEND_USER_MESSAGE") {
             contentType(Plain)
-            parameter(CASE_ID, caseId)
             setKBParameter()
             setCaseIdParameter(caseId)
             setBody(message)

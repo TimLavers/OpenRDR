@@ -8,74 +8,79 @@ import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.condition.lessThanOrEqualTo
 import io.rippledown.model.rule.Rule
+import io.rippledown.shouldContainIgnoringMultipleWhitespace
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
 import kotlin.test.Test
 
 class ConversationTest {
+    lateinit var conversation: ConversationService
+
+    @BeforeEach
+    fun setUp() {
+        conversation = Conversation()
+    }
+
     @Test
     fun `for a case with no comments, the model should start a conversation by asking if a comment should be added`() =
-        runTest() {
+        runTest {
             // Given
-            val conversation = Conversation()
             val case = caseWithNoComments()
 
             // When
             val response = conversation.startConversation(case)
 
             // Then
-            response shouldContain "Would you like to add a comment to this report?"
+            response shouldContain QUESTION_IF_THERE_ARE_NO_EXISTING_COMMENTS
         }
 
     @Test
-    fun `when the comment to be added is described, the model should request confirmation`() =
-        runTest() {
+    fun `for a case with at least one comment, the model should start a conversation by asking what change is required to the report`() =
+        runTest {
             // Given
-            val conversation = Conversation()
-            val case = caseWithNoComments()
-            conversation.startConversation(case)
-
-            // When
-            val response = conversation.sendUserMessage("Add the comment 'Go to Bondi'")
-
-            // Then
-            response shouldContain CONFIRMATION_START
-        }
-
-    @Test
-    fun `when the comment to be added is confirmed, the model output a json object representing the rule action`() =
-        runTest() {
-            // Given
-            val conversation = Conversation()
-            val case = caseWithNoComments()
-            conversation.startConversation(case)
-            val bondiComment = "Go to Bondi."
-            conversation.sendUserMessage("Add the comment '$bondiComment'")
-
-            // When
-            val confirmationResponse = conversation.sendUserMessage("Yes")
-
-
-            // Then
-            confirmationResponse shouldContain """
-                {
-                    "action": "add",
-                    "comment": "$bondiComment"
-                }
-            """.trimIndent()
-        }
-
-    @Test
-    fun `for a case with 2 comments, the model should start a conversation by asking what change is required to the report`() =
-        runTest() {
-            // Given
-            val conversation = Conversation()
             val case = caseWithComments()
 
             // When
             val response = conversation.startConversation(case)
 
             // Then
-            response shouldContain "Would you like to change the report?"
+            response shouldContain QUESTION_IF_THERE_ARE_EXISTING_COMMENTS
+        }
+
+    @Test
+    fun `when the comment to be added is described, the model should request confirmation`() = runTest {
+        // Given
+        val case = caseWithNoComments()
+        val initialResponse = conversation.startConversation(case)
+        println("initialResponse = ${initialResponse}")
+
+        // When
+        val response = conversation.response("add the comment 'Go to Bondi'")
+
+        // Then
+        println("response = ${response}")
+        response shouldContain CONFIRMATION_START
+    }
+
+    @Test
+    fun `when the comment to be added is confirmed, the model output a json object representing the rule action`() =
+        runTest {
+            // Given
+            val case = caseWithNoComments()
+            conversation.startConversation(case)
+            val bondiComment = "Go to Bondi."
+            conversation.response("Add the comment '$bondiComment'")
+
+            // When
+            val confirmationResponse = conversation.response("Yes")
+
+            // Then
+            confirmationResponse shouldContainIgnoringMultipleWhitespace """
+                {
+                    "action": "add",
+                    "comment": "$bondiComment"
+                }
+            """.trimIndent()
         }
 }
 

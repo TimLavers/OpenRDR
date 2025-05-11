@@ -32,7 +32,7 @@ class EngineConfig {
     var returnCornerstone: ViewableCase = createCase("The Case")
     var returnCornerstoneStatus: CornerstoneStatus = CornerstoneStatus()
     var returnConditionList: ConditionList = ConditionList()
-    var returnBotResponse: String = ""
+    var returnResponse: String = ""
 
     var returnConditionParsingResult: ConditionParsingResult? = null
     var expectedCaseId: Long? = null
@@ -161,7 +161,7 @@ private class EngineBuilder(private val config: EngineConfig) {
             }
 
             CONDITION_HINTS -> {
-                if (config.expectedCaseId != null) request.url.parameters["id"] shouldBe config.expectedCaseId.toString()
+                if (config.expectedCaseId != null) request.url.parameters[CASE_ID] shouldBe config.expectedCaseId.toString()
                 httpResponseData(json.encodeToString(config.returnConditionList))
             }
 
@@ -186,7 +186,13 @@ private class EngineBuilder(private val config: EngineConfig) {
             SEND_USER_MESSAGE -> {
                 val body = request.body as TextContent
                 body.text shouldBe config.expectedUserMessage
-                httpResponseData(config.returnBotResponse)
+                request.url.parameters[CASE_ID] shouldBe config.expectedCaseId.toString()
+                httpResponseData(config.returnResponse)
+            }
+
+            START_CONVERSATION -> {
+                request.url.parameters[CASE_ID] shouldBe config.expectedCaseId.toString()
+                httpResponseData(config.returnResponse)
             }
 
             else -> {

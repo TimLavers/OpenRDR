@@ -877,11 +877,11 @@ class KBTest {
         val userExpression = "Please add a comment to go to Bondi"
         val botResponse = "Go to Bondi"
         val conversationService = mockk<ConversationService>()
-        coEvery { conversationService.response(userExpression, case) } returns botResponse
+        coEvery { conversationService.response(userExpression) } returns botResponse
         kb.setChatService(conversationService)
 
         //When
-        val response = kb.botResponseToUserMessage(userExpression, case)
+        val response = kb.responseToUserMessage(userExpression, case)
 
         //Then
         response shouldBe botResponse

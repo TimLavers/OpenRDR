@@ -17,7 +17,7 @@ import java.io.File
 import kotlin.io.path.createTempDirectory
 
 class KBEndpoint(val kb: KB, casesRootDirectory: File) {
-    val casesDir = File(casesRootDirectory,"cases").apply { mkdirs() }
+    val casesDir = File(casesRootDirectory, "cases").apply { mkdirs() }
     val interpretationsDir = File(casesRootDirectory, "interpretations").apply { mkdirs() }
 
     fun kbName(): KBInfo {
@@ -84,8 +84,11 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
 
     fun conditionHintsForCase(id: Long): ConditionList = kb.conditionHintsForCase(case(id))
 
-    suspend fun botResponseToUserMessage(message: String, caseId: Long): String =
-        kb.botResponseToUserMessage(message, case(caseId))
+    suspend fun startConversation(caseId: Long): String =
+        kb.startConversation(case(caseId))
+
+    suspend fun responseToUserMessage(message: String, caseId: Long): String =
+        kb.responseToUserMessage(message, case(caseId))
 
     fun processCase(externalCase: ExternalCase) = kb.processCase(externalCase)
 

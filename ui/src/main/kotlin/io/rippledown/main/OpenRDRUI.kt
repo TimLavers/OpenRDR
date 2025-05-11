@@ -49,6 +49,11 @@ fun OpenRDRUI(handler: Handler) {
     var ruleAction: Diff? by remember { mutableStateOf(null) }
     var conditionHints by remember { mutableStateOf(listOf<SuggestedCondition>()) }
 
+    val isShowingCornerstone = cornerstoneStatus?.cornerstoneToReview != null
+    val ruleInProgress = cornerstoneStatus != null
+    handler.showingCornerstone(isShowingCornerstone)
+
+
     LaunchedEffect(Unit) {
         kbInfo = api.kbList().firstOrNull()
     }
@@ -59,13 +64,14 @@ fun OpenRDRUI(handler: Handler) {
                 //No initial case, or it's now been deleted
                 currentCaseId = casesInfo.caseIds[0].id!!
             }
-            currentCase = runBlocking { api.getCase(currentCaseId!!) }
-            conditionHints = runBlocking { api.conditionHints(currentCaseId!!).suggestions }
+            currentCase = api.getCase(currentCaseId!!)
+            conditionHints = api.conditionHints(currentCaseId!!).suggestions
         }
     }
-    val ruleInProgress = cornerstoneStatus != null
-    val isShowingCornerstone = cornerstoneStatus?.cornerstoneToReview != null
-    handler.showingCornerstone(isShowingCornerstone)
+
+    LaunchedEffect(currentCaseId) {
+        currentCaseId?.let { api.startConversation(it) }
+    }
 
     Scaffold(
         topBar = {

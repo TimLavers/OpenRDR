@@ -282,7 +282,7 @@ class KB(persistentKB: PersistentKB) {
     internal fun holdsForSessionCase(condition: Condition) = condition.holds(ruleSession!!.case)
 
     suspend fun startConversation(case: RDRCase) = conversationService.startConversation(case)
-    suspend fun botResponseToUserMessage(message: String, case: RDRCase) = conversationService.response(message, case)
+    suspend fun responseToUserMessage(message: String, case: RDRCase) = conversationService.response(message)
 }
 
 interface ConditionParser {

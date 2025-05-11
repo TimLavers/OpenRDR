@@ -8,6 +8,7 @@ import io.ktor.server.testing.*
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.rippledown.constants.api.SEND_USER_MESSAGE
+import io.rippledown.constants.api.START_CONVERSATION
 import io.rippledown.constants.server.CASE_ID
 import io.rippledown.constants.server.KB_ID
 import kotlin.test.Test
@@ -15,13 +16,32 @@ import kotlin.test.Test
 class ChatManagementTest : OpenRDRServerTestBase() {
 
     @Test
-    fun `should delegate generating a bot response to the server application`() = testApplication {
+    fun `should delegate starting a conversation with model to the server application`() = testApplication {
+        //Given
+        setup()
+        val caseId = 42L
+        val response = "Shall I add a surfing comment to the report?"
+        coEvery { kbEndpoint.startConversation(caseId) } returns response
+
+        //When
+        val result = httpClient.post(START_CONVERSATION) {
+            parameter(KB_ID, kbId)
+            parameter(CASE_ID, caseId)
+        }
+
+        //Then
+        coVerify { kbEndpoint.startConversation(caseId) }
+        result.status shouldBe HttpStatusCode.OK
+    }
+
+    @Test
+    fun `should delegate generating a response from the model to the server application`() = testApplication {
         //Given
         setup()
         val caseId = 42L
         val userMessage = "The report should include a surfing comment"
-        val botResponse = "Shall I add a surfing comment to the report?"
-        coEvery { kbEndpoint.botResponseToUserMessage(userMessage, caseId) } returns botResponse
+        val response = "Shall I add a surfing comment to the report?"
+        coEvery { kbEndpoint.responseToUserMessage(userMessage, caseId) } returns response
 
         //When
         val result = httpClient.post(SEND_USER_MESSAGE) {
@@ -31,8 +51,8 @@ class ChatManagementTest : OpenRDRServerTestBase() {
         }
 
         //Then
-        coVerify { kbEndpoint.botResponseToUserMessage(userMessage, caseId) }
+        coVerify { kbEndpoint.responseToUserMessage(userMessage, caseId) }
         result.status shouldBe HttpStatusCode.OK
-        result.body<String>() shouldBe botResponse
+        result.body<String>() shouldBe response
     }
 }

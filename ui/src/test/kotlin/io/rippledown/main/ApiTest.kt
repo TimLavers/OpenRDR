@@ -276,15 +276,26 @@ class ApiTest {
     }
 
     @Test
-    fun `should return a bot response`() = runTest {
+    fun `should return a response from the conversation with the model`() = runTest {
         val userMessage = "What is the meaning of life?"
         val caseId = 1234L
         val config = config {
             expectedUserMessage = userMessage
             expectedCaseId = caseId
-            returnBotResponse = "42"
+            returnResponse = "42"
         }
         val response = Api(mock(config)).sendUserMessage(userMessage, caseId)
-        response shouldBe config.returnBotResponse
+        response shouldBe config.returnResponse
+    }
+
+    @Test
+    fun `should start a conversation with the model`() = runTest {
+        val caseId = 1234L
+        val config = config {
+            expectedCaseId = caseId
+            returnResponse = "42"
+        }
+        val response = Api(mock(config)).startConversation(caseId)
+        response shouldBe config.returnResponse
     }
 }
