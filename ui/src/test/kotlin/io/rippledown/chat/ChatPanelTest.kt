@@ -32,7 +32,7 @@ class ChatPanelTest {
             )
             // When
             setContent {
-                ChatPanel(messages, onMessageSent)
+                ChatPanel(sendIsEnabled = true, messages = messages, onMessageSent)
             }
             // Then
             requireChatMessagesShowing(messages)
@@ -44,7 +44,7 @@ class ChatPanelTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatPanel(listOf(), onMessageSent)
+                ChatPanel(sendIsEnabled = true, listOf(), onMessageSent)
             }
 
             // When
@@ -62,7 +62,7 @@ class ChatPanelTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatPanel(listOf(), onMessageSent)
+                ChatPanel(sendIsEnabled = true, listOf(), onMessageSent)
             }
             performTextInput("add a comment")
             requireSendButtonEnabled()
@@ -80,7 +80,7 @@ class ChatPanelTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatPanel(listOf(), onMessageSent)
+                ChatPanel(sendIsEnabled = true, listOf(), onMessageSent)
             }
 
             // Then
@@ -93,7 +93,7 @@ class ChatPanelTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatPanel(listOf(), onMessageSent)
+                ChatPanel(sendIsEnabled = true, listOf(), onMessageSent)
             }
 
             // When
@@ -113,7 +113,7 @@ class ChatPanelTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatPanel(history, onMessageSent)
+                ChatPanel(sendIsEnabled = true, history, onMessageSent)
             }
 
             // Then
@@ -126,7 +126,7 @@ class ChatPanelTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatPanel(listOf(), onMessageSent)
+                ChatPanel(sendIsEnabled = true, listOf(), onMessageSent)
             }
 
             // Then
@@ -142,6 +142,7 @@ fun main() {
             onCloseRequest = ::exitApplication,
         ) {
             ChatPanel(
+                sendIsEnabled = true,
                 listOf(
                     BotMessage("Hi there"),
                     UserMessage("Meaning of life?"),
@@ -151,4 +152,3 @@ fun main() {
         }
     }
 }
-

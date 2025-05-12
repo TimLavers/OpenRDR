@@ -5,7 +5,6 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.mockk.mockk
 import io.mockk.verify
-import io.rippledown.constants.chat.CHAT_BOT_INITIAL_MESSAGE
 import io.rippledown.constants.chat.CHAT_BOT_NO_RESPONSE_MESSAGE
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -17,7 +16,6 @@ class ChatControllerTest {
     @get:Rule
     var composeTestRule = createComposeRule()
 
-    val initialBotMessage = BotMessage(CHAT_BOT_INITIAL_MESSAGE)
     lateinit var handler: ChatControllerHandler
 
     @Before

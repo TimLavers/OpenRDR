@@ -17,6 +17,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ElevatedSuggestionChip
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -38,7 +39,6 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.rippledown.constants.chat.CHAT_BOT_PLACEHOLDER
 import io.rippledown.decoration.LIGHT_BLUE
-import io.rippledown.decoration.LIGHT_GREY
 
 interface ChatMessage {
     val text: String
@@ -65,7 +65,11 @@ const val CHAT_SEND = "CHAT_SEND"
 const val CHAT_TEXT_FIELD = "CHAT_TEXT_FIELD"
 
 @Composable
-fun ChatPanel(messages: List<ChatMessage> = emptyList(), onMessageSent: OnMessageSent = {}) {
+fun ChatPanel(
+    sendIsEnabled: Boolean = true,
+    messages: List<ChatMessage> = emptyList(),
+    onMessageSent: OnMessageSent = {}
+) {
     var inputText by remember { mutableStateOf(TextFieldValue()) }
     val listState = rememberLazyListState()
     val textAreaFocusRequester = remember { FocusRequester() }
@@ -114,6 +118,7 @@ fun ChatPanel(messages: List<ChatMessage> = emptyList(), onMessageSent: OnMessag
         ) {
             TextField(
                 value = inputText,
+                enabled = sendIsEnabled,
                 textStyle = TextStyle(fontSize = 14.sp),
                 onValueChange = { inputText = it },
                 modifier = Modifier
@@ -127,9 +132,9 @@ fun ChatPanel(messages: List<ChatMessage> = emptyList(), onMessageSent: OnMessag
                                 onMessageSent(UserMessage(messageText))
                                 inputText = TextFieldValue("")
                             }
-                            true // consume the event to avoid newline insertion
+                            true // Consume the event to avoid newline insertion
                         } else {
-                            false//allow other events to be handled
+                            false // Allow other events to be handled
                         }
                     }
                     .focusRequester(textAreaFocusRequester),
@@ -159,12 +164,15 @@ fun ChatPanel(messages: List<ChatMessage> = emptyList(), onMessageSent: OnMessag
                             },
                             enabled = inputText.text.isNotBlank(),
                             modifier = Modifier
-                                .semantics { contentDescription = CHAT_SEND }
+                                .semantics { contentDescription = CHAT_SEND },
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = LIGHT_BLUE
+                            )
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                 contentDescription = "Send",
-                                tint = if (inputText.text.isNotBlank()) Blue else LIGHT_GREY
+                                tint = if (inputText.text.isNotBlank()) Blue else Color.Gray
                             )
                         }
                     }
@@ -250,7 +258,7 @@ fun main() = application {
             BotMessage("Sure! What do you need help with?")
         )
         MaterialTheme {
-            ChatPanel(messages)
+            ChatPanel(sendIsEnabled = true, messages)
         }
     }
 }

@@ -53,6 +53,21 @@ fun OpenRDRUI(handler: Handler) {
     val ruleInProgress = cornerstoneStatus != null
     handler.showingCornerstone(isShowingCornerstone)
 
+    val chatControllerHandler = object : ChatControllerHandler {
+        override var onBotMessageReceived: (message: String) -> Unit = { }
+        override fun sendUserMessage(message: String) {
+            println("User message to be sent : $message")
+            val caseId = requireNotNull(currentCaseId) {
+                "currentCaseId should not be null when casesInfo.count > 0"
+            }
+            runBlocking {
+                val response = api.sendUserMessage(message, caseId)
+                println("response from model = '${response}'")
+                onBotMessageReceived(response)
+            }
+        }
+    }
+
 
     LaunchedEffect(Unit) {
         kbInfo = api.kbList().firstOrNull()
@@ -70,7 +85,14 @@ fun OpenRDRUI(handler: Handler) {
     }
 
     LaunchedEffect(currentCaseId) {
-        currentCaseId?.let { api.startConversation(it) }
+        currentCaseId?.let {
+            println("Starting conversation for currentCaseId = '${currentCaseId}'")
+            val response = api.startConversation(it)
+            println("response to starting the conversation = '${response}'")
+            if (response.isNotBlank()) {
+                chatControllerHandler.onBotMessageReceived(response)
+            }
+        }
     }
 
     Scaffold(
@@ -212,20 +234,8 @@ fun OpenRDRUI(handler: Handler) {
                             }
                         }
                     )
-                    ChatController(object : ChatControllerHandler {
-                        override var onBotMessageReceived: (message: String) -> Unit = { }
-                        override fun sendUserMessage(message: String) {
-                            println("User message to be sent : $message")
-                            val caseId = requireNotNull(currentCaseId) {
-                                "currentCaseId should not be null when casesInfo.count > 0"
-                            }
-                            runBlocking {
-                                val response = api.sendUserMessage(message, caseId)
-                                println("response from model = '${response}'")
-                                onBotMessageReceived(response)
-                            }
-                        }
-                    })
+
+                    ChatController(chatControllerHandler)
                 }
             }
         }

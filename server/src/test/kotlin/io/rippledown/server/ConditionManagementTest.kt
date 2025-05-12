@@ -9,6 +9,7 @@ import io.mockk.every
 import io.mockk.verify
 import io.rippledown.constants.api.CONDITION_HINTS
 import io.rippledown.constants.api.GET_OR_CREATE_CONDITION
+import io.rippledown.constants.server.CASE_ID
 import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.*
@@ -49,7 +50,7 @@ class ConditionManagementTest: OpenRDRServerTestBase() {
 
         val result = httpClient.get(CONDITION_HINTS) {
             parameter(KB_ID, kbId)
-            parameter("id", caseId)
+            parameter(CASE_ID, caseId)
         }
 
         result.status shouldBe HttpStatusCode.OK

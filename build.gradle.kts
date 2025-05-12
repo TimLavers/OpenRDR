@@ -38,6 +38,16 @@ subprojects {
     dependencies {
         testImplementation(kotlin("test"))
     }
+    sourceSets {
+        main {
+            resources {
+                srcDirs.add(
+                    project(":")
+                        .projectDir.resolve("shared-resources")
+                )
+            }
+        }
+    }
 
     tasks.test {
         //compose desktop tests are not working with junit5, just use junit4 for now

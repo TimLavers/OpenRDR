@@ -35,6 +35,14 @@ fun ComposeTestRule.requireChangeInterpretationIconToBeShowing() {
 }
 
 fun ComposeTestRule.requireChangeInterpretationIconToBeNotShowing() {
+    waitUntil {
+        try {
+            onNodeWithContentDescription(CHANGE_INTERPRETATION_ICON).assertDoesNotExist()
+            true
+        } catch (e: Throwable) {
+            false
+        }
+    }
     onNodeWithContentDescription(CHANGE_INTERPRETATION_ICON).assertDoesNotExist()
 }
 

@@ -27,6 +27,9 @@ class DirProxy {
         cleanupAndCreateAnew(tempDir)
         downloadsDir = File(userDir, "downloads")
         cleanupAndCreateAnew(downloadsDir)
+        println("----tempDir = ${tempDir}")
+        println("----userDir = ${userDir}")
+        println("----logDir  = ${logDir}")
     }
 
     private fun cleanupAndCreateAnew(file: File) {

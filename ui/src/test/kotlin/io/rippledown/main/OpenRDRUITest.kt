@@ -121,7 +121,7 @@ class OpenRDRUITest {
     }
 
     @Test
-    fun `should call the api when a user chat message is entered`() = runTest {
+    fun `should call the api to send a message to the model when a user chat message is entered`() = runTest {
         val caseName = "case A"
         val caseId = CaseId(id = 1234, name = caseName)
         val id = caseId.id!!
@@ -148,15 +148,101 @@ class OpenRDRUITest {
     }
 
     @Test
-    fun `should update the chat panel when a bot message is received`() = runTest {
+    fun `should start a conversation with the model when a case is selected`() = runTest {
+        val caseName = "case A"
+        val caseId = CaseId(id = 1234, name = caseName)
+        val id = caseId.id!!
+        val caseIds = listOf(caseId)
+        val bondiComment = "Go to Bondi"
+        val case = createCaseWithInterpretation(caseName, id, listOf(bondiComment))
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.getCase(id) } returns case
+
+        with(composeTestRule) {
+            //Given
+            setContent {
+                OpenRDRUI(handler)
+            }
+
+            //When
+            waitForCaseToBeShowing(caseName)
+
+            //Then
+            coVerify { api.startConversation(id) }
+        }
+    }
+
+    @Test
+    fun `should start a new conversation with the model when another case is selected`() = runTest {
+        val caseNameA = "case A"
+        val caseNameB = "case B"
+        val caseIdA = CaseId(id = 1234, name = caseNameA)
+        val caseIdB = CaseId(id = 5678, name = caseNameB)
+        val idA = caseIdA.id!!
+        val idB = caseIdB.id!!
+        val caseIds = listOf(caseIdA, caseIdB)
+        val bondiComment = "Go to Bondi"
+        val malabarComment = "Go to Malabar"
+        val caseA = createCaseWithInterpretation(caseNameA, idA, listOf(bondiComment))
+        val caseB = createCaseWithInterpretation(caseNameB, idB, listOf(malabarComment))
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.getCase(idA) } returns caseA
+        coEvery { api.getCase(idB) } returns caseB
+
+        with(composeTestRule) {
+            //Given
+            setContent {
+                OpenRDRUI(handler)
+            }
+            waitForCaseToBeShowing(caseNameA)
+            coVerify { api.startConversation(idA) }
+
+            //When
+            selectCaseByName(caseNameB)
+            waitForCaseToBeShowing(caseNameB)
+
+            //Then
+            coVerify { api.startConversation(idB) }
+        }
+    }
+
+    @Test
+    fun `should update the chat panel with the response from the model when a new conversation is started`() = runTest {
+        val caseName = "case A"
+        val caseId = CaseId(id = 1234, name = caseName)
+        val id = caseId.id!!
+        val caseIds = listOf(caseId)
+        val bondiComment = "Go to Bondi"
+        val case = createCaseWithInterpretation(caseName, id, listOf(bondiComment))
+        val initialResponse = "the answer is 42"
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.getCase(id) } returns case
+        coEvery { api.startConversation(id) } returns initialResponse
+
+        with(composeTestRule) {
+            //Given
+            setContent {
+                OpenRDRUI(handler)
+            }
+
+            //When
+            waitForCaseToBeShowing(caseName)
+
+            //Then
+            requireChatMessagesShowing(listOf(BotMessage(initialResponse)))
+        }
+    }
+
+    @Test
+    fun `should update the chat panel when a response to a user message is received`() = runTest {
         val caseA = "case A"
         val caseId1 = CaseId(id = 1, name = caseA)
         val caseIds = listOf(caseId1)
         val bondiComment = "Go to Bondi"
+        val answer = "the answer is 42"
         val case = createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
         coEvery { api.getCase(1) } returns case
-        val answer = "the answer is 42"
         coEvery { api.sendUserMessage(any(), any<Long>()) } returns answer
 
         with(composeTestRule) {

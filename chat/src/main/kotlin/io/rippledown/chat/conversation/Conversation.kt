@@ -21,7 +21,8 @@ const val QUESTION_IF_THERE_ARE_EXISTING_COMMENTS =
 const val QUESTION_IF_THERE_ARE_NO_EXISTING_COMMENTS = "Would you like to add a comment to this report?"
 
 class Conversation : ConversationService {
-    val logger: Logger = LoggerFactory.getLogger(this::class.java.name)
+    val logger: Logger = LoggerFactory.getLogger("rdr")
+//    val logger: Logger = LoggerFactory.getLogger(this::class.java.name)
 
     private lateinit var chatService: GeminiChatService
     private lateinit var chat: Chat
