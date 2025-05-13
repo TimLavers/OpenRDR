@@ -1,10 +1,12 @@
 package io.rippledown.kb
 
-import io.rippledown.chat.conversation.ConversationService
+import io.rippledown.chat.conversation.Conversation
 import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
 import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
 import io.rippledown.expressionparser.AttributeFor
 import io.rippledown.expressionparser.ConditionTip
+import io.rippledown.kb.chat.ChatManager
+import io.rippledown.kb.chat.RuleService
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
@@ -33,17 +35,22 @@ class KB(persistentKB: PersistentKB) {
             persistentKB.conclusionOrderStore(),
             conclusionManager
         )
-
     //a var so it can be mocked in tests
     private var conditionParser: ConditionParser
-    private var conversationService: ConversationService
+
+    val ruleService = object : RuleService {
+        override suspend fun buildRule(case: RDRCase, ruleTreeChange: RuleTreeChange): String {
+            return ruleTreeChange.toString()
+        }
+    }
+
+    private var chatManager = ChatManager(Conversation(), ruleService)
 
     init {
         conditionParser = object : ConditionParser {
             override fun parse(expression: String, attributeNames: List<String>, attributeFor: AttributeFor) =
                 ConditionTip(attributeNames, attributeFor).conditionFor(expression)
         }
-        conversationService = io.rippledown.chat.conversation.Conversation()
     }
 
     fun description() = metaInfo.getDescription()
@@ -259,9 +266,9 @@ class KB(persistentKB: PersistentKB) {
         conditionParser = parser
     }
 
-    //Allow a mock chat service to be set so we can avoid connecting to Gemini for all the tests
-    fun setChatService(service: ConversationService) {
-        conversationService = service
+    //Allow a mock chat session to be set so we can avoid connecting to Gemini for all the tests
+    fun setChatManager(manager: ChatManager) {
+        chatManager = manager
     }
 
     fun conditionForExpression(expression: String, attributeNames: List<String>): ConditionParsingResult {
@@ -281,8 +288,11 @@ class KB(persistentKB: PersistentKB) {
 
     internal fun holdsForSessionCase(condition: Condition) = condition.holds(ruleSession!!.case)
 
-    suspend fun startConversation(case: RDRCase) = conversationService.startConversation(case)
-    suspend fun responseToUserMessage(message: String, case: RDRCase) = conversationService.response(message)
+    suspend fun startConversation(case: RDRCase): String {
+        return chatManager.startConversation(case)
+    }
+
+    suspend fun responseToUserMessage(message: String) = chatManager.response(message)
 }
 
 interface ConditionParser {

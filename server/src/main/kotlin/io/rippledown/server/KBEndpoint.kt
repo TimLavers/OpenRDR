@@ -87,8 +87,8 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
     suspend fun startConversation(caseId: Long): String =
         kb.startConversation(case(caseId))
 
-    suspend fun responseToUserMessage(message: String, caseId: Long): String =
-        kb.responseToUserMessage(message, case(caseId))
+    suspend fun responseToUserMessage(message: String): String =
+        kb.responseToUserMessage(message)
 
     fun processCase(externalCase: ExternalCase) = kb.processCase(externalCase)
 

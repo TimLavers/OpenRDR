@@ -41,7 +41,7 @@ class ChatManagementTest : OpenRDRServerTestBase() {
         val caseId = 42L
         val userMessage = "The report should include a surfing comment"
         val response = "Shall I add a surfing comment to the report?"
-        coEvery { kbEndpoint.responseToUserMessage(userMessage, caseId) } returns response
+        coEvery { kbEndpoint.responseToUserMessage(userMessage) } returns response
 
         //When
         val result = httpClient.post(SEND_USER_MESSAGE) {
@@ -51,7 +51,7 @@ class ChatManagementTest : OpenRDRServerTestBase() {
         }
 
         //Then
-        coVerify { kbEndpoint.responseToUserMessage(userMessage, caseId) }
+        coVerify { kbEndpoint.responseToUserMessage(userMessage) }
         result.status shouldBe HttpStatusCode.OK
         result.body<String>() shouldBe response
     }

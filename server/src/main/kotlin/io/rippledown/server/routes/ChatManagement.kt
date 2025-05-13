@@ -19,7 +19,7 @@ fun Application.chatManagement(application: ServerApplication) {
         post(path = SEND_USER_MESSAGE) {
             val kbEndpoint = kbEndpoint(application)
             val userMessage = call.receiveText()
-            val response = kbEndpoint.responseToUserMessage(userMessage, caseId())
+            val response = kbEndpoint.responseToUserMessage(userMessage)
             call.respond(OK, response)
         }
     }

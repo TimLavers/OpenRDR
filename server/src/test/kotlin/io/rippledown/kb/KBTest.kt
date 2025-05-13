@@ -11,7 +11,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import io.rippledown.chat.conversation.ConversationService
+import io.rippledown.kb.chat.ChatManager
 import io.rippledown.model.*
 import io.rippledown.model.condition.*
 import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals
@@ -855,13 +855,13 @@ class KBTest {
     }
 
     @Test
-    fun `should delegate starting a conversation to the conversation service`() = runTest {
+    fun `should delegate starting a conversation to the ChatManager`() = runTest {
         //Given
         val case = createCase("Case")
         val botResponse = "Go to Bondi"
-        val conversationService = mockk<ConversationService>()
-        coEvery { conversationService.startConversation(case) } returns botResponse
-        kb.setChatService(conversationService)
+        val chatManager = mockk<ChatManager>()
+        coEvery { chatManager.startConversation(case) } returns botResponse
+        kb.setChatManager(chatManager)
 
         //When
         val response = kb.startConversation(case)
@@ -871,17 +871,16 @@ class KBTest {
     }
 
     @Test
-    fun `should delegate bot response to the conversation service`() = runTest {
+    fun `should delegate user message to the ChatManager`() = runTest {
         //Given
-        val case = createCase("Case")
         val userExpression = "Please add a comment to go to Bondi"
         val botResponse = "Go to Bondi"
-        val conversationService = mockk<ConversationService>()
-        coEvery { conversationService.response(userExpression) } returns botResponse
-        kb.setChatService(conversationService)
+        val chatManager = mockk<ChatManager>()
+        coEvery { chatManager.response(userExpression) } returns botResponse
+        kb.setChatManager(chatManager)
 
         //When
-        val response = kb.responseToUserMessage(userExpression, case)
+        val response = kb.responseToUserMessage(userExpression)
 
         //Then
         response shouldBe botResponse
