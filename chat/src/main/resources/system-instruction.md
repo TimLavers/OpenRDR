@@ -17,26 +17,44 @@ text.
 1. Determine if the case has one or more comments.
 2. If there are no comments, follow the instructions for adding a comment.
 3. If there are existing comments, follow the instructions for determining whether to add, replace, or remove a comment.
-4. If there are no comments, generate the output "debug: no comments". Otherwise, generate the output "debug: existing
-   comments".
+4. If there are no comments, output a JSON object with the following structure:
+   {
+   "action": "{{DEBUG}}",
+   "message": "no comments in the report"
+   }
+5. Otherwise, output a JSON object with the following structure:
+   {
+   "action": "{{DEBUG}}",
+   "message": "existing comments in the report"
+   }
 
 ## Instructions for determining whether to add, replace, or remove a comment
 
+- If the case report no existing comments, ask: "{{question_if_there_are_no_existing_comments}}"
 - If the case report has existing comments, ask: "{{question_if_there_are_existing_comments}}"
+- Your question should be formatted as a JSON object with the following structure:
+  {
+  "action": "{{USER}}",
+  "message": "<your question to the user>"
+  }
 - If the user indicates they want to add a comment, follow the instructions for adding a comment.
 - If the user indicates they want to replace a comment, follow the instructions for replacing a comment.
 - If the user indicates they want to remove a comment, follow the instructions for removing a comment.
 
 ## Instructions for adding a comment
 
-- Start the conversation by asking: "{{question_if_there_are_no_existing_comments}}"
-- If the user responds positively, ask for the comment text to be added.
+- Ask the for the comment text to be added.
 - If the user provides a comment, ask for confirmation to add the comment.
-- The request for confirmation should contain the comment text.
+- Your confirmation request should be formatted as a JSON object with the following structure:
+  {
+  "action": "{{USER}}",
+  "message": "<your request for confirmation>"
+  }
+- Your request for confirmation should contain the proposed comment text.
 - If the user has confirmed the comment to be added, output a JSON object with the following structure:
   {
-  "action": "add",
-  "comment": "<comment text>"
+  "action": "{{ADD}}",
+  "new_comment": "<comment text>"
   }
 
 ## Instructions for replacing comment
@@ -50,9 +68,10 @@ text.
 - The request for confirmation should contain the existing comment text.
 - If the user confirms, output a JSON object with the following structure:
   {
-  "action": "replace",
-  "comment": "<new comment text>",
+  "action": "{{REPLACE}}",
   "existing_comment": "<existing comment text>"
+  "new_hi
+- comment": "<new comment text>",
   }
 
 ## Instructions for removing a comment
@@ -64,12 +83,13 @@ text.
 - The request for confirmation should contain the existing comment text.
 - Once the user's intent is clear to remove a comment, output a JSON object with the following structure:
   {
-  "action": "remove",
+  "action": "{{REMOVE}}",
   "existing_comment": "<existing comment text>"
   }
 
 ## Formatting Rules
 
+- Every response you make should be formatted as a JSON object.
 - Ensure the JSON is formatted exactly as shown in the example structures above, with no additional formatting or
   annotations.
 - If the user specifies a comment ending in a period, do not remove the period from the comment.

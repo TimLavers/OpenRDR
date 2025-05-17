@@ -39,11 +39,15 @@ class KB(persistentKB: PersistentKB) {
     private var conditionParser: ConditionParser
 
     val ruleService = object : RuleService {
-        override suspend fun buildRule(case: RDRCase, ruleTreeChange: RuleTreeChange): String {
-            return ruleTreeChange.toString()
+        override suspend fun buildRuleToAddComment(case: RDRCase, comment: String) {
+            val conclusion = conclusionManager.getOrCreate(comment)
+            val action = ChangeTreeToAddConclusion(conclusion)
+            startRuleSession(case, action)
+            commitCurrentRuleSession()
         }
     }
 
+    //a var so it can be mocked in tests
     private var chatManager = ChatManager(Conversation(), ruleService)
 
     init {
@@ -289,10 +293,16 @@ class KB(persistentKB: PersistentKB) {
     internal fun holdsForSessionCase(condition: Condition) = condition.holds(ruleSession!!.case)
 
     suspend fun startConversation(case: RDRCase): String {
-        return chatManager.startConversation(case)
+        val initialResponse = chatManager.startConversation(case)
+        logger.info("Initial model response: '$initialResponse'")
+        return initialResponse
     }
 
-    suspend fun responseToUserMessage(message: String) = chatManager.response(message)
+    suspend fun responseToUserMessage(message: String): String {
+        val response = chatManager.response(message)
+        logger.info("Subsequent model response to user message: \n$message was: \n$response")
+        return response
+    }
 }
 
 interface ConditionParser {

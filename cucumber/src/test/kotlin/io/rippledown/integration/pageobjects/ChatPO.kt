@@ -1,5 +1,6 @@
 package io.rippledown.integration.pageobjects
 
+import io.rippledown.chat.BOT
 import io.rippledown.chat.CHAT_SEND
 import io.rippledown.chat.CHAT_TEXT_FIELD
 import io.rippledown.integration.utils.find
@@ -20,12 +21,25 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
         chatTextContext()?.accessibleName ?: ""
     }
 
-    fun enterChatText(text: String) = execute {
+    fun enterChatText(text: String) =
         execute { chatEditableTextContext()?.setTextContents(text) }
-    }
 
-    fun clickSend() = execute {
+    fun clickSend() =
         execute { chatTextContext().find(CHAT_SEND)?.accessibleAction?.doAccessibleAction(0) }
+
+    fun botRowContainsText(text: String): Boolean {
+        return execute<Boolean> {
+            val matcher = { context: AccessibleContext ->
+                context.foundText(text) && context.isBotResponse()
+            }
+            contextProvider().find(matcher, true) != null
+        }
     }
 
 }
+
+fun AccessibleContext.foundText(text: String): Boolean =
+    accessibleName?.contains(text) ?: false
+
+fun AccessibleContext.isBotResponse(): Boolean =
+    accessibleDescription?.startsWith(BOT) ?: false

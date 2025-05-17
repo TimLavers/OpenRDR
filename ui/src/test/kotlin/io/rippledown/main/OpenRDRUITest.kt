@@ -262,9 +262,40 @@ class OpenRDRUITest {
                 BotMessage(answer)
             )
             requireChatMessagesShowing(expected)
-
         }
     }
+
+    @Test
+    fun `should update the case when a response to a user message is received`() = runTest {
+        val caseName = "case a"
+        val id = 1L
+        val caseId = CaseId(id = id, name = caseName)
+        val bondiComment = "Go to Bondi"
+        val updatedBondiComments = "Go to Bondi. Bring flippers."
+        val case = createCaseWithInterpretation(caseName, id, listOf(bondiComment))
+        val updatedCase = createCaseWithInterpretation(caseName, id, listOf(updatedBondiComments))
+        coEvery { api.getCase(id) } returns case
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        with(composeTestRule) {
+            //Given
+            setContent {
+                OpenRDRUI(handler)
+            }
+            waitForCaseToBeShowing(caseName)
+            coVerify(exactly = 2) { api.getCase(id) }
+            requireInterpretation(bondiComment)
+
+            //When
+            coEvery { api.getCase(id) } returns updatedCase
+            val userMessage = "yes, please add that comment to the interpretation"
+            typeChatMessageAndClickSend(userMessage)
+
+            //Then
+            coVerify(exactly = 3) { api.getCase(id) }
+            requireInterpretation(updatedBondiComments)
+        }
+    }
+
 
     @Test
     fun `should show case list for several cases`() = runTest {

@@ -64,6 +64,9 @@ fun OpenRDRUI(handler: Handler) {
                 val response = api.sendUserMessage(message, caseId)
                 println("response from model = '${response}'")
                 onBotMessageReceived(response)
+
+                //refresh the case to get the latest interpretation
+                currentCase = api.getCase(caseId)
             }
         }
     }

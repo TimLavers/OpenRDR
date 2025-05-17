@@ -44,7 +44,7 @@ fun AccessibleContext.find(matcher: (AccessibleContext) -> Boolean, debug: Boole
         try {
             val child = getAccessibleChild(i).accessibleContext.find(matcher, debug)
             if (child != null) return child
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             //ignore. This is a workaround for a possible bug in the Java AccessibleContext API
         }
     }
@@ -78,7 +78,7 @@ fun AccessibleContext.findAll(
     for (i in 0..<childCount) {
         try {
             getAccessibleChild(i).accessibleContext.findAll(holder, matcher, debug)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             //ignore. This is a workaround for a possible bug in the Java AccessibleContext API
         }
     }
