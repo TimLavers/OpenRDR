@@ -7,13 +7,14 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.rippledown.constants.api.*
 import io.rippledown.constants.server.EXPRESSION
+import io.rippledown.log.lazyLogger
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.server.ServerApplication
-import io.rippledown.server.logger
 
 fun Application.ruleSession(application: ServerApplication) {
+    val logger = lazyLogger
     routing {
 
         post(START_RULE_SESSION) {

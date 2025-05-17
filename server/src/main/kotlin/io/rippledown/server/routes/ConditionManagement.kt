@@ -7,12 +7,13 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.rippledown.constants.api.CONDITION_HINTS
 import io.rippledown.constants.api.GET_OR_CREATE_CONDITION
+import io.rippledown.log.lazyLogger
 import io.rippledown.model.condition.Condition
 import io.rippledown.server.ServerApplication
-import io.rippledown.server.logger
 import kotlinx.serialization.json.Json
 
 fun Application.conditionManagement(application: ServerApplication) {
+    val logger = lazyLogger
     routing {
         get(CONDITION_HINTS) {
             val kbEndpoint = kbEndpoint(application)

@@ -7,6 +7,7 @@ import io.rippledown.expressionparser.AttributeFor
 import io.rippledown.expressionparser.ConditionTip
 import io.rippledown.kb.chat.ChatManager
 import io.rippledown.kb.chat.RuleService
+import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
@@ -15,9 +16,9 @@ import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistentKB
-import io.rippledown.server.logger
 
 class KB(persistentKB: PersistentKB) {
+    val logger = lazyLogger
 
     val kbInfo: KBInfo = persistentKB.kbInfo()
     val metaInfo = MetaInfo(persistentKB.metaDataStore())

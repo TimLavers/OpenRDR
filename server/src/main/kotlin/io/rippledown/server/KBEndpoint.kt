@@ -3,6 +3,7 @@ package io.rippledown.server
 import io.rippledown.kb.KB
 import io.rippledown.kb.export.KBExporter
 import io.rippledown.kb.export.util.Zipper
+import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
@@ -17,6 +18,7 @@ import java.io.File
 import kotlin.io.path.createTempDirectory
 
 class KBEndpoint(val kb: KB, casesRootDirectory: File) {
+    val logger = lazyLogger
     val casesDir = File(casesRootDirectory, "cases").apply { mkdirs() }
     val interpretationsDir = File(casesRootDirectory, "interpretations").apply { mkdirs() }
 

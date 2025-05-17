@@ -3,8 +3,8 @@ package io.rippledown.kb.chat
 import io.rippledown.chat.conversation.ConversationService
 import io.rippledown.constants.chat.*
 import io.rippledown.fromJsonString
+import io.rippledown.log.lazyLogger
 import io.rippledown.model.RDRCase
-import io.rippledown.server.logger
 import kotlinx.serialization.Serializable
 
 interface RuleService {
@@ -12,6 +12,7 @@ interface RuleService {
 }
 
 class ChatManager(val conversationService: ConversationService, val ruleService: RuleService) {
+    private val logger = lazyLogger
     lateinit var currentCase: RDRCase
 
     suspend fun startConversation(case: RDRCase): String {

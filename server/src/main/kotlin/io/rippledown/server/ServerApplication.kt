@@ -6,6 +6,7 @@ import io.rippledown.kb.KBManager
 import io.rippledown.kb.export.KBImporter
 import io.rippledown.kb.export.util.Unzipper
 import io.rippledown.kb.sample.loadSampleKB
+import io.rippledown.log.lazyLogger
 import io.rippledown.model.KBInfo
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.postgres.PostgresPersistenceProvider
@@ -15,6 +16,7 @@ import java.io.File
 import kotlin.io.path.createTempDirectory
 
 class ServerApplication(private val persistenceProvider: PersistenceProvider = PostgresPersistenceProvider()) {
+    private val logger = lazyLogger
     val kbDataDir = File("data").apply { mkdirs() }
     private val kbManager = KBManager(persistenceProvider)
     private val idToKBEndpoint = mutableMapOf<String, KBEndpoint>()

@@ -1,5 +1,6 @@
 Feature: The user can use the chat to make changes the interpretive report
 
+  @single
   Scenario: The user should be able to use the chat to add a comment with no conditions
     Given case Bondi is provided having data:
       | Wave | excellent |

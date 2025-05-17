@@ -10,9 +10,9 @@ import io.rippledown.constants.api.CASE
 import io.rippledown.constants.api.DELETE_CASE_WITH_NAME
 import io.rippledown.constants.api.PROCESS_CASE
 import io.rippledown.constants.api.WAITING_CASES
+import io.rippledown.log.lazyLogger
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.server.ServerApplication
-import io.rippledown.server.logger
 import kotlinx.serialization.json.Json
 
 private val jsonAllowSMK = Json {
@@ -20,6 +20,7 @@ private val jsonAllowSMK = Json {
 }
 
 fun Application.caseManagement(application: ServerApplication) {
+    val logger = lazyLogger
     routing {
         get(WAITING_CASES) {
             call.respond(kbEndpoint(application).waitingCasesInfo())

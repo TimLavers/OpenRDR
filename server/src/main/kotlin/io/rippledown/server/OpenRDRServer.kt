@@ -15,19 +15,20 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.rippledown.constants.server.IN_MEMORY
 import io.rippledown.constants.server.STARTING_SERVER
+import io.rippledown.log.lazyLogger
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.persistence.postgres.PostgresPersistenceProvider
 import io.rippledown.server.routes.*
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 
 lateinit var server: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>
 
 private lateinit var persistenceProvider: PersistenceProvider
 
-val logger: Logger = LoggerFactory.getLogger("io.rippledown.ServerApplication")
+object OpenRDRServer
+
+val logger = OpenRDRServer.lazyLogger
 
 fun main(args: Array<String>) {
     logger.info("Starting server with args: ${args.joinToString(", ")}")

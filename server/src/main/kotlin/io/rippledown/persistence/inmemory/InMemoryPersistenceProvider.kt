@@ -1,12 +1,13 @@
 package io.rippledown.persistence.inmemory
 
+import io.rippledown.log.lazyLogger
 import io.rippledown.model.KBInfo
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.PersistentKB
 import io.rippledown.persistence.PersistentKBIds
-import io.rippledown.server.logger
 
 class InMemoryPersistenceProvider: PersistenceProvider {
+    val logger = lazyLogger
     private val idStore = InMemoryKBIds()
     private val kbStore = mutableMapOf<String, InMemoryKB>()
     init {
