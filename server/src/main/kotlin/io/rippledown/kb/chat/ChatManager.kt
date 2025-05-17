@@ -3,8 +3,8 @@ package io.rippledown.kb.chat
 import io.rippledown.chat.conversation.ConversationService
 import io.rippledown.constants.chat.*
 import io.rippledown.fromJsonString
-import io.rippledown.llm.logger
 import io.rippledown.model.RDRCase
+import io.rippledown.server.logger
 import kotlinx.serialization.Serializable
 
 interface RuleService {

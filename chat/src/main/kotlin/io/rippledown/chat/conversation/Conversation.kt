@@ -17,8 +17,7 @@ interface ConversationService {
 }
 
 class Conversation : ConversationService {
-    val logger: Logger = LoggerFactory.getLogger("rdr")
-//    val logger: Logger = LoggerFactory.getLogger(this::class.java.name)
+    val logger: Logger = LoggerFactory.getLogger(this::class.java.name)
 
     private lateinit var chatService: GeminiChatService
     private lateinit var chat: Chat

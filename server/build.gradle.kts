@@ -37,4 +37,5 @@ tasks.named<ShadowJar>("shadowJar") {
     manifest {
         attributes["Main-Class"] = application.mainClass.get()
     }
+    from("../shared-resources") //put logback.xml in the jar
 }

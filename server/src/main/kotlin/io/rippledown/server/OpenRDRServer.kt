@@ -27,7 +27,7 @@ lateinit var server: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngi
 
 private lateinit var persistenceProvider: PersistenceProvider
 
-val logger: Logger = LoggerFactory.getLogger("rdr")
+val logger: Logger = LoggerFactory.getLogger("io.rippledown.ServerApplication")
 
 fun main(args: Array<String>) {
     logger.info("Starting server with args: ${args.joinToString(", ")}")
