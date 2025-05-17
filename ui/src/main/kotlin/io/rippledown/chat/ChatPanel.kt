@@ -5,7 +5,6 @@ package io.rippledown.chat
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.TooltipArea
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -88,7 +87,6 @@ fun ChatPanel(
         modifier = Modifier
             .padding(start = 0.dp, top = 8.dp, end = 8.dp, bottom = 8.dp)
             .widthIn(min = 300.dp)
-            .border(1.dp, Blue)
             .background(Color(0xFFF5F5F5))
     ) {
         // Chat messages area
