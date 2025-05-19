@@ -32,7 +32,7 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
             val matcher = { context: AccessibleContext ->
                 context.foundText(text) && context.isBotResponse()
             }
-            contextProvider().find(matcher, true) != null
+            contextProvider().find(matcher) != null
         }
     }
 

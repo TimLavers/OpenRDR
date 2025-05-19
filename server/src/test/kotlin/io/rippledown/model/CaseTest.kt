@@ -3,7 +3,7 @@ package io.rippledown.model
 import io.rippledown.CaseTestUtils
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.external.MeasurementEvent
-import kotlinx.serialization.decodeFromString
+import io.rippledown.utils.defaultDate
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals

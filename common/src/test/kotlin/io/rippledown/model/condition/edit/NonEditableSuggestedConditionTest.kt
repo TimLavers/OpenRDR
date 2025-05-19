@@ -5,7 +5,7 @@ import io.rippledown.model.condition.ConditionTestBase
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.episodic.predicate.Normal
 import io.rippledown.model.condition.episodic.signature.Current
-import io.rippledown.model.serializeDeserialize
+import io.rippledown.utils.serializeDeserialize
 import kotlin.test.Test
 
 class NonEditableSuggestedConditionTest: ConditionTestBase() {

@@ -2,12 +2,15 @@ package io.rippledown.model.interpretationview
 
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.*
+import io.rippledown.model.Attribute
+import io.rippledown.model.CaseId
+import io.rippledown.model.Conclusion
+import io.rippledown.model.Interpretation
 import io.rippledown.model.condition.containsText
 import io.rippledown.model.condition.isCondition
 import io.rippledown.model.rule.Rule
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
+import io.rippledown.utils.checkSerializationIsThreadSafe
+import io.rippledown.utils.serializeDeserialize
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 

@@ -1,15 +1,24 @@
 package io.rippledown.constants.chat
 
-const val CONFIRMATION_START = "Please confirm"
-const val QUESTION_IF_THERE_ARE_EXISTING_COMMENTS =
-    "Would you like to change the report? If so, you can add a comment, modify a comment, or remove a comment."
-const val QUESTION_IF_THERE_ARE_NO_EXISTING_COMMENTS = "Would you like to add a comment to this report?"
+const val PLEASE_CONFIRM = "Please confirm"
+const val ADD = "add"
+const val REMOVE = "remove"
+const val REPLACE = "replace"
+const val NO_COMMENTS = "No comments"
+const val EXISTING_COMMENTS = "Existing comments"
+const val WOULD_YOU_LIKE = "Would you like"
+const val ADD_A_COMMENT = "add a comment"
+const val REMOVE_A_COMMENT = "remove a comment"
+const val REPLACE_A_COMMENT = "replace a comment"
+const val WHAT_COMMENT = "What comment"
 
 const val CHAT_BOT_NO_RESPONSE_MESSAGE = "Sorry, I don't understand. Please try again."
 const val CHAT_BOT_PLACEHOLDER = "Please enter your request..."
 const val ADD_COMMENT_PLACEHOLDER = "{{ADDED}}"
-const val CHAT_BOT_ADD_COMMENT_USER_MESSAGE = "the comment \"$ADD_COMMENT_PLACEHOLDER\" has been added."
+const val CHAT_BOT_DONE_MESSAGE = "Done."
 
+const val START_ACTION = "start"
+const val STOP_ACTION = "stop"
 const val DEBUG_ACTION = "debug"
 const val USER_ACTION = "user"
 const val ADD_ACTION = "add"

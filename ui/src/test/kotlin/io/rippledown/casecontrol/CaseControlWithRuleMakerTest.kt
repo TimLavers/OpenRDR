@@ -10,11 +10,11 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.condition.RuleConditionList
 import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
 import io.rippledown.model.condition.hasCurrentValue
-import io.rippledown.model.createCaseWithInterpretation
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.rule.*
+import io.rippledown.utils.createCaseWithInterpretation
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule

@@ -1,4 +1,7 @@
-package io.rippledown
+package io.rippledown.utils
+
+import io.kotest.matchers.string.shouldContain
+
 
 infix fun String?.shouldContainIgnoringMultipleWhitespace(substr: String): String? {
     if (this == null) {
@@ -10,4 +13,14 @@ infix fun String?.shouldContainIgnoringMultipleWhitespace(substr: String): Strin
         return this
     }
     throw AssertionError("Expected '$thisTrimmed' to contain '$substrTrimmed'")
+}
+infix fun String?.shouldContainAll(expected: List<String>): String? {
+    if (this == null) {
+        return null
+    }
+    expected.all { phrase ->
+        this shouldContain phrase
+        true
+    }
+    return this
 }

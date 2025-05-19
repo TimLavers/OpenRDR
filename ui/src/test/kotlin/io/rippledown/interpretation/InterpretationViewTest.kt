@@ -4,9 +4,9 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import io.rippledown.model.createCaseWithInterpretation
-import io.rippledown.model.createInterpretation
 import io.rippledown.utils.applicationFor
+import io.rippledown.utils.createCaseWithInterpretation
+import io.rippledown.utils.createInterpretation
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule

@@ -3,7 +3,7 @@ package io.rippledown.model.caseview
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
-import kotlinx.serialization.encodeToString
+import io.rippledown.utils.*
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 

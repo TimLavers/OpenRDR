@@ -2,7 +2,7 @@ package io.rippledown.model
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import kotlinx.serialization.encodeToString
+import io.rippledown.utils.randomString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 

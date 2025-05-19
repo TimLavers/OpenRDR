@@ -18,41 +18,48 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
     suspend fun startConversation(case: RDRCase): String {
         currentCase = case
         val response = conversationService.startConversation(case)
-        logger.info("Start conversation response: '${response}'")
-        return parseAndActionTheModelResponse(response)
+        logger.info("$LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE '$response'")
+        return processActionComment(response.fromJsonString<ActionComment>())
     }
 
     suspend fun response(message: String): String {
+        logger.info("$LOG_PREFIX_FOR_USER_MESSAGE '$message'")
         val response = conversationService.response(message)
-        logger.info("Response: '${response}'")
-        return parseAndActionTheModelResponse(response)
+        logger.info("$LOG_PREFIX_FOR_CONVERSATION_RESPONSE '$response'")
+        return processActionComment(response.fromJsonString<ActionComment>())
     }
 
-    private suspend fun parseAndActionTheModelResponse(response: String): String {
-        val actionComment = response.fromJsonString<ActionComment>()
+    //Either pass on the model's response to the user or take some rule action
+    suspend fun processActionComment(actionComment: ActionComment): String {
         return when (actionComment.action) {
-            DEBUG_ACTION -> {
-                logger.info(actionComment.message)
-                ""
-            }
+            STOP_ACTION -> ""  //TODO
 
             USER_ACTION -> {
-                actionComment.message ?: ""
+                actionComment.message!!
             }
 
             ADD_ACTION -> {
                 val newComment = actionComment.new_comment
                 newComment?.let {
                     ruleService.buildRuleToAddComment(currentCase, it)
-                    CHAT_BOT_ADD_COMMENT_USER_MESSAGE.replace(ADD_COMMENT_PLACEHOLDER, newComment)
+                    CHAT_BOT_DONE_MESSAGE
                 } ?: ""
             }
 
+            REMOVE_ACTION -> "" // TODO
+            REPLACE_ACTION -> "" // TODO
+
             else -> {
-                logger.error("Unknown action in response: ${response}")
+                logger.error("Unknown actionComment: ${actionComment.action}")
                 ""
             }
         }
+    }
+
+    companion object {
+        const val LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE = "Start conversation response:"
+        const val LOG_PREFIX_FOR_CONVERSATION_RESPONSE = "Conversation response:"
+        const val LOG_PREFIX_FOR_USER_MESSAGE = "User message:"
     }
 }
 
@@ -60,6 +67,7 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
 data class ActionComment(
     val action: String,
     val message: String? = null,
+    val debug: String? = null,
     val new_comment: String? = null,
     val existing_comment: String? = null
 )

@@ -293,17 +293,9 @@ class KB(persistentKB: PersistentKB) {
 
     internal fun holdsForSessionCase(condition: Condition) = condition.holds(ruleSession!!.case)
 
-    suspend fun startConversation(case: RDRCase): String {
-        val initialResponse = chatManager.startConversation(case)
-        logger.info("Initial model response: '$initialResponse'")
-        return initialResponse
-    }
+    suspend fun startConversation(case: RDRCase) = chatManager.startConversation(case)
 
-    suspend fun responseToUserMessage(message: String): String {
-        val response = chatManager.response(message)
-        logger.info("Subsequent model response to user message: \n$message was: \n$response")
-        return response
-    }
+    suspend fun responseToUserMessage(message: String) = chatManager.response(message)
 }
 
 interface ConditionParser {

@@ -1,12 +1,15 @@
 package io.rippledown.diff
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.*
+import io.rippledown.model.Attribute
+import io.rippledown.model.RDRCase
+import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.caseview.CaseViewProperties
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.rule.CornerstoneStatus
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
+import io.rippledown.utils.checkSerializationIsThreadSafe
+import io.rippledown.utils.defaultDate
+import io.rippledown.utils.serializeDeserialize
 import kotlin.test.Test
 
 class CornerstoneStatusTest {

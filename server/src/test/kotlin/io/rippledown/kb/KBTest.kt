@@ -25,6 +25,7 @@ import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.persistence.inmemory.InMemoryKB
 import io.rippledown.util.shouldBeSameAs
+import io.rippledown.utils.defaultDate
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test

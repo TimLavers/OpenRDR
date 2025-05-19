@@ -9,6 +9,8 @@ import io.rippledown.model.condition.episodic.signature.All
 import io.rippledown.model.condition.episodic.signature.AtLeast
 import io.rippledown.model.condition.episodic.signature.No
 import io.rippledown.model.condition.series.Increasing
+import io.rippledown.utils.daysAgo
+import io.rippledown.utils.today
 import kotlin.test.Test
 
 /**

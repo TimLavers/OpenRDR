@@ -7,11 +7,11 @@ import io.rippledown.interpretation.requireInterpretation
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
 import io.rippledown.model.condition.hasCurrentValue
-import io.rippledown.model.createCaseWithInterpretation
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.rule.clickCancelRuleButton
 import io.rippledown.rule.requireRuleMakerToBeDisplayed
 import io.rippledown.utils.applicationFor
+import io.rippledown.utils.createCaseWithInterpretation
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule

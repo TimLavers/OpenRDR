@@ -4,7 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.model.condition.edit.*
 import io.rippledown.model.condition.episodic.predicate.Normal
 import io.rippledown.model.condition.episodic.signature.Current
-import io.rippledown.model.serializeDeserialize
+import io.rippledown.utils.serializeDeserialize
 import kotlin.test.Test
 
 class ConditionListTest: ConditionTestBase() {

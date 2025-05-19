@@ -3,10 +3,10 @@ package io.rippledown.model.condition
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.kotest.matchers.types.shouldNotBeSameInstanceAs
-import io.rippledown.model.checkSerializationIsThreadSafe
 import io.rippledown.model.condition.structural.IsAbsentFromCase
 import io.rippledown.model.condition.structural.IsPresentInCase
-import io.rippledown.model.serializeDeserialize
+import io.rippledown.utils.checkSerializationIsThreadSafe
+import io.rippledown.utils.serializeDeserialize
 import kotlin.test.Test
 
 class CaseStructureConditionTest: ConditionTestBase() {

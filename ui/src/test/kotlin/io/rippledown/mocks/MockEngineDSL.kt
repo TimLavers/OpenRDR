@@ -8,7 +8,10 @@ import io.ktor.utils.io.*
 import io.rippledown.constants.api.*
 import io.rippledown.constants.server.CASE_ID
 import io.rippledown.constants.server.EXPRESSION
-import io.rippledown.model.*
+import io.rippledown.model.CasesInfo
+import io.rippledown.model.Conclusion
+import io.rippledown.model.KBInfo
+import io.rippledown.model.OperationResult
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
@@ -17,6 +20,7 @@ import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.sample.SampleKB
+import io.rippledown.utils.createCase
 import kotlinx.serialization.json.Json
 
 fun mock(config: EngineConfig) = EngineBuilder(config).build()

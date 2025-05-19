@@ -5,10 +5,10 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
-import io.rippledown.model.defaultDate
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.persistence.inmemory.InMemoryKB
+import io.rippledown.utils.defaultDate
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 

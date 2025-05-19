@@ -13,7 +13,6 @@ import io.rippledown.CaseTestUtils
 import io.rippledown.kb.ConditionParser
 import io.rippledown.kb.KB
 import io.rippledown.kb.KBManager
-import io.rippledown.model.beSameAs
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.condition.greaterThanOrEqualTo
@@ -22,6 +21,7 @@ import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.supplyCaseFromFile
 import io.rippledown.util.EntityRetrieval
+import io.rippledown.utils.beSameAs
 import org.apache.commons.io.FileUtils
 import java.io.File
 import kotlin.test.AfterTest
