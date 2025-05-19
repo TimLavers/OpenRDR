@@ -89,9 +89,7 @@ fun OpenRDRUI(handler: Handler) {
 
     LaunchedEffect(currentCaseId) {
         currentCaseId?.let {
-            println("Starting conversation for currentCaseId = '${currentCaseId}'")
             val response = api.startConversation(it)
-            println("response to starting the conversation = '${response}'")
             if (response.isNotBlank()) {
                 chatControllerHandler.onBotMessageReceived(response)
             }

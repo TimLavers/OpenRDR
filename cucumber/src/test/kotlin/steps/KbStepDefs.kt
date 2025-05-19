@@ -74,8 +74,6 @@ class KbStepDefs {
 
     @When("I set the KB description to:")
     fun i_set_the_description_to(description: DocString) {
-        println("description: ${description.content}")
-        val editCurrentKbControlPO = editCurrentKbControlPO()
         val descriptionOperator = editCurrentKbControlPO().showDescriptionOperator()
         descriptionOperator.setDescription(description.content)
     }
