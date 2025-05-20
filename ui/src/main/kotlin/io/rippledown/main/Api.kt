@@ -5,6 +5,7 @@ import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
 import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
@@ -30,11 +31,18 @@ import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.sample.SampleKB
 import java.io.File
 
-class Api(engine: HttpClientEngine = CIO.create()) {
+class Api(
+    engine: HttpClientEngine = CIO.create()
+) {
     private var currentKB: KBInfo? = null
     private val client = HttpClient(engine) {
         install(ContentNegotiation) {
             json()
+        }
+        install(HttpTimeout) {
+            this.requestTimeoutMillis = 30_000
+            connectTimeoutMillis = 30_000
+            socketTimeoutMillis = 30_000
         }
     }
 
@@ -43,8 +51,8 @@ class Api(engine: HttpClientEngine = CIO.create()) {
     private fun HttpRequestBuilder.setCaseIdParameter(caseId: Long) = parameter(CASE_ID, caseId)
 
     fun shutdown() {
-//        client.close()
-//        engine.close()
+        // client.close() // Uncomment if needed, but not required for CIO engine
+        // engine.close() // Uncomment if needed, but not required for CIO engine
     }
 
     suspend fun createKB(name: String): KBInfo {
@@ -52,7 +60,7 @@ class Api(engine: HttpClientEngine = CIO.create()) {
             contentType(Plain)
             setBody(name)
         }.body()
-        return currentKB!!
+        return currentKB ?: throw IllegalStateException("Failed to create KB")
     }
 
     suspend fun createKBFromSample(name: String, sample: SampleKB): KBInfo {
@@ -60,7 +68,7 @@ class Api(engine: HttpClientEngine = CIO.create()) {
             contentType(Json)
             setBody(Pair(name, sample))
         }.body()
-        return currentKB!!
+        return currentKB ?: throw IllegalStateException("Failed to create KB from sample")
     }
 
     suspend fun selectKB(id: String): KBInfo {
@@ -68,15 +76,14 @@ class Api(engine: HttpClientEngine = CIO.create()) {
             contentType(Plain)
             setBody(id)
         }.body()
-        return currentKB!!
+        return currentKB ?: throw IllegalStateException("Failed to select KB")
     }
 
     @OptIn(InternalComposeApi::class)
     suspend fun kbInfo(): KBInfo {
-        if (currentKB == null) {
-            currentKB = client.get("$API_URL$DEFAULT_KB").body<KBInfo>()
-        }
-        return currentKB!!
+        currentKB?.let { return it }
+        currentKB = client.get("$API_URL$DEFAULT_KB").body<KBInfo>()
+        return currentKB ?: throw IllegalStateException("No default KB available")
     }
 
     suspend fun kbList() = client.get("$API_URL$KB_LIST").body<List<KBInfo>>()
@@ -102,17 +109,18 @@ class Api(engine: HttpClientEngine = CIO.create()) {
             contentType(ContentType.Application.Zip)
             setBody(
                 MultiPartFormDataContent(
-                formData {
-                    append(
-                        "document",
-                        data,
-                        Headers.build {
-                            append(HttpHeaders.ContentType, "images/*") // Mime type required
-                            append(HttpHeaders.ContentDisposition, "filename=${file.name}")
-                        }
-                    )
-                }
-            ))
+                    formData {
+                        append(
+                            "document",
+                            data,
+                            Headers.build {
+                                append(HttpHeaders.ContentType, "application/zip")
+                                append(HttpHeaders.ContentDisposition, "filename=${file.name}")
+                            }
+                        )
+                    }
+                )
+            )
         }.body()
         return currentKB!!
     }
@@ -126,11 +134,10 @@ class Api(engine: HttpClientEngine = CIO.create()) {
 
     suspend fun getCase(caseId: Long): ViewableCase? {
         return try {
-            val result: ViewableCase = client.get("$API_URL$CASE") {
+            client.get("$API_URL$CASE") {
                 setKBParameter()
                 setCaseIdParameter(caseId)
-            }.body()
-            result
+            }.body<ViewableCase>()
         } catch (_: Exception) {
             null
         }
@@ -180,12 +187,11 @@ class Api(engine: HttpClientEngine = CIO.create()) {
      * @return the first cornerstone, its index and the total number of cornerstones
      */
     suspend fun startRuleSession(sessionStartRequest: SessionStartRequest): CornerstoneStatus {
-        val body = client.post("$API_URL$START_RULE_SESSION") {
+        return client.post("$API_URL$START_RULE_SESSION") {
             contentType(Json)
             setBody(sessionStartRequest)
             setKBParameter()
-        }.body<CornerstoneStatus>()
-        return body
+        }.body()
     }
 
     /**
@@ -256,7 +262,7 @@ class Api(engine: HttpClientEngine = CIO.create()) {
             setKBParameter()
             parameter(EXPRESSION, expression)
             setBody(attributeNames)
-        }.body<ConditionParsingResult>()
+        }.body()
     }
 
     suspend fun startConversation(caseId: Long): String {

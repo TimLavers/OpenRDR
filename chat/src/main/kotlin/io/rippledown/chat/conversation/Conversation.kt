@@ -16,7 +16,6 @@ interface ConversationService {
 }
 
 class Conversation : ConversationService {
-    val logger = lazyLogger
 
     private lateinit var chatService: GeminiChatService
     private lateinit var chat: Chat
@@ -69,6 +68,7 @@ class Conversation : ConversationService {
 /**
  * Retry when receiving the 503 error from the API due to rate limiting.
  */
+object Retry
 fun <T> retry(
     maxRetries: Int = 10,
     initialDelay: Long = 1_000,
@@ -81,7 +81,7 @@ fun <T> retry(
             return block()
         } catch (e: Exception) {
             if (attempt == maxRetries - 1) throw e
-            println("attempt $attempt failed. Waiting $currentDelay ms before retrying")
+            Retry.lazyLogger.info("attempt $attempt failed. Waiting $currentDelay ms before retrying")
             sleep(currentDelay)
             currentDelay = (currentDelay * 2).coerceAtMost(maxDelay) + nextLong(0, 1_000)
         }

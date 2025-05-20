@@ -25,17 +25,16 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
     suspend fun response(message: String): String {
         logger.info("$LOG_PREFIX_FOR_USER_MESSAGE '$message'")
         val response = conversationService.response(message)
-        logger.info("$LOG_PREFIX_FOR_CONVERSATION_RESPONSE '$response'")
+        logger.info("$LOG_PREFIX_FOR_CONVERSATION_RESPONSE $response")
         return processActionComment(response.fromJsonString<ActionComment>())
     }
 
     //Either pass on the model's response to the user or take some rule action
     suspend fun processActionComment(actionComment: ActionComment): String {
         return when (actionComment.action) {
-            STOP_ACTION -> ""  //TODO
 
             USER_ACTION -> {
-                actionComment.message!!
+                actionComment.message ?: ""
             }
 
             ADD_ACTION -> {
@@ -46,6 +45,7 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
                 } ?: ""
             }
 
+            STOP_ACTION -> ""  //TODO
             REMOVE_ACTION -> "" // TODO
             REPLACE_ACTION -> "" // TODO
 

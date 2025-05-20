@@ -56,13 +56,11 @@ fun OpenRDRUI(handler: Handler) {
     val chatControllerHandler = object : ChatControllerHandler {
         override var onBotMessageReceived: (message: String) -> Unit = { }
         override fun sendUserMessage(message: String) {
-            println("User message to be sent : $message")
             val caseId = requireNotNull(currentCaseId) {
                 "currentCaseId should not be null when casesInfo.count > 0"
             }
             runBlocking {
                 val response = api.sendUserMessage(message, caseId)
-                println("response from model = '${response}'")
                 onBotMessageReceived(response)
 
                 //refresh the case to get the latest interpretation

@@ -2,10 +2,7 @@ package steps
 
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
-import io.rippledown.constants.chat.ADD_A_COMMENT
-import io.rippledown.constants.chat.PLEASE_CONFIRM
-import io.rippledown.constants.chat.REPLACE
-import io.rippledown.constants.chat.WOULD_YOU_LIKE
+import io.rippledown.constants.chat.*
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
 
@@ -28,33 +25,74 @@ class ChatDefs {
     }
 
     @Then("the chatbot has asked for confirmation")
-    fun requireBotRequestForConfirmation() {
+    fun waitForBotRequestForConfirmation() {
         await().atMost(ofSeconds(10)).until {
             chatPO().botRowContainsText(PLEASE_CONFIRM)
+        }
+    }
+
+    fun waitForBotInitialPrompt() {
+        await().atMost(ofSeconds(10)).until {
+            botInitialPrompt()
         }
     }
 
     @Then("the chatbot has asked if I want to add a comment")
     fun requireBotQuestionToAddAComment() {
         await().atMost(ofSeconds(10)).until {
-            chatPO().botRowContainsText(WOULD_YOU_LIKE) &&
-                    chatPO().botRowContainsText(ADD_A_COMMENT)
+            botQuestionToAddAComment()
         }
     }
 
-    @Then("the chatbot has asked if I want to change the report")
-    fun requireBotQuestionToChangeTheReport() {
+    @Then("the chatbot has asked if I want to add, remove or replace a comment")
+    fun waitForBotQuestionToAddRemoveOrReplaceAComment() {
         await().atMost(ofSeconds(10)).until {
-            chatPO().botRowContainsText(REPLACE)
+            botQuestionToAddRemoveOrReplaceAComment()
         }
     }
 
+    private fun botInitialPrompt() = with(chatPO()) {
+        botRowContainsText(WOULD_YOU_LIKE)
+    }
 
-    @And("I have added a comment {string} using the chat")
+    private fun botQuestionToAddAComment() = with(chatPO()) {
+        botRowContainsText(WOULD_YOU_LIKE) &&
+                botRowContainsText(ADD_A_COMMENT)
+    }
+
+    @And("the chatbot has asked for what comment I want to add")
+    fun waitForBotQuestionToSpecifyAComment() {
+        await().atMost(ofSeconds(10)).until {
+            botQuestionFoWhatComment()
+        }
+    }
+
+    private fun botQuestionFoWhatComment() = with(chatPO()) {
+        botRowContainsText(WHAT_COMMENT)
+    }
+
+    private fun botQuestionToAddRemoveOrReplaceAComment() = with(chatPO()) {
+        botRowContainsText(WOULD_YOU_LIKE) &&
+                botRowContainsText(ADD) &&
+                botRowContainsText(REMOVE) &&
+                botRowContainsText(REPLACE)
+    }
+
+    @And("I build a rule to add an initial comment {string} using the chat")
     fun addCommentUsingChat(comment: String) {
-        requireBotQuestionToAddAComment()
-        enterChatTextAndSend("Add the comment \"$comment\"")
-        requireBotRequestForConfirmation()
+        waitForBotInitialPrompt()
+        confirm()
+        enterChatTextAndSend("Add the comment: \"$comment\"")
+        waitForBotRequestForConfirmation()
+        confirm()
+    }
+
+    @And("I build a rule to add another comment {string} using the chat")
+    fun addAnotherCommentUsingChat(comment: String) {
+        waitForBotQuestionToAddRemoveOrReplaceAComment()
+        confirm()
+        enterChatTextAndSend("Add the comment: \"$comment\"")
+        waitForBotRequestForConfirmation()
         confirm()
     }
 
