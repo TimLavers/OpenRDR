@@ -1,3 +1,4 @@
+@chat
 Feature: The user can use the chat to make changes the interpretive report
 
   Scenario: The user should be able to use the chat to add a comment to a blank report, with no conditions

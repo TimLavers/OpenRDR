@@ -50,6 +50,12 @@ class Defs {
         println("After scenario  '${scenario.name}', duration: ${stopwatch.elapsed(SECONDS)} seconds")
     }
 
+    @After("@chat")
+    fun afterChatScenario(scenario: Scenario) {
+        println("Delaying for 30 secs after chat scenario")
+        Thread.sleep(30_000)
+    }
+
     @When("A Knowledge Base called {word} has been created")
     fun createKnowledgeBase(name: String) {
         restClient().createKB(name)
