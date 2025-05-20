@@ -98,7 +98,57 @@ class OpenRDRUITest {
     }
 
     @Test
-    fun `should show the chat panel if a case is showing`() = runTest {
+    fun `should show the chat panel by default`() = runTest {
+        val caseA = "case A"
+        val caseId1 = CaseId(id = 1, name = caseA)
+        val caseIds = listOf(caseId1)
+        val bondiComment = "Go to Bondi"
+        val case = createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.getCase(1) } returns case
+
+        with(composeTestRule) {
+            //Given
+            setContent {
+                OpenRDRUI(handler)
+            }
+            requireNamesToBeShowingOnCaseList(caseA)
+
+            //When
+            waitForCaseToBeShowing(caseA)
+
+            //Then
+            requireChatPanelIsDisplayed()
+        }
+    }
+
+    @Test
+    fun `should hide the chat panel if the chat toggle is clicked`() = runTest {
+        val caseA = "case A"
+        val caseId1 = CaseId(id = 1, name = caseA)
+        val caseIds = listOf(caseId1)
+        val bondiComment = "Go to Bondi"
+        val case = createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.getCase(1) } returns case
+
+        with(composeTestRule) {
+            //Given
+            setContent {
+                OpenRDRUI(handler)
+            }
+            requireChatPanelIsDisplayed()
+
+            //When
+            clickChatIconToggle()
+
+            //Then
+            requireChatPanelIsNotDisplayed()
+        }
+    }
+
+    @Test
+    fun `should show the chat panel if a case is showing and the chat toggle icon has been clicked`() = runTest {
         val caseA = "case A"
         val caseId1 = CaseId(id = 1, name = caseA)
         val caseIds = listOf(caseId1)
@@ -737,6 +787,7 @@ class OpenRDRUITest {
             }
             //Given
             waitForCaseToBeShowing(caseName)
+            clickChatIconToggle() //more space for the rule session
             clickChangeInterpretationButton()
             clickAddCommentMenu()
             addNewComment("Go to Bondi")
@@ -909,7 +960,6 @@ class OpenRDRUITest {
             requireCommentOptionsToBeDisplayed(REMOVE_COMMENT_PREFIX, listOf(commentA))
         }
     }
-
 }
 
 fun main() {

@@ -26,7 +26,7 @@ composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "k
 
 [libraries]
 composePreviewDesktop = { module = "org.jetbrains.compose.ui:ui-tooling-preview-desktop", version.ref = "compose" }
-materialIcons = { module = "org.jetbrains.compose.material:material-icons-core", version.ref = "material_icons" }
+materialIcons = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "material_icons" }
 
 commonsIo = { module = "commons-io:commons-io", version.ref = "commonsIo" }
 commonsLang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commonsLang3" }

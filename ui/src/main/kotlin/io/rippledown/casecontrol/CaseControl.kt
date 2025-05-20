@@ -39,13 +39,14 @@ fun CaseControl(
     currentCase: ViewableCase?,
     cornerstoneStatus: CornerstoneStatus? = null,
     conditionHints: List<SuggestedCondition>,
-    handler: CaseControlHandler
+    handler: CaseControlHandler,
+    modifier: Modifier = Modifier
 ) {
     val ruleInProgress = cornerstoneStatus != null
     val attributeNames = conditionHints.flatMap { it.initialSuggestion().attributeNames() }.toSet()
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .padding(8.dp)
     )
     {

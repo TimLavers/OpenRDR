@@ -6,8 +6,8 @@ Feature: The user can use the chat to make changes the interpretive report
       | Wave | excellent |
       | Sun  | hot       |
     And I start the client application
-    And I see the case Bondi as the current case
     And the report is empty
+    And I see the case Bondi as the current case
     And the chatbot has asked if I want to add a comment
     And I confirm
     And the chatbot has asked for what comment I want to add
