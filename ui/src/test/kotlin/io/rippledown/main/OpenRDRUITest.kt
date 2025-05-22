@@ -98,7 +98,7 @@ class OpenRDRUITest {
     }
 
     @Test
-    fun `should show the chat panel by default`() = runTest {
+    fun `should hide the chat panel by default`() = runTest {
         val caseA = "case A"
         val caseId1 = CaseId(id = 1, name = caseA)
         val caseIds = listOf(caseId1)
@@ -118,12 +118,12 @@ class OpenRDRUITest {
             waitForCaseToBeShowing(caseA)
 
             //Then
-            requireChatPanelIsDisplayed()
+            requireChatPanelIsNotDisplayed()
         }
     }
 
     @Test
-    fun `should hide the chat panel if the chat toggle is clicked`() = runTest {
+    fun `should show the chat panel if the chat toggle is clicked`() = runTest {
         val caseA = "case A"
         val caseId1 = CaseId(id = 1, name = caseA)
         val caseIds = listOf(caseId1)
@@ -137,13 +137,13 @@ class OpenRDRUITest {
             setContent {
                 OpenRDRUI(handler)
             }
-            requireChatPanelIsDisplayed()
+            requireChatPanelIsNotDisplayed()
 
             //When
             clickChatIconToggle()
 
             //Then
-            requireChatPanelIsNotDisplayed()
+            requireChatPanelIsDisplayed()
         }
     }
 
@@ -189,6 +189,7 @@ class OpenRDRUITest {
                 OpenRDRUI(handler)
             }
             waitForCaseToBeShowing(caseName)
+            clickChatIconToggle()
 
             //When
             val userMessage = "add a comment"
@@ -279,6 +280,7 @@ class OpenRDRUITest {
 
             //When
             waitForCaseToBeShowing(caseName)
+            clickChatIconToggle()
 
             //Then
             requireChatMessagesShowing(listOf(BotMessage(initialResponse)))
@@ -303,6 +305,7 @@ class OpenRDRUITest {
                 OpenRDRUI(handler)
             }
             waitForCaseToBeShowing(caseA)
+            clickChatIconToggle()
 
             //When
             val userMessage = "add a comment"
@@ -336,6 +339,7 @@ class OpenRDRUITest {
             waitForCaseToBeShowing(caseName)
             coVerify(exactly = 2) { api.getCase(id) }
             requireInterpretation(bondiComment)
+            clickChatIconToggle()
 
             //When
             coEvery { api.getCase(id) } returns updatedCase
@@ -787,7 +791,6 @@ class OpenRDRUITest {
             }
             //Given
             waitForCaseToBeShowing(caseName)
-            clickChatIconToggle() //more space for the rule session
             clickChangeInterpretationButton()
             clickAddCommentMenu()
             addNewComment("Go to Bondi")

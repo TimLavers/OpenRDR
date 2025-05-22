@@ -48,7 +48,7 @@ fun OpenRDRUI(handler: Handler) {
     var rightInformationMessage by remember { mutableStateOf("") }
     var ruleAction: Diff? by remember { mutableStateOf(null) }
     var conditionHints by remember { mutableStateOf(listOf<SuggestedCondition>()) }
-    var isChatVisible by remember { mutableStateOf(true) }
+    var isChatVisible by remember { mutableStateOf(false) }
     var isChatEnabled by remember { mutableStateOf(true) }
 
     val isShowingCornerstone = cornerstoneStatus?.cornerstoneToReview != null
@@ -89,6 +89,15 @@ fun OpenRDRUI(handler: Handler) {
     }
 
     LaunchedEffect(currentCaseId) {
+        currentCaseId?.let {
+            val response = api.startConversation(it)
+            if (response.isNotBlank()) {
+                chatControllerHandler.onBotMessageReceived(response)
+            }
+        }
+    }
+    //Start a conversation with the model when the chat is made visible
+    LaunchedEffect(isChatVisible) {
         currentCaseId?.let {
             val response = api.startConversation(it)
             if (response.isNotBlank()) {
@@ -236,7 +245,11 @@ fun OpenRDRUI(handler: Handler) {
                                 api.conditionFor(conditionText, attributeNames)
                             }
                         },
-                        modifier = Modifier.weight(if (isChatVisible) 0.7f else 1f)
+                        modifier = if (isChatVisible) {
+                            Modifier.weight(0.7f)
+                        } else {
+                            Modifier.fillMaxSize()
+                        }
                     )
 
                     if (isChatVisible) {
