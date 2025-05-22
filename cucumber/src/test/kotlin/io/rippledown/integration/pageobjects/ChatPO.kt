@@ -29,7 +29,7 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
         execute { chatTextContext().find(CHAT_SEND)?.accessibleAction?.doAccessibleAction(0) }
 
     fun clickChatIconToggle() =
-        execute { chatTextContext().find(CHAT_ICON_TOGGLE)?.accessibleAction?.doAccessibleAction(0) }
+        execute { contextProvider().find(CHAT_ICON_TOGGLE)?.accessibleAction?.doAccessibleAction(0) }
 
     fun botRowContainsText(text: String): Boolean {
         return execute<Boolean> {

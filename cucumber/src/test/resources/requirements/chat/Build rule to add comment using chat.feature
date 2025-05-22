@@ -8,6 +8,7 @@ Feature: The user can use the chat to make changes the interpretive report
     And I start the client application
     And the report is empty
     And I see the case Bondi as the current case
+    And the chat is showing
     And the chatbot has asked if I want to add a comment
     And I confirm
     And the chatbot has asked for what comment I want to add
@@ -25,6 +26,7 @@ Feature: The user can use the chat to make changes the interpretive report
     And the interpretation of the case Bondi is "Go to Bondi."
     And I start the client application
     And I see the case Bondi as the current case
+    And the chat is showing
     And the chatbot has asked if I want to add, remove or replace a comment
     And I enter the following text into the chat panel:
       | Add the comment: "Let's surf" |
@@ -39,6 +41,7 @@ Feature: The user can use the chat to make changes the interpretive report
       | Sun  | hot       |
     And I start the client application
     And I see the case Bondi as the current case
+    And the chat is showing
     And the report is empty
     And  I build a rule to add an initial comment "Let's surf." using the chat
     And I enter the following text into the chat panel:
@@ -54,6 +57,7 @@ Feature: The user can use the chat to make changes the interpretive report
       | Case2 |
     And I start the client application
     And I should see the case Case1 as the current case
+    And the chat is showing
     And I build a rule to add an initial comment "Let's surf." using the chat
     And the report should be "Let's surf."
     And select the case Case2
