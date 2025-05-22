@@ -30,9 +30,8 @@ interface CaseControlHandler : CaseInspectionHandler, CornerstonePagerHandler {
     fun endRuleSession()
     fun buildRule(ruleRequest: RuleRequest)
     fun updateCornerstoneStatus(cornerstoneRequest: UpdateCornerstoneRequest)
-    fun conditionForExpression(conditionText: String, attributeNames: Collection<String>): ConditionParsingResult
+    fun conditionFor(conditionText: String, attributeNames: Collection<String>): ConditionParsingResult
     var setRightInfoMessage: (message: String) -> Unit
-
 }
 
 @Composable
@@ -47,8 +46,7 @@ fun CaseControl(
 
     Row(
         modifier = Modifier
-            .padding(10.dp)
-            .width(1800.dp)
+            .padding(8.dp)
     )
     {
         if (currentCase != null) {
@@ -59,7 +57,7 @@ fun CaseControl(
             })
         }
         if (ruleInProgress) {
-            if (cornerstoneStatus!!.cornerstoneToReview == null) {
+            if (cornerstoneStatus.cornerstoneToReview == null) {
                 handler.setRightInfoMessage(NO_CORNERSTONES_TO_REVIEW_MSG)
             } else {
                 handler.setRightInfoMessage("")
@@ -83,7 +81,7 @@ fun CaseControl(
                 }
 
                 override fun conditionForExpression(expression: String) =
-                    handler.conditionForExpression(expression, attributeNames)
+                    handler.conditionFor(expression, attributeNames)
             })
         }
     }

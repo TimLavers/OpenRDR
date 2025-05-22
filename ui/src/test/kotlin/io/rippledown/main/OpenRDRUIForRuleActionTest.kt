@@ -12,8 +12,8 @@ import io.rippledown.constants.interpretation.REPLACING
 import io.rippledown.interpretation.*
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
-import io.rippledown.model.createCase
-import io.rippledown.model.createCaseWithInterpretation
+import io.rippledown.utils.createCase
+import io.rippledown.utils.createCaseWithInterpretation
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule

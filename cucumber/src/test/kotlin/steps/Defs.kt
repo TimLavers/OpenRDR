@@ -14,7 +14,6 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.integration.pause
 import io.rippledown.integration.proxy.ConfiguredTestData
 import io.rippledown.integration.proxy.TestResultDetail
-import io.rippledown.integration.waitUntilAsserted
 import org.awaitility.Awaitility
 import steps.StepsInfrastructure.cleanup
 import steps.StepsInfrastructure.reStartWithPostgres
@@ -49,6 +48,12 @@ class Defs {
         stopwatch.stop()
         cleanup()
         println("After scenario  '${scenario.name}', duration: ${stopwatch.elapsed(SECONDS)} seconds")
+    }
+
+    @After("@chat")
+    fun afterChatScenario(scenario: Scenario) {
+        println("Delaying for 30 secs after chat scenario")
+        Thread.sleep(30_000)
     }
 
     @When("A Knowledge Base called {word} has been created")
@@ -252,7 +257,7 @@ class Defs {
         interpretationViewPO().waitForInterpretationTextToContain(text)
     }
 
-    @Then("the interpretation should be {string}")
+    @Then("the (interpretation )(report )should be {string}")
     fun theInterpretationShouldBeString(text: String) {
         interpretationViewPO().waitForInterpretationText(text)
     }
@@ -262,7 +267,7 @@ class Defs {
         interpretationViewPO().waitForInterpretationText(text.content)
     }
 
-    @Then("the interpretation should be empty")
+    @Then("the (interpretation )(report )(should be )(is )(empty)(blank)")
     fun theInterpretationFieldShouldBeEmpty() {
         interpretationViewPO().waitForInterpretationText("")
     }

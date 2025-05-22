@@ -5,7 +5,7 @@ import io.rippledown.model.condition.episodic.predicate.Contains
 import io.rippledown.model.condition.episodic.predicate.Low
 import io.rippledown.model.condition.episodic.signature.All
 import io.rippledown.model.condition.episodic.signature.Current
-import io.rippledown.model.serializeDeserialize
+import io.rippledown.utils.serializeDeserialize
 import kotlin.test.Test
 
 class AndTest: ConditionTestBase() {

@@ -6,15 +6,11 @@ import dev.shreyaspatil.ai.client.generativeai.type.BlockThreshold.NONE
 import io.rippledown.conditiongenerator.ConditionSpecification
 import io.rippledown.conditiongenerator.fromJson
 import kotlinx.coroutines.runBlocking
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.lang.System.getenv
 import java.lang.Thread.sleep
 import kotlin.random.Random.Default.nextLong
 
 const val GEMINI_MODEL = "gemini-1.5-flash"
-
-val logger: Logger = LoggerFactory.getLogger("rdr")
 
 //Set the model to be as deterministic as possible
 val generativeConfig = GenerationConfig.builder().apply {

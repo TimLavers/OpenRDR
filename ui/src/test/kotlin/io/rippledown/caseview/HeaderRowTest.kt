@@ -8,8 +8,8 @@ import io.mockk.every
 import io.mockk.mockk
 import io.rippledown.constants.caseview.ATTRIBUTE_HEADER_CELL_TEXT
 import io.rippledown.mocks.DummyLazyItemScope
-import io.rippledown.model.lastWeek
-import io.rippledown.model.today
+import io.rippledown.utils.lastWeek
+import io.rippledown.utils.today
 import org.junit.Rule
 import org.junit.Test
 

@@ -50,7 +50,7 @@ fun OKCancelButtons(
         horizontalArrangement = Arrangement.End,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(10.dp)
+            .padding(8.dp)
     ) {
         TextButton(
             onClick = onCancel,

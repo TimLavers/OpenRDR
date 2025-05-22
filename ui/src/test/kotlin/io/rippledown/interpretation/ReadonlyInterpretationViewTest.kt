@@ -9,7 +9,7 @@ import androidx.compose.ui.text.TextLayoutResult
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import io.rippledown.decoration.BACKGROUND_COLOR
-import io.rippledown.model.createInterpretation
+import io.rippledown.utils.createInterpretation
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule

@@ -1,8 +1,7 @@
 package io.rippledown.model.external
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.defaultDate
-import kotlinx.serialization.encodeToString
+import io.rippledown.utils.defaultDate
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 

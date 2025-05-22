@@ -4,9 +4,9 @@ import io.kotest.matchers.shouldBe
 import io.ktor.server.testing.*
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.rule.SessionStartRequest
-import io.rippledown.model.serializeDeserialize
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.sample.SampleKB
+import io.rippledown.utils.serializeDeserialize
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking

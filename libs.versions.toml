@@ -1,12 +1,13 @@
 [versions]
 kotlin = "2.1.10"
 compose = "1.7.3"
+material_icons = "1.7.3"
 kotest = "5.7.2"
 assertjSwing = "3.17.1"
 guava = "33.2.1-jre"
 mockk = "1.13.8"
 logback = "1.5.17"
-ktor = "2.3.12"
+ktor = "3.1.2"
 kotlinx_coroutines = "1.8.1"
 kotlinx_serialization = "1.7.2"
 kotlinx_datetime = "0.6.1"
@@ -15,6 +16,9 @@ awaitility = "4.2.2"
 commonsIo = "2.14.0"
 commonsLang3 = "3.14.0"
 exposed = "0.42.0"
+postgresql = "42.6.0"
+generativeai = "0.9.0-1.1.0"
+filepicker = "3.1.0"
 
 [plugins]
 compose = { id = "org.jetbrains.compose", version.ref = "compose" }
@@ -22,7 +26,7 @@ composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "k
 
 [libraries]
 composePreviewDesktop = { module = "org.jetbrains.compose.ui:ui-tooling-preview-desktop", version.ref = "compose" }
-materialIcons = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "compose" }
+materialIcons = { module = "org.jetbrains.compose.material:material-icons-core", version.ref = "material_icons" }
 
 commonsIo = { module = "commons-io:commons-io", version.ref = "commonsIo" }
 commonsLang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commonsLang3" }
@@ -32,6 +36,7 @@ cucumberPicocontainer = { module = "io.cucumber:cucumber-picocontainer", version
 #junit-platformSuite = { module = "org.junit.platform:junit-platform-suite", version.ref = "junitSuite" }
 
 kotlinxCoroutinesCore = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx_coroutines" }
+kotlinxCoroutinesTest = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx_coroutines" }
 kotlinxSerializationCore = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx_serialization" }
 kotlinxSerializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx_serialization" }
 kotlinxDateTime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx_datetime" }
@@ -40,10 +45,19 @@ ktorClientCore = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktorClientCio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktorClientMock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 ktorClientContentNegotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktorServerCore = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
+ktor-server-core-jvm = { module = "io.ktor:ktor-server-core-jvm", version.ref = "ktor" }
 ktorServerContentNegotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
 ktorSerialization = { module = "io.ktor:ktor-serialization", version.ref = "ktor" }
 ktorSerializationKotlinxJson = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+ktorClientOkhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+ktor-server-cors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor" }
+ktor-server-compression = { module = "io.ktor:ktor-server-compression", version.ref = "ktor" }
+ktor-server-call-logging = { module = "io.ktor:ktor-server-call-logging", version.ref = "ktor" }
+ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
+ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
 
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 exposedCore = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
 exposedJdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
 exposedDao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
@@ -55,10 +69,27 @@ mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 awaitility = { module = "org.awaitility:awaitility", version.ref = "awaitility" }
 
-generativeai = { module = "dev.shreyaspatil.generativeai:generativeai-google-jvm", version = "0.9.0-1.0.1" }
+generativeai = { module = "dev.shreyaspatil.generativeai:generativeai-google-jvm", version.ref = "generativeai" }
+filepicker = { module = "com.darkrockstudios:mpfilepicker", version.ref = "filepicker" }
 
 [bundles]
-ktor = ["ktorClientCore", "ktorClientCio", "ktorClientMock", "ktorClientContentNegotiation", "ktorServerContentNegotiation", "ktorSerialization", "ktorSerializationKotlinxJson"]
+ktor = [
+    "ktorClientCore",
+    "ktorClientCio",
+    "ktorClientMock",
+    "ktorClientContentNegotiation",
+    "ktorServerCore",
+    "ktor-server-core-jvm",
+    "ktor-server-netty",
+    "ktorServerContentNegotiation",
+    "ktorSerialization",
+    "ktorSerializationKotlinxJson",
+    "ktorClientOkhttp",
+    "ktor-server-cors",
+    "ktor-server-compression",
+    "ktor-server-call-logging",
+    "ktor-server-test-host"
+]
 kotlinx = ["kotlinxCoroutinesCore", "kotlinxSerializationCore", "kotlinxSerializationJson", "kotlinxDateTime"]
 cucumber = ["cucumberJava", "cucumberJunitPlatformEngine", "cucumberPicocontainer"]
 exposed = ["exposedCore", "exposedJdbc", "exposedDao"]

@@ -2,14 +2,14 @@ package io.rippledown.expressionparser
 
 import io.rippledown.conditiongenerator.ConditionGenerator
 import io.rippledown.llm.conditionSpecificationFor
-import io.rippledown.logger
+import io.rippledown.log.lazyLogger
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.Condition
 
 typealias AttributeFor = (String) -> Attribute
 
 class ConditionTip(attributeNames: Collection<String>, attributeFor: AttributeFor) {
-    private val logger = ConditionTip::class.logger()
+    private val logger = lazyLogger
     private val expressionConverter = ExpressionConverter(attributeNames)
     private val conditionGenerator = ConditionGenerator(attributeFor)
 

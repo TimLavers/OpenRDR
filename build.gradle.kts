@@ -5,8 +5,7 @@ apply(from = "repositories.gradle.kts")
 plugins {
     kotlin("jvm") version "2.1.10"
     kotlin("plugin.serialization") version "2.1.10"
-    id("io.ktor.plugin") version "2.3.5"
-    id("com.github.johnrengelman.shadow") version "5.2.0"
+    id("io.ktor.plugin") version "3.1.2"
     idea
     alias(libs.plugins.compose) apply false
     alias(libs.plugins.composeCompiler) apply false
@@ -38,7 +37,16 @@ subprojects {
 
     dependencies {
         testImplementation(kotlin("test"))
-        testImplementation("io.ktor:ktor-client-mock")
+    }
+    sourceSets {
+        main {
+            resources {
+                srcDirs.add(
+                    project(":")
+                        .projectDir.resolve("shared-resources")
+                )
+            }
+        }
     }
 
     tasks.test {

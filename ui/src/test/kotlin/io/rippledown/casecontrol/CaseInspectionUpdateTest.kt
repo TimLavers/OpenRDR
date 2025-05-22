@@ -9,8 +9,12 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import io.mockk.every
 import io.mockk.mockk
-import io.rippledown.model.*
+import io.rippledown.model.Attribute
+import io.rippledown.model.CaseId
+import io.rippledown.model.TestResult
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.utils.AttributeWithValue
+import io.rippledown.utils.createCase
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import kotlin.test.Test

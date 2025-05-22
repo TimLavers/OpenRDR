@@ -3,8 +3,7 @@ package io.rippledown.model.condition.structural
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.rippledown.model.condition.ConditionTestBase
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
+import io.rippledown.utils.serializeDeserialize
 import kotlin.test.Test
 
 class IsSingleEpisodeCaseTest: ConditionTestBase() {
@@ -32,6 +31,6 @@ class IsSingleEpisodeCaseTest: ConditionTestBase() {
 
     @Test
     fun serialization() {
-        io.rippledown.model.serializeDeserialize(predicate) shouldBe predicate
+        serializeDeserialize(predicate) shouldBe predicate
     }
 }

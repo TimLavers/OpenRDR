@@ -1,7 +1,7 @@
 package io.rippledown.model.condition
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.serializeDeserialize
+import io.rippledown.utils.serializeDeserialize
 import kotlin.test.Test
 
 class TrueTest: ConditionTestBase() {

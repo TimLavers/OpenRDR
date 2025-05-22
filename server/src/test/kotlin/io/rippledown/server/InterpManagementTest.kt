@@ -13,12 +13,12 @@ import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.CaseId
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.RuleConditionList
-import io.rippledown.model.createCase
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
+import io.rippledown.utils.createCase
 import kotlin.test.Test
 
 class InterpManagementTest : OpenRDRServerTestBase() {

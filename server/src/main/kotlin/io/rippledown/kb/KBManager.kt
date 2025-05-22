@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory
 
 class KBManager(private val persistenceProvider: PersistenceProvider) {
     private val kbInfos = mutableSetOf<KBInfo>()
-    private val logger: Logger = LoggerFactory.getLogger("rdr")
+    private val logger: Logger = LoggerFactory.getLogger(this::class.java.name)
 
     init {
         persistenceProvider.idStore().data().forEach{

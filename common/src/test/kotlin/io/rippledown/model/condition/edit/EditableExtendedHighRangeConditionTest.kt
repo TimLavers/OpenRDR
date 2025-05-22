@@ -7,7 +7,7 @@ import io.rippledown.model.condition.episodic.predicate.High
 import io.rippledown.model.condition.episodic.predicate.HighByAtMostSomePercentage
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.episodic.signature.No
-import io.rippledown.model.serializeDeserialize
+import io.rippledown.utils.serializeDeserialize
 import kotlin.test.Test
 
 class EditableExtendedHighRangeConditionTest: ConditionTestBase() {

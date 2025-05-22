@@ -28,21 +28,28 @@ class ServerProxy {
     fun reStartWithPostgres() = start(false, cleanup = false)
 
     fun start(inMemory: Boolean, cleanup: Boolean = true) {
-//        println("START: inMemory = [${inMemory}], cleanup = [${cleanup}]")
         findJar()
         if (cleanup) {
             dirProxy.createAndCleanManagedDirectories()
             logProxy.deleteLogfiles()
         }
         val dbFlag = if (inMemory) IN_MEMORY else ""
-        process = ProcessBuilder("java", "-jar", jarFile.absolutePath, dbFlag, "-Xmx24G")
+        val tempDir = dirProxy.tempDir().absolutePath
+        val command = listOf(
+            "java",
+            "-DlogFilePath=$tempDir/logs/server.log",
+            "-jar",
+            jarFile.absolutePath,
+            dbFlag,
+            "-Xmx24G"
+        )
+        process = ProcessBuilder(command)
             .redirectErrorStream(true)
             .redirectOutput(systemOutputFile)
             .directory(dirProxy.tempDir())
             .start()
         waitForServerToStart()
     }
-
     private fun findJar() {
         val rootDirectory = dirProxy.userDir()
         val serverLibsDir = Paths.get(rootDirectory.path, "server", "build", "libs").toFile()

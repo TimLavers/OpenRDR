@@ -8,6 +8,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.rippledown.appbar.assertKbNameIs
 import io.rippledown.casecontrol.*
+import io.rippledown.chat.*
 import io.rippledown.constants.interpretation.ADD_COMMENT_PREFIX
 import io.rippledown.constants.interpretation.REMOVE_COMMENT_PREFIX
 import io.rippledown.constants.interpretation.REPLACED_COMMENT_PREFIX
@@ -24,6 +25,8 @@ import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.rule.clickCancelRuleButton
 import io.rippledown.rule.clickFinishRuleButton
 import io.rippledown.utils.applicationFor
+import io.rippledown.utils.createCase
+import io.rippledown.utils.createCaseWithInterpretation
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -93,6 +96,208 @@ class OpenRDRUITest {
             requireInterpretation(bondiComment)
         }
     }
+
+    @Test
+    fun `should show the chat panel if a case is showing`() = runTest {
+        val caseA = "case A"
+        val caseId1 = CaseId(id = 1, name = caseA)
+        val caseIds = listOf(caseId1)
+        val bondiComment = "Go to Bondi"
+        val case = createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.getCase(1) } returns case
+
+        with(composeTestRule) {
+            //Given
+            setContent {
+                OpenRDRUI(handler)
+            }
+            requireNamesToBeShowingOnCaseList(caseA)
+
+            //When
+            waitForCaseToBeShowing(caseA)
+
+            //Then
+            requireEmptyChatHistory()
+        }
+    }
+
+    @Test
+    fun `should call the api to send a message to the model when a user chat message is entered`() = runTest {
+        val caseName = "case A"
+        val caseId = CaseId(id = 1234, name = caseName)
+        val id = caseId.id!!
+        val caseIds = listOf(caseId)
+        val bondiComment = "Go to Bondi"
+        val case = createCaseWithInterpretation(caseName, id, listOf(bondiComment))
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.getCase(id) } returns case
+
+        with(composeTestRule) {
+            //Given
+            setContent {
+                OpenRDRUI(handler)
+            }
+            waitForCaseToBeShowing(caseName)
+
+            //When
+            val userMessage = "add a comment"
+            typeChatMessageAndClickSend(userMessage)
+
+            //Then
+            coVerify { api.sendUserMessage(userMessage, id) }
+        }
+    }
+
+    @Test
+    fun `should start a conversation with the model when a case is selected`() = runTest {
+        val caseName = "case A"
+        val caseId = CaseId(id = 1234, name = caseName)
+        val id = caseId.id!!
+        val caseIds = listOf(caseId)
+        val bondiComment = "Go to Bondi"
+        val case = createCaseWithInterpretation(caseName, id, listOf(bondiComment))
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.getCase(id) } returns case
+
+        with(composeTestRule) {
+            //Given
+            setContent {
+                OpenRDRUI(handler)
+            }
+
+            //When
+            waitForCaseToBeShowing(caseName)
+
+            //Then
+            coVerify { api.startConversation(id) }
+        }
+    }
+
+    @Test
+    fun `should start a new conversation with the model when another case is selected`() = runTest {
+        val caseNameA = "case A"
+        val caseNameB = "case B"
+        val caseIdA = CaseId(id = 1234, name = caseNameA)
+        val caseIdB = CaseId(id = 5678, name = caseNameB)
+        val idA = caseIdA.id!!
+        val idB = caseIdB.id!!
+        val caseIds = listOf(caseIdA, caseIdB)
+        val bondiComment = "Go to Bondi"
+        val malabarComment = "Go to Malabar"
+        val caseA = createCaseWithInterpretation(caseNameA, idA, listOf(bondiComment))
+        val caseB = createCaseWithInterpretation(caseNameB, idB, listOf(malabarComment))
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.getCase(idA) } returns caseA
+        coEvery { api.getCase(idB) } returns caseB
+
+        with(composeTestRule) {
+            //Given
+            setContent {
+                OpenRDRUI(handler)
+            }
+            waitForCaseToBeShowing(caseNameA)
+            coVerify { api.startConversation(idA) }
+
+            //When
+            selectCaseByName(caseNameB)
+            waitForCaseToBeShowing(caseNameB)
+
+            //Then
+            coVerify { api.startConversation(idB) }
+        }
+    }
+
+    @Test
+    fun `should update the chat panel with the response from the model when a new conversation is started`() = runTest {
+        val caseName = "case A"
+        val caseId = CaseId(id = 1234, name = caseName)
+        val id = caseId.id!!
+        val caseIds = listOf(caseId)
+        val bondiComment = "Go to Bondi"
+        val case = createCaseWithInterpretation(caseName, id, listOf(bondiComment))
+        val initialResponse = "the answer is 42"
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.getCase(id) } returns case
+        coEvery { api.startConversation(id) } returns initialResponse
+
+        with(composeTestRule) {
+            //Given
+            setContent {
+                OpenRDRUI(handler)
+            }
+
+            //When
+            waitForCaseToBeShowing(caseName)
+
+            //Then
+            requireChatMessagesShowing(listOf(BotMessage(initialResponse)))
+        }
+    }
+
+    @Test
+    fun `should update the chat panel when a response to a user message is received`() = runTest {
+        val caseA = "case A"
+        val caseId1 = CaseId(id = 1, name = caseA)
+        val caseIds = listOf(caseId1)
+        val bondiComment = "Go to Bondi"
+        val answer = "the answer is 42"
+        val case = createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.getCase(1) } returns case
+        coEvery { api.sendUserMessage(any(), any<Long>()) } returns answer
+
+        with(composeTestRule) {
+            //Given
+            setContent {
+                OpenRDRUI(handler)
+            }
+            waitForCaseToBeShowing(caseA)
+
+            //When
+            val userMessage = "add a comment"
+            typeChatMessageAndClickSend(userMessage)
+
+            //Then
+            val expected = listOf(
+                UserMessage(userMessage),
+                BotMessage(answer)
+            )
+            requireChatMessagesShowing(expected)
+        }
+    }
+
+    @Test
+    fun `should update the case when a response to a user message is received`() = runTest {
+        val caseName = "case a"
+        val id = 1L
+        val caseId = CaseId(id = id, name = caseName)
+        val bondiComment = "Go to Bondi"
+        val updatedBondiComments = "Go to Bondi. Bring flippers."
+        val case = createCaseWithInterpretation(caseName, id, listOf(bondiComment))
+        val updatedCase = createCaseWithInterpretation(caseName, id, listOf(updatedBondiComments))
+        coEvery { api.getCase(id) } returns case
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        with(composeTestRule) {
+            //Given
+            setContent {
+                OpenRDRUI(handler)
+            }
+            waitForCaseToBeShowing(caseName)
+            coVerify(exactly = 2) { api.getCase(id) }
+            requireInterpretation(bondiComment)
+
+            //When
+            coEvery { api.getCase(id) } returns updatedCase
+            val userMessage = "yes, please add that comment to the interpretation"
+            typeChatMessageAndClickSend(userMessage)
+
+            //Then
+            coVerify(exactly = 3) { api.getCase(id) }
+            requireInterpretation(updatedBondiComments)
+        }
+    }
+
 
     @Test
     fun `should show case list for several cases`() = runTest {
@@ -187,12 +392,12 @@ class OpenRDRUITest {
 
         val viewableCaseA = createCaseWithInterpretation(
             name = caseA,
-            id = 1,
+            caseId = 1,
             conclusionTexts = listOf(bondiComment)
         )
         val viewableCaseB = createCaseWithInterpretation(
             name = caseB,
-            id = 2,
+            caseId = 2,
             conclusionTexts = listOf(malabarComment)
         )
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
@@ -230,12 +435,12 @@ class OpenRDRUITest {
 
         val viewableCaseA = createCaseWithInterpretation(
             name = caseA,
-            id = 1,
+            caseId = 1,
             conclusionTexts = listOf(bondiComment)
         )
         val viewableCaseB = createCaseWithInterpretation(
             name = caseB,
-            id = 2,
+            caseId = 2,
             conclusionTexts = listOf(malabarComment)
         )
         val normalTSH = EpisodicCondition(null, Attribute(1, "tsh"), Normal, Current)
@@ -454,64 +659,66 @@ class OpenRDRUITest {
     }
 
     @Test
-    fun `should hide the change interpretation icon when a rule session is started to remove a comment`() = runTest {
-        //Given
-        val caseName = "case a"
-        val id = 1L
-        val caseId = CaseId(id = id, name = caseName)
-        val bondiComment = "Go to Bondi"
-        val case = createCaseWithInterpretation(caseName, id = id, conclusionTexts = listOf(bondiComment))
-        coEvery { api.getCase(1) } returns case
-        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
-        coEvery { api.startRuleSession(any()) } returns CornerstoneStatus()
-        coEvery { api.selectCornerstone(any()) } returns CornerstoneStatus()
-        with(composeTestRule) {
-            setContent {
-                OpenRDRUI(handler)
-            }
+    fun `should hide the change interpretation icon when a rule session is started to remove a comment`() =
+        runTest {
             //Given
-            waitForCaseToBeShowing(caseName)
-            requireChangeInterpretationIconToBeShowing()
-            clickChangeInterpretationButton()
-            clickRemoveCommentMenu()
+            val caseName = "case a"
+            val id = 1L
+            val caseId = CaseId(id = id, name = caseName)
+            val bondiComment = "Go to Bondi"
+            val case = createCaseWithInterpretation(caseName, caseId = id, conclusionTexts = listOf(bondiComment))
+            coEvery { api.getCase(1) } returns case
+            coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+            coEvery { api.startRuleSession(any()) } returns CornerstoneStatus()
+            coEvery { api.selectCornerstone(any()) } returns CornerstoneStatus()
+            with(composeTestRule) {
+                setContent {
+                    OpenRDRUI(handler)
+                }
+                //Given
+                waitForCaseToBeShowing(caseName)
+                requireChangeInterpretationIconToBeShowing()
+                clickChangeInterpretationButton()
+                clickRemoveCommentMenu()
 
-            //When
-            removeComment(bondiComment)
+                //When
+                removeComment(bondiComment)
 
-            //Then
-            requireChangeInterpretationIconToBeNotShowing()
+                //Then
+                requireChangeInterpretationIconToBeNotShowing()
+            }
         }
-    }
 
     @Test
-    fun `should hide the change interpretation icon when a rule session is started to replace a comment`() = runTest {
-        val caseName = "case a"
-        val id = 1L
-        val caseId = CaseId(id = id, name = caseName)
-        val bondiComment = "Go to Bondi"
-        val malabarComment = "Go to Malabar"
-        val case = createCaseWithInterpretation(caseName, id = id, conclusionTexts = listOf(bondiComment))
-        coEvery { api.getCase(1) } returns case
-        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
-        coEvery { api.startRuleSession(any()) } returns CornerstoneStatus()
-        coEvery { api.selectCornerstone(any()) } returns CornerstoneStatus()
-        with(composeTestRule) {
-            setContent {
-                OpenRDRUI(handler)
+    fun `should hide the change interpretation icon when a rule session is started to replace a comment`() =
+        runTest {
+            val caseName = "case a"
+            val id = 1L
+            val caseId = CaseId(id = id, name = caseName)
+            val bondiComment = "Go to Bondi"
+            val malabarComment = "Go to Malabar"
+            val case = createCaseWithInterpretation(caseName, caseId = id, conclusionTexts = listOf(bondiComment))
+            coEvery { api.getCase(1) } returns case
+            coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+            coEvery { api.startRuleSession(any()) } returns CornerstoneStatus()
+            coEvery { api.selectCornerstone(any()) } returns CornerstoneStatus()
+            with(composeTestRule) {
+                setContent {
+                    OpenRDRUI(handler)
+                }
+                //Given
+                waitForCaseToBeShowing(caseName)
+                requireChangeInterpretationIconToBeShowing()
+                clickChangeInterpretationButton()
+                clickReplaceCommentMenu()
+
+                //When
+                replaceComment(bondiComment, malabarComment)
+
+                //Then
+                requireChangeInterpretationIconToBeNotShowing()
             }
-            //Given
-            waitForCaseToBeShowing(caseName)
-            requireChangeInterpretationIconToBeShowing()
-            clickChangeInterpretationButton()
-            clickReplaceCommentMenu()
-
-            //When
-            replaceComment(bondiComment, malabarComment)
-
-            //Then
-            requireChangeInterpretationIconToBeNotShowing()
         }
-    }
 
     @Test
     fun `should re-show the change interpretation icon when a rule session is committed`() = runTest {
@@ -573,7 +780,6 @@ class OpenRDRUITest {
         }
     }
 
-
     @Test
     fun `should call handler to retrieve all comments`() = runTest {
         val caseName = "case a"
@@ -593,32 +799,33 @@ class OpenRDRUITest {
     }
 
     @Test
-    fun `the dialog to add a comment to a case with no given comments should show all available comments`() = runTest {
-        val caseName = "case a"
-        val caseId = CaseId(id = 1, name = caseName)
-        val case = createCase(caseId)
-        coEvery { api.getCase(1) } returns case
-        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+    fun `the dialog to add a comment to a case with no given comments should show all available comments`() =
+        runTest {
+            val caseName = "case a"
+            val caseId = CaseId(id = 1, name = caseName)
+            val case = createCase(caseId)
+            coEvery { api.getCase(1) } returns case
+            coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
 
-        val commentA = "A"
-        val commentB = "B"
-        val conclusionA = Conclusion(1, commentA)
-        val conclusionB = Conclusion(2, commentB)
-        coEvery { api.allConclusions() } returns setOf(conclusionA, conclusionB)
-        with(composeTestRule) {
-            //Given
-            setContent {
-                OpenRDRUI(handler)
+            val commentA = "A"
+            val commentB = "B"
+            val conclusionA = Conclusion(1, commentA)
+            val conclusionB = Conclusion(2, commentB)
+            coEvery { api.allConclusions() } returns setOf(conclusionA, conclusionB)
+            with(composeTestRule) {
+                //Given
+                setContent {
+                    OpenRDRUI(handler)
+                }
+
+                //When
+                clickChangeInterpretationButton()
+                clickAddCommentMenu()
+
+                //Then
+                requireCommentOptionsToBeDisplayed(ADD_COMMENT_PREFIX, listOf(commentA, commentB))
             }
-
-            //When
-            clickChangeInterpretationButton()
-            clickAddCommentMenu()
-
-            //Then
-            requireCommentOptionsToBeDisplayed(ADD_COMMENT_PREFIX, listOf(commentA, commentB))
         }
-    }
 
     @Test
     fun `the dialog to add a comment should not show any comment already given for the case`() = runTest {
@@ -716,6 +923,7 @@ fun main() {
     coEvery { handler.isClosing() } returns false
     coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
     coEvery { api.getCase(any()) } returns createCaseWithInterpretation("case A", 1, listOf("Go to Bondi"))
+    coEvery { api.sendUserMessage(any(), any()) } returns "The answer is 42"
 
     applicationFor {
         OpenRDRUI(handler)

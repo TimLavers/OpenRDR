@@ -7,8 +7,8 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.verify
-import io.rippledown.model.createCase
 import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.utils.createCase
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test

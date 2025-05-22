@@ -6,11 +6,11 @@ import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.model.Attribute
-import io.rippledown.model.beSameAs
 import io.rippledown.model.condition.*
 import io.rippledown.persistence.ConditionStore
 import io.rippledown.util.shouldBeEqualUsingSameAs
 import io.rippledown.util.shouldContainSameAs
+import io.rippledown.utils.beSameAs
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 

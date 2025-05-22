@@ -42,6 +42,10 @@ class RippleDownUIOperator(private val window: ComposeWindow) {
         context()
     }
 
+    fun chatPO() = ChatPO {
+        context()
+    }
+
     fun ruleMakerPO() = RuleMakerPO {
         context()
     }
