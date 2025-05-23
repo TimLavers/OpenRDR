@@ -39,6 +39,14 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
             contextProvider().find(matcher) != null
         }
     }
+    fun botRowContainsTerms(terms: List<String>): Boolean {
+        return execute<Boolean> {
+            val matcher = { context: AccessibleContext ->
+                terms.all { term -> context.foundText(term) } && context.isBotResponse()
+            }
+            contextProvider().find(matcher) != null
+        }
+    }
 
 }
 

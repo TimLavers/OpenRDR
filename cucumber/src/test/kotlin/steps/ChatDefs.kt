@@ -39,6 +39,19 @@ class ChatDefs {
         }
     }
 
+    @Then("the chatbot has asked for confirmation of the comment and condition")
+    fun waitForBotRequestForConfirmationOfCommentAndCondition() {
+        await().atMost(ofSeconds(10)).until {
+            chatPO().botRowContainsTerms(
+                listOf(
+                    PLEASE_CONFIRM,
+                    COMMENT,
+                    CONDITION
+                )
+            )
+        }
+    }
+
     fun waitForBotInitialPrompt() {
         await().atMost(ofSeconds(10)).until {
             botInitialPrompt()
@@ -49,6 +62,13 @@ class ChatDefs {
     fun requireBotQuestionToAddAComment() {
         await().atMost(ofSeconds(10)).until {
             botQuestionToAddAComment()
+        }
+    }
+
+    @Then("the chatbot has asked if I want to provide a condition")
+    fun requireBotQuestionToProvideACondition() {
+        await().atMost(ofSeconds(10)).until {
+            botQuestionToProvideACondition()
         }
     }
 
@@ -66,6 +86,11 @@ class ChatDefs {
     private fun botQuestionToAddAComment() = with(chatPO()) {
         botRowContainsText(WOULD_YOU_LIKE) &&
                 botRowContainsText(ADD_A_COMMENT)
+    }
+
+    private fun botQuestionToProvideACondition() = with(chatPO()) {
+        botRowContainsText(WOULD_YOU_LIKE) &&
+                botRowContainsText(PROVIDE_A_CONDITION)
     }
 
     @And("the chatbot has asked for what comment I want to add")

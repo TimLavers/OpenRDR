@@ -65,3 +65,27 @@ Feature: The user can use the chat to make changes the interpretive report
     When I build a rule to add another comment "Bring flippers." using the chat
     Then the report should be "Let's surf. Bring flippers."
     And stop the client application
+
+  @single
+  Scenario: The user should be able to use the chat to add a comment to a blank report with a condition
+    Given case Bondi is provided having data:
+      | Wave | excellent |
+      | Sun  | hot       |
+    And I start the client application
+    And the report is empty
+    And I see the case Bondi as the current case
+    And the chat is showing
+    And the chatbot has asked if I want to add a comment
+    And I confirm
+    And the chatbot has asked for what comment I want to add
+    And I enter the following text into the chat panel:
+      | Add the comment" "Let's surf." |
+    And the chatbot has asked if I want to provide a condition
+    And I enter the following text into the chat panel:
+      | Yes, if the sun is hot |
+    And the chatbot has asked for confirmation of the comment and condition
+    When I confirm
+    Then the report should be "Let's surf."
+    And the condition showing for the comment "Let's surf." is:
+      | Sun is "hot" |
+    And stop the client application

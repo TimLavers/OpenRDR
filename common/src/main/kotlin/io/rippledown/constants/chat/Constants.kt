@@ -1,6 +1,8 @@
 package io.rippledown.constants.chat
 
 const val PLEASE_CONFIRM = "Please confirm"
+const val COMMENT = "comment"
+const val CONDITION = "condition"
 const val ADD = "add"
 const val REMOVE = "remove"
 const val REPLACE = "replace"
@@ -11,6 +13,7 @@ const val ADD_A_COMMENT = "add a comment"
 const val REMOVE_A_COMMENT = "remove a comment"
 const val REPLACE_A_COMMENT = "replace a comment"
 const val WHAT_COMMENT = "What comment"
+const val PROVIDE_A_CONDITION = "provide a condition"
 
 const val CHAT_BOT_NO_RESPONSE_MESSAGE = "Sorry, I don't understand. Please try again."
 const val CHAT_BOT_PLACEHOLDER = "Please enter your request..."
