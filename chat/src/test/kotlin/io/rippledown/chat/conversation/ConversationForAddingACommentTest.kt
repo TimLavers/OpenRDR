@@ -82,6 +82,33 @@ class ConversationForAddingACommentTest {
         }
 
     @Test
+    fun `when the user confirms the comment to be added, the model should ask for conditions`() = runTest {
+        // Given
+        val bondiComment = "Go to Bondi."
+        val case = caseWithNoComments()
+        val bot0 = conversation.startConversation(case)
+        bot0 shouldContainAll listOf(
+            WOULD_YOU_LIKE,
+            ADD_A_COMMENT,
+            DEBUG_ACTION,
+            NO_COMMENTS
+        )
+        val bot1 = conversation.response("yes")
+        bot1 shouldContain WHAT_COMMENT
+        val bot2 = conversation.response("Add the comment '$bondiComment'")
+        bot2 shouldContainAll listOf(
+            PLEASE_CONFIRM,
+            bondiComment
+        )
+        // When
+        val bot3 = conversation.response("yes")
+
+        // Then
+        bot3 shouldContainAll listOf(
+            PROVIDE_A_CONDITION
+        )
+    }
+    @Test
     fun `when the user specifies the comment to be added, the model should ask for confirmation`() = runTest {
         // Given
         val case = caseWithNoComments()

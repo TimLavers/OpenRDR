@@ -16,7 +16,6 @@ interface ConversationService {
 }
 
 class Conversation : ConversationService {
-
     private lateinit var chatService: GeminiChatService
     private lateinit var chat: Chat
     private val genericSystemInstruction = this::class.java.getResource("/system-instruction.md")?.readText()

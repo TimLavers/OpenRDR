@@ -69,6 +69,7 @@ data class ActionComment(
     val message: String? = null,
     val debug: String? = null,
     val new_comment: String? = null,
-    val existing_comment: String? = null
+    val existing_comment: String? = null,
+    val conditions: List<String>? = null,
 )
 
