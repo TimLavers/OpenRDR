@@ -67,7 +67,8 @@ const val CHAT_TEXT_FIELD = "CHAT_TEXT_FIELD"
 fun ChatPanel(
     sendIsEnabled: Boolean = true,
     messages: List<ChatMessage> = emptyList(),
-    onMessageSent: OnMessageSent = {}
+    onMessageSent: OnMessageSent = {},
+    modifier: Modifier = Modifier
 ) {
     var inputText by remember { mutableStateOf(TextFieldValue()) }
     val listState = rememberLazyListState()
@@ -84,7 +85,7 @@ fun ChatPanel(
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .padding(start = 0.dp, top = 8.dp, end = 8.dp, bottom = 8.dp)
             .widthIn(min = 300.dp)
             .background(Color(0xFFF5F5F5))

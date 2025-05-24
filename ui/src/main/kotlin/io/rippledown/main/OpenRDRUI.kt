@@ -48,6 +48,8 @@ fun OpenRDRUI(handler: Handler) {
     var rightInformationMessage by remember { mutableStateOf("") }
     var ruleAction: Diff? by remember { mutableStateOf(null) }
     var conditionHints by remember { mutableStateOf(listOf<SuggestedCondition>()) }
+    var isChatVisible by remember { mutableStateOf(false) }
+    var isChatEnabled by remember { mutableStateOf(true) }
 
     val isShowingCornerstone = cornerstoneStatus?.cornerstoneToReview != null
     val ruleInProgress = cornerstoneStatus != null
@@ -82,6 +84,7 @@ fun OpenRDRUI(handler: Handler) {
             }
             currentCase = api.getCase(currentCaseId!!)
             conditionHints = api.conditionHints(currentCaseId!!).suggestions
+            isChatEnabled = true
         }
     }
 
@@ -93,10 +96,19 @@ fun OpenRDRUI(handler: Handler) {
             }
         }
     }
+    //Start a conversation with the model when the chat is made visible
+    LaunchedEffect(isChatVisible) {
+        currentCaseId?.let {
+            val response = api.startConversation(it)
+            if (response.isNotBlank()) {
+                chatControllerHandler.onBotMessageReceived(response)
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
-            ApplicationBar(kbInfo, object : AppBarHandler {
+            ApplicationBar(kbInfo, isChatVisible, isChatEnabled, object : AppBarHandler {
                 override var isRuleSessionInProgress = ruleInProgress
                 override var selectKB: (id: String) -> Unit = { runBlocking { kbInfo = api.selectKB(it) } }
                 override var createKB: (name: String) -> Unit = { runBlocking { kbInfo = api.createKB(it) } }
@@ -113,6 +125,7 @@ fun OpenRDRUI(handler: Handler) {
                 override var setKbDescription: (description: String) -> Unit =
                     { runBlocking { api.setKbDescription(it) } }
                 override var kbDescription: () -> String = { runBlocking { api.kbDescription() } }
+                override var onToggleChat: () -> Unit = { isChatVisible = !isChatVisible }
             })
         },
         bottomBar = {
@@ -231,10 +244,20 @@ fun OpenRDRUI(handler: Handler) {
                             ) = runBlocking {
                                 api.conditionFor(conditionText, attributeNames)
                             }
+                        },
+                        modifier = if (isChatVisible) {
+                            Modifier.weight(0.7f)
+                        } else {
+                            Modifier.fillMaxSize()
                         }
                     )
 
-                    ChatController(chatControllerHandler)
+                    if (isChatVisible) {
+                        ChatController(
+                            chatControllerHandler,
+                            modifier = Modifier.weight(0.3f)
+                        )
+                    }
                 }
             }
         }

@@ -44,7 +44,7 @@ text.
 - Output a JSON object containing a debug message as well as a question to the user whether they want to add, remove or
   replace a comment
   in the report.
-- The JSON array should have the following structure:
+- The JSON object should have the following structure:
 
   {
   "action": "{{USER}}",

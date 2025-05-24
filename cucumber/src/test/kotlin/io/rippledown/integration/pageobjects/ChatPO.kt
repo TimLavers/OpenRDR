@@ -1,5 +1,6 @@
 package io.rippledown.integration.pageobjects
 
+import io.rippledown.appbar.CHAT_ICON_TOGGLE
 import io.rippledown.chat.BOT
 import io.rippledown.chat.CHAT_SEND
 import io.rippledown.chat.CHAT_TEXT_FIELD
@@ -26,6 +27,9 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
 
     fun clickSend() =
         execute { chatTextContext().find(CHAT_SEND)?.accessibleAction?.doAccessibleAction(0) }
+
+    fun clickChatIconToggle() =
+        execute { contextProvider().find(CHAT_ICON_TOGGLE)?.accessibleAction?.doAccessibleAction(0) }
 
     fun botRowContainsText(text: String): Boolean {
         return execute<Boolean> {

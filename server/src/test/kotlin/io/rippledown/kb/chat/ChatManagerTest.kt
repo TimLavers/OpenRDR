@@ -112,7 +112,7 @@ class ChatManagerTest {
         chatManager.response("hi there")
 
         // Then
-        coVerify(exactly = 1) { logger.info("$LOG_PREFIX_FOR_CONVERSATION_RESPONSE '$responseFromModel'") }
+        coVerify(exactly = 1) { logger.info("$LOG_PREFIX_FOR_CONVERSATION_RESPONSE $responseFromModel") }
     }
 
     @Test

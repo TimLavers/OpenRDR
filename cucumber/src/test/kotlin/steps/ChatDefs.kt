@@ -8,6 +8,14 @@ import java.time.Duration.ofSeconds
 
 
 class ChatDefs {
+
+    @Then("the chat is showing")
+    fun showChat() {
+        with(chatPO()) {
+            clickChatIconToggle()
+        }
+    }
+
     @Then("I enter the following text into the chat panel:")
     fun enterChatTextAndSend(text: String) {
         with(chatPO()) {

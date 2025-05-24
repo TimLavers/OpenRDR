@@ -28,7 +28,7 @@ class ChatControllerTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatController(handler)
+                ChatController(handler = handler)
             }
             // Then
             requireEmptyChatHistory()
@@ -40,7 +40,7 @@ class ChatControllerTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatController(handler)
+                ChatController(handler = handler)
             }
             // When
             val userMessage = "add a comment"
@@ -66,7 +66,7 @@ class ChatControllerTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatController(h)
+                ChatController(handler = h)
             }
             // When
             val botResponse = "confirm 42?"
@@ -90,7 +90,7 @@ class ChatControllerTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatController(h)
+                ChatController(handler = h)
             }
             val botResponse = "confirm 42?"
             h.onBotMessageReceived(botResponse)
@@ -117,7 +117,7 @@ class ChatControllerTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatController(h)
+                ChatController(handler = h)
             }
             val userMessage = "add a comment"
             typeChatMessageAndClickSend(userMessage)
@@ -153,7 +153,7 @@ fun main() {
 
                 override var onBotMessageReceived: (String) -> Unit = {}
             }
-            ChatController(handler)
+            ChatController(handler = handler)
         }
     }
 }
