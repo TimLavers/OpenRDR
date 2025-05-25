@@ -6,11 +6,11 @@ import io.rippledown.fromJsonString
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
-import kotlinx.serialization.Serializable
+import io.rippledown.model.condition.ConditionParsingResult
 
 interface RuleService {
-    suspend fun buildRuleToAddComment(case: RDRCase, comment: String)
-    suspend fun conditionForExpression(case: RDRCase, expression: String): Condition?
+    suspend fun buildRuleToAddComment(case: RDRCase, comment: String, conditions: List<Condition>)
+    suspend fun conditionForExpression(case: RDRCase, expression: String): ConditionParsingResult
 }
 
 class ChatManager(val conversationService: ConversationService, val ruleService: RuleService) {
@@ -41,10 +41,23 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
 
             ADD_ACTION -> {
                 val newComment = actionComment.new_comment
-                newComment?.let {
-                    ruleService.buildRuleToAddComment(currentCase, it)
-                    CHAT_BOT_DONE_MESSAGE
-                } ?: ""
+                val userExpressionsForConditions = actionComment.conditions
+                val conditionParsingResults = userExpressionsForConditions?.map { expression ->
+                    ruleService.conditionForExpression(currentCase, expression)
+                } ?: emptyList()
+
+                //Check for failures and collect conditions at the same time
+                val (failedResult, conditions) = checkForUnparsedConditions(conditionParsingResults)
+
+                // If a failure was found, return the error message
+                if (failedResult != null) {
+                    "Failed to parse condition: ${failedResult}"
+                } else {
+                    newComment?.let {
+                        ruleService.buildRuleToAddComment(currentCase, it, conditions)
+                        CHAT_BOT_DONE_MESSAGE
+                    } ?: ""
+                }
             }
 
             STOP_ACTION -> ""  //TODO
@@ -58,20 +71,31 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
         }
     }
 
+    // Checks for unparsed conditions in the list of ConditionParsingResults.
+    // Returns a pair containing an error message (if any) and a list of successfully parsed conditions.
+    fun checkForUnparsedConditions(conditionParsingResults: List<ConditionParsingResult>): Pair<String?, List<Condition>> {
+        val (failedResult, conditions) = conditionParsingResults.fold(
+            initial = Pair(first = null as String?, second = mutableListOf<Condition>())
+        ) { acc, result ->
+            if (acc.first == null && result.isFailure) {
+                Pair(result.errorMessage, acc.second)
+            } else if (!result.isFailure) {
+                acc.second.add(
+                    result.condition
+                        ?: throw IllegalStateException("Condition should not be null for a successful parsing result")
+                )
+                acc
+            } else {
+                acc
+            }
+        }
+        return Pair(failedResult, conditions)
+    }
+
     companion object {
         const val LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE = "Start conversation response:"
         const val LOG_PREFIX_FOR_CONVERSATION_RESPONSE = "Conversation response:"
         const val LOG_PREFIX_FOR_USER_MESSAGE = "User message:"
     }
 }
-
-@Serializable
-data class ActionComment(
-    val action: String,
-    val message: String? = null,
-    val debug: String? = null,
-    val new_comment: String? = null,
-    val existing_comment: String? = null,
-    val conditions: List<String>? = null,
-)
 

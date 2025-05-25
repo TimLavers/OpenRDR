@@ -734,7 +734,6 @@ class KBTest {
     fun `should not set the user expression for a condition parsed from that expression if the condition already exists`() {
         //Given
         val waves = kb.attributeManager.getOrCreate("Waves")
-        val attributeNames = listOf(waves.name)
         val height = "2" //greater than 1
         val sessionCase = createCase("Case", attribute = waves, value = height)
         val conditionParser = mockk<ConditionParser>()
@@ -766,7 +765,6 @@ class KBTest {
     fun `should set the user expression for a condition parsed from that expression if the condition does not already exist`() {
         //Given
         val waves = kb.attributeManager.getOrCreate("Waves")
-        val attributeNames = listOf(waves.name)
         val height = "2" //greater than 1
         val sessionCase = createCase("Case", attribute = waves, value = height)
         val conditionParser = mockk<ConditionParser>()
@@ -798,7 +796,6 @@ class KBTest {
     fun `should create a condition using Gemini`() {
         //Given
         val waves = kb.attributeManager.getOrCreate("Waves")
-        val attributeNames = listOf(waves.name)
         val height = "2.5" //high
         val sessionCase = createCase("Case", attribute = waves, value = height, range = ReferenceRange("1", "2"))
         val userExpression = "elevated waves"
@@ -820,7 +817,6 @@ class KBTest {
     fun `should return null if the parsed condition is not true for the session case`() {
         //Given
         val waves = kb.attributeManager.getOrCreate("Waves")
-        val attributeNames = listOf(waves.name)
         val height = "0.5" //less than 1.0
         val sessionCase = createCase("Case", attribute = waves, value = height)
         val conditionParser = mockk<ConditionParser>()
@@ -847,7 +843,6 @@ class KBTest {
     fun `should return null if no condition can be parsed from the user expression`() {
         //Given
         val waves = kb.attributeManager.getOrCreate("Waves")
-        val attributeNames = listOf(waves.name)
         val height = "0.5"
         val sessionCase = createCase("Case", attribute = waves, value = height)
         val conditionParser = mockk<ConditionParser>()

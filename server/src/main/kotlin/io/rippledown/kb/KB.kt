@@ -40,19 +40,18 @@ class KB(persistentKB: PersistentKB) {
     private var conditionParser: ConditionParser
 
     val ruleService = object : RuleService {
-        override suspend fun buildRuleToAddComment(case: RDRCase, comment: String) {
+        override suspend fun buildRuleToAddComment(case: RDRCase, comment: String, conditions: List<Condition>) {
             val conclusion = conclusionManager.getOrCreate(comment)
             val action = ChangeTreeToAddConclusion(conclusion)
             startRuleSession(case, action)
+            conditions.forEach { addConditionToCurrentRuleSession(it) }
             commitCurrentRuleSession()
         }
 
         override suspend fun conditionForExpression(
             case: RDRCase,
             expression: String
-        ): Condition? {
-            TODO("Not yet implemented")
-        }
+        ) = conditionForExpression(expression)
     }
 
     //a var so it can be mocked in tests
