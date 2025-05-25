@@ -46,6 +46,13 @@ class KB(persistentKB: PersistentKB) {
             startRuleSession(case, action)
             commitCurrentRuleSession()
         }
+
+        override suspend fun conditionForExpression(
+            case: RDRCase,
+            expression: String
+        ): Condition? {
+            TODO("Not yet implemented")
+        }
     }
 
     //a var so it can be mocked in tests
@@ -53,10 +60,12 @@ class KB(persistentKB: PersistentKB) {
 
     init {
         conditionParser = object : ConditionParser {
-            override fun parse(expression: String, attributeNames: List<String>, attributeFor: AttributeFor) =
-                ConditionTip(attributeNames, attributeFor).conditionFor(expression)
+            override fun parse(expression: String, attributeFor: AttributeFor) =
+                ConditionTip(attributeNames(), attributeFor).conditionFor(expression)
         }
     }
+
+    fun attributeNames() = attributeManager.all().map { it.name }
 
     fun description() = metaInfo.getDescription()
 
@@ -276,9 +285,9 @@ class KB(persistentKB: PersistentKB) {
         chatManager = manager
     }
 
-    fun conditionForExpression(expression: String, attributeNames: List<String>): ConditionParsingResult {
+    fun conditionForExpression(expression: String): ConditionParsingResult {
         val attributeFor: AttributeFor = { attributeManager.getOrCreate(it) }
-        val condition = conditionParser.parse(expression, attributeNames, attributeFor)
+        val condition = conditionParser.parse(expression, attributeFor)
 
         //Only return the condition if non-null and holds for the session case
         return if (condition == null) {
@@ -299,6 +308,6 @@ class KB(persistentKB: PersistentKB) {
 }
 
 interface ConditionParser {
-    fun parse(expression: String, attributeNames: List<String>, attributeFor: (String) -> Attribute): Condition? = null
+    fun parse(expression: String, attributeFor: (String) -> Attribute): Condition? = null
 }
 

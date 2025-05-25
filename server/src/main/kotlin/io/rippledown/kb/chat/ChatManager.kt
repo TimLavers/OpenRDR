@@ -5,10 +5,12 @@ import io.rippledown.constants.chat.*
 import io.rippledown.fromJsonString
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.RDRCase
+import io.rippledown.model.condition.Condition
 import kotlinx.serialization.Serializable
 
 interface RuleService {
     suspend fun buildRuleToAddComment(case: RDRCase, comment: String)
+    suspend fun conditionForExpression(case: RDRCase, expression: String): Condition?
 }
 
 class ChatManager(val conversationService: ConversationService, val ruleService: RuleService) {

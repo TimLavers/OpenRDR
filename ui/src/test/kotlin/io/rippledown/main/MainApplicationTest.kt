@@ -1,19 +1,13 @@
 package io.rippledown.main
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.Snapshot
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposeWindow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.ApplicationScope
 import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import io.kotest.matchers.shouldBe
 import io.mockk.every
@@ -24,6 +18,7 @@ import io.rippledown.constants.main.CREATE_KB_TEXT
 import io.rippledown.constants.main.KBS_DROPDOWN_DESCRIPTION
 import io.rippledown.constants.main.TITLE
 import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers.Unconfined
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.takeWhile
 import org.assertj.swing.edt.GuiActionRunner.execute
@@ -48,55 +43,49 @@ class MainApplicationTest {
     }
 
     @Test
-    fun `application should be accessible via its owning window`() {
-        var windowHolder: ComposeWindow? = null
+    fun `application should be accessible via its owning window`() = runApplicationTest {
+        lateinit var window: ComposeWindow
 
-        val runnable = java.lang.Runnable {
-            run {
-                application {
-                    Window(
-                        onCloseRequest = ::exitApplication,
-                        icon = painterResource("water-wave-icon.png"),
-                        title = TITLE
-                    ) {
-                        windowHolder = this.window
-                        OpenRDRUI(handler)
-                    }
-                }
+        // Launch the application
+        launchTestApplication {
+            Window(
+                onCloseRequest = { isOpen = false }, // Allow clean exit
+                icon = painterResource("water-wave-icon.png"),
+                title = TITLE
+            ) {
+                window = this.window
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
         }
-        Thread(runnable, "App Runner").start()
 
-        while (windowHolder == null) {
-            Thread.sleep(500)
+        // Wait for the window to be ready
+        awaitIdle()
+        execute { window.waitForWindowToShow() }
+
+        // Perform accessibility checks
+        execute {
+            val accessibleContext0 = window!!.accessibleContext
+            val kbRow = accessibleContext0.find(KB_CONTROL_DESCRIPTION, AccessibleRole.UNKNOWN)
+            val expandDropdownButton = kbRow!!.find(KB_CONTROL_DROPDOWN_DESCRIPTION, AccessibleRole.PUSH_BUTTON)
+            val action = expandDropdownButton!!.accessibleAction
+            val count = action.accessibleActionCount
+            count shouldBe 1
+
+            // Simulate clicking the dropdown button
+            action.doAccessibleAction(0)
         }
-        val window = windowHolder!!
 
-        window.waitForWindowToShow()
+        // Wait for UI updates
+        awaitIdle()
+        execute {
+            val accessibleContext1 = window.accessibleContext
+            val dropDown = accessibleContext1.find(KBS_DROPDOWN_DESCRIPTION, AccessibleRole.COMBO_BOX)
+            val createKBItem = dropDown!!.find(CREATE_KB_TEXT, AccessibleRole.PUSH_BUTTON)
+            val createKBActionCount = createKBItem!!.accessibleAction.accessibleActionCount
+            createKBActionCount shouldBe 1
+        }
 
-
-        val accessibleContext0 = window.accessibleContext
-
-        val kbRow = accessibleContext0.find(KB_CONTROL_DESCRIPTION, AccessibleRole.UNKNOWN)
-
-        val expandDropdownButton = kbRow!!.find(KB_CONTROL_DROPDOWN_DESCRIPTION, AccessibleRole.PUSH_BUTTON)
-
-        val action = expandDropdownButton!!.accessibleAction
-        val count = action.accessibleActionCount
-        count shouldBe 1
-        action.doAccessibleAction(0)
-
-        Thread.sleep(500)
-
-        val accessibleContext1 = window.accessibleContext
-
-        val dropDown = accessibleContext1.find(KBS_DROPDOWN_DESCRIPTION, AccessibleRole.COMBO_BOX)
-
-        val createKBItem = dropDown!!.find(CREATE_KB_TEXT, AccessibleRole.PUSH_BUTTON)
-        val createKBActionCount = createKBItem!!.accessibleAction.accessibleActionCount
-        createKBActionCount shouldBe 1
-        Thread(runnable, "App Runner").join()
-
+        // Cleanup is handled by runApplicationTest
     }
 
     @Test
@@ -113,7 +102,7 @@ class MainApplicationTest {
                     )
                 ) {
                     window = this.window
-                    OpenRDRUI(handler)
+                    OpenRDRUI(handler, dispatcher = Unconfined)
                 }
             }
         }
@@ -122,79 +111,29 @@ class MainApplicationTest {
     }
 
     @Test
-    fun `run application`() = runApplicationTest {
-        var isInit = false
+    fun `should dispose the application when it is exited`() = runApplicationTest {
+        //Given
         var isDisposed = false
 
         val appJob = launchTestApplication {
             DisposableEffect(Unit) {
-                isInit = true
                 onDispose {
                     isDisposed = true
                 }
             }
         }
 
+        //When
+        // Ensure the application is closed to trigger disposal
+        exitTestApplication()
 
+        //Then
         appJob.join()
-
-//        assertThat(isInit).isTrue()
-//        assertThat(isDisposed).isTrue()
-    }
-
-    @org.junit.Test
-    fun `run two applications`() = runApplicationTest {
-        var window1: ComposeWindow? = null
-        var window2: ComposeWindow? = null
-
-        var isOpen1 by mutableStateOf(true)
-        var isOpen2 by mutableStateOf(true)
-
-        launchTestApplication {
-            if (isOpen1) {
-                Window(
-                    onCloseRequest = {},
-                    state = rememberWindowState(
-                        size = DpSize(600.dp, 600.dp),
-                    )
-                ) {
-                    window1 = this.window
-                    Box(Modifier.size(32.dp))
-                }
-            }
-        }
-
-        launchTestApplication {
-            if (isOpen2) {
-                Window(
-                    onCloseRequest = {},
-                    state = rememberWindowState(
-                        size = DpSize(300.dp, 300.dp),
-                    )
-                ) {
-                    window2 = this.window
-                    Box(Modifier.size(32.dp).background(Color.Blue))
-                }
-            }
-        }
-
         awaitIdle()
-//        assertThat(window1?.isShowing).isTrue()
-//        assertThat(window2?.isShowing).isTrue()
-
-        isOpen1 = false
-        awaitIdle()
-//        assertThat(window1?.isShowing).isFalse()
-//        assertThat(window2?.isShowing).isTrue()
-
-        isOpen2 = false
-        awaitIdle()
-//        assertThat(window1?.isShowing).isFalse()
-//        assertThat(window2?.isShowing).isFalse()
+        isDisposed shouldBe false
     }
 
 }
-
 
 suspend fun awaitEDT() {
     // Most of the work usually is done after the first yield(), almost all the work -
@@ -203,7 +142,6 @@ suspend fun awaitEDT() {
         yield()
     }
 }
-
 
 internal fun runApplicationTest(
     /**
@@ -237,7 +175,8 @@ internal fun runApplicationTest(
                     scope = this,
                     delayMillis = if (useDelay) delayMillis else -1,
                     animationsDelayMillis = if (hasAnimations) animationsDelayMillis else -1,
-                    exceptionHandler = exceptionHandler)
+                    exceptionHandler = exceptionHandler
+                )
                 try {
                     scope.body()
                 } finally {

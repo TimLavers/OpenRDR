@@ -27,6 +27,7 @@ import io.rippledown.rule.clickFinishRuleButton
 import io.rippledown.utils.applicationFor
 import io.rippledown.utils.createCase
 import io.rippledown.utils.createCaseWithInterpretation
+import kotlinx.coroutines.Dispatchers.Unconfined
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -52,7 +53,7 @@ class OpenRDRUITest {
     fun `should show OpenRDR UI`() = runTest {
         with(composeTestRule) {
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             onNodeWithTag(testTag = APPLICATION_BAR_ID).assertExists()
         }
@@ -63,7 +64,7 @@ class OpenRDRUITest {
         coEvery { api.kbList() } returns listOf(KBInfo("Bondi"), KBInfo("Malabar"))
         with(composeTestRule) {
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             assertKbNameIs("Bondi")
         }
@@ -83,7 +84,7 @@ class OpenRDRUITest {
 
         with(composeTestRule) {
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             //Given
             requireNumberOfCasesOnCaseList(2)
@@ -110,7 +111,7 @@ class OpenRDRUITest {
         with(composeTestRule) {
             //Given
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             requireNamesToBeShowingOnCaseList(caseA)
 
@@ -135,7 +136,7 @@ class OpenRDRUITest {
         with(composeTestRule) {
             //Given
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             requireChatPanelIsNotDisplayed()
 
@@ -160,7 +161,7 @@ class OpenRDRUITest {
         with(composeTestRule) {
             //Given
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             requireNamesToBeShowingOnCaseList(caseA)
 
@@ -186,7 +187,7 @@ class OpenRDRUITest {
         with(composeTestRule) {
             //Given
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             waitForCaseToBeShowing(caseName)
             clickChatIconToggle()
@@ -214,7 +215,7 @@ class OpenRDRUITest {
         with(composeTestRule) {
             //Given
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
 
             //When
@@ -245,7 +246,7 @@ class OpenRDRUITest {
         with(composeTestRule) {
             //Given
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             waitForCaseToBeShowing(caseNameA)
             coVerify { api.startConversation(idA) }
@@ -275,7 +276,7 @@ class OpenRDRUITest {
         with(composeTestRule) {
             //Given
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
 
             //When
@@ -302,7 +303,7 @@ class OpenRDRUITest {
         with(composeTestRule) {
             //Given
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             waitForCaseToBeShowing(caseA)
             clickChatIconToggle()
@@ -334,7 +335,7 @@ class OpenRDRUITest {
         with(composeTestRule) {
             //Given
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             waitForCaseToBeShowing(caseName)
             coVerify(exactly = 2) { api.getCase(id) }
@@ -366,7 +367,7 @@ class OpenRDRUITest {
         val caseName10 = "case 10"
         with(composeTestRule) {
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             //Given
             waitForCaseToBeShowing(caseName1)
@@ -397,7 +398,7 @@ class OpenRDRUITest {
 
         with(composeTestRule) {
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             //Given
             requireNumberOfCasesOnCaseList(3)
@@ -427,7 +428,7 @@ class OpenRDRUITest {
 
         with(composeTestRule) {
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             requireNumberOfCasesOnCaseList(2)
             requireNamesToBeShowingOnCaseList(caseA, caseB)
@@ -460,7 +461,7 @@ class OpenRDRUITest {
 
         with(composeTestRule) {
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             //Given
             requireNumberOfCasesOnCaseList(2)
@@ -520,7 +521,7 @@ class OpenRDRUITest {
 
         with(composeTestRule) {
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             //Given
             requireNumberOfCasesOnCaseList(2)
@@ -545,7 +546,7 @@ class OpenRDRUITest {
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         with(composeTestRule) {
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             //Given
             waitForCaseToBeShowing(caseName)
@@ -576,7 +577,7 @@ class OpenRDRUITest {
         coEvery { api.selectCornerstone(any()) } returns cornerstoneStatus
         with(composeTestRule) {
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             //Given
             waitForCaseToBeShowing(caseName)
@@ -607,7 +608,7 @@ class OpenRDRUITest {
         coEvery { api.selectCornerstone(any()) } returns cornerstoneStatus
         with(composeTestRule) {
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             //Given
             waitForCaseToBeShowing(caseName)
@@ -635,7 +636,7 @@ class OpenRDRUITest {
         coEvery { api.cancelRuleSession() } returns HttpStatusCode.OK
         with(composeTestRule) {
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             //Given
             waitForCaseToBeShowing(caseName)
@@ -666,7 +667,7 @@ class OpenRDRUITest {
         coEvery { api.selectCornerstone(any()) } returns cornerstoneStatus
         with(composeTestRule) {
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             //Given
             waitForCaseToBeShowing(caseName)
@@ -696,7 +697,7 @@ class OpenRDRUITest {
         coEvery { api.selectCornerstone(any()) } returns CornerstoneStatus()
         with(composeTestRule) {
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             //Given
             waitForCaseToBeShowing(caseName)
@@ -727,7 +728,7 @@ class OpenRDRUITest {
             coEvery { api.selectCornerstone(any()) } returns CornerstoneStatus()
             with(composeTestRule) {
                 setContent {
-                    OpenRDRUI(handler)
+                    OpenRDRUI(handler, dispatcher = Unconfined)
                 }
                 //Given
                 waitForCaseToBeShowing(caseName)
@@ -758,7 +759,7 @@ class OpenRDRUITest {
             coEvery { api.selectCornerstone(any()) } returns CornerstoneStatus()
             with(composeTestRule) {
                 setContent {
-                    OpenRDRUI(handler)
+                    OpenRDRUI(handler, dispatcher = Unconfined)
                 }
                 //Given
                 waitForCaseToBeShowing(caseName)
@@ -787,7 +788,7 @@ class OpenRDRUITest {
         coEvery { api.selectCornerstone(any()) } returns CornerstoneStatus()
         with(composeTestRule) {
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             //Given
             waitForCaseToBeShowing(caseName)
@@ -817,7 +818,7 @@ class OpenRDRUITest {
         coEvery { api.selectCornerstone(any()) } returns CornerstoneStatus()
         with(composeTestRule) {
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             //Given
             waitForCaseToBeShowing(caseName)
@@ -844,7 +845,7 @@ class OpenRDRUITest {
         with(composeTestRule) {
             //Given
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
 
             //Then
@@ -869,7 +870,7 @@ class OpenRDRUITest {
             with(composeTestRule) {
                 //Given
                 setContent {
-                    OpenRDRUI(handler)
+                    OpenRDRUI(handler, dispatcher = Unconfined)
                 }
 
                 //When
@@ -896,7 +897,7 @@ class OpenRDRUITest {
         with(composeTestRule) {
             //Given
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
 
             //When
@@ -924,7 +925,7 @@ class OpenRDRUITest {
             with(composeTestRule) {
                 //Given
                 setContent {
-                    OpenRDRUI(handler)
+                    OpenRDRUI(handler, dispatcher = Unconfined)
                 }
 
                 //When
@@ -952,7 +953,7 @@ class OpenRDRUITest {
         with(composeTestRule) {
             //Given
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
 
             //When
@@ -979,6 +980,6 @@ fun main() {
     coEvery { api.sendUserMessage(any(), any()) } returns "The answer is 42"
 
     applicationFor {
-        OpenRDRUI(handler)
+        OpenRDRUI(handler, dispatcher = Unconfined)
     }
 }

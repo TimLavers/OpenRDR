@@ -16,6 +16,7 @@ interface ConversationService {
 }
 
 class Conversation : ConversationService {
+    private val logger = lazyLogger
     private lateinit var chatService: GeminiChatService
     private lateinit var chat: Chat
     private val genericSystemInstruction = this::class.java.getResource("/system-instruction.md")?.readText()
@@ -55,6 +56,7 @@ class Conversation : ConversationService {
         .replace("{{REMOVE_A_COMMENT}}", REMOVE_A_COMMENT)
         .replace("{{REPLACE_A_COMMENT}}", REPLACE_A_COMMENT)
         .replace("{{WHAT_COMMENT}}", WHAT_COMMENT)
+        .replace("{{ANY_CONDITIONS}}", ANY_CONDITIONS)
         .replace("{{START}}", START_ACTION)
         .replace("{{STOP}}", STOP_ACTION)
         .replace("{{DEBUG}}", DEBUG_ACTION)

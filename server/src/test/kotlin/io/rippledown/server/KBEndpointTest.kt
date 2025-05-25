@@ -68,16 +68,16 @@ internal class KBEndpointTest {
         // Given
         val kb = mockk<KB>(relaxed = true)
         val condition = mockk<Condition>(relaxed = true)
-        every { kb.conditionForExpression(any(), any()) } returns ConditionParsingResult(condition)
+        every { kb.conditionForExpression(any()) } returns ConditionParsingResult(condition)
         val endpoint = KBEndpoint(kb, File("kbe"))
         val userExpression = "TSH is depressed"
         val attributeNames = listOf("TSH")
 
         // When
-        val parsed = endpoint.conditionForExpression(userExpression, attributeNames).condition
+        val parsed = endpoint.conditionForExpression(userExpression).condition
 
         // Then
-        verify { kb.conditionForExpression(userExpression, attributeNames) }
+        verify { kb.conditionForExpression(userExpression) }
         parsed shouldBe condition
     }
 

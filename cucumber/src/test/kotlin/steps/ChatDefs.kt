@@ -46,7 +46,7 @@ class ChatDefs {
                 listOf(
                     PLEASE_CONFIRM,
                     COMMENT,
-                    CONDITION
+                    ANY_CONDITIONS
                 )
             )
         }
@@ -90,7 +90,7 @@ class ChatDefs {
 
     private fun botQuestionToProvideACondition() = with(chatPO()) {
         botRowContainsText(WOULD_YOU_LIKE) &&
-                botRowContainsText(PROVIDE_A_CONDITION)
+                botRowContainsText(ANY_CONDITIONS)
     }
 
     @And("the chatbot has asked for what comment I want to add")

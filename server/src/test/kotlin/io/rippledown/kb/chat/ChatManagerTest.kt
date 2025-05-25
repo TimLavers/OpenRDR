@@ -186,11 +186,17 @@ class ChatManagerTest {
         coEvery { conversationService.startConversation(case) } returns initialResponseFromModel
 
         chatManager.startConversation(case)
-        val comment = "the answer is 42"
+        val comment = "Go to Bondi."
+        val condition1 = "If the sun is hot."
+        val condition2 = "If the waves are good."
         val responseFromModel = """
             {
                 "action": "$ADD_ACTION",
                 "new_comment": "$comment",
+                "conditions": [
+                  {"condition:": "$condition1"},
+                  {"condition:": "$condition2"}
+                  ]
             }
         """
         coEvery { conversationService.response(any<String>()) } returns responseFromModel

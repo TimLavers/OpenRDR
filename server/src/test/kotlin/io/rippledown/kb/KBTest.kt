@@ -202,6 +202,19 @@ class KBTest {
     }
 
     @Test
+    fun `should return the attribute names in a KB`() {
+        // Given
+        kb.attributeNames() shouldBe emptyList()
+
+        // When
+        kb.attributeManager.getOrCreate("Glucose")
+        kb.attributeManager.getOrCreate("Cholesterol")
+
+        // Then
+        kb.attributeNames() shouldBe setOf("Glucose", "Cholesterol")
+    }
+
+    @Test
     fun conclusionManager() {
         kb.conclusionManager.all() shouldBe emptySet()
 
@@ -727,7 +740,7 @@ class KBTest {
         val conditionParser = mockk<ConditionParser>()
         val userExpression = "waves seem to be at least one metre"
         val parsedCondition = EpisodicCondition(null, waves, GreaterThanOrEquals(1.0), Current, userExpression)
-        every { conditionParser.parse(any(), any(), any()) } returns parsedCondition
+        every { conditionParser.parse(any(), any()) } returns parsedCondition
         kb.setConditionParser(conditionParser)
 
         kb.startRuleSession(
@@ -739,10 +752,10 @@ class KBTest {
 
         //When
         val existingCondition = kb.conditionManager.getOrCreate(greaterThanOrEqualTo(null, waves, 1.0))
-        val returnedCondition = kb.conditionForExpression(userExpression, attributeNames).condition!!
+        val returnedCondition = kb.conditionForExpression(userExpression).condition!!
 
         //Then
-        verify { conditionParser.parse(userExpression, attributeNames, any()) }
+        verify { conditionParser.parse(userExpression, any()) }
         returnedCondition shouldBe existingCondition
         withClue("The user expression should not be set for an existing condition") {
             returnedCondition.userExpression() shouldBe ""
@@ -759,7 +772,7 @@ class KBTest {
         val conditionParser = mockk<ConditionParser>()
         val userExpression = "waves seem to be at least one metre"
         val parsedCondition = EpisodicCondition(null, waves, GreaterThanOrEquals(1.0), Current, userExpression)
-        every { conditionParser.parse(any(), any(), any()) } returns parsedCondition
+        every { conditionParser.parse(any(), any()) } returns parsedCondition
         kb.setConditionParser(conditionParser)
 
         kb.startRuleSession(
@@ -770,11 +783,11 @@ class KBTest {
         parsedCondition.userExpression() shouldBe userExpression
 
         //When
-        val conditionForExpression = kb.conditionForExpression(userExpression, attributeNames).condition!!
+        val conditionForExpression = kb.conditionForExpression(userExpression).condition!!
         val returnedCondition = conditionForExpression
 
         //Then
-        verify { conditionParser.parse(userExpression, attributeNames, any()) }
+        verify { conditionParser.parse(userExpression, any()) }
         returnedCondition shouldBeSameAs parsedCondition
         withClue("The user expression should be set for new condition") {
             returnedCondition.userExpression() shouldBe userExpression
@@ -796,7 +809,7 @@ class KBTest {
         )
 
         //When
-        val returnedCondition = kb.conditionForExpression(userExpression, attributeNames).condition!!
+        val returnedCondition = kb.conditionForExpression(userExpression).condition!!
 
         //Then
         kb.holdsForSessionCase(returnedCondition) shouldBe true
@@ -813,7 +826,7 @@ class KBTest {
         val conditionParser = mockk<ConditionParser>()
         val userExpression = "waves seem to be at least one metre"
         val parsedCondition = EpisodicCondition(null, waves, GreaterThanOrEquals(1.0), Current, userExpression)
-        every { conditionParser.parse(any(), any(), any()) } returns parsedCondition
+        every { conditionParser.parse(any(), any()) } returns parsedCondition
         kb.setConditionParser(conditionParser)
 
         kb.startRuleSession(
@@ -823,10 +836,10 @@ class KBTest {
         kb.holdsForSessionCase(parsedCondition) shouldBe false
 
         //When
-        val returnedCondition = kb.conditionForExpression(userExpression, attributeNames).condition
+        val returnedCondition = kb.conditionForExpression(userExpression).condition
 
         //Then
-        verify { conditionParser.parse(userExpression, attributeNames, any()) }
+        verify { conditionParser.parse(userExpression, any()) }
         returnedCondition shouldBe null
     }
 
@@ -839,7 +852,7 @@ class KBTest {
         val sessionCase = createCase("Case", attribute = waves, value = height)
         val conditionParser = mockk<ConditionParser>()
         val userExpression = "waves are all over the place"
-        every { conditionParser.parse(any(), any(), any()) } returns null
+        every { conditionParser.parse(any(), any()) } returns null
         kb.setConditionParser(conditionParser)
 
         kb.startRuleSession(
@@ -848,10 +861,10 @@ class KBTest {
         )
 
         //When
-        val returnedCondition = kb.conditionForExpression(userExpression, attributeNames).condition
+        val returnedCondition = kb.conditionForExpression(userExpression).condition
 
         //Then
-        verify { conditionParser.parse(userExpression, attributeNames, any()) }
+        verify { conditionParser.parse(userExpression, any()) }
         returnedCondition shouldBe null
     }
 

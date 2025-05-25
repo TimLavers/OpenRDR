@@ -24,10 +24,9 @@ class RuleSessionsTest : OpenRDRServerTestBase() {
     fun `should delegate requesting a condition for an expression to the server application`() = testApplication {
         setup()
         val expression = "elevated waves"
-        val attributeNames = listOf("Sun, surf")
         val waves = Attribute(0, "Waves")
         val condition = EpisodicCondition(null, waves, High, Current, expression)
-        every { kbEndpoint.conditionForExpression(any<String>(), any<List<String>>()) } returns ConditionParsingResult(
+        every { kbEndpoint.conditionForExpression(any<String>()) } returns ConditionParsingResult(
             condition
         )
 
@@ -35,11 +34,10 @@ class RuleSessionsTest : OpenRDRServerTestBase() {
             contentType(ContentType.Application.Json)
             parameter(EXPRESSION, expression)
             parameter(KB_ID, kbId)
-            setBody(attributeNames)
         }
         result.status shouldBe OK
         result.body<ConditionParsingResult>().condition shouldBe condition
-        verify { kbEndpoint.conditionForExpression(expression, attributeNames) }
+        verify { kbEndpoint.conditionForExpression(expression) }
     }
 
 

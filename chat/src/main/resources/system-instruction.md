@@ -41,7 +41,7 @@ text and the conditions to be evaluated.
   {
   "action": "{{STOP}}",
   "debug": "user does not want to add a comment"
-   }
+  }
 
 ## Instruction if there are existing comments
 
@@ -75,17 +75,27 @@ text and the conditions to be evaluated.
   "message": "<your question to the user>"
   }
 - Your question to the user should include the phrase {{WHAT_COMMENT}}.
-- If the user provides a comment, ask for confirmation to add the comment.
+- If the user provides a comment, ask for confirmation on the exact wording of the comment unless they have specified
+  the comment in quotes.
 - Your confirmation request should be formatted as a JSON object with the following structure:
   {
   "action": "{{USER}}",
   "message": "<your request for confirmation>"
   }
 - Your request for confirmation should contain the phrase {{PLEASE_CONFIRM}} and the proposed comment text in quotes.
-- If the user has confirmed the comment to be added, output a JSON object with the following structure:
+- If the user has confirmed the comment to be added, follow the instructions for providing conditions.
+- Once the user has provided conditions, output a JSON object with the following structure:
   {
   "action": "{{ADD}}",
   "new_comment": "<comment text>"
+  "conditions": [
+  {
+  "condition" : "<condition 1>"
+  },
+  {
+  "condition" : "<condition 2>"
+  }
+  ...]
   }
 
 ## Instructions for replacing comment
@@ -117,6 +127,20 @@ text and the conditions to be evaluated.
   "action": "{{REMOVE}}",
   "existing_comment": "<existing comment text>"
   }
+
+## Instructions for providing conditions
+
+- If the user indicates they want to add, remove or replace a comment, ask the user if they are any conditions that must
+  be true in order for the report to be changed.
+- Your question should be formatted as a JSON object with the following structure:
+  {
+  "action": "{{USER}}",
+  "message": "<your question to the user>"
+  }
+
+- Your question to the user should include the phrase "{{ANY_CONDITIONS}}"
+- The user can provide multiple conditions, and you should store them in a list.
+- Alternatively, the user can indicate that there are no conditions.
 
 ## Formatting Rules
 
