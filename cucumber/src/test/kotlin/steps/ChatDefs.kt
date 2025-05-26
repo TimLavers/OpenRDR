@@ -32,10 +32,25 @@ class ChatDefs {
         }
     }
 
+    @Then("I decline")
+    fun decline() {
+        with(chatPO()) {
+            enterChatText("no")
+            clickSend()
+        }
+    }
+
     @Then("the chatbot has asked for confirmation")
     fun waitForBotRequestForConfirmation() {
         await().atMost(ofSeconds(10)).until {
-            chatPO().botRowContainsText(PLEASE_CONFIRM)
+            chatPO().botRowContainsTerms(listOf(PLEASE_CONFIRM))
+        }
+    }
+
+    @Then("the chatbot has completed the action")
+    fun waitForBotToSayDone() {
+        await().atMost(ofSeconds(10)).until {
+            chatPO().botRowContainsTerms(listOf(CHAT_BOT_DONE_MESSAGE))
         }
     }
 
@@ -66,7 +81,7 @@ class ChatDefs {
     }
 
     @Then("the chatbot has asked if I want to provide a condition")
-    fun requireBotQuestionToProvideACondition() {
+    fun waotForBotQuestionToProvideACondition() {
         await().atMost(ofSeconds(10)).until {
             botQuestionToProvideACondition()
         }
@@ -111,19 +126,24 @@ class ChatDefs {
                 botRowContainsText(REPLACE)
     }
 
-    @And("I build a rule to add an initial comment {string} using the chat")
+    @And("I build a rule to add an initial comment {string} using the chat with no condition")
     fun addCommentUsingChat(comment: String) {
         waitForBotInitialPrompt()
         confirm()
+        waitForBotQuestionToSpecifyAComment()
         enterChatTextAndSend("Add the comment: \"$comment\"")
         waitForBotRequestForConfirmation()
         confirm()
+        waotForBotQuestionToProvideACondition()
+        decline()
+        waitForBotToSayDone()
     }
 
     @And("I build a rule to add another comment {string} using the chat")
     fun addAnotherCommentUsingChat(comment: String) {
         waitForBotQuestionToAddRemoveOrReplaceAComment()
         confirm()
+        waitForBotQuestionToSpecifyAComment()
         enterChatTextAndSend("Add the comment: \"$comment\"")
         waitForBotRequestForConfirmation()
         confirm()

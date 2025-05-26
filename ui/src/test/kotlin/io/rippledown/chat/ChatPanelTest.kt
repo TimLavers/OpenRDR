@@ -134,6 +134,42 @@ class ChatPanelTest {
         }
     }
 
+    @Test
+    fun `should set focus on the user text field after clicking the send button`() {
+        with(composeTestRule) {
+            // Given
+            setContent {
+                ChatPanel(sendIsEnabled = true, listOf(), onMessageSent)
+            }
+            requireUserTextFieldFocused()
+
+            // When
+            val userMessage = "add a comment"
+            typeChatMessageAndClickSend(userMessage)
+
+            // Then
+            requireUserTextFieldFocused()
+        }
+    }
+
+    @Test
+    fun `should set focus on the user text field after pressing the Enter key`() {
+        with(composeTestRule) {
+            // Given
+            setContent {
+                ChatPanel(sendIsEnabled = true, listOf(), onMessageSent)
+            }
+            requireUserTextFieldFocused()
+
+            // When
+            val userMessage = "add a comment"
+            typeChatMessageAndPressEnter(userMessage)
+
+            // Then
+            requireUserTextFieldFocused()
+        }
+    }
+
 }
 
 fun main() {

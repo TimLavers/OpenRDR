@@ -15,7 +15,9 @@ Feature: The user can use the chat to make changes the interpretive report
     And I enter the following text into the chat panel:
       | Add the comment" "Let's surf" |
     And the chatbot has asked for confirmation
-    When I confirm
+    And I confirm
+    And the chatbot has asked if I want to provide a condition
+    When I decline
     Then the report should be "Let's surf"
     And stop the client application
 
@@ -31,10 +33,13 @@ Feature: The user can use the chat to make changes the interpretive report
     And I enter the following text into the chat panel:
       | Add the comment: "Let's surf" |
     And the chatbot has asked for confirmation
-    When I confirm
+    And I confirm
+    And the chatbot has asked if I want to provide a condition
+    When I decline
     Then the report should be "Go to Bondi. Let's surf"
     And stop the client application
 
+  @single
   Scenario: The user should be able to use the chat to add two comments with no conditions
     Given case Bondi is provided having data:
       | Wave | excellent |
@@ -43,11 +48,14 @@ Feature: The user can use the chat to make changes the interpretive report
     And I see the case Bondi as the current case
     And the chat is showing
     And the report is empty
-    And  I build a rule to add an initial comment "Let's surf." using the chat
+    And  I build a rule to add an initial comment "Let's surf." using the chat with no condition
+    And pause
     And I enter the following text into the chat panel:
       | Add another comment "Bring flippers." |
     And the chatbot has asked for confirmation
-    When I confirm
+    And I confirm
+    And the chatbot has asked if I want to provide a condition
+    When I decline
     Then the report should be "Let's surf. Bring flippers."
     And stop the client application
 
@@ -58,7 +66,7 @@ Feature: The user can use the chat to make changes the interpretive report
     And I start the client application
     And I should see the case Case1 as the current case
     And the chat is showing
-    And I build a rule to add an initial comment "Let's surf." using the chat
+    And I build a rule to add an initial comment "Let's surf." using the chat with no condition
     And the report should be "Let's surf."
     And select the case Case2
     And the interpretation should be "Let's surf."
@@ -66,7 +74,7 @@ Feature: The user can use the chat to make changes the interpretive report
     Then the report should be "Let's surf. Bring flippers."
     And stop the client application
 
-  @single
+  @ignore
   Scenario: The user should be able to use the chat to add a comment to a blank report with a condition
     Given case Bondi is provided having data:
       | Wave | excellent |

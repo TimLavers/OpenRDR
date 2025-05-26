@@ -126,11 +126,7 @@ fun ChatPanel(
                     .semantics { contentDescription = CHAT_TEXT_FIELD }
                     .onPreviewKeyEvent { event ->
                         if (event.key == Key.Enter && event.type == KeyEventType.KeyDown) {
-                            if (inputText.text.isNotBlank()) {
-                                val messageText = inputText.text.trim()
-                                onMessageSent(UserMessage(messageText))
-                                inputText = TextFieldValue("")
-                            }
+                            inputText = sendUserMessage(inputText, onMessageSent, textAreaFocusRequester)
                             true // Consume the event to avoid newline insertion
                         } else {
                             false // Allow other events to be handled
@@ -155,11 +151,7 @@ fun ChatPanel(
                     ) {
                         FilledIconButton(
                             onClick = {
-                                if (inputText.text.isNotBlank()) {
-                                    val messageText = inputText.text.trim()
-                                    onMessageSent(UserMessage(messageText))
-                                    inputText = TextFieldValue("")
-                                }
+                                inputText = sendUserMessage(inputText, onMessageSent, textAreaFocusRequester)
                             },
                             enabled = inputText.text.isNotBlank(),
                             modifier = Modifier
@@ -184,6 +176,19 @@ fun ChatPanel(
             )
         }
     }
+}
+
+private fun sendUserMessage(
+    inputText: TextFieldValue,
+    onMessageSent: OnMessageSent,
+    textAreaFocusRequester: FocusRequester
+): TextFieldValue {
+    if (inputText.text.isNotBlank()) {
+        val messageText = inputText.text.trim()
+        onMessageSent(UserMessage(messageText))
+        textAreaFocusRequester.requestFocus() // Retain focus after button click
+    }
+    return TextFieldValue("")
 }
 
 @Composable
