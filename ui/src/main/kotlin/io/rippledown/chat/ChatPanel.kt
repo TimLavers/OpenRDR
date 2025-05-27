@@ -65,6 +65,7 @@ const val CHAT_TEXT_FIELD = "CHAT_TEXT_FIELD"
 
 @Composable
 fun ChatPanel(
+    caseId: Long = -1,
     sendIsEnabled: Boolean = true,
     messages: List<ChatMessage> = emptyList(),
     onMessageSent: OnMessageSent = {},
@@ -74,14 +75,15 @@ fun ChatPanel(
     val listState = rememberLazyListState()
     val textAreaFocusRequester = remember { FocusRequester() }
 
+    // Request focus when the id of the case changes
+    LaunchedEffect(caseId) {
+        textAreaFocusRequester.requestFocus()
+    }
+
     LaunchedEffect(messages) {
         if (messages.isNotEmpty()) {
             listState.scrollToItem(messages.size - 1)
         }
-    }
-
-    LaunchedEffect(Unit) {
-        textAreaFocusRequester.requestFocus()
     }
 
     Column(
@@ -262,7 +264,7 @@ fun main() = application {
             BotMessage("Sure! What do you need help with?")
         )
         MaterialTheme {
-            ChatPanel(sendIsEnabled = true, messages)
+            ChatPanel(0, sendIsEnabled = true, messages)
         }
     }
 }

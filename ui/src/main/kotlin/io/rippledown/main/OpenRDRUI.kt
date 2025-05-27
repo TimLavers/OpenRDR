@@ -264,8 +264,8 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
 
                             override fun startRuleSession(sessionStartRequest: SessionStartRequest) =
                                 runBlocking(dispatcher) {
-                                cornerstoneStatus = api.startRuleSession(sessionStartRequest)
-                            }
+                                    cornerstoneStatus = api.startRuleSession(sessionStartRequest)
+                                }
 
                             override fun getCase(caseId: Long) =
                                 runBlocking(dispatcher) { currentCase = api.getCase(caseId) }
@@ -299,6 +299,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
 
                     if (isChatVisible) {
                         ChatController(
+                            currentCaseId ?: -1L,
                             chatControllerHandler,
                             modifier = Modifier.weight(0.3f)
                         )

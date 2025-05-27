@@ -1,6 +1,18 @@
 package io.rippledown.chat
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.height
+import androidx.compose.material.Button
+import androidx.compose.material.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.mockk.mockk
@@ -32,7 +44,7 @@ class ChatPanelTest {
             )
             // When
             setContent {
-                ChatPanel(sendIsEnabled = true, messages = messages, onMessageSent)
+                ChatPanel(caseId = 0L, sendIsEnabled = true, messages = messages, onMessageSent)
             }
             // Then
             requireChatMessagesShowing(messages)
@@ -44,7 +56,7 @@ class ChatPanelTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatPanel(sendIsEnabled = true, listOf(), onMessageSent)
+                ChatPanel(caseId = 0L, sendIsEnabled = true, listOf(), onMessageSent)
             }
 
             // When
@@ -62,7 +74,7 @@ class ChatPanelTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatPanel(sendIsEnabled = true, listOf(), onMessageSent)
+                ChatPanel(caseId = 0L, sendIsEnabled = true, listOf(), onMessageSent)
             }
             performTextInput("add a comment")
             requireSendButtonEnabled()
@@ -80,7 +92,7 @@ class ChatPanelTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatPanel(sendIsEnabled = true, listOf(), onMessageSent)
+                ChatPanel(caseId = 0L, sendIsEnabled = true, listOf(), onMessageSent)
             }
 
             // Then
@@ -93,7 +105,7 @@ class ChatPanelTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatPanel(sendIsEnabled = true, listOf(), onMessageSent)
+                ChatPanel(caseId = 0L, sendIsEnabled = true, listOf(), onMessageSent)
             }
 
             // When
@@ -113,7 +125,7 @@ class ChatPanelTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatPanel(sendIsEnabled = true, history, onMessageSent)
+                ChatPanel(caseId = 0L, sendIsEnabled = true, history, onMessageSent)
             }
 
             // Then
@@ -126,7 +138,7 @@ class ChatPanelTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatPanel(sendIsEnabled = true, listOf(), onMessageSent)
+                ChatPanel(caseId = 0L, sendIsEnabled = true, listOf(), onMessageSent)
             }
 
             // Then
@@ -139,7 +151,7 @@ class ChatPanelTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatPanel(sendIsEnabled = true, listOf(), onMessageSent)
+                ChatPanel(caseId = 0L, sendIsEnabled = true, listOf(), onMessageSent)
             }
             requireUserTextFieldFocused()
 
@@ -157,7 +169,7 @@ class ChatPanelTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatPanel(sendIsEnabled = true, listOf(), onMessageSent)
+                ChatPanel(caseId = 0L, sendIsEnabled = true, listOf(), onMessageSent)
             }
             requireUserTextFieldFocused()
 
@@ -170,6 +182,51 @@ class ChatPanelTest {
         }
     }
 
+    @Test
+    fun `should set focus on the user text field when the caseId changes`() {
+        with(composeTestRule) {
+            // Given
+            setContent {
+                ParentComposable()
+            }
+            requireUserTextFieldFocused()
+
+            // When
+            onNodeWithContentDescription("TEST_BUTTON").performClick()
+
+            // Then
+            requireUserTextFieldFocused()
+        }
+    }
+}
+
+// A parent composable to test the behaviour of the ChatPanel when the caseId changes
+@Composable
+fun ParentComposable() {
+    var messages by remember { mutableStateOf(listOf<ChatMessage>()) }
+    var uniqueId by remember { mutableStateOf(0L) }
+
+    Column(verticalArrangement = Arrangement.Top) {
+        ChatPanel(
+            caseId = uniqueId,
+            sendIsEnabled = true,
+            messages = messages,
+            onMessageSent = { userMessage ->
+                messages = messages + userMessage
+            },
+            modifier = Modifier.height(400.dp) //leave space for the button
+        )
+        Button(
+            onClick = {
+                messages = listOf()
+                uniqueId = ++uniqueId
+            },
+            modifier = Modifier.semantics {
+                contentDescription = "TEST_BUTTON"
+            }) {
+            Text("Click to reset chat")
+        }
+    }
 }
 
 fun main() {
@@ -178,6 +235,7 @@ fun main() {
             onCloseRequest = ::exitApplication,
         ) {
             ChatPanel(
+                caseId = -1,
                 sendIsEnabled = true,
                 listOf(
                     BotMessage("Hi there"),

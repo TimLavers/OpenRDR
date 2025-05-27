@@ -149,7 +149,8 @@ class OpenRDRUITest {
     }
 
     @Test
-    fun `should show the chat panel if a case is showing and the chat toggle icon has been clicked`() = runTest {
+    fun `focus should be on the chat user text field if a case is showing and the chat toggle icon has been clicked`() =
+        runTest {
         val caseA = "case A"
         val caseId1 = CaseId(id = 1, name = caseA)
         val caseIds = listOf(caseId1)
@@ -164,12 +165,48 @@ class OpenRDRUITest {
                 OpenRDRUI(handler, dispatcher = Unconfined)
             }
             requireNamesToBeShowingOnCaseList(caseA)
-
-            //When
             waitForCaseToBeShowing(caseA)
 
+            //When
+            clickChatIconToggle()
+
             //Then
-            requireEmptyChatHistory()
+            requireUserTextFieldFocused()
+        }
+        }
+
+    @Test
+    fun `focus should remain on the chat user text field if a second case is selected`() = runTest {
+        val caseA = "case A"
+        val caseB = "case B"
+        val caseId1 = CaseId(id = 1, name = caseA)
+        val caseId2 = CaseId(id = 2, name = caseB)
+        val caseIds = listOf(caseId1, caseId2)
+        val bondiComment = "Go to Bondi"
+        val malabarComment = "Go to Malabar"
+        val case1 = createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
+        val case2 = createCaseWithInterpretation(caseB, 2, listOf(malabarComment))
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.getCase(1) } returns case1
+        coEvery { api.getCase(2) } returns case2
+
+        with(composeTestRule) {
+            //Given
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            requireNamesToBeShowingOnCaseList(caseA)
+            waitForCaseToBeShowing(caseA)
+            clickChatIconToggle()
+            requireUserTextFieldFocused()
+
+            //When
+            selectCaseByName(caseB)
+            waitForCaseToBeShowing(caseB)
+
+            //Then
+            waitForIdle()
+            requireUserTextFieldFocused()
         }
     }
 
