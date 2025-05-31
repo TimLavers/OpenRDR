@@ -2,7 +2,6 @@ package io.rippledown.model.condition.series
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.TestResult
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 
@@ -31,9 +30,9 @@ class DecreasingTest {
 
     @Test
     fun onTrend() {
-        Decreasing.onTrend(10.0F, 12.0F) shouldBe true
-        Decreasing.onTrend(10.0F, 10.0F) shouldBe false
-        Decreasing.onTrend(12.0F, 10.0F) shouldBe false
+        Decreasing.onTrend(10.0, 12.0) shouldBe true
+        Decreasing.onTrend(10.0, 10.0) shouldBe false
+        Decreasing.onTrend(12.0, 10.0) shouldBe false
     }
 
     @Test
