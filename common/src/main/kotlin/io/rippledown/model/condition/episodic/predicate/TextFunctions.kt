@@ -46,7 +46,10 @@ data class DoesNotContain(val toFind: String): TestResultPredicate {
 
 @Serializable
 data class Is(val toFind: String): TestResultPredicate {
-    override fun evaluate(result: TestResult) = result.value.text == toFind
+    override fun evaluate(result: TestResult): Boolean {
+        println("Evaluating Is predicate: ${result.value.text} == $toFind")
+        return result.value.text == toFind
+    }
 
     override fun description(plural: Boolean) = if (plural) "are \"$toFind\"" else "is \"$toFind\""
 }
