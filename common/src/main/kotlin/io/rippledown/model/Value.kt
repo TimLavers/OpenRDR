@@ -6,8 +6,5 @@ import kotlinx.serialization.Transient
 @Serializable
 data class Value(val text: String) {
     @Transient
-    val real = text.toFloatOrNull()
-
-    @Transient
-    val realReal = text.toDoubleOrNull()
+    val real = text.toDoubleOrNull()
 }
