@@ -116,7 +116,7 @@ sealed class ExpandedRangeComparison(private val lowerCutoffExpansionPercentage:
         return !normalRange.isNormal(result.value)
     }
 
-    private fun veryClose(x: Float, y: Double) = abs(x - y) < 0.0001
+    private fun veryClose(x: Double, y: Double) = abs(x - y) < 0.0001
 }
 
 @Serializable
