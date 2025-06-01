@@ -67,7 +67,7 @@ fun EditCurrentKbControl(handler: KbEditControlHandler) {
         }
     }
     if(undoLastRuleDialogShowing) {
-        val dialogState = rememberDialogState(size = DpSize(640.dp, 460.dp))
+        val dialogState = rememberDialogState(size = DpSize(640.dp, 280.dp))
         DialogWindow(
             onCloseRequest = { undoLastRuleDialogShowing = false },
             title =UNDO_LAST_RULE_MENU_ITEM,
@@ -82,6 +82,7 @@ fun EditCurrentKbControl(handler: KbEditControlHandler) {
 
                 override fun undoLastRule() {
                     handler.undoLastRule()
+                    undoLastRuleDialogShowing = false
                 }
             })
         }

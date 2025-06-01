@@ -50,22 +50,4 @@ class KbStepDefs {
     fun theKBControlsAreShouldBeShown() {
         kbControlsPO().requireKbControlsToBeShown()
     }
-
-    @When("I set the KB description to:")
-    fun i_set_the_description_to(description: DocString) {
-        println("description: ${description.content}")
-        val editCurrentKbControlPO = editCurrentKbControlPO()
-        val descriptionOperator = editCurrentKbControlPO().showDescriptionOperator()
-        descriptionOperator.setDescription(description.content)
-    }
-
-    @Then("the KB description is:")
-    fun the_KBDescriptionIsNow(description: DocString) {
-        println("description: ${description.content}")
-        val expectedText = description.content ?: ""
-        println(expectedText)
-        val descriptionOperator = editCurrentKbControlPO().showDescriptionOperator()
-        descriptionOperator.description() shouldBe expectedText
-        descriptionOperator.cancel()
-    }
 }
