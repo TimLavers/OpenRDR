@@ -42,7 +42,7 @@ class KBImporter(source: File, private val persistenceProvider: PersistenceProvi
 
         // Extract the rule sessions.
         val ruleSessionRecordStore = persistentKB.ruleSessionRecordStore()
-        ruleSessionRecordStore.load(DirectoryImporter(ruleSessionsDirectory, RuleSessionRecordsExporter()).import())
+        ruleSessionRecordStore.load(DirectoryImporter(ruleSessionsDirectory, RuleSessionRecordsExporter(), true).import())
 
         // Create the result KB.
         val result = KB(persistentKB)
