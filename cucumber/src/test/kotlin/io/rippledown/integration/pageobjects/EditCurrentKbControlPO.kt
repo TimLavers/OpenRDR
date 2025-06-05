@@ -23,12 +23,21 @@ class EditCurrentKbControlPO(private val contextProvider: () -> AccessibleContex
     }
 
     fun showUndoLastRuleOperator(): UndoLastRuleOperator {
-        expandDropdownMenu()
+        expandDropdownMenuWithRetry()
         Thread.sleep(1_000)
         clickDropdownItem(UNDO_LAST_RULE_BUTTON_TEXT)
         Thread.sleep(1_000)
         val dialog = findComposeDialogThatIsShowing()
         return UndoLastRuleOperator(dialog!!)
+    }
+
+    private fun expandDropdownMenuWithRetry() {
+        try {
+            expandDropdownMenu()
+        } catch (e: Exception) {
+            Thread.sleep(2500)
+            expandDropdownMenu()
+        }
     }
 
     private fun expandDropdownMenu() {

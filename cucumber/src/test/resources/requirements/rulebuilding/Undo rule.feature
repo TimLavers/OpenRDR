@@ -4,7 +4,7 @@ Feature: The user can undo rules
     Given case Bondi is provided having data:
       | Wave | excellent |
       | Sun  | hot       |
-      | Tide  | low       |
+      | Tide | low       |
     And I start the client application
     And I see the case Bondi as the current case
     And I build a rule to add the comment "Go to Bondi." with the condition "Sun is hot"
@@ -18,17 +18,16 @@ Feature: The user can undo rules
     Then the undo last rule dialog shows that no rule is available for undoing
     And stop the client application
 
-    @single
   Scenario: Undo rules from sample KB
     Given I start the client application
 
     And I create a Knowledge Base with the name ContactLenseUndo based on the "Contact Lense Prescription" sample
     Then the count of the number of cases is 24
-And pause for 30 seconds
-    When I select case Case24
-      Then the interpretation should be empty
 
-      And I undo the last rule
+    When I select case Case24
+    Then the interpretation should be empty
+
+    And I undo the last rule
     Then the interpretation should be "hard"
 
     And stop the client application
