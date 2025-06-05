@@ -210,7 +210,6 @@ class RuleMakerStepDefs {
         }
     }
 
-
     @When("I start to build a rule to replace the comment {string} by {string}")
     fun startRuleToReplaceCommentBy(toBeReplaced: String, replacement: String) {
         startRuleToReplaceComment(toBeReplaced, replacement)

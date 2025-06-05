@@ -3,8 +3,10 @@ package io.rippledown.appbar
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import io.kotest.matchers.shouldBe
 import io.rippledown.constants.kb.CONFIRM_UNDO_LAST_RULE_TEXT
+import io.rippledown.constants.kb.UNDO_LAST_RULE_BUTTON_DESCRIPTION
 import io.rippledown.model.rule.UndoRuleDescription
 import io.rippledown.utils.applicationFor
 import org.junit.Rule
@@ -20,11 +22,16 @@ class UndoRuleDescriptionDisplayTest {
             "It replaces the comment: \"Dogs have four legs and a long tail and other body parts.\"\n" +
             "with:\n" +
             "\"Cats have eight legs and thirteen tails, according to ChatGPT.\""
-    val lastRuleDescription = UndoRuleDescription(descriptionText, true)
+    var canRemoveLastRule = true
+    fun lastRuleDescription() = UndoRuleDescription(descriptionText, canRemoveLastRule)
     var closeClicked = false
     var undone = false
+    var serverCallCount = 0
     val handler = object : UndoRuleDescriptionDisplayHandler {
-        override fun description() = lastRuleDescription
+        override fun description(): UndoRuleDescription {
+            serverCallCount++
+            return lastRuleDescription()
+        }
 
         override fun cancel() {
             closeClicked = true
@@ -39,6 +46,8 @@ class UndoRuleDescriptionDisplayTest {
     fun setup() {
         closeClicked = false
         undone = false
+        canRemoveLastRule = true
+        serverCallCount = 0
     }
 
     @Test
@@ -48,6 +57,28 @@ class UndoRuleDescriptionDisplayTest {
                 UndoRuleDescriptionDisplay(handler)
             }
             waitUntilExactlyOneExists(hasText(descriptionText))
+        }
+    }
+
+    @Test
+    fun `should not show remove button if there is no rule to remove`() {
+        canRemoveLastRule = false
+        with(composeTestRule) {
+            setContent {
+                UndoRuleDescriptionDisplay(handler)
+            }
+            waitUntilExactlyOneExists(hasText(descriptionText))
+            onNodeWithContentDescription(UNDO_LAST_RULE_BUTTON_DESCRIPTION).assertDoesNotExist()
+        }
+    }
+
+    @Test
+    fun `only a single server call is made when building the display`() {
+        with(composeTestRule) {
+            setContent {
+                UndoRuleDescriptionDisplay(handler)
+            }
+            serverCallCount shouldBe 1
         }
     }
 

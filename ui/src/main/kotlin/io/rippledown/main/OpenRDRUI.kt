@@ -95,7 +95,15 @@ fun OpenRDRUI(handler: Handler) {
                 override var kbDescription: () -> String = { runBlocking { api.kbDescription() } }
                 override var lastRuleDescription: () -> UndoRuleDescription = { runBlocking { api.lastRuleDescription() } }
                 override var undoLastRule: () -> Unit = {
-                    runBlocking { api.undoLastRule() }
+                    runBlocking {
+                        api.undoLastRule()
+                        println("rule undone")
+                        if (currentCaseId != null) {
+                            println("refreshing case")
+                            currentCase = api.getCase(currentCaseId!!)
+                            println("case refreshed")
+                        }
+                    }
                 }
             })
         },

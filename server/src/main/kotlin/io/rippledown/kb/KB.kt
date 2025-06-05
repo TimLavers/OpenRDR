@@ -147,7 +147,7 @@ class KB(persistentKB: PersistentKB) {
 
     fun descriptionOfMostRecentRule(): UndoRuleDescription {
         val record = ruleSessionRecorder.idsOfRulesAddedInMostRecentSession()
-            ?: return UndoRuleDescription("There are no more rules to undo.", false)
+            ?: return UndoRuleDescription("There are no rules to undo.", false)
         val idOfExemplar = record.idsOfRulesAddedInSession.random()
         val exemplar = ruleTree.ruleForId(idOfExemplar)
         return UndoRuleDescription(exemplar.actionSummary(), true);

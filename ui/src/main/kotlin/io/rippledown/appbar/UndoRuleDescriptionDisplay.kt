@@ -29,6 +29,7 @@ interface UndoRuleDescriptionDisplayHandler {
 @Preview
 fun UndoRuleDescriptionDisplay(handler: UndoRuleDescriptionDisplayHandler) {
     var undoRuleClicked by remember { mutableStateOf(false) }
+    val udr = handler.description()
     Surface {
         Box {
             Column(
@@ -36,7 +37,7 @@ fun UndoRuleDescriptionDisplay(handler: UndoRuleDescriptionDisplayHandler) {
             ) {
                 Row {
                     OutlinedTextField(
-                        value = handler.description().description,
+                        value = udr.description,
                         onValueChange = {},
                         label = {
                             Text(
@@ -46,6 +47,7 @@ fun UndoRuleDescriptionDisplay(handler: UndoRuleDescriptionDisplayHandler) {
                         },
                         modifier = Modifier
                             .fillMaxWidth()
+                            .fillMaxHeight(0.8F)
                             .testTag(LAST_RULE_DESCRIPTION_ID)
                             .semantics { contentDescription = LAST_RULE_DESCRIPTION_DESCRIPTION }
                     )
@@ -65,16 +67,18 @@ fun UndoRuleDescriptionDisplay(handler: UndoRuleDescriptionDisplayHandler) {
                         ) {
                             Text("Close")
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        TextButton(
-                            onClick = {
-                                undoRuleClicked = true
-                            },
-                            modifier = Modifier.semantics {
-                                contentDescription = UNDO_LAST_RULE_BUTTON_DESCRIPTION
+                        if (udr.canRemove) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            TextButton(
+                                onClick = {
+                                    undoRuleClicked = true
+                                },
+                                modifier = Modifier.semantics {
+                                    contentDescription = UNDO_LAST_RULE_BUTTON_DESCRIPTION
+                                }
+                            ) {
+                                Text("Undo last rule")
                             }
-                        ) {
-                            Text("Undo last rule")
                         }
                     }
                 }

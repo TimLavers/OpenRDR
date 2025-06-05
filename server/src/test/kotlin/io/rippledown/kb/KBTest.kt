@@ -292,7 +292,7 @@ class KBTest {
     @Test
     fun `description for most recent rule when none have been built`() {
         with(kb.descriptionOfMostRecentRule()) {
-            description shouldBe "There are no more rules to undo."
+            description shouldBe "There are no rules to undo."
             canRemove shouldBe false
         }
     }
