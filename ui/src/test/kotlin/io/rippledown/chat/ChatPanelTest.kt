@@ -44,7 +44,7 @@ class ChatPanelTest {
             )
             // When
             setContent {
-                ChatPanel(caseId = 0L, sendIsEnabled = true, messages = messages, onMessageSent)
+                ChatPanel(id = 0L, sendIsEnabled = true, messages = messages, onMessageSent)
             }
             // Then
             requireChatMessagesShowing(messages)
@@ -56,7 +56,7 @@ class ChatPanelTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatPanel(caseId = 0L, sendIsEnabled = true, listOf(), onMessageSent)
+                ChatPanel(id = 0L, sendIsEnabled = true, listOf(), onMessageSent)
             }
 
             // When
@@ -74,7 +74,7 @@ class ChatPanelTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatPanel(caseId = 0L, sendIsEnabled = true, listOf(), onMessageSent)
+                ChatPanel(id = 0L, sendIsEnabled = true, listOf(), onMessageSent)
             }
             performTextInput("add a comment")
             requireSendButtonEnabled()
@@ -92,7 +92,7 @@ class ChatPanelTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatPanel(caseId = 0L, sendIsEnabled = true, listOf(), onMessageSent)
+                ChatPanel(id = 0L, sendIsEnabled = true, listOf(), onMessageSent)
             }
 
             // Then
@@ -105,7 +105,7 @@ class ChatPanelTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatPanel(caseId = 0L, sendIsEnabled = true, listOf(), onMessageSent)
+                ChatPanel(id = 0L, sendIsEnabled = true, listOf(), onMessageSent)
             }
 
             // When
@@ -125,7 +125,7 @@ class ChatPanelTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatPanel(caseId = 0L, sendIsEnabled = true, history, onMessageSent)
+                ChatPanel(id = 0L, sendIsEnabled = true, history, onMessageSent)
             }
 
             // Then
@@ -138,7 +138,7 @@ class ChatPanelTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatPanel(caseId = 0L, sendIsEnabled = true, listOf(), onMessageSent)
+                ChatPanel(id = 0L, sendIsEnabled = true, listOf(), onMessageSent)
             }
 
             // Then
@@ -151,7 +151,7 @@ class ChatPanelTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatPanel(caseId = 0L, sendIsEnabled = true, listOf(), onMessageSent)
+                ChatPanel(id = 0L, sendIsEnabled = true, listOf(), onMessageSent)
             }
             requireUserTextFieldFocused()
 
@@ -169,7 +169,7 @@ class ChatPanelTest {
         with(composeTestRule) {
             // Given
             setContent {
-                ChatPanel(caseId = 0L, sendIsEnabled = true, listOf(), onMessageSent)
+                ChatPanel(id = 0L, sendIsEnabled = true, listOf(), onMessageSent)
             }
             requireUserTextFieldFocused()
 
@@ -183,7 +183,7 @@ class ChatPanelTest {
     }
 
     @Test
-    fun `should set focus on the user text field when the caseId changes`() {
+    fun `should set focus on the user text field when the recomposed with a different id`() {
         with(composeTestRule) {
             // Given
             setContent {
@@ -208,7 +208,7 @@ fun ParentComposable() {
 
     Column(verticalArrangement = Arrangement.Top) {
         ChatPanel(
-            caseId = uniqueId,
+            id = uniqueId,
             sendIsEnabled = true,
             messages = messages,
             onMessageSent = { userMessage ->
@@ -235,7 +235,7 @@ fun main() {
             onCloseRequest = ::exitApplication,
         ) {
             ChatPanel(
-                caseId = -1,
+                id = -1,
                 sendIsEnabled = true,
                 listOf(
                     BotMessage("Hi there"),

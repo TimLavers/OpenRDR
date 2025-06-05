@@ -38,13 +38,9 @@ fun InterpretationView(
     var comments by remember {
         mutableStateOf(interpretation.conclusions().map { it.text })
     }
-    var unstyledText by remember { mutableStateOf(comments.unhighlighted()) }
-    var styledText by remember { mutableStateOf(unstyledText) }
 
     LaunchedEffect(interpretation) {
         comments = interpretation.conclusions().map { it.text }
-        unstyledText = comments.unhighlighted()
-        styledText = unstyledText
     }
 
     OutlinedCard(modifier = Modifier.padding(vertical = 10.dp)) {

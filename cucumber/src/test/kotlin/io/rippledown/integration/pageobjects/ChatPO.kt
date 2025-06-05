@@ -4,6 +4,7 @@ import io.rippledown.appbar.CHAT_ICON_TOGGLE
 import io.rippledown.chat.BOT
 import io.rippledown.chat.CHAT_SEND
 import io.rippledown.chat.CHAT_TEXT_FIELD
+import io.rippledown.chat.NUMBER_OF_CHAT_MESSAGES_
 import io.rippledown.integration.utils.find
 import org.assertj.swing.edt.GuiActionRunner.execute
 import javax.accessibility.AccessibleContext
@@ -31,27 +32,32 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
     fun clickChatIconToggle() =
         execute { contextProvider().find(CHAT_ICON_TOGGLE)?.accessibleAction?.doAccessibleAction(0) }
 
-    fun botRowContainsText(text: String): Boolean {
+    fun mostRecentBotRowContainsTerms(terms: List<String>): Boolean {
+        val numberOfChatMessages = numberOfChatMessages()
         return execute<Boolean> {
             val matcher = { context: AccessibleContext ->
-                context.foundText(text) && context.isBotResponse()
-            }
-            contextProvider().find(matcher) != null
-        }
-    }
-    fun botRowContainsTerms(terms: List<String>): Boolean {
-        return execute<Boolean> {
-            val matcher = { context: AccessibleContext ->
-                terms.all { term -> context.foundText(term) } && context.isBotResponse()
+                terms.all { term -> context.foundText(term) } && context.isBotResponseForIndex(numberOfChatMessages - 1)
             }
             contextProvider().find(matcher) != null
         }
     }
 
+    fun numberOfChatMessages(): Int =
+        execute<Int> {
+            val matcher = { context: AccessibleContext ->
+                context.accessibleDescription?.startsWith(NUMBER_OF_CHAT_MESSAGES_) ?: false
+            }
+            contextProvider().find(matcher)
+                ?.accessibleDescription
+                ?.substring(NUMBER_OF_CHAT_MESSAGES_.length)
+                ?.toIntOrNull() ?: 0
+        }
 }
 
 fun AccessibleContext.foundText(text: String): Boolean =
     accessibleName?.contains(text) ?: false
 
-fun AccessibleContext.isBotResponse(): Boolean =
-    accessibleDescription?.startsWith(BOT) ?: false
+fun AccessibleContext.isBotResponseForIndex(index: Int): Boolean =
+    accessibleDescription == "$BOT$index"
+
+

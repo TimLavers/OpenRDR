@@ -45,6 +45,7 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
                 val conditionParsingResults = userExpressionsForConditions?.map { expression ->
                     ruleService.conditionForExpression(currentCase, expression)
                 } ?: emptyList()
+                conditionParsingResults.forEach { condition -> logger.info("error parsing condition ${condition.errorMessage}") }
 
                 //Check for failures and collect conditions at the same time
                 val (failedResult, conditions) = checkForUnparsedConditions(conditionParsingResults)

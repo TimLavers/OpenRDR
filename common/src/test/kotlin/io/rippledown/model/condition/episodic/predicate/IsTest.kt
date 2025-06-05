@@ -6,7 +6,7 @@ import io.rippledown.model.TestResult
 import io.rippledown.utils.serializeDeserialize
 import kotlin.test.Test
 
-class IsTest: Base() {
+class IsTest : Base() {
     val stuff = "stuff"
     private val predicate = Is(stuff)
 
@@ -26,9 +26,33 @@ class IsTest: Base() {
     }
 
     @Test
+    fun `evaluation should ignore surrounding quotesin the value being compared with`() {
+        val isGoat = Is("goat")
+        isGoat.evaluate(TestResult("\"goat\"")) shouldBe true
+    }
+
+    @Test
+    fun `evaluation should ignore surrounding quotes in the condition parameter`() {
+        val isGoat = Is("\"goat\"")
+        isGoat.evaluate(TestResult("goat")) shouldBe true
+    }
+
+    @Test
+    fun `evaluation should ignore surrounding apostrophes in the value being compared with`() {
+        val isGoat = Is("goat")
+        isGoat.evaluate(TestResult("'goat'")) shouldBe true
+    }
+
+    @Test
+    fun `evaluation should ignore surrounding apostrophes in the condition parameter`() {
+        val isGoat = Is("'goat'")
+        isGoat.evaluate(TestResult("goat")) shouldBe true
+    }
+
+    @Test
     fun equalsTest() {
         Is("Blah") shouldBe Is("Blah")
-        Is("Blah") shouldNotBe  Is("blah")
+        Is("Blah") shouldNotBe Is("blah")
         Is("Blah") shouldNotBe Is("")
     }
 
@@ -46,5 +70,12 @@ class IsTest: Base() {
     fun description() {
         predicate.description(false) shouldBe "is \"$stuff\""
         predicate.description(true) shouldBe "are \"$stuff\""
+    }
+
+    @Test
+    fun `description should show one set of quotes`() {
+        Is("goat").description(false) shouldBe "is \"goat\""
+        Is("\"goat\"").description(false) shouldBe "is \"goat\""
+        Is("'goat\'").description(false) shouldBe "is \"goat\""
     }
 }

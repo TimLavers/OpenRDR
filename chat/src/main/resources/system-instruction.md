@@ -19,14 +19,14 @@ text and the conditions to be evaluated.
 ## Initial instructions
 
 - Determine if the case has one or more comments.
-- If there are no comments, follow the instruction if there are no comments.
-- If there are existing comments, follow the instruction if there are existing comments.
+- If there are no comments, follow the instructions if there are no comments.
+- If there are existing comments, follow the instructions if there are existing comments.
 
-## Instruction if there are no comments
+## Instructions if there are no comments
 
 - Output a JSON object containing a debug message as well as a question to the user whether they want to add a comment
   to the report.
-- The JSON object should have the following structure:
+- The JSON object should have the following format:
 
   {
   "action": "{{USER}}",
@@ -43,12 +43,11 @@ text and the conditions to be evaluated.
   "debug": "user does not want to add a comment"
   }
 
-## Instruction if there are existing comments
+## Instructions if there are existing comments
 
 - Output a JSON object containing a debug message as well as a question to the user whether they want to add, remove or
-  replace a comment
-  in the report.
-- The JSON object should have the following structure:
+  replace a comment in the report.
+- The JSON object should have the following format:
 
   {
   "action": "{{USER}}",
@@ -90,6 +89,9 @@ text and the conditions to be evaluated.
   "new_comment": "<comment text>"
   "conditions": ["<condition 1>", "<condition 2>", ...]
   }
+- Once you have output the JSON object, ask the user if they there are any additional changes they would like to make to
+  the
+  report. If so, follow the Instructions if there are existing comments. Otherwise, do nothing.
 
 ## Instructions for replacing comment
 
@@ -124,7 +126,7 @@ text and the conditions to be evaluated.
 ## Instructions for providing conditions
 
 - If the user indicates they want to add, remove or replace a comment, ask the user if they are any conditions that must
-  be true in order for the report to be changed.
+  be satisfied for the report to be changed.
 - Your question should be formatted as a JSON object with the following structure:
   {
   "action": "{{USER}}",

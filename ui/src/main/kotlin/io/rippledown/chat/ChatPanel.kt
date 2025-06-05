@@ -63,9 +63,11 @@ const val BOT = "BOT_"
 const val CHAT_SEND = "CHAT_SEND"
 const val CHAT_TEXT_FIELD = "CHAT_TEXT_FIELD"
 
+const val NUMBER_OF_CHAT_MESSAGES_ = "NumberOfChatMessages_"
+
 @Composable
 fun ChatPanel(
-    caseId: Long = -1,
+    id: Long = -1,
     sendIsEnabled: Boolean = true,
     messages: List<ChatMessage> = emptyList(),
     onMessageSent: OnMessageSent = {},
@@ -76,7 +78,7 @@ fun ChatPanel(
     val textAreaFocusRequester = remember { FocusRequester() }
 
     // Request focus when the id of the case changes
-    LaunchedEffect(caseId) {
+    LaunchedEffect(id) {
         textAreaFocusRequester.requestFocus()
     }
 
@@ -91,6 +93,7 @@ fun ChatPanel(
             .padding(start = 0.dp, top = 8.dp, end = 8.dp, bottom = 8.dp)
             .widthIn(min = 300.dp)
             .background(Color(0xFFF5F5F5))
+            .semantics { contentDescription = "$NUMBER_OF_CHAT_MESSAGES_${messages.size}" }
     ) {
         // Chat messages area
         LazyColumn(
@@ -186,9 +189,9 @@ private fun sendUserMessage(
     textAreaFocusRequester: FocusRequester
 ): TextFieldValue {
     if (inputText.text.isNotBlank()) {
+        textAreaFocusRequester.requestFocus() // Retain focus after button click
         val messageText = inputText.text.trim()
         onMessageSent(UserMessage(messageText))
-        textAreaFocusRequester.requestFocus() // Retain focus after button click
     }
     return TextFieldValue("")
 }

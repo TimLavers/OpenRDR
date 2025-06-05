@@ -14,7 +14,7 @@ const val REMOVE_A_COMMENT = "remove a comment"
 const val REPLACE_A_COMMENT = "replace a comment"
 const val WHAT_COMMENT = "What comment"
 const val CHAT_BOT_NO_RESPONSE_MESSAGE = "Sorry, I don't understand. Please try again."
-const val CHAT_BOT_PLACEHOLDER = "Please enter your request..."
+const val CHAT_BOT_PLACEHOLDER = "Your response..."
 const val ADD_COMMENT_PLACEHOLDER = "{{ADDED}}"
 const val CHAT_BOT_DONE_MESSAGE = "Done"
 

@@ -43,6 +43,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     val api = handler.api
     var currentCase by remember { mutableStateOf<ViewableCase?>(null) }
     var currentCaseId by remember { mutableStateOf<Long?>(null) }
+    var chatId by remember { mutableStateOf<Long>(-1) }
     var cornerstoneStatus: CornerstoneStatus? by remember { mutableStateOf(null) }
     var casesInfo by remember { mutableStateOf(CasesInfo()) }
     var kbInfo: KBInfo? by remember { mutableStateOf(null) }
@@ -69,6 +70,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
 
                 //refresh the case to get the latest interpretation
                 currentCase = api.getCase(caseId)
+                ++chatId // Increment chatId to trigger recomposition in ChatController
             }
         }
     }
@@ -100,6 +102,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                 val response = api.startConversation(it)
                 if (response.isNotBlank()) {
                     chatControllerHandler.onBotMessageReceived(response)
+                    ++chatId // Increment chatId to trigger recomposition in ChatController
                 }
             }
         }
@@ -194,6 +197,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                             Spacer(modifier = Modifier.height(8.dp))
                             CaseSelector(casesInfo.caseIds, object : CaseSelectorHandler, Handler by handler {
                                 override var selectCase = { id: Long ->
+                                    ++chatId
                                     currentCase = runBlocking(dispatcher) { api.getCase(id) }
                                     currentCaseId = id
                                 }
@@ -299,7 +303,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
 
                     if (isChatVisible) {
                         ChatController(
-                            currentCaseId ?: -1L,
+                            id = chatId,
                             chatControllerHandler,
                             modifier = Modifier.weight(0.3f)
                         )

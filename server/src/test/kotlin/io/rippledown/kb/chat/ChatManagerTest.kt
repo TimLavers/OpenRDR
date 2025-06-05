@@ -178,7 +178,7 @@ class ChatManagerTest {
     @Test
     fun `should build a rule to add a comment with conditions from a response from the conversation service`() =
         runTest {
-        // Given
+            // Given
             val message = "What do you want to add?"
             val initialResponseFromModel = ActionComment(USER_ACTION, message = message).toJsonString()
             coEvery { conversationService.startConversation(case) } returns initialResponseFromModel
@@ -209,27 +209,58 @@ class ChatManagerTest {
         }
 
     @Test
+    fun `should start another conversation after building a rule`() =
+        runTest {
+            // Given
+            val message = "What do you want to add?"
+            val initialResponseFromModel = ActionComment(USER_ACTION, message = message).toJsonString()
+            coEvery { conversationService.startConversation(case) } returns initialResponseFromModel
+            chatManager.startConversation(case)
+            coVerify(exactly = 1) { conversationService.startConversation(case) }
+
+            val comment = "Go to Bondi."
+            val expression1 = "If the sun is hot."
+            val condition1 = mockk<Condition>()
+            val conditionParsingResult1 = ConditionParsingResult(condition1)
+            val responseFromModel = ActionComment(
+                action = ADD_ACTION,
+                new_comment = comment,
+                conditions = listOf(expression1)
+            ).toJsonString()
+            coEvery { conversationService.response(any<String>()) } returns responseFromModel
+            coEvery { ruleService.conditionForExpression(case, expression1) } returns conditionParsingResult1
+
+            // When
+            val responseToUser = chatManager.response("yes!")
+            coVerify { ruleService.buildRuleToAddComment(case, comment, eq(listOf(condition1))) }
+            responseToUser shouldBe CHAT_BOT_DONE_MESSAGE
+
+            // Then
+            coVerify(exactly = 2) { conversationService.startConversation(case) }
+        }
+
+    @Test
     fun `should build a rule to add a comment with no conditions from a response from the conversation service`() =
         runTest {
             // Given
-        val message = "What do you want to add?"
+            val message = "What do you want to add?"
             val initialResponseFromModel = ActionComment(USER_ACTION, message = message).toJsonString()
-        coEvery { conversationService.startConversation(case) } returns initialResponseFromModel
+            coEvery { conversationService.startConversation(case) } returns initialResponseFromModel
 
-        chatManager.startConversation(case)
-        val comment = "Go to Bondi."
+            chatManager.startConversation(case)
+            val comment = "Go to Bondi."
             val responseFromModel = ActionComment(
                 action = ADD_ACTION,
                 new_comment = comment
             ).toJsonString()
-        coEvery { conversationService.response(any<String>()) } returns responseFromModel
+            coEvery { conversationService.response(any<String>()) } returns responseFromModel
 
-        // When
+            // When
             chatManager.response("yes!")
 
-        // Then
+            // Then
             coVerify { ruleService.buildRuleToAddComment(case, comment, emptyList()) }
-    }
+        }
 
 
 }

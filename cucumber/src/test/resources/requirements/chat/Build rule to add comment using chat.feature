@@ -39,7 +39,6 @@ Feature: The user can use the chat to make changes the interpretive report
     Then the report should be "Go to Bondi. Let's surf"
     And stop the client application
 
-  @single
   Scenario: The user should be able to use the chat to add two comments with no conditions
     Given case Bondi is provided having data:
       | Wave | excellent |
@@ -49,7 +48,6 @@ Feature: The user can use the chat to make changes the interpretive report
     And the chat is showing
     And the report is empty
     And  I build a rule to add an initial comment "Let's surf." using the chat with no condition
-    And pause
     And I enter the following text into the chat panel:
       | Add another comment "Bring flippers." |
     And the chatbot has asked for confirmation
@@ -74,13 +72,11 @@ Feature: The user can use the chat to make changes the interpretive report
     Then the report should be "Let's surf. Bring flippers."
     And stop the client application
 
-  @ignore
+  @single
   Scenario: The user should be able to use the chat to add a comment to a blank report with a condition
     Given case Bondi is provided having data:
-      | Wave | excellent |
-      | Sun  | hot       |
+      | wave height | 2 |
     And I start the client application
-    And the report is empty
     And I see the case Bondi as the current case
     And the chat is showing
     And the chatbot has asked if I want to add a comment
@@ -91,12 +87,10 @@ Feature: The user can use the chat to make changes the interpretive report
     And the chatbot has asked for confirmation
     And I confirm
     And the chatbot has asked if I want to provide a condition
-    And I confirm
     And I enter the following text into the chat panel:
-      | if the sun is hot |
-    And the chatbot has asked for confirmation of the comment and condition
-    When I confirm
+      | wave height is more than 1 |
+    And the chatbot has completed the action
     Then the report should be "Let's surf."
     And the condition showing for the comment "Let's surf." is:
-      | Sun is "hot" |
+      | wave height > 1.0 |
     And stop the client application
