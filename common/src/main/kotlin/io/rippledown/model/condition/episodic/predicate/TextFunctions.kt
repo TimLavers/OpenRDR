@@ -48,21 +48,13 @@ data class DoesNotContain(val toFind: String) : TestResultPredicate {
 
 @Serializable
 data class Is(val toFind: String) : TestResultPredicate {
-    private val cleanedToFind: String = toFind
-        .removeSurrounding("\"")
-        .removeSurrounding("'")
+    val unquotedToFind = toFind.unquoted()
 
-    override fun evaluate(result: TestResult): Boolean {
-        val cleanedResult = result.value.text
-            .removeSurrounding("\"")
-            .removeSurrounding("'")
-        val bool = cleanedResult == cleanedToFind
-        println("Evaluating Is predicate: '$cleanedResult' == '$cleanedToFind' : $bool")
-        return bool
-    }
+    override fun evaluate(result: TestResult) =
+        result.value.text.unquoted() == unquotedToFind
 
     override fun description(plural: Boolean): String =
-        if (plural) "are \"$cleanedToFind\"" else "is \"$cleanedToFind\""
+        if (plural) "are \"$unquotedToFind\"" else "is \"$unquotedToFind\""
 }
 
 @Serializable
