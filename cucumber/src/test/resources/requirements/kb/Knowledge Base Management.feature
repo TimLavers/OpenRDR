@@ -6,6 +6,7 @@ Feature: Knowledge Base management
     Then the displayed KB name is now Thyroids
     And stop the client application
 
+  @single
   Scenario: A previously exported Knowledge Base can be imported
     Given A Knowledge Base called Thyroids has been created
     And I start the client application

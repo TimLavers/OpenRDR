@@ -43,9 +43,6 @@ val prerequisiteTasks = listOf(
     tasks.processTestResources,
     tasks.getByName("testClasses")
 )
-tasks.register<JavaExec>("application") {
-    runCukesInDirectory(this@Build_gradle, this)
-}
 tasks.register<JavaExec>("attributes") {
     runCukesInDirectory(this@Build_gradle, this)
 }
@@ -66,7 +63,6 @@ tasks.register<JavaExec>("samples") {
 }
 tasks.register("cucumberTest") {
     dependsOn(listOf(
-        "application",
         "attributes",
         "cases",
         "conditions",
