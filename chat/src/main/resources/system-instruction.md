@@ -56,6 +56,8 @@ text and the conditions to be evaluated.
   }
 
 - Your question to the user should include the phrases {{WOULD_YOU_LIKE}}, {{ADD}}, {{REMOVE}} AND {{REPLACE}}.
+- If the user just responds with a confirmation or a simple "yes", ask them to clarify whether they want to add, remove,
+  or replace a comment.
 - If the user indicates they want to add a comment, follow the instructions for adding a comment.
 - If the user indicates they want to remove a comment, follow the instructions for removing a comment.
 - If the user indicates they want to replace a comment, follow the instructions for replacing a comment.

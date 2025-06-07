@@ -88,7 +88,7 @@ class ChatDefs {
     }
 
     @Then("the chatbot has asked if I want to provide a condition")
-    fun waotForBotQuestionToProvideACondition() {
+    fun waitForBotQuestionToProvideACondition() {
         await().atMost(ofSeconds(10)).until {
             botQuestionToProvideACondition()
         }
@@ -116,11 +116,11 @@ class ChatDefs {
     @And("the chatbot has asked for what comment I want to add")
     fun waitForBotQuestionToSpecifyAComment() {
         await().atMost(ofSeconds(10)).until {
-            botQuestionFoWhatComment()
+            botQuestionForWhatComment()
         }
     }
 
-    private fun botQuestionFoWhatComment() = with(chatPO()) {
+    private fun botQuestionForWhatComment() = with(chatPO()) {
         mostRecentBotRowContainsTerms(listOf(WHAT_COMMENT))
     }
 
@@ -136,7 +136,7 @@ class ChatDefs {
         enterChatTextAndSend("Add the comment: \"$comment\"")
         waitForBotRequestForConfirmation()
         confirm()
-        waotForBotQuestionToProvideACondition()
+        waitForBotQuestionToProvideACondition()
         decline()
         waitForBotToSayDone()
     }
@@ -144,11 +144,12 @@ class ChatDefs {
     @And("I build a rule to add another comment {string} using the chat")
     fun addAnotherCommentUsingChat(comment: String) {
         waitForBotQuestionToAddRemoveOrReplaceAComment()
-        confirm()
-        waitForBotQuestionToSpecifyAComment()
         enterChatTextAndSend("Add the comment: \"$comment\"")
         waitForBotRequestForConfirmation()
         confirm()
+        waitForBotQuestionToProvideACondition()
+        decline()
+        waitForBotToSayDone()
     }
 
 

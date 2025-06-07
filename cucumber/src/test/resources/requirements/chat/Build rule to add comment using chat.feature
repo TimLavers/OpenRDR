@@ -57,7 +57,6 @@ Feature: The user can use the chat to make changes the interpretive report
     Then the report should be "Let's surf. Bring flippers."
     And stop the client application
 
-  @ignore
   Scenario: The user should be able to use the chat to add comments with no conditions to two cases
     Given a list of cases with the following names is stored on the server:
       | Case1 |
