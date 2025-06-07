@@ -7,9 +7,14 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import io.mockk.every
 import io.mockk.mockk
-import io.rippledown.model.*
+import io.rippledown.model.Attribute
+import io.rippledown.model.CaseId
+import io.rippledown.model.TestResult
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.utils.AttributeWithValue
+import io.rippledown.utils.createCase
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import kotlin.test.Test
@@ -19,7 +24,6 @@ private const val buttonId = "buttonId"
 class CaseInspectionUpdateTest {
     @get:Rule
     val composeTestRule = createComposeRule()
-
 
     @Test
     fun `should recompose case view if the case changes`() = runTest {
@@ -76,7 +80,7 @@ class CaseInspectionUpdateTest {
 
 
             //When update the case
-            onNodeWithTag("buttonId").performClick()
+            onNodeWithTag(buttonId).performClick()
 
             //Then
             waitForCaseToBeShowing(bondi)
@@ -95,7 +99,8 @@ class CaseInspectionUpdateTest {
 fun CaseInspectionWithButton(initialCase: ViewableCase, changedCase: ViewableCase) {
 
     var currentCase by remember { mutableStateOf(initialCase) }
-    val handler = mockk<CaseInspectionHandler>()
+    val handler = mockk<CaseInspectionHandler>(relaxUnitFun = true)
+    every { handler.allComments() } returns setOf("Malabar.", "Bondi.")
 
     CaseInspection(currentCase, false, handler)
 

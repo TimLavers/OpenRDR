@@ -23,12 +23,38 @@ fun ComposeTestRule.requireInterpretation(text: String) {
     onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD, useUnmergedTree = true).assertTextEquals(text)
 }
 
-fun ComposeTestRule.requireInterpretationActionsDropdownMenu() {
-    onNodeWithContentDescription(CHANGE_INTERPRETATION_BUTTON).assertIsDisplayed()
+@OptIn(ExperimentalTestApi::class)
+fun ComposeTestRule.requireInterpretationForCornerstone(text: String) {
+    onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE, useUnmergedTree = true).assertTextEquals(
+        text
+    )
+}
+
+fun ComposeTestRule.requireChangeInterpretationIconToBeShowing() {
+    onNodeWithContentDescription(CHANGE_INTERPRETATION_ICON).assertIsDisplayed()
+}
+
+fun ComposeTestRule.requireChangeInterpretationIconToBeNotShowing() {
+    waitUntil {
+        try {
+            onNodeWithContentDescription(CHANGE_INTERPRETATION_ICON).assertDoesNotExist()
+            true
+        } catch (e: Throwable) {
+            false
+        }
+    }
+    onNodeWithContentDescription(CHANGE_INTERPRETATION_ICON).assertDoesNotExist()
+}
+
+fun ComposeTestRule.requireInterpretationActionsMenuToBeShowing() {
+    onNodeWithContentDescription(CHANGE_INTERPRETATION_DROPDOWN).assertIsDisplayed()
+}
+fun ComposeTestRule.requireInterpretationActionsMenuToBeNotShowing() {
+    onNodeWithContentDescription(CHANGE_INTERPRETATION_DROPDOWN).assertDoesNotExist()
 }
 
 fun ComposeTestRule.clickChangeInterpretationButton() =
-    onNodeWithContentDescription(CHANGE_INTERPRETATION_BUTTON)
+    onNodeWithContentDescription(CHANGE_INTERPRETATION_ICON)
         .assertIsDisplayed()
         .performClick()
 

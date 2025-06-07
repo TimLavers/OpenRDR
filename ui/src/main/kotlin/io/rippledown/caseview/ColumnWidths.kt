@@ -3,7 +3,7 @@ package io.rippledown.caseview
 class ColumnWidths(numberOfDates: Int) {
     init {
         require(numberOfDates > 0) {
-            "There must be a positive number of columns."
+            "There must be a positive number of columns (i.e. dates)."
         }
     }
     val attributeColumnWeight = 0.2F

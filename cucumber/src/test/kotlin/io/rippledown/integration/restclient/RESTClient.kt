@@ -8,9 +8,7 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.rippledown.constants.api.*
-import io.rippledown.constants.server.DEFAULT_PROJECT_NAME
-import io.rippledown.constants.server.PING
-import io.rippledown.constants.server.SHUTDOWN
+import io.rippledown.constants.server.*
 import io.rippledown.main.Api
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
@@ -29,7 +27,6 @@ import java.util.concurrent.atomic.AtomicReference
 
 
 class RESTClient {
-    private val KB_ID = "kb"
     private val endpoint = "http://localhost:9090"
     private val api = Api()
 
@@ -51,7 +48,7 @@ class RESTClient {
             try {
                 jsonClient.get("$endpoint$PING")
                 true
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 false
             }
         }
@@ -64,7 +61,7 @@ class RESTClient {
             }.body()
             val caseId = casesInfo.caseIds.first { it.name == name }
             currentCase = jsonClient.get(endpoint + CASE) {
-                parameter("id", caseId.id)
+                parameter(CASE_ID, caseId.id)
                 parameter(KB_ID, currentKB.get()!!.id)
             }.body()
         }
@@ -145,7 +142,7 @@ class RESTClient {
     fun shutdown(): Unit = runBlocking {
         try {
             jsonClient.post("$endpoint$SHUTDOWN")
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             //expected
         } finally {
             jsonClient.close()

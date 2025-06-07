@@ -1,10 +1,14 @@
-@file:OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
+@file:OptIn(
+    ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class,
+    ExperimentalFoundationApi::class, ExperimentalFoundationApi::class
+)
 
 package io.rippledown.interpretation
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.TooltipArea
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.material3.OutlinedCard
@@ -14,32 +18,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.interpretation.CONDITION_PREFIX
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
-import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE
 import io.rippledown.model.interpretationview.ViewableInterpretation
 
-interface InterpretationViewHandler {
-    fun onTextLayoutResult(layoutResult: TextLayoutResult)
+interface InterpretationViewHandler : ReadonlyInterpretationViewHandler, InterpretationActionsHandler {
+    fun allComments(): Set<String>
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun InterpretationView(
     interpretation: ViewableInterpretation,
-    isCornerstone: Boolean,
-    handler: InterpretationViewHandler? = null
+    showChangeIcon: Boolean,
+    handler: InterpretationViewHandler
 ) {
-    val conclusionList = interpretation.conclusions().toList()
     var comments by remember {
         mutableStateOf(interpretation.conclusions().map { it.text })
     }
     var unstyledText by remember { mutableStateOf(comments.unhighlighted()) }
     var styledText by remember { mutableStateOf(unstyledText) }
-    var commentIndex by remember { mutableStateOf(-1) }
 
     LaunchedEffect(interpretation) {
         comments = interpretation.conclusions().map { it.text }
@@ -48,34 +48,33 @@ fun InterpretationView(
     }
 
     OutlinedCard(modifier = Modifier.padding(vertical = 10.dp)) {
-        TooltipArea(
-            tooltip = {
-                val showToolTip = commentIndex != -1
-                if (showToolTip) {
-                    ConditionTooltip(interpretation.conditionsForConclusion(conclusionList[commentIndex]))
-                }
-            },
-            content = {
-                AnnotatedTextView(
-                    text = if (commentIndex == -1) unstyledText else styledText,
-                    description = if (isCornerstone) INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE else INTERPRETATION_TEXT_FIELD,
-                    handler = object : AnnotatedTextViewHandler {
-                        override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
-                            handler?.onTextLayoutResult(layoutResult)
+        Row(modifier = Modifier.fillMaxWidth()) {
+            ReadonlyInterpretationView(
+                interpretation = interpretation,
+                contentDescription = INTERPRETATION_TEXT_FIELD,
+                modifier = Modifier.weight(1f), // Fill the available space, but leaving space for the icon
+                handler = handler
+            )
+            if (showChangeIcon) {
+                InterpretationActions(
+                    commentsGivenForCase = comments,
+                    allComments = handler.allComments(),
+                    handler = object : InterpretationActionsHandler {
+                        override fun startRuleToAddComment(comment: String) {
+                            handler.startRuleToAddComment(comment)
                         }
 
-                        override fun onPointerEnter(characterOffset: Int) {
-                            commentIndex = comments.commentIndexForOffset(characterOffset)
-                            styledText = comments.highlightItem(commentIndex)
+                        override fun startRuleToReplaceComment(toBeReplaced: String, replacement: String) {
+                            handler.startRuleToReplaceComment(toBeReplaced, replacement)
                         }
 
-                        override fun onPointerExit() {
-                            commentIndex = -1
+                        override fun startRuleToRemoveComment(comment: String) {
+                            handler.startRuleToRemoveComment(comment)
                         }
                     }
                 )
             }
-        )
+        }
     }
 }
 

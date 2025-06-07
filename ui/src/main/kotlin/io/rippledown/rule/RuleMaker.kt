@@ -13,6 +13,7 @@ import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
 import io.rippledown.constants.rule.RULE_MAKER
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.condition.edit.EditableCondition
 import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
 import io.rippledown.model.condition.edit.SuggestedCondition
@@ -22,7 +23,7 @@ interface RuleMakerHandler {
     var onDone: (conditions: List<Condition>) -> Unit
     var onCancel: () -> Unit
     var onUpdateConditions: (conditions: List<Condition>) -> Unit
-    fun conditionForExpression(expression: String): Condition?
+    fun conditionForExpression(expression: String): ConditionParsingResult
 }
 
 const val DEBOUNCE: Long = 1_000
@@ -37,6 +38,7 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
     var conditionToBeEdited by remember { mutableStateOf<EditableCondition?>(null) }
     var suggestionBeingEdited by remember { mutableStateOf<SuggestedCondition?>(null) }
     var showWaitingIndicator by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     if (suggestionBeingEdited != null) {
         val dialogState = rememberDialogState(size = DpSize(420.dp, 200.dp))
@@ -80,8 +82,12 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
 
     LaunchedEffect(allConditions, filterText) {
         showWaitingIndicator = true
+        val conditionFor: (String) -> Condition? = { expression ->
+            handler.conditionForExpression(expression).condition
+        }
         availableConditions =
-            refreshAvailableConditions(allConditions, filterText, selectedConditions, handler::conditionForExpression)
+            refreshAvailableConditions(allConditions, filterText, selectedConditions, conditionFor)
+        if (filterText.isNotBlank()) errorMessage = handler.conditionForExpression(filterText).errorMessage
         showWaitingIndicator = false
     }
     Column(
@@ -101,11 +107,15 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
             }
         })
 
-        ConditionFilter(filterText, showWaitingIndicator, object : ConditionFilterHandler {
-            override var onFilterChange = { filter: String ->
-                filterText = filter
-            }
-        })
+        ConditionFilter(
+            filterText,
+            showWaitingIndicator,
+            invalidExpression = errorMessage,
+            handler = object : ConditionFilterHandler {
+                override var onFilterChange = { filter: String ->
+                    filterText = filter
+                }
+            })
 
         AvailableConditions(availableConditions, object : AvailableConditionsHandler {
             override fun onAddCondition(suggestedCondition: SuggestedCondition) {

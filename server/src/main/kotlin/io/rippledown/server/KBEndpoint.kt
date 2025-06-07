@@ -3,6 +3,7 @@ package io.rippledown.server
 import io.rippledown.kb.KB
 import io.rippledown.kb.export.KBExporter
 import io.rippledown.kb.export.util.Zipper
+import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
@@ -17,7 +18,8 @@ import java.io.File
 import kotlin.io.path.createTempDirectory
 
 class KBEndpoint(val kb: KB, casesRootDirectory: File) {
-    val casesDir = File(casesRootDirectory,"cases").apply { mkdirs() }
+    val logger = lazyLogger
+    val casesDir = File(casesRootDirectory, "cases").apply { mkdirs() }
     val interpretationsDir = File(casesRootDirectory, "interpretations").apply { mkdirs() }
 
     fun kbName(): KBInfo {
@@ -90,6 +92,12 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
 
     fun conditionHintsForCase(id: Long): ConditionList = kb.conditionHintsForCase(case(id))
 
+    suspend fun startConversation(caseId: Long): String =
+        kb.startConversation(case(caseId))
+
+    suspend fun responseToUserMessage(message: String): String =
+        kb.responseToUserMessage(message)
+
     fun processCase(externalCase: ExternalCase) = kb.processCase(externalCase)
 
     fun deleteCase(name: String) = kb.deletedProcessedCaseWithName(name)
@@ -144,7 +152,8 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
         return case
     }
 
-    private fun uninterpretedCase(id: Long) = kb.getProcessedCase(id)!!
+    fun uninterpretedCase(id: Long) =
+        kb.getProcessedCase(id) ?: throw IllegalArgumentException("Case with id $id not found")
 
     fun updateCornerstone(request: UpdateCornerstoneRequest) = kb.updateCornerstone(request)
     fun selectCornerstone(index: Int) = kb.selectCornerstone(index)

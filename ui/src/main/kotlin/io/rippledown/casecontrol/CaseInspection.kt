@@ -7,10 +7,11 @@ import androidx.compose.ui.unit.dp
 import io.rippledown.caseview.CaseView
 import io.rippledown.caseview.CaseViewHandler
 import io.rippledown.interpretation.InterpretationView
+import io.rippledown.interpretation.InterpretationViewHandler
 import io.rippledown.model.Attribute
 import io.rippledown.model.caseview.ViewableCase
 
-interface CaseInspectionHandler : CaseViewHandler
+interface CaseInspectionHandler : CaseViewHandler, InterpretationViewHandler
 
 @Composable
 fun CaseInspection(case: ViewableCase, isRuleBuilding: Boolean, handler: CaseInspectionHandler) {
@@ -27,6 +28,10 @@ fun CaseInspection(case: ViewableCase, isRuleBuilding: Boolean, handler: CaseIns
                 handler.swapAttributes(moved, target)
             }
         })
-        InterpretationView(case.viewableInterpretation, false)
+        InterpretationView(
+            interpretation = case.viewableInterpretation,
+            showChangeIcon = !isRuleBuilding,
+            handler = handler
+        )
     }
 }

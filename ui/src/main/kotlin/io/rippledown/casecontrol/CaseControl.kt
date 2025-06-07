@@ -14,6 +14,7 @@ import io.rippledown.main.Handler
 import io.rippledown.model.Attribute
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.condition.RuleConditionList
 import io.rippledown.model.condition.edit.SuggestedCondition
 import io.rippledown.model.rule.CornerstoneStatus
@@ -23,13 +24,14 @@ import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.rule.RuleMaker
 import io.rippledown.rule.RuleMakerHandler
 
-interface CaseControlHandler : Handler, CaseInspectionHandler, CornerstonePagerHandler {
+interface CaseControlHandler : CaseInspectionHandler, CornerstonePagerHandler {
     fun getCase(caseId: Long)
     fun startRuleSession(sessionStartRequest: SessionStartRequest)
     fun endRuleSession()
     fun buildRule(ruleRequest: RuleRequest)
     fun updateCornerstoneStatus(cornerstoneRequest: UpdateCornerstoneRequest)
-    fun conditionForExpression(conditionText: String, attributeNames: Collection<String>): Condition?
+    fun conditionFor(conditionText: String, attributeNames: Collection<String>): ConditionParsingResult
+    var setRightInfoMessage: (message: String) -> Unit
 }
 
 @Composable
@@ -37,26 +39,26 @@ fun CaseControl(
     currentCase: ViewableCase?,
     cornerstoneStatus: CornerstoneStatus? = null,
     conditionHints: List<SuggestedCondition>,
-    handler: CaseControlHandler
+    handler: CaseControlHandler,
+    modifier: Modifier = Modifier
 ) {
     val ruleInProgress = cornerstoneStatus != null
     val attributeNames = conditionHints.flatMap { it.initialSuggestion().attributeNames() }.toSet()
 
     Row(
-        modifier = Modifier
-            .padding(10.dp)
-            .width(1800.dp)
+        modifier = modifier
+            .padding(8.dp)
     )
     {
         if (currentCase != null) {
-            CaseInspection(currentCase, ruleInProgress, object : CaseInspectionHandler, Handler by handler {
+            CaseInspection(currentCase, isRuleBuilding = ruleInProgress, object : CaseInspectionHandler by handler {
                 override fun swapAttributes(moved: Attribute, target: Attribute) {
                     handler.swapAttributes(moved, target)
                 }
             })
         }
         if (ruleInProgress) {
-            if (cornerstoneStatus!!.cornerstoneToReview == null) {
+            if (cornerstoneStatus.cornerstoneToReview == null) {
                 handler.setRightInfoMessage(NO_CORNERSTONES_TO_REVIEW_MSG)
             } else {
                 handler.setRightInfoMessage("")
@@ -80,7 +82,7 @@ fun CaseControl(
                 }
 
                 override fun conditionForExpression(expression: String) =
-                    handler.conditionForExpression(expression, attributeNames)
+                    handler.conditionFor(expression, attributeNames)
             })
         }
     }

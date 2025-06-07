@@ -6,7 +6,7 @@ import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.episodic.predicate.LessThanOrEquals
 import io.rippledown.model.condition.episodic.signature.AtLeast
 import io.rippledown.model.condition.episodic.signature.Current
-import io.rippledown.model.serializeDeserialize
+import io.rippledown.utils.serializeDeserialize
 import kotlin.test.Test
 
 class EditableLessThanEqualsConditionTest: ConditionTestBase() {

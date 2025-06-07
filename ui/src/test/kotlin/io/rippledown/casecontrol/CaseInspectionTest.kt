@@ -3,11 +3,10 @@ package io.rippledown.casecontrol
 import androidx.compose.ui.test.junit4.createComposeRule
 import io.mockk.mockk
 import io.rippledown.interpretation.requireInterpretation
-import io.rippledown.model.Attribute
 import io.rippledown.model.CaseId
-import io.rippledown.model.createCase
-import io.rippledown.model.createCaseWithInterpretation
 import io.rippledown.utils.applicationFor
+import io.rippledown.utils.createCase
+import io.rippledown.utils.createCaseWithInterpretation
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -41,7 +40,7 @@ class CaseInspectionTest {
     @Test
     fun `should show interpretation`() = runTest {
         val text = "Go to Bondi now!"
-        val case = createCaseWithInterpretation(name = "case a", id = 1L, conclusionTexts = listOf(text))
+        val case = createCaseWithInterpretation(name = "case a", caseId = 1L, conclusionTexts = listOf(text))
         with(composeTestRule) {
             setContent {
                 CaseInspection(case, false, handler)
@@ -52,10 +51,8 @@ class CaseInspectionTest {
 }
 
 fun main() {
-    val case = createCase(name = "Bondi", id = 45L)
+    val case = createCase(name = "Bondi", caseId = 45L)
     applicationFor {
-            CaseInspection(case, false, object : CaseInspectionHandler {
-                override fun swapAttributes(moved: Attribute, target: Attribute) {}
-            })
+        CaseInspection(case, false, mockk(relaxed = true))
     }
 }

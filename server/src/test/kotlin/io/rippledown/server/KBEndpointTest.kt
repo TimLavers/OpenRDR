@@ -13,8 +13,8 @@ import io.rippledown.CaseTestUtils
 import io.rippledown.kb.ConditionParser
 import io.rippledown.kb.KB
 import io.rippledown.kb.KBManager
-import io.rippledown.model.beSameAs
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.model.condition.isCondition
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
@@ -22,6 +22,7 @@ import io.rippledown.model.rule.UndoRuleDescription
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.supplyCaseFromFile
 import io.rippledown.util.EntityRetrieval
+import io.rippledown.utils.beSameAs
 import org.apache.commons.io.FileUtils
 import java.io.File
 import kotlin.test.AfterTest
@@ -83,13 +84,13 @@ internal class KBEndpointTest {
         // Given
         val kb = mockk<KB>(relaxed = true)
         val condition = mockk<Condition>(relaxed = true)
-        every { kb.conditionForExpression(any(), any()) } returns condition
+        every { kb.conditionForExpression(any(), any()) } returns ConditionParsingResult(condition)
         val endpoint = KBEndpoint(kb, File("kbe"))
         val userExpression = "TSH is depressed"
         val attributeNames = listOf("TSH")
 
         // When
-        val parsed = endpoint.conditionForExpression(userExpression, attributeNames)
+        val parsed = endpoint.conditionForExpression(userExpression, attributeNames).condition
 
         // Then
         verify { kb.conditionForExpression(userExpression, attributeNames) }

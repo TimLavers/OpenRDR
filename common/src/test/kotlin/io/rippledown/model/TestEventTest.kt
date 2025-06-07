@@ -1,6 +1,6 @@
 package io.rippledown.model
 
-import kotlinx.serialization.encodeToString
+import io.rippledown.utils.defaultDate
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals

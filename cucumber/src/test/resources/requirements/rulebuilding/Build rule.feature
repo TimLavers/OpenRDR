@@ -100,6 +100,33 @@ Feature: The user can make rules that change the interpretive report
     And the case list should be shown
     And stop the client application
 
+  Scenario: The rule action dropdown should be hidden if the action is cancelled
+    Given a new case is stored on the server
+    And I start the client application
+    When I start to build a rule to add the comment "Let's surf" and click Cancel
+    Then the change interpretation dropdown menu should be hidden
+    And stop the client application
+
+  Scenario: The change interpretation icon should be re-shown after building a rule
+    Given a new case is stored on the server
+    And I start the client application
+    And the change interpretation icon is shown
+    And I start to build a rule to add the comment "Let's surf"
+    And the change interpretation icon is hidden
+    When I complete the rule
+    Then the change interpretation icon should be shown
+    And stop the client application
+
+  Scenario: The change interpretation icon should be re-shown after cancelling a rule
+    Given a new case is stored on the server
+    And I start the client application
+    And the change interpretation icon is shown
+    And I start to build a rule to add the comment "Let's surf"
+    And the change interpretation icon is hidden
+    When I cancel the rule
+    Then the change interpretation icon should be shown
+    And stop the client application
+
   Scenario: When the user starts to build a rule to add a comment, the rule action should be shown
     Given case Bondi is provided having data:
       | Wave | excellent |

@@ -6,15 +6,15 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.rippledown.constants.api.*
-import io.rippledown.constants.server.ATTRIBUTE_NAMES
 import io.rippledown.constants.server.EXPRESSION
+import io.rippledown.log.lazyLogger
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.server.ServerApplication
-import io.rippledown.server.logger
 
 fun Application.ruleSession(application: ServerApplication) {
+    val logger = lazyLogger
     routing {
 
         post(START_RULE_SESSION) {
@@ -62,9 +62,9 @@ fun Application.ruleSession(application: ServerApplication) {
         get(CONDITION_FOR_EXPRESSION) {
             val expression = call.parameters[EXPRESSION] ?: error("Invalid expression.")
             val attributeNames = call.receive<List<String>>()
-            val condition = kbEndpoint(application).conditionForExpression(expression, attributeNames)
-            call.respondNullable(HttpStatusCode.OK, condition)
-            logger.info("Condition for expression '$expression' and attributes '$attributeNames' was '${condition?.asText()}'")
+            val conditionParsingResult = kbEndpoint(application).conditionForExpression(expression, attributeNames)
+            call.respondNullable(HttpStatusCode.OK, conditionParsingResult)
+            logger.info("Condition for expression '$expression' and attributes '$attributeNames' was '${conditionParsingResult.condition?.asText()}'")
         }
     }
 }

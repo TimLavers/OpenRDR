@@ -6,14 +6,22 @@ import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.utils.io.*
 import io.rippledown.constants.api.*
+import io.rippledown.constants.server.CASE_ID
 import io.rippledown.constants.server.EXPRESSION
-import io.rippledown.model.*
+import io.rippledown.model.CasesInfo
+import io.rippledown.model.Conclusion
+import io.rippledown.model.KBInfo
+import io.rippledown.model.OperationResult
 import io.rippledown.model.caseview.ViewableCase
-import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.condition.ConditionParsingResult
+import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.model.rule.RuleRequest
+import io.rippledown.model.rule.SessionStartRequest
+import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.model.rule.*
 import io.rippledown.sample.SampleKB
-import kotlinx.serialization.encodeToString
+import io.rippledown.utils.createCase
 import kotlinx.serialization.json.Json
 
 fun mock(config: EngineConfig) = EngineBuilder(config).build()
@@ -29,8 +37,9 @@ class EngineConfig {
     var returnCornerstone: ViewableCase = createCase("The Case")
     var returnCornerstoneStatus: CornerstoneStatus = CornerstoneStatus()
     var returnConditionList: ConditionList = ConditionList()
-    var returnCondition: Condition? = null
+    var returnResponse: String = ""
 
+    var returnConditionParsingResult: ConditionParsingResult? = null
     var expectedCaseId: Long? = null
     var expectedCase: ViewableCase? = null
     var expectedRuleRequest: RuleRequest? = null
@@ -41,10 +50,11 @@ class EngineConfig {
     var expectedCornerstoneIndex: Int? = null
     var expectedUpdatedCornerstoneStatus: CornerstoneStatus? = null
     var expectedExpression: String = ""
-    var expectedAttributeNames: Collection<String> = emptyList()
 
+    var expectedAttributeNames: Collection<String> = emptyList()
     var expectedMovedAttributeId: Int? = null
     var expectedTargetAttributeId: Int? = null
+    var expectedUserMessage: String = ""
     var newKbName: String? = null
     var sampleKB: SampleKB? = null
 
@@ -73,7 +83,7 @@ private class EngineBuilder(private val config: EngineConfig) {
             }
 
             CASE -> {
-                if (config.expectedCaseId != null) request.url.parameters["id"] shouldBe config.expectedCaseId.toString()
+                if (config.expectedCaseId != null) request.url.parameters[CASE_ID] shouldBe config.expectedCaseId.toString()
                 httpResponseData(json.encodeToString(config.returnCase))
             }
 
@@ -159,13 +169,13 @@ private class EngineBuilder(private val config: EngineConfig) {
             }
 
             CONDITION_HINTS -> {
-                if (config.expectedCaseId != null) request.url.parameters["id"] shouldBe config.expectedCaseId.toString()
+                if (config.expectedCaseId != null) request.url.parameters[CASE_ID] shouldBe config.expectedCaseId.toString()
                 httpResponseData(json.encodeToString(config.returnConditionList))
             }
 
             CONDITION_FOR_EXPRESSION -> {
                 request.url.parameters[EXPRESSION] shouldBe config.expectedExpression
-                httpResponseData(json.encodeToString(config.returnCondition))
+                httpResponseData(json.encodeToString(config.returnConditionParsingResult))
             }
 
             KB_DESCRIPTION -> {
@@ -190,6 +200,18 @@ private class EngineBuilder(private val config: EngineConfig) {
 
             DEFAULT_KB -> {
                 httpResponseData(json.encodeToString(config.defaultKB))
+            }
+
+            SEND_USER_MESSAGE -> {
+                val body = request.body as TextContent
+                body.text shouldBe config.expectedUserMessage
+                request.url.parameters[CASE_ID] shouldBe config.expectedCaseId.toString()
+                httpResponseData(config.returnResponse)
+            }
+
+            START_CONVERSATION -> {
+                request.url.parameters[CASE_ID] shouldBe config.expectedCaseId.toString()
+                httpResponseData(config.returnResponse)
             }
 
             else -> {

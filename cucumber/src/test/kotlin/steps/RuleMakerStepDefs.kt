@@ -21,7 +21,7 @@ import javax.accessibility.AccessibleStateSet
 
 class RuleMakerStepDefs {
 
-    @When("I complete the rule")
+    @When("(I )complete the rule")
     fun completeRule() {
         ruleMakerPO().clickDoneButton()
     }
@@ -68,6 +68,15 @@ class RuleMakerStepDefs {
             clickChangeInterpretationButton()
             clickAddCommentMenu()
             setAddCommentTextAndClickOK(comment)
+        }
+    }
+
+    @And("I start to build a rule to add the comment {string} and click Cancel")
+    fun startRuleToAddNewCommentAndClickCancel(comment: String) {
+        with(interpretationViewPO()) {
+            clickChangeInterpretationButton()
+            clickAddCommentMenu()
+            setAddCommentTextAndClickCancel(comment)
         }
     }
 
@@ -315,6 +324,11 @@ class RuleMakerStepDefs {
     @Then("I enter the expression {string}")
     fun `enter expression`(expression: String) {
         ruleMakerPO().enterExpressionIntoSearchField(expression)
+    }
+
+    @Then("an alert should be displayed with the message:")
+    fun `require alert`(expected: String) {
+        ruleMakerPO().requireAlertToBeDisplayed(expected)
     }
 }
 

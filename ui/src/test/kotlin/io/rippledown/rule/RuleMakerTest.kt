@@ -7,9 +7,10 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.EpisodicCondition
+import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.condition.containsText
 import io.rippledown.model.condition.edit.*
 import io.rippledown.model.condition.episodic.signature.Current
@@ -36,7 +37,7 @@ class RuleMakerTest {
         conditionsShown = allSuggestions.map { it.asText() }
         suggestionConditions = allSuggestions.map { it.initialSuggestion() }
         handler = mockk<RuleMakerHandler>(relaxed = true)
-        every { handler.conditionForExpression(any()) } returns null
+        every { handler.conditionForExpression(any()) } returns ConditionParsingResult()
     }
 
     @Test
@@ -70,7 +71,7 @@ class RuleMakerTest {
 
     @Test
     fun `if the tip is an available condition, then it should always be included`() {
-        every { handler.conditionForExpression(any()) } returns suggestionConditions[2]
+        every { handler.conditionForExpression(any()) } returns ConditionParsingResult(suggestionConditions[2])
         with(composeTestRule) {
             //Given
             setContent {
@@ -100,7 +101,6 @@ class RuleMakerTest {
 
     @Test
     fun `if the tip is not an available condition, then it should not be included`() {
-        every { handler.conditionForExpression(any()) } returns null
         with(composeTestRule) {
             //Given
             setContent {
@@ -116,8 +116,48 @@ class RuleMakerTest {
     }
 
     @Test
+    fun `if the tip is null then the condition filter should indicate an unknown expression`() {
+        every { handler.conditionForExpression(any()) } returns ConditionParsingResult(errorMessage = DOES_NOT_CORRESPOND_TO_A_CONDITION)
+
+        with(composeTestRule) {
+            //Given
+            setContent {
+                RuleMaker(allSuggestions, handler)
+            }
+
+            //When
+            enterTextIntoConditionFilter("below")
+
+            //Then
+            requireUnknownExpressionMessageToBeShowing()
+        }
+    }
+
+    @Test
+    fun `if there is no user expression, then the condition filter should prompt for an expression`() {
+        every { handler.conditionForExpression(any()) } returns ConditionParsingResult(errorMessage = DOES_NOT_CORRESPOND_TO_A_CONDITION)
+
+        val text = "below"
+        with(composeTestRule) {
+            //Given
+            setContent {
+                RuleMaker(allSuggestions, handler)
+            }
+            enterTextIntoConditionFilter(text)
+            requireUnknownExpressionMessageToBeShowing()
+
+
+            //When
+            removeExpressionText(text)
+
+            //Then
+            requireEnterConditionMessageToBeShowing()
+        }
+    }
+
+    @Test
     fun `if the tip is not an available condition, then show conditions matching the filter text`() {
-        every { handler.conditionForExpression(any()) } returns null
+        every { handler.conditionForExpression(any()) } returns ConditionParsingResult()
         with(composeTestRule) {
             //Given
             setContent {
@@ -473,10 +513,7 @@ fun main() {
     val handler = mockk<RuleMakerHandler>(relaxed = true)
     every { handler.conditionForExpression(any()) } answers {
         Thread.sleep(1000)
-        EpisodicCondition(
-            null, waves,
-            io.rippledown.model.condition.episodic.predicate.High, Current, "waves look tall enough"
-        )
+        ConditionParsingResult()
     }
     val conditions = (1..10).map { index ->
         nonEditableSuggestion(index, notes, "condition $index")

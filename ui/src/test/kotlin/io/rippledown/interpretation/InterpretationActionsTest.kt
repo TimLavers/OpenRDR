@@ -33,7 +33,64 @@ class InterpretationActionsTest {
             clickChangeInterpretationButton()
 
             //Then
-            requireInterpretationActionsDropdownMenu()
+            requireChangeInterpretationIconToBeShowing()
+        }
+    }
+
+    @Test
+    fun `should hide dropdown menu when the user selects the add comment menu then clicks cancel`() {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                InterpretationActions(listOf(), setOf(), handler)
+            }
+
+            clickChangeInterpretationButton()
+            clickAddCommentMenu()
+
+            //When
+            clickCancelAddNewComment()
+
+            //Then
+            requireInterpretationActionsMenuToBeNotShowing()
+        }
+    }
+
+    @Test
+    fun `should hide dropdown menu when the user selects the remove comment menu then clicks cancel`() {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                InterpretationActions(listOf("Bondi"), setOf(), handler)
+            }
+
+            clickChangeInterpretationButton()
+            clickRemoveCommentMenu()
+
+            //When
+            clickCancelRemoveComment()
+
+            //Then
+            requireInterpretationActionsMenuToBeNotShowing()
+        }
+    }
+
+    @Test
+    fun `should hide dropdown menu when the user selects the replace comment menu then clicks cancel`() {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                InterpretationActions(listOf("Bondi"), setOf(), handler)
+            }
+
+            clickChangeInterpretationButton()
+            clickReplaceCommentMenu()
+
+            //When
+            clickCancelReplaceComment()
+
+            //Then
+            requireInterpretationActionsMenuToBeNotShowing()
         }
     }
 
@@ -55,7 +112,7 @@ class InterpretationActionsTest {
         }
     }
 
-//    @Test
+    @Test
     fun `should show all available comments when the user clicks on the add comment button if there are no comments given for the case`() {
         with(composeTestRule) {
             //Given
@@ -92,7 +149,7 @@ class InterpretationActionsTest {
         }
     }
 
-//    @Test
+    @Test
     fun `should call handler when the user clicks on the replace comment button, selects an existing comment, adds a replacement comment and presses OK`() =
         runTest {
             with(composeTestRule) {
@@ -117,7 +174,7 @@ class InterpretationActionsTest {
             }
         }
 
-//    @Test
+    @Test
     fun `should call handler when the user clicks on the remove comment button, selects a comment and presses OK`() =
         runTest {
             val bondi = "Bondi"

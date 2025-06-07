@@ -22,12 +22,12 @@ fun Application.kbManagement(application: ServerApplication) {
             logger.info("KBManagement, import kb...")
 
             val multipart = call.receiveMultipart()
-            multipart.forEachPart {
-                logger.info("KBManagement, import kb, part: $it")
-                if (it is PartData.FileItem) {
+            multipart.forEachPart { partData ->
+                logger.info("KBManagement, import kb, part: $partData")
+                if (partData is PartData.FileItem) {
                     val partReader = ByteArrayOutputStream()
                     val buffered = BufferedOutputStream(partReader)
-                    it.streamProvider().use { inputStream ->
+                    partData.streamProvider().use { inputStream ->
                         inputStream.copyTo(buffered)
                         inputStream.close()
                     }

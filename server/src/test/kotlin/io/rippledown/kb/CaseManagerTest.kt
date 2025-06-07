@@ -5,8 +5,9 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.model.*
 import io.rippledown.persistence.CaseStore
-import io.rippledown.persistence.inmemory.InMemoryCaseStore
 import io.rippledown.persistence.inmemory.InMemoryAttributeStore
+import io.rippledown.persistence.inmemory.InMemoryCaseStore
+import io.rippledown.utils.defaultDate
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 

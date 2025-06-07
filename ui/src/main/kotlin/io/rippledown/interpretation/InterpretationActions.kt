@@ -1,9 +1,10 @@
 package io.rippledown.interpretation
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.DropdownMenu
+import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.Icon
+import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.Alignment.Companion.CenterVertically
@@ -35,18 +36,15 @@ fun InterpretationActions(
     var addCommentDialogShowing by remember { mutableStateOf(false) }
     var replaceCommentDialogShowing by remember { mutableStateOf(false) }
     var removeCommentDialogShowing by remember { mutableStateOf(false) }
-    val noDialogsShowing = !(addCommentDialogShowing || replaceCommentDialogShowing || removeCommentDialogShowing)
-
+    val showDropdownMenu = !(addCommentDialogShowing || replaceCommentDialogShowing || removeCommentDialogShowing)
     var expanded by remember { mutableStateOf(false) }
     Box(
         modifier = Modifier.wrapContentSize(BottomEnd)
     ) {
-        ExtendedFloatingActionButton(
-            onClick = { expanded = !expanded },
-            text = { Text(text = CHANGE_INTERPRETATION) },
-            icon = { Icon(Icons.Filled.Edit, CHANGE_INTERPRETATION_BUTTON) }
-        )
-        if (noDialogsShowing) {
+        ChangeInterpretationIcon {
+            expanded = !expanded
+        }
+        if (showDropdownMenu) {
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
@@ -97,6 +95,7 @@ fun InterpretationActions(
 
             override fun cancel() {
                 addCommentDialogShowing = false
+                expanded = false
             }
         })
     }
@@ -112,6 +111,7 @@ fun InterpretationActions(
 
                 override fun cancel() {
                     replaceCommentDialogShowing = false
+                    expanded = false
                 }
             })
     }
@@ -127,6 +127,7 @@ fun InterpretationActions(
 
                 override fun cancel() {
                     removeCommentDialogShowing = false
+                    expanded = false
                 }
             })
     }

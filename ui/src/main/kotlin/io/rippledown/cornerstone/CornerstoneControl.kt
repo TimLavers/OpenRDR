@@ -9,7 +9,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -19,6 +18,11 @@ import io.rippledown.constants.navigation.NEXT_BUTTON
 import io.rippledown.constants.navigation.OF
 import io.rippledown.constants.navigation.PREVIOUS_BUTTON
 import io.rippledown.decoration.ItalicGrey
+import openrdr.ui.generated.resources.Res
+import openrdr.ui.generated.resources.check_24
+import openrdr.ui.generated.resources.left_arrow_24
+import openrdr.ui.generated.resources.right_arrow_24
+import org.jetbrains.compose.resources.painterResource
 
 interface CornerstoneControlHandler {
     fun next(): Unit
@@ -39,7 +43,7 @@ fun CornerstoneControl(currentIndex: Int, total: Int, handler: CornerstoneContro
             enabled = currentIndex > 0
         ) {
             Icon(
-                painter = painterResource("left-arrow_24.png"),
+                painter = painterResource(Res.drawable.left_arrow_24),
                 contentDescription = PREVIOUS_BUTTON
             )
         }
@@ -58,7 +62,7 @@ fun CornerstoneControl(currentIndex: Int, total: Int, handler: CornerstoneContro
             enabled = currentIndex < total - 1
         ) {
             Icon(
-                painter = painterResource("right-arrow_24.png"),
+                painter = painterResource(Res.drawable.right_arrow_24),
                 contentDescription = NEXT_BUTTON
             )
         }
@@ -69,7 +73,7 @@ fun CornerstoneControl(currentIndex: Int, total: Int, handler: CornerstoneContro
             enabled = total > 0
         ) {
             Icon(
-                painter = painterResource("check_24.png"),
+                painter = painterResource(Res.drawable.check_24),
                 contentDescription = EXEMPT_BUTTON
             )
         }

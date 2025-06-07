@@ -1,6 +1,6 @@
 package io.rippledown.server.routes
 
-import io.ktor.http.*
+import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -15,19 +15,22 @@ import io.rippledown.server.ServerApplication
 fun Application.attributeManagement(application: ServerApplication) {
     routing {
         post(MOVE_ATTRIBUTE) {
+            val kbEndpoint = kbEndpoint(application)
             val attributeIdPair = call.receive<Pair<Int, Int>>()
-            kbEndpoint(application).moveAttribute(attributeIdPair.first, attributeIdPair.second)
-            call.respond(HttpStatusCode.OK, OperationResult("Attribute moved"))
+            kbEndpoint.moveAttribute(attributeIdPair.first, attributeIdPair.second)
+            call.respond(OK, OperationResult("Attribute moved"))
         }
         post(GET_OR_CREATE_ATTRIBUTE) {
+            val kbEndpoint = kbEndpoint(application)
             val name = call.receive<String>()
-            val result = kbEndpoint(application).getOrCreateAttribute(name)
-            call.respond(HttpStatusCode.OK, result)
+            val result = kbEndpoint.getOrCreateAttribute(name)
+            call.respond(OK, result)
         }
         post(SET_ATTRIBUTE_ORDER) {
+            val kbEndpoint = kbEndpoint(application)
             val attributesInOrder = call.receive<List<Attribute>>()
-            kbEndpoint(application).setAttributeOrder(attributesInOrder)
-            call.respond(HttpStatusCode.OK, OperationResult("Attribute order set"))
+            kbEndpoint.setAttributeOrder(attributesInOrder)
+            call.respond(OK, OperationResult("Attribute order set"))
         }
     }
 }

@@ -5,6 +5,7 @@ x is elevated
 x es alto
 elevated x
 excessive x
+x is above normal
 
 EXPECTED PREDICATE: High
 EXPECTED SIGNATURE: No
@@ -34,6 +35,7 @@ EXPECTED PREDICATE: Normal
 EXPECTED SIGNATURE: No
 no x are normal
 all x are abnormal
+all x results are abnormal
 
 EXPECTED PREDICATE: Is, y
 EXPECTED SIGNATURE: Current
@@ -54,6 +56,21 @@ EXPECTED PREDICATE: Is, "pending"
 EXPECTED SIGNATURE: Current
 x equals pending
 
+EXPECTED PREDICATE: IsNot, y
+EXPECTED SIGNATURE: Current
+x does not equal to y
+x is not the same as y
+
+EXPECTED PREDICATE: IsNot, 1.5
+EXPECTED SIGNATURE: Current
+x != 1.5
+
+EXPECTED PREDICATE: IsNot, "abc"
+EXPECTED SIGNATURE: Current
+x is not abc
+x is not "abc"
+x isn't abc
+
 EXPECTED PREDICATE: LessThanOrEquals, 4.1
 EXPECTED SIGNATURE: Current
 x is less than or equal to 4.1
@@ -65,9 +82,10 @@ EXPECTED PREDICATE: GreaterThanOrEquals, y
 EXPECTED SIGNATURE: Current
 x is greater than or equal to y
 x is not less than y
+x is at least y
 
 EXPECTED PREDICATE: GreaterThanOrEquals, 4.1
-EXPECTED SIGNATURE: AtMost, y
+EXPECTED SIGNATURE: AtMost, 5
 at most 5 x are greater than or equal to 4.1
 no more than 5 x are larger than 4.1
 
@@ -127,6 +145,7 @@ EXPECTED PREDICATE: IsPresentInCase
 x is present
 x detected
 x is available
+case contains a value for x
 
 EXPECTED PREDICATE: IsAbsentFromCase
 x is not present
@@ -140,10 +159,13 @@ x is increasing
 x on the rise
 x rising
 x growing
+x is going up
+x is getting higher
 
 EXPECTED PREDICATE: Decreasing
 x is decreasing
 x falling
+x is getting lower
 
 EXPECTED PREDICATE: LowOrNormal
 EXPECTED SIGNATURE: Current
@@ -156,6 +178,7 @@ x is high or normal
 EXPECTED PREDICATE: LowByAtMostSomePercentage, 20
 EXPECTED SIGNATURE: Current
 x is low by at most 20 percent
+x is lower than normal by at most 20 percent
 
 EXPECTED PREDICATE: NormalOrLowByAtMostSomePercentage, 20
 EXPECTED SIGNATURE: Current
@@ -164,7 +187,9 @@ x is normal or not more than 20 percent below normal
 EXPECTED PREDICATE: HighByAtMostSomePercentage, 20
 EXPECTED SIGNATURE: Current
 x is high by at most 20 percent
+x is elevated by no more than 20%
 
 EXPECTED PREDICATE: NormalOrHighByAtMostSomePercentage, 20
 EXPECTED SIGNATURE: Current
 x is normal or not more than 20 percent above normal
+x is normal or high by no more than 20 percent

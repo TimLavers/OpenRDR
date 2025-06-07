@@ -9,6 +9,7 @@ import io.rippledown.model.condition.series.Increasing
 import io.rippledown.model.condition.structural.IsAbsentFromCase
 import io.rippledown.model.condition.structural.IsPresentInCase
 import io.rippledown.model.condition.structural.IsSingleEpisodeCase
+import io.rippledown.utils.*
 
 fun isLow(id: Int? = null, attribute: Attribute) = EpisodicCondition(id, attribute, Low, Current)
 fun isNormal(id: Int? = null, attribute: Attribute) = EpisodicCondition(id, attribute, Normal, Current)
@@ -115,32 +116,32 @@ open class ConditionTestBase {
 
     fun highTSHCase(): RDRCase {
         val builder1 = RDRCaseBuilder()
-        builder1.addResult(tsh, defaultDate , TestResult("9.667", tshRange, "pmol/L"))
+        builder1.addResult(tsh, defaultDate, TestResult("9.667", tshRange, "pmol/L"))
         return builder1.build("HighTSHCase")
     }
 
     fun highTSHWithOneSidedRangeCase(): RDRCase {
         val builder1 = RDRCaseBuilder()
         val range = ReferenceRange(null, "6.0")
-        builder1.addResult(tsh, defaultDate , TestResult("9.667", range, "pmol/L"))
+        builder1.addResult(tsh, defaultDate, TestResult("9.667", range, "pmol/L"))
         return builder1.build("HighTSHWithOneSidedRangeCase")
     }
 
     fun lowTSHCase(): RDRCase {
         val builder1 = RDRCaseBuilder()
-        builder1.addResult(tsh, defaultDate , TestResult("0.30", tshRange, "pmol/L"))
+        builder1.addResult(tsh, defaultDate, TestResult("0.30", tshRange, "pmol/L"))
         return builder1.build("LowTSHCase")
     }
 
     fun normalTSHCase(): RDRCase {
         val builder1 = RDRCaseBuilder()
-        builder1.addResult(tsh, defaultDate , TestResult("1.30", tshRange, "pmol/L"))
+        builder1.addResult(tsh, defaultDate, TestResult("1.30", tshRange, "pmol/L"))
         return builder1.build("NormalTSHCase")
     }
 
     fun tshValueNonNumericCase(): RDRCase {
         val builder1 = RDRCaseBuilder()
-        builder1.addResult(tsh, defaultDate , TestResult("n.a.", tshRange, "pmol/L"))
+        builder1.addResult(tsh, defaultDate, TestResult("n.a.", tshRange, "pmol/L"))
         return builder1.build("TSHValueNonNumeric")
     }
 
@@ -152,13 +153,13 @@ open class ConditionTestBase {
 
     fun singleEpisodeCaseWithTSHNormal(): RDRCase {
         val builder1 = RDRCaseBuilder()
-        builder1.addResult(tsh, defaultDate , TestResult("0.667", tshRange, "pmol/L"))
+        builder1.addResult(tsh, defaultDate, TestResult("0.667", tshRange, "pmol/L"))
         return builder1.build("TSHNormal")
     }
 
     fun singleEpisodeCaseWithTSHAsGiven(value: String): RDRCase {
         val builder1 = RDRCaseBuilder()
-        builder1.addResult(tsh, defaultDate , TestResult(value))
+        builder1.addResult(tsh, defaultDate, TestResult(value))
         return builder1.build("TSHCase")
     }
 

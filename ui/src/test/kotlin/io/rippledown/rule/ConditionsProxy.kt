@@ -1,8 +1,11 @@
+@file:OptIn(ExperimentalTestApi::class)
+
 package io.rippledown.rule
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.text.TextRange
 import io.rippledown.constants.main.*
 import io.rippledown.constants.rule.*
 
@@ -170,11 +173,34 @@ fun ComposeTestRule.requireConditionFilterText(expected: String) {
         .assertTextEquals(expected)
 }
 
+fun ComposeTestRule.selectExpressionText(text: String) {
+    onNodeWithContentDescription(CURRENT_CONDITION, useUnmergedTree = true)
+        .performTextInputSelection(TextRange(0, text.length))
+}
+
+fun ComposeTestRule.removeExpressionText(text: String) {
+    selectExpressionText(text)
+    enterTextIntoConditionFilter("")
+}
+
 fun ComposeTestRule.enterTextIntoConditionFilter(text: String) {
     onNodeWithContentDescription(CURRENT_CONDITION, useUnmergedTree = true)
         .performTextInput(text)
 }
 
+fun ComposeTestRule.requireUnknownExpressionMessageToBeShowing() {
+    onNodeWithText(DOES_NOT_CORRESPOND_TO_A_CONDITION)
+        .assertIsDisplayed()
+}
+fun ComposeTestRule.requireConditionIsNotTrueMessageToBeShowing() {
+    onNodeWithText(CONDITION_IS_NOT_TRUE)
+        .assertIsDisplayed()
+}
+
+fun ComposeTestRule.requireEnterConditionMessageToBeShowing() {
+    onNodeWithText(ENTER_OR_SELECT_CONDITION)
+        .assertIsDisplayed()
+}
 fun ComposeTestRule.requireWaitingIndicatorToBeShowing() {
     onNodeWithContentDescription(WAITING_INDICATOR)
         .assertIsDisplayed()

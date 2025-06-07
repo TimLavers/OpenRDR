@@ -39,6 +39,12 @@ class ConditionTipTest {
     }
 
     @Test
+    fun `should return null for a valid predicate but when no attribute is defined`() {
+        val tip = ConditionTip(emptySet(), mockk())
+        tip.conditionFor("high") shouldBe null
+    }
+
+    @Test
     fun `should parse expression to High`() {
         // Given
         val expression = "elevated glucose"
@@ -120,6 +126,42 @@ class ConditionTipTest {
 
         // Then
         actual shouldBe EpisodicCondition(null, glucose, Is("\"pending\""), Current, expression)
+    }
+
+    @Test
+    fun `should parse expression to IsNot`() {
+        // Given
+        val expression = "glucose does not equal 3.14159"
+
+        // When
+        val actual = conditionTip.conditionFor(expression)
+
+        // Then
+        actual shouldBe EpisodicCondition(null, glucose, IsNot("3.14159"), Current, expression)
+    }
+
+    @Test
+    fun `should parse expression to IsNot with value unquoted`() {
+        // Given
+        val expression = "glucose different to pending"
+
+        // When
+        val actual = conditionTip.conditionFor(expression)
+
+        // Then
+        actual shouldBe EpisodicCondition(null, glucose, IsNot("\"pending\""), Current, expression)
+    }
+
+    @Test
+    fun `should parse expression to IsNot with value quoted`() {
+        // Given
+        val expression = "glucose isn't \"pending\""
+
+        // When
+        val actual = conditionTip.conditionFor(expression)
+
+        // Then
+        actual shouldBe EpisodicCondition(null, glucose, IsNot("\"pending\""), Current, expression)
     }
 
     @Test

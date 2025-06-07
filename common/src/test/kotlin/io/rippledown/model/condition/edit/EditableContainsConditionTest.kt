@@ -8,7 +8,7 @@ import io.rippledown.model.condition.episodic.predicate.IsNotBlank
 import io.rippledown.model.condition.episodic.signature.All
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.episodic.signature.No
-import io.rippledown.model.serializeDeserialize
+import io.rippledown.utils.serializeDeserialize
 import kotlin.test.Test
 
 class EditableContainsConditionTest: ConditionTestBase() {

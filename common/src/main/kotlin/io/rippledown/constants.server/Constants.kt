@@ -9,6 +9,7 @@ const val STOPPING_SERVER = "Stopping server"
 
 const val DEFAULT_PROJECT_NAME = "Thyroids"
 const val KB_ID = "kb"
+const val CASE_ID = "caseId"
 
 const val EXPRESSION = "expression"
 const val ATTRIBUTE_NAMES = "attributeNames"

@@ -14,8 +14,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.mockk.mockk
-import io.rippledown.model.createCase
 import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.utils.createCase
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test

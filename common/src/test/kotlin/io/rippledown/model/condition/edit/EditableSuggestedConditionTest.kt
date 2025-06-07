@@ -3,7 +3,7 @@ package io.rippledown.model.condition.edit
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.condition.ConditionTestBase
 import io.rippledown.model.condition.episodic.signature.Current
-import io.rippledown.model.serializeDeserialize
+import io.rippledown.utils.serializeDeserialize
 import kotlin.test.Test
 
 class EditableSuggestedConditionTest: ConditionTestBase() {

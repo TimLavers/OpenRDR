@@ -4,17 +4,16 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.mocks.config
 import io.rippledown.mocks.mock
 import io.rippledown.model.*
-import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.ConditionList
-import io.rippledown.model.condition.RuleConditionList
+import io.rippledown.model.condition.*
 import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
-import io.rippledown.model.condition.hasCurrentValue
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.sample.SampleKB.TSH_CASES
+import io.rippledown.utils.createCase
+import io.rippledown.utils.createCaseWithInterpretation
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
@@ -58,6 +57,7 @@ class ApiTest {
 
     @Test
     fun getCaseWithInterpretationTest() = runTest {
+        //Given
         val malabarComment = "go to Malabar"
         val case = createCaseWithInterpretation("A", 1, conclusionTexts = listOf(malabarComment))
 
@@ -68,8 +68,10 @@ class ApiTest {
             returnCase = case
             expectedCaseId = 1
         }
-
+        //When
         val retrieved = Api(mock(config)).getCase(1)!!
+
+        //Then
         retrieved shouldBe case
         retrieved.viewableInterpretation shouldBe case.viewableInterpretation
         retrieved.viewableInterpretation.latestText() shouldBe malabarComment
@@ -255,11 +257,48 @@ class ApiTest {
         val config = config {
             expectedExpression = "Great surf"
             expectedAttributeNames = listOf("Surf", "Sun")
-            returnCondition = hasCurrentValue(1, Attribute(1, "Surf"))
+            val condition = hasCurrentValue(1, Attribute(1, "Surf"))
+            returnConditionParsingResult = ConditionParsingResult(condition)
         }
         val returned =
-            Api(mock(config)).conditionForExpression(config.expectedExpression, config.expectedAttributeNames)
-        returned shouldBe config.returnCondition
+            Api(mock(config)).conditionFor(config.expectedExpression, config.expectedAttributeNames)
+        returned shouldBe config.returnConditionParsingResult
+    }
+
+    @Test
+    fun `should return an error message for the specified expression`() = runTest {
+        val config = config {
+            expectedExpression = "Great surf"
+            expectedAttributeNames = listOf("Surf", "Sun")
+            returnConditionParsingResult = ConditionParsingResult(errorMessage = "unknown expression")
+        }
+        val returned =
+            Api(mock(config)).conditionFor(config.expectedExpression, config.expectedAttributeNames)
+        returned shouldBe config.returnConditionParsingResult
+    }
+
+    @Test
+    fun `should return a response from the conversation with the model`() = runTest {
+        val userMessage = "What is the meaning of life?"
+        val caseId = 1234L
+        val config = config {
+            expectedUserMessage = userMessage
+            expectedCaseId = caseId
+            returnResponse = "42"
+        }
+        val response = Api(mock(config)).sendUserMessage(userMessage, caseId)
+        response shouldBe config.returnResponse
+    }
+
+    @Test
+    fun `should start a conversation with the model`() = runTest {
+        val caseId = 1234L
+        val config = config {
+            expectedCaseId = caseId
+            returnResponse = "42"
+        }
+        val response = Api(mock(config)).startConversation(caseId)
+        response shouldBe config.returnResponse
     }
 
     @Test

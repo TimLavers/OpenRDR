@@ -3,8 +3,7 @@ package io.rippledown.model.external
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.TestResult
-import io.rippledown.model.defaultDate
-import kotlinx.serialization.json.Json
+import io.rippledown.utils.defaultDate
 import kotlin.test.Test
 
 

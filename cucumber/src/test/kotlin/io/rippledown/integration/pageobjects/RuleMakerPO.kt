@@ -222,6 +222,10 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
         }
     }
 
+    fun requireAlertToBeDisplayed(expected: String) {
+        waitForContextToBeNotNull(contextProvider, expected)
+    }
+
     fun movePointerToFirstAvailableCondition() {
         waitForAvailableConditionContextForIndex(0)
         val ctx = availableConditionContextForIndex(0)!!

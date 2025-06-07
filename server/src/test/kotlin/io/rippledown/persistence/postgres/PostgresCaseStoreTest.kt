@@ -6,6 +6,7 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.rippledown.kb.AttributeProvider
 import io.rippledown.model.*
+import io.rippledown.utils.today
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 

@@ -10,7 +10,7 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.caseview.CaseViewProperties
 import io.rippledown.model.caseview.ViewableCase
-import io.rippledown.model.defaultDate
+import io.rippledown.utils.defaultDate
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule

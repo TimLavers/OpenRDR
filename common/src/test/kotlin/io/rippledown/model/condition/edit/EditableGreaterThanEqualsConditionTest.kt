@@ -8,7 +8,7 @@ import io.rippledown.model.condition.episodic.predicate.IsNumeric
 import io.rippledown.model.condition.episodic.signature.AtLeast
 import io.rippledown.model.condition.episodic.signature.AtMost
 import io.rippledown.model.condition.episodic.signature.Current
-import io.rippledown.model.serializeDeserialize
+import io.rippledown.utils.serializeDeserialize
 import kotlin.test.Test
 
 class EditableGreaterThanEqualsConditionTest: ConditionTestBase() {
