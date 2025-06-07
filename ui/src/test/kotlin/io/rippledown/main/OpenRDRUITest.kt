@@ -254,6 +254,7 @@ class OpenRDRUITest {
             setContent {
                 OpenRDRUI(handler, dispatcher = Unconfined)
             }
+            clickChatIconToggle()
 
             //When
             waitForCaseToBeShowing(caseName)
@@ -262,6 +263,33 @@ class OpenRDRUITest {
             coVerify { api.startConversation(id) }
         }
     }
+
+    @Test
+    fun `should not start a conversation with the model when a case is selected if the chat panel is not showing`() =
+        runTest {
+            val caseName = "case A"
+            val caseId = CaseId(id = 1234, name = caseName)
+            val id = caseId.id!!
+            val caseIds = listOf(caseId)
+            val bondiComment = "Go to Bondi"
+            val case = createCaseWithInterpretation(caseName, id, listOf(bondiComment))
+            coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+            coEvery { api.getCase(id) } returns case
+
+            with(composeTestRule) {
+                //Given
+                setContent {
+                    OpenRDRUI(handler, dispatcher = Unconfined)
+                }
+                requireChatPanelIsNotDisplayed()
+
+                //When
+                waitForCaseToBeShowing(caseName)
+
+                //Then
+                coVerify(exactly = 0) { api.startConversation(id) }
+            }
+        }
 
     @Test
     fun `should start a new conversation with the model when another case is selected`() = runTest {
@@ -285,15 +313,16 @@ class OpenRDRUITest {
             setContent {
                 OpenRDRUI(handler, dispatcher = Unconfined)
             }
+            clickChatIconToggle()
             waitForCaseToBeShowing(caseNameA)
-            coVerify { api.startConversation(idA) }
 
             //When
             selectCaseByName(caseNameB)
             waitForCaseToBeShowing(caseNameB)
 
             //Then
-            coVerify { api.startConversation(idB) }
+            coVerify(exactly = 1) { api.startConversation(idA) }
+            coVerify(exactly = 1) { api.startConversation(idB) }
         }
     }
 

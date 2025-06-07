@@ -17,7 +17,6 @@ import io.rippledown.constants.api.*
 import io.rippledown.constants.server.CASE_ID
 import io.rippledown.constants.server.EXPRESSION
 import io.rippledown.constants.server.KB_ID
-import io.rippledown.log.lazyLogger
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.Conclusion
 import io.rippledown.model.KBInfo
@@ -266,8 +265,6 @@ class Api(
     }
 
     suspend fun startConversation(caseId: Long): String {
-        lazyLogger.info("\n\n---api startConversation($caseId)")
-        Thread.dumpStack()
         return client.post("$API_URL$START_CONVERSATION") {
             contentType(Plain)
             setKBParameter()

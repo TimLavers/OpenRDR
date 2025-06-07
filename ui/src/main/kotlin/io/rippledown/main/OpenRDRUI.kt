@@ -97,16 +97,20 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     }
 
     LaunchedEffect(currentCaseId) {
-        withContext(dispatcher) {
-            currentCaseId?.let {
-                val response = api.startConversation(it)
-                if (response.isNotBlank()) {
-                    chatControllerHandler.onBotMessageReceived(response)
-                    ++chatId // Increment chatId to trigger recomposition in ChatController
+        // When currentCaseId changes, start a conversation with the model if the chat panel is visible
+        if (isChatVisible) {
+            withContext(dispatcher) {
+                currentCaseId?.let {
+                    val response = api.startConversation(it)
+                    if (response.isNotBlank()) {
+                        chatControllerHandler.onBotMessageReceived(response)
+                        ++chatId // Increment chatId to trigger recomposition in ChatController
+                    }
                 }
             }
         }
     }
+
     //Start a conversation with the model when the chat is made visible
     LaunchedEffect(isChatVisible) {
         withContext(dispatcher) {

@@ -98,11 +98,7 @@ class ConversationForAddingACommentTest {
                 {
                     "action": "$ADD_ACTION",
                     "new_comment": "$bondiComment",
-                    "conditions": [
-                        {
-                          "condition": "$condition"
-                        }
-                    ]
+                    "conditions": [ "$condition" ]
                 }
             """.trimIndent()
         }
