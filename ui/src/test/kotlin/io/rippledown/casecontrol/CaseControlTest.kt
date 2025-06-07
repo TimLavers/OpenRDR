@@ -26,7 +26,7 @@ class CaseControlTest {
 
     @Before
     fun setUp() {
-        handler = mockk<CaseControlHandler>(relaxed = true)
+        handler = mockk<CaseControlHandler>()
     }
 
 
@@ -127,7 +127,7 @@ class CaseControlTest {
 
 fun main() {
     applicationFor {
-        val handler = mockk<CaseControlHandler>(relaxed = true)
+        val handler = mockk<CaseControlHandler>()
 
         val caseName = "Bondi"
         val id = 45L

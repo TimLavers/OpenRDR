@@ -41,7 +41,7 @@ class CaseControlWithRuleMakerTest {
 
     @Before
     fun setUp() {
-        handler = mockk<CaseControlHandler>(relaxed = true)
+        handler = mockk<CaseControlHandler>()
 //        coEvery { handler.selectCornerstone(any()) } returns cornerstoneStatus
     }
 

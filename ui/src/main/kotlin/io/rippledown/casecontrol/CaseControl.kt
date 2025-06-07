@@ -30,7 +30,7 @@ interface CaseControlHandler : CaseInspectionHandler, CornerstonePagerHandler {
     fun endRuleSession()
     fun buildRule(ruleRequest: RuleRequest)
     fun updateCornerstoneStatus(cornerstoneRequest: UpdateCornerstoneRequest)
-    fun conditionFor(conditionText: String, attributeNames: Collection<String>): ConditionParsingResult
+    fun conditionFor(conditionText: String): ConditionParsingResult
     var setRightInfoMessage: (message: String) -> Unit
 }
 
@@ -43,7 +43,6 @@ fun CaseControl(
     modifier: Modifier = Modifier
 ) {
     val ruleInProgress = cornerstoneStatus != null
-    val attributeNames = conditionHints.flatMap { it.initialSuggestion().attributeNames() }.toSet()
 
     Row(
         modifier = modifier
@@ -82,7 +81,7 @@ fun CaseControl(
                 }
 
                 override fun conditionForExpression(expression: String) =
-                    handler.conditionFor(expression, attributeNames)
+                    handler.conditionFor(expression)
             })
         }
     }

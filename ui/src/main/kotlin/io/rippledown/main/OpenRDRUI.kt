@@ -28,7 +28,8 @@ import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.sample.SampleKB
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
+import org.jetbrains.skiko.MainUIDispatcher
 import java.io.File
 
 interface Handler {
@@ -38,10 +39,11 @@ interface Handler {
 }
 
 @Composable
-fun OpenRDRUI(handler: Handler) {
+fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatcher) {
     val api = handler.api
     var currentCase by remember { mutableStateOf<ViewableCase?>(null) }
     var currentCaseId by remember { mutableStateOf<Long?>(null) }
+    var chatId by remember { mutableStateOf<Long>(-1) }
     var cornerstoneStatus: CornerstoneStatus? by remember { mutableStateOf(null) }
     var casesInfo by remember { mutableStateOf(CasesInfo()) }
     var kbInfo: KBInfo? by remember { mutableStateOf(null) }
@@ -61,47 +63,62 @@ fun OpenRDRUI(handler: Handler) {
             val caseId = requireNotNull(currentCaseId) {
                 "currentCaseId should not be null when casesInfo.count > 0"
             }
-            runBlocking {
+            // Use dispatcher to ensure API calls run on the EDT
+            CoroutineScope(dispatcher).launch {
                 val response = api.sendUserMessage(message, caseId)
                 onBotMessageReceived(response)
 
                 //refresh the case to get the latest interpretation
                 currentCase = api.getCase(caseId)
+                ++chatId // Increment chatId to trigger recomposition in ChatController
             }
         }
     }
 
 
     LaunchedEffect(Unit) {
-        kbInfo = api.kbList().firstOrNull()
+        withContext(dispatcher) {
+            kbInfo = api.kbList().firstOrNull()
+        }
     }
 
     LaunchedEffect(casesInfo, currentCaseId) {
-        if (casesInfo.caseIds.isNotEmpty()) {
-            if (currentCaseId == null || currentCaseId !in casesInfo.caseIds.map { it.id }) {
-                //No initial case, or it's now been deleted
-                currentCaseId = casesInfo.caseIds[0].id!!
+        withContext(dispatcher) {
+            if (casesInfo.caseIds.isNotEmpty()) {
+                if (currentCaseId == null || currentCaseId !in casesInfo.caseIds.map { it.id }) {
+                    // No initial case, or it's now been deleted
+                    currentCaseId = casesInfo.caseIds[0].id!!
+                }
+                currentCase = api.getCase(currentCaseId!!)
+                conditionHints = api.conditionHints(currentCaseId!!).suggestions
+                isChatEnabled = true
             }
-            currentCase = api.getCase(currentCaseId!!)
-            conditionHints = api.conditionHints(currentCaseId!!).suggestions
-            isChatEnabled = true
         }
     }
 
     LaunchedEffect(currentCaseId) {
-        currentCaseId?.let {
-            val response = api.startConversation(it)
-            if (response.isNotBlank()) {
-                chatControllerHandler.onBotMessageReceived(response)
+        // When currentCaseId changes, start a conversation with the model if the chat panel is visible
+        if (isChatVisible) {
+            withContext(dispatcher) {
+                currentCaseId?.let {
+                    val response = api.startConversation(it)
+                    if (response.isNotBlank()) {
+                        chatControllerHandler.onBotMessageReceived(response)
+                        ++chatId // Increment chatId to trigger recomposition in ChatController
+                    }
+                }
             }
         }
     }
+
     //Start a conversation with the model when the chat is made visible
     LaunchedEffect(isChatVisible) {
-        currentCaseId?.let {
-            val response = api.startConversation(it)
-            if (response.isNotBlank()) {
-                chatControllerHandler.onBotMessageReceived(response)
+        withContext(dispatcher) {
+            currentCaseId?.let {
+                val response = api.startConversation(it)
+                if (response.isNotBlank()) {
+                    chatControllerHandler.onBotMessageReceived(response)
+                }
             }
         }
     }
@@ -110,43 +127,68 @@ fun OpenRDRUI(handler: Handler) {
         topBar = {
             ApplicationBar(kbInfo, isChatVisible, isChatEnabled, object : AppBarHandler {
                 override var isRuleSessionInProgress = ruleInProgress
-                override var selectKB: (id: String) -> Unit = { runBlocking { kbInfo = api.selectKB(it) } }
-                override var createKB: (name: String) -> Unit = { runBlocking { kbInfo = api.createKB(it) } }
+                override var selectKB: (id: String) -> Unit = {
+                    CoroutineScope(dispatcher).launch {
+                        kbInfo = api.selectKB(it)
+                    }
+                }
+                override var createKB: (name: String) -> Unit = {
+                    CoroutineScope(dispatcher).launch {
+                        kbInfo = api.createKB(it)
+                    }
+                }
                 override var createKBFromSample: (name: String, sample: SampleKB) -> Unit =
                     { name: String, sample: SampleKB ->
-                        runBlocking {
+                        CoroutineScope(dispatcher).launch {
                             kbInfo = api.createKBFromSample(name, sample)
                         }
                     }
-                override var importKB: (data: File) -> Unit = { runBlocking { kbInfo = api.importKBFromZip(it) } }
-                override var exportKB: (data: File) -> Unit = { runBlocking { api.exportKBToZip(it) } }
-                override val kbList: () -> List<KBInfo> = { runBlocking { api.kbList() } }
-
-                override var setKbDescription: (description: String) -> Unit =
-                    { runBlocking { api.setKbDescription(it) } }
-                override var kbDescription: () -> String = { runBlocking { api.kbDescription() } }
+                override var importKB: (data: File) -> Unit = {
+                    CoroutineScope(dispatcher).launch {
+                        kbInfo = api.importKBFromZip(it)
+                    }
+                }
+                override var exportKB: (data: File) -> Unit = {
+                    CoroutineScope(dispatcher).launch {
+                        api.exportKBToZip(it)
+                    }
+                }
+                override val kbList: () -> List<KBInfo> = {
+                    runBlocking(dispatcher) { api.kbList() }
+                }
+                override var setKbDescription: (description: String) -> Unit = {
+                    CoroutineScope(dispatcher).launch {
+                        api.setKbDescription(it)
+                    }
+                }
+                override var kbDescription: () -> String = {
+                    runBlocking(dispatcher) { api.kbDescription() }
+                }
                 override var onToggleChat: () -> Unit = { isChatVisible = !isChatVisible }
             })
         },
         bottomBar = {
             BottomAppBar(
                 backgroundColor = Color.White,
-            )
-            {
+            ) {
                 val leftMessage = ruleAction?.toAnnotatedString() ?: AnnotatedString("")
                 val rightMessage = AnnotatedString(rightInformationMessage)
                 InformationPanel(leftMessage, rightMessage)
             }
         },
-    )
-    { paddingValues ->
+    ) { paddingValues ->
         CasePoller(object : CasePollerHandler {
             override var onUpdate: (updated: CasesInfo) -> Unit = {
                 casesInfo = it
             }
-            override var updateCasesInfo: () -> CasesInfo = { runBlocking { api.waitingCasesInfo() } }
+            override var updateCasesInfo: () -> CasesInfo = {
+                val r = runBlocking(dispatcher) {
+                    api.waitingCasesInfo()
+                }
+                r
+            }
             override var isClosing: () -> Boolean = handler.isClosing
-        })
+        }, dispatcher)
 
         if (casesInfo.count > 0) {
             Column(modifier = Modifier.padding(paddingValues)) {
@@ -159,7 +201,8 @@ fun OpenRDRUI(handler: Handler) {
                             Spacer(modifier = Modifier.height(8.dp))
                             CaseSelector(casesInfo.caseIds, object : CaseSelectorHandler, Handler by handler {
                                 override var selectCase = { id: Long ->
-                                    currentCase = runBlocking { api.getCase(id) }
+                                    ++chatId
+                                    currentCase = runBlocking(dispatcher) { api.getCase(id) }
                                     currentCaseId = id
                                 }
                             })
@@ -171,7 +214,8 @@ fun OpenRDRUI(handler: Handler) {
                         cornerstoneStatus = cornerstoneStatus,
                         conditionHints = conditionHints,
                         handler = object : CaseControlHandler {
-                            override fun allComments() = runBlocking { api.allConclusions().map { it.text }.toSet() }
+                            override fun allComments() =
+                                runBlocking(dispatcher) { api.allConclusions().map { it.text }.toSet() }
 
                             override fun startRuleToAddComment(comment: String) {
                                 ruleAction = Addition(comment)
@@ -179,7 +223,9 @@ fun OpenRDRUI(handler: Handler) {
                                     caseId = currentCase!!.id!!,
                                     diff = ruleAction as Addition
                                 )
-                                cornerstoneStatus = runBlocking { api.startRuleSession(sessionStartRequest) }
+                                CoroutineScope(dispatcher).launch {
+                                    cornerstoneStatus = api.startRuleSession(sessionStartRequest)
+                                }
                             }
 
                             override fun startRuleToReplaceComment(toBeReplaced: String, replacement: String) {
@@ -188,7 +234,9 @@ fun OpenRDRUI(handler: Handler) {
                                     caseId = currentCase!!.id!!,
                                     diff = ruleAction as Replacement
                                 )
-                                cornerstoneStatus = runBlocking { api.startRuleSession(sessionStartRequest) }
+                                CoroutineScope(dispatcher).launch {
+                                    cornerstoneStatus = api.startRuleSession(sessionStartRequest)
+                                }
                             }
 
                             override fun startRuleToRemoveComment(comment: String) {
@@ -197,52 +245,57 @@ fun OpenRDRUI(handler: Handler) {
                                     caseId = currentCase!!.id!!,
                                     diff = ruleAction as Removal
                                 )
-                                cornerstoneStatus = runBlocking { api.startRuleSession(sessionStartRequest) }
+                                CoroutineScope(dispatcher).launch {
+                                    cornerstoneStatus = api.startRuleSession(sessionStartRequest)
+                                }
                             }
 
                             override fun endRuleSession() {
-                                runBlocking { api.cancelRuleSession() }
-                                cornerstoneStatus = null
+                                CoroutineScope(dispatcher).launch {
+                                    api.cancelRuleSession()
+                                    cornerstoneStatus = null
+                                }
                             }
 
                             override var setRightInfoMessage: (message: String) -> Unit =
                                 { rightInformationMessage = it }
 
-                            override fun buildRule(ruleRequest: RuleRequest) = runBlocking {
+                            override fun buildRule(ruleRequest: RuleRequest) = runBlocking(dispatcher) {
                                 currentCase = api.commitSession(ruleRequest)
                                 cornerstoneStatus = null
                             }
 
                             override fun updateCornerstoneStatus(cornerstoneRequest: UpdateCornerstoneRequest) =
-                                runBlocking {
+                                runBlocking(dispatcher) {
                                     cornerstoneStatus = api.updateCornerstoneStatus(cornerstoneRequest)
                                 }
 
-                            override fun startRuleSession(sessionStartRequest: SessionStartRequest) = runBlocking {
-                                cornerstoneStatus = api.startRuleSession(sessionStartRequest)
-                            }
+                            override fun startRuleSession(sessionStartRequest: SessionStartRequest) =
+                                runBlocking(dispatcher) {
+                                    cornerstoneStatus = api.startRuleSession(sessionStartRequest)
+                                }
 
-                            override fun getCase(caseId: Long) = runBlocking { currentCase = api.getCase(caseId) }
+                            override fun getCase(caseId: Long) =
+                                runBlocking(dispatcher) { currentCase = api.getCase(caseId) }
 
                             override fun swapAttributes(moved: Attribute, target: Attribute) {
-                                runBlocking {
+                                runBlocking(dispatcher) {
                                     api.moveAttribute(moved.id, target.id)
                                 }
                             }
 
-                            override fun selectCornerstone(index: Int) = runBlocking {
+                            override fun selectCornerstone(index: Int) = runBlocking(dispatcher) {
                                 cornerstoneStatus = api.selectCornerstone(index)
                             }
 
-                            override fun exemptCornerstone(index: Int) = runBlocking {
+                            override fun exemptCornerstone(index: Int) = runBlocking(dispatcher) {
                                 cornerstoneStatus = api.exemptCornerstone(index)
                             }
 
                             override fun conditionFor(
                                 conditionText: String,
-                                attributeNames: Collection<String>
-                            ) = runBlocking {
-                                api.conditionFor(conditionText, attributeNames)
+                            ) = runBlocking(dispatcher) {
+                                api.conditionFor(conditionText)
                             }
                         },
                         modifier = if (isChatVisible) {
@@ -254,6 +307,7 @@ fun OpenRDRUI(handler: Handler) {
 
                     if (isChatVisible) {
                         ChatController(
+                            id = chatId,
                             chatControllerHandler,
                             modifier = Modifier.weight(0.3f)
                         )

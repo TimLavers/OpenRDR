@@ -21,7 +21,7 @@ class EditCurrentKbControlTest {
 
     @Before
     fun setup() {
-        handler = mockk<KbEditControlHandler>(relaxed = true)
+        handler = mockk<KbEditControlHandler>()
         every { handler.kbDescription } returns { bondiDescription }
     }
 

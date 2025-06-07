@@ -23,7 +23,7 @@ class KbInfoItemTest {
 
     @Before
     fun setup() {
-        handler = mockk<KbSelectionHandler>(relaxed = true)
+        handler = mockk<KbSelectionHandler>()
     }
 
     @Test

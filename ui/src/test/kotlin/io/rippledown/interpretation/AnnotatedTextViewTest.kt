@@ -31,7 +31,7 @@ class AnnotatedTextViewTest {
                 AnnotatedTextView(
                     AnnotatedString(bondiComment),
                     INTERPRETATION_TEXT_FIELD,
-                    mockk(relaxed = true)
+                    mockk()
                 )
             }
             requireInterpretation(bondiComment)
@@ -42,7 +42,7 @@ class AnnotatedTextViewTest {
     fun `should show a blank interpretation`() = runTest {
         with(composeTestRule) {
             setContent {
-                AnnotatedTextView(AnnotatedString(""), INTERPRETATION_TEXT_FIELD, mockk(relaxed = true))
+                AnnotatedTextView(AnnotatedString(""), INTERPRETATION_TEXT_FIELD, mockk())
             }
             requireInterpretation("")
         }

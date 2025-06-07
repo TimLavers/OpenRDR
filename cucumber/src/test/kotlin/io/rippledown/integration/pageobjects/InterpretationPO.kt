@@ -21,7 +21,7 @@ import javax.swing.SwingUtilities.invokeLater
 class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
 
     private fun interpretationTextContext() =
-        execute<AccessibleContext?> { contextProvider().find(INTERPRETATION_TEXT_FIELD) }
+        execute<AccessibleContext> { contextProvider().find(INTERPRETATION_TEXT_FIELD) }
 
     fun movePointerToComment(comment: String) {
         val interpretation = interpretationText()
@@ -30,9 +30,9 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun movePointerToCharacterPosition(characterPosition: Int) {
-        val interpretationTextContext = interpretationTextContext()
+        val interpretationTextContext = interpretationTextContext()!!
         val rectangle =
-            execute<Rectangle> { interpretationTextContext?.accessibleText?.getCharacterBounds(characterPosition) }
+            execute<Rectangle> { interpretationTextContext.accessibleText?.getCharacterBounds(characterPosition) }
         val loc = interpretationTextContext.accessibleComponent.locationOnScreen
         Robot().mouseMove(loc.x + rectangle.x, loc.y)
     }
@@ -127,7 +127,7 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
     fun waitForConditionsToBeShowing(conditions: List<String>) {
         waitUntilAsserted {
             conditions.forEach { condition ->
-                execute<AccessibleContext?> { contextProvider().find(CONDITION_PREFIX + condition) } shouldNotBe null
+                execute<AccessibleContext> { contextProvider().find("$CONDITION_PREFIX$condition") } shouldNotBe null
             }
         }
     }

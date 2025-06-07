@@ -27,7 +27,7 @@ class AvailableConditionsTest {
         with(composeTestRule) {
             //Given
             setContent {
-                AvailableConditions(conditions, mockk(relaxed = true))
+                AvailableConditions(conditions, mockk())
             }
 
             //Then
@@ -37,7 +37,7 @@ class AvailableConditionsTest {
 
     @Test
     fun `should call the handler when an available condition is clicked by index`() {
-        val handler = mockk<AvailableConditionsHandler>(relaxed = true)
+        val handler = mockk<AvailableConditionsHandler>()
 
         with(composeTestRule) {
             //Given
@@ -55,7 +55,7 @@ class AvailableConditionsTest {
 
     @Test
     fun `should call the handler when an available condition is clicked by text`() {
-        val handler = mockk<AvailableConditionsHandler>(relaxed = true)
+        val handler = mockk<AvailableConditionsHandler>()
 
         with(composeTestRule) {
             //Given
@@ -73,7 +73,7 @@ class AvailableConditionsTest {
 }
 
 fun main() {
-    val handler = mockk<AvailableConditionsHandler>(relaxed = true)
+    val handler = mockk<AvailableConditionsHandler>()
     application {
         Window(
             onCloseRequest = ::exitApplication,

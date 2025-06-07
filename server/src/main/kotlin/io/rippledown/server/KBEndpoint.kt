@@ -8,6 +8,7 @@ import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.diff.Removal
@@ -152,6 +153,6 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
     fun updateCornerstone(request: UpdateCornerstoneRequest) = kb.updateCornerstone(request)
     fun selectCornerstone(index: Int) = kb.selectCornerstone(index)
     fun exemptCornerstone(index: Int) = kb.exemptCornerstone(index)
-    fun conditionForExpression(expression: String, attributeNames: List<String>) =
-        kb.conditionForExpression(expression, attributeNames)
+    fun conditionForExpression(expression: String): ConditionParsingResult =
+        kb.conditionForExpression(expression)
 }

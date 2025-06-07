@@ -23,6 +23,8 @@ import io.rippledown.constants.kb.KB_CONTROL_ID
 import io.rippledown.constants.main.*
 import io.rippledown.model.KBInfo
 import io.rippledown.sample.SampleKB
+import kotlinx.coroutines.withContext
+import org.jetbrains.skiko.MainUIDispatcher
 import java.io.File
 
 interface KBControlHandler {
@@ -46,9 +48,12 @@ fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
         remember { mutableStateListOf<KBInfo>() } // https://tigeroakes.com/posts/mutablestateof-list-vs-mutablestatelistof/
 
     LaunchedEffect(Unit) {
-        val kbsApartFromCurrent = handler.kbList().filter { it != kbInfo }.sorted()
-        availableKBs.clear()
-        availableKBs.addAll(kbsApartFromCurrent)
+        withContext(MainUIDispatcher) {
+
+            val kbsApartFromCurrent = handler.kbList().filter { it != kbInfo }.sorted()
+            availableKBs.clear()
+            availableKBs.addAll(kbsApartFromCurrent)
+        }
     }
 
     if (createKbDialogShowing) {

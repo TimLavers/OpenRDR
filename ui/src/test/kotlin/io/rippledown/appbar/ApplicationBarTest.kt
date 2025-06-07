@@ -28,7 +28,7 @@ class ApplicationBarTest {
 
     @Before
     fun setUp() {
-        handler = mockk<AppBarHandler>(relaxed = true)
+        handler = mockk<AppBarHandler>()
         every { handler.kbList } returns { emptyList() }
     }
 
@@ -107,7 +107,7 @@ class ApplicationBarTest {
 
 fun main() {
     val bondiInfo = KBInfo("Bondi")
-    val handler = mockk<AppBarHandler>(relaxed = true)
+    val handler = mockk<AppBarHandler>()
     every { handler.kbList } returns { emptyList() }
 
     application {

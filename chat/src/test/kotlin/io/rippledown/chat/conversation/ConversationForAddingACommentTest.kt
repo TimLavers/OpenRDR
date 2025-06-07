@@ -62,79 +62,43 @@ class ConversationForAddingACommentTest {
         }
 
     @Test
-    fun `when the user confirms that a comment should be added, the model should ask what the comment should be`() =
+    fun `when the comment to be added and the condition is confirmed, the model should output a json object representing the rule action`() =
         runTest {
             // Given
-            val case = caseWithNoComments()
-            val initialResponse = conversation.startConversation(case)
-            initialResponse shouldContainAll listOf(
-                WOULD_YOU_LIKE,
-                ADD_A_COMMENT,
-                DEBUG_ACTION,
-                NO_COMMENTS
-            )
-
-            // When
-            val response = conversation.response("yes")
-
-            // Then
-            response shouldContain WHAT_COMMENT
-        }
-
-    @Test
-    fun `when the user specifies the comment to be added, the model should ask for confirmation`() = runTest {
-        // Given
-        val case = caseWithNoComments()
-        val response0 = conversation.startConversation(case)
-        response0 shouldContainAll listOf(
-            WOULD_YOU_LIKE,
-            ADD_A_COMMENT,
-            DEBUG_ACTION,
-            NO_COMMENTS
-        )
-        val response1 = conversation.response("yes")
-        response1 shouldContain WHAT_COMMENT
-
-        // When
-        val bondiComment = "Go to Bondi."
-        val response2 = conversation.response("Add the comment '$bondiComment'")
-
-        // Then
-        response2 shouldContainAll listOf(
-            PLEASE_CONFIRM,
-            bondiComment
-        )
-    }
-
-    @Test
-    fun `when the comment to be added is confirmed, the model output a json object representing the rule action`() =
-        runTest {
-            // Given
-            val case = caseWithNoComments()
-            val response0 = conversation.startConversation(case)
-            response0 shouldContainAll listOf(
-                WOULD_YOU_LIKE,
-                ADD_A_COMMENT,
-                DEBUG_ACTION,
-                NO_COMMENTS
-            )
-            val response1 = conversation.response("yes")
-            response1 shouldContain WHAT_COMMENT
-
             val bondiComment = "Go to Bondi."
-            val response2 = conversation.response("Add the comment '$bondiComment'")
-            response2 shouldContainAll listOf(
+            val condition = "The sun is hot."
+            val case = caseWithNoComments()
+
+            //Ask if the user wants to add a comment
+            val bot0 = conversation.startConversation(case)
+            bot0 shouldContainAll listOf(
+                WOULD_YOU_LIKE,
+                ADD_A_COMMENT,
+                DEBUG_ACTION,
+                NO_COMMENTS
+            )
+            val bot1 = conversation.response("yes")
+
+            //Confirm that the user wants to add the bondi comment
+            bot1 shouldContain WHAT_COMMENT
+            val bot2 = conversation.response("Add the comment '$bondiComment'")
+            bot2 shouldContainAll listOf(
                 PLEASE_CONFIRM,
                 bondiComment
             )
+            val bot3 = conversation.response("yes")
+
             // When
-            val response3 = conversation.response("yes")
+            // Ask if the user wants to add a condition
+            bot3 shouldContain ANY_CONDITIONS
+            val bot4 = conversation.response("Add the condition '$condition'")
 
             // Then
-            response3 shouldContainIgnoringMultipleWhitespace """
+            bot4 shouldContainIgnoringMultipleWhitespace """
                 {
                     "action": "$ADD_ACTION",
-                    "new_comment": "$bondiComment"
+                    "new_comment": "$bondiComment",
+                    "conditions": [ "$condition" ]
                 }
             """.trimIndent()
         }

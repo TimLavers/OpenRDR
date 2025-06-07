@@ -1,6 +1,5 @@
 package io.rippledown.model
 
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -20,7 +19,7 @@ internal class ValueTest {
     fun real() {
         val value = Value("2.718")
         assertEquals(value.text, "2.718")
-        assertEquals(value.real!!, 2.718F)
+        assertEquals(value.real!!, 2.718)
     }
 
     @Test

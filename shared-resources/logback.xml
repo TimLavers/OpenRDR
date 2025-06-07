@@ -1,5 +1,8 @@
 <configuration debug="false">
-    <conversionRule conversionWord="sc" converterClass="io.rippledown.log.SimpleClassNameConverter"/>
+    <!-- Suppress Logback internal logging -->
+    <logger name="ch.qos.logback" level="ERROR"/>
+
+    <conversionRule conversionWord="sc" class="io.rippledown.log.SimpleClassNameConverter"/>
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} %-5level %sc - %msg%n</pattern>

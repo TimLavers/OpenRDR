@@ -40,12 +40,18 @@ class KB(persistentKB: PersistentKB) {
     private var conditionParser: ConditionParser
 
     val ruleService = object : RuleService {
-        override suspend fun buildRuleToAddComment(case: RDRCase, comment: String) {
+        override suspend fun buildRuleToAddComment(case: RDRCase, comment: String, conditions: List<Condition>) {
             val conclusion = conclusionManager.getOrCreate(comment)
             val action = ChangeTreeToAddConclusion(conclusion)
             startRuleSession(case, action)
+            conditions.forEach { addConditionToCurrentRuleSession(it) }
             commitCurrentRuleSession()
         }
+
+        override suspend fun conditionForExpression(
+            case: RDRCase,
+            expression: String
+        ) = conditionForExpression(expression, case)
     }
 
     //a var so it can be mocked in tests
@@ -53,10 +59,12 @@ class KB(persistentKB: PersistentKB) {
 
     init {
         conditionParser = object : ConditionParser {
-            override fun parse(expression: String, attributeNames: List<String>, attributeFor: AttributeFor) =
-                ConditionTip(attributeNames, attributeFor).conditionFor(expression)
+            override fun parse(expression: String, attributeFor: AttributeFor) =
+                ConditionTip(attributeNames(), attributeFor).conditionFor(expression)
         }
     }
+
+    fun attributeNames() = attributeManager.all().map { it.name }
 
     fun description() = metaInfo.getDescription()
 
@@ -276,9 +284,23 @@ class KB(persistentKB: PersistentKB) {
         chatManager = manager
     }
 
-    fun conditionForExpression(expression: String, attributeNames: List<String>): ConditionParsingResult {
+    fun conditionForExpression(expression: String, case: RDRCase): ConditionParsingResult {
         val attributeFor: AttributeFor = { attributeManager.getOrCreate(it) }
-        val condition = conditionParser.parse(expression, attributeNames, attributeFor)
+        val condition = conditionParser.parse(expression, attributeFor)
+
+        //Only return the condition if non-null and holds for the case
+        return if (condition == null) {
+            ConditionParsingResult(errorMessage = DOES_NOT_CORRESPOND_TO_A_CONDITION)
+        } else if (!condition.holds(case)) {
+            ConditionParsingResult(errorMessage = CONDITION_IS_NOT_TRUE)
+        } else {
+            //if this a new condition, the following will store it with its user expression, else the existing condition will be returned
+            ConditionParsingResult(conditionManager.getOrCreate(condition))
+        }
+    }
+    fun conditionForExpression(expression: String): ConditionParsingResult {
+        val attributeFor: AttributeFor = { attributeManager.getOrCreate(it) }
+        val condition = conditionParser.parse(expression, attributeFor)
 
         //Only return the condition if non-null and holds for the session case
         return if (condition == null) {
@@ -299,6 +321,6 @@ class KB(persistentKB: PersistentKB) {
 }
 
 interface ConditionParser {
-    fun parse(expression: String, attributeNames: List<String>, attributeFor: (String) -> Attribute): Condition? = null
+    fun parse(expression: String, attributeFor: (String) -> Attribute): Condition? = null
 }
 

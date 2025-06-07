@@ -15,18 +15,18 @@ sealed class Trend: SeriesPredicate {
         return true
     }
 
-    abstract fun onTrend(current: Float, previous: Float): Boolean
+    abstract fun onTrend(current: Double, previous: Double): Boolean
 
 }
 @Serializable
 data object Increasing: Trend() {
-    override fun onTrend(current: Float, previous: Float) = current > previous
+    override fun onTrend(current: Double, previous: Double) = current > previous
 
     override fun description(attributeName: String) = "$attributeName increasing"
 }
 @Serializable
 data object Decreasing: Trend() {
-    override fun onTrend(current: Float, previous: Float) = current < previous
+    override fun onTrend(current: Double, previous: Double) = current < previous
 
     override fun description(attributeName: String) = "$attributeName decreasing"
 }

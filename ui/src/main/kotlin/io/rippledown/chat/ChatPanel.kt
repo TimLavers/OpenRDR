@@ -63,8 +63,11 @@ const val BOT = "BOT_"
 const val CHAT_SEND = "CHAT_SEND"
 const val CHAT_TEXT_FIELD = "CHAT_TEXT_FIELD"
 
+const val NUMBER_OF_CHAT_MESSAGES_ = "NumberOfChatMessages_"
+
 @Composable
 fun ChatPanel(
+    id: Long = -1,
     sendIsEnabled: Boolean = true,
     messages: List<ChatMessage> = emptyList(),
     onMessageSent: OnMessageSent = {},
@@ -74,14 +77,15 @@ fun ChatPanel(
     val listState = rememberLazyListState()
     val textAreaFocusRequester = remember { FocusRequester() }
 
+    // Request focus when the id of the case changes
+    LaunchedEffect(id) {
+        textAreaFocusRequester.requestFocus()
+    }
+
     LaunchedEffect(messages) {
         if (messages.isNotEmpty()) {
             listState.scrollToItem(messages.size - 1)
         }
-    }
-
-    LaunchedEffect(Unit) {
-        textAreaFocusRequester.requestFocus()
     }
 
     Column(
@@ -89,6 +93,7 @@ fun ChatPanel(
             .padding(start = 0.dp, top = 8.dp, end = 8.dp, bottom = 8.dp)
             .widthIn(min = 300.dp)
             .background(Color(0xFFF5F5F5))
+            .semantics { contentDescription = "$NUMBER_OF_CHAT_MESSAGES_${messages.size}" }
     ) {
         // Chat messages area
         LazyColumn(
@@ -126,11 +131,7 @@ fun ChatPanel(
                     .semantics { contentDescription = CHAT_TEXT_FIELD }
                     .onPreviewKeyEvent { event ->
                         if (event.key == Key.Enter && event.type == KeyEventType.KeyDown) {
-                            if (inputText.text.isNotBlank()) {
-                                val messageText = inputText.text.trim()
-                                onMessageSent(UserMessage(messageText))
-                                inputText = TextFieldValue("")
-                            }
+                            inputText = sendUserMessage(inputText, onMessageSent, textAreaFocusRequester)
                             true // Consume the event to avoid newline insertion
                         } else {
                             false // Allow other events to be handled
@@ -155,11 +156,7 @@ fun ChatPanel(
                     ) {
                         FilledIconButton(
                             onClick = {
-                                if (inputText.text.isNotBlank()) {
-                                    val messageText = inputText.text.trim()
-                                    onMessageSent(UserMessage(messageText))
-                                    inputText = TextFieldValue("")
-                                }
+                                inputText = sendUserMessage(inputText, onMessageSent, textAreaFocusRequester)
                             },
                             enabled = inputText.text.isNotBlank(),
                             modifier = Modifier
@@ -184,6 +181,19 @@ fun ChatPanel(
             )
         }
     }
+}
+
+private fun sendUserMessage(
+    inputText: TextFieldValue,
+    onMessageSent: OnMessageSent,
+    textAreaFocusRequester: FocusRequester
+): TextFieldValue {
+    if (inputText.text.isNotBlank()) {
+        textAreaFocusRequester.requestFocus() // Retain focus after button click
+        val messageText = inputText.text.trim()
+        onMessageSent(UserMessage(messageText))
+    }
+    return TextFieldValue("")
 }
 
 @Composable
@@ -257,7 +267,7 @@ fun main() = application {
             BotMessage("Sure! What do you need help with?")
         )
         MaterialTheme {
-            ChatPanel(sendIsEnabled = true, messages)
+            ChatPanel(0, sendIsEnabled = true, messages)
         }
     }
 }
