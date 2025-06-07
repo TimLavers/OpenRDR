@@ -39,7 +39,6 @@ Feature: The user can use the chat to make changes the interpretive report
     Then the report should be "Go to Bondi. Let's surf"
     And stop the client application
 
-  @ignore
   Scenario: The user should be able to use the chat to add two comments with no conditions
     Given case Bondi is provided having data:
       | Wave | excellent |
