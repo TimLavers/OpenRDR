@@ -43,8 +43,8 @@ class OpenRDRUITest {
 
     @Before
     fun setUp() {
-        api = mockk<Api>(relaxed = true)
-        handler = mockk<Handler>(relaxed = true)
+        api = mockk<Api>()
+        handler = mockk<Handler>()
         coEvery { handler.api } returns api
         coEvery { handler.isClosing } returns { true }
     }
