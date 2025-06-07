@@ -29,7 +29,7 @@ class ChatPanelTest {
 
     @Before
     fun setUp() {
-        onMessageSent = mockk(relaxed = true)
+        onMessageSent = mockk()
     }
 
     @Test
@@ -241,7 +241,7 @@ fun main() {
                     BotMessage("Hi there"),
                     UserMessage("Meaning of life?"),
                     BotMessage("42")
-                ), mockk(relaxed = true)
+                ), mockk()
             )
         }
     }

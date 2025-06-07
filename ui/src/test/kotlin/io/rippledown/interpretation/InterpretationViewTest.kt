@@ -206,6 +206,6 @@ fun main() {
         conclusionTexts = listOf("Surf's up!", "Go to Bondi now!", "Bring your flippers.")
     ).viewableInterpretation
     applicationFor {
-        InterpretationView(interpretation, true, mockk(relaxed = true))
+        InterpretationView(interpretation, true, mockk())
     }
 }

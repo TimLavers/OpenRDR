@@ -28,7 +28,7 @@ class CornerstonePagerUpdateTest {
 
     @Before
     fun setUp() {
-        handler = mockk(relaxed = true)
+        handler = mockk()
     }
 
     @Test
@@ -75,7 +75,7 @@ fun main() {
         Window(
             onCloseRequest = ::exitApplication,
         ) {
-            val handler = mockk<CornerstonePagerHandler>(relaxed = true)
+            val handler = mockk<CornerstonePagerHandler>()
             CornerstonePagerWithButton(handler)
         }
     }

@@ -24,7 +24,7 @@ class CasePollerTest {
 
     @Before
     fun setUp() {
-        handler = mockk<CasePollerHandler>(relaxed = true)
+        handler = mockk<CasePollerHandler>()
     }
 
     @Test

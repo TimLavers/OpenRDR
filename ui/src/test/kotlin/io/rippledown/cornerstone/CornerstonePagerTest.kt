@@ -31,7 +31,7 @@ class CornerstonePagerTest {
 
     @Before
     fun setUp() {
-        handler = mockk(relaxed = true)
+        handler = mockk()
         coEvery { handler.selectCornerstone(any()) } answers {
             val caseId = firstArg<Int>()
             createCase("$caseNamePrefix$caseId")

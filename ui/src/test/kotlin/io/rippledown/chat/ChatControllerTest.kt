@@ -20,7 +20,7 @@ class ChatControllerTest {
 
     @Before
     fun setUp() {
-        handler = mockk(relaxed = true)
+        handler = mockk()
     }
 
     @Test

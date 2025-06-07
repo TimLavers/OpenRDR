@@ -15,7 +15,7 @@ internal class KBEndpointDelegationTest {
 
     @BeforeTest
     fun setup() {
-        kb = mockk<KB>(relaxed = true)
+        kb = mockk<KB>()
         endpoint = KBEndpoint(kb, File(""))
     }
 

@@ -25,7 +25,7 @@ class KBControlTest {
 
     @Before
     fun setup() {
-        handler = mockk<KBControlHandler>(relaxed = true)
+        handler = mockk<KBControlHandler>()
         every { handler.kbList } returns { emptyList() }
     }
 
@@ -154,7 +154,7 @@ class KBControlTest {
 fun main() {
     val lipidInfo = KBInfo("Lipids")
     val glucoseInfo = KBInfo("Glucose")
-    val handler = mockk<KBControlHandler>(relaxed = true)
+    val handler = mockk<KBControlHandler>()
     every { handler.kbList } returns { listOf(lipidInfo, glucoseInfo) }
 
     application {

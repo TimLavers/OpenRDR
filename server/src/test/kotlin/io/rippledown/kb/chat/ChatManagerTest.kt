@@ -31,15 +31,15 @@ class ChatManagerTest {
 
     @BeforeTest
     fun setUp() {
-        conversationService = mockk(relaxed = true)
-        ruleService = mockk(relaxed = true)
-        case = mockk(relaxed = true)
+        conversationService = mockk()
+        ruleService = mockk()
+        case = mockk()
         chatManager = ChatManager(conversationService, ruleService)
         setupLogger()
     }
 
     private fun setupLogger() {
-        logger = mockk(relaxed = true)
+        logger = mockk()
         val loggerField = ChatManager::class.java.getDeclaredField("logger")
         loggerField.isAccessible = true
         loggerField.set(chatManager, logger)

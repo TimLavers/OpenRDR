@@ -66,8 +66,8 @@ internal class KBEndpointTest {
     @Test
     fun `should delegate parsing a condition to the KB`() {
         // Given
-        val kb = mockk<KB>(relaxed = true)
-        val condition = mockk<Condition>(relaxed = true)
+        val kb = mockk<KB>()
+        val condition = mockk<Condition>()
         every { kb.conditionForExpression(any()) } returns ConditionParsingResult(condition)
         val endpoint = KBEndpoint(kb, File("kbe"))
         val userExpression = "TSH is depressed"

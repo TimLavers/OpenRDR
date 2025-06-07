@@ -11,13 +11,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
-import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.constants.main.EDIT_CONDITION_FIELD_DESCRIPTION
 import io.rippledown.model.Attribute
-import io.rippledown.model.condition.edit.*
+import io.rippledown.model.condition.edit.EditableCondition
+import io.rippledown.model.condition.edit.EditableContainsCondition
+import io.rippledown.model.condition.edit.EditableExtendedLowNormalRangeCondition
 import io.rippledown.model.condition.episodic.signature.All
 import org.junit.Before
 import org.junit.Rule
@@ -34,7 +35,7 @@ class ConditionEditorTest {
     @Before
     fun setUp() {
         conditionBeingEdited = EditableExtendedLowNormalRangeCondition(glucose, All)
-        handler = mockk(relaxed = true)
+        handler = mockk()
         every {
             handler.editableCondition()
         }.returns(conditionBeingEdited)
@@ -119,7 +120,7 @@ fun main() {
             val conditionBeingEdited = EditableContainsCondition(notes, "whatever")
 //            val conditionBeingEdited = EditableGreaterThanEqualsCondition(tsh, EditableValue("2.50", Type.Real), AtLeast(3))
 //            val conditionBeingEdited = EditableExtendedLowNormalRangeCondition(tsh, AtLeast(3))
-            val handler = mockk<ConditionEditHandler>(relaxed = true)
+            val handler = mockk<ConditionEditHandler>()
             every {
                 handler.editableCondition()
             }.returns(conditionBeingEdited)

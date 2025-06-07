@@ -38,7 +38,7 @@ class MainApplicationTest {
 
     @Before
     fun setUp() {
-        handler = mockk<Handler>(relaxed = true)
+        handler = mockk<Handler>()
         every { handler.isClosing } returns { true }
     }
 

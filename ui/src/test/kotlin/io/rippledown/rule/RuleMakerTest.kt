@@ -36,7 +36,7 @@ class RuleMakerTest {
         }
         conditionsShown = allSuggestions.map { it.asText() }
         suggestionConditions = allSuggestions.map { it.initialSuggestion() }
-        handler = mockk<RuleMakerHandler>(relaxed = true)
+        handler = mockk<RuleMakerHandler>()
         every { handler.conditionForExpression(any()) } returns ConditionParsingResult()
     }
 
@@ -313,7 +313,7 @@ class RuleMakerWithReusableEditableSuggestionsTest {
         }
         conditionsShown = allSuggestions.map { it.asText() }
         suggestionConditions = allSuggestions.map { it.initialSuggestion() }
-        handler = mockk<RuleMakerHandler>(relaxed = true)
+        handler = mockk<RuleMakerHandler>()
     }
 
     @Test
@@ -510,7 +510,7 @@ fun nonEditableSuggestion(id: Int? = null, attribute: Attribute, text: String): 
 fun main() {
     val notes = Attribute(0, "Notes")
     val waves = Attribute(1, "Waves")
-    val handler = mockk<RuleMakerHandler>(relaxed = true)
+    val handler = mockk<RuleMakerHandler>()
     every { handler.conditionForExpression(any()) } answers {
         Thread.sleep(1000)
         ConditionParsingResult()
