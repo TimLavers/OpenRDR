@@ -33,13 +33,6 @@ class KB(persistentKB: PersistentKB) {
     internal val caseViewManager = CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
     val interpretationViewManager = InterpretationViewManager(persistentKB.conclusionOrderStore(), conclusionManager)
 
-    internal val caseViewManager: CaseViewManager =
-        CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
-    val interpretationViewManager: InterpretationViewManager =
-        InterpretationViewManager(
-            persistentKB.conclusionOrderStore(),
-            conclusionManager
-        )
     //a var so it can be mocked in tests
     private var conditionParser: ConditionParser
 

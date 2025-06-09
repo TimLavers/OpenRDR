@@ -56,7 +56,7 @@ class MainApplicationTest {
                 application {
                     Window(
                         onCloseRequest = ::exitApplication,
-                        icon = painterResource("water-wave-icon.png"),
+//                        icon = painterResource("water-wave-icon.png"),
                         title = TITLE
                     ) {
                         windowHolder = this.window

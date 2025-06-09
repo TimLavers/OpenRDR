@@ -62,7 +62,7 @@ internal class AttributeTest {
     }
 
     private fun serializeDeserialize(attribute: Attribute): Attribute {
-        val serialized = Json.encodeToString(attribute)
+        val serialized = Json.encodeToString(Attribute.serializer(), attribute)
         return Json.decodeFromString(serialized)
     }
 }

@@ -1,5 +1,5 @@
 Feature: The TSH KB can be built with the user interface.
-
+@single
  Scenario: Build the TSH KB from cases
     Given I start the client application
     And I create a Knowledge Base with the name TSH based on the "Thyroid Stimulating Hormone - cases only" sample
