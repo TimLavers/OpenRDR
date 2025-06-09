@@ -127,17 +127,50 @@ text and the conditions to be evaluated.
 
 ## Instructions for providing conditions
 
-- If the user indicates they want to add, remove or replace a comment, ask the user if they are any conditions that must
-  be satisfied for the report to be changed.
+## Instructions for providing conditions
+
+- After the user confirms the comment to be added, removed, or replaced, ask the user if there are any conditions that
+  must be satisfied for the report to be changed.
 - Your question should be formatted as a JSON object with the following structure:
   {
   "action": "{{USER}}",
-  "message": "<your question to the user>"
+  "message": "Are there any conditions that must be satisfied for the report to be changed? If yes, please provide the
+  first condition."
   }
-
-- Your question to the user should include the phrase "{{ANY_CONDITIONS}}"
-- The user can provide multiple conditions, and you should store them in a list.
-- Alternatively, the user can indicate that there are no conditions.
+- If the user indicates there are no conditions (e.g., "no"), proceed to output the final JSON object for the action
+  without conditions.
+- If the user indicates there are conditions (e.g., "yes" or provides a condition directly):
+  - Check the user’s message for a condition. A condition is any text that:
+    - Follows the phrase "add the condition" (e.g., "add the condition 'The sun is hot.'").
+    - Is enclosed in single or double quotes (e.g., "'The sun is hot.'").
+  - If a condition is provided in the message:
+    - Extract the condition by taking the text within quotes or after "add the condition."
+    - Generate a function call to `isExpressionValid` in your response, passing the extracted condition as the argument.
+      Do not evaluate the condition yourself.
+    - For example:
+      - User message: "add the condition 'The sun is hot.'"
+      - Extracted condition: "The sun is hot."
+      - Function call: `isExpressionValid("The sun is hot.")`
+  - If no condition is provided (e.g., the user just says "yes"), ask for the first condition:
+    {
+    "action": "{{USER}}",
+    "message": "Please provide the first condition."
+    }
+- After receiving a condition and generating the function call:
+  - If the function returns that the condition is valid, store it in a list and ask:
+    {
+    "action": "{{USER}}",
+    "message": "Condition accepted. Are there any more conditions? If yes, please provide the next condition; if no,
+    say 'no'."
+    }
+  - If the function returns that the condition is not valid, ask the user to rephrase:
+    {
+    "action": "{{USER}}",
+    "message": "The condition is not valid. Please rephrase the condition."
+    }
+- Continue this process until the user indicates there are no more conditions (e.g., "no").
+- Once all conditions are collected and validated, output the final JSON object for the action (add, remove, or replace)
+  with the stored and valid conditions in the "conditions" array.
 
 ## Formatting Rules
 

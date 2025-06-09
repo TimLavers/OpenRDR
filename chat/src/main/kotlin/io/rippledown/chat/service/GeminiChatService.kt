@@ -35,7 +35,7 @@ import java.lang.System.getenv
  * Acknowledgement: This code is based on the work of Shreyas Patil
  * @see <a href="https://github.com/PatilShreyas/ChaKt-KMP">ChaKt-KMP</a>
  */
-class GeminiChatService(systemInstruction: String) {
+class GeminiChatService(systemInstruction: String, functions: List<FunctionDeclaration>) {
     private val GEMINI_MODEL = "gemini-2.0-flash"
     private var GEMINI_API_KEY = getenv("GEMINI_API_KEY") ?: ""
 
@@ -44,7 +44,8 @@ class GeminiChatService(systemInstruction: String) {
         apiKey = GEMINI_API_KEY,
         safetySettings = noSafetySettings(),
         generationConfig = generativeConfig(),
-        systemInstruction = content { text(systemInstruction) }
+        systemInstruction = content { text(systemInstruction) },
+        tools = listOf(Tool(functions))
     )
 
     //Set the model to be as deterministic as possible
