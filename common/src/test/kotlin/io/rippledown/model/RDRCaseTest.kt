@@ -2,6 +2,7 @@ package io.rippledown.model
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
+import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.rippledown.model.condition.containsText
 import io.rippledown.model.rule.Rule
 import io.rippledown.utils.*
@@ -418,6 +419,20 @@ class RDRCaseTest {
                 units shouldBe null
             }
         }
+    }
+
+    @Test
+    fun copyWithNewInterpretation() {
+        val case = basicCase()
+        val originalInterpretation = case.interpretation
+
+        val copied = case.copyWithNewInterpretation()
+        copied.interpretation.caseId.name shouldBe case.name
+        copied.interpretation.caseId.id shouldBe null
+        copied.interpretation.conclusions().size shouldBe 0
+        copied.interpretation shouldNotBeSameInstanceAs  originalInterpretation
+        copied.caseId shouldBeSameInstanceAs case.caseId
+        copied.data shouldBeSameInstanceAs case.data
     }
 
     private fun basicCase(): RDRCase {

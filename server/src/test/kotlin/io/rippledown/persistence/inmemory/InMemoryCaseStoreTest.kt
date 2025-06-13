@@ -1,4 +1,4 @@
-package io.rippledown.persistence.postgres
+package io.rippledown.persistence.inmemory
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -11,33 +11,28 @@ import io.rippledown.utils.today
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-class PostgresCaseStoreTest : PostgresStoreTest() {
+class InMemoryCaseStoreTest {
+    private lateinit var store: InMemoryCaseStore
     private val a = Attribute(1000, "A")
     private val b = Attribute(1001, "B")
     private val c = Attribute(1002, "C")
-    private val idToAttribute = mapOf(a.id to a, b.id to b, c.id to c)
     private val attributeProvider = object : AttributeProvider {
-        override fun getById(id: Int) = idToAttribute[id]!!
+        override fun getById(id: Int) = TODO()
 
-        override fun getOrCreate(text: String): Attribute {
-            TODO("Not yet implemented")
-        }
+        override fun getOrCreate(text: String) = TODO()
     }
     private val case0 = createCase("Tea Case", mapOf(a to "1", b to "1"))
     private val case1 = createCase("Coffee Case", mapOf(a to "2", b to "3"))
     private val case2 = createCase("Beer Case", mapOf(a to "5", b to "8", c to "88"))
-    private lateinit var store: PostgresCaseStore
-    override fun tablesInDropOrder() = listOf("cases_processed")
 
     @BeforeTest
     fun setup() {
-        dropTable()
-        store = postgresKB.caseStore() as PostgresCaseStore
+        store = InMemoryCaseStore()
     }
 
-    override fun reload() {
-        super.reload()
-        store = postgresKB.caseStore() as PostgresCaseStore
+    @Test
+    fun `initially empty`() {
+        store.allCaseIds() shouldBe emptyList()
     }
 
     @Test
@@ -48,9 +43,6 @@ class PostgresCaseStoreTest : PostgresStoreTest() {
         val caseId1 = store.put(case1).caseId
         val caseId2 = store.put(case2).caseId
 
-        store.allCaseIds() shouldBe listOf(caseId0, caseId1, caseId2)
-
-        reload()
         store.allCaseIds() shouldBe listOf(caseId0, caseId1, caseId2)
     }
 
@@ -64,18 +56,6 @@ class PostgresCaseStoreTest : PostgresStoreTest() {
         caseId0.type shouldBe CaseType.Cornerstone
         caseId1.type shouldBe CaseType.Processed
         caseId2.type shouldBe CaseType.Cornerstone
-
-        reload()
-        store.allCaseIds() shouldBe listOf(caseId0, caseId1, caseId2)
-    }
-
-    @Test
-    fun dataPointsCount() {
-        store.dataPointsCount() shouldBe 0
-        store.put(case0)
-        store.dataPointsCount() shouldBe 2
-        store.put(case2)
-        store.dataPointsCount() shouldBe 5
     }
 
     @Test
@@ -109,10 +89,6 @@ class PostgresCaseStoreTest : PostgresStoreTest() {
 
         store.allCaseIds().shouldBe(listOf(retrieved0.caseId, retrieved1.caseId, retrieved2.caseId))
         store.all(attributeProvider).shouldBe(listOf(retrieved0, retrieved1, retrieved2))
-
-        reload()
-        store.allCaseIds().shouldBe(listOf(retrieved0.caseId, retrieved1.caseId, retrieved2.caseId))
-        store.all(attributeProvider).shouldBe(listOf(retrieved0, retrieved1, retrieved2))
     }
 
     @Test
@@ -122,12 +98,6 @@ class PostgresCaseStoreTest : PostgresStoreTest() {
         builder.addResult(a, today, testResult)
         val unitsCase = builder.build("Units Case")
         val stored = store.put(unitsCase)
-        with(store.get(stored.id!!, attributeProvider)!!) {
-            values(a)!![0] shouldBe testResult
-            data shouldBe stored.data
-        }
-
-        reload()
         with(store.get(stored.id!!, attributeProvider)!!) {
             values(a)!![0] shouldBe testResult
             data shouldBe stored.data
@@ -152,22 +122,12 @@ class PostgresCaseStoreTest : PostgresStoreTest() {
             values(c)!![0] shouldBe rangeResult
             data shouldBe stored.data
         }
-
-        reload()
-        with(store.get(stored.id!!, attributeProvider)!!) {
-            values(a)!![0] shouldBe lowRangeResult
-            values(b)!![0] shouldBe highRangeResult
-            values(c)!![0] shouldBe rangeResult
-            data shouldBe stored.data
-        }
     }
 
     @Test
-    fun get() {
-        // Largely tested elsewhere.
+    fun getUnknownCase() {
         store.get(9, attributeProvider) shouldBe null
     }
-
 
     @Test
     fun getReturnsCaseCopy() {
@@ -193,7 +153,6 @@ class PostgresCaseStoreTest : PostgresStoreTest() {
         val stored0 = store.put(case0)
         store.delete(stored0.id!!)
         store.get(stored0.id!!, attributeProvider) shouldBe null
-        store.dataPointsCount() shouldBe 0
     }
 
     @Test
@@ -216,13 +175,9 @@ class PostgresCaseStoreTest : PostgresStoreTest() {
         val caseX = createCase("X", mapOf(a to "1", b to "1"), 10)
         val caseY = createCase("Y", mapOf(a to "2", b to "3"), 100)
         val caseZ = createCase("Z", mapOf(a to "5", b to "8", c to "88"), 1000)
-        val caseList = listOf(caseX, caseZ, caseY) // Not the expected return order.
+        val caseList = listOf(caseX, caseY, caseZ)
         store.load(caseList)
 
-        store.allCaseIds() shouldBe listOf(caseX.caseId, caseY.caseId, caseZ.caseId)
-        store.all(attributeProvider) shouldBe listOf(caseX, caseY, caseZ)
-
-        reload()
         store.allCaseIds() shouldBe listOf(caseX.caseId, caseY.caseId, caseZ.caseId)
         store.all(attributeProvider) shouldBe listOf(caseX, caseY, caseZ)
     }
@@ -233,7 +188,7 @@ class PostgresCaseStoreTest : PostgresStoreTest() {
         val caseX = createCase("X", mapOf(a to "1", b to "1"), 10)
         shouldThrow<IllegalArgumentException> {
             store.load(listOf(caseX))
-        }.message shouldBe "Cannot load cases if there are already some present."
+        }.message shouldBe "Cannot load if there are already cases."
         store.all(attributeProvider) shouldBe listOf(stored0)
     }
 
@@ -241,7 +196,7 @@ class PostgresCaseStoreTest : PostgresStoreTest() {
     fun `cannot load cases with non-null ids`() {
         shouldThrow<IllegalArgumentException> {
             store.load(listOf(case0))
-        }.message shouldBe "Cannot load cases unless they already have their ids set."
+        }.message shouldBe "Cannot load a case with a null id."
         store.all(attributeProvider) shouldBe emptyList()
     }
 }
