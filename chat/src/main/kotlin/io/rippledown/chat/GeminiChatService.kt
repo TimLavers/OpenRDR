@@ -21,21 +21,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package io.rippledown.chat.service
+package io.rippledown.chat
 
+import dev.shreyaspatil.ai.client.generativeai.Chat
 import dev.shreyaspatil.ai.client.generativeai.GenerativeModel
 import dev.shreyaspatil.ai.client.generativeai.type.*
 import dev.shreyaspatil.ai.client.generativeai.type.BlockThreshold.NONE
 import dev.shreyaspatil.ai.client.generativeai.type.HarmCategory.UNKNOWN
 import java.lang.System.getenv
 
+interface ChatService {
+    /**
+     * Starts a new chat session with the model, allowing for an ongoing conversation.
+     *
+     * @param history Optional initial conversation history to start the chat with.
+     * @return A chat instance that can be used to send messages and receive responses.
+     */
+    fun startChat(history: List<Content> = emptyList()): Chat
+}
+
 /**
- * Service for Generative AI operations that can interact with text.
+ * Service for Gemini Generative AI operations that can interact with text.
  *
  * Acknowledgement: This code is based on the work of Shreyas Patil
  * @see <a href="https://github.com/PatilShreyas/ChaKt-KMP">ChaKt-KMP</a>
  */
-class GeminiChatService(systemInstruction: String, functions: List<FunctionDeclaration>) {
+class GeminiChatService(systemInstruction: String, functionDeclarations: List<FunctionDeclaration> = emptyList()) :
+    ChatService {
     private val GEMINI_MODEL = "gemini-2.0-flash"
     private var GEMINI_API_KEY = getenv("GEMINI_API_KEY") ?: ""
 
@@ -45,7 +57,7 @@ class GeminiChatService(systemInstruction: String, functions: List<FunctionDecla
         safetySettings = noSafetySettings(),
         generationConfig = generativeConfig(),
         systemInstruction = content { text(systemInstruction) },
-        tools = listOf(Tool(functions))
+        tools = if (functionDeclarations.isNotEmpty()) listOf(Tool(functionDeclarations)) else emptyList()
     )
 
     //Set the model to be as deterministic as possible
@@ -64,8 +76,5 @@ class GeminiChatService(systemInstruction: String, functions: List<FunctionDecla
                 )
             }
 
-    /**
-     * Creates a chat instance which internally tracks the ongoing conversation with the model
-     */
-    fun startChat(history: List<Content> = emptyList()) = model.startChat(history)
+    override fun startChat(history: List<Content>) = model.startChat(history)
 }

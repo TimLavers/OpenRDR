@@ -17,7 +17,7 @@ import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ElevatedSuggestionChip
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.SuggestionChipDefaults
+import androidx.compose.material3.SuggestionChipDefaults.elevatedSuggestionChipColors
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,7 +37,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.rippledown.constants.chat.CHAT_BOT_PLACEHOLDER
+import io.rippledown.decoration.DARK_GREY
 import io.rippledown.decoration.LIGHT_BLUE
+import io.rippledown.decoration.LIGHT_GREY
 
 interface ChatMessage {
     val text: String
@@ -210,13 +212,13 @@ fun UserRow(
             label = {
                 Text(
                     text = text,
-                    color = White,
+                    color = DARK_GREY,
                     style = TextStyle(fontSize = 14.sp)
                 )
             },
-            colors = SuggestionChipDefaults.elevatedSuggestionChipColors(
-                containerColor = LIGHT_BLUE,
-                labelColor = White
+            colors = elevatedSuggestionChipColors(
+                containerColor = LIGHT_GREY,
+                labelColor = DARK_GREY
             ),
             modifier = Modifier
                 .semantics {
