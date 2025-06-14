@@ -17,6 +17,7 @@ dependencies {
     implementation(libs.commonsIo)
     implementation(libs.bundles.exposed)
     implementation(libs.postgresql)
+    implementation(libs.generativeai)
 
     testImplementation(testFixtures(project(":common")))
     testImplementation(libs.kotlinxCoroutinesTest)

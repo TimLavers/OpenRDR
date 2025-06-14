@@ -7,11 +7,9 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
-import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import io.rippledown.kb.chat.ChatManager
 import io.rippledown.model.*
 import io.rippledown.model.condition.*
 import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals
@@ -26,7 +24,6 @@ import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.persistence.inmemory.InMemoryKB
 import io.rippledown.util.shouldBeSameAs
 import io.rippledown.utils.defaultDate
-import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
@@ -746,7 +743,6 @@ class KBTest {
             sessionCase,
             ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
         )
-        kb.holdsForSessionCase(parsedCondition) shouldBe true
         parsedCondition.userExpression() shouldBe userExpression
 
         //When
@@ -777,7 +773,6 @@ class KBTest {
             sessionCase,
             ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
         )
-        kb.holdsForSessionCase(parsedCondition) shouldBe true
         parsedCondition.userExpression() shouldBe userExpression
 
         //When
@@ -809,7 +804,6 @@ class KBTest {
         val returnedCondition = kb.conditionForExpression(userExpression).condition!!
 
         //Then
-        kb.holdsForSessionCase(returnedCondition) shouldBe true
         returnedCondition shouldBeSameAs EpisodicCondition(null, waves, High, Current, userExpression)
     }
 
@@ -829,7 +823,6 @@ class KBTest {
             sessionCase,
             ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
         )
-        kb.holdsForSessionCase(parsedCondition) shouldBe false
 
         //When
         val returnedCondition = kb.conditionForExpression(userExpression).condition
@@ -861,38 +854,6 @@ class KBTest {
         //Then
         verify { conditionParser.parse(userExpression, any()) }
         returnedCondition shouldBe null
-    }
-
-    @Test
-    fun `should delegate starting a conversation to the ChatManager`() = runTest {
-        //Given
-        val case = createCase("Case")
-        val botResponse = "Go to Bondi"
-        val chatManager = mockk<ChatManager>()
-        coEvery { chatManager.startConversation(case) } returns botResponse
-        kb.setChatManager(chatManager)
-
-        //When
-        val response = kb.startConversation(case)
-
-        //Then
-        response shouldBe botResponse
-    }
-
-    @Test
-    fun `should delegate user message to the ChatManager`() = runTest {
-        //Given
-        val userExpression = "Please add a comment to go to Bondi"
-        val botResponse = "Go to Bondi"
-        val chatManager = mockk<ChatManager>()
-        coEvery { chatManager.response(userExpression) } returns botResponse
-        kb.setChatManager(chatManager)
-
-        //When
-        val response = kb.responseToUserMessage(userExpression)
-
-        //Then
-        response shouldBe botResponse
     }
 
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")

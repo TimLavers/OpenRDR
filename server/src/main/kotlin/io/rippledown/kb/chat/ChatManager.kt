@@ -1,6 +1,6 @@
 package io.rippledown.kb.chat
 
-import io.rippledown.chat.conversation.ConversationService
+import io.rippledown.chat.ConversationService
 import io.rippledown.constants.chat.*
 import io.rippledown.fromJsonString
 import io.rippledown.log.lazyLogger
@@ -13,13 +13,16 @@ interface RuleService {
     suspend fun conditionForExpression(case: RDRCase, expression: String): ConditionParsingResult
 }
 
+/**
+ * Manages the chat conversation with the user, processing messages and actions based on the AI model's responses.
+ */
 class ChatManager(val conversationService: ConversationService, val ruleService: RuleService) {
     private val logger = lazyLogger
-    lateinit var currentCase: RDRCase
+    private lateinit var currentCase: RDRCase
 
     suspend fun startConversation(case: RDRCase): String {
         currentCase = case
-        val response = conversationService.startConversation(case)
+        val response = conversationService.startConversation()
         logger.info("$LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE '$response'")
         return processActionComment(response.fromJsonString<ActionComment>())
     }

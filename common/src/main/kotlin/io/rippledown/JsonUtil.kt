@@ -19,3 +19,8 @@ inline fun <reified T> String.fromJsonString(): T {
     }
     return json.decodeFromString<T>(this)
 }
+
+fun String.stripEnclosingJson() =
+    replace("```json\n", "")
+        .replace("\n```", "")
+        .trim()

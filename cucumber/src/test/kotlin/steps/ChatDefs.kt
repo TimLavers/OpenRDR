@@ -42,91 +42,59 @@ class ChatDefs {
 
     @Then("the chatbot has asked for confirmation")
     fun waitForBotRequestForConfirmation() {
-        await().atMost(ofSeconds(10)).until {
-            chatPO().mostRecentBotRowContainsTerms(listOf(PLEASE_CONFIRM))
-        }
+        waitForBotText(PLEASE_CONFIRM)
     }
 
     @Then("the chatbot has asked for confirmation of the comment:")
     fun waitForBotRequestForConfirmation(comment: String) {
-        await().atMost(ofSeconds(10)).until {
-            chatPO().mostRecentBotRowContainsTerms(listOf(PLEASE_CONFIRM, comment))
-        }
+        waitForBotText(PLEASE_CONFIRM, comment)
     }
 
     @Then("the chatbot has completed the action")
     fun waitForBotToSayDone() {
-        await().atMost(ofSeconds(10)).until {
-            chatPO().mostRecentBotRowContainsTerms(listOf(CHAT_BOT_DONE_MESSAGE))
-        }
-    }
-
-    @Then("the chatbot has asked for confirmation of the comment and condition")
-    fun waitForBotRequestForConfirmationOfCommentAndCondition() {
-        await().atMost(ofSeconds(10)).until {
-            chatPO().mostRecentBotRowContainsTerms(
-                listOf(
-                    PLEASE_CONFIRM,
-                    COMMENT,
-                    ANY_CONDITIONS
-                )
-            )
-        }
+        waitForBotText(CHAT_BOT_DONE_MESSAGE)
     }
 
     fun waitForBotInitialPrompt() {
-        await().atMost(ofSeconds(10)).until {
-            botInitialPrompt()
-        }
+        waitForBotText(WOULD_YOU_LIKE)
     }
 
     @Then("the chatbot has asked if I want to add a comment")
     fun requireBotQuestionToAddAComment() {
-        await().atMost(ofSeconds(10)).until {
-            botQuestionToAddAComment()
-        }
+        waitForBotText(WOULD_YOU_LIKE, ADD_A_COMMENT)
     }
 
-    @Then("the chatbot has asked if I want to provide a condition")
-    fun waitForBotQuestionToProvideACondition() {
-        await().atMost(ofSeconds(10)).until {
-            botQuestionToProvideACondition()
-        }
+    @And("the chatbot has asked if I want to provide any conditions")
+    fun waitForBotQuestionToProvideConditions() {
+        waitForBotText(ANY_CONDITIONS)
+    }
+
+    @And("the chatbot has asked if I want to provide any more conditions")
+    fun waitForBotQuestionToProvideMoreConditions() {
+        waitForBotText(ANY_MORE_CONDITIONS)
+    }
+
+    @And("the chatbot has asked for the first condition")
+    fun waitForBotRequestForACondition() {
+        waitForBotText(FIRST_CONDITION)
     }
 
     @Then("the chatbot has asked if I want to add, remove or replace a comment")
     fun waitForBotQuestionToAddRemoveOrReplaceAComment() {
+        waitForBotText(WOULD_YOU_LIKE, ADD, REMOVE, REPLACE)
+    }
+
+    fun waitForBotText(vararg terms: String) {
         await().atMost(ofSeconds(10)).until {
-            botQuestionToAddRemoveOrReplaceAComment()
+            chatPO().mostRecentBotRowContainsTerms(terms.toList())
         }
-    }
-
-    private fun botInitialPrompt() = with(chatPO()) {
-        mostRecentBotRowContainsTerms(listOf(WOULD_YOU_LIKE))
-    }
-
-    private fun botQuestionToAddAComment() = with(chatPO()) {
-        mostRecentBotRowContainsTerms(listOf(WOULD_YOU_LIKE, ADD_A_COMMENT))
-    }
-
-    private fun botQuestionToProvideACondition() = with(chatPO()) {
-        mostRecentBotRowContainsTerms(listOf(ANY_CONDITIONS))
     }
 
     @And("the chatbot has asked for what comment I want to add")
     fun waitForBotQuestionToSpecifyAComment() {
-        await().atMost(ofSeconds(10)).until {
-            botQuestionForWhatComment()
-        }
+        waitForBotText(WHAT_COMMENT)
     }
 
-    private fun botQuestionForWhatComment() = with(chatPO()) {
-        mostRecentBotRowContainsTerms(listOf(WHAT_COMMENT))
-    }
-
-    private fun botQuestionToAddRemoveOrReplaceAComment() = with(chatPO()) {
-        mostRecentBotRowContainsTerms(listOf(WOULD_YOU_LIKE, ADD, REMOVE, REPLACE))
-    }
 
     @And("I build a rule to add an initial comment {string} using the chat with no condition")
     fun addCommentUsingChat(comment: String) {
@@ -136,7 +104,7 @@ class ChatDefs {
         enterChatTextAndSend("Add the comment: \"$comment\"")
         waitForBotRequestForConfirmation()
         confirm()
-        waitForBotQuestionToProvideACondition()
+        waitForBotQuestionToProvideConditions()
         decline()
         waitForBotToSayDone()
     }
@@ -147,10 +115,8 @@ class ChatDefs {
         enterChatTextAndSend("Add the comment: \"$comment\"")
         waitForBotRequestForConfirmation()
         confirm()
-        waitForBotQuestionToProvideACondition()
+        waitForBotQuestionToProvideConditions()
         decline()
         waitForBotToSayDone()
     }
-
-
 }

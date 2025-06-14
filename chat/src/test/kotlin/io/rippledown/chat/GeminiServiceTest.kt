@@ -1,4 +1,4 @@
-package io.rippledown.chat.service
+package io.rippledown.chat
 
 import dev.shreyaspatil.ai.client.generativeai.type.content
 import io.kotest.matchers.string.shouldContain
@@ -10,7 +10,7 @@ class GeminiServiceTest {
     @Test
     fun `should start a chat with Gemini`() = runTest {
         //Given
-        val geminiChatService = GeminiChatService("")
+        val geminiChatService = GeminiChatService("", emptyList())
 
         //When
         val chat = geminiChatService.startChat()
@@ -29,7 +29,7 @@ class GeminiServiceTest {
     fun `should start a chat with Gemini with system instruction`() = runTest {
         //Given
         val geminiChatService = GeminiChatService(
-            "Format the response as a json object with key 'answer' and numeric value only."
+            "Format the response as a json object with key 'answer' and numeric value only.", emptyList()
         )
 
         //When
