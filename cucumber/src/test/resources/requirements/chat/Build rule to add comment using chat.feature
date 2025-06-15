@@ -16,7 +16,7 @@ Feature: The user can use the chat to make changes the interpretive report
       | Add the comment" "Let's surf" |
     And the chatbot has asked for confirmation
     And I confirm
-    And the chatbot has asked if I want to provide a condition
+    And the chatbot has asked if I want to provide any conditions
     When I decline
     Then the report should be "Let's surf"
     And stop the client application
@@ -34,7 +34,7 @@ Feature: The user can use the chat to make changes the interpretive report
       | Add the comment: "Let's surf" |
     And the chatbot has asked for confirmation
     And I confirm
-    And the chatbot has asked if I want to provide a condition
+    And the chatbot has asked if I want to provide any conditions
     When I decline
     Then the report should be "Go to Bondi. Let's surf"
     And stop the client application
@@ -52,7 +52,7 @@ Feature: The user can use the chat to make changes the interpretive report
       | Add another comment "Bring flippers." |
     And the chatbot has asked for confirmation
     And I confirm
-    And the chatbot has asked if I want to provide a condition
+    And the chatbot has asked if I want to provide any conditions
     When I decline
     Then the report should be "Let's surf. Bring flippers."
     And stop the client application
@@ -85,9 +85,13 @@ Feature: The user can use the chat to make changes the interpretive report
       | Add the comment" "Let's surf." |
     And the chatbot has asked for confirmation
     And I confirm
-    And the chatbot has asked if I want to provide a condition
+    And the chatbot has asked if I want to provide any conditions
+    And I confirm
+    And the chatbot has asked for the first condition
     And I enter the following text into the chat panel:
-      | wave height is more than 1 |
+      | Add the condition "wave height is more than 1" |
+    And the chatbot has asked if I want to provide any more conditions
+    When I decline
     And the chatbot has completed the action
     Then the report should be "Let's surf."
     And the condition showing for the comment "Let's surf." is:
