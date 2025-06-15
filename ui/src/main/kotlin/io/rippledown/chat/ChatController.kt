@@ -10,7 +10,7 @@ interface ChatControllerHandler {
 }
 
 @Composable
-fun ChatController(handler: ChatControllerHandler, modifier: Modifier = Modifier) {
+fun ChatController(id: Long = -1L, handler: ChatControllerHandler, modifier: Modifier = Modifier) {
     var chatHistory: List<ChatMessage> by remember { mutableStateOf(emptyList()) }
     var sendIsEnabled: Boolean by remember { mutableStateOf(true) }
 
@@ -24,7 +24,7 @@ fun ChatController(handler: ChatControllerHandler, modifier: Modifier = Modifier
         sendIsEnabled = true
     }
 
-    ChatPanel(sendIsEnabled, chatHistory, onMessageSent = { userMessage ->
+    ChatPanel(id, sendIsEnabled, chatHistory, onMessageSent = { userMessage ->
         if (userMessage.text.isNotEmpty()) {
             chatHistory = chatHistory + userMessage
         }

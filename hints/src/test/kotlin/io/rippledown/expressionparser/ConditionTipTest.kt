@@ -21,9 +21,6 @@ class ConditionTipTest {
 
     private lateinit var conditionTip: ConditionTip
     private lateinit var glucose: Attribute
-    private lateinit var TSH: Attribute
-    private lateinit var XYZ: Attribute
-    private lateinit var waves: Attribute
 
     @BeforeEach
     fun setUp() {
@@ -129,6 +126,18 @@ class ConditionTipTest {
     }
 
     @Test
+    fun `should parse expression to Is with cold quoted`() {
+        // Given
+        val expression = "glucose is cold"
+
+        // When
+        val actual = conditionTip.conditionFor(expression)
+
+        // Then
+        actual shouldBe EpisodicCondition(null, glucose, Is("\"cold\""), Current, expression)
+    }
+
+    @Test
     fun `should parse expression to IsNot`() {
         // Given
         val expression = "glucose does not equal 3.14159"
@@ -177,6 +186,18 @@ class ConditionTipTest {
     }
 
     @Test
+    fun `should parse expression to LessThan`() {
+        // Given
+        val expression = "glucose smaller than 3.14159"
+
+        // When
+        val actual = conditionTip.conditionFor(expression)
+
+        // Then
+        actual shouldBe EpisodicCondition(null, glucose, LessThan(3.14159), Current, expression)
+    }
+
+    @Test
     fun `should parse expression to GreaterThanOrEquals`() {
         // Given
         val expression = "glucose is at least 3.14159"
@@ -186,6 +207,18 @@ class ConditionTipTest {
 
         // Then
         actual shouldBe EpisodicCondition(null, glucose, GreaterThanOrEquals(3.14159), Current, expression)
+    }
+
+    @Test
+    fun `should parse expression to GreaterThan`() {
+        // Given
+        val expression = "glucose more than 3.14159"
+
+        // When
+        val actual = conditionTip.conditionFor(expression)
+
+        // Then
+        actual shouldBe EpisodicCondition(null, glucose, GreaterThan(3.14159), Current, expression)
     }
 
     @Test

@@ -12,6 +12,7 @@ import androidx.compose.ui.window.application
 import io.ktor.client.engine.cio.*
 import io.rippledown.constants.main.TITLE
 import io.rippledown.main.*
+import kotlinx.coroutines.Dispatchers.Unconfined
 import java.awt.event.WindowEvent
 import java.awt.event.WindowEvent.WINDOW_CLOSING
 import java.lang.Thread.sleep
@@ -51,7 +52,7 @@ class TestClientLauncher {
                     state = WindowState(size = windowSize)//allow for resizing
                 ) {
                     composeWindow = this.window
-                    OpenRDRUI(handler)
+                    OpenRDRUI(handler, dispatcher = Unconfined)
                 }
             }
         }

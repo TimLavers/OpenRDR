@@ -18,7 +18,7 @@ class InterpretationActionsTest {
 
     @Before
     fun setUp() {
-        handler = mockk(relaxed = true)
+        handler = mockk()
     }
 
     @Test
@@ -200,7 +200,7 @@ class InterpretationActionsTest {
 }
 
 fun main() {
-    val handler = mockk<InterpretationActionsHandler>(relaxed = true)
+    val handler = mockk<InterpretationActionsHandler>()
     val givenComments = listOf("Bondi", "Manly", "Coogee")
     val allComments = givenComments.toSet() + setOf("Maroubra", "Bronte", "Tamarama")
     applicationFor {

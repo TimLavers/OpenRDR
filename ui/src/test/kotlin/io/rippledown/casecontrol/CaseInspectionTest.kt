@@ -20,7 +20,7 @@ class CaseInspectionTest {
 
     @Before
     fun setUp() {
-        handler = mockk<CaseInspectionHandler>(relaxed = true)
+        handler = mockk<CaseInspectionHandler>()
     }
 
     @Test
@@ -53,6 +53,6 @@ class CaseInspectionTest {
 fun main() {
     val case = createCase(name = "Bondi", caseId = 45L)
     applicationFor {
-        CaseInspection(case, false, mockk(relaxed = true))
+        CaseInspection(case, false, mockk())
     }
 }

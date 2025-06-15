@@ -257,12 +257,11 @@ class Api(
     /**
      * @return a condition that corresponds to the specified expression
      */
-    suspend fun conditionFor(expression: String, attributeNames: Collection<String>): ConditionParsingResult {
+    suspend fun conditionFor(expression: String): ConditionParsingResult {
         return client.get("$API_URL$CONDITION_FOR_EXPRESSION") {
             contentType(Json)
             setKBParameter()
             parameter(EXPRESSION, expression)
-            setBody(attributeNames)
         }.body()
     }
 

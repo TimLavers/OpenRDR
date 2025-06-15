@@ -22,7 +22,7 @@ class CommentSelectorTest {
 
     @Before
     fun setUp() {
-        handler = mockk(relaxed = true)
+        handler = mockk()
     }
 
 //    @Test
@@ -123,7 +123,7 @@ class CommentSelectorTest {
 
 
 fun main() {
-    val handler = mockk<CommentSelectorHandler>(relaxed = true)
+    val handler = mockk<CommentSelectorHandler>()
     val options = (1..100).map {
         "Option $it"
     }

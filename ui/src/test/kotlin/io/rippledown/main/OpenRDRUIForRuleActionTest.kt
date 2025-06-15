@@ -12,8 +12,10 @@ import io.rippledown.constants.interpretation.REPLACING
 import io.rippledown.interpretation.*
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
+import io.rippledown.model.KBInfo
 import io.rippledown.utils.createCase
 import io.rippledown.utils.createCaseWithInterpretation
+import kotlinx.coroutines.Dispatchers.Unconfined
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -28,8 +30,8 @@ class OpenRDRUIForRuleActionTest {
 
     @Before
     fun setUp() {
-        api = mockk<Api>(relaxed = true)
-        handler = mockk<Handler>(relaxed = true)
+        api = mockk<Api>()
+        handler = mockk<Handler>()
         coEvery { handler.api } returns api
         coEvery { handler.isClosing } returns { true }
     }
@@ -44,18 +46,18 @@ class OpenRDRUIForRuleActionTest {
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         with(composeTestRule) {
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
-            //Given
+            // Given
             waitForCaseToBeShowing(caseName)
             requireCaseSelectorToBeDisplayed()
             clickChangeInterpretationButton()
 
-            //When
+            // When
             clickAddCommentMenu()
             addNewComment(addedComment)
 
-            //Then
+            // Then
             requireLeftInformationMessage("$ADDING$addedComment")
         }
     }
@@ -71,18 +73,18 @@ class OpenRDRUIForRuleActionTest {
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         with(composeTestRule) {
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             //Given
             waitForCaseToBeShowing(caseName)
             requireCaseSelectorToBeDisplayed()
             clickChangeInterpretationButton()
 
-            //When
+            // When
             clickReplaceCommentMenu()
             replaceComment(originalComment, replacementComment)
 
-            //Then
+            // Then
             requireLeftInformationMessage("$REPLACING$originalComment$BY$replacementComment")
         }
     }
@@ -93,22 +95,23 @@ class OpenRDRUIForRuleActionTest {
         val caseName = "case a"
         val caseId = CaseId(id = 1, name = caseName)
         val case = createCaseWithInterpretation(caseId.name, caseId.id, listOf(originalComment))
+        coEvery { api.kbList() } returns listOf(KBInfo("kb1"))
         coEvery { api.getCase(1) } returns case
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         with(composeTestRule) {
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
-            //Given
+            // Given
             waitForCaseToBeShowing(caseName)
             requireCaseSelectorToBeDisplayed()
             clickChangeInterpretationButton()
 
-            //When
+            // When
             clickRemoveCommentMenu()
             removeComment(originalComment)
 
-            //Then
+            // Then
             requireLeftInformationMessage("$REMOVING$originalComment")
         }
     }

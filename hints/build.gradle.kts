@@ -13,5 +13,4 @@ dependencies {
     implementation(libs.kotlinxSerializationJson)
     testImplementation(libs.kotestAssertions)
     testImplementation(libs.mockk)
-
 }

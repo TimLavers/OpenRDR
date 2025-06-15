@@ -32,77 +32,91 @@ class ChatDefs {
         }
     }
 
-    @Then("the chatbot has asked for confirmation")
-    fun waitForBotRequestForConfirmation() {
-        await().atMost(ofSeconds(10)).until {
-            chatPO().botRowContainsText(PLEASE_CONFIRM)
+    @Then("I decline")
+    fun decline() {
+        with(chatPO()) {
+            enterChatText("no")
+            clickSend()
         }
     }
 
+    @Then("the chatbot has asked for confirmation")
+    fun waitForBotRequestForConfirmation() {
+        waitForBotText(PLEASE_CONFIRM)
+    }
+
+    @Then("the chatbot has asked for confirmation of the comment:")
+    fun waitForBotRequestForConfirmation(comment: String) {
+        waitForBotText(PLEASE_CONFIRM, comment)
+    }
+
+    @Then("the chatbot has completed the action")
+    fun waitForBotToSayDone() {
+        waitForBotText(CHAT_BOT_DONE_MESSAGE)
+    }
+
     fun waitForBotInitialPrompt() {
-        await().atMost(ofSeconds(10)).until {
-            botInitialPrompt()
-        }
+        waitForBotText(WOULD_YOU_LIKE)
     }
 
     @Then("the chatbot has asked if I want to add a comment")
     fun requireBotQuestionToAddAComment() {
-        await().atMost(ofSeconds(10)).until {
-            botQuestionToAddAComment()
-        }
+        waitForBotText(WOULD_YOU_LIKE, ADD_A_COMMENT)
+    }
+
+    @And("the chatbot has asked if I want to provide any conditions")
+    fun waitForBotQuestionToProvideConditions() {
+        waitForBotText(ANY_CONDITIONS)
+    }
+
+    @And("the chatbot has asked if I want to provide any more conditions")
+    fun waitForBotQuestionToProvideMoreConditions() {
+        waitForBotText(ANY_MORE_CONDITIONS)
+    }
+
+    @And("the chatbot has asked for the first condition")
+    fun waitForBotRequestForACondition() {
+        waitForBotText(FIRST_CONDITION)
     }
 
     @Then("the chatbot has asked if I want to add, remove or replace a comment")
     fun waitForBotQuestionToAddRemoveOrReplaceAComment() {
+        waitForBotText(WOULD_YOU_LIKE, ADD, REMOVE, REPLACE)
+    }
+
+    fun waitForBotText(vararg terms: String) {
         await().atMost(ofSeconds(10)).until {
-            botQuestionToAddRemoveOrReplaceAComment()
+            chatPO().mostRecentBotRowContainsTerms(terms.toList())
         }
-    }
-
-    private fun botInitialPrompt() = with(chatPO()) {
-        botRowContainsText(WOULD_YOU_LIKE)
-    }
-
-    private fun botQuestionToAddAComment() = with(chatPO()) {
-        botRowContainsText(WOULD_YOU_LIKE) &&
-                botRowContainsText(ADD_A_COMMENT)
     }
 
     @And("the chatbot has asked for what comment I want to add")
     fun waitForBotQuestionToSpecifyAComment() {
-        await().atMost(ofSeconds(10)).until {
-            botQuestionFoWhatComment()
-        }
+        waitForBotText(WHAT_COMMENT)
     }
 
-    private fun botQuestionFoWhatComment() = with(chatPO()) {
-        botRowContainsText(WHAT_COMMENT)
-    }
 
-    private fun botQuestionToAddRemoveOrReplaceAComment() = with(chatPO()) {
-        botRowContainsText(WOULD_YOU_LIKE) &&
-                botRowContainsText(ADD) &&
-                botRowContainsText(REMOVE) &&
-                botRowContainsText(REPLACE)
-    }
-
-    @And("I build a rule to add an initial comment {string} using the chat")
+    @And("I build a rule to add an initial comment {string} using the chat with no condition")
     fun addCommentUsingChat(comment: String) {
         waitForBotInitialPrompt()
         confirm()
+        waitForBotQuestionToSpecifyAComment()
         enterChatTextAndSend("Add the comment: \"$comment\"")
         waitForBotRequestForConfirmation()
         confirm()
+        waitForBotQuestionToProvideConditions()
+        decline()
+        waitForBotToSayDone()
     }
 
     @And("I build a rule to add another comment {string} using the chat")
     fun addAnotherCommentUsingChat(comment: String) {
         waitForBotQuestionToAddRemoveOrReplaceAComment()
-        confirm()
         enterChatTextAndSend("Add the comment: \"$comment\"")
         waitForBotRequestForConfirmation()
         confirm()
+        waitForBotQuestionToProvideConditions()
+        decline()
+        waitForBotToSayDone()
     }
-
-
 }

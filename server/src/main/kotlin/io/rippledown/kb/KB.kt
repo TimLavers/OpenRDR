@@ -1,11 +1,13 @@
 package io.rippledown.kb
 
-import io.rippledown.chat.conversation.Conversation
+import io.rippledown.chat.Conversation
+import io.rippledown.chat.ExpressionValidator
 import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
 import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
 import io.rippledown.expressionparser.AttributeFor
 import io.rippledown.expressionparser.ConditionTip
 import io.rippledown.kb.chat.ChatManager
+import io.rippledown.kb.chat.KBChatService
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
@@ -29,6 +31,14 @@ class KB(persistentKB: PersistentKB) {
     val ruleTree = ruleManager.ruleTree()
     private val caseManager = CaseManager(persistentKB.caseStore(), attributeManager)
     private var ruleSession: RuleBuildingSession? = null
+    internal val caseViewManager: CaseViewManager =
+        CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
+    val interpretationViewManager: InterpretationViewManager =
+        InterpretationViewManager(
+            persistentKB.conclusionOrderStore(),
+            conclusionManager
+        )
+
     val ruleSessionRecorder = RuleSessionRecorder(persistentKB.ruleSessionRecordStore())
     internal val caseViewManager = CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
     val interpretationViewManager = InterpretationViewManager(persistentKB.conclusionOrderStore(), conclusionManager)
@@ -37,23 +47,30 @@ class KB(persistentKB: PersistentKB) {
     private var conditionParser: ConditionParser
 
     val ruleService = object : RuleService {
-        override suspend fun buildRuleToAddComment(case: RDRCase, comment: String) {
+        override suspend fun buildRuleToAddComment(case: RDRCase, comment: String, conditions: List<Condition>) {
             val conclusion = conclusionManager.getOrCreate(comment)
             val action = ChangeTreeToAddConclusion(conclusion)
             startRuleSession(case, action)
+            conditions.forEach { addConditionToCurrentRuleSession(it) }
             commitCurrentRuleSession()
         }
+
+        override suspend fun conditionForExpression(
+            case: RDRCase,
+            expression: String
+        ) = conditionForExpression(expression, case)
     }
 
-    //a var so it can be mocked in tests
-    private var chatManager = ChatManager(Conversation(), ruleService)
+    private lateinit var chatManager: ChatManager
 
     init {
         conditionParser = object : ConditionParser {
-            override fun parse(expression: String, attributeNames: List<String>, attributeFor: AttributeFor) =
-                ConditionTip(attributeNames, attributeFor).conditionFor(expression)
+            override fun parse(expression: String, attributeFor: AttributeFor) =
+                ConditionTip(attributeNames(), attributeFor).conditionFor(expression)
         }
     }
+
+    fun attributeNames() = attributeManager.all().map { it.name }
 
     fun description() = metaInfo.getDescription()
 
@@ -285,19 +302,14 @@ class KB(persistentKB: PersistentKB) {
         conditionParser = parser
     }
 
-    //Allow a mock chat session to be set so we can avoid connecting to Gemini for all the tests
-    fun setChatManager(manager: ChatManager) {
-        chatManager = manager
-    }
-
-    fun conditionForExpression(expression: String, attributeNames: List<String>): ConditionParsingResult {
+    fun conditionForExpression(expression: String, case: RDRCase): ConditionParsingResult {
         val attributeFor: AttributeFor = { attributeManager.getOrCreate(it) }
-        val condition = conditionParser.parse(expression, attributeNames, attributeFor)
+        val condition = conditionParser.parse(expression, attributeFor)
 
-        //Only return the condition if non-null and holds for the session case
+        //Only return the condition if non-null and holds for the case
         return if (condition == null) {
             ConditionParsingResult(errorMessage = DOES_NOT_CORRESPOND_TO_A_CONDITION)
-        } else if (!holdsForSessionCase(condition)) {
+        } else if (!condition.holds(case)) {
             ConditionParsingResult(errorMessage = CONDITION_IS_NOT_TRUE)
         } else {
             //if this a new condition, the following will store it with its user expression, else the existing condition will be returned
@@ -312,13 +324,25 @@ class KB(persistentKB: PersistentKB) {
     }
 
     internal fun holdsForSessionCase(condition: Condition) = condition.holds(ruleSession!!.case)
+    fun conditionForExpression(expression: String) = conditionForExpression(expression, ruleSession!!.case)
 
-    suspend fun startConversation(case: RDRCase) = chatManager.startConversation(case)
+    suspend fun startConversation(case: RDRCase): String {
+        val chatService = KBChatService.createKBChatService(case)
+        val conversationService = Conversation(
+            chatService, expressionValidator =
+                object : ExpressionValidator {
+                    override suspend fun isValid(expression: String): Boolean {
+                        return conditionForExpression(expression, case).errorMessage == null
+                    }
+                })
+        chatManager = ChatManager(conversationService, ruleService)
+        return chatManager.startConversation(case)
+    }
 
     suspend fun responseToUserMessage(message: String) = chatManager.response(message)
 }
 
 interface ConditionParser {
-    fun parse(expression: String, attributeNames: List<String>, attributeFor: (String) -> Attribute): Condition? = null
+    fun parse(expression: String, attributeFor: (String) -> Attribute): Condition? = null
 }
 

@@ -47,6 +47,10 @@ EXPECTED SIGNATURE: Current
 x = 1.5
 x == 1.5
 
+EXPECTED PREDICATE: Is, "hot"
+EXPECTED SIGNATURE: Current
+x is hot
+
 EXPECTED PREDICATE: Is, "abc"
 EXPECTED SIGNATURE: Current
 x is abc
@@ -71,12 +75,22 @@ x is not abc
 x is not "abc"
 x isn't abc
 
+EXPECTED PREDICATE: LessThan, 4.1
+EXPECTED SIGNATURE: Current
+x is less than to 4.1
+x smaller than 4.1
+
 EXPECTED PREDICATE: LessThanOrEquals, 4.1
 EXPECTED SIGNATURE: Current
 x is less than or equal to 4.1
 x is not greater than 4.1
 x is no more than 4.1
 x no more than 4.1
+
+EXPECTED PREDICATE: GreaterThan, y
+EXPECTED SIGNATURE: Current
+x is greater than y
+x more than y
 
 EXPECTED PREDICATE: GreaterThanOrEquals, y
 EXPECTED SIGNATURE: Current

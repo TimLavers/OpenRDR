@@ -31,7 +31,7 @@ class CaseViewUpdateTest {
 
     @Before
     fun setUp() {
-        caseViewHandler = mockk<CaseViewHandler>(relaxed = true)
+        caseViewHandler = mockk<CaseViewHandler>()
     }
 
     @Test

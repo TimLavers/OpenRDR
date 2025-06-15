@@ -7,3 +7,5 @@ fun checkIsReasonablePercentage(value: Int) {
         "Value should be an integer in the range [0, 100]."
     }
 }
+
+fun String.unquoted() = removeSurrounding("\"").removeSurrounding("'")

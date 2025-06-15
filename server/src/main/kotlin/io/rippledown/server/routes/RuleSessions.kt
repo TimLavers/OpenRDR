@@ -61,10 +61,9 @@ fun Application.ruleSession(application: ServerApplication) {
 
         get(CONDITION_FOR_EXPRESSION) {
             val expression = call.parameters[EXPRESSION] ?: error("Invalid expression.")
-            val attributeNames = call.receive<List<String>>()
-            val conditionParsingResult = kbEndpoint(application).conditionForExpression(expression, attributeNames)
+            val conditionParsingResult = kbEndpoint(application).conditionForExpression(expression)
             call.respondNullable(HttpStatusCode.OK, conditionParsingResult)
-            logger.info("Condition for expression '$expression' and attributes '$attributeNames' was '${conditionParsingResult.condition?.asText()}'")
+            logger.info("Condition for expression '$expression' was '${conditionParsingResult.condition?.asText()}'")
         }
     }
 }
