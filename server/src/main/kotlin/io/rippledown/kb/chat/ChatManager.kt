@@ -7,6 +7,7 @@ import io.rippledown.log.lazyLogger
 import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionParsingResult
+import io.rippledown.toJsonString
 
 interface RuleService {
     suspend fun buildRuleToAddComment(case: RDRCase, comment: String, conditions: List<Condition>)
@@ -36,6 +37,7 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
 
     //Either pass on the model's response to the user or take some rule action
     suspend fun processActionComment(actionComment: ActionComment): String {
+        logger.info("---Processing action comment: ${actionComment.toJsonString()}")
         return when (actionComment.action) {
 
             USER_ACTION -> {

@@ -110,7 +110,7 @@ class ConversationTest {
             conversation.response("Add the condition '$userExpression'.")
 
             // Then
-            coVerify { expressionValidator.isValid(userExpression) }
+            coVerify { expressionValidator.evaluate(userExpression) }
         }
     }
 }

@@ -3,6 +3,8 @@ package io.rippledown.kb.chat
 import dev.shreyaspatil.ai.client.generativeai.type.FunctionDeclaration
 import dev.shreyaspatil.ai.client.generativeai.type.Schema
 import io.rippledown.chat.ChatService
+import io.rippledown.chat.Conversation.Companion.EXPRESSION_PARAMETER
+import io.rippledown.chat.Conversation.Companion.IS_EXPRESSION_VALID
 import io.rippledown.chat.GeminiChatService
 import io.rippledown.constants.chat.*
 import io.rippledown.log.lazyLogger
@@ -17,8 +19,6 @@ object KBChatService {
     private val genericSystemInstruction: String =
         this::class.java.getResource(systemInstructionResource)?.readText()
             ?: throw IllegalStateException("System instruction file '${systemInstructionResource}' not found")
-
-    private val IS_EXPRESSION_VALID = "isExpressionValid"
 
     private val placeholders = mapOf(
         "{{CASE_JSON}}" to { case: RDRCase -> case.toJsonString() },
@@ -65,11 +65,11 @@ object KBChatService {
         description = "Check if the user-entered expression represents a valid condition",
         parameters = listOf(
             Schema.str(
-                name = "expression",
+                name = EXPRESSION_PARAMETER,
                 description = "The expression to check for validity"
             )
         ),
-        requiredParameters = listOf("expression")
+        requiredParameters = listOf(EXPRESSION_PARAMETER)
     )
 
     fun createKBChatService(case: RDRCase): ChatService {

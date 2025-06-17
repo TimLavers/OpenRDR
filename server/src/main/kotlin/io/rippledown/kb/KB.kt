@@ -2,6 +2,7 @@ package io.rippledown.kb
 
 import io.rippledown.chat.Conversation
 import io.rippledown.chat.ExpressionValidator
+import io.rippledown.chat.toExpressionEvaluation
 import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
 import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
 import io.rippledown.expressionparser.AttributeFor
@@ -303,9 +304,8 @@ class KB(persistentKB: PersistentKB) {
         val conversationService = Conversation(
             chatService, expressionValidator =
                 object : ExpressionValidator {
-                    override suspend fun isValid(expression: String): Boolean {
-                        return conditionForExpression(expression, case).errorMessage == null
-                    }
+                    override suspend fun evaluate(expression: String) =
+                        conditionForExpression(expression, case).toExpressionEvaluation()
                 })
         chatManager = ChatManager(conversationService, ruleService)
         return chatManager.startConversation(case)

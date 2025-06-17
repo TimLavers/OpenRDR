@@ -97,3 +97,24 @@ Feature: The user can use the chat to make changes the interpretive report
     And the condition showing for the comment "Let's surf." is:
       | wave height > 1.0 |
     And stop the client application
+
+  Scenario: The user should be able to see the reason why their condition expression is invalid
+    Given case Bondi is provided having data:
+      | wave height | 2 |
+    And I start the client application
+    And I see the case Bondi as the current case
+    And the chat is showing
+    And the chatbot has asked if I want to add a comment
+    And I confirm
+    And the chatbot has asked for what comment I want to add
+    And I enter the following text into the chat panel:
+      | Add the comment" "Let's surf." |
+    And the chatbot has asked for confirmation
+    And I confirm
+    And the chatbot has asked if I want to provide any conditions
+    And I confirm
+    And the chatbot has asked for the first condition
+    When I enter the following text into the chat panel:
+      | Add the condition "wave height is more than 2" |
+    Then the chatbot indicates that this condition is not true for the current case
+    And stop the client application

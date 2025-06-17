@@ -79,6 +79,11 @@ class ChatDefs {
         waitForBotText(FIRST_CONDITION)
     }
 
+    @And("the chatbot indicates that this condition is not true for the current case")
+    fun waitForBotToIndicateThatConditionIsNotTrue() {
+        waitForBotText(IS_NOT_TRUE)
+    }
+
     @Then("the chatbot has asked if I want to add, remove or replace a comment")
     fun waitForBotQuestionToAddRemoveOrReplaceAComment() {
         waitForBotText(WOULD_YOU_LIKE, ADD, REMOVE, REPLACE)

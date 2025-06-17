@@ -3,9 +3,11 @@ package io.rippledown.chat
 import dev.shreyaspatil.ai.client.generativeai.Chat
 import dev.shreyaspatil.ai.client.generativeai.type.FunctionCallPart
 import dev.shreyaspatil.ai.client.generativeai.type.GenerateContentResponse
+import dev.shreyaspatil.ai.client.generativeai.type.TextPart
 import dev.shreyaspatil.ai.client.generativeai.type.content
 import io.rippledown.log.lazyLogger
 import io.rippledown.stripEnclosingJson
+import io.rippledown.toJsonString
 import kotlinx.coroutines.delay
 import kotlin.random.Random.Default.nextLong
 import kotlin.time.Duration.Companion.milliseconds
@@ -16,12 +18,9 @@ interface ConversationService {
 }
 
 interface ExpressionValidator {
-    suspend fun isValid(expression: String): Boolean
+    suspend fun evaluate(expression: String): ExpressionEvaluation
 }
 
-/**
- * Manages a conversation with an AI model, handling user messages, function calls and retries on failure.
- */
 class Conversation(private val chatService: ChatService, private val expressionValidator: ExpressionValidator) :
     ConversationService {
     private val logger = lazyLogger
@@ -35,15 +34,15 @@ class Conversation(private val chatService: ChatService, private val expressionV
     }
 
     private suspend fun executeFunction(functionCall: FunctionCallPart): String {
-        if (functionCall.name != "isExpressionValid") {
+        if (functionCall.name != IS_EXPRESSION_VALID) {
             logger.warn("Unknown function call: ${functionCall.name}")
             return "Unknown function: ${functionCall.name}"
         }
 
-        val expression = functionCall.args?.get("expression") ?: ""
-        val isValid = expressionValidator.isValid(expression)
-        logger.info("Function call: '${functionCall.name}' with args: '$expression', isValid: $isValid")
-        return "'$expression' is valid?: $isValid"
+        val expression = functionCall.args?.get(EXPRESSION_PARAMETER) ?: ""
+        val evaluation = expressionValidator.evaluate(expression)
+        logger.info("Function call: '${functionCall.name}' with args: '$expression', evaluation: ${evaluation.toJsonString()}")
+        return "'$expression' evaluation: ${evaluation.toJsonString()}"
     }
 
     /**
@@ -61,8 +60,8 @@ class Conversation(private val chatService: ChatService, private val expressionV
             throw e
         }
         val finalResponse = handleResponse(response)
-        logger.info("initial response text: ${response.text}")
-        logger.info("final response text  : ${finalResponse}")
+        logger.info("initial response json: ${response.text}")
+        logger.info("final response json  : ${finalResponse}")
         return finalResponse
     }
 
@@ -70,6 +69,8 @@ class Conversation(private val chatService: ChatService, private val expressionV
         return if (response.functionCalls.isNotEmpty()) {
             val functionResults = response.functionCalls.map { executeFunction(it) }
             val prompt = content { text("Function results: ${functionResults.joinToString(", ")}") }
+            val promptText = (prompt.parts.get(0) as TextPart).text
+            logger.info("prompt for follow-up response: '$promptText'")
             val followUpResponse = chat.sendMessage(prompt)
             followUpResponse.text?.stripEnclosingJson() ?: "No text response after function execution"
         } else {
@@ -84,6 +85,10 @@ class Conversation(private val chatService: ChatService, private val expressionV
         logger.info("$context - tokens: ${response.usageMetadata?.totalTokenCount}")
     }
 
+    companion object {
+        const val EXPRESSION_PARAMETER = "expression"
+        const val IS_EXPRESSION_VALID = "isExpressionValid"
+    }
 }
 
 /**
