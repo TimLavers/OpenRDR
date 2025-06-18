@@ -31,14 +31,6 @@ class KB(persistentKB: PersistentKB) {
     val ruleTree = ruleManager.ruleTree()
     private val caseManager = CaseManager(persistentKB.caseStore(), attributeManager)
     private var ruleSession: RuleBuildingSession? = null
-    internal val caseViewManager: CaseViewManager =
-        CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
-    val interpretationViewManager: InterpretationViewManager =
-        InterpretationViewManager(
-            persistentKB.conclusionOrderStore(),
-            conclusionManager
-        )
-
     val ruleSessionRecorder = RuleSessionRecorder(persistentKB.ruleSessionRecordStore())
     internal val caseViewManager = CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
     val interpretationViewManager = InterpretationViewManager(persistentKB.conclusionOrderStore(), conclusionManager)
@@ -183,7 +175,7 @@ class KB(persistentKB: PersistentKB) {
             ?: return UndoRuleDescription("There are no rules to undo.", false)
         val idOfExemplar = record.idsOfRulesAddedInSession.random()
         val exemplar = ruleTree.ruleForId(idOfExemplar)
-        return UndoRuleDescription(exemplar.actionSummary(), true);
+        return UndoRuleDescription(exemplar.actionSummary(), true)
     }
 
     fun ruleSessionHistories() = ruleSessionRecorder.allRuleSessionHistories()
@@ -341,8 +333,3 @@ class KB(persistentKB: PersistentKB) {
 
     suspend fun responseToUserMessage(message: String) = chatManager.response(message)
 }
-
-interface ConditionParser {
-    fun parse(expression: String, attributeFor: (String) -> Attribute): Condition? = null
-}
-
