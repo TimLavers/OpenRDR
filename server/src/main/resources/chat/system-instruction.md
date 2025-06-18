@@ -134,7 +134,7 @@ text and the conditions to be evaluated.
   "message": <your question for a condition>
   }
 - Your question should include the phrase {{ANY_CONDITIONS}} and should ask if there are any conditions that
-  must be satisfied for the action to proceed.
+  must be satisfied for the report to be changed.
 - If the user indicates there are no conditions (e.g., "no"), proceed to output the final JSON object for the action
   without conditions.
 - If the user indicates there are conditions (e.g., "yes" or provides a condition directly). Then follow these steps:

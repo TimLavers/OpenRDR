@@ -1,5 +1,6 @@
 package steps
 
+import io.cucumber.datatable.DataTable
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
 import io.rippledown.constants.chat.*
@@ -82,6 +83,11 @@ class ChatDefs {
     @Then("the chatbot has asked if I want to add, remove or replace a comment")
     fun waitForBotQuestionToAddRemoveOrReplaceAComment() {
         waitForBotText(WOULD_YOU_LIKE, ADD, REMOVE, REPLACE)
+    }
+
+    @Then("the chatbot response contains the following phrases:")
+    fun checkBotResponseContainsPhrases(phrases: DataTable) {
+        waitForBotText(*phrases.asList().toTypedArray())
     }
 
     fun waitForBotText(vararg terms: String) {
