@@ -5,10 +5,12 @@ import dev.shreyaspatil.ai.client.generativeai.type.*
 import dev.shreyaspatil.ai.client.generativeai.type.BlockThreshold.NONE
 import io.rippledown.conditiongenerator.ConditionSpecification
 import io.rippledown.conditiongenerator.fromJson
+import io.rippledown.log.lazyLogger
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import java.lang.System.getenv
-import java.lang.Thread.sleep
 import kotlin.random.Random.Default.nextLong
+import kotlin.time.Duration.Companion.milliseconds
 
 const val GEMINI_MODEL = "gemini-1.5-flash"
 
@@ -66,8 +68,8 @@ fun conditionSpecificationFor(input: String): ConditionSpecification {
         text("---OUTPUT FORMAT---")
         text("Generate output without a leading ```json and without a trailing ```.")
     }
-    val json = retry {
-        runBlocking {
+    val json = runBlocking {
+        retry {
             generativeModel.generateContent(prompt).text
         }
     }
@@ -84,11 +86,13 @@ private fun linesFrom(resourceFileName: String) =
 /**
  * Retry when receiving the 503 error from the API due to rate limiting.
  */
-fun <T> retry(
+object Retry
+
+suspend fun <T> retry(
     maxRetries: Int = 10,
     initialDelay: Long = 1_000,
     maxDelay: Long = 32_000,
-    block: () -> T
+    block: suspend () -> T
 ): T {
     var currentDelay = initialDelay
     repeat(maxRetries) { attempt ->
@@ -96,8 +100,8 @@ fun <T> retry(
             return block()
         } catch (e: Exception) {
             if (attempt == maxRetries - 1) throw e
-            println("attempt $attempt failed. Waiting $currentDelay ms before retrying")
-            sleep(currentDelay)
+            Retry.lazyLogger.info("attempt $attempt failed. Waiting $currentDelay ms before retrying")
+            delay(currentDelay.milliseconds)
             currentDelay = (currentDelay * 2).coerceAtMost(maxDelay) + nextLong(0, 1_000)
         }
     }
