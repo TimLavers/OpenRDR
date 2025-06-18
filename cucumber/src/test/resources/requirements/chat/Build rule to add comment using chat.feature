@@ -13,7 +13,7 @@ Feature: The user can use the chat to make changes the interpretive report
     And I confirm
     And the chatbot has asked for what comment I want to add
     And I enter the following text into the chat panel:
-      | Add the comment" "Let's surf" |
+      | Add the comment "Let's surf" |
     And the chatbot has asked for confirmation
     And I confirm
     And the chatbot has asked if I want to provide any conditions
@@ -98,6 +98,7 @@ Feature: The user can use the chat to make changes the interpretive report
       | wave height > 1.0 |
     And stop the client application
 
+  @single
   Scenario: The user should be able to see the reason why their condition expression is invalid
     Given case Bondi is provided having data:
       | wave height | 2 |
