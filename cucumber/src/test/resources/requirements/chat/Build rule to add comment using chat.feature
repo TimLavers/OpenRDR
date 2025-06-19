@@ -89,7 +89,7 @@ Feature: The user can use the chat to make changes the interpretive report
     And I confirm
     And the chatbot has asked for the first condition
     And I enter the following text into the chat panel:
-      | Add the condition "wave height is more than 1" |
+      | wave height is more than 1 |
     And the chatbot has asked if I want to provide any more conditions
     When I decline
     And the chatbot has completed the action
@@ -98,7 +98,6 @@ Feature: The user can use the chat to make changes the interpretive report
       | wave height > 1.0 |
     And stop the client application
 
-  @single
   Scenario: The user should be able to see the reason why their condition expression is invalid
     Given case Bondi is provided having data:
       | wave height | 2 |
@@ -116,6 +115,6 @@ Feature: The user can use the chat to make changes the interpretive report
     And I confirm
     And the chatbot has asked for the first condition
     When I enter the following text into the chat panel:
-      | Add the condition "wave height is more than 2" |
+      | wave height is more than 2 |
     Then the chatbot indicates that this condition is not true for the current case
     And stop the client application
