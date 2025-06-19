@@ -6,6 +6,7 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.rippledown.kb.AttributeProvider
 import io.rippledown.model.*
+import io.rippledown.persistence.createCase
 import io.rippledown.utils.today
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -167,6 +168,26 @@ class PostgresCaseStoreTest : PostgresStoreTest() {
         store.get(9, attributeProvider) shouldBe null
     }
 
+
+    @Test
+    fun getReturnsCaseCopy() {
+        val stored0 = store.put(case0)
+        stored0.caseId.id shouldNotBe null
+        stored0 shouldNotBeSameInstanceAs case0
+        stored0.data shouldBe case0.data
+
+        val retrieved0 = store.get(stored0.id!!, attributeProvider)!!
+        retrieved0 shouldBe stored0
+        retrieved0.data shouldBe stored0.data
+        retrieved0.interpretation shouldNotBeSameInstanceAs  stored0.interpretation
+
+        val retrieved1 = store.get(stored0.id!!, attributeProvider)!!
+        retrieved1 shouldBe stored0
+        retrieved1.data shouldBe stored0.data
+        retrieved1.interpretation shouldNotBeSameInstanceAs stored0.interpretation
+        retrieved1.interpretation shouldNotBeSameInstanceAs retrieved0.interpretation
+    }
+
     @Test
     fun delete() {
         val stored0 = store.put(case0)
@@ -222,11 +243,5 @@ class PostgresCaseStoreTest : PostgresStoreTest() {
             store.load(listOf(case0))
         }.message shouldBe "Cannot load cases unless they already have their ids set."
         store.all(attributeProvider) shouldBe emptyList()
-    }
-
-    private fun createCase(name: String, attributeToValue: Map<Attribute, String>, id: Long? = null): RDRCase {
-        val builder = RDRCaseBuilder()
-        attributeToValue.forEach { (attribute, value) -> builder.addResult(attribute, today, TestResult(value)) }
-        return builder.build(name, id)
     }
 }

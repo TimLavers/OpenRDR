@@ -18,6 +18,7 @@ import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.model.condition.isCondition
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
+import io.rippledown.model.rule.UndoRuleDescription
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.supplyCaseFromFile
 import io.rippledown.util.EntityRetrieval
@@ -61,6 +62,21 @@ internal class KBEndpointTest {
         val newDescription = "lots of rules"
         endpoint.setDescription(newDescription)
         endpoint.description() shouldBe newDescription
+    }
+
+    @Test
+    fun descriptionOfMostRecentRuleTest() {
+        val undoDescription = UndoRuleDescription("Cool rule!", false)
+        val kb = mockk<KB>(relaxed = true)
+        every { kb.descriptionOfMostRecentRule() } returns undoDescription
+        KBEndpoint(kb, File("kbe")).descriptionOfMostRecentRule() shouldBe undoDescription
+    }
+
+    @Test
+    fun undoLastRuleTest() {
+        val kb = mockk<KB>(relaxed = true)
+        KBEndpoint(kb, File("kbe")).undoLastRule()
+        verify { kb.undoLastRuleSession() }
     }
 
     @Test

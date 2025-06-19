@@ -23,10 +23,7 @@ import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.diff.Removal
 import io.rippledown.model.diff.Replacement
-import io.rippledown.model.rule.CornerstoneStatus
-import io.rippledown.model.rule.RuleRequest
-import io.rippledown.model.rule.SessionStartRequest
-import io.rippledown.model.rule.UpdateCornerstoneRequest
+import io.rippledown.model.rule.*
 import io.rippledown.sample.SampleKB
 import kotlinx.coroutines.*
 import org.jetbrains.skiko.MainUIDispatcher
@@ -165,6 +162,18 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                     runBlocking(dispatcher) { api.kbDescription() }
                 }
                 override var onToggleChat: () -> Unit = { isChatVisible = !isChatVisible }
+                override var lastRuleDescription: () -> UndoRuleDescription = { runBlocking { api.lastRuleDescription() } }
+                override var undoLastRule: () -> Unit = {
+                    runBlocking {
+                        api.undoLastRule()
+                        println("rule undone")
+                        if (currentCaseId != null) {
+                            println("refreshing case")
+                            currentCase = api.getCase(currentCaseId!!)
+                            println("case refreshed")
+                        }
+                    }
+                }
             })
         },
         bottomBar = {

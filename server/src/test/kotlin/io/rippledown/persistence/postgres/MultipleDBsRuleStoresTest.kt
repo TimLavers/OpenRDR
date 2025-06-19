@@ -44,6 +44,22 @@ class MultipleDBsRuleStoresTest: MultipleDBsTest() {
     }
 
     @Test
+    fun remove() {
+        val a11 = store1.create(PersistentRule(null, null, null, setOf()))
+        val a21 = store2.create(PersistentRule(null, null, null, setOf()))
+        val a12 = store1.create(PersistentRule(null, 0, 5, setOf(10, 11)))
+        val a22 = store2.create(PersistentRule(null, 0, 6, setOf(11, 12)))
+
+        store1.removeById(a12.id!!)
+        store2.removeById(a22.id!!)
+        store1.all() shouldBe setOf(a11)
+        store2.all() shouldBe setOf(a21)
+        reload()
+        store1.all() shouldBe setOf(a11)
+        store2.all() shouldBe setOf(a21)
+    }
+
+    @Test
     fun load() {
         val a1 = PersistentRule(0, null, null, setOf())
         val a2 = PersistentRule(1, 0, 9, setOf(7, 8))

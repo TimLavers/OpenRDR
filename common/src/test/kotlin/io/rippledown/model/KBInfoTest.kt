@@ -132,7 +132,7 @@ internal class KBInfoTest {
     }
 
     private fun serializeDeserialize(info: KBInfo): KBInfo {
-        val serialized = Json.encodeToString(info)
+        val serialized = Json.encodeToString(KBInfo.serializer(), info)
         return Json.decodeFromString(serialized)
     }
 }

@@ -1,5 +1,6 @@
 package io.rippledown.kb.export
 
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.equality.shouldBeEqualToComparingFields
 import io.kotest.matchers.maps.shouldHaveSize
 import io.kotest.matchers.shouldBe
@@ -54,6 +55,7 @@ class KBImporterTest : ExporterTestBase() {
         rebuilt.allCornerstoneCases().size shouldBe 0
         rebuilt.caseViewManager.allInOrder().size shouldBe 0
         rebuilt.ruleTree.size() shouldBe 1
+        rebuilt.ruleSessionHistories().size shouldBe 0
     }
 
     @Test
@@ -79,9 +81,13 @@ class KBImporterTest : ExporterTestBase() {
 
         rebuilt.ruleTree.size() shouldBe 2
         val rebuiltFirstRule = rebuilt.ruleTree.root.childRules().first()
-        rebuiltFirstRule
-            .structurallyEqual(kb.ruleTree.root.childRules().first()) shouldBe true
+        rebuiltFirstRule.structurallyEqual(kb.ruleTree.root.childRules().first()) shouldBe true
         rebuiltFirstRule.conditions.iterator().next().userExpression() shouldBe userExpression
+
+        with(rebuilt.ruleSessionHistories()) {
+            size shouldBe 1
+            first().idsOfRulesAddedInSession shouldContain rebuiltFirstRule.id
+        }
 
         persistenceProvider.idStore().data() shouldHaveSize 2
     }

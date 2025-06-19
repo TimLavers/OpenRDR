@@ -21,12 +21,15 @@ import androidx.compose.ui.window.rememberDialogState
 import io.rippledown.constants.kb.*
 import io.rippledown.constants.main.*
 import io.rippledown.model.KBInfo
+import io.rippledown.model.rule.UndoRuleDescription
 import io.rippledown.sample.SampleKB
 import java.io.File
 
 interface KbEditControlHandler {
     var setKbDescription: (name: String) -> Unit
     var kbDescription: () -> String
+    var lastRuleDescription: () -> UndoRuleDescription
+    var undoLastRule: () -> Unit
 }
 
 @Composable
@@ -34,9 +37,9 @@ interface KbEditControlHandler {
 fun EditCurrentKbControl(handler: KbEditControlHandler) {
     var expanded by remember { mutableStateOf(false) }
     var kbDescriptionDialogShowing by remember { mutableStateOf(false) }
+    var undoLastRuleDialogShowing by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-    }
+    LaunchedEffect(Unit) {}
 
     if (kbDescriptionDialogShowing) {
         val dialogState = rememberDialogState(size = DpSize(640.dp, 460.dp))
@@ -59,6 +62,27 @@ fun EditCurrentKbControl(handler: KbEditControlHandler) {
 
                 override fun cancel() {
                     kbDescriptionDialogShowing = false
+                }
+            })
+        }
+    }
+    if(undoLastRuleDialogShowing) {
+        val dialogState = rememberDialogState(size = DpSize(640.dp, 280.dp))
+        DialogWindow(
+            onCloseRequest = { undoLastRuleDialogShowing = false },
+            title =UNDO_LAST_RULE_MENU_ITEM,
+            state = dialogState
+        ) {
+            UndoRuleDescriptionDisplay(object : UndoRuleDescriptionDisplayHandler {
+                override fun description() = handler.lastRuleDescription()
+
+                override fun cancel() {
+                    undoLastRuleDialogShowing = false
+                }
+
+                override fun undoLastRule() {
+                    handler.undoLastRule()
+                    undoLastRuleDialogShowing = false
                 }
             })
         }
@@ -99,6 +123,18 @@ fun EditCurrentKbControl(handler: KbEditControlHandler) {
                 }
             ) {
                 Text(text = EDIT_KB_DESCRIPTION_BUTTON_TEXT)
+            }
+            DropdownMenuItem(
+                onClick = {
+                    expanded = false
+                    undoLastRuleDialogShowing = true
+                },
+                modifier = Modifier.semantics(mergeDescendants = true) {
+                    role = Role.Button
+                    contentDescription = UNDO_LAST_RULE_BUTTON_TEXT
+                }
+            ) {
+                Text(text = UNDO_LAST_RULE_BUTTON_TEXT)
             }
         }
     }

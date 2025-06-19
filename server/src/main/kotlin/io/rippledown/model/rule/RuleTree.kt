@@ -46,6 +46,8 @@ open class RuleTree(val root: Rule = rootRule()) {
         return result
     }
 
+    fun ruleForId(id: Int) = rulesMatching { it.id == id }.first()
+
     fun copy(): RuleTree {
         return RuleTree(root.copy())
     }

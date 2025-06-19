@@ -17,10 +17,7 @@ import io.rippledown.model.condition.episodic.predicate.High
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.external.MeasurementEvent
-import io.rippledown.model.rule.ChangeTreeToAddConclusion
-import io.rippledown.model.rule.ConditionSuggester
-import io.rippledown.model.rule.CornerstoneStatus
-import io.rippledown.model.rule.UpdateCornerstoneRequest
+import io.rippledown.model.rule.*
 import io.rippledown.persistence.inmemory.InMemoryKB
 import io.rippledown.util.shouldBeSameAs
 import io.rippledown.utils.defaultDate
@@ -307,6 +304,69 @@ class KBTest {
     }
 
     @Test
+    fun `description for most recent rule when none have been built`() {
+        with(kb.descriptionOfMostRecentRule()) {
+            description shouldBe "There are no rules to undo."
+            canRemove shouldBe false
+        }
+    }
+
+    @Test
+    fun `description for rule that adds a comment`() {
+        val sessionCase = createCase("Case1", value = "1.0")
+        sessionCase.interpretation.conclusionTexts() shouldBe emptySet()
+        val commentText = "The Brindabellas are a range of beautiful mountains to the south east of Canberra."
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate(commentText)))
+        kb.commitCurrentRuleSession()
+        with(kb.descriptionOfMostRecentRule()) {
+            description shouldBe "Rule to add comment:\n${commentText.substring(0, 20)}..."
+            canRemove shouldBe true
+        }
+    }
+
+    @Test
+    fun `description for rule that removes a comment`() {
+        val case1 = createCase("Case1", value = "1.0")
+        case1.interpretation.conclusionTexts() shouldBe emptySet()
+        val commentText = "Lake Burley-Griffin is not renowned as somewhere to go swimming."
+        val comment = kb.conclusionManager.getOrCreate(commentText)
+        kb.startRuleSession(case1, ChangeTreeToAddConclusion(comment))
+        kb.commitCurrentRuleSession()
+        val case2 = createCase("Case2", value = "2.0")
+        kb.startRuleSession(case2, ChangeTreeToRemoveConclusion(comment))
+        kb.commitCurrentRuleSession()
+        with(kb.descriptionOfMostRecentRule()) {
+            description shouldBe "Rule to remove comment:\n${commentText.substring(0, 20)}..."
+            canRemove shouldBe true
+        }
+    }
+
+    @Test
+    fun `description for rule that replaces a comment with another comment`() {
+        val case1 = createCase("Case1", value = "1.0")
+        case1.interpretation.conclusionTexts() shouldBe emptySet()
+        val commentText = "The National Portrait Gallery is well worth a visit."
+        val comment = kb.conclusionManager.getOrCreate(commentText)
+        kb.startRuleSession(case1, ChangeTreeToAddConclusion(comment))
+        kb.commitCurrentRuleSession()
+        val case2 = createCase("Case2", value = "2.0")
+        val replacementText = "The National Library is a good place for studying."
+        val replacement = kb.conclusionManager.getOrCreate(replacementText)
+        kb.startRuleSession(case2, ChangeTreeToReplaceConclusion(comment, replacement))
+        kb.commitCurrentRuleSession()
+        with(kb.descriptionOfMostRecentRule()) {
+            val expected = """
+                Rule to replace comment:
+                ${commentText.substring(0, 20)}...
+                with:
+                ${replacementText.substring(0, 20)}...
+            """.trimIndent()
+            description shouldBe expected
+            canRemove shouldBe true
+        }
+    }
+
+    @Test
     fun getCaseByNameWhenNoCases() {
         shouldThrow<NoSuchElementException> {
             kb.getCornerstoneCaseByName("Whatever")
@@ -524,6 +584,21 @@ class KBTest {
         // Rule now added...
         kb.interpret(otherCase)
         otherCase.interpretation.conclusionTexts() shouldBe setOf("Whatever.")
+    }
+
+    @Test
+    fun undoLastRuleSession() {
+        val sessionCase = createCase("Case1", value = "1.0")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
+        kb.commitCurrentRuleSession()
+
+        val otherCase = createCase("Case2", value = "2.0")
+        kb.interpret(otherCase)
+        otherCase.interpretation.conclusionTexts() shouldBe setOf("Whatever.") // Sanity
+
+        kb.undoLastRuleSession()
+        kb.interpret(otherCase)
+        otherCase.interpretation.conclusionTexts() shouldBe emptySet()
     }
 
     @Test

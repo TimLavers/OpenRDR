@@ -1,18 +1,22 @@
 package io.rippledown.main
 
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import io.ktor.http.*
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import io.rippledown.appbar.assertKbNameIs
+import io.rippledown.appbar.*
 import io.rippledown.casecontrol.*
 import io.rippledown.chat.*
 import io.rippledown.constants.interpretation.ADD_COMMENT_PREFIX
 import io.rippledown.constants.interpretation.REMOVE_COMMENT_PREFIX
 import io.rippledown.constants.interpretation.REPLACED_COMMENT_PREFIX
 import io.rippledown.constants.interpretation.REPLACEMENT_COMMENT_PREFIX
+import io.rippledown.constants.kb.CONFIRM_UNDO_LAST_RULE_TEXT
 import io.rippledown.constants.main.APPLICATION_BAR_ID
 import io.rippledown.interpretation.*
 import io.rippledown.model.*
@@ -22,6 +26,7 @@ import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
 import io.rippledown.model.condition.episodic.predicate.Normal
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.model.rule.UndoRuleDescription
 import io.rippledown.rule.clickCancelRuleButton
 import io.rippledown.rule.clickFinishRuleButton
 import io.rippledown.utils.applicationFor
@@ -1030,10 +1035,65 @@ class OpenRDRUITest {
             requireCommentOptionsToBeDisplayed(REMOVE_COMMENT_PREFIX, listOf(commentA))
         }
     }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun `when a rule is undone and there is no current case, the case is not refreshed`() = runTest {
+        val descriptionText = "This is the last rule!"
+        val lastRuleDescription = UndoRuleDescription(descriptionText, true)
+
+        coEvery { api.lastRuleDescription() } returns lastRuleDescription
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler)
+            }
+            undoLastRule(descriptionText)
+            coVerify {
+                api.undoLastRule()
+            }
+            coVerify(exactly = 0) {
+                api.getCase(any())
+            }
+        }
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun `when a rule is undone the current case should be refreshed`() = runTest {
+        val caseName = "case a"
+        val caseId = CaseId(id = 1, name = caseName)
+        val case = createCaseWithInterpretation(caseId.name, caseId.id, listOf())
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.getCase(any()) } returns case
+        val descriptionText = "This is the last rule!"
+        val lastRuleDescription = UndoRuleDescription(descriptionText, true)
+        coEvery { api.lastRuleDescription() } returns lastRuleDescription
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler)
+            }
+            undoLastRule(descriptionText)
+            coVerify {
+                api.undoLastRule()
+                api.getCase(1)
+            }
+        }
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    private fun ComposeContentTestRule.undoLastRule(descriptionText: String) {
+        clickEditKbDropdown()
+        assertEditKbDescriptionMenuItemIsShowing()
+        clickUndoLastRuleMenuItem()
+        waitUntilExactlyOneExists(hasText(descriptionText))
+        clickUndoLastRule()
+        waitUntilExactlyOneExists(hasText(CONFIRM_UNDO_LAST_RULE_TEXT))
+        assertUndoLastRuleButtonIsNotShowing()
+        clickUndoLastRuleConfirmationYesButton()
+    }
 }
 
 fun main() {
-
     val caseIds = (1..100).map { i ->
         CaseId(id = i.toLong(), name = "case $i")
     }
