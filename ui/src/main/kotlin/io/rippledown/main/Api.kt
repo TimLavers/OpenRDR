@@ -28,6 +28,7 @@ import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
+import io.rippledown.model.rule.*
 import io.rippledown.sample.SampleKB
 import java.io.File
 
@@ -282,5 +283,18 @@ class Api(
     }
 
 
+
+    suspend fun lastRuleDescription(): UndoRuleDescription {
+        return client.get("$API_URL$LAST_RULE_DESCRIPTION") {
+            setKBParameter()
+        }.body<UndoRuleDescription>()
+    }
+
+    suspend fun undoLastRule(): HttpStatusCode {
+        client.delete("$API_URL$LAST_RULE_DESCRIPTION") {
+            setKBParameter()
+        }
+        return HttpStatusCode.OK
+    }
 }
 

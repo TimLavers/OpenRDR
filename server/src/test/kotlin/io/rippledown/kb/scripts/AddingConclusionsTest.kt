@@ -6,7 +6,7 @@ import kotlin.test.Test
 
 class AddingConclusionsTest {
     @Test
-    fun add_conclusion() {
+    fun `add conclusion`() {
         build {
             case("Case1", "a")
             requireInterpretation("Case1")
@@ -22,7 +22,7 @@ class AddingConclusionsTest {
     }
 
     @Test
-    fun add_two_conclusions() {
+    fun `add two conclusions`() {
         build {
             case("Case1", "a")
             session {
@@ -44,7 +44,7 @@ class AddingConclusionsTest {
     }
 
     @Test
-    fun all_cornerstones_should_be_presented_when_adding_a_conclusion() {
+    fun `all cornerstones should be presented when adding a conclusion`() {
         build {
             cornerstoneCase("1", "a")
             cornerstoneCase("2", "b")
@@ -70,7 +70,7 @@ class AddingConclusionsTest {
     }
 
     @Test
-    fun session_action_must_be_defined_before_adding_a_condition() {
+    fun `session action must be defined before adding a condition`() {
         val exception = shouldThrow<Exception> {
             build {
                 case("1", "a")

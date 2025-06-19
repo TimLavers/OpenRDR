@@ -46,6 +46,12 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
         kb.setDescription(newDescription)
     }
 
+    fun descriptionOfMostRecentRule() = kb.descriptionOfMostRecentRule()
+
+    fun undoLastRule() {
+        kb.undoLastRuleSession()
+    }
+
     fun exportKBToZip(): File {
         val tempDir: File = createTempDirectory().toFile()
         KBExporter(tempDir, kb).export()

@@ -6,10 +6,8 @@ import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.addLogger
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 
 const val RULES_TABLE = "rules"
@@ -38,7 +36,6 @@ class PostgresRuleStore(private val db: Database): RuleStore {
         }
     }
 
-
     override fun load(persistentRules: Set<PersistentRule>) {
         require(all().isEmpty()) {
             "Cannot load persistent rules if there are some stored already."
@@ -50,6 +47,14 @@ class PostgresRuleStore(private val db: Database): RuleStore {
                     conclusionId = it.conclusionId
                     conditionIds = it.conditionIdsString()
                 }
+            }
+        }
+    }
+
+    override fun removeById(ruleId: Int) {
+        transaction(db) {
+            PGRules.deleteWhere {
+                id eq ruleId
             }
         }
     }

@@ -8,6 +8,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.rippledown.mocks.DummyRowScope
+import kotlinx.datetime.Instant
 import kotlinx.datetime.toInstant
 import org.junit.Rule
 import org.junit.Test
@@ -19,7 +20,7 @@ class DateCellTest {
 
     @Test
     fun show() {
-        val date = "2010-06-01T22:19:44.475Z".toInstant().toEpochMilliseconds()
+        val date = Instant.parse("2010-06-01T22:19:44.475Z").toEpochMilliseconds()
         val columnWidths = mockk<ColumnWidths>()
         every { columnWidths.valueColumnWeight() }.returns(0.5F)
 
@@ -34,19 +35,19 @@ class DateCellTest {
 
     @Test
     fun dateFormatting() {
-        val date1 = "2010-06-01T22:19:44.475Z".toInstant().toEpochMilliseconds()
+        val date1 = Instant.parse("2010-06-01T22:19:44.475Z").toEpochMilliseconds()
         formatDate(date1) shouldBe "2010-06-01 22:20"
 
-        val date2 = "2010-06-01T22:19:24.475Z".toInstant().toEpochMilliseconds()
+        val date2 = Instant.parse("2010-06-01T22:19:24.475Z").toEpochMilliseconds()
         formatDate(date2) shouldBe "2010-06-01 22:19"
 
-        val date3 = "2010-06-01T22:19:29.999Z".toInstant().toEpochMilliseconds()
+        val date3 = Instant.parse("2010-06-01T22:19:29.999Z").toEpochMilliseconds()
         formatDate(date3) shouldBe "2010-06-01 22:19"
 
-        val date4 = "2010-06-01T22:19:30.000Z".toInstant().toEpochMilliseconds()
+        val date4 = Instant.parse("2010-06-01T22:19:30.000Z").toEpochMilliseconds()
         formatDate(date4) shouldBe "2010-06-01 22:20"
 
-        val date5 = "2010-06-01T22:19:31.000Z".toInstant().toEpochMilliseconds()
+        val date5 = Instant.parse("2010-06-01T22:19:31.000Z").toEpochMilliseconds()
         formatDate(date5) shouldBe "2010-06-01 22:20"
     }
 }

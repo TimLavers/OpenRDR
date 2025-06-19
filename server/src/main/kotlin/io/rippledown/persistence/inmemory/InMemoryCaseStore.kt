@@ -1,7 +1,6 @@
 package io.rippledown.persistence.inmemory
 
 import io.rippledown.kb.AttributeProvider
-import io.rippledown.model.CaseId
 import io.rippledown.model.RDRCase
 import io.rippledown.persistence.CaseStore
 
@@ -34,7 +33,7 @@ class InMemoryCaseStore: CaseStore {
         data.addAll(cases)
     }
 
-    override fun get(id: Long, attributeProvider: AttributeProvider) = data.firstOrNull { id == it.id }
+    override fun get(id: Long, attributeProvider: AttributeProvider) = data.firstOrNull { it.id == id }?.copyWithNewInterpretation()
 
     override fun delete(id: Long) {
         data.removeIf{it.id == id}

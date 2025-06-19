@@ -22,22 +22,18 @@ import io.rippledown.persistence.PersistentKB
 class KB(persistentKB: PersistentKB) {
     val logger = lazyLogger
 
-    val kbInfo: KBInfo = persistentKB.kbInfo()
+    val kbInfo = persistentKB.kbInfo()
     val metaInfo = MetaInfo(persistentKB.metaDataStore())
-    val attributeManager: AttributeManager = AttributeManager(persistentKB.attributeStore())
-    val conclusionManager: ConclusionManager = ConclusionManager(persistentKB.conclusionStore())
-    val conditionManager: ConditionManager = ConditionManager(attributeManager, persistentKB.conditionStore())
-    private val ruleManager: RuleManager = RuleManager(conclusionManager, conditionManager, persistentKB.ruleStore())
-    val ruleTree: RuleTree = ruleManager.ruleTree()
+    val attributeManager = AttributeManager(persistentKB.attributeStore())
+    val conclusionManager = ConclusionManager(persistentKB.conclusionStore())
+    val conditionManager = ConditionManager(attributeManager, persistentKB.conditionStore())
+    private val ruleManager = RuleManager(conclusionManager, conditionManager, persistentKB.ruleStore())
+    val ruleTree = ruleManager.ruleTree()
     private val caseManager = CaseManager(persistentKB.caseStore(), attributeManager)
     private var ruleSession: RuleBuildingSession? = null
-    internal val caseViewManager: CaseViewManager =
-        CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
-    val interpretationViewManager: InterpretationViewManager =
-        InterpretationViewManager(
-            persistentKB.conclusionOrderStore(),
-            conclusionManager
-        )
+    val ruleSessionRecorder = RuleSessionRecorder(persistentKB.ruleSessionRecordStore())
+    internal val caseViewManager = CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
+    val interpretationViewManager = InterpretationViewManager(persistentKB.conclusionOrderStore(), conclusionManager)
 
     //a var so it can be mocked in tests
     private var conditionParser: ConditionParser
@@ -167,9 +163,30 @@ class KB(persistentKB: PersistentKB) {
 
     fun commitCurrentRuleSession() {
         checkSession()
-        ruleSession!!.commit()
+        val rulesAdded = ruleSession!!.commit()
+        ruleSessionRecorder.recordRuleSessionCommitted(rulesAdded)
         addCornerstoneCase(ruleSession!!.case)
         ruleSession = null
+        checkRuleSessionHistoryConsistency()
+    }
+
+    fun descriptionOfMostRecentRule(): UndoRuleDescription {
+        val record = ruleSessionRecorder.idsOfRulesAddedInMostRecentSession()
+            ?: return UndoRuleDescription("There are no rules to undo.", false)
+        val idOfExemplar = record.idsOfRulesAddedInSession.random()
+        val exemplar = ruleTree.ruleForId(idOfExemplar)
+        return UndoRuleDescription(exemplar.actionSummary(), true)
+    }
+
+    fun ruleSessionHistories() = ruleSessionRecorder.allRuleSessionHistories()
+
+    fun undoLastRuleSession() {
+        val record = ruleSessionRecorder.idsOfRulesAddedInMostRecentSession()!!
+        record.idsOfRulesAddedInSession.forEach{
+            val toDelete = ruleTree.ruleForId(it)
+            ruleManager.deleteLeafRule(toDelete)
+        }
+        ruleSessionRecorder.delete(ruleSessionRecorder.allRuleSessionHistories().last())
     }
 
     private fun checkSession() {
@@ -197,10 +214,6 @@ class KB(persistentKB: PersistentKB) {
     override fun hashCode() = kbInfo.hashCode()
 
     fun conditionHintsForCase(case: RDRCase): ConditionList {
-//        checkSession() TODO re-instate and get rid of the if-block below
-//        if (ruleSession == null) {
-//            return ConditionList()
-//        }
         val suggester = ConditionSuggester(attributeManager.all(), case)
         return ConditionList(suggester.suggestions())
     }
@@ -296,6 +309,13 @@ class KB(persistentKB: PersistentKB) {
         }
     }
 
+    private fun checkRuleSessionHistoryConsistency() {
+        val idsOfNonRootRulesInTree = ruleTree.rules().filter { it.parent != null }.map { it.id }.toSet()
+//        val ruleIdsFromSessions = ruleSessionRecorder.idsOfAllSessionRules()
+//        assert(idsOfNonRootRulesInTree == ruleIdsFromSessions) {"Ids of rules in sessions don't match non-root tree rules."}
+    }
+
+    internal fun holdsForSessionCase(condition: Condition) = condition.holds(ruleSession!!.case)
     fun conditionForExpression(expression: String) = conditionForExpression(expression, ruleSession!!.case)
 
     suspend fun startConversation(case: RDRCase): String {
@@ -313,8 +333,3 @@ class KB(persistentKB: PersistentKB) {
 
     suspend fun responseToUserMessage(message: String) = chatManager.response(message)
 }
-
-interface ConditionParser {
-    fun parse(expression: String, attributeFor: (String) -> Attribute): Condition? = null
-}
-

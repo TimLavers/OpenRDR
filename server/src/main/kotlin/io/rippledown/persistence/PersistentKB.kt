@@ -10,6 +10,7 @@ interface PersistentKB {
     fun conclusionOrderStore(): OrderStore
     fun conditionStore(): ConditionStore
     fun ruleStore(): RuleStore
+    fun ruleSessionRecordStore(): RuleSessionRecordStore
     fun caseStore(): CaseStore
     fun metaDataStore(): KeyValueStore
 }

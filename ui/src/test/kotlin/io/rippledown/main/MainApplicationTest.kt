@@ -50,10 +50,10 @@ class MainApplicationTest {
         launchTestApplication {
             Window(
                 onCloseRequest = { isOpen = false }, // Allow clean exit
-                icon = painterResource("water-wave-icon.png"),
-                title = TITLE
-            ) {
-                window = this.window
+//                        icon = painterResource("water-wave-icon.png"),
+                        title = TITLE
+                    ) {
+                        window = this.window
                 OpenRDRUI(handler, dispatcher = Unconfined)
             }
         }

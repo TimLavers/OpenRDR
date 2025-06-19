@@ -34,6 +34,7 @@ class BuildTemplate {
         val case = caseBuilder.build(name)
         kb.addCornerstoneCase(case)
     }
+
     fun case(name: String, data: String) {
         val caseBuilder = RDRCaseBuilder()
         val textAttribute = kb.attributeManager.getOrCreate(text)
@@ -68,6 +69,10 @@ class BuildTemplate {
         val case = kb.getProcessedCaseByName(caseName)
         kb.interpret(case)
         case.interpretation.conclusions().map { it.text }.toSet() shouldBe expectedConclusions.toSet()
+    }
+
+    fun undoLastRuleSession() {
+        kb.undoLastRuleSession()
     }
 }
 

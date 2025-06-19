@@ -19,6 +19,7 @@ import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
+import io.rippledown.model.rule.*
 import io.rippledown.sample.SampleKB
 import io.rippledown.utils.createCase
 import kotlinx.serialization.json.Json
@@ -56,6 +57,9 @@ class EngineConfig {
     var expectedUserMessage: String = ""
     var newKbName: String? = null
     var sampleKB: SampleKB? = null
+
+    var undoRuleDescription: UndoRuleDescription = UndoRuleDescription("It was a great rule, but it has to go.", true)
+    var lastRuleUndoCalled = false
 
     val defaultKB = KBInfo("Thyroids")
     var returnKBInfo = defaultKB
@@ -180,6 +184,17 @@ private class EngineBuilder(private val config: EngineConfig) {
                 } else {
                     config.returnedKbDescription = (request.body as TextContent).text
                     httpResponseData("OK")
+                }
+            }
+
+            LAST_RULE_DESCRIPTION -> {
+                if (request.method == HttpMethod.Get) {
+                    httpResponseData(json.encodeToString(config.undoRuleDescription))
+                } else if (request.method == HttpMethod.Delete){
+                    config.lastRuleUndoCalled = true
+                    httpResponseData("OK")
+                } else {
+                    httpResponseData("No way!")
                 }
             }
 

@@ -36,3 +36,14 @@ const val EDIT_CURRENT_KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION = "Edit Current K
 const val EDIT_CURRENT_KB_CONTROL_ID = "edit_current_kb_control_id"
 const val EDIT_KB_DESCRIPTION_BUTTON_ID = "edit_kb_description_button_id"
 const val EDIT_KB_DESCRIPTION_BUTTON_TEXT = "KB description"
+
+const val UNDO_LAST_RULE_BUTTON_TEXT = "Undo last rule"
+const val LAST_RULE_DESCRIPTION_ID = "last_rule_description"
+const val LAST_RULE_DESCRIPTION_DESCRIPTION = "A summary of the last rule"
+const val CLOSE_SHOW_LAST_RULE_DESCRIPTION = "Stop showing the last rule"
+const val UNDO_LAST_RULE_BUTTON_DESCRIPTION = "Remove last rule"
+const val CONFIRM_UNDO_LAST_RULE_TEXT_DESCRIPTION = "Check that the last rule should be removed"
+const val CONFIRM_UNDO_LAST_RULE_TEXT = "Are you sure that you want to remove the last rule?"
+const val CONFIRM_UNDO_LAST_RULE_YES_OPTION_DESCRIPTION = "Yes, the last rule should be removed"
+const val CONFIRM_UNDO_LAST_RULE_NO_OPTION_DESCRIPTION = "No, the last rule should not be removed"
+

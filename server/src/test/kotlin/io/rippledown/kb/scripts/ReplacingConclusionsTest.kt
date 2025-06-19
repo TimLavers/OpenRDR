@@ -4,7 +4,7 @@ import kotlin.test.Test
 
 class ReplacingConclusionsTest {
     @Test
-    fun replace_conclusion_using_a_rule_with_no_conditions() {
+    fun `replace conclusion using a rule with no conditions`() {
         build {
             case("1", "a")
             requireInterpretation("1")
@@ -25,7 +25,7 @@ class ReplacingConclusionsTest {
     }
 
     @Test
-    fun replace_conclusion_with_a_rule_with_one_condition() {
+    fun `replace conclusion with a rule with one condition`() {
         build {
             case("1", "a")
             case("2", "b")
@@ -76,7 +76,7 @@ class ReplacingConclusionsTest {
     }
 
     @Test
-    fun replace_a_conclusion_that_is_given_by_several_rules() {
+    fun `replace a conclusion that is given by several rules`() {
         build {
             (1..4).forEach {
                 case(it)
@@ -127,7 +127,7 @@ class ReplacingConclusionsTest {
     }
 
     @Test
-    fun replace_a_conclusion_that_has_been_removed() {
+    fun `replace a conclusion that has been removed`() {
         build {
             case("1", "ac")
             case("2", "b")

@@ -11,5 +11,4 @@ class ApplicationBarOperator(private val contextProvider: () -> AccessibleContex
         val textContext = contextProvider().find(MAIN_HEADING, AccessibleRole.LABEL)!!
         return textContext.accessibleName
     }
-
 }
