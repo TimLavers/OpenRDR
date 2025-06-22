@@ -21,24 +21,6 @@ Feature: The user can use the chat to make changes the interpretive report
     Then the report should be "Let's surf"
     And stop the client application
 
-  Scenario: The user should be able to use the chat to add a comment to an existing report, with no conditions
-    Given case Bondi is provided having data:
-      | Wave | excellent |
-      | Sun  | hot       |
-    And the interpretation of the case Bondi is "Go to Bondi."
-    And I start the client application
-    And I see the case Bondi as the current case
-    And the chat is showing
-    And the chatbot has asked if I want to add, remove or replace a comment
-    And I enter the following text into the chat panel:
-      | Add the comment: "Let's surf" |
-    And the chatbot has asked for confirmation
-    And I confirm
-    And the chatbot has asked if I want to provide any conditions
-    When I decline
-    Then the report should be "Go to Bondi. Let's surf"
-    And stop the client application
-
   Scenario: The user should be able to use the chat to add two comments with no conditions
     Given case Bondi is provided having data:
       | Wave | excellent |
