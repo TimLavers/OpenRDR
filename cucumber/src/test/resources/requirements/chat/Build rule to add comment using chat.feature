@@ -54,6 +54,7 @@ Feature: The user can use the chat to make changes the interpretive report
     Then the report should be "Let's surf. Bring flippers."
     And stop the client application
 
+  @single
   Scenario: The user should be able to use the chat to add a comment with a valid condition
     Given case Bondi is provided having data:
       | wave height | 2 |
