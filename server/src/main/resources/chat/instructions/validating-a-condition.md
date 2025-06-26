@@ -1,7 +1,9 @@
-- Always check the validity of the user's condition by calling the function `{{IS_EXPRESSION_VALID}}` with
-  the extracted condition as the argument.
-- This function returns a JSON object with a boolean field "isValid" indicating whether the condition is valid, and a
-  "message" field providing additional information for the user. For example:
+- Always call the {{IS_EXPRESSION_VALID}} function with the extracted condition as the argument.
+- For every condition, you MUST call isExpressionValid, no exceptions
+- The function returns a JSON object with:
+  "isValid": Boolean indicating validity.
+  "message": Additional information for the user.
+- Example:
   {
   "isValid": true,
   "message": "The condition is valid and is equivalent to 'The sun is \"hot\".'"
@@ -11,4 +13,4 @@
   "isValid": false,
   "message": "The condition is not true for the case."
   }
-  -Use the value of the "isValid" field to determine if the condition is valid.
+  - Use the "isValid" field to determine the next step, and include the "message" in your response to the user.

@@ -8,7 +8,7 @@ import io.rippledown.chat.Conversation.Companion.IS_EXPRESSION_VALID
 import io.rippledown.chat.GeminiChatService
 import io.rippledown.constants.chat.*
 import io.rippledown.log.lazyLogger
-import io.rippledown.model.ViewableCase
+import io.rippledown.model.RDRCase
 import io.rippledown.toJsonString
 
 object KBChatService {
@@ -19,16 +19,16 @@ object KBChatService {
 
     // Placeholder value providers
     private sealed class PlaceholderValue {
-        abstract fun getValue(case: ViewableCase?): String
+        abstract fun getValue(case: RDRCase?): String
     }
 
-    private class CaseDependentValue(private val provider: (ViewableCase) -> String) : PlaceholderValue() {
-        override fun getValue(case: ViewableCase?): String =
+    private class CaseDependentValue(private val provider: (RDRCase) -> String) : PlaceholderValue() {
+        override fun getValue(case: RDRCase?): String =
             provider(case ?: throw IllegalArgumentException("Case required"))
     }
 
     private class ConstantValue(private val provider: () -> String) : PlaceholderValue() {
-        override fun getValue(case: ViewableCase?): String = provider()
+        override fun getValue(case: RDRCase?): String = provider()
     }
 
     private val placeholders = mapOf(
@@ -75,7 +75,7 @@ object KBChatService {
         }
     }
 
-    private fun String.replacePlaceholders(case: ViewableCase?): String {
+    private fun String.replacePlaceholders(case: RDRCase?): String {
         return placeholders.entries.fold(this) { text, (placeholder, valueProvider) ->
             try {
                 text.replace(placeholder, valueProvider.getValue(case))
@@ -88,17 +88,21 @@ object KBChatService {
 
     private val expressionCheck = FunctionDeclaration(
         name = IS_EXPRESSION_VALID,
-        description = "Check if the user-entered expression represents a valid condition",
+        description = """
+            This function MUST be called to validate any user-provided condition expression.
+            Do not attempt to determine the validity of a condition yourself.
+            Always use this function to get the definitive validity status and message.
+        """.trimIndent(),
         parameters = listOf(
             Schema.str(
                 name = EXPRESSION_PARAMETER,
-                description = "The expression to check for validity"
+                description = "The user-entered expression to check for validity"
             )
         ),
         requiredParameters = listOf(EXPRESSION_PARAMETER)
     )
 
-    fun createKBChatService(case: ViewableCase): ChatService {
+    fun createKBChatService(case: RDRCase): ChatService {
         val systemInstruction = systemInstruction(case)
         logger.info("system instruction:\n$systemInstruction")
         return GeminiChatService(
@@ -107,7 +111,7 @@ object KBChatService {
         )
     }
 
-    fun systemInstruction(case: ViewableCase): String {
+    fun systemInstruction(case: RDRCase): String {
         return readResource("system.md").replacePlaceholders(case)
     }
 }

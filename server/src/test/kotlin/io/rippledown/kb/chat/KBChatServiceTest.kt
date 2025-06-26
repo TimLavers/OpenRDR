@@ -2,14 +2,14 @@ package io.rippledown.kb.chat
 
 import io.kotest.assertions.withClue
 import io.kotest.matchers.string.shouldNotContain
-import io.rippledown.utils.createCaseWithInterpretation
+import io.rippledown.CaseTestUtils.createCase
 import kotlin.test.Test
 
 class KBChatServiceTest {
     @Test
     fun `should create system instruction`() {
         // Given
-        val case = createCaseWithInterpretation("caseName", conclusionTexts = listOf("Conclusion 1", "Conclusion 2"))
+        val case = createCase("caseName")
 
         // When
         val systemInstruction = KBChatService.systemInstruction(case)

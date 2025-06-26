@@ -46,9 +46,9 @@ class ChatDefs {
         waitForBotText(PLEASE_CONFIRM)
     }
 
-    @Then("the chatbot has asked for confirmation of the comment:")
-    fun waitForBotRequestForConfirmation(comment: String) {
-        waitForBotText(PLEASE_CONFIRM, comment)
+    @Then("the chatbot has asked for confirmation of the (comment|condition):")
+    fun waitForBotRequestForConfirmation(textToConfirm: String) {
+        waitForBotText(PLEASE_CONFIRM, textToConfirm)
     }
 
     @Then("the chatbot has completed the action")
@@ -112,7 +112,7 @@ class ChatDefs {
         waitForBotInitialPrompt()
         confirm()
         waitForBotQuestionToSpecifyAComment()
-        enterChatTextAndSend("Add the comment: \"$comment\"")
+        enterChatTextAndSend(comment)
         waitForBotRequestForConfirmation()
         confirm()
         waitForBotQuestionToProvideConditions()

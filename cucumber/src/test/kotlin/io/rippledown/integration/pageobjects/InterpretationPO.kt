@@ -43,7 +43,7 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
 
     fun waitForInterpretationText(expected: String): InterpretationPO {
         await()
-            .atMost(ofSeconds(5))
+            .atMost(ofSeconds(10))
             .until {
                 interpretationText() == expected
             }

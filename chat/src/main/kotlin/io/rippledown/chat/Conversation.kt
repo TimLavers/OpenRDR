@@ -41,16 +41,10 @@ class Conversation(private val chatService: ChatService, private val expressionV
 
         val expression = functionCall.args?.get(EXPRESSION_PARAMETER) ?: ""
         val evaluation = expressionValidator.evaluate(expression)
-        logger.info("Function call: '${functionCall.name}' with args: '$expression', evaluation: ${evaluation.toJsonString()}")
+        logger.info("*** Function call: '${functionCall.name}' with args: '$expression', evaluation: ${evaluation.toJsonString()}")
         return "'$expression' evaluation: ${evaluation.toJsonString()}"
     }
 
-    /**
-     * Processes a user message and returns the AI model's response.
-     *
-     * @param userMessage The user's input message.
-     * @return The model's response, possibly after executing function calls.
-     */
     override suspend fun response(userMessage: String): String {
         val currentChat = checkNotNull(chat) { "Chat not initialized. Call startConversation first." }
         val response = try {
@@ -67,6 +61,7 @@ class Conversation(private val chatService: ChatService, private val expressionV
 
     private suspend fun handleResponse(response: GenerateContentResponse): String {
         return if (response.functionCalls.isNotEmpty()) {
+            logger.info("*****Received function calls: ${response.functionCalls.joinToString { it.name }}")
             val functionResults = response.functionCalls.map { executeFunction(it) }
             val prompt = content { text("Function results: ${functionResults.joinToString(", ")}") }
             val promptText = (prompt.parts.get(0) as TextPart).text

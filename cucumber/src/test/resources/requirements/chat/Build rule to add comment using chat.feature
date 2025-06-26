@@ -13,12 +13,12 @@ Feature: The user can use the chat to make changes the interpretive report
     And I confirm
     And the chatbot has asked for what comment I want to add
     And I enter the following text into the chat panel:
-      | Add the comment "Let's surf" |
+      | Let's surf. |
     And the chatbot has asked for confirmation
     And I confirm
     And the chatbot has asked if I want to provide any conditions
     When I decline
-    Then the report should be "Let's surf"
+    Then the report should be "Let's surf."
     And stop the client application
 
   Scenario: The user should be able to use the chat to add two comments with no conditions
@@ -65,7 +65,7 @@ Feature: The user can use the chat to make changes the interpretive report
     And I confirm
     And the chatbot has asked for what comment I want to add
     And I enter the following text into the chat panel:
-      | Add the comment "Let's surf." |
+      | Let's surf |
     And the chatbot has asked for confirmation
     And I confirm
     And the chatbot has asked if I want to provide any conditions
@@ -73,6 +73,9 @@ Feature: The user can use the chat to make changes the interpretive report
     And the chatbot has asked for the first condition
     And I enter the following text into the chat panel:
       | wave height is more than 1 |
+    And the chatbot has asked for confirmation
+    And I confirm
+    And pause
     And the chatbot has asked if I want to provide any more conditions
     When I decline
     And the chatbot has completed the action
@@ -91,7 +94,7 @@ Feature: The user can use the chat to make changes the interpretive report
     And I confirm
     And the chatbot has asked for what comment I want to add
     And I enter the following text into the chat panel:
-      | Add the comment" "Let's surf." |
+      | Let's surf. |
     And the chatbot has asked for confirmation
     And I confirm
     And the chatbot has asked if I want to provide any conditions
