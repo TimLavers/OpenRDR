@@ -14,7 +14,7 @@ import io.rippledown.model.CaseId
 import io.rippledown.model.TestResult
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.utils.AttributeWithValue
-import io.rippledown.utils.createCase
+import io.rippledown.utils.createViewableCase
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import kotlin.test.Test
@@ -31,8 +31,8 @@ class CaseInspectionUpdateTest {
         val malabar = "Malabar"
         val caseIdBondi = CaseId(id = 1, name = bondi)
         val caseIdMalabar = CaseId(id = 2, name = malabar)
-        val initialCase = createCase(caseIdBondi)
-        val otherCase = createCase(caseIdMalabar)
+        val initialCase = createViewableCase(caseIdBondi)
+        val otherCase = createViewableCase(caseIdMalabar)
 
         with(composeTestRule) {
             setContent {
@@ -58,8 +58,8 @@ class CaseInspectionUpdateTest {
         val b = Attribute(2, "b")
         val attributeWithValueA = AttributeWithValue(a, TestResult("42"))
         val attributeWithValueB = AttributeWithValue(b, TestResult("43"))
-        val initialCase = createCase(caseId, listOf(attributeWithValueA, attributeWithValueB))
-        val caseWithReorderedAttributes = createCase(caseId, listOf(attributeWithValueB, attributeWithValueA))
+        val initialCase = createViewableCase(caseId, listOf(attributeWithValueA, attributeWithValueB))
+        val caseWithReorderedAttributes = createViewableCase(caseId, listOf(attributeWithValueB, attributeWithValueA))
 
         with(composeTestRule) {
             setContent {

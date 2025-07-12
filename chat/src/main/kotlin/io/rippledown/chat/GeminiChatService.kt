@@ -62,7 +62,7 @@ class GeminiChatService(systemInstruction: String, functionDeclarations: List<Fu
 
     //Set the model to be as deterministic as possible
     private fun generativeConfig() = GenerationConfig.builder().apply {
-        temperature = 0.0f
+        temperature = 0.1f
         topP = 0.995f
     }.build()
 

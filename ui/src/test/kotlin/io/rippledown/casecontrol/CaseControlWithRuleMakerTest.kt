@@ -14,7 +14,7 @@ import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.rule.*
-import io.rippledown.utils.createCaseWithInterpretation
+import io.rippledown.utils.createViewableCaseWithInterpretation
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -32,7 +32,7 @@ class CaseControlWithRuleMakerTest {
     val bondiComment = "Go to Bondi now!"
     val condition = hasCurrentValue(1, Attribute(2, "surf"))
     val suggestedCondition = NonEditableSuggestedCondition(condition)
-    val viewableCase = createCaseWithInterpretation(
+    val viewableCase = createViewableCaseWithInterpretation(
         name = caseName,
         caseId = id,
         conclusionTexts = listOf(bondiComment)

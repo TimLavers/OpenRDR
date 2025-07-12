@@ -40,7 +40,7 @@ class KBModelIntegrationTest {
         val response = kb.responseToUserMessage(userExpression)
 
         //Then
-        response shouldBe "What comment would you like to add?"
+        response shouldBe "Please confirm that you want to add the comment: 'to go to Bondi.'"
     }
 
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")

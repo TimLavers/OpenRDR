@@ -41,8 +41,8 @@ val glucose = Attribute(1, "Glucose")
 
 data class AttributeWithValue(val attribute: Attribute = glucose, val result: TestResult = TestResult("5.1"))
 
-fun createCase(caseId: CaseId, attributesWithValues: List<AttributeWithValue> = listOf(AttributeWithValue())) =
-    createCase(
+fun createViewableCase(caseId: CaseId, attributesWithValues: List<AttributeWithValue> = listOf(AttributeWithValue())) =
+    createViewableCase(
         caseId.name,
         caseId.id,
         attributesWithValues
@@ -52,22 +52,29 @@ fun createCase(
     name: String = "",
     caseId: Long? = null,
     attributesWithResults: List<AttributeWithValue> = listOf(AttributeWithValue())
-): ViewableCase {
-    val builder = RDRCaseBuilder()
+) = with(RDRCaseBuilder()) {
     attributesWithResults.forEach {
-        builder.addResult(it.attribute, 99994322, it.result)
+        addResult(it.attribute, 99994322, it.result)
     }
-    val rdrCase = builder.build(name, caseId)
-    val attributes = attributesWithResults.map { it.attribute }
-    return ViewableCase(rdrCase, CaseViewProperties(attributes))
+    build(name, caseId)
 }
 
-fun createCaseWithInterpretation(
+fun createViewableCase(
+    name: String = "",
+    caseId: Long? = null,
+    attributesWithResults: List<AttributeWithValue> = listOf(AttributeWithValue())
+): ViewableCase {
+    val case = createCase(name, caseId, attributesWithResults)
+    val attributes = attributesWithResults.map { it.attribute }
+    return ViewableCase(case, CaseViewProperties(attributes))
+}
+
+fun createViewableCaseWithInterpretation(
     name: String = "",
     caseId: Long? = null,
     conclusionTexts: List<String> = listOf(),
 ): ViewableCase {
-    val case = createCase(name, caseId, listOf(AttributeWithValue()))
+    val case = createViewableCase(name, caseId, listOf(AttributeWithValue()))
     var conclusionId = 10
     val interp = Interpretation(case.case.caseId).apply {
         conclusionTexts.forEach { text ->
@@ -90,11 +97,21 @@ fun createCaseWithInterpretation(
     return case
 }
 
+fun createCaseWithInterpretation(
+    name: String = "",
+    caseId: Long? = null,
+    conclusionTexts: List<String> = listOf(),
+): RDRCase {
+    val commentToConditions = conclusionTexts.associateWith { emptyList<String>() }
+    val interp = createInterpretation(commentToConditions)
+    return createCase(name, caseId, listOf(AttributeWithValue())).apply { interpretation = interp }
+}
+
 fun createInterpretation(
     commentToConditions: Map<String, List<String>> = mapOf(),
-): ViewableInterpretation {
+): Interpretation {
     var conclusionId = 0
-    val interp = Interpretation().apply {
+    return Interpretation().apply {
         commentToConditions.forEach { comment, conditions ->
             add(
                 RuleSummary(
@@ -104,6 +121,12 @@ fun createInterpretation(
             )
         }
     }
+}
+
+fun createViewableInterpretation(
+    commentToConditions: Map<String, List<String>> = mapOf(),
+): ViewableInterpretation {
+    val interp = createInterpretation(commentToConditions)
     val text = interp.conclusionTexts().joinToString(" ")
     return ViewableInterpretation(interpretation = interp, textGivenByRules = text)
 }
@@ -117,7 +140,7 @@ fun beSameAs(other: Condition) = Matcher<Condition> { value ->
 }
 
 inline fun <reified T> serializeDeserialize(t: T): T {
-    val json =Json {
+    val json = Json {
         allowStructuredMapKeys = true
     }
     val serialized = json.encodeToString(t)

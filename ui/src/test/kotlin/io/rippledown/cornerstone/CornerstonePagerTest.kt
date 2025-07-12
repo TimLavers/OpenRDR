@@ -8,7 +8,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.model.rule.CornerstoneStatus
-import io.rippledown.utils.createCase
+import io.rippledown.utils.createViewableCase
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -20,7 +20,7 @@ class CornerstonePagerTest {
     val caseNamePrefix = "Greta"
     val index = 42
     val total = 100
-    val case = createCase(caseNamePrefix)
+    val case = createViewableCase(caseNamePrefix)
     val cornerstoneStatus = CornerstoneStatus(
         cornerstoneToReview = case,
         indexOfCornerstoneToReview = index,
@@ -34,7 +34,7 @@ class CornerstonePagerTest {
         handler = mockk()
         coEvery { handler.selectCornerstone(any()) } answers {
             val caseId = firstArg<Int>()
-            createCase("$caseNamePrefix$caseId")
+            createViewableCase("$caseNamePrefix$caseId")
         }
     }
 
@@ -135,7 +135,7 @@ fun main() {
         ) {
 
             CornerstonePager(
-                CornerstoneStatus(createCase("Greta"), 2, 5), object : CornerstonePagerHandler {
+                CornerstoneStatus(createViewableCase("Greta"), 2, 5), object : CornerstonePagerHandler {
                     override fun selectCornerstone(index: Int) {
                     }
 

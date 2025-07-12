@@ -1,11 +1,10 @@
 package io.rippledown.constants.chat
 
-const val PLEASE_CONFIRM = "Please confirm"
-const val ANY_CONDITIONS = "any conditions"
-const val ANY_MORE_CONDITIONS = "any more conditions"
-const val FIRST_CONDITION = "first condition"
+const val CONFIRM = "confirm"
+const val REASON = "reason"
+const val MORE_REASONS = "more reasons"
+const val FIRST_REASON = "first reason"
 const val IS_NOT_TRUE = "is not true"
-const val COMMENT = "comment"
 const val ADD = "add"
 const val REMOVE = "remove"
 const val REPLACE = "replace"

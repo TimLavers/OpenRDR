@@ -17,11 +17,11 @@ interface ConversationService {
     suspend fun response(userMessage: String): String = ""
 }
 
-interface ExpressionValidator {
-    suspend fun evaluate(expression: String): ExpressionEvaluation
+interface REASON_TRANSFORMER {
+    suspend fun transform(reason: String): ReasonTransformation
 }
 
-class Conversation(private val chatService: ChatService, private val expressionValidator: ExpressionValidator) :
+class Conversation(private val chatService: ChatService, private val reasonTransformer: REASON_TRANSFORMER) :
     ConversationService {
     private val logger = lazyLogger
     private lateinit var chat: Chat
@@ -34,15 +34,14 @@ class Conversation(private val chatService: ChatService, private val expressionV
     }
 
     private suspend fun executeFunction(functionCall: FunctionCallPart): String {
-        if (functionCall.name != IS_EXPRESSION_VALID) {
+        if (functionCall.name != TRANSFORM_REASON) {
             logger.warn("Unknown function call: ${functionCall.name}")
             return "Unknown function: ${functionCall.name}"
         }
 
-        val expression = functionCall.args?.get(EXPRESSION_PARAMETER) ?: ""
-        val evaluation = expressionValidator.evaluate(expression)
-        logger.info("*** Function call: '${functionCall.name}' with args: '$expression', evaluation: ${evaluation.toJsonString()}")
-        return "'$expression' evaluation: ${evaluation.toJsonString()}"
+        val reason = functionCall.args?.get(REASON_PARAMETER) ?: ""
+        val transformation = reasonTransformer.transform(reason)
+        return "'$reason' evaluation: ${transformation.toJsonString()}"
     }
 
     override suspend fun response(userMessage: String): String {
@@ -81,8 +80,8 @@ class Conversation(private val chatService: ChatService, private val expressionV
     }
 
     companion object {
-        const val EXPRESSION_PARAMETER = "expression"
-        const val IS_EXPRESSION_VALID = "isExpressionValid"
+        const val REASON_PARAMETER = "reason"
+        const val TRANSFORM_REASON = "transformReasonToFormalCondition"
     }
 }
 

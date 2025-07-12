@@ -1,8 +1,8 @@
 package io.rippledown.kb
 
 import io.rippledown.chat.Conversation
-import io.rippledown.chat.ExpressionValidator
-import io.rippledown.chat.toExpressionEvaluation
+import io.rippledown.chat.REASON_TRANSFORMER
+import io.rippledown.chat.toExpressionTransformation
 import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
 import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
 import io.rippledown.expressionparser.AttributeFor
@@ -11,7 +11,10 @@ import io.rippledown.kb.chat.ChatManager
 import io.rippledown.kb.chat.KBChatService
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.log.lazyLogger
-import io.rippledown.model.*
+import io.rippledown.model.CaseType
+import io.rippledown.model.Interpretation
+import io.rippledown.model.RDRCase
+import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
@@ -322,10 +325,10 @@ class KB(persistentKB: PersistentKB) {
     suspend fun startConversation(case: RDRCase): String {
         val chatService = KBChatService.createKBChatService(case)
         val conversationService = Conversation(
-            chatService, expressionValidator =
-                object : ExpressionValidator {
-                    override suspend fun evaluate(expression: String) =
-                        conditionForExpression(expression, case).toExpressionEvaluation()
+            chatService, reasonTransformer =
+                object : REASON_TRANSFORMER {
+                    override suspend fun transform(reason: String) =
+                        conditionForExpression(reason, case).toExpressionTransformation()
                 })
         chatManager = ChatManager(conversationService, ruleService)
         return chatManager.startConversation(case)

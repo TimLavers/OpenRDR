@@ -11,7 +11,7 @@ import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.rule.clickCancelRuleButton
 import io.rippledown.rule.requireRuleMakerToBeDisplayed
 import io.rippledown.utils.applicationFor
-import io.rippledown.utils.createCaseWithInterpretation
+import io.rippledown.utils.createViewableCaseWithInterpretation
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -34,7 +34,7 @@ class CaseControlTest {
     fun `should show the interpretative report of the case`() = runTest {
         val name = "case A"
         val bondiComment = "Go to Bondi"
-        val case = createCaseWithInterpretation(name, 1, listOf(bondiComment))
+        val case = createViewableCaseWithInterpretation(name, 1, listOf(bondiComment))
 
         with(composeTestRule) {
             //Given
@@ -53,7 +53,7 @@ class CaseControlTest {
 
     @Test
     fun `should show case view`() = runTest {
-        val viewableCase = createCaseWithInterpretation(
+        val viewableCase = createViewableCaseWithInterpretation(
             name = "case 1",
             caseId = 1,
             conclusionTexts = listOf()
@@ -75,8 +75,8 @@ class CaseControlTest {
     fun `should show rule builder if the cornerstone status is not null`() = runTest {
         val name = "Bondi"
         val bondiComment = "Go to Bondi"
-        val case = createCaseWithInterpretation(name, 1, listOf(bondiComment))
-        val cornerstone = createCaseWithInterpretation("Malabar", 1, listOf(bondiComment))
+        val case = createViewableCaseWithInterpretation(name, 1, listOf(bondiComment))
+        val cornerstone = createViewableCaseWithInterpretation("Malabar", 1, listOf(bondiComment))
         val cornerstoneStatus = CornerstoneStatus(cornerstone, 42, 84)
 
         with(composeTestRule) {
@@ -99,7 +99,7 @@ class CaseControlTest {
     fun `should call handler when the rule session is cancelled`() = runTest {
         val name = "Bondi"
         val bondiComment = "Go to Bondi"
-        val case = createCaseWithInterpretation(name, 1, listOf(bondiComment))
+        val case = createViewableCaseWithInterpretation(name, 1, listOf(bondiComment))
 
         with(composeTestRule) {
             //Given
@@ -132,7 +132,7 @@ fun main() {
         val caseName = "Bondi"
         val id = 45L
         val bondiComment = "Go to Bondi now!"
-        val viewableCase = createCaseWithInterpretation(
+        val viewableCase = createViewableCaseWithInterpretation(
             name = caseName,
             caseId = id,
             conclusionTexts = listOf(bondiComment)

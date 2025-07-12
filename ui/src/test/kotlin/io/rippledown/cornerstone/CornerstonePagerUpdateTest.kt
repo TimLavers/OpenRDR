@@ -15,7 +15,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.mockk.mockk
 import io.rippledown.model.rule.CornerstoneStatus
-import io.rippledown.utils.createCase
+import io.rippledown.utils.createViewableCase
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -52,7 +52,7 @@ class CornerstonePagerUpdateTest {
 
 @Composable
 fun CornerstonePagerWithButton(handler: CornerstonePagerHandler) {
-    val case = createCase("Greta")
+    val case = createViewableCase("Greta")
     var cornerstoneStatus by remember { mutableStateOf(CornerstoneStatus(case, 0, 1)) }
 
     Row {

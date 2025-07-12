@@ -3,8 +3,8 @@ package io.rippledown.kb.chat
 import dev.shreyaspatil.ai.client.generativeai.type.FunctionDeclaration
 import dev.shreyaspatil.ai.client.generativeai.type.Schema
 import io.rippledown.chat.ChatService
-import io.rippledown.chat.Conversation.Companion.EXPRESSION_PARAMETER
-import io.rippledown.chat.Conversation.Companion.IS_EXPRESSION_VALID
+import io.rippledown.chat.Conversation.Companion.REASON_PARAMETER
+import io.rippledown.chat.Conversation.Companion.TRANSFORM_REASON
 import io.rippledown.chat.GeminiChatService
 import io.rippledown.constants.chat.*
 import io.rippledown.log.lazyLogger
@@ -14,104 +14,85 @@ import io.rippledown.toJsonString
 object KBChatService {
     private val logger = lazyLogger
 
-    // Cache for markdown file contents
-    private val fileCache = mutableMapOf<String, String>()
-
-    // Placeholder value providers
-    private sealed class PlaceholderValue {
-        abstract fun getValue(case: RDRCase?): String
+    private fun readPromptResource(resource: String): String {
+        val promptResource = "/chat/instructions/$resource"
+        return (KBChatService::class.java.getResource(promptResource)
+            ?: throw IllegalArgumentException("Prompt file not found: $promptResource")).readText()
     }
 
-    private class CaseDependentValue(private val provider: (RDRCase) -> String) : PlaceholderValue() {
-        override fun getValue(case: RDRCase?): String =
-            provider(case ?: throw IllegalArgumentException("Case required"))
-    }
-
-    private class ConstantValue(private val provider: () -> String) : PlaceholderValue() {
-        override fun getValue(case: RDRCase?): String = provider()
-    }
-
-    private val placeholders = mapOf(
-        "{{case_json}}" to CaseDependentValue { case -> case.toJsonString() },
-        "{{objective}}" to ConstantValue { readResource("objective.md") },
-        "{{initial-instructions}}" to ConstantValue { readResource("initial-instructions.md") },
-        "{{adding-a-comment}}" to ConstantValue { readResource("adding-a-comment.md") },
-        "{{removing-a-comment}}" to ConstantValue { readResource("removing-a-comment.md") },
-        "{{replacing-a-comment}}" to ConstantValue { readResource("replacing-a-comment.md") },
-        "{{providing-conditions}}" to ConstantValue { readResource("providing-conditions.md") },
-        "{{validating-a-condition}}" to ConstantValue { readResource("validating-a-condition.md") },
-        "{{formatting-rules}}" to ConstantValue { readResource("formatting-rules.md") },
-        "{{general-guidelines}}" to ConstantValue { readResource("general-guidelines.md") },
-        "{{IS_EXPRESSION_VALID}}" to ConstantValue { IS_EXPRESSION_VALID },
-        "{{PLEASE_CONFIRM}}" to ConstantValue { PLEASE_CONFIRM },
-        "{{ADD}}" to ConstantValue { ADD },
-        "{{REMOVE}}" to ConstantValue { REMOVE },
-        "{{REPLACE}}" to ConstantValue { REPLACE },
-        "{{STOP}}" to ConstantValue { STOP },
-        "{{NO_COMMENTS}}" to ConstantValue { NO_COMMENTS },
-        "{{EXISTING_COMMENTS}}" to ConstantValue { EXISTING_COMMENTS },
-        "{{WOULD_YOU_LIKE}}" to ConstantValue { WOULD_YOU_LIKE },
-        "{{ADD_A_COMMENT}}" to ConstantValue { ADD_A_COMMENT },
-        "{{REMOVE_A_COMMENT}}" to ConstantValue { REMOVE_A_COMMENT },
-        "{{REPLACE_A_COMMENT}}" to ConstantValue { REPLACE_A_COMMENT },
-        "{{WHAT_COMMENT}}" to ConstantValue { WHAT_COMMENT },
-        "{{ANY_CONDITIONS}}" to ConstantValue { ANY_CONDITIONS },
-        "{{ANY_MORE_CONDITIONS}}" to ConstantValue { ANY_MORE_CONDITIONS },
-        "{{FIRST_CONDITION}}" to ConstantValue { FIRST_CONDITION },
-        "{{START_ACTION}}" to ConstantValue { START_ACTION },
-        "{{STOP_ACTION}}" to ConstantValue { STOP_ACTION },
-        "{{DEBUG_ACTION}}" to ConstantValue { DEBUG_ACTION },
-        "{{USER_ACTION}}" to ConstantValue { USER_ACTION },
-        "{{ADD_ACTION}}" to ConstantValue { ADD_ACTION },
-        "{{REMOVE_ACTION}}" to ConstantValue { REMOVE_ACTION },
-        "{{REPLACE_ACTION}}" to ConstantValue { REPLACE_ACTION }
-    )
-
-    private fun readResource(resource: String): String {
-        return fileCache.computeIfAbsent(resource) {
-            val text = KBChatService::class.java.getResource("/chat/instructions/$resource")?.readText()
-                ?: throw IllegalStateException("Resource '$resource' not found")
-            text.trimIndent()
+    private fun String.replacePlaceholders(case: RDRCase): String {
+        var result = this
+        systemPromptVariables(case).forEach { key, value ->
+            result = result.replace("{{$key}}", value)
         }
+        return result
     }
 
-    private fun String.replacePlaceholders(case: RDRCase?): String {
-        return placeholders.entries.fold(this) { text, (placeholder, valueProvider) ->
-            try {
-                text.replace(placeholder, valueProvider.getValue(case))
-            } catch (e: Exception) {
-                logger.warn("Failed to replace placeholder $placeholder", e)
-                text // Fallback to original text with placeholder intact
-            }
-        }
-    }
-
-    private val expressionCheck = FunctionDeclaration(
-        name = IS_EXPRESSION_VALID,
-        description = """
-            This function MUST be called to validate any user-provided condition expression.
-            Do not attempt to determine the validity of a condition yourself.
-            Always use this function to get the definitive validity status and message.
-        """.trimIndent(),
+    private val reasonTransformer = FunctionDeclaration(
+        name = TRANSFORM_REASON,
+        description = "This function transforms a user-entered natural language reason into a formal condition. ",
         parameters = listOf(
             Schema.str(
-                name = EXPRESSION_PARAMETER,
-                description = "The user-entered expression to check for validity"
+                name = REASON_PARAMETER,
+                description = "The user-entered natural language reason for a condition, e.g. 'The patient has a fever'."
             )
         ),
-        requiredParameters = listOf(EXPRESSION_PARAMETER)
+        requiredParameters = listOf(REASON_PARAMETER)
     )
 
     fun createKBChatService(case: RDRCase): ChatService {
-        val systemInstruction = systemInstruction(case)
+        val systemInstruction = systemPrompt(case)
         logger.info("system instruction:\n$systemInstruction")
         return GeminiChatService(
             systemInstruction = systemInstruction,
-            functionDeclarations = listOf(expressionCheck)
+            functionDeclarations = listOf(reasonTransformer)
         )
     }
 
-    fun systemInstruction(case: RDRCase): String {
-        return readResource("system.md").replacePlaceholders(case)
+    val systemPromptSections = listOf(
+        "context.md",
+        "task.md",
+        "instructions.md",
+        "transform-reason.md",
+        "confirm-details.md",
+        "generate-output.md",
+        "examples.md",
+        "example-initial_blank_report.md",
+        "example-initial_non_blank_report.md",
+        "general-guidelines.md",
+    )
+
+    fun systemPromptVariables(case: RDRCase) = mapOf(
+        "COMMENTS" to case.interpretation.toJsonString(),
+        "TRANSFORM_REASON" to TRANSFORM_REASON,
+        "REASON" to REASON,
+        "FIRST_REASON" to FIRST_REASON,
+        "MORE_REASONS" to MORE_REASONS,
+        "CONFIRM" to CONFIRM,
+        "ADD" to ADD,
+        "REMOVE" to REMOVE,
+        "REPLACE" to REPLACE,
+        "STOP" to STOP,
+        "NO_COMMENTS" to NO_COMMENTS,
+        "EXISTING_COMMENTS" to EXISTING_COMMENTS,
+        "WOULD_YOU_LIKE" to WOULD_YOU_LIKE,
+        "ADD_A_COMMENT" to ADD_A_COMMENT,
+        "REMOVE_A_COMMENT" to REMOVE_A_COMMENT,
+        "REPLACE_A_COMMENT" to REPLACE_A_COMMENT,
+        "WHAT_COMMENT" to WHAT_COMMENT,
+        "START_ACTION" to START_ACTION,
+        "STOP_ACTION" to STOP_ACTION,
+        "DEBUG_ACTION" to DEBUG_ACTION,
+        "USER_ACTION" to USER_ACTION,
+        "ADD_ACTION" to ADD_ACTION,
+        "REMOVE_ACTION" to REMOVE_ACTION,
+        "REPLACE_ACTION" to REPLACE_ACTION
+    )
+
+    fun systemPrompt(case: RDRCase): String {
+        val map = systemPromptSections.map { it ->
+            readPromptResource(it).replacePlaceholders(case)
+        }
+        return map.joinToString(separator = "\n")
     }
 }

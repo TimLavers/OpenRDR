@@ -1,26 +1,35 @@
 package io.rippledown.kb.chat
 
-import io.kotest.assertions.withClue
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
-import io.rippledown.CaseTestUtils.createCase
+import io.rippledown.utils.createCaseWithInterpretation
 import kotlin.test.Test
 
 class KBChatServiceTest {
     @Test
-    fun `should create system instruction`() {
+    fun `system instruction should not contain placeholders`() {
         // Given
-        val case = createCase("caseName")
+        val case = createCaseWithInterpretation("Test Case")
 
         // When
-        val systemInstruction = KBChatService.systemInstruction(case)
+        val systemPrompt = KBChatService.systemPrompt(case)
 
         // Then
-        withClue("System instruction should not contain placeholders") {
-            systemInstruction shouldNotContain "{{"
-            systemInstruction shouldNotContain "}}"
-        }
+        systemPrompt shouldNotContain "{{"
+        systemPrompt shouldNotContain "}}"
 
-        println("System Instruction: $systemInstruction")
+    }
 
+    @Test
+    fun `system instruction should contain the comments in the interpretation`() {
+        // Given
+        val comments = listOf("Go to Bondi", "Go to Malabar")
+        val case = createCaseWithInterpretation("Test Case", conclusionTexts = comments)
+
+        // When
+        val systemPrompt = KBChatService.systemPrompt(case)
+
+        // Then
+        comments.forEach { systemPrompt shouldContain it }
     }
 }

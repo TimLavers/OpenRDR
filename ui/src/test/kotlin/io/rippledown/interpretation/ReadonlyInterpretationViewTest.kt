@@ -9,7 +9,7 @@ import androidx.compose.ui.text.TextLayoutResult
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import io.rippledown.decoration.BACKGROUND_COLOR
-import io.rippledown.utils.createInterpretation
+import io.rippledown.utils.createViewableInterpretation
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -37,7 +37,7 @@ class ReadonlyInterpretationViewTest {
         with(composeTestRule) {
             setContent {
                 ReadonlyInterpretationView(
-                    createInterpretation(mapOf(text to emptyList())),
+                    createViewableInterpretation(mapOf(text to emptyList())),
                     modifier = modifier,
                     handler = handler
                 )
@@ -50,7 +50,7 @@ class ReadonlyInterpretationViewTest {
     fun `should show a blank interpretation`() = runTest {
         with(composeTestRule) {
             setContent {
-                ReadonlyInterpretationView(createInterpretation(), modifier = modifier, handler = handler)
+                ReadonlyInterpretationView(createViewableInterpretation(), modifier = modifier, handler = handler)
             }
             requireInterpretationForCornerstone("")
         }
@@ -60,7 +60,7 @@ class ReadonlyInterpretationViewTest {
     fun `should highlight comment under the pointer`() = runTest {
         //Given
         val bondiComment = "Bondi."
-        val interpretation = createInterpretation(mapOf(bondiComment to emptyList()))
+        val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
         var textLayoutResult: TextLayoutResult? = null
         val handler = object : ReadonlyInterpretationViewHandler by handler {
             override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
@@ -88,7 +88,8 @@ class ReadonlyInterpretationViewTest {
         //Given
         val bondiComment = "Bondi."
         val malabarComment = "Malabar."
-        val interpretation = createInterpretation(mapOf(bondiComment to emptyList(), malabarComment to emptyList()))
+        val interpretation =
+            createViewableInterpretation(mapOf(bondiComment to emptyList(), malabarComment to emptyList()))
         val conclusionTexts = interpretation.conclusions().map { it.text }
         val unhighlighted = conclusionTexts.unhighlighted().text
         var textLayoutResult: TextLayoutResult? = null
@@ -116,7 +117,7 @@ class ReadonlyInterpretationViewTest {
     fun `should not highlight a comment if the pointer is not over it`() = runTest {
         //Given
         val bondiComment = "Bondi."
-        val interpretation = createInterpretation(mapOf(bondiComment to emptyList()))
+        val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
         val conclusionTexts = interpretation.conclusions().map { it.text }
         val unhighlighted = conclusionTexts.unhighlighted().text
         var textLayoutResult: TextLayoutResult? = null
@@ -151,7 +152,7 @@ class ReadonlyInterpretationViewTest {
         val interpretationText = "$bondiComment $malabarComment"
         val bondiConditions = listOf("Bring your flippers.", "And your sunscreeen.")
         val malabarConditions = listOf("Great for a swim!", "And a picnic.")
-        val interpretation = createInterpretation(
+        val interpretation = createViewableInterpretation(
             mapOf(
                 bondiComment to bondiConditions,
                 malabarComment to malabarConditions
@@ -183,7 +184,7 @@ class ReadonlyInterpretationViewTest {
         runTest {
             //Given
             val bondiComment = "Best surf in the world!"
-            val interpretation = createInterpretation(
+            val interpretation = createViewableInterpretation(
                 mapOf(bondiComment to listOf())
             )
             var textLayoutResult: TextLayoutResult? = null
@@ -212,7 +213,7 @@ class ReadonlyInterpretationViewTest {
     fun `should show comment but not show any conditions if the pointer is not over a comment`() = runTest {
         //Given
         val bondiComment = "Best surf in the world!"
-        val interpretation = createInterpretation(
+        val interpretation = createViewableInterpretation(
             mapOf(bondiComment to listOf())
         )
         var textLayoutResult: TextLayoutResult? = null
@@ -240,7 +241,7 @@ class ReadonlyInterpretationViewTest {
     fun `should not show change interpretation icon`() = runTest {
         //Given
         val bondiComment = "Best surf in the world!"
-        val interpretation = createInterpretation(
+        val interpretation = createViewableInterpretation(
             mapOf(bondiComment to listOf())
         )
         with(composeTestRule) {

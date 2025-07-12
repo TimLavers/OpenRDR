@@ -30,8 +30,8 @@ import io.rippledown.model.rule.UndoRuleDescription
 import io.rippledown.rule.clickCancelRuleButton
 import io.rippledown.rule.clickFinishRuleButton
 import io.rippledown.utils.applicationFor
-import io.rippledown.utils.createCase
-import io.rippledown.utils.createCaseWithInterpretation
+import io.rippledown.utils.createViewableCase
+import io.rippledown.utils.createViewableCaseWithInterpretation
 import kotlinx.coroutines.Dispatchers.Unconfined
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -83,7 +83,7 @@ class OpenRDRUITest {
         val caseId2 = CaseId(id = 2, name = caseB)
         val caseIds = listOf(caseId1, caseId2)
         val bondiComment = "Go to Bondi"
-        val case = createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
+        val case = createViewableCaseWithInterpretation(caseA, 1, listOf(bondiComment))
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
         coEvery { api.getCase(1) } returns case
 
@@ -109,7 +109,7 @@ class OpenRDRUITest {
         val caseId1 = CaseId(id = 1, name = caseA)
         val caseIds = listOf(caseId1)
         val bondiComment = "Go to Bondi"
-        val case = createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
+        val case = createViewableCaseWithInterpretation(caseA, 1, listOf(bondiComment))
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
         coEvery { api.getCase(1) } returns case
 
@@ -134,7 +134,7 @@ class OpenRDRUITest {
         val caseId1 = CaseId(id = 1, name = caseA)
         val caseIds = listOf(caseId1)
         val bondiComment = "Go to Bondi"
-        val case = createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
+        val case = createViewableCaseWithInterpretation(caseA, 1, listOf(bondiComment))
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
         coEvery { api.getCase(1) } returns case
 
@@ -160,7 +160,7 @@ class OpenRDRUITest {
         val caseId1 = CaseId(id = 1, name = caseA)
         val caseIds = listOf(caseId1)
         val bondiComment = "Go to Bondi"
-        val case = createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
+            val case = createViewableCaseWithInterpretation(caseA, 1, listOf(bondiComment))
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
         coEvery { api.getCase(1) } returns case
 
@@ -189,8 +189,8 @@ class OpenRDRUITest {
         val caseIds = listOf(caseId1, caseId2)
         val bondiComment = "Go to Bondi"
         val malabarComment = "Go to Malabar"
-        val case1 = createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
-        val case2 = createCaseWithInterpretation(caseB, 2, listOf(malabarComment))
+        val case1 = createViewableCaseWithInterpretation(caseA, 1, listOf(bondiComment))
+        val case2 = createViewableCaseWithInterpretation(caseB, 2, listOf(malabarComment))
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
         coEvery { api.getCase(1) } returns case1
         coEvery { api.getCase(2) } returns case2
@@ -222,7 +222,7 @@ class OpenRDRUITest {
         val id = caseId.id!!
         val caseIds = listOf(caseId)
         val bondiComment = "Go to Bondi"
-        val case = createCaseWithInterpretation(caseName, id, listOf(bondiComment))
+        val case = createViewableCaseWithInterpretation(caseName, id, listOf(bondiComment))
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
         coEvery { api.getCase(id) } returns case
 
@@ -250,7 +250,7 @@ class OpenRDRUITest {
         val id = caseId.id!!
         val caseIds = listOf(caseId)
         val bondiComment = "Go to Bondi"
-        val case = createCaseWithInterpretation(caseName, id, listOf(bondiComment))
+        val case = createViewableCaseWithInterpretation(caseName, id, listOf(bondiComment))
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
         coEvery { api.getCase(id) } returns case
 
@@ -277,7 +277,7 @@ class OpenRDRUITest {
             val id = caseId.id!!
             val caseIds = listOf(caseId)
             val bondiComment = "Go to Bondi"
-            val case = createCaseWithInterpretation(caseName, id, listOf(bondiComment))
+            val case = createViewableCaseWithInterpretation(caseName, id, listOf(bondiComment))
             coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
             coEvery { api.getCase(id) } returns case
 
@@ -307,8 +307,8 @@ class OpenRDRUITest {
         val caseIds = listOf(caseIdA, caseIdB)
         val bondiComment = "Go to Bondi"
         val malabarComment = "Go to Malabar"
-        val caseA = createCaseWithInterpretation(caseNameA, idA, listOf(bondiComment))
-        val caseB = createCaseWithInterpretation(caseNameB, idB, listOf(malabarComment))
+        val caseA = createViewableCaseWithInterpretation(caseNameA, idA, listOf(bondiComment))
+        val caseB = createViewableCaseWithInterpretation(caseNameB, idB, listOf(malabarComment))
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
         coEvery { api.getCase(idA) } returns caseA
         coEvery { api.getCase(idB) } returns caseB
@@ -338,7 +338,7 @@ class OpenRDRUITest {
         val id = caseId.id!!
         val caseIds = listOf(caseId)
         val bondiComment = "Go to Bondi"
-        val case = createCaseWithInterpretation(caseName, id, listOf(bondiComment))
+        val case = createViewableCaseWithInterpretation(caseName, id, listOf(bondiComment))
         val initialResponse = "the answer is 42"
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
         coEvery { api.getCase(id) } returns case
@@ -366,7 +366,7 @@ class OpenRDRUITest {
         val caseIds = listOf(caseId1)
         val bondiComment = "Go to Bondi"
         val answer = "the answer is 42"
-        val case = createCaseWithInterpretation(caseA, 1, listOf(bondiComment))
+        val case = createViewableCaseWithInterpretation(caseA, 1, listOf(bondiComment))
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
         coEvery { api.getCase(1) } returns case
         coEvery { api.sendUserMessage(any(), any<Long>()) } returns answer
@@ -399,8 +399,8 @@ class OpenRDRUITest {
         val caseId = CaseId(id = id, name = caseName)
         val bondiComment = "Go to Bondi"
         val updatedBondiComments = "Go to Bondi. Bring flippers."
-        val case = createCaseWithInterpretation(caseName, id, listOf(bondiComment))
-        val updatedCase = createCaseWithInterpretation(caseName, id, listOf(updatedBondiComments))
+        val case = createViewableCaseWithInterpretation(caseName, id, listOf(bondiComment))
+        val updatedCase = createViewableCaseWithInterpretation(caseName, id, listOf(updatedBondiComments))
         coEvery { api.getCase(id) } returns case
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         with(composeTestRule) {
@@ -429,7 +429,7 @@ class OpenRDRUITest {
     fun `should show case list for several cases`() = runTest {
         val caseIds = (1..10).map { i ->
             val caseId = CaseId(id = i.toLong(), name = "case $i")
-            coEvery { api.getCase(caseId.id!!) } returns createCase(caseId)
+            coEvery { api.getCase(caseId.id!!) } returns createViewableCase(caseId)
             caseId
         }
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
@@ -460,8 +460,8 @@ class OpenRDRUITest {
         val caseId2 = CaseId(id = 2, name = caseNameB)
         val caseId3 = CaseId(id = 3, name = caseNameC)
         val threeCaseIds = listOf(caseId1, caseId2, caseId3)
-        val caseA = createCase(caseId1)
-        val caseB = createCase(caseId2)
+        val caseA = createViewableCase(caseId1)
+        val caseB = createViewableCase(caseId2)
 
         coEvery { api.getCase(1) } returns caseA
         coEvery { api.getCase(2) } returns caseB
@@ -493,7 +493,7 @@ class OpenRDRUITest {
         val twoCaseIds = listOf(
             caseId1, caseId2
         )
-        val case = createCase(caseId1)
+        val case = createViewableCase(caseId1)
         coEvery { api.getCase(1) } returns case
         coEvery { api.waitingCasesInfo() } returns CasesInfo(twoCaseIds)
 
@@ -516,12 +516,12 @@ class OpenRDRUITest {
         val bondiComment = "Go to Bondi"
         val malabarComment = "Go to Malabar"
 
-        val viewableCaseA = createCaseWithInterpretation(
+        val viewableCaseA = createViewableCaseWithInterpretation(
             name = caseA,
             caseId = 1,
             conclusionTexts = listOf(bondiComment)
         )
-        val viewableCaseB = createCaseWithInterpretation(
+        val viewableCaseB = createViewableCaseWithInterpretation(
             name = caseB,
             caseId = 2,
             conclusionTexts = listOf(malabarComment)
@@ -559,12 +559,12 @@ class OpenRDRUITest {
         val bondiComment = "Go to Bondi"
         val malabarComment = "Go to Malabar"
 
-        val viewableCaseA = createCaseWithInterpretation(
+        val viewableCaseA = createViewableCaseWithInterpretation(
             name = caseA,
             caseId = 1,
             conclusionTexts = listOf(bondiComment)
         )
-        val viewableCaseB = createCaseWithInterpretation(
+        val viewableCaseB = createViewableCaseWithInterpretation(
             name = caseB,
             caseId = 2,
             conclusionTexts = listOf(malabarComment)
@@ -612,7 +612,7 @@ class OpenRDRUITest {
     fun `should not show case selector when a rule session is started`() = runTest {
         val caseName = "case a"
         val caseId = CaseId(id = 1, name = caseName)
-        val case = createCase(caseId)
+        val case = createViewableCase(caseId)
         coEvery { api.getCase(1) } returns case
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         with(composeTestRule) {
@@ -639,8 +639,8 @@ class OpenRDRUITest {
         val cornerstoneName = "case b"
         val caseId = CaseId(id = 1, name = caseName)
         val cornerstoneId = CaseId(id = 2, name = cornerstoneName)
-        val case = createCase(caseId)
-        val cornerstone = createCase(cornerstoneId)
+        val case = createViewableCase(caseId)
+        val cornerstone = createViewableCase(cornerstoneId)
         val cornerstoneStatus = CornerstoneStatus(cornerstone, 0, 1)
         coEvery { api.getCase(1) } returns case
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
@@ -670,8 +670,8 @@ class OpenRDRUITest {
         val cornerstoneName = "case b"
         val caseId = CaseId(id = 1, name = caseName)
         val cornerstoneId = CaseId(id = 2, name = cornerstoneName)
-        val case = createCase(caseId)
-        val cornerstone = createCase(cornerstoneId)
+        val case = createViewableCase(caseId)
+        val cornerstone = createViewableCase(cornerstoneId)
         val cornerstoneStatus = CornerstoneStatus(cornerstone, 0, 1)
         coEvery { api.getCase(1) } returns case
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
@@ -700,7 +700,7 @@ class OpenRDRUITest {
     fun `should call handler to cancel the rule session when a rule session is cancelled`() = runTest {
         val caseName = "case a"
         val caseId = CaseId(id = 1, name = caseName)
-        val case = createCase(caseId)
+        val case = createViewableCase(caseId)
         coEvery { api.getCase(1) } returns case
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         coEvery { api.startRuleSession(any()) } returns CornerstoneStatus()
@@ -729,8 +729,8 @@ class OpenRDRUITest {
         val cornerstoneName = "case b"
         val caseId = CaseId(id = 1, name = caseName)
         val cornerstoneId = CaseId(id = 2, name = cornerstoneName)
-        val case = createCase(caseId)
-        val cornerstone = createCase(cornerstoneId)
+        val case = createViewableCase(caseId)
+        val cornerstone = createViewableCase(cornerstoneId)
         val cornerstoneStatus = CornerstoneStatus(cornerstone, 0, 1)
         coEvery { api.getCase(1) } returns case
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
@@ -761,7 +761,7 @@ class OpenRDRUITest {
     fun `should hide the change interpretation icon when a rule session is started to add a comment`() = runTest {
         val caseName = "case a"
         val caseId = CaseId(id = 1, name = caseName)
-        val case = createCase(caseId)
+        val case = createViewableCase(caseId)
         coEvery { api.getCase(1) } returns case
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         coEvery { api.startRuleSession(any()) } returns CornerstoneStatus()
@@ -792,7 +792,8 @@ class OpenRDRUITest {
             val id = 1L
             val caseId = CaseId(id = id, name = caseName)
             val bondiComment = "Go to Bondi"
-            val case = createCaseWithInterpretation(caseName, caseId = id, conclusionTexts = listOf(bondiComment))
+            val case =
+                createViewableCaseWithInterpretation(caseName, caseId = id, conclusionTexts = listOf(bondiComment))
             coEvery { api.getCase(1) } returns case
             coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
             coEvery { api.startRuleSession(any()) } returns CornerstoneStatus()
@@ -823,7 +824,8 @@ class OpenRDRUITest {
             val caseId = CaseId(id = id, name = caseName)
             val bondiComment = "Go to Bondi"
             val malabarComment = "Go to Malabar"
-            val case = createCaseWithInterpretation(caseName, caseId = id, conclusionTexts = listOf(bondiComment))
+            val case =
+                createViewableCaseWithInterpretation(caseName, caseId = id, conclusionTexts = listOf(bondiComment))
             coEvery { api.getCase(1) } returns case
             coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
             coEvery { api.startRuleSession(any()) } returns CornerstoneStatus()
@@ -851,7 +853,7 @@ class OpenRDRUITest {
         val caseName = "case a"
         val id = 1L
         val caseId = CaseId(id = id, name = caseName)
-        val case = createCaseWithInterpretation(caseName, id, listOf("Go to Coogee"))
+        val case = createViewableCaseWithInterpretation(caseName, id, listOf("Go to Coogee"))
         coEvery { api.getCase(id) } returns case
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         coEvery { api.startRuleSession(any()) } returns CornerstoneStatus()
@@ -881,7 +883,7 @@ class OpenRDRUITest {
         val caseName = "case a"
         val id = 1L
         val caseId = CaseId(id = id, name = caseName)
-        val case = createCaseWithInterpretation(caseName, id, listOf("Go to Coogee"))
+        val case = createViewableCaseWithInterpretation(caseName, id, listOf("Go to Coogee"))
         coEvery { api.getCase(id) } returns case
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         coEvery { api.startRuleSession(any()) } returns CornerstoneStatus()
@@ -910,7 +912,7 @@ class OpenRDRUITest {
     fun `should call handler to retrieve all comments`() = runTest {
         val caseName = "case a"
         val caseId = CaseId(id = 1, name = caseName)
-        val case = createCase(caseId)
+        val case = createViewableCase(caseId)
         coEvery { api.getCase(1) } returns case
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         with(composeTestRule) {
@@ -929,7 +931,7 @@ class OpenRDRUITest {
         runTest {
             val caseName = "case a"
             val caseId = CaseId(id = 1, name = caseName)
-            val case = createCase(caseId)
+            val case = createViewableCase(caseId)
             coEvery { api.getCase(1) } returns case
             coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
 
@@ -961,7 +963,7 @@ class OpenRDRUITest {
         val conclusionB = Conclusion(2, commentB)
         val caseName = "case a"
         val caseId = CaseId(id = 1, name = caseName)
-        val case = createCaseWithInterpretation(caseId.name, caseId.id, listOf(commentA))
+        val case = createViewableCaseWithInterpretation(caseId.name, caseId.id, listOf(commentA))
         coEvery { api.getCase(1) } returns case
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         coEvery { api.allConclusions() } returns setOf(conclusionA, conclusionB)
@@ -989,7 +991,7 @@ class OpenRDRUITest {
             val conclusionB = Conclusion(2, commentB)
             val caseName = "case a"
             val caseId = CaseId(id = 1, name = caseName)
-            val case = createCaseWithInterpretation(caseId.name, caseId.id, listOf(commentA))
+            val case = createViewableCaseWithInterpretation(caseId.name, caseId.id, listOf(commentA))
             coEvery { api.getCase(1) } returns case
             coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
             coEvery { api.allConclusions() } returns setOf(conclusionA, conclusionB)
@@ -1017,7 +1019,7 @@ class OpenRDRUITest {
         val conclusionB = Conclusion(2, commentB)
         val caseName = "case a"
         val caseId = CaseId(id = 1, name = caseName)
-        val case = createCaseWithInterpretation(caseId.name, caseId.id, listOf(commentA))
+        val case = createViewableCaseWithInterpretation(caseId.name, caseId.id, listOf(commentA))
         coEvery { api.getCase(1) } returns case
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         coEvery { api.allConclusions() } returns setOf(conclusionA, conclusionB)
@@ -1062,7 +1064,7 @@ class OpenRDRUITest {
     fun `when a rule is undone the current case should be refreshed`() = runTest {
         val caseName = "case a"
         val caseId = CaseId(id = 1, name = caseName)
-        val case = createCaseWithInterpretation(caseId.name, caseId.id, listOf())
+        val case = createViewableCaseWithInterpretation(caseId.name, caseId.id, listOf())
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         coEvery { api.getCase(any()) } returns case
         val descriptionText = "This is the last rule!"
@@ -1102,7 +1104,7 @@ fun main() {
     coEvery { handler.api } returns api
     coEvery { handler.isClosing() } returns false
     coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
-    coEvery { api.getCase(any()) } returns createCaseWithInterpretation("case A", 1, listOf("Go to Bondi"))
+    coEvery { api.getCase(any()) } returns createViewableCaseWithInterpretation("case A", 1, listOf("Go to Bondi"))
     coEvery { api.sendUserMessage(any(), any()) } returns "The answer is 42"
 
     applicationFor {

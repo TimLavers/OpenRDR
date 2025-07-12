@@ -32,7 +32,12 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
         logger.info("$LOG_PREFIX_FOR_USER_MESSAGE '$message'")
         val response = conversationService.response(message)
         logger.info("$LOG_PREFIX_FOR_CONVERSATION_RESPONSE $response")
-        return processActionComment(response.fromJsonString<ActionComment>())
+        // Strip the enclosing JSON if it exists
+        return if (response.contains("action")) {
+            processActionComment(response.fromJsonString<ActionComment>())
+        } else {
+            response
+        }
     }
 
     //Either pass on the model's response to the user or take some rule action
@@ -45,8 +50,8 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
             }
 
             ADD_ACTION -> {
-                val newComment = actionComment.new_comment
-                val userExpressionsForConditions = actionComment.conditions
+                val comment = actionComment.comment
+                val userExpressionsForConditions = actionComment.reasons
                 val conditionParsingResults = userExpressionsForConditions?.map { expression ->
                     ruleService.conditionForExpression(currentCase, expression)
                 } ?: emptyList()
@@ -59,7 +64,7 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
                 if (failedResult != null) {
                     "Failed to parse condition: ${failedResult}"
                 } else {
-                    newComment?.let {
+                    comment?.let {
                         ruleService.buildRuleToAddComment(currentCase, it, conditions)
                         CHAT_BOT_DONE_MESSAGE
                     } ?: ""

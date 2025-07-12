@@ -21,11 +21,11 @@ class ExpressionEvaluationTest {
         val conditionParsingResult = ConditionParsingResult(condition = condition)
 
         // When
-        val expressionEvaluation = conditionParsingResult.toExpressionEvaluation()
+        val expressionEvaluation = conditionParsingResult.toExpressionTransformation()
 
         // Then
-        expressionEvaluation.isValid shouldBe true
-        expressionEvaluation.message shouldBe ExpressionEvaluation.VALID_CONDITION_MESSAGE
+        expressionEvaluation.isTransformed shouldBe true
+        expressionEvaluation.message shouldBe ReasonTransformation.OK
     }
 
     @Test
@@ -40,11 +40,11 @@ class ExpressionEvaluationTest {
         val conditionParsingResult = ConditionParsingResult(condition = condition)
 
         // When
-        val expressionEvaluation = conditionParsingResult.toExpressionEvaluation()
+        val expressionEvaluation = conditionParsingResult.toExpressionTransformation()
 
         // Then
-        expressionEvaluation.isValid shouldBe true
-        expressionEvaluation.message shouldBe ExpressionEvaluation.VALID_CONDITION_WITH_EVALUATION_MESSAGE.format(
+        expressionEvaluation.isTransformed shouldBe true
+        expressionEvaluation.message shouldBe ReasonTransformation.TRANSFORMATION_MESSAGE.format(
             condition.asText()
         )
     }
@@ -56,23 +56,23 @@ class ExpressionEvaluationTest {
         val conditionParsingResult = ConditionParsingResult(condition = null, errorMessage = errorMessage)
 
         // When
-        val expressionEvaluation = conditionParsingResult.toExpressionEvaluation()
+        val expressionEvaluation = conditionParsingResult.toExpressionTransformation()
 
         // Then
-        expressionEvaluation.isValid shouldBe false
+        expressionEvaluation.isTransformed shouldBe false
         expressionEvaluation.message shouldBe errorMessage
     }
 
     @Test
     fun `should be able to serialise ExpressionEvaluation to JSON`() {
         // Given
-        val expressionEvaluation = ExpressionEvaluation(true, "Valid condition")
+        val expressionEvaluation = ReasonTransformation(true, "Valid condition")
 
         // When
         val result = expressionEvaluation.toJsonString()
 
         // Then
-        Json.parseToJsonElement(result) shouldBe Json.parseToJsonElement("""{"isValid":true,"message":"Valid condition"}""")
+        Json.parseToJsonElement(result) shouldBe Json.parseToJsonElement("""{"isTransformed":true,"message":"Valid condition"}""")
     }
 
 }
