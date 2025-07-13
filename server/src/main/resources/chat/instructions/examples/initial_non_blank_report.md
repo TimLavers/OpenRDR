@@ -1,4 +1,4 @@
-## Example Interaction where the report has an initial comment:
+## Example interaction where the report has an initial comment:
 
 Assistant:
 

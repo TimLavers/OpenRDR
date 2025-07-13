@@ -1,4 +1,4 @@
-## Example Interaction where the report has no initial comments
+## Example interaction where the user enters an invalid reason
 
 Assistant:
 
@@ -41,34 +41,25 @@ which returns the JSON:
 
 ```json
 {
-  "isTransformed": true,
-  "message": "Your reason is equivalent to: sun is \"hot\"."
+  "isTransformed": false,
+  "message": "Your reason is not true for this case. Please rephrase the reason."
 }
 ```
 
 ]
 
-Assistant:
-
-```json
-{
-  "action": "USER_ACTION",
-  "message": "Your reason is equivalent to: sun is \"hot\". Do you want to provide any more reasons?"
-}
-```
-
-User: Yes, if waves are more than 1 metre.
+User: the sun is out.
 
 Assistant:
 
-[Internal: Function call to {{TRANSFORM_REASON}}(reason="waves are more than 1 metre")
+[Internal: Function call to {{TRANSFORM_REASON}}(reason="the sun is out")
 
 which returns the JSON:
 
 ```json{
 {
   "isTransformed": true,
-  "message": "Your reason is equivalent to: waves > 1."
+  "message": "Your reason is equivalent to: sun is \"out\"."
 }
 ```
 
@@ -79,7 +70,7 @@ Assistant:
 ```json
 {
   "action": "USER_ACTION",
-  "message": "Your reason is equivalent to: waves > 1. Do you want to provide any more reasons?"
+  "message": "Your reason is equivalent to: sun is \"out\". Do you want to provide any more reasons?"
 }
 ```
 
@@ -92,8 +83,7 @@ Assistant:
   "action": "ADD_ACTION",
   "comment": "Let's go to the beach.",
   "reasons": [
-    "sun is \"hot\"",
-    "waves > 1"
+    "sun is \"out\""
   ]
 }
 ```

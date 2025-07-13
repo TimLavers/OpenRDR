@@ -2,21 +2,20 @@
 
 Engage with the User:
 
-The current report for the case is a list of comments.
+In general, the current report for the case is a list of comments.
 
-For a non-blank report, each comment is represented in the following JSON object as the value of "conclusion":"text" in
-the"ruleSummaries" array, as follows:
+For this particular case, the list of comments is as follows:
 
 {{COMMENTS}}
 
 If there are no comments, ask the user if they want to add a comment.
 
-Else, if there are comments, display them with an index and ask the user if they want to add, remove, or replace a
-comment.
+Else, if there is at least one comment, display the comments with an index and ask the user if they want to add, remove,
+or replace a comment.
 
 Depending on the action, collect the necessary details:
 
-- For add: collect the comment text.
+- For add: Collect the comment text.
 - For remove: Ask which comment to remove (e.g., by index or text).
 - For replace: Ask which comment to remove and what to replace it with.
 

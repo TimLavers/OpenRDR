@@ -8,14 +8,15 @@ import io.rippledown.chat.Conversation.Companion.TRANSFORM_REASON
 import io.rippledown.chat.GeminiChatService
 import io.rippledown.constants.chat.*
 import io.rippledown.log.lazyLogger
+import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import io.rippledown.toJsonString
 
 object KBChatService {
     private val logger = lazyLogger
 
-    private fun readPromptResource(resource: String): String {
-        val promptResource = "/chat/instructions/$resource"
+    private fun readPromptResource(directory: String, resource: String): String {
+        val promptResource = "$directory/$resource"
         return (KBChatService::class.java.getResource(promptResource)
             ?: throw IllegalArgumentException("Prompt file not found: $promptResource")).readText()
     }
@@ -49,21 +50,24 @@ object KBChatService {
         )
     }
 
-    val systemPromptSections = listOf(
+    val systemPromptMainSections = listOf(
         "context.md",
         "task.md",
         "instructions.md",
         "transform-reason.md",
         "confirm-details.md",
         "generate-output.md",
-        "examples.md",
-        "example-initial_blank_report.md",
-        "example-initial_non_blank_report.md",
         "general-guidelines.md",
+    )
+    val systemPromptExampleSections = listOf(
+        "examples.md",
+        "initial_blank_report.md",
+        "initial_non_blank_report.md",
+        "invalid-reason.md",
     )
 
     fun systemPromptVariables(case: RDRCase) = mapOf(
-        "COMMENTS" to case.interpretation.toJsonString(),
+        "COMMENTS" to case.interpretation.toComments(),
         "TRANSFORM_REASON" to TRANSFORM_REASON,
         "REASON" to REASON,
         "FIRST_REASON" to FIRST_REASON,
@@ -90,9 +94,14 @@ object KBChatService {
     )
 
     fun systemPrompt(case: RDRCase): String {
-        val map = systemPromptSections.map { it ->
-            readPromptResource(it).replacePlaceholders(case)
+        val mainSection = systemPromptMainSections.map { it ->
+            readPromptResource("/chat/instructions", it).replacePlaceholders(case)
         }
-        return map.joinToString(separator = "\n")
+        val exampleSection = systemPromptExampleSections.map { it ->
+            readPromptResource("/chat/instructions/examples", it).replacePlaceholders(case)
+        }
+        return (mainSection + exampleSection).joinToString(separator = "\n")
     }
 }
+
+private fun Interpretation.toComments() = conclusionTexts().toJsonString()
