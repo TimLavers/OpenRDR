@@ -34,7 +34,7 @@ class KBModelIntegrationTest {
         //Given
         val case = createCase("Case")
         kb.startConversation(case)
-        val userExpression = "Please add a comment to go to Bondi"
+        val userExpression = "Please add a comment to go to Bondi."
 
         //When
         val response = kb.responseToUserMessage(userExpression)
