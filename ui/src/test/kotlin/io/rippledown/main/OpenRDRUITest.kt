@@ -1047,7 +1047,7 @@ class OpenRDRUITest {
         coEvery { api.lastRuleDescription() } returns lastRuleDescription
         with(composeTestRule) {
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             undoLastRule(descriptionText)
             coVerify {
@@ -1072,7 +1072,7 @@ class OpenRDRUITest {
         coEvery { api.lastRuleDescription() } returns lastRuleDescription
         with(composeTestRule) {
             setContent {
-                OpenRDRUI(handler)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             undoLastRule(descriptionText)
             coVerify {
