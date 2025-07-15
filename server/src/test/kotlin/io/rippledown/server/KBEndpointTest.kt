@@ -5,7 +5,7 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeSameInstanceAs
+import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -21,6 +21,7 @@ import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.model.rule.UndoRuleDescription
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.supplyCaseFromFile
+import io.rippledown.toJsonString
 import io.rippledown.util.EntityRetrieval
 import io.rippledown.utils.beSameAs
 import org.apache.commons.io.FileUtils
@@ -118,11 +119,17 @@ internal class KBEndpointTest {
     }
 
     @Test
-    fun `should retrieve the cached case when using InMemoryPersistenceProvider`() {
+    fun `should retrieve a copy of the cached case when using InMemoryPersistenceProvider`() {
+        //Given
         val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
         val retrieved = endpoint.case(id)
+
+        //When
         val retrievedAgain = endpoint.case(id)
-        retrievedAgain shouldBeSameInstanceAs retrieved
+
+        //Then
+        retrievedAgain shouldNotBeSameInstanceAs retrieved
+        retrievedAgain.toJsonString() shouldBe retrieved.toJsonString()
     }
 
     @Test

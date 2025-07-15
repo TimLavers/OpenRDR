@@ -58,13 +58,32 @@ class KBTest {
 
     @Test
     fun `processed cases are interpreted`() {
+        // Given
         val conclusionToAdd = "Whatever"
         buildRuleToAddAComment(kb, conclusionToAdd)
+        val externalCase = createExternalCase("Case1", "g1")
 
-        val externalCase1 = createExternalCase("Case1", "g1")
-        val processed = kb.processCase(externalCase1)
+        // When
+        val processed = kb.processCase(externalCase)
+
+        // Then
         processed.interpretation.conclusionTexts() shouldBe setOf(conclusionToAdd)
-        kb.getProcessedCase(processed.caseId.id!!)!!.interpretation.conclusionTexts() shouldBe setOf(conclusionToAdd)
+    }
+
+    @Test
+    fun `getProcessedCase should return the case with a blank interpretation`() {
+        // Given
+        val conclusionToAdd = "Whatever"
+        buildRuleToAddAComment(kb, conclusionToAdd)
+        val externalCase = createExternalCase("Case", "g")
+        val processed = kb.processCase(externalCase)
+        processed.interpretation.conclusionTexts() shouldBe setOf(conclusionToAdd)
+
+        // When
+        val retrieved = kb.getProcessedCase(processed.caseId.id!!)!!
+
+        // Then
+        retrieved.interpretation.conclusionTexts() shouldBe emptySet()
     }
 
     @Test
