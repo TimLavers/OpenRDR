@@ -68,7 +68,7 @@ class ViewableCaseTest {
     @Test
     fun serializationWithInterpretation() {
         val surfComment = "Surf's up."
-        val viewableCase = createCaseWithInterpretation("Case1", 123, listOf(surfComment))
+        val viewableCase = createViewableCaseWithInterpretation("Case1", 123, listOf(surfComment))
         withClue("sanity check") {
             viewableCase.latestText() shouldBe surfComment
         }

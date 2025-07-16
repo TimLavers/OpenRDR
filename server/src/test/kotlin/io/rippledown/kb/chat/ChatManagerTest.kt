@@ -194,8 +194,8 @@ class ChatManagerTest {
             val conditionParsingResult2 = ConditionParsingResult(condition2)
             val responseFromModel = ActionComment(
                 action = ADD_ACTION,
-                new_comment = comment,
-                conditions = listOf(expression1, expression2)
+                comment = comment,
+                reasons = listOf(expression1, expression2)
             ).toJsonString()
             coEvery { conversationService.response(any<String>()) } returns responseFromModel
             coEvery { ruleService.conditionForExpression(case, expression1) } returns conditionParsingResult1
@@ -226,8 +226,8 @@ class ChatManagerTest {
             val conditionParsingResult = ConditionParsingResult(condition)
             val responseFromModel = ActionComment(
                 action = ADD_ACTION,
-                new_comment = comment,
-                conditions = listOf(expression)
+                comment = comment,
+                reasons = listOf(expression)
             ).toJsonString()
             coEvery { conversationService.response(any<String>()) } returns responseFromModel
             coEvery { ruleService.conditionForExpression(case, expression) } returns conditionParsingResult
@@ -253,7 +253,7 @@ class ChatManagerTest {
             val comment = "Go to Bondi."
             val responseFromModel = ActionComment(
                 action = ADD_ACTION,
-                new_comment = comment
+                comment = comment
             ).toJsonString()
             coEvery { conversationService.response(any<String>()) } returns responseFromModel
 

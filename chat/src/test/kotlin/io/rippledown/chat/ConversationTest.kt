@@ -8,16 +8,22 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.rippledown.chat.Conversation.Companion.TRANSFORM_REASON
+import io.rippledown.constants.chat.REASON
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import kotlin.test.Test
 
 class ConversationTest {
-    private lateinit var expressionValidator: ExpressionValidator
+    private lateinit var reasonTransformer: REASON_TRANSFORMER
 
     @BeforeEach
     fun setUp() {
-        expressionValidator = mockk()
+        reasonTransformer = mockk()
+        coEvery { reasonTransformer.transform(any<String>()) } returns ReasonTransformation(
+            isTransformed = true,
+            message = "Transformed successfully"
+        )
     }
 
     @Test
@@ -27,7 +33,7 @@ class ConversationTest {
             val expectedResponse = mockk<GenerateContentResponse>()
             coEvery { expectedResponse.text } returns "Hello, how can I assist you today?"
             val mockChatService = MockChatService(listOf(expectedResponse))
-            val conversation = Conversation(mockChatService, expressionValidator)
+            val conversation = Conversation(mockChatService, reasonTransformer)
 
             // When
             val response = conversation.startConversation()
@@ -45,7 +51,7 @@ class ConversationTest {
             coEvery { response1.text } returns "Hello, how can I assist you today?"
             coEvery { response2.text } returns "Hello again, how can I help you further?"
             val mockChatService = MockChatService(listOf(response1, response2))
-            val conversation = Conversation(mockChatService, expressionValidator)
+            val conversation = Conversation(mockChatService, reasonTransformer)
             val responseForStartConversation = conversation.startConversation() // Initialize the chat session
             responseForStartConversation shouldBe response1.text
 
@@ -73,7 +79,7 @@ class ConversationTest {
             )
             coEvery { response3.text } returns "A beautiful condition was added to the case."
             val mockChatService = MockChatService(listOf(response1, response2, response3))
-            val conversation = Conversation(mockChatService, expressionValidator)
+            val conversation = Conversation(mockChatService, reasonTransformer)
             val responseForStartConversation = conversation.startConversation() // Initialize the chat session
             responseForStartConversation shouldBe response1.text
 
@@ -96,13 +102,13 @@ class ConversationTest {
             coEvery { response2.text } returns "Your expression was valid"
             coEvery { response2.functionCalls } returns listOf(
                 FunctionCallPart(
-                    name = "isExpressionValid",
-                    args = mapOf("expression" to userExpression)
+                    name = TRANSFORM_REASON,
+                    args = mapOf(REASON to userExpression)
                 )
             )
             coEvery { response3.text } returns "A beautiful condition was added to the case."
             val mockChatService = MockChatService(listOf(response1, response2, response3))
-            val conversation = Conversation(mockChatService, expressionValidator)
+            val conversation = Conversation(mockChatService, reasonTransformer)
             val responseForStartConversation = conversation.startConversation() // Initialize the chat session
             responseForStartConversation shouldBe response1.text
 
@@ -110,7 +116,7 @@ class ConversationTest {
             conversation.response("Add the condition '$userExpression'.")
 
             // Then
-            coVerify { expressionValidator.isValid(userExpression) }
+            coVerify { reasonTransformer.transform(userExpression) }
         }
     }
 }

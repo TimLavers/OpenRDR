@@ -12,13 +12,13 @@ import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.sample.SampleKB.TSH_CASES
-import io.rippledown.utils.createCase
-import io.rippledown.utils.createCaseWithInterpretation
+import io.rippledown.utils.createViewableCase
+import io.rippledown.utils.createViewableCaseWithInterpretation
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
 class ApiTest {
-    val case = createCase("A", 1)
+    val case = createViewableCase("A", 1)
 
     @Test
     fun kbDescriptionTest() = runTest {
@@ -59,7 +59,7 @@ class ApiTest {
     fun getCaseWithInterpretationTest() = runTest {
         //Given
         val malabarComment = "go to Malabar"
-        val case = createCaseWithInterpretation("A", 1, conclusionTexts = listOf(malabarComment))
+        val case = createViewableCaseWithInterpretation("A", 1, conclusionTexts = listOf(malabarComment))
 
         //sanity check
         case.viewableInterpretation.latestText() shouldBe malabarComment
@@ -179,7 +179,7 @@ class ApiTest {
                 )
             )
         )
-        val caseToReturn = createCase("A", 1)
+        val caseToReturn = createViewableCase("A", 1)
         val config = config {
             expectedRuleRequest = ruleRequest
             returnCaseAfterBuildingRule = caseToReturn
@@ -222,7 +222,7 @@ class ApiTest {
             )
         )
 
-        val newCornerstone = createCase("A", 1)
+        val newCornerstone = createViewableCase("A", 1)
         val config = config {
             expectedUpdateCornerstoneRequest = request
             returnCornerstoneStatus = CornerstoneStatus(newCornerstone, 0, 1)
@@ -232,7 +232,7 @@ class ApiTest {
 
     @Test
     fun `should exempt a cornerstone case`() = runTest {
-        val updatedCornerstoneStatus = CornerstoneStatus(createCase("Bondi"), 42, 100)
+        val updatedCornerstoneStatus = CornerstoneStatus(createViewableCase("Bondi"), 42, 100)
 
         val config = config {
             expectedCornerstoneIndex = 42
@@ -243,7 +243,7 @@ class ApiTest {
 
     @Test
     fun shouldSelectCornerstone() = runTest {
-        val updatedCornerstoneStatus = CornerstoneStatus(createCase("Bondi"), 42, 100)
+        val updatedCornerstoneStatus = CornerstoneStatus(createViewableCase("Bondi"), 42, 100)
 
         val config = config {
             expectedCornerstoneIndex = 42

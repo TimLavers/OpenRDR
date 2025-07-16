@@ -13,8 +13,8 @@ import io.rippledown.interpretation.*
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
-import io.rippledown.utils.createCase
-import io.rippledown.utils.createCaseWithInterpretation
+import io.rippledown.utils.createViewableCase
+import io.rippledown.utils.createViewableCaseWithInterpretation
 import kotlinx.coroutines.Dispatchers.Unconfined
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -41,7 +41,7 @@ class OpenRDRUIForRuleActionTest {
         val addedComment = "Go to Bondi"
         val caseName = "case a"
         val caseId = CaseId(id = 1, name = caseName)
-        val case = createCase(caseId)
+        val case = createViewableCase(caseId)
         coEvery { api.getCase(1) } returns case
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         with(composeTestRule) {
@@ -68,7 +68,7 @@ class OpenRDRUIForRuleActionTest {
         val replacementComment = "Go to Malabar"
         val caseName = "case a"
         val caseId = CaseId(id = 1, name = caseName)
-        val case = createCaseWithInterpretation(caseId.name, caseId.id, listOf(originalComment))
+        val case = createViewableCaseWithInterpretation(caseId.name, caseId.id, listOf(originalComment))
         coEvery { api.getCase(1) } returns case
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         with(composeTestRule) {
@@ -94,7 +94,7 @@ class OpenRDRUIForRuleActionTest {
         val originalComment = "Go to Bondi"
         val caseName = "case a"
         val caseId = CaseId(id = 1, name = caseName)
-        val case = createCaseWithInterpretation(caseId.name, caseId.id, listOf(originalComment))
+        val case = createViewableCaseWithInterpretation(caseId.name, caseId.id, listOf(originalComment))
         coEvery { api.kbList() } returns listOf(KBInfo("kb1"))
         coEvery { api.getCase(1) } returns case
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))

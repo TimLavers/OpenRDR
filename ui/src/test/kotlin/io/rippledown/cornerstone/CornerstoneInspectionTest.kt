@@ -8,7 +8,7 @@ import io.rippledown.constants.cornerstone.CORNERSTONE_ID
 import io.rippledown.constants.cornerstone.CORNERSTONE_TITLE
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.utils.applicationFor
-import io.rippledown.utils.createCase
+import io.rippledown.utils.createViewableCase
 import org.junit.Rule
 import org.junit.Test
 
@@ -17,7 +17,7 @@ class CornerstoneInspectionTest {
     val composeTestRule = createComposeRule()
 
     val name = "Greta"
-    val case = createCase(name)
+    val case = createViewableCase(name)
     val cornerstoneStatus = CornerstoneStatus(case, 42, 100)
 
 
@@ -49,7 +49,7 @@ class CornerstoneInspectionTest {
 
 fun main() {
     applicationFor {
-            CornerstoneInspection(createCase("Greta"))
+        CornerstoneInspection(createViewableCase("Greta"))
     }
 }
 

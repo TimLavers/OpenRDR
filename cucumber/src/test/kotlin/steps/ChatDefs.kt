@@ -1,5 +1,6 @@
 package steps
 
+import io.cucumber.datatable.DataTable
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
 import io.rippledown.constants.chat.*
@@ -42,12 +43,12 @@ class ChatDefs {
 
     @Then("the chatbot has asked for confirmation")
     fun waitForBotRequestForConfirmation() {
-        waitForBotText(PLEASE_CONFIRM)
+        waitForBotText(CONFIRM)
     }
 
-    @Then("the chatbot has asked for confirmation of the comment:")
-    fun waitForBotRequestForConfirmation(comment: String) {
-        waitForBotText(PLEASE_CONFIRM, comment)
+    @Then("the chatbot has asked for confirmation of the (comment|reason):")
+    fun waitForBotRequestForConfirmation(textToConfirm: String) {
+        waitForBotText(CONFIRM, textToConfirm)
     }
 
     @Then("the chatbot has completed the action")
@@ -59,29 +60,39 @@ class ChatDefs {
         waitForBotText(WOULD_YOU_LIKE)
     }
 
-    @Then("the chatbot has asked if I want to add a comment")
+    @Then("the chatbot has asked if I would like to add a comment")
     fun requireBotQuestionToAddAComment() {
         waitForBotText(WOULD_YOU_LIKE, ADD_A_COMMENT)
     }
 
-    @And("the chatbot has asked if I want to provide any conditions")
-    fun waitForBotQuestionToProvideConditions() {
-        waitForBotText(ANY_CONDITIONS)
+    @And("the chatbot has asked if I want to provide any reasons")
+    fun waitForBotQuestionToProvideReasons() {
+        waitForBotText(REASON)
     }
 
-    @And("the chatbot has asked if I want to provide any more conditions")
-    fun waitForBotQuestionToProvideMoreConditions() {
-        waitForBotText(ANY_MORE_CONDITIONS)
+    @And("the chatbot has asked if I want to provide any more reasons")
+    fun waitForBotQuestionToProvideMoreReasons() {
+        waitForBotText(MORE_REASONS)
     }
 
-    @And("the chatbot has asked for the first condition")
-    fun waitForBotRequestForACondition() {
-        waitForBotText(FIRST_CONDITION)
+    @And("the chatbot has asked for the first reason")
+    fun waitForBotRequestForFirstReason() {
+        waitForBotText(FIRST_REASON)
+    }
+
+    @And("the chatbot indicates that this reason is not true for the current case")
+    fun waitForBotToIndicateThatReasonIsNotTrue() {
+        waitForBotText(IS_NOT_TRUE)
     }
 
     @Then("the chatbot has asked if I want to add, remove or replace a comment")
     fun waitForBotQuestionToAddRemoveOrReplaceAComment() {
         waitForBotText(WOULD_YOU_LIKE, ADD, REMOVE, REPLACE)
+    }
+
+    @Then("the chatbot response contains the following phrases:")
+    fun checkBotResponseContainsPhrases(phrases: DataTable) {
+        waitForBotText(*phrases.asList().toTypedArray())
     }
 
     fun waitForBotText(vararg terms: String) {
@@ -101,10 +112,10 @@ class ChatDefs {
         waitForBotInitialPrompt()
         confirm()
         waitForBotQuestionToSpecifyAComment()
-        enterChatTextAndSend("Add the comment: \"$comment\"")
+        enterChatTextAndSend(comment)
         waitForBotRequestForConfirmation()
         confirm()
-        waitForBotQuestionToProvideConditions()
+        waitForBotQuestionToProvideReasons()
         decline()
         waitForBotToSayDone()
     }
@@ -115,7 +126,7 @@ class ChatDefs {
         enterChatTextAndSend("Add the comment: \"$comment\"")
         waitForBotRequestForConfirmation()
         confirm()
-        waitForBotQuestionToProvideConditions()
+        waitForBotQuestionToProvideReasons()
         decline()
         waitForBotToSayDone()
     }

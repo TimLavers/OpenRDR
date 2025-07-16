@@ -18,7 +18,7 @@ import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
-import io.rippledown.utils.createCase
+import io.rippledown.utils.createViewableCase
 import kotlin.test.Test
 
 class InterpManagementTest : OpenRDRServerTestBase() {
@@ -63,7 +63,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
     @Test
     fun `should delegate exempting cornerstone to server application`() = testApplication {
         setup()
-        val updatedCornerstoneStatus = CornerstoneStatus(createCase("Bondi"), 42, 100)
+        val updatedCornerstoneStatus = CornerstoneStatus(createViewableCase("Bondi"), 42, 100)
         every { kbEndpoint.exemptCornerstone(any()) } returns updatedCornerstoneStatus
 
         val result = httpClient.post(EXEMPT_CORNERSTONE) {
@@ -81,7 +81,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
         // Given
         setup()
         val index = 42
-        val updatedCornerstoneStatus = CornerstoneStatus(createCase("Bondi"), index, 100)
+        val updatedCornerstoneStatus = CornerstoneStatus(createViewableCase("Bondi"), index, 100)
         every { kbEndpoint.selectCornerstone(any()) } returns updatedCornerstoneStatus
 
         // When
@@ -102,7 +102,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
         setup()
 
         val ruleRequest = RuleRequest(1)
-        val viewableCase = createCase(CaseId(1, "Bondi"))
+        val viewableCase = createViewableCase(CaseId(1, "Bondi"))
         every { kbEndpoint.commitRuleSession(ruleRequest) } returns viewableCase
 
         val result = httpClient.post(COMMIT_RULE_SESSION) {

@@ -5,8 +5,8 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.utils.applicationFor
-import io.rippledown.utils.createCaseWithInterpretation
-import io.rippledown.utils.createInterpretation
+import io.rippledown.utils.createViewableCaseWithInterpretation
+import io.rippledown.utils.createViewableInterpretation
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -29,7 +29,7 @@ class InterpretationViewTest {
     fun `should show change interpretation icon if the showChangeInterpretationIcon parameter is true`() = runTest {
         //Given
         val bondiComment = "Best surf in the world!"
-        val interpretation = createInterpretation(
+        val interpretation = createViewableInterpretation(
             mapOf(bondiComment to listOf())
         )
         with(composeTestRule) {
@@ -52,7 +52,7 @@ class InterpretationViewTest {
         runTest {
             //Given
             val bondiComment = "Best surf in the world!"
-            val interpretation = createInterpretation(
+            val interpretation = createViewableInterpretation(
                 mapOf(bondiComment to listOf())
             )
             with(composeTestRule) {
@@ -74,7 +74,7 @@ class InterpretationViewTest {
     fun `should show change interpretation icon if not in a rule session`() = runTest {
         //Given
         val bondiComment = "Best surf in the world!"
-        val interpretation = createInterpretation(
+        val interpretation = createViewableInterpretation(
             mapOf(bondiComment to listOf())
         )
         with(composeTestRule) {
@@ -98,7 +98,7 @@ class InterpretationViewTest {
         val text = "Go to Bondi now!"
         with(composeTestRule) {
             setContent {
-                InterpretationView(createInterpretation(mapOf(text to emptyList())), true, handler)
+                InterpretationView(createViewableInterpretation(mapOf(text to emptyList())), true, handler)
             }
             requireInterpretation(text)
 
@@ -111,7 +111,7 @@ class InterpretationViewTest {
     fun `should show dropdown if the change interpretation icon is clicked`() = runTest {
         //Given
         val bondiComment = "Best surf in the world!"
-        val interpretation = createInterpretation(
+        val interpretation = createViewableInterpretation(
             mapOf(bondiComment to listOf())
         )
         with(composeTestRule) {
@@ -132,7 +132,7 @@ class InterpretationViewTest {
     fun `should call handler when a rule session is started to add a comment`() = runTest {
         //Given
         val bondiComment = "Best surf in the world!"
-        val interpretation = createInterpretation(
+        val interpretation = createViewableInterpretation(
             mapOf(bondiComment to listOf())
         )
         with(composeTestRule) {
@@ -156,7 +156,7 @@ class InterpretationViewTest {
     fun `should call handler when a rule session is started to remove a comment`() = runTest {
         //Given
         val bondiComment = "Best surf in the world!"
-        val interpretation = createInterpretation(
+        val interpretation = createViewableInterpretation(
             mapOf(bondiComment to listOf())
         )
         with(composeTestRule) {
@@ -179,7 +179,7 @@ class InterpretationViewTest {
     fun `should call handler when a rule session is started to replace a comment`() = runTest {
         //Given
         val bondiComment = "Best surf in the world!"
-        val interpretation = createInterpretation(
+        val interpretation = createViewableInterpretation(
             mapOf(bondiComment to listOf())
         )
         with(composeTestRule) {
@@ -202,7 +202,7 @@ class InterpretationViewTest {
 
 
 fun main() {
-    val interpretation = createCaseWithInterpretation(
+    val interpretation = createViewableCaseWithInterpretation(
         conclusionTexts = listOf("Surf's up!", "Go to Bondi now!", "Bring your flippers.")
     ).viewableInterpretation
     applicationFor {

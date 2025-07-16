@@ -21,7 +21,7 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.external.serialize
 import io.rippledown.server.routes.ID_SHOULD_BE_A_LONG
 import io.rippledown.server.routes.MISSING_CASE_ID
-import io.rippledown.utils.createCase
+import io.rippledown.utils.createViewableCase
 import kotlin.test.Test
 
 class CaseManagementTest : OpenRDRServerTestBase() {
@@ -107,7 +107,7 @@ class CaseManagementTest : OpenRDRServerTestBase() {
         setup()
         val case = CaseTestUtils.getCase("Case2")
         val caseData = case.serialize()
-        val returnCase = createCase("Case2").case
+        val returnCase = createViewableCase("Case2").case
         every { kbEndpoint.processCase(case) } returns returnCase
         val result = httpClient.put(PROCESS_CASE) {
             contentType(ContentType.Application.Json)

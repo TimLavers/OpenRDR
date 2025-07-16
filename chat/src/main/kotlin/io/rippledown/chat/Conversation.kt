@@ -3,9 +3,11 @@ package io.rippledown.chat
 import dev.shreyaspatil.ai.client.generativeai.Chat
 import dev.shreyaspatil.ai.client.generativeai.type.FunctionCallPart
 import dev.shreyaspatil.ai.client.generativeai.type.GenerateContentResponse
+import dev.shreyaspatil.ai.client.generativeai.type.TextPart
 import dev.shreyaspatil.ai.client.generativeai.type.content
 import io.rippledown.log.lazyLogger
 import io.rippledown.stripEnclosingJson
+import io.rippledown.toJsonString
 import kotlinx.coroutines.delay
 import kotlin.random.Random.Default.nextLong
 import kotlin.time.Duration.Companion.milliseconds
@@ -15,14 +17,11 @@ interface ConversationService {
     suspend fun response(userMessage: String): String = ""
 }
 
-interface ExpressionValidator {
-    suspend fun isValid(expression: String): Boolean
+interface REASON_TRANSFORMER {
+    suspend fun transform(reason: String): ReasonTransformation
 }
 
-/**
- * Manages a conversation with an AI model, handling user messages, function calls and retries on failure.
- */
-class Conversation(private val chatService: ChatService, private val expressionValidator: ExpressionValidator) :
+class Conversation(private val chatService: ChatService, private val reasonTransformer: REASON_TRANSFORMER) :
     ConversationService {
     private val logger = lazyLogger
     private lateinit var chat: Chat
@@ -35,23 +34,16 @@ class Conversation(private val chatService: ChatService, private val expressionV
     }
 
     private suspend fun executeFunction(functionCall: FunctionCallPart): String {
-        if (functionCall.name != "isExpressionValid") {
+        if (functionCall.name != TRANSFORM_REASON) {
             logger.warn("Unknown function call: ${functionCall.name}")
             return "Unknown function: ${functionCall.name}"
         }
 
-        val expression = functionCall.args?.get("expression") ?: ""
-        val isValid = expressionValidator.isValid(expression)
-        logger.info("Function call: '${functionCall.name}' with args: '$expression', isValid: $isValid")
-        return "'$expression' is valid?: $isValid"
+        val reason = functionCall.args?.get(REASON_PARAMETER) ?: ""
+        val transformation = reasonTransformer.transform(reason)
+        return "'$reason' evaluation: ${transformation.toJsonString()}"
     }
 
-    /**
-     * Processes a user message and returns the AI model's response.
-     *
-     * @param userMessage The user's input message.
-     * @return The model's response, possibly after executing function calls.
-     */
     override suspend fun response(userMessage: String): String {
         val currentChat = checkNotNull(chat) { "Chat not initialized. Call startConversation first." }
         val response = try {
@@ -61,15 +53,18 @@ class Conversation(private val chatService: ChatService, private val expressionV
             throw e
         }
         val finalResponse = handleResponse(response)
-        logger.info("initial response text: ${response.text}")
-        logger.info("final response text  : ${finalResponse}")
+        logger.info("initial response json: ${response.text}")
+        logger.info("final response json  : ${finalResponse}")
         return finalResponse
     }
 
     private suspend fun handleResponse(response: GenerateContentResponse): String {
         return if (response.functionCalls.isNotEmpty()) {
+            logger.info("*****Received function calls: ${response.functionCalls.joinToString { it.name }}")
             val functionResults = response.functionCalls.map { executeFunction(it) }
             val prompt = content { text("Function results: ${functionResults.joinToString(", ")}") }
+            val promptText = (prompt.parts.get(0) as TextPart).text
+            logger.info("prompt for follow-up response: '$promptText'")
             val followUpResponse = chat.sendMessage(prompt)
             followUpResponse.text?.stripEnclosingJson() ?: "No text response after function execution"
         } else {
@@ -84,6 +79,10 @@ class Conversation(private val chatService: ChatService, private val expressionV
         logger.info("$context - tokens: ${response.usageMetadata?.totalTokenCount}")
     }
 
+    companion object {
+        const val REASON_PARAMETER = "reason"
+        const val TRANSFORM_REASON = "transformReasonToFormalCondition"
+    }
 }
 
 /**

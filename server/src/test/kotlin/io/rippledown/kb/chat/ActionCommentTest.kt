@@ -13,9 +13,8 @@ class ActionCommentTest {
                 "action": "USER_ACTION",
                 "message": "This is a test message",
                 "debug": "Debug info",
-                "new_comment": "New comment text",
-                "existing_comment": "Existing comment text",
-                "conditions": ["condition1", "condition2"]
+                "comment": "New comment text",
+                "reasons": ["reason1", "reason2"]
             }
         """
 
@@ -27,11 +26,10 @@ class ActionCommentTest {
             action shouldBe "USER_ACTION"
             message shouldBe "This is a test message"
             debug shouldBe "Debug info"
-            new_comment shouldBe "New comment text"
-            existing_comment shouldBe "Existing comment text"
-            conditions?.size shouldBe 2
-            conditions?.get(0) shouldBe "condition1"
-            conditions?.get(1) shouldBe "condition2"
+            comment shouldBe "New comment text"
+            reasons?.size shouldBe 2
+            reasons?.get(0) shouldBe "reason1"
+            reasons?.get(1) shouldBe "reason2"
         }
     }
 }
