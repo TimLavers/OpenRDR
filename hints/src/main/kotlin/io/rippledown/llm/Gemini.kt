@@ -12,7 +12,7 @@ import java.lang.System.getenv
 import kotlin.random.Random.Default.nextLong
 import kotlin.time.Duration.Companion.milliseconds
 
-const val GEMINI_MODEL = "gemini-1.5-flash"
+const val GEMINI_MODEL = "gemini-2.5-flash"
 
 //Set the model to be as deterministic as possible
 val generativeConfig = GenerationConfig.builder().apply {

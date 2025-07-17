@@ -3,6 +3,7 @@ EXPECTED SIGNATURE: Current
 x is high
 x is elevated
 x es alto
+x es mejor que el rango normal
 elevated x
 excessive x
 x is above normal
