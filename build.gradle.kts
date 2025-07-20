@@ -42,12 +42,12 @@ subprojects {
     sourceSets {
         main {
             resources {
-                srcDir(rootProject.projectDir.resolve("shared-resources/src/main/resources"))
+                srcDir(rootProject.projectDir.resolve("shared-resources"))
             }
         }
         test {
             resources {
-                srcDir(rootProject.projectDir.resolve("shared-resources/src/test/resources"))
+                srcDir(rootProject.projectDir.resolve("shared-test-resources"))
             }
         }
     }
