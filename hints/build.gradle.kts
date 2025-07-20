@@ -5,6 +5,7 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":shared-resources"))
     implementation(project(":common"))
     implementation(kotlin("reflect"))
     implementation(libs.logback)

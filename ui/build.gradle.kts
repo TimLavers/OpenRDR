@@ -8,6 +8,7 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":shared-resources"))
     implementation(project(":common"))
     implementation(compose.desktop.currentOs)
     implementation(compose.preview)
