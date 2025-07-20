@@ -39,6 +39,19 @@ subprojects {
         testImplementation(kotlin("test"))
     }
 
+    sourceSets {
+        main {
+            resources {
+                srcDir(rootProject.projectDir.resolve("shared-resources/src/main/resources"))
+            }
+        }
+        test {
+            resources {
+                srcDir(rootProject.projectDir.resolve("shared-resources/src/test/resources"))
+            }
+        }
+    }
+
     tasks.test {
         if (project.name != "ui") {
             useJUnitPlatform()

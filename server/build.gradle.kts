@@ -7,7 +7,6 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":shared-resources"))
     implementation(project(":common"))
     implementation(project(":hints"))
     implementation(project(":chat"))

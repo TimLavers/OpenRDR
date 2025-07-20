@@ -3,7 +3,6 @@ plugins {
     `java-test-fixtures`
 }
 dependencies {
-    implementation(project(":shared-resources"))
     implementation(libs.bundles.kotlinx)
     implementation(libs.logback)
 

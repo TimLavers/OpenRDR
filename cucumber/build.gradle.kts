@@ -8,7 +8,6 @@ plugins {
 }
 
 dependencies {
-    testImplementation(project(":shared-resources"))
     testImplementation(project(":ui"))
     testImplementation(testFixtures(project(":common")))
     testImplementation(compose.desktop.currentOs)
