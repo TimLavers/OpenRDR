@@ -3,6 +3,7 @@ package io.rippledown.model
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.rippledown.utils.randomString
+import io.rippledown.utils.serializeDeserialize
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 
@@ -59,10 +60,5 @@ internal class AttributeTest {
         shouldThrow<IllegalStateException> {
             Attribute(256, randomString(256))
         }.message shouldBe "Attribute names cannot have length more than 255."
-    }
-
-    private fun serializeDeserialize(attribute: Attribute): Attribute {
-        val serialized = Json.encodeToString(Attribute.serializer(), attribute)
-        return Json.decodeFromString(serialized)
     }
 }

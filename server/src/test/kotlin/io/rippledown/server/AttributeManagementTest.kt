@@ -16,7 +16,7 @@ import kotlin.test.Test
 class AttributeManagementTest: OpenRDRServerTestBase() {
     @Test
     fun getOrCreateAttribute() = testApplication {
-        setup()
+        setupServer()
         val glucose = "Glucose"
         val attribute = Attribute(4000, glucose)
         every { kbEndpoint.getOrCreateAttribute(glucose) } returns attribute
@@ -31,7 +31,7 @@ class AttributeManagementTest: OpenRDRServerTestBase() {
 
     @Test
     fun setAttributeOder() = testApplication {
-        setup()
+        setupServer()
         val tsh = Attribute(100,"TSH")
         val ft3 = Attribute(110,"FT3")
         val ft4 = Attribute(120,"FT4")
