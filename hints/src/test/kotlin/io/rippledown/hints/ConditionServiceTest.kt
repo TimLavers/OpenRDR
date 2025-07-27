@@ -86,7 +86,7 @@ class ConditionServiceTest {
         // Given
         val param = "abc"
         val expressions = listOf(
-            "x equals $param",
+            "x is $param",
 //            "x = $param",
 //            "x == $param",
 //            "x is the same as $param",

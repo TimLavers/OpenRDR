@@ -8,7 +8,7 @@ import java.lang.System.getenv
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.milliseconds
 
-val GEMINI_MODEL = "gemini-2.5-pro"
+val GEMINI_MODEL = "gemini-1.5-flash"
 var GEMINI_API_KEY = getenv("GEMINI_API_KEY") ?: ""
 
 fun generativeModel(
@@ -35,7 +35,7 @@ fun noSafetySettings() =
 
 //Set the model to be as deterministic as possible
 fun generativeConfig() = GenerationConfig.Companion.builder().apply {
-    temperature = 0.1f
+    temperature = 0f
     topP = 0.995f
 }.build()
 
