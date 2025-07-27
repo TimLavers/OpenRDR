@@ -5,8 +5,8 @@ import io.rippledown.chat.REASON_TRANSFORMER
 import io.rippledown.chat.toExpressionTransformation
 import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
 import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
-import io.rippledown.expressionparser.AttributeFor
-import io.rippledown.expressionparser.ConditionTip
+import io.rippledown.hints.AttributeFor
+import io.rippledown.hints.ConditionTip
 import io.rippledown.kb.chat.ChatManager
 import io.rippledown.kb.chat.KBChatService
 import io.rippledown.kb.chat.RuleService

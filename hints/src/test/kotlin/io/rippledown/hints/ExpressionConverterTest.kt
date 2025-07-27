@@ -1,7 +1,7 @@
-package io.rippledown.expressionparser
+package io.rippledown.hints
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.expressionparser.ExpressionConverter.Companion.placeHolder
+import io.rippledown.hints.ExpressionConverter.Companion.placeHolder
 import org.junit.jupiter.api.BeforeEach
 import kotlin.test.Test
 

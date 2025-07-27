@@ -51,15 +51,27 @@ x == 1.5
 EXPECTED PREDICATE: Is, "hot"
 EXPECTED SIGNATURE: Current
 x is hot
+x is "hot"
+x = hot
+x = "hot"
+x equals hot
+x equals "hot"
 
 EXPECTED PREDICATE: Is, "abc"
 EXPECTED SIGNATURE: Current
 x is abc
 x is "abc"
+x = abc
+x = "abc"
+x equals abc
+x equals "abc"
+
 
 EXPECTED PREDICATE: Is, "pending"
 EXPECTED SIGNATURE: Current
 x equals pending
+x is pending
+x is "pending"
 
 EXPECTED PREDICATE: IsNot, y
 EXPECTED SIGNATURE: Current

@@ -1,4 +1,4 @@
-package io.rippledown.expressionparser
+package io.rippledown.hints
 
 class ExpressionConverter(private val attributeNames: Collection<String>) {
 

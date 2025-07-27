@@ -1,6 +1,5 @@
-package io.rippledown.conditiongenerator
+package io.rippledown.hints
 
-import io.rippledown.expressionparser.AttributeFor
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.CaseStructureCondition
 import io.rippledown.model.condition.Condition
