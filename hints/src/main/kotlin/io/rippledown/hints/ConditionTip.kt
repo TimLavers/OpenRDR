@@ -12,27 +12,30 @@ class ConditionTip(attributeNames: Collection<String>, attributeFor: AttributeFo
     private val expressionConverter = ExpressionConverter(attributeNames)
     private val conditionGenerator = ConditionGenerator(attributeFor)
 
-    fun conditionFor(userText: String): Condition? {
-        if (userText.isBlank()) return null // Early return for invalid input
+    fun conditionFor(userText: String) = conditionsFor(listOf(userText))[0]
 
+    fun conditionsFor(userTexts: List<String>): List<Condition?> {
+        if (userTexts.isEmpty()) return emptyList()
+        val nonBlankTexts = userTexts.map { if (it.isBlank()) "" else it }
         return try {
-            val expression = expressionConverter.insertPlaceholder(Expression(userText))
-            val conditionSpec = conditionSpecificationsFor(expression.text).get(0)
-
-            when {
-                conditionSpec.predicate.name.isNotBlank() -> {
-                    conditionGenerator.conditionFor(
+            val expressions = nonBlankTexts.map { expressionConverter.insertPlaceholder(Expression(it)) }
+            val conditionSpecs = conditionSpecificationsFor(*expressions.map { it.text }.toTypedArray())
+            userTexts.zip(expressions).zip(conditionSpecs).map { (userTextAndExpression, spec) ->
+                val (userText, expression) = userTextAndExpression
+                when {
+                    userText.isBlank() -> null
+                    spec.predicate.name.isNotBlank() -> conditionGenerator.conditionFor(
                         expression.attributeName,
                         userText,
-                        conditionSpec
+                        spec
                     )
-                }
 
-                else -> null
+                    else -> null
+                }
             }
         } catch (e: Exception) {
-            logger.error("Failed to create condition for text: '$userText'", e)
-            null
+            logger.error("Failed to create conditions for texts: '$userTexts'", e)
+            userTexts.map { null }
         }
     }
 }

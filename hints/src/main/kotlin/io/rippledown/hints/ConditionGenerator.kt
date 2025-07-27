@@ -30,6 +30,7 @@ class ConditionGenerator(private val attributeFor: AttributeFor) {
         return when (predicate) {
             is TestResultPredicate -> {
                 val signature = signatureFrom(conditionSpec.signature)
+                println("signature = ${signature}, predicate = $predicate, userExpression = $userExpression, attribute = $attribute")
                 EpisodicCondition(null, attribute!!, predicate, signature, userExpression)
             }
 

@@ -9,14 +9,14 @@ import kotlinx.coroutines.runBlocking
 object ConditionService {
     private val logger = lazyLogger
     private const val RESOURCE_DIR = "/prompt"
-    private const val EPISODIC_PREDICATES = "EPISODIC_PREDICATES"
-    private const val SERIES_PREDICATES = "SERIES_PREDICATES"
-    private const val CASE_STRUCTURE_PREDICATES = "CASE_STRUCTURE_PREDICATES"
-    private const val EPISODIC_SIGNATURES = "EPISODIC_SIGNATURES"
-    private const val SINGLE_EXPRESSION_EXAMPLES = "SINGLE_EXPRESSION_EXAMPLES"
-    private const val MULTIPLE_EXPRESSION_EXAMPLES = "MULTIPLE_EXPRESSION_EXAMPLES"
-    private const val PROMPT_TEMPLATE = "PROMPT_TEMPLATE"
-    private const val INPUT_EXPRESSIONS = "INPUT_EXPRESSIONS"
+    const val EPISODIC_PREDICATES = "EPISODIC_PREDICATES"
+    const val SERIES_PREDICATES = "SERIES_PREDICATES"
+    const val CASE_STRUCTURE_PREDICATES = "CASE_STRUCTURE_PREDICATES"
+    const val EPISODIC_SIGNATURES = "EPISODIC_SIGNATURES"
+    const val SINGLE_EXPRESSION_EXAMPLES = "SINGLE_EXPRESSION_EXAMPLES"
+    const val MULTIPLE_EXPRESSION_EXAMPLES = "MULTIPLE_EXPRESSION_EXAMPLES"
+    const val PROMPT_TEMPLATE = "PROMPT_TEMPLATE"
+    const val INPUT_EXPRESSIONS = "INPUT_EXPRESSIONS"
 
     private fun readResource(resourceKey: String): String {
         val path = "$RESOURCE_DIR/${resourceKey.toResourceFileName()}"
@@ -26,14 +26,16 @@ object ConditionService {
 
     private fun String.toResourceFileName() = lowercase() + ".txt"
 
+    private fun examples() = examplesFrom(readResource(SINGLE_EXPRESSION_EXAMPLES).split("\n"))
+
     fun promptFor(vararg inputExpressions: String): String {
         val promptVariables: Map<String, String> = mapOf(
             EPISODIC_PREDICATES to readResource(EPISODIC_PREDICATES),
             EPISODIC_SIGNATURES to readResource(EPISODIC_SIGNATURES),
             SERIES_PREDICATES to readResource(SERIES_PREDICATES),
             CASE_STRUCTURE_PREDICATES to readResource(CASE_STRUCTURE_PREDICATES),
-            SINGLE_EXPRESSION_EXAMPLES to readResource(SINGLE_EXPRESSION_EXAMPLES),
-            MULTIPLE_EXPRESSION_EXAMPLES to readResource(MULTIPLE_EXPRESSION_EXAMPLES),
+            SINGLE_EXPRESSION_EXAMPLES to examples(),
+//            MULTIPLE_EXPRESSION_EXAMPLES to readResource(MULTIPLE_EXPRESSION_EXAMPLES),
             INPUT_EXPRESSIONS to inputExpressions.joinToString(separator = "\n")
         )
         val templateText = readResource(PROMPT_TEMPLATE)

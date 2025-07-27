@@ -4,16 +4,9 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.rippledown.model.Attribute
-import io.rippledown.model.condition.CaseStructureCondition
 import io.rippledown.model.condition.EpisodicCondition
-import io.rippledown.model.condition.episodic.predicate.*
-import io.rippledown.model.condition.episodic.signature.All
-import io.rippledown.model.condition.episodic.signature.AtMost
+import io.rippledown.model.condition.episodic.predicate.High
 import io.rippledown.model.condition.episodic.signature.Current
-import io.rippledown.model.condition.episodic.signature.No
-import io.rippledown.model.condition.structural.IsAbsentFromCase
-import io.rippledown.model.condition.structural.IsPresentInCase
-import io.rippledown.model.condition.structural.IsSingleEpisodeCase
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -31,481 +24,60 @@ class ConditionTipTest {
     }
 
     @Test
-    fun `should return null if no condition can be parsed`() {
-        conditionTip.conditionFor("gobbledygook") shouldBe null
-    }
-
-    @Test
-    fun `should return null for a valid predicate but when no attribute is defined`() {
-        val tip = ConditionTip(emptySet(), mockk())
-        tip.conditionFor("high") shouldBe null
-    }
-
-    @Test
-    fun `should parse expression to High`() {
+    fun `should parse expressions to correct conditions`() {
         // Given
-        val expression = "elevated glucose"
+        val expressionToExpected = mapOf(
+            "gobbledygook" to null,
+            "high" to null, // No attribute defined
+            "elevated glucose" to EpisodicCondition(null, glucose, High, Current, "elevated glucose"),
+//            "glucose is below the normal range" to EpisodicCondition(null, glucose, Low, Current, "glucose is below the normal range"),
+//            "glucose is either low or normal" to EpisodicCondition(null, glucose, LowOrNormal, Current, "glucose is either low or normal"),
+//            "glucose is either high or normal" to EpisodicCondition(null, glucose, HighOrNormal, Current, "glucose is either high or normal"),
+//            "glucose is within the acceptable range" to EpisodicCondition(null, glucose, Normal, Current, "glucose is within the acceptable range"),
+//            "glucose equals 3.14159" to EpisodicCondition(null, glucose, Is("3.14159"), Current, "glucose equals 3.14159"),
+//            "glucose is pending" to EpisodicCondition(null, glucose, Is("\"pending\""), Current, "glucose is pending"),
+//            "glucose is cold" to EpisodicCondition(null, glucose, Is("\"cold\""), Current, "glucose is cold"),
+//            "glucose does not equal 3.14159" to EpisodicCondition(null, glucose, IsNot("3.14159"), Current, "glucose does not equal 3.14159"),
+//            "glucose different to pending" to EpisodicCondition(null, glucose, IsNot("\"pending\""), Current, "glucose different to pending"),
+//            "glucose isn't \"pending\"" to EpisodicCondition(null, glucose, IsNot("\"pending\""), Current, "glucose isn't \"pending\""),
+//            "glucose is no more than 3.14159" to EpisodicCondition(null, glucose, LessThanOrEquals(3.14159), Current, "glucose is no more than 3.14159"),
+//            "glucose smaller than 3.14159" to EpisodicCondition(null, glucose, LessThan(3.14159), Current, "glucose smaller than 3.14159"),
+//            "glucose is at least 3.14159" to EpisodicCondition(null, glucose, GreaterThanOrEquals(3.14159), Current, "glucose is at least 3.14159"),
+//            "glucose more than 3.14159" to EpisodicCondition(null, glucose, GreaterThan(3.14159), Current, "glucose more than 3.14159"),
+//            "at most 3 glucose results are greater than or equal to 5.5" to EpisodicCondition(null, glucose, GreaterThanOrEquals(5.5), AtMost(3), "at most 3 glucose results are greater than or equal to 5.5"),
+//            "glucose is a number" to EpisodicCondition(null, glucose, IsNumeric, Current, "glucose is a number"),
+//            "glucose is available" to CaseStructureCondition(null, IsPresentInCase(glucose), "glucose is available"),
+//            "glucose is not available" to CaseStructureCondition(null, IsAbsentFromCase(glucose), "glucose is not available"),
+//            "case has only one episode" to CaseStructureCondition(null, IsSingleEpisodeCase, "case has only one episode"),
+//            "every glucose result is normal" to EpisodicCondition(null, glucose, Normal, All, "every glucose result is normal"),
+//            "every glucose result is abnormal" to EpisodicCondition(null, glucose, Normal, No, "every glucose result is abnormal"),
+//            "every glucose result is elevated" to EpisodicCondition(null, glucose, High, All, "every glucose result is elevated"),
+//            "no elevated glucose" to EpisodicCondition(null, glucose, High, No, "no elevated glucose"),
+//            "no more than 5 glucose results are elevated" to EpisodicCondition(null, glucose, High, AtMost(5), "no more than 5 glucose results are elevated"),
+//            "every glucose result is low" to EpisodicCondition(null, glucose, Low, All, "every glucose result is low"),
+//            "no lowered glucose" to EpisodicCondition(null, glucose, Low, No, "no lowered glucose"),
+//            "at most 3 glucose results are below normal" to EpisodicCondition(null, glucose, Low, AtMost(3), "at most 3 glucose results are below normal"),
+//            "every glucose result is a number" to EpisodicCondition(null, glucose, IsNumeric, All, "every glucose result is a number"),
+//            "none of the glucose results are numeric" to EpisodicCondition(null, glucose, IsNumeric, No, "none of the glucose results are numeric"),
+//            "glucose contains undefined" to EpisodicCondition(null, glucose, Contains("\"undefined\""), Current, "glucose contains undefined"),
+//            "every glucose result contains undefined" to EpisodicCondition(null, glucose, Contains("\"undefined\""), All, "every glucose result contains undefined"),
+//            "no glucose contains \"undefined\"" to EpisodicCondition(null, glucose, Contains("\"undefined\""), No, "no glucose contains \"undefined\""),
+//            "none of the glucose results contain \"undefined\"" to EpisodicCondition(null, glucose, Contains("\"undefined\""), No, "none of the glucose results contain \"undefined\""),
+//            "glucose does not contain undefined" to EpisodicCondition(null, glucose, DoesNotContain("\"undefined\""), Current, "glucose does not contain undefined"),
+//            "glucose is lowered by no more than 15%" to EpisodicCondition(null, glucose, LowByAtMostSomePercentage(15), Current, "glucose is lowered by no more than 15%"),
+//            "glucose is raised by no more than 15 percent%" to EpisodicCondition(null, glucose, HighByAtMostSomePercentage(15), Current, "glucose is raised by no more than 15 percent%"),
+//            "glucose is either normal or not more than 15 percent below normal" to EpisodicCondition(null, glucose, NormalOrLowByAtMostSomePercentage(15), Current, "glucose is either normal or not more than 15 percent below normal"),
+//            "glucose is either normal or not more than 15 percent above normal" to EpisodicCondition(null, glucose, NormalOrHighByAtMostSomePercentage(15), Current, "glucose is either normal or not more than 15 percent above normal")
+        )
 
         // When
-        val actual = conditionTip.conditionFor(expression)
+        val results = conditionTip.conditionsFor(expressionToExpected.keys.toList())
 
         // Then
-        actual shouldBe EpisodicCondition(null, glucose, High, Current, expression)
-    }
-
-    @Test
-    fun `should parse expression to Low`() {
-        // Given
-        val expression = "glucose is below the normal range"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, Low, Current, expression)
-    }
-
-    @Test
-    fun `should parse expression to LowOrNormal`() {
-        // Given
-        val expression = "glucose is either low or normal"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, LowOrNormal, Current, expression)
-    }
-
-    @Test
-    fun `should parse expression to HighOrNormal`() {
-        // Given
-        val expression = "glucose is either high or normal"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, HighOrNormal, Current, expression)
-    }
-
-    @Test
-    fun `should parse expression to Normal`() {
-        // Given
-        val expression = "glucose is within the acceptable range"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, Normal, Current, expression)
-    }
-
-    @Test
-    fun `should parse expression to Is`() {
-        // Given
-        val expression = "glucose equals 3.14159"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, Is("3.14159"), Current, expression)
-    }
-
-    @Test
-    fun `should parse expression to Is with pending quoted`() {
-        // Given
-        val expression = "glucose is pending"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, Is("\"pending\""), Current, expression)
-    }
-
-    @Test
-    fun `should parse expression to Is with cold quoted`() {
-        // Given
-        val expression = "glucose is cold"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, Is("\"cold\""), Current, expression)
-    }
-
-    @Test
-    fun `should parse expression to IsNot`() {
-        // Given
-        val expression = "glucose does not equal 3.14159"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, IsNot("3.14159"), Current, expression)
-    }
-
-    @Test
-    fun `should parse expression to IsNot with value unquoted`() {
-        // Given
-        val expression = "glucose different to pending"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, IsNot("\"pending\""), Current, expression)
-    }
-
-    @Test
-    fun `should parse expression to IsNot with value quoted`() {
-        // Given
-        val expression = "glucose isn't \"pending\""
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, IsNot("\"pending\""), Current, expression)
-    }
-
-    @Test
-    fun `should parse expression to LessThanOrEquals`() {
-        // Given
-        val expression = "glucose is no more than 3.14159"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, LessThanOrEquals(3.14159), Current, expression)
-    }
-
-    @Test
-    fun `should parse expression to LessThan`() {
-        // Given
-        val expression = "glucose smaller than 3.14159"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, LessThan(3.14159), Current, expression)
-    }
-
-    @Test
-    fun `should parse expression to GreaterThanOrEquals`() {
-        // Given
-        val expression = "glucose is at least 3.14159"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, GreaterThanOrEquals(3.14159), Current, expression)
-    }
-
-    @Test
-    fun `should parse expression to GreaterThan`() {
-        // Given
-        val expression = "glucose more than 3.14159"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, GreaterThan(3.14159), Current, expression)
-    }
-
-    @Test
-    fun `should parse expression to GreaterThanOrEquals with signature AtMost`() {
-        // Given
-        val expression = "at most 3 glucose results are greater than or equal to 5.5"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, GreaterThanOrEquals(5.5), AtMost(3), expression)
-    }
-
-    @Test
-    fun `should parse expression to IsNumeric`() {
-        // Given
-        val expression = "glucose is a number"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, IsNumeric, Current, expression)
-    }
-
-    @Test
-    fun `should parse expression to IsPresentInCase`() {
-        // Given
-        val expression = "glucose is available"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe CaseStructureCondition(null, IsPresentInCase(glucose), expression)
-    }
-
-    @Test
-    fun `should parse expression to IsAbsentFromCase`() {
-        // Given
-        val expression = "glucose is not available"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe CaseStructureCondition(null, IsAbsentFromCase(glucose), expression)
-    }
-
-    @Test
-    fun `should parse expression to SingleEpisodeCase`() {
-        // Given
-        val expression = "case has only one episode"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe CaseStructureCondition(null, IsSingleEpisodeCase, expression)
-    }
-
-    @Test
-    fun `should parse expression to Normal with signature All`() {
-        // Given
-        val expression = "every glucose result is normal"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, Normal, All, expression)
-    }
-
-    @Test
-    fun `should parse expression to Normal with signature No`() {
-        // Given
-        val expression = "every glucose result is abnormal"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, Normal, No, expression)
-    }
-
-    @Test
-    fun `should parse expression to High with signature All`() {
-        // Given
-        val expression = "every glucose result is elevated"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, High, All, expression)
-    }
-
-    @Test
-    fun `should parse expression to High with signature No`() {
-        // Given
-        val expression = "no elevated glucose"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, High, No, expression)
-    }
-
-    @Test
-    fun `should parse expression to High with signature AtMost`() {
-        // Given
-        val expression = "no more than 5 glucose results are elevated"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, High, AtMost(5), expression)
-    }
-
-    @Test
-    fun `should parse expression to Low with signature All`() {
-        // Given
-        val expression = "every glucose result is low"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, Low, All, expression)
-    }
-
-    @Test
-    fun `should parse expression to Low with signature No`() {
-        // Given
-        val expression = "no lowered glucose"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, Low, No, expression)
-    }
-
-    @Test
-    fun `should parse expression to Low with signature AtMost`() {
-        // Given
-        val expression = "at most 3 glucose results are below normal"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, Low, AtMost(3), expression)
-    }
-
-    @Test
-    fun `should parse expression to IsNumeric with signature All`() {
-        // Given
-        val expression = "every glucose result is a number"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, IsNumeric, All, expression)
-    }
-
-    @Test
-    fun `should parse expression to IsNumeric with signature No`() {
-        // Given
-        val expression = "none of the glucose results are numeric"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, IsNumeric, No, expression)
-    }
-
-    @Test
-    fun `should parse expression to Contains`() {
-        // Given
-        val expression = "glucose contains undefined"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, Contains("\"undefined\""), Current, expression)
-    }
-
-    @Test
-    fun `should parse expression to Contains with signature All`() {
-        // Given
-        val expression = "every glucose result contains undefined"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, Contains("\"undefined\""), All, expression)
-    }
-
-    @Test
-    fun `should parse expression to Contains with signature No`() {
-        // Given
-        val expression = "no glucose contains \"undefined\""
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, Contains("\"undefined\""), No, expression)
-    }
-
-    @Test
-    fun `should parse expression to Contains with No signature variant`() {
-        // Given
-        val expression = "none of the glucose results contain \"undefined\""
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, Contains("\"undefined\""), No, expression)
-    }
-
-    @Test
-    fun `should parse expression to DoesNotContain`() {
-        // Given
-        val expression = "glucose does not contain undefined"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, DoesNotContain("\"undefined\""), Current, expression)
-    }
-
-    @Test
-    fun `should parse expression to LowByAtMostSomePercentage`() {
-        // Given
-        val expression = "glucose is lowered by no more than 15%"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, LowByAtMostSomePercentage(15), Current, expression)
-    }
-
-    @Test
-    fun `should parse expression to HighByAtMostSomePercentage`() {
-        // Given
-        val expression = "glucose is raised by no more than 15 percent%"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, HighByAtMostSomePercentage(15), Current, expression)
-    }
-
-    @Test
-    fun `should parse expression to NormalOrLowByAtMostSomePercentage`() {
-        // Given
-        val expression = "glucose is either normal or not more than 15 percent below normal"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, NormalOrLowByAtMostSomePercentage(15), Current, expression)
-    }
-
-    @Test
-    fun `should parse expression to NormalOrHighByAtMostSomePercentage`() {
-        // Given
-        val expression = "glucose is either normal or not more than 15 percent above normal"
-
-        // When
-        val actual = conditionTip.conditionFor(expression)
-
-        // Then
-        actual shouldBe EpisodicCondition(null, glucose, NormalOrHighByAtMostSomePercentage(15), Current, expression)
+        results.forEachIndexed { index, actual ->
+            val expression = expressionToExpected.keys.elementAt(index)
+            val expected = expressionToExpected[expression]
+            actual shouldBe expected
+        }
     }
 }

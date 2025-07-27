@@ -8,7 +8,7 @@ import java.lang.System.getenv
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.milliseconds
 
-val GEMINI_MODEL = "gemini-1.5-flash"
+val GEMINI_MODEL = "gemini-2.5-flash"
 var GEMINI_API_KEY = getenv("GEMINI_API_KEY") ?: ""
 
 fun generativeModel(

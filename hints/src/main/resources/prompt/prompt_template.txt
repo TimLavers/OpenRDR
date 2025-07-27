@@ -14,7 +14,7 @@ The possible values for a case structure predicate name are:
 {{CASE_STRUCTURE_PREDICATES}}.
 
 The possible values for a series predicate name are:
-{SERIES_PREDICATES}}.
+{{SERIES_PREDICATES}}.
 
 The predicate name should be blank if the expression does not refer to one of the possible predicates.
 
@@ -35,9 +35,6 @@ If there is a signature, it may have either no parameter or just one parameter.
 ---EXAMPLES---
 Examples of single expressions, each with the expected output, are:
 {{SINGLE_EXPRESSION_EXAMPLES}}.
-
-Examples of multiple expressions with the expected output are:
-{{MULTIPLE_EXPRESSION_EXAMPLES}}
 
 ---INPUT EXPRESSIONS---
 Here is the list of expressions to transform:
