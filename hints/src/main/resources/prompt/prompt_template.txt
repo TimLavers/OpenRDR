@@ -21,7 +21,7 @@ The predicate name should be blank if the expression does not refer to one of th
 For an episodic predicate:
 {{EPISODIC_PREDICATES}},
 the possible values for the signature name are only:
-{{episodicSignatures}}.
+{{EPISODIC_SIGNATURES}}.
 
 For a case structure predicate:
 {{CASE_STRUCTURE_PREDICATES}},
@@ -37,7 +37,7 @@ Examples of single expressions, each with the expected output, are:
 {{SINGLE_EXPRESSION_EXAMPLES}}.
 
 Examples of multiple expressions with the expected output are:
-{{MULTIPLE_EXPRESSION_EXAMPLES}
+{{MULTIPLE_EXPRESSION_EXAMPLES}}
 
 ---INPUT EXPRESSIONS---
 Here is the list of expressions to transform:
