@@ -1,41 +1,41 @@
 package io.rippledown.hints
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.hints.ExpressionConverter.Companion.placeHolder
-import org.junit.jupiter.api.BeforeEach
 import kotlin.test.Test
 
 class ExpressionConverterTest {
-    private lateinit var expressionConverter: ExpressionConverter
     private val x = placeHolder
-
-    @BeforeEach
-    fun setUp() {
-        expressionConverter = ExpressionConverter(setOf("ABC", "TSH", "XYZ"))
-    }
+    private val attributes = setOf("ABC", "TSH", "XYZ")
 
     @Test
     fun `should replace attribute with placeholder`() {
-        expressionConverter.insertPlaceholder(Expression("ABC is high")) shouldBe Expression("$x is high", "ABC")
-        expressionConverter.insertPlaceholder(Expression("elevated TSH")) shouldBe Expression("elevated $x", "TSH")
+        "ABC is high".insertPlaceholder(attributes) shouldBe Expression("ABC is high", "$x is high", "ABC")
+        "elevated TSH".insertPlaceholder(attributes) shouldBe Expression("elevated TSH", "elevated $x", "TSH")
     }
 
     @Test
     fun `should return blank attribute if the expression does not contain any attribute`() {
-        expressionConverter.insertPlaceholder(Expression("lowered unknown")) shouldBe Expression("lowered unknown")
+        "lowered unknown".insertPlaceholder(attributes) shouldBe Expression("lowered unknown", "lowered unknown")
     }
 
     @Test
     fun `replacement should be case insensitive`() {
-        expressionConverter.insertPlaceholder(Expression("abc is high")) shouldBe Expression("$x is high", "ABC")
-        expressionConverter.insertPlaceholder(Expression("elevated tsh")) shouldBe Expression("elevated $x", "TSH")
-        expressionConverter.insertPlaceholder(Expression("Lowered Unknown")) shouldBe Expression("Lowered Unknown")
+        "abc is high".insertPlaceholder(attributes) shouldBe Expression("abc is high", "$x is high", "ABC")
     }
 
     @Test
     fun `should replace placeholder with attribute`() {
-        expressionConverter.removePlaceholder(Expression("$x is high", "ABC")) shouldBe Expression("ABC is high")
-        expressionConverter.removePlaceholder(Expression("elevated $x", "TSH")) shouldBe Expression("elevated TSH")
-        expressionConverter.removePlaceholder(Expression("lowered unknown")) shouldBe Expression("lowered unknown")
+        removePlaceholder(Expression("abc is high", "$x is high", "ABC")) shouldBe Expression(
+            "abc is high",
+            "ABC is high"
+        )
+        removePlaceholder(Expression("elevated TSH", "$x is high", "TSH")) shouldBe Expression(
+            "elevated TSH",
+            "TSH is high"
+        )
+        removePlaceholder(Expression("lowered unknown", "lowered unknown")) shouldBe Expression(
+            "lowered unknown",
+            "lowered unknown"
+        )
     }
 }
