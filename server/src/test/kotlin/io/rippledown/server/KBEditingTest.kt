@@ -63,13 +63,13 @@ class KBEditingTest: OpenRDRServerTestBase() {
     fun kbName() = testApplication {
         setupServer()
         val kbInfo = KBInfo("Glucose")
-        every { kbEndpoint.kbName() } returns kbInfo
+        every { kbEndpoint.kbInfo() } returns kbInfo
         val result = httpClient.get(KB_INFO){
             parameter(KB_ID, kbId)
         }
         result.status shouldBe HttpStatusCode.OK
         result.body<KBInfo>() shouldBe kbInfo
-        verify { kbEndpoint.kbName() }
+        verify { kbEndpoint.kbInfo() }
     }
 
     @Test

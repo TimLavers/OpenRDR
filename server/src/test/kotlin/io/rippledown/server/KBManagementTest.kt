@@ -84,7 +84,7 @@ class KBManagementTest: OpenRDRServerTestBase() {
     fun exportKB() = testApplication {
         setupServer()
         val zipFile = File("src/test/resources/export/Empty.zip")
-        every { kbEndpoint.kbName() } returns KBInfo("Empty")
+        every { kbEndpoint.kbInfo() } returns KBInfo("Empty")
         every { kbEndpoint.exportKBToZip() } returns zipFile
         val result = httpClient.get(EXPORT_KB){
             parameter(KB_ID, kbId)

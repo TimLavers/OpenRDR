@@ -12,6 +12,7 @@ import kotlinx.serialization.json.Json
 
 open class OpenRDRServerTestBase {
     val kbId = "2023"
+    val kbName = "Wisdom"
     lateinit var kbEndpoint: KBEndpoint
     lateinit var serverApplication: ServerApplication
     lateinit var httpClient: HttpClient
@@ -20,6 +21,7 @@ open class OpenRDRServerTestBase {
         kbEndpoint = mockk<KBEndpoint>()
         serverApplication = mockk<ServerApplication>()
         every { serverApplication.kbForId(kbId) } returns kbEndpoint
+        every { serverApplication.kbForName(kbName) } returns kbEndpoint
         httpClient = createClient {
             install(ContentNegotiation) {
                 json(Json {
@@ -36,6 +38,7 @@ open class OpenRDRServerTestBase {
             kbManagement(serverApplication)
             kbEditing(serverApplication)
             caseManagement(serverApplication)
+            interpreter(serverApplication)
             attributeManagement(serverApplication)
             conclusionManagement(serverApplication)
             conditionManagement(serverApplication)

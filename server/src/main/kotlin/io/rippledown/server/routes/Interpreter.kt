@@ -26,7 +26,7 @@ fun Application.interpreter(application: ServerApplication) {
         put(INTERPRET_CASE) {
             val str = call.receiveText()
             val externalCase = jsonAllowSMK.decodeFromString(ExternalCase.serializer(), str)
-            val case = kbEndpoint(application).processCase(externalCase)
+            val case = kbEndpointByName(application).processCase(externalCase)
             call.respond(HttpStatusCode.Accepted, case)
         }
     }

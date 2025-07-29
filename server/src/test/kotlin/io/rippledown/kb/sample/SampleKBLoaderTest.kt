@@ -34,7 +34,7 @@ class SampleKBLoaderTest {
 
     @AfterTest
     fun cleanup() {
-        kbManager.deleteKB(endpoint.kbName())
+        kbManager.deleteKB(endpoint.kbInfo())
     }
 
     @Test

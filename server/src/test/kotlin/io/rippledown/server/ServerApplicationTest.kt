@@ -94,6 +94,49 @@ internal class ServerApplicationTest {
     }
 
     @Test
+    fun kbForIdTest() {
+        val kbi1 = app.createKB("KB1", false)
+        val kbi2 = app.createKB("KB2", false)
+        val kbi3 = app.createKB("KB3", false)
+        app.kbForId(kbi1.id).kbInfo() shouldBe kbi1
+        app.kbForId(kbi2.id).kbInfo() shouldBe kbi2
+        app.kbForId(kbi3.id).kbInfo() shouldBe kbi3
+    }
+
+    @Test
+    fun `unknown kb id`() {
+        shouldThrow<IllegalArgumentException> {
+            app.kbForId("Unknown")
+        }.message shouldBe "Unknown kb id: Unknown"
+    }
+
+    @Test
+    fun kbForName() {
+        val kbi1 = app.createKB("KB1", false)
+        val kbi2 = app.createKB("KB2", false)
+        val kbi3 = app.createKB("KB3", false)
+        app.kbForName(kbi1.name).kbInfo() shouldBe kbi1
+        app.kbForName(kbi2.name).kbInfo() shouldBe kbi2
+        app.kbForName(kbi3.name).kbInfo() shouldBe kbi3
+    }
+
+    @Test
+    fun `unknown kb name`() {
+        shouldThrow<IllegalArgumentException> {
+            app.kbForName("Unknown")
+        }.message shouldBe "No KB with name Unknown found."
+    }
+
+    @Test
+    fun `multiple KBs with same name`() {
+        val kbId = app.createKB("KB1", false)
+        app.createKB(kbId.name, true)
+        shouldThrow<IllegalArgumentException> {
+            app.kbForName(kbId.name)
+        }.message shouldBe "More than one KB with name ${kbId.name} found."
+    }
+
+    @Test
     fun `should not create a KB with the same name as an existing KB if force is false`() {
         app.kbList().size shouldBe 0
         val kbName = "Whatever"
