@@ -35,7 +35,6 @@ object ConditionService {
             SERIES_PREDICATES to readResource(SERIES_PREDICATES),
             CASE_STRUCTURE_PREDICATES to readResource(CASE_STRUCTURE_PREDICATES),
             SINGLE_EXPRESSION_EXAMPLES to examples(),
-//            MULTIPLE_EXPRESSION_EXAMPLES to readResource(MULTIPLE_EXPRESSION_EXAMPLES),
             INPUT_EXPRESSIONS to inputExpressions.joinToString(separator = "\n")
         )
         val templateText = readResource(PROMPT_TEMPLATE)
