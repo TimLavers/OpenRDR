@@ -43,7 +43,7 @@ val prerequisiteTasks = listOf(
     tasks.getByName("testClasses")
 )
 
-val featureFolders = listOf("attributes", "cases", "conditions", "kb", "rulebuilding", "samples", "xchat")
+val featureFolders = listOf("attributes", "cases", "conditions", "kb", "rulebuilding", "samples", "chat")
 featureFolders.forEach { folderName ->
     tasks.register<JavaExec>(folderName) {
         setupExec()
