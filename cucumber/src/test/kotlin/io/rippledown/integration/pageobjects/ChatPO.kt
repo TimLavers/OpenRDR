@@ -7,7 +7,6 @@ import io.rippledown.chat.CHAT_TEXT_FIELD
 import io.rippledown.chat.NUMBER_OF_CHAT_MESSAGES_
 import io.rippledown.integration.utils.find
 import org.assertj.swing.edt.GuiActionRunner.execute
-import java.lang.Thread.sleep
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleEditableText
 
@@ -24,7 +23,6 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
         execute { chatEditableTextContext()?.setTextContents(text) }
 
     fun clickSend() {
-        sleep(1_000)
         execute { chatTextContext().find(CHAT_SEND)?.accessibleAction?.doAccessibleAction(0) }
     }
 
