@@ -81,6 +81,7 @@ fun Application.module() {
     kbManagement(application)
     kbEditing(application)
     caseManagement(application)
+    interpreter(application)
     attributeManagement(application)
     conclusionManagement(application)
     conditionManagement(application)

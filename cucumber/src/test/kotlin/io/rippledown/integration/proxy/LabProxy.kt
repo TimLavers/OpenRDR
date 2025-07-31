@@ -56,12 +56,20 @@ class LabProxy(tempDir: File, val restProxy: RESTClient) {
         restProxy.provideCase(case)
     }
 
+    fun provideCaseForKb(kbName: String, caseName: String, attributeNameToValue: Map<String, String>): RDRCase {
+        val now = now().toEpochMilli()
+        val data = mutableMapOf<MeasurementEvent, TestResult>()
+        attributeNameToValue.forEach { data[MeasurementEvent(it.key, now)] = TestResult(it.value) }
+        val case = ExternalCase(caseName, data)
+        return restProxy.provideCaseForKB(kbName, case)
+    }
+
     fun provideCase(caseName: String, details: List<TestResultDetail>) {
         val now = now().toEpochMilli()
-        val data = details.map {
+        val data = details.associate {
             val referenceRange = ReferenceRange(it.lowReferenceRange, it.highReferenceRange)
             MeasurementEvent(it.attributeName, now) to TestResult(it.result, referenceRange, it.units)
-        }.toMap()
+        }
         val case = ExternalCase(caseName, data)
         restProxy.provideCase(case)
     }

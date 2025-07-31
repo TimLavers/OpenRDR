@@ -183,6 +183,21 @@ class Defs {
         labProxy().provideCase(caseName, attributeNameToValue)
     }
 
+    @Given("case {word} for KB {word} is provided having data:")
+    fun provideCaseWithDataForKB(caseName: String, kbName: String, dataTable: DataTable) {
+        val attributeNameToValue = mutableMapOf<String, String>()
+        dataTable.asMap().forEach { (t, u) -> attributeNameToValue[t] = u }
+        labProxy().provideCaseForKb(kbName, caseName, attributeNameToValue)
+    }
+
+    @Given("case {word} for KB {word} gets the interpretation {string} when it is provided having data:")
+    fun provideCaseWithDataForKbAndCheckInterpretation(caseName: String, kbName: String, comment: String,  dataTable: DataTable) {
+        val attributeNameToValue = mutableMapOf<String, String>()
+        dataTable.asMap().forEach { (t, u) -> attributeNameToValue[t] = u }
+        val received = labProxy().provideCaseForKb(kbName, caseName, attributeNameToValue)
+        received.interpretation.conclusionTexts() shouldBe setOf(comment)
+    }
+
     @Given("case {word} is provided with the following values, reference ranges and units:")
     fun provideCaseWithDataIncludingReferenceRangesAndUnits(caseName: String, dataTable: DataTable) {
         //| attribute | value | lower reference range| upper reference range | units |
