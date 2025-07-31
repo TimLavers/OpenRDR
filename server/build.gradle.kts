@@ -1,6 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-apply(from = "../repositories.gradle.kts")
 plugins {
     id("io.ktor.plugin") version "3.1.2"
     kotlin("plugin.serialization")

@@ -1,4 +1,4 @@
-package io.rippledown.conditiongenerator
+package io.rippledown.hints
 
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk

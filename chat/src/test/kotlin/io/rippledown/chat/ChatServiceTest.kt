@@ -5,7 +5,7 @@ import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
-class GeminiServiceTest {
+class ChatServiceTest {
 
     @Test
     fun `should start a chat with Gemini`() = runTest {

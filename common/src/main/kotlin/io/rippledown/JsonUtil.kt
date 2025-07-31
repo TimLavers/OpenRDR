@@ -21,6 +21,6 @@ inline fun <reified T> String.fromJsonString(): T {
 }
 
 fun String.stripEnclosingJson() =
-    replace("```json\n", "")
-        .replace("\n```", "")
+    replace("```json", "")
+        .replace("```", "")
         .trim()

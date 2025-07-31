@@ -1,8 +1,4 @@
-package io.rippledown.llm
-
-import io.rippledown.conditiongenerator.ConditionSpecification
-import io.rippledown.conditiongenerator.FunctionSpecification
-import io.rippledown.conditiongenerator.spec
+package io.rippledown.hints
 
 const val EXPECTED_PREDICATE = "EXPECTED PREDICATE:"
 const val EXPECTED_SIGNATURE = "EXPECTED SIGNATURE:"
@@ -31,7 +27,7 @@ fun examplesFrom(lines: List<String>): String {
                 .replace(EXPECTED_PREDICATE, "")
                 .split(",")
                 .map { it.trim() }
-            spec = spec(
+            spec = ConditionSpecification(
                 predicateName = predicateComponents[0],
                 predicateParameters = predicateComponents.drop(1),
                 signatureName = "",

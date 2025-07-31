@@ -1,8 +1,7 @@
-package io.rippledown.conditiongenerator
+package io.rippledown.hints
 
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
-import io.rippledown.expressionparser.AttributeFor
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.episodic.predicate.Contains
 import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals

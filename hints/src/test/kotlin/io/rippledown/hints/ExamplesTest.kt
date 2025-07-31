@@ -1,7 +1,6 @@
-package io.rippledown.llm
+package io.rippledown.hints
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.conditiongenerator.spec
 import org.junit.jupiter.api.Test
 
 class ExamplesTest {
@@ -21,9 +20,9 @@ class ExamplesTest {
         // Then
         examples shouldBe """
             Input: elevated x
-            Output: ${spec(predicateName = "High", signatureName = "")}
+            Output: ${ConditionSpecification(predicateName = "High", signatureName = "")}
             Input: excessive x
-            Output: ${spec(predicateName = "High", signatureName = "")}
+            Output: ${ConditionSpecification(predicateName = "High", signatureName = "")}
         """.trimIndent()
     }
 
@@ -45,8 +44,8 @@ class ExamplesTest {
         val examples = examplesFrom(lines)
 
         // Then
-        val expectedSpecHigh = spec(predicateName = "High", signatureName = "")
-        val expectedSpecLow = spec(predicateName = "Low", signatureName = "")
+        val expectedSpecHigh = ConditionSpecification(predicateName = "High", signatureName = "")
+        val expectedSpecLow = ConditionSpecification(predicateName = "Low", signatureName = "")
         examples shouldBe """
             Input: elevated x
             Output: $expectedSpecHigh
@@ -74,7 +73,11 @@ class ExamplesTest {
         val examples = examplesFrom(lines)
 
         // Then
-        val expectedSpec = spec(predicateName = "High", signatureName = "AtLeast", signatureParameters = listOf("42"))
+        val expectedSpec = ConditionSpecification(
+            predicateName = "High",
+            signatureName = "AtLeast",
+            signatureParameters = listOf("42")
+        )
         examples shouldBe """
             Input: at least 42 elevated x
             Output: $expectedSpec
@@ -106,9 +109,9 @@ class ExamplesTest {
         val examples = examplesFrom(lines)
 
         // Then
-        val highSpec = spec(predicateName = "High", signatureName = "Current")
-        val lowSpec = spec(predicateName = "Low", signatureName = "Current")
-        val isSpec = spec(
+        val highSpec = ConditionSpecification(predicateName = "High", signatureName = "Current")
+        val lowSpec = ConditionSpecification(predicateName = "Low", signatureName = "Current")
+        val isSpec = ConditionSpecification(
             predicateName = "Is",
             predicateParameters = listOf("6"),
             signatureName = "AtLeast",

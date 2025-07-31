@@ -1,6 +1,5 @@
-package io.rippledown.conditiongenerator
+package io.rippledown.hints
 
-import io.rippledown.expressionparser.AttributeFor
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.CaseStructureCondition
 import io.rippledown.model.condition.Condition
@@ -31,6 +30,7 @@ class ConditionGenerator(private val attributeFor: AttributeFor) {
         return when (predicate) {
             is TestResultPredicate -> {
                 val signature = signatureFrom(conditionSpec.signature)
+                println("signature = ${signature}, predicate = $predicate, userExpression = $userExpression, attribute = $attribute")
                 EpisodicCondition(null, attribute!!, predicate, signature, userExpression)
             }
 

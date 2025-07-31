@@ -24,11 +24,9 @@
 package io.rippledown.chat
 
 import dev.shreyaspatil.ai.client.generativeai.Chat
-import dev.shreyaspatil.ai.client.generativeai.GenerativeModel
-import dev.shreyaspatil.ai.client.generativeai.type.*
-import dev.shreyaspatil.ai.client.generativeai.type.BlockThreshold.NONE
-import dev.shreyaspatil.ai.client.generativeai.type.HarmCategory.UNKNOWN
-import java.lang.System.getenv
+import dev.shreyaspatil.ai.client.generativeai.type.Content
+import dev.shreyaspatil.ai.client.generativeai.type.FunctionDeclaration
+import io.rippledown.llm.generativeModel
 
 interface ChatService {
     /**
@@ -48,33 +46,11 @@ interface ChatService {
  */
 class GeminiChatService(systemInstruction: String, functionDeclarations: List<FunctionDeclaration> = emptyList()) :
     ChatService {
-    private val GEMINI_MODEL = "gemini-2.0-flash"
-    private var GEMINI_API_KEY = getenv("GEMINI_API_KEY") ?: ""
 
-    private val model = GenerativeModel(
-        modelName = GEMINI_MODEL,
-        apiKey = GEMINI_API_KEY,
-        safetySettings = noSafetySettings(),
-        generationConfig = generativeConfig(),
-        systemInstruction = content { text(systemInstruction) },
-        tools = if (functionDeclarations.isNotEmpty()) listOf(Tool(functionDeclarations)) else emptyList()
+    private val model = generativeModel(
+        systemInstruction = systemInstruction,
+        functionDeclarations = functionDeclarations
     )
-
-    //Set the model to be as deterministic as possible
-    private fun generativeConfig() = GenerationConfig.builder().apply {
-        temperature = 0.1f
-        topP = 0.995f
-    }.build()
-
-    private fun noSafetySettings() =
-        HarmCategory.entries
-            .filter { harmCategory -> harmCategory != UNKNOWN } //Invalid safety setting
-            .map { harmCategory ->
-                SafetySetting(
-                    harmCategory = harmCategory,
-                    threshold = NONE
-                )
-            }
 
     override fun startChat(history: List<Content>) = model.startChat(history)
 }

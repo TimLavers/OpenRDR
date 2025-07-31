@@ -19,15 +19,12 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
     private fun chatEditableTextContext() =
         execute<AccessibleEditableText> { chatTextContext().accessibleEditableText }
 
-    fun chatText(): String = execute<String> {
-        chatTextContext()?.accessibleName ?: ""
-    }
-
     fun enterChatText(text: String) =
         execute { chatEditableTextContext()?.setTextContents(text) }
 
-    fun clickSend() =
+    fun clickSend() {
         execute { chatTextContext().find(CHAT_SEND)?.accessibleAction?.doAccessibleAction(0) }
+    }
 
     fun clickChatIconToggle() =
         execute { contextProvider().find(CHAT_ICON_TOGGLE)?.accessibleAction?.doAccessibleAction(0) }
