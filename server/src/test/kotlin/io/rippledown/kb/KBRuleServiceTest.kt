@@ -13,8 +13,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-class RuleServiceTest {
-    private lateinit var persistentKB: InMemoryKB
+class KBRuleServiceTest {
     private lateinit var kb: KB
     private lateinit var ruleService: RuleService
 
@@ -58,10 +57,5 @@ class RuleServiceTest {
             addResult(attribute, defaultDate, testResult)
             return build(caseName)
         }
-    }
-
-    private fun createKB(kbInfo: KBInfo): KB {
-        persistentKB = InMemoryKB(kbInfo)
-        return KB(persistentKB)
     }
 }
