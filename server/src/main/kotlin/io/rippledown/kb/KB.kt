@@ -8,8 +8,8 @@ import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
 import io.rippledown.hints.AttributeFor
 import io.rippledown.hints.ConditionTip
 import io.rippledown.kb.chat.ChatManager
+import io.rippledown.kb.chat.ChatRuleService
 import io.rippledown.kb.chat.KBChatService
-import io.rippledown.kb.chat.RuleService
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.CaseType
 import io.rippledown.model.Interpretation
@@ -31,33 +31,24 @@ class KB(persistentKB: PersistentKB) {
     val attributeManager = AttributeManager(persistentKB.attributeStore())
     val conclusionManager = ConclusionManager(persistentKB.conclusionStore())
     val conditionManager = ConditionManager(attributeManager, persistentKB.conditionStore())
-    private val ruleManager = RuleManager(conclusionManager, conditionManager, persistentKB.ruleStore())
-    val ruleTree = ruleManager.ruleTree()
-    private val caseManager = CaseManager(persistentKB.caseStore(), attributeManager)
-    private var ruleSession: RuleBuildingSession? = null
-    val ruleSessionRecorder = RuleSessionRecorder(persistentKB.ruleSessionRecordStore())
-    internal val caseViewManager = CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
     val interpretationViewManager = InterpretationViewManager(persistentKB.conclusionOrderStore(), conclusionManager)
+    val ruleSessionRecorder = RuleSessionRecorder(persistentKB.ruleSessionRecordStore())
+    private val ruleManager = RuleManager(conclusionManager, conditionManager, persistentKB.ruleStore())
+    private val caseManager = CaseManager(persistentKB.caseStore(), attributeManager)
+    internal val caseViewManager = CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
+    val ruleTree = ruleManager.ruleTree()
+    private var ruleSession: RuleBuildingSession? = null
 
-    //a var so it can be mocked in tests
     private var conditionParser: ConditionParser
-
-    val ruleService = object : RuleService {
-        override suspend fun buildRuleToAddComment(case: RDRCase, comment: String, conditions: List<Condition>) {
-            val conclusion = conclusionManager.getOrCreate(comment)
-            val action = ChangeTreeToAddConclusion(conclusion)
-            startRuleSession(case, action)
-            conditions.forEach { addConditionToCurrentRuleSession(it) }
-            commitCurrentRuleSession()
-        }
-
-        override suspend fun conditionForExpression(
-            case: RDRCase,
-            expression: String
-        ) = conditionForExpression(expression, case)
-    }
-
     private lateinit var chatManager: ChatManager
+
+    val ruleService = ChatRuleService(
+        getOrCreateConclusion = conclusionManager::getOrCreate,
+        startRuleSession = ::startRuleSession,
+        addCondition = ::addConditionToCurrentRuleSession,
+        commitRuleSession = ::commitCurrentRuleSession,
+        conditionForExpression = ::conditionForExpression
+    )
 
     init {
         conditionParser = object : ConditionParser {
