@@ -11,30 +11,51 @@ When outputting any message to the user, use the following JSON object structure
 
 Once the action and reasons are confirmed, generate a JSON object with the following structure:
 
+For an add action:
 ```json
 {
-  "action": "{{ADD_ACTION}}"
-  |
-  "{{REMOVE_ACTION}}"
-  |
-  "{{REPLACE_ACTION}}",
-  "comment": "<user entered comment text>"
-  |
-  "<user entered comment identifier>",
-  "replace_with": "<user entered new comment text>"
-  |
-  "<user entered existing comment text or identifier>"
-  (only
-  for
-  replace
-  action),
+  "action": "{{ADD_ACTION}}",
+  "comment": "<user entered comment text>",
   "reasons": [
     <array
     of
-    reasons>
+    reasons
+    if
+    provided>
   ]
-  (if
-  provided)
+}
+```
+
+For a remove action:
+
+```json
+{
+  "action": "{{REMOVE_ACTION}}",
+  "comment": "<user entered comment text or identifier>",
+  "reasons": [
+    <array
+    of
+    reasons
+    if
+    provided>
+  ]
+}
+```
+
+For a replace action:
+
+```json
+{
+  "action": "{{REPLACE_ACTION}}",
+  "comment": "<user entered comment text or identifier for the comment to replace>",
+  "replacementComment": "<user entered replacement comment text or identifier for the replacement comment>",
+  "reasons": [
+    <array
+    of
+    reasons
+    if
+    provided>
+  ]
 }
 ```
 

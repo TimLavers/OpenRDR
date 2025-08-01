@@ -1,7 +1,6 @@
 @chat
 Feature: Replace comment
 
-  @single
   Scenario: The user should be able to use the chat to replace a comment with a valid condition
     Given case Bondi is provided having data:
       | wave height | 2   |
@@ -15,7 +14,6 @@ Feature: Replace comment
     And the chatbot has asked if I want to add, remove or replace a comment
     And I enter the following text into the chat panel:
       | Replace the flippers comment by "Don't forget sunscreen." |
-    And pause
     And the chatbot has asked for confirmation
     And I confirm
     And the chatbot has asked if I want to provide any reasons
