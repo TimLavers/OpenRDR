@@ -26,7 +26,6 @@ Feature: KB available as API enpoint
       | age |
     And stop the client application
 
-  @single
   Scenario: The comments given for a case are returned by the interpretation service
     Given I start the client application
     And I create a Knowledge Base with the name Glucose
