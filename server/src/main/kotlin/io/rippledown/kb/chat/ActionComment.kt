@@ -8,5 +8,6 @@ data class ActionComment(
     val message: String? = null,
     val debug: String? = null,
     val comment: String? = null,
+    val replacementComment: String? = null,
     val reasons: List<String>? = null,
 )

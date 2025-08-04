@@ -52,8 +52,8 @@ class Defs {
 
     @After("@chat")
     fun afterChatScenario(scenario: Scenario) {
-        println("Delaying for 15 secs after chat scenario")
-        Thread.sleep(15_000)
+        println("Delaying for one minute after chat scenario")
+        Thread.sleep(60_000)
     }
 
     @When("A Knowledge Base called {word} has been created")

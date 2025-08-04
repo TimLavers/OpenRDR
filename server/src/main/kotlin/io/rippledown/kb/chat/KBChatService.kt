@@ -43,7 +43,6 @@ object KBChatService {
 
     fun createKBChatService(case: RDRCase): ChatService {
         val systemInstruction = systemPrompt(case)
-        logger.info("system instruction:\n$systemInstruction")
         return GeminiChatService(
             systemInstruction = systemInstruction,
             functionDeclarations = listOf(reasonTransformer)

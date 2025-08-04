@@ -43,7 +43,7 @@ val prerequisiteTasks = listOf(
     tasks.getByName("testClasses")
 )
 
-val featureFolders = listOf("attributes", "cases", "chat", "conditions", "kb", "rulebuilding", "samples")
+val featureFolders = listOf("attributes", "cases", "conditions", "kb", "rulebuilding", "samples", "chat")
 featureFolders.forEach { folderName ->
     tasks.register<JavaExec>(folderName) {
         setupExec()
@@ -66,6 +66,19 @@ tasks.register<JavaExec>("cucumberSingleTest") {
         pathToRequirements,
         "--tags",
         "@single"
+    )
+    dependsOn(prerequisiteTasks)
+}
+
+tasks.register<JavaExec>("cucumberFolderTest") {
+    setupExec()
+    val folder by extra {
+        project.properties["folder"] ?: error("Folder must be specified using -Pfolder=<folderName>")
+    }
+    args = argsForCuke() + listOf(
+        "$pathToRequirements/$folder",
+        "--tags",
+        "not @ignore"
     )
     dependsOn(prerequisiteTasks)
 }

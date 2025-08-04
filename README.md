@@ -54,15 +54,23 @@ There are two layers of tests:
 
 To run the unit tests, call the `test` task for each of the subprojects: 
 - `./gradlew common:test`
+- `./gradlew chat:test`
 - `./gradlew hints:test`
 - `./gradlew server:test`
+- `./gradlew llm:test`
 - `./gradlew ui:test`
 
 The cucumber tests build a fat jar and run it in a separate JVM to the client. The client is controlled
 and interrogated by the test code using the accessibility API. To run the cucumber tests 
 call `./gradlew cucumber:cucumberTest`.
+
 To run a single cucumber test or feature file, add the @single annotation at the start of the 
 scenario or feature file and run the `cucumberSingleTest` task.
+
+To run the cucumber tests in just one folder, run the task ```./gradlew cucumberFolderTest -Pfolder=<folder name>```,
+for example:
+
+```./gradlew cucumberFolderTest -Pfolder=chat```
 
 ## Acknowledgements
 

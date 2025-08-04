@@ -5,12 +5,10 @@ import dev.shreyaspatil.ai.client.generativeai.type.FunctionCallPart
 import dev.shreyaspatil.ai.client.generativeai.type.GenerateContentResponse
 import dev.shreyaspatil.ai.client.generativeai.type.TextPart
 import dev.shreyaspatil.ai.client.generativeai.type.content
+import io.rippledown.llm.retry
 import io.rippledown.log.lazyLogger
 import io.rippledown.stripEnclosingJson
 import io.rippledown.toJsonString
-import kotlinx.coroutines.delay
-import kotlin.random.Random.Default.nextLong
-import kotlin.time.Duration.Companion.milliseconds
 
 interface ConversationService {
     suspend fun startConversation(): String = ""
@@ -84,29 +82,3 @@ class Conversation(private val chatService: ChatService, private val reasonTrans
         const val TRANSFORM_REASON = "transformReasonToFormalCondition"
     }
 }
-
-/**
- * Retry when receiving the 503 error from the API due to rate limiting.
- */
-object Retry
-
-suspend fun <T> retry(
-    maxRetries: Int = 10,
-    initialDelay: Long = 1_000,
-    maxDelay: Long = 32_000,
-    block: suspend () -> T
-): T {
-    var currentDelay = initialDelay
-    repeat(maxRetries) { attempt ->
-        try {
-            return block()
-        } catch (e: Exception) {
-            if (attempt == maxRetries - 1) throw e
-            Retry.lazyLogger.info("attempt $attempt failed. Waiting $currentDelay ms before retrying")
-            delay(currentDelay.milliseconds)
-            currentDelay = (currentDelay * 2).coerceAtMost(maxDelay) + nextLong(0, 1_000)
-        }
-    }
-    throw IllegalStateException("Max retries of $maxRetries reached")
-}
-

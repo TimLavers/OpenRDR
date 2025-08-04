@@ -36,7 +36,7 @@ fun allDatabasesInSystem(): Set<String> {
 
 fun createDatabase(name: String) {
     ConnectionProvider.systemConnection().use {
-        it.createStatement().executeUpdate("CREATE DATABASE $name")
+        it.createStatement().executeUpdate("CREATE DATABASE $name WITH ENCODING 'UTF8' TEMPLATE template0")
     }
 }
 

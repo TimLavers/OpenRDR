@@ -11,6 +11,13 @@ import io.rippledown.toJsonString
 
 interface RuleService {
     suspend fun buildRuleToAddComment(case: RDRCase, comment: String, conditions: List<Condition>)
+    suspend fun buildRuleToRemoveComment(case: RDRCase, comment: String, conditions: List<Condition>)
+    suspend fun buildRuleToReplaceComment(
+        case: RDRCase,
+        replacedComment: String,
+        replacementComment: String,
+        conditions: List<Condition>
+    )
     suspend fun conditionForExpression(case: RDRCase, expression: String): ConditionParsingResult
 }
 
@@ -71,9 +78,53 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
                 }
             }
 
+            REMOVE_ACTION -> {
+                val comment = actionComment.comment
+                val userExpressionsForConditions = actionComment.reasons
+                val conditionParsingResults = userExpressionsForConditions?.map { expression ->
+                    ruleService.conditionForExpression(currentCase, expression)
+                } ?: emptyList()
+                conditionParsingResults.forEach { condition -> logger.info("error parsing condition ${condition.errorMessage}") }
+
+                //Check for failures and collect conditions at the same time
+                val (failedResult, conditions) = checkForUnparsedConditions(conditionParsingResults)
+
+                // If a failure was found, return the error message
+                if (failedResult != null) {
+                    "Failed to parse condition: ${failedResult}"
+                } else {
+                    comment?.let {
+                        ruleService.buildRuleToRemoveComment(currentCase, it, conditions)
+                        CHAT_BOT_DONE_MESSAGE
+                    } ?: ""
+                }
+            }
+            REPLACE_ACTION -> {
+                val comment = actionComment.comment
+                val replacementComment = actionComment.replacementComment
+                if (comment == null || replacementComment == null) {
+                    logger.error("Comment or replacementComment is null in actionComment: ${actionComment.toJsonString()}")
+                    return "Comment or replacement comment is missing."
+                }
+                val userExpressionsForConditions = actionComment.reasons
+                val conditionParsingResults = userExpressionsForConditions?.map { expression ->
+                    ruleService.conditionForExpression(currentCase, expression)
+                } ?: emptyList()
+                conditionParsingResults.forEach { condition -> logger.info("error parsing condition ${condition.errorMessage}") }
+
+                //Check for failures and collect conditions at the same time
+                val (failedResult, conditions) = checkForUnparsedConditions(conditionParsingResults)
+
+                // If a failure was found, return the error message
+                if (failedResult != null) {
+                    "Failed to parse condition: ${failedResult}"
+                } else {
+                    ruleService.buildRuleToReplaceComment(currentCase, comment, replacementComment, conditions)
+                    CHAT_BOT_DONE_MESSAGE
+                }
+            }
+
             STOP_ACTION -> ""  //TODO
-            REMOVE_ACTION -> "" // TODO
-            REPLACE_ACTION -> "" // TODO
 
             else -> {
                 logger.error("Unknown actionComment: ${actionComment.action}")

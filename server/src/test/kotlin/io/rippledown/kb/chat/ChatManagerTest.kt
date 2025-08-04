@@ -7,10 +7,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.rippledown.chat.ConversationService
-import io.rippledown.constants.chat.ADD_ACTION
-import io.rippledown.constants.chat.CHAT_BOT_DONE_MESSAGE
-import io.rippledown.constants.chat.DEBUG_ACTION
-import io.rippledown.constants.chat.USER_ACTION
+import io.rippledown.constants.chat.*
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_CONVERSATION_RESPONSE
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE
 import io.rippledown.model.RDRCase
@@ -206,6 +203,73 @@ class ChatManagerTest {
 
             // Then
             coVerify { ruleService.buildRuleToAddComment(case, comment, eq(listOf(condition1, condition2))) }
+            responseToUser shouldBe CHAT_BOT_DONE_MESSAGE
+        }
+
+    @Test
+    fun `should build a rule to remove a comment with conditions from a response from the conversation service`() =
+        runTest {
+            // Given
+            val message = "What do you want to remove?"
+            val initialResponseFromModel = ActionComment(USER_ACTION, message = message).toJsonString()
+            coEvery { conversationService.startConversation() } returns initialResponseFromModel
+            chatManager.startConversation(case)
+
+            val comment = "Go to Bondi."
+            val expression1 = "If the sun is hot."
+            val condition1 = mockk<Condition>()
+            val conditionParsingResult1 = ConditionParsingResult(condition1)
+            val responseFromModel = ActionComment(
+                action = REMOVE_ACTION,
+                comment = comment,
+                reasons = listOf(expression1)
+            ).toJsonString()
+            coEvery { conversationService.response(any<String>()) } returns responseFromModel
+            coEvery { ruleService.conditionForExpression(case, expression1) } returns conditionParsingResult1
+
+            // When
+            val responseToUser = chatManager.response("yes!")
+
+            // Then
+            coVerify { ruleService.buildRuleToRemoveComment(case, comment, eq(listOf(condition1))) }
+            responseToUser shouldBe CHAT_BOT_DONE_MESSAGE
+        }
+
+    @Test
+    fun `should build a rule to replace a comment with conditions from a response from the conversation service`() =
+        runTest {
+            // Given
+            val message = "What do you want to replace?"
+            val initialResponseFromModel = ActionComment(USER_ACTION, message = message).toJsonString()
+            coEvery { conversationService.startConversation() } returns initialResponseFromModel
+            chatManager.startConversation(case)
+
+            val comment = "Go to Bondi."
+            val replacementComment = "Go to Manly."
+            val expression1 = "If the sun is hot."
+            val condition1 = mockk<Condition>()
+            val conditionParsingResult1 = ConditionParsingResult(condition1)
+            val responseFromModel = ActionComment(
+                action = REPLACE_ACTION,
+                comment = comment,
+                replacementComment = replacementComment,
+                reasons = listOf(expression1)
+            ).toJsonString()
+            coEvery { conversationService.response(any<String>()) } returns responseFromModel
+            coEvery { ruleService.conditionForExpression(case, expression1) } returns conditionParsingResult1
+
+            // When
+            val responseToUser = chatManager.response("yes!")
+
+            // Then
+            coVerify {
+                ruleService.buildRuleToReplaceComment(
+                    case,
+                    comment,
+                    replacementComment,
+                    eq(listOf(condition1))
+                )
+            }
             responseToUser shouldBe CHAT_BOT_DONE_MESSAGE
         }
 

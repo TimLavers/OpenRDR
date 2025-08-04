@@ -6,6 +6,7 @@ plugins {
 
 dependencies {
     implementation(project(":common"))
+    implementation(project(":llm"))
     implementation(kotlin("reflect"))
     implementation(libs.logback)
     implementation(libs.generativeai)
