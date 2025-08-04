@@ -5,6 +5,7 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import io.rippledown.casecontrol.requireCaseSelectorToBeDisplayed
 import io.rippledown.casecontrol.waitForCaseToBeShowing
+import io.rippledown.chat.clickChatIconToggle
 import io.rippledown.constants.interpretation.ADDING
 import io.rippledown.constants.interpretation.BY
 import io.rippledown.constants.interpretation.REMOVING
@@ -59,6 +60,28 @@ class OpenRDRUIForRuleActionTest {
 
             // Then
             requireLeftInformationMessage("$ADDING$addedComment")
+        }
+    }
+
+    @Test
+    fun `should disable the ChangeInterpretationButton if the chat is showing`() = runTest {
+        val caseName = "case a"
+        val caseId = CaseId(id = 1, name = caseName)
+        val case = createViewableCase(caseId)
+        coEvery { api.getCase(1) } returns case
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            // Given
+            waitForCaseToBeShowing(caseName)
+
+            // When
+            clickChatIconToggle()
+
+            // Then
+            requireChangeInterpretationIconToBeNotShowing()
         }
     }
 

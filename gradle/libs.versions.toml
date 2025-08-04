@@ -1,6 +1,6 @@
 [versions]
 kotlin = "2.1.10"
-compose = "1.7.3"
+compose = "1.8.2"
 material_icons = "1.7.3"
 kotest = "5.7.2"
 assertjSwing = "3.17.1"
