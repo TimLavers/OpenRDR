@@ -1,5 +1,6 @@
 package io.rippledown.kb.chat
 
+import io.rippledown.log.lazyLogger
 import io.rippledown.model.Conclusion
 import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
@@ -16,6 +17,7 @@ class ChatRuleService(
     private val commitRuleSession: () -> Unit,
     private val conditionForExpression: (String, RDRCase) -> ConditionParsingResult
 ) : RuleService {
+    private val logger = lazyLogger
 
     override suspend fun buildRuleToAddComment(case: RDRCase, comment: String, conditions: List<Condition>) {
         val conclusion = getOrCreateConclusion(comment)

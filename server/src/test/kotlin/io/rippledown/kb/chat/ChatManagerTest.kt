@@ -236,6 +236,44 @@ class ChatManagerTest {
         }
 
     @Test
+    fun `should build a rule to replace a comment with conditions from a response from the conversation service`() =
+        runTest {
+            // Given
+            val message = "What do you want to replace?"
+            val initialResponseFromModel = ActionComment(USER_ACTION, message = message).toJsonString()
+            coEvery { conversationService.startConversation() } returns initialResponseFromModel
+            chatManager.startConversation(case)
+
+            val comment = "Go to Bondi."
+            val replacementComment = "Go to Manly."
+            val expression1 = "If the sun is hot."
+            val condition1 = mockk<Condition>()
+            val conditionParsingResult1 = ConditionParsingResult(condition1)
+            val responseFromModel = ActionComment(
+                action = REPLACE_ACTION,
+                comment = comment,
+                replacementComment = replacementComment,
+                reasons = listOf(expression1)
+            ).toJsonString()
+            coEvery { conversationService.response(any<String>()) } returns responseFromModel
+            coEvery { ruleService.conditionForExpression(case, expression1) } returns conditionParsingResult1
+
+            // When
+            val responseToUser = chatManager.response("yes!")
+
+            // Then
+            coVerify {
+                ruleService.buildRuleToReplaceComment(
+                    case,
+                    comment,
+                    replacementComment,
+                    eq(listOf(condition1))
+                )
+            }
+            responseToUser shouldBe CHAT_BOT_DONE_MESSAGE
+        }
+
+    @Test
     @Ignore //TODO NOT YET IMPLEMENTED
     fun `should start another conversation after building a rule`() =
         runTest {

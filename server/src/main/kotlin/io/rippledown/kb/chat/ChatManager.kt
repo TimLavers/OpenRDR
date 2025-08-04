@@ -99,8 +99,31 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
                     } ?: ""
                 }
             }
+            REPLACE_ACTION -> {
+                val comment = actionComment.comment
+                val replacementComment = actionComment.replacementComment
+                if (comment == null || replacementComment == null) {
+                    logger.error("Comment or replacementComment is null in actionComment: ${actionComment.toJsonString()}")
+                    return "Comment or replacement comment is missing."
+                }
+                val userExpressionsForConditions = actionComment.reasons
+                val conditionParsingResults = userExpressionsForConditions?.map { expression ->
+                    ruleService.conditionForExpression(currentCase, expression)
+                } ?: emptyList()
+                conditionParsingResults.forEach { condition -> logger.info("error parsing condition ${condition.errorMessage}") }
 
-            REPLACE_ACTION -> "" // TODO
+                //Check for failures and collect conditions at the same time
+                val (failedResult, conditions) = checkForUnparsedConditions(conditionParsingResults)
+
+                // If a failure was found, return the error message
+                if (failedResult != null) {
+                    "Failed to parse condition: ${failedResult}"
+                } else {
+                    ruleService.buildRuleToReplaceComment(currentCase, comment, replacementComment, conditions)
+                    CHAT_BOT_DONE_MESSAGE
+                }
+            }
+
             STOP_ACTION -> ""  //TODO
 
             else -> {

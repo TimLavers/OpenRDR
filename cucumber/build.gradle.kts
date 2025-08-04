@@ -70,6 +70,19 @@ tasks.register<JavaExec>("cucumberSingleTest") {
     dependsOn(prerequisiteTasks)
 }
 
+tasks.register<JavaExec>("cucumberFolderTest") {
+    setupExec()
+    val folder by extra {
+        project.properties["folder"] ?: error("Folder must be specified using -Pfolder=<folderName>")
+    }
+    args = argsForCuke() + listOf(
+        "$pathToRequirements/$folder",
+        "--tags",
+        "not @ignore"
+    )
+    dependsOn(prerequisiteTasks)
+}
+
 fun JavaExec.setupExec() {
     group = "verification"
     maxHeapSize = "4G"
