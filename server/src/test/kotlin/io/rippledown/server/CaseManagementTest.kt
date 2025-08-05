@@ -28,7 +28,7 @@ class CaseManagementTest : OpenRDRServerTestBase() {
 
     @Test
     fun waitingCases() = testApplication {
-        setup()
+        setupServer()
         val casesInfo = CasesInfo(listOf(CaseId("Tea"), CaseId("Coffee")))
         every { kbEndpoint.waitingCasesInfo() } returns casesInfo
         val result = httpClient.get(WAITING_CASES) { parameter(KB_ID, kbId) }
@@ -39,7 +39,7 @@ class CaseManagementTest : OpenRDRServerTestBase() {
 
     @Test
     fun `should return a viewable case`() = testApplication {
-        setup()
+        setupServer()
         val rdrCase = RDRCase(CaseId(1, "Case1"))
         val viewableCase = ViewableCase(rdrCase)
         val caseId = 1L
@@ -56,7 +56,7 @@ class CaseManagementTest : OpenRDRServerTestBase() {
     @Test
     fun `should throw exception when trying to get a case which is not founc`() = testApplication {
         //Given
-        setup()
+        setupServer()
         val message = "Case not found"
         every { kbEndpoint.viewableCase(any()) } throws Exception(message)
 
@@ -74,7 +74,7 @@ class CaseManagementTest : OpenRDRServerTestBase() {
     @Test
     fun `Should return BadRequest if the case id is not a Long`() = testApplication {
         //Given
-        setup()
+        setupServer()
 
         //When
         val response = httpClient.get(CASE) {
@@ -90,7 +90,7 @@ class CaseManagementTest : OpenRDRServerTestBase() {
     @Test
     fun `Should return BadRequest if the case id parameter is missing`() = testApplication {
         //Given
-        setup()
+        setupServer()
 
         //When
         val response = httpClient.get(CASE) {
@@ -104,7 +104,7 @@ class CaseManagementTest : OpenRDRServerTestBase() {
 
     @Test
     fun provideCase() = testApplication {
-        setup()
+        setupServer()
         val case = CaseTestUtils.getCase("Case2")
         val caseData = case.serialize()
         val returnCase = createViewableCase("Case2").case
@@ -121,7 +121,7 @@ class CaseManagementTest : OpenRDRServerTestBase() {
 
     @Test
     fun deleteProcessedCaseWithName() = testApplication {
-        setup()
+        setupServer()
         val caseName = "The Case"
         every { kbEndpoint.deleteCase(caseName) } returns Unit
         val result = httpClient.delete(DELETE_CASE_WITH_NAME) {

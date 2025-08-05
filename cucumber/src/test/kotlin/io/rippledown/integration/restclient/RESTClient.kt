@@ -107,6 +107,14 @@ class RESTClient {
         return result
     }
 
+    fun provideCaseForKB(kbName: String, externalCase: ExternalCase) = runBlocking {
+            jsonClient.put(endpoint + INTERPRET_CASE) {
+                contentType(ContentType.Application.Json)
+                setBody(externalCase)
+                parameter(KB_NAME, kbName)
+            }.body<RDRCase>()
+        }
+
     fun createRuleToAddText(caseName: String, text: String, vararg conditions: String = arrayOf()): ViewableCase {
         val currentCase = getCaseWithName(caseName)!!
         val sessionStartRequest = SessionStartRequest(currentCase.id!!, Addition(text))

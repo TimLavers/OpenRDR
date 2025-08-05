@@ -23,7 +23,7 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
     val casesDir = File(casesRootDirectory, "cases").apply { mkdirs() }
     val interpretationsDir = File(casesRootDirectory, "interpretations").apply { mkdirs() }
 
-    fun kbName(): KBInfo {
+    fun kbInfo(): KBInfo {
         logger.info("kbName will return: ${kb.kbInfo.name}")
         return kb.kbInfo
     }

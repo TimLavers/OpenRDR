@@ -16,7 +16,7 @@ import kotlin.test.Test
 class ConclusionManagementTest: OpenRDRServerTestBase() {
     @Test
     fun getOrCreateConclusion() = testApplication {
-        setup()
+        setupServer()
         val text = "Glucose is high."
         val conclusion = Conclusion(8, text)
         every { kbEndpoint.getOrCreateConclusion(text) } returns conclusion
@@ -31,7 +31,7 @@ class ConclusionManagementTest: OpenRDRServerTestBase() {
 
     @Test
     fun `should return all conclusions`() = testApplication {
-        setup()
+        setupServer()
         val text1 = "Glucose is high."
         val text2 = "Fructose is high."
         val conclusion1 = Conclusion(8, text1)

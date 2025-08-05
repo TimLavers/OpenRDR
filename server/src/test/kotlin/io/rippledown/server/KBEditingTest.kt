@@ -3,7 +3,6 @@ package io.rippledown.server
 import io.kotest.matchers.shouldBe
 import io.ktor.client.call.*
 import io.ktor.client.request.*
-import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.every
@@ -12,15 +11,13 @@ import io.rippledown.constants.api.*
 import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.KBInfo
 import io.rippledown.model.rule.UndoRuleDescription
-import io.rippledown.sample.SampleKB
-import java.io.File
 import kotlin.test.Test
 
 class KBEditingTest: OpenRDRServerTestBase() {
 
     @Test
     fun kbDescription() = testApplication {
-        setup()
+        setupServer()
         val description = """
             # OpenRDR
 
@@ -51,7 +48,7 @@ class KBEditingTest: OpenRDRServerTestBase() {
 
     @Test
     fun setDescription() = testApplication {
-        setup()
+        setupServer()
         val newDescription = "Whatever"
         val result = httpClient.post(KB_DESCRIPTION) {
             parameter(KB_ID, kbId)
@@ -64,20 +61,20 @@ class KBEditingTest: OpenRDRServerTestBase() {
 
     @Test
     fun kbName() = testApplication {
-        setup()
+        setupServer()
         val kbInfo = KBInfo("Glucose")
-        every { kbEndpoint.kbName() } returns kbInfo
+        every { kbEndpoint.kbInfo() } returns kbInfo
         val result = httpClient.get(KB_INFO){
             parameter(KB_ID, kbId)
         }
         result.status shouldBe HttpStatusCode.OK
         result.body<KBInfo>() shouldBe kbInfo
-        verify { kbEndpoint.kbName() }
+        verify { kbEndpoint.kbInfo() }
     }
 
     @Test
     fun lastUndoableRule() = testApplication {
-        setup()
+        setupServer()
         val description = """
             This is an amazing
             rule that can be undone!
@@ -94,7 +91,7 @@ class KBEditingTest: OpenRDRServerTestBase() {
 
     @Test
     fun undoLastRule() = testApplication {
-        setup()
+        setupServer()
         val result = httpClient.delete(LAST_RULE_DESCRIPTION) {
             parameter(KB_ID, kbId)
         }

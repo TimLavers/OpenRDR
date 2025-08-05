@@ -20,7 +20,7 @@ import kotlin.test.Test
 class ConditionManagementTest: OpenRDRServerTestBase() {
     @Test
     fun getOrCreateCondition() = testApplication {
-        setup()
+        setupServer()
         val glucose = Attribute(33, "Glucose")
         val toReturn = isHigh(54, glucose)
         val template = isLow(null, glucose)
@@ -38,7 +38,7 @@ class ConditionManagementTest: OpenRDRServerTestBase() {
 
     @Test
     fun `should delegate generating condition hints to server application`() = testApplication {
-        setup()
+        setupServer()
         val caseId = 42L
         val conditionList = ConditionList(
             listOf(
