@@ -54,7 +54,7 @@ internal class KBEndpointTest {
 
     @AfterTest
     fun cleanup() {
-        kbManager.deleteKB(endpoint.kbName())
+        kbManager.deleteKB(endpoint.kbInfo())
     }
 
     @Test
@@ -261,7 +261,7 @@ internal class KBEndpointTest {
 
     @Test
     fun kbName() {
-        endpoint.kbName().name shouldBe kbName
+        endpoint.kbInfo().name shouldBe kbName
     }
 
     @Test

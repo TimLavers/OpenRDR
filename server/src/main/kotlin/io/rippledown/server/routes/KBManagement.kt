@@ -44,7 +44,7 @@ fun Application.kbManagement(application: ServerApplication) {
         get(EXPORT_KB) {
             val kbEndpoint = kbEndpoint(application)
             val file = kbEndpoint.exportKBToZip()
-            val kbName = kbEndpoint.kbName().name
+            val kbName = kbEndpoint.kbInfo().name
             call.response.header(
                 HttpHeaders.ContentDisposition, ContentDisposition.Attachment.withParameter(
                     ContentDisposition.Parameters.FileName, "$kbName.zip"

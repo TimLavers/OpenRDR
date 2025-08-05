@@ -11,7 +11,7 @@ class OpenRDRServerTest: OpenRDRServerTestBase() {
 
     @Test
     fun testPing() = testApplication {
-        setup()
+        setupServer()
         val response = httpClient.get(PING)
         assertEquals(HttpStatusCode.OK, response.status)
     }

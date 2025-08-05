@@ -38,7 +38,6 @@ fun Application.caseManagement(application: ServerApplication) {
             logger.info("viewable case retrieved")
             call.respond(viewableCase)
             logger.info("viewable case written")
-
         }
         put(PROCESS_CASE) {
             val str = call.receiveText()

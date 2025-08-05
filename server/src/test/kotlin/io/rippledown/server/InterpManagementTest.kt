@@ -25,7 +25,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
 
     @Test
     fun `should delegate starting a rule session to server application`() = testApplication {
-        setup()
+        setupServer()
         val diff = Addition("Bring your handboard.")
 
         val caseId = 1L
@@ -45,7 +45,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
 
     @Test
     fun `should delegate updating the cornerstone status of a rule session to server application`() = testApplication {
-        setup()
+        setupServer()
         val request = UpdateCornerstoneRequest(CornerstoneStatus(), RuleConditionList())
         val cornerstoneStatus = CornerstoneStatus()
         every { kbEndpoint.updateCornerstone(request) } returns cornerstoneStatus
@@ -62,7 +62,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
 
     @Test
     fun `should delegate exempting cornerstone to server application`() = testApplication {
-        setup()
+        setupServer()
         val updatedCornerstoneStatus = CornerstoneStatus(createViewableCase("Bondi"), 42, 100)
         every { kbEndpoint.exemptCornerstone(any()) } returns updatedCornerstoneStatus
 
@@ -79,7 +79,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
     @Test
     fun `should delegate selecting a cornerstone case to server application`() = testApplication {
         // Given
-        setup()
+        setupServer()
         val index = 42
         val updatedCornerstoneStatus = CornerstoneStatus(createViewableCase("Bondi"), index, 100)
         every { kbEndpoint.selectCornerstone(any()) } returns updatedCornerstoneStatus
@@ -99,7 +99,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
 
     @Test
     fun `should delegate building a rule to server application`() = testApplication {
-        setup()
+        setupServer()
 
         val ruleRequest = RuleRequest(1)
         val viewableCase = createViewableCase(CaseId(1, "Bondi"))
@@ -119,7 +119,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
     @Test
     fun `should delegate cancelling a rule session to the server application`() = testApplication {
         // Given
-        setup()
+        setupServer()
 
         // When
         val result = httpClient.post(CANCEL_RULE_SESSION) {

@@ -49,7 +49,7 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
 
     fun selectKB(id: String): KBInfo {
         logger.info("Selecting kb with id: $id")
-        return kbForId(id).kbName()
+        return kbForId(id).kbInfo()
     }
 
     fun deleteKB(id: String) {
@@ -58,6 +58,17 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
 
     fun kbForId(id: String): KBEndpoint {
         return if (idToKBEndpoint.containsKey(id)) idToKBEndpoint[id]!! else throw IllegalArgumentException("Unknown kb id: $id")
+    }
+
+    fun kbForName(name: String): KBEndpoint {
+        val kbIdsForName = kbManager.all().filter { it.name == name }
+        if (kbIdsForName.isEmpty()) {
+            throw IllegalArgumentException("No KB with name $name found.")
+        }
+        if (kbIdsForName.size > 1) {
+            throw IllegalArgumentException("More than one KB with name $name found.")
+        }
+        return kbForId(kbIdsForName.first().id)
     }
 
     fun kbFor(kbInfo: KBInfo) = kbForId(kbInfo.id)

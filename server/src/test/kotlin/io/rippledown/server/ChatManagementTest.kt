@@ -18,7 +18,7 @@ class ChatManagementTest : OpenRDRServerTestBase() {
     @Test
     fun `should delegate starting a conversation with model to the server application`() = testApplication {
         //Given
-        setup()
+        setupServer()
         val caseId = 42L
         val response = "Shall I add a surfing comment to the report?"
         coEvery { kbEndpoint.startConversation(caseId) } returns response
@@ -37,7 +37,7 @@ class ChatManagementTest : OpenRDRServerTestBase() {
     @Test
     fun `should delegate generating a response from the model to the server application`() = testApplication {
         //Given
-        setup()
+        setupServer()
         val caseId = 42L
         val userMessage = "The report should include a surfing comment"
         val response = "Shall I add a surfing comment to the report?"

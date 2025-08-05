@@ -16,6 +16,7 @@ import io.rippledown.decoration.BACKGROUND_COLOR
 import io.rippledown.main.LEFT_INFO_MESSAGE_ID
 import io.rippledown.main.RIGHT_INFO_MESSAGE_ID
 import io.rippledown.utils.dump
+import org.assertj.swing.edt.GuiActionRunner
 
 
 @OptIn(ExperimentalTestApi::class)
@@ -117,9 +118,12 @@ fun ComposeTestRule.clickCommentToBeReplaced(comment: String) {
 }
 
 fun ComposeTestRule.clickComment(prefix: String, comment: String) {
-    waitUntil { onNodeWithContentDescription("$prefix$comment").isDisplayed() }
-    onNodeWithContentDescription("$prefix$comment").performClick()
-    waitForIdle()
+    GuiActionRunner.execute {
+        waitUntil { onNodeWithContentDescription("$prefix$comment").isDisplayed() }
+        onNodeWithContentDescription("$prefix$comment").performClick()
+        waitForIdle()
+
+    }
 }
 
 fun ComposeTestRule.clickOKToAddNewComment() {
@@ -132,6 +136,7 @@ fun ComposeTestRule.clickOKToAddNewComment() {
 
 fun ComposeTestRule.clickOKToReplaceComment() {
     waitTillButtonIsEnabled(OK_BUTTON_FOR_REPLACE_COMMENT)
+    waitForIdle()
     onNodeWithContentDescription(OK_BUTTON_FOR_REPLACE_COMMENT)
         .assertIsEnabled()
         .performClick()
@@ -181,6 +186,7 @@ fun ComposeTestRule.clickCancelReplaceComment() {
 }
 
 fun ComposeTestRule.clickCancelRemoveComment() {
+    waitTillButtonIsEnabled(CANCEL_BUTTON_FOR_REMOVE_COMMENT)
     onNodeWithContentDescription(CANCEL_BUTTON_FOR_REMOVE_COMMENT)
         .assertIsDisplayed()
         .performClick()

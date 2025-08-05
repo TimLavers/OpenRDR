@@ -11,7 +11,7 @@ import io.rippledown.server.ServerApplication
 fun Application.kbEditing(application: ServerApplication) {
     routing {
         get(KB_INFO) {
-            call.respond(kbEndpoint(application).kbName())
+            call.respond(kbEndpoint(application).kbInfo())
         }
 
         get(KB_DESCRIPTION) {

@@ -22,7 +22,7 @@ class RuleSessionsTest : OpenRDRServerTestBase() {
 
     @Test
     fun `should delegate requesting a condition for an expression to the server application`() = testApplication {
-        setup()
+        setupServer()
         val expression = "elevated waves"
         val waves = Attribute(0, "Waves")
         val condition = EpisodicCondition(null, waves, High, Current, expression)

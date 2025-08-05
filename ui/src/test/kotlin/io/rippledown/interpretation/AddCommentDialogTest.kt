@@ -31,7 +31,6 @@ class AddCommentDialogTest {
 
             //When
             addNewComment("Bondi")
-            clickOKToAddNewComment()
 
             //Then
             verify { handler.startRuleToAddComment("Bondi") }
