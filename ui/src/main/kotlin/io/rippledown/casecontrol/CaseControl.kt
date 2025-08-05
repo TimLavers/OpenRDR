@@ -38,6 +38,7 @@ interface CaseControlHandler : CaseInspectionHandler, CornerstonePagerHandler {
 fun CaseControl(
     currentCase: ViewableCase?,
     cornerstoneStatus: CornerstoneStatus? = null,
+    isChatVisible: Boolean = false,
     conditionHints: List<SuggestedCondition>,
     handler: CaseControlHandler,
     modifier: Modifier = Modifier
@@ -50,7 +51,8 @@ fun CaseControl(
     )
     {
         if (currentCase != null) {
-            CaseInspection(currentCase, isRuleBuilding = ruleInProgress, object : CaseInspectionHandler by handler {
+            val showChangeInterpretationIcon = !ruleInProgress && !isChatVisible
+            CaseInspection(currentCase, showChangeInterpretationIcon, object : CaseInspectionHandler by handler {
                 override fun swapAttributes(moved: Attribute, target: Attribute) {
                     handler.swapAttributes(moved, target)
                 }
