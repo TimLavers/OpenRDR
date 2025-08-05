@@ -42,6 +42,7 @@ fun ReadonlyInterpretationView(
         tooltip = {
             val showToolTip = commentIndex != -1
             if (showToolTip) {
+                println("------------Showing tooltip for comment index $commentIndex")
                 ConditionTooltip(interpretation.conditionsForConclusion(conclusionList[commentIndex]))
             }
         },
@@ -57,9 +58,11 @@ fun ReadonlyInterpretationView(
                     override fun onPointerEnter(characterOffset: Int) {
                         commentIndex = comments.commentIndexForOffset(characterOffset)
                         styledText = comments.highlightItem(commentIndex)
+                        println("------------Pointer entered at offset $characterOffset, comment index is now $commentIndex")
                     }
 
                     override fun onPointerExit() {
+                        println("------------Pointer exited, resetting comment index")
                         commentIndex = -1
                     }
                 }

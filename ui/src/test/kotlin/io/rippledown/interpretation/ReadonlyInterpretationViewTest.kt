@@ -6,6 +6,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.application
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import io.rippledown.decoration.BACKGROUND_COLOR
@@ -285,6 +287,28 @@ class ReadonlyInterpretationViewTest {
             val annotatedString = highlightItem(1)
             requireStyleForCommentInAnnotatedStringToHaveBackground(annotatedString, this[0], Color.Unspecified)
             requireStyleForCommentInAnnotatedStringToHaveBackground(annotatedString, this[1], BACKGROUND_COLOR)
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+fun main() {
+    //Given
+    val bondiComment = "Best surf in the world!"
+    val malabarComment = "Great for a swim!"
+    val bondiConditions = listOf("Bring your flippers.", "And your sunscreeen.")
+    val malabarConditions = listOf("Great for a swim!", "And a picnic.")
+    val interpretation = createViewableInterpretation(
+        mapOf(
+            bondiComment to bondiConditions,
+            malabarComment to malabarConditions
+        )
+    )
+    application {
+        Window(
+            onCloseRequest = ::exitApplication,
+        ) {
+            ReadonlyInterpretationView(interpretation, modifier = Modifier, handler = mockk())
         }
     }
 }

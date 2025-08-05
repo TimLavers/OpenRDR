@@ -10,7 +10,6 @@ import androidx.compose.ui.unit.dp
 import io.rippledown.constants.cornerstone.NO_CORNERSTONES_TO_REVIEW_MSG
 import io.rippledown.cornerstone.CornerstonePager
 import io.rippledown.cornerstone.CornerstonePagerHandler
-import io.rippledown.main.Handler
 import io.rippledown.model.Attribute
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
@@ -67,7 +66,8 @@ fun CaseControl(
             }
 
             Spacer(modifier = Modifier.width(5.dp))
-            RuleMaker(conditionHints, object : RuleMakerHandler, Handler by handler {
+            RuleMaker(conditionHints, object : RuleMakerHandler {
+
                 override var onDone = { conditions: List<Condition> ->
                     val ruleRequest = RuleRequest(currentCase!!.id!!, RuleConditionList(conditions))
                     handler.buildRule(ruleRequest)

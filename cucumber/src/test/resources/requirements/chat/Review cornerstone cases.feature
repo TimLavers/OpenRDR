@@ -1,4 +1,4 @@
-@single
+#@single
 @chat
 Feature: Review cornerstone cases
 
