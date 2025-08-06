@@ -17,7 +17,7 @@ fun ComposeTestRule.clickPrevious() = onNodeWithContentDescription(PREVIOUS_BUTT
 fun ComposeTestRule.clickExempt() = onNodeWithContentDescription(EXEMPT_BUTTON).performClick()
 
 fun ComposeTestRule.requireIndexAndTotalToBeDisplayed(index: Int, total: Int) {
-    waitUntilAsserted {
+    waitUntilAsserted(1_000) {
         onNodeWithContentDescription(INDEX_AND_TOTAL_ID)
             .assertTextEquals("${index + 1} $OF $total") // use 1-based index for display
     }

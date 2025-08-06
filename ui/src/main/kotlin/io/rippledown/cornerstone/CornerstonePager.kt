@@ -25,6 +25,7 @@ fun CornerstonePager(cornerstoneStatus: CornerstoneStatus, handler: CornerstoneP
     )
 
     LaunchedEffect(cornerstoneStatus) {
+//        pagerState.scrollToPage(cornerstoneStatus.indexOfCornerstoneToReview)
         pagerState.animateScrollToPage(cornerstoneStatus.indexOfCornerstoneToReview)
         println("---CornerstonePager: LaunchedEffect 1: animateScrollToPage = ${cornerstoneStatus.indexOfCornerstoneToReview}")
         println("---CornerstonePager: LaunchedEffect 1: currentPage = ${pagerState.currentPage}")
