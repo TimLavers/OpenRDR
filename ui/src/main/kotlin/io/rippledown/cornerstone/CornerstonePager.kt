@@ -37,6 +37,7 @@ fun CornerstonePager(cornerstoneStatus: CornerstoneStatus, handler: CornerstoneP
             handler.selectCornerstone(index)
             pagerState.animateScrollToPage(index)
             println("---CornerstonePager: LaunchedEffect 2: animateScrollToPage = ${index}")
+            println("---CornerstonePager: LaunchedEffect 2: currentPage = ${pagerState.currentPage}")
 
         }
     }
