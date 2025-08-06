@@ -32,6 +32,7 @@ interface CornerstoneControlHandler {
 
 @Composable
 fun CornerstoneControl(currentIndex: Int, total: Int, handler: CornerstoneControlHandler) {
+    println("***CC control currentIndex = ${currentIndex}, total = $total")
     Row(
         verticalAlignment = CenterVertically,
         modifier = Modifier.height(40.dp)

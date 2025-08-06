@@ -30,7 +30,6 @@ class ReadonlyInterpretationViewTest {
     fun setUp() {
         handler = mockk(relaxUnitFun = true)
         modifier = Modifier.fillMaxWidth()
-
     }
 
     @Test

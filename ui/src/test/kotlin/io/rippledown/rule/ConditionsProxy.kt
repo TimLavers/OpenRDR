@@ -19,7 +19,9 @@ fun ComposeTestRule.requireRuleMakerNotToBeDisplayed() {
 }
 
 fun ComposeTestRule.requireAvailableConditionsToBeDisplayed(conditions: List<String>) {
-    onNodeWithContentDescription(AVAILABLE_CONDITIONS).onChildren().assertCountEquals(conditions.size)
+    waitUntilAsserted {
+        onNodeWithContentDescription(AVAILABLE_CONDITIONS).onChildren().assertCountEquals(conditions.size)
+    }
     conditions.forEachIndexed { index, condition ->
         onNodeWithContentDescription("$AVAILABLE_CONDITION_PREFIX$index")
             .assertTextEquals(condition)
@@ -189,9 +191,12 @@ fun ComposeTestRule.enterTextIntoConditionFilter(text: String) {
 }
 
 fun ComposeTestRule.requireUnknownExpressionMessageToBeShowing() {
-    onNodeWithText(DOES_NOT_CORRESPOND_TO_A_CONDITION)
-        .assertIsDisplayed()
+    waitUntilAsserted {
+        onNodeWithText(DOES_NOT_CORRESPOND_TO_A_CONDITION)
+            .assertIsDisplayed()
+    }
 }
+
 fun ComposeTestRule.requireConditionIsNotTrueMessageToBeShowing() {
     onNodeWithText(CONDITION_IS_NOT_TRUE)
         .assertIsDisplayed()
