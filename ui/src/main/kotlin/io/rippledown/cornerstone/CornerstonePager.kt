@@ -17,7 +17,6 @@ interface CornerstonePagerHandler {
 @Composable
 fun CornerstonePager(cornerstoneStatus: CornerstoneStatus, handler: CornerstonePagerHandler) {
     val case = cornerstoneStatus.cornerstoneToReview
-    println("---CornerstonePager: summary = ${cornerstoneStatus.summary()}")
 
     val pagerState = rememberPagerState(
         initialPage = cornerstoneStatus.indexOfCornerstoneToReview,
@@ -25,27 +24,12 @@ fun CornerstonePager(cornerstoneStatus: CornerstoneStatus, handler: CornerstoneP
     )
 
     LaunchedEffect(cornerstoneStatus) {
-//        pagerState.scrollToPage(cornerstoneStatus.indexOfCornerstoneToReview)
         pagerState.animateScrollToPage(cornerstoneStatus.indexOfCornerstoneToReview)
-        println("---CornerstonePager: LaunchedEffect 1: animateScrollToPage = ${cornerstoneStatus.indexOfCornerstoneToReview}")
-        println("---CornerstonePager: LaunchedEffect 1: currentPage = ${pagerState.currentPage}")
-    }
-
-    LaunchedEffect(pagerState.currentPage) {
-        val index = pagerState.currentPage
-        println("---CornerstonePager: LaunchedEffect 2: currentPage = $index")
-        if (index > -1) {
-            handler.selectCornerstone(index)
-            pagerState.animateScrollToPage(index)
-            println("---CornerstonePager: LaunchedEffect 2: animateScrollToPage = ${index}")
-            println("---CornerstonePager: LaunchedEffect 2: currentPage = ${pagerState.currentPage}")
-
-        }
     }
 
     Column {
         CornerstoneControl(
-            pagerState.currentPage,
+            cornerstoneStatus.indexOfCornerstoneToReview,
             cornerstoneStatus.numberOfCornerstones,
             object : CornerstoneControlHandler {
                 override fun next() {
