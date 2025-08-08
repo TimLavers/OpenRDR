@@ -3,6 +3,7 @@ package io.rippledown.casecontrol
 import androidx.compose.ui.test.junit4.createComposeRule
 import io.mockk.mockk
 import io.mockk.verify
+import io.rippledown.interpretation.requireChangeInterpretationIconToBeNotShowing
 import io.rippledown.interpretation.requireInterpretation
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
@@ -48,6 +49,51 @@ class CaseControlTest {
 
             //Then
             requireInterpretation(bondiComment)
+        }
+    }
+
+    @Test
+    fun `should hide the change interpretation icon if a rule session is in progress`() = runTest {
+        val name = "case A"
+        val bondiComment = "Go to Bondi"
+        val case = createViewableCaseWithInterpretation(name, 1, listOf(bondiComment))
+
+        with(composeTestRule) {
+            //Given
+            setContent {
+                CaseControl(
+                    currentCase = case,
+                    cornerstoneStatus = CornerstoneStatus(case, 42, 84),
+                    conditionHints = listOf(),
+                    handler = handler
+                )
+            }
+
+            //Then
+            requireChangeInterpretationIconToBeNotShowing()
+        }
+    }
+
+    @Test
+    fun `should hide the change interpretation icon if the chat is visible`() = runTest {
+        val name = "case A"
+        val bondiComment = "Go to Bondi"
+        val case = createViewableCaseWithInterpretation(name, 1, listOf(bondiComment))
+
+        with(composeTestRule) {
+            //Given
+            setContent {
+                CaseControl(
+                    currentCase = case,
+                    cornerstoneStatus = null,
+                    isChatVisible = true,
+                    conditionHints = listOf(),
+                    handler = handler
+                )
+            }
+
+            //Then
+            requireChangeInterpretationIconToBeNotShowing()
         }
     }
 
@@ -141,8 +187,8 @@ fun main() {
         val suggestedCondition = NonEditableSuggestedCondition(condition)
         CaseControl(
             currentCase = viewableCase,
-            conditionHints = listOf(suggestedCondition),
             cornerstoneStatus = CornerstoneStatus(viewableCase, 42, 84),
+            conditionHints = listOf(suggestedCondition),
             handler = handler
         )
     }

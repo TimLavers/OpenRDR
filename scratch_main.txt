@@ -1,0 +1,14 @@
+---CornerstonePager: summary = Cornerstone: Greta, Index: 0, Total: 1
+***CC control currentIndex = 0, total = 1
+---CornerstonePager: LaunchedEffect 1: animateScrollToPage = 0
+---CornerstonePager: LaunchedEffect 1: currentPage = 0
+---CornerstonePager: LaunchedEffect 2: currentPage = 0
+---CornerstonePager: LaunchedEffect 2: animateScrollToPage = 0
+---CornerstonePager: LaunchedEffect 2: currentPage = 0
+---CornerstonePager: summary = Cornerstone: Greta, Index: 1, Total: 2
+***CC control currentIndex = 0, total = 2
+---CornerstonePager: summary = Cornerstone: Greta, Index: 1, Total: 2
+***CC control currentIndex = 1, total = 2
+---CornerstonePager: LaunchedEffect 2: currentPage = 1
+---CornerstonePager: LaunchedEffect 2: animateScrollToPage = 1
+---CornerstonePager: LaunchedEffect 2: currentPage = 1

@@ -3,8 +3,8 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion.of
 apply(from = "repositories.gradle.kts")
 
 plugins {
-    kotlin("jvm") version "2.1.10"
-    kotlin("plugin.serialization") version "2.1.10"
+    kotlin("jvm") version "2.2.0"
+    kotlin("plugin.serialization") version "2.2.0"
     id("io.ktor.plugin") version "3.1.2"
     idea
     alias(libs.plugins.compose) apply false

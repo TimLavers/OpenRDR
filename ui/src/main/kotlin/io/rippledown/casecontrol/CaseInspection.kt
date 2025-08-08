@@ -14,7 +14,7 @@ import io.rippledown.model.caseview.ViewableCase
 interface CaseInspectionHandler : CaseViewHandler, InterpretationViewHandler
 
 @Composable
-fun CaseInspection(case: ViewableCase, isRuleBuilding: Boolean, handler: CaseInspectionHandler) {
+fun CaseInspection(case: ViewableCase, showChangeInterpretationIcon: Boolean, handler: CaseInspectionHandler) {
     Column(
         verticalArrangement = Arrangement.Top,
         modifier = Modifier
@@ -22,7 +22,7 @@ fun CaseInspection(case: ViewableCase, isRuleBuilding: Boolean, handler: CaseIns
             .padding(start = 5.dp)
             .width(500.dp)
     ) {
-        if (isRuleBuilding) Spacer(modifier = Modifier.height(40.dp))
+        if (!showChangeInterpretationIcon) Spacer(modifier = Modifier.height(40.dp))
         CaseView(case, handler = object : CaseViewHandler {
             override fun swapAttributes(moved: Attribute, target: Attribute) {
                 handler.swapAttributes(moved, target)
@@ -30,7 +30,7 @@ fun CaseInspection(case: ViewableCase, isRuleBuilding: Boolean, handler: CaseIns
         })
         InterpretationView(
             interpretation = case.viewableInterpretation,
-            showChangeIcon = !isRuleBuilding,
+            showChangeIcon = showChangeInterpretationIcon,
             handler = handler
         )
     }

@@ -27,17 +27,9 @@ fun CornerstonePager(cornerstoneStatus: CornerstoneStatus, handler: CornerstoneP
         pagerState.animateScrollToPage(cornerstoneStatus.indexOfCornerstoneToReview)
     }
 
-    LaunchedEffect(pagerState.currentPage) {
-        val index = pagerState.currentPage
-        if (index > -1) {
-            handler.selectCornerstone(index)
-            pagerState.animateScrollToPage(index)
-        }
-    }
-
     Column {
         CornerstoneControl(
-            pagerState.currentPage,
+            cornerstoneStatus.indexOfCornerstoneToReview,
             cornerstoneStatus.numberOfCornerstones,
             object : CornerstoneControlHandler {
                 override fun next() {

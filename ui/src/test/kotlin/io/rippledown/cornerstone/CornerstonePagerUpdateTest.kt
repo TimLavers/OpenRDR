@@ -16,6 +16,7 @@ import androidx.compose.ui.window.application
 import io.mockk.mockk
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.utils.createViewableCase
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -32,7 +33,7 @@ class CornerstonePagerUpdateTest {
     }
 
     @Test
-    fun `should show index of current cornerstone when the cornerstone status changes`() {
+    fun `should show index of current cornerstone when the cornerstone status changes`() = runTest {
         with(composeTestRule) {
             //Given
             setContent {
