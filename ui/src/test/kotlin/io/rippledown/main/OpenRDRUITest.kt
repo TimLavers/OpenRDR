@@ -760,9 +760,10 @@ class OpenRDRUITest {
     @Test
     fun `should hide the change interpretation icon when a rule session is started to add a comment`() = runTest {
         val caseName = "case a"
-        val caseId = CaseId(id = 1, name = caseName)
+        val id = 1L
+        val caseId = CaseId(id = id, name = caseName)
         val case = createViewableCase(caseId)
-        coEvery { api.getCase(1) } returns case
+        coEvery { api.getCase(id) } returns case
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         coEvery { api.startRuleSession(any()) } returns CornerstoneStatus()
         coEvery { api.selectCornerstone(any()) } returns CornerstoneStatus()
@@ -794,7 +795,7 @@ class OpenRDRUITest {
             val bondiComment = "Go to Bondi"
             val case =
                 createViewableCaseWithInterpretation(caseName, caseId = id, conclusionTexts = listOf(bondiComment))
-            coEvery { api.getCase(1) } returns case
+            coEvery { api.getCase(id) } returns case
             coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
             coEvery { api.startRuleSession(any()) } returns CornerstoneStatus()
             coEvery { api.selectCornerstone(any()) } returns CornerstoneStatus()
@@ -826,7 +827,7 @@ class OpenRDRUITest {
             val malabarComment = "Go to Malabar"
             val case =
                 createViewableCaseWithInterpretation(caseName, caseId = id, conclusionTexts = listOf(bondiComment))
-            coEvery { api.getCase(1) } returns case
+            coEvery { api.getCase(id) } returns case
             coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
             coEvery { api.startRuleSession(any()) } returns CornerstoneStatus()
             coEvery { api.selectCornerstone(any()) } returns CornerstoneStatus()
@@ -842,6 +843,32 @@ class OpenRDRUITest {
 
                 //When
                 replaceComment(bondiComment, malabarComment)
+
+                //Then
+                requireChangeInterpretationIconToBeNotShowing()
+            }
+        }
+
+    @Test
+    fun `should hide the change interpretation icon when the chat is showing`() =
+        runTest {
+            val caseName = "case a"
+            val id = 1L
+            val caseId = CaseId(id = id, name = caseName)
+            val case =
+                createViewableCaseWithInterpretation(caseName, caseId = id, conclusionTexts = listOf("Go to Bondi"))
+            coEvery { api.getCase(id) } returns case
+            coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+            with(composeTestRule) {
+                setContent {
+                    OpenRDRUI(handler, dispatcher = Unconfined)
+                }
+                //Given
+                waitForCaseToBeShowing(caseName)
+                requireChangeInterpretationIconToBeShowing()
+
+                //When
+                clickChatIconToggle()
 
                 //Then
                 requireChangeInterpretationIconToBeNotShowing()
