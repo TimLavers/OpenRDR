@@ -43,7 +43,7 @@ object ConditionService {
 
     fun conditionSpecificationsFor(vararg inputExpressions: String): List<ConditionSpecification> {
         val prompt = promptFor(*inputExpressions)
-        logger.info("---START PROMPT---\n$prompt\n---END PROMPT---\n")
+        logger.debug("---START PROMPT---\n$prompt\n---END PROMPT---\n")
         val response = runBlocking {
             retry {
                 generativeModel()
@@ -51,7 +51,7 @@ object ConditionService {
                     .text
             }
         }
-        logger.info("\n---START RESPONSE---\n$response\n---END RESPONSE---")
+        logger.debug("\n---START RESPONSE---\n$response\n---END RESPONSE---")
         return response?.let { decode(it) } ?: emptyList()
     }
 }

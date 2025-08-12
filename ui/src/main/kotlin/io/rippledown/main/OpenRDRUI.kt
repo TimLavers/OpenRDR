@@ -88,7 +88,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                 }
                 currentCase = api.getCase(currentCaseId!!)
                 conditionHints = api.conditionHints(currentCaseId!!).suggestions
-                isChatEnabled = true
+                isChatEnabled = true // Enable chat only if there are cases available
             }
         }
     }
@@ -221,6 +221,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                     CaseControl(
                         currentCase = currentCase,
                         cornerstoneStatus = cornerstoneStatus,
+                        isChatVisible = isChatVisible,
                         conditionHints = conditionHints,
                         handler = object : CaseControlHandler {
                             override fun allComments() =
