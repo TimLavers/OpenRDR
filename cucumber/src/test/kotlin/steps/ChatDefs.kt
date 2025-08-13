@@ -120,6 +120,16 @@ class ChatDefs {
         waitForBotToSayDone()
     }
 
+    @And("I start to build a rule using the chat to add the comment {string}")
+    fun startToAddCommentUsingChat(comment: String) {
+        waitForBotInitialPrompt()
+        confirm()
+        waitForBotQuestionToSpecifyAComment()
+        enterChatTextAndSend(comment)
+        waitForBotRequestForConfirmation()
+        confirm()
+    }
+
     @And("I build a rule to add another comment {string} using the chat")
     fun addAnotherCommentUsingChat(comment: String) {
         waitForBotQuestionToAddRemoveOrReplaceAComment()

@@ -314,8 +314,23 @@ class Defs {
         }
     }
 
+    @Given("cases are set up as follows:")
+    fun casesAreSetUpAsFollows(dataTable: DataTable) {
+        dataTable.cells()
+            .drop(1) // Drop the header row
+            .forEach { row ->
+                val caseName = row[0]
+                val attributeName = row[1]
+                val attributeValue = row[2]
+                val comment = row[3]
+                val conditionText = row[4]
+                labProxy().provideCase(caseName, mapOf(attributeName to attributeValue))
+                createRuleToAddComment(caseName, comment, conditionText)
+            }
+    }
+
     @And("the interpretation of the case {word} includes {string} because of condition {string}")
-    fun theInterpretationOfTheCaseWordIncludesStringBecauseOfConditionString(
+    fun createRuleToAddComment(
         caseName: String,
         text: String,
         conditionText: String
