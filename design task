@@ -1,6 +1,10 @@
-We are reimplementing a case-based, rule-building application with a moderately complex UI so that the user can interact with the app using an alternative mode, namely a chat window backed by an LLM, with the goal of making it easier for the user.
+We are reimplementing a case-based, rule-building application with a moderately complex UI so that the user can interact with the app using an alternative mode,
+ namely a chat window backed by an LLM, with the goal of making it easier for the user.
 
-The application allows a user to build rules to generate a list of comments for each "case" that is presented to it. A case is a collection of attribute/value pairs, e.g. glucose = 5.5. Each rule will have an action that will be performed when the rule is triggered. The actions are:
+The application allows a user to build rules to generate a list of comments for each "case" that is presented to it. A case is a collection of attribute/value pairs,
+ e.g. glucose = 5.5. Each rule will have an action that will be performed when the rule is triggered.
+
+The actions are:
 - add a comment,
 - remove a comment,
 - replace a comment.
@@ -9,8 +13,37 @@ Each rule also has one or more boolean conditions referring to the case attribut
 
 A rule is therefore built when a user reviews the comments given for a case (the "interpretation") and decides that a comment needs to be added, removed or replaced.
 
-The case that triggers the building of one or more rules to fix its interpretation is called a "cornerstone" case. The application stores each cornerstone case and its associated rules.
+The case that triggers the building of one or more rules to fix its interpretation is called a "cornerstone" case.
+The application stores each cornerstone case and its associated rules.
 
-Whenever a user starts to build a rule by defining the action, the first cornerstone case whose interpretation will also change as a result of the proposed rule is shown to the user. The user can then accept that the new interpretation of that cornerstone case is correct, or they can add one or more further conditions to their current rule so that it no longer applies to that cornerstone case, that is, conditions that will evaluate to false for that cornerstone case, but true for the case that triggered the rule building.
+Whenever a user starts to build a rule by defining the action, the first cornerstone case whose interpretation will also
+change as a result of the proposed rule is shown to the user.
 
-Once that cornerstone case is dealt with, either by accepting the change to the interpretation or by making the rule not apply to that cornerstone case, the next cornerstone case is shown to the user, and so on, until the user has dealt with all cornerstone cases that could be affected by the rule.
+The user can then either accept that the new interpretation of that cornerstone case is correct,
+or they can add one or more further conditions to their current rule so that it no longer applies to that cornerstone case, that is,
+they can add conditions to this rule that will evaluate to false for that cornerstone case, but true for the case that triggered the rule building.
+
+Once that cornerstone case is dealt with, either by accepting the change to the interpretation or by making the rule not apply to that cornerstone case,
+the next cornerstone case is shown to the user.
+
+This process continues until the user has dealt with all cornerstone cases that could be affected by the rule.
+
+The chat prompt has been developed to guide the user through the first part of this process to define the action.
+The prompt also can ask the user to add conditions to the rule but then closes the rule session and adds the rule.
+It does not guide them through the process of reviewing cornerstone cases and making decisions about them.
+
+What I need now is the design of the prompt that will guide the user through the second part of the process, which is to
+review each cornerstone case and either accept the interpretation change or add one or more conditions to the rule so that it no longer applies to the cornerstone case.
+
+Attached is a screenshot of the current UI, which shows the cornerstone case and the rule being built. To accept the change, they click the "tick" button.
+To add conditions with this current UI (not the chat), they use the more complex UI controls which have now been implemented in the chat window.
+
+What I need is a design for the prompt, and/or other interactions with the model, that will guide the user through this process in the chat window.
+
+For example, when the user confirms the action of the rule, the first cornerstone case could automatically be shown to the user.
+Should I implement a "system" (as distinct from "user") message to the LLM so it knows the details of the cornerstone case and its interpretation?
+Or should the LLM itself call a function to show the cornerstone case to the user?
+
+In general, should the LLM call functions directly on the server back end, or should it just return a json object that I can intercept in a class and then
+call the functions on the server back end?
+

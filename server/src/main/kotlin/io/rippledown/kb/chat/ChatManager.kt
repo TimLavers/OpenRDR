@@ -56,7 +56,7 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
                 actionComment.message ?: ""
             }
 
-            ADD_ACTION -> {
+            ADD_COMMENT -> {
                 val comment = actionComment.comment
                 val userExpressionsForConditions = actionComment.reasons
                 val conditionParsingResults = userExpressionsForConditions?.map { expression ->
@@ -78,7 +78,7 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
                 }
             }
 
-            REMOVE_ACTION -> {
+            REMOVE_COMMENT -> {
                 val comment = actionComment.comment
                 val userExpressionsForConditions = actionComment.reasons
                 val conditionParsingResults = userExpressionsForConditions?.map { expression ->
@@ -99,7 +99,8 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
                     } ?: ""
                 }
             }
-            REPLACE_ACTION -> {
+
+            REPLACE_COMMENT -> {
                 val comment = actionComment.comment
                 val replacementComment = actionComment.replacementComment
                 if (comment == null || replacementComment == null) {

@@ -74,7 +74,7 @@ Assistant:
 
 ```json
 {
-  "action": "ADD_ACTION",
+  "action": "ADD_COMMENT",
   "comment": "Bring flippers.",
   "reasons": [
     "waves are high"

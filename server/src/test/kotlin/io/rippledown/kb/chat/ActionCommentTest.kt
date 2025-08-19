@@ -10,7 +10,7 @@ class ActionCommentTest {
         // Given
         val json = """
             {
-                "action": "REPLACE_ACTION",
+                "action": "REPLACE_COMMENT",
                 "message": "This is a test message",
                 "debug": "Debug info",
                 "comment": "Old comment text",
@@ -24,7 +24,7 @@ class ActionCommentTest {
 
         // Then
         with(actionComment) {
-            action shouldBe "REPLACE_ACTION"
+            action shouldBe "REPLACE_COMMENT"
             message shouldBe "This is a test message"
             debug shouldBe "Debug info"
             comment shouldBe "Old comment text"

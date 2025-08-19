@@ -1,7 +1,5 @@
 # Generate Output
 
-# Generate Output
-
 Generate JSON objects that conform to the backend's ActionComment data class:
 
 ```kotlin
@@ -34,7 +32,9 @@ following JSON structure:
 
 ## For Actionable Requests
 
-Once the action and reasons are confirmed, generate a JSON object based on the action type:
+The following is the list of actions that can be performed on comments:
+
+Once the action is confirmed, generate a JSON object based on the action type:
 
 ### For an Add Action
 
@@ -42,7 +42,7 @@ For an add action, use the following JSON structure:
 
 ```json
 {
-  "action": "{{ADD_ACTION}}",
+  "action": "{{ADD_COMMENT}}",
   "comment": "<user entered comment text>",
   "reasons": [
     <array
@@ -63,7 +63,7 @@ For an add action, use the following JSON structure:
 ## For a Remove Action
 ```json
 {
-  "action": "{{REMOVE_ACTION}}",
+  "action": "{{REMOVE_COMMENT}}",
   "comment": "<user entered comment text or identifier>",
   "reasons": [
     <array
@@ -84,7 +84,7 @@ For an add action, use the following JSON structure:
 ## For a Replace Action
 ```json
 {
-  "action": "{{REPLACE_ACTION}}",
+  "action": "{{REPLACE_COMMENT}}",
   "comment": "<user entered comment text or identifier for the comment to replace>",
   "replacementComment": "<user entered replacement comment text or identifier>",
   "reasons": [
@@ -115,7 +115,7 @@ For an add action, use the following JSON structure:
 
 ```json
 {
-  "action": "{{ADD_ACTION}}",
+  "action": "{{ADD_COMMENT}}",
   "comment": "Let's \"surf\"",
   "reasons": []
 }
@@ -142,7 +142,7 @@ For a user prompt to confirm adding the comment "Let's surf":
 
 ```json
 {
-  "action": "{{ADD_ACTION}}",
+  "action": "{{ADD_COMMENT}}",
   "comment": "Let's surf",
   "reasons": []
 }
@@ -153,7 +153,7 @@ For user input "Comment123" with reasons ["Outdated", "Incorrect"]:
 
 ```json
 {
-  "action": "{{REMOVE_ACTION}}",
+  "action": "{{REMOVE_COMMENT}}",
   "comment": "Comment123",
   "reasons": [
     "Outdated",
@@ -167,7 +167,7 @@ For user input "Comment123" with reasons ["Outdated", "Incorrect"]:
 
 ```json
 {
-  "action": "{{REPLACE_ACTION}}",
+  "action": "{{REPLACE_COMMENT}}",
   "comment": "Old comment",
   "replacementComment": "New comment",
   "reasons": []

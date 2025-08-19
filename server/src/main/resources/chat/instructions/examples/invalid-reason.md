@@ -80,7 +80,7 @@ Assistant:
 
 ```json
 {
-  "action": "ADD_ACTION",
+  "action": "ADD_COMMENT",
   "comment": "Let's go to the beach.",
   "reasons": [
     "sun is \"out\""

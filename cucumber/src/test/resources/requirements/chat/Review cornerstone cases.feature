@@ -11,8 +11,8 @@ Feature: Review cornerstone cases
     And I start the client application
     And I see the case Case1 as the current case
     And the chat is showing
-    And I start to build a rule using the chat to add the comment "Comment 4."
     And pause
+    And I start to build a rule using the chat to add the comment "Comment 4."
     And the case Case2 is shown as the cornerstone case
     When I enter the following text into the chat panel:
       | next cornerstone case |

@@ -190,7 +190,7 @@ class ChatManagerTest {
             val conditionParsingResult1 = ConditionParsingResult(condition1)
             val conditionParsingResult2 = ConditionParsingResult(condition2)
             val responseFromModel = ActionComment(
-                action = ADD_ACTION,
+                action = ADD_COMMENT,
                 comment = comment,
                 reasons = listOf(expression1, expression2)
             ).toJsonString()
@@ -220,7 +220,7 @@ class ChatManagerTest {
             val condition1 = mockk<Condition>()
             val conditionParsingResult1 = ConditionParsingResult(condition1)
             val responseFromModel = ActionComment(
-                action = REMOVE_ACTION,
+                action = REMOVE_COMMENT,
                 comment = comment,
                 reasons = listOf(expression1)
             ).toJsonString()
@@ -250,7 +250,7 @@ class ChatManagerTest {
             val condition1 = mockk<Condition>()
             val conditionParsingResult1 = ConditionParsingResult(condition1)
             val responseFromModel = ActionComment(
-                action = REPLACE_ACTION,
+                action = REPLACE_COMMENT,
                 comment = comment,
                 replacementComment = replacementComment,
                 reasons = listOf(expression1)
@@ -289,7 +289,7 @@ class ChatManagerTest {
             val condition = mockk<Condition>()
             val conditionParsingResult = ConditionParsingResult(condition)
             val responseFromModel = ActionComment(
-                action = ADD_ACTION,
+                action = ADD_COMMENT,
                 comment = comment,
                 reasons = listOf(expression)
             ).toJsonString()
@@ -316,7 +316,7 @@ class ChatManagerTest {
             chatManager.startConversation(case)
             val comment = "Go to Bondi."
             val responseFromModel = ActionComment(
-                action = ADD_ACTION,
+                action = ADD_COMMENT,
                 comment = comment
             ).toJsonString()
             coEvery { conversationService.response(any<String>()) } returns responseFromModel

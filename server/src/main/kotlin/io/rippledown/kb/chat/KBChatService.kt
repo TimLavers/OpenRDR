@@ -52,7 +52,7 @@ object KBChatService {
     val systemPromptMainSections = listOf(
         "context.md",
         "task.md",
-        "instructions.md",
+        "defining_the_report_change.md",
         "transform-reason.md",
         "confirm-details.md",
         "generate-output.md",
@@ -87,9 +87,9 @@ object KBChatService {
         "STOP_ACTION" to STOP_ACTION,
         "DEBUG_ACTION" to DEBUG_ACTION,
         "USER_ACTION" to USER_ACTION,
-        "ADD_ACTION" to ADD_ACTION,
-        "REMOVE_ACTION" to REMOVE_ACTION,
-        "REPLACE_ACTION" to REPLACE_ACTION
+        "ADD_COMMENT" to ADD_COMMENT,
+        "REMOVE_COMMENT" to REMOVE_COMMENT,
+        "REPLACE_COMMENT" to REPLACE_COMMENT
     )
 
     fun systemPrompt(case: RDRCase): String {
