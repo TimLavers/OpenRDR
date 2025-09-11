@@ -1,5 +1,6 @@
 package io.rippledown.kb.chat
 
+import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.beBlank
 import io.mockk.coEvery
@@ -13,6 +14,7 @@ import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_START_CONVERSA
 import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionParsingResult
+import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.toJsonString
 import kotlinx.coroutines.test.runTest
 import org.slf4j.Logger
@@ -306,27 +308,121 @@ class ChatManagerTest {
         }
 
     @Test
-    fun `should build a rule to add a comment with no conditions from a response from the conversation service`() =
+    fun `should start a rule session to add a comment`() =
         runTest {
             // Given
-            val message = "What do you want to add?"
-            val initialResponseFromModel = ActionComment(USER_ACTION, message = message).toJsonString()
+            val initialResponseFromModel =
+                ActionComment(USER_ACTION, message = "What do you want to add?").toJsonString()
             coEvery { conversationService.startConversation() } returns initialResponseFromModel
+            chatManager.startConversation(case) //to set the current case
 
-            chatManager.startConversation(case)
             val comment = "Go to Bondi."
             val responseFromModel = ActionComment(
-                action = ADD_COMMENT,
-                comment = comment
+                action = REVIEW_CORNERSTONES_ADD_COMMENT,
+                comment = comment,
             ).toJsonString()
             coEvery { conversationService.response(any<String>()) } returns responseFromModel
 
+            val cornerstoneStatus = CornerstoneStatus(null, 10, 42)
+            coEvery { ruleService.startRuleSessionToAddComment(case, comment) } returns cornerstoneStatus
+
             // When
-            chatManager.response("yes!")
+            chatManager.response("")
 
             // Then
-            coVerify { ruleService.buildRuleToAddComment(case, comment, emptyList()) }
+            coVerify { ruleService.startRuleSessionToAddComment(case, comment) }
+            val slot = mutableListOf<String>()
+            coVerify(exactly = 2) {
+                conversationService.response(capture(slot))
+            }
+
+            // The second captured value:
+            withClue("The second call to conversationService.response should be with the CornerstoneStatus") {
+                val secondArgument = slot[1]
+                secondArgument shouldBe cornerstoneStatus.toJsonString()
+            }
         }
 
+    @Test
+    fun `should start a rule session to remove a comment`() =
+        runTest {
+            // Given
+            val initialResponseFromModel =
+                ActionComment(USER_ACTION, message = "What do you want to remove?").toJsonString()
+            coEvery { conversationService.startConversation() } returns initialResponseFromModel
+            chatManager.startConversation(case) //to set the current case
+
+            val comment = "Go to Bondi."
+            val responseFromModel = ActionComment(
+                action = REVIEW_CORNERSTONES_REMOVE_COMMENT,
+                comment = comment,
+            ).toJsonString()
+            coEvery { conversationService.response(any<String>()) } returns responseFromModel
+
+            val cornerstoneStatus = CornerstoneStatus(null, 10, 42)
+            coEvery { ruleService.startRuleSessionToRemoveComment(case, comment) } returns cornerstoneStatus
+
+            // When
+            chatManager.response("")
+
+            // Then
+            coVerify { ruleService.startRuleSessionToRemoveComment(case, comment) }
+            val slot = mutableListOf<String>()
+            coVerify(exactly = 2) {
+                conversationService.response(capture(slot))
+            }
+
+            // The second captured value:
+            withClue("The second call to conversationService.response should be with the CornerstoneStatus") {
+                val secondArgument = slot[1]
+                secondArgument shouldBe cornerstoneStatus.toJsonString()
+            }
+        }
+
+    @Test
+    fun `should start a rule session to replace a comment`() =
+        runTest {
+            // Given
+            val initialResponseFromModel =
+                ActionComment(USER_ACTION, message = "What do you want to replace?").toJsonString()
+            coEvery { conversationService.startConversation() } returns initialResponseFromModel
+            chatManager.startConversation(case) //to set the current case
+
+            val comment = "Go to Bondi."
+            val replacementComment = "Go to Manly."
+            val responseFromModel = ActionComment(
+                action = REVIEW_CORNERSTONES_REPLACE_COMMENT,
+                comment = comment,
+                replacementComment = replacementComment,
+            ).toJsonString()
+            coEvery { conversationService.response(any<String>()) } returns responseFromModel
+
+            val cornerstoneStatus = CornerstoneStatus(null, 10, 42)
+            coEvery {
+                ruleService.startRuleSessionToReplaceComment(
+                    case,
+                    comment,
+                    replacementComment
+                )
+            } returns cornerstoneStatus
+
+            // When
+            chatManager.response("")
+
+            // Then
+            coVerify { ruleService.startRuleSessionToReplaceComment(case, comment, replacementComment) }
+            val slot = mutableListOf<String>()
+            coVerify(exactly = 2) {
+                conversationService.response(capture(slot))
+            }
+
+            // The second captured value:
+            withClue("The second call to conversationService.response should be with the CornerstoneStatus") {
+                val secondArgument = slot[1]
+                secondArgument shouldBe cornerstoneStatus.toJsonString()
+            }
+
+
+        }
 
 }

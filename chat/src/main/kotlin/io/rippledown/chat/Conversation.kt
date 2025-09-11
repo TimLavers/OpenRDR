@@ -12,7 +12,7 @@ import io.rippledown.toJsonString
 
 interface ConversationService {
     suspend fun startConversation(): String = ""
-    suspend fun response(userMessage: String): String = ""
+    suspend fun response(message: String): String = ""
 }
 
 interface REASON_TRANSFORMER {
@@ -42,12 +42,12 @@ class Conversation(private val chatService: ChatService, private val reasonTrans
         return "'$reason' evaluation: ${transformation.toJsonString()}"
     }
 
-    override suspend fun response(userMessage: String): String {
+    override suspend fun response(message: String): String {
         val currentChat = checkNotNull(chat) { "Chat not initialized. Call startConversation first." }
         val response = try {
-            currentChat.sendMessage(userMessage)
+            currentChat.sendMessage(message)
         } catch (e: Exception) {
-            logger.error("Failed to send message: $userMessage", e)
+            logger.error("Failed to send message: $message", e)
             throw e
         }
         val finalResponse = handleResponse(response)

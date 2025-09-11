@@ -1,13 +1,13 @@
 package io.rippledown
 
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 inline fun <reified T> T.toJsonString(): String {
     val json = Json {
         allowStructuredMapKeys = true
         prettyPrint = true
+        encodeDefaults = true
     }
     return json.encodeToString(this)
 }

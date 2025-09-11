@@ -5,10 +5,7 @@ import io.rippledown.model.Conclusion
 import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionParsingResult
-import io.rippledown.model.rule.ChangeTreeToAddConclusion
-import io.rippledown.model.rule.ChangeTreeToRemoveConclusion
-import io.rippledown.model.rule.ChangeTreeToReplaceConclusion
-import io.rippledown.model.rule.RuleTreeChange
+import io.rippledown.model.rule.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -18,10 +15,11 @@ import kotlin.test.assertEquals
 @OptIn(ExperimentalCoroutinesApi::class)
 class ChatRuleServiceTest {
     private lateinit var getOrCreateConclusion: (String) -> Conclusion
-    private lateinit var startRuleSession: (RDRCase, RuleTreeChange) -> Unit
+    private lateinit var startRuleSession: (RDRCase, RuleTreeChange) -> CornerstoneStatus
     private lateinit var addCondition: (Condition) -> Unit
     private lateinit var commitRuleSession: () -> Unit
     private lateinit var conditionForExpression: (String, RDRCase) -> ConditionParsingResult
+    private lateinit var undoLastRuleOnKB: () -> Unit
     private lateinit var case: RDRCase
     private lateinit var commentToAdd: String
     private lateinit var commentToRemove: String
@@ -51,7 +49,7 @@ class ChatRuleServiceTest {
         condition1 = mockk<Condition>()
         condition2 = mockk<Condition>()
         conditions = listOf(condition1, condition2)
-        every { startRuleSession(case, any()) } just Runs
+        every { startRuleSession(case, any()) } returns CornerstoneStatus()
         every { addCondition(any()) } just Runs
         every { commitRuleSession() } just Runs
         service = ChatRuleService(
@@ -59,7 +57,8 @@ class ChatRuleServiceTest {
             startRuleSession,
             addCondition,
             commitRuleSession,
-            conditionForExpression
+            conditionForExpression,
+            undoLastRuleOnKB
         )
     }
 
@@ -83,7 +82,7 @@ class ChatRuleServiceTest {
     fun `buildRuleToRemoveComment should build rule to remove comment`() = runTest {
         // Given
         every { getOrCreateConclusion(commentToRemove) } returns conclusion
-        every { startRuleSession(case, any()) } just Runs
+        every { startRuleSession(case, any()) } returns CornerstoneStatus()
         every { addCondition(any()) } just Runs
         every { commitRuleSession() } just Runs
 

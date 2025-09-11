@@ -50,13 +50,16 @@ object KBChatService {
     }
 
     val systemPromptMainSections = listOf(
-        "context.md",
-        "task.md",
-        "defining_the_report_change.md",
-        "transform-reason.md",
-        "confirm-details.md",
-        "generate-output.md",
-        "general-guidelines.md",
+        "1_task.md",
+        "2_interactions.md",
+        "3_defining_the_report_change.md",
+        "4_defining_the_reasons.md",
+        "5_reviewing_cornerstones.md",
+        "6_allow_or_disallow_cornerstone.md",
+        "7_transform-reason.md",
+        "8_completing_the_report_change.md",
+        "9_json_format_guidelines.md",
+        "10_general-guidelines.md",
     )
     val systemPromptExampleSections = listOf(
         "examples.md",
@@ -66,30 +69,33 @@ object KBChatService {
     )
 
     fun systemPromptVariables(case: RDRCase) = mapOf(
+        "ADD" to ADD,
+        "ADD_A_COMMENT" to ADD_A_COMMENT,
+        "ADD_COMMENT" to ADD_COMMENT,
+        "ALLOW_REPORT_CHANGE" to ALLOW_REPORT_CHANGE,
         "COMMENTS" to case.interpretation.toComments(),
         "TRANSFORM_REASON" to TRANSFORM_REASON,
         "REASON" to REASON,
         "FIRST_REASON" to FIRST_REASON,
         "MORE_REASONS" to MORE_REASONS,
         "CONFIRM" to CONFIRM,
-        "ADD" to ADD,
+        "REMOVE_COMMENT" to REMOVE_COMMENT,
+        "REPLACE_COMMENT" to REPLACE_COMMENT,
+        "REVIEW_CORNERSTONES_ADD_COMMENT" to REVIEW_CORNERSTONES_ADD_COMMENT,
+        "REVIEW_CORNERSTONES_REMOVE_COMMENT" to REVIEW_CORNERSTONES_REMOVE_COMMENT,
+        "REVIEW_CORNERSTONES_REPLACE_COMMENT" to REVIEW_CORNERSTONES_REPLACE_COMMENT,
         "REMOVE" to REMOVE,
         "REPLACE" to REPLACE,
         "STOP" to STOP,
         "NO_COMMENTS" to NO_COMMENTS,
         "EXISTING_COMMENTS" to EXISTING_COMMENTS,
         "WOULD_YOU_LIKE" to WOULD_YOU_LIKE,
-        "ADD_A_COMMENT" to ADD_A_COMMENT,
         "REMOVE_A_COMMENT" to REMOVE_A_COMMENT,
         "REPLACE_A_COMMENT" to REPLACE_A_COMMENT,
         "WHAT_COMMENT" to WHAT_COMMENT,
         "START_ACTION" to START_ACTION,
-        "STOP_ACTION" to STOP_ACTION,
         "DEBUG_ACTION" to DEBUG_ACTION,
-        "USER_ACTION" to USER_ACTION,
-        "ADD_COMMENT" to ADD_COMMENT,
-        "REMOVE_COMMENT" to REMOVE_COMMENT,
-        "REPLACE_COMMENT" to REPLACE_COMMENT
+        "USER_ACTION" to USER_ACTION
     )
 
     fun systemPrompt(case: RDRCase): String {

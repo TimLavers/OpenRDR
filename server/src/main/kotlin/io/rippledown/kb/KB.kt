@@ -47,7 +47,8 @@ class KB(persistentKB: PersistentKB) {
         startRuleSession = ::startRuleSession,
         addCondition = ::addConditionToCurrentRuleSession,
         commitRuleSession = ::commitCurrentRuleSession,
-        conditionForExpression = ::conditionForExpression
+        conditionForExpression = ::conditionForExpression,
+        undoLastRuleOnKB = ::undoLastRuleSession
     )
 
     init {
@@ -119,13 +120,14 @@ class KB(persistentKB: PersistentKB) {
         return builder.build(case.name)
     }
 
-    fun startRuleSession(case: RDRCase, action: RuleTreeChange) {
+    fun startRuleSession(case: RDRCase, action: RuleTreeChange): CornerstoneStatus {
         logger.info("KB starting rule session for case ${case.name} and action $action")
         check(ruleSession == null) { "Session already in progress." }
         check(action.isApplicable(ruleTree, case)) { "Action $action is not applicable to case ${case.name}" }
         val alignedAction = action.alignWith(conclusionManager)
         ruleSession = RuleBuildingSession(ruleManager, ruleTree, case, alignedAction, allCornerstoneCases())
         logger.info("KB rule session created")
+        return cornerstoneStatus(null)
     }
 
     fun cancelRuleSession() {

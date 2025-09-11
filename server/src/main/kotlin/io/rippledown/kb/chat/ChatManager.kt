@@ -7,6 +7,7 @@ import io.rippledown.log.lazyLogger
 import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionParsingResult
+import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.toJsonString
 
 interface RuleService {
@@ -19,6 +20,15 @@ interface RuleService {
         conditions: List<Condition>
     )
     suspend fun conditionForExpression(case: RDRCase, expression: String): ConditionParsingResult
+    fun startRuleSessionToAddComment(case: RDRCase, comment: String): CornerstoneStatus
+    fun startRuleSessionToRemoveComment(case: RDRCase, comment: String): CornerstoneStatus
+    fun startRuleSessionToReplaceComment(
+        case: RDRCase,
+        replacedComment: String,
+        replacementComment: String
+    ): CornerstoneStatus
+
+    fun undoLastRule()
 }
 
 /**
@@ -39,35 +49,43 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
         logger.info("$LOG_PREFIX_FOR_USER_MESSAGE '$message'")
         val response = conversationService.response(message)
         logger.info("$LOG_PREFIX_FOR_CONVERSATION_RESPONSE $response")
-        // Strip the enclosing JSON if it exists
-        return if (response.contains("action")) {
-            processActionComment(response.fromJsonString<ActionComment>())
-        } else {
-            response
+        try {
+            return processActionComment(response.fromJsonString<ActionComment>())
+        } catch (_: Exception) {
+            logger.error("Failed to parse response to ActionComment: $response")
+            return "response parsing error: '$response'"
         }
     }
 
-    //Either pass on the model's response to the user or take some rule action
+    //Either pass on the model's response to the user or take some action
     suspend fun processActionComment(actionComment: ActionComment): String {
         logger.info("---Processing action comment: ${actionComment.toJsonString()}")
         return when (actionComment.action) {
 
             USER_ACTION -> {
+                println("-----------USER_ACTION = ${actionComment.toJsonString()}")
                 actionComment.message ?: ""
             }
 
+            "UNDO_LAST_RULE" -> {
+                ruleService.undoLastRule()
+                "the last rule has been undone"
+            }
+
             ADD_COMMENT -> {
-                val comment = actionComment.comment
+                val comment = actionComment.comment!! //TODO remove !!
+
+
+
+
                 val userExpressionsForConditions = actionComment.reasons
                 val conditionParsingResults = userExpressionsForConditions?.map { expression ->
                     ruleService.conditionForExpression(currentCase, expression)
                 } ?: emptyList()
                 conditionParsingResults.forEach { condition -> logger.info("error parsing condition ${condition.errorMessage}") }
-
-                //Check for failures and collect conditions at the same time
+//                Check for failures and collect conditions at the same time
                 val (failedResult, conditions) = checkForUnparsedConditions(conditionParsingResults)
-
-                // If a failure was found, return the error message
+//                 If a failure was found, return the error message
                 if (failedResult != null) {
                     "Failed to parse condition: ${failedResult}"
                 } else {
@@ -125,7 +143,31 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
                 }
             }
 
-            STOP_ACTION -> ""  //TODO
+            REVIEW_CORNERSTONES_ADD_COMMENT -> {
+                val comment = actionComment.comment!!
+                val cornerstoneStatus = ruleService.startRuleSessionToAddComment(currentCase, comment)
+                val messageToModel = cornerstoneStatus.toJsonString()
+                val response = conversationService.response(messageToModel)
+                response
+            }
+
+            REVIEW_CORNERSTONES_REMOVE_COMMENT -> {
+                val comment = actionComment.comment!!
+                val cornerstoneStatus = ruleService.startRuleSessionToRemoveComment(currentCase, comment)
+                val messageToModel = cornerstoneStatus.toJsonString()
+                val response = conversationService.response(messageToModel)
+                response
+            }
+
+            REVIEW_CORNERSTONES_REPLACE_COMMENT -> {
+                val comment = actionComment.comment!!
+                val replacementComment = actionComment.replacementComment!!
+                val cornerstoneStatus =
+                    ruleService.startRuleSessionToReplaceComment(currentCase, comment, replacementComment)
+                val messageToModel = cornerstoneStatus.toJsonString()
+                val response = conversationService.response(messageToModel)
+                response
+            }
 
             else -> {
                 logger.error("Unknown actionComment: ${actionComment.action}")
