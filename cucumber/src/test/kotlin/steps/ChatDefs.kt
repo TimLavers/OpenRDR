@@ -138,4 +138,10 @@ class ChatDefs {
         decline()
         waitForBotToSayDone()
     }
+
+    @And("the chatbot has asked if I want to allow the report of the cornerstone case to change")
+    fun waitForBotQuestionToAllowCornerstoneReportToChange() {
+        waitForBotText("allow", "change", "cornerstone")
+    }
+
 }
