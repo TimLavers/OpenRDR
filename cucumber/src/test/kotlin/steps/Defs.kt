@@ -272,7 +272,7 @@ class Defs {
         interpretationViewPO().waitForInterpretationTextToContain(text)
     }
 
-    @Then("the (interpretation )(report )should be {string}")
+    @Then("the (interpretation )(report )(should be )(is ){string}")
     fun theInterpretationShouldBeString(text: String) {
         interpretationViewPO().waitForInterpretationText(text)
     }
