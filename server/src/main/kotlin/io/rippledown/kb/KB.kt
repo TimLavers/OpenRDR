@@ -44,10 +44,12 @@ class KB(persistentKB: PersistentKB) {
 
     val ruleService = ChatRuleService(
         getOrCreateConclusion = conclusionManager::getOrCreate,
-        startRuleSession = ::startRuleSession,
+        startCornerstoneReviewSession = ::startRuleSession,
+        cornerstoneReviewSessionStarted = ::cornerstoneReviewSessionStarted,
         addCondition = ::addConditionToCurrentRuleSession,
+        conditionForExpression = ::conditionForExpression,
+        undoLastRuleOnKB = ::undoLastRuleSession,
         commitRuleSession = ::commitCurrentRuleSession,
-        conditionForExpression = ::conditionForExpression
     )
 
     init {
@@ -119,14 +121,16 @@ class KB(persistentKB: PersistentKB) {
         return builder.build(case.name)
     }
 
-    fun startRuleSession(case: RDRCase, action: RuleTreeChange) {
+    fun startRuleSession(case: RDRCase, action: RuleTreeChange): CornerstoneStatus {
         logger.info("KB starting rule session for case ${case.name} and action $action")
         check(ruleSession == null) { "Session already in progress." }
         check(action.isApplicable(ruleTree, case)) { "Action $action is not applicable to case ${case.name}" }
         val alignedAction = action.alignWith(conclusionManager)
         ruleSession = RuleBuildingSession(ruleManager, ruleTree, case, alignedAction, allCornerstoneCases())
         logger.info("KB rule session created")
+        return cornerstoneStatus(null)
     }
+    fun cornerstoneReviewSessionStarted() = ruleSession != null
 
     fun cancelRuleSession() {
         check(ruleSession != null) { "No rule session in progress." }
@@ -310,7 +314,6 @@ class KB(persistentKB: PersistentKB) {
 //        assert(idsOfNonRootRulesInTree == ruleIdsFromSessions) {"Ids of rules in sessions don't match non-root tree rules."}
     }
 
-    internal fun holdsForSessionCase(condition: Condition) = condition.holds(ruleSession!!.case)
     fun conditionForExpression(expression: String) = conditionForExpression(expression, ruleSession!!.case)
 
     suspend fun startConversation(case: RDRCase): String {

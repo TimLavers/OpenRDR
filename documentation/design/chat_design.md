@@ -1,3 +1,5 @@
+# Using a chat interface to add rules to the knowledge base
+
 ## What do we want to achieve?
 
 When viewing a case and its report, if the report is not appropriate for the case, the actions available to the user

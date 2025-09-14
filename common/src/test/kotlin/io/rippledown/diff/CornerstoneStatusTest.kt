@@ -7,6 +7,7 @@ import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.caseview.CaseViewProperties
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.toJsonString
 import io.rippledown.utils.checkSerializationIsThreadSafe
 import io.rippledown.utils.defaultDate
 import io.rippledown.utils.serializeDeserialize
@@ -30,6 +31,19 @@ class CornerstoneStatusTest {
         deserialized shouldBe cornerstoneStatus
 
         checkSerializationIsThreadSafe(cornerstoneStatus)
+    }
+
+    @Test
+    fun checkJson() {
+        val cornerstoneStatus = CornerstoneStatus()
+
+        cornerstoneStatus.toJsonString() shouldBe """
+            {
+                "cornerstoneToReview": null,
+                "indexOfCornerstoneToReview": -1,
+                "numberOfCornerstones": 0
+            }
+        """.trimIndent()
     }
 
     private fun caseViewProperties() = CaseViewProperties(listOf(abc, tsh, xyz))

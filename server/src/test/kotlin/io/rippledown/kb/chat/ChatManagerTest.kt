@@ -190,7 +190,7 @@ class ChatManagerTest {
             val conditionParsingResult1 = ConditionParsingResult(condition1)
             val conditionParsingResult2 = ConditionParsingResult(condition2)
             val responseFromModel = ActionComment(
-                action = ADD_ACTION,
+                action = ADD_COMMENT,
                 comment = comment,
                 reasons = listOf(expression1, expression2)
             ).toJsonString()
@@ -220,7 +220,7 @@ class ChatManagerTest {
             val condition1 = mockk<Condition>()
             val conditionParsingResult1 = ConditionParsingResult(condition1)
             val responseFromModel = ActionComment(
-                action = REMOVE_ACTION,
+                action = REMOVE_COMMENT,
                 comment = comment,
                 reasons = listOf(expression1)
             ).toJsonString()
@@ -250,7 +250,7 @@ class ChatManagerTest {
             val condition1 = mockk<Condition>()
             val conditionParsingResult1 = ConditionParsingResult(condition1)
             val responseFromModel = ActionComment(
-                action = REPLACE_ACTION,
+                action = REPLACE_COMMENT,
                 comment = comment,
                 replacementComment = replacementComment,
                 reasons = listOf(expression1)
@@ -289,7 +289,7 @@ class ChatManagerTest {
             val condition = mockk<Condition>()
             val conditionParsingResult = ConditionParsingResult(condition)
             val responseFromModel = ActionComment(
-                action = ADD_ACTION,
+                action = ADD_COMMENT,
                 comment = comment,
                 reasons = listOf(expression)
             ).toJsonString()
@@ -306,27 +306,100 @@ class ChatManagerTest {
         }
 
     @Test
-    fun `should build a rule to add a comment with no conditions from a response from the conversation service`() =
+    fun `should start a cornerstone review session for adding a comment`() =
         runTest {
             // Given
-            val message = "What do you want to add?"
-            val initialResponseFromModel = ActionComment(USER_ACTION, message = message).toJsonString()
+            val initialResponseFromModel =
+                ActionComment(USER_ACTION, message = "What do you want to add?").toJsonString()
             coEvery { conversationService.startConversation() } returns initialResponseFromModel
+            chatManager.startConversation(case) //to set the current case
 
-            chatManager.startConversation(case)
             val comment = "Go to Bondi."
-            val responseFromModel = ActionComment(
-                action = ADD_ACTION,
-                comment = comment
+            val responseFromModelToReviewCornerstones = ActionComment(
+                action = REVIEW_CORNERSTONES_ADD_COMMENT,
+                comment = comment,
             ).toJsonString()
-            coEvery { conversationService.response(any<String>()) } returns responseFromModel
+            val responseFromModelToAddComment = ActionComment(
+                action = ADD_COMMENT,
+                comment = comment,
+            ).toJsonString()
+            coEvery { conversationService.response(any<String>()) } answers {
+                responseFromModelToReviewCornerstones
+            } andThenAnswer {
+                responseFromModelToAddComment //to build the rule
+            }
 
             // When
-            chatManager.response("yes!")
+            chatManager.response("")
 
             // Then
-            coVerify { ruleService.buildRuleToAddComment(case, comment, emptyList()) }
+            coVerify { ruleService.startCornerstoneReviewSessionToAddComment(case, comment) }
         }
 
+    @Test
+    fun `should start a cornerstone review session for removing a comment`() =
+        runTest {
+            // Given
+            val initialResponseFromModel =
+                ActionComment(USER_ACTION, message = "What do you want to remove?").toJsonString()
+            coEvery { conversationService.startConversation() } returns initialResponseFromModel
+            chatManager.startConversation(case) //to set the current case
 
+            val comment = "Go to Bondi."
+            val responseFromModelToReviewCornerstones = ActionComment(
+                action = REVIEW_CORNERSTONES_REMOVE_COMMENT,
+                comment = comment,
+            ).toJsonString()
+            val responseFromModelToRemoveComment = ActionComment(
+                action = REMOVE_COMMENT,
+                comment = comment,
+            ).toJsonString()
+
+            coEvery { conversationService.response(any<String>()) } answers {
+                responseFromModelToReviewCornerstones
+            } andThenAnswer {
+                responseFromModelToRemoveComment //to build the rule
+            }
+
+            // When
+            chatManager.response("")
+
+            // Then
+            coVerify { ruleService.startCornerstoneReviewSessionToRemoveComment(case, comment) }
+        }
+
+    @Test
+    fun `should start a cornerstone review session for replacing a comment`() =
+        runTest {
+            // Given
+            val initialResponseFromModel =
+                ActionComment(USER_ACTION, message = "What do you want to replace?").toJsonString()
+            coEvery { conversationService.startConversation() } returns initialResponseFromModel
+            chatManager.startConversation(case) //to set the current case
+
+            val comment = "Go to Bondi."
+            val replacementComment = "Go to Manly."
+            val responseFromModelToReviewCornerstones = ActionComment(
+                action = REVIEW_CORNERSTONES_REPLACE_COMMENT,
+                comment = comment,
+                replacementComment = replacementComment,
+            ).toJsonString()
+            val responseFromModelToReplaceComment = ActionComment(
+                action = REPLACE_COMMENT,
+                comment = comment,
+                replacementComment = replacementComment,
+            ).toJsonString()
+
+            coEvery { conversationService.response(any<String>()) } answers {
+                responseFromModelToReviewCornerstones
+            } andThenAnswer {
+                responseFromModelToReplaceComment //to build the rule
+            }
+
+            // When
+            chatManager.response("")
+
+            // Then
+            coVerify { ruleService.startCornerstoneReviewSessionToReplaceComment(case, comment, replacementComment) }
+        }
 }

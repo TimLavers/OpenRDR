@@ -32,7 +32,7 @@ internal class RuleBuildingSessionForChangeToReplaceConclusion : RuleTestBase() 
     }
 
     @Test
-    fun a_session_for_a_replace_action_should_present_those_cornerstones_which_satisfy_the_conditions() {
+    fun a_session_for_a_REPLACE_COMMENT_should_present_those_cornerstones_which_satisfy_the_conditions() {
         val tree = RuleTree()
         val conclusionA = conclusionFactory.getOrCreate("A")
         val replaceAction = ChangeTreeToReplaceConclusion(conclusionA, conclusionFactory.getOrCreate("D"))
@@ -50,7 +50,7 @@ internal class RuleBuildingSessionForChangeToReplaceConclusion : RuleTestBase() 
     }
 
     @Test
-    fun a_session_for_a_replace_action_should_only_present_those_cornerstones_whose_interpretations_would_change() {
+    fun a_session_for_a_REPLACE_COMMENT_should_only_present_those_cornerstones_whose_interpretations_would_change() {
         val tree = RuleTree()
         val ruleGivingA = Rule(2, null, conclusionFactory.getOrCreate("A"))
         val ruleGivingB = Rule(3, null, conclusionFactory.getOrCreate("B"))
@@ -65,7 +65,7 @@ internal class RuleBuildingSessionForChangeToReplaceConclusion : RuleTestBase() 
     }
 
     @Test
-    fun updating_the_rule_tree_for_a_replace_action_should_add_the_rule_under_the_rule_corresponding_to_the_conclusion_to_be_replaced() {
+    fun updating_the_rule_tree_for_a_REPLACE_COMMENT_should_add_the_rule_under_the_rule_corresponding_to_the_conclusion_to_be_replaced() {
         val tree = ruleTree(conclusionFactory) {
             child {
                 +"A"

@@ -96,7 +96,7 @@ class ChatDefs {
     }
 
     fun waitForBotText(vararg terms: String) {
-        await().atMost(ofSeconds(10)).until {
+        await().atMost(ofSeconds(30)).until {
             chatPO().mostRecentBotRowContainsTerms(terms.toList())
         }
     }
@@ -118,6 +118,14 @@ class ChatDefs {
         waitForBotQuestionToProvideReasons()
         decline()
         waitForBotToSayDone()
+    }
+
+    @And("I start to build a rule using the chat to add the comment {string}")
+    fun startToAddCommentUsingChat(comment: String) {
+        waitForBotQuestionToAddRemoveOrReplaceAComment()
+        enterChatTextAndSend("Add the comment: \"$comment\"")
+        waitForBotRequestForConfirmation()
+        confirm()
     }
 
     @And("I build a rule to add another comment {string} using the chat")

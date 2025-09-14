@@ -21,7 +21,7 @@
     <root level="WARN">
         <appender-ref ref="CONSOLE"/>
     </root>
-    <logger name="io.rippledown" level="INFO">
+    <logger name="io.rippledown" level="INFO" additivity="false">
         <appender-ref ref="FILE"/>
         <appender-ref ref="CONSOLE"/>
     </logger>

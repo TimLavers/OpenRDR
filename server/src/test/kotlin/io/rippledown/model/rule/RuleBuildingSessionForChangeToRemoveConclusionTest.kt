@@ -32,7 +32,7 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
     }
 
     @Test
-    fun a_session_for_a_remove_action_should_present_those_cornerstones_which_satisfy_the_conditions() {
+    fun a_session_for_a_REMOVE_COMMENT_should_present_those_cornerstones_which_satisfy_the_conditions() {
         val tree = RuleTree()
         val conclusionA = conclusionFactory.getOrCreate("A")
         val removeAction = ChangeTreeToRemoveConclusion(conclusionA)
@@ -50,7 +50,7 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
     }
 
     @Test
-    fun a_session_for_a_remove_action_should_only_present_those_cornerstones_whose_interpretations_would_change() {
+    fun a_session_for_a_REMOVE_COMMENT_should_only_present_those_cornerstones_whose_interpretations_would_change() {
         val tree = RuleTree()
         val ruleGivingA = Rule(7, null, conclusionFactory.getOrCreate("A"))
         tree.root.addChild(ruleGivingA)
@@ -65,7 +65,7 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
     }
 
     @Test
-    fun updating_the_rule_tree_for_a_remove_action_should_add_the_rule_under_the_rule_to_be_stopped() {
+    fun updating_the_rule_tree_for_a_REMOVE_COMMENT_should_add_the_rule_under_the_rule_to_be_stopped() {
         val tree = ruleTree(conclusionFactory) {
             child {
                 +"A"
