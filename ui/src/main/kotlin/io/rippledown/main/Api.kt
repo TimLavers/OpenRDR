@@ -24,10 +24,6 @@ import io.rippledown.model.OperationResult
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
-import io.rippledown.model.rule.CornerstoneStatus
-import io.rippledown.model.rule.RuleRequest
-import io.rippledown.model.rule.SessionStartRequest
-import io.rippledown.model.rule.UpdateCornerstoneRequest
 import io.rippledown.model.rule.*
 import io.rippledown.sample.SampleKB
 import java.io.File
@@ -152,6 +148,10 @@ class Api(
     }
 
     suspend fun waitingCasesInfo(): CasesInfo = client.get("$API_URL$WAITING_CASES") {
+        setKBParameter()
+    }.body()
+
+    suspend fun cornerstoneStatus(): CornerstoneStatus = client.get("$API_URL$CORNERSTONE_STATUS") {
         setKBParameter()
     }.body()
 

@@ -13,6 +13,8 @@ import io.rippledown.appbar.ApplicationBar
 import io.rippledown.casecontrol.*
 import io.rippledown.chat.ChatController
 import io.rippledown.chat.ChatControllerHandler
+import io.rippledown.cornerstone.CornerstonePoller
+import io.rippledown.cornerstone.CornerstonePollerHandler
 import io.rippledown.interpretation.toAnnotatedString
 import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
@@ -186,17 +188,28 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
             }
         },
     ) { paddingValues ->
+        CornerstonePoller(object : CornerstonePollerHandler {
+            override var onUpdate: (updated: CornerstoneStatus) -> Unit = {
+                cornerstoneStatus = it
+            }
+            override var updateCornerstoneStatus = {
+                runBlocking(dispatcher) {
+                    api.cornerstoneStatus()
+                }
+            }
+            override var isClosing = handler.isClosing
+        })
+
         CasePoller(object : CasePollerHandler {
             override var onUpdate: (updated: CasesInfo) -> Unit = {
                 casesInfo = it
             }
-            override var updateCasesInfo: () -> CasesInfo = {
-                val r = runBlocking(dispatcher) {
+            override var updateCasesInfo = {
+                runBlocking(dispatcher) {
                     api.waitingCasesInfo()
                 }
-                r
             }
-            override var isClosing: () -> Boolean = handler.isClosing
+            override var isClosing = handler.isClosing
         }, dispatcher)
 
         if (casesInfo.count > 0) {
