@@ -57,4 +57,5 @@
 }
 ```
 
+- If the user had specified a comment ending in a period, do not remove the period from the comment.
 - Follow the instructions "Reviewing Cornerstone Cases".

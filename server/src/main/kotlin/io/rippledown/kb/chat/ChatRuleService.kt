@@ -9,29 +9,30 @@ import io.rippledown.model.rule.*
 
 class ChatRuleService(
     private val getOrCreateConclusion: (String) -> Conclusion,
-    private val startRuleSession: (RDRCase, RuleTreeChange) -> CornerstoneStatus,
+    private val startCornerstoneReviewSession: (RDRCase, RuleTreeChange) -> CornerstoneStatus,
+    private val cornerstoneReviewSessionStarted: () -> Boolean = { false },
     private val addCondition: (Condition) -> Unit,
-    private val commitRuleSession: () -> Unit,
     private val conditionForExpression: (String, RDRCase) -> ConditionParsingResult,
-    private val undoLastRuleOnKB: () -> Unit
+    private val undoLastRuleOnKB: () -> Unit,
+    private val commitRuleSession: () -> Unit
 ) : RuleService {
     private val logger = lazyLogger
 
     override fun undoLastRule() = undoLastRuleOnKB()
 
-    override fun startRuleSessionToAddComment(case: RDRCase, comment: String): CornerstoneStatus {
+    override fun startCornerstoneReviewSessionToAddComment(case: RDRCase, comment: String): CornerstoneStatus {
         val conclusion = getOrCreateConclusion(comment)
         val action = ChangeTreeToAddConclusion(conclusion)
-        return startRuleSession(case, action)
+        return startCornerstoneReviewSession(case, action)
     }
 
-    override fun startRuleSessionToRemoveComment(case: RDRCase, comment: String): CornerstoneStatus {
+    override fun startCornerstoneReviewSessionToRemoveComment(case: RDRCase, comment: String): CornerstoneStatus {
         val conclusion = getOrCreateConclusion(comment)
         val action = ChangeTreeToRemoveConclusion(conclusion)
-        return startRuleSession(case, action)
+        return startCornerstoneReviewSession(case, action)
     }
 
-    override fun startRuleSessionToReplaceComment(
+    override fun startCornerstoneReviewSessionToReplaceComment(
         case: RDRCase,
         replacedComment: String,
         replacementComment: String
@@ -39,7 +40,7 @@ class ChatRuleService(
         val replacedConclusion = getOrCreateConclusion(replacedComment)
         val replacementConclusion = getOrCreateConclusion(replacementComment)
         val action = ChangeTreeToReplaceConclusion(replacedConclusion, replacementConclusion)
-        return startRuleSession(case, action)
+        return startCornerstoneReviewSession(case, action)
     }
 
     override suspend fun buildRuleToAddComment(case: RDRCase, comment: String, conditions: List<Condition>) {
@@ -71,7 +72,9 @@ class ChatRuleService(
         action: RuleTreeChange,
         conditions: List<Condition>
     ) {
-        startRuleSession(case, action)
+        if (!cornerstoneReviewSessionStarted()) {
+            startCornerstoneReviewSession(case, action)
+        }
         conditions.forEach { addCondition(it) }
         commitRuleSession()
     }

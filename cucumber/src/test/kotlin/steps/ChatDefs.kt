@@ -96,7 +96,7 @@ class ChatDefs {
     }
 
     fun waitForBotText(vararg terms: String) {
-        await().atMost(ofSeconds(10)).until {
+        await().atMost(ofSeconds(30)).until {
             chatPO().mostRecentBotRowContainsTerms(terms.toList())
         }
     }

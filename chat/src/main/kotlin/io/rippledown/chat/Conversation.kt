@@ -44,6 +44,7 @@ class Conversation(private val chatService: ChatService, private val reasonTrans
 
     override suspend fun response(message: String): String {
         val currentChat = checkNotNull(chat) { "Chat not initialized. Call startConversation first." }
+        logger.info("about to send message to model: '$message'")
         val response = try {
             currentChat.sendMessage(message)
         } catch (e: Exception) {

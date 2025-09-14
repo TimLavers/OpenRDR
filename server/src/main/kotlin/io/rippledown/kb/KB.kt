@@ -44,11 +44,12 @@ class KB(persistentKB: PersistentKB) {
 
     val ruleService = ChatRuleService(
         getOrCreateConclusion = conclusionManager::getOrCreate,
-        startRuleSession = ::startRuleSession,
+        startCornerstoneReviewSession = ::startRuleSession,
+        cornerstoneReviewSessionStarted = ::cornerstoneReviewSessionStarted,
         addCondition = ::addConditionToCurrentRuleSession,
-        commitRuleSession = ::commitCurrentRuleSession,
         conditionForExpression = ::conditionForExpression,
-        undoLastRuleOnKB = ::undoLastRuleSession
+        undoLastRuleOnKB = ::undoLastRuleSession,
+        commitRuleSession = ::commitCurrentRuleSession,
     )
 
     init {
@@ -129,6 +130,7 @@ class KB(persistentKB: PersistentKB) {
         logger.info("KB rule session created")
         return cornerstoneStatus(null)
     }
+    fun cornerstoneReviewSessionStarted() = ruleSession != null
 
     fun cancelRuleSession() {
         check(ruleSession != null) { "No rule session in progress." }
@@ -312,7 +314,6 @@ class KB(persistentKB: PersistentKB) {
 //        assert(idsOfNonRootRulesInTree == ruleIdsFromSessions) {"Ids of rules in sessions don't match non-root tree rules."}
     }
 
-    internal fun holdsForSessionCase(condition: Condition) = condition.holds(ruleSession!!.case)
     fun conditionForExpression(expression: String) = conditionForExpression(expression, ruleSession!!.case)
 
     suspend fun startConversation(case: RDRCase): String {

@@ -3,7 +3,7 @@ package io.rippledown.interpretation
 import androidx.compose.ui.test.junit4.createComposeRule
 import io.mockk.mockk
 import io.mockk.verify
-import io.rippledown.constants.interpretation._PREFIX
+import io.rippledown.constants.interpretation.ADD_COMMENT_PREFIX
 import io.rippledown.utils.applicationFor
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -47,7 +47,7 @@ class AddCommentDialogTest {
             }
 
             //Then
-            requireCommentOptionsToBeDisplayed(_PREFIX, availableComments)
+            requireCommentOptionsToBeDisplayed(ADD_COMMENT_PREFIX, availableComments)
         }
     }
 

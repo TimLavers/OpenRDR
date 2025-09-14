@@ -30,12 +30,3 @@
 3. After the user has indicated that they do not want to provide more reasons, guide the user to review any cornerstone
    cases that may arise from the changes they are making to the report. See the instructions "Reviewing Cornerstones"
    below.
-
-4. If the user indicates that they want to undo the last rule, output the system response:
-
-```json
-{
-  "action": "UNDO_LAST_RULE"
-}
-```
-

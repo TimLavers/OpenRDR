@@ -58,8 +58,9 @@ object KBChatService {
         "6_allow_or_disallow_cornerstone.md",
         "7_transform-reason.md",
         "8_completing_the_report_change.md",
-        "9_json_format_guidelines.md",
-        "10_general-guidelines.md",
+        "9_undoing_the_report_change.md",
+        "10_json_format_guidelines.md",
+        "11_general-guidelines.md",
     )
     val systemPromptExampleSections = listOf(
         "examples.md",
@@ -95,7 +96,8 @@ object KBChatService {
         "WHAT_COMMENT" to WHAT_COMMENT,
         "START_ACTION" to START_ACTION,
         "DEBUG_ACTION" to DEBUG_ACTION,
-        "USER_ACTION" to USER_ACTION
+        "USER_ACTION" to USER_ACTION,
+        "UNDO_LAST_RULE" to UNDO_LAST_RULE
     )
 
     fun systemPrompt(case: RDRCase): String {
