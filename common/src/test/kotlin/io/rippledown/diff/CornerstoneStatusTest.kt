@@ -36,8 +36,14 @@ class CornerstoneStatusTest {
     @Test
     fun checkJson() {
         val cornerstoneStatus = CornerstoneStatus()
-        println("cornerstoneStatus = ${cornerstoneStatus.toJsonString()}")
 
+        cornerstoneStatus.toJsonString() shouldBe """
+            {
+                "cornerstoneToReview": null,
+                "indexOfCornerstoneToReview": -1,
+                "numberOfCornerstones": 0
+            }
+        """.trimIndent()
     }
 
     private fun caseViewProperties() = CaseViewProperties(listOf(abc, tsh, xyz))
