@@ -30,7 +30,7 @@ class Defs {
     private var exportedZip: File? = null
     private lateinit var stopwatch: Stopwatch
 
-    @Before("not @database")
+    @Before("not (@database or @no_default_kb)")
     fun before(scenario: Scenario) {
         println("\nBefore scenario '${scenario.name}'")
         stopwatch = Stopwatch.createStarted()
@@ -41,6 +41,13 @@ class Defs {
     fun beforeWithDatabase(scenario: Scenario) {
         println("\nDB Before. Scenario: '${scenario.name}'")
         startServerWithPostgresDatabase()
+    }
+
+    @Before("@no_default_kb")
+    fun beforeWithNoDefaultKB(scenario: Scenario) {
+        println("\nNo default KB, before scenario '${scenario.name}'")
+        stopwatch = Stopwatch.createStarted()
+        startServerWithInMemoryDatabase(false)
     }
 
     @After

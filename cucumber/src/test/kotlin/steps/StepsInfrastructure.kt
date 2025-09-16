@@ -11,10 +11,12 @@ object StepsInfrastructure {
         uiTestBase = UITestBase()
     }
 
-    fun startServerWithInMemoryDatabase() {
+    fun startServerWithInMemoryDatabase(createDefaultKB: Boolean = true) {
         setup()
         uiTestBase.serverProxy.start()
-        uiTestBase.restClient.createKBWithDefaultName()
+        if (createDefaultKB) {
+            uiTestBase.restClient.createKBWithDefaultName()
+        }
     }
 
     fun startServerWithPostgresDatabase() {
