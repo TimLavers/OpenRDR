@@ -23,9 +23,7 @@ class KBManager(private val persistenceProvider: PersistenceProvider) {
         }
     }
 
-    fun all(): Set<KBInfo> {
-        return kbInfos.toSet()
-    }
+    fun all() = kbInfos.toSet()
 
     fun createKB(name: String, force: Boolean = false): KBInfo {
         if (!force) {

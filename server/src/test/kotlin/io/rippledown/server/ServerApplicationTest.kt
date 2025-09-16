@@ -121,6 +121,28 @@ internal class ServerApplicationTest {
     }
 
     @Test
+    fun deleteKB() {
+        val kbi1 = app.createKB("KB1", false)
+        val kbi2 = app.createKB("KB2", false)
+        val kbi3 = app.createKB("KB3", false)
+
+        app.kbList().map { it.name } shouldBe listOf(kbi1.name, kbi2.name, kbi3.name)
+
+        app.deleteKB(kbi2.id)
+        app.kbList().map { it.name } shouldBe listOf(kbi1.name, kbi3.name)
+
+        // Check that it can't be retrieved by id.
+        shouldThrow<IllegalArgumentException> {
+            app.kbForId(kbi2.id)
+        }
+
+        // or by name
+        shouldThrow<IllegalArgumentException> {
+            app.kbForName(kbi2.name)
+        }
+    }
+
+    @Test
     fun `unknown kb name`() {
         shouldThrow<IllegalArgumentException> {
             app.kbForName("Unknown")

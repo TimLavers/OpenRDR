@@ -53,7 +53,9 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
     }
 
     fun deleteKB(id: String) {
-        TODO()
+        kbManager.deleteKB(kbForId(id).kbInfo())
+        idToKBEndpoint.remove(id)
+        logger.info("Deleted KB with id: $id")
     }
 
     fun kbForId(id: String): KBEndpoint {
