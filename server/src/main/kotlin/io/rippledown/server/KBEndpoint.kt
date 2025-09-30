@@ -93,11 +93,9 @@ class KBEndpoint(val kb: KB, casesRootDirectory: File) {
 
     fun conditionHintsForCase(id: Long): ConditionList = kb.conditionHintsForCase(case(id))
 
-    suspend fun startConversation(caseId: Long): String =
-        kb.startConversation(case(caseId))
+    suspend fun startConversation(caseId: Long): String = kb.startConversation(viewableCase(caseId))
 
-    suspend fun responseToUserMessage(message: String): String =
-        kb.responseToUserMessage(message)
+    suspend fun responseToUserMessage(message: String): String = kb.responseToUserMessage(message)
 
     fun processCase(externalCase: ExternalCase) = kb.processCase(externalCase)
 

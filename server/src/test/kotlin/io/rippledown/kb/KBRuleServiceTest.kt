@@ -3,6 +3,7 @@ package io.rippledown.kb
 import io.kotest.matchers.shouldBe
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.model.*
+import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.episodic.predicate.Is
 import io.rippledown.model.condition.episodic.signature.Current
@@ -29,11 +30,11 @@ class KBRuleServiceTest {
         //Given
         val x = kb.attributeManager.getOrCreate("x")
         val value = "42"
-        val case = createCase("Case", attribute = x, value = value)
+        val viewableCase = createCase("Case", attribute = x, value = value)
         val userExpression = "X equates to $value"
 
         //When
-        val conditionParsingResult = ruleService.conditionForExpression(case, userExpression)
+        val conditionParsingResult = ruleService.conditionForExpression(viewableCase.case, userExpression)
 
         //Then
         val expectedCondition = EpisodicCondition(
@@ -51,11 +52,11 @@ class KBRuleServiceTest {
         caseName: String,
         attribute: Attribute,
         value: String,
-    ): RDRCase {
+    ): ViewableCase {
         with(RDRCaseBuilder()) {
             val testResult = TestResult(value)
             addResult(attribute, defaultDate, testResult)
-            return build(caseName)
+            return ViewableCase(build(caseName))
         }
     }
 }

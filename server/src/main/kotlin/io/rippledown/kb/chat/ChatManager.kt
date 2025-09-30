@@ -5,6 +5,7 @@ import io.rippledown.constants.chat.*
 import io.rippledown.fromJsonString
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.RDRCase
+import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.rule.CornerstoneStatus
@@ -14,32 +15,34 @@ interface RuleService {
     /**
      * Creates a session if not already started, then builds a rule to add a comment
      */
-    suspend fun buildRuleToAddComment(case: RDRCase, comment: String, conditions: List<Condition>)
+    suspend fun buildRuleToAddComment(viewableCase: ViewableCase, comment: String, conditions: List<Condition>)
 
     /**
      * Creates a session if not already started, then builds a rule to remove a comment
      */
-    suspend fun buildRuleToRemoveComment(case: RDRCase, comment: String, conditions: List<Condition>)
+    suspend fun buildRuleToRemoveComment(viewableCase: ViewableCase, comment: String, conditions: List<Condition>)
 
     /**
      * Creates a session if not already started, then builds a rule to replace a comment
      */
     suspend fun buildRuleToReplaceComment(
-        case: RDRCase,
+        viewableCase: ViewableCase,
         replacedComment: String,
         replacementComment: String,
         conditions: List<Condition>
     )
     suspend fun conditionForExpression(case: RDRCase, expression: String): ConditionParsingResult
-    fun startCornerstoneReviewSessionToAddComment(case: RDRCase, comment: String): CornerstoneStatus
-    fun startCornerstoneReviewSessionToRemoveComment(case: RDRCase, comment: String): CornerstoneStatus
+    fun startCornerstoneReviewSessionToAddComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus
+    fun startCornerstoneReviewSessionToRemoveComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus
     fun startCornerstoneReviewSessionToReplaceComment(
-        case: RDRCase,
+        viewableCase: ViewableCase,
         replacedComment: String,
         replacementComment: String
     ): CornerstoneStatus
 
     fun undoLastRule()
+
+    fun moveAttributeTo(moved: String, destination: String)
 }
 
 /**
@@ -47,10 +50,10 @@ interface RuleService {
  */
 class ChatManager(val conversationService: ConversationService, val ruleService: RuleService) {
     private val logger = lazyLogger
-    private lateinit var currentCase: RDRCase
+    private lateinit var currentCase: ViewableCase
 
-    suspend fun startConversation(case: RDRCase): String {
-        currentCase = case
+    suspend fun startConversation(viewableCase: ViewableCase): String {
+        currentCase = viewableCase
         val response = conversationService.startConversation()
         logger.info("$LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE '$response'")
         return processActionComment(response.fromJsonString<ActionComment>())
@@ -72,9 +75,13 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
     suspend fun processActionComment(actionComment: ActionComment): String {
         logger.info("---Processing action comment: ${actionComment.toJsonString()}")
         return when (actionComment.action) {
-
             USER_ACTION -> {
                 actionComment.message ?: ""
+            }
+
+            MOVE_ATTRIBUTE -> {
+                ruleService.moveAttributeTo(actionComment.attributeMoved!!, actionComment.destination!!)
+                "attribute moved"
             }
 
             UNDO_LAST_RULE -> {
@@ -86,7 +93,7 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
                 val comment = actionComment.comment!! //TODO remove !!
                 val userExpressionsForConditions = actionComment.reasons
                 val conditionParsingResults = userExpressionsForConditions?.map { expression ->
-                    ruleService.conditionForExpression(currentCase, expression)
+                    ruleService.conditionForExpression(currentCase.case, expression)
                 } ?: emptyList()
 
                 //Check for failures and collect conditions at the same time
@@ -105,7 +112,7 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
                 val comment = actionComment.comment!!
                 val userExpressionsForConditions = actionComment.reasons
                 val conditionParsingResults = userExpressionsForConditions?.map { expression ->
-                    ruleService.conditionForExpression(currentCase, expression)
+                    ruleService.conditionForExpression(currentCase.case, expression)
                 } ?: emptyList()
                 conditionParsingResults.forEach { condition -> logger.info("error parsing condition ${condition.errorMessage}") }
 
@@ -126,7 +133,7 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
                 val replacementComment = actionComment.replacementComment!!
                 val userExpressionsForConditions = actionComment.reasons
                 val conditionParsingResults = userExpressionsForConditions?.map { expression ->
-                    ruleService.conditionForExpression(currentCase, expression)
+                    ruleService.conditionForExpression(currentCase.case, expression)
                 } ?: emptyList()
                 conditionParsingResults.forEach { condition -> logger.info("error parsing condition ${condition.errorMessage}") }
 

@@ -2,6 +2,7 @@ package io.rippledown.kb
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
+import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.persistence.inmemory.InMemoryKB
 import io.rippledown.utils.defaultDate
 import kotlinx.coroutines.test.runTest
@@ -51,11 +52,12 @@ class KBModelIntegrationTest {
         value: String = "0.667",
         range: ReferenceRange? = null,
         id: Long? = null
-    ): RDRCase {
+    ): ViewableCase {
         with(RDRCaseBuilder()) {
             val testResult = TestResult(value, range)
             addResult(attribute, defaultDate, testResult)
-            return build(caseName, id)
+            val case = build(caseName, id)
+            return ViewableCase(case)
         }
     }
 }

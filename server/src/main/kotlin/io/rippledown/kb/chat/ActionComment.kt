@@ -10,4 +10,6 @@ data class ActionComment(
     val comment: String? = null,
     val replacementComment: String? = null,
     val reasons: List<String>? = null,
+    val attributeMoved: String? = null, // todo refactor
+    val destination: String? = null, // todo refactor
 )
