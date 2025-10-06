@@ -74,21 +74,14 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
     //Either pass on the model's response to the user or take some action
     suspend fun processActionComment(actionComment: ActionComment): String {
         logger.info("---Processing action comment: ${actionComment.toJsonString()}")
+        val chatAction = actionComment.createActionInstance()
+        if (chatAction != null) {
+            return chatAction.doIt(ruleService)
+        }
         return when (actionComment.action) {
             USER_ACTION -> {
                 actionComment.message ?: ""
             }
-
-            MOVE_ATTRIBUTE -> {
-                ruleService.moveAttributeTo(actionComment.attributeMoved!!, actionComment.destination!!)
-                "attribute moved"
-            }
-
-            UNDO_LAST_RULE -> {
-                ruleService.undoLastRule()
-                "the last rule has been undone"
-            }
-
             ADD_COMMENT -> {
                 val comment = actionComment.comment!! //TODO remove !!
                 val userExpressionsForConditions = actionComment.reasons

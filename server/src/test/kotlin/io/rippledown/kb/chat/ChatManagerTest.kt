@@ -415,7 +415,7 @@ class ChatManagerTest {
 
     @Test
     fun `should handle undo rule action`() = runTest {
-        val responseFromModel = ActionComment(UNDO_LAST_RULE, message = "whatever").toJsonString()
+        val responseFromModel = ActionComment(UNDO_LAST_RULE).toJsonString()
         coEvery { conversationService.response(any<String>()) } answers {
             responseFromModel
         }

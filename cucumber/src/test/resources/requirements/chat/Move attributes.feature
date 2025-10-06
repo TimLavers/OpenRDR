@@ -1,6 +1,5 @@
 @chat
 Feature: Move attributes using the chat bot
-  @single
   Scenario: The user should be able to use the chat to reorder the attributes in the case
     Given case Bondi is provided having data:
       | glucose | 4.5 |
@@ -21,13 +20,5 @@ Feature: Move attributes using the chat bot
       | sex     |
       | hdl     |
       | ldl     |
-#    And I enter the following text into the chat panel:
-#      | Now put sex before glucose |
-#    Then I see these case values:
-#      | age     | 22  |
-#      | sex     | F   |
-#      | glucose | 4.5 |
-#      | hdl     | 1.7 |
-#      | ldl     | 3.8 |
     And stop the client application
 

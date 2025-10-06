@@ -45,6 +45,7 @@ class ChatRuleServiceTest {
         commitRuleSession = mockk()
         conditionForExpression = mockk()
         undoLastRuleOnKB = mockk()
+        moveAttribute = mockk()
         viewableCase = mockk<ViewableCase>()
         case = mockk<RDRCase>()
         every { viewableCase.case } returns case

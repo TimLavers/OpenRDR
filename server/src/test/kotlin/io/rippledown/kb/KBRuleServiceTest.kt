@@ -2,26 +2,20 @@ package io.rippledown.kb
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.kb.chat.RuleService
-import io.rippledown.model.*
-import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.episodic.predicate.Is
 import io.rippledown.model.condition.episodic.signature.Current
-import io.rippledown.persistence.inmemory.InMemoryKB
-import io.rippledown.utils.defaultDate
 import io.rippledown.utils.shouldBeSameAs
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-class KBRuleServiceTest {
-    private lateinit var kb: KB
+class KBRuleServiceTest: KBTestBase(){
     private lateinit var ruleService: RuleService
 
     @BeforeTest
-    fun setup() {
-        val kbInfo = KBInfo("id123", "123")
-        kb = KB(InMemoryKB(kbInfo))
+    override fun setup() {
+        super.setup()
         ruleService = kb.ruleService
     }
 
@@ -46,17 +40,5 @@ class KBRuleServiceTest {
         )
         conditionParsingResult.isFailure shouldBe false
         conditionParsingResult.condition shouldBeSameAs expectedCondition
-    }
-
-    private fun createCase(
-        caseName: String,
-        attribute: Attribute,
-        value: String,
-    ): ViewableCase {
-        with(RDRCaseBuilder()) {
-            val testResult = TestResult(value)
-            addResult(attribute, defaultDate, testResult)
-            return ViewableCase(build(caseName))
-        }
     }
 }
