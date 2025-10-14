@@ -22,7 +22,7 @@ const val CHAT_BOT_PLACEHOLDER = "Your response..."
 const val CHAT_BOT_DONE_MESSAGE = "Done"
 const val START_ACTION = "start"
 
-const val ADD_COMMENT = "ADD_COMMENT"
+const val ADD_COMMENT = "AddComment"
 const val REMOVE_COMMENT = "REMOVE_COMMENT"
 const val REPLACE_COMMENT = "REPLACE_COMMENT"
 const val DEBUG_ACTION = "DEBUG_ACTION"

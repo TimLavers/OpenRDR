@@ -8,7 +8,7 @@
 
 ```json
 {
-  "action": "{{ADD_COMMENT}}",
+  "action": "{{AddComment}}",
   "comment": "<user entered comment text or identifier for the comment to add>>",
   "reasons": [
     "<list of reasons provided by the user, if any>"

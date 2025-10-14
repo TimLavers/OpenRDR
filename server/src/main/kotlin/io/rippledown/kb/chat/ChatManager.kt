@@ -50,7 +50,7 @@ interface RuleService {
  */
 class ChatManager(val conversationService: ConversationService, val ruleService: RuleService) {
     private val logger = lazyLogger
-    private lateinit var currentCase: ViewableCase
+    private var currentCase: ViewableCase? = null
 
     suspend fun startConversation(viewableCase: ViewableCase): String {
         currentCase = viewableCase
@@ -76,36 +76,19 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
         logger.info("---Processing action comment: ${actionComment.toJsonString()}")
         val chatAction = actionComment.createActionInstance()
         if (chatAction != null) {
-            return chatAction.doIt(ruleService)
+            return chatAction.doIt(ruleService,currentCase)
         }
         return when (actionComment.action) {
             USER_ACTION -> {
                 actionComment.message ?: ""
             }
-            ADD_COMMENT -> {
-                val comment = actionComment.comment!! //TODO remove !!
-                val userExpressionsForConditions = actionComment.reasons
-                val conditionParsingResults = userExpressionsForConditions?.map { expression ->
-                    ruleService.conditionForExpression(currentCase.case, expression)
-                } ?: emptyList()
-
-                //Check for failures and collect conditions at the same time
-                val (failedResult, conditions) = checkForUnparsedConditions(conditionParsingResults)
-
-                //If a failure was found, return the error message
-                if (failedResult != null) {
-                    "Failed to parse condition: ${failedResult}"
-                } else {
-                    ruleService.buildRuleToAddComment(currentCase, comment, conditions)
-                    CHAT_BOT_DONE_MESSAGE
-                }
-            }
 
             REMOVE_COMMENT -> {
                 val comment = actionComment.comment!!
+                val sessionCase = currentCase ?: throw IllegalStateException("No current case")
                 val userExpressionsForConditions = actionComment.reasons
                 val conditionParsingResults = userExpressionsForConditions?.map { expression ->
-                    ruleService.conditionForExpression(currentCase.case, expression)
+                    ruleService.conditionForExpression(sessionCase.case, expression)
                 } ?: emptyList()
                 conditionParsingResults.forEach { condition -> logger.info("error parsing condition ${condition.errorMessage}") }
 
@@ -116,7 +99,7 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
                 if (failedResult != null) {
                     "Failed to parse condition: ${failedResult}"
                 } else {
-                    ruleService.buildRuleToRemoveComment(currentCase, comment, conditions)
+                    ruleService.buildRuleToRemoveComment(sessionCase, comment, conditions)
                     CHAT_BOT_DONE_MESSAGE
                 }
             }
@@ -124,9 +107,10 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
             REPLACE_COMMENT -> {
                 val comment = actionComment.comment!!
                 val replacementComment = actionComment.replacementComment!!
+                val sessionCase = currentCase ?: throw IllegalStateException("No current case")
                 val userExpressionsForConditions = actionComment.reasons
                 val conditionParsingResults = userExpressionsForConditions?.map { expression ->
-                    ruleService.conditionForExpression(currentCase.case, expression)
+                    ruleService.conditionForExpression(sessionCase.case, expression)
                 } ?: emptyList()
                 conditionParsingResults.forEach { condition -> logger.info("error parsing condition ${condition.errorMessage}") }
 
@@ -137,28 +121,31 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
                 if (failedResult != null) {
                     "Failed to parse condition: ${failedResult}"
                 } else {
-                    ruleService.buildRuleToReplaceComment(currentCase, comment, replacementComment, conditions)
+                    ruleService.buildRuleToReplaceComment(sessionCase, comment, replacementComment, conditions)
                     CHAT_BOT_DONE_MESSAGE
                 }
             }
 
             REVIEW_CORNERSTONES_ADD_COMMENT -> {
                 val comment = actionComment.comment!!
-                val cornerstoneStatus = ruleService.startCornerstoneReviewSessionToAddComment(currentCase, comment)
+                val sessionCase = currentCase ?: throw IllegalStateException("No current case")
+                val cornerstoneStatus = ruleService.startCornerstoneReviewSessionToAddComment(sessionCase, comment)
                 response(cornerstoneStatus.toJsonString<CornerstoneStatus>())
             }
 
             REVIEW_CORNERSTONES_REMOVE_COMMENT -> {
                 val comment = actionComment.comment!!
-                val cornerstoneStatus = ruleService.startCornerstoneReviewSessionToRemoveComment(currentCase, comment)
+                val sessionCase = currentCase ?: throw IllegalStateException("No current case")
+                val cornerstoneStatus = ruleService.startCornerstoneReviewSessionToRemoveComment(sessionCase, comment)
                 response(cornerstoneStatus.toJsonString<CornerstoneStatus>())
             }
 
             REVIEW_CORNERSTONES_REPLACE_COMMENT -> {
                 val comment = actionComment.comment!!
                 val replacementComment = actionComment.replacementComment!!
+                val sessionCase = currentCase ?: throw IllegalStateException("No current case")
                 val cornerstoneStatus =
-                    ruleService.startCornerstoneReviewSessionToReplaceComment(currentCase, comment, replacementComment)
+                    ruleService.startCornerstoneReviewSessionToReplaceComment(sessionCase, comment, replacementComment)
                 response(cornerstoneStatus.toJsonString<CornerstoneStatus>())
             }
 

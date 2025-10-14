@@ -8,12 +8,14 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-class MoveAttributeTest : ActionTestBase() {
-    @Test
-    fun `moves attribute`() {
-        runTest {
-            MoveAttribute("Glucose", "Lipids").doIt(ruleService, currentCase)
-            coVerify { ruleService.moveAttributeTo("Glucose", "Lipids") }
-        }
+open class ActionTestBase {
+
+    lateinit var ruleService: RuleService
+    lateinit var currentCase: ViewableCase
+
+    @BeforeTest
+    fun setUp() {
+        ruleService = mockk()
+        currentCase = mockk()
     }
 }

@@ -1,8 +1,8 @@
 package io.rippledown.kb.chat
 
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import io.rippledown.fromJsonString
+import io.rippledown.kb.chat.action.AddComment
 import io.rippledown.kb.chat.action.MoveAttribute
 import io.rippledown.kb.chat.action.UndoLastRule
 import kotlin.test.Test
@@ -74,6 +74,17 @@ class ActionCommentTest {
     fun undoLastRule() {
         val actionComment = ActionComment("UndoLastRule")
         actionComment.createActionInstance()!!.javaClass shouldBe UndoLastRule().javaClass
+    }
+
+    @Test
+    fun addComment() {
+        val comment = "Beach time!"
+        val reasons = listOf("Surf is up", "Sun is out")
+        val actionComment = ActionComment("AddComment", comment = comment, reasons = reasons)
+        with(actionComment.createActionInstance() as AddComment) {
+            this.comment shouldBe comment
+            this.reasons shouldBe reasons
+        }
     }
 
     @Test

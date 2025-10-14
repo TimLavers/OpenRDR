@@ -18,17 +18,6 @@ data class ActionComment(
     val attributeMoved: String? = null, // todo refactor
     val destination: String? = null, // todo refactor
 ) {
-    private val asMap = mutableMapOf<String, String>()
-
-    init {
-        if (message != null) asMap["message"] = message
-        if (comment != null) asMap["comment"] = comment
-        if (replacementComment != null) asMap["replacementComment"] = replacementComment
-        if (reasons != null) asMap["reasons"] = reasons.joinToString(",")
-        if (attributeMoved != null) asMap["attributeMoved"] = attributeMoved
-        if (destination != null) asMap["destination"] = destination
-    }
-
     fun createActionInstance(): ChatAction? {
         val className = "io.rippledown.kb.chat.action.${action}"
         try {
@@ -40,8 +29,16 @@ data class ActionComment(
     }
 
     fun invokeConstructor(fn: KFunction<ChatAction>): ChatAction? {
+        val asMap = mutableMapOf<String, Any>()
+        if (message != null) asMap["message"] = message
+        if (comment != null) asMap["comment"] = comment
+        if (replacementComment != null) asMap["replacementComment"] = replacementComment
+        if (reasons != null) asMap["reasons"] = reasons
+        if (attributeMoved != null) asMap["attributeMoved"] = attributeMoved
+        if (destination != null) asMap["destination"] = destination
+
         if (fn.parameters.size != asMap.size) return null
-        val paramMap = mutableMapOf<KParameter, String>()
+        val paramMap = mutableMapOf<KParameter, Any>()
         fn.parameters.forEach {
             val parameterName = it.name
             if (!asMap.containsKey(parameterName)) return null
