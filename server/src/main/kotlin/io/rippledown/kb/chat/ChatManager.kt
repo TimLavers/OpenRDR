@@ -82,50 +82,6 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
             USER_ACTION -> {
                 actionComment.message ?: ""
             }
-
-            REMOVE_COMMENT -> {
-                val comment = actionComment.comment!!
-                val sessionCase = currentCase ?: throw IllegalStateException("No current case")
-                val userExpressionsForConditions = actionComment.reasons
-                val conditionParsingResults = userExpressionsForConditions?.map { expression ->
-                    ruleService.conditionForExpression(sessionCase.case, expression)
-                } ?: emptyList()
-                conditionParsingResults.forEach { condition -> logger.info("error parsing condition ${condition.errorMessage}") }
-
-                //Check for failures and collect conditions at the same time
-                val (failedResult, conditions) = checkForUnparsedConditions(conditionParsingResults)
-
-                // If a failure was found, return the error message
-                if (failedResult != null) {
-                    "Failed to parse condition: ${failedResult}"
-                } else {
-                    ruleService.buildRuleToRemoveComment(sessionCase, comment, conditions)
-                    CHAT_BOT_DONE_MESSAGE
-                }
-            }
-
-            REPLACE_COMMENT -> {
-                val comment = actionComment.comment!!
-                val replacementComment = actionComment.replacementComment!!
-                val sessionCase = currentCase ?: throw IllegalStateException("No current case")
-                val userExpressionsForConditions = actionComment.reasons
-                val conditionParsingResults = userExpressionsForConditions?.map { expression ->
-                    ruleService.conditionForExpression(sessionCase.case, expression)
-                } ?: emptyList()
-                conditionParsingResults.forEach { condition -> logger.info("error parsing condition ${condition.errorMessage}") }
-
-                //Check for failures and collect conditions at the same time
-                val (failedResult, conditions) = checkForUnparsedConditions(conditionParsingResults)
-
-                // If a failure was found, return the error message
-                if (failedResult != null) {
-                    "Failed to parse condition: ${failedResult}"
-                } else {
-                    ruleService.buildRuleToReplaceComment(sessionCase, comment, replacementComment, conditions)
-                    CHAT_BOT_DONE_MESSAGE
-                }
-            }
-
             REVIEW_CORNERSTONES_ADD_COMMENT -> {
                 val comment = actionComment.comment!!
                 val sessionCase = currentCase ?: throw IllegalStateException("No current case")
@@ -156,31 +112,9 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
         }
     }
 
-    // Checks for unparsed conditions in the list of ConditionParsingResults.
-    // Returns a pair containing an error message (if any) and a list of successfully parsed conditions.
-    fun checkForUnparsedConditions(conditionParsingResults: List<ConditionParsingResult>): Pair<String?, List<Condition>> {
-        val (failedResult, conditions) = conditionParsingResults.fold(
-            initial = Pair(first = null as String?, second = mutableListOf<Condition>())
-        ) { acc, result ->
-            if (acc.first == null && result.isFailure) {
-                Pair(result.errorMessage, acc.second)
-            } else if (!result.isFailure) {
-                acc.second.add(
-                    result.condition
-                        ?: throw IllegalStateException("Condition should not be null for a successful parsing result")
-                )
-                acc
-            } else {
-                acc
-            }
-        }
-        return Pair(failedResult, conditions)
-    }
-
     companion object {
         const val LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE = "Start conversation response:"
         const val LOG_PREFIX_FOR_CONVERSATION_RESPONSE = "Conversation response:"
         const val LOG_PREFIX_FOR_USER_MESSAGE = "User message:"
     }
 }
-
