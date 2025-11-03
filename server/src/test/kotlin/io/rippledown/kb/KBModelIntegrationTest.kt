@@ -29,12 +29,12 @@ class KBModelIntegrationTest: KBTestBase() {
         //Given
         val case = createCase("Case")
         kb.startConversation(case)
-        val userExpression = "Please add a comment to go to Bondi."
+        val userExpression = "Please add the comment 'Go to Bondi.'."
 
         //When
         val response = kb.responseToUserMessage(userExpression)
 
         //Then
-        response shouldBe "Please confirm that you want to add the comment: 'to go to Bondi.'"
+        response shouldBe "Please confirm that you want to add the comment: 'Go to Bondi.'"
     }
 }
