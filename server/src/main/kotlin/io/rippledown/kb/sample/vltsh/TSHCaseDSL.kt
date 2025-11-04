@@ -1,9 +1,12 @@
+@file:OptIn(ExperimentalTime::class)
+
 package io.rippledown.kb.sample.vltsh
 
 import io.rippledown.kb.AttributeManager
 import io.rippledown.kb.sample.defaultDate
 import io.rippledown.model.*
-import kotlinx.datetime.Instant
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 fun tshCase(lambda: CaseTemplate.() -> Unit): CaseTemplate {
     val template = CaseTemplate()
