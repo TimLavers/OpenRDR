@@ -151,7 +151,7 @@ class Api(
         setKBParameter()
     }.body()
 
-    suspend fun cornerstoneStatus(): CornerstoneStatus = client.get("$API_URL$CORNERSTONE_STATUS") {
+    suspend fun cornerstoneStatus(): CornerstoneStatus? = client.get("$API_URL$CORNERSTONE_STATUS") {
         setKBParameter()
     }.body()
 

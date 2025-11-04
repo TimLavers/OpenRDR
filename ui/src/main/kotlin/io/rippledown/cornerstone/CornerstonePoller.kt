@@ -10,8 +10,8 @@ import org.jetbrains.skiko.MainUIDispatcher
 import kotlin.time.Duration.Companion.seconds
 
 interface CornerstonePollerHandler {
-    var onUpdate: (updated: CornerstoneStatus) -> Unit
-    var updateCornerstoneStatus: () -> CornerstoneStatus
+    var onUpdate: (updated: CornerstoneStatus?) -> Unit
+    var updateCornerstoneStatus: () -> CornerstoneStatus?
     var isClosing: () -> Boolean
 }
 
@@ -25,9 +25,11 @@ fun CornerstonePoller(handler: CornerstonePollerHandler, dispatcher: CoroutineDi
                 // Avoid blocking the UI.
                 withContext(dispatcher) {
                     cornerstoneStatus(handler)
+                    println("1 CornerstonePoller: polling")
                 }
             } else {
                 // On a test thread so we can launch directly.
+                println("2 CornerstonePoller: polling")
                 cornerstoneStatus(handler)
             }
             if (handler.isClosing()) break

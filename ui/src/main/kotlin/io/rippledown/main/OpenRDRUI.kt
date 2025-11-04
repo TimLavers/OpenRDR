@@ -188,17 +188,19 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
             }
         },
     ) { paddingValues ->
-        CornerstonePoller(object : CornerstonePollerHandler {
-            override var onUpdate: (updated: CornerstoneStatus) -> Unit = {
-                cornerstoneStatus = it
-            }
-            override var updateCornerstoneStatus = {
-                runBlocking(dispatcher) {
-                    api.cornerstoneStatus()
+        if (isChatVisible) {
+            CornerstonePoller(object : CornerstonePollerHandler {
+                override var onUpdate: (updated: CornerstoneStatus?) -> Unit = {
+                    cornerstoneStatus = it
                 }
-            }
-            override var isClosing = handler.isClosing
-        })
+                override var updateCornerstoneStatus = {
+                    runBlocking(dispatcher) {
+                        api.cornerstoneStatus()
+                    }
+                }
+                override var isClosing = handler.isClosing
+            })
+        }
 
         CasePoller(object : CasePollerHandler {
             override var onUpdate: (updated: CasesInfo) -> Unit = {
