@@ -50,6 +50,7 @@ class KB(persistentKB: PersistentKB) {
         conditionForExpression = ::conditionForExpression,
         undoLastRuleOnKB = ::undoLastRuleSession,
         commitRuleSession = ::commitCurrentRuleSession,
+        moveAttribute = ::moveAttributeTo
     )
 
     init {
@@ -57,6 +58,12 @@ class KB(persistentKB: PersistentKB) {
             override fun parse(expression: String, attributeFor: AttributeFor) =
                 ConditionTip(attributeNames(), attributeFor).conditionFor(expression)
         }
+    }
+
+    fun moveAttributeTo(moved: String, destination: String) {
+        val attributeMoved = attributeManager.all().first { it.name.equals(moved) }
+        val attributeDestination = attributeManager.all().first { it.name.equals(destination) }
+        caseViewManager.move(attributeMoved, attributeDestination)
     }
 
     fun attributeNames() = attributeManager.all().map { it.name }
@@ -316,16 +323,16 @@ class KB(persistentKB: PersistentKB) {
 
     fun conditionForExpression(expression: String) = conditionForExpression(expression, ruleSession!!.case)
 
-    suspend fun startConversation(case: RDRCase): String {
-        val chatService = KBChatService.createKBChatService(case)
+    suspend fun startConversation(viewableCase: ViewableCase): String {
+        val chatService = KBChatService.createKBChatService(viewableCase)
         val conversationService = Conversation(
             chatService, reasonTransformer =
                 object : REASON_TRANSFORMER {
                     override suspend fun transform(reason: String) =
-                        conditionForExpression(reason, case).toExpressionTransformation()
+                        conditionForExpression(reason, viewableCase.case).toExpressionTransformation()
                 })
         chatManager = ChatManager(conversationService, ruleService)
-        return chatManager.startConversation(case)
+        return chatManager.startConversation(viewableCase)
     }
 
     suspend fun responseToUserMessage(message: String) = chatManager.response(message)

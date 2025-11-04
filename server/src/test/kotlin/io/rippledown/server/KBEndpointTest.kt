@@ -88,7 +88,6 @@ internal class KBEndpointTest {
         every { kb.conditionForExpression(any()) } returns ConditionParsingResult(condition)
         val endpoint = KBEndpoint(kb, File("kbe"))
         val userExpression = "TSH is depressed"
-        val attributeNames = listOf("TSH")
 
         // When
         val parsed = endpoint.conditionForExpression(userExpression).condition
@@ -238,6 +237,72 @@ internal class KBEndpointTest {
         retrievedAfter.attributes()[1] shouldBe attributesBefore[2]
         retrievedAfter.attributes()[2] shouldBe attributesBefore[1]
         retrievedAfter.attributes()[3] shouldBe attributesBefore[0]
+    }
+
+    @Test
+    fun setAttributesOrderDuringRuleSession() {
+        // Get a case with multiple attributes.
+        val case5Id = supplyCaseFromFile("Case5", endpoint).caseId.id!!
+        val retrieved = endpoint.viewableCase(case5Id)
+        val attributesBefore = retrieved.attributes()
+        attributesBefore.size shouldBe 4 // sanity
+
+        // Get another case, with which to start a rule session.
+        val case1Id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
+        endpoint.case(case1Id).interpretation.conclusions() shouldBe emptySet()
+        endpoint.startRuleSessionToAddConclusion(case1Id, endpoint.kb.conclusionManager.getOrCreate("Whatever"))
+
+        // Re-order the attributes in the first case.
+        val reordered = attributesBefore.reversed()
+        endpoint.setAttributeOrder(reordered)
+        // Get the case again and check that the order has been applied.
+        val retrievedAfter = endpoint.viewableCase(case5Id)
+        retrievedAfter.attributes()[0] shouldBe attributesBefore[3]
+        retrievedAfter.attributes()[1] shouldBe attributesBefore[2]
+        retrievedAfter.attributes()[2] shouldBe attributesBefore[1]
+        retrievedAfter.attributes()[3] shouldBe attributesBefore[0]
+
+        // Commit the rule session.
+        endpoint.commitCurrentRuleSession()
+        endpoint.case(case1Id).interpretation.conclusionTexts() shouldBe setOf("Whatever")
+
+        // Get the case again and check that the order has been applied.
+        val retrievedAfterRuleSession = endpoint.viewableCase(case5Id)
+        retrievedAfterRuleSession.attributes()[0] shouldBe attributesBefore[3]
+        retrievedAfterRuleSession.attributes()[1] shouldBe attributesBefore[2]
+        retrievedAfterRuleSession.attributes()[2] shouldBe attributesBefore[1]
+        retrievedAfterRuleSession.attributes()[3] shouldBe attributesBefore[0]
+    }
+
+    @Test
+    fun setAttributesOrderOfRuleSessionCase() {
+        // Get a case with which to start a rule session.
+        val caseId = supplyCaseFromFile("Case5", endpoint).caseId.id!!
+        val viewableCase5 = endpoint.viewableCase(caseId)
+        val attributesBefore = viewableCase5.attributes()
+        attributesBefore.size shouldBe 4
+
+        viewableCase5.case.interpretation.conclusions() shouldBe emptySet()
+        endpoint.startRuleSessionToAddConclusion(caseId, endpoint.kb.conclusionManager.getOrCreate("Whatever"))
+
+        endpoint.moveAttribute(attributesBefore[0].id, attributesBefore[3].id)
+        val attributesAfterMove = endpoint.viewableCase(caseId).attributes()
+        attributesAfterMove.size shouldBe 4
+        attributesAfterMove[0] shouldBe attributesBefore[1]
+        attributesAfterMove[1] shouldBe attributesBefore[2]
+        attributesAfterMove[2] shouldBe attributesBefore[3]
+        attributesAfterMove[3] shouldBe attributesBefore[0]
+
+        // Commit the rule session.
+        endpoint.commitCurrentRuleSession()
+        endpoint.viewableCase(caseId).case.interpretation.conclusionTexts() shouldBe setOf("Whatever")
+
+        val attributesAfterRule = endpoint.viewableCase(caseId).attributes()
+        attributesAfterRule.size shouldBe 4
+        attributesAfterRule[0] shouldBe attributesBefore[1]
+        attributesAfterRule[1] shouldBe attributesBefore[2]
+        attributesAfterRule[2] shouldBe attributesBefore[3]
+        attributesAfterRule[3] shouldBe attributesBefore[0]
     }
 
     @Test

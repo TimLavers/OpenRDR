@@ -19,6 +19,7 @@ class ChatDefs {
 
     @Then("I enter the following text into the chat panel:")
     fun enterChatTextAndSend(text: String) {
+        println("---------> $text")
         with(chatPO()) {
             enterChatText(text)
             clickSend()

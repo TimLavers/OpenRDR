@@ -3,6 +3,7 @@ package io.rippledown.kb.chat
 import io.mockk.*
 import io.rippledown.model.Conclusion
 import io.rippledown.model.RDRCase
+import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.rule.*
@@ -21,6 +22,8 @@ class ChatRuleServiceTest {
     private lateinit var commitRuleSession: () -> Unit
     private lateinit var conditionForExpression: (String, RDRCase) -> ConditionParsingResult
     private lateinit var undoLastRuleOnKB: () -> Unit
+    private lateinit var moveAttribute: (String, String) -> Unit
+    private lateinit var viewableCase: ViewableCase
     private lateinit var case: RDRCase
     private lateinit var commentToAdd: String
     private lateinit var commentToRemove: String
@@ -42,7 +45,10 @@ class ChatRuleServiceTest {
         commitRuleSession = mockk()
         conditionForExpression = mockk()
         undoLastRuleOnKB = mockk()
+        moveAttribute = mockk()
+        viewableCase = mockk<ViewableCase>()
         case = mockk<RDRCase>()
+        every { viewableCase.case } returns case
         commentToAdd = "Test comment to add"
         commentToRemove = "Test comment to remove"
         replacedComment = "Old comment"
@@ -56,6 +62,7 @@ class ChatRuleServiceTest {
         every { cornerstoneReviewSessionStarted() } returns false
         every { addCondition(any()) } just Runs
         every { commitRuleSession() } just Runs
+        every { moveAttribute(any<String>(),any<String>())} just Runs
         service = ChatRuleService(
             getOrCreateConclusion,
             startRuleSession,
@@ -63,7 +70,8 @@ class ChatRuleServiceTest {
             addCondition,
             conditionForExpression,
             undoLastRuleOnKB,
-            commitRuleSession
+            commitRuleSession,
+            moveAttribute,
         )
     }
 
@@ -73,7 +81,7 @@ class ChatRuleServiceTest {
         every { getOrCreateConclusion(commentToAdd) } returns conclusion
 
         // When
-        service.buildRuleToAddComment(case, commentToAdd, conditions)
+        service.buildRuleToAddComment(viewableCase, commentToAdd, conditions)
 
         // Then
         verify { getOrCreateConclusion(commentToAdd) }
@@ -93,7 +101,7 @@ class ChatRuleServiceTest {
         every { commitRuleSession() } just Runs
 
         // When
-        service.buildRuleToRemoveComment(case, commentToRemove, conditions)
+        service.buildRuleToRemoveComment(viewableCase, commentToRemove, conditions)
 
         // Then
         verify { getOrCreateConclusion(commentToRemove) }
@@ -109,7 +117,7 @@ class ChatRuleServiceTest {
         every { getOrCreateConclusion(replacementComment) } returns replacementConclusion
 
         // When buildRuleToReplaceComment is called
-        service.buildRuleToReplaceComment(case, replacedComment, replacementComment, conditions)
+        service.buildRuleToReplaceComment(viewableCase, replacedComment, replacementComment, conditions)
 
         // Then the expected functions are called with the correct parameters
         verify { getOrCreateConclusion(replacedComment) }
