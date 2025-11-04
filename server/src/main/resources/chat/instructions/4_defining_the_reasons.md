@@ -34,7 +34,7 @@
 ```json
 {
   "action": "{{REVIEW_CORNERSTONES_ADD_COMMENT}}",
-  "comment": "<user entered comment text or identifier for the comment to add>>"
+  "comment": "<user entered comment text or identifier for the comment to add>"
 }
 ```
 

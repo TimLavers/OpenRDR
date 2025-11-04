@@ -11,6 +11,7 @@ import io.rippledown.constants.chat.*
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_CONVERSATION_RESPONSE
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE
 import io.rippledown.model.RDRCase
+import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.toJsonString
@@ -25,13 +26,16 @@ class ChatManagerTest {
     lateinit var conversationService: ConversationService
     lateinit var ruleService: RuleService
     lateinit var case: RDRCase
+    lateinit var viewableCase: ViewableCase
     lateinit var chatManager: ChatManager
 
     @BeforeTest
     fun setUp() {
         conversationService = mockk()
         ruleService = mockk()
+        viewableCase = mockk()
         case = mockk()
+        every { viewableCase.case } returns case
         chatManager = ChatManager(conversationService, ruleService)
         setupLogger()
     }
@@ -81,7 +85,7 @@ class ChatManagerTest {
         coEvery { conversationService.startConversation() } returns responseFromModel
 
         // When
-        chatManager.startConversation(case)
+        chatManager.startConversation(viewableCase)
 
         // Then
         coVerify { conversationService.startConversation() }
@@ -95,7 +99,7 @@ class ChatManagerTest {
         coEvery { conversationService.startConversation() } returns responseFromModel
 
         // When
-        chatManager.startConversation(case)
+        chatManager.startConversation(viewableCase)
 
         // Then
         coVerify(exactly = 1) { logger.info("$LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE '$responseFromModel'") }
@@ -128,7 +132,7 @@ class ChatManagerTest {
         coEvery { conversationService.startConversation() } returns responseFromModel
 
         // When
-        val responseToUser = chatManager.startConversation(case)
+        val responseToUser = chatManager.startConversation(viewableCase)
 
         // Then
         responseToUser shouldBe message
@@ -180,7 +184,7 @@ class ChatManagerTest {
             val message = "What do you want to add?"
             val initialResponseFromModel = ActionComment(USER_ACTION, message = message).toJsonString()
             coEvery { conversationService.startConversation() } returns initialResponseFromModel
-            chatManager.startConversation(case)
+            chatManager.startConversation(viewableCase)
 
             val comment = "Go to Bondi."
             val expression1 = "If the sun is hot."
@@ -202,7 +206,7 @@ class ChatManagerTest {
             val responseToUser = chatManager.response("yes!")
 
             // Then
-            coVerify { ruleService.buildRuleToAddComment(case, comment, eq(listOf(condition1, condition2))) }
+            coVerify { ruleService.buildRuleToAddComment(viewableCase, comment, eq(listOf(condition1, condition2))) }
             responseToUser shouldBe CHAT_BOT_DONE_MESSAGE
         }
 
@@ -213,7 +217,7 @@ class ChatManagerTest {
             val message = "What do you want to remove?"
             val initialResponseFromModel = ActionComment(USER_ACTION, message = message).toJsonString()
             coEvery { conversationService.startConversation() } returns initialResponseFromModel
-            chatManager.startConversation(case)
+            chatManager.startConversation(viewableCase)
 
             val comment = "Go to Bondi."
             val expression1 = "If the sun is hot."
@@ -231,7 +235,7 @@ class ChatManagerTest {
             val responseToUser = chatManager.response("yes!")
 
             // Then
-            coVerify { ruleService.buildRuleToRemoveComment(case, comment, eq(listOf(condition1))) }
+            coVerify { ruleService.buildRuleToRemoveComment(viewableCase, comment, eq(listOf(condition1))) }
             responseToUser shouldBe CHAT_BOT_DONE_MESSAGE
         }
 
@@ -242,7 +246,7 @@ class ChatManagerTest {
             val message = "What do you want to replace?"
             val initialResponseFromModel = ActionComment(USER_ACTION, message = message).toJsonString()
             coEvery { conversationService.startConversation() } returns initialResponseFromModel
-            chatManager.startConversation(case)
+            chatManager.startConversation(viewableCase)
 
             val comment = "Go to Bondi."
             val replacementComment = "Go to Manly."
@@ -264,7 +268,7 @@ class ChatManagerTest {
             // Then
             coVerify {
                 ruleService.buildRuleToReplaceComment(
-                    case,
+                    viewableCase,
                     comment,
                     replacementComment,
                     eq(listOf(condition1))
@@ -281,7 +285,7 @@ class ChatManagerTest {
             val message = "What do you want to add?"
             val initialResponseFromModel = ActionComment(USER_ACTION, message = message).toJsonString()
             coEvery { conversationService.startConversation() } returns initialResponseFromModel
-            chatManager.startConversation(case)
+            chatManager.startConversation(viewableCase)
             coVerify(exactly = 1) { conversationService.startConversation() }
 
             val comment = "Go to Bondi."
@@ -298,7 +302,7 @@ class ChatManagerTest {
 
             // When
             val responseToUser = chatManager.response("yes!")
-            coVerify { ruleService.buildRuleToAddComment(case, comment, eq(listOf(condition))) }
+            coVerify { ruleService.buildRuleToAddComment(viewableCase, comment, eq(listOf(condition))) }
             responseToUser shouldBe CHAT_BOT_DONE_MESSAGE
 
             // Then
@@ -312,7 +316,7 @@ class ChatManagerTest {
             val initialResponseFromModel =
                 ActionComment(USER_ACTION, message = "What do you want to add?").toJsonString()
             coEvery { conversationService.startConversation() } returns initialResponseFromModel
-            chatManager.startConversation(case) //to set the current case
+            chatManager.startConversation(viewableCase) //to set the current case
 
             val comment = "Go to Bondi."
             val responseFromModelToReviewCornerstones = ActionComment(
@@ -333,7 +337,7 @@ class ChatManagerTest {
             chatManager.response("")
 
             // Then
-            coVerify { ruleService.startCornerstoneReviewSessionToAddComment(case, comment) }
+            coVerify { ruleService.startCornerstoneReviewSessionToAddComment(viewableCase, comment) }
         }
 
     @Test
@@ -343,7 +347,7 @@ class ChatManagerTest {
             val initialResponseFromModel =
                 ActionComment(USER_ACTION, message = "What do you want to remove?").toJsonString()
             coEvery { conversationService.startConversation() } returns initialResponseFromModel
-            chatManager.startConversation(case) //to set the current case
+            chatManager.startConversation(viewableCase) //to set the current case
 
             val comment = "Go to Bondi."
             val responseFromModelToReviewCornerstones = ActionComment(
@@ -365,7 +369,7 @@ class ChatManagerTest {
             chatManager.response("")
 
             // Then
-            coVerify { ruleService.startCornerstoneReviewSessionToRemoveComment(case, comment) }
+            coVerify { ruleService.startCornerstoneReviewSessionToRemoveComment(viewableCase, comment) }
         }
 
     @Test
@@ -375,7 +379,7 @@ class ChatManagerTest {
             val initialResponseFromModel =
                 ActionComment(USER_ACTION, message = "What do you want to replace?").toJsonString()
             coEvery { conversationService.startConversation() } returns initialResponseFromModel
-            chatManager.startConversation(case) //to set the current case
+            chatManager.startConversation(viewableCase) //to set the current case
 
             val comment = "Go to Bondi."
             val replacementComment = "Go to Manly."
@@ -400,6 +404,37 @@ class ChatManagerTest {
             chatManager.response("")
 
             // Then
-            coVerify { ruleService.startCornerstoneReviewSessionToReplaceComment(case, comment, replacementComment) }
+            coVerify {
+                ruleService.startCornerstoneReviewSessionToReplaceComment(
+                    viewableCase,
+                    comment,
+                    replacementComment
+                )
+            }
         }
+
+    @Test
+    fun `should handle undo rule action`() = runTest {
+        val responseFromModel = ActionComment(UNDO_LAST_RULE).toJsonString()
+        coEvery { conversationService.response(any<String>()) } answers {
+            responseFromModel
+        }
+
+        chatManager.response("blah")
+
+        coVerify { ruleService.undoLastRule() }
+    }
+
+    @Test
+    fun `should handle attribute reorder action`() = runTest {
+        val responseFromModel =
+            ActionComment(MOVE_ATTRIBUTE, attributeMoved = "Glucose", destination = "Lipids").toJsonString()
+        coEvery { conversationService.response(any<String>()) } answers {
+            responseFromModel
+        }
+
+        chatManager.response("blah")
+
+        coVerify { ruleService.moveAttributeTo("Glucose",  "Lipids") }
+    }
 }

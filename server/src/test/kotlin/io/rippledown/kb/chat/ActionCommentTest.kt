@@ -2,6 +2,9 @@ package io.rippledown.kb.chat
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.fromJsonString
+import io.rippledown.kb.chat.action.AddComment
+import io.rippledown.kb.chat.action.MoveAttribute
+import io.rippledown.kb.chat.action.UndoLastRule
 import kotlin.test.Test
 
 class ActionCommentTest {
@@ -56,5 +59,37 @@ class ActionCommentTest {
             comment shouldBe "Let's surf"
             reasons shouldBe null
         }
+    }
+
+    @Test
+    fun moveAttribute() {
+        val actionComment = ActionComment("MoveAttribute", attributeMoved = "Glucose", destination = "Age")
+        with(actionComment.createActionInstance() as MoveAttribute) {
+            this.attributeMoved shouldBe "Glucose"
+            this.destination shouldBe "Age"
+        }
+    }
+
+    @Test
+    fun undoLastRule() {
+        val actionComment = ActionComment("UndoLastRule")
+        actionComment.createActionInstance()!!.javaClass shouldBe UndoLastRule().javaClass
+    }
+
+    @Test
+    fun addComment() {
+        val comment = "Beach time!"
+        val reasons = listOf("Surf is up", "Sun is out")
+        val actionComment = ActionComment("AddComment", comment = comment, reasons = reasons)
+        with(actionComment.createActionInstance() as AddComment) {
+            this.comment shouldBe comment
+            this.reasons shouldBe reasons
+        }
+    }
+
+    @Test
+    fun handleUnknownAction() {
+        val actionComment = ActionComment("SwapAttributes", attributeMoved = "Glucose", destination = "Age")
+        actionComment.createActionInstance() shouldBe null
     }
 }

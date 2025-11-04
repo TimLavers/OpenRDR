@@ -91,8 +91,7 @@ fun createViewableCaseWithInterpretation(
         }
     }
     val text = interp.conclusionTexts().joinToString(" ")
-    val viewableInterp =
-        ViewableInterpretation(interpretation = interp, textGivenByRules = text)
+    val viewableInterp = ViewableInterpretation(interpretation = interp, textGivenByRules = text)
     case.viewableInterpretation = viewableInterp
     return case
 }
@@ -101,10 +100,14 @@ fun createCaseWithInterpretation(
     name: String = "",
     caseId: Long? = null,
     conclusionTexts: List<String> = listOf(),
-): RDRCase {
+): ViewableCase {
     val commentToConditions = conclusionTexts.associateWith { emptyList<String>() }
     val interp = createInterpretation(commentToConditions)
-    return createCase(name, caseId, listOf(AttributeWithValue())).apply { interpretation = interp }
+    val viewableInterp = ViewableInterpretation(interpretation = interp, textGivenByRules = name)
+    val attributesWithResults = listOf(AttributeWithValue())
+    val case = createCase(name, caseId, attributesWithResults).apply { interpretation = interp }
+    val properties = CaseViewProperties(attributesWithResults.map { it.attribute })
+    return ViewableCase(case, properties, viewableInterp)
 }
 
 fun createInterpretation(

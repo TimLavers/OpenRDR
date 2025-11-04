@@ -31,9 +31,7 @@ fun Application.kbManagement(application: ServerApplication) {
                         inputStream.copyTo(buffered)
                         inputStream.close()
                     }
-                    withContext(Dispatchers.IO) {
-                        buffered.flush()
-                    }
+                    buffered.flush()
                     val bytes = partReader.toByteArray()
                     val kbInfo = application.importKBFromZip(bytes)
                     call.respond(OK, kbInfo)
