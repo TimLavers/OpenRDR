@@ -25,11 +25,11 @@ fun CornerstonePoller(handler: CornerstonePollerHandler, dispatcher: CoroutineDi
                 // Avoid blocking the UI.
                 withContext(dispatcher) {
                     cornerstoneStatus(handler)
-                    println("1 CornerstonePoller: polling")
+                    println("****** 1 CornerstonePoller: polling on UI thread")
                 }
             } else {
                 // On a test thread so we can launch directly.
-                println("2 CornerstonePoller: polling")
+                println("******** 2 CornerstonePoller: polling on test thread")
                 cornerstoneStatus(handler)
             }
             if (handler.isClosing()) break

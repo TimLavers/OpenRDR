@@ -8,8 +8,7 @@ The current report for the case is a list of comments. For the current case, the
 
 - If there are no comments, ask the user if they want to add a comment.
 - Else, if there is at least one comment, display the comments with an index and ask the user if they want to add,
-  remove,
-  or replace a comment.
+  remove, or replace a comment.
 
 ```json
 {

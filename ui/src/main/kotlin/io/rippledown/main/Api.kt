@@ -151,6 +151,8 @@ class Api(
         setKBParameter()
     }.body()
 
+    // Retrieves the current cornerstone status for an ongoing rule session, if any
+    //todo implement the backend for this. Use the conditions and currre
     suspend fun cornerstoneStatus(): CornerstoneStatus? = client.get("$API_URL$CORNERSTONE_STATUS") {
         setKBParameter()
     }.body()

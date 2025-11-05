@@ -2,10 +2,8 @@ package io.rippledown.kb.chat
 
 import io.rippledown.kb.chat.action.ChatAction
 import kotlinx.serialization.Serializable
-import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
-import kotlin.reflect.jvm.isAccessible
 
 @Serializable
 data class ActionComment(
@@ -15,21 +13,24 @@ data class ActionComment(
     val comment: String? = null,
     val replacementComment: String? = null,
     val reasons: List<String>? = null,
-    val attributeMoved: String? = null, // todo refactor
-    val destination: String? = null, // todo refactor
+    val attributeMoved: String? = null,
+    val destination: String? = null,
 ) {
     fun createActionInstance(): ChatAction? {
         val className = "io.rippledown.kb.chat.action.${action}"
-        try {
-            val actionClass = Class<ChatAction>.forName(className).kotlin
-            return actionClass.constructors.map { invokeConstructor(it as KFunction<ChatAction>) }.first { it != null }
-        } catch (_: ClassNotFoundException) {
+        val kclass = try {
+            Class.forName(className)
+                .asSubclass(ChatAction::class.java)
+                .kotlin
+        } catch (_: Exception) {
             return null
         }
+
+        return kclass.constructors.firstNotNullOfOrNull { invokeConstructor(it) }
     }
 
-    fun invokeConstructor(fn: KFunction<ChatAction>): ChatAction? {
-        val asMap = mutableMapOf<String, Any>()
+    private fun invokeConstructor(fn: KFunction<ChatAction>): ChatAction? {
+        val asMap = mutableMapOf<String, Any?>()
         if (message != null) asMap["message"] = message
         if (comment != null) asMap["comment"] = comment
         if (replacementComment != null) asMap["replacementComment"] = replacementComment
