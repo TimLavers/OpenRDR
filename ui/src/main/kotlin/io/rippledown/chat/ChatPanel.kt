@@ -161,8 +161,6 @@ fun ChatPanel(
                                 inputText = sendUserMessage(inputText, onMessageSent, textAreaFocusRequester)
                             },
                             enabled = inputText.text.isNotBlank(),
-                            modifier = Modifier
-                                .semantics { contentDescription = CHAT_SEND },
                             colors = IconButtonDefaults.filledIconButtonColors(
                                 containerColor = LIGHT_BLUE
                             )
@@ -170,7 +168,10 @@ fun ChatPanel(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                 contentDescription = "Send",
-                                tint = if (inputText.text.isNotBlank()) Blue else Color.Gray
+                                tint = if (inputText.text.isNotBlank()) Blue else Color.Gray,
+                                modifier = Modifier.semantics {
+                                    contentDescription = CHAT_SEND
+                                }
                             )
                         }
                     }

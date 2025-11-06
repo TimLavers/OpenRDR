@@ -19,7 +19,6 @@ class ChatDefs {
 
     @Then("I enter the following text into the chat panel:")
     fun enterChatTextAndSend(text: String) {
-        println("---------> $text")
         with(chatPO()) {
             enterChatText(text)
             clickSend()
@@ -139,4 +138,10 @@ class ChatDefs {
         decline()
         waitForBotToSayDone()
     }
+
+    @And("the chatbot has asked if I want to allow the report of the cornerstone case to change")
+    fun waitForBotQuestionToAllowCornerstoneReportToChange() {
+        waitForBotText("allow", "change", "cornerstone")
+    }
+
 }

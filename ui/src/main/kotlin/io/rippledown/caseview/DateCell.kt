@@ -9,9 +9,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import io.rippledown.constants.caseview.DATE_CELL_DESCRIPTION_PREFIX
-import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 @Composable
 fun RowScope.DateCell(index: Int, date: Long, columnWidths: ColumnWidths) {
@@ -28,6 +29,7 @@ fun RowScope.DateCell(index: Int, date: Long, columnWidths: ColumnWidths) {
 
 fun dateCellContentDescription(index: Int) = "$DATE_CELL_DESCRIPTION_PREFIX $index"
 
+@OptIn(ExperimentalTime::class)
 fun formatDate(date: Long): String {
     fun pad(n: Int): String {
         return if (n < 10) "0$n" else "$n"

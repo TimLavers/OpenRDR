@@ -22,8 +22,8 @@ fun waitForContextToBeNotNull(contextProvider: () -> AccessibleContext, descript
 }
 
 fun AccessibleContext.find(description: String, debug: Boolean = false): AccessibleContext? {
-    val matcher = { context: AccessibleContext ->
-        description == context.accessibleDescription
+    val matcher = { context: AccessibleContext? ->
+        context != null && context.accessibleDescription != null && context.accessibleDescription.contains(description)
     }
     return find(matcher, debug)
 }
@@ -36,7 +36,7 @@ fun AccessibleContext.findByName(name: String, role: AccessibleRole): Accessible
 }
 
 fun AccessibleContext.find(matcher: (AccessibleContext) -> Boolean, debug: Boolean = false): AccessibleContext? {
-    if (debug) println("find, this.name: ${this.accessibleName}, this.description: ${this.accessibleDescription}, this.role: ${this.accessibleRole}")
+    if (debug) println("find, name: '${accessibleName}', description: '${accessibleDescription}', role: '${accessibleRole}'")
     if (matcher(this)) return this
     val childCount = accessibleChildrenCount
     if (debug) println("Searching amongst children, of which there are $childCount")

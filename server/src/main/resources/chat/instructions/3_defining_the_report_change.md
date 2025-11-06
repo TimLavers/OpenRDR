@@ -8,8 +8,7 @@ The current report for the case is a list of comments. For the current case, the
 
 - If there are no comments, ask the user if they want to add a comment.
 - Else, if there is at least one comment, display the comments with an index and ask the user if they want to add,
-  remove,
-  or replace a comment.
+  remove, or replace a comment.
 
 ```json
 {
@@ -33,7 +32,8 @@ The current report for the case is a list of comments. For the current case, the
 
 ## Step 3. Ask for confirmation for the user-requested change:
 
-- If the user specifies a comment ending in a period, do not remove the period from the comment.
+- If the user specifies a comment ending in a period, for example, "Go to Bondi.", do not remove the period from the end
+  of the comment.
 - Summarize the report change (including the reasons if provided) and ask the user to confirm.
 
 ```json

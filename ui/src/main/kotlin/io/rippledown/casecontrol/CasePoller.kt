@@ -28,7 +28,7 @@ fun CasePoller(handler: CasePollerHandler, dispatcher: CoroutineDispatcher = Mai
                     queryForCases(handler)
                 }
             } else {
-                // If we are not on a test thread, we can launch directly.
+                // If we are on a test thread, we can launch directly.
                 queryForCases(handler)
             }
             //Allow one poll to complete before checking if we should close. Some tests rely on

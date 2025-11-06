@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTime::class)
+
 package io.rippledown.caseview
 
 import androidx.compose.foundation.layout.RowScope
@@ -8,10 +10,10 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.rippledown.mocks.DummyRowScope
-import kotlinx.datetime.Instant
-import kotlinx.datetime.toInstant
 import org.junit.Rule
 import org.junit.Test
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 @OptIn(ExperimentalTestApi::class)
 class DateCellTest {
