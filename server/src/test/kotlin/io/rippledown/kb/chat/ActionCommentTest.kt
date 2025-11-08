@@ -1,6 +1,7 @@
 package io.rippledown.kb.chat
 
 import io.kotest.matchers.shouldBe
+import io.rippledown.constants.chat.USER_ACTION
 import io.rippledown.fromJsonString
 import io.rippledown.kb.chat.action.AddComment
 import io.rippledown.kb.chat.action.MoveAttribute
@@ -8,6 +9,45 @@ import io.rippledown.kb.chat.action.UndoLastRule
 import kotlin.test.Test
 
 class ActionCommentTest {
+
+    @Test
+    fun `should handle error when action class cannot be instantiated`() {
+        // Given
+        val invalidAction = "NonExistentAction"
+        val actionComment = ActionComment(invalidAction)
+        
+        // When
+        val result = actionComment.createActionInstance()
+        
+        // Then
+        result shouldBe null
+    }
+
+    @Test
+    fun `should parse UserAction from JSON`() {
+        // Given
+        val msg = "Please confirm..."
+        val json = """
+            {
+                "action": "$USER_ACTION",
+                "message": "$msg",
+            }
+        """
+
+        // When
+        val actionComment = json.fromJsonString<ActionComment>()
+
+        // Then
+        with(actionComment) {
+            action shouldBe USER_ACTION
+            message shouldBe msg
+            debug shouldBe null
+            comment shouldBe null
+            replacementComment shouldBe null
+            reasons shouldBe null
+        }
+    }
+
     @Test
     fun `should parse ActionComment from JSON`() {
         // Given
@@ -61,6 +101,22 @@ class ActionCommentTest {
         }
     }
 
+    @Test
+    fun `should handle an invalid action string`() {
+        // Given
+        val json = """
+            {
+                "action": "unknown action"
+            }
+        """
+        val actionComment = json.fromJsonString<ActionComment>()
+
+        // When
+        val action = actionComment.createActionInstance()
+
+        // Then
+        action shouldBe null
+    }
     @Test
     fun moveAttribute() {
         val actionComment = ActionComment("MoveAttribute", attributeMoved = "Glucose", destination = "Age")

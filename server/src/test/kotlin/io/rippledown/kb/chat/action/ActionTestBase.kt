@@ -1,6 +1,7 @@
 package io.rippledown.kb.chat.action
 
 import io.mockk.mockk
+import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
@@ -11,6 +12,7 @@ open class ActionTestBase {
 
     lateinit var ruleService: RuleService
     lateinit var currentCase: ViewableCase
+    lateinit var modelResponder: ModelResponder
     val commentToAdd = "Beach today!"
     val commentToRemove = "Bushwalk today!"
     val expression1 = "If the sun is hot."
@@ -26,5 +28,6 @@ open class ActionTestBase {
     fun setUp() {
         ruleService = mockk()
         currentCase = mockk()
+        modelResponder = mockk()
     }
 }
