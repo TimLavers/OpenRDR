@@ -1,9 +1,11 @@
 package io.rippledown.kb.chat
 
 import io.rippledown.kb.chat.action.ChatAction
+import io.rippledown.log.lazyLogger
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
+
 
 @Serializable
 data class ActionComment(
@@ -16,13 +18,18 @@ data class ActionComment(
     val attributeMoved: String? = null,
     val destination: String? = null,
 ) {
+    companion object {
+        val logger = lazyLogger
+    }
+
     fun createActionInstance(): ChatAction? {
-        val className = "io.rippledown.kb.chat.action.${action}"
+        val className = "io.rippledown.kb.chat.action.$action"
         val kclass = try {
             Class.forName(className)
                 .asSubclass(ChatAction::class.java)
                 .kotlin
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error("Failed to create action instance from '$action'", e)
             return null
         }
 

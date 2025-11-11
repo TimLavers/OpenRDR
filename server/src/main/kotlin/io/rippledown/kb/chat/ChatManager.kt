@@ -1,7 +1,6 @@
 package io.rippledown.kb.chat
 
 import io.rippledown.chat.ConversationService
-import io.rippledown.constants.chat.*
 import io.rippledown.fromJsonString
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.RDRCase
@@ -45,10 +44,14 @@ interface RuleService {
     fun moveAttributeTo(moved: String, destination: String)
 }
 
+interface ModelResponder {
+    suspend fun response(message: String): String
+}
+
 /**
  * Manages the chat conversation with the user, processing messages and actions based on the AI model's responses.
  */
-class ChatManager(val conversationService: ConversationService, val ruleService: RuleService) {
+class ChatManager(val conversationService: ConversationService, val ruleService: RuleService) : ModelResponder {
     private val logger = lazyLogger
     private var currentCase: ViewableCase? = null
 
@@ -59,7 +62,7 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
         return processActionComment(response.fromJsonString<ActionComment>())
     }
 
-    suspend fun response(message: String): String {
+    override suspend fun response(message: String): String {
         logger.info("$LOG_PREFIX_FOR_USER_MESSAGE '$message'")
         val response = conversationService.response(message)
         logger.info("$LOG_PREFIX_FOR_CONVERSATION_RESPONSE $response")
@@ -75,41 +78,12 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
     suspend fun processActionComment(actionComment: ActionComment): String {
         logger.info("---Processing action comment: ${actionComment.toJsonString()}")
         val chatAction = actionComment.createActionInstance()
-        if (chatAction != null) {
-            return chatAction.doIt(ruleService,currentCase)
-        }
-        return when (actionComment.action) {
-            USER_ACTION -> {
-                actionComment.message ?: ""
-            }
-            REVIEW_CORNERSTONES_ADD_COMMENT -> {
-                val comment = actionComment.comment!!
-                val sessionCase = currentCase ?: throw IllegalStateException("No current case")
-                val cornerstoneStatus = ruleService.startCornerstoneReviewSessionToAddComment(sessionCase, comment)
-                response(cornerstoneStatus.toJsonString<CornerstoneStatus>())
-            }
-
-            REVIEW_CORNERSTONES_REMOVE_COMMENT -> {
-                val comment = actionComment.comment!!
-                val sessionCase = currentCase ?: throw IllegalStateException("No current case")
-                val cornerstoneStatus = ruleService.startCornerstoneReviewSessionToRemoveComment(sessionCase, comment)
-                response(cornerstoneStatus.toJsonString<CornerstoneStatus>())
-            }
-
-            REVIEW_CORNERSTONES_REPLACE_COMMENT -> {
-                val comment = actionComment.comment!!
-                val replacementComment = actionComment.replacementComment!!
-                val sessionCase = currentCase ?: throw IllegalStateException("No current case")
-                val cornerstoneStatus =
-                    ruleService.startCornerstoneReviewSessionToReplaceComment(sessionCase, comment, replacementComment)
-                response(cornerstoneStatus.toJsonString<CornerstoneStatus>())
-            }
-
-            else -> {
+        return if (chatAction != null) {
+            chatAction.doIt(ruleService, currentCase, this)
+        } else {
                 logger.error("Unknown actionComment: ${actionComment.action}")
                 ""
             }
-        }
     }
 
     companion object {
