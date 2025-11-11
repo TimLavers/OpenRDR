@@ -13,6 +13,7 @@ import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.websocket.*
 import io.rippledown.constants.server.IN_MEMORY
 import io.rippledown.constants.server.STARTING_SERVER
 import io.rippledown.log.lazyLogger
@@ -21,6 +22,7 @@ import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.persistence.postgres.PostgresPersistenceProvider
 import io.rippledown.server.routes.*
 import org.slf4j.event.Level
+import kotlin.time.Duration.Companion.seconds
 
 lateinit var server: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>
 
@@ -67,6 +69,12 @@ fun Application.module() {
     install(Compression) {
         gzip()
     }
+    install(WebSockets) {
+        pingPeriod = 15.seconds
+        timeout = 15.seconds
+        maxFrameSize = Long.MAX_VALUE
+        masking = false
+    }
     routing {
         get("/") {
             call.respondText(
@@ -87,4 +95,5 @@ fun Application.module() {
     conditionManagement(application)
     ruleSession(application)
     chatManagement(application)
+    webSockets(application)
 }
