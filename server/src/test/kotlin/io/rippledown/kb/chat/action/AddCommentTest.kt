@@ -23,7 +23,7 @@ class AddCommentTest : ActionTestBase() {
     @Test
     fun `no conditions`() {
         runTest {
-            AddComment(commentToAdd, emptyList()).doIt(ruleService, currentCase)
+            AddComment(commentToAdd, emptyList()).doIt(ruleService, currentCase, modelResponder)
             coVerify { ruleService.buildRuleToAddComment( currentCase, commentToAdd, emptyList()) }
         }
     }
@@ -31,7 +31,7 @@ class AddCommentTest : ActionTestBase() {
     @Test
     fun `null conditions`() {
         runTest {
-            AddComment(commentToAdd, null).doIt(ruleService, currentCase)
+            AddComment(commentToAdd, null).doIt(ruleService, currentCase, modelResponder)
             coVerify { ruleService.buildRuleToAddComment( currentCase, commentToAdd, emptyList()) }
         }
     }
@@ -40,7 +40,8 @@ class AddCommentTest : ActionTestBase() {
     fun `conditions are parsed`() = runTest {
         coEvery { ruleService.conditionForExpression(currentCase.case, expression1) } returns conditionParsingResult1
         coEvery { ruleService.conditionForExpression(currentCase.case, expression2) } returns conditionParsingResult2
-        val returnMessage = AddComment(commentToAdd, listOf(expression1, expression2)).doIt(ruleService, currentCase)
+        val returnMessage =
+            AddComment(commentToAdd, listOf(expression1, expression2)).doIt(ruleService, currentCase, modelResponder)
 
         coVerify { ruleService.buildRuleToAddComment(currentCase, commentToAdd, eq(listOf(condition1, condition2))) }
         returnMessage shouldBe CHAT_BOT_DONE_MESSAGE
@@ -50,7 +51,8 @@ class AddCommentTest : ActionTestBase() {
     fun `first condition cannot be parsed`() = runTest {
         coEvery { ruleService.conditionForExpression(currentCase.case, expression1) } returns conditionParsingFailedResult
         coEvery { ruleService.conditionForExpression(currentCase.case, expression2) } returns conditionParsingResult2
-        val returnMessage = AddComment(commentToAdd, listOf(expression1, expression2)).doIt(ruleService, currentCase)
+        val returnMessage =
+            AddComment(commentToAdd, listOf(expression1, expression2)).doIt(ruleService, currentCase, modelResponder)
 
         coVerify(inverse = true) { ruleService.buildRuleToAddComment(any(), any(), any()) }
         returnMessage shouldBe "Failed to parse condition: ${conditionParsingFailedResult.errorMessage}"
@@ -60,7 +62,8 @@ class AddCommentTest : ActionTestBase() {
     fun `subsequent condition cannot be parsed`() = runTest {
         coEvery { ruleService.conditionForExpression(currentCase.case, expression1) } returns conditionParsingResult1
         coEvery { ruleService.conditionForExpression(currentCase.case, expression2) } returns conditionParsingFailedResult
-        val returnMessage = AddComment(commentToAdd, listOf(expression1, expression2)).doIt(ruleService, currentCase)
+        val returnMessage =
+            AddComment(commentToAdd, listOf(expression1, expression2)).doIt(ruleService, currentCase, modelResponder)
 
         coVerify(inverse = true) { ruleService.buildRuleToAddComment(any(), any(), any()) }
         returnMessage shouldBe "Failed to parse condition: ${conditionParsingFailedResult.errorMessage}"
@@ -70,7 +73,8 @@ class AddCommentTest : ActionTestBase() {
     fun `no condition can be parsed`() = runTest {
         coEvery { ruleService.conditionForExpression(currentCase.case, expression1) } returns conditionParsingFailedResult
         coEvery { ruleService.conditionForExpression(currentCase.case, expression2) } returns conditionParsingFailedResult2
-        val returnMessage = AddComment(commentToAdd, listOf(expression1, expression2)).doIt(ruleService, currentCase)
+        val returnMessage =
+            AddComment(commentToAdd, listOf(expression1, expression2)).doIt(ruleService, currentCase, modelResponder)
 
         coVerify(inverse = true) { ruleService.buildRuleToAddComment(any(), any(), any()) }
         returnMessage shouldBe "Failed to parse condition: ${conditionParsingFailedResult.errorMessage}"
@@ -83,7 +87,7 @@ class AddCommentTest : ActionTestBase() {
         coEvery { ruleService.conditionForExpression(currentCase.case, expression1) } returns inconsistentParsingResult
 
         shouldThrow<IllegalStateException> {
-            AddComment(commentToAdd, listOf(expression1)).doIt(ruleService, currentCase)
+            AddComment(commentToAdd, listOf(expression1)).doIt(ruleService, currentCase, modelResponder)
         }.message shouldBe "Condition should not be null for a successful parsing result"
     }
 }

@@ -141,7 +141,7 @@ class ChatManagerTest {
     @Test
     fun `should return a user message from a response call`() = runTest {
         // Given
-        val message = "the answer is 42"
+        val message = "the answer's 42"
         val responseFromModel = """
             {
                 "action": "$USER_ACTION",
@@ -414,6 +414,41 @@ class ChatManagerTest {
         }
 
     @Test
+    fun `should log an unknown action from the model`() =
+        runTest {
+            // Given
+            val initialResponseFromModel =
+                ActionComment(USER_ACTION, message = "What do you want to replace?").toJsonString()
+            coEvery { conversationService.startConversation() } returns initialResponseFromModel
+            chatManager.startConversation(viewableCase) //to set the current case
+
+            val comment = "Go to Bondi."
+            val replacementComment = "Go to Manly."
+            val responseFromModelToReviewCornerstones = """
+                {
+                    "action": "unknown",
+                    "comment": "x",
+                }
+            """.trimIndent()
+
+            coEvery { conversationService.response(any<String>()) } answers {
+                responseFromModelToReviewCornerstones
+            }
+
+            // When
+            chatManager.response("")
+
+            // Then
+            coVerify(exactly = 0) {
+                ruleService.startCornerstoneReviewSessionToReplaceComment(
+                    viewableCase,
+                    comment,
+                    replacementComment
+                )
+            }
+        }
+
+    @Test
     fun `should handle undo rule action`() = runTest {
         val responseFromModel = ActionComment(UNDO_LAST_RULE).toJsonString()
         coEvery { conversationService.response(any<String>()) } answers {
@@ -437,4 +472,26 @@ class ChatManagerTest {
 
         coVerify { ruleService.moveAttributeTo("Glucose",  "Lipids") }
     }
+
+    @Test
+    fun `should handle a user message with apostrophe`() = runTest {
+        // Given
+        val message = "Let's surf"
+
+        val responseFromModel = """
+            {
+                "action": "$USER_ACTION",
+                "message": "Please confirm you want to add the comment '$message'"
+            }
+        """.trimIndent()
+        coEvery { conversationService.response(any()) } returns responseFromModel
+
+
+        // When
+        val responseToUser = chatManager.response(message)
+
+        // Then
+        responseToUser shouldBe "Please confirm you want to add the comment '$message'"
+    }
+
 }
