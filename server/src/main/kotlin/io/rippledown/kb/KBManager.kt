@@ -2,11 +2,12 @@ package io.rippledown.kb
 
 import io.rippledown.model.KBInfo
 import io.rippledown.persistence.PersistenceProvider
+import io.rippledown.server.websocket.WebSocketManager
 import io.rippledown.util.EntityRetrieval
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-class KBManager(private val persistenceProvider: PersistenceProvider) {
+class KBManager(private val persistenceProvider: PersistenceProvider, val webSocketManager: WebSocketManager) {
     private val kbInfos = mutableSetOf<KBInfo>()
     private val logger: Logger = LoggerFactory.getLogger(this::class.java.name)
 
@@ -55,7 +56,7 @@ class KBManager(private val persistenceProvider: PersistenceProvider) {
             EntityRetrieval.Failure("Unknown id: $id.")
         } else {
             val persistentKB = persistenceProvider.kbPersistence(kbInfo.id)
-            EntityRetrieval.Success(KB(persistentKB))
+            EntityRetrieval.Success(KB(persistentKB, webSocketManager))
         }
     }
 }

@@ -2,6 +2,7 @@ package io.rippledown.server
 
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
+import io.mockk.mockk
 import io.rippledown.kb.KB
 import io.rippledown.kb.KBManager
 import io.rippledown.model.COMMENT_SEPARATOR
@@ -21,7 +22,7 @@ import kotlin.test.Test
 internal class RuleBuildingTest {
     private val kbName = "KBEndpointTest"
     private val persistenceProvider = InMemoryPersistenceProvider()
-    private val kbManager = KBManager(persistenceProvider)
+    private val kbManager = KBManager(persistenceProvider, mockk())
     private lateinit var kbEndpoint: KBEndpoint
 
     @BeforeTest
@@ -30,7 +31,7 @@ internal class RuleBuildingTest {
         val kb = (kbManager.openKB(kbInfo.id) as EntityRetrieval.Success<KB>).entity
         val rootDir = File("kbe")
         FileUtils.cleanDirectory(rootDir)
-        kbEndpoint = KBEndpoint(kb, rootDir)
+        kbEndpoint = KBEndpoint(kb)
     }
 
     @Test

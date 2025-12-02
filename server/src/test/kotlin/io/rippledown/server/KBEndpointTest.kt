@@ -24,7 +24,6 @@ import io.rippledown.supplyCaseFromFile
 import io.rippledown.toJsonString
 import io.rippledown.util.EntityRetrieval
 import io.rippledown.utils.beSameAs
-import org.apache.commons.io.FileUtils
 import java.io.File
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -35,7 +34,7 @@ internal class KBEndpointTest {
 
     private val kbName = "KBEndpointTest"
     private val persistenceProvider = InMemoryPersistenceProvider()
-    private val kbManager = KBManager(persistenceProvider)
+    private val kbManager = KBManager(persistenceProvider, mockk())
 
     private lateinit var endpoint: KBEndpoint
     private lateinit var conditionParser: ConditionParser
@@ -47,9 +46,9 @@ internal class KBEndpointTest {
         val kb = (kbManager.openKB(kbInfo.id) as EntityRetrieval.Success<KB>).entity
         conditionParser = mockk()
         kb.setConditionParser(conditionParser)
-        endpoint = KBEndpoint(kb, rootDir)
-        FileUtils.cleanDirectory(endpoint.casesDir)
-        FileUtils.cleanDirectory(endpoint.interpretationsDir)
+        endpoint = KBEndpoint(kb)
+//        FileUtils.cleanDirectory(endpoint.casesDir)
+//        FileUtils.cleanDirectory(endpoint.interpretationsDir)
     }
 
     @AfterTest
@@ -70,13 +69,13 @@ internal class KBEndpointTest {
         val undoDescription = UndoRuleDescription("Cool rule!", false)
         val kb = mockk<KB>(relaxed = true)
         every { kb.descriptionOfMostRecentRule() } returns undoDescription
-        KBEndpoint(kb, File("kbe")).descriptionOfMostRecentRule() shouldBe undoDescription
+        KBEndpoint(kb).descriptionOfMostRecentRule() shouldBe undoDescription
     }
 
     @Test
     fun undoLastRuleTest() {
         val kb = mockk<KB>(relaxed = true)
-        KBEndpoint(kb, File("kbe")).undoLastRule()
+        KBEndpoint(kb).undoLastRule()
         verify { kb.undoLastRuleSession() }
     }
 
@@ -86,7 +85,7 @@ internal class KBEndpointTest {
         val kb = mockk<KB>()
         val condition = mockk<Condition>()
         every { kb.conditionForExpression(any()) } returns ConditionParsingResult(condition)
-        val endpoint = KBEndpoint(kb, File("kbe"))
+        val endpoint = KBEndpoint(kb)
         val userExpression = "TSH is depressed"
 
         // When
@@ -307,7 +306,7 @@ internal class KBEndpointTest {
 
     @Test
     fun waitingCasesInfo() {
-        FileUtils.cleanDirectory(endpoint.casesDir)
+//        FileUtils.cleanDirectory(endpoint.casesDir)
         assertEquals(endpoint.waitingCasesInfo().kbName, endpoint.kb.kbInfo.name)
         assertEquals(endpoint.waitingCasesInfo().count, 0)
 
@@ -435,7 +434,7 @@ internal class KBEndpointTest {
 
         // Import the exported KB.
         val persistenceProvider = InMemoryPersistenceProvider()
-        val serverApplication = ServerApplication(persistenceProvider)
+        val serverApplication = ServerApplication(persistenceProvider, mockk())
         serverApplication.importKBFromZip(exported.readBytes())
         endpoint.kb.allCornerstoneCases().size shouldBe 1
         endpoint.kb.ruleTree.size() shouldBe 2

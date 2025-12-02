@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 
 class RESTClient {
-    private val endpoint = "http://localhost:9090"
+    private val endpoint = "http://localhost:$PORT"
     private val api = Api()
 
     private val jsonClient = HttpClient(CIO) {

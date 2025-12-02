@@ -22,8 +22,10 @@ import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistentKB
+import io.rippledown.server.websocket.WebSocketManager
+import kotlinx.coroutines.runBlocking
 
-class KB(persistentKB: PersistentKB) {
+class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = null) {
     val logger = lazyLogger
 
     val kbInfo = persistentKB.kbInfo()
@@ -135,8 +137,17 @@ class KB(persistentKB: PersistentKB) {
         val alignedAction = action.alignWith(conclusionManager)
         ruleSession = RuleBuildingSession(ruleManager, ruleTree, case, alignedAction, allCornerstoneCases())
         logger.info("KB rule session created")
-        return cornerstoneStatus(null)
+        val cornerstoneStatus = cornerstoneStatus(null)
+
+        //Notify the client that there are cornerstones to review
+        if (cornerstoneStatus.numberOfCornerstones > 0) sendCornerstoneStatus(cornerstoneStatus)
+        return cornerstoneStatus
     }
+
+    fun sendCornerstoneStatus(cornerstoneStatus: CornerstoneStatus) {
+        runBlocking { webSocketManager?.sendStatus(cornerstoneStatus) }
+    }
+
     fun cornerstoneReviewSessionStarted() = ruleSession != null
 
     fun cancelRuleSession() {

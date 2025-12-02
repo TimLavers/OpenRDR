@@ -8,6 +8,7 @@ guava = "33.2.1-jre"
 mockk = "1.14.2"
 logback = "1.5.20"
 ktor = "3.3.2"
+commonsCodec = "1.17.0"
 kotlinx_coroutines = "1.10.2"
 kotlinx_serialization = "1.9.0"
 kotlinx_datetime = "0.7.1"
@@ -44,6 +45,7 @@ kotlinxDateTime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.r
 
 ktorClientCore = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktorClientCio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
+ktorClientWebsockets = { module = "io.ktor:ktor-client-websockets", version.ref = "ktor" }
 ktorClientMock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 ktorClientContentNegotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktorServerCore = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
@@ -56,7 +58,10 @@ ktor-server-cors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor" }
 ktor-server-compression = { module = "io.ktor:ktor-server-compression", version.ref = "ktor" }
 ktor-server-call-logging = { module = "io.ktor:ktor-server-call-logging", version.ref = "ktor" }
 ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
-ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
+ktorServerWebSockets = { module = "io.ktor:ktor-server-websockets", version.ref = "ktor" }
+ktorServerTestHost = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
+
+commonsCodec = { module = "commons-codec:commons-codec", version.ref = "commonsCodec" }
 
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 exposedCore = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
@@ -78,6 +83,7 @@ jte = { module = "gg.jte:jte-kotlin", version.ref = "jte" }
 ktor = [
     "ktorClientCore",
     "ktorClientCio",
+    "ktorClientWebsockets",
     "ktorClientMock",
     "ktorClientContentNegotiation",
     "ktorServerCore",
@@ -90,7 +96,8 @@ ktor = [
     "ktor-server-cors",
     "ktor-server-compression",
     "ktor-server-call-logging",
-    "ktor-server-test-host"
+    "ktorServerWebSockets",
+    "ktorServerTestHost"
 ]
 kotlinx = ["kotlinxCoroutinesCore", "kotlinxSerializationCore", "kotlinxSerializationJson", "kotlinxDateTime"]
 cucumber = ["cucumberJava", "cucumberJunitPlatformEngine", "cucumberPicocontainer"]

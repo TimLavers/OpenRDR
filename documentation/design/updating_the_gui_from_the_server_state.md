@@ -13,12 +13,13 @@ There are several instances where we want the GUI to be updated when the state o
 
 ## Design
 
-1. There is currently no mechanism for the Server to directly update the client (e.g. Reverse Invoke using gRPC or
-   WebSockets). This approach may be considered in the future, but for now we will use polling.
-2. The GUI will poll the Server at regular intervals (e.g. every 2 seconds) to check if the state of the Server has
-   changed. If it has, the GUI will update correspondingly.
-3. The Server will provide an endpoint that returns its current state, i.e.
-    1. the list of all case names,
-    2. the currently selected case, and
-    3. cornerstone case information (i.e. CornerstoneStatus)
+There are 2 mechanisms for the client to be updated when the state of the server changes:
+1. The Server will provide an endpoint that returns its current state, i.e.
+a. the list of all case names, and
+b. the currently selected case
+The client will poll for this information.
+2. The server provides a web socket endpoint that the client can connect to. The server will send updates to the client
+when the state of the server changes. This is used to update the GUI when the user has initiated a rule building session
+using the chat interface.
 
+The web socket approach is preferred over polling and it is planned to replace polling with web sockets in the future.

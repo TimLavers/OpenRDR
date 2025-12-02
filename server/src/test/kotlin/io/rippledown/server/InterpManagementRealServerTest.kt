@@ -2,6 +2,7 @@ package io.rippledown.server
 
 import io.kotest.matchers.shouldBe
 import io.ktor.server.testing.*
+import io.mockk.mockk
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
@@ -10,7 +11,6 @@ import io.rippledown.utils.serializeDeserialize
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.apache.commons.io.FileUtils
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
@@ -25,8 +25,7 @@ class InterpManagementRealServerTest {
 
     @BeforeTest
     fun setup() {
-        app = ServerApplication(persistenceProvider)
-        FileUtils.cleanDirectory(app.kbDataDir)
+        app = ServerApplication(persistenceProvider, mockk())
     }
 
     @Test

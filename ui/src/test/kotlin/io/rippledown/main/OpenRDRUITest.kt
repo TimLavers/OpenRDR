@@ -57,6 +57,19 @@ class OpenRDRUITest {
     }
 
     @Test
+    fun `should start a web socket session when composed`() = runTest {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+
+            //Then
+            coVerify { api.startWebSocketSession(updateCornerstoneStatus = any()) }
+        }
+    }
+
+    @Test
     fun `should show OpenRDR UI`() = runTest {
         with(composeTestRule) {
             setContent {

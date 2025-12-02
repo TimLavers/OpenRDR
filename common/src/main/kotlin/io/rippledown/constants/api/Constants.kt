@@ -1,6 +1,8 @@
 package io.rippledown.constants.api
 
-const val API_URL = "http://localhost:9090"
+const val HOST = "localhost"
+const val PORT = 9090
+const val API_URL = "http://$HOST:$PORT"
 const val WAITING_CASES = "/api/waitingCasesInfo"
 const val CONDITION_HINTS = "/api/conditionHints"
 const val CONDITION_FOR_EXPRESSION = "/api/conditionForExpression"

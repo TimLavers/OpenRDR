@@ -7,16 +7,22 @@ import io.ktor.client.engine.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.websocket.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.http.ContentType.Application.Json
 import io.ktor.http.ContentType.Text.Plain
+import io.ktor.http.HttpMethod.Companion.Get
 import io.ktor.serialization.kotlinx.json.*
+import io.ktor.websocket.*
+import io.ktor.websocket.Frame.*
 import io.rippledown.constants.api.*
 import io.rippledown.constants.server.CASE_ID
 import io.rippledown.constants.server.EXPRESSION
 import io.rippledown.constants.server.KB_ID
+import io.rippledown.fromJsonString
+import io.rippledown.log.lazyLogger
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.Conclusion
 import io.rippledown.model.KBInfo
@@ -32,7 +38,7 @@ class Api(
     engine: HttpClientEngine = CIO.create()
 ) {
     private var currentKB: KBInfo? = null
-    private val client = HttpClient(engine) {
+    val client = HttpClient(engine) {
         install(ContentNegotiation) {
             json()
         }
@@ -41,12 +47,56 @@ class Api(
             connectTimeoutMillis = 30_000
             socketTimeoutMillis = 30_000
         }
+        install(WebSockets)
     }
+
+    private val logger = lazyLogger
 
     private suspend fun HttpRequestBuilder.setKBParameter() = parameter(KB_ID, kbInfo().id)
 
     private fun HttpRequestBuilder.setCaseIdParameter(caseId: Long) = parameter(CASE_ID, caseId)
 
+    suspend fun startWebSocketSession(
+        updateCornerstoneStatus: (CornerstoneStatus) -> Unit
+    ) {
+        client.webSocket(
+            method = Get,
+            host = HOST,
+            port = PORT,
+            path = CORNERSTONE
+        ) {
+            println("Successfully connected to WebSocket")
+
+            try {
+                for (frame in incoming) {
+                    when (frame) {
+                        is Text -> {
+                            val receivedText = frame.readText()
+                            logger.info("RECEIVED: $receivedText")
+                            try {
+                                val cornerstoneStatus = receivedText.fromJsonString<CornerstoneStatus>()
+                                updateCornerstoneStatus(cornerstoneStatus)
+                            } catch (e: Exception) {
+                                logger.error("Error parsing cornerstone status", e)
+                            }
+                        }
+
+                        is Close -> {
+                            logger.info("Server closed WebSocket connection")
+                            break
+                        }
+
+                        else -> {
+                            logger.debug("Received frame type: ${frame::class.simpleName}")
+
+                        }
+                    }
+                }
+            } catch (_: Exception) {
+                //expected
+            }
+        }
+    }
     fun shutdown() {
         // client.close() // Uncomment if needed, but not required for CIO engine
         // engine.close() // Uncomment if needed, but not required for CIO engine
@@ -283,8 +333,6 @@ class Api(
             setBody(message)
         }.body()
     }
-
-
 
     suspend fun lastRuleDescription(): UndoRuleDescription {
         return client.get("$API_URL$LAST_RULE_DESCRIPTION") {

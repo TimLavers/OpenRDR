@@ -1,8 +1,8 @@
 @chat
 Feature: Show cornerstones
 
-#  @single
-  @ignore
+  @single
+#  @ignore
   Scenario: The user should be able to decline to review the cornerstones
     Given cases are set up as follows:
       | Case name | attribute name | value | comment    | condition    |

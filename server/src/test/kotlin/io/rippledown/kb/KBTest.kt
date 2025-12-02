@@ -7,6 +7,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -19,19 +20,38 @@ import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.external.MeasurementEvent
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.inmemory.InMemoryKB
+import io.rippledown.server.websocket.WebSocketManager
 import io.rippledown.util.shouldBeSameAs
+import io.rippledown.utils.createViewableCase
 import io.rippledown.utils.defaultDate
+import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 
 class KBTest {
     private lateinit var persistentKB: InMemoryKB
     private lateinit var kb: KB
+    lateinit var webSocketManager: WebSocketManager
 
     @BeforeTest
     fun setup() {
         val kbInfo = KBInfo("id123", "Blah")
+        webSocketManager = mockk()
         kb = createKB(kbInfo)
+    }
+
+    @Test
+    fun `should call web socket manager on cornerstone status change`() = runTest {
+        //Given
+        val cornerstoneCase = createViewableCase("Case1")
+        val cornerstoneStatus = CornerstoneStatus(cornerstoneCase, 42, 43)
+
+        //When
+        kb.sendCornerstoneStatus(cornerstoneStatus)
+
+        //Then
+        coVerify { webSocketManager.sendStatus(cornerstoneStatus) }
     }
 
     @Test
@@ -591,6 +611,24 @@ class KBTest {
     }
 
     @Test
+    @Ignore //TODO
+    fun `should resend cornerstone case status if there is a condition added that changes the cornerstone list`() {
+        //Given
+        val sessionCase = createCase("Case1", value = "1.0")
+        kb.addCornerstoneCase(createCase("Case2", value = "2.0"))
+        sessionCase.interpretation.conclusionTexts() shouldBe emptySet()
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
+
+        //When
+        kb.addConditionToCurrentRuleSession(lessThanOrEqualTo(null, glucose(), 1.2))
+        kb.conflictingCasesInCurrentRuleSession().size shouldBe 0
+
+        //Then
+        val updatedCornerstoneStatus = CornerstoneStatus()
+        verify { kb.sendCornerstoneStatus(updatedCornerstoneStatus) }
+    }
+
+    @Test
     fun commitSession() {
         val sessionCase = createCase("Case1", value = "1.0")
         val otherCase = createCase("Case2", value = "2.0")
@@ -805,6 +843,43 @@ class KBTest {
     }
 
     @Test
+    fun `should send cornerstone status when the rule session has just started and there are some cornerstones to review`() {
+        //Given
+        kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
+        kb.addCornerstoneCase(createCase("Case2", value = "2.0"))
+        kb.addCornerstoneCase(createCase("Case3", value = "3.0"))
+        val sessionCase = createCase("Case4", value = "4.0")
+
+        //When
+        kb.startRuleSession(
+            sessionCase,
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
+        )
+        val ccStatus = kb.cornerstoneStatus(null)
+        ccStatus.numberOfCornerstones shouldBe 3
+
+        //Then
+        verify { kb.sendCornerstoneStatus(ccStatus) }
+    }
+
+    @Test
+    fun `should not send cornerstone status when the rule session has just started and there are no cornerstones to review`() {
+        //Given
+        val sessionCase = createCase("Case4", value = "4.0")
+
+        //When
+        kb.startRuleSession(
+            sessionCase,
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
+        )
+        val ccStatus = kb.cornerstoneStatus(null)
+        ccStatus.numberOfCornerstones shouldBe 0
+
+        //Then
+        verify(exactly = 0) { kb.sendCornerstoneStatus(ccStatus) }
+    }
+
+    @Test
     fun `should not change the index of the current cornerstone if it has not been removed`() {
         val cc1 = kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
         val cc2 = kb.addCornerstoneCase(createCase("Case2", value = "2.0"))
@@ -978,6 +1053,6 @@ class KBTest {
 
     private fun createKB(kbInfo: KBInfo): KB {
         persistentKB = InMemoryKB(kbInfo)
-        return KB(persistentKB)
+        return KB(persistentKB, webSocketManager)
     }
 }

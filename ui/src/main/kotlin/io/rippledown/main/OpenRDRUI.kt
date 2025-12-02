@@ -120,6 +120,16 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
         }
     }
 
+    LaunchedEffect(Unit) {
+        withContext(dispatcher) {
+            println("Starting WebSocket session")
+            handler.api.startWebSocketSession {
+                cornerstoneStatus = it
+                println("Received cornerstone status: $cornerstoneStatus")
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             ApplicationBar(kbInfo, isChatVisible, isChatEnabled, object : AppBarHandler {
