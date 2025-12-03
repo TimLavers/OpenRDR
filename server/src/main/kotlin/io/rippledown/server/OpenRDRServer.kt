@@ -87,7 +87,7 @@ fun Application.module() {
         }
         staticResources("/", "")
     }
-    println("********* creating server application")
+    webSocketManager = WebSocketManager()
     val application = ServerApplication(persistenceProvider, webSocketManager)
     serverManagement()
     kbManagement(application)
