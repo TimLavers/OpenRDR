@@ -11,6 +11,7 @@ import io.rippledown.constants.api.SEND_USER_MESSAGE
 import io.rippledown.constants.api.START_CONVERSATION
 import io.rippledown.constants.server.CASE_ID
 import io.rippledown.constants.server.KB_ID
+import io.rippledown.model.ServerChatResult
 import kotlin.test.Test
 
 class ChatManagementTest : OpenRDRServerTestBase() {
@@ -38,21 +39,18 @@ class ChatManagementTest : OpenRDRServerTestBase() {
     fun `should delegate generating a response from the model to the server application`() = testApplication {
         //Given
         setupServer()
-        val caseId = 42L
-        val userMessage = "The report should include a surfing comment"
+        val userMessage = "This is a request to the server."
         val response = "Shall I add a surfing comment to the report?"
-        coEvery { kbEndpoint.responseToUserMessage(userMessage) } returns response
+        coEvery { serverApplication.processUserRequest(userMessage, null) } returns ServerChatResult(response)
 
         //When
         val result = httpClient.post(SEND_USER_MESSAGE) {
-            parameter(KB_ID, kbId)
-            parameter(CASE_ID, caseId)
             setBody(userMessage)
         }
 
         //Then
-        coVerify { kbEndpoint.responseToUserMessage(userMessage) }
+        coVerify { serverApplication.processUserRequest(userMessage, null) }
         result.status shouldBe HttpStatusCode.OK
-        result.body<String>() shouldBe response
+        result.body<ServerChatResult>().userMessage shouldBe response
     }
 }

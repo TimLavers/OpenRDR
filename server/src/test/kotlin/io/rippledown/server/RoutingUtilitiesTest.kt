@@ -50,6 +50,7 @@ class RoutingUtilitiesTest : OpenRDRServerTestBase() {
     fun `use kb name`() = testApplication {
         setupServer()
         every { parameters.get(KB_NAME) } returns "Otford"
+        every { serverApplication.kbForName("Otford") } returns mockk()
         context.kbEndpointByName(serverApplication)
         verify { serverApplication.kbForName("Otford") }
     }
@@ -118,7 +119,19 @@ class RoutingUtilitiesTest : OpenRDRServerTestBase() {
 
         every { parameters.get(CASE_ID) } returns "1000"
         context.caseId() shouldBe 1000L
-
     }
 
+    @Test
+    fun kbIdOrNullNullTest() = testApplication {
+        setupServer()
+        every { parameters[KB_ID] } returns null
+        context.kbIdOrNull() shouldBe null
+    }
+
+    @Test
+    fun kbIdOrNullTest() = testApplication {
+        setupServer()
+        every { parameters[KB_ID] } returns "Otford"
+        context.kbIdOrNull() shouldBe "Otford"
+    }
 }

@@ -21,7 +21,7 @@ open class OpenRDRServerTestBase {
         kbEndpoint = mockk<KBEndpoint>()
         serverApplication = mockk<ServerApplication>()
         every { serverApplication.kbForId(kbId) } returns kbEndpoint
-        every { serverApplication.kbForName(kbName) } returns kbEndpoint
+        every { serverApplication.kbForName(kbName) } returns Result.success(kbEndpoint)
         httpClient = createClient {
             install(ContentNegotiation) {
                 json(Json {

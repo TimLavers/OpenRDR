@@ -115,25 +115,42 @@ internal class ServerApplicationTest {
         val kbi1 = app.createKB("KB1", false)
         val kbi2 = app.createKB("KB2", false)
         val kbi3 = app.createKB("KB3", false)
-        app.kbForName(kbi1.name).kbInfo() shouldBe kbi1
-        app.kbForName(kbi2.name).kbInfo() shouldBe kbi2
-        app.kbForName(kbi3.name).kbInfo() shouldBe kbi3
+        app.kbForName(kbi1.name).getOrThrow().kbInfo() shouldBe kbi1
+        app.kbForName(kbi2.name).getOrThrow().kbInfo() shouldBe kbi2
+        app.kbForName(kbi3.name).getOrThrow().kbInfo() shouldBe kbi3
+    }
+
+    @Test
+    fun `kb for name is case insensitive`() {
+        val kbi1 = app.createKB("Glucose", false)
+        val kbi2 = app.createKB("Lipids", false)
+        val kbi3 = app.createKB("TFT", false)
+        app.kbForName("glucose").getOrThrow().kbInfo() shouldBe kbi1
+        app.kbForName("LIPIDS").getOrThrow().kbInfo() shouldBe kbi2
+        app.kbForName("tft").getOrThrow().kbInfo() shouldBe kbi3
+    }
+
+    @Test
+    fun `kb for name is case sensible`() {
+        val kbi1 = app.createKB("Glucose", true)
+        val kbi2 = app.createKB("GLUCOSE", true)
+        val kbi3 = app.createKB("glucose", true)
+        app.kbForName("Glucose").getOrThrow().kbInfo() shouldBe kbi1
+        app.kbForName("GLUCOSE").getOrThrow().kbInfo() shouldBe kbi2
+        app.kbForName("glucose").getOrThrow().kbInfo() shouldBe kbi3
+        app.kbForName("GLUcose").exceptionOrNull()!!.message shouldBe "These KBs matched 'GLUcose': GLUCOSE, Glucose, glucose."
     }
 
     @Test
     fun `unknown kb name`() {
-        shouldThrow<IllegalArgumentException> {
-            app.kbForName("Unknown")
-        }.message shouldBe "No KB with name Unknown found."
+        app.kbForName("Unknown").exceptionOrNull()!!.message shouldBe "No KB with name matching 'Unknown' found."
     }
 
     @Test
     fun `multiple KBs with same name`() {
         val kbId = app.createKB("KB1", false)
         app.createKB(kbId.name, true)
-        shouldThrow<IllegalArgumentException> {
-            app.kbForName(kbId.name)
-        }.message shouldBe "More than one KB with name ${kbId.name} found."
+        app.kbForName(kbId.name).exceptionOrNull()!!.message shouldBe "More than one KB with name ${kbId.name} found."
     }
 
     @Test

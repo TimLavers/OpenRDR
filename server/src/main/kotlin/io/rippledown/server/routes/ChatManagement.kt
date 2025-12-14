@@ -17,10 +17,15 @@ fun Application.chatManagement(application: ServerApplication) {
             call.respond(OK, response)
         }
         post(path = SEND_USER_MESSAGE) {
-            val kbEndpoint = kbEndpoint(application)
             val userMessage = call.receiveText()
-            val response = kbEndpoint.responseToUserMessage(userMessage)
-            call.respond(OK, response)
+            val kdbId = kbId()
+            try {
+                val reply = application.processUserRequest(userMessage, kdbId)
+                call.respond(OK, reply)
+            } catch (e: Exception) {
+                log.error("Could not process message: $e")
+                call.respond(OK, "Could not process message: $e")
+            }
         }
     }
 }

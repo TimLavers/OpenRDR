@@ -22,7 +22,7 @@ fun CaseInspection(case: ViewableCase, showChangeInterpretationIcon: Boolean, ha
             .padding(start = 5.dp)
             .width(500.dp)
     ) {
-        if (!showChangeInterpretationIcon) Spacer(modifier = Modifier.height(40.dp))
+//        if (!showChangeInterpretationIcon) Spacer(modifier = Modifier.height(40.dp))
         CaseView(case, handler = object : CaseViewHandler {
             override fun swapAttributes(moved: Attribute, target: Attribute) {
                 handler.swapAttributes(moved, target)

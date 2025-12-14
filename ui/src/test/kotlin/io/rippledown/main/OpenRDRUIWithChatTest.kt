@@ -48,7 +48,7 @@ class OpenRDRUIWithChatTest {
         with(composeTestRule) {
             //Given
             setContent {
-                OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             requireNamesToBeShowingOnCaseList(caseA)
 
@@ -73,7 +73,26 @@ class OpenRDRUIWithChatTest {
         with(composeTestRule) {
             //Given
             setContent {
-                OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            requireChatPanelIsNotDisplayed()
+
+            //When
+            clickChatIconToggle()
+
+            //Then
+            requireChatPanelIsDisplayed()
+        }
+    }
+
+    @Test
+    fun `can show the chat panel with an empty knowledge base open`() = runTest {
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(emptyList())
+
+        with(composeTestRule) {
+            //Given
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             requireChatPanelIsNotDisplayed()
 
@@ -99,7 +118,7 @@ class OpenRDRUIWithChatTest {
             with(composeTestRule) {
                 //Given
                 setContent {
-                    OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
+                    OpenRDRUI(handler, dispatcher = Unconfined)
                 }
                 requireNamesToBeShowingOnCaseList(caseA)
                 waitForCaseToBeShowing(caseA)
@@ -130,7 +149,7 @@ class OpenRDRUIWithChatTest {
         with(composeTestRule) {
             //Given
             setContent {
-                OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             requireNamesToBeShowingOnCaseList(caseA)
             waitForCaseToBeShowing(caseA)
@@ -161,7 +180,7 @@ class OpenRDRUIWithChatTest {
         with(composeTestRule) {
             //Given
             setContent {
-                OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             waitForCaseToBeShowing(caseName)
             clickChatIconToggle()
@@ -189,7 +208,7 @@ class OpenRDRUIWithChatTest {
         with(composeTestRule) {
             //Given
             setContent {
-                OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             clickChatIconToggle()
 
@@ -216,7 +235,7 @@ class OpenRDRUIWithChatTest {
             with(composeTestRule) {
                 //Given
                 setContent {
-                    OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
+                    OpenRDRUI(handler, dispatcher = Unconfined)
                 }
                 requireChatPanelIsNotDisplayed()
 
@@ -248,7 +267,7 @@ class OpenRDRUIWithChatTest {
         with(composeTestRule) {
             //Given
             setContent {
-                OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             clickChatIconToggle()
             waitForCaseToBeShowing(caseNameA)
@@ -279,7 +298,7 @@ class OpenRDRUIWithChatTest {
         with(composeTestRule) {
             //Given
             setContent {
-                OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
 
             //When
@@ -306,7 +325,7 @@ class OpenRDRUIWithChatTest {
         with(composeTestRule) {
             //Given
             setContent {
-                OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
             waitForCaseToBeShowing(caseA)
             clickChatIconToggle()
@@ -322,37 +341,37 @@ class OpenRDRUIWithChatTest {
             )
             requireChatMessagesShowing(expected)
         }
-        @Test
-        fun `should poll for cornerstones if a rule session is started by the chat`() = runTest {
-            val caseA = "case A"
-            val caseId1 = CaseId(id = 1, name = caseA)
-            val caseIds = listOf(caseId1)
-            val bondiComment = "Go to Bondi"
-            val answer = "the answer is 42"
-            val case = createViewableCaseWithInterpretation(caseA, 1, listOf(bondiComment))
-            coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
-            coEvery { api.getCase(1) } returns case
-            coEvery { api.sendUserMessage(any(), any<Long>()) } returns answer
+    }
 
-            with(composeTestRule) {
-                //Given
-                setContent {
-                    OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
-                }
+//    @Test
+    fun `should poll for cornerstones if a rule session is started by the chat`() = runTest {
+        val caseA = "case A"
+        val caseId1 = CaseId(id = 1, name = caseA)
+        val caseIds = listOf(caseId1)
+        val bondiComment = "Go to Bondi"
+        val answer = "the answer is 42"
+        val case = createViewableCaseWithInterpretation(caseA, 1, listOf(bondiComment))
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.getCase(1) } returns case
+        coEvery { api.sendUserMessage(any(), any<Long>()) } returns answer
 
-                //When
-                waitForCaseToBeShowing(caseA)
-                clickChatIconToggle()
-
-                //Then
-                val expected = listOf(
-                    UserMessage("userMessage"),
-                    BotMessage(answer)
-                )
-                requireChatMessagesShowing(expected)
+        with(composeTestRule) {
+            //Given
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
             }
-        }
 
+            //When
+            waitForCaseToBeShowing(caseA)
+            clickChatIconToggle()
+
+            //Then
+            val expected = listOf(
+                UserMessage("userMessage"),
+                BotMessage(answer)
+            )
+            requireChatMessagesShowing(expected)
+        }
     }
 }
 

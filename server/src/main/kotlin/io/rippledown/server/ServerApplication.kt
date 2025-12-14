@@ -8,24 +8,29 @@ import io.rippledown.kb.export.util.Unzipper
 import io.rippledown.kb.sample.loadSampleKB
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.KBInfo
+import io.rippledown.model.ServerChatResult
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.postgres.PostgresPersistenceProvider
 import io.rippledown.sample.SampleKB
 import io.rippledown.util.EntityRetrieval
 import java.io.File
 import kotlin.io.path.createTempDirectory
+import kotlinx.coroutines.runBlocking
 
 class ServerApplication(private val persistenceProvider: PersistenceProvider = PostgresPersistenceProvider()) {
     private val logger = lazyLogger
     val kbDataDir = File("data").apply { mkdirs() }
     private val kbManager = KBManager(persistenceProvider)
     private val idToKBEndpoint = mutableMapOf<String, KBEndpoint>()
+    private val chatManager: ServerChatManager
 
     init {
         persistenceProvider.idStore().data().keys.forEach {
             val kbPersistence = persistenceProvider.kbPersistence(it)
             loadKnownKB(kbPersistence.kbInfo())
         }
+        val chatService = ServerChatServiceFactory().createChatService()
+        chatManager = ServerChatManager(chatService, ChatActionsHandler(this))
     }
 
     fun getDefaultProject(): KBInfo {
@@ -60,15 +65,23 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         return if (idToKBEndpoint.containsKey(id)) idToKBEndpoint[id]!! else throw IllegalArgumentException("Unknown kb id: $id")
     }
 
-    fun kbForName(name: String): KBEndpoint {
-        val kbIdsForName = kbManager.all().filter { it.name == name }
+    fun kbForName(name: String): Result<KBEndpoint> {
+        val searchName = name.lowercase().trim()
+        val kbIdsForName = kbManager.all().filter { it.name.lowercase() == searchName }
         if (kbIdsForName.isEmpty()) {
-            throw IllegalArgumentException("No KB with name $name found.")
+            return Result.failure(IllegalArgumentException("No KB with name matching '$name' found."))
         }
         if (kbIdsForName.size > 1) {
-            throw IllegalArgumentException("More than one KB with name $name found.")
+            // Maybe there's an exact match.
+            val exactMatches = kbManager.all().filter { it.name == name }
+            if (exactMatches.size == 1) {
+                return Result.success(kbForId(exactMatches.first().id))
+            }
+            // No exact match, throw an error.
+            val matches = kbIdsForName.map { it.name }.sorted().joinToString(", ")
+            return Result.failure(IllegalArgumentException("These KBs matched '$name': $matches."))
         }
-        return kbForId(kbIdsForName.first().id)
+        return Result.success(kbForId(kbIdsForName.first().id))
     }
 
     fun kbFor(kbInfo: KBInfo) = kbForId(kbInfo.id)
@@ -87,6 +100,17 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
         logger.info("Imported KB with name: '${kb.kbInfo.name}' and id: '${kb.kbInfo.id}' from zip.")
         idToKBEndpoint[kb.kbInfo.id] = kbEndpoint(kb)
         return kb.kbInfo
+    }
+
+    suspend fun processUserRequest(request: String, kbId: String?): ServerChatResult {
+        logger.info("processUserRequest, request: $request")
+        return chatManager.sendMessageAndActOnResponse(request, kbId)
+    }
+
+    class ChatActionsHandler(val serverApplication: ServerApplication) : ServerChatActionsInterface {
+        override fun listKnowledgeBases() = serverApplication.kbList()
+        override fun openKB(name: String) = serverApplication.kbForName(name).map { it.kbInfo() }
+        override fun passUserMessageToKbChat(message: String, kbId: String) = runBlocking { serverApplication.kbForId(kbId).responseToUserMessage(message) }
     }
 
     private fun kbDataFile(kb: KB) = File(kbDataDir, kb.kbInfo.id)

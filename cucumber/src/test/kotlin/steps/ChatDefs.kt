@@ -95,6 +95,14 @@ class ChatDefs {
         waitForBotText(*phrases.asList().toTypedArray())
     }
 
+    @Then("the chatbot response consists of the following lines:")
+    fun checkBotResponseContainsLines(phrases: DataTable) {
+        await().atMost(ofSeconds(30)).until {
+            chatPO().mostRecentBotRowIs(phrases.asList().joinToString("\n"))
+
+        }
+    }
+
     fun waitForBotText(vararg terms: String) {
         await().atMost(ofSeconds(30)).until {
             chatPO().mostRecentBotRowContainsTerms(terms.toList())

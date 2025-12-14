@@ -22,8 +22,13 @@ fun RoutingContext.kbEndpoint(serverApplication: ServerApplication): KBEndpoint 
 }
 
 fun RoutingContext.kbEndpointByName(serverApplication: ServerApplication): KBEndpoint {
-    val kbId = call.parameterValue(KB_NAME, MISSING_KB_NAME)
-    return serverApplication.kbForName(kbId)
+    val kbName = call.parameterValue(KB_NAME, MISSING_KB_NAME)
+    val result = serverApplication.kbForName(kbName)
+    if (result.isSuccess) {
+        return result.getOrThrow()
+    } else {
+        throw result.exceptionOrNull()!!
+    }
 }
 
 fun RoutingCall.parameterValue(key: String, errorMessage: String): String {
@@ -33,3 +38,5 @@ fun RoutingCall.parameterValue(key: String, errorMessage: String): String {
     }
     return value
 }
+
+fun RoutingContext.kbIdOrNull() = call.parameters[KB_ID]

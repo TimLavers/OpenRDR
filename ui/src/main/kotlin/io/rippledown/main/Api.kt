@@ -267,24 +267,24 @@ class Api(
         }.body()
     }
 
-    suspend fun startConversation(caseId: Long): String {
+    suspend fun startConversation(caseId: Long?): String {
+        println("-------: Start conversation")
         return client.post("$API_URL$START_CONVERSATION") {
             contentType(Plain)
             setKBParameter()
-            setCaseIdParameter(caseId)
+            caseId?.let { setCaseIdParameter(it) }
         }.body()
     }
 
-    suspend fun sendUserMessage(message: String, caseId: Long): String {
-        return client.post("$API_URL$SEND_USER_MESSAGE") {
+    suspend fun sendUserMessage(message: String, caseId: Long?): String {
+        println("-------: Send user message: $message, caseId: $caseId")
+            return client.post("$API_URL$SEND_USER_MESSAGE") {
             contentType(Plain)
             setKBParameter()
-            setCaseIdParameter(caseId)
+                caseId?.let { setCaseIdParameter(it) }
             setBody(message)
         }.body()
     }
-
-
 
     suspend fun lastRuleDescription(): UndoRuleDescription {
         return client.get("$API_URL$LAST_RULE_DESCRIPTION") {

@@ -39,6 +39,15 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
         }
     }
 
+    fun mostRecentBotRowIs(expected: String): Boolean {
+        return execute<Boolean> {
+            val matcher = { context: AccessibleContext ->
+                context.foundText(expected)
+            }
+            contextProvider().find(matcher) != null
+        }
+    }
+
     fun numberOfChatMessages(): Int =
         execute<Int> {
             val matcher = { context: AccessibleContext ->

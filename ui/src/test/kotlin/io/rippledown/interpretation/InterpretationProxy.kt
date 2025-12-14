@@ -129,6 +129,7 @@ fun ComposeTestRule.clickComment(prefix: String, comment: String) {
 
 fun ComposeTestRule.clickOKToAddNewComment() {
     waitTillButtonIsEnabled(OK_BUTTON_FOR_ADD_COMMENT)
+    waitForIdle()
     onNodeWithContentDescription(OK_BUTTON_FOR_ADD_COMMENT)
         .assertIsDisplayed()
         .performClick()
