@@ -32,7 +32,7 @@ import java.io.File
 interface Handler {
     var api: Api
     var isClosing: () -> Boolean
-    fun showingCornerstone(isShowingCornerstone: Boolean)
+    fun setWindowSize(isShowingCornerstone: Boolean, isShowingChat: Boolean)
 }
 
 @Composable
@@ -47,12 +47,13 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     var rightInformationMessage by remember { mutableStateOf("") }
     var ruleAction: Diff? by remember { mutableStateOf(null) }
     var conditionHints by remember { mutableStateOf(listOf<SuggestedCondition>()) }
-    var isChatVisible by remember { mutableStateOf(false) }
+    var isShowingChat by remember { mutableStateOf(false) }
     var isChatEnabled by remember { mutableStateOf(true) }
 
     val isShowingCornerstone = cornerstoneStatus?.cornerstoneToReview != null
     val ruleInProgress = cornerstoneStatus != null
-    handler.showingCornerstone(isShowingCornerstone)
+
+    handler.setWindowSize(isShowingCornerstone, isShowingChat)
 
     val chatControllerHandler = object : ChatControllerHandler {
         override var onBotMessageReceived: (message: String) -> Unit = { }
@@ -71,7 +72,6 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
             }
         }
     }
-
 
     LaunchedEffect(Unit) {
         withContext(dispatcher) {
@@ -95,7 +95,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
 
     LaunchedEffect(currentCaseId) {
         // When currentCaseId changes, start a conversation with the model if the chat panel is visible
-        if (isChatVisible) {
+        if (isShowingChat) {
             withContext(dispatcher) {
                 currentCaseId?.let {
                     val response = api.startConversation(it)
@@ -109,7 +109,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     }
 
     //Start a conversation with the model when the chat is made visible
-    LaunchedEffect(isChatVisible) {
+    LaunchedEffect(isShowingChat) {
         withContext(dispatcher) {
             currentCaseId?.let {
                 val response = api.startConversation(it)
@@ -122,17 +122,15 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
 
     LaunchedEffect(Unit) {
         withContext(dispatcher) {
-            println("Starting WebSocket session")
-            handler.api.startWebSocketSession {
-                cornerstoneStatus = it
-                println("Received cornerstone status: $cornerstoneStatus")
-            }
+            handler.api.startWebSocketSession(
+                updateCornerstoneStatus = { cornerstoneStatus = it },
+                ruleSessionCompleted = { cornerstoneStatus = null })
         }
     }
 
     Scaffold(
         topBar = {
-            ApplicationBar(kbInfo, isChatVisible, isChatEnabled, object : AppBarHandler {
+            ApplicationBar(kbInfo, isShowingChat, isChatEnabled, object : AppBarHandler {
                 override var isRuleSessionInProgress = ruleInProgress
                 override var selectKB: (id: String) -> Unit = {
                     CoroutineScope(dispatcher).launch {
@@ -171,7 +169,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                 override var kbDescription: () -> String = {
                     runBlocking(dispatcher) { api.kbDescription() }
                 }
-                override var onToggleChat: () -> Unit = { isChatVisible = !isChatVisible }
+                override var onToggleChat: () -> Unit = { isShowingChat = !isShowingChat }
                 override var lastRuleDescription: () -> UndoRuleDescription = { runBlocking { api.lastRuleDescription() } }
                 override var undoLastRule: () -> Unit = {
                     runBlocking {
@@ -196,23 +194,6 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
             }
         },
     ) { paddingValues ->
-        //TODO
-        /*
-        if (isChatVisible) {
-            CornerstonePoller(object : CornerstonePollerHandler {
-                override var onUpdate: (updated: CornerstoneStatus?) -> Unit = {
-                    cornerstoneStatus = it
-                }
-                override var updateCornerstoneStatus = {
-                    runBlocking(dispatcher) {
-                        api.cornerstoneStatus()
-                    }
-                }
-                override var isClosing = handler.isClosing
-            })
-        }
-*/
-
         CasePoller(object : CasePollerHandler {
             override var onUpdate: (updated: CasesInfo) -> Unit = {
                 casesInfo = it
@@ -247,7 +228,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                     CaseControl(
                         currentCase = currentCase,
                         cornerstoneStatus = cornerstoneStatus,
-                        isChatVisible = isChatVisible,
+                        isChatVisible = isShowingChat,
                         conditionHints = conditionHints,
                         handler = object : CaseControlHandler {
                             override fun allComments() =
@@ -334,14 +315,14 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                                 api.conditionFor(conditionText)
                             }
                         },
-                        modifier = if (isChatVisible) {
+                        modifier = if (isShowingChat) {
                             Modifier.weight(0.7f)
                         } else {
                             Modifier.fillMaxSize()
                         }
                     )
 
-                    if (isChatVisible) {
+                    if (isShowingChat) {
                         ChatController(
                             id = chatId,
                             chatControllerHandler,

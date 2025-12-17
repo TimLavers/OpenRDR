@@ -65,26 +65,28 @@ fun CaseControl(
                 CornerstonePager(cornerstoneStatus, handler)
             }
 
-            Spacer(modifier = Modifier.width(5.dp))
-            RuleMaker(conditionHints, object : RuleMakerHandler {
+            if (!isChatVisible) {
+                Spacer(modifier = Modifier.width(5.dp))
+                RuleMaker(conditionHints, object : RuleMakerHandler {
 
-                override var onDone = { conditions: List<Condition> ->
-                    val ruleRequest = RuleRequest(currentCase!!.id!!, RuleConditionList(conditions))
-                    handler.buildRule(ruleRequest)
-                }
+                    override var onDone = { conditions: List<Condition> ->
+                        val ruleRequest = RuleRequest(currentCase!!.id!!, RuleConditionList(conditions))
+                        handler.buildRule(ruleRequest)
+                    }
 
-                override var onCancel = {
-                    handler.endRuleSession()
-                }
+                    override var onCancel = {
+                        handler.endRuleSession()
+                    }
 
-                override var onUpdateConditions = { conditions: List<Condition> ->
-                    val ccUpdateRequest = UpdateCornerstoneRequest(cornerstoneStatus, RuleConditionList(conditions))
-                    handler.updateCornerstoneStatus(ccUpdateRequest)
-                }
+                    override var onUpdateConditions = { conditions: List<Condition> ->
+                        val ccUpdateRequest = UpdateCornerstoneRequest(cornerstoneStatus, RuleConditionList(conditions))
+                        handler.updateCornerstoneStatus(ccUpdateRequest)
+                    }
 
-                override fun conditionForExpression(expression: String) =
-                    handler.conditionFor(expression)
-            })
+                    override fun conditionForExpression(expression: String) =
+                        handler.conditionFor(expression)
+                })
+            }
         }
     }
 }

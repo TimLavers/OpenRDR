@@ -15,7 +15,7 @@ import org.junit.jupiter.api.BeforeEach
 import kotlin.test.Test
 
 class ConversationTest {
-    private lateinit var reasonTransformer: REASON_TRANSFORMER
+    private lateinit var reasonTransformer: ReasonTransformer
 
     @BeforeEach
     fun setUp() {

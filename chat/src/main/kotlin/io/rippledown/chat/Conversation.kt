@@ -15,11 +15,11 @@ interface ConversationService {
     suspend fun response(message: String): String = ""
 }
 
-interface REASON_TRANSFORMER {
+interface ReasonTransformer {
     suspend fun transform(reason: String): ReasonTransformation
 }
 
-class Conversation(private val chatService: ChatService, private val reasonTransformer: REASON_TRANSFORMER) :
+class Conversation(private val chatService: ChatService, private val reasonTransformer: ReasonTransformer) :
     ConversationService {
     private val logger = lazyLogger
     private lateinit var chat: Chat

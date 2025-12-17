@@ -1,4 +1,4 @@
-## Example interaction where the report has an initial comment:
+## Example interactions where the report has an initial comment:
 
 Assistant:
 
@@ -26,8 +26,27 @@ Assistant:
 
 ```json
 {
+  "action": "{{ADD_COMMENT}}",
+  "comment": "Bring flippers."
+}
+```
+
+System:
+
+```json
+{
+  "cornerstoneToReview": null,
+  "indexOfCornerstoneToReview": -1,
+  "numberOfCornerstones": 0
+}
+```
+
+Assistant:
+
+```json
+{
   "action": "USER_ACTION",
-  "message": "{{WOULD_YOU_LIKE}} to provide a {{REASON}} based on the values in this case for adding this comment?"
+  "message": "{{WOULD_YOU_LIKE}} to provide a {{REASON}} for adding this comment?"
 }
 ```
 
@@ -74,10 +93,6 @@ Assistant:
 
 ```json
 {
-  "action": "ADD_COMMENT",
-  "comment": "Bring flippers.",
-  "reasons": [
-    "waves are high"
-  ]
+  "action": "{{COMMIT_RULE}}"
 }
 ```

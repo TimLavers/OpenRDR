@@ -13,15 +13,11 @@ import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.http.ContentType.Application.Json
 import io.ktor.http.ContentType.Text.Plain
-import io.ktor.http.HttpMethod.Companion.Get
 import io.ktor.serialization.kotlinx.json.*
-import io.ktor.websocket.*
-import io.ktor.websocket.Frame.*
 import io.rippledown.constants.api.*
 import io.rippledown.constants.server.CASE_ID
 import io.rippledown.constants.server.EXPRESSION
 import io.rippledown.constants.server.KB_ID
-import io.rippledown.fromJsonString
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.Conclusion
@@ -56,46 +52,13 @@ class Api(
 
     private fun HttpRequestBuilder.setCaseIdParameter(caseId: Long) = parameter(CASE_ID, caseId)
 
+    private val webSocketManager = WebSocketApi(client)
+
     suspend fun startWebSocketSession(
-        updateCornerstoneStatus: (CornerstoneStatus) -> Unit
+        updateCornerstoneStatus: (CornerstoneStatus) -> Unit,
+        ruleSessionCompleted: () -> Unit
     ) {
-        client.webSocket(
-            method = Get,
-            host = HOST,
-            port = PORT,
-            path = CORNERSTONE
-        ) {
-            println("Successfully connected to WebSocket")
-
-            try {
-                for (frame in incoming) {
-                    when (frame) {
-                        is Text -> {
-                            val receivedText = frame.readText()
-                            logger.info("RECEIVED: $receivedText")
-                            try {
-                                val cornerstoneStatus = receivedText.fromJsonString<CornerstoneStatus>()
-                                updateCornerstoneStatus(cornerstoneStatus)
-                            } catch (e: Exception) {
-                                logger.error("Error parsing cornerstone status", e)
-                            }
-                        }
-
-                        is Close -> {
-                            logger.info("Server closed WebSocket connection")
-                            break
-                        }
-
-                        else -> {
-                            logger.debug("Received frame type: ${frame::class.simpleName}")
-
-                        }
-                    }
-                }
-            } catch (_: Exception) {
-                //expected
-            }
-        }
+        webSocketManager.startSession(updateCornerstoneStatus, ruleSessionCompleted)
     }
     fun shutdown() {
         // client.close() // Uncomment if needed, but not required for CIO engine

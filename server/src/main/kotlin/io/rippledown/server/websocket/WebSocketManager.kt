@@ -1,6 +1,7 @@
 package io.rippledown.server.websocket
 
 import io.ktor.websocket.*
+import io.rippledown.constants.chat.RULE_SESSION_COMPLETED
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.toJsonString
@@ -26,12 +27,19 @@ class WebSocketManager {
     }
 
     suspend fun sendStatus(status: CornerstoneStatus) {
-        val message = status.toJsonString()
-        logger.info("Sending cornerstone status: $message")
+        send(status.toJsonString<CornerstoneStatus>())
+    }
+
+    suspend fun sendRuleSessionCompleted() {
+        send(RULE_SESSION_COMPLETED)
+    }
+
+    private suspend fun send(message: String) {
+        logger.info("About to send ws message: $message")
         try {
             if (::connection.isInitialized) {
                 connection.send(message)
-                logger.info("Sent cornerstone status: $message")
+                logger.info("Sent ws message: $message")
             }
         } catch (e: Exception) {
             e.printStackTrace()

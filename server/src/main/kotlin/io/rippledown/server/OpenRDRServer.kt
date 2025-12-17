@@ -31,12 +31,12 @@ lateinit var server: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngi
 private lateinit var persistenceProvider: PersistenceProvider
 private lateinit var webSocketManager: WebSocketManager
 
-object OpenRDRServer
-
-val logger = OpenRDRServer.lazyLogger
+object OpenRDRServer {
+    val logger = OpenRDRServer.lazyLogger
+}
 
 fun main(args: Array<String>) {
-    logger.info("Starting server with args: ${args.joinToString(", ")}")
+    OpenRDRServer.logger.info("Starting server with args: ${args.joinToString(", ")}")
     persistenceProvider = if (args.isNotEmpty() && args[0] == IN_MEMORY) {
         InMemoryPersistenceProvider()
     } else {
@@ -46,7 +46,7 @@ fun main(args: Array<String>) {
     server = embeddedServer(factory = Netty, port = PORT) {
         module()
     }
-    logger.info(STARTING_SERVER)
+    OpenRDRServer.logger.info(STARTING_SERVER)
     server.start(wait = true)
 }
 

@@ -19,7 +19,8 @@ a. the list of all case names, and
 b. the currently selected case
 The client will poll for this information.
 2. The server provides a web socket endpoint that the client can connect to. The server will send updates to the client
-when the state of the server changes. This is used to update the GUI when the user has initiated a rule building session
+   when the state of the server changes. For example, this is used to update the GUI when the user has initiated a rule
+   building session
 using the chat interface.
 
 The web socket approach is preferred over polling and it is planned to replace polling with web sockets in the future.

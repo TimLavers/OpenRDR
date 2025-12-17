@@ -1,93 +1,66 @@
 package io.rippledown.kb.chat.action
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.rippledown.constants.chat.CHAT_BOT_DONE_MESSAGE
-import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.ConditionParsingResult
+import io.mockk.mockk
+import io.rippledown.kb.chat.ModelResponder
+import io.rippledown.kb.chat.RuleService
+import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.toJsonString
 import kotlinx.coroutines.test.runTest
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-class AddCommentTest : ActionTestBase() {
-    @Test
-    fun `build rule`() {
-        val conditions = listOf<Condition>(condition1, condition2)
-        runTest {
-            AddComment(commentToAdd,emptyList()).buildRule(ruleService, currentCase, conditions)
-            coVerify { ruleService.buildRuleToAddComment( currentCase, commentToAdd, conditions) }
-        }
+class AddCommentTest {
+    private lateinit var ruleService: RuleService
+    private lateinit var currentCase: ViewableCase
+    private lateinit var modelResponder: ModelResponder
+
+    @BeforeTest
+    fun setup() {
+        ruleService = mockk()
+        currentCase = mockk()
+        modelResponder = mockk()
     }
-
     @Test
-    fun `no conditions`() {
-        runTest {
-            AddComment(commentToAdd, emptyList()).doIt(ruleService, currentCase, modelResponder)
-            coVerify { ruleService.buildRuleToAddComment( currentCase, commentToAdd, emptyList()) }
-        }
+    fun `should start a rule session to add a comment`() = runTest {
+        //Given
+        val commentToAdd = "please add me"
+        val action = AddComment(commentToAdd)
+        val ccStatus = CornerstoneStatus(indexOfCornerstoneToReview = 42, numberOfCornerstones = 84)
+        coEvery {
+            ruleService.startRuleSessionToAddComment(any(), commentToAdd)
+        } returns ccStatus
+
+        val responseFromModel = "There are 84 cornerstone cases. Do you want to review them?"
+        coEvery { modelResponder.response(any<String>()) } returns responseFromModel
+
+        //When
+        val response = action.doIt(ruleService, currentCase, modelResponder)
+
+        //Then
+        coVerify { modelResponder.response(ccStatus.toJsonString<CornerstoneStatus>()) }
+        response shouldBe responseFromModel
     }
-
     @Test
-    fun `null conditions`() {
-        runTest {
-            AddComment(commentToAdd, null).doIt(ruleService, currentCase, modelResponder)
-            coVerify { ruleService.buildRuleToAddComment( currentCase, commentToAdd, emptyList()) }
-        }
-    }
+    fun `should send CornerstoneStatus after starting a rule session to add a comment`() = runTest {
+        //Given
+        val commentToAdd = "please add me"
+        val action = AddComment(commentToAdd)
+        val ccStatus = CornerstoneStatus(indexOfCornerstoneToReview = 42, numberOfCornerstones = 84)
+        coEvery {
+            ruleService.startRuleSessionToAddComment(any(), commentToAdd)
+        } returns ccStatus
 
-    @Test
-    fun `conditions are parsed`() = runTest {
-        coEvery { ruleService.conditionForExpression(currentCase.case, expression1) } returns conditionParsingResult1
-        coEvery { ruleService.conditionForExpression(currentCase.case, expression2) } returns conditionParsingResult2
-        val returnMessage =
-            AddComment(commentToAdd, listOf(expression1, expression2)).doIt(ruleService, currentCase, modelResponder)
+        val responseFromModel = "There are 84 cornstone cases. Do you want to review them?"
+        coEvery { modelResponder.response(any<String>()) } returns responseFromModel
 
-        coVerify { ruleService.buildRuleToAddComment(currentCase, commentToAdd, eq(listOf(condition1, condition2))) }
-        returnMessage shouldBe CHAT_BOT_DONE_MESSAGE
-    }
+        //When
+        action.doIt(ruleService, currentCase, modelResponder)
 
-    @Test
-    fun `first condition cannot be parsed`() = runTest {
-        coEvery { ruleService.conditionForExpression(currentCase.case, expression1) } returns conditionParsingFailedResult
-        coEvery { ruleService.conditionForExpression(currentCase.case, expression2) } returns conditionParsingResult2
-        val returnMessage =
-            AddComment(commentToAdd, listOf(expression1, expression2)).doIt(ruleService, currentCase, modelResponder)
-
-        coVerify(inverse = true) { ruleService.buildRuleToAddComment(any(), any(), any()) }
-        returnMessage shouldBe "Failed to parse condition: ${conditionParsingFailedResult.errorMessage}"
-    }
-
-    @Test
-    fun `subsequent condition cannot be parsed`() = runTest {
-        coEvery { ruleService.conditionForExpression(currentCase.case, expression1) } returns conditionParsingResult1
-        coEvery { ruleService.conditionForExpression(currentCase.case, expression2) } returns conditionParsingFailedResult
-        val returnMessage =
-            AddComment(commentToAdd, listOf(expression1, expression2)).doIt(ruleService, currentCase, modelResponder)
-
-        coVerify(inverse = true) { ruleService.buildRuleToAddComment(any(), any(), any()) }
-        returnMessage shouldBe "Failed to parse condition: ${conditionParsingFailedResult.errorMessage}"
-    }
-
-    @Test
-    fun `no condition can be parsed`() = runTest {
-        coEvery { ruleService.conditionForExpression(currentCase.case, expression1) } returns conditionParsingFailedResult
-        coEvery { ruleService.conditionForExpression(currentCase.case, expression2) } returns conditionParsingFailedResult2
-        val returnMessage =
-            AddComment(commentToAdd, listOf(expression1, expression2)).doIt(ruleService, currentCase, modelResponder)
-
-        coVerify(inverse = true) { ruleService.buildRuleToAddComment(any(), any(), any()) }
-        returnMessage shouldBe "Failed to parse condition: ${conditionParsingFailedResult.errorMessage}"
-    }
-
-    @Test
-    fun `handle inconsistent condition parsing result`() = runTest {
-        val inconsistentParsingResult = ConditionParsingResult(null, null)
-
-        coEvery { ruleService.conditionForExpression(currentCase.case, expression1) } returns inconsistentParsingResult
-
-        shouldThrow<IllegalStateException> {
-            AddComment(commentToAdd, listOf(expression1)).doIt(ruleService, currentCase, modelResponder)
-        }.message shouldBe "Condition should not be null for a successful parsing result"
+        //Then
+        coVerify { ruleService.sendCornerstoneStatus() }
     }
 }

@@ -34,12 +34,18 @@ fun printDuration(text: String, block: () -> Unit) {
 
 const val defaultDate = 1659752689505
 
+const val DEFAULT_GLUCOSE_VALUE = 5.1
 const val today = defaultDate
 val yesterday = daysAgo(1)
 val lastWeek = daysAgo(7)
+
 val glucose = Attribute(1, "Glucose")
 
-data class AttributeWithValue(val attribute: Attribute = glucose, val result: TestResult = TestResult("5.1"))
+data class AttributeWithValue(
+    val attribute: Attribute = glucose, val result: TestResult = TestResult(
+        DEFAULT_GLUCOSE_VALUE.toString()
+    )
+)
 
 fun createViewableCase(caseId: CaseId, attributesWithValues: List<AttributeWithValue> = listOf(AttributeWithValue())) =
     createViewableCase(

@@ -65,7 +65,7 @@ class OpenRDRUITest {
             }
 
             //Then
-            coVerify { api.startWebSocketSession(updateCornerstoneStatus = any()) }
+            coVerify { api.startWebSocketSession(updateCornerstoneStatus = any(), ruleSessionCompleted = any()) }
         }
     }
 
@@ -378,7 +378,7 @@ class OpenRDRUITest {
             }
             //Given
             waitForCaseToBeShowing(caseName)
-            coVerify { handler.showingCornerstone(false) }
+            coVerify { handler.setWindowSize(false, false) }
             clickChangeInterpretationButton()
 
             //When
@@ -386,7 +386,7 @@ class OpenRDRUITest {
             addNewComment("Go to Bondi")
 
             //Then
-            coVerify { handler.showingCornerstone(true) }
+            coVerify { handler.setWindowSize(true, false) }
         }
     }
 
@@ -412,13 +412,13 @@ class OpenRDRUITest {
             clickChangeInterpretationButton()
             clickAddCommentMenu()
             addNewComment("Go to Bondi")
-            coVerify { handler.showingCornerstone(true) }
+            coVerify { handler.setWindowSize(true, false) }
 
             //When
             clickCancelRuleButton()
 
             //Then
-            coVerify { handler.showingCornerstone(false) }
+            coVerify { handler.setWindowSize(false, false) }
         }
     }
 
@@ -472,14 +472,14 @@ class OpenRDRUITest {
             clickAddCommentMenu()
             addNewComment("Go to Bondi")
             waitForIdle()
-            coVerify { handler.showingCornerstone(true) }
+            coVerify { handler.setWindowSize(true, false) }
 
             //When
             clickFinishRuleButton()
             waitForIdle()
 
             //Then
-            coVerify { handler.showingCornerstone(false) }
+            coVerify { handler.setWindowSize(false, false) }
         }
     }
 

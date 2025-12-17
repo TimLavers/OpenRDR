@@ -4,12 +4,12 @@ import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
-import io.rippledown.constants.api.CORNERSTONE
+import io.rippledown.constants.api.WEB_SOCKET
 import io.rippledown.server.websocket.WebSocketManager
 
 fun Application.webSockets(webSocketManager: WebSocketManager) {
     routing {
-        webSocket(path = CORNERSTONE) {
+        webSocket(path = WEB_SOCKET) {
             try {
                 webSocketManager.setSession(this)
             } catch (e: Exception) {

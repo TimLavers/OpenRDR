@@ -26,3 +26,7 @@ fun ComposeTestRule.requireCornerstoneCase(name: String) {
     onNodeWithContentDescription(CORNERSTONE_CASE_NAME_ID)
         .assertTextEquals(name)
 }
+fun ComposeTestRule.requireNoCornerstoneCaseToBeShowing() {
+    onNodeWithContentDescription(CORNERSTONE_CASE_NAME_ID)
+        .assertDoesNotExist()
+}

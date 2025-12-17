@@ -3,23 +3,36 @@
 ## What do we want to achieve?
 
 When viewing a case and its report, if the report is not appropriate for the case, the actions available to the user
-are:
+include:
 
-- Add another comment (new or existing)
+- Add a comment (new or existing)
 - Remove a comment
 - Replace a comment by another one (new or existing)
 - Undo the last rule
 
 The user then has to provide the justification for an Add, Remove or Replace action which is one or more boolean
-expressions involving the
-case attributes and values which must evaluate as true for this case.
+expressions involving the case attributes and values which must evaluate as true for this case.
 
-The user then has to review the cornerstone cases and decide whether the changed report is appropriate for them. If not,
-the user can add a further condition to the current rule which will be false for the cornerstone case and so exclude
+The user then has the option to review the cornerstone cases and decide whether the changed report is also appropriate
+for those cases. If not,
+the user can add further conditions to the current rule which will be false for the cornerstone case and so exclude
 that case from the rule action. Once this is done, the interpretive report for that cornerstone case will remain
 as it was, that is, unaffected by the new rule.
 
-GUI controls have been provided to do all this. However, the application could be enhanced by providing a more
+When they are done, the user can commit the rule to the knowledge base.
+
+The basic workflow from the user's perspective is therefore:
+
+```mermaid
+graph TD
+    A((Start)) --> B[Define the report change]
+    B --> C[Add a set of initial\nconditions]
+    C --> D[Review cornerstone cases]
+    D --> E[Add further conditions\nif necessary]
+    E --> F[Commit the rule] --> G((Stop))
+```
+
+GUI controls have been provided to do all this. However, the application is being enhanced by providing a more
 user-friendly interface which is a chat window. In that window the user can simply say how they want the report to
 change, and the justification for this change. The user's request will then be given to an LLM which may ask the user
 further questions to clarify exactly what is meant, and will then provide a structured output to the backend of the
@@ -27,8 +40,26 @@ application which will then automatically add the rule that effects the report c
 
 This avoids the user having to learn how to use the GUI controls, which may be particularly helpful for new or
 infrequent users. It also allows the user to enter their request in their own words, or own language, which may be more
-natural and
-intuitive than using a formal rule-building workflow.
+natural and intuitive than using a formal rule-building workflow.
+
+An example of a chat session is as follows:
+
+```mermaid
+sequenceDiagram
+    Model ->> User: Do you want to add a comment to the report?
+    User ->> Model: Yes, add the comment "Let's go to Bondi Beach"
+    Model ->> User: Would you like to provide a reason for adding this comment?
+    User ->> Model: Because it's hot
+    Model ->> User: Your reason is equivalent to "sun is hot". Any more reasons?
+    User ->> Model: No
+    Model ->> User: Would you like to review the cornerstone case?
+    User ->> Model: Yes
+    Model ->> User: Do you want to allow the comment to be added also for this case?
+    User ->> Model: No, because that case indicates that the weather is rainy
+    Model ->> User: Your reason is equivalent to "weather is rainy". Any more reasons?
+    User ->> Model: No
+    Model ->> User: Done. Your rule has been added to the knowledge base.
+```
 
 ## Design options
 
@@ -90,11 +121,11 @@ The chat LLM will operate in a multi-turn chat environment following the sequenc
 4. the user enters their request
 5. the model asks for confirmation of the intended report action, or else asks to clarify that action
 6. the user confirms or clarifies the action
-7. the model asks for the reason for the action (i.e. the conditions that must be true for the case)
-8. the user enters the reason
-9. the model confirms the reason, or else responds with a question to clarify that reason
-10. once both the action and reason are confirmed, the model outputs a structured JSON response to the backend
-11. the backend processes the JSON and adds the rule to the knowledge base
+7. the model informs the system of the report change and a rule session is started
+8. the model asks for the reason for the action (i.e. the conditions that must be true for the case)
+9. the user enters the reason
+10. the model confirms the reason, or else responds with a question to clarify that reason
+10. once all the reasons have been entered, the model informs the system to commit the rule session
 
 ## UI design
 

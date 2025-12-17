@@ -1,6 +1,7 @@
 package io.rippledown.casecontrol
 
 import androidx.compose.ui.test.junit4.createComposeRule
+import io.kotest.assertions.withClue
 import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.interpretation.requireChangeInterpretationIconToBeNotShowing
@@ -10,6 +11,7 @@ import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
 import io.rippledown.model.condition.hasCurrentValue
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.rule.clickCancelRuleButton
+import io.rippledown.rule.requireRuleMakerNotToBeDisplayed
 import io.rippledown.rule.requireRuleMakerToBeDisplayed
 import io.rippledown.utils.applicationFor
 import io.rippledown.utils.createViewableCaseWithInterpretation
@@ -139,6 +141,34 @@ class CaseControlTest {
 
             //Then
             requireRuleMakerToBeDisplayed()
+        }
+    }
+
+    @Test
+    fun `should not show rule builder if the chat is visible`() = runTest {
+        val name = "Bondi"
+        val bondiComment = "Go to Bondi"
+        val case = createViewableCaseWithInterpretation(name, 1, listOf(bondiComment))
+        val cornerstone = createViewableCaseWithInterpretation("Malabar", 1, listOf(bondiComment))
+        val cornerstoneStatus = CornerstoneStatus(cornerstone, 42, 84)
+
+        with(composeTestRule) {
+            //Given
+            setContent {
+                CaseControl(
+                    currentCase = case,
+                    cornerstoneStatus = cornerstoneStatus,
+                    conditionHints = listOf(),
+                    handler = handler,
+                    isChatVisible = true
+                )
+            }
+            requireInterpretation(bondiComment)
+
+            //Then
+            withClue("the user can only use the chat to build a rule if the chat panel is showing") {
+                requireRuleMakerNotToBeDisplayed()
+            }
         }
     }
     @Test

@@ -1,7 +1,7 @@
-package io.rippledown.main
+package io.rippledown.ws
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.mocks.startServer
+import io.rippledown.main.Api
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.utils.createViewableCase
 import kotlinx.coroutines.*
@@ -9,22 +9,22 @@ import org.junit.Test
 
 class WebSocketForCornerstoneStatusTest {
     @Test
-    fun `test websocket with real CIO client`() = runBlocking {
+    fun `should receive cornerstone status from test websocket using CIO client`() = runBlocking {
         // Given
         val expectedStatus = CornerstoneStatus(
             cornerstoneToReview = createViewableCase("Test Case", 1),
             indexOfCornerstoneToReview = 0,
             numberOfCornerstones = 3
         )
-        val server = startServer(expectedStatus)
+        val server = startServerAndSendCornerstoneStatus(expectedStatus)
         val api = Api()
         val receivedSignal = CompletableDeferred<CornerstoneStatus>()
 
         // When
         val clientJob = launch {
-            api.startWebSocketSession { cornerstoneStatus ->
+            api.startWebSocketSession(updateCornerstoneStatus = { cornerstoneStatus ->
                 receivedSignal.complete(cornerstoneStatus)
-            }
+            }, ruleSessionCompleted = {})
         }
 
         // Then
