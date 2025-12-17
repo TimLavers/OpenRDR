@@ -27,8 +27,6 @@ open class WebSocketApi(private val client: HttpClient) {
             port = PORT,
             path = WEB_SOCKET
         ) {
-            logger.info("Successfully connected to WebSocket")
-
             try {
                 incoming.consumeAsFlow()
                     .filterIsInstance<Frame.Text>()
@@ -46,12 +44,10 @@ open class WebSocketApi(private val client: HttpClient) {
                     }
             } catch (e: Exception) {
                 if (e is java.util.concurrent.CancellationException) {
-                    logger.info("WebSocket connection cancelled (expected during cleanup)")
+                    //expected during cleanup
                 } else {
                     logger.error("WebSocket connection error", e)
                 }
-            } finally {
-                logger.info("WebSocket connection closed")
             }
         }
     }
