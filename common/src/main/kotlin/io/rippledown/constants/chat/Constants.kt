@@ -27,11 +27,10 @@ const val REMOVE_COMMENT = "RemoveComment"
 const val REPLACE_COMMENT = "ReplaceComment"
 const val DEBUG_ACTION = "DEBUG_ACTION"
 const val USER_ACTION = "UserAction"
+const val COMMIT_RULE = "CommitRule"
 const val UNDO_LAST_RULE = "UndoLastRule"
-const val REVIEW_CORNERSTONES_ADD_COMMENT = "ReviewCornerstonesAddComment"
-const val REVIEW_CORNERSTONES_REMOVE_COMMENT = "ReviewCornerstonesRemoveComment"
-const val REVIEW_CORNERSTONES_REPLACE_COMMENT = "ReviewCornerstonesReplaceComment"
-
 const val MOVE_ATTRIBUTE = "MoveAttribute"
+const val SHOW_CORNERSTONES = "ShowCornerstones"
+const val RULE_SESSION_COMPLETED = "RuleSessionCompleted"
 
 

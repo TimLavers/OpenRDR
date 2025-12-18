@@ -18,10 +18,8 @@ import io.rippledown.model.rule.*
 import java.io.File
 import kotlin.io.path.createTempDirectory
 
-class KBEndpoint(val kb: KB, casesRootDirectory: File) {
+class KBEndpoint(val kb: KB) {
     val logger = lazyLogger
-    val casesDir = File(casesRootDirectory, "cases").apply { mkdirs() }
-    val interpretationsDir = File(casesRootDirectory, "interpretations").apply { mkdirs() }
 
     fun kbInfo(): KBInfo {
         logger.info("kbName will return: ${kb.kbInfo.name}")

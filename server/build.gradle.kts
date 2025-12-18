@@ -1,7 +1,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
-    id("io.ktor.plugin") version "3.1.2"
+    id("io.ktor.plugin") version "3.2.3"
     kotlin("plugin.serialization")
     id("org.gretty") version "4.1.0"
 }

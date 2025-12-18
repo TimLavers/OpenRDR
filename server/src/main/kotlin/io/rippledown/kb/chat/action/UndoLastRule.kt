@@ -10,7 +10,7 @@ class UndoLastRule(): ChatAction {
         currentCase: ViewableCase?,
         modelResponder: ModelResponder
     ): String {
-        ruleService.undoLastRule()
+        ruleService.undoLastRuleSession()
         return "rule undone"
     }
 }

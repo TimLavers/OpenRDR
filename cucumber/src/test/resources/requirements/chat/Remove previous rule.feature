@@ -1,6 +1,5 @@
-#@chat
+@chat
 Feature: Remove previous rules
-
   Scenario: The user should be able to remove the previous rule using the chat
     Given cases are set up as follows:
       | Case name | attribute name | value | comment    | condition    |
@@ -19,5 +18,5 @@ Feature: Remove previous rules
       | and again please |
     Then the report should be "Comment 1."
     When I enter the following text into the chat panel:
-      | and once more with feeling |
+      | and once more |
     Then the interpretation report should be blank

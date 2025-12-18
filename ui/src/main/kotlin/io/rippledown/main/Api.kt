@@ -7,6 +7,7 @@ import io.ktor.client.engine.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.websocket.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
@@ -17,6 +18,7 @@ import io.rippledown.constants.api.*
 import io.rippledown.constants.server.CASE_ID
 import io.rippledown.constants.server.EXPRESSION
 import io.rippledown.constants.server.KB_ID
+import io.rippledown.log.lazyLogger
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.Conclusion
 import io.rippledown.model.KBInfo
@@ -32,7 +34,7 @@ class Api(
     engine: HttpClientEngine = CIO.create()
 ) {
     private var currentKB: KBInfo? = null
-    private val client = HttpClient(engine) {
+    val client = HttpClient(engine) {
         install(ContentNegotiation) {
             json()
         }
@@ -41,12 +43,23 @@ class Api(
             connectTimeoutMillis = 30_000
             socketTimeoutMillis = 30_000
         }
+        install(WebSockets)
     }
+
+    private val logger = lazyLogger
 
     private suspend fun HttpRequestBuilder.setKBParameter() = parameter(KB_ID, kbInfo().id)
 
     private fun HttpRequestBuilder.setCaseIdParameter(caseId: Long) = parameter(CASE_ID, caseId)
 
+    private val webSocketManager = WebSocketApi(client)
+
+    suspend fun startWebSocketSession(
+        updateCornerstoneStatus: (CornerstoneStatus) -> Unit,
+        ruleSessionCompleted: () -> Unit
+    ) {
+        webSocketManager.startSession(updateCornerstoneStatus, ruleSessionCompleted)
+    }
     fun shutdown() {
         // client.close() // Uncomment if needed, but not required for CIO engine
         // engine.close() // Uncomment if needed, but not required for CIO engine
@@ -283,8 +296,6 @@ class Api(
             setBody(message)
         }.body()
     }
-
-
 
     suspend fun lastRuleDescription(): UndoRuleDescription {
         return client.get("$API_URL$LAST_RULE_DESCRIPTION") {

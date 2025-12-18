@@ -15,7 +15,8 @@ import openrdr.ui.generated.resources.water_wave_icon
 import org.jetbrains.compose.resources.painterResource
 
 val DEFAULT_WINDOW_SIZE = DpSize(1_000.dp, 800.dp)
-val EXPANDED_WINDOW_SIZE = DpSize(1_800.dp, 800.dp)
+val EXPANDED_WINDOW_SIZE = DpSize(1_400.dp, 800.dp)
+val MAX_WINDOW_SIZE = DpSize(1_800.dp, 800.dp)
 
 fun main() = application {
     var closing by remember { mutableStateOf(false) }
@@ -36,8 +37,13 @@ fun main() = application {
         OpenRDRUI(object : Handler {
             override var isClosing = { closing }
             override var api: Api = Api()
-            override fun showingCornerstone(isShowingCornerstone: Boolean) {
-                if (isShowingCornerstone) resizeWindow(EXPANDED_WINDOW_SIZE) else resizeWindow(DEFAULT_WINDOW_SIZE)
+            override fun setWindowSize(isShowingCornerstone: Boolean, isShowingChat: Boolean) {
+                val size = if (isShowingCornerstone) {
+                    if (isShowingChat) EXPANDED_WINDOW_SIZE else MAX_WINDOW_SIZE
+                } else {
+                    DEFAULT_WINDOW_SIZE
+                }
+                resizeWindow(size)
             }
         })
     }

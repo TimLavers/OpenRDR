@@ -19,6 +19,11 @@ class CornerstoneStepDefs {
         cornerstonePO().requireCornerstoneCaseNotToBeShowing(ccName)
     }
 
+    @Then("there are no cornerstone cases showing")
+    fun requireNoCornerstoneCases() {
+        cornerstonePO().requireNoCornerstoneCases()
+    }
+
     @Then("the cornerstone case indicator (should )show(s) {int} of {int}")
     fun theCornerstoneCaseIndicatorShouldShowsIntOfInt(index: Int, numberOfCornerstoneCases: Int) {
         cornerstonePO().requireIndexAndNumberOfCornerstones(index, numberOfCornerstoneCases)

@@ -14,7 +14,7 @@ data class ActionComment(
     val debug: String? = null,
     val comment: String? = null,
     val replacementComment: String? = null,
-    val reasons: List<String>? = null,
+    val reason: String? = null,
     val attributeMoved: String? = null,
     val destination: String? = null,
 ) {
@@ -41,7 +41,7 @@ data class ActionComment(
         if (message != null) asMap["message"] = message
         if (comment != null) asMap["comment"] = comment
         if (replacementComment != null) asMap["replacementComment"] = replacementComment
-        if (reasons != null) asMap["reasons"] = reasons
+        if (reason != null) asMap["reason"] = reason
         if (attributeMoved != null) asMap["attributeMoved"] = attributeMoved
         if (destination != null) asMap["destination"] = destination
 

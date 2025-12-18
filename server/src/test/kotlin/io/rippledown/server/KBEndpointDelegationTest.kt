@@ -3,7 +3,6 @@ package io.rippledown.server
 import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.kb.KB
-import java.io.File
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
@@ -16,7 +15,7 @@ internal class KBEndpointDelegationTest {
     @BeforeTest
     fun setup() {
         kb = mockk<KB>()
-        endpoint = KBEndpoint(kb, File(""))
+        endpoint = KBEndpoint(kb)
     }
 
     @Test

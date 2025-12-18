@@ -9,7 +9,7 @@ import kotlin.random.Random
 import kotlin.time.Duration.Companion.milliseconds
 
 val GEMINI_MODEL = "gemini-2.5-flash"
-var GEMINI_API_KEY = getenv("GEMINI_API_KEY") ?: ""
+var GEMINI_API_KEY = getenv("API_KEY") ?: ""
 
 fun generativeModel(
     systemInstruction: String = "",

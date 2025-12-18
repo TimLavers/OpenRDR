@@ -34,16 +34,15 @@ The current report for the case is a list of comments. For the current case, the
 
 - If the user specifies a comment ending in a period, for example, "Go to Bondi.", do not remove the period from the end
   of the comment.
-- Summarize the report change (including the reasons if provided) and ask the user to confirm.
+- Summarize the report change and ask the user to confirm.
 
 ```json
 {
   "action": "{{USER_ACTION}}",
-  "message": "<user provided summary of the report change and request for confirmation>"
+  "message": "<summary of the report change and request for confirmation>"
 }
 ```
 
-## Step 4: Ask the user if they want to provide reasons for the report change:
+## Step 4: Inform the system to start a rule session:
 
-- If the user confirms, follow the instructions "Defining the reasons for report change".
-- If the user does not confirm, follow the instructions "Completing the change to the report".
+- Once the user confirms the report change, follow the instructions "Starting the rule session".

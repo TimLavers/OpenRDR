@@ -186,7 +186,7 @@ private class EngineBuilder(private val config: EngineConfig) {
             LAST_RULE_DESCRIPTION -> {
                 if (request.method == HttpMethod.Get) {
                     httpResponseData(json.encodeToString(config.undoRuleDescription))
-                } else if (request.method == HttpMethod.Delete){
+                } else if (request.method == HttpMethod.Delete) {
                     config.lastRuleUndoCalled = true
                     httpResponseData("OK")
                 } else {

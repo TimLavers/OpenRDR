@@ -20,6 +20,7 @@ dependencies {
     implementation(libs.filepicker)
     implementation(libs.bundles.ktor)
     implementation(libs.bundles.kotlinx)
+    implementation(libs.commonsCodec)
 
     testImplementation(testFixtures(project(":common")))
     testImplementation(compose.desktop.uiTestJUnit4)

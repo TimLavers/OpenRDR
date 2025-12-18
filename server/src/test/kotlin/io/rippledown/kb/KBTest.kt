@@ -7,31 +7,66 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
+import io.mockk.*
+import io.rippledown.kb.chat.RuleService
 import io.rippledown.model.*
 import io.rippledown.model.condition.*
 import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals
 import io.rippledown.model.condition.episodic.predicate.High
+import io.rippledown.model.condition.episodic.predicate.Is
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.external.MeasurementEvent
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.inmemory.InMemoryKB
+import io.rippledown.server.websocket.WebSocketManager
 import io.rippledown.util.shouldBeSameAs
+import io.rippledown.utils.DEFAULT_GLUCOSE_VALUE
+import io.rippledown.utils.createViewableCase
 import io.rippledown.utils.defaultDate
+import io.rippledown.utils.shouldBeSameAs
+import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class KBTest {
     private lateinit var persistentKB: InMemoryKB
     private lateinit var kb: KB
+    lateinit var webSocketManager: WebSocketManager
 
     @BeforeTest
     fun setup() {
         val kbInfo = KBInfo("id123", "Blah")
+        webSocketManager = mockk()
         kb = createKB(kbInfo)
+    }
+
+    @Test
+    fun `should call web socket manager when sending cornerstone status`() = runTest {
+        //Given
+        val sessionCase = createCase("Case1")
+        val conclusion = kb.conclusionManager.getOrCreate("Whatever.")
+        val ccStatus = kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(conclusion))
+
+        //When
+        kb.sendCornerstoneStatus()
+
+        //Then
+        coVerify { webSocketManager.sendStatus(ccStatus) }
+    }
+
+    @Test
+    fun `should call web socket manager when sending rule session completed`() = runTest {
+        //Given
+        val sessionCase = createCase("Case1")
+        val conclusion = kb.conclusionManager.getOrCreate("Whatever.")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(conclusion))
+
+        //When
+        kb.sendRuleSessionCompleted()
+
+        //Then
+        coVerify { webSocketManager.sendRuleSessionCompleted() }
     }
 
     @Test
@@ -882,6 +917,29 @@ class KBTest {
     }
 
     @Test
+    fun `should return the condition for a user expression`() = runTest {
+        //Given
+        val x = kb.attributeManager.getOrCreate("x")
+        val value = "42"
+        val case = createCase("Case", attribute = x, value = value)
+        val userExpression = "X equates to $value"
+
+        //When
+        val conditionParsingResult = kb.conditionForExpression(case, userExpression)
+
+        //Then
+        val expectedCondition = EpisodicCondition(
+            null,
+            x,
+            Is(value),
+            Current,
+            userExpression
+        )
+        conditionParsingResult.isFailure shouldBe false
+        conditionParsingResult.condition shouldBeSameAs expectedCondition
+    }
+
+    @Test
     fun `should create a condition using Gemini`() {
         //Given
         val waves = kb.attributeManager.getOrCreate("Waves")
@@ -950,6 +1008,28 @@ class KBTest {
         returnedCondition shouldBe null
     }
 
+    @Test
+    fun `should create ReasonTransformer`() = runTest {
+        //Given
+        val viewableCase = createViewableCase()
+        val ruleService = mockk<RuleService>()
+        val conditionParser = mockk<ConditionParser>()
+        kb.setConditionParser(conditionParser)
+        val reason = "elevated glucose value"
+        val condition = greaterThanOrEqualTo(null, glucose(), DEFAULT_GLUCOSE_VALUE)
+        every { conditionParser.parse(reason, any()) } returns condition
+
+        //When
+        val reasonTransformer = kb.createReasonTransformer(viewableCase, ruleService)
+        val reasonTransformation = reasonTransformer.transform(reason)
+
+        //Then
+        reasonTransformation.message shouldBe "Your reason is equivalent to 'Glucose ≥ 5.1'."
+        val slot = slot<Condition>()
+        verify { ruleService.addConditionToCurrentRuleSession(capture(slot)) }
+        slot.captured shouldBeSameAs condition
+    }
+
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")
 
     private fun createCondition(): Condition {
@@ -978,6 +1058,6 @@ class KBTest {
 
     private fun createKB(kbInfo: KBInfo): KB {
         persistentKB = InMemoryKB(kbInfo)
-        return KB(persistentKB)
+        return KB(persistentKB, webSocketManager)
     }
 }

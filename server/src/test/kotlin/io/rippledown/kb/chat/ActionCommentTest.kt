@@ -1,11 +1,10 @@
 package io.rippledown.kb.chat
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.constants.chat.USER_ACTION
+import io.kotest.matchers.types.shouldBeInstanceOf
+import io.rippledown.constants.chat.*
 import io.rippledown.fromJsonString
-import io.rippledown.kb.chat.action.AddComment
-import io.rippledown.kb.chat.action.MoveAttribute
-import io.rippledown.kb.chat.action.UndoLastRule
+import io.rippledown.kb.chat.action.*
 import kotlin.test.Test
 
 class ActionCommentTest {
@@ -44,7 +43,7 @@ class ActionCommentTest {
             debug shouldBe null
             comment shouldBe null
             replacementComment shouldBe null
-            reasons shouldBe null
+            reason shouldBe null
         }
     }
 
@@ -58,8 +57,8 @@ class ActionCommentTest {
                 "debug": "Debug info",
                 "comment": "Old comment text",
                 "replacementComment": "New comment text",
-                "reasons": ["reason1", "reason2"]
-            }
+                "reason": "reason1"
+             }
         """
 
         // When
@@ -72,9 +71,7 @@ class ActionCommentTest {
             debug shouldBe "Debug info"
             comment shouldBe "Old comment text"
             replacementComment shouldBe "New comment text"
-            reasons?.size shouldBe 2
-            reasons?.get(0) shouldBe "reason1"
-            reasons?.get(1) shouldBe "reason2"
+            reason shouldBe "reason1"
         }
     }
 
@@ -97,7 +94,7 @@ class ActionCommentTest {
             message shouldBe null
             debug shouldBe null
             comment shouldBe "Let's surf"
-            reasons shouldBe null
+            reason shouldBe null
         }
     }
 
@@ -117,12 +114,13 @@ class ActionCommentTest {
         // Then
         action shouldBe null
     }
+
     @Test
     fun moveAttribute() {
         val actionComment = ActionComment("MoveAttribute", attributeMoved = "Glucose", destination = "Age")
         with(actionComment.createActionInstance() as MoveAttribute) {
-            this.attributeMoved shouldBe "Glucose"
-            this.destination shouldBe "Age"
+            attributeMoved shouldBe "Glucose"
+            destination shouldBe "Age"
         }
     }
 
@@ -134,13 +132,61 @@ class ActionCommentTest {
 
     @Test
     fun addComment() {
-        val comment = "Beach time!"
-        val reasons = listOf("Surf is up", "Sun is out")
-        val actionComment = ActionComment("AddComment", comment = comment, reasons = reasons)
+        val commentToAdd = "Beach time!"
+        val actionComment = ActionComment(ADD_COMMENT, comment = commentToAdd)
         with(actionComment.createActionInstance() as AddComment) {
-            this.comment shouldBe comment
-            this.reasons shouldBe reasons
+            comment shouldBe commentToAdd
         }
+    }
+
+    @Test
+    fun removeComment() {
+        val commentToRemove = "Beach time!"
+        val actionComment = ActionComment(REMOVE_COMMENT, comment = commentToRemove)
+        with(actionComment.createActionInstance() as RemoveComment) {
+            comment shouldBe commentToRemove
+        }
+    }
+
+    @Test
+    fun replaceComment() {
+        val commentToRemove = "Beach time!"
+        val commentToAdd = "Surf time!"
+        val actionComment = ActionComment(REPLACE_COMMENT, comment = commentToRemove, replacementComment = commentToAdd)
+        with(actionComment.createActionInstance() as ReplaceComment) {
+            comment shouldBe commentToRemove
+            replacementComment shouldBe commentToAdd
+        }
+    }
+
+    @Test
+    fun commitRule() {
+        val actionComment = ActionComment(action = COMMIT_RULE)
+        actionComment.createActionInstance().shouldBeInstanceOf<CommitRule>()
+    }
+
+    @Test
+    fun `should parse action comment for CommitRule from JSON`() {
+        //Given
+        val json = """
+            {
+                "action": "$COMMIT_RULE",
+                "message": null,
+                "debug": null,
+                "comment": null,
+                "replacementComment": null,
+                "reason": null,
+                "attributeMoved": null,
+                "destination": null
+            }
+        """.trimIndent()
+        val actionComment = json.fromJsonString<ActionComment>()
+
+        //When
+        val instance = actionComment.createActionInstance()
+
+        //Then
+        instance.shouldBeInstanceOf<CommitRule>()
     }
 
     @Test

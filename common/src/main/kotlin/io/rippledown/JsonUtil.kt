@@ -16,6 +16,8 @@ inline fun <reified T> T.toJsonString(): String {
 inline fun <reified T> String.fromJsonString(): T {
     val json = Json {
         allowTrailingComma = true
+        allowStructuredMapKeys = true
+        ignoreUnknownKeys = true
     }
     return json.decodeFromString<T>(this)
 }

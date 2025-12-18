@@ -1,11 +1,20 @@
 package io.rippledown.kb.chat.action
 
+import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.model.caseview.ViewableCase
-import io.rippledown.model.condition.Condition
+import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.toJsonString
 
-class RemoveComment(comment: String, reasons: List<String>?) : RuleAction(comment, reasons) {
-    override suspend fun buildRule(ruleService: RuleService, currentCase: ViewableCase, conditions: List<Condition>) {
-        ruleService.buildRuleToRemoveComment(currentCase, comment, conditions)
+class RemoveComment(val comment: String) : ChatAction {
+    override suspend fun doIt(
+        ruleService: RuleService,
+        currentCase: ViewableCase?,
+        modelResponder: ModelResponder
+    ): String {
+        val sessionCase = currentCase ?: throw IllegalStateException("No current case")
+        val cornerstoneStatus = ruleService.startRuleSessionToRemoveComment(sessionCase, comment)
+        return modelResponder.response(cornerstoneStatus.toJsonString<CornerstoneStatus>())
     }
+
 }

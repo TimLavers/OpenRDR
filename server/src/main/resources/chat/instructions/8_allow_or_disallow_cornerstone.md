@@ -40,5 +40,5 @@
 
 - Once the change to the cornerstone case has been allowed or disallowed, the system will now recalculate the
   cornerstone cases.
-- Follow the instructions "Reviewing Cornerstone Cases" to continue reviewing cornerstone cases or to complete the
-  report change.
+- Follow the instructions "Reviewing Cornerstone Cases" to continue reviewing cornerstone cases.
+- If there are no remaining cornerstone cases, following the instructions "Completing the change to the report"
