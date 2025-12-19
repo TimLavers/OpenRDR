@@ -19,4 +19,4 @@ Feature: Remove previous rules
     Then the report should be "Comment 1."
     When I enter the following text into the chat panel:
       | and once more |
-    Then the interpretation report should be blank
+    Then the report should be empty
