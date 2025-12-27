@@ -257,21 +257,20 @@ class ConditionTipTest {
     }
 
     @Test
-    fun `should return null for unparseable expressions`() {
-        // Given
-        val expressionToExpected = mapOf(
-            "gobbledygook" to null,
-            "high" to null, // No attribute defined
-        )
-
+    fun `should return null for an unparseable expression`() {
         // When
-        val results = conditionTip.conditionsFor(expressionToExpected.keys.toList())
+        val results = conditionTip.conditionsFor(listOf("gobbledygook"))
 
         // Then
-        results.forEachIndexed { index, actual ->
-            val expression = expressionToExpected.keys.elementAt(index)
-            val expected = expressionToExpected[expression]
-            actual shouldBe expected
-        }
+        results[0] shouldBe null
+    }
+
+    @Test
+    fun `should return null for expression with no attribute`() {
+        // When
+        val results = conditionTip.conditionsFor(listOf("high"))
+
+        // Then
+        results[0] shouldBe null
     }
 }

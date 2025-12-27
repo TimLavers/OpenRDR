@@ -18,5 +18,5 @@ Feature: Remove previous rules
       | and again please |
     Then the report should be "Comment 1."
     When I enter the following text into the chat panel:
-      | and once more |
+      | and again please |
     Then the report should be empty

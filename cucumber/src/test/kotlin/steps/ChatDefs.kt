@@ -46,6 +46,12 @@ class ChatDefs {
         waitForBotText(CONFIRM)
     }
 
+    @Then("the chatbot has asked for confirmation and I confirm")
+    fun waitForBotRequestForConfirmationAndConfirm() {
+        waitForBotText(CONFIRM)
+        confirm()
+    }
+
     @Then("the chatbot has asked for confirmation of the (comment|reason):")
     fun waitForBotRequestForConfirmation(textToConfirm: String) {
         waitForBotText(CONFIRM, textToConfirm)
