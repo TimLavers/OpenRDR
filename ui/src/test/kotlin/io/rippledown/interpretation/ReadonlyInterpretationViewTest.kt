@@ -4,13 +4,19 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.kotest.matchers.shouldBe
+import io.mockk.every
 import io.mockk.mockk
+import io.rippledown.constants.interpretation.CONDITION_PREFIX
 import io.rippledown.decoration.BACKGROUND_COLOR
+import io.rippledown.model.Conclusion
+import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.utils.createViewableInterpretation
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -54,6 +60,50 @@ class ReadonlyInterpretationViewTest {
                 ReadonlyInterpretationView(createViewableInterpretation(), modifier = modifier, handler = handler)
             }
             requireInterpretationForCornerstone("")
+        }
+    }
+
+    @Test
+    fun `should not show tool tip for a blank interpretation`() = runTest {
+        with(composeTestRule) {
+            //Given
+            setContent {
+                ToolTipForNonEmptyInterpretation(
+                    commentIndex = -1,
+                    conclusionList = emptyList(),
+                    interpretation = mockk()
+                )
+            }
+            //When
+            //Then
+            onNodeWithContentDescription(label = CONDITION_PREFIX, substring = true).assertDoesNotExist()
+        }
+    }
+
+    @Test
+    fun `should show tool tip for a non-blank interpretation and non-empty condition list`() = runTest {
+        //Given
+        val interpretation = mockk<ViewableInterpretation>()
+        val conclusion = Conclusion(
+            42,
+            "meaning of life"
+        )
+        val condition1 = "surf's up"
+        val condition2 = "it's sunny"
+        every { interpretation.conditionsForConclusion(conclusion) } returns listOf(condition1, condition2)
+
+        with(composeTestRule) {
+            //When
+            setContent {
+                ToolTipForNonEmptyInterpretation(
+                    commentIndex = 0,
+                    conclusionList = listOf(conclusion),
+                    interpretation = interpretation
+                )
+            }
+            //Then
+            onNodeWithContentDescription(label = "$CONDITION_PREFIX$condition1").assertIsDisplayed()
+            onNodeWithContentDescription(label = "$CONDITION_PREFIX$condition2").assertIsDisplayed()
         }
     }
 

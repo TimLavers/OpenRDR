@@ -11,6 +11,7 @@ import io.mockk.*
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.model.*
 import io.rippledown.model.condition.*
+import io.rippledown.model.condition.episodic.predicate.Contains
 import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals
 import io.rippledown.model.condition.episodic.predicate.High
 import io.rippledown.model.condition.episodic.predicate.Is
@@ -932,6 +933,29 @@ class KBTest {
             null,
             x,
             Is(value),
+            Current,
+            userExpression
+        )
+        conditionParsingResult.isFailure shouldBe false
+        conditionParsingResult.condition shouldBeSameAs expectedCondition
+    }
+
+    @Test
+    fun `should return the condition for a user expression involving contains`() = runTest {
+        //Given
+        val x = kb.attributeManager.getOrCreate("x")
+        val value = "ab"
+        val case = createCase("Case", attribute = x, value = value)
+        val userExpression = "x contains b"
+
+        //When
+        val conditionParsingResult = kb.conditionForExpression(case, userExpression)
+
+        //Then
+        val expectedCondition = EpisodicCondition(
+            null,
+            x,
+            Contains("\"b\""),
             Current,
             userExpression
         )

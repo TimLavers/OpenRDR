@@ -8,6 +8,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextLayoutResult
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE
+import io.rippledown.model.Conclusion
 import io.rippledown.model.interpretationview.ViewableInterpretation
 
 interface ReadonlyInterpretationViewHandler {
@@ -40,10 +41,7 @@ fun ReadonlyInterpretationView(
     TooltipArea(
         modifier = modifier.fillMaxWidth(),
         tooltip = {
-            val showToolTip = commentIndex != -1
-            if (showToolTip) {
-                ConditionTooltip(interpretation.conditionsForConclusion(conclusionList[commentIndex]))
-            }
+            ToolTipForNonEmptyInterpretation(commentIndex, conclusionList, interpretation)
         },
         content = {
             AnnotatedTextView(
@@ -66,4 +64,16 @@ fun ReadonlyInterpretationView(
             )
         }
     )
+}
+
+@Composable
+fun ToolTipForNonEmptyInterpretation(
+    commentIndex: Int,
+    conclusionList: List<Conclusion>,
+    interpretation: ViewableInterpretation
+) {
+    val showToolTip = commentIndex != -1 && commentIndex < conclusionList.size
+    if (showToolTip) {
+        ConditionTooltip(interpretation.conditionsForConclusion(conclusionList[commentIndex]))
+    }
 }

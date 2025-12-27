@@ -101,27 +101,22 @@ class ConditionGenerator(private val attributeFor: AttributeFor) {
             val arg = args[0]  //Assume there is only one argument
             val constructorParameter = constructor.parameters[0]
             val type = constructorParameter.type
-            println("arg: $arg, type: $type")
             when (type.toString()) {
                 "kotlin.String" -> {
-                    println("class $className has a string parameter")
                     constructor.call(arg) as T
                 }
 
                 "kotlin.Double" -> {
-                    println("class $className has a double parameter")
                     val toDouble = arg!!.toDouble()
                     constructor.call(toDouble) as T
                 }
 
                 "kotlin.Int" -> {
-                    println("class $className has a double parameter")
                     val toInt = arg!!.toInt()
                     constructor.call(toInt) as T
                 }
 
                 else -> {
-                    println("class $className has a parameter of unknown type $type")
                     throw IllegalArgumentException("Unknown type for parameter")
                 }
             }

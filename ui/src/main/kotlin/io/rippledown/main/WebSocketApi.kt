@@ -32,8 +32,6 @@ open class WebSocketApi(private val client: HttpClient) {
                     .filterIsInstance<Frame.Text>()
                     .collect { frame ->
                         val receivedText = frame.readText()
-                        logger.info("RECEIVED: $receivedText")
-
                         when {
                             receivedText == RULE_SESSION_COMPLETED -> {
                                 ruleSessionCompleted()

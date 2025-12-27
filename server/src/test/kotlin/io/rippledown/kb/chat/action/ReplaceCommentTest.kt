@@ -45,4 +45,26 @@ class ReplaceCommentTest {
         coVerify { modelResponder.response(ccStatus.toJsonString<CornerstoneStatus>()) }
         response shouldBe responseFromModel
     }
+
+    @Test
+    fun `should send CornerstoneStatus after starting a rule session to replace a comment`() = runTest {
+        //Given
+        val comment = "please replace me"
+        val replacementComment = "please use me"
+        val action = ReplaceComment(comment, replacementComment)
+        val ccStatus = CornerstoneStatus(indexOfCornerstoneToReview = 42, numberOfCornerstones = 84)
+        coEvery {
+            ruleService.startRuleSessionToReplaceComment(any(), comment, replacementComment)
+        } returns ccStatus
+
+        val responseFromModel = "There are 84 cornstone cases. Do you want to review them?"
+        coEvery { modelResponder.response(any<String>()) } returns responseFromModel
+
+        //When
+        action.doIt(ruleService, currentCase, modelResponder)
+
+        //Then
+        coVerify { ruleService.sendCornerstoneStatus() }
+    }
+
 }

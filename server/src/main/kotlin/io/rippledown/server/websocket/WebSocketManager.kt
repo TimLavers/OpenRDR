@@ -18,8 +18,7 @@ class WebSocketManager {
             // Keep the session open until the client disconnects
             for (frame in session.incoming) {
                 // Handle incoming frames if needed
-                val bytes = frame.readBytes()
-                println("Received frame: ${bytes.decodeToString()}")
+                frame.readBytes()
             }
         } finally {
             connection.close()

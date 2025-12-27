@@ -14,6 +14,7 @@ class ReplaceComment(val comment: String, val replacementComment: String) : Chat
     ): String {
         val sessionCase = currentCase ?: throw IllegalStateException("No current case")
         val cornerstoneStatus = ruleService.startRuleSessionToReplaceComment(sessionCase, comment, replacementComment)
+        ruleService.sendCornerstoneStatus()
         return modelResponder.response(cornerstoneStatus.toJsonString<CornerstoneStatus>())
     }
 }

@@ -52,8 +52,8 @@ class Defs {
 
     @After("@chat")
     fun afterChatScenario(scenario: Scenario) {
-        println("Delaying for one minute after chat scenario")
-        Thread.sleep(60_000)
+        println("Delaying for 30 secs after chat scenario")
+        Thread.sleep(30_000)
     }
 
     @When("A Knowledge Base called {word} has been created")
@@ -325,7 +325,7 @@ class Defs {
                 val comment = row[3]
                 val conditionText = row[4]
                 labProxy().provideCase(caseName, mapOf(attributeName to attributeValue))
-                createRuleToAddComment(caseName, comment, conditionText)
+                if (comment != null) createRuleToAddComment(caseName, comment, conditionText)
             }
     }
 
