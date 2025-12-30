@@ -22,7 +22,23 @@ class ContainsTest : Base() {
         containsGoat.evaluate(TestResult("sheep")) shouldBe false
         containsGoat.evaluate(TestResult("goat")) shouldBe true
         containsGoat.evaluate(TestResult("goats")) shouldBe true
+        containsGoat.evaluate(TestResult("sheep and goats")) shouldBe true
         containsGoat.evaluate(TestResult("Goat")) shouldBe false
+        containsGoat.evaluate(TestResult("goatherd")) shouldBe true
+    }
+
+    @Test
+    fun `should strip enclosing double quotes from the text to be matched`() {
+        val containsGoat = Contains("\"goat\"")
+        containsGoat.evaluate(TestResult("goat")) shouldBe true
+        containsGoat.evaluate(TestResult("goatherd")) shouldBe true
+    }
+
+    @Test
+    fun `should strip enclosing single quotes from the text to be matched`() {
+        val containsGoat = Contains("'goat'")
+        containsGoat.evaluate(TestResult("goat")) shouldBe true
+        containsGoat.evaluate(TestResult("goatherd")) shouldBe true
     }
 
     @Test

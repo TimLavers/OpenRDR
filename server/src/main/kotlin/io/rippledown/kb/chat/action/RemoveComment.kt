@@ -14,6 +14,7 @@ class RemoveComment(val comment: String) : ChatAction {
     ): String {
         val sessionCase = currentCase ?: throw IllegalStateException("No current case")
         val cornerstoneStatus = ruleService.startRuleSessionToRemoveComment(sessionCase, comment)
+        ruleService.sendCornerstoneStatus()
         return modelResponder.response(cornerstoneStatus.toJsonString<CornerstoneStatus>())
     }
 

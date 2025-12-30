@@ -45,4 +45,25 @@ class RemoveCommentTest {
         coVerify { modelResponder.response(ccStatus.toJsonString<CornerstoneStatus>()) }
         response shouldBe responseFromModel
     }
+
+    @Test
+    fun `should send CornerstoneStatus after starting a rule session to remove a comment`() = runTest {
+        //Given
+        val comment = "please remove me"
+        val action = RemoveComment(comment)
+        val ccStatus = CornerstoneStatus(indexOfCornerstoneToReview = 42, numberOfCornerstones = 84)
+        coEvery {
+            ruleService.startRuleSessionToRemoveComment(any(), comment)
+        } returns ccStatus
+
+        val responseFromModel = "There are 84 cornstone cases. Do you want to review them?"
+        coEvery { modelResponder.response(any<String>()) } returns responseFromModel
+
+        //When
+        action.doIt(ruleService, currentCase, modelResponder)
+
+        //Then
+        coVerify { ruleService.sendCornerstoneStatus() }
+    }
+
 }

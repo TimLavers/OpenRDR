@@ -33,7 +33,7 @@ data object IsNotNumeric : TestResultPredicate {
 
 @Serializable
 data class Contains(val toFind: String) : TestResultPredicate {
-    override fun evaluate(result: TestResult) = result.value.text.contains(toFind)
+    override fun evaluate(result: TestResult) = result.value.text.contains(toFind.unquoted())
 
     override fun description(plural: Boolean) = if (plural) "contain \"$toFind\"" else "contains \"$toFind\""
 }

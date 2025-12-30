@@ -3,7 +3,6 @@ package io.rippledown.chat
 import dev.shreyaspatil.ai.client.generativeai.Chat
 import dev.shreyaspatil.ai.client.generativeai.type.FunctionCallPart
 import dev.shreyaspatil.ai.client.generativeai.type.GenerateContentResponse
-import dev.shreyaspatil.ai.client.generativeai.type.TextPart
 import dev.shreyaspatil.ai.client.generativeai.type.content
 import io.rippledown.llm.retry
 import io.rippledown.log.lazyLogger
@@ -59,11 +58,8 @@ class Conversation(private val chatService: ChatService, private val reasonTrans
 
     private suspend fun handleResponse(response: GenerateContentResponse): String {
         return if (response.functionCalls.isNotEmpty()) {
-            logger.info("*****Received function calls: ${response.functionCalls.joinToString { it.name }}")
             val functionResults = response.functionCalls.map { executeFunction(it) }
             val prompt = content { text("Function results: ${functionResults.joinToString(", ")}") }
-            val promptText = (prompt.parts.get(0) as TextPart).text
-            logger.info("prompt for follow-up response: '$promptText'")
             val followUpResponse = chat.sendMessage(prompt)
             followUpResponse.text?.stripEnclosingJson() ?: "No text response after function execution"
         } else {
