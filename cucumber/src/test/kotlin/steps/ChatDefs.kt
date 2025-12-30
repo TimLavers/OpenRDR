@@ -6,6 +6,7 @@ import io.cucumber.java.en.Then
 import io.rippledown.constants.chat.*
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
+import java.util.Collections.singletonList
 
 
 class ChatDefs {
@@ -96,10 +97,16 @@ class ChatDefs {
     }
 
     @Then("the chatbot response consists of the following lines:")
-    fun checkBotResponseContainsLines(phrases: DataTable) {
+    fun checkBotResponseConsistsOfTheseLines(phrases: DataTable) {
         await().atMost(ofSeconds(30)).until {
             chatPO().mostRecentBotRowIs(phrases.asList().joinToString("\n"))
+        }
+    }
 
+    @Then("the chatbot response contains the following phrase:")
+    fun checkBotResponseContainsTheseLinesLines(phrase: String) {
+        await().atMost(ofSeconds(30)).until {
+            chatPO().mostRecentBotRowContainsTerms(singletonList(phrase))
         }
     }
 

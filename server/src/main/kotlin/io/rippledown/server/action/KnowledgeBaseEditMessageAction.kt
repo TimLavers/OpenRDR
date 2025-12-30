@@ -5,13 +5,13 @@ import io.rippledown.server.ServerChatActionsInterface
 import kotlinx.serialization.json.JsonObject
 
 class KnowledgeBaseEditMessageAction: ServerAction {
-    val message: String
+    val userInstruction: String
     constructor(jsonObject: JsonObject) {
-        message = jsonObject["message"]?.toString()?.trim('"') ?: ""
+        userInstruction = jsonObject["userInstruction"]?.toString()?.trim('"') ?: ""
     }
 
     override fun doIt(application: ServerChatActionsInterface, kbId: String?): ServerChatResult {
-        val result =  if (kbId != null) application.passUserMessageToKbChat(message, kbId) else "Instruction not understood."
+        val result =  if (kbId != null) application.passUserMessageToKbChat(userInstruction, kbId) else "Instruction not understood."
         return ServerChatResult(result)
     }
 }

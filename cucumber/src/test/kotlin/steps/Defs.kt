@@ -52,8 +52,8 @@ class Defs {
 
     @After("@chat")
     fun afterChatScenario(scenario: Scenario) {
-        println("Delaying for one minute after chat scenario")
-        Thread.sleep(60_000)
+//        println("Delaying for one minute after chat scenario")
+//        Thread.sleep(60_000)
     }
 
     @When("A Knowledge Base called {word} has been created")
@@ -104,6 +104,11 @@ class Defs {
     @When("a new case with the name {word} is stored on the server")
     fun aNewCaseIsStoredOnTheServer(caseName: String) {
         labProxy().provideCase(caseName)
+    }
+
+    @When("a new case with the name {word} is stored in the Knowledge Base {word}")
+    fun aNewCaseIsStoredOnTheServerForKb(caseName: String, kbName: String) {
+        labProxy().provideCaseForKb(kbName, caseName, mapOf("Age" to "100"))
     }
 
     @When("a new case is stored on the server")
@@ -191,7 +196,12 @@ class Defs {
     }
 
     @Given("case {word} for KB {word} gets the interpretation {string} when it is provided having data:")
-    fun provideCaseWithDataForKbAndCheckInterpretation(caseName: String, kbName: String, comment: String,  dataTable: DataTable) {
+    fun provideCaseWithDataForKbAndCheckInterpretation(
+        caseName: String,
+        kbName: String,
+        comment: String,
+        dataTable: DataTable
+    ) {
         val attributeNameToValue = mutableMapOf<String, String>()
         dataTable.asMap().forEach { (t, u) -> attributeNameToValue[t] = u }
         val received = labProxy().provideCaseForKb(kbName, caseName, attributeNameToValue)
