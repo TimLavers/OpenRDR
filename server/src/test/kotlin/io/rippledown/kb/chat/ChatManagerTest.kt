@@ -12,6 +12,7 @@ import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_CONVERSATION_R
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.toJsonString
 import kotlinx.coroutines.test.runTest
 import org.slf4j.Logger
@@ -368,5 +369,28 @@ class ChatManagerTest {
         // Then
         responseToUser shouldBe "Please confirm you want to add the comment '$message'"
     }
+
+    @Test
+    fun `should process multiple actions in sequence`() = runTest {
+        // Given
+        val response = """
+            {"action": "ExemptCornerstone"}
+            {"action": "CommitRule"}
+        """.trimIndent()
+        val message = "test message"
+
+        coEvery { conversationService.response(message) } returns response
+        coEvery { ruleService.exemptCornerstoneCase() } returns CornerstoneStatus()
+        coEvery { ruleService.commitCurrentRuleSession() } returns Unit
+
+        // When
+        chatManager.response(message)
+
+        // Then
+        coVerify { ruleService.exemptCornerstoneCase() }
+        coVerify { ruleService.commitCurrentRuleSession() }
+    }
+
+
 
 }

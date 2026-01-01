@@ -13,13 +13,11 @@ Feature: Add comments with conditions
       | Let's surf. |
     And the chatbot has asked for confirmation
     And I confirm
-    And the chatbot has asked if I want to provide any reasons
-    And I confirm
+    And the chatbot has asked if I want to provide any reasons and I confirm
     And the chatbot has asked for the first reason
     And I enter the following text into the chat panel:
       | wave height is more than 0.5 |
-    And the chatbot has asked if I want to provide any more reasons
-    When I decline
+    When the chatbot has asked if I want to provide any more reasons and I decline
     Then the report should be "Let's surf."
     And the condition showing for the comment "Let's surf." is:
       | wave height > 0.5 |
@@ -38,8 +36,7 @@ Feature: Add comments with conditions
       | Let's surf. |
     And the chatbot has asked for confirmation
     And I confirm
-    And the chatbot has asked if I want to provide any reasons
-    And I confirm
+    And the chatbot has asked if I want to provide any reasons and I confirm
     And the chatbot has asked for the first reason
     When I enter the following text into the chat panel:
       | wave height is more than 2 |

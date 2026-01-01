@@ -14,7 +14,7 @@ interface RuleService {
         replacedComment: String,
         replacementComment: String
     ): CornerstoneStatus
-
+    fun exemptCornerstoneCase(): CornerstoneStatus
     fun addConditionToCurrentRuleSession(condition: Condition)
     fun conditionForExpression(case: RDRCase, expression: String): ConditionParsingResult
     fun commitCurrentRuleSession()

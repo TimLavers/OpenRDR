@@ -24,7 +24,9 @@ import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistentKB
 import io.rippledown.server.websocket.WebSocketManager
+import io.rippledown.toJsonString
 import kotlinx.coroutines.runBlocking
+
 
 class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = null) : RuleService {
     val logger = lazyLogger
@@ -199,6 +201,9 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         checkRuleSessionHistoryConsistency()
     }
 
+    //TODO allow the user to exempt a cornerstone case other than the first
+    override fun exemptCornerstoneCase() = exemptCornerstone(0)
+
     fun descriptionOfMostRecentRule(): UndoRuleDescription {
         val record = ruleSessionRecorder.idsOfRulesAddedInMostRecentSession()
             ?: return UndoRuleDescription("There are no rules to undo.", false)
@@ -369,8 +374,15 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     fun createReasonTransformer(viewableCase: ViewableCase, ruleService: RuleService) = object : ReasonTransformer {
         override suspend fun transform(reason: String): ReasonTransformation {
             val result = conditionForExpression(viewableCase.case, reason)
-            result.condition?.let(ruleService::addConditionToCurrentRuleSession)
-            //TODO Send CornerstoneStatus to the UI when a new condition is added
+            val condition = result.condition
+            if (condition != null) {
+                ruleService.addConditionToCurrentRuleSession(condition)
+                //inform the UI and the model of the update cornerstones
+                //TODO TEST THIS
+                val cornerstoneStatus = cornerstoneStatus(null)
+                sendCornerstoneStatus()
+                chatManager.response(cornerstoneStatus.toJsonString())
+            }
             return result.toExpressionTransformation()
         }
     }

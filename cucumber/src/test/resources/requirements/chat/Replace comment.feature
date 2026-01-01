@@ -16,13 +16,11 @@ Feature: Replace comment
       | Replace the flippers comment by "Don't forget sunscreen." |
     And the chatbot has asked for confirmation
     And I confirm
-    And the chatbot has asked if I want to provide any reasons
-    And I confirm
+    And the chatbot has asked if I want to provide any reasons and I confirm
     And the chatbot has asked for the first reason
     And I enter the following text into the chat panel:
       | UV more than 4 |
-    And the chatbot has asked if I want to provide any more reasons
-    When I decline
+    When the chatbot has asked if I want to provide any more reasons and I decline
     Then the report should be "Go to the beach. Don't forget sunscreen."
     And stop the client application
 
