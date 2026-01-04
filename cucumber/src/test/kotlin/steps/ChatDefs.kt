@@ -76,9 +76,33 @@ class ChatDefs {
         waitForBotText(REASON)
     }
 
+    @And("the chatbot has asked if I want to provide any reasons and I decline")
+    fun waitForBotQuestionToProvideReasonsThenDecline() {
+        waitForBotText(REASON)
+        decline()
+    }
+
+    @And("the chatbot has asked if I want to provide any reasons and I confirm")
+    fun waitForBotQuestionToProvideReasonsThenConfirm() {
+        waitForBotText(REASON)
+        confirm()
+    }
+
     @And("the chatbot has asked if I want to provide any more reasons")
     fun waitForBotQuestionToProvideMoreReasons() {
         waitForBotText(MORE_REASONS)
+    }
+
+    @And("the chatbot has asked if I want to provide any more reasons and I confirm")
+    fun waitForBotQuestionToProvideMoreReasonsThenConfirm() {
+        waitForBotText(MORE_REASONS)
+        confirm()
+    }
+
+    @And("the chatbot has asked if I want to provide any more reasons and I decline")
+    fun waitForBotQuestionToProvideMoreReasonsThenDecline() {
+        waitForBotText(MORE_REASONS)
+        decline()
     }
 
     @And("the chatbot has asked for the first reason")
@@ -145,9 +169,16 @@ class ChatDefs {
         waitForBotToSayDone()
     }
 
-    @And("the chatbot has asked if I want to allow the report of the cornerstone case to change")
-    fun waitForBotQuestionToAllowCornerstoneReportToChange() {
-        waitForBotText("allow", "change", "cornerstone")
+    @And("the chatbot has asked if want to allow the report change to the cornerstone case and I confirm")
+    fun waitForBotQuestionToAllowReportChangeToCornerstoneThenConfirm() {
+        waitForBotText("allow")
+        confirm()
+    }
+
+    @And("the chatbot has asked if want to allow the report change to cornerstone case {string} and I confirm")
+    fun waitForBotQuestionToAllowReportChangeToCornerstoneThenConfirm(name: String) {
+        waitForBotText("allow", name)
+        confirm()
     }
 
 }

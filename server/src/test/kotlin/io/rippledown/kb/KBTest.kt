@@ -1044,6 +1044,11 @@ class KBTest {
         every { conditionParser.parse(reason, any()) } returns condition
 
         //When
+        kb.startConversation(viewableCase)
+        kb.startRuleSession(
+            viewableCase.case,
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
+        )
         val reasonTransformer = kb.createReasonTransformer(viewableCase, ruleService)
         val reasonTransformation = reasonTransformer.transform(reason)
 
@@ -1052,6 +1057,19 @@ class KBTest {
         val slot = slot<Condition>()
         verify { ruleService.addConditionToCurrentRuleSession(capture(slot)) }
         slot.captured shouldBeSameAs condition
+    }
+
+    @Test
+    //TODO
+    fun `should inform the model and the UI when a condition is added`() = runTest {
+        //Given
+
+
+        //When
+
+
+        //Then
+
     }
 
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")

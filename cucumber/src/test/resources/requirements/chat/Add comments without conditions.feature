@@ -15,8 +15,7 @@ Feature: Add comments without conditions
       | We need to be at the beach. |
     And the chatbot has asked for confirmation
     And I confirm
-    And the chatbot has asked if I want to provide any reasons
-    When I decline
+    When the chatbot has asked if I want to provide any reasons and I decline
     Then the report should be "We need to be at the beach."
     And stop the client application
 
@@ -33,8 +32,7 @@ Feature: Add comments without conditions
       | Add another comment "Bring flippers." |
     And the chatbot has asked for confirmation
     And I confirm
-    And the chatbot has asked if I want to provide any reasons
-    When I decline
+    When the chatbot has asked if I want to provide any reasons and I decline
     Then the report should be "Let's surf. Bring flippers."
     And stop the client application
 

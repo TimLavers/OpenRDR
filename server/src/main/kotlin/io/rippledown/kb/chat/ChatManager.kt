@@ -1,6 +1,7 @@
 package io.rippledown.kb.chat
 
 import io.rippledown.chat.ConversationService
+import io.rippledown.extractJsonFragments
 import io.rippledown.fromJsonString
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.caseview.ViewableCase
@@ -28,12 +29,19 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
         val response = conversationService.response(message)
         logger.info("$LOG_PREFIX_FOR_CONVERSATION_RESPONSE $response")
         try {
-            return processActionComment(response.fromJsonString<ActionComment>())
+            // Split response into individual JSON objects and process each
+            val jsonFragments = extractJsonFragments(response)
+            var lastResponse = ""
+            jsonFragments.forEach { fragment ->
+                lastResponse = processActionComment(fragment.fromJsonString<ActionComment>())
+            }
+            return lastResponse
         } catch (e: Exception) {
             logger.error("Failed to process ActionComment: $response", e)
             return "System error. See server.log: '$response'"
         }
     }
+
 
     //Either pass on the model's response to the user or take some action
     suspend fun processActionComment(actionComment: ActionComment): String {

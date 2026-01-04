@@ -166,6 +166,12 @@ class ActionCommentTest {
     }
 
     @Test
+    fun exemptCornerstone() {
+        val actionComment = ActionComment(action = EXEMPT_CORNERSTONE)
+        actionComment.createActionInstance().shouldBeInstanceOf<ExemptCornerstone>()
+    }
+
+    @Test
     fun `should parse action comment for CommitRule from JSON`() {
         //Given
         val json = """

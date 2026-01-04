@@ -15,13 +15,11 @@ Feature: Remove comment
       | Remove the flippers comment |
     And the chatbot has asked for confirmation
     And I confirm
-    And the chatbot has asked if I want to provide any reasons
-    And I confirm
+    And the chatbot has asked if I want to provide any reasons and I confirm
     And the chatbot has asked for the first reason
     And I enter the following text into the chat panel:
       | wave height is more than 0.5 |
-    And the chatbot has asked if I want to provide any more reasons
-    When I decline
+    When the chatbot has asked if I want to provide any more reasons and I decline
     Then the report should be "Go to the beach."
     And stop the client application
 

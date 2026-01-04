@@ -57,7 +57,7 @@ object KBChatService {
         "5_defining_the_reasons.md",
 
         "7_transform-reason.md",
-
+        "8_allow_or_disallow_cornerstone.md",
         "9_completing_the_report_change.md",
         "10_undoing_the_report_change.md",
         "11_reordering_the_case_attributes.md",
@@ -75,7 +75,6 @@ object KBChatService {
         "ADD" to ADD,
         "ADD_A_COMMENT" to ADD_A_COMMENT,
         "ADD_COMMENT" to ADD_COMMENT,
-        "ALLOW_REPORT_CHANGE" to ALLOW_REPORT_CHANGE,
         "ATTRIBUTES" to viewableCase.attributes().joinToString("\n") { it.name },
         "COMMENTS" to viewableCase.case.interpretation.toComments(),
         "TRANSFORM_REASON" to TRANSFORM_REASON,
@@ -99,6 +98,7 @@ object KBChatService {
         "DEBUG_ACTION" to DEBUG_ACTION,
         "USER_ACTION" to USER_ACTION,
         "COMMIT_RULE" to COMMIT_RULE,
+        "EXEMPT_CORNERSTONE" to EXEMPT_CORNERSTONE,
         "UNDO_LAST_RULE" to UNDO_LAST_RULE,
         "MOVE_ATTRIBUTE" to MOVE_ATTRIBUTE
     )

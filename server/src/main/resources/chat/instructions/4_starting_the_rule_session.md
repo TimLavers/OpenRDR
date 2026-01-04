@@ -47,4 +47,6 @@ been started. Wait for the message
 
 - If the user wants to provide reasons for the report change, follow the instructions "Defining the reasons for report
   change".
-- Otherwise, follow the instructions "Completing the change to the report"
+- Otherwise, if there are no remaining cornerstone cases, follow the instructions "Completing the change to the report".
+- Otherwise, if there are remaining cornerstone cases, follow the instructions "Allowing or Disallowing the change to
+  the Cornerstone Case report".
