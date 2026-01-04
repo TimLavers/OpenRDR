@@ -34,6 +34,12 @@ class CornerstonePO(private val contextProvider: () -> AccessibleContext) {
         }
     }
 
+    fun requireNoCornerstoneCases() {
+        waitUntilAsserted {
+            contextProvider().find(CORNERSTONE_CASE_NAME_ID) shouldBe null
+        }
+    }
+
     fun requireCornerstoneCaseNotToBeShowing(ccName: String) {
         waitUntilAsserted {
             contextProvider().find(CORNERSTONE_CASE_NAME_ID)?.accessibleName shouldNotBe ccName

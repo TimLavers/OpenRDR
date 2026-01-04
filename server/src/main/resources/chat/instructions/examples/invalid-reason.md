@@ -26,8 +26,17 @@ Assistant:
 
 ```json
 {
+  "action": "{{ADD_COMMENT}}",
+  "comment": "Let's go to the beach."
+}
+```
+
+Assistant:
+
+```json
+{
   "action": "USER_ACTION",
-  "message": "{{WOULD_YOU_LIKE}} to provide a {{REASON}} based on the values in this case for adding this comment?"
+  "message": "{{WOULD_YOU_LIKE}} to provide a {{REASON}} for adding this comment?"
 }
 ```
 
@@ -56,7 +65,7 @@ Assistant:
 
 which returns the JSON:
 
-```json{
+```json
 {
   "isTransformed": true,
   "message": "Your reason is equivalent to: sun is \"out\"."
@@ -80,10 +89,6 @@ Assistant:
 
 ```json
 {
-  "action": "ADD_COMMENT",
-  "comment": "Let's go to the beach.",
-  "reasons": [
-    "sun is \"out\""
-  ]
+  "action": "{{COMMIT_RULE}}"
 }
 ```

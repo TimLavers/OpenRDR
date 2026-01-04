@@ -1,11 +1,20 @@
 package io.rippledown.kb.chat.action
 
+import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.model.caseview.ViewableCase
-import io.rippledown.model.condition.Condition
+import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.toJsonString
 
-class ReplaceComment(comment: String, val replacementComment: String, reasons: List<String>?) : RuleAction(comment, reasons) {
-    override suspend fun buildRule(ruleService: RuleService, currentCase: ViewableCase, conditions: List<Condition>) {
-        ruleService.buildRuleToReplaceComment(currentCase, comment, replacementComment, conditions)
+class ReplaceComment(val comment: String, val replacementComment: String) : ChatAction {
+    override suspend fun doIt(
+        ruleService: RuleService,
+        currentCase: ViewableCase?,
+        modelResponder: ModelResponder
+    ): String {
+        val sessionCase = currentCase ?: throw IllegalStateException("No current case")
+        val cornerstoneStatus = ruleService.startRuleSessionToReplaceComment(sessionCase, comment, replacementComment)
+        ruleService.sendCornerstoneStatus()
+        return modelResponder.response(cornerstoneStatus.toJsonString<CornerstoneStatus>())
     }
 }

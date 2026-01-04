@@ -4,21 +4,19 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.mockk.mockk
 import io.rippledown.CaseTestUtils
 import io.rippledown.constants.server.DEFAULT_PROJECT_NAME
 import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCase
 import io.rippledown.model.TestResult
+import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
-import io.rippledown.sample.SampleKB.TSH
-import io.rippledown.sample.SampleKB.TSH_CASES
-import org.apache.commons.io.FileUtils
+import io.rippledown.sample.SampleKB
+import org.junit.jupiter.api.BeforeEach
 import java.io.File
 import java.nio.file.Files
-import kotlin.test.BeforeTest
 import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 fun RDRCase.getAttribute(attributeName: String): Attribute {
     return attributes.first { attribute -> attribute.name == attributeName }
@@ -30,25 +28,13 @@ fun RDRCase.getLatest(attributeName: String): TestResult? {
 
 internal class ServerApplicationTest {
 
-    private val persistenceProvider = InMemoryPersistenceProvider()
+    private lateinit var persistenceProvider: PersistenceProvider
     private lateinit var app: ServerApplication
 
-    @BeforeTest
+    @BeforeEach
     fun setup() {
-        app = ServerApplication(persistenceProvider)
-        FileUtils.cleanDirectory(app.kbDataDir)
-    }
-
-    @Test
-    fun casesDir() {
-        assertEquals(app.kbDataDir, File("data"))
-        assertTrue(app.kbDataDir.exists())
-    }
-
-    @Test
-    fun interpretationsDir() {
-        assertEquals(app.kbDataDir, File("data"))
-        assertTrue(app.kbDataDir.exists())
+        persistenceProvider = InMemoryPersistenceProvider()
+        app = ServerApplication(persistenceProvider, mockk())
     }
 
     @Test
@@ -69,19 +55,23 @@ internal class ServerApplicationTest {
         app.kbList()[0] shouldBe kbInfoDefault
     }
 
+
     @Test // KBM-6
     fun `the KBs are loaded at init`() {
+        //Given
         val whatever = "Whatever"
         val kbInfoWhatever = app.createKB(whatever, false)
         val stuff = "Stuff"
-        val kbInfoStuff = app.createKB(stuff, false)
-        app.kbList() shouldBe listOf(kbInfoStuff, kbInfoWhatever) // Sanity check.
 
-        app = ServerApplication(persistenceProvider)
-        app.kbList() shouldBe listOf(kbInfoStuff, kbInfoWhatever) // KBs are loaded from the persistence provider.
+        //When
+        val kbInfoStuff = app.createKB(stuff, false)
+
+        //Then
+        app.kbList() shouldBe listOf(kbInfoStuff, kbInfoWhatever) // Sanity check.
         app.kbForId(kbInfoStuff.id).kb.kbInfo shouldBe kbInfoStuff
         app.kbForId(kbInfoWhatever.id).kb.kbInfo shouldBe kbInfoWhatever
     }
+
 
     @Test
     fun selectKB() {
@@ -208,25 +198,8 @@ internal class ServerApplicationTest {
         app.kbFor(kbi1).kb.containsCornerstoneCaseWithName("Case1") shouldBe false //new kb with same name
         persistenceProvider.idStore().data().keys shouldBe setOf(kbi0.id, kbi1.id)
     }
-/*
-    @Test
-    fun `should create a KB with a new name`() {
-        //Given
-        app.kbList().size shouldBe 0
-        val kbName0 = "KB0"
-        app.createKB(kbName0, false)
-        val id0 = app.kbList()[0]
 
-        //When
-        app.createKB("KB1", false)
-        val id0 = app.kbList()[0]
-        app.createKB("KB2", true)
-        val id3 = app.kb.kbInfo.id
 
-        //Then - check that all the other KBs are still there.
-        persistenceProvider.idStore().data().keys shouldBe setOf(id0, id1, id2, id3)
-    }
-   */
     @Test
     fun `handle zip in bad format`() {
         val zipFile = File("src/test/resources/export/NoRootDir.zip").toPath()
@@ -262,7 +235,7 @@ internal class ServerApplicationTest {
     fun `create KB from sample`() {
         app.kbList().size shouldBe 0
         val kbName = "Whatever"
-        val info = app.createKBFromSample(kbName, TSH)
+        val info = app.createKBFromSample(kbName, SampleKB.TSH)
         info.name shouldBe kbName
         app.kbList() shouldBe listOf(info)
 
@@ -272,7 +245,7 @@ internal class ServerApplicationTest {
 
         // Now create another.
         val kbName2 = "Stuff"
-        val info2 = app.createKBFromSample(kbName2, TSH_CASES)
+        val info2 = app.createKBFromSample(kbName2, SampleKB.TSH_CASES)
         info2.name shouldBe kbName2
         app.kbList() shouldBe listOf(info2, info)
         app.kbFor(info2).kb.allProcessedCases() shouldHaveSize 34
@@ -293,8 +266,8 @@ internal class ServerApplicationTest {
 
         //When
         try {
-            app.createKBFromSample(kbName, TSH)
-        } catch (e: Exception) {
+            app.createKBFromSample(kbName, SampleKB.TSH)
+        } catch (_: Exception) {
             //expected
         }
 

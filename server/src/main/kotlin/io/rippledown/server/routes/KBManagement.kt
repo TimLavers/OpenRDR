@@ -9,10 +9,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.rippledown.constants.api.*
 import io.rippledown.sample.SampleKB
+import io.rippledown.server.OpenRDRServer.logger
 import io.rippledown.server.ServerApplication
-import io.rippledown.server.logger
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.io.BufferedOutputStream
 import java.io.ByteArrayOutputStream
 

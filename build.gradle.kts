@@ -5,7 +5,7 @@ apply(from = "repositories.gradle.kts")
 plugins {
     kotlin("jvm") version "2.2.0"
     kotlin("plugin.serialization") version "2.2.0"
-    id("io.ktor.plugin") version "3.1.2"
+    id("io.ktor.plugin") version "3.2.3"
     idea
     alias(libs.plugins.compose) apply false
     alias(libs.plugins.composeCompiler) apply false

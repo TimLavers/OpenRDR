@@ -4,9 +4,10 @@ import androidx.compose.runtime.InternalComposeApi
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
-import io.ktor.client.engine.cio.CIO
+import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.websocket.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
@@ -17,7 +18,11 @@ import io.rippledown.constants.api.*
 import io.rippledown.constants.server.CASE_ID
 import io.rippledown.constants.server.EXPRESSION
 import io.rippledown.constants.server.KB_ID
-import io.rippledown.model.*
+import io.rippledown.log.lazyLogger
+import io.rippledown.model.CasesInfo
+import io.rippledown.model.Conclusion
+import io.rippledown.model.KBInfo
+import io.rippledown.model.OperationResult
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
@@ -25,17 +30,11 @@ import io.rippledown.model.rule.*
 import io.rippledown.sample.SampleKB
 import java.io.File
 
-interface KbState {
-    fun kbChanged(kbInfo: KBInfo?, notifyListeners: Boolean = false)
-    fun currentKB(): KBInfo?
-    fun attachListener(callback: (KBInfo?) -> Unit)
-}
-
 class Api(
     engine: HttpClientEngine = CIO.create()
 ) {
-    val kbState: KbState = ClientState()
-    private val client = HttpClient(engine) {
+    private var currentKB: KBInfo? = null
+    val client = HttpClient(engine) {
         install(ContentNegotiation) {
             json()
         }
@@ -44,49 +43,56 @@ class Api(
             connectTimeoutMillis = 30_000
             socketTimeoutMillis = 30_000
         }
+        install(WebSockets)
     }
+
+    private val logger = lazyLogger
 
     private suspend fun HttpRequestBuilder.setKBParameter() = parameter(KB_ID, kbInfo().id)
 
     private fun HttpRequestBuilder.setCaseIdParameter(caseId: Long) = parameter(CASE_ID, caseId)
 
+    private val webSocketManager = WebSocketApi(client)
+
+    suspend fun startWebSocketSession(
+        updateCornerstoneStatus: (CornerstoneStatus) -> Unit,
+        ruleSessionCompleted: () -> Unit
+    ) {
+        webSocketManager.startSession(updateCornerstoneStatus, ruleSessionCompleted)
+    }
     fun shutdown() {
         // client.close() // Uncomment if needed, but not required for CIO engine
         // engine.close() // Uncomment if needed, but not required for CIO engine
     }
 
     suspend fun createKB(name: String): KBInfo {
-        val currentKB = client.post("$API_URL$CREATE_KB") {
+        currentKB = client.post("$API_URL$CREATE_KB") {
             contentType(Plain)
             setBody(name)
-        }.body<KBInfo?>()
-        kbState.kbChanged(currentKB)
+        }.body()
         return currentKB ?: throw IllegalStateException("Failed to create KB")
     }
 
     suspend fun createKBFromSample(name: String, sample: SampleKB): KBInfo {
-        val currentKB = client.post("$API_URL$CREATE_KB_FROM_SAMPLE") {
+        currentKB = client.post("$API_URL$CREATE_KB_FROM_SAMPLE") {
             contentType(Json)
             setBody(Pair(name, sample))
-        }.body<KBInfo?>()
-        kbState.kbChanged(currentKB)
+        }.body()
         return currentKB ?: throw IllegalStateException("Failed to create KB from sample")
     }
 
     suspend fun selectKB(id: String): KBInfo {
-        val currentKB = client.post("$API_URL$SELECT_KB") {
+        currentKB = client.post("$API_URL$SELECT_KB") {
             contentType(Plain)
             setBody(id)
-        }.body<KBInfo?>()
-        kbState.kbChanged(currentKB)
+        }.body()
         return currentKB ?: throw IllegalStateException("Failed to select KB")
     }
 
     @OptIn(InternalComposeApi::class)
     suspend fun kbInfo(): KBInfo {
-        kbState.currentKB()?.let { return it }
-        val currentKB = client.get("$API_URL$DEFAULT_KB").body<KBInfo?>()
-        kbState.kbChanged(currentKB)
+        currentKB?.let { return it }
+        currentKB = client.get("$API_URL$DEFAULT_KB").body<KBInfo>()
         return currentKB ?: throw IllegalStateException("No default KB available")
     }
 
@@ -109,7 +115,7 @@ class Api(
 
     suspend fun importKBFromZip(file: File): KBInfo {
         val data = file.readBytes()
-        val currentKB = client.post("$API_URL$IMPORT_KB") {
+        currentKB = client.post("$API_URL$IMPORT_KB") {
             contentType(ContentType.Application.Zip)
             setBody(
                 MultiPartFormDataContent(
@@ -125,8 +131,7 @@ class Api(
                     }
                 )
             )
-        }.body<KBInfo?>()
-        kbState.kbChanged(currentKB)
+        }.body()
         return currentKB!!
     }
 
@@ -275,28 +280,24 @@ class Api(
         }.body()
     }
 
-    suspend fun startConversation(caseId: Long?): String {
-        println("-------: Start conversation")
+    suspend fun startConversation(caseId: Long): String {
         return client.post("$API_URL$START_CONVERSATION") {
             contentType(Plain)
             setKBParameter()
-            caseId?.let { setCaseIdParameter(it) }
+            setCaseIdParameter(caseId)
         }.body()
     }
 
-    suspend fun sendUserMessage(message: String, caseId: Long?): String {
-        println("-------: Send user message: $message, caseId: $caseId")
-        val result = client.post("$API_URL$SEND_USER_MESSAGE") {
+    suspend fun sendUserMessage(message: String, caseId: Long): String {
+        return client.post("$API_URL$SEND_USER_MESSAGE") {
             contentType(Plain)
             setKBParameter()
-            caseId?.let { setCaseIdParameter(it) }
+            setCaseIdParameter(caseId)
             setBody(message)
-        }.body<ServerChatResult>()
-        if (result.kbInfo != null) {
-            kbState.kbChanged(result.kbInfo, true)
-        }
-        return result.userMessage
+        }.body()
     }
+
+
 
     suspend fun lastRuleDescription(): UndoRuleDescription {
         return client.get("$API_URL$LAST_RULE_DESCRIPTION") {

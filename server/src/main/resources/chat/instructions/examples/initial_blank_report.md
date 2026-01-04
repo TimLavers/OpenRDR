@@ -26,8 +26,27 @@ Assistant:
 
 ```json
 {
+  "action": "{{ADD_COMMENT}}",
+  "comment": "Let's go to the beach."
+}
+```
+
+System:
+
+```json
+{
+  "cornerstoneToReview": null,
+  "indexOfCornerstoneToReview": -1,
+  "numberOfCornerstones": 0
+}
+```
+
+Assistant:
+
+```json
+{
   "action": "USER_ACTION",
-  "message": "{{WOULD_YOU_LIKE}} to provide a {{REASON}} based on the values in this case for adding this comment?"
+  "message": "{{WOULD_YOU_LIKE}} to provide a {{REASON}} for adding this comment?"
 }
 ```
 
@@ -89,11 +108,6 @@ Assistant:
 
 ```json
 {
-  "action": "ADD_COMMENT",
-  "comment": "Let's go to the beach.",
-  "reasons": [
-    "sun is \"hot\"",
-    "waves > 1"
-  ]
+  "action": "{{COMMIT_RULE}}"
 }
 ```

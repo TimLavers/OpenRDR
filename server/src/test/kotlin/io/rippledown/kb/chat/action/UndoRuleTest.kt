@@ -8,6 +8,6 @@ class UndoRuleTest: ActionTestBase() {
     @Test
     fun `undoes last rule`() = runTest{
         UndoLastRule().doIt(ruleService, currentCase, modelResponder)
-        coVerify { ruleService.undoLastRule() }
+        coVerify { ruleService.undoLastRuleSession() }
     }
 }

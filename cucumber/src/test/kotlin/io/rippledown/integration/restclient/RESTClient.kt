@@ -15,6 +15,8 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.RuleConditionList
+import io.rippledown.model.condition.episodic.predicate.Contains
+import io.rippledown.model.condition.episodic.predicate.Is
 import io.rippledown.model.condition.episodic.predicate.IsNotBlank
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.diff.Addition
@@ -25,9 +27,10 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import java.util.concurrent.atomic.AtomicReference
 
+typealias AttributeGetter = (String) -> Attribute
 
 class RESTClient {
-    private val endpoint = "http://localhost:9090"
+    private val endpoint = "http://localhost:$PORT"
     private val api = Api()
 
     private val jsonClient = HttpClient(CIO) {
@@ -108,12 +111,12 @@ class RESTClient {
     }
 
     fun provideCaseForKB(kbName: String, externalCase: ExternalCase) = runBlocking {
-            jsonClient.put(endpoint + INTERPRET_CASE) {
-                contentType(ContentType.Application.Json)
-                setBody(externalCase)
-                parameter(KB_NAME, kbName)
-            }.body<RDRCase>()
-        }
+        jsonClient.put(endpoint + INTERPRET_CASE) {
+            contentType(ContentType.Application.Json)
+            setBody(externalCase)
+            parameter(KB_NAME, kbName)
+        }.body<RDRCase>()
+    }
 
     fun createRuleToAddText(caseName: String, text: String, vararg conditions: String = arrayOf()): ViewableCase {
         val currentCase = getCaseWithName(caseName)!!
@@ -121,22 +124,13 @@ class RESTClient {
         runBlocking { api.startRuleSession(sessionStartRequest) }
 
         val listOfConditions = conditions.map { conditionText ->
-                getOrCreateCondition(parseToCondition(conditionText))
+            getOrCreateCondition(parseToCondition(conditionText, { getOrCreateAttribute(it) }))
         }
 
         val ruleRequest = RuleRequest(currentCase.id!!, RuleConditionList(listOfConditions))
         return runBlocking { api.commitSession(ruleRequest) }
     }
 
-    private fun parseToCondition(conditionText: String): Condition {
-        val firstWord = conditionText.split(" ")[0]
-        val attribute = getOrCreateAttribute(firstWord)
-        val remainderOfExpression = conditionText.substring(firstWord.length + 1)
-        if (remainderOfExpression != "is in case") {
-            throw IllegalArgumentException("Only 'is in case' is supported")
-        }
-        return EpisodicCondition(null, attribute, IsNotBlank, Current)
-    }
 
     fun createKB(name: String) {
         runBlocking {
@@ -154,6 +148,32 @@ class RESTClient {
             //expected
         } finally {
             jsonClient.close()
+        }
+    }
+}
+
+fun parseToCondition(conditionText: String, attributeGetter: (String) -> Attribute): Condition {
+    val firstWord = conditionText.split(" ")[0]
+    val attribute = attributeGetter(firstWord)
+    val remainderOfExpression = conditionText.substring(firstWord.length + 1)
+
+    return when {
+        remainderOfExpression == "is in case" -> {
+            EpisodicCondition(null, attribute, IsNotBlank, Current)
+        }
+
+        remainderOfExpression.startsWith("is ") -> {
+            val value = remainderOfExpression.substring(3)
+            EpisodicCondition(null, attribute, Is(value), Current)
+        }
+
+        remainderOfExpression.startsWith("contains ") -> {
+            val value = remainderOfExpression.substring(9)
+            EpisodicCondition(null, attribute, Contains(value), Current)
+        }
+
+        else -> {
+            throw IllegalArgumentException("Only 'is in case', 'is <value>', or 'contains <value>' is supported")
         }
     }
 }

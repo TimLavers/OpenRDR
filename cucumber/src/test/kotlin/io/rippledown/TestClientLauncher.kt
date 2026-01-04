@@ -37,7 +37,7 @@ class TestClientLauncher {
                 val handler = object : Handler {
                     override var api = api
                     override var isClosing: () -> Boolean = { false }
-                    override fun showingCornerstone(isShowingCornerstone: Boolean) {
+                    override fun setWindowSize(isShowingCornerstone: Boolean, isShowingChat: Boolean) {
                         if (isShowingCornerstone) resizeWindow(EXPANDED_WINDOW_SIZE) else resizeWindow(
                             DEFAULT_WINDOW_SIZE
                         )

@@ -1,6 +1,5 @@
 @chat
 Feature: Add comments without conditions
-
   Scenario: The user should be able to use the chat to add a comment to a blank report, with no conditions
     Given case Bondi is provided having data:
       | Wave | excellent |
@@ -13,12 +12,11 @@ Feature: Add comments without conditions
     And I confirm
     And the chatbot has asked for what comment I want to add
     And I enter the following text into the chat panel:
-      | Let's surf. |
+      | We need to be at the beach. |
     And the chatbot has asked for confirmation
     And I confirm
-    And the chatbot has asked if I want to provide any reasons
-    When I decline
-    Then the report should be "Let's surf."
+    When the chatbot has asked if I want to provide any reasons and I decline
+    Then the report should be "We need to be at the beach."
     And stop the client application
 
   Scenario: The user should be able to use the chat to add two comments with no conditions
@@ -34,8 +32,7 @@ Feature: Add comments without conditions
       | Add another comment "Bring flippers." |
     And the chatbot has asked for confirmation
     And I confirm
-    And the chatbot has asked if I want to provide any reasons
-    When I decline
+    When the chatbot has asked if I want to provide any reasons and I decline
     Then the report should be "Let's surf. Bring flippers."
     And stop the client application
 

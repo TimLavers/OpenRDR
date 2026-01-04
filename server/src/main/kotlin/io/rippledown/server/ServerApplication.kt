@@ -12,15 +12,20 @@ import io.rippledown.model.ServerChatResult
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.postgres.PostgresPersistenceProvider
 import io.rippledown.sample.SampleKB
+import io.rippledown.server.websocket.WebSocketManager
 import io.rippledown.util.EntityRetrieval
 import java.io.File
 import kotlin.io.path.createTempDirectory
 import kotlinx.coroutines.runBlocking
 
-class ServerApplication(private val persistenceProvider: PersistenceProvider = PostgresPersistenceProvider()) {
+class ServerApplication(
+    private val persistenceProvider: PersistenceProvider = PostgresPersistenceProvider(),
+    private val webSocketManager: WebSocketManager
+) {
     private val logger = lazyLogger
-    val kbDataDir = File("data").apply { mkdirs() }
-    private val kbManager = KBManager(persistenceProvider)
+
+    //    val kbDataDir = File("data").apply { mkdirs() }
+    private val kbManager = KBManager(persistenceProvider, webSocketManager)
     private val idToKBEndpoint = mutableMapOf<String, KBEndpoint>()
     private val chatManager: ServerChatManager
 
@@ -116,6 +121,7 @@ class ServerApplication(private val persistenceProvider: PersistenceProvider = P
     private fun kbDataFile(kb: KB) = File(kbDataDir, kb.kbInfo.id)
 
     private fun kbEndpoint(kb: KB) = KBEndpoint(kb, kbDataFile(kb))
+    private fun kbEndpoint(kb: KB) = KBEndpoint(kb)
 
     private fun loadKnownKB(kbInfo: KBInfo) {
         val kb = (kbManager.openKB(kbInfo.id) as EntityRetrieval.Success<KB>).entity

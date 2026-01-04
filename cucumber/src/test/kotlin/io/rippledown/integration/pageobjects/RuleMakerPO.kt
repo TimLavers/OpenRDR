@@ -1,6 +1,7 @@
 package io.rippledown.integration.pageobjects
 
 import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.comparables.shouldBeGreaterThanOrEqualTo
 import io.kotest.matchers.shouldBe
@@ -77,6 +78,12 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
     fun clickCancelButton() {
         waitForContextToBeNotNull(contextProvider, CANCEL_RULE_BUTTON)
         execute { contextProvider().find(CANCEL_RULE_BUTTON)!!.accessibleAction!!.doAccessibleAction(0) }
+    }
+
+    fun waitForOneAvailableCondition() {
+        await().atMost(ofSeconds(20)).untilAsserted {
+            allAvailableConditions() shouldHaveSize 1
+        }
     }
 
     fun requireAvailableConditions(expectedConditions: List<String>) {

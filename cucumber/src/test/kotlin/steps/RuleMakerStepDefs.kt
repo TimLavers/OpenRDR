@@ -264,6 +264,7 @@ class RuleMakerStepDefs {
         val expectedConditionText = dataTable.cell(0, 0)
         val expectedToolTip = dataTable.cell(0, 1)
         with(ruleMakerPO()) {
+            waitForOneAvailableCondition()
             requireAvailableConditions(listOf(expectedConditionText))
             movePointerToFirstAvailableCondition()
             requireFirstAvailableConditionToolTip(expectedToolTip)
