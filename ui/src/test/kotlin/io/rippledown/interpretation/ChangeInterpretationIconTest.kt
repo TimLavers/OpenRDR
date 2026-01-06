@@ -14,7 +14,7 @@ class ChangeInterpretationIconTest {
     @Test
     fun `should call onClick when clicked`() {
         //Given
-        val onClick = mockk<OnClick>()
+        val onClick = mockk<OnClick>(relaxed = true)
         with(composeTestRule) {
             setContent {
                 ChangeInterpretationIcon(onClick)

@@ -31,8 +31,8 @@ class OpenRDRUIForRuleActionTest {
 
     @Before
     fun setUp() {
-        api = mockk<Api>()
-        handler = mockk<Handler>()
+        api = mockk<Api>(relaxed = true)
+        handler = mockk<Handler>(relaxed = true)
         coEvery { handler.api } returns api
         coEvery { handler.isClosing } returns { true }
     }

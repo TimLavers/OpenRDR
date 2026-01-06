@@ -28,7 +28,7 @@ class ApplicationBarTest {
 
     @Before
     fun setUp() {
-        handler = mockk<AppBarHandler>()
+        handler = mockk<AppBarHandler>(relaxed = true)
         every { handler.kbList } returns { emptyList() }
     }
 

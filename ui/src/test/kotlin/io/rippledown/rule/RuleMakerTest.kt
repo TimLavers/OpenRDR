@@ -36,7 +36,7 @@ class RuleMakerTest {
         }
         conditionsShown = allSuggestions.map { it.asText() }
         suggestionConditions = allSuggestions.map { it.initialSuggestion() }
-        handler = mockk<RuleMakerHandler>()
+        handler = mockk<RuleMakerHandler>(relaxed = true)
         every { handler.conditionForExpression(any()) } returns ConditionParsingResult()
     }
 
@@ -313,7 +313,7 @@ class RuleMakerWithReusableEditableSuggestionsTest {
         }
         conditionsShown = allSuggestions.map { it.asText() }
         suggestionConditions = allSuggestions.map { it.initialSuggestion() }
-        handler = mockk<RuleMakerHandler>()
+        handler = mockk<RuleMakerHandler>(relaxed = true)
     }
 
     @Test

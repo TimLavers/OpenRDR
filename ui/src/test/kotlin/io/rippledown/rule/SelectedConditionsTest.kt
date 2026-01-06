@@ -24,7 +24,7 @@ class SelectedConditionsTest {
         with(composeTestRule) {
             //Given
             setContent {
-                SelectedConditions(conditions, mockk())
+                SelectedConditions(conditions, mockk(relaxed = true))
             }
 
             //Then
@@ -34,7 +34,7 @@ class SelectedConditionsTest {
 
     @Test
     fun `should call the handler when the remove icon associated with a selected condition is clicked`() {
-        val handler = mockk<SelectedConditionsHandler>()
+        val handler = mockk<SelectedConditionsHandler>(relaxed = true)
 
         with(composeTestRule) {
             //Given
@@ -49,5 +49,4 @@ class SelectedConditionsTest {
             verify { handler.onRemoveCondition(conditions[2]) }
         }
     }
-
 }

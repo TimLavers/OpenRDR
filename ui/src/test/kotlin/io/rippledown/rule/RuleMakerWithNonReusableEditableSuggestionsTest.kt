@@ -27,7 +27,7 @@ class RuleMakerWithNonReusableEditableSuggestionsTest {
         }
         conditionsShown = allSuggestions.map { it.asText() }
         suggestionConditions = allSuggestions.map { it.initialSuggestion() }
-        handler = mockk<RuleMakerHandler>()
+        handler = mockk<RuleMakerHandler>(relaxed = true)
     }
 
     @Test

@@ -28,6 +28,19 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
 
+sourceSets {
+    main {
+        resources {
+            srcDir(rootProject.projectDir.resolve("shared-resources"))
+        }
+    }
+    test {
+        resources {
+            srcDir(rootProject.projectDir.resolve("shared-test-resources"))
+        }
+    }
+}
+
 application {
     mainClass.set("io.rippledown.server.OpenRDRServerKt")
 }

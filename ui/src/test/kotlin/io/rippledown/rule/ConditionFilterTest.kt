@@ -21,7 +21,7 @@ class ConditionFilterTest {
             //Given
             val filter = "Waves are high"
             setContent {
-                ConditionFilter(filter, false, handler = mockk())
+                ConditionFilter(filter, false, handler = mockHandler())
             }
 
             //Then
@@ -34,7 +34,7 @@ class ConditionFilterTest {
         with(composeTestRule) {
             //Given
             val filter = "Waves are high"
-            val handler = mockk<ConditionFilterHandler>()
+            val handler = mockHandler()
             setContent {
                 ConditionFilter("", false, handler = handler)
             }
@@ -51,7 +51,7 @@ class ConditionFilterTest {
     fun `should show the waiting indicator if specified`() {
         with(composeTestRule) {
             //Given
-            val handler = mockk<ConditionFilterHandler>()
+            val handler = mockHandler()
             setContent {
                 ConditionFilter("", true, handler = handler)
             }
@@ -65,7 +65,7 @@ class ConditionFilterTest {
     fun `should not show the waiting indicator if it is not specified`() {
         with(composeTestRule) {
             //Given
-            val handler = mockk<ConditionFilterHandler>()
+            val handler = mockHandler()
             setContent {
                 ConditionFilter("", false, handler = handler)
             }
@@ -79,7 +79,7 @@ class ConditionFilterTest {
     fun `should show label to enter or select a condition if there is no error`() {
         with(composeTestRule) {
             //Given
-            val handler = mockk<ConditionFilterHandler>()
+            val handler = mockHandler()
 
             //When
             setContent {
@@ -95,7 +95,7 @@ class ConditionFilterTest {
     fun `should show a warning if the expression cannot be parsed`() {
         with(composeTestRule) {
             //Given
-            val handler = mockk<ConditionFilterHandler>()
+            val handler = mockHandler()
             val message = DOES_NOT_CORRESPOND_TO_A_CONDITION
 
             //When
@@ -112,7 +112,7 @@ class ConditionFilterTest {
     fun `should show a condition-must-be-true message if the condition is not true for the current case`() {
         with(composeTestRule) {
             //Given
-            val handler = mockk<ConditionFilterHandler>()
+            val handler = mockHandler()
             val message = CONDITION_IS_NOT_TRUE
 
             //When
@@ -124,6 +124,8 @@ class ConditionFilterTest {
             requireConditionIsNotTrueMessageToBeShowing()
         }
     }
+
+    private fun mockHandler(): ConditionFilterHandler = mockk<ConditionFilterHandler>(relaxed = true)
 }
 
 fun main() {

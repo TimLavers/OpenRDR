@@ -29,7 +29,7 @@ class CaseControlTest {
 
     @Before
     fun setUp() {
-        handler = mockk<CaseControlHandler>()
+        handler = mockk<CaseControlHandler>(relaxed = true)
     }
 
 
