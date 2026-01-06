@@ -13,7 +13,7 @@ class ExpressionEvaluationTest {
     @Test
     fun `should create an ExpressionEvaluation from a valid ConditionParsingResult where the user expression is the same as the condition text`() {
         //Given
-        val condition = mockk<Condition>().apply {
+        val condition = mockk<Condition>(relaxed = true).apply {
             val expression = "Temperature > 30"
             every { asText() } returns expression
             every { userExpression() } returns expression
@@ -31,7 +31,7 @@ class ExpressionEvaluationTest {
     @Test
     fun `should create an ExpressionEvaluation from a valid ConditionParsingResult where the user expression is different to the condition text`() {
         //Given
-        val condition = mockk<Condition>().apply {
+        val condition = mockk<Condition>(relaxed = true).apply {
             val expression = "It's hot today"
             val condition = "Temperature > 30"
             every { userExpression() } returns expression
