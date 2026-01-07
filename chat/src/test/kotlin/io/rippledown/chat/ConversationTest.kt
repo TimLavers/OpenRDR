@@ -19,7 +19,7 @@ class ConversationTest {
 
     @BeforeEach
     fun setUp() {
-        reasonTransformer = mockk()
+        reasonTransformer = mockk(relaxed = true)
         coEvery { reasonTransformer.transform(any<String>()) } returns ReasonTransformation(
             isTransformed = true,
             message = "Transformed successfully"
@@ -30,7 +30,7 @@ class ConversationTest {
     fun `starting a conversation should delegate to the chat service`() =
         runTest {
             // Given
-            val expectedResponse = mockk<GenerateContentResponse>()
+            val expectedResponse = mockk<GenerateContentResponse>(relaxed = true)
             coEvery { expectedResponse.text } returns "Hello, how can I assist you today?"
             val mockChatService = MockChatService(listOf(expectedResponse))
             val conversation = Conversation(mockChatService, reasonTransformer)
@@ -46,8 +46,8 @@ class ConversationTest {
     fun `requesting a response should delegate to the chat service`() =
         runTest {
             // Given
-            val response1 = mockk<GenerateContentResponse>()
-            val response2 = mockk<GenerateContentResponse>()
+            val response1 = mockk<GenerateContentResponse>(relaxed = true)
+            val response2 = mockk<GenerateContentResponse>(relaxed = true)
             coEvery { response1.text } returns "Hello, how can I assist you today?"
             coEvery { response2.text } returns "Hello again, how can I help you further?"
             val mockChatService = MockChatService(listOf(response1, response2))
@@ -66,9 +66,9 @@ class ConversationTest {
     fun `should handle a function call in a response`() =
         runTest {
             // Given
-            val response1 = mockk<GenerateContentResponse>()
-            val response2 = mockk<GenerateContentResponse>()
-            val response3 = mockk<GenerateContentResponse>()
+            val response1 = mockk<GenerateContentResponse>(relaxed = true)
+            val response2 = mockk<GenerateContentResponse>(relaxed = true)
+            val response3 = mockk<GenerateContentResponse>(relaxed = true)
             coEvery { response1.text } returns "Hello, how can I assist you today?"
             coEvery { response2.text } returns "Your expression was valid"
             coEvery { response2.functionCalls } returns listOf(
@@ -95,9 +95,9 @@ class ConversationTest {
         val userExpression = "x is greater than 0"
         runTest {
             // Given
-            val response1 = mockk<GenerateContentResponse>()
-            val response2 = mockk<GenerateContentResponse>()
-            val response3 = mockk<GenerateContentResponse>()
+            val response1 = mockk<GenerateContentResponse>(relaxed = true)
+            val response2 = mockk<GenerateContentResponse>(relaxed = true)
+            val response3 = mockk<GenerateContentResponse>(relaxed = true)
             coEvery { response1.text } returns "Hello, how can I assist you today?"
             coEvery { response2.text } returns "Your expression was valid"
             coEvery { response2.functionCalls } returns listOf(

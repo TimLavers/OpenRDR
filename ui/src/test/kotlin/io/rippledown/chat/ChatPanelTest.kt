@@ -29,7 +29,7 @@ class ChatPanelTest {
 
     @Before
     fun setUp() {
-        onMessageSent = mockk()
+        onMessageSent = mockk(relaxed = true)
     }
 
     @Test

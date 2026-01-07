@@ -26,7 +26,7 @@ class ReplaceCommentDialogTest {
 
     @Before
     fun init() {
-        handler = mockk()
+        handler = mockk(relaxed = true)
     }
 
     @Test

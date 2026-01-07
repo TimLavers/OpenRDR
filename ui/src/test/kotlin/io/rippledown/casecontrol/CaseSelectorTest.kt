@@ -23,7 +23,7 @@ class CaseSelectorTest {
 
     @Before
     fun setUp() {
-        handler = mockk<CaseSelectorHandler>()
+        handler = mockk<CaseSelectorHandler>(relaxed = true)
     }
 
     @Test

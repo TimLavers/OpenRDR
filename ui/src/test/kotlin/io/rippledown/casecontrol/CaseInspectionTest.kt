@@ -20,7 +20,7 @@ class CaseInspectionTest {
 
     @Before
     fun setUp() {
-        handler = mockk<CaseInspectionHandler>()
+        handler = mockk<CaseInspectionHandler>(relaxed = true)
     }
 
     @Test

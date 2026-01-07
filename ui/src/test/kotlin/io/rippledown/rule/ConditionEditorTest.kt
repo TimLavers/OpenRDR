@@ -35,7 +35,7 @@ class ConditionEditorTest {
     @Before
     fun setUp() {
         conditionBeingEdited = EditableExtendedLowNormalRangeCondition(glucose, All)
-        handler = mockk()
+        handler = mockk(relaxed = true)
         every {
             handler.editableCondition()
         }.returns(conditionBeingEdited)

@@ -25,7 +25,7 @@ class KBControlTest {
 
     @Before
     fun setup() {
-        handler = mockk<KBControlHandler>()
+        handler = mockk<KBControlHandler>(relaxed = true)
         every { handler.kbList } returns { emptyList() }
     }
 

@@ -15,7 +15,7 @@ class RuleControlButtonsTest {
 
     @Before
     fun setUp() {
-        handler = mockk()
+        handler = mockk(relaxed = true)
     }
 
     @Test

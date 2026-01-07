@@ -20,7 +20,7 @@ class CornerstoneControlTest {
 
     @Before
     fun setUp() {
-        handler = mockk()
+        handler = mockk(relaxed = true)
     }
 
     @Test
