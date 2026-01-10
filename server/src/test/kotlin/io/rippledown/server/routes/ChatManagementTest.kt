@@ -1,10 +1,12 @@
-package io.rippledown.server
+package io.rippledown.server.routes
 
 import io.kotest.matchers.shouldBe
-import io.ktor.client.call.*
-import io.ktor.client.request.*
-import io.ktor.http.*
-import io.ktor.server.testing.*
+import io.ktor.client.call.body
+import io.ktor.client.request.parameter
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.rippledown.constants.api.SEND_USER_MESSAGE
@@ -12,6 +14,7 @@ import io.rippledown.constants.api.START_CONVERSATION
 import io.rippledown.constants.server.CASE_ID
 import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.ServerChatResult
+import io.rippledown.server.OpenRDRServerTestBase
 import kotlin.test.Test
 
 class ChatManagementTest : OpenRDRServerTestBase() {
@@ -32,7 +35,7 @@ class ChatManagementTest : OpenRDRServerTestBase() {
 
         //Then
         coVerify { kbEndpoint.startConversation(caseId) }
-        result.status shouldBe HttpStatusCode.OK
+        result.status shouldBe HttpStatusCode.Companion.OK
     }
 
     @Test
@@ -50,7 +53,7 @@ class ChatManagementTest : OpenRDRServerTestBase() {
 
         //Then
         coVerify { serverApplication.processUserRequest(userMessage, null) }
-        result.status shouldBe HttpStatusCode.OK
+        result.status shouldBe HttpStatusCode.Companion.OK
         result.body<ServerChatResult>().userMessage shouldBe response
     }
 }

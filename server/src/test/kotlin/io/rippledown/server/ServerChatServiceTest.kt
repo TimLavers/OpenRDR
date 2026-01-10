@@ -23,7 +23,7 @@ class ServerChatServiceTest {
         val chatService = ServerChatServiceFactory().createChatService()
         val chat = chatService.startChat(listOf())
         val response = chat.sendMessage("Please put glucose above TSH")
-        extractAction(response.text!!) shouldBe  "KnowledgeBaseEdit"
+        extractAction(response.text!!) shouldBe  "KnowledgeBaseEditMessageAction"
     }
 
     private fun extractAction(response: String): String? {

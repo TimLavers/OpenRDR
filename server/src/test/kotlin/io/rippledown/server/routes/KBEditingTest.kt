@@ -1,16 +1,23 @@
-package io.rippledown.server
+package io.rippledown.server.routes
 
 import io.kotest.matchers.shouldBe
-import io.ktor.client.call.*
-import io.ktor.client.request.*
-import io.ktor.http.*
-import io.ktor.server.testing.*
+import io.ktor.client.call.body
+import io.ktor.client.request.delete
+import io.ktor.client.request.get
+import io.ktor.client.request.parameter
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.testing.testApplication
 import io.mockk.every
 import io.mockk.verify
-import io.rippledown.constants.api.*
+import io.rippledown.constants.api.KB_DESCRIPTION
+import io.rippledown.constants.api.KB_INFO
+import io.rippledown.constants.api.LAST_RULE_DESCRIPTION
 import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.KBInfo
 import io.rippledown.model.rule.UndoRuleDescription
+import io.rippledown.server.OpenRDRServerTestBase
 import kotlin.test.Test
 
 class KBEditingTest: OpenRDRServerTestBase() {
@@ -38,10 +45,10 @@ class KBEditingTest: OpenRDRServerTestBase() {
             documentation is [OpenRDR](./documentation/openrdr.md).
         """.trimIndent()
         every { kbEndpoint.description() } returns description
-        val result = httpClient.get(KB_DESCRIPTION){
+        val result = httpClient.get(KB_DESCRIPTION) {
             parameter(KB_ID, kbId)
         }
-        result.status shouldBe HttpStatusCode.OK
+        result.status shouldBe HttpStatusCode.Companion.OK
         result.body<String>() shouldBe description
         verify { kbEndpoint.description() }
     }
@@ -54,7 +61,7 @@ class KBEditingTest: OpenRDRServerTestBase() {
             parameter(KB_ID, kbId)
             setBody(newDescription)
         }
-        result.status shouldBe HttpStatusCode.OK
+        result.status shouldBe HttpStatusCode.Companion.OK
         verify { kbEndpoint.setDescription(newDescription) }
 
     }
@@ -64,10 +71,10 @@ class KBEditingTest: OpenRDRServerTestBase() {
         setupServer()
         val kbInfo = KBInfo("Glucose")
         every { kbEndpoint.kbInfo() } returns kbInfo
-        val result = httpClient.get(KB_INFO){
+        val result = httpClient.get(KB_INFO) {
             parameter(KB_ID, kbId)
         }
-        result.status shouldBe HttpStatusCode.OK
+        result.status shouldBe HttpStatusCode.Companion.OK
         result.body<KBInfo>() shouldBe kbInfo
         verify { kbEndpoint.kbInfo() }
     }
@@ -81,10 +88,10 @@ class KBEditingTest: OpenRDRServerTestBase() {
         """.trimIndent()
         val undoRuleDescription = UndoRuleDescription(description, true)
         every { kbEndpoint.descriptionOfMostRecentRule() } returns undoRuleDescription
-        val result = httpClient.get(LAST_RULE_DESCRIPTION){
+        val result = httpClient.get(LAST_RULE_DESCRIPTION) {
             parameter(KB_ID, kbId)
         }
-        result.status shouldBe HttpStatusCode.OK
+        result.status shouldBe HttpStatusCode.Companion.OK
         result.body<UndoRuleDescription>() shouldBe undoRuleDescription
         verify { kbEndpoint.descriptionOfMostRecentRule() }
     }
@@ -95,7 +102,7 @@ class KBEditingTest: OpenRDRServerTestBase() {
         val result = httpClient.delete(LAST_RULE_DESCRIPTION) {
             parameter(KB_ID, kbId)
         }
-        result.status shouldBe HttpStatusCode.OK
+        result.status shouldBe HttpStatusCode.Companion.OK
         verify { kbEndpoint.undoLastRule() }
     }
  }

@@ -1,4 +1,4 @@
-package io.rippledown.server
+package io.rippledown.server.routes
 
 import io.kotest.matchers.shouldBe
 import io.ktor.server.testing.*
@@ -7,6 +7,8 @@ import io.rippledown.model.diff.Addition
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.sample.SampleKB
+import io.rippledown.server.KBEndpoint
+import io.rippledown.server.ServerApplication
 import io.rippledown.utils.serializeDeserialize
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

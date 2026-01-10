@@ -3,6 +3,7 @@ package io.rippledown.server.websocket
 import io.ktor.websocket.*
 import io.rippledown.constants.chat.RULE_SESSION_COMPLETED
 import io.rippledown.log.lazyLogger
+import io.rippledown.model.KBInfo
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.toJsonString
 
@@ -31,6 +32,10 @@ class WebSocketManager {
 
     suspend fun sendRuleSessionCompleted() {
         send(RULE_SESSION_COMPLETED)
+    }
+
+    suspend fun sendKbInfo(kbInfo: KBInfo) {
+        send(kbInfo.toJsonString<KBInfo>())
     }
 
     private suspend fun send(message: String) {

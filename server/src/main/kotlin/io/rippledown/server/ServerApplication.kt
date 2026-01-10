@@ -84,7 +84,7 @@ class ServerApplication(
             }
             // No exact match, throw an error.
             val matches = kbIdsForName.map { it.name }.sorted().joinToString(", ")
-            return Result.failure(IllegalArgumentException("These KBs matched '$name': $matches."))
+            return Result.failure(IllegalArgumentException("More than one KB with name $name found."))
         }
         return Result.success(kbForId(kbIdsForName.first().id))
     }

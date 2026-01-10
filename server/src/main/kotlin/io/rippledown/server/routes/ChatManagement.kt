@@ -18,7 +18,7 @@ fun Application.chatManagement(application: ServerApplication) {
         }
         post(path = SEND_USER_MESSAGE) {
             val userMessage = call.receiveText()
-            val kdbId = kbId()
+            val kdbId = kbIdOrNull()
             try {
                 val reply = application.processUserRequest(userMessage, kdbId)
                 call.respond(OK, reply)

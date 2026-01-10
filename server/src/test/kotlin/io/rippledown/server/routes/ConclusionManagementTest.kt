@@ -1,4 +1,4 @@
-package io.rippledown.server
+package io.rippledown.server.routes
 
 import io.kotest.matchers.shouldBe
 import io.ktor.client.call.*
@@ -11,6 +11,7 @@ import io.rippledown.constants.api.ALL_CONCLUSIONS
 import io.rippledown.constants.api.GET_OR_CREATE_CONCLUSION
 import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.Conclusion
+import io.rippledown.server.OpenRDRServerTestBase
 import kotlin.test.Test
 
 class ConclusionManagementTest: OpenRDRServerTestBase() {

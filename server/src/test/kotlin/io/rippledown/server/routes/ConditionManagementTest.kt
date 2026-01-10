@@ -1,4 +1,4 @@
-package io.rippledown.server
+package io.rippledown.server.routes
 
 import io.kotest.matchers.shouldBe
 import io.ktor.client.call.*
@@ -14,6 +14,7 @@ import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.*
 import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
+import io.rippledown.server.OpenRDRServerTestBase
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 

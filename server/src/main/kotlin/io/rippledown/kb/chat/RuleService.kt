@@ -20,6 +20,6 @@ interface RuleService {
     fun commitCurrentRuleSession()
     fun undoLastRuleSession()
     fun moveAttributeTo(moved: String, destination: String)
-    fun sendCornerstoneStatus()
-    fun sendRuleSessionCompleted()
+    suspend fun sendCornerstoneStatus()
+    suspend fun sendRuleSessionCompleted()
 }

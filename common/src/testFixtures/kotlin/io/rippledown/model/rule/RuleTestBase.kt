@@ -22,7 +22,7 @@ open class RuleTestBase: ConditionTestBase() {
                 conclusionWithText = it.conclusion
             }
         }
-        return if (conclusionWithText != null) conclusionWithText!! else  Conclusion(conclusionId++, text)
+        return conclusionWithText ?: Conclusion(conclusionId++, text)
     }
 
     fun createCondition(text: String): Condition {

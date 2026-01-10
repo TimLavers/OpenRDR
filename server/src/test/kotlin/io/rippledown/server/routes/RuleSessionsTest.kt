@@ -1,4 +1,4 @@
-package io.rippledown.server
+package io.rippledown.server.routes
 
 import io.kotest.matchers.shouldBe
 import io.ktor.client.call.*
@@ -16,6 +16,7 @@ import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.episodic.predicate.High
 import io.rippledown.model.condition.episodic.signature.Current
+import io.rippledown.server.OpenRDRServerTestBase
 import kotlin.test.Test
 
 class RuleSessionsTest : OpenRDRServerTestBase() {

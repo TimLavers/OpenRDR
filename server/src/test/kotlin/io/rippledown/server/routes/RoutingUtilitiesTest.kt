@@ -1,4 +1,4 @@
-package io.rippledown.server
+package io.rippledown.server.routes
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -11,7 +11,7 @@ import io.mockk.verify
 import io.rippledown.constants.server.CASE_ID
 import io.rippledown.constants.server.KB_ID
 import io.rippledown.constants.server.KB_NAME
-import io.rippledown.server.routes.*
+import io.rippledown.server.OpenRDRServerTestBase
 import org.junit.jupiter.api.BeforeEach
 import kotlin.test.Test
 

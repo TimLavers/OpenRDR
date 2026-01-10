@@ -1,4 +1,4 @@
-package io.rippledown.server
+package io.rippledown.server.routes
 
 import io.kotest.matchers.shouldBe
 import io.ktor.client.call.*
@@ -18,6 +18,7 @@ import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
+import io.rippledown.server.OpenRDRServerTestBase
 import io.rippledown.utils.createViewableCase
 import kotlin.test.Test
 

@@ -53,10 +53,10 @@ class ConditionGenerator(private val attributeFor: AttributeFor) {
         val parameters = specification.parameters
         return try {
             episodicPredicate(specification, parameters)
-        } catch (e: ClassNotFoundException) {
+        } catch (_: ClassNotFoundException) {
             try {
                 seriesPredicate(specification, parameters)
-            } catch (e: ClassNotFoundException) {
+            } catch (_: ClassNotFoundException) {
                 caseStructurePredicate(specification, attribute)
             }
         }
@@ -92,7 +92,7 @@ class ConditionGenerator(private val attributeFor: AttributeFor) {
         return createInstance(functionName, *parameters.toTypedArray()) as Signature
     }
 
-    fun <T : Any> createInstance(className: String, vararg args: String?): T {
+    inline fun <reified T : Any> createInstance(className: String, vararg args: String?): T {
         val clazz = Class.forName(className).kotlin
         val constructor = clazz.primaryConstructor
         return if (constructor == null) {
@@ -124,7 +124,7 @@ class ConditionGenerator(private val attributeFor: AttributeFor) {
         }
     }
 
-    fun <T : Any> createCaseStructureInstance(className: String, attribute: Attribute?): T {
+    inline fun <reified T : Any> createCaseStructureInstance(className: String, attribute: Attribute?): T {
         val clazz = Class.forName(className).kotlin
         val constructor = clazz.primaryConstructor
         return if (constructor == null) {

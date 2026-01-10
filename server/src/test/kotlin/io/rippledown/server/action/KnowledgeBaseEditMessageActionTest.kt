@@ -25,7 +25,7 @@ class KnowledgeBaseEditMessageActionTest : ActionTestBase() {
         val jsonObject = JsonObject(
             mapOf(
                 "action" to JsonPrimitive("KnowledgeBaseEditMessage"),
-                "message" to JsonPrimitive(instruction)
+                "userMessage" to JsonPrimitive(instruction)
             )
         )
         val received = KnowledgeBaseEditMessageAction(jsonObject).doIt(actionsInterface, kbId)
@@ -40,7 +40,7 @@ class KnowledgeBaseEditMessageActionTest : ActionTestBase() {
         val jsonObject = JsonObject(
             mapOf(
                 "action" to JsonPrimitive("KnowledgeBaseEditMessage"),
-                "message" to JsonPrimitive(instruction)
+                "userMessage" to JsonPrimitive(instruction)
             )
         )
         val received = KnowledgeBaseEditMessageAction(jsonObject).doIt(actionsInterface, null)

@@ -1,17 +1,33 @@
-package io.rippledown.server
+package io.rippledown.server.routes
 
 import io.kotest.matchers.shouldBe
-import io.ktor.client.call.*
-import io.ktor.client.request.*
-import io.ktor.client.request.forms.*
-import io.ktor.http.*
-import io.ktor.server.testing.*
+import io.ktor.client.call.body
+import io.ktor.client.request.delete
+import io.ktor.client.request.forms.MultiPartFormDataContent
+import io.ktor.client.request.forms.formData
+import io.ktor.client.request.get
+import io.ktor.client.request.parameter
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.Headers
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
+import io.ktor.server.testing.testApplication
 import io.mockk.every
 import io.mockk.verify
-import io.rippledown.constants.api.*
+import io.rippledown.constants.api.CREATE_KB
+import io.rippledown.constants.api.CREATE_KB_FROM_SAMPLE
+import io.rippledown.constants.api.DELETE_KB
+import io.rippledown.constants.api.EXPORT_KB
+import io.rippledown.constants.api.IMPORT_KB
+import io.rippledown.constants.api.KB_LIST
+import io.rippledown.constants.api.SELECT_KB
 import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.KBInfo
 import io.rippledown.sample.SampleKB
+import io.rippledown.server.OpenRDRServerTestBase
 import java.io.File
 import kotlin.test.Test
 
@@ -19,16 +35,16 @@ class KBManagementTest: OpenRDRServerTestBase() {
 
      @Test
     fun kbList() = testApplication {
-        setupServer()
-        val kbs = listOf(KBInfo("10", "Glucose"), KBInfo("1", "Thyroids"), KBInfo("3", "Whatever"))
-        every { serverApplication.kbList() } returns kbs
-        val result = httpClient.get(KB_LIST) {
-            parameter(KB_ID, kbId)
-        }
-        result.status shouldBe HttpStatusCode.OK
-        result.body<List<KBInfo>>() shouldBe kbs
-        verify { serverApplication.kbList() }
-    }
+         setupServer()
+         val kbs = listOf(KBInfo("10", "Glucose"), KBInfo("1", "Thyroids"), KBInfo("3", "Whatever"))
+         every { serverApplication.kbList() } returns kbs
+         val result = httpClient.get(KB_LIST) {
+             parameter(KB_ID, kbId)
+         }
+         result.status shouldBe HttpStatusCode.Companion.OK
+         result.body<List<KBInfo>>() shouldBe kbs
+         verify { serverApplication.kbList() }
+     }
 
     @Test
     fun selectKB() = testApplication {
@@ -38,7 +54,7 @@ class KBManagementTest: OpenRDRServerTestBase() {
         val result = httpClient.post(SELECT_KB) {
             setBody(kbInfo.id)
         }
-        result.status shouldBe HttpStatusCode.OK
+        result.status shouldBe HttpStatusCode.Companion.OK
         result.body<KBInfo>() shouldBe kbInfo
         verify { serverApplication.selectKB(kbInfo.id) }
     }
@@ -52,7 +68,7 @@ class KBManagementTest: OpenRDRServerTestBase() {
             contentType(ContentType.Application.Json)
             setBody("Bondi")
         }
-        result.status shouldBe HttpStatusCode.OK
+        result.status shouldBe HttpStatusCode.Companion.OK
         result.body<KBInfo>() shouldBe kbInfoToReturnOnCreation
         verify { serverApplication.createKB("Bondi", true) }
     }
@@ -66,7 +82,7 @@ class KBManagementTest: OpenRDRServerTestBase() {
             contentType(ContentType.Application.Json)
             setBody(Pair(kbInfoToReturn.name, SampleKB.TSH))
         }
-        result.status shouldBe HttpStatusCode.OK
+        result.status shouldBe HttpStatusCode.Companion.OK
         result.body<KBInfo>() shouldBe kbInfoToReturn
         verify { serverApplication.createKBFromSample(kbInfoToReturn.name, SampleKB.TSH) }
     }
@@ -75,8 +91,8 @@ class KBManagementTest: OpenRDRServerTestBase() {
     fun deleteKB() = testApplication {
         setupServer()
         every { serverApplication.deleteKB(kbId) } returns Unit
-        val result = httpClient.delete(DELETE_KB) {parameter(KB_ID, kbId)}
-        result.status shouldBe HttpStatusCode.OK
+        val result = httpClient.delete(DELETE_KB) { parameter(KB_ID, kbId) }
+        result.status shouldBe HttpStatusCode.Companion.OK
         verify { serverApplication.deleteKB(kbId) }
     }
 
@@ -86,10 +102,10 @@ class KBManagementTest: OpenRDRServerTestBase() {
         val zipFile = File("src/test/resources/export/Empty.zip")
         every { kbEndpoint.kbInfo() } returns KBInfo("Empty")
         every { kbEndpoint.exportKBToZip() } returns zipFile
-        val result = httpClient.get(EXPORT_KB){
+        val result = httpClient.get(EXPORT_KB) {
             parameter(KB_ID, kbId)
         }
-        result.status shouldBe HttpStatusCode.OK
+        result.status shouldBe HttpStatusCode.Companion.OK
         result.headers[HttpHeaders.ContentType] shouldBe "application/zip"
         result.headers[HttpHeaders.ContentDisposition] shouldBe "attachment; filename=Empty.zip"
         result.headers[HttpHeaders.ContentLength] shouldBe zipFile.length().toString()
@@ -109,7 +125,7 @@ class KBManagementTest: OpenRDRServerTestBase() {
             setBody(
                 MultiPartFormDataContent(
                     formData {
-                        append("zip", zipBytes, Headers.build {
+                        append("zip", zipBytes, Headers.Companion.build {
                             append(HttpHeaders.ContentType, "application/zip")
                             append(HttpHeaders.ContentDisposition, "filename=\"KBExported.zip\"")
                         })

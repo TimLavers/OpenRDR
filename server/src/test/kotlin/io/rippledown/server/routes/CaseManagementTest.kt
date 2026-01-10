@@ -1,10 +1,16 @@
-package io.rippledown.server
+package io.rippledown.server.routes
 
 import io.kotest.matchers.shouldBe
-import io.ktor.client.call.*
-import io.ktor.client.request.*
-import io.ktor.http.*
-import io.ktor.server.testing.*
+import io.ktor.client.call.body
+import io.ktor.client.request.delete
+import io.ktor.client.request.get
+import io.ktor.client.request.parameter
+import io.ktor.client.request.put
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
+import io.ktor.server.testing.testApplication
 import io.mockk.every
 import io.mockk.verify
 import io.rippledown.CaseTestUtils
@@ -19,8 +25,7 @@ import io.rippledown.model.CasesInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.external.serialize
-import io.rippledown.server.routes.ID_SHOULD_BE_A_LONG
-import io.rippledown.server.routes.MISSING_CASE_ID
+import io.rippledown.server.OpenRDRServerTestBase
 import io.rippledown.utils.createViewableCase
 import kotlin.test.Test
 
@@ -32,7 +37,7 @@ class CaseManagementTest : OpenRDRServerTestBase() {
         val casesInfo = CasesInfo(listOf(CaseId("Tea"), CaseId("Coffee")))
         every { kbEndpoint.waitingCasesInfo() } returns casesInfo
         val result = httpClient.get(WAITING_CASES) { parameter(KB_ID, kbId) }
-        result.status shouldBe HttpStatusCode.OK
+        result.status shouldBe HttpStatusCode.Companion.OK
         result.body<CasesInfo>() shouldBe casesInfo
         verify { kbEndpoint.waitingCasesInfo() }
     }
@@ -49,7 +54,7 @@ class CaseManagementTest : OpenRDRServerTestBase() {
             parameter(CASE_ID, caseId)
             parameter(KB_ID, kbId)
         }
-        result.status shouldBe HttpStatusCode.OK
+        result.status shouldBe HttpStatusCode.Companion.OK
         result.body<ViewableCase>() shouldBe viewableCase
     }
 
@@ -63,11 +68,11 @@ class CaseManagementTest : OpenRDRServerTestBase() {
         //When
         val response = httpClient.get(CASE) {
             parameter(CASE_ID, 42L)
-                parameter(KB_ID, kbId)
-            }
+            parameter(KB_ID, kbId)
+        }
 
         //Then
-        response.status shouldBe HttpStatusCode.BadRequest
+        response.status shouldBe HttpStatusCode.Companion.BadRequest
         response.body<String>() shouldBe message
     }
 
@@ -83,7 +88,7 @@ class CaseManagementTest : OpenRDRServerTestBase() {
         }
 
         //Then
-        response.status shouldBe HttpStatusCode.BadRequest
+        response.status shouldBe HttpStatusCode.Companion.BadRequest
         response.body<String>() shouldBe ID_SHOULD_BE_A_LONG
     }
 
@@ -98,7 +103,7 @@ class CaseManagementTest : OpenRDRServerTestBase() {
         }
 
         //Then
-        response.status shouldBe HttpStatusCode.BadRequest
+        response.status shouldBe HttpStatusCode.Companion.BadRequest
         response.body<String>() shouldBe MISSING_CASE_ID
     }
 
@@ -114,7 +119,7 @@ class CaseManagementTest : OpenRDRServerTestBase() {
             setBody(caseData)
             parameter(KB_ID, kbId)
         }
-        result.status shouldBe HttpStatusCode.Accepted
+        result.status shouldBe HttpStatusCode.Companion.Accepted
         result.body<RDRCase>() shouldBe returnCase
         verify { kbEndpoint.processCase(case) }
     }
@@ -129,7 +134,7 @@ class CaseManagementTest : OpenRDRServerTestBase() {
             parameter(KB_ID, kbId)
             parameter("name", caseName)
         }
-        result.status shouldBe HttpStatusCode.OK
+        result.status shouldBe HttpStatusCode.Companion.OK
         verify { kbEndpoint.deleteCase(caseName) }
     }
 }

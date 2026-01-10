@@ -155,13 +155,13 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         return startRuleSession(viewableCase.case, action)
     }
 
-    override fun sendCornerstoneStatus() {
+    override suspend fun sendCornerstoneStatus() {
         val cornerstoneStatus = cornerstoneStatus(null)
-        runBlocking { webSocketManager?.sendStatus(cornerstoneStatus) }
+        webSocketManager?.sendStatus(cornerstoneStatus)
     }
 
-    override fun sendRuleSessionCompleted() {
-        runBlocking { webSocketManager?.sendRuleSessionCompleted() }
+    override suspend fun sendRuleSessionCompleted() {
+        webSocketManager?.sendRuleSessionCompleted()
     }
 
     fun cancelRuleSession() {

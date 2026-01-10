@@ -128,7 +128,7 @@ internal class ServerApplicationTest {
         app.kbForName("Glucose").getOrThrow().kbInfo() shouldBe kbi1
         app.kbForName("GLUCOSE").getOrThrow().kbInfo() shouldBe kbi2
         app.kbForName("glucose").getOrThrow().kbInfo() shouldBe kbi3
-        app.kbForName("GLUcose").exceptionOrNull()!!.message shouldBe "These KBs matched 'GLUcose': GLUCOSE, Glucose, glucose."
+        app.kbForName("GLUcose").exceptionOrNull()!!.message shouldBe "More than one KB with name GLUcose found."
     }
 
     @Test

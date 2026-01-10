@@ -1,4 +1,4 @@
-package io.rippledown.server
+package io.rippledown.server.routes
 
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
@@ -12,6 +12,7 @@ import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
+import io.rippledown.server.KBEndpoint
 import io.rippledown.supplyCaseFromFile
 import io.rippledown.util.EntityRetrieval
 import org.apache.commons.io.FileUtils
