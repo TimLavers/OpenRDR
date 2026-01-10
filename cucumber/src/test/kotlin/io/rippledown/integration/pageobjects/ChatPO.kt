@@ -6,6 +6,7 @@ import io.rippledown.chat.CHAT_SEND
 import io.rippledown.chat.CHAT_TEXT_FIELD
 import io.rippledown.chat.NUMBER_OF_CHAT_MESSAGES_
 import io.rippledown.integration.utils.find
+import io.rippledown.integration.utils.waitForContextToBeNotNull
 import org.assertj.swing.edt.GuiActionRunner.execute
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleEditableText
@@ -28,6 +29,10 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
 
     fun clickChatIconToggle() =
         execute { contextProvider().find(CHAT_ICON_TOGGLE)?.accessibleAction?.doAccessibleAction(0) }
+
+    fun waitForChatToBeVisible() {
+        waitForContextToBeNotNull(contextProvider, CHAT_TEXT_FIELD)
+    }
 
     fun mostRecentBotRowContainsTerms(terms: List<String>): Boolean {
         val numberOfChatMessages = numberOfChatMessages()

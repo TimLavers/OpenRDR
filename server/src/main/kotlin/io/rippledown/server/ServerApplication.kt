@@ -118,9 +118,9 @@ class ServerApplication(
         override fun passUserMessageToKbChat(message: String, kbId: String) = runBlocking { serverApplication.kbForId(kbId).responseToUserMessage(message) }
     }
 
-    private fun kbDataFile(kb: KB) = File(kbDataDir, kb.kbInfo.id)
+//    private fun kbDataFile(kb: KB) = File(kbDataDir, kb.kbInfo.id)
 
-    private fun kbEndpoint(kb: KB) = KBEndpoint(kb, kbDataFile(kb))
+//    private fun kbEndpoint(kb: KB) = KBEndpoint(kb, kbDataFile(kb))
     private fun kbEndpoint(kb: KB) = KBEndpoint(kb)
 
     private fun loadKnownKB(kbInfo: KBInfo) {

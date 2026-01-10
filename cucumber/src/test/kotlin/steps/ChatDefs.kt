@@ -15,6 +15,7 @@ class ChatDefs {
     fun showChat() {
         with(chatPO()) {
             clickChatIconToggle()
+            waitForChatToBeVisible()
         }
     }
 

@@ -852,8 +852,8 @@ fun main() {
     val caseIds = (1..100).map { i ->
         CaseId(id = i.toLong(), name = "case $i")
     }
-    val handler = mockk<Handler>()
-    val api = mockk<Api>()
+    val handler = mockk<Handler>(relaxed = true)
+    val api = mockk<Api>(relaxed = true)
     coEvery { handler.api } returns api
     coEvery { handler.isClosing() } returns false
     coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)

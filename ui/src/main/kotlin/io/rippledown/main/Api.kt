@@ -19,10 +19,7 @@ import io.rippledown.constants.server.CASE_ID
 import io.rippledown.constants.server.EXPRESSION
 import io.rippledown.constants.server.KB_ID
 import io.rippledown.log.lazyLogger
-import io.rippledown.model.CasesInfo
-import io.rippledown.model.Conclusion
-import io.rippledown.model.KBInfo
-import io.rippledown.model.OperationResult
+import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
@@ -45,8 +42,6 @@ class Api(
         }
         install(WebSockets)
     }
-
-    private val logger = lazyLogger
 
     private suspend fun HttpRequestBuilder.setKBParameter() = parameter(KB_ID, kbInfo().id)
 
@@ -280,24 +275,28 @@ class Api(
         }.body()
     }
 
-    suspend fun startConversation(caseId: Long): String {
+    suspend fun startConversation(caseId: Long?): String {
+        println("-------: Start conversation")
         return client.post("$API_URL$START_CONVERSATION") {
             contentType(Plain)
             setKBParameter()
-            setCaseIdParameter(caseId)
+            caseId?.let { setCaseIdParameter(it) }
         }.body()
     }
 
-    suspend fun sendUserMessage(message: String, caseId: Long): String {
-        return client.post("$API_URL$SEND_USER_MESSAGE") {
+    suspend fun sendUserMessage(message: String, caseId: Long?): String {
+        println("-------: Send user message: $message, caseId: $caseId")
+        val result = client.post("$API_URL$SEND_USER_MESSAGE") {
             contentType(Plain)
             setKBParameter()
-            setCaseIdParameter(caseId)
+            caseId?.let { setCaseIdParameter(it) }
             setBody(message)
-        }.body()
+        }.body<ServerChatResult>()
+        if (result.kbInfo != null) {
+            currentKB = result.kbInfo
+        }
+        return result.userMessage
     }
-
-
 
     suspend fun lastRuleDescription(): UndoRuleDescription {
         return client.get("$API_URL$LAST_RULE_DESCRIPTION") {

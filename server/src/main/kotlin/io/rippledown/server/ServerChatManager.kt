@@ -2,6 +2,7 @@ package io.rippledown.server
 
 import io.rippledown.chat.ChatService
 import io.rippledown.model.ServerChatResult
+import io.rippledown.server.OpenRDRServer.logger
 import io.rippledown.server.action.extractAction
 
 class ServerChatManager(
