@@ -10,6 +10,7 @@ import io.rippledown.constants.api.WEB_SOCKET
 import io.rippledown.constants.chat.RULE_SESSION_COMPLETED
 import io.rippledown.fromJsonString
 import io.rippledown.log.lazyLogger
+import io.rippledown.model.KBInfo
 import io.rippledown.model.rule.CornerstoneStatus
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.filterIsInstance
@@ -19,7 +20,8 @@ open class WebSocketApi(private val client: HttpClient) {
 
     open suspend fun startSession(
         updateCornerstoneStatus: (CornerstoneStatus) -> Unit,
-        ruleSessionCompleted: () -> Unit
+        ruleSessionCompleted: () -> Unit,
+        kbInfoUpdated: (KBInfo) -> Unit = {}
     ) {
         client.webSocket(
             method = HttpMethod.Get,
@@ -36,8 +38,10 @@ open class WebSocketApi(private val client: HttpClient) {
                             receivedText == RULE_SESSION_COMPLETED -> {
                                 ruleSessionCompleted()
                             }
-
-                            else -> handleCornerstoneStatus(receivedText, updateCornerstoneStatus)
+                            receivedText.contains("case") -> {
+                                handleCornerstoneStatus(receivedText, updateCornerstoneStatus)
+                            }
+                            else -> handleKbInfo(receivedText, kbInfoUpdated)
                         }
                     }
             } catch (e: Exception) {
@@ -50,6 +54,17 @@ open class WebSocketApi(private val client: HttpClient) {
         }
     }
 
+    private fun handleKbInfo(
+        message: String,
+        kbInfoUpdated: (KBInfo) -> Unit
+    ) {
+        try {
+            val kbInfo = message.fromJsonString<KBInfo>()
+            kbInfoUpdated(kbInfo)
+        } catch (e: Exception) {
+            logger.error("Error parsing kb info", e)
+        }
+    }
     private fun handleCornerstoneStatus(
         message: String,
         updateCornerstoneStatus: (CornerstoneStatus) -> Unit

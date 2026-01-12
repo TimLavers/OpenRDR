@@ -65,7 +65,8 @@ class OpenRDRUITest {
             }
 
             //Then
-            coVerify { api.startWebSocketSession(updateCornerstoneStatus = any(), ruleSessionCompleted = any()) }
+            coVerify { api.startWebSocketSession(updateCornerstoneStatus = any(),
+                ruleSessionCompleted = any(), kbInfoUpdated = any()) }
         }
     }
 

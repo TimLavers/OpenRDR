@@ -24,7 +24,7 @@ class WebSocketForCornerstoneStatusTest {
         val clientJob = launch {
             api.startWebSocketSession(updateCornerstoneStatus = { cornerstoneStatus ->
                 receivedSignal.complete(cornerstoneStatus)
-            }, ruleSessionCompleted = {})
+            }, ruleSessionCompleted = {}, kbInfoUpdated = {})
         }
 
         // Then

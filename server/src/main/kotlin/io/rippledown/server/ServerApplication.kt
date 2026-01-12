@@ -59,7 +59,11 @@ class ServerApplication(
 
     fun selectKB(id: String): KBInfo {
         logger.info("Selecting kb with id: $id")
-        return kbForId(id).kbInfo()
+        val kbInfo = kbForId(id).kbInfo()
+        runBlocking {
+            webSocketManager.sendKbInfo(kbInfo)
+        }
+        return kbInfo
     }
 
     fun deleteKB(id: String) {

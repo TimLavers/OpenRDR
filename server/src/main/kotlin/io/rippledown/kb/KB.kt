@@ -25,8 +25,6 @@ import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistentKB
 import io.rippledown.server.websocket.WebSocketManager
 import io.rippledown.toJsonString
-import kotlinx.coroutines.runBlocking
-
 
 class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = null) : RuleService {
     val logger = lazyLogger
@@ -157,7 +155,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
 
     override suspend fun sendCornerstoneStatus() {
         val cornerstoneStatus = cornerstoneStatus(null)
-        webSocketManager?.sendStatus(cornerstoneStatus)
+        webSocketManager?.sendCornerstoneStatus(cornerstoneStatus)
     }
 
     override suspend fun sendRuleSessionCompleted() {

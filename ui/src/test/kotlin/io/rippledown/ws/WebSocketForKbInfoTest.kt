@@ -2,24 +2,25 @@ package io.rippledown.ws
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.main.Api
+import io.rippledown.model.KBInfo
 import kotlinx.coroutines.*
 import org.junit.Test
 
-class WebSocketForCommitRuleTest {
+class WebSocketForKbInfoTest {
     @Test
-    fun `should receive rule session completed message from test websocket using CIO client`() = runBlocking {
+    fun `should receive kb info from test websocket using CIO client`() = runBlocking {
         // Given
-        val server = startServerAndSendRulesSessionCompleted()
+        val expectedKbInfo = KBInfo("id123", "Glucose")
+        val server = startServerAndSendKbInfo(expectedKbInfo)
         val api = Api()
-        val receivedSignal = CompletableDeferred<Boolean>()
+        val receivedSignal = CompletableDeferred<KBInfo>()
 
         // When
         val clientJob = launch {
             api.startWebSocketSession(
                 updateCornerstoneStatus = {},
-                ruleSessionCompleted = { receivedSignal.complete(true) },
-                kbInfoUpdated = {}
-            )
+                ruleSessionCompleted = {}
+            ) { kbInfo -> receivedSignal.complete(kbInfo) }
         }
 
         // Then
@@ -27,13 +28,11 @@ class WebSocketForCommitRuleTest {
             receivedSignal.await()
         }
 
-        result shouldBe true
+        result shouldBe expectedKbInfo
 
         // CLEANUP
         clientJob.cancelAndJoin()
         api.client.close()
         server.stop(1000, 1000)
     }
-
-
 }

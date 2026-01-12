@@ -53,7 +53,7 @@ class KBTest {
         kb.sendCornerstoneStatus()
 
         //Then
-        coVerify { webSocketManager.sendStatus(ccStatus) }
+        coVerify { webSocketManager.sendCornerstoneStatus(ccStatus) }
     }
 
     @Test

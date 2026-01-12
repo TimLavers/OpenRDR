@@ -4,6 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.mockk.coVerify
 import io.mockk.mockk
 import io.rippledown.CaseTestUtils
 import io.rippledown.constants.server.DEFAULT_PROJECT_NAME
@@ -13,6 +14,7 @@ import io.rippledown.model.TestResult
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.sample.SampleKB
+import io.rippledown.server.websocket.WebSocketManager
 import org.junit.jupiter.api.BeforeEach
 import java.io.File
 import java.nio.file.Files
@@ -30,11 +32,13 @@ internal class ServerApplicationTest {
 
     private lateinit var persistenceProvider: PersistenceProvider
     private lateinit var app: ServerApplication
+    private lateinit var webSocketManager: WebSocketManager
 
     @BeforeEach
     fun setup() {
         persistenceProvider = InMemoryPersistenceProvider()
-        app = ServerApplication(persistenceProvider, mockk())
+        webSocketManager = mockk()
+        app = ServerApplication(persistenceProvider, webSocketManager)
     }
 
     @Test
@@ -81,6 +85,16 @@ internal class ServerApplicationTest {
         app.selectKB(kbi1.id) shouldBe kbi1
         app.selectKB(kbi2.id) shouldBe kbi2
         app.selectKB(kbi3.id) shouldBe kbi3
+    }
+
+    @Test
+    fun `client feedback via websocket upon kb selection`() {
+        val kbi1 = app.createKB("KB1", false)
+        val kbi2 = app.createKB("KB2", false)
+        app.selectKB(kbi1.id)
+        coVerify { webSocketManager.sendKbInfo(kbi1) }
+        app.selectKB(kbi2.id)
+        coVerify { webSocketManager.sendKbInfo(kbi2) }
     }
 
     @Test

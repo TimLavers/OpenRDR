@@ -58,9 +58,6 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     val chatControllerHandler = object : ChatControllerHandler {
         override var onBotMessageReceived: (message: String) -> Unit = { }
         override fun sendUserMessage(message: String) {
-//            val caseId = requireNotNull(currentCaseId) {
-//                "currentCaseId should not be null when casesInfo.count > 0"
-//            }
             // Use dispatcher to ensure API calls run on the EDT
             CoroutineScope(dispatcher).launch {
                 val response = api.sendUserMessage(message, currentCaseId)
@@ -127,7 +124,8 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
         withContext(dispatcher) {
             handler.api.startWebSocketSession(
                 updateCornerstoneStatus = { cornerstoneStatus = it },
-                ruleSessionCompleted = { cornerstoneStatus = null })
+                ruleSessionCompleted = { cornerstoneStatus = null },
+                kbInfoUpdated = {kbInfo = it})
         }
     }
 

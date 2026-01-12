@@ -60,7 +60,8 @@ class ShowCornerstonesFromChatTest {
         coEvery {
             api.startWebSocketSession(
                 updateCornerstoneStatus = any(),
-                ruleSessionCompleted = any()
+                ruleSessionCompleted = any(),
+                kbInfoUpdated = any()
             )
         } coAnswers {
             updateCornerstoneStatus = firstArg()
@@ -105,7 +106,8 @@ class ShowCornerstonesFromChatTest {
         coEvery {
             api.startWebSocketSession(
                 updateCornerstoneStatus = any(),
-                ruleSessionCompleted = any()
+                ruleSessionCompleted = any(),
+                kbInfoUpdated = any()
             )
         } coAnswers {
             updateCornerstoneStatus = firstArg()
