@@ -98,6 +98,17 @@ internal class ServerApplicationTest {
     }
 
     @Test
+    fun `client feedback via websocket upon kb open by name`() {
+        val kbi1 = app.createKB("KB1", false)
+        val kbi2 = app.createKB("KB2", false)
+
+        val result1 = app.openKB(kbi1.name)
+        result1.isSuccess shouldBe true
+        result1.getOrNull()!! shouldBe kbi1
+        coVerify { webSocketManager.sendKbInfo(kbi1) }
+    }
+
+    @Test
     fun kbForIdTest() {
         val kbi1 = app.createKB("KB1", false)
         val kbi2 = app.createKB("KB2", false)
