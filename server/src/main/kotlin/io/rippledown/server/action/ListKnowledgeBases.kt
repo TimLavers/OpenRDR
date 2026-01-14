@@ -8,6 +8,6 @@ class ListKnowledgeBases: ServerAction {
     constructor(jsonObject: JsonObject)
 
     override fun doIt(application: ServerChatActionsInterface, kbId: String?): ServerChatResult {
-        return ServerChatResult(application.listKnowledgeBases().sorted().joinToString("\n") { it.name })
+        return ServerChatResult(application.kbList().sorted().joinToString("\n") { it.name })
     }
 }

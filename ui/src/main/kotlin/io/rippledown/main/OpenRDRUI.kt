@@ -339,7 +339,6 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                 }
             }
             Column {
-                println("chat column, isShowingChat = $isShowingChat")
                 if (isShowingChat) {
                     ChatController(
                         id = chatId,

@@ -18,9 +18,9 @@ class ListKnowledgeBasesTest: ActionTestBase() {
     @Test
     fun `do it`() {
         val kbsList = listOf(KBInfo("lipids"), KBInfo("glucose"), KBInfo("CE"))
-        every { actionsInterface.listKnowledgeBases()}.returns(kbsList)
+        every { actionsInterface.kbList()}.returns(kbsList)
         val received = ListKnowledgeBases(JsonObject(emptyMap())).doIt(actionsInterface)
         received.userMessage shouldBe "CE\nglucose\nlipids"
-        verify { actionsInterface.listKnowledgeBases() }
+        verify { actionsInterface.kbList() }
     }
 }

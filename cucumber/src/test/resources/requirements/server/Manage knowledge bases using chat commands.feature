@@ -34,7 +34,7 @@ Feature: Open and close Knowledge Bases using the chat interface
       | Please open b |
     Then the chatbot response contains the following phrase:
       | opened |
-#    Then the displayed KB name is now B
+    Then the displayed KB name is now B
     Then I should see the case CaseB1 as the current case
     And stop the client application
 
