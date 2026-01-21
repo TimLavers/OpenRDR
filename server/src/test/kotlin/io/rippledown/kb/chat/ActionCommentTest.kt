@@ -48,6 +48,31 @@ class ActionCommentTest {
     }
 
     @Test
+    fun `should parse UserAction with ' character from JSON`() {
+        // Given
+        val msg = "Please confirm that you want to add the comment: 'Let's surf.'"
+        val json = """
+            {
+                "action": "UserAction",
+                "message": "$msg"
+            }
+        """.trimIndent()
+
+        // When
+        val actionComment = json.fromJsonString<ActionComment>()
+
+        // Then
+        with(actionComment) {
+            action shouldBe USER_ACTION
+            message shouldBe msg
+            debug shouldBe null
+            comment shouldBe null
+            replacementComment shouldBe null
+            reason shouldBe null
+        }
+    }
+
+    @Test
     fun `should parse ActionComment from JSON`() {
         // Given
         val json = """
@@ -72,6 +97,27 @@ class ActionCommentTest {
             comment shouldBe "Old comment text"
             replacementComment shouldBe "New comment text"
             reason shouldBe "reason1"
+            reasonId shouldBe null
+        }
+    }
+
+    @Test
+    fun `should parse ActionComment to remove a reason from JSON`() {
+        // Given
+        val json = """
+            {
+                "action": "$REMOVE_REASON",
+                "reasonId": 42
+             }
+        """
+
+        // When
+        val actionComment = json.fromJsonString<ActionComment>()
+
+        // Then
+        with(actionComment) {
+            action shouldBe REMOVE_REASON
+            reasonId shouldBe 42
         }
     }
 
@@ -152,7 +198,11 @@ class ActionCommentTest {
     fun replaceComment() {
         val commentToRemove = "Beach time!"
         val commentToAdd = "Surf time!"
-        val actionComment = ActionComment(REPLACE_COMMENT, comment = commentToRemove, replacementComment = commentToAdd)
+        val actionComment = ActionComment(
+            REPLACE_COMMENT,
+            comment = commentToRemove,
+            replacementComment = commentToAdd,
+        )
         with(actionComment.createActionInstance() as ReplaceComment) {
             comment shouldBe commentToRemove
             replacementComment shouldBe commentToAdd

@@ -22,4 +22,5 @@ interface RuleService {
     fun moveAttributeTo(moved: String, destination: String)
     fun sendCornerstoneStatus()
     fun sendRuleSessionCompleted()
+    fun removeCondition(conditionId: Int): CornerstoneStatus
 }

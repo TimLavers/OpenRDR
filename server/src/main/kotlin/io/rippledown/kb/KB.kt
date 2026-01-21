@@ -164,6 +164,13 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         runBlocking { webSocketManager?.sendRuleSessionCompleted() }
     }
 
+    override fun removeCondition(conditionId: Int): CornerstoneStatus {
+        check(ruleSession != null) { "No rule session in progress." }
+        val condition = conditionManager.getById(conditionId)
+        ruleSession!!.removeCondition(condition)
+        return cornerstoneStatus(null)
+    }
+
     fun cancelRuleSession() {
         check(ruleSession != null) { "No rule session in progress." }
         ruleSession = null

@@ -12,6 +12,7 @@ import kotlinx.serialization.encoding.*
 
 class RDRCaseBuilder {
     private val caseData: MutableMap<TestEvent, TestResult> = mutableMapOf()
+    private var caseType = CaseType.Processed
 
     fun addValue(attribute: Attribute, date: Long, value: String) {
         val result = TestResult(value)
@@ -22,9 +23,12 @@ class RDRCaseBuilder {
         val testEvent = TestEvent(attribute, date)
         caseData[testEvent] = result
     }
+    fun setCaseType(caseType: CaseType) {
+        this.caseType = caseType
+    }
 
     fun build(name: String, id: Long? = null): RDRCase {
-        return RDRCase(CaseId(id, name), caseData)
+        return RDRCase(CaseId(id, name, caseType), caseData)
     }
 }
 

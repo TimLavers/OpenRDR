@@ -62,8 +62,8 @@ class ChatDefs {
         waitForBotText(CHAT_BOT_DONE_MESSAGE)
     }
 
-    fun waitForBotInitialPrompt() {
-        waitForBotText(WOULD_YOU_LIKE)
+    fun waitForBotQuestion() {
+        waitForBotText("?")
     }
 
     @Then("the chatbot has asked if I would like to add a comment")
@@ -71,38 +71,22 @@ class ChatDefs {
         waitForBotText(WOULD_YOU_LIKE, ADD_A_COMMENT)
     }
 
-    @And("the chatbot has asked if I want to provide any reasons")
+    @And("the chatbot has asked if I want to provide any (more )reasons")
     fun waitForBotQuestionToProvideReasons() {
         waitForBotText(REASON)
     }
 
-    @And("the chatbot has asked if I want to provide any reasons and I decline")
+    @And("the chatbot has asked if I want to provide any (more )reasons and I decline")
     fun waitForBotQuestionToProvideReasonsThenDecline() {
         waitForBotText(REASON)
         decline()
+//        waitForBotToSayDone()
     }
 
-    @And("the chatbot has asked if I want to provide any reasons and I confirm")
+    @And("the chatbot has asked if I want to provide any (more )reasons and I confirm")
     fun waitForBotQuestionToProvideReasonsThenConfirm() {
         waitForBotText(REASON)
         confirm()
-    }
-
-    @And("the chatbot has asked if I want to provide any more reasons")
-    fun waitForBotQuestionToProvideMoreReasons() {
-        waitForBotText(MORE_REASONS)
-    }
-
-    @And("the chatbot has asked if I want to provide any more reasons and I confirm")
-    fun waitForBotQuestionToProvideMoreReasonsThenConfirm() {
-        waitForBotText(MORE_REASONS)
-        confirm()
-    }
-
-    @And("the chatbot has asked if I want to provide any more reasons and I decline")
-    fun waitForBotQuestionToProvideMoreReasonsThenDecline() {
-        waitForBotText(MORE_REASONS)
-        decline()
     }
 
     @And("the chatbot has asked for the first reason")
@@ -120,11 +104,6 @@ class ChatDefs {
         waitForBotText(WOULD_YOU_LIKE, ADD, REMOVE, REPLACE)
     }
 
-    @Then("the chatbot response contains the following phrases:")
-    fun checkBotResponseContainsPhrases(phrases: DataTable) {
-        waitForBotText(*phrases.asList().toTypedArray())
-    }
-
     fun waitForBotText(vararg terms: String) {
         await().atMost(ofSeconds(30)).until {
             chatPO().mostRecentBotRowContainsTerms(terms.toList())
@@ -139,7 +118,7 @@ class ChatDefs {
 
     @And("I build a rule to add an initial comment {string} using the chat with no condition")
     fun addCommentUsingChat(comment: String) {
-        waitForBotInitialPrompt()
+        waitForBotQuestion()
         confirm()
         waitForBotQuestionToSpecifyAComment()
         enterChatTextAndSend(comment)
@@ -148,6 +127,26 @@ class ChatDefs {
         waitForBotQuestionToProvideReasons()
         decline()
         waitForBotToSayDone()
+    }
+
+    @And("I provide only the following reason(s):")
+    fun provideTheseReasonsThenDeclineToAddMore(reasons: DataTable) {
+        provideTheseReasons(reasons)
+        declineToAddMoreReasons()
+        waitForBotToSayDone()
+    }
+
+    fun declineToAddMoreReasons() {
+        waitForBotQuestionToProvideReasons()
+        decline()
+    }
+
+    @And("I provide the following reason(s):")
+    fun provideTheseReasons(reasons: DataTable) {
+        reasons.asList().forEach { reason ->
+            waitForBotQuestionToProvideReasons()
+            enterChatTextAndSend(reason)
+        }
     }
 
     @And("I start to build a rule using the chat to add the comment {string}")
@@ -160,25 +159,68 @@ class ChatDefs {
 
     @And("I build a rule to add another comment {string} using the chat")
     fun addAnotherCommentUsingChat(comment: String) {
-        waitForBotQuestionToAddRemoveOrReplaceAComment()
-        enterChatTextAndSend("Add the comment: \"$comment\"")
-        waitForBotRequestForConfirmation()
-        confirm()
+        requestCommentBeAdded(comment)
         waitForBotQuestionToProvideReasons()
         decline()
         waitForBotToSayDone()
     }
 
+    @And("I add a comment {string}, allowing the report change to the cornerstone case")
+    fun addCommentUsingChatAndAllowCornerstoneReportChange(comment: String) {
+        requestCommentBeAdded(comment)
+        waitForBotQuestionToProvideReasons()
+        decline()
+        waitForBotQuestionToAllowReportChangeToCornerstoneThenConfirm()
+        waitForBotToSayDone()
+    }
+
+    @And("I request that the comment {string} be added")
+    fun requestCommentBeAdded(comment: String) {
+        waitForBotQuestion()
+        enterChatTextAndSend("Add the comment: \"$comment\"")
+        waitForBotRequestForConfirmationAndConfirm()
+    }
+
+    @And("I request that the comment be removed")
+    fun requestCommentBeRemoved() {
+        waitForBotQuestion()
+        enterChatTextAndSend("Remove the comment")
+        waitForBotRequestForConfirmationAndConfirm()
+    }
+
+    @And("I request that the comment be replaced by {string}")
+    fun requestCommentBeReplacedBy(comment: String) {
+        waitForBotQuestion()
+        enterChatTextAndSend("Replace the comment by '$comment'")
+        waitForBotRequestForConfirmationAndConfirm()
+    }
+
     @And("the chatbot has asked if want to allow the report change to the cornerstone case and I confirm")
     fun waitForBotQuestionToAllowReportChangeToCornerstoneThenConfirm() {
-        waitForBotText("allow")
+        waitForBotQuestion()
         confirm()
     }
 
     @And("the chatbot has asked if want to allow the report change to cornerstone case {string} and I confirm")
     fun waitForBotQuestionToAllowReportChangeToCornerstoneThenConfirm(name: String) {
-        waitForBotText("allow", name)
+        waitForBotText(name)
         confirm()
+    }
+
+    @And("the chatbot lists the following reasons:")
+    fun waitForReasonsToBeListed(dataTable: DataTable) {
+        val reasons = dataTable.asList().toTypedArray()
+        waitForBotText(*reasons)
+    }
+
+    @And("I ask to see the reasons")
+    fun askToSeeReasons() {
+        enterChatTextAndSend("What reasons are there?")
+    }
+
+    @And("I request that the {word} reason be removed")
+    fun removeReason(index: String) {
+        enterChatTextAndSend("Remove the $index reason")
     }
 
 }

@@ -12,7 +12,7 @@
 ## Step 2. Transform reason.
 
 - Transform each reason using the "{{TRANSFORM_REASON}}" function. The function will return a JSON object with "
-  isTransformed" and "message".
+  reasonId" and "message".
 - See the "Transform reason" instructions below.
 
 ## Step 3. Show the transformed reason to the user:
@@ -45,3 +45,39 @@
 - If the number of cornerstone cases to review is greater than 0 after the last reason was transformed, follow the
   instructions "Allowing or Disallowing the change to the Cornerstone Case report", else follow the instructions "
   Completing the report change".
+
+## Step 6. Allow the user to remove a reason:
+
+- If the user indicates that a reason be removed, output the following:
+
+```json
+{
+  "action": "{{REMOVE_REASON}}",
+  "reasonId": "<reason id of the reason to remove>"
+}
+```
+
+- After a reason has been removed, you will receive an input from the system indicating that there may be
+  cornerstone cases to review as per Step 4.
+- Inform the user that the reason has been removed and ask for further reasons:
+
+```json
+{
+  "action": "{{USER_ACTION}}",
+  "message": "<your message indicating that the reason has been removed and asking for further reasons>"
+}
+```
+
+## Step 7. Allow the user to see all reasons:
+
+- If the user asks to see the reasons entered so far, list them to the user as a numbered list with one reason per line,
+  for example:
+
+```json
+{
+  "action": "{{USER_ACTION}}",
+  "message": "1. <first reason>\\n2. <second reason>\\n3. <third reason>"
+}
+```
+
+

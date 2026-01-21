@@ -14,5 +14,6 @@ sealed class Condition {
     abstract fun sameAs(other: Condition): Boolean
     abstract fun userExpression(): String
     open fun attributeNames(): Collection<String> = setOf()
+    open fun id(): Int? = id
 }
 
