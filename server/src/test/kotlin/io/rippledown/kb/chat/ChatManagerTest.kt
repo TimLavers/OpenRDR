@@ -258,7 +258,7 @@ class ChatManagerTest {
         runTest {
             // Given
             val initialResponseFromModel =
-                ActionComment(USER_ACTION, message = "What do you want to replace?").toJsonString()
+                ActionComment(action = USER_ACTION, message = "What do you want to replace?").toJsonString()
             coEvery { conversationService.startConversation() } returns initialResponseFromModel
             chatManager.startConversation(viewableCase) //to set the current case
 
@@ -339,7 +339,7 @@ class ChatManagerTest {
     @Test
     fun `should handle attribute reorder action`() = runTest {
         val responseFromModel =
-            ActionComment(MOVE_ATTRIBUTE, attributeMoved = "Glucose", destination = "Lipids").toJsonString()
+            ActionComment(action = MOVE_ATTRIBUTE, attributeMoved = "Glucose", destination = "Lipids").toJsonString()
         coEvery { conversationService.response(any<String>()) } answers {
             responseFromModel
         }

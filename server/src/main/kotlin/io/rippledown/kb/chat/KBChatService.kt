@@ -100,7 +100,9 @@ object KBChatService {
         "COMMIT_RULE" to COMMIT_RULE,
         "EXEMPT_CORNERSTONE" to EXEMPT_CORNERSTONE,
         "UNDO_LAST_RULE" to UNDO_LAST_RULE,
-        "MOVE_ATTRIBUTE" to MOVE_ATTRIBUTE
+        "MOVE_ATTRIBUTE" to MOVE_ATTRIBUTE,
+        "REMOVE_REASON" to REMOVE_REASON,
+
     )
 
     fun systemPrompt(viewableCase: ViewableCase): String {

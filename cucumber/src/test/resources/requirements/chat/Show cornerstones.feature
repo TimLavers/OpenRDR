@@ -1,5 +1,6 @@
 @chat
 Feature: Show cornerstones
+
   Scenario: The user should be able to review cornerstones when adding a comment using the chat
     Given cases are set up as follows:
       | Case name | attribute name | value | comment    | condition    |
@@ -9,10 +10,7 @@ Feature: Show cornerstones
     And I start the client application
     And I see the case Case1 as the current case
     And the chat is showing
-    And the chatbot has asked if I want to add, remove or replace a comment
-    And I enter the following text into the chat panel:
-      | Add the comment "Comment 4." |
-    And the chatbot has asked for confirmation and I confirm
+    And I request that the comment "Comment 4." be added
     And the case Case2 is shown as the cornerstone case
     And the chatbot has asked if I want to provide any reasons and I decline
     And the chatbot has asked if want to allow the report change to cornerstone case "Case2" and I confirm
@@ -31,10 +29,7 @@ Feature: Show cornerstones
     And select the case Case2
     And I see the case Case2 as the current case
     And the chat is showing
-    And the chatbot has asked if I want to add, remove or replace a comment
-    And I enter the following text into the chat panel:
-      | Remove the comment |
-    And the chatbot has asked for confirmation and I confirm
+    And I request that the comment be removed
     And the case Case1 is shown as the cornerstone case
     And the chatbot has asked if I want to provide any reasons and I decline
     When the chatbot has asked if want to allow the report change to cornerstone case "Case1" and I confirm
@@ -52,10 +47,7 @@ Feature: Show cornerstones
     And select the case Case2
     And I see the case Case2 as the current case
     And the chat is showing
-    And the chatbot has asked if I want to add, remove or replace a comment
-    And I enter the following text into the chat panel:
-      | Replace the comment with "Comment 2." |
-    And the chatbot has asked for confirmation and I confirm
+    And I request that the comment be replaced by "Comment 2."
     And the case Case1 is shown as the cornerstone case
     And the chatbot has asked if I want to provide any reasons and I decline
     When the chatbot has asked if want to allow the report change to cornerstone case "Case1" and I confirm
@@ -73,16 +65,12 @@ Feature: Show cornerstones
     And select the case Case2
     And I see the case Case2 as the current case
     And the chat is showing
-    And the chatbot has asked if I want to add, remove or replace a comment
-    And I enter the following text into the chat panel:
-      | Remove the comment |
-    And the chatbot has asked for confirmation and I confirm
+    And I request that the comment be removed
     And the case Case1 is shown as the cornerstone case
     And the chatbot has asked if I want to provide any reasons
     When I enter the following text into the chat panel:
       | x contains b |
-    And the chatbot has asked if I want to provide any more reasons
-    And I decline
+    And the chatbot has asked if I want to provide any more reasons and I decline
     Then there are no cornerstone cases showing
     And the chatbot has completed the action
     And the report should be empty
@@ -96,10 +84,7 @@ Feature: Show cornerstones
     And I start the client application
     And I see the case Case1 as the current case
     And the chat is showing
-    And the chatbot has asked if I want to add, remove or replace a comment
-    And I enter the following text into the chat panel:
-      | Add the comment "Comment 3." |
-    And the chatbot has asked for confirmation and I confirm
+    And I request that the comment "Comment 3." be added
     And the case Case2 is shown as the cornerstone case
     And the chatbot has asked if I want to provide any reasons and I decline
     When the chatbot has asked if want to allow the report change to the cornerstone case and I confirm

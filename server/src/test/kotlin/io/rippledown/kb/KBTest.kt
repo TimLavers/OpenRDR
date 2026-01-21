@@ -8,6 +8,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.*
+import io.rippledown.chat.ReasonTransformation
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.model.*
 import io.rippledown.model.condition.*
@@ -627,6 +628,27 @@ class KBTest {
     }
 
     @Test
+    fun `should remove condition from rule session`() {
+        //Given
+        val sessionCase = createCase("Case1", value = "1.0")
+        val cornerstoneCase = createViewableCase("Case2", caseId = 1, CaseType.Cornerstone)
+        kb.addCornerstoneCase(cornerstoneCase.case)
+        sessionCase.interpretation.conclusionTexts() shouldBe emptySet()
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
+        val condition = lessThanOrEqualTo(null, glucose(), 1.2)
+        kb.addConditionToCurrentRuleSession(condition)
+        kb.conflictingCasesInCurrentRuleSession().size shouldBe 0
+
+        //When
+        val addedCondition = kb.conditionManager.getOrCreate(condition)
+        val ccStatus = kb.removeCondition(addedCondition.id!!)
+
+        //Then
+        kb.conflictingCasesInCurrentRuleSession().size shouldBe 1
+        ccStatus shouldBe CornerstoneStatus(cornerstoneCase, 0, 1)
+    }
+
+    @Test
     fun commitSession() {
         val sessionCase = createCase("Case1", value = "1.0")
         val otherCase = createCase("Case2", value = "2.0")
@@ -1053,7 +1075,8 @@ class KBTest {
         val reasonTransformation = reasonTransformer.transform(reason)
 
         //Then
-        reasonTransformation.message shouldBe "Your reason is equivalent to 'Glucose ≥ 5.1'."
+        val expected = ReasonTransformation.TRANSFORMATION_MESSAGE.format("Glucose ≥ 5.1")
+        reasonTransformation.message shouldBe expected
         val slot = slot<Condition>()
         verify { ruleService.addConditionToCurrentRuleSession(capture(slot)) }
         slot.captured shouldBeSameAs condition

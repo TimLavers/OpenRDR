@@ -11,19 +11,19 @@ Do not tell the user that you are calling the function, just call it and use the
 
 - The function returns a JSON object with:
 
-  "isTransformed": Boolean indicating whether the reason was transformed
+  "reasonId": the integer id of the transformed reason, or null if the reason could not be transformed
 
   "message": Information for the user.
 
-- If "isTransformed" is true, include the "message" in your response to the user and ask if they have any more reasons.
-- If "isTransformed" is false, include the "message" in your response to the user and also ask for a revised reason.
+- If "reasonId" is not null, include the "message" in your response to the user and ask if they have any more reasons.
+- If "reasonId" is null, include the "message" in your response to the user and also ask for a revised reason.
 
 - Example:
 
 ```json
 {
-  "isTransformed": true,
-  "message": "Your reason is equivalent to 'The sun is \"hot\".' Do you want to provide any more reasons?"
+  "reasonId": 42,
+  "message": "Added your reason 'The sun is \"hot\".' Do you want to provide any more reasons?"
 }
 ```
 
@@ -31,8 +31,8 @@ or
 
 ```json
 {
-  "isTransformed": false,
-  "message": "Your reason is not true for the case. Please rephrase the reason."
+  "reasonId": null,
+  "message": "Your reason is not true for the case. Please rephrase it."
 }
 ```
   

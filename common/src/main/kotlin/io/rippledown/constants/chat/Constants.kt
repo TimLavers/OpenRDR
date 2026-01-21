@@ -32,5 +32,6 @@ const val UNDO_LAST_RULE = "UndoLastRule"
 const val MOVE_ATTRIBUTE = "MoveAttribute"
 const val SHOW_CORNERSTONES = "ShowCornerstones"
 const val RULE_SESSION_COMPLETED = "RuleSessionCompleted"
+const val REMOVE_REASON = "RemoveReason"
 
 

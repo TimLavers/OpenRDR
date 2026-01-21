@@ -7,16 +7,12 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.rippledown.model.Attribute
-import io.rippledown.model.RDRCase
-import io.rippledown.model.RDRCaseBuilder
-import io.rippledown.model.TestResult
 import io.rippledown.model.condition.*
 import io.rippledown.persistence.ConditionStore
 import io.rippledown.persistence.inmemory.InMemoryAttributeStore
 import io.rippledown.persistence.inmemory.InMemoryConditionStore
 import io.rippledown.util.shouldContainSameAs
 import io.rippledown.utils.beSameAs
-import java.time.Instant
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
@@ -55,7 +51,7 @@ class ConditionManagerTest {
         conditionManager = ConditionManager(attributeManager, conditionStore)
         val retrieved = conditionManager.getById(created.id!!)
         retrieved shouldNotBeSameInstanceAs glucoseHigh
-        retrieved!!.id shouldNotBe null
+        retrieved.id shouldNotBe null
         retrieved should beSameAs(glucoseHigh)
     }
 
@@ -88,22 +84,15 @@ class ConditionManagerTest {
         val tshNormal = conditionManager.getOrCreate(isNormal(null, tsh))
         val notesIndicateFeline = conditionManager.getOrCreate(containsText(null, notes, "cat"))
 
-        conditionManager.getById(glucoseNormal.id!!)!! should beSameAs(isNormal(null, glucose))
-        conditionManager.getById(tshNormal.id!!)!! should beSameAs(isNormal(null, tsh))
-        conditionManager.getById(notesIndicateFeline.id!!)!! should beSameAs(containsText(99, notes, "cat"))
+        conditionManager.getById(glucoseNormal.id!!) should beSameAs(isNormal(null, glucose))
+        conditionManager.getById(tshNormal.id!!) should beSameAs(isNormal(null, tsh))
+        conditionManager.getById(notesIndicateFeline.id!!) should beSameAs(containsText(99, notes, "cat"))
 
         // Rebuild.
         conditionManager = ConditionManager(attributeManager, conditionStore)
-        conditionManager.getById(glucoseNormal.id!!)!! should beSameAs(isNormal(null, glucose))
-        conditionManager.getById(tshNormal.id!!)!! should beSameAs(isNormal(null, tsh))
-        conditionManager.getById(notesIndicateFeline.id!!)!! should beSameAs(containsText(99, notes, "cat"))
-    }
-
-    @Test
-    fun `get by id with unknown id`() {
-        conditionManager.getOrCreate(isNormal(null, glucose))
-        conditionManager.getOrCreate(isNormal(null, tsh))
-        conditionManager.getById(9999) shouldBe null
+        conditionManager.getById(glucoseNormal.id!!) should beSameAs(isNormal(null, glucose))
+        conditionManager.getById(tshNormal.id!!) should beSameAs(isNormal(null, tsh))
+        conditionManager.getById(notesIndicateFeline.id!!) should beSameAs(containsText(99, notes, "cat"))
     }
 
     @Test //Cond-2
@@ -157,14 +146,5 @@ class ConditionManagerTest {
         toLoad.forEach {
             conditionManager.all() shouldContainSameAs it
         }
-    }
-
-    private fun createCase(attributes: List<Attribute>): RDRCase {
-        val date = Instant.now()
-        val builder = RDRCaseBuilder()
-        attributes.forEach {
-            builder.addResult(it, date.toEpochMilli(), TestResult(it.name + " value"))
-        }
-        return builder.build("")
     }
 }

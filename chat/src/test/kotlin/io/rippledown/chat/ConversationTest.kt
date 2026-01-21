@@ -21,7 +21,7 @@ class ConversationTest {
     fun setUp() {
         reasonTransformer = mockk()
         coEvery { reasonTransformer.transform(any<String>()) } returns ReasonTransformation(
-            isTransformed = true,
+            reasonId = 42,
             message = "Transformed successfully"
         )
     }
