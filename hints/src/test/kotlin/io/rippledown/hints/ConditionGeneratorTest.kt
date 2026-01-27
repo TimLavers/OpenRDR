@@ -1,6 +1,5 @@
 package io.rippledown.hints
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
@@ -41,14 +40,14 @@ class ConditionGeneratorTest {
     fun `should generate Episodic condition for a no-arg predicate and no-arg signature`() {
         //Given
         val spec = ConditionSpecification(
+            userExpression,
+            atttributeName,
             FunctionSpecification(High::class.simpleName!!, listOf()),
             FunctionSpecification(Current::class.simpleName!!, listOf())
         )
 
         //When
         val condition = generator.conditionFor(
-            attributeName = atttributeName,
-            userExpression = userExpression,
             conditionSpec = spec
         )
 
@@ -60,14 +59,14 @@ class ConditionGeneratorTest {
     fun `should generate Episodic condition for a 1-arg predicate and no-arg signature`() {
         //Given
         val spec = ConditionSpecification(
+            userExpression,
+            atttributeName,
             FunctionSpecification(Contains::class.simpleName!!, listOf("pending")),
             FunctionSpecification(Current::class.simpleName!!, listOf())
         )
 
         //When
         val condition = generator.conditionFor(
-            attributeName = atttributeName,
-            userExpression = userExpression,
             conditionSpec = spec
         )
 
@@ -80,14 +79,14 @@ class ConditionGeneratorTest {
     fun `should generate Episodic condition for a no-arg predicate and 1-arg signature`() {
         //Given
         val spec = ConditionSpecification(
+            userExpression,
+            atttributeName,
             FunctionSpecification(Low::class.simpleName!!, listOf()),
             FunctionSpecification(AtLeast::class.simpleName!!, listOf("42"))
         )
 
         //When
         val condition = generator.conditionFor(
-            attributeName = atttributeName,
-            userExpression = userExpression,
             conditionSpec = spec
         )
 
@@ -99,14 +98,14 @@ class ConditionGeneratorTest {
     fun `should generate Episodic condition for a 1-arg predicate and 1-arg signature`() {
         //Given
         val spec = ConditionSpecification(
+            userExpression,
+            atttributeName,
             FunctionSpecification(Is::class.simpleName!!, listOf("pending")),
             FunctionSpecification(AtLeast::class.simpleName!!, listOf("42"))
         )
 
         //When
         val condition = generator.conditionFor(
-            attributeName = atttributeName,
-            userExpression = userExpression,
             conditionSpec = spec
         )
 
@@ -118,13 +117,13 @@ class ConditionGeneratorTest {
     fun `should generate CaseStructure condition for IsSingleEpisodeCase`() {
         //Given
         val spec = ConditionSpecification(
+            userExpression,
+            atttributeName,
             FunctionSpecification(IsSingleEpisodeCase::class.simpleName!!, listOf())
         )
 
         //When
         val condition = generator.conditionFor(
-            attributeName = "",
-            userExpression = userExpression,
             conditionSpec = spec
         )
 
@@ -136,13 +135,13 @@ class ConditionGeneratorTest {
     fun `should generate CaseStructure condition for IsPresentInCase`() {
         //Given
         val spec = ConditionSpecification(
+            userExpression,
+            atttributeName,
             FunctionSpecification(IsPresentInCase::class.simpleName!!, listOf())
         )
 
         //When
         val condition = generator.conditionFor(
-            attributeName = atttributeName,
-            userExpression = userExpression,
             conditionSpec = spec
         )
 
@@ -154,13 +153,13 @@ class ConditionGeneratorTest {
     fun `should generate CaseStructure condition for IsAbsentFromCase`() {
         //Given
         val spec = ConditionSpecification(
+            userExpression,
+            atttributeName,
             FunctionSpecification(IsAbsentFromCase::class.simpleName!!, listOf())
         )
 
         //When
         val condition = generator.conditionFor(
-            attributeName = atttributeName,
-            userExpression = userExpression,
             conditionSpec = spec
         )
 
@@ -172,36 +171,17 @@ class ConditionGeneratorTest {
     fun `should generate Series condition`() {
         //Given
         val spec = ConditionSpecification(
+            userExpression,
+            atttributeName,
             FunctionSpecification(Increasing::class.simpleName!!, listOf())
         )
 
         //When
         val condition = generator.conditionFor(
-            attributeName = atttributeName,
-            userExpression = userExpression,
             conditionSpec = spec
         )
 
         //Then
         condition shouldBe SeriesCondition(null, attribute, Increasing, userExpression)
     }
-
-    @Test
-    fun `should throw NPE when trying to generate an Episodic condition if the attribute is null`() {
-        //Given
-        val spec = ConditionSpecification(
-            FunctionSpecification(High::class.simpleName!!, listOf()),
-            FunctionSpecification(Current::class.simpleName!!, listOf())
-        )
-
-        //Then
-        shouldThrow<NullPointerException> {
-            generator.conditionFor(
-                attributeName = "",
-                userExpression = "elevated",
-                conditionSpec = spec
-            )
-        }
-    }
-
 }

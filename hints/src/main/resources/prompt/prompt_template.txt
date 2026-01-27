@@ -2,7 +2,9 @@
 Your task is to transform a list of expressions into a json array of objects.
 
 ---TASK DETAILS---
-Each json object in the array should have two fields: predicate and signature.
+Each json object in the array should have four fields: userExpression, attributeName, predicate and signature.
+The userExpression is the expression to transform.
+The attributeName is the name of the attribute identified in the userExpression.
 The predicate field should have two fields: name and parameters.
 The signature field should have two fields: name and parameters.
 There are three types of predicate names: episodic, case structure and series.

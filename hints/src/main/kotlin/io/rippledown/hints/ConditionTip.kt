@@ -17,14 +17,11 @@ class ConditionTip(val attributeNames: Collection<String>, attributeFor: Attribu
         if (userTexts.isEmpty()) return emptyList()
         val nonBlankTexts = userTexts.map { if (it.isBlank()) "" else it }
         return try {
-            val expressions = nonBlankTexts.map { it.insertPlaceholder(attributeNames = attributeNames) }
-            val conditionSpecs = conditionSpecificationsFor(*expressions.map { it.textWithPlaceholder }.toTypedArray())
-            expressions.zip(conditionSpecs).map { (expression, spec) ->
+            val conditionSpecs = conditionSpecificationsFor(*nonBlankTexts.toTypedArray())
+            conditionSpecs.map { spec ->
                 conditionGenerator.conditionFor(
-                        expression.attributeName,
-                    expression.originalText,
-                        spec
-                    )
+                    spec
+                )
 
                 }
         } catch (e: Exception) {

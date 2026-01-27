@@ -3,22 +3,21 @@ package io.rippledown
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 
+@OptIn(ExperimentalSerializationApi::class)
+val json = Json {
+    allowStructuredMapKeys = true
+    ignoreUnknownKeys = true
+    allowTrailingComma = true
+    prettyPrint = true
+    encodeDefaults = true
+}
+
 inline fun <reified T> T.toJsonString(): String {
-    val json = Json {
-        allowStructuredMapKeys = true
-        prettyPrint = true
-        encodeDefaults = true
-    }
     return json.encodeToString(this)
 }
 
 @OptIn(ExperimentalSerializationApi::class)
 inline fun <reified T> String.fromJsonString(): T {
-    val json = Json {
-        allowTrailingComma = true
-        allowStructuredMapKeys = true
-        ignoreUnknownKeys = true
-    }
     return json.decodeFromString<T>(this)
 }
 

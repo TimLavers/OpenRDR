@@ -1,21 +1,31 @@
 package io.rippledown.hints
 
+import io.rippledown.json
 import io.rippledown.stripEnclosingJson
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 
-
+/**
+ * This is the output of the model in response to a prompt to transform a user expression into a condition.
+ * It contains all the information needed to create a condition, including the attribute name, function name and parameters.
+ * Note: only single attribute conditions are supported at the moment.
+ */
 @Serializable
 data class ConditionSpecification(
+    val userExpression: String,
+    val attributeName: String,
     val predicate: FunctionSpecification = FunctionSpecification(),
     var signature: FunctionSpecification = FunctionSpecification()
 ) {
     constructor(
+        userExpression: String,
+        attributeName: String,
         predicateName: String,
         predicateParameters: List<String> = listOf(),
         signatureName: String,
         signatureParameters: List<String> = listOf()
     ) : this(
+        userExpression.replace("\\r", ""),
+        attributeName,
         predicate = FunctionSpecification(predicateName, predicateParameters),
         signature = FunctionSpecification(signatureName, signatureParameters)
     )
@@ -23,12 +33,14 @@ data class ConditionSpecification(
     override fun toString() = encode(this)
 
     companion object {
-        fun decode(json: String): List<ConditionSpecification> {
-            val stripped = json.stripEnclosingJson().replace("\n", "")
-            return Json.decodeFromString<List<ConditionSpecification>>(stripped)
+        fun decode(text: String): List<ConditionSpecification> {
+            val stripped = text.stripEnclosingJson().replace("\\r", "")
+            println("text = ${text}")
+            println("stripped = ${stripped}")
+            return json.decodeFromString<List<ConditionSpecification>>(stripped)
         }
 
         fun encode(conditionStructure: ConditionSpecification) =
-            Json.encodeToString(conditionStructure)
+            json.encodeToString(conditionStructure)
     }
 }

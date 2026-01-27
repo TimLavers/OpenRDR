@@ -5,94 +5,165 @@ import io.rippledown.hints.ConditionService.conditionSpecificationsFor
 import org.junit.jupiter.api.Test
 
 class ConditionServiceTest {
-    @Test
-    fun `should generate conditions from expressions`() {
-        // Given
-        val high = ConditionSpecification(predicateName = "High", signatureName = "Current")
-        val low = ConditionSpecification(predicateName = "Low", signatureName = "Current")
-        val normal = ConditionSpecification(predicateName = "Normal", signatureName = "Current")
-        val isFloat = ConditionSpecification(
-            predicateName = "Is",
-            predicateParameters = listOf("3.1"),
-            signatureName = "Current"
-        )
-        val text = "abc"
-        val quotedText = "\"abc\""
-
-        val isText = ConditionSpecification(
-            predicateName = "Is",
-            predicateParameters = listOf("\"$text\""),
-            signatureName = "Current"
+    fun cs(
+        expression: String,
+        attribute: String,
+        predicate: String,
+        predicateParameters: List<String> = listOf(),
+        signature: String,
+        signatureParameters: List<String> = listOf()
+    ) =
+        expression to ConditionSpecification(
+            userExpression = expression,
+            attributeName = attribute,
+            predicateName = predicate,
+            predicateParameters = predicateParameters,
+            signatureName = signature,
+            signatureParameters = signatureParameters
         )
 
-        val gte10 = ConditionSpecification(
-            predicateName = "GreaterThanOrEquals",
-            predicateParameters = listOf("10.0"),
-            signatureName = "Current"
-        )
-        val lte10 = ConditionSpecification(
-            predicateName = "LessThanOrEquals",
-            predicateParameters = listOf("10.0"),
-            signatureName = "Current"
-        )
-        val atMostGTE = ConditionSpecification(
-            predicateName = "GreaterThanOrEquals",
-            predicateParameters = listOf("10.1"),
-            signatureName = "AtMost",
-            signatureParameters = listOf("42")
-        )
-
-        val expressionToCondition = sortedMapOf(
-            "x is elevated" to high,
-            "x is above the normal range" to high,
-            "raised x" to high,
-            "elevated x" to high,
-            "high x" to high,
-            "x es alto" to high,
-            "x es mejor que el rango normal" to high,
-            "x is lowered" to low,
-            "low x" to low,
-            "x is below the normal range" to low,
-            "x es menor que el rango normal" to low,
-            "x低於正常範圍" to low,
-            "x is OK" to normal,
-            "x is not high or low" to normal,
-            "x is within the normal range" to normal,
-            "x equals 3.1" to isFloat,
-            "x = 3.1" to isFloat,
-            "x == 3.1" to isFloat,
-            "x is equal to 3.1" to isFloat,
-            "x is $text" to isText,
-            "x = $text" to isText,
-            "x == $text" to isText,
-            "x is the same as $text" to isText,
-            "x is equal to $text" to isText,
-            "x identical to $text" to isText,
-            "x equals $quotedText" to isText,
-            "x = $quotedText" to isText,
-            "x == $quotedText" to isText,
-            "x is the same as $quotedText" to isText,
-            "x is equal to $quotedText" to isText,
-            "x identical to $quotedText" to isText,
-            "x is greater than or equal to 10.0" to gte10,
-            "x no less than 10.0" to gte10,
-            "x is greater than or equal to 10.0" to gte10,
-            "x is less than or equal to 10.0" to lte10,
-            "x no more than 10.0" to lte10,
-            "x is smaller than or equal to 10.0" to lte10,
-            "at most 42 x are greater than or equal to 10.1" to atMostGTE,
-            "no more than 42 x results greater than or equal to 10.1" to atMostGTE
-        )
-
-        // When
-        val actual = conditionSpecificationsFor(*expressionToCondition.keys.toTypedArray())
-
-        // Then
-        val expressions = expressionToCondition.keys.toList()
+    private fun verify(expressionToCondition: Map<String, ConditionSpecification>) {
+        val inputExpressions = expressionToCondition.keys.toTypedArray()
+        val actual = conditionSpecificationsFor(*inputExpressions)
         actual.forEachIndexed { index, condition ->
-            val key = expressions[index]
+            val key = inputExpressions[index]
             val expectedCondition = expressionToCondition[key]
             condition shouldBe expectedCondition
         }
+    }
+
+    @Test
+    fun `should generate High conditions`() {
+        verify(
+            sortedMapOf(
+                cs("x is elevated", "x", "High", signature = "Current"),
+                cs("x is above the normal range", "x", "High", signature = "Current"),
+                cs("raised x", "x", "High", signature = "Current"),
+                cs("elevated x", "x", "High", signature = "Current"),
+                cs("high x", "x", "High", signature = "Current"),
+                cs("x es mejor que el rango normal", "x", "High", signature = "Current"),
+            )
+        )
+    }
+
+    @Test
+    fun `should generate Low conditions`() {
+        verify(
+            sortedMapOf(
+                cs("x is lowered", "x", "Low", signature = "Current"),
+                cs("low x", "x", "Low", signature = "Current"),
+                cs("x is below the normal range", "x", "Low", signature = "Current"),
+                cs("x es menor que el rango normal", "x", "Low", signature = "Current"),
+                cs("x低於正常範圍", "x", "Low", signature = "Current"),
+            )
+        )
+    }
+
+    @Test
+    fun `should generate Normal conditions`() {
+        verify(
+            sortedMapOf(
+                cs("x is OK", "x", "Normal", signature = "Current"),
+                cs("x is not high or low", "x", "Normal", signature = "Current"),
+                cs("x is within the normal range", "x", "Normal", signature = "Current"),
+            )
+        )
+    }
+
+    @Test
+    fun `should generate Is conditions with numeric values`() {
+        verify(
+            sortedMapOf(
+                cs("x equals 3.1", "x", "Is", listOf("3.1"), "Current"),
+                cs("x = 3.1", "x", "Is", listOf("3.1"), "Current"),
+                cs("x == 3.1", "x", "Is", listOf("3.1"), "Current"),
+                cs("x is equal to 3.1", "x", "Is", listOf("3.1"), "Current"),
+            )
+        )
+    }
+
+    @Test
+    fun `should generate Is conditions with text values`() {
+        val text = "abc"
+        verify(
+            sortedMapOf(
+                cs("x is $text", "x", "Is", listOf("\"$text\""), "Current"),
+                cs("x = $text", "x", "Is", listOf("\"$text\""), "Current"),
+                cs("x == $text", "x", "Is", listOf("\"$text\""), "Current"),
+                cs("x is the same as $text", "x", "Is", listOf("\"$text\""), "Current"),
+                cs("x is equal to $text", "x", "Is", listOf("\"$text\""), "Current"),
+                cs("x identical to $text", "x", "Is", listOf("\"$text\""), "Current"),
+            )
+        )
+    }
+
+    @Test
+    fun `should generate Is conditions with quoted text values`() {
+        val text = "abc"
+        val quotedText = "\"abc\""
+        verify(
+            sortedMapOf(
+                cs("x equals $quotedText", "x", "Is", listOf("\"$text\""), "Current"),
+                cs("x = $quotedText", "x", "Is", listOf("\"$text\""), "Current"),
+                cs("x == $quotedText", "x", "Is", listOf("\"$text\""), "Current"),
+                cs("x is the same as $quotedText", "x", "Is", listOf("\"$text\""), "Current"),
+                cs("x is equal to $quotedText", "x", "Is", listOf("\"$text\""), "Current"),
+                cs("x identical to $quotedText", "x", "Is", listOf("\"$text\""), "Current"),
+            )
+        )
+    }
+
+    @Test
+    fun `should generate GreaterThanOrEquals conditions`() {
+        verify(
+            sortedMapOf(
+                cs("x is greater than or equal to 10.0", "x", "GreaterThanOrEquals", listOf("10.0"), "Current"),
+                cs("x no less than 10.0", "x", "GreaterThanOrEquals", listOf("10.0"), "Current"),
+            )
+        )
+    }
+
+    @Test
+    fun `should generate LessThanOrEquals conditions`() {
+        verify(
+            sortedMapOf(
+                cs("x is less than or equal to 10.0", "x", "LessThanOrEquals", listOf("10.0"), "Current"),
+                cs("x no more than 10.0", "x", "LessThanOrEquals", listOf("10.0"), "Current"),
+                cs("x is smaller than or equal to 10.0", "x", "LessThanOrEquals", listOf("10.0"), "Current"),
+            )
+        )
+    }
+
+    @Test
+    fun `should generate AtMost conditions`() {
+        verify(
+            sortedMapOf(
+                cs(
+                    "at most 42 x are greater than or equal to 10.1",
+                    "x",
+                    "GreaterThanOrEquals",
+                    listOf("10.1"),
+                    "AtMost",
+                    listOf("42")
+                ),
+                cs(
+                    "no more than 42 x results greater than or equal to 10.1",
+                    "x",
+                    "GreaterThanOrEquals",
+                    listOf("10.1"),
+                    "AtMost",
+                    listOf("42")
+                ),
+            )
+        )
+    }
+
+    @Test
+    fun `should generate AtLeast conditions`() {
+        verify(
+            sortedMapOf(
+                cs("at least 2 x are less than 10", "x", "LessThan", listOf("10"), "AtLeast", listOf("2")),
+            )
+        )
     }
 }

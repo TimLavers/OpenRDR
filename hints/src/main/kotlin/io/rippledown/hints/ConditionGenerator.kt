@@ -15,16 +15,18 @@ import io.rippledown.model.condition.structural.CaseStructurePredicate
 import io.rippledown.model.condition.structural.IsSingleEpisodeCase
 import kotlin.reflect.full.primaryConstructor
 
-val EPISODIC_PREDICATE_PACKAGE = Contains::class.java.packageName
-val SERIES_PREDICATE_PACKAGE = Increasing::class.java.packageName
-val CASE_STRUCTURE_PREDICATE_PACKAGE = IsSingleEpisodeCase::class.java.packageName
+val EPISODIC_PREDICATE_PACKAGE: String = Contains::class.java.packageName
+val SERIES_PREDICATE_PACKAGE: String = Increasing::class.java.packageName
+val CASE_STRUCTURE_PREDICATE_PACKAGE: String = IsSingleEpisodeCase::class.java.packageName
 
 //All the signatures are in the same package
-val SIGNATURE_PACKAGE = All::class.java.packageName
+val SIGNATURE_PACKAGE: String = All::class.java.packageName
 
 class ConditionGenerator(private val attributeFor: AttributeFor) {
 
-    fun conditionFor(attributeName: String, userExpression: String, conditionSpec: ConditionSpecification): Condition {
+    fun conditionFor(conditionSpec: ConditionSpecification): Condition {
+        val userExpression = conditionSpec.userExpression
+        val attributeName = conditionSpec.attributeName
         val attribute = if (attributeName.isNotBlank()) attributeFor(attributeName) else null
         val predicate = predicateFrom(conditionSpec.predicate, attribute)
         return when (predicate) {
@@ -53,10 +55,10 @@ class ConditionGenerator(private val attributeFor: AttributeFor) {
         val parameters = specification.parameters
         return try {
             episodicPredicate(specification, parameters)
-        } catch (e: ClassNotFoundException) {
+        } catch (_: ClassNotFoundException) {
             try {
                 seriesPredicate(specification, parameters)
-            } catch (e: ClassNotFoundException) {
+            } catch (_: ClassNotFoundException) {
                 caseStructurePredicate(specification, attribute)
             }
         }
@@ -92,28 +94,27 @@ class ConditionGenerator(private val attributeFor: AttributeFor) {
         return createInstance(functionName, *parameters.toTypedArray()) as Signature
     }
 
-    fun <T : Any> createInstance(className: String, vararg args: String?): T {
+    fun createInstance(className: String, vararg args: String?): Any {
         val clazz = Class.forName(className).kotlin
         val constructor = clazz.primaryConstructor
         return if (constructor == null) {
-            clazz.objectInstance as T
+            clazz.objectInstance
+                ?: throw IllegalArgumentException("$className is not an object and has no primary constructor")
         } else {
-            val arg = args[0]  //Assume there is only one argument
+            val arg = requireNotNull(args[0])  //Assume there is only one argument
             val constructorParameter = constructor.parameters[0]
             val type = constructorParameter.type
             when (type.toString()) {
                 "kotlin.String" -> {
-                    constructor.call(arg) as T
+                    constructor.call(arg)
                 }
 
                 "kotlin.Double" -> {
-                    val toDouble = arg!!.toDouble()
-                    constructor.call(toDouble) as T
+                    constructor.call(arg.toDouble())
                 }
 
                 "kotlin.Int" -> {
-                    val toInt = arg!!.toInt()
-                    constructor.call(toInt) as T
+                    constructor.call(arg.toInt())
                 }
 
                 else -> {
@@ -124,13 +125,11 @@ class ConditionGenerator(private val attributeFor: AttributeFor) {
         }
     }
 
-    fun <T : Any> createCaseStructureInstance(className: String, attribute: Attribute?): T {
+    fun createCaseStructureInstance(className: String, attribute: Attribute?): Any {
         val clazz = Class.forName(className).kotlin
         val constructor = clazz.primaryConstructor
-        return if (constructor == null) {
-            clazz.objectInstance as T
-        } else {
-            constructor.call(attribute) as T
-        }
+        return constructor?.call(attribute)
+            ?: (clazz.objectInstance
+                ?: throw IllegalArgumentException("$className is not an object and has no primary constructor"))
     }
 }

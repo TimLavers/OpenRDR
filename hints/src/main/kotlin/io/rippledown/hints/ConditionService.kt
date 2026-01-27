@@ -38,7 +38,7 @@ object ConditionService {
             INPUT_EXPRESSIONS to inputExpressions.joinToString(separator = "\n")
         )
         val templateText = readResource(PROMPT_TEMPLATE)
-        return templateText.replacePlaceholders(promptVariables)
+        return templateText.replacePromptPlaceholders(promptVariables)
     }
 
     fun conditionSpecificationsFor(vararg inputExpressions: String): List<ConditionSpecification> {
@@ -56,7 +56,7 @@ object ConditionService {
     }
 }
 
-fun String.replacePlaceholders(placeholders: Map<String, String>) =
+fun String.replacePromptPlaceholders(placeholders: Map<String, String>) =
     placeholders.entries.fold(this) { result, (key, value) ->
         result.replace("{{$key}}", value)
     }

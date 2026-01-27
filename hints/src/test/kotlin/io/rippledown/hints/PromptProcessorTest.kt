@@ -44,7 +44,7 @@ class PromptProcessorTest {
         val text = "{{input}} and {{input}} and {{input}} to {{output}}"
 
         //When
-        val replacedText = text.replacePlaceholders(mapOf("input" to "A", "output" to "B"))
+        val replacedText = text.replacePromptPlaceholders(mapOf("input" to "A", "output" to "B"))
 
         //Then
         replacedText shouldBe "A and A and A to B"
