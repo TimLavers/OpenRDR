@@ -11,28 +11,20 @@ There are three types of predicate names: episodic, case structure and series.
 
 The possible values for an episodic predicate name are:
 {{EPISODIC_PREDICATES}}.
+There may be no parameter or just one parameter for an episodic predicate.
+For an episodic predicate the possible values for the signature name are only:
+{{EPISODIC_SIGNATURES}}.
+If there is a signature, it may have either no parameter or just one parameter.
 
 The possible values for a case structure predicate name are:
 {{CASE_STRUCTURE_PREDICATES}}.
+For all case structure predicates there must be no signature name.
+In addition, for the specific case structure predicate 'IsSingleEpisodeCase' the attribute name must be null.
 
 The possible values for a series predicate name are:
 {{SERIES_PREDICATES}}.
-
 The predicate name should be blank if the expression does not refer to one of the possible predicates.
-
-For an episodic predicate:
-{{EPISODIC_PREDICATES}},
-the possible values for the signature name are only:
-{{EPISODIC_SIGNATURES}}.
-
-For a case structure predicate:
-{{CASE_STRUCTURE_PREDICATES}},
-or a series predicate:
-{{SERIES_PREDICATES}},
-there must be no signature.
-
-There may be no parameter or just one parameter for a predicate.
-If there is a signature, it may have either no parameter or just one parameter.
+For a series predicate there must be no signature.
 
 ---EXAMPLES---
 Examples of single expressions, each with the expected output, are:

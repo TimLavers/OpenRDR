@@ -12,13 +12,13 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ConditionSpecification(
     val userExpression: String,
-    val attributeName: String,
+    val attributeName: String?,
     val predicate: FunctionSpecification = FunctionSpecification(),
     var signature: FunctionSpecification = FunctionSpecification()
 ) {
     constructor(
         userExpression: String,
-        attributeName: String,
+        attributeName: String?,
         predicateName: String,
         predicateParameters: List<String> = listOf(),
         signatureName: String,

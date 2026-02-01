@@ -27,6 +27,32 @@ Output: ${ConditionSpecification("excessive x", "x", predicateName = "High", sig
     }
 
     @Test
+    fun `should generate example for an expression with no attribute`() {
+        // Given
+        val lines = """
+            EXPECTED PREDICATE: IsSingleEpisodeCase
+            case is for a single date
+        """.trimIndent()
+            .split("\n")
+
+        // When
+        val examples = examplesFrom(lines)
+
+        // Then
+        examples shouldBe """
+Input: case is for a single date
+Output: ${
+            ConditionSpecification(
+                "case is for a single date",
+                attributeName = null,
+                predicateName = "IsSingleEpisodeCase",
+                signatureName = ""
+            )
+        }
+        """.trimIndent()
+    }
+
+    @Test
     fun `should generate examples for several predicates`() {
         // Given
         val lines = """

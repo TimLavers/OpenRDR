@@ -28,6 +28,7 @@ fun examplesFrom(lines: List<String>): String {
                 .replace(EXPECTED_PREDICATE, "")
                 .split(",")
                 .map { it.trim() }
+            signatureComponents = emptyList()
         } else if (line.startsWith(EXPECTED_SIGNATURE)) {
             signatureComponents = line
                 .replace(EXPECTED_SIGNATURE, "")
@@ -40,7 +41,7 @@ fun examplesFrom(lines: List<String>): String {
             } else FunctionSpecification()
             val spec = ConditionSpecification(
                 userExpression = line,
-                attributeName = "x",
+                attributeName = if (line.contains("x")) "x" else null,
                 predicate = predicate,
                 signature = signature
             )

@@ -27,13 +27,14 @@ class ConditionGenerator(private val attributeFor: AttributeFor) {
     fun conditionFor(conditionSpec: ConditionSpecification): Condition {
         val userExpression = conditionSpec.userExpression
         val attributeName = conditionSpec.attributeName
-        val attribute = if (attributeName.isNotBlank()) attributeFor(attributeName) else null
+        val attribute = attributeName?.takeIf { it.isNotBlank() }?.let { attributeFor(it) }
         val predicate = predicateFrom(conditionSpec.predicate, attribute)
         return when (predicate) {
             is TestResultPredicate -> {
+                requireNotNull(attribute) { "Attribute required for episodic condition" }
                 val signature = signatureFrom(conditionSpec.signature)
                 println("signature = ${signature}, predicate = $predicate, userExpression = $userExpression, attribute = $attribute")
-                EpisodicCondition(null, attribute!!, predicate, signature, userExpression)
+                EpisodicCondition(null, attribute, predicate, signature, userExpression)
             }
 
             is CaseStructurePredicate -> {
@@ -41,7 +42,8 @@ class ConditionGenerator(private val attributeFor: AttributeFor) {
             }
 
             is SeriesPredicate -> {
-                SeriesCondition(null, attribute!!, predicate, userExpression)
+                requireNotNull(attribute) { "Attribute required for series condition" }
+                SeriesCondition(null, attribute, predicate, userExpression)
             }
 
             else -> throw IllegalArgumentException("Unknown predicate type")
