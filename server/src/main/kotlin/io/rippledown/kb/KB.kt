@@ -7,7 +7,8 @@ import io.rippledown.chat.toExpressionTransformation
 import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
 import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
 import io.rippledown.hints.AttributeFor
-import io.rippledown.hints.ConditionTip
+import io.rippledown.hints.ConditionChatService
+import io.rippledown.hints.ConditionGenerator
 import io.rippledown.kb.chat.ChatManager
 import io.rippledown.kb.chat.KBChatService
 import io.rippledown.kb.chat.RuleService
@@ -43,6 +44,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     internal val caseViewManager = CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
     val ruleTree = ruleManager.ruleTree()
     private var ruleSession: RuleBuildingSession? = null
+    private val conditionChatService = ConditionChatService()
 
     private var conditionParser: ConditionParser
     private lateinit var chatManager: ChatManager
@@ -50,7 +52,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     init {
         conditionParser = object : ConditionParser {
             override fun parse(expression: String, attributeFor: AttributeFor) =
-                ConditionTip(attributeNames(), attributeFor).conditionFor(expression)
+                ConditionGenerator(attributeFor, conditionChatService, attributeNames()).conditionFor(expression)
         }
     }
 

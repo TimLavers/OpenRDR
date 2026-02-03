@@ -18,7 +18,7 @@ class PredicateGenerationTest {
 
     @BeforeEach
     fun setUp() {
-        generator = ConditionGenerator(attributeFor)
+        generator = ConditionGenerator(attributeFor, mockk())
     }
 
     @Test

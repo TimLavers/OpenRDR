@@ -35,9 +35,12 @@ data class ConditionSpecification(
     companion object {
         fun decode(text: String): List<ConditionSpecification> {
             val stripped = text.stripEnclosingJson().replace("\\r", "")
-            println("text = ${text}")
-            println("stripped = ${stripped}")
             return json.decodeFromString<List<ConditionSpecification>>(stripped)
+        }
+
+        fun decodeOne(text: String): ConditionSpecification {
+            val stripped = text.stripEnclosingJson().replace("\\r", "")
+            return json.decodeFromString<ConditionSpecification>(stripped)
         }
 
         fun encode(conditionStructure: ConditionSpecification) =

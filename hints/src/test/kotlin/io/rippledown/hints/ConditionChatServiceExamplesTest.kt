@@ -1,10 +1,19 @@
 package io.rippledown.hints
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.hints.ConditionService.conditionSpecificationsFor
+import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class ConditionServiceTest {
+class ConditionChatServiceExamplesTest {
+    private lateinit var service: ConditionChatService
+    val attributeNames = listOf("x", "glucose")
+
+    @BeforeEach
+    fun setUp() {
+        service = ConditionChatService()
+    }
+
     fun cs(
         expression: String,
         attribute: String?,
@@ -22,18 +31,15 @@ class ConditionServiceTest {
             signatureParameters = signatureParameters
         )
 
-    private fun verify(expressionToCondition: Map<String, ConditionSpecification>) {
-        val inputExpressions = expressionToCondition.keys.toTypedArray()
-        val actual = conditionSpecificationsFor(*inputExpressions)
-        actual.forEachIndexed { index, condition ->
-            val key = inputExpressions[index]
-            val expectedCondition = expressionToCondition[key]
-            condition shouldBe expectedCondition
+    private suspend fun verify(expressionToCondition: Map<String, ConditionSpecification>) {
+        expressionToCondition.forEach { (expression, expectedCondition) ->
+            val actualCondition = service.transform(expression, attributeNames)
+            actualCondition shouldBe expectedCondition
         }
     }
 
     @Test
-    fun `should generate High conditions`() {
+    fun `should generate High conditions`() = runBlocking {
         verify(
             sortedMapOf(
                 cs("x is elevated", "x", "High", signature = "Current"),
@@ -48,7 +54,7 @@ class ConditionServiceTest {
     }
 
     @Test
-    fun `should generate Low conditions`() {
+    fun `should generate Low conditions`() = runBlocking {
         verify(
             sortedMapOf(
                 cs("x is lowered", "x", "Low", signature = "Current"),
@@ -61,7 +67,7 @@ class ConditionServiceTest {
     }
 
     @Test
-    fun `should generate Normal conditions`() {
+    fun `should generate Normal conditions`() = runBlocking {
         verify(
             sortedMapOf(
                 cs("x is OK", "x", "Normal", signature = "Current"),
@@ -73,7 +79,7 @@ class ConditionServiceTest {
     }
 
     @Test
-    fun `should generate HighOrNormal conditions`() {
+    fun `should generate HighOrNormal conditions`() = runBlocking {
         verify(
             sortedMapOf(
                 cs("glucose is either high or normal", "glucose", "HighOrNormal", signature = "Current"),
@@ -82,7 +88,7 @@ class ConditionServiceTest {
     }
 
     @Test
-    fun `should generate Is conditions with numeric values`() {
+    fun `should generate Is conditions with numeric values`() = runBlocking {
         verify(
             sortedMapOf(
                 cs("x equals 3.1", "x", "Is", listOf("3.1"), "Current"),
@@ -94,7 +100,7 @@ class ConditionServiceTest {
     }
 
     @Test
-    fun `should generate Is conditions with text values`() {
+    fun `should generate Is conditions with text values`() = runBlocking {
         val text = "abc"
         verify(
             sortedMapOf(
@@ -109,7 +115,7 @@ class ConditionServiceTest {
     }
 
     @Test
-    fun `should generate Is conditions with quoted text values`() {
+    fun `should generate Is conditions with quoted text values`() = runBlocking {
         val text = "abc"
         val quotedText = "\"abc\""
         verify(
@@ -125,7 +131,7 @@ class ConditionServiceTest {
     }
 
     @Test
-    fun `should generate IsNot conditions`() {
+    fun `should generate IsNot conditions`() = runBlocking {
         verify(
             sortedMapOf(
                 cs("x does not equal 3.1", "x", "IsNot", listOf("3.1"), "Current"),
@@ -134,7 +140,7 @@ class ConditionServiceTest {
         )
     }
     @Test
-    fun `should generate GreaterThanOrEquals conditions`() {
+    fun `should generate GreaterThanOrEquals conditions`() = runBlocking {
         verify(
             sortedMapOf(
                 cs("x is greater than or equal to 10.0", "x", "GreaterThanOrEquals", listOf("10.0"), "Current"),
@@ -145,7 +151,7 @@ class ConditionServiceTest {
     }
 
     @Test
-    fun `should generate LessThanOrEquals conditions`() {
+    fun `should generate LessThanOrEquals conditions`() = runBlocking {
         verify(
             sortedMapOf(
                 cs("x is less than or equal to 10.0", "x", "LessThanOrEquals", listOf("10.0"), "Current"),
@@ -156,7 +162,7 @@ class ConditionServiceTest {
     }
 
     @Test
-    fun `should generate LessThan conditions`() {
+    fun `should generate LessThan conditions`() = runBlocking {
         verify(
             sortedMapOf(
                 cs("glucose smaller than 3.14159", "glucose", "LessThan", listOf("3.14159"), "Current"),
@@ -165,7 +171,7 @@ class ConditionServiceTest {
     }
 
     @Test
-    fun `should generate GreaterThan conditions`() {
+    fun `should generate GreaterThan conditions`() = runBlocking {
         verify(
             sortedMapOf(
                 cs("glucose more than 3.14159", "glucose", "GreaterThan", listOf("3.14159"), "Current"),
@@ -174,7 +180,16 @@ class ConditionServiceTest {
     }
 
     @Test
-    fun `should generate AtMost conditions`() {
+    fun `should recognise a misspelled attribute name`() = runBlocking {
+        verify(
+            sortedMapOf(
+                cs("glcuose more than 3.14159", "glucose", "GreaterThan", listOf("3.14159"), "Current"),
+            )
+        )
+    }
+
+    @Test
+    fun `should generate AtMost conditions`() = runBlocking {
         verify(
             sortedMapOf(
                 cs(
@@ -206,7 +221,7 @@ class ConditionServiceTest {
     }
 
     @Test
-    fun `should generate IsNumeric conditions`() {
+    fun `should generate IsNumeric conditions`() = runBlocking {
         verify(
             sortedMapOf(
                 cs("glucose is a number", "glucose", "IsNumeric", listOf(), "Current"),
@@ -215,7 +230,7 @@ class ConditionServiceTest {
     }
 
     @Test
-    fun `should generate IsPresentInCase conditions`() {
+    fun `should generate IsPresentInCase conditions`() = runBlocking {
         verify(
             sortedMapOf(
                 cs("glucose is available", "glucose", "IsPresentInCase", listOf(), ""),
@@ -224,16 +239,16 @@ class ConditionServiceTest {
     }
 
     @Test
-    fun `should generate IsAbsentFromCase conditions`() {
+    fun `should generate IsAbsentFromCase conditions`() = runBlocking {
         verify(
             sortedMapOf(
-                cs("glucose is not available", "glucose", "IsAbsentFromCase", listOf(), "K"),
+                cs("glucose is not available", "glucose", "IsAbsentFromCase", listOf(), ""),
             )
         )
     }
 
     @Test
-    fun `should generate IsSingleEpisodeCase conditions`() {
+    fun `should generate IsSingleEpisodeCase conditions`() = runBlocking {
         verify(
             sortedMapOf(
                 cs("case has only one episode", null, "IsSingleEpisodeCase", listOf(), ""),
@@ -242,7 +257,7 @@ class ConditionServiceTest {
     }
 
     @Test
-    fun `should generate AtLeast conditions`() {
+    fun `should generate AtLeast conditions`() = runBlocking {
         verify(
             sortedMapOf(
                 cs("at least 2 x are less than 10", "x", "LessThan", listOf("10"), "AtLeast", listOf("2")),
@@ -251,7 +266,7 @@ class ConditionServiceTest {
     }
 
     @Test
-    fun `should generate All conditions`() {
+    fun `should generate All conditions`() = runBlocking {
         verify(
             sortedMapOf(
                 cs("every glucose result is normal", "glucose", "Normal", listOf(), "All", listOf()),
@@ -262,7 +277,7 @@ class ConditionServiceTest {
     }
 
     @Test
-    fun `should generate No conditions`() {
+    fun `should generate No conditions`() = runBlocking {
         verify(
             sortedMapOf(
                 cs("every glucose result is abnormal", "glucose", "Normal", listOf(), "No", listOf()),
@@ -275,7 +290,7 @@ class ConditionServiceTest {
     }
 
     @Test
-    fun `should generate Contains conditions`() {
+    fun `should generate Contains conditions`() = runBlocking {
         verify(
             sortedMapOf(
                 cs("glucose contains undefined", "glucose", "Contains", listOf("\"undefined\""), "Current"),
@@ -285,7 +300,7 @@ class ConditionServiceTest {
     }
 
     @Test
-    fun `should generate DoesNotContain conditions`() {
+    fun `should generate DoesNotContain conditions`() = runBlocking {
         verify(
             sortedMapOf(
                 cs(
@@ -307,7 +322,7 @@ class ConditionServiceTest {
     }
 
     @Test
-    fun `should generate LowByAtMostSomePercentage conditions`() {
+    fun `should generate LowByAtMostSomePercentage conditions`() = runBlocking {
         verify(
             sortedMapOf(
                 cs(
@@ -322,7 +337,7 @@ class ConditionServiceTest {
     }
 
     @Test
-    fun `should generate HighByAtMostSomePercentage conditions`() {
+    fun `should generate HighByAtMostSomePercentage conditions`() = runBlocking {
         verify(
             sortedMapOf(
                 cs(
@@ -337,7 +352,7 @@ class ConditionServiceTest {
     }
 
     @Test
-    fun `should generate NormalOrLowByAtMostSomePercentage conditions`() {
+    fun `should generate NormalOrLowByAtMostSomePercentage conditions`() = runBlocking {
         verify(
             sortedMapOf(
                 cs(
@@ -352,7 +367,7 @@ class ConditionServiceTest {
     }
 
     @Test
-    fun `should generate NormalOrHighByAtMostSomePercentage conditions`() {
+    fun `should generate NormalOrHighByAtMostSomePercentage conditions`() = runBlocking {
         verify(
             sortedMapOf(
                 cs(

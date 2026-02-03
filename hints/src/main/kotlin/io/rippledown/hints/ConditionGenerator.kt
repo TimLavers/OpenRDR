@@ -1,5 +1,6 @@
 package io.rippledown.hints
 
+import io.rippledown.log.lazyLogger
 import io.rippledown.model.Attribute
 import io.rippledown.model.condition.CaseStructureCondition
 import io.rippledown.model.condition.Condition
@@ -13,7 +14,10 @@ import io.rippledown.model.condition.series.Increasing
 import io.rippledown.model.condition.series.SeriesPredicate
 import io.rippledown.model.condition.structural.CaseStructurePredicate
 import io.rippledown.model.condition.structural.IsSingleEpisodeCase
+import kotlinx.coroutines.runBlocking
 import kotlin.reflect.full.primaryConstructor
+
+typealias AttributeFor = (String) -> Attribute
 
 val EPISODIC_PREDICATE_PACKAGE: String = Contains::class.java.packageName
 val SERIES_PREDICATE_PACKAGE: String = Increasing::class.java.packageName
@@ -22,7 +26,25 @@ val CASE_STRUCTURE_PREDICATE_PACKAGE: String = IsSingleEpisodeCase::class.java.p
 //All the signatures are in the same package
 val SIGNATURE_PACKAGE: String = All::class.java.packageName
 
-class ConditionGenerator(private val attributeFor: AttributeFor) {
+class ConditionGenerator(
+    private val attributeFor: AttributeFor,
+    private val conditionChatService: ConditionChatService,
+    private val attributeNames: List<String> = emptyList()
+) {
+    private val logger = lazyLogger
+
+    fun conditionFor(userText: String): Condition? {
+        if (userText.isBlank()) return null
+        return try {
+            val spec = runBlocking {
+                conditionChatService.transform(userText, attributeNames)
+            }
+            spec?.let { conditionFor(it) }
+        } catch (e: Exception) {
+            logger.error("Failed to create condition for text: '$userText'", e)
+            null
+        }
+    }
 
     fun conditionFor(conditionSpec: ConditionSpecification): Condition {
         val userExpression = conditionSpec.userExpression
@@ -33,7 +55,6 @@ class ConditionGenerator(private val attributeFor: AttributeFor) {
             is TestResultPredicate -> {
                 requireNotNull(attribute) { "Attribute required for episodic condition" }
                 val signature = signatureFrom(conditionSpec.signature)
-                println("signature = ${signature}, predicate = $predicate, userExpression = $userExpression, attribute = $attribute")
                 EpisodicCondition(null, attribute, predicate, signature, userExpression)
             }
 

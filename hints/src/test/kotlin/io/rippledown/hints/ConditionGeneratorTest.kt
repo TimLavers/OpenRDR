@@ -33,7 +33,7 @@ class ConditionGeneratorTest {
         attributeFor = mockk<AttributeFor>()
         attribute = mockk<Attribute>()
         every { attributeFor(atttributeName) } returns attribute
-        generator = ConditionGenerator(attributeFor)
+        generator = ConditionGenerator(attributeFor, mockk())
     }
 
     @Test
