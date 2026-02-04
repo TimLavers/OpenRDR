@@ -37,7 +37,7 @@ class ConditionGenerator(
         if (userText.isBlank()) return null
         return try {
             val spec = runBlocking {
-                conditionChatService.transform(userText, attributeNames)
+                conditionChatService.transform(userText)
             }
             spec?.let { conditionFor(it) }
         } catch (e: Exception) {

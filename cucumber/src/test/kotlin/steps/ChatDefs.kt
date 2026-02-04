@@ -80,7 +80,7 @@ class ChatDefs {
     fun waitForBotQuestionToProvideReasonsThenDecline() {
         waitForBotText(REASON)
         decline()
-//        waitForBotToSayDone()
+        waitForBotToSayDone()
     }
 
     @And("the chatbot has asked if I want to provide any (more )reasons and I confirm")

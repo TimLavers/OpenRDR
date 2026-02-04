@@ -1,6 +1,12 @@
 package io.rippledown.hints
 
+import dev.shreyaspatil.ai.client.generativeai.Chat
+import dev.shreyaspatil.ai.client.generativeai.type.GenerateContentResponse
+import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import kotlin.test.Test
@@ -39,15 +45,15 @@ class ConditionChatServiceTest {
     fun `should transform multiple expressions in a single session`() {
         runBlocking {
             // When/Then - first expression
-            val result1 = service.transform("glucose is high", emptyList())
+            val result1 = service.transform("glucose is high")
             result1 shouldBe cs("glucose is high", "glucose", "High", signature = "Current")
 
             // When/Then - second expression
-            val result2 = service.transform("x is low", emptyList())
+            val result2 = service.transform("x is low")
             result2 shouldBe cs("x is low", "x", "Low", signature = "Current")
 
             // When/Then - third expression
-            val result3 = service.transform("TSH is greater than 5.0", emptyList())
+            val result3 = service.transform("TSH is greater than 5.0")
             result3 shouldBe cs("TSH is greater than 5.0", "TSH", "GreaterThan", listOf("5.0"), "Current")
         }
     }
@@ -61,7 +67,7 @@ class ConditionChatServiceTest {
     fun `should transform High condition`() {
         runBlocking {
             // When
-            val result = service.transform("glucose is elevated", emptyList())
+            val result = service.transform("glucose is elevated")
             // Then
             result shouldBe cs("glucose is elevated", "glucose", "High", signature = "Current")
         }
@@ -76,7 +82,7 @@ class ConditionChatServiceTest {
     fun `should transform Low condition`() {
         runBlocking {
             // When
-            val result = service.transform("x is below normal", emptyList())
+            val result = service.transform("x is below normal")
             // Then
             result shouldBe cs("x is below normal", "x", "Low", signature = "Current")
         }
@@ -91,7 +97,7 @@ class ConditionChatServiceTest {
     fun `should transform Normal condition`() {
         runBlocking {
             // When
-            val result = service.transform("glucose is within range", emptyList())
+            val result = service.transform("glucose is within range")
             // Then
             result shouldBe cs("glucose is within range", "glucose", "Normal", signature = "Current")
         }
@@ -106,7 +112,7 @@ class ConditionChatServiceTest {
     fun `should transform Is condition with numeric value`() {
         runBlocking {
             // When
-            val result = service.transform("x = 3.14", emptyList())
+            val result = service.transform("x = 3.14")
             // Then
             result shouldBe cs("x = 3.14", "x", "Is", listOf("3.14"), "Current")
         }
@@ -121,7 +127,7 @@ class ConditionChatServiceTest {
     fun `should transform Is condition with text value`() {
         runBlocking {
             // When
-            val result = service.transform("x is pending", emptyList())
+            val result = service.transform("x is pending")
             // Then
             result shouldBe cs("x is pending", "x", "Is", listOf("\"pending\""), "Current")
         }
@@ -136,7 +142,7 @@ class ConditionChatServiceTest {
     fun `should transform Contains condition`() {
         runBlocking {
             // When
-            val result = service.transform("glucose contains undefined", emptyList())
+            val result = service.transform("glucose contains undefined")
             // Then
             result shouldBe cs("glucose contains undefined", "glucose", "Contains", listOf("\"undefined\""), "Current")
         }
@@ -151,7 +157,7 @@ class ConditionChatServiceTest {
     fun `should transform IsSingleEpisodeCase condition`() {
         runBlocking {
             // When
-            val result = service.transform("case has one episode", emptyList())
+            val result = service.transform("case has one episode")
             // Then
             result shouldBe cs("case has one episode", null, "IsSingleEpisodeCase", listOf(), "")
         }
@@ -166,7 +172,7 @@ class ConditionChatServiceTest {
     fun `should transform IsPresentInCase condition`() {
         runBlocking {
             // When
-            val result = service.transform("glucose is available", emptyList())
+            val result = service.transform("glucose is available")
             // Then
             result shouldBe cs("glucose is available", "glucose", "IsPresentInCase", listOf(), "")
         }
@@ -181,7 +187,7 @@ class ConditionChatServiceTest {
     fun `should transform Increasing condition`() {
         runBlocking {
             // When
-            val result = service.transform("glucose is increasing", emptyList())
+            val result = service.transform("glucose is increasing")
             // Then
             result shouldBe cs("glucose is increasing", "glucose", "Increasing", listOf(), "")
         }
@@ -234,8 +240,11 @@ class ConditionChatServiceTest {
     @Test
     fun `should use correct attribute name casing when attributeNames provided`() {
         runBlocking {
+            // Given
+            service.initialise(listOf("glucose", "TSH", "x"))
+
             // When - user types "X" but attribute is "x"
-            val result = service.transform("X is high", listOf("glucose", "TSH", "x"))
+            val result = service.transform("X is high")
 
             // Then - should use "x" not "X"
             result?.attributeName shouldBe "x"
@@ -251,10 +260,59 @@ class ConditionChatServiceTest {
     fun `should handle empty attribute names list`() {
         runBlocking {
             // When
-            val result = service.transform("glucose is high", emptyList())
+            val result = service.transform("glucose is high")
 
             // Then
             result shouldBe cs("glucose is high", "glucose", "High", signature = "Current")
+        }
+    }
+
+    @Test
+    fun `should provide attribute names when transform is called`() {
+        runBlocking {
+            // Given
+            val response = mockk<GenerateContentResponse>()
+            coEvery { response.text } returns """{"userExpression":"x is high","attributeName":"x","predicate":{"name":"High","parameters":[]},"signature":{"name":"Current","parameters":[]}}"""
+            val chat = mockk<Chat>()
+            coEvery { chat.sendMessage(any<String>()) } returns response
+
+            val serviceWithMock = ConditionChatService { chat }
+            val attributes = listOf("x", "glucose")
+
+            // When
+            serviceWithMock.initialise(attributes)
+            serviceWithMock.transform("x is high")
+
+            // Then
+            coVerify(exactly = 1) {
+                chat.sendMessage(match<String> { it.startsWith("The attribute names defined in the knowledge base are:") })
+            }
+        }
+    }
+
+    @Test
+    fun `should only provide attribute names once per session`() {
+        runBlocking {
+            // Given
+            val response = mockk<GenerateContentResponse>()
+            coEvery { response.text } returns """{"userExpression":"x is high","attributeName":"x","predicate":{"name":"High","parameters":[]},"signature":{"name":"Current","parameters":[]}}"""
+            val chat = mockk<Chat>()
+            coEvery { chat.sendMessage(any<String>()) } returns response
+
+            val serviceWithMock = ConditionChatService { chat }
+            val attributes = listOf("x", "glucose")
+
+            // When
+            serviceWithMock.initialise(attributes)
+            serviceWithMock.transform("x is high")
+            serviceWithMock.transform("x is high")
+
+            // Then
+            withClue("the second transform should not send the attributes to the model") {
+                coVerify(exactly = 1) {
+                    chat.sendMessage(match<String> { it.startsWith("The attribute names defined in the knowledge base are:") })
+                }
+            }
         }
     }
 }

@@ -947,8 +947,13 @@ class KBTest {
         val case = createCase("Case", attribute = x, value = value)
         val userExpression = "X equates to $value"
 
+        kb.startRuleSession(
+            case,
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever."))
+        )
+
         //When
-        val conditionParsingResult = kb.conditionForExpression(case, userExpression)
+        val conditionParsingResult = kb.conditionForExpression(userExpression)
 
         //Then
         val expectedCondition = EpisodicCondition(
@@ -970,8 +975,13 @@ class KBTest {
         val case = createCase("Case", attribute = x, value = value)
         val userExpression = "x contains b"
 
+        kb.startRuleSession(
+            case,
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever."))
+        )
+
         //When
-        val conditionParsingResult = kb.conditionForExpression(case, userExpression)
+        val conditionParsingResult = kb.conditionForExpression(userExpression)
 
         //Then
         val expectedCondition = EpisodicCondition(

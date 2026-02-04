@@ -129,6 +129,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         check(ruleSession == null) { "Session already in progress." }
         check(action.isApplicable(ruleTree, case)) { "Action $action is not applicable to case ${case.name}" }
         val alignedAction = action.alignWith(conclusionManager)
+        runBlocking { conditionChatService.initialise(attributeNames()) }
         ruleSession = RuleBuildingSession(ruleManager, ruleTree, case, alignedAction, allCornerstoneCases())
         logger.info("KB rule session created")
         return cornerstoneStatus(null)

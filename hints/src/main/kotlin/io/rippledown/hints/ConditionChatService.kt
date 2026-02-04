@@ -19,23 +19,25 @@ import io.rippledown.log.lazyLogger
  */
 class ConditionChatService {
     private val logger = lazyLogger
-    private val chat: Chat
+    private val systemPrompt: String
 
-    init {
-        val systemPrompt = buildSystemPrompt()
+    private val chatFactory: (String) -> Chat
+    private var chat: Chat
+
+    constructor() : this(chatFactory = { prompt ->
+        val model = generativeModel(systemInstruction = prompt)
+        model.startChat()
+    })
+
+    internal constructor(chatFactory: (String) -> Chat) {
+        this.chatFactory = chatFactory
+        systemPrompt = buildSystemPrompt()
         logger.debug("---START SYSTEM PROMPT---\n$systemPrompt\n---END SYSTEM PROMPT---\n")
-        val model = generativeModel(systemInstruction = systemPrompt)
-        chat = model.startChat()
+        chat = chatFactory(systemPrompt)
     }
 
-    /**
-     * Transform a user expression into a condition specification.
-     * 
-     * @param expression The natural language expression to transform (e.g., "glucose is high")
-     * @param attributeNames The list of attribute names defined in the KB, used for case-sensitive matching
-     * @return The parsed condition specification, or null if transformation failed
-     */
-    suspend fun transform(expression: String, attributeNames: List<String>): ConditionSpecification? {
+    suspend fun initialise(attributeNames: List<String>) {
+        chat = chatFactory(systemPrompt)
         if (attributeNames.isNotEmpty()) {
             val message =
                 "The attribute names defined in the knowledge base are: ${attributeNames.joinToString(", ")}. " +
@@ -44,6 +46,15 @@ class ConditionChatService {
             logger.debug("Providing attribute names: $message")
             retry { chat.sendMessage(message) }
         }
+    }
+
+    /**
+     * Transform a user expression into a condition specification.
+     * 
+     * @param expression The natural language expression to transform (e.g., "glucose is high")
+     * @return The parsed condition specification, or null if transformation failed
+     */
+    suspend fun transform(expression: String): ConditionSpecification? {
         logger.debug("Transforming: $expression")
         val response = retry {
             chat.sendMessage(expression).text

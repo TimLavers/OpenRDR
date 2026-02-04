@@ -56,7 +56,7 @@ class ConditionGeneratorUserTextTest {
     @Test
     fun `should return null when chat service returns null`() {
         //Given
-        coEvery { chatService.transform(any(), any()) } returns null
+        coEvery { chatService.transform(any()) } returns null
 
         //When
         val condition = generator.conditionFor("glucose is high")
@@ -75,7 +75,7 @@ class ConditionGeneratorUserTextTest {
             FunctionSpecification(High::class.simpleName!!, listOf()),
             FunctionSpecification(Current::class.simpleName!!, listOf())
         )
-        coEvery { chatService.transform(userText, any()) } returns spec
+        coEvery { chatService.transform(userText) } returns spec
 
         //When
         val condition = generator.conditionFor(userText)
@@ -94,7 +94,7 @@ class ConditionGeneratorUserTextTest {
             null,
             FunctionSpecification(IsSingleEpisodeCase::class.simpleName!!, listOf())
         )
-        coEvery { chatService.transform(userText, any()) } returns spec
+        coEvery { chatService.transform(userText) } returns spec
 
         //When
         val condition = generator.conditionFor(userText)
@@ -113,7 +113,7 @@ class ConditionGeneratorUserTextTest {
             attributeName,
             FunctionSpecification(Increasing::class.simpleName!!, listOf())
         )
-        coEvery { chatService.transform(userText, any()) } returns spec
+        coEvery { chatService.transform(userText) } returns spec
 
         //When
         val condition = generator.conditionFor(userText)
@@ -126,7 +126,7 @@ class ConditionGeneratorUserTextTest {
     @Test
     fun `should return null when chat service throws exception`() {
         //Given
-        coEvery { chatService.transform(any(), any()) } throws RuntimeException("API error")
+        coEvery { chatService.transform(any()) } throws RuntimeException("API error")
 
         //When
         val condition = generator.conditionFor("glucose is high")
@@ -145,7 +145,7 @@ class ConditionGeneratorUserTextTest {
             FunctionSpecification(Contains::class.simpleName!!, listOf("undefined")),
             FunctionSpecification(Current::class.simpleName!!, listOf())
         )
-        coEvery { chatService.transform(userText, any()) } returns spec
+        coEvery { chatService.transform(userText) } returns spec
 
         //When
         val condition = generator.conditionFor(userText)
@@ -164,7 +164,7 @@ class ConditionGeneratorUserTextTest {
             FunctionSpecification(Low::class.simpleName!!, listOf()),
             FunctionSpecification(AtLeast::class.simpleName!!, listOf("3"))
         )
-        coEvery { chatService.transform(userText, any()) } returns spec
+        coEvery { chatService.transform(userText) } returns spec
 
         //When
         val condition = generator.conditionFor(userText)

@@ -12,6 +12,7 @@ class ConditionChatServiceExamplesTest {
     @BeforeEach
     fun setUp() {
         service = ConditionChatService()
+        runBlocking { service.initialise(attributeNames) }
     }
 
     fun cs(
@@ -33,7 +34,7 @@ class ConditionChatServiceExamplesTest {
 
     private suspend fun verify(expressionToCondition: Map<String, ConditionSpecification>) {
         expressionToCondition.forEach { (expression, expectedCondition) ->
-            val actualCondition = service.transform(expression, attributeNames)
+            val actualCondition = service.transform(expression)
             actualCondition shouldBe expectedCondition
         }
     }
