@@ -36,16 +36,10 @@ class ConditionChatService {
         chat = chatFactory(systemPrompt)
     }
 
-    suspend fun initialise(attributeNames: List<String>) {
-        chat = chatFactory(systemPrompt)
-        if (attributeNames.isNotEmpty()) {
-            val message =
-                "The attribute names defined in the knowledge base are: ${attributeNames.joinToString(", ")}. " +
-                        "When transforming expressions, use one of these exact attribute names (case-sensitive) if the user's " +
-                        "expression refers to an attribute."
-            logger.debug("Providing attribute names: $message")
-            retry { chat.sendMessage(message) }
-        }
+    suspend fun updateChatWithAttributeNames(attributeNames: List<String>) {
+        val message = buildAttributePrompt(attributeNames)
+        logger.info("Providing attribute names: ${attributeNames.joinToString { it }}")
+        retry { chat.sendMessage(message) }
     }
 
     /**
@@ -66,11 +60,13 @@ class ConditionChatService {
     companion object {
         private const val RESOURCE_DIR = "/prompt"
         private const val CHAT_SYSTEM_PROMPT = "CHAT_SYSTEM_PROMPT"
+        private const val CHAT_ATTRIBUTE_PROMPT = "chat_attribute_prompt"
         const val EPISODIC_PREDICATES = "EPISODIC_PREDICATES"
         const val SERIES_PREDICATES = "SERIES_PREDICATES"
         const val CASE_STRUCTURE_PREDICATES = "CASE_STRUCTURE_PREDICATES"
         const val EPISODIC_SIGNATURES = "EPISODIC_SIGNATURES"
         const val SINGLE_EXPRESSION_EXAMPLES = "SINGLE_EXPRESSION_EXAMPLES"
+        const val ATTRIBUTE_NAMES = "ATTRIBUTE_NAMES"
 
         private fun readResource(resourceKey: String): String {
             val path = "$RESOURCE_DIR/${resourceKey.lowercase()}.txt"
@@ -90,8 +86,16 @@ class ConditionChatService {
                 CASE_STRUCTURE_PREDICATES to readResource(CASE_STRUCTURE_PREDICATES),
                 SINGLE_EXPRESSION_EXAMPLES to examples(),
             )
-            val templateText = readResource(CHAT_SYSTEM_PROMPT)
-            return templateText.replacePromptPlaceholders(promptVariables)
+            return readResource(CHAT_SYSTEM_PROMPT)
+                .replacePromptPlaceholders(promptVariables)
+        }
+
+        internal fun buildAttributePrompt(attributeNames: List<String>): String {
+            val promptVariables: Map<String, String> = mapOf(
+                ATTRIBUTE_NAMES to attributeNames.joinToString(separator = "\n") { "\"$it\"" },
+            )
+            return readResource(CHAT_ATTRIBUTE_PROMPT)
+                .replacePromptPlaceholders(promptVariables)
         }
     }
 }

@@ -1,6 +1,5 @@
 @chat
 Feature: Show cornerstones
-
   Scenario: The user should be able to review cornerstones when adding a comment using the chat
     Given cases are set up as follows:
       | Case name | attribute name | value | comment    | condition    |
@@ -70,8 +69,8 @@ Feature: Show cornerstones
     And the chatbot has asked if I want to provide any reasons
     When I enter the following text into the chat panel:
       | x contains b |
-    And the chatbot has asked if I want to provide any more reasons and I decline
     Then there are no cornerstone cases showing
+    And the chatbot has asked if I want to provide any more reasons and I decline
     And the chatbot has completed the action
     And the report should be empty
     And stop the client application

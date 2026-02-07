@@ -241,7 +241,7 @@ class ConditionChatServiceTest {
     fun `should use correct attribute name casing when attributeNames provided`() {
         runBlocking {
             // Given
-            service.initialise(listOf("glucose", "TSH", "x"))
+            service.updateChatWithAttributeNames(listOf("glucose", "TSH", "x"))
 
             // When - user types "X" but attribute is "x"
             val result = service.transform("X is high")
@@ -280,7 +280,7 @@ class ConditionChatServiceTest {
             val attributes = listOf("x", "glucose")
 
             // When
-            serviceWithMock.initialise(attributes)
+            serviceWithMock.updateChatWithAttributeNames(attributes)
             serviceWithMock.transform("x is high")
 
             // Then
@@ -303,7 +303,7 @@ class ConditionChatServiceTest {
             val attributes = listOf("x", "glucose")
 
             // When
-            serviceWithMock.initialise(attributes)
+            serviceWithMock.updateChatWithAttributeNames(attributes)
             serviceWithMock.transform("x is high")
             serviceWithMock.transform("x is high")
 
@@ -312,6 +312,38 @@ class ConditionChatServiceTest {
                 coVerify(exactly = 1) {
                     chat.sendMessage(match<String> { it.startsWith("The attribute names defined in the knowledge base are:") })
                 }
+            }
+        }
+    }
+
+    @Test
+    fun `should transform condition with misspelled attribute name`() {
+        runBlocking {
+            // Given
+            service.updateChatWithAttributeNames(listOf("glucose", "LDL", "TSH"))
+            // When
+            val result = service.transform("flucose is elevated")
+            // Then
+            result shouldBe cs("flucose is elevated", "glucose", "High", signature = "Current")
+        }
+    }
+
+    @Test
+    fun `buildAttributePrompt should contain attribute names each on a new line and delimited by quotes`() {
+        // Given
+        val attributeNames = listOf("glucose", "TSH", "LDL")
+
+        // When
+        val prompt = ConditionChatService.buildAttributePrompt(attributeNames)
+
+        // Then
+        attributeNames.forEach { name ->
+            withClue("Attribute '$name' should be present in the prompt, quoted and on its own line") {
+                prompt.contains("\"$name\"") shouldBe true
+                // Check that the quoted attribute is on its own line (preceded by newline or start, followed by newline or end)
+                val quotedName = "\"$name\""
+                val lines = prompt.lines()
+                lines.any { it.trim() == quotedName } shouldBe true
             }
         }
     }

@@ -2,17 +2,19 @@ package io.rippledown.hints
 
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ConditionChatServiceExamplesTest {
     private lateinit var service: ConditionChatService
     val attributeNames = listOf("x", "glucose")
 
-    @BeforeEach
+    @BeforeAll
     fun setUp() {
         service = ConditionChatService()
-        runBlocking { service.initialise(attributeNames) }
+        runBlocking { service.updateChatWithAttributeNames(attributeNames) }
     }
 
     fun cs(

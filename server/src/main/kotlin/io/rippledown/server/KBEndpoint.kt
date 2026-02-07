@@ -60,15 +60,15 @@ class KBEndpoint(val kb: KB) {
     }
 
     fun startRuleSessionToAddConclusion(caseId: Long, conclusion: Conclusion) {
-        kb.startRuleSession(case(caseId), ChangeTreeToAddConclusion(conclusion))
+        kb.startRuleSession(case(caseId), ChangeTreeToAddConclusion(conclusion), true)
     }
 
     fun startRuleSessionToRemoveConclusion(caseId: Long, conclusion: Conclusion) {
-        kb.startRuleSession(case(caseId), ChangeTreeToRemoveConclusion(conclusion))
+        kb.startRuleSession(case(caseId), ChangeTreeToRemoveConclusion(conclusion), true)
     }
 
     fun startRuleSessionToReplaceConclusion(caseId: Long, toGo: Conclusion, replacement: Conclusion) {
-        kb.startRuleSession(case(caseId), ChangeTreeToReplaceConclusion(toGo, replacement))
+        kb.startRuleSession(case(caseId), ChangeTreeToReplaceConclusion(toGo, replacement), true)
     }
 
     fun cancelRuleSession() = kb.cancelRuleSession()

@@ -20,6 +20,7 @@ Feature: Remove comment
     And I enter the following text into the chat panel:
       | wave height is more than 0.5 |
     When the chatbot has asked if I want to provide any more reasons and I decline
+    And the chatbot has completed the action
     Then the report should be "Go to the beach."
     And stop the client application
 
