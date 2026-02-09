@@ -173,6 +173,7 @@ fun ComposeTestRule.requireOKButtonOnReplaceCommentDialogToBeDisabled() {
 }
 
 fun ComposeTestRule.clickCancelAddNewComment() {
+    waitTillButtonIsEnabled(CANCEL_BUTTON_FOR_ADD_COMMENT)
     onNodeWithContentDescription(CANCEL_BUTTON_FOR_ADD_COMMENT)
         .assertIsDisplayed()
         .performClick()
@@ -180,6 +181,7 @@ fun ComposeTestRule.clickCancelAddNewComment() {
 }
 
 fun ComposeTestRule.clickCancelReplaceComment() {
+    waitTillButtonIsEnabled(CANCEL_BUTTON_FOR_REPLACE_COMMENT)
     onNodeWithContentDescription(CANCEL_BUTTON_FOR_REPLACE_COMMENT)
         .assertIsDisplayed()
         .performClick()

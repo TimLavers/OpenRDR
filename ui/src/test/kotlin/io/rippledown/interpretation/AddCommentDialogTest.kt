@@ -5,7 +5,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.constants.interpretation.ADD_COMMENT_PREFIX
 import io.rippledown.utils.applicationFor
-import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import kotlin.test.Test
@@ -22,7 +21,7 @@ class AddCommentDialogTest {
     }
 
     @Test
-    fun `should call handler to start rule when OK is pressed`() = runTest {
+    fun `should call handler to start rule when OK is pressed`() {
         with(composeTestRule) {
             //Given
             setContent {
@@ -38,7 +37,7 @@ class AddCommentDialogTest {
     }
 
     @Test
-    fun `should initially display all available comments`() = runTest {
+    fun `should initially display all available comments`() {
         with(composeTestRule) {
             //Given
             val availableComments = listOf("Bondi", "Manly", "Coogee")
@@ -52,7 +51,7 @@ class AddCommentDialogTest {
     }
 
     @Test
-    fun `should call handler to cancel when Cancel is pressed`() = runTest {
+    fun `should call handler to cancel when Cancel is pressed`() {
         with(composeTestRule) {
             //Given
             setContent {
