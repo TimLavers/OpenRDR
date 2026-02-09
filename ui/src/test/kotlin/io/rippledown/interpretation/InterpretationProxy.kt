@@ -55,31 +55,40 @@ fun ComposeTestRule.requireInterpretationActionsMenuToBeNotShowing() {
     onNodeWithContentDescription(CHANGE_INTERPRETATION_DROPDOWN).assertDoesNotExist()
 }
 
-fun ComposeTestRule.clickChangeInterpretationButton() =
+fun ComposeTestRule.clickChangeInterpretationButton() {
+    waitForIdle()
     onNodeWithContentDescription(CHANGE_INTERPRETATION_ICON)
         .assertIsDisplayed()
         .performClick()
+    waitForIdle()
+}
 
 fun ComposeTestRule.clickAddCommentMenu() {
+    waitForIdle()
     waitTillButtonIsEnabled(ADD_COMMENT_MENU)
     onNodeWithContentDescription(ADD_COMMENT_MENU)
         .assertIsDisplayed()
         .performClick()
+    waitForIdle()
 }
 
 
 fun ComposeTestRule.clickReplaceCommentMenu() {
+    waitForIdle()
     waitTillButtonIsEnabled(REPLACE_COMMENT_MENU)
     onNodeWithContentDescription(REPLACE_COMMENT_MENU)
         .assertIsDisplayed()
         .performClick()
+    waitForIdle()
 }
 
 fun ComposeTestRule.clickRemoveCommentMenu() {
+    waitForIdle()
     waitTillButtonIsEnabled(REMOVE_COMMENT_MENU)
     onNodeWithContentDescription(REMOVE_COMMENT_MENU)
         .assertIsDisplayed()
         .performClick()
+    waitForIdle()
 }
 
 private fun ComposeTestRule.enterCommentToBeAdded(comment: String) {
@@ -128,6 +137,7 @@ fun ComposeTestRule.clickComment(prefix: String, comment: String) {
 }
 
 fun ComposeTestRule.clickOKToAddNewComment() {
+    waitForIdle()
     waitTillButtonIsEnabled(OK_BUTTON_FOR_ADD_COMMENT)
     onNodeWithContentDescription(OK_BUTTON_FOR_ADD_COMMENT)
         .assertIsDisplayed()
@@ -136,6 +146,7 @@ fun ComposeTestRule.clickOKToAddNewComment() {
 }
 
 fun ComposeTestRule.clickOKToReplaceComment() {
+    waitForIdle()
     waitTillButtonIsEnabled(OK_BUTTON_FOR_REPLACE_COMMENT)
     waitForIdle()
     onNodeWithContentDescription(OK_BUTTON_FOR_REPLACE_COMMENT)
@@ -156,10 +167,13 @@ private fun ComposeTestRule.waitTillButtonIsEnabled(contentDescriptionForButton:
 }
 
 fun ComposeTestRule.clickOKToRemoveComment() {
-    waitTillButtonIsEnabled(OK_BUTTON_FOR_REMOVE_COMMENT)
-    onNodeWithContentDescription(OK_BUTTON_FOR_REMOVE_COMMENT)
-        .performClick()
     waitForIdle()
+    waitTillButtonIsEnabled(OK_BUTTON_FOR_REMOVE_COMMENT)
+    GuiActionRunner.execute {
+        onNodeWithContentDescription(OK_BUTTON_FOR_REMOVE_COMMENT)
+            .performClick()
+        waitForIdle()
+    }
 }
 
 fun ComposeTestRule.requireOKButtonOnRemoveCommentDialogToBeDisabled() {
