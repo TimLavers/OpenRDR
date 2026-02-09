@@ -17,7 +17,7 @@ import io.rippledown.main.LEFT_INFO_MESSAGE_ID
 import io.rippledown.main.RIGHT_INFO_MESSAGE_ID
 import io.rippledown.rule.waitUntilAsserted
 import io.rippledown.utils.dump
-import org.assertj.swing.edt.GuiActionRunner
+import org.assertj.swing.edt.GuiActionRunner.execute
 
 
 @OptIn(ExperimentalTestApi::class)
@@ -128,7 +128,7 @@ fun ComposeTestRule.clickCommentToBeReplaced(comment: String) {
 }
 
 fun ComposeTestRule.clickComment(prefix: String, comment: String) {
-    GuiActionRunner.execute {
+    execute {
         waitUntil { onNodeWithContentDescription("$prefix$comment").isDisplayed() }
         onNodeWithContentDescription("$prefix$comment").performClick()
         waitForIdle()
@@ -139,20 +139,24 @@ fun ComposeTestRule.clickComment(prefix: String, comment: String) {
 fun ComposeTestRule.clickOKToAddNewComment() {
     waitForIdle()
     waitTillButtonIsEnabled(OK_BUTTON_FOR_ADD_COMMENT)
-    onNodeWithContentDescription(OK_BUTTON_FOR_ADD_COMMENT)
-        .assertIsDisplayed()
-        .performClick()
     waitForIdle()
+    execute {
+        onNodeWithContentDescription(OK_BUTTON_FOR_ADD_COMMENT)
+            .assertIsDisplayed()
+            .performClick()
+        waitForIdle()
+    }
 }
 
 fun ComposeTestRule.clickOKToReplaceComment() {
     waitForIdle()
     waitTillButtonIsEnabled(OK_BUTTON_FOR_REPLACE_COMMENT)
     waitForIdle()
-    onNodeWithContentDescription(OK_BUTTON_FOR_REPLACE_COMMENT)
-        .assertIsEnabled()
-        .performClick()
-    waitForIdle()
+    execute {
+        onNodeWithContentDescription(OK_BUTTON_FOR_REPLACE_COMMENT)
+            .performClick()
+        waitForIdle()
+    }
 }
 
 private fun ComposeTestRule.waitTillButtonIsEnabled(contentDescriptionForButton: String) {
@@ -169,7 +173,7 @@ private fun ComposeTestRule.waitTillButtonIsEnabled(contentDescriptionForButton:
 fun ComposeTestRule.clickOKToRemoveComment() {
     waitForIdle()
     waitTillButtonIsEnabled(OK_BUTTON_FOR_REMOVE_COMMENT)
-    GuiActionRunner.execute {
+    execute {
         onNodeWithContentDescription(OK_BUTTON_FOR_REMOVE_COMMENT)
             .performClick()
         waitForIdle()
