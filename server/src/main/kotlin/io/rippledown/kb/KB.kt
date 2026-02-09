@@ -129,7 +129,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         check(action.isApplicable(ruleTree, case)) { "Action $action is not applicable to case ${case.name}" }
         val alignedAction = action.alignWith(conclusionManager)
         if (initialiseConditionChatService) {
-            runBlocking { conditionChatService.updateChatWithAttributeNames(attributeNames()) }
+            conditionChatService.setAttributeNames(attributeNames())
         }
         ruleSession = RuleBuildingSession(ruleManager, ruleTree, case, alignedAction, allCornerstoneCases())
         logger.info("KB rule session created")

@@ -24,6 +24,10 @@ class ConditionChatService {
     private val chatFactory: (String) -> Chat
     private var chat: Chat
 
+    // Lazy initialization support
+    private var pendingAttributeNames: List<String>? = null
+    private var attributesInitialized = false
+
     constructor() : this(chatFactory = { prompt ->
         val model = generativeModel(systemInstruction = prompt)
         model.startChat()
@@ -36,10 +40,27 @@ class ConditionChatService {
         chat = chatFactory(systemPrompt)
     }
 
+    /**
+     * Set attribute names to be sent to the LLM on the next transform call.
+     * This allows lazy initialization - the LLM call is deferred until actually needed.
+     */
+    fun setAttributeNames(attributeNames: List<String>) {
+        pendingAttributeNames = attributeNames
+        attributesInitialized = false
+    }
+
+    private suspend fun ensureAttributesInitialized() {
+        if (!attributesInitialized && pendingAttributeNames != null) {
+            updateChatWithAttributeNames(pendingAttributeNames!!)
+            attributesInitialized = true
+        }
+    }
+
     suspend fun updateChatWithAttributeNames(attributeNames: List<String>) {
         val message = buildAttributePrompt(attributeNames)
         logger.info("Providing attribute names: ${attributeNames.joinToString { it }}")
         retry { chat.sendMessage(message) }
+        attributesInitialized = true
     }
 
     /**
@@ -49,6 +70,7 @@ class ConditionChatService {
      * @return The parsed condition specification, or null if transformation failed
      */
     suspend fun transform(expression: String): ConditionSpecification? {
+        ensureAttributesInitialized()
         logger.debug("Transforming: $expression")
         val response = retry {
             chat.sendMessage(expression).text

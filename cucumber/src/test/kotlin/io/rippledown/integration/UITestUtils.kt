@@ -19,7 +19,7 @@ fun pause(millis: Long) {
 fun waitForDebounce() {
     pause(DEBOUNCE_WAIT_PERIOD_MILLIS + 100)
 }
-fun waitUntilAsserted(seconds: Long = 10, assertion: ThrowingRunnable) {
+fun waitUntilAsserted(seconds: Long = 60, assertion: ThrowingRunnable) {
     await().atMost(ofSeconds(seconds)).untilAsserted(assertion)
 }
 

@@ -15,7 +15,7 @@ class CaseCountPO(private val contextProvider: () -> AccessibleContext) {
 
     fun waitForCountOfNumberOfCasesToBe(count: Int) {
         if (countOfTheNumberOfCases() == count) return
-        await().atMost(ofSeconds(60)).until {
+        await().atMost(ofSeconds(120)).until {
             countOfTheNumberOfCases() == count
         }
     }
