@@ -21,7 +21,7 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
         currentCase = viewableCase
         val response = conversationService.startConversation()
         logger.info("$LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE '$response'")
-        return processActionComment(response.fromJsonString<ActionComment>())
+        return processActionComment(response.sanitizeLlmJson().fromJsonString<ActionComment>())
     }
 
     override suspend fun response(message: String): String {
@@ -33,7 +33,7 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
             val jsonFragments = extractJsonFragments(response)
             var lastResponse = ""
             jsonFragments.forEach { fragment ->
-                lastResponse = processActionComment(fragment.fromJsonString<ActionComment>())
+                lastResponse = processActionComment(fragment.sanitizeLlmJson().fromJsonString<ActionComment>())
             }
             return lastResponse
         } catch (e: Exception) {
@@ -60,3 +60,5 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
         const val LOG_PREFIX_FOR_USER_MESSAGE = "User message:"
     }
 }
+
+fun String.sanitizeLlmJson() = replace("\\'", "'")
