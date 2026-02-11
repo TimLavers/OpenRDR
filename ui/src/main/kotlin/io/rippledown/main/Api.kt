@@ -54,7 +54,11 @@ class Api(
         ruleSessionCompleted: () -> Unit,
         kbInfoUpdated: (KBInfo) -> Unit,
     ) {
-        webSocketManager.startSession(updateCornerstoneStatus, ruleSessionCompleted, kbInfoUpdated)
+        fun updateKbInfo(kbInfo: KBInfo) {
+            currentKB = kbInfo
+            kbInfoUpdated(kbInfo)
+        }
+        webSocketManager.startSession(updateCornerstoneStatus, ruleSessionCompleted, ::updateKbInfo)
     }
     fun shutdown() {
         // client.close() // Uncomment if needed, but not required for CIO engine
@@ -292,11 +296,8 @@ class Api(
             setKBParameter()
             caseId?.let { setCaseIdParameter(it) }
             setBody(message)
-        }.body<ServerChatResult>()
-        if (result.kbInfo != null) {
-            currentKB = result.kbInfo
-        }
-        return result.userMessage
+        }.body<String>()
+        return result
     }
 
     suspend fun lastRuleDescription(): UndoRuleDescription {

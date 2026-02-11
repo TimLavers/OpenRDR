@@ -13,6 +13,7 @@ const val MISSING_KB_NAME = "$KB_NAME is missing."
 const val MISSING_KB_ID = "$KB_ID is missing."
 
 fun RoutingContext.caseId() = call.parameterValue(CASE_ID, MISSING_CASE_ID).toLongOrNull() ?: error(ID_SHOULD_BE_A_LONG)
+fun RoutingContext.caseIdOrNull() = call.parameters[CASE_ID]?.toLongOrNull() // TODO TEST
 
 fun RoutingContext.kbId() = call.parameterValue(KB_ID, MISSING_KB_ID)
 

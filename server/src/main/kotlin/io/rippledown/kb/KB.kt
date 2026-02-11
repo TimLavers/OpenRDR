@@ -1,16 +1,11 @@
 package io.rippledown.kb
 
-import io.rippledown.chat.Conversation
-import io.rippledown.chat.ReasonTransformation
-import io.rippledown.chat.ReasonTransformer
-import io.rippledown.chat.toExpressionTransformation
 import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
 import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
 import io.rippledown.hints.AttributeFor
 import io.rippledown.hints.ConditionTip
-import io.rippledown.kb.chat.ChatManager
-import io.rippledown.kb.chat.KBChatService
-import io.rippledown.kb.chat.RuleService
+import io.rippledown.server.chat.ChatManager
+import io.rippledown.server.chat.KbEditInterface
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.CaseType
 import io.rippledown.model.Interpretation
@@ -24,9 +19,8 @@ import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistentKB
 import io.rippledown.server.websocket.WebSocketManager
-import io.rippledown.toJsonString
 
-class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = null) : RuleService {
+class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = null) : KbEditInterface {
     val logger = lazyLogger
 
     val kbInfo = persistentKB.kbInfo()
@@ -349,40 +343,4 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
 
     fun conditionForExpression(expression: String) = conditionForExpression(ruleSession!!.case, expression)
 
-    /**
-     * Starts a new conversation for the given viewable case.
-     *
-     * @param viewableCase The case to start a conversation about
-     * @return A string representing the conversation ID or initial response
-     */
-    suspend fun startConversation(viewableCase: ViewableCase): String {
-        val chatService = KBChatService.createKBChatService(viewableCase)
-        val conversationService = Conversation(
-            chatService = chatService,
-            reasonTransformer = createReasonTransformer(viewableCase, this)
-        )
-        chatManager = ChatManager(conversationService, this)
-        return chatManager.startConversation(viewableCase)
-    }
-
-    /**
-     * Creates a transformer that converts a natural language reason into a rule condition and
-     * adds it to the current rule session if it is valid.
-     */
-    fun createReasonTransformer(viewableCase: ViewableCase, ruleService: RuleService) = object : ReasonTransformer {
-        override suspend fun transform(reason: String): ReasonTransformation {
-            val result = conditionForExpression(viewableCase.case, reason)
-            val condition = result.condition
-            if (condition != null) {
-                ruleService.addConditionToCurrentRuleSession(condition)
-                //inform the UI and the model of the update cornerstones
-                //TODO TEST THIS
-                val cornerstoneStatus = cornerstoneStatus(null)
-                sendCornerstoneStatus()
-                chatManager.response(cornerstoneStatus.toJsonString())
-            }
-            return result.toExpressionTransformation()
-        }
-    }
-    suspend fun responseToUserMessage(message: String) = chatManager.response(message)
 }

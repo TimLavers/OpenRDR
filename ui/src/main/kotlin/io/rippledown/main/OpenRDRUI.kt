@@ -197,6 +197,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     ) { paddingValues ->
         CasePoller(object : CasePollerHandler {
             override var onUpdate: (updated: CasesInfo) -> Unit = {
+                println("cases info updated")
                 casesInfo = it
             }
             override var updateCasesInfo = {

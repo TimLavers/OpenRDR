@@ -1,8 +1,8 @@
 # Defining the change to the report
 
-The current report for the case is a list of comments. For the current case, the list of comments is as follows:
-
-{{COMMENTS}}
+The current report for the case is a list of comments. 
+Whenever the user selects a case, you will be provided with the comments for that case.
+You will also be provided with the list of attributes for that case.
 
 ## Step 1: Ask the user if they want to change the report for the case:
 

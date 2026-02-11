@@ -21,11 +21,12 @@ class ChatManagementTest : OpenRDRServerTestBase() {
 
     @Test
     fun `should delegate starting a conversation with model to the server application`() = testApplication {
+        TODO()
         //Given
         setupServer()
         val caseId = 42L
         val response = "Shall I add a surfing comment to the report?"
-        coEvery { kbEndpoint.startConversation(caseId) } returns response
+//        coEvery { kbEndpoint.startConversation(caseId) } returns response
 
         //When
         val result = httpClient.post(START_CONVERSATION) {
@@ -34,17 +35,18 @@ class ChatManagementTest : OpenRDRServerTestBase() {
         }
 
         //Then
-        coVerify { kbEndpoint.startConversation(caseId) }
+//        coVerify { kbEndpoint.startConversation(caseId) }
         result.status shouldBe HttpStatusCode.Companion.OK
     }
 
     @Test
     fun `should delegate generating a response from the model to the server application`() = testApplication {
+        TODO()
         //Given
         setupServer()
         val userMessage = "This is a request to the server."
         val response = "Shall I add a surfing comment to the report?"
-        coEvery { serverApplication.processUserRequest(userMessage, null) } returns ServerChatResult(response)
+//        coEvery { serverApplication.processUserRequest(userMessage, null) } returns ServerChatResult(response)
 
         //When
         val result = httpClient.post(SEND_USER_MESSAGE) {

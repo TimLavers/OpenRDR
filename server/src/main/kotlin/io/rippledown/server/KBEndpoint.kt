@@ -91,10 +91,6 @@ class KBEndpoint(val kb: KB) {
 
     fun conditionHintsForCase(id: Long): ConditionList = kb.conditionHintsForCase(case(id))
 
-    suspend fun startConversation(caseId: Long): String = kb.startConversation(viewableCase(caseId))
-
-    suspend fun responseToUserMessage(message: String): String = kb.responseToUserMessage(message)
-
     fun processCase(externalCase: ExternalCase) = kb.processCase(externalCase)
 
     fun deleteCase(name: String) = kb.deletedProcessedCaseWithName(name)

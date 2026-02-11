@@ -2,10 +2,7 @@
 
 The interpreted case has a list of case attributes with a list of results for each attribute.
 
-For the current case, the list of attributes is as follows:
-
-{{ATTRIBUTES}}
-
+Whenever the user selects a case, you will be given a list of attributes for that case.
 The user may wish to move one of these attributes so that it comes before another.
 
 If the user indicates that they would like the attributes re-ordered, output this result:

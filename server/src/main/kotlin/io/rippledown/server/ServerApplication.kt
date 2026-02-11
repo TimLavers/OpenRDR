@@ -1,5 +1,9 @@
 package io.rippledown.server
 
+import io.rippledown.chat.Conversation
+import io.rippledown.chat.ReasonTransformation
+import io.rippledown.chat.ReasonTransformer
+import io.rippledown.chat.toExpressionTransformation
 import io.rippledown.constants.server.DEFAULT_PROJECT_NAME
 import io.rippledown.kb.KB
 import io.rippledown.kb.KBManager
@@ -9,10 +13,15 @@ import io.rippledown.kb.sample.loadSampleKB
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.KBInfo
 import io.rippledown.model.ServerChatResult
+import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.postgres.PostgresPersistenceProvider
 import io.rippledown.sample.SampleKB
+import io.rippledown.server.chat.ChatManager
+import io.rippledown.server.chat.KBChatService
+import io.rippledown.server.chat.KbEditInterface
 import io.rippledown.server.websocket.WebSocketManager
+import io.rippledown.toJsonString
 import io.rippledown.util.EntityRetrieval
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -25,7 +34,7 @@ class ServerApplication(
     private val logger = lazyLogger
     private val kbManager = KBManager(persistenceProvider, webSocketManager)
     private val idToKBEndpoint = mutableMapOf<String, KBEndpoint>()
-    private val chatManager: ServerChatManager
+    private lateinit var chatManager: ChatManager
 
     init {
         persistenceProvider.idStore().data().keys.forEach {
@@ -33,7 +42,11 @@ class ServerApplication(
             loadKnownKB(kbPersistence.kbInfo())
         }
         val chatService = ServerChatServiceFactory().createChatService()
-        chatManager = ServerChatManager(chatService, this)
+        val conversation = Conversation(chatService = chatService, null)
+        runBlocking{
+            startConversation(null, null)
+        }
+//        chatManager = ChatManager(conversation, this)
     }
 
     fun getDefaultProject(): KBInfo {
@@ -58,9 +71,11 @@ class ServerApplication(
     fun selectKB(id: String): KBInfo {
         logger.info("Selecting kb with id: $id")
         val kbInfo = kbForId(id).kbInfo()
+        loadKnownKB(kbInfo)
         runBlocking {
             webSocketManager.sendKbInfo(kbInfo)
         }
+        logger.info("KB info sent to websocket, kb selected in server: $kbInfo.")
         return kbInfo
     }
 
@@ -111,9 +126,9 @@ class ServerApplication(
         return kb.kbInfo
     }
 
-    suspend fun processUserRequest(request: String, kbId: String?): ServerChatResult {
+    suspend fun processUserRequest(request: String, kbId: String?): String {
         logger.info("processUserRequest, request: $request")
-        return chatManager.sendMessageAndActOnResponse(request, kbId)
+        return chatManager.response(request)
     }
 
     override fun openKB(name: String): Result<KBInfo> = runBlocking {
@@ -121,7 +136,58 @@ class ServerApplication(
         return@runBlocking if (kbInfoResult.isFailure) kbInfoResult else kbInfoResult.map { selectKB(it.id) }
     }
 
-    override fun passUserMessageToKbChat(message: String, kbId: String) = runBlocking { kbForId(kbId).responseToUserMessage(message) }
+    override fun kb(id: String): KbEditInterface {
+        TODO("Not yet implemented")
+    }
+
+    suspend fun startConversation(kbId: String?, caseId: Long?): String {
+        val chatService = KBChatService.createKBChatService()
+        if (kbId != null) {
+            val kBEndpoint = kbForId(kbId)
+            if (caseId != null) {
+                val viewableCase = kBEndpoint.viewableCase(caseId)
+                val conversationService = Conversation(
+                    chatService = chatService,
+                    reasonTransformer = createReasonTransformer(viewableCase, kBEndpoint.kb)
+                )
+                chatManager = ChatManager(conversationService, this)
+                return chatManager.startConversation(kbId, viewableCase)
+            } else {
+                val conversationService = Conversation(
+                    chatService = chatService,
+                    reasonTransformer =  null
+                )
+                chatManager = ChatManager(conversationService, this)
+                return chatManager.startConversation(kbId, null)
+            }
+        } else {
+            val conversationService = Conversation(
+                chatService = chatService,
+                reasonTransformer =  null
+            )
+            chatManager = ChatManager(conversationService, this)
+            return chatManager.startConversation(kbId, null)
+        }
+    }
+
+    /**
+     * Creates a transformer that converts a natural language reason into a rule condition and
+     * adds it to the current rule session if it is valid.
+     */
+    fun createReasonTransformer(viewableCase: ViewableCase, ruleService: KbEditInterface) = object : ReasonTransformer {
+        override suspend fun transform(reason: String): ReasonTransformation {
+            val result = ruleService.conditionForExpression(viewableCase.case, reason)
+            val condition = result.condition
+            if (condition != null) {
+                val cornerstoneStatus = ruleService.addConditionToCurrentRuleSession(condition)
+                //inform the UI and the model of the update cornerstones
+                //TODO TEST THIS
+                chatManager.response(cornerstoneStatus.toJsonString())
+            }
+            return result.toExpressionTransformation()
+        }
+    }
+    suspend fun responseToUserMessage(message: String) = chatManager.response(message)
 
     private fun kbEndpoint(kb: KB) = KBEndpoint(kb)
 

@@ -8,7 +8,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.*
-import io.rippledown.kb.chat.RuleService
+import io.rippledown.server.chat.KbEditInterface
 import io.rippledown.model.*
 import io.rippledown.model.condition.*
 import io.rippledown.model.condition.episodic.predicate.Contains
@@ -1034,9 +1034,10 @@ class KBTest {
 
     @Test
     fun `should create ReasonTransformer`() = runTest {
+ /*
         //Given
         val viewableCase = createViewableCase()
-        val ruleService = mockk<RuleService>()
+        val ruleService = mockk<KbEditInterface>()
         val conditionParser = mockk<ConditionParser>()
         kb.setConditionParser(conditionParser)
         val reason = "elevated glucose value"
@@ -1057,19 +1058,8 @@ class KBTest {
         val slot = slot<Condition>()
         verify { ruleService.addConditionToCurrentRuleSession(capture(slot)) }
         slot.captured shouldBeSameAs condition
-    }
-
-    @Test
-    //TODO
-    fun `should inform the model and the UI when a condition is added`() = runTest {
-        //Given
-
-
-        //When
-
-
-        //Then
-
+  */
+        TODO()
     }
 
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")

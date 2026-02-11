@@ -18,7 +18,7 @@ interface ReasonTransformer {
     suspend fun transform(reason: String): ReasonTransformation
 }
 
-class Conversation(private val chatService: ChatService, private val reasonTransformer: ReasonTransformer) :
+class Conversation(private val chatService: ChatService, private val reasonTransformer: ReasonTransformer?) :
     ConversationService {
     private val logger = lazyLogger
     private lateinit var chat: Chat
@@ -37,6 +37,7 @@ class Conversation(private val chatService: ChatService, private val reasonTrans
         }
 
         val reason = functionCall.args?.get(REASON_PARAMETER) ?: ""
+        if (reasonTransformer == null) return "'$reason' evaluation: No reason transformer available."
         val transformation = reasonTransformer.transform(reason)
         return "'$reason' evaluation: ${transformation.toJsonString()}"
     }

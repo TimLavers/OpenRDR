@@ -60,7 +60,7 @@ internal class ServerApplicationTest {
     }
 
 
-    @Test // KBM-6
+    @Test
     fun `the KBs are loaded at init`() {
         //Given
         val whatever = "Whatever"
@@ -75,7 +75,6 @@ internal class ServerApplicationTest {
         app.kbForId(kbInfoStuff.id).kb.kbInfo shouldBe kbInfoStuff
         app.kbForId(kbInfoWhatever.id).kb.kbInfo shouldBe kbInfoWhatever
     }
-
 
     @Test
     fun selectKB() {
@@ -100,7 +99,7 @@ internal class ServerApplicationTest {
     @Test
     fun `client feedback via websocket upon kb open by name`() {
         val kbi1 = app.createKB("KB1", false)
-        val kbi2 = app.createKB("KB2", false)
+        app.createKB("KB2", false)
 
         val result1 = app.openKB(kbi1.name)
         result1.isSuccess shouldBe true
@@ -185,7 +184,7 @@ internal class ServerApplicationTest {
         //When
         try {
             app.createKB(kbName, false)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             //expected
         }
 
@@ -205,8 +204,9 @@ internal class ServerApplicationTest {
         app.kbList().size shouldBe 1
         app.kbList()[0] shouldBe kbi0
         kbi0.name shouldBe kbName
-        app.kbFor(kbi0).kb.addCornerstoneCase(createCase("Case1"))
-        app.kbFor(kbi0).kb.containsCornerstoneCaseWithName("Case1") shouldBe true
+        val caseName = "Whatever"
+        app.kbFor(kbi0).kb.addCornerstoneCase(createCase(caseName))
+        app.kbFor(kbi0).kb.containsCornerstoneCaseWithName(caseName) shouldBe true
 
         //When - Existing name, force true.
         val kbi1 = app.createKB(kbName, true)
@@ -219,11 +219,10 @@ internal class ServerApplicationTest {
             get(1).name shouldBe kbName
         }
 
-        app.kbFor(kbi0).kb.containsCornerstoneCaseWithName("Case1") shouldBe true //original kb
-        app.kbFor(kbi1).kb.containsCornerstoneCaseWithName("Case1") shouldBe false //new kb with same name
+        app.kbFor(kbi0).kb.containsCornerstoneCaseWithName(caseName) shouldBe true //original kb
+        app.kbFor(kbi1).kb.containsCornerstoneCaseWithName(caseName) shouldBe false //new kb with same name
         persistenceProvider.idStore().data().keys shouldBe setOf(kbi0.id, kbi1.id)
     }
-
 
     @Test
     fun `handle zip in bad format`() {

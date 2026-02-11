@@ -1,0 +1,419 @@
+package io.rippledown.server.chat
+
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.beBlank
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
+import io.rippledown.chat.ConversationService
+import io.rippledown.constants.chat.*
+import io.rippledown.model.RDRCase
+import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.server.ServerChatActionsInterface
+import io.rippledown.server.chat.ChatManager.Companion.LOG_PREFIX_FOR_CONVERSATION_RESPONSE
+import io.rippledown.server.chat.ChatManager.Companion.LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE
+import io.rippledown.toJsonString
+import kotlinx.coroutines.test.runTest
+import org.slf4j.Logger
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+
+class ChatManagerTest {
+    val defaultConversationStartResponseFromModel = """
+            {
+                "action": "$USER_ACTION",
+                "message": "Do you know what to do?"
+            }
+        """.trimIndent()
+    lateinit var logger: Logger
+    lateinit var conversationService: ConversationService
+    lateinit var kbEditService: KbEditInterface
+    lateinit var chatActionsInterface: ServerChatActionsInterface
+    lateinit var case: RDRCase
+    lateinit var kbId: String
+    lateinit var viewableCase: ViewableCase
+    lateinit var chatManager: ChatManager
+
+    @BeforeTest
+    fun setUp() {
+        conversationService = mockk()
+        kbEditService = mockk()
+        chatActionsInterface = mockk()
+        every { chatActionsInterface.kb(any()) } returns kbEditService
+        kbId = "Kb_123"
+        viewableCase = mockk()
+        case = mockk()
+        every { viewableCase.case } returns case
+        chatManager = ChatManager(conversationService, chatActionsInterface)
+        setupLogger()
+    }
+
+    private fun setupLogger() {
+        logger = mockk()
+        val loggerField = ChatManager::class.java.getDeclaredField("logger")
+        loggerField.isAccessible = true
+        loggerField.set(chatManager, logger)
+        every { logger.isInfoEnabled } returns true
+    }
+
+    @Test
+    fun `should process an action comment from a start conversation response`() = runTest {
+        // Given
+        val actionComment = ActionComment(action = USER_ACTION, message = "test response")
+
+        // When
+        val responseToUser = chatManager.processActionComment(actionComment)
+
+        // Then
+        responseToUser shouldBe "Action not called as no kbId was provided"
+    }
+
+    @Test
+    fun `should process an action comment from a response after the conversation has been started`() = runTest {
+        // Given
+        coEvery { conversationService.startConversation() } returns defaultConversationStartResponseFromModel
+        chatManager.startConversation(kbId, viewableCase)
+        val actionComment = ActionComment(action = USER_ACTION, message = "test response")
+
+        // When
+        val responseToUser = chatManager.processActionComment(actionComment)
+
+        // Then
+        responseToUser shouldBe actionComment.message
+    }
+
+    @Test
+    fun `should delegate a start conversation request to the conversation service`() = runTest {
+        // Given
+        val message = "Do you know the meaning of life?"
+        val responseFromModel = """
+            {
+                "action": "$USER_ACTION",
+                "message": "$message"
+            }
+        """.trimIndent()
+        coEvery { conversationService.startConversation() } returns responseFromModel
+
+        // When
+        chatManager.startConversation(kbId, viewableCase)
+
+        // Then
+        coVerify { conversationService.startConversation() }
+    }
+
+    @Test
+    fun `should log a start conversation response`() = runTest {
+        // Given
+        val actionComment = ActionComment(action = USER_ACTION, message = "test response")
+        val responseFromModel = actionComment.toJsonString()
+        coEvery { conversationService.startConversation() } returns responseFromModel
+
+        // When
+        chatManager.startConversation(kbId, viewableCase)
+
+        // Then
+        coVerify(exactly = 1) { logger.info("$LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE '$responseFromModel'") }
+    }
+
+    @Test
+    fun `should log a conversation response`() = runTest {
+        // Given
+        val actionComment = ActionComment(action = USER_ACTION, message = "test response")
+        val responseFromModel = actionComment.toJsonString()
+        coEvery { conversationService.response(any<String>()) } returns responseFromModel
+
+        // When
+        chatManager.response("hi there")
+
+        // Then
+        coVerify(exactly = 1) { logger.info("$LOG_PREFIX_FOR_CONVERSATION_RESPONSE $responseFromModel") }
+    }
+
+    @Test
+    fun `should return a user message from a startConversation call`() = runTest {
+        // Given
+        val message = "Do you know the meaning of life?"
+        val responseFromModel = """
+            {
+                "action": "$USER_ACTION",
+                "message": "$message"
+            }
+        """.trimIndent()
+        coEvery { conversationService.startConversation() } returns responseFromModel
+
+        // When
+        val responseToUser = chatManager.startConversation(kbId, viewableCase)
+
+        // Then
+        responseToUser shouldBe message
+    }
+
+    @Test
+    fun `should return a user message from a response call`() = runTest {
+        // Given
+        coEvery { conversationService.startConversation() } returns defaultConversationStartResponseFromModel
+        chatManager.startConversation(kbId, viewableCase)
+        val message = "the answer's 42"
+        val responseFromModel = """
+            {
+                "action": "$USER_ACTION",
+                "message": "$message"
+            }
+        """.trimIndent()
+        coEvery { conversationService.response(any()) } returns responseFromModel
+
+
+        // When
+        val responseToUser = chatManager.response("meaning of life?")
+
+        // Then
+        responseToUser shouldBe message
+    }
+
+    @Test
+    fun `should return a blank string to a debug message from the conversation service`() = runTest {
+        // Given
+        val message = "the answer is 42"
+        val responseFromModel = """
+            {
+                "action": "$DEBUG_ACTION",
+                "message": "$message"
+            }
+        """.trimIndent()
+        coEvery { conversationService.response(any()) } returns responseFromModel
+
+        // When
+        val responseToUser = chatManager.response("meaning of life?")
+
+        // Then
+        responseToUser shouldBe beBlank()
+    }
+
+    @Test
+    fun `should commit a rule session`() =
+        runTest {
+            // Given
+            val message = "What do you want to replace?"
+            val initialResponseFromModel = ActionComment(USER_ACTION, message = message).toJsonString()
+            coEvery { conversationService.startConversation() } returns initialResponseFromModel
+            chatManager.startConversation(kbId, viewableCase)
+
+            val responseFromModel = ActionComment(
+                action = COMMIT_RULE,
+            ).toJsonString()
+            coEvery { conversationService.response(any<String>()) } returns responseFromModel
+
+            // When
+            chatManager.response("please commit the rule")
+
+            // Then
+            coVerify {
+                kbEditService.commitCurrentRuleSession()
+            }
+        }
+
+    @Test
+    fun `should start a rule session for adding a comment`() =
+        runTest {
+            // Given
+            val initialResponseFromModel =
+                ActionComment(USER_ACTION, message = "What do you want to add?").toJsonString()
+            coEvery { conversationService.startConversation() } returns initialResponseFromModel
+            chatManager.startConversation(kbId, viewableCase) //to set the current case
+
+            val comment = "Go to Bondi."
+            val responseFromModelToAddComment = ActionComment(
+                action = ADD_COMMENT,
+                comment = comment,
+            ).toJsonString()
+            coEvery { conversationService.response(any<String>()) } answers {
+                responseFromModelToAddComment
+            } andThenAnswer {
+                "anything else?"
+            }
+
+            // When
+            chatManager.response("")
+
+            // Then
+            coVerify { kbEditService.startRuleSessionToAddComment(viewableCase, comment) }
+        }
+
+    @Test
+    fun `should start a rule session for removing a comment`() =
+        runTest {
+            // Given
+            val initialResponseFromModel =
+                ActionComment(USER_ACTION, message = "What do you want to remove?").toJsonString()
+            coEvery { conversationService.startConversation() } returns initialResponseFromModel
+            chatManager.startConversation(kbId, viewableCase) //to set the current case
+
+            val comment = "Go to Bondi."
+            val responseFromModelToRemoveComment = ActionComment(
+                action = REMOVE_COMMENT,
+                comment = comment,
+            ).toJsonString()
+
+            coEvery { conversationService.response(any<String>()) } answers {
+                responseFromModelToRemoveComment
+            } andThenAnswer {
+                "anything else?"
+            }
+
+            // When
+            chatManager.response("")
+
+            // Then
+            coVerify { kbEditService.startRuleSessionToRemoveComment(viewableCase, comment) }
+        }
+
+    @Test
+    fun `should start a rule session for replacing a comment`() =
+        runTest {
+            // Given
+            val initialResponseFromModel =
+                ActionComment(USER_ACTION, message = "What do you want to replace?").toJsonString()
+            coEvery { conversationService.startConversation() } returns initialResponseFromModel
+            chatManager.startConversation(kbId, viewableCase) //to set the current case
+
+            val comment = "Go to Bondi."
+            val replacementComment = "Go to Manly."
+            val responseFromModelToReplaceComment = ActionComment(
+                action = REPLACE_COMMENT,
+                comment = comment,
+                replacementComment = replacementComment,
+            ).toJsonString()
+
+            coEvery { conversationService.response(any<String>()) } answers {
+                responseFromModelToReplaceComment
+            } andThenAnswer {
+                "anything else?"
+            }
+
+            // When
+            chatManager.response("")
+
+            // Then
+            coVerify {
+                kbEditService.startRuleSessionToReplaceComment(
+                    viewableCase,
+                    comment,
+                    replacementComment
+                )
+            }
+        }
+
+    @Test
+    fun `should log an unknown action from the model`() =
+        runTest {
+            // Given
+            val initialResponseFromModel =
+                ActionComment(USER_ACTION, message = "What do you want to replace?").toJsonString()
+            coEvery { conversationService.startConversation() } returns initialResponseFromModel
+            chatManager.startConversation(kbId, viewableCase) //to set the current case
+
+            val comment = "Go to Bondi."
+            val replacementComment = "Go to Manly."
+            val responseFromModelToReviewCornerstones = """
+                {
+                    "action": "unknown",
+                    "comment": "x",
+                }
+            """.trimIndent()
+
+            coEvery { conversationService.response(any<String>()) } answers {
+                responseFromModelToReviewCornerstones
+            }
+
+            // When
+            chatManager.response("")
+
+            // Then
+            coVerify(exactly = 0) {
+                kbEditService.startRuleSessionToReplaceComment(
+                    viewableCase,
+                    comment,
+                    replacementComment
+                )
+            }
+        }
+
+    @Test
+    fun `should handle undo rule action`() = runTest {
+        // Given
+        coEvery { conversationService.startConversation() } returns defaultConversationStartResponseFromModel
+        chatManager.startConversation(kbId, viewableCase)
+        val responseFromModel = ActionComment(UNDO_LAST_RULE).toJsonString()
+        coEvery { conversationService.response(any<String>()) } answers {
+            responseFromModel
+        }
+
+        chatManager.response("blah")
+
+        coVerify { kbEditService.undoLastRuleSession() }
+    }
+
+    @Test
+    fun `should handle attribute reorder action`() = runTest {
+        // Given
+        coEvery { conversationService.startConversation() } returns defaultConversationStartResponseFromModel
+        chatManager.startConversation(kbId, viewableCase)
+        val responseFromModel =
+            ActionComment(MOVE_ATTRIBUTE, attributeMoved = "Glucose", destination = "Lipids").toJsonString()
+        coEvery { conversationService.response(any<String>()) } answers {
+            responseFromModel
+        }
+
+        chatManager.response("blah")
+
+        coVerify { kbEditService.moveAttributeTo("Glucose",  "Lipids") }
+    }
+
+    @Test
+    fun `should handle a user message with apostrophe`() = runTest {
+        // Given
+        coEvery { conversationService.startConversation() } returns defaultConversationStartResponseFromModel
+        chatManager.startConversation(kbId, viewableCase)
+        val message = "Let's surf"
+
+        val responseFromModel = """
+            {
+                "action": "$USER_ACTION",
+                "message": "Please confirm you want to add the comment '$message'"
+            }
+        """.trimIndent()
+        coEvery { conversationService.response(any()) } returns responseFromModel
+
+
+        // When
+        val responseToUser = chatManager.response(message)
+
+        // Then
+        responseToUser shouldBe "Please confirm you want to add the comment '$message'"
+    }
+
+    @Test
+    fun `should process multiple actions in sequence`() = runTest {
+        // Given
+        coEvery { conversationService.startConversation() } returns defaultConversationStartResponseFromModel
+        chatManager.startConversation(kbId, viewableCase)
+        val response = """
+            {"action": "ExemptCornerstone"}
+            {"action": "CommitRule"}
+        """.trimIndent()
+        val message = "test message"
+
+        coEvery { conversationService.response(message) } returns response
+        coEvery { kbEditService.exemptCornerstoneCase() } returns CornerstoneStatus()
+        coEvery { kbEditService.commitCurrentRuleSession() } returns Unit
+
+        // When
+        chatManager.response(message)
+
+        // Then
+        coVerify { kbEditService.exemptCornerstoneCase() }
+        coVerify { kbEditService.commitCurrentRuleSession() }
+    }
+}
