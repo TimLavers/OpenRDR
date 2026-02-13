@@ -87,6 +87,10 @@ class ServerApplication(
         return if (idToKBEndpoint.containsKey(id)) idToKBEndpoint[id]!! else throw IllegalArgumentException("Unknown kb id: $id")
     }
 
+    override fun kb(id: String): KbEditInterface {
+        return kbForId(id).kb
+    }
+
     fun kbForName(name: String) = kbInfoForName(name).map { kbForId(it.id) }
 
     private fun kbInfoForName(name: String): Result<KBInfo> {
@@ -134,10 +138,6 @@ class ServerApplication(
     override fun openKB(name: String): Result<KBInfo> = runBlocking {
         val kbInfoResult = kbInfoForName(name)
         return@runBlocking if (kbInfoResult.isFailure) kbInfoResult else kbInfoResult.map { selectKB(it.id) }
-    }
-
-    override fun kb(id: String): KbEditInterface {
-        TODO("Not yet implemented")
     }
 
     suspend fun startConversation(kbId: String?, caseId: Long?): String {

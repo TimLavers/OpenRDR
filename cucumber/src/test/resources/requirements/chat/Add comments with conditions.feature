@@ -23,6 +23,7 @@ Feature: Add comments with conditions
       | wave height > 0.5 |
     And stop the client application
 
+  @single
   Scenario: The user should be able to see the reason why their condition expression is invalid
     Given case Bondi is provided having data:
       | wave height | 2 |

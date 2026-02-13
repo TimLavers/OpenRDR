@@ -24,10 +24,11 @@ class AddCommentTest {
         currentCase = mockk()
         modelResponder = mockk()
     }
+
     @Test
     fun `should start a rule session to add a comment`() = runTest {
         //Given
-        val commentToAdd = "please add me"
+        val commentToAdd = "Let's surf, eh!!"
         val action = AddComment(commentToAdd)
         val ccStatus = CornerstoneStatus(indexOfCornerstoneToReview = 42, numberOfCornerstones = 84)
         coEvery {
@@ -44,6 +45,7 @@ class AddCommentTest {
         coVerify { modelResponder.response(ccStatus.toJsonString<CornerstoneStatus>()) }
         response shouldBe responseFromModel
     }
+
     @Test
     fun `should send CornerstoneStatus after starting a rule session to add a comment`() = runTest {
         //Given

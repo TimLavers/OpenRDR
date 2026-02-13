@@ -1,5 +1,6 @@
 package io.rippledown.model
 
+import io.rippledown.utils.serializeDeserialize
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
@@ -36,14 +37,16 @@ internal class CaseIdTest {
     }
 
     @Test
-    fun jsonSerialisationNullId() {
-        val caseId = CaseId(null, "Case 1")
+    fun jsonSerialisationWithApostropheInCaseName() {
+        val caseId = CaseId(1234, "Sherlock's finest", CaseType.Cornerstone )
         val sd = serializeDeserialize(caseId)
         assertEquals(sd, caseId)
     }
 
-    private fun serializeDeserialize(caseId: CaseId): CaseId {
-        val serialized = Json.encodeToString(caseId)
-        return Json.decodeFromString(serialized)
+    @Test
+    fun jsonSerialisationNullId() {
+        val caseId = CaseId(null, "Case 1")
+        val sd = serializeDeserialize(caseId)
+        assertEquals(sd, caseId)
     }
 }

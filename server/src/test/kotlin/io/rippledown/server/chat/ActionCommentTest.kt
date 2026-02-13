@@ -4,15 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.rippledown.constants.chat.*
 import io.rippledown.fromJsonString
-import io.rippledown.server.chat.action.AddComment
-import io.rippledown.server.chat.action.CommitRule
-import io.rippledown.server.chat.action.ExemptCornerstone
-import io.rippledown.server.chat.action.ListKnowledgeBases
-import io.rippledown.server.chat.action.MoveAttribute
-import io.rippledown.server.chat.action.OpenKnowledgeBase
-import io.rippledown.server.chat.action.RemoveComment
-import io.rippledown.server.chat.action.ReplaceComment
-import io.rippledown.server.chat.action.UndoLastRule
+import io.rippledown.server.chat.action.*
 import kotlin.test.Test
 
 class ActionCommentTest {
@@ -22,10 +14,10 @@ class ActionCommentTest {
         // Given
         val invalidAction = "NonExistentAction"
         val actionComment = ActionComment(invalidAction)
-        
+
         // When
         val result = actionComment.createActionInstance()
-        
+
         // Then
         result shouldBe null
     }
@@ -102,6 +94,28 @@ class ActionCommentTest {
             message shouldBe null
             debug shouldBe null
             comment shouldBe "Let's surf"
+            reason shouldBe null
+        }
+    }
+
+    @Test
+    fun `handle apostrophes`() {
+        // Given
+        val json = """
+        {
+            "action": "UserAction",
+            "message": "Please confirm that you want to add the comment: 'Let's surf.'"
+        }        
+        """
+
+        // When
+        val actionComment = json.fromJsonString<ActionComment>()
+
+        // Then
+        with(actionComment) {
+            action shouldBe "UserAction"
+            message shouldBe "Please confirm that you want to add the comment: 'Let's surf.'"
+            debug shouldBe null
             reason shouldBe null
         }
     }

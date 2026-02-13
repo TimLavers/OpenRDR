@@ -53,7 +53,7 @@ class Conversation(private val chatService: ChatService, private val reasonTrans
         }
         val finalResponse = handleResponse(response)
         logger.info("initial response json: ${response.text}")
-        logger.info("final response json  : ${finalResponse}")
+        logger.info("final response json  : $finalResponse")
         return finalResponse
     }
 

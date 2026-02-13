@@ -1,6 +1,5 @@
 Feature: Open and close Knowledge Bases using the chat interface
   @chat
-  @single
   Scenario: The user should be able to use the chat to get a list of the available Knowledge Bases.
     Given A Knowledge Base called B has been created
     And A Knowledge Base called C has been created

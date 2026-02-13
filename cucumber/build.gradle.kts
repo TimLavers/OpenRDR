@@ -52,7 +52,8 @@ val featureFolders = listOf(
     "interpreter",
     "kb",
     "rulebuilding",
-    "samples"
+    "samples",
+    "server"
 )
 featureFolders.forEach { folderName ->
     tasks.register<JavaExec>(folderName) {

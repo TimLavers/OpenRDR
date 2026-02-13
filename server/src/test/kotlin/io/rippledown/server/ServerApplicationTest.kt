@@ -8,6 +8,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.rippledown.CaseTestUtils
 import io.rippledown.constants.server.DEFAULT_PROJECT_NAME
+import io.rippledown.kb.KB
 import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCase
 import io.rippledown.model.TestResult
@@ -58,7 +59,6 @@ internal class ServerApplicationTest {
         app.kbList().size shouldBe 1
         app.kbList()[0] shouldBe kbInfoDefault
     }
-
 
     @Test
     fun `the KBs are loaded at init`() {
@@ -121,6 +121,23 @@ internal class ServerApplicationTest {
     fun `unknown kb id`() {
         shouldThrow<IllegalArgumentException> {
             app.kbForId("Unknown")
+        }.message shouldBe "Unknown kb id: Unknown"
+    }
+
+    @Test
+    fun kbTest() {
+        val kbi1 = app.createKB("KB1", false)
+        val kbi2 = app.createKB("KB2", false)
+        val kbi3 = app.createKB("KB3", false)
+        (app.kb(kbi1.id) as KB).kbInfo shouldBe kbi1
+        (app.kb(kbi2.id) as KB).kbInfo shouldBe kbi2
+        (app.kb(kbi3.id) as KB).kbInfo shouldBe kbi3
+    }
+
+    @Test
+    fun `kb for unknown id`() {
+        shouldThrow<IllegalArgumentException> {
+            app.kb("Unknown")
         }.message shouldBe "Unknown kb id: Unknown"
     }
 

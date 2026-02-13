@@ -15,6 +15,7 @@ import io.rippledown.model.diff.Removal
 import io.rippledown.model.diff.Replacement
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.rule.*
+import io.rippledown.server.chat.KbEditInterface
 import java.io.File
 import kotlin.io.path.createTempDirectory
 
