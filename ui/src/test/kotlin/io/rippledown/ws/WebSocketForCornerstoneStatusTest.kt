@@ -16,8 +16,8 @@ class WebSocketForCornerstoneStatusTest {
             indexOfCornerstoneToReview = 0,
             numberOfCornerstones = 3
         )
-        val server = startServerAndSendCornerstoneStatus(expectedStatus)
-        val api = Api()
+        val serverInfo = startServerAndSendCornerstoneStatus(expectedStatus)
+        val api = Api(webSocketPort = serverInfo.port)
         val receivedSignal = CompletableDeferred<CornerstoneStatus>()
 
         // When
@@ -37,7 +37,7 @@ class WebSocketForCornerstoneStatusTest {
         // CLEANUP
         clientJob.cancelAndJoin()
         api.client.close()
-        server.stop(1000, 1000)
+        serverInfo.server.stop(1000, 1000)
     }
 
 

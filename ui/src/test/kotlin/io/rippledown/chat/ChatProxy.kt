@@ -88,3 +88,11 @@ fun ComposeTestRule.requireSendButtonEnabled() {
 fun ComposeTestRule.requireUserTextFieldFocused() {
     onNodeWithContentDescription(CHAT_TEXT_FIELD).assertIsFocused()
 }
+
+fun ComposeTestRule.requireTypingIndicatorShowing() {
+    onNodeWithContentDescription(TYPING_INDICATOR).assertIsDisplayed()
+}
+
+fun ComposeTestRule.requireTypingIndicatorNotShowing() {
+    onNodeWithContentDescription(TYPING_INDICATOR).assertDoesNotExist()
+}

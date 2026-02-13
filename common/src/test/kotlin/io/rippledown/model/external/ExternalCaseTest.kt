@@ -2,6 +2,7 @@ package io.rippledown.model.external
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.rippledown.json
 import io.rippledown.model.TestResult
 import io.rippledown.utils.defaultDate
 import kotlin.test.Test
@@ -44,5 +45,5 @@ internal class ExternalCaseTest {
         serializeDeserialize(case) shouldBe case
     }
 
-    private fun serializeDeserialize(event: ExternalCase): ExternalCase = jsonPretty.decodeFromString(event.serialize())
+    private fun serializeDeserialize(event: ExternalCase): ExternalCase = json.decodeFromString(event.serialize())
 }

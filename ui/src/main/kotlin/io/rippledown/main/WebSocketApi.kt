@@ -14,7 +14,7 @@ import io.rippledown.model.rule.CornerstoneStatus
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.filterIsInstance
 
-open class WebSocketApi(private val client: HttpClient) {
+open class WebSocketApi(private val client: HttpClient, private val port: Int = PORT) {
     private val logger = lazyLogger
 
     open suspend fun startSession(
@@ -24,7 +24,7 @@ open class WebSocketApi(private val client: HttpClient) {
         client.webSocket(
             method = HttpMethod.Get,
             host = HOST,
-            port = PORT,
+            port = port,
             path = WEB_SOCKET
         ) {
             try {

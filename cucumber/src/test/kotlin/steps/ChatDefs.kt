@@ -80,7 +80,6 @@ class ChatDefs {
     fun waitForBotQuestionToProvideReasonsThenDecline() {
         waitForBotText(REASON)
         decline()
-//        waitForBotToSayDone()
     }
 
     @And("the chatbot has asked if I want to provide any (more )reasons and I confirm")
@@ -105,7 +104,7 @@ class ChatDefs {
     }
 
     fun waitForBotText(vararg terms: String) {
-        await().atMost(ofSeconds(30)).until {
+        await().atMost(ofSeconds(120)).until {
             chatPO().mostRecentBotRowContainsTerms(terms.toList())
         }
     }

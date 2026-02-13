@@ -23,4 +23,5 @@ interface RuleService {
     fun sendCornerstoneStatus()
     fun sendRuleSessionCompleted()
     fun removeCondition(conditionId: Int): CornerstoneStatus
+    fun cornerstoneStatus(): CornerstoneStatus
 }

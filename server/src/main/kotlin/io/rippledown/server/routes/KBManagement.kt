@@ -7,6 +7,7 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.utils.io.jvm.javaio.*
 import io.rippledown.constants.api.*
 import io.rippledown.sample.SampleKB
 import io.rippledown.server.OpenRDRServer.logger
@@ -25,7 +26,7 @@ fun Application.kbManagement(application: ServerApplication) {
                 if (partData is PartData.FileItem) {
                     val partReader = ByteArrayOutputStream()
                     val buffered = BufferedOutputStream(partReader)
-                    partData.streamProvider().use { inputStream ->
+                    partData.provider().toInputStream().use { inputStream ->
                         inputStream.copyTo(buffered)
                         inputStream.close()
                     }

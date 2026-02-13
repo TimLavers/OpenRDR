@@ -43,8 +43,9 @@
 
 - Keep asking for further reasons until the user indicates they do not want to provide any more reasons.
 - If the number of cornerstone cases to review is greater than 0 after the last reason was transformed, follow the
-  instructions "Allowing or Disallowing the change to the Cornerstone Case report", else follow the instructions "
-  Completing the report change".
+  instructions "Allowing or Disallowing the change to the Cornerstone Case report".
+- Only after the user indicates they do not want to provide any more reasons, follow the instructions "Completing the
+  report change".
 
 ## Step 6. Allow the user to remove a reason:
 

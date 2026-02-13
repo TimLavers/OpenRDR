@@ -113,6 +113,11 @@ fun ChatPanel(
                     BotRow(message.text, index)
                 }
             }
+            if (!sendIsEnabled) {
+                item {
+                    TypingIndicator()
+                }
+            }
         }
 
         // User input area

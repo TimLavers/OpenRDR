@@ -1,0 +1,5 @@
+The attribute names defined in the knowledge base are:
+
+{{ATTRIBUTE_NAMES}}
+
+When transforming an expression, if the user's expression refers to an attribute, use the attribute name in this list which most closely matches the one used in the expression. Note that the attribute names are case-sensitive. Note also that the user may have misspelled the attribute name in their expression.

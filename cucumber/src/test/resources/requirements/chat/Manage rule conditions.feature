@@ -1,6 +1,19 @@
 @chat
 Feature: Manage rule conditions
 
+  Scenario: The user should be able to build a rule using a misspelled attribute name
+    Given case Bondi is provided having data:
+      | wave height | 2 |
+    And I start the client application
+    And I see the case Bondi as the current case
+    And the chat is showing
+    And I request that the comment "Let's surf." be added
+    When I provide only the following reason:
+      | wave hite is more than 1 |
+    Then the conditions showing for the comment "Let's surf." are:
+      | wave height > 1.0 |
+    And stop the client application
+
   Scenario: The user should be able to build a rule using several conditions
     Given case Bondi is provided having data:
       | wave height | 2  |
@@ -49,6 +62,7 @@ Feature: Manage rule conditions
     And the chatbot has asked if I want to provide any more reasons
     When I request that the first reason be removed
     And the chatbot has asked if I want to provide any more reasons and I decline
+    And the chatbot has completed the action
     Then the condition showing for the comment "Let's surf." is:
       | wave period > 5.0 |
     And stop the client application

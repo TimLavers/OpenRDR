@@ -52,8 +52,8 @@ class Defs {
 
     @After("@chat")
     fun afterChatScenario(scenario: Scenario) {
-        println("Delaying for 5 secs after chat scenario")
-        Thread.sleep(5_000)
+        println("Delaying for 10 secs after chat scenario to avoid rate limiting")
+        Thread.sleep(10_000)
     }
 
     @When("A Knowledge Base called {word} has been created")
@@ -131,6 +131,7 @@ class Defs {
     @And("I select case {word}")
     fun selectCase(caseName: String) {
         caseListPO().select(caseName)
+        caseViewPO().waitForNameToShow(caseName)
     }
 
     @And("I move attribute {word} below attribute {word}")

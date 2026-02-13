@@ -34,7 +34,6 @@ class WebSocketManager {
     }
 
     private suspend fun send(message: String) {
-        logger.info("About to send ws message: $message")
         try {
             if (::connection.isInitialized) {
                 connection.send(message)

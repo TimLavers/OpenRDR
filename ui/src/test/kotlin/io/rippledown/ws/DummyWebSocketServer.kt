@@ -6,15 +6,20 @@ import io.ktor.server.netty.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
-import io.rippledown.constants.api.PORT
 import io.rippledown.constants.api.WEB_SOCKET
 import io.rippledown.constants.chat.RULE_SESSION_COMPLETED
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.toJsonString
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 
-fun startServerAndSendCornerstoneStatus(expectedStatus: CornerstoneStatus): EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration> {
-    val server = embeddedServer(Netty, port = PORT) {
+data class TestServerInfo(
+    val server: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>,
+    val port: Int
+)
+
+fun startServerAndSendCornerstoneStatus(expectedStatus: CornerstoneStatus): TestServerInfo {
+    val server = embeddedServer(Netty, port = 0) {
         install(WebSockets)
         routing {
             webSocket(WEB_SOCKET) {
@@ -27,11 +32,12 @@ fun startServerAndSendCornerstoneStatus(expectedStatus: CornerstoneStatus): Embe
             }
         }
     }.start(wait = false)
-    return server
+    val actualPort = runBlocking { server.engine.resolvedConnectors().first().port }
+    return TestServerInfo(server, actualPort)
 }
 
-fun startServerAndSendRulesSessionCompleted(): EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration> {
-    val server = embeddedServer(Netty, port = PORT) {
+fun startServerAndSendRulesSessionCompleted(): TestServerInfo {
+    val server = embeddedServer(Netty, port = 0) {
         install(WebSockets)
         routing {
             webSocket(WEB_SOCKET) {
@@ -44,6 +50,7 @@ fun startServerAndSendRulesSessionCompleted(): EmbeddedServer<NettyApplicationEn
             }
         }
     }.start(wait = false)
-    println("Server with websocket started")
-    return server
+    val actualPort = runBlocking { server.engine.resolvedConnectors().first().port }
+    println("Server with websocket started on port $actualPort")
+    return TestServerInfo(server, actualPort)
 }

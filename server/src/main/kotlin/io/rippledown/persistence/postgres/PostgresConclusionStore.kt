@@ -38,7 +38,7 @@ class PostgresConclusionStore(private val db: Database): ConclusionStore {
                 conclusionText = text
             }
         }
-        return Conclusion(pgConclusion!!.id.value, pgConclusion!!.conclusionText)
+        return Conclusion(pgConclusion!!.id.value, pgConclusion.conclusionText)
     }
 
     override fun store(conclusion: Conclusion) =

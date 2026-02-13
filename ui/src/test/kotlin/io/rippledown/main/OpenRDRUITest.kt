@@ -30,6 +30,7 @@ import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.UndoRuleDescription
 import io.rippledown.rule.clickCancelRuleButton
 import io.rippledown.rule.clickFinishRuleButton
+import io.rippledown.rule.requireRuleMakerToBeDisplayed
 import io.rippledown.utils.applicationFor
 import io.rippledown.utils.createViewableCase
 import io.rippledown.utils.createViewableCaseWithInterpretation
@@ -471,6 +472,7 @@ class OpenRDRUITest {
             clickChangeInterpretationButton()
             clickAddCommentMenu()
             addNewComment("Go to Bondi")
+            requireRuleMakerToBeDisplayed()
             waitForIdle()
             coVerify { handler.setWindowSize(true, false) }
 

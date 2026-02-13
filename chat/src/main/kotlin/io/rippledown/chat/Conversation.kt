@@ -43,17 +43,13 @@ class Conversation(private val chatService: ChatService, private val reasonTrans
 
     override suspend fun response(message: String): String {
         val currentChat = checkNotNull(chat) { "Chat not initialized. Call startConversation first." }
-        logger.info("about to send message to model: '$message'")
         val response = try {
             currentChat.sendMessage(message)
         } catch (e: Exception) {
             logger.error("Failed to send message: $message", e)
             throw e
         }
-        val finalResponse = handleResponse(response)
-        logger.info("initial response json: ${response.text}")
-        logger.info("final response json  : ${finalResponse}")
-        return finalResponse
+        return handleResponse(response)
     }
 
     private suspend fun handleResponse(response: GenerateContentResponse): String {

@@ -9,8 +9,8 @@ class WebSocketForCommitRuleTest {
     @Test
     fun `should receive rule session completed message from test websocket using CIO client`() = runBlocking {
         // Given
-        val server = startServerAndSendRulesSessionCompleted()
-        val api = Api()
+        val serverInfo = startServerAndSendRulesSessionCompleted()
+        val api = Api(webSocketPort = serverInfo.port)
         val receivedSignal = CompletableDeferred<Boolean>()
 
         // When
@@ -31,7 +31,7 @@ class WebSocketForCommitRuleTest {
         // CLEANUP
         clientJob.cancelAndJoin()
         api.client.close()
-        server.stop(1000, 1000)
+        serverInfo.server.stop(1000, 1000)
     }
 
 

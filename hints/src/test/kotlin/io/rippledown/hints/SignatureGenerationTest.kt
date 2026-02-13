@@ -12,7 +12,7 @@ class SignatureGenerationTest {
 
     @BeforeEach
     fun setUp() {
-        generator = ConditionGenerator(mockk())
+        generator = ConditionGenerator(mockk(), mockk())
     }
 
     @Test

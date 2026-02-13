@@ -392,5 +392,82 @@ class ChatManagerTest {
     }
 
 
+    @Test
+    fun `should sanitize escaped apostrophe in response`() {
+        // Given
+        val input = """
+            {
+                "action": "UserAction",
+                "message": "Please confirm that you want to add the comment: 'Let\'s surf.'"
+            }
+        """.trimIndent()
+
+        // When
+        val result = input.sanitizeLlmJson()
+
+        // Then
+        result shouldBe """
+            {
+                "action": "UserAction",
+                "message": "Please confirm that you want to add the comment: 'Let's surf.'"
+            }
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should sanitize multiple escaped apostrophes`() {
+        // Given
+        val input = """
+            {
+                "action": "UserAction",
+                "message": "It\'s the patient\'s result that\'s important."
+            }
+        """.trimIndent()
+
+        // When
+        val result = input.sanitizeLlmJson()
+
+        // Then
+        result shouldBe """
+            {
+                "action": "UserAction",
+                "message": "It's the patient's result that's important."
+            }
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should not alter json without escaped apostrophes`() {
+        // Given
+        val input = """
+            {
+                "action": "UserAction",
+                "message": "No apostrophes here."
+            }
+        """.trimIndent()
+
+        // When
+        val result = input.sanitizeLlmJson()
+
+        // Then
+        result shouldBe input
+    }
+
+    @Test
+    fun `should not alter valid json backslash sequences`() {
+        // Given
+        val input = """
+            {
+                "action": "UserAction",
+                "message": "line1\nline2"
+            }
+        """.trimIndent()
+
+        // When
+        val result = input.sanitizeLlmJson()
+
+        // Then
+        result shouldBe input
+    }
 
 }
