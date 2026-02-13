@@ -1,11 +1,13 @@
 package io.rippledown.kb
 
+import io.ktor.util.logging.*
+import io.rippledown.chat.Conversation
 import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
 import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
 import io.rippledown.hints.AttributeFor
-import io.rippledown.hints.ConditionTip
-import io.rippledown.server.chat.ChatManager
-import io.rippledown.server.chat.KbEditInterface
+import io.rippledown.hints.ConditionChatService
+import io.rippledown.hints.ConditionGenerator
+import io.rippledown.kb.chat.*
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.CaseType
 import io.rippledown.model.Interpretation
@@ -19,6 +21,7 @@ import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistentKB
 import io.rippledown.server.websocket.WebSocketManager
+import kotlinx.coroutines.runBlocking
 
 class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = null) : KbEditInterface {
     val logger = lazyLogger
@@ -35,6 +38,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     internal val caseViewManager = CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
     val ruleTree = ruleManager.ruleTree()
     private var ruleSession: RuleBuildingSession? = null
+    private val conditionChatService = ConditionChatService()
 
     private var conditionParser: ConditionParser
     private lateinit var chatManager: ChatManager
@@ -42,7 +46,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     init {
         conditionParser = object : ConditionParser {
             override fun parse(expression: String, attributeFor: AttributeFor) =
-                ConditionTip(attributeNames(), attributeFor).conditionFor(expression)
+                ConditionGenerator(attributeFor, conditionChatService, attributeNames()).conditionFor(expression)
         }
     }
 
@@ -114,11 +118,18 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         return builder.build(case.name)
     }
 
-    fun startRuleSession(case: RDRCase, action: RuleTreeChange): CornerstoneStatus {
+    fun startRuleSession(
+        case: RDRCase,
+        action: RuleTreeChange,
+        initialiseConditionChatService: Boolean = false
+    ): CornerstoneStatus {
         logger.info("KB starting rule session for case ${case.name} and action $action")
         check(ruleSession == null) { "Session already in progress." }
         check(action.isApplicable(ruleTree, case)) { "Action $action is not applicable to case ${case.name}" }
         val alignedAction = action.alignWith(conclusionManager)
+        if (initialiseConditionChatService) {
+            conditionChatService.setAttributeNames(attributeNames())
+        }
         ruleSession = RuleBuildingSession(ruleManager, ruleTree, case, alignedAction, allCornerstoneCases())
         logger.info("KB rule session created")
         return cornerstoneStatus(null)
@@ -127,13 +138,13 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     override fun startRuleSessionToAddComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus {
         val conclusion = conclusionManager.getOrCreate(comment)
         val action = ChangeTreeToAddConclusion(conclusion)
-        return startRuleSession(viewableCase.case, action)
+        return startRuleSession(viewableCase.case, action, initialiseConditionChatService = true)
     }
 
     override fun startRuleSessionToRemoveComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus {
         val conclusion = conclusionManager.getOrCreate(comment)
         val action = ChangeTreeToRemoveConclusion(conclusion)
-        return startRuleSession(viewableCase.case, action)
+        return startRuleSession(viewableCase.case, action, initialiseConditionChatService = true)
     }
 
     override fun startRuleSessionToReplaceComment(
@@ -144,7 +155,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         val replacedConclusion = conclusionManager.getOrCreate(replacedComment)
         val replacementConclusion = conclusionManager.getOrCreate(replacementComment)
         val action = ChangeTreeToReplaceConclusion(replacedConclusion, replacementConclusion)
-        return startRuleSession(viewableCase.case, action)
+        return startRuleSession(viewableCase.case, action, initialiseConditionChatService = true)
     }
 
     override suspend fun sendCornerstoneStatus() {
@@ -154,6 +165,13 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
 
     override suspend fun sendRuleSessionCompleted() {
         webSocketManager?.sendRuleSessionCompleted()
+    }
+
+    override fun removeCondition(conditionId: Int): CornerstoneStatus {
+        check(ruleSession != null) { "No rule session in progress." }
+        val condition = conditionManager.getById(conditionId)
+        ruleSession!!.removeCondition(condition)
+        return cornerstoneStatus(null)
     }
 
     fun cancelRuleSession() {
@@ -176,7 +194,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
             // Check that there's no confusion between the condition provided
             // and the one that already exists (here we're defending against test code
             // that might have mixed things up).
-            require(existing!!.sameAs(condition)) {
+            require(existing.sameAs(condition)) {
                 "Condition provided does not match that in the condition manager."
             }
             existing
@@ -216,7 +234,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     }
 
     private fun checkSession() {
-        logger.info("checking session in KB ${this.kbInfo}")
+        logger.debug { "checking session in KB ${this.kbInfo}" }
         check(ruleSession != null) { "Rule session not started." }
     }
 
@@ -296,6 +314,8 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         return CornerstoneStatus(viewableCase(newCC), index, cornerstones.size)
     }
 
+    override fun cornerstoneStatus(): CornerstoneStatus = cornerstoneStatus(null)
+
     /**
      * @return the CornerstoneStatus for the current session where the specified cornerstone should remain selected if it is still in the list of cornerstones
      */
@@ -343,4 +363,32 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
 
     fun conditionForExpression(expression: String) = conditionForExpression(ruleSession!!.case, expression)
 
+    /**
+     * Starts a new conversation for the given viewable case.
+     *
+     * @param viewableCase The case to start a conversation about
+     * @return A string representing the conversation ID or initial response
+     */
+    suspend fun startConversation(viewableCase: ViewableCase): String {
+        val chatService = KBChatService.createKBChatService(viewableCase)
+        // Use a lazy ModelResponder since chatManager isn't created until after Conversation
+        val modelResponder = object : ModelResponder {
+            override suspend fun response(message: String): String = chatManager.response(message)
+        }
+        val conversationService = Conversation(
+            chatService = chatService,
+            reasonTransformer = createReasonTransformer(viewableCase, this, modelResponder)
+        )
+        chatManager = ChatManager(conversationService, this)
+        return chatManager.startConversation(viewableCase)
+    }
+
+    /**
+     * Creates a transformer that converts a natural language reason into a rule condition and
+     * adds it to the current rule session if it is valid.
+     */
+    fun createReasonTransformer(viewableCase: ViewableCase, ruleService: RuleService, modelResponder: ModelResponder) =
+        KBReasonTransformer(viewableCase.case, ruleService, modelResponder)
+
+    suspend fun responseToUserMessage(message: String) = chatManager.response(message)
 }

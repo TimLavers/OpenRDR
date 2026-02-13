@@ -11,15 +11,22 @@ fun ComposeTestRule.assertRuleDescriptionIs(expected: String) {
 }
 fun ComposeTestRule.cancelShowLastRule() {
     onNodeWithContentDescription(CLOSE_SHOW_LAST_RULE_DESCRIPTION).performClick()
+    waitForIdle()
 }
 fun ComposeTestRule.clickUndoLastRule() {
+    waitForIdle()
     onNodeWithContentDescription(UNDO_LAST_RULE_BUTTON_DESCRIPTION).performClick()
+    waitForIdle()
 }
 fun ComposeTestRule.clickUndoLastRuleConfirmationYesButton() {
+    waitForIdle()
     onNodeWithContentDescription(CONFIRM_UNDO_LAST_RULE_YES_OPTION_DESCRIPTION).performClick()
+    waitForIdle()
 }
 fun ComposeTestRule.clickUndoLastRuleConfirmationNoButton() {
+    waitForIdle()
     onNodeWithContentDescription(CONFIRM_UNDO_LAST_RULE_NO_OPTION_DESCRIPTION).performClick()
+    waitForIdle()
 }
 fun ComposeTestRule.assertUndoLastRuleButtonIsNotShowing() = onAllNodesWithContentDescription(UNDO_LAST_RULE_BUTTON_DESCRIPTION).assertCountEquals(0)
 fun ComposeTestRule.assertUndoLastRuleButtonIsShowing() = onAllNodesWithContentDescription(UNDO_LAST_RULE_BUTTON_DESCRIPTION).assertCountEquals(1)

@@ -8,6 +8,8 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.*
+import io.rippledown.chat.ReasonTransformation
+import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.server.chat.KbEditInterface
 import io.rippledown.model.*
 import io.rippledown.model.condition.*
@@ -627,6 +629,27 @@ class KBTest {
     }
 
     @Test
+    fun `should remove condition from rule session`() {
+        //Given
+        val sessionCase = createCase("Case1", value = "1.0")
+        val cornerstoneCase = createViewableCase("Case2", caseId = 1, CaseType.Cornerstone)
+        kb.addCornerstoneCase(cornerstoneCase.case)
+        sessionCase.interpretation.conclusionTexts() shouldBe emptySet()
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
+        val condition = lessThanOrEqualTo(null, glucose(), 1.2)
+        kb.addConditionToCurrentRuleSession(condition)
+        kb.conflictingCasesInCurrentRuleSession().size shouldBe 0
+
+        //When
+        val addedCondition = kb.conditionManager.getOrCreate(condition)
+        val ccStatus = kb.removeCondition(addedCondition.id!!)
+
+        //Then
+        kb.conflictingCasesInCurrentRuleSession().size shouldBe 1
+        ccStatus shouldBe CornerstoneStatus(cornerstoneCase, 0, 1)
+    }
+
+    @Test
     fun commitSession() {
         val sessionCase = createCase("Case1", value = "1.0")
         val otherCase = createCase("Case2", value = "2.0")
@@ -923,10 +946,15 @@ class KBTest {
         val x = kb.attributeManager.getOrCreate("x")
         val value = "42"
         val case = createCase("Case", attribute = x, value = value)
-        val userExpression = "X equates to $value"
+        val userExpression = "x equates to $value"
+
+        kb.startRuleSession(
+            case,
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever."))
+        )
 
         //When
-        val conditionParsingResult = kb.conditionForExpression(case, userExpression)
+        val conditionParsingResult = kb.conditionForExpression(userExpression)
 
         //Then
         val expectedCondition = EpisodicCondition(
@@ -948,8 +976,14 @@ class KBTest {
         val case = createCase("Case", attribute = x, value = value)
         val userExpression = "x contains b"
 
+        kb.startRuleSession(
+            case,
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")),
+            true
+        )
+
         //When
-        val conditionParsingResult = kb.conditionForExpression(case, userExpression)
+        val conditionParsingResult = kb.conditionForExpression(userExpression)
 
         //Then
         val expectedCondition = EpisodicCondition(
@@ -973,7 +1007,8 @@ class KBTest {
 
         kb.startRuleSession(
             sessionCase,
-            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")),
+            true
         )
 
         //When
@@ -1043,6 +1078,12 @@ class KBTest {
         val reason = "elevated glucose value"
         val condition = greaterThanOrEqualTo(null, glucose(), DEFAULT_GLUCOSE_VALUE)
         every { conditionParser.parse(reason, any()) } returns condition
+        every {
+            ruleService.conditionForExpression(
+                viewableCase.case,
+                reason
+            )
+        } returns ConditionParsingResult(condition)
 
         //When
         kb.startConversation(viewableCase)
@@ -1050,16 +1091,16 @@ class KBTest {
             viewableCase.case,
             ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
         )
-        val reasonTransformer = kb.createReasonTransformer(viewableCase, ruleService)
+        val modelResponder = mockk<ModelResponder>(relaxed = true)
+        val reasonTransformer = kb.createReasonTransformer(viewableCase, ruleService, modelResponder)
         val reasonTransformation = reasonTransformer.transform(reason)
 
         //Then
-        reasonTransformation.message shouldBe "Your reason is equivalent to 'Glucose ≥ 5.1'."
+        val expected = ReasonTransformation.TRANSFORMATION_MESSAGE.format("Glucose ≥ 5.1")
+        reasonTransformation.message shouldBe expected
         val slot = slot<Condition>()
         verify { ruleService.addConditionToCurrentRuleSession(capture(slot)) }
         slot.captured shouldBeSameAs condition
-  */
-        TODO()
     }
 
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")

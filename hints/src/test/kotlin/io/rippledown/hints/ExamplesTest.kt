@@ -19,10 +19,36 @@ class ExamplesTest {
 
         // Then
         examples shouldBe """
-            Input: elevated x
-            Output: ${ConditionSpecification(predicateName = "High", signatureName = "")}
-            Input: excessive x
-            Output: ${ConditionSpecification(predicateName = "High", signatureName = "")}
+Input: elevated x
+Output: ${ConditionSpecification("elevated x", "x", predicateName = "High", signatureName = "")}
+Input: excessive x
+Output: ${ConditionSpecification("excessive x", "x", predicateName = "High", signatureName = "")}
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should generate example for an expression with no attribute`() {
+        // Given
+        val lines = """
+            EXPECTED PREDICATE: IsSingleEpisodeCase
+            case is for a single date
+        """.trimIndent()
+            .split("\n")
+
+        // When
+        val examples = examplesFrom(lines)
+
+        // Then
+        examples shouldBe """
+Input: case is for a single date
+Output: ${
+            ConditionSpecification(
+                "case is for a single date",
+                attributeName = null,
+                predicateName = "IsSingleEpisodeCase",
+                signatureName = ""
+            )
+        }
         """.trimIndent()
     }
 
@@ -44,17 +70,15 @@ class ExamplesTest {
         val examples = examplesFrom(lines)
 
         // Then
-        val expectedSpecHigh = ConditionSpecification(predicateName = "High", signatureName = "")
-        val expectedSpecLow = ConditionSpecification(predicateName = "Low", signatureName = "")
         examples shouldBe """
-            Input: elevated x
-            Output: $expectedSpecHigh
-            Input: excessive x
-            Output: $expectedSpecHigh
-            Input: reduced x
-            Output: $expectedSpecLow
-            Input: lowered x
-            Output: $expectedSpecLow
+Input: elevated x
+Output: ${ConditionSpecification("elevated x", "x", predicateName = "High", signatureName = "")}
+Input: excessive x
+Output: ${ConditionSpecification("excessive x", "x", predicateName = "High", signatureName = "")}
+Input: reduced x
+Output: ${ConditionSpecification("reduced x", "x", predicateName = "Low", signatureName = "")}
+Input: lowered x
+Output: ${ConditionSpecification("lowered x", "x", predicateName = "Low", signatureName = "")}
         """.trimIndent()
     }
 
@@ -73,16 +97,25 @@ class ExamplesTest {
         val examples = examplesFrom(lines)
 
         // Then
-        val expectedSpec = ConditionSpecification(
+        val conditionSpecificationForElevated = ConditionSpecification(
+            "at least 42 elevated x",
+            "x",
+            predicateName = "High",
+            signatureName = "AtLeast",
+            signatureParameters = listOf("42")
+        )
+        val conditionSpecificationForExcessive = ConditionSpecification(
+            "no less than 42 excessive x",
+            "x",
             predicateName = "High",
             signatureName = "AtLeast",
             signatureParameters = listOf("42")
         )
         examples shouldBe """
-            Input: at least 42 elevated x
-            Output: $expectedSpec
-            Input: no less than 42 excessive x
-            Output: $expectedSpec
+Input: at least 42 elevated x
+Output: $conditionSpecificationForElevated
+Input: no less than 42 excessive x
+Output: $conditionSpecificationForExcessive
         """.trimIndent()
     }
 
@@ -109,27 +142,37 @@ class ExamplesTest {
         val examples = examplesFrom(lines)
 
         // Then
-        val highSpec = ConditionSpecification(predicateName = "High", signatureName = "Current")
-        val lowSpec = ConditionSpecification(predicateName = "Low", signatureName = "Current")
-        val isSpec = ConditionSpecification(
-            predicateName = "Is",
-            predicateParameters = listOf("6"),
-            signatureName = "AtLeast",
-            signatureParameters = listOf("42")
-        )
         examples shouldBe """
-            Input: elevated x
-            Output: $highSpec
-            Input: excessive x
-            Output: $highSpec
-            Input: reduced x
-            Output: $lowSpec
-            Input: lowered x
-            Output: $lowSpec
-            Input: no less than 42 x equals 6
-            Output: $isSpec
-            Input: at least 42 x are the same as 6
-            Output: $isSpec
+Input: elevated x
+Output: ${ConditionSpecification("elevated x", "x", predicateName = "High", signatureName = "Current")}
+Input: excessive x
+Output: ${ConditionSpecification("excessive x", "x", predicateName = "High", signatureName = "Current")}
+Input: reduced x
+Output: ${ConditionSpecification("reduced x", "x", predicateName = "Low", signatureName = "Current")}
+Input: lowered x
+Output: ${ConditionSpecification("lowered x", "x", predicateName = "Low", signatureName = "Current")}
+Input: no less than 42 x equals 6
+Output: ${
+            ConditionSpecification(
+                "no less than 42 x equals 6",
+                "x",
+                predicateName = "Is",
+                predicateParameters = listOf("6"),
+                signatureName = "AtLeast",
+                signatureParameters = listOf("42")
+            )
+        }
+Input: at least 42 x are the same as 6
+Output: ${
+            ConditionSpecification(
+                "at least 42 x are the same as 6",
+                "x",
+                predicateName = "Is",
+                predicateParameters = listOf("6"),
+                signatureName = "AtLeast",
+                signatureParameters = listOf("42")
+            )
+        }
         """.trimIndent()
     }
 }

@@ -22,4 +22,6 @@ interface KbEditInterface {
     fun moveAttributeTo(moved: String, destination: String)
     suspend fun sendCornerstoneStatus()
     suspend fun sendRuleSessionCompleted()
+    fun removeCondition(conditionId: Int): CornerstoneStatus
+    fun cornerstoneStatus(): CornerstoneStatus
 }

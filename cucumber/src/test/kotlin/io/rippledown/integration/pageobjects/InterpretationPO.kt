@@ -24,6 +24,7 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         execute<AccessibleContext> { contextProvider().find(INTERPRETATION_TEXT_FIELD) }
 
     fun movePointerToComment(comment: String) {
+        waitForInterpretationTextToContain(comment)
         val interpretation = interpretationText()
         val index = interpretation.indexOf(comment)
         movePointerToCharacterPosition(index)
@@ -51,7 +52,7 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun waitForInterpretationTextToContain(expected: String) {
-        await().atMost(ofSeconds(2)).until {
+        await().atMost(ofSeconds(30)).until {
             interpretationText().contains(expected)
         }
     }

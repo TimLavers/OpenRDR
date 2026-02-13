@@ -6,13 +6,18 @@ import io.ktor.server.netty.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
-import io.rippledown.constants.api.PORT
 import io.rippledown.constants.api.WEB_SOCKET
 import io.rippledown.constants.chat.RULE_SESSION_COMPLETED
 import io.rippledown.model.KBInfo
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.toJsonString
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+
+data class TestServerInfo(
+    val server: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>,
+    val port: Int
+)
 
 fun startServerAndSendCornerstoneStatus(expectedStatus: CornerstoneStatus) = startServerAndSendPayload(expectedStatus.toJsonString())
 
@@ -20,13 +25,13 @@ fun startServerAndSendRulesSessionCompleted() = startServerAndSendPayload(RULE_S
 
 fun startServerAndSendKbInfo(kbInfo: KBInfo) = startServerAndSendPayload(kbInfo.toJsonString())
 
-fun startServerAndSendPayload(payload: String): EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration> {
-    val server = embeddedServer(Netty, port = PORT) {
+fun startServerAndSendPayload(payload: String): TestServerInfo {
+    val server = embeddedServer(Netty, port = 0) {
         install(WebSockets)
         routing {
             webSocket(WEB_SOCKET) {
                 // Send expected data
-                send(Frame.Text(payload))
+                send(Frame.Text(expectedStatus.toJsonString<CornerstoneStatus>()))
 
                 // Keep open briefly so client receives it, then close
                 delay(100)
@@ -34,6 +39,25 @@ fun startServerAndSendPayload(payload: String): EmbeddedServer<NettyApplicationE
             }
         }
     }.start(wait = false)
-    println("Server with websocket started")
-    return server
+    val actualPort = runBlocking { server.engine.resolvedConnectors().first().port }
+    return TestServerInfo(server, actualPort)
+}
+
+fun startServerAndSendRulesSessionCompleted(): TestServerInfo {
+    val server = embeddedServer(Netty, port = 0) {
+        install(WebSockets)
+        routing {
+            webSocket(WEB_SOCKET) {
+                // Send expected data
+                send(Frame.Text(RULE_SESSION_COMPLETED))
+
+                // Keep open briefly so client receives it, then close
+                delay(100)
+                close(CloseReason(CloseReason.Codes.NORMAL, "Test Complete"))
+            }
+        }
+    }.start(wait = false)
+    val actualPort = runBlocking { server.engine.resolvedConnectors().first().port }
+    println("Server with websocket started on port $actualPort")
+    return TestServerInfo(server, actualPort)
 }

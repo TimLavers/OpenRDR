@@ -13,11 +13,15 @@ import io.rippledown.CaseTestUtils
 import io.rippledown.kb.ConditionParser
 import io.rippledown.kb.KB
 import io.rippledown.kb.KBManager
+import io.rippledown.model.Conclusion
+import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.model.condition.isCondition
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
+import io.rippledown.model.rule.ChangeTreeToRemoveConclusion
+import io.rippledown.model.rule.ChangeTreeToReplaceConclusion
 import io.rippledown.model.rule.UndoRuleDescription
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.supplyCaseFromFile
@@ -443,5 +447,57 @@ internal class KBEndpointTest {
         conditions.size shouldBe 1
         conditions.single().sameAs(tshCondition) shouldBe true
         rule.conclusion shouldBe conclusion1
+    }
+
+    @Test
+    fun `startRuleSessionToAddConclusion should call startRuleSession with initialise parameter true`() {
+        // Given
+        val kb = mockk<KB>(relaxed = true)
+        val case = mockk<RDRCase>()
+        val conclusion = mockk<Conclusion>()
+        every { kb.getProcessedCase(any()) } returns case
+        every { kb.interpret(any()) } returns mockk()
+        val endpoint = KBEndpoint(kb)
+
+        // When
+        endpoint.startRuleSessionToAddConclusion(1L, conclusion)
+
+        // Then
+        verify { kb.startRuleSession(case, any<ChangeTreeToAddConclusion>(), true) }
+    }
+
+    @Test
+    fun `startRuleSessionToRemoveConclusion should call startRuleSession with initialise parameter true`() {
+        // Given
+        val kb = mockk<KB>(relaxed = true)
+        val case = mockk<RDRCase>()
+        val conclusion = mockk<Conclusion>()
+        every { kb.getProcessedCase(any()) } returns case
+        every { kb.interpret(any()) } returns mockk()
+        val endpoint = KBEndpoint(kb)
+
+        // When
+        endpoint.startRuleSessionToRemoveConclusion(1L, conclusion)
+
+        // Then
+        verify { kb.startRuleSession(case, any<ChangeTreeToRemoveConclusion>(), true) }
+    }
+
+    @Test
+    fun `startRuleSessionToReplaceConclusion should call startRuleSession with initialise parameter true`() {
+        // Given
+        val kb = mockk<KB>(relaxed = true)
+        val case = mockk<RDRCase>()
+        val toGo = mockk<Conclusion>()
+        val replacement = mockk<Conclusion>()
+        every { kb.getProcessedCase(any()) } returns case
+        every { kb.interpret(any()) } returns mockk()
+        val endpoint = KBEndpoint(kb)
+
+        // When
+        endpoint.startRuleSessionToReplaceConclusion(1L, toGo, replacement)
+
+        // Then
+        verify { kb.startRuleSession(case, any<ChangeTreeToReplaceConclusion>(), true) }
     }
 }

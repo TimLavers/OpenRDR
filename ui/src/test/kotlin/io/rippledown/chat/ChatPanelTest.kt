@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
@@ -196,6 +197,102 @@ class ChatPanelTest {
 
             // Then
             requireUserTextFieldFocused()
+        }
+    }
+
+    @Test
+    fun `should show typing indicator when sendIsEnabled is false`() {
+        with(composeTestRule) {
+            // Given
+            setContent {
+                ChatPanel(id = 0L, sendIsEnabled = false, listOf(), onMessageSent)
+            }
+
+            // Then
+            requireTypingIndicatorShowing()
+        }
+    }
+
+    @Test
+    fun `should not show typing indicator when sendIsEnabled is true`() {
+        with(composeTestRule) {
+            // Given
+            setContent {
+                ChatPanel(id = 0L, sendIsEnabled = true, listOf(), onMessageSent)
+            }
+
+            // Then
+            requireTypingIndicatorNotShowing()
+        }
+    }
+
+    @Test
+    fun `should show typing indicator with existing messages when sendIsEnabled is false`() {
+        with(composeTestRule) {
+            // Given
+            val messages = listOf(
+                BotMessage("Hello"),
+                UserMessage("Hi there")
+            )
+            setContent {
+                ChatPanel(id = 0L, sendIsEnabled = false, messages, onMessageSent)
+            }
+
+            // Then
+            requireChatMessagesShowing(messages)
+            requireTypingIndicatorShowing()
+        }
+    }
+
+    @Test
+    fun `should hide typing indicator when sendIsEnabled changes from false to true`() {
+        with(composeTestRule) {
+            // Given
+            var sendEnabled by mutableStateOf(false)
+            setContent {
+                ChatPanel(id = 0L, sendIsEnabled = sendEnabled, listOf(), onMessageSent)
+            }
+            requireTypingIndicatorShowing()
+
+            // When
+            sendEnabled = true
+            waitForIdle()
+
+            // Then
+            requireTypingIndicatorNotShowing()
+        }
+    }
+
+    @Test
+    fun `should show typing indicator when sendIsEnabled changes from true to false`() {
+        with(composeTestRule) {
+            // Given
+            var sendEnabled by mutableStateOf(true)
+            setContent {
+                ChatPanel(id = 0L, sendIsEnabled = sendEnabled, listOf(), onMessageSent)
+            }
+            requireTypingIndicatorNotShowing()
+
+            // When
+            sendEnabled = false
+            waitForIdle()
+
+            // Then
+            requireTypingIndicatorShowing()
+        }
+    }
+
+    @Test
+    fun `should disable text field when typing indicator is showing`() {
+        with(composeTestRule) {
+            // Given
+            setContent {
+                ChatPanel(id = 0L, sendIsEnabled = false, listOf(), onMessageSent)
+            }
+
+            // Then
+            requireTypingIndicatorShowing()
+            onNodeWithContentDescription(CHAT_TEXT_FIELD).assertIsNotEnabled()
         }
     }
 }

@@ -19,26 +19,32 @@ fun examplesFrom(lines: List<String>): String {
     val numberOfLines = nonBlankLines.size
     var lineNumber = 0
     val result = mutableListOf<String>()
-    var spec = ConditionSpecification()
+    var predicateComponents: List<String> = mutableListOf()
+    var signatureComponents: List<String> = mutableListOf()
     while (lineNumber < numberOfLines) {
         val line = nonBlankLines[lineNumber]
         if (line.startsWith(EXPECTED_PREDICATE)) {
-            val predicateComponents = line
+            predicateComponents = line
                 .replace(EXPECTED_PREDICATE, "")
                 .split(",")
                 .map { it.trim() }
-            spec = ConditionSpecification(
-                predicateName = predicateComponents[0],
-                predicateParameters = predicateComponents.drop(1),
-                signatureName = "",
-            )
+            signatureComponents = emptyList()
         } else if (line.startsWith(EXPECTED_SIGNATURE)) {
-            val signatureComponents = line
+            signatureComponents = line
                 .replace(EXPECTED_SIGNATURE, "")
                     .split(",")
                     .map { it.trim() }
-            spec.signature = FunctionSpecification(signatureComponents[0], signatureComponents.drop(1))
         } else {
+            val predicate = FunctionSpecification(predicateComponents[0], predicateComponents.drop(1))
+            val signature = if (signatureComponents.isNotEmpty()) {
+                FunctionSpecification(signatureComponents[0], signatureComponents.drop(1))
+            } else FunctionSpecification()
+            val spec = ConditionSpecification(
+                userExpression = line,
+                attributeName = if (line.contains("x")) "x" else null,
+                predicate = predicate,
+                signature = signature
+            )
             result.add(INPUT + line + "\n" + OUTPUT + spec)
         }
         lineNumber++

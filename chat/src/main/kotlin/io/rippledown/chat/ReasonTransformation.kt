@@ -8,14 +8,14 @@ import kotlinx.serialization.Serializable
 /**
  * Represents the result of transforming a user-entered reason for a report change to a formal condition.
  *
- * @property isTransformed Indicates whether the reason can be transformed to a formal condition that is true for the case.
+ * @property reasonId The id of the condition added, or null if the reason could not be transformed to a condition
  * @property message The user-facing message describing the transformation result.
  */
 @Serializable
-data class ReasonTransformation(val isTransformed: Boolean, val message: String) {
+data class ReasonTransformation(val reasonId: Int? = null, val message: String) {
     companion object {
         const val OK = "Ok"
-        const val TRANSFORMATION_MESSAGE = "Your reason is equivalent to '%s'."
+        const val TRANSFORMATION_MESSAGE = "Added your reason '%s'."
     }
 }
 
@@ -26,17 +26,19 @@ data class ReasonTransformation(val isTransformed: Boolean, val message: String)
  */
 fun ConditionParsingResult.toExpressionTransformation() = when {
     isFailure -> {
-        ReasonTransformation(false, requireNotNull(errorMessage))
+        ReasonTransformation(
+            message = requireNotNull(errorMessage)
+        )
     }
 
     else -> {
-        val transformed = requireNotNull(condition)
+        val cond = requireNotNull(condition)
         val message = when {
-            transformed.userExpression() != transformed.asText() ->
-                TRANSFORMATION_MESSAGE.format(transformed.asText())
+            cond.userExpression() != cond.asText() ->
+                TRANSFORMATION_MESSAGE.format(cond.asText())
 
             else -> OK
         }
-        ReasonTransformation(true, message)
+        ReasonTransformation(cond.id(), message)
     }
 }

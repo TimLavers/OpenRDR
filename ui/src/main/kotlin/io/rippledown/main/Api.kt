@@ -28,7 +28,8 @@ import io.rippledown.sample.SampleKB
 import java.io.File
 
 class Api(
-    engine: HttpClientEngine = CIO.create()
+    engine: HttpClientEngine = CIO.create(),
+    private val webSocketPort: Int = PORT
 ) {
     private var currentKB: KBInfo? = null
     val client = HttpClient(engine) {
@@ -47,7 +48,7 @@ class Api(
 
     private fun HttpRequestBuilder.setCaseIdParameter(caseId: Long) = parameter(CASE_ID, caseId)
 
-    private val webSocketManager = WebSocketApi(client)
+    private val webSocketManager = WebSocketApi(client, webSocketPort)
 
     suspend fun startWebSocketSession(
         updateCornerstoneStatus: (CornerstoneStatus) -> Unit,

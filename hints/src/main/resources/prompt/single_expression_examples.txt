@@ -37,6 +37,7 @@ EXPECTED SIGNATURE: No
 no x are normal
 all x are abnormal
 all x results are abnormal
+every x results is abnormal
 
 EXPECTED PREDICATE: Is, y
 EXPECTED SIGNATURE: Current

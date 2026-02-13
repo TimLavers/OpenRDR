@@ -11,6 +11,7 @@ the rule and review the cornerstones.
 The user actions for each cornerstone case are:
 - allow the report of the cornerstone case to change once the new rule is added, or
 - add further conditions to the rule to exclude the cornerstone case from the rule action, or
+- remove a condition from the rule, or
 - cancel the review of the cornerstone cases
 
 ## Conversation design
@@ -23,7 +24,7 @@ flowchart TD
     B --> C{Any cornerstones?}
     C -->|Yes| D[Show cornerstone panel] --> E
     C -->|No| E
-    E{Any conditions?}
+    E{Any conditions\nadded or removed?}
     E -->|Yes| G[Update cornerstones] --> C
     E -->|No| H
     H[Build rule]

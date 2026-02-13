@@ -75,7 +75,7 @@ class RuleManager(
 
     private fun rebuildRuleButDoNotSetParent(persistentRule: PersistentRule): Rule {
         val conclusion = if (persistentRule.conclusionId != null) conclusionManager.getById(persistentRule.conclusionId) else null
-        val conditions = persistentRule.conditionIds.map { conditionManager.getById(it)!! }.toSet()
+        val conditions = persistentRule.conditionIds.map { conditionManager.getById(it) }.toSet()
         return Rule(persistentRule.id!!, null, conclusion, conditions, mutableSetOf())
     }
 }

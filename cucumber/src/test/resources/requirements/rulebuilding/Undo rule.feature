@@ -20,14 +20,10 @@ Feature: The user can undo rules
 
   Scenario: Undo rules from sample KB
     Given I start the client application
-
     And I create a Knowledge Base with the name ContactLenseUndo based on the "Contact Lense Prescription" sample
-    Then the count of the number of cases is 24
-
-    When I select case Case24
-    Then the interpretation should be empty
-
-    And I undo the last rule
+    And the count of the number of cases is 24
+    And I select case Case24
+    And the interpretation should be empty
+    When I undo the last rule
     Then the interpretation should be "hard"
-
     And stop the client application

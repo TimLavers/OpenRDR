@@ -55,6 +55,7 @@ suspend fun <T> retry(
         try {
             return block()
         } catch (e: Exception) {
+            e.printStackTrace()
             if (attempt == maxRetries - 1) throw e
             Retry.lazyLogger.info("attempt $attempt failed. Waiting $currentDelay ms before retrying")
             delay(currentDelay.milliseconds)

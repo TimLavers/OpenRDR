@@ -15,6 +15,7 @@ data class ActionComment(
     val comment: String? = null,
     val replacementComment: String? = null,
     val reason: String? = null,
+    val reasonId: Int? = null,
     val attributeMoved: String? = null,
     val destination: String? = null,
     val kbName: String? = null,
@@ -43,6 +44,7 @@ data class ActionComment(
         if (comment != null) asMap["comment"] = comment
         if (replacementComment != null) asMap["replacementComment"] = replacementComment
         if (reason != null) asMap["reason"] = reason
+        if (reasonId != null) asMap["reasonId"] = reasonId
         if (attributeMoved != null) asMap["attributeMoved"] = attributeMoved
         if (destination != null) asMap["destination"] = destination
         if (kbName != null) asMap["kbName"] = kbName

@@ -1,12 +1,7 @@
 package io.rippledown.kb
 
 import io.rippledown.model.ConditionFactory
-import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.ConditionList
-import io.rippledown.model.condition.EpisodicCondition
-import io.rippledown.model.condition.episodic.signature.Current
-import io.rippledown.model.condition.episodic.predicate.IsNotBlank
 import io.rippledown.persistence.ConditionStore
 
 class ConditionManager(private val attributeManager: AttributeManager,
@@ -34,7 +29,7 @@ class ConditionManager(private val attributeManager: AttributeManager,
         }
     }
 
-    fun getById(id: Int): Condition? = idToCondition[id]
+    fun getById(id: Int): Condition = idToCondition.getValue(id)
 
     fun all() = idToCondition.values.toSet()
 

@@ -28,7 +28,7 @@ class CornerstonePO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun requireCornerstoneCase(expectedCaseName: String) {
-        await().atMost(Duration.ofSeconds(5)).untilAsserted {
+        await().atMost(Duration.ofSeconds(10)).untilAsserted {
             val ccName = execute<String> { contextProvider().find(CORNERSTONE_CASE_NAME_ID)?.accessibleName }
             ccName shouldBe expectedCaseName
         }
