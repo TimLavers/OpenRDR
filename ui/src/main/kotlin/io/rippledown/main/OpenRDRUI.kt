@@ -13,6 +13,8 @@ import io.rippledown.appbar.ApplicationBar
 import io.rippledown.casecontrol.*
 import io.rippledown.chat.ChatController
 import io.rippledown.chat.ChatControllerHandler
+import io.rippledown.chat.VoiceRecognitionService
+import io.rippledown.chat.VoiceRecognitionService.Companion.defaultModelPath
 import io.rippledown.interpretation.toAnnotatedString
 import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
@@ -49,6 +51,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     var conditionHints by remember { mutableStateOf(listOf<SuggestedCondition>()) }
     var isShowingChat by remember { mutableStateOf(false) }
     var isChatEnabled by remember { mutableStateOf(true) }
+    val voiceRecognitionService = remember { VoiceRecognitionService(defaultModelPath()) }
 
     val isShowingCornerstone = cornerstoneStatus?.cornerstoneToReview != null
     val ruleInProgress = cornerstoneStatus != null
@@ -326,6 +329,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                         ChatController(
                             id = chatId,
                             chatControllerHandler,
+                            voiceRecognitionService = voiceRecognitionService,
                             modifier = Modifier.weight(0.3f)
                         )
                     }

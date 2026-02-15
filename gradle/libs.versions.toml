@@ -21,6 +21,7 @@ postgresql = "42.6.0"
 generativeai = "0.9.0-1.1.0"
 filepicker = "3.1.0"
 jte = "3.2.1"
+vosk = "0.3.45"
 
 [plugins]
 compose = { id = "org.jetbrains.compose", version.ref = "compose" }
@@ -78,6 +79,7 @@ awaitility = { module = "org.awaitility:awaitility", version.ref = "awaitility" 
 generativeai = { module = "dev.shreyaspatil.generativeai:generativeai-google-jvm", version.ref = "generativeai" }
 filepicker = { module = "com.darkrockstudios:mpfilepicker", version.ref = "filepicker" }
 jte = { module = "gg.jte:jte-kotlin", version.ref = "jte" }
+vosk = { module = "com.alphacephei:vosk", version.ref = "vosk" }
 
 [bundles]
 ktor = [

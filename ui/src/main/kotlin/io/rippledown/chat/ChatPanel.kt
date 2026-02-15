@@ -66,6 +66,7 @@ const val CHAT_SEND = "CHAT_SEND"
 const val CHAT_TEXT_FIELD = "CHAT_TEXT_FIELD"
 
 const val NUMBER_OF_CHAT_MESSAGES_ = "NumberOfChatMessages_"
+const val CHAT_MIC_BUTTON = "CHAT_MIC_BUTTON"
 
 @Composable
 fun ChatPanel(
@@ -73,6 +74,7 @@ fun ChatPanel(
     sendIsEnabled: Boolean = true,
     messages: List<ChatMessage> = emptyList(),
     onMessageSent: OnMessageSent = {},
+    voiceRecognitionService: VoiceRecognitionService? = null,
     modifier: Modifier = Modifier
 ) {
     var inputText by remember { mutableStateOf(TextFieldValue()) }
@@ -127,6 +129,14 @@ fun ChatPanel(
                 .padding(horizontal = 8.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            if (voiceRecognitionService != null) {
+                VoiceInputButton(
+                    voiceRecognitionService = voiceRecognitionService,
+                    enabled = sendIsEnabled,
+                    onTextUpdated = { inputText = TextFieldValue(it) }
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+            }
             TextField(
                 value = inputText,
                 enabled = sendIsEnabled,

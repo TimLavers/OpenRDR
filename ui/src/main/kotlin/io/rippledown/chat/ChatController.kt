@@ -10,7 +10,12 @@ interface ChatControllerHandler {
 }
 
 @Composable
-fun ChatController(id: Long = -1L, handler: ChatControllerHandler, modifier: Modifier = Modifier) {
+fun ChatController(
+    id: Long = -1L,
+    handler: ChatControllerHandler,
+    voiceRecognitionService: VoiceRecognitionService? = null,
+    modifier: Modifier = Modifier
+) {
     var chatHistory: List<ChatMessage> by remember { mutableStateOf(emptyList()) }
     var sendIsEnabled: Boolean by remember { mutableStateOf(true) }
 
@@ -30,5 +35,5 @@ fun ChatController(id: Long = -1L, handler: ChatControllerHandler, modifier: Mod
         }
         sendIsEnabled = false
         handler.sendUserMessage(userMessage.text)
-    }, modifier)
+    }, voiceRecognitionService, modifier)
 }
