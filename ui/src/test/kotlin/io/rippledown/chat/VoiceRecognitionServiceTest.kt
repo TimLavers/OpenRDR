@@ -258,7 +258,7 @@ class VoiceRecognitionServiceTest {
     // --- startListening with final result ---
 
     @Test
-    fun `should invoke onFinalResult when recognizer accepts a waveform`() = runBlocking {
+    fun `should invoke onFinalResult immediately when segment is finalized`() = runBlocking {
         // Given
         val finalResults = mutableListOf<String>()
         val service = createService()
@@ -267,7 +267,7 @@ class VoiceRecognitionServiceTest {
         every { mockTargetDataLine.read(any(), any(), any()) } answers {
             readCount++
             if (readCount <= 1) 4096 else {
-                service.stopListening()
+                Thread.sleep(50)
                 0
             }
         }
@@ -322,18 +322,19 @@ class VoiceRecognitionServiceTest {
         Unit
     }
 
-    // --- startListening clears partial on final ---
+    // --- partialResult cleared after segment finalized ---
 
     @Test
-    fun `should clear partialResult when a final result is received`() = runBlocking {
+    fun `should clear partialResult after segment is finalized`() = runBlocking {
         // Given
+        val finalResults = mutableListOf<String>()
         val service = createService()
         var readCount = 0
 
         every { mockTargetDataLine.read(any(), any(), any()) } answers {
             readCount++
             if (readCount <= 1) 4096 else {
-                service.stopListening()
+                Thread.sleep(50)
                 0
             }
         }
@@ -342,10 +343,9 @@ class VoiceRecognitionServiceTest {
         every { mockRecognizer.finalResult } returns """{"text" : ""}"""
 
         // When
-        service.startListening(CoroutineScope(Dispatchers.IO)) {}
+        service.startListening(CoroutineScope(Dispatchers.IO)) { finalResults.add(it) }
         withTimeout(2000) {
-            // Wait for the final result to be processed (partial should be cleared)
-            while (service.isListening.value) {
+            while (finalResults.isEmpty()) {
                 delay(10)
             }
         }

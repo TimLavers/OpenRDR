@@ -52,9 +52,15 @@ class VoiceRecognitionService(
         if (_isListening.value) return
 
         recognitionJob = scope.launch(Dispatchers.IO) {
+            var recognizer: Recognizer? = null
             try {
-                val voskModel = ensureModel()
-                val recognizer = recognizerFactory(voskModel, sampleRate)
+                val voskModel = try {
+                    ensureModel()
+                } catch (e: IllegalArgumentException) {
+                    System.err.println(e.message)
+                    return@launch
+                }
+                recognizer = recognizerFactory(voskModel, sampleRate)
                 val line = openMicrophone()
                 targetDataLine = line
                 _isListening.value = true
@@ -66,35 +72,33 @@ class VoiceRecognitionService(
                         if (recognizer.acceptWaveForm(buffer, bytesRead)) {
                             val result = extractText(recognizer.result)
                             if (result.isNotBlank()) {
-                                withContext(Dispatchers.Main) {
-                                    onFinalResult(result)
-                                }
-                                _partialResult.value = ""
+                                onFinalResult(result)
                             }
+                            _partialResult.value = ""
                         } else {
                             val partial = extractText(recognizer.partialResult)
-                            _partialResult.value = partial
+                            if (partial.isNotBlank()) {
+                                _partialResult.value = partial
+                            }
                         }
                     }
                 }
-
-                // Get any remaining result
-                val finalResult = extractText(recognizer.finalResult)
-                if (finalResult.isNotBlank()) {
-                    withContext(Dispatchers.Main) {
-                        onFinalResult(finalResult)
-                    }
-                }
-                _partialResult.value = ""
-                recognizer.close()
-            } catch (e: Exception) {
-                _partialResult.value = ""
-                throw e
             } finally {
                 stopMicrophone()
                 _isListening.value = false
+                // Deliver any remaining recognized text
+                val remaining = extractText(recognizer?.finalResult ?: "")
+                if (remaining.isNotBlank()) {
+                    onFinalResult(remaining)
+                }
+                _partialResult.value = ""
+                recognizer?.close()
             }
         }
+    }
+
+    fun resetAccumulatedText() {
+        _partialResult.value = ""
     }
 
     fun stopListening() {

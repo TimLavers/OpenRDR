@@ -2,7 +2,6 @@ package io.rippledown.chat
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.mockk.*
 import kotlinx.coroutines.CoroutineScope
@@ -107,14 +106,14 @@ class VoiceInputButtonTest {
     }
 
     @Test
-    fun `should call onTextUpdated when partial result changes`() {
+    fun `should call onPartialResult when partial result changes`() {
         val receivedTexts = mutableListOf<String>()
         with(composeTestRule) {
             // Given
             setContent {
                 VoiceInputButton(
                     voiceRecognitionService = voiceRecognitionService,
-                    onTextUpdated = { receivedTexts.add(it) }
+                    onPartialResult = { receivedTexts.add(it) }
                 )
             }
 
@@ -128,14 +127,14 @@ class VoiceInputButtonTest {
     }
 
     @Test
-    fun `should not call onTextUpdated when partial result is blank`() {
+    fun `should call onPartialResult with empty string when partial result is blank`() {
         val receivedTexts = mutableListOf<String>()
         with(composeTestRule) {
             // Given
             setContent {
                 VoiceInputButton(
                     voiceRecognitionService = voiceRecognitionService,
-                    onTextUpdated = { receivedTexts.add(it) }
+                    onPartialResult = { receivedTexts.add(it) }
                 )
             }
 
@@ -144,7 +143,7 @@ class VoiceInputButtonTest {
             waitForIdle()
 
             // Then
-            receivedTexts.shouldBeEmpty()
+            receivedTexts shouldContain ""
         }
     }
 
@@ -201,7 +200,7 @@ class VoiceInputButtonTest {
     }
 
     @Test
-    fun `should call onTextUpdated with final result when startListening callback is invoked`() {
+    fun `should call onSegmentFinalized when startListening callback is invoked`() {
         val receivedTexts = mutableListOf<String>()
         val callbackSlot = slot<(String) -> Unit>()
         every {
@@ -215,7 +214,7 @@ class VoiceInputButtonTest {
             setContent {
                 VoiceInputButton(
                     voiceRecognitionService = voiceRecognitionService,
-                    onTextUpdated = { receivedTexts.add(it) }
+                    onSegmentFinalized = { receivedTexts.add(it) }
                 )
             }
 
@@ -229,14 +228,14 @@ class VoiceInputButtonTest {
     }
 
     @Test
-    fun `should call onTextUpdated for multiple partial results`() {
+    fun `should call onPartialResult for multiple partial results`() {
         val receivedTexts = mutableListOf<String>()
         with(composeTestRule) {
             // Given
             setContent {
                 VoiceInputButton(
                     voiceRecognitionService = voiceRecognitionService,
-                    onTextUpdated = { receivedTexts.add(it) }
+                    onPartialResult = { receivedTexts.add(it) }
                 )
             }
 
