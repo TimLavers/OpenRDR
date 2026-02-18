@@ -67,7 +67,7 @@ class LabProxy(tempDir: File, val restProxy: RESTClient) {
     fun provideCase(caseName: String, details: List<TestResultDetail>) {
         val now = now().toEpochMilli()
         val data = details.associate {
-            val referenceRange = ReferenceRange(it.lowReferenceRange, it.highReferenceRange)
+            val referenceRange = if (it.lowReferenceRange != null || it.highReferenceRange != null ) ReferenceRange(it.lowReferenceRange, it.highReferenceRange) else null
             MeasurementEvent(it.attributeName, now) to TestResult(it.result, referenceRange, it.units)
         }
         val case = ExternalCase(caseName, data)
