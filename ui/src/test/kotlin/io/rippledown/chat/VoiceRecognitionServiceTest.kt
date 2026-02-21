@@ -19,8 +19,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.vosk.Model
-import org.vosk.Recognizer
 import javax.sound.sampled.TargetDataLine
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -29,8 +27,8 @@ class VoiceRecognitionServiceTest {
     @get:Rule
     val tempFolder = TemporaryFolder()
 
-    private lateinit var mockModel: Model
-    private lateinit var mockRecognizer: Recognizer
+    private lateinit var mockModel: SpeechModel
+    private lateinit var mockRecognizer: SpeechRecognizer
     private lateinit var mockTargetDataLine: TargetDataLine
     private lateinit var modelDir: java.io.File
 
@@ -267,7 +265,7 @@ class VoiceRecognitionServiceTest {
                 0
             }
         }
-        every { mockRecognizer.acceptWaveForm(any<ByteArray>(), any()) } returns true
+        every { mockRecognizer.acceptWaveForm(any(), any()) } returns true
         every { mockRecognizer.result } returns """{"text" : "hello world"}"""
         every { mockRecognizer.finalResult } returns """{"text" : ""}"""
 
@@ -300,7 +298,7 @@ class VoiceRecognitionServiceTest {
                 0
             }
         }
-        every { mockRecognizer.acceptWaveForm(any<ByteArray>(), any()) } returns false
+        every { mockRecognizer.acceptWaveForm(any(), any()) } returns false
         every { mockRecognizer.partialResult } returns """{"partial" : "hel"}"""
         every { mockRecognizer.finalResult } returns """{"text" : ""}"""
 
@@ -334,7 +332,7 @@ class VoiceRecognitionServiceTest {
                 0
             }
         }
-        every { mockRecognizer.acceptWaveForm(any<ByteArray>(), any()) } returns true
+        every { mockRecognizer.acceptWaveForm(any(), any()) } returns true
         every { mockRecognizer.result } returns """{"text" : "hello"}"""
         every { mockRecognizer.finalResult } returns """{"text" : ""}"""
 
@@ -367,7 +365,7 @@ class VoiceRecognitionServiceTest {
                 0
             }
         }
-        every { mockRecognizer.acceptWaveForm(any<ByteArray>(), any()) } returns false
+        every { mockRecognizer.acceptWaveForm(any(), any()) } returns false
         every { mockRecognizer.partialResult } returns """{"partial" : "in progress"}"""
         every { mockRecognizer.finalResult } returns """{"text" : ""}"""
 
@@ -484,7 +482,7 @@ class VoiceRecognitionServiceTest {
                 0
             }
         }
-        every { mockRecognizer.acceptWaveForm(any<ByteArray>(), any()) } returns true
+        every { mockRecognizer.acceptWaveForm(any(), any()) } returns true
         every { mockRecognizer.result } returns """{"text" : ""}"""
         every { mockRecognizer.finalResult } returns """{"text" : ""}"""
 

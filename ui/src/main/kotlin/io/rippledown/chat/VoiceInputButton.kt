@@ -32,7 +32,7 @@ import kotlinx.coroutines.Dispatchers
 
 @Composable
 fun VoiceInputButton(
-    voiceRecognitionService: VoiceRecognitionService,
+    voiceRecognitionService: VoiceRecognition,
     enabled: Boolean = true,
     onPartialResult: (String) -> Unit = {},
     onSegmentFinalized: (String) -> Unit = {}

@@ -14,7 +14,7 @@ class VoiceInputButtonTest {
     @get:Rule
     var composeTestRule = createComposeRule()
 
-    private lateinit var voiceRecognitionService: VoiceRecognitionService
+    private lateinit var voiceRecognitionService: VoiceRecognition
     private val isListeningFlow = MutableStateFlow(false)
     private val partialResultFlow = MutableStateFlow("")
 

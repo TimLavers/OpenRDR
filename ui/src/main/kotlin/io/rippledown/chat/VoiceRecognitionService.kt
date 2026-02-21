@@ -11,24 +11,34 @@ import javax.sound.sampled.AudioSystem
 import javax.sound.sampled.DataLine
 import javax.sound.sampled.TargetDataLine
 
+interface SpeechModel : AutoCloseable
+interface SpeechRecognizer : AutoCloseable {
+    fun acceptWaveForm(data: ByteArray, len: Int): Boolean
+    val result: String
+    val partialResult: String
+    val finalResult: String
+}
+
 class VoiceRecognitionService(
     private val modelPath: String,
     private val sampleRate: Float = 16000f,
-    private val modelFactory: (String) -> Model = ::Model,
-    private val recognizerFactory: (Model, Float) -> Recognizer = ::Recognizer,
+    private val modelFactory: (String) -> SpeechModel = { path -> VoskModel(Model(path)) },
+    private val recognizerFactory: (SpeechModel, Float) -> SpeechRecognizer = { model, rate ->
+        VoskRecognizer(Recognizer((model as VoskModel).delegate, rate))
+    },
     private val microphoneFactory: (AudioFormat) -> TargetDataLine = Companion::defaultOpenMicrophone
-) {
+) : VoiceRecognition {
     private val _isListening = MutableStateFlow(false)
-    val isListening: StateFlow<Boolean> = _isListening
+    override val isListening: StateFlow<Boolean> = _isListening
 
     private val _partialResult = MutableStateFlow("")
-    val partialResult: StateFlow<String> = _partialResult
+    override val partialResult: StateFlow<String> = _partialResult
 
     private var recognitionJob: Job? = null
     private var targetDataLine: TargetDataLine? = null
-    private var model: Model? = null
+    private var model: SpeechModel? = null
 
-    private fun ensureModel(): Model {
+    private fun ensureModel(): SpeechModel {
         if (model == null) {
             val modelDir = File(modelPath)
             require(modelDir.exists() && modelDir.isDirectory) {
@@ -45,22 +55,22 @@ class VoiceRecognitionService(
         return microphoneFactory(format)
     }
 
-    fun startListening(
+    override fun startListening(
         scope: CoroutineScope,
         onFinalResult: (String) -> Unit
     ) {
         if (_isListening.value) return
 
         recognitionJob = scope.launch(Dispatchers.IO) {
-            var recognizer: Recognizer? = null
+            var recognizer: SpeechRecognizer? = null
             try {
-                val voskModel = try {
+                val speechModel = try {
                     ensureModel()
                 } catch (e: IllegalArgumentException) {
                     System.err.println(e.message)
                     return@launch
                 }
-                recognizer = recognizerFactory(voskModel, sampleRate)
+                recognizer = recognizerFactory(speechModel, sampleRate)
                 val line = openMicrophone()
                 targetDataLine = line
                 _isListening.value = true
@@ -97,11 +107,11 @@ class VoiceRecognitionService(
         }
     }
 
-    fun resetAccumulatedText() {
+    override fun resetAccumulatedText() {
         _partialResult.value = ""
     }
 
-    fun stopListening() {
+    override fun stopListening() {
         _isListening.value = false
         stopMicrophone()
         recognitionJob?.cancel()
@@ -116,7 +126,7 @@ class VoiceRecognitionService(
         targetDataLine = null
     }
 
-    fun close() {
+    override fun close() {
         stopListening()
         model?.close()
         model = null
@@ -179,4 +189,16 @@ class VoiceRecognitionService(
             return tempDir.absolutePath
         }
     }
+}
+
+class VoskModel(val delegate: Model) : SpeechModel {
+    override fun close() = delegate.close()
+}
+
+class VoskRecognizer(private val delegate: Recognizer) : SpeechRecognizer {
+    override fun acceptWaveForm(data: ByteArray, len: Int): Boolean = delegate.acceptWaveForm(data, len)
+    override val result: String get() = delegate.result
+    override val partialResult: String get() = delegate.partialResult
+    override val finalResult: String get() = delegate.finalResult
+    override fun close() = delegate.close()
 }

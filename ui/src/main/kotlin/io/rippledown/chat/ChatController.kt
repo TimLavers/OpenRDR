@@ -13,7 +13,7 @@ interface ChatControllerHandler {
 fun ChatController(
     id: Long = -1L,
     handler: ChatControllerHandler,
-    voiceRecognitionService: VoiceRecognitionService? = null,
+    voiceRecognitionService: VoiceRecognition? = null,
     modifier: Modifier = Modifier
 ) {
     var chatHistory: List<ChatMessage> by remember { mutableStateOf(emptyList()) }

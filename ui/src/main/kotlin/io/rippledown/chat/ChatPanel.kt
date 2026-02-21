@@ -77,7 +77,7 @@ fun ChatPanel(
     sendIsEnabled: Boolean = true,
     messages: List<ChatMessage> = emptyList(),
     onMessageSent: OnMessageSent = {},
-    voiceRecognitionService: VoiceRecognitionService? = null,
+    voiceRecognitionService: VoiceRecognition? = null,
     modifier: Modifier = Modifier
 ) {
     var inputText by remember { mutableStateOf(TextFieldValue()) }
