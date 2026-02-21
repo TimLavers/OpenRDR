@@ -185,15 +185,11 @@ class VoiceRecognitionServiceTest {
     // --- defaultModelPath ---
 
     @Test
-    fun `should return default model path in user home`() {
-        // Given
-        val userHome = System.getProperty("user.home")
-
+    fun `should return default model path from resources`() {
         // When
         val path = VoiceRecognitionService.defaultModelPath()
 
         // Then
-        path shouldContain userHome
         path shouldContain "vosk-model"
     }
 

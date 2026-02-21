@@ -141,8 +141,42 @@ class VoiceRecognitionService(
         }
 
         fun defaultModelPath(): String {
-            val userHome = System.getProperty("user.home")
-            return "$userHome${File.separator}vosk-model"
+            val resource = VoiceRecognitionService::class.java.getResource("/vosk-model")
+                ?: error("Vosk model not found in resources. Ensure vosk-model is in ui/src/main/resources/")
+            return if (resource.protocol == "file") {
+                File(resource.toURI()).absolutePath
+            } else {
+                extractModelFromJar()
+            }
+        }
+
+        private fun extractModelFromJar(): String {
+            val tempDir = File(System.getProperty("java.io.tmpdir"), "vosk-model")
+            if (tempDir.exists() && tempDir.isDirectory && tempDir.list()?.isNotEmpty() == true) {
+                return tempDir.absolutePath
+            }
+            tempDir.mkdirs()
+            val resourceUrl = VoiceRecognitionService::class.java.getResource("/vosk-model")!!
+            val jarPath = resourceUrl.path.substringAfter("file:").substringBefore("!")
+            val jarFile = java.util.jar.JarFile(File(jarPath))
+            jarFile.use { jar ->
+                jar.entries().asSequence()
+                    .filter { it.name.startsWith("vosk-model/") }
+                    .forEach { entry ->
+                        val outFile = File(tempDir.parentFile, entry.name)
+                        if (entry.isDirectory) {
+                            outFile.mkdirs()
+                        } else {
+                            outFile.parentFile.mkdirs()
+                            jar.getInputStream(entry).use { input ->
+                                outFile.outputStream().use { output ->
+                                    input.copyTo(output)
+                                }
+                            }
+                        }
+                    }
+            }
+            return tempDir.absolutePath
         }
     }
 }
