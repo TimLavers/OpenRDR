@@ -8,6 +8,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import kotlin.test.Test
 
@@ -18,6 +19,11 @@ class ConditionChatServiceTest {
     @BeforeEach
     fun setUp() {
         service = ConditionChatService()
+    }
+    @AfterEach
+    fun tearDown() {
+        //avoid model rate limiting
+        Thread.sleep(10_000)
     }
 
     private fun cs(
