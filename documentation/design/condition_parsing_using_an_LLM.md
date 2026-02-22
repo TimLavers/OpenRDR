@@ -22,9 +22,7 @@ The `hints` subproject provides the functionality to translate a user expression
 Gemini LLM. The process is as follows:
 
 1. When building a rule, the user enters an expression describing some condition, e.g. `Glucose is no less than 5.5`.
-2. The attribute in the expression is identified and replaced by a placeholder 'x'. The expression now becomes
-   `x is no less than 5.5`. This is done to make it easier for the LLM to identify the significant parts of the
-   expression, which in this example are "is no less than" and "5.5".
+2. The model is provided with all the attributes in the case. This is done to make it easier for the LLM to identify any attributes in the expression.
 3. Gemini is given a structured prompt to convert the expression into a list of tokens, the first token being the name
    of a function that will construct the condition, and the subsequent tokens identifying any parameters needed by that
    function.
