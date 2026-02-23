@@ -10,7 +10,6 @@ plugins {
 dependencies {
     implementation(project(":common"))
     implementation(compose.desktop.currentOs)
-    implementation(compose.preview)
     implementation(compose.material)
     implementation(compose.material3)
     implementation(compose.components.resources)
@@ -35,6 +34,7 @@ dependencies {
 compose.desktop {
     application {
         mainClass = "Main"
+        jvmArgs("--enable-native-access=ALL-UNNAMED")
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi)

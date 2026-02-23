@@ -1,6 +1,5 @@
 package io.rippledown.appbar
 
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.MaterialTheme.colors
@@ -16,7 +15,6 @@ import io.rippledown.constants.main.MAIN_HEADING
 import io.rippledown.constants.main.MAIN_HEADING_ID
 
 @Composable
-@Preview
 fun ApplicationNameDisplay() {
     Text(
         style = MaterialTheme.typography.h6,

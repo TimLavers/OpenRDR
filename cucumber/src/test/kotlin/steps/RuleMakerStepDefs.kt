@@ -354,7 +354,7 @@ fun addConditionsAndFinishRule(dataTable: DataTable) {
 fun addConditionsThatMayBeEditable(conditionsWithHints: List<List<String>>) {
     conditionsWithHints.forEach { conditionWithHints ->
         pause(100)
-        if (conditionWithHints[1] != null && conditionWithHints[1].isNotBlank()) {
+        if (conditionWithHints[1].isNotBlank()) {
             ruleMakerPO().clickConditionStartingWithText(conditionWithHints[1])
             pause(200)
             ruleMakerPO().setEditableValue(conditionWithHints[2])

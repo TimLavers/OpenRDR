@@ -42,7 +42,7 @@ class Api(
         install(HttpTimeout) {
             this.requestTimeoutMillis = 60_000
             connectTimeoutMillis = 60_000
-            socketTimeoutMillis = 60_000
+            socketTimeoutMillis = 120_000
         }
         install(WebSockets)
     }

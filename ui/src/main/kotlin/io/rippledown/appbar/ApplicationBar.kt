@@ -2,7 +2,6 @@
 
 package io.rippledown.appbar
 
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.TooltipArea
 import androidx.compose.foundation.layout.Row
@@ -36,7 +35,6 @@ interface AppBarHandler : KBControlHandler, KbEditControlHandler {
 const val CHAT_ICON_TOGGLE = "CHAT_ICON"
 
 @Composable
-@Preview
 fun ApplicationBar(
     kbInfo: KBInfo?,
     isChatVisible: Boolean = true,
