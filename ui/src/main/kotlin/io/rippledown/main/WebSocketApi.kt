@@ -34,11 +34,12 @@ open class WebSocketApi(private val client: HttpClient, private val port: Int = 
                     .filterIsInstance<Frame.Text>()
                     .collect { frame ->
                         val receivedText = frame.readText()
+                        logger.debug("Received message: $receivedText")
                         when {
                             receivedText == RULE_SESSION_COMPLETED -> {
                                 ruleSessionCompleted()
                             }
-                            receivedText.contains("case") -> {
+                            receivedText.contains("cornerstoneToReview") -> {
                                 handleCornerstoneStatus(receivedText, updateCornerstoneStatus)
                             }
                             else -> handleKbInfo(receivedText, kbInfoUpdated)

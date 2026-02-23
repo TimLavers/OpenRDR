@@ -41,7 +41,8 @@ class ServerProxy {
             "-jar",
             jarFile.absolutePath,
             dbFlag,
-            "-Xmx24G"
+            "-Xmx24G",
+            "-log_level=DEBUG"
         )
         process = ProcessBuilder(command)
             .redirectErrorStream(true)

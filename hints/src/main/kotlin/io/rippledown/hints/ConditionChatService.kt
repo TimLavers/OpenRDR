@@ -58,8 +58,10 @@ class ConditionChatService {
 
     suspend fun updateChatWithAttributeNames(attributeNames: List<String>) {
         val message = buildAttributePrompt(attributeNames)
+        logger.info("Updating chat with attribute names: $message")
         logger.info("Providing attribute names: ${attributeNames.joinToString { it }}")
         retry { chat.sendMessage(message) }
+        logger.info("Attribute names sent successfully.")
         attributesInitialized = true
     }
 
@@ -70,6 +72,7 @@ class ConditionChatService {
      * @return The parsed condition specification, or null if transformation failed
      */
     suspend fun transform(expression: String): ConditionSpecification? {
+        logger.debug("Transforming an expression, first ensuring attribute names are initialized:")
         ensureAttributesInitialized()
         logger.debug("Transforming: $expression")
         val response = retry {

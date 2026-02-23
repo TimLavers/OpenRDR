@@ -121,23 +121,24 @@ class ConditionGenerator(
         val clazz = Class.forName(className).kotlin
         val constructor = clazz.primaryConstructor
         return if (constructor == null) {
-            clazz.objectInstance
-                ?: throw IllegalArgumentException("$className is not an object and has no primary constructor")
+            clazz.objectInstance as T
         } else {
-            val arg = requireNotNull(args[0])  //Assume there is only one argument
+            val arg = args[0]  //Assume there is only one argument
             val constructorParameter = constructor.parameters[0]
             val type = constructorParameter.type
             when (type.toString()) {
                 "kotlin.String" -> {
-                    constructor.call(arg)
+                    constructor.call(arg) as T
                 }
 
                 "kotlin.Double" -> {
-                    constructor.call(arg.toDouble())
+                    val toDouble = arg!!.toDouble()
+                    constructor.call(toDouble) as T
                 }
 
                 "kotlin.Int" -> {
-                    constructor.call(arg.toInt())
+                    val toInt = arg!!.toInt()
+                    constructor.call(toInt) as T
                 }
 
                 else -> {
@@ -151,8 +152,10 @@ class ConditionGenerator(
     inline fun <reified T : Any> createCaseStructureInstance(className: String, attribute: Attribute?): T {
         val clazz = Class.forName(className).kotlin
         val constructor = clazz.primaryConstructor
-        return constructor?.call(attribute)
-            ?: (clazz.objectInstance
-                ?: throw IllegalArgumentException("$className is not an object and has no primary constructor"))
+        return if (constructor == null) {
+            clazz.objectInstance as T
+        } else {
+            constructor.call(attribute) as T
+        }
     }
 }

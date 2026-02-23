@@ -14,6 +14,7 @@ Feature: Manage rule conditions
       | wave height > 1.0 |
     And stop the client application
 
+  @single
   Scenario: The user should be able to build a rule using several conditions
     Given case Bondi is provided having data:
       | wave height | 2  |

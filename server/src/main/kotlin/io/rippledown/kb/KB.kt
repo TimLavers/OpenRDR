@@ -7,7 +7,6 @@ import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
 import io.rippledown.hints.AttributeFor
 import io.rippledown.hints.ConditionChatService
 import io.rippledown.hints.ConditionGenerator
-import io.rippledown.kb.chat.*
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.CaseType
 import io.rippledown.model.Interpretation
@@ -20,6 +19,8 @@ import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistentKB
+import io.rippledown.server.chat.ChatManager
+import io.rippledown.server.chat.KbEditInterface
 import io.rippledown.server.websocket.WebSocketManager
 import kotlinx.coroutines.runBlocking
 
@@ -160,7 +161,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
 
     override suspend fun sendCornerstoneStatus() {
         val cornerstoneStatus = cornerstoneStatus(null)
-        webSocketManager?.sendCornerstoneStatus(cornerstoneStatus)
+        webSocketManager?.sendStatus(cornerstoneStatus)
     }
 
     override suspend fun sendRuleSessionCompleted() {
@@ -363,32 +364,4 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
 
     fun conditionForExpression(expression: String) = conditionForExpression(ruleSession!!.case, expression)
 
-    /**
-     * Starts a new conversation for the given viewable case.
-     *
-     * @param viewableCase The case to start a conversation about
-     * @return A string representing the conversation ID or initial response
-     */
-    suspend fun startConversation(viewableCase: ViewableCase): String {
-        val chatService = KBChatService.createKBChatService(viewableCase)
-        // Use a lazy ModelResponder since chatManager isn't created until after Conversation
-        val modelResponder = object : ModelResponder {
-            override suspend fun response(message: String): String = chatManager.response(message)
-        }
-        val conversationService = Conversation(
-            chatService = chatService,
-            reasonTransformer = createReasonTransformer(viewableCase, this, modelResponder)
-        )
-        chatManager = ChatManager(conversationService, this)
-        return chatManager.startConversation(viewableCase)
-    }
-
-    /**
-     * Creates a transformer that converts a natural language reason into a rule condition and
-     * adds it to the current rule session if it is valid.
-     */
-    fun createReasonTransformer(viewableCase: ViewableCase, ruleService: RuleService, modelResponder: ModelResponder) =
-        KBReasonTransformer(viewableCase.case, ruleService, modelResponder)
-
-    suspend fun responseToUserMessage(message: String) = chatManager.response(message)
 }

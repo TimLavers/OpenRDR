@@ -26,7 +26,7 @@ class WebSocketManager {
         }
     }
 
-    suspend fun sendCornerstoneStatus(status: CornerstoneStatus) {
+    suspend fun sendStatus(status: CornerstoneStatus) {
         send(status.toJsonString<CornerstoneStatus>())
     }
 

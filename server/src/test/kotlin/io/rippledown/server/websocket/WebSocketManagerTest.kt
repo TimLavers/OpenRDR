@@ -32,7 +32,7 @@ class WebSocketManagerTest {
         webSocketManager.setSession(session)
 
         val status = CornerstoneStatus(null, -1, 0)
-        webSocketManager.sendCornerstoneStatus(status)
+        webSocketManager.sendStatus(status)
         val expectedText = status.toJsonString<CornerstoneStatus>()
         coVerify {
             session.send(match { it is Frame.Text && it.readText() == expectedText })
@@ -64,7 +64,7 @@ class WebSocketManagerTest {
     @Test
     fun shouldNotSendIfSessionNotSet() = runBlocking {
         val status = CornerstoneStatus(null, -1, 0)
-        webSocketManager.sendCornerstoneStatus(status)
+        webSocketManager.sendStatus(status)
         coVerify(exactly = 0) {
             session.send(any())
         }

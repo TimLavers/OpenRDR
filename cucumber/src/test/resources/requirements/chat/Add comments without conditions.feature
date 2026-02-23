@@ -1,5 +1,5 @@
 @chat
-Feature: Add comments without conditions
+  Feature: Add comments without conditions
   Scenario: The user should be able to use the chat to add a comment to a blank report, with no conditions
     Given case Bondi is provided having data:
       | Wave | excellent |

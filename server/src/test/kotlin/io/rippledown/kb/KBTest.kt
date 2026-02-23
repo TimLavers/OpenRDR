@@ -8,9 +8,6 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.*
-import io.rippledown.chat.ReasonTransformation
-import io.rippledown.kb.chat.ModelResponder
-import io.rippledown.server.chat.KbEditInterface
 import io.rippledown.model.*
 import io.rippledown.model.condition.*
 import io.rippledown.model.condition.episodic.predicate.Contains
@@ -55,7 +52,7 @@ class KBTest {
         kb.sendCornerstoneStatus()
 
         //Then
-        coVerify { webSocketManager.sendCornerstoneStatus(ccStatus) }
+        coVerify { webSocketManager.sendStatus(ccStatus) }
     }
 
     @Test
@@ -1101,6 +1098,8 @@ class KBTest {
         val slot = slot<Condition>()
         verify { ruleService.addConditionToCurrentRuleSession(capture(slot)) }
         slot.captured shouldBeSameAs condition
+  */
+        TODO()
     }
 
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")
