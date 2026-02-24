@@ -127,7 +127,9 @@ class VoiceRecognitionService(
     }
 
     override fun close() {
+        val job = recognitionJob
         stopListening()
+        runBlocking { job?.join() }
         model?.close()
         model = null
     }

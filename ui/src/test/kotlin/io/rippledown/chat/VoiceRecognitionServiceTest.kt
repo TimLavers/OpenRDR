@@ -31,6 +31,7 @@ class VoiceRecognitionServiceTest {
     private lateinit var mockRecognizer: SpeechRecognizer
     private lateinit var mockTargetDataLine: TargetDataLine
     private lateinit var modelDir: java.io.File
+    private var service: VoiceRecognitionService? = null
 
     private val testDispatcher = UnconfinedTestDispatcher()
 
@@ -45,6 +46,8 @@ class VoiceRecognitionServiceTest {
 
     @After
     fun tearDown() {
+        service?.close()
+        service = null
         Dispatchers.resetMain()
         unmockkAll()
     }
@@ -59,7 +62,7 @@ class VoiceRecognitionServiceTest {
             modelFactory = { mockModel },
             recognizerFactory = { _, _ -> mockRecognizer },
             microphoneFactory = { mockTargetDataLine }
-        )
+        ).also { service = it }
     }
 
     // --- Initial state ---
@@ -455,7 +458,7 @@ class VoiceRecognitionServiceTest {
             modelFactory = { mockModel },
             recognizerFactory = { _, _ -> mockRecognizer },
             microphoneFactory = { mockTargetDataLine }
-        )
+        ).also { this@VoiceRecognitionServiceTest.service = it }
 
         // When
         service.startListening(CoroutineScope(Dispatchers.IO)) {}
