@@ -119,6 +119,43 @@ class ConversationTest {
             coVerify { reasonTransformer.transform(userExpression) }
         }
     }
+
+    @Test
+    fun `should handle multiple rounds of function calls`() =
+        runTest {
+            // Given
+            val firstExpression = "hite > 1"
+            val secondExpression = "height > 1"
+            val response1 = mockk<GenerateContentResponse>()
+            val response2 = mockk<GenerateContentResponse>()
+            val response3 = mockk<GenerateContentResponse>()
+            val response4 = mockk<GenerateContentResponse>()
+            coEvery { response1.text } returns "Hello, how can I assist you today?"
+            coEvery { response2.functionCalls } returns listOf(
+                FunctionCallPart(
+                    name = TRANSFORM_REASON,
+                    args = mapOf(REASON to firstExpression)
+                )
+            )
+            coEvery { response3.functionCalls } returns listOf(
+                FunctionCallPart(
+                    name = TRANSFORM_REASON,
+                    args = mapOf(REASON to secondExpression)
+                )
+            )
+            coEvery { response4.text } returns "The condition was added."
+            val mockChatService = MockChatService(listOf(response1, response2, response3, response4))
+            val conversation = Conversation(mockChatService, reasonTransformer)
+            conversation.startConversation()
+
+            // When
+            val response = conversation.response("Add the condition '$firstExpression'.")
+
+            // Then
+            response shouldBe "The condition was added."
+            coVerify { reasonTransformer.transform(firstExpression) }
+            coVerify { reasonTransformer.transform(secondExpression) }
+        }
 }
 
 private class MockChatService(private val responses: List<GenerateContentResponse>) : ChatService {
