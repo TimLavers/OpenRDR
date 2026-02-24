@@ -53,14 +53,13 @@ class Conversation(private val chatService: ChatService, private val reasonTrans
     }
 
     private suspend fun handleResponse(response: GenerateContentResponse): String {
-        return if (response.functionCalls.isNotEmpty()) {
-            val functionResults = response.functionCalls.map { executeFunction(it) }
+        var currentResponse = response
+        while (currentResponse.functionCalls.isNotEmpty()) {
+            val functionResults = currentResponse.functionCalls.map { executeFunction(it) }
             val prompt = content { text("Function results: ${functionResults.joinToString(", ")}") }
-            val followUpResponse = chat.sendMessage(prompt)
-            followUpResponse.text?.stripEnclosingJson() ?: "No text response after function execution"
-        } else {
-            response.text?.stripEnclosingJson() ?: "No function call or text response"
+            currentResponse = chat.sendMessage(prompt)
         }
+        return currentResponse.text?.stripEnclosingJson() ?: "No function call or text response"
     }
 
     /**

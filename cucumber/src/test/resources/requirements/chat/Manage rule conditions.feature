@@ -44,8 +44,8 @@ Feature: Manage rule conditions
     And the chatbot has asked if I want to provide any more reasons
     And I ask to see the reasons
     Then the chatbot lists the following reasons:
-      | 1.  height > 1.0 |
-      | 2.  period > 5.0 |
+      | height > 1.0 |
+      | period > 5.0 |
     And stop the client application
 
   Scenario: The user should be able to remove a condition from the current rule building session
