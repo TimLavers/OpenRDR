@@ -55,6 +55,9 @@ suspend fun <T> retry(
         try {
             return block()
         } catch (e: Exception) {
+            // Don't retry serialization errors - they indicate a malformed API response
+            // that won't be fixed by retrying with the same request
+            if (e is SerializationException) throw e
             e.printStackTrace()
             if (attempt == maxRetries - 1) throw e
             Retry.lazyLogger.info("attempt $attempt failed. Waiting $currentDelay ms before retrying")

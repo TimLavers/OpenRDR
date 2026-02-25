@@ -59,7 +59,13 @@ class ConditionChatService {
     suspend fun updateChatWithAttributeNames(attributeNames: List<String>) {
         val message = buildAttributePrompt(attributeNames)
         logger.info("Providing attribute names: ${attributeNames.joinToString { it }}")
-        retry { chat.sendMessage(message) }
+        try {
+            retry { chat.sendMessage(message) }
+        } catch (e: Exception) {
+            logger.warn("Attribute update failed, resetting chat and retrying: ${e.message}")
+            chat = chatFactory(systemPrompt)
+            retry { chat.sendMessage(message) }
+        }
         attributesInitialized = true
     }
 
@@ -72,11 +78,21 @@ class ConditionChatService {
     suspend fun transform(expression: String): ConditionSpecification? {
         ensureAttributesInitialized()
         logger.debug("Transforming: $expression")
-        val response = retry {
-            chat.sendMessage(expression).text
+        val response = try {
+            retry { chat.sendMessage(expression).text }
+        } catch (e: Exception) {
+            logger.warn("Transform failed, resetting chat and retrying: ${e.message}")
+            resetChat()
+            retry { chat.sendMessage(expression).text }
         }
         logger.debug("Response: $response")
         return response?.let { decodeOne(it) }
+    }
+
+    private suspend fun resetChat() {
+        chat = chatFactory(systemPrompt)
+        attributesInitialized = false
+        ensureAttributesInitialized()
     }
 
     companion object {
