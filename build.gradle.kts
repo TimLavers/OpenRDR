@@ -56,7 +56,7 @@ subprojects {
         if (project.name != "ui") {
             useJUnitPlatform()
         }
-        jvmArgs("-Xshare:off")
+        jvmArgs("-Xshare:off", "-XX:+EnableDynamicAgentLoading")
     }
 }
 

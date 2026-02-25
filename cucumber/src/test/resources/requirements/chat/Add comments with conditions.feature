@@ -15,7 +15,6 @@ Feature: Add comments with conditions
       | wave height > 0.5 |
     And stop the client application
 
-  @single
   Scenario: The user should be able to use the chat to add a comment with a valid condition in French
     Given case Lindsay is provided with the following values, reference ranges and units:
       | Attribute | Value | Low | High | Units  |
@@ -30,7 +29,6 @@ Feature: Add comments with conditions
       | Le taux de Glucose est élevé |
       | Moins de 50 ans              |
       | pregnant est "Y"             |
-    And pause
     Then the report should be "La patiente présente un diabète gestationnel."
     And the condition showing for the comment "La patiente présente un diabète gestationnel." is:
       | Glucose is high |
