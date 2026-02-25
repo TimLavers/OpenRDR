@@ -1,9 +1,10 @@
 package io.rippledown.chat
 
-import dev.shreyaspatil.ai.client.generativeai.Chat
-import dev.shreyaspatil.ai.client.generativeai.type.FunctionCallPart
-import dev.shreyaspatil.ai.client.generativeai.type.GenerateContentResponse
-import dev.shreyaspatil.ai.client.generativeai.type.content
+import com.google.genai.Chat
+import com.google.genai.types.Content
+import com.google.genai.types.FunctionCall
+import com.google.genai.types.GenerateContentResponse
+import com.google.genai.types.Part
 import io.rippledown.llm.retry
 import io.rippledown.log.lazyLogger
 import io.rippledown.stripEnclosingJson
@@ -30,13 +31,14 @@ class Conversation(private val chatService: ChatService, private val reasonTrans
         return response("Please assist me with the report for this case.")
     }
 
-    private suspend fun executeFunction(functionCall: FunctionCallPart): String {
-        if (functionCall.name != TRANSFORM_REASON) {
-            logger.warn("Unknown function call: ${functionCall.name}")
-            return "Unknown function: ${functionCall.name}"
+    private suspend fun executeFunction(functionCall: FunctionCall): String {
+        val name = functionCall.name().orElse("")
+        if (name != TRANSFORM_REASON) {
+            logger.warn("Unknown function call: $name")
+            return "Unknown function: $name"
         }
 
-        val reason = functionCall.args?.get(REASON_PARAMETER) ?: ""
+        val reason = functionCall.args().map { it[REASON_PARAMETER]?.toString() }.orElse("") ?: ""
         val transformation = reasonTransformer.transform(reason)
         return "'$reason' evaluation: ${transformation.toJsonString()}"
     }
@@ -54,19 +56,19 @@ class Conversation(private val chatService: ChatService, private val reasonTrans
 
     private suspend fun handleResponse(response: GenerateContentResponse): String {
         var currentResponse = response
-        while (currentResponse.functionCalls.isNotEmpty()) {
-            val functionResults = currentResponse.functionCalls.map { executeFunction(it) }
-            val prompt = content { text("Function results: ${functionResults.joinToString(", ")}") }
+        while (currentResponse.functionCalls()?.isNotEmpty() == true) {
+            val functionResults = currentResponse.functionCalls()!!.map { executeFunction(it) }
+            val prompt = Content.fromParts(Part.fromText("Function results: ${functionResults.joinToString(", ")}"))
             currentResponse = chat.sendMessage(prompt)
         }
-        return currentResponse.text?.stripEnclosingJson() ?: "No function call or text response"
+        return currentResponse.text()?.stripEnclosingJson() ?: "No function call or text response"
     }
 
     /**
      * Logs input and output token counts from a response, or estimates if unavailable.
      */
     private fun logTokenCounts(response: GenerateContentResponse, context: String) {
-        logger.info("$context - tokens: ${response.usageMetadata?.totalTokenCount}")
+        logger.info("$context - tokens: ${response.usageMetadata()}")
     }
 
     companion object {

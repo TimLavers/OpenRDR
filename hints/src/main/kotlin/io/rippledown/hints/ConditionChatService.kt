@@ -1,8 +1,10 @@
 package io.rippledown.hints
 
-import dev.shreyaspatil.ai.client.generativeai.Chat
+import com.google.genai.Chat
 import io.rippledown.hints.ConditionSpecification.Companion.decodeOne
-import io.rippledown.llm.generativeModel
+import io.rippledown.llm.GEMINI_MODEL
+import io.rippledown.llm.geminiClient
+import io.rippledown.llm.generateContentConfig
 import io.rippledown.llm.retry
 import io.rippledown.log.lazyLogger
 
@@ -29,8 +31,8 @@ class ConditionChatService {
     private var attributesInitialized = false
 
     constructor() : this(chatFactory = { prompt ->
-        val model = generativeModel(systemInstruction = prompt)
-        model.startChat()
+        val config = generateContentConfig(systemInstruction = prompt)
+        geminiClient.chats.create(GEMINI_MODEL, config)
     })
 
     internal constructor(chatFactory: (String) -> Chat) {
@@ -79,11 +81,11 @@ class ConditionChatService {
         ensureAttributesInitialized()
         logger.debug("Transforming: $expression")
         val response = try {
-            retry { chat.sendMessage(expression).text }
+            retry { chat.sendMessage(expression).text() }
         } catch (e: Exception) {
             logger.warn("Transform failed, resetting chat and retrying: ${e.message}")
             resetChat()
-            retry { chat.sendMessage(expression).text }
+            retry { chat.sendMessage(expression).text() }
         }
         logger.debug("Response: $response")
         return response?.let { decodeOne(it) }

@@ -1,12 +1,12 @@
 package io.rippledown.hints
 
-import dev.shreyaspatil.ai.client.generativeai.Chat
-import dev.shreyaspatil.ai.client.generativeai.type.GenerateContentResponse
+import com.google.genai.Chat
+import com.google.genai.types.GenerateContentResponse
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
-import io.mockk.coEvery
-import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -278,9 +278,9 @@ class ConditionChatServiceTest {
         runBlocking {
             // Given
             val response = mockk<GenerateContentResponse>()
-            coEvery { response.text } returns """{"userExpression":"x is high","attributeName":"x","predicate":{"name":"High","parameters":[]},"signature":{"name":"Current","parameters":[]}}"""
+            every { response.text() } returns """{"userExpression":"x is high","attributeName":"x","predicate":{"name":"High","parameters":[]},"signature":{"name":"Current","parameters":[]}}"""
             val chat = mockk<Chat>()
-            coEvery { chat.sendMessage(any<String>()) } returns response
+            every { chat.sendMessage(any<String>()) } returns response
 
             val serviceWithMock = ConditionChatService { chat }
             val attributes = listOf("x", "glucose")
@@ -290,7 +290,7 @@ class ConditionChatServiceTest {
             serviceWithMock.transform("x is high")
 
             // Then
-            coVerify(exactly = 1) {
+            verify(exactly = 1) {
                 chat.sendMessage(match<String> { it.startsWith("The attribute names defined in the knowledge base are:") })
             }
         }
@@ -301,9 +301,9 @@ class ConditionChatServiceTest {
         runBlocking {
             // Given
             val response = mockk<GenerateContentResponse>()
-            coEvery { response.text } returns """{"userExpression":"x is high","attributeName":"x","predicate":{"name":"High","parameters":[]},"signature":{"name":"Current","parameters":[]}}"""
+            every { response.text() } returns """{"userExpression":"x is high","attributeName":"x","predicate":{"name":"High","parameters":[]},"signature":{"name":"Current","parameters":[]}}"""
             val chat = mockk<Chat>()
-            coEvery { chat.sendMessage(any<String>()) } returns response
+            every { chat.sendMessage(any<String>()) } returns response
 
             val serviceWithMock = ConditionChatService { chat }
             val attributes = listOf("x", "glucose")
@@ -315,7 +315,7 @@ class ConditionChatServiceTest {
 
             // Then
             withClue("the second transform should not send the attributes to the model") {
-                coVerify(exactly = 1) {
+                verify(exactly = 1) {
                     chat.sendMessage(match<String> { it.startsWith("The attribute names defined in the knowledge base are:") })
                 }
             }

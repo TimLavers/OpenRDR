@@ -1,7 +1,7 @@
 package io.rippledown.llm
 
-import dev.shreyaspatil.ai.client.generativeai.GenerativeModel
-import dev.shreyaspatil.ai.client.generativeai.type.*
+import com.google.genai.Client
+import com.google.genai.types.*
 import io.rippledown.log.lazyLogger
 import kotlinx.coroutines.delay
 import java.lang.System.getenv
@@ -11,33 +11,43 @@ import kotlin.time.Duration.Companion.milliseconds
 val GEMINI_MODEL = "gemini-2.5-flash"
 var GEMINI_API_KEY = getenv("API_KEY") ?: ""
 
-fun generativeModel(
+val geminiClient: Client by lazy {
+    Client.builder().apiKey(GEMINI_API_KEY).build()
+}
+
+fun generateContentConfig(
     systemInstruction: String = "",
     functionDeclarations: List<FunctionDeclaration> = emptyList()
-) = GenerativeModel(
-    modelName = GEMINI_MODEL,
-    apiKey = GEMINI_API_KEY,
-    safetySettings = noSafetySettings(),
-    generationConfig = generativeConfig(),
-    systemInstruction = content { text(systemInstruction) },
-    tools = if (functionDeclarations.isNotEmpty()) listOf(Tool(functionDeclarations)) else emptyList()
-)
+): GenerateContentConfig {
+    val builder = GenerateContentConfig.builder()
+        .temperature(0f)
+        .topP(0.995f)
+        .safetySettings(noSafetySettings())
 
-fun noSafetySettings() =
-    HarmCategory.entries
-        .filter { harmCategory -> harmCategory != HarmCategory.UNKNOWN } //Invalid safety setting
-        .map { harmCategory ->
-            SafetySetting(
-                harmCategory = harmCategory,
-                threshold = BlockThreshold.NONE
-            )
-        }
+    if (systemInstruction.isNotEmpty()) {
+        builder.systemInstruction(Content.fromParts(Part.fromText(systemInstruction)))
+    }
 
-//Set the model to be as deterministic as possible
-fun generativeConfig() = GenerationConfig.Companion.builder().apply {
-    temperature = 0f
-    topP = 0.995f
-}.build()
+    if (functionDeclarations.isNotEmpty()) {
+        builder.tools(Tool.builder().functionDeclarations(functionDeclarations).build())
+    }
+
+    return builder.build()
+}
+
+fun noSafetySettings(): List<SafetySetting> =
+    listOf(
+        HarmCategory.Known.HARM_CATEGORY_HATE_SPEECH,
+        HarmCategory.Known.HARM_CATEGORY_DANGEROUS_CONTENT,
+        HarmCategory.Known.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+        HarmCategory.Known.HARM_CATEGORY_HARASSMENT,
+        HarmCategory.Known.HARM_CATEGORY_CIVIC_INTEGRITY,
+    ).map { category ->
+        SafetySetting.builder()
+            .category(category)
+            .threshold(HarmBlockThreshold.Known.OFF)
+            .build()
+    }
 
 /**
  * Retry when receiving the 503 error from the API due to rate limiting.
@@ -55,9 +65,6 @@ suspend fun <T> retry(
         try {
             return block()
         } catch (e: Exception) {
-            // Don't retry serialization errors - they indicate a malformed API response
-            // that won't be fixed by retrying with the same request
-            if (e is SerializationException) throw e
             e.printStackTrace()
             if (attempt == maxRetries - 1) throw e
             Retry.lazyLogger.info("attempt $attempt failed. Waiting $currentDelay ms before retrying")
