@@ -16,17 +16,14 @@ val geminiClient: Client by lazy {
 }
 
 fun generateContentConfig(
-    systemInstruction: String = "",
+    systemInstruction: String,
     functionDeclarations: List<FunctionDeclaration> = emptyList()
 ): GenerateContentConfig {
     val builder = GenerateContentConfig.builder()
         .temperature(0f)
         .topP(0.995f)
         .safetySettings(noSafetySettings())
-
-    if (systemInstruction.isNotEmpty()) {
-        builder.systemInstruction(Content.fromParts(Part.fromText(systemInstruction)))
-    }
+        .systemInstruction(Content.fromParts(Part.fromText(systemInstruction)))
 
     if (functionDeclarations.isNotEmpty()) {
         builder.tools(Tool.builder().functionDeclarations(functionDeclarations).build())
