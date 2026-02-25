@@ -278,6 +278,9 @@ class Api(
             contentType(Json)
             setKBParameter()
             parameter(EXPRESSION, expression)
+            timeout {
+                requestTimeoutMillis = 120_000
+            }
         }.body()
     }
 

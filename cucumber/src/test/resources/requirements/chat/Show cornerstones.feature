@@ -1,4 +1,4 @@
-@chat
+@delay_after_cuke
 Feature: Show cornerstones
   Scenario: The user should be able to review cornerstones when adding a comment using the chat
     Given cases are set up as follows:

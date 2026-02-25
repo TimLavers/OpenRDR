@@ -1,3 +1,5 @@
+@delay_after_cuke
+@single
 Feature: When entering an expression to be used in a rule, the user is provided with a syntactically correct condition
   Scenario: Should provide a condition tip when the user types an expression
     Given case Bondi is provided with the following values, reference ranges and units:

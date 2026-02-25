@@ -1,4 +1,4 @@
-@chat
+@delay_after_cuke
 Feature: Manage rule conditions
 
   Scenario: The user should be able to build a rule using a misspelled attribute name
