@@ -19,7 +19,8 @@ class KBReasonTransformer(
             ruleService.addConditionToCurrentRuleSession(condition)
             val cornerstoneStatus = ruleService.cornerstoneStatus()
             ruleService.sendCornerstoneStatus()
-            modelResponder.response(cornerstoneStatus.toJsonString())
+            return result.toExpressionTransformation()
+                .copy(cornerstoneStatusJson = cornerstoneStatus.toJsonString())
         }
         return result.toExpressionTransformation()
     }

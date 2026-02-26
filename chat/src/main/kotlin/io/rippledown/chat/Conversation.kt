@@ -41,7 +41,9 @@ class Conversation(private val chatService: ChatService, private val reasonTrans
 
         val reason = functionCall.args().map { it[REASON_PARAMETER]?.toString() }.orElse("") ?: ""
         val transformation = reasonTransformer.transform(reason)
-        return "'$reason' evaluation: ${transformation.toJsonString()}"
+        val result = "'$reason' evaluation: ${transformation.toJsonString()}"
+        val cornerstoneStatus = transformation.cornerstoneStatusJson
+        return if (cornerstoneStatus != null) "$result\nCornerstone status: $cornerstoneStatus" else result
     }
 
     override suspend fun response(message: String): String {

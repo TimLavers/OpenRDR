@@ -1,12 +1,12 @@
 package io.rippledown.kb.chat
 
 import io.kotest.matchers.shouldBe
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.chat.ReasonTransformation
 import io.rippledown.model.Attribute
+import io.rippledown.model.CaseId
 import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.condition.greaterThanOrEqualTo
@@ -17,7 +17,7 @@ import kotlin.test.Test
 
 class KBReasonTransformerTest {
 
-    private val case = mockk<RDRCase>()
+    private val case = RDRCase(CaseId(1L, "testCase"))
     private val ruleService = mockk<RuleService>()
     private val modelResponder = mockk<ModelResponder>()
     private val transformer = KBReasonTransformer(case, ruleService, modelResponder)
@@ -29,6 +29,7 @@ class KBReasonTransformerTest {
         val condition = greaterThanOrEqualTo(1, Attribute(1, "glucose"), 5.0)
         val parsingResult = ConditionParsingResult(condition)
         every { ruleService.conditionForExpression(case, reason) } returns parsingResult
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
 
         // When
         transformer.transform(reason)
@@ -44,6 +45,7 @@ class KBReasonTransformerTest {
         val condition = greaterThanOrEqualTo(1, Attribute(1, "glucose"), 5.0)
         val parsingResult = ConditionParsingResult(condition)
         every { ruleService.conditionForExpression(case, reason) } returns parsingResult
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
 
         // When
         transformer.transform(reason)
@@ -87,6 +89,7 @@ class KBReasonTransformerTest {
         val condition = greaterThanOrEqualTo(1, Attribute(1, "glucose"), 5.0)
         val parsingResult = ConditionParsingResult(condition)
         every { ruleService.conditionForExpression(case, reason) } returns parsingResult
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
 
         // When
         val result = transformer.transform(reason)
@@ -143,7 +146,7 @@ class KBReasonTransformerTest {
     }
 
     @Test
-    fun `should call modelResponder response with cornerstoneStatus when a condition is added`() = runTest {
+    fun `should include cornerstoneStatusJson in transformation when a condition is added`() = runTest {
         // Given
         val reason = "glucose is elevated"
         val condition = greaterThanOrEqualTo(1, Attribute(1, "glucose"), 5.0)
@@ -154,14 +157,14 @@ class KBReasonTransformerTest {
         every { ruleService.cornerstoneStatus() } returns cornerstoneStatus
 
         // When
-        transformer.transform(reason)
+        val result = transformer.transform(reason)
 
         // Then
-        coVerify { modelResponder.response(cornerstoneStatus.toJsonString()) }
+        result.cornerstoneStatusJson shouldBe cornerstoneStatus.toJsonString()
     }
 
     @Test
-    fun `should not call modelResponder response when no condition is parsed`() = runTest {
+    fun `should not include cornerstoneStatusJson when no condition is parsed`() = runTest {
         // Given
         val reason = "something that cannot be parsed"
         val parsingResult = ConditionParsingResult(null, "error")
@@ -169,9 +172,9 @@ class KBReasonTransformerTest {
         every { ruleService.conditionForExpression(case, reason) } returns parsingResult
 
         // When
-        transformer.transform(reason)
+        val result = transformer.transform(reason)
 
         // Then
-        coVerify(exactly = 0) { modelResponder.response(any()) }
+        result.cornerstoneStatusJson shouldBe null
     }
 }
