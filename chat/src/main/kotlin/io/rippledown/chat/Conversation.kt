@@ -5,6 +5,7 @@ import com.google.genai.types.Content
 import com.google.genai.types.FunctionCall
 import com.google.genai.types.GenerateContentResponse
 import com.google.genai.types.Part
+import io.rippledown.llm.callWithTimeout
 import io.rippledown.llm.retry
 import io.rippledown.log.lazyLogger
 import io.rippledown.stripEnclosingJson
@@ -46,7 +47,7 @@ class Conversation(private val chatService: ChatService, private val reasonTrans
     override suspend fun response(message: String): String {
         val currentChat = checkNotNull(chat) { "Chat not initialized. Call startConversation first." }
         val response = try {
-            currentChat.sendMessage(message)
+            callWithTimeout { currentChat.sendMessage(message) }
         } catch (e: Exception) {
             logger.error("Failed to send message: $message", e)
             throw e
@@ -59,7 +60,7 @@ class Conversation(private val chatService: ChatService, private val reasonTrans
         while (currentResponse.functionCalls()?.isNotEmpty() == true) {
             val functionResults = currentResponse.functionCalls()!!.map { executeFunction(it) }
             val prompt = Content.fromParts(Part.fromText("Function results: ${functionResults.joinToString(", ")}"))
-            currentResponse = chat.sendMessage(prompt)
+            currentResponse = callWithTimeout { chat.sendMessage(prompt) }
         }
         return currentResponse.text()?.stripEnclosingJson() ?: "No function call or text response"
     }

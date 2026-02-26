@@ -5,6 +5,10 @@ import com.google.genai.types.*
 import io.rippledown.log.lazyLogger
 import kotlinx.coroutines.delay
 import java.lang.System.getenv
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -12,7 +16,10 @@ val GEMINI_MODEL = "gemini-2.5-flash"
 var GEMINI_API_KEY = getenv("API_KEY") ?: ""
 
 val geminiClient: Client by lazy {
-    Client.builder().apiKey(GEMINI_API_KEY).build()
+    Client.builder()
+        .apiKey(GEMINI_API_KEY)
+        .httpOptions(HttpOptions.builder().timeout(120_000).build())
+        .build()
 }
 
 fun generateContentConfig(
@@ -45,6 +52,23 @@ fun noSafetySettings(): List<SafetySetting> =
             .threshold(HarmBlockThreshold.Known.OFF)
             .build()
     }
+
+/**
+ * Run a blocking call with a hard timeout.
+ * Needed because the Google Gen AI SDK's sendMessage() is synchronous
+ * and may hang indefinitely if the API is unresponsive.
+ */
+fun <T> callWithTimeout(timeoutMs: Long = 90_000, block: () -> T): T {
+    val future = CompletableFuture.supplyAsync { block() }
+    return try {
+        future.get(timeoutMs, TimeUnit.MILLISECONDS)
+    } catch (e: TimeoutException) {
+        future.cancel(true)
+        throw RuntimeException("Gemini API call timed out after ${timeoutMs}ms", e)
+    } catch (e: ExecutionException) {
+        throw e.cause ?: e
+    }
+}
 
 /**
  * Retry when receiving the 503 error from the API due to rate limiting.

@@ -2,10 +2,7 @@ package io.rippledown.hints
 
 import com.google.genai.Chat
 import io.rippledown.hints.ConditionSpecification.Companion.decodeOne
-import io.rippledown.llm.GEMINI_MODEL
-import io.rippledown.llm.geminiClient
-import io.rippledown.llm.generateContentConfig
-import io.rippledown.llm.retry
+import io.rippledown.llm.*
 import io.rippledown.log.lazyLogger
 
 /**
@@ -62,11 +59,11 @@ class ConditionChatService {
         val message = buildAttributePrompt(attributeNames)
         logger.info("Providing attribute names: ${attributeNames.joinToString { it }}")
         try {
-            retry { chat.sendMessage(message) }
+            retry { callWithTimeout { chat.sendMessage(message) } }
         } catch (e: Exception) {
             logger.warn("Attribute update failed, resetting chat and retrying: ${e.message}")
             chat = chatFactory(systemPrompt)
-            retry { chat.sendMessage(message) }
+            retry { callWithTimeout { chat.sendMessage(message) } }
         }
         attributesInitialized = true
     }
@@ -81,11 +78,11 @@ class ConditionChatService {
         ensureAttributesInitialized()
         logger.debug("Transforming: $expression")
         val response = try {
-            retry { chat.sendMessage(expression).text() }
+            retry { callWithTimeout { chat.sendMessage(expression).text() } }
         } catch (e: Exception) {
             logger.warn("Transform failed, resetting chat and retrying: ${e.message}")
             resetChat()
-            retry { chat.sendMessage(expression).text() }
+            retry { callWithTimeout { chat.sendMessage(expression).text() } }
         }
         logger.debug("Response: $response")
         return response?.let { decodeOne(it) }
