@@ -87,7 +87,7 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun requireAvailableConditions(expectedConditions: List<String>) {
-        await().atMost(ofSeconds(10)).untilAsserted {
+        await().atMost(ofSeconds(30)).untilAsserted {
             allAvailableConditions() shouldBe expectedConditions
         }
     }

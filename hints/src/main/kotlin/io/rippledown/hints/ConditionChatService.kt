@@ -4,6 +4,10 @@ import com.google.genai.Chat
 import io.rippledown.hints.ConditionSpecification.Companion.decodeOne
 import io.rippledown.llm.*
 import io.rippledown.log.lazyLogger
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 /**
  * A chat-style service for transforming user expressions into condition specifications.
@@ -23,9 +27,10 @@ class ConditionChatService {
     private val chatFactory: (String) -> Chat
     private var chat: Chat
 
-    // Lazy initialization support
+    // Eager background initialization support
     private var pendingAttributeNames: List<String>? = null
     private var attributesInitialized = false
+    private var initJob: Job? = null
 
     constructor() : this(chatFactory = { prompt ->
         val config = generateContentConfig(systemInstruction = prompt)
@@ -40,18 +45,30 @@ class ConditionChatService {
     }
 
     /**
-     * Set attribute names to be sent to the LLM on the next transform call.
-     * This allows lazy initialization - the LLM call is deferred until actually needed.
+     * Set attribute names and eagerly start sending them to the LLM in the background.
+     * This way, the initialization is already done (or nearly done) by the time
+     * the first transform call comes in.
      */
     fun setAttributeNames(attributeNames: List<String>) {
+        initJob?.cancel()
         pendingAttributeNames = attributeNames
         attributesInitialized = false
+        initJob = CoroutineScope(Dispatchers.IO).launch {
+            try {
+                updateChatWithAttributeNames(attributeNames)
+            } catch (e: Exception) {
+                logger.warn("Background attribute initialization failed: ${e.message}")
+            }
+        }
     }
 
     private suspend fun ensureAttributesInitialized() {
         if (!attributesInitialized && pendingAttributeNames != null) {
-            updateChatWithAttributeNames(pendingAttributeNames!!)
-            attributesInitialized = true
+            initJob?.join()
+            if (!attributesInitialized) {
+                updateChatWithAttributeNames(pendingAttributeNames!!)
+                attributesInitialized = true
+            }
         }
     }
 
@@ -59,12 +76,19 @@ class ConditionChatService {
         val message = buildAttributePrompt(attributeNames)
         logger.info("Providing attribute names: ${attributeNames.joinToString { it }}")
         try {
-            retry { callWithTimeout { chat.sendMessage(message) } }
+            retry(maxRetries = 3) {
+                logger.info("Sending attribute names to LLM...")
+                callWithTimeout(timeoutMs = GEMINI_CALL_TIMEOUT) { chat.sendMessage(message) }
+            }
         } catch (e: Exception) {
             logger.warn("Attribute update failed, resetting chat and retrying: ${e.message}")
             chat = chatFactory(systemPrompt)
-            retry { callWithTimeout { chat.sendMessage(message) } }
+            retry(maxRetries = 3) {
+                logger.info("Sending attribute names to LLM (after reset)...")
+                callWithTimeout(timeoutMs = GEMINI_CALL_TIMEOUT) { chat.sendMessage(message) }
+            }
         }
+        logger.info("Attribute names provided successfully")
         attributesInitialized = true
     }
 
@@ -76,15 +100,21 @@ class ConditionChatService {
      */
     suspend fun transform(expression: String): ConditionSpecification? {
         ensureAttributesInitialized()
-        logger.debug("Transforming: $expression")
+        logger.info("Transforming: $expression")
         val response = try {
-            retry { callWithTimeout { chat.sendMessage(expression).text() } }
+            retry(maxRetries = 3) {
+                logger.info("Sending expression to LLM...")
+                callWithTimeout(timeoutMs = GEMINI_CALL_TIMEOUT) { chat.sendMessage(expression).text() }
+            }
         } catch (e: Exception) {
             logger.warn("Transform failed, resetting chat and retrying: ${e.message}")
             resetChat()
-            retry { callWithTimeout { chat.sendMessage(expression).text() } }
+            retry(maxRetries = 3) {
+                logger.info("Sending expression to LLM (after reset)...")
+                callWithTimeout(timeoutMs = GEMINI_CALL_TIMEOUT) { chat.sendMessage(expression).text() }
+            }
         }
-        logger.debug("Response: $response")
+        logger.info("Transform response: $response")
         return response?.let { decodeOne(it) }
     }
 
@@ -95,6 +125,7 @@ class ConditionChatService {
     }
 
     companion object {
+        private const val GEMINI_CALL_TIMEOUT = 30_000L
         private const val RESOURCE_DIR = "/prompt"
         private const val CHAT_SYSTEM_PROMPT = "CHAT_SYSTEM_PROMPT"
         private const val CHAT_ATTRIBUTE_PROMPT = "chat_attribute_prompt"

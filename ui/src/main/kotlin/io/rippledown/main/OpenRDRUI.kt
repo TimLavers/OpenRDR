@@ -314,7 +314,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
 
                             override fun conditionFor(
                                 conditionText: String,
-                            ) = runBlocking(dispatcher) {
+                            ) = runBlocking(Dispatchers.IO) {
                                 api.conditionFor(conditionText)
                             }
                         },
