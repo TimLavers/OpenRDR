@@ -121,16 +121,12 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
 
     fun startRuleSession(
         case: RDRCase,
-        action: RuleTreeChange,
-        initialiseConditionChatService: Boolean = false
+        action: RuleTreeChange
     ): CornerstoneStatus {
         logger.info("KB starting rule session for case ${case.name} and action $action")
         check(ruleSession == null) { "Session already in progress." }
         check(action.isApplicable(ruleTree, case)) { "Action $action is not applicable to case ${case.name}" }
         val alignedAction = action.alignWith(conclusionManager)
-        if (initialiseConditionChatService) {
-            conditionChatService.setAttributeNames(attributeNames())
-        }
         ruleSession = RuleBuildingSession(ruleManager, ruleTree, case, alignedAction, allCornerstoneCases())
         logger.info("KB rule session created")
         return cornerstoneStatus(null)
@@ -139,13 +135,13 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     override fun startRuleSessionToAddComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus {
         val conclusion = conclusionManager.getOrCreate(comment)
         val action = ChangeTreeToAddConclusion(conclusion)
-        return startRuleSession(viewableCase.case, action, initialiseConditionChatService = true)
+        return startRuleSession(viewableCase.case, action)
     }
 
     override fun startRuleSessionToRemoveComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus {
         val conclusion = conclusionManager.getOrCreate(comment)
         val action = ChangeTreeToRemoveConclusion(conclusion)
-        return startRuleSession(viewableCase.case, action, initialiseConditionChatService = true)
+        return startRuleSession(viewableCase.case, action)
     }
 
     override fun startRuleSessionToReplaceComment(
@@ -156,7 +152,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         val replacedConclusion = conclusionManager.getOrCreate(replacedComment)
         val replacementConclusion = conclusionManager.getOrCreate(replacementComment)
         val action = ChangeTreeToReplaceConclusion(replacedConclusion, replacementConclusion)
-        return startRuleSession(viewableCase.case, action, initialiseConditionChatService = true)
+        return startRuleSession(viewableCase.case, action)
     }
 
     override fun sendCornerstoneStatus() {

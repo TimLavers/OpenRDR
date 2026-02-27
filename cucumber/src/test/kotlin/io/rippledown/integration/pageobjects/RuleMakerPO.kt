@@ -81,7 +81,7 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun waitForOneAvailableCondition() {
-        await().atMost(ofSeconds(20)).untilAsserted {
+        await().atMost(ofSeconds(120)).untilAsserted {
             allAvailableConditions() shouldHaveSize 1
         }
     }

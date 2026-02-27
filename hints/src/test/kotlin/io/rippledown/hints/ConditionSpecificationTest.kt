@@ -85,6 +85,58 @@ class ConditionSpecificationTest {
     }
 
     @Test
+    fun `decodeOne should handle duplicate JSON blocks from LLM`() {
+        // Given - LLM returns two identical JSON blocks
+        val duplicateJson = """
+            ```json
+            {
+                "userExpression": "x is low",
+                "attributeName": "x",
+                "predicate": { "name": "Low", "parameters": [] },
+                "signature": { "name": "Current", "parameters": [] }
+            }
+            ```
+            ```json
+            {
+                "userExpression": "x is low",
+                "attributeName": "x",
+                "predicate": { "name": "Low", "parameters": [] },
+                "signature": { "name": "Current", "parameters": [] }
+            }
+            ```
+            """.trimIndent()
+
+        // When
+        val result = ConditionSpecification.decodeOne(duplicateJson)
+
+        // Then
+        result shouldBe ConditionSpecification(
+            userExpression = "x is low",
+            attributeName = "x",
+            FunctionSpecification("Low"),
+            FunctionSpecification("Current")
+        )
+    }
+
+    @Test
+    fun `extractFirstJsonObject should return first object when multiple present`() {
+        val input = """{"a": 1} {"b": 2}"""
+        ConditionSpecification.extractFirstJsonObject(input) shouldBe """{"a": 1}"""
+    }
+
+    @Test
+    fun `extractFirstJsonObject should handle nested braces`() {
+        val input = """{"a": {"b": 1}} {"c": 2}"""
+        ConditionSpecification.extractFirstJsonObject(input) shouldBe """{"a": {"b": 1}}"""
+    }
+
+    @Test
+    fun `extractFirstJsonObject should return single object unchanged`() {
+        val input = """{"a": 1}"""
+        ConditionSpecification.extractFirstJsonObject(input) shouldBe """{"a": 1}"""
+    }
+
+    @Test
     fun `should strip line break in user expression when deserializing`() {
         // Given
         val userExpression = "x is elevated"

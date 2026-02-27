@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test
 class ConditionGeneratorUserTextTest {
     private lateinit var attributeFor: AttributeFor
     private lateinit var attribute: Attribute
-    private lateinit var chatService: ConditionChatService
+    private lateinit var chatService: ConditionTransformer
     private lateinit var generator: ConditionGenerator
     private val attributeName = "glucose"
 
@@ -30,7 +30,7 @@ class ConditionGeneratorUserTextTest {
     fun setUp() {
         attributeFor = mockk<AttributeFor>()
         attribute = mockk<Attribute>()
-        chatService = mockk<ConditionChatService>()
+        chatService = mockk<ConditionTransformer>()
         every { attributeFor(attributeName) } returns attribute
         generator = ConditionGenerator(attributeFor, chatService)
     }

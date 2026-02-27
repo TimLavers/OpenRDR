@@ -4,10 +4,6 @@ import com.google.genai.Chat
 import io.rippledown.hints.ConditionSpecification.Companion.decodeOne
 import io.rippledown.llm.*
 import io.rippledown.log.lazyLogger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 
 /**
  * A chat-style service for transforming user expressions into condition specifications.
@@ -20,17 +16,14 @@ import kotlinx.coroutines.launch
  *
  * @author Cascade AI
  */
-class ConditionChatService {
+class ConditionChatService : ConditionTransformer {
     private val logger = lazyLogger
     private val systemPrompt: String
 
     private val chatFactory: (String) -> Chat
     private var chat: Chat
 
-    // Eager background initialization support
-    private var pendingAttributeNames: List<String>? = null
-    private var attributesInitialized = false
-    private var initJob: Job? = null
+    private var attributeNames: List<String> = emptyList()
 
     constructor() : this(chatFactory = { prompt ->
         val config = generateContentConfig(systemInstruction = prompt)
@@ -44,91 +37,50 @@ class ConditionChatService {
         chat = chatFactory(systemPrompt)
     }
 
-    /**
-     * Set attribute names and eagerly start sending them to the LLM in the background.
-     * This way, the initialization is already done (or nearly done) by the time
-     * the first transform call comes in.
-     */
-    fun setAttributeNames(attributeNames: List<String>) {
-        initJob?.cancel()
-        pendingAttributeNames = attributeNames
-        attributesInitialized = false
-        initJob = CoroutineScope(Dispatchers.IO).launch {
-            try {
-                updateChatWithAttributeNames(attributeNames)
-            } catch (e: Exception) {
-                logger.warn("Background attribute initialization failed: ${e.message}")
-            }
-        }
-    }
-
-    private suspend fun ensureAttributesInitialized() {
-        if (!attributesInitialized && pendingAttributeNames != null) {
-            initJob?.join()
-            if (!attributesInitialized) {
-                updateChatWithAttributeNames(pendingAttributeNames!!)
-                attributesInitialized = true
-            }
-        }
-    }
-
-    suspend fun updateChatWithAttributeNames(attributeNames: List<String>) {
-        val message = buildAttributePrompt(attributeNames)
-        logger.info("Providing attribute names: ${attributeNames.joinToString { it }}")
-        try {
-            retry(maxRetries = 3) {
-                logger.info("Sending attribute names to LLM...")
-                callWithTimeout(timeoutMs = GEMINI_CALL_TIMEOUT) { chat.sendMessage(message) }
-            }
-        } catch (e: Exception) {
-            logger.warn("Attribute update failed, resetting chat and retrying: ${e.message}")
-            chat = chatFactory(systemPrompt)
-            retry(maxRetries = 3) {
-                logger.info("Sending attribute names to LLM (after reset)...")
-                callWithTimeout(timeoutMs = GEMINI_CALL_TIMEOUT) { chat.sendMessage(message) }
-            }
-        }
-        logger.info("Attribute names provided successfully")
-        attributesInitialized = true
+    override fun setAttributeNames(attributeNames: List<String>) {
+        this.attributeNames = attributeNames
     }
 
     /**
      * Transform a user expression into a condition specification.
+     * Attribute names, if previously set via [setAttributeNames], are included in the message.
      * 
      * @param expression The natural language expression to transform (e.g., "glucose is high")
      * @return The parsed condition specification, or null if transformation failed
      */
-    suspend fun transform(expression: String): ConditionSpecification? {
-        ensureAttributesInitialized()
+    override suspend fun transform(expression: String): ConditionSpecification? {
         logger.info("Transforming: $expression")
+        val message = buildTransformMessage(expression, attributeNames)
         val response = try {
             retry(maxRetries = 3) {
                 logger.info("Sending expression to LLM...")
-                callWithTimeout(timeoutMs = GEMINI_CALL_TIMEOUT) { chat.sendMessage(expression).text() }
+                callWithTimeout(timeoutMs = GEMINI_CALL_TIMEOUT) { chat.sendMessage(message).text() }
             }
         } catch (e: Exception) {
             logger.warn("Transform failed, resetting chat and retrying: ${e.message}")
-            resetChat()
+            chat = chatFactory(systemPrompt)
             retry(maxRetries = 3) {
                 logger.info("Sending expression to LLM (after reset)...")
-                callWithTimeout(timeoutMs = GEMINI_CALL_TIMEOUT) { chat.sendMessage(expression).text() }
+                callWithTimeout(timeoutMs = GEMINI_CALL_TIMEOUT) { chat.sendMessage(message).text() }
             }
         }
         logger.info("Transform response: $response")
         return response?.let { decodeOne(it) }
     }
 
-    private suspend fun resetChat() {
-        chat = chatFactory(systemPrompt)
-        attributesInitialized = false
-        ensureAttributesInitialized()
+    private fun buildTransformMessage(expression: String, attributeNames: List<String>): String {
+        return if (attributeNames.isNotEmpty()) {
+            "${buildAttributePrompt(attributeNames)}\n\n$expression"
+        } else {
+            expression
+        }
     }
 
     companion object {
         private const val GEMINI_CALL_TIMEOUT = 30_000L
         private const val RESOURCE_DIR = "/prompt"
         private const val CHAT_SYSTEM_PROMPT = "CHAT_SYSTEM_PROMPT"
-        private const val CHAT_ATTRIBUTE_PROMPT = "chat_attribute_prompt"
+        internal const val CHAT_ATTRIBUTE_PROMPT = "chat_attribute_prompt"
         const val EPISODIC_PREDICATES = "EPISODIC_PREDICATES"
         const val SERIES_PREDICATES = "SERIES_PREDICATES"
         const val CASE_STRUCTURE_PREDICATES = "CASE_STRUCTURE_PREDICATES"

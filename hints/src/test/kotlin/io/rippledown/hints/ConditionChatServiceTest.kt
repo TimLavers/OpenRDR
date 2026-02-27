@@ -247,7 +247,7 @@ class ConditionChatServiceTest {
     fun `should use correct attribute name casing when attributeNames provided`() {
         runBlocking {
             // Given
-            service.updateChatWithAttributeNames(listOf("glucose", "TSH", "x"))
+            service.setAttributeNames(listOf("glucose", "TSH", "x"))
 
             // When - user types "X" but attribute is "x"
             val result = service.transform("X is high")
@@ -274,7 +274,7 @@ class ConditionChatServiceTest {
     }
 
     @Test
-    fun `should provide attribute names when transform is called`() {
+    fun `should include attribute names in transform message`() {
         runBlocking {
             // Given
             val response = mockk<GenerateContentResponse>()
@@ -283,21 +283,20 @@ class ConditionChatServiceTest {
             every { chat.sendMessage(any<String>()) } returns response
 
             val serviceWithMock = ConditionChatService { chat }
-            val attributes = listOf("x", "glucose")
+            serviceWithMock.setAttributeNames(listOf("x", "glucose"))
 
             // When
-            serviceWithMock.updateChatWithAttributeNames(attributes)
             serviceWithMock.transform("x is high")
 
             // Then
             verify(exactly = 1) {
-                chat.sendMessage(match<String> { it.startsWith("The attribute names defined in the knowledge base are:") })
+                chat.sendMessage(match<String> { it.contains("attribute names") && it.contains("x is high") })
             }
         }
     }
 
     @Test
-    fun `should only provide attribute names once per session`() {
+    fun `should not include attribute context when no attribute names set`() {
         runBlocking {
             // Given
             val response = mockk<GenerateContentResponse>()
@@ -306,18 +305,13 @@ class ConditionChatServiceTest {
             every { chat.sendMessage(any<String>()) } returns response
 
             val serviceWithMock = ConditionChatService { chat }
-            val attributes = listOf("x", "glucose")
 
             // When
-            serviceWithMock.updateChatWithAttributeNames(attributes)
-            serviceWithMock.transform("x is high")
             serviceWithMock.transform("x is high")
 
             // Then
-            withClue("the second transform should not send the attributes to the model") {
-                verify(exactly = 1) {
-                    chat.sendMessage(match<String> { it.startsWith("The attribute names defined in the knowledge base are:") })
-                }
+            verify(exactly = 1) {
+                chat.sendMessage("x is high")
             }
         }
     }
@@ -326,7 +320,7 @@ class ConditionChatServiceTest {
     fun `should transform condition with misspelled attribute name`() {
         runBlocking {
             // Given
-            service.updateChatWithAttributeNames(listOf("glucose", "LDL", "TSH"))
+            service.setAttributeNames(listOf("glucose", "LDL", "TSH"))
             // When
             val result = service.transform("flucose is elevated")
             // Then

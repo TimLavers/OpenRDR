@@ -17,7 +17,10 @@ import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.condition.edit.EditableCondition
 import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
 import io.rippledown.model.condition.edit.SuggestedCondition
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 
 interface RuleMakerHandler {
     var onDone: (conditions: List<Condition>) -> Unit
@@ -87,7 +90,15 @@ fun RuleMaker(allConditions: List<SuggestedCondition>, handler: RuleMakerHandler
         }
         availableConditions =
             refreshAvailableConditions(allConditions, filterText, selectedConditions, conditionFor)
-        if (filterText.isNotBlank()) errorMessage = handler.conditionForExpression(filterText).errorMessage
+        if (filterText.isNotBlank()) errorMessage = try {
+            withContext(Dispatchers.IO) {
+                handler.conditionForExpression(filterText).errorMessage
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            null
+        }
         showWaitingIndicator = false
     }
     Column(
@@ -160,7 +171,13 @@ internal suspend fun refreshAvailableConditions(
     //If there is no matching condition, attempt to parse the filter text as a condition.
     if (filteredConditions.isEmpty()) {
         delay(DEBOUNCE)
-        val parsed = conditionFor(filterText)
+        val parsed = try {
+            withContext(Dispatchers.IO) { conditionFor(filterText) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            null
+        }
         if (parsed != null) {
             filteredConditions.add(0, NonEditableSuggestedCondition(parsed))
         }

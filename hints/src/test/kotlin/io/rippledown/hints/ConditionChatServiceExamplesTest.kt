@@ -14,7 +14,7 @@ class ConditionChatServiceExamplesTest {
     @BeforeAll
     fun setUp() {
         service = ConditionChatService()
-        runBlocking { service.updateChatWithAttributeNames(attributeNames) }
+        service.setAttributeNames(attributeNames)
     }
 
     fun cs(
