@@ -5,7 +5,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.persistence.KeyValue
 import io.rippledown.persistence.KeyValueStore
-import org.jetbrains.exposed.dao.exceptions.EntityNotFoundException
+import org.jetbrains.exposed.v1.dao.exceptions.EntityNotFoundException
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 

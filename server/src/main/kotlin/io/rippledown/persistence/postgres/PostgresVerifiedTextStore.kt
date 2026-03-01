@@ -1,9 +1,14 @@
 package io.rippledown.persistence.postgres
 
 import io.rippledown.persistence.VerifiedTextStore
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.StdOutSqlLogger
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 /**
  * Persists the mapping from case id to verified text.
@@ -22,9 +27,9 @@ class PostgresVerifiedTextStore(private val db: Database) : VerifiedTextStore {
 
     override fun get(id: Long) = transaction(db) {
         return@transaction PGStringTable
-            .select { PGStringTable.id eq id.toInt() }
-            .map<ResultRow, String> { it[PGStringTable.text] }
-            .firstOrNull<String>()
+            .selectAll().where { PGStringTable.id eq id.toInt() }
+            .map { it[PGStringTable.text] }
+            .firstOrNull()
     }
 
     override fun put(id: Long, text: String) {
