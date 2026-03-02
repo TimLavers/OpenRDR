@@ -178,6 +178,7 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
             enterValue(value)
             pause(100)
             clickOkButton()
+            pause(100)
         }
     }
 

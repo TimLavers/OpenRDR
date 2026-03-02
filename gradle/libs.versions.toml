@@ -1,7 +1,6 @@
 [versions]
 assertjSwing = "3.17.1"
 awaitility = "4.3.0"
-benManesVersions = "0.53.0"
 commonsCodec = "1.21.0"
 commonsIo = "2.21.0"
 commonsLang3 = "3.20.0"
@@ -26,7 +25,7 @@ versionCatalogUpdate = "1.1.0"
 vosk = "0.3.45"
 
 [plugins]
-benManesVersions = { id = "com.github.ben-manes.versions", version.ref = "benManesVersions" }
+#benManesVersions = { id = "com.github.ben-manes.versions", version.ref = "benManesVersions" }
 compose = { id = "org.jetbrains.compose", version.ref = "compose" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 versionCatalogUpdate = { id = "nl.littlerobots.version-catalog-update", version.ref = "versionCatalogUpdate" }
