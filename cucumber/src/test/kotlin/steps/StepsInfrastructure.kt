@@ -1,8 +1,10 @@
 package steps
 
+import io.cucumber.java.Scenario
 import io.rippledown.integration.UITestBase
 import steps.StepsInfrastructure.client
 import steps.StepsInfrastructure.uiTestBase
+import java.io.File
 
 object StepsInfrastructure {
     lateinit var uiTestBase: UITestBase
@@ -34,6 +36,19 @@ object StepsInfrastructure {
         launchedClient = LaunchedClient()
     }
     fun client() = launchedClient
+
+    fun screenshotOnFailure(scenario: Scenario) {
+        if (scenario.isFailed && ::launchedClient.isInitialized) {
+            val safeName = scenario.name.replace(Regex("[^a-zA-Z0-9_-]"), "_")
+            val file = File("build/screenshots/${safeName}.png")
+            println("Scenario failed — saving screenshot to ${file.absolutePath}")
+            try {
+                launchedClient.screenshot(file)
+            } catch (e: Exception) {
+                println("Failed to capture screenshot: ${e.message}")
+            }
+        }
+    }
 
     fun cleanup() {
         if (::launchedClient.isInitialized) launchedClient.stopClient()

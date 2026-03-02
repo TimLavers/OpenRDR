@@ -2,6 +2,9 @@ package steps
 
 import io.rippledown.TestClientLauncher
 import io.rippledown.integration.pageobjects.RippleDownUIOperator
+import java.awt.Robot
+import java.io.File
+import javax.imageio.ImageIO
 
 class LaunchedClient {
     private val testClientLauncher = TestClientLauncher()
@@ -17,6 +20,13 @@ class LaunchedClient {
     fun interpretationViewPO() = rdUiOperator.interpretationViewPO()
     fun chatPO() = rdUiOperator.chatPO()
     fun ruleMakerPO() = rdUiOperator.ruleMakerPO()
+    fun screenshot(file: File) {
+        val bounds = composeWindow.bounds
+        val image = Robot().createScreenCapture(bounds)
+        file.parentFile?.mkdirs()
+        ImageIO.write(image, "png", file)
+    }
+
     fun stopClient() {
         testClientLauncher.stopClient()
     }

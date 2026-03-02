@@ -17,6 +17,7 @@ import io.rippledown.integration.proxy.TestResultDetail
 import org.awaitility.Awaitility
 import steps.StepsInfrastructure.cleanup
 import steps.StepsInfrastructure.reStartWithPostgres
+import steps.StepsInfrastructure.screenshotOnFailure
 import steps.StepsInfrastructure.startClient
 import steps.StepsInfrastructure.startServerWithInMemoryDatabase
 import steps.StepsInfrastructure.startServerWithPostgresDatabase
@@ -46,6 +47,7 @@ class Defs {
     @After
     fun after(scenario: Scenario) {
         stopwatch.stop()
+        screenshotOnFailure(scenario)
         cleanup()
         println("After scenario  '${scenario.name}', duration: ${stopwatch.elapsed(SECONDS)} seconds")
     }
