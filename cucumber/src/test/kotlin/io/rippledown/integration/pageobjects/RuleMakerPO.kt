@@ -81,13 +81,13 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun waitForOneAvailableCondition() {
-        await().atMost(ofSeconds(20)).untilAsserted {
+        await().atMost(ofSeconds(120)).untilAsserted {
             allAvailableConditions() shouldHaveSize 1
         }
     }
 
     fun requireAvailableConditions(expectedConditions: List<String>) {
-        await().atMost(ofSeconds(10)).untilAsserted {
+        await().atMost(ofSeconds(30)).untilAsserted {
             allAvailableConditions() shouldBe expectedConditions
         }
     }
@@ -102,13 +102,13 @@ class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun requireFirstAvailableConditionToolTip(expected: String) {
-        await().atMost(ofSeconds(5)).untilAsserted {
+        await().atMost(ofSeconds(20)).untilAsserted {
             execute<AccessibleContext?> { contextProvider().find("$CONDITION_PREFIX$expected") } shouldNotBe null
         }
     }
 
     fun requireAvailableConditionsDoesNotContain(absentConditions: Set<String>) {
-        await().atMost(ofSeconds(2)).untilAsserted {
+        await().atMost(ofSeconds(10)).untilAsserted {
             val allShowing = allAvailableConditions()
             absentConditions.forEach {
                 allShowing shouldNotContain it

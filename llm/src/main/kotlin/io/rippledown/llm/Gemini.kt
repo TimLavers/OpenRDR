@@ -1,43 +1,74 @@
 package io.rippledown.llm
 
-import dev.shreyaspatil.ai.client.generativeai.GenerativeModel
-import dev.shreyaspatil.ai.client.generativeai.type.*
+import com.google.genai.Client
+import com.google.genai.types.*
 import io.rippledown.log.lazyLogger
 import kotlinx.coroutines.delay
 import java.lang.System.getenv
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.milliseconds
 
 val GEMINI_MODEL = "gemini-2.5-flash"
 var GEMINI_API_KEY = getenv("API_KEY") ?: ""
 
-fun generativeModel(
-    systemInstruction: String = "",
+val geminiClient: Client by lazy {
+    Client.builder()
+        .apiKey(GEMINI_API_KEY)
+        .httpOptions(HttpOptions.builder().timeout(120_000).build())
+        .build()
+}
+
+fun generateContentConfig(
+    systemInstruction: String,
     functionDeclarations: List<FunctionDeclaration> = emptyList()
-) = GenerativeModel(
-    modelName = GEMINI_MODEL,
-    apiKey = GEMINI_API_KEY,
-    safetySettings = noSafetySettings(),
-    generationConfig = generativeConfig(),
-    systemInstruction = content { text(systemInstruction) },
-    tools = if (functionDeclarations.isNotEmpty()) listOf(Tool(functionDeclarations)) else emptyList()
-)
+): GenerateContentConfig {
+    val builder = GenerateContentConfig.builder()
+        .temperature(0f)
+        .topP(0.995f)
+        .safetySettings(noSafetySettings())
+        .systemInstruction(Content.fromParts(Part.fromText(systemInstruction)))
 
-fun noSafetySettings() =
-    HarmCategory.entries
-        .filter { harmCategory -> harmCategory != HarmCategory.UNKNOWN } //Invalid safety setting
-        .map { harmCategory ->
-            SafetySetting(
-                harmCategory = harmCategory,
-                threshold = BlockThreshold.NONE
-            )
-        }
+    if (functionDeclarations.isNotEmpty()) {
+        builder.tools(Tool.builder().functionDeclarations(functionDeclarations).build())
+    }
 
-//Set the model to be as deterministic as possible
-fun generativeConfig() = GenerationConfig.Companion.builder().apply {
-    temperature = 0f
-    topP = 0.995f
-}.build()
+    return builder.build()
+}
+
+fun noSafetySettings(): List<SafetySetting> =
+    listOf(
+        HarmCategory.Known.HARM_CATEGORY_HATE_SPEECH,
+        HarmCategory.Known.HARM_CATEGORY_DANGEROUS_CONTENT,
+        HarmCategory.Known.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+        HarmCategory.Known.HARM_CATEGORY_HARASSMENT,
+        HarmCategory.Known.HARM_CATEGORY_CIVIC_INTEGRITY,
+    ).map { category ->
+        SafetySetting.builder()
+            .category(category)
+            .threshold(HarmBlockThreshold.Known.OFF)
+            .build()
+    }
+
+/**
+ * Run a blocking call with a hard timeout.
+ * Needed because the Google Gen AI SDK's sendMessage() is synchronous
+ * and may hang indefinitely if the API is unresponsive.
+ */
+fun <T> callWithTimeout(timeoutMs: Long = 90_000, block: () -> T): T {
+    val future = CompletableFuture.supplyAsync { block() }
+    return try {
+        future.get(timeoutMs, TimeUnit.MILLISECONDS)
+    } catch (e: TimeoutException) {
+        future.cancel(true)
+        throw RuntimeException("Gemini API call timed out after ${timeoutMs}ms", e)
+    } catch (e: ExecutionException) {
+        throw e.cause ?: e
+    }
+}
 
 /**
  * Retry when receiving the 503 error from the API due to rate limiting.

@@ -14,7 +14,7 @@ class ConditionChatServiceExamplesTest {
     @BeforeAll
     fun setUp() {
         service = ConditionChatService()
-        runBlocking { service.updateChatWithAttributeNames(attributeNames) }
+        service.setAttributeNames(attributeNames)
     }
 
     fun cs(
@@ -98,6 +98,7 @@ class ConditionChatServiceExamplesTest {
                 cs("x = 3.1", "x", "Is", listOf("3.1"), "Current"),
                 cs("x == 3.1", "x", "Is", listOf("3.1"), "Current"),
                 cs("x is equal to 3.1", "x", "Is", listOf("3.1"), "Current"),
+                cs("x is equal to one", "x", "Is", listOf("1"), "Current"),
             )
         )
     }
@@ -138,6 +139,7 @@ class ConditionChatServiceExamplesTest {
         verify(
             sortedMapOf(
                 cs("x does not equal 3.1", "x", "IsNot", listOf("3.1"), "Current"),
+                cs("x does not equal three", "x", "IsNot", listOf("3"), "Current"),
                 cs("x isn't \"pending\"", "x", "IsNot", listOf("\"pending\""), "Current"),
             )
         )

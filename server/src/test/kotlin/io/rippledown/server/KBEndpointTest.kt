@@ -450,7 +450,7 @@ internal class KBEndpointTest {
     }
 
     @Test
-    fun `startRuleSessionToAddConclusion should call startRuleSession with initialise parameter true`() {
+    fun `startRuleSessionToAddConclusion should call startRuleSession`() {
         // Given
         val kb = mockk<KB>(relaxed = true)
         val case = mockk<RDRCase>()
@@ -463,11 +463,11 @@ internal class KBEndpointTest {
         endpoint.startRuleSessionToAddConclusion(1L, conclusion)
 
         // Then
-        verify { kb.startRuleSession(case, any<ChangeTreeToAddConclusion>(), true) }
+        verify { kb.startRuleSession(case, any<ChangeTreeToAddConclusion>()) }
     }
 
     @Test
-    fun `startRuleSessionToRemoveConclusion should call startRuleSession with initialise parameter true`() {
+    fun `startRuleSessionToRemoveConclusion should call startRuleSession`() {
         // Given
         val kb = mockk<KB>(relaxed = true)
         val case = mockk<RDRCase>()
@@ -480,11 +480,11 @@ internal class KBEndpointTest {
         endpoint.startRuleSessionToRemoveConclusion(1L, conclusion)
 
         // Then
-        verify { kb.startRuleSession(case, any<ChangeTreeToRemoveConclusion>(), true) }
+        verify { kb.startRuleSession(case, any<ChangeTreeToRemoveConclusion>()) }
     }
 
     @Test
-    fun `startRuleSessionToReplaceConclusion should call startRuleSession with initialise parameter true`() {
+    fun `startRuleSessionToReplaceConclusion should call startRuleSession`() {
         // Given
         val kb = mockk<KB>(relaxed = true)
         val case = mockk<RDRCase>()
@@ -498,6 +498,6 @@ internal class KBEndpointTest {
         endpoint.startRuleSessionToReplaceConclusion(1L, toGo, replacement)
 
         // Then
-        verify { kb.startRuleSession(case, any<ChangeTreeToReplaceConclusion>(), true) }
+        verify { kb.startRuleSession(case, any<ChangeTreeToReplaceConclusion>()) }
     }
 }

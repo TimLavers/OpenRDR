@@ -49,6 +49,11 @@ EXPECTED SIGNATURE: Current
 x = 1.5
 x == 1.5
 
+EXPECTED PREDICATE: Is, 1
+EXPECTED SIGNATURE: Current
+x is one
+x is 1
+
 EXPECTED PREDICATE: Is, "hot"
 EXPECTED SIGNATURE: Current
 x is hot

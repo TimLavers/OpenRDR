@@ -1,4 +1,4 @@
-@chat
+@delay_after_cuke
 Feature: Remove comment
 
   Scenario: The user should be able to use the chat to remove a comment with a valid condition

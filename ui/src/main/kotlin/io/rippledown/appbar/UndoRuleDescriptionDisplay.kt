@@ -1,6 +1,5 @@
 package io.rippledown.appbar
 
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Surface
@@ -26,7 +25,6 @@ interface UndoRuleDescriptionDisplayHandler {
 }
 
 @Composable
-@Preview
 fun UndoRuleDescriptionDisplay(handler: UndoRuleDescriptionDisplayHandler) {
     var undoRuleClicked by remember { mutableStateOf(false) }
     val udr = handler.description()

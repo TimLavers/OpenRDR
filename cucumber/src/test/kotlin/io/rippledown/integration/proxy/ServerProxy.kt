@@ -38,10 +38,11 @@ class ServerProxy {
         val command = listOf(
             "java",
             "-DlogFilePath=$tempDir/logs/server.log",
+            "-Xmx24G",
+            "--enable-native-access=ALL-UNNAMED",
             "-jar",
             jarFile.absolutePath,
-            dbFlag,
-            "-Xmx24G"
+            dbFlag
         )
         process = ProcessBuilder(command)
             .redirectErrorStream(true)

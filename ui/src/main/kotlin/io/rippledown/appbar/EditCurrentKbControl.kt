@@ -1,6 +1,5 @@
 package io.rippledown.appbar
 
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.MaterialTheme.colors
@@ -33,7 +32,6 @@ interface KbEditControlHandler {
 }
 
 @Composable
-@Preview
 fun EditCurrentKbControl(handler: KbEditControlHandler) {
     var expanded by remember { mutableStateOf(false) }
     var kbDescriptionDialogShowing by remember { mutableStateOf(false) }

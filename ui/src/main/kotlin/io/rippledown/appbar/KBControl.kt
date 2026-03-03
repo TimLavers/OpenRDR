@@ -1,6 +1,5 @@
 package io.rippledown.appbar
 
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
@@ -37,7 +36,6 @@ interface KBControlHandler {
 }
 
 @Composable
-@Preview
 fun KBControl(kbInfo: KBInfo?, handler: KBControlHandler) {
     var expanded by remember { mutableStateOf(false) }
     var createKbDialogShowing by remember { mutableStateOf(false) }

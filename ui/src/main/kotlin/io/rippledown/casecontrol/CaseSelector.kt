@@ -1,6 +1,5 @@
 package io.rippledown.casecontrol
 
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.ExperimentalMaterialApi
@@ -31,7 +30,6 @@ interface CaseSelectorHandler {
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
 @Composable
-@Preview
 fun CaseSelector(caseIds: List<CaseId>, handler: CaseSelectorHandler) {
     val scrollState = rememberScrollState()
     val hoverOverScroll = remember { mutableStateOf(false) }

@@ -1,4 +1,7 @@
 # Suggested conditions - version 1
+
+TODO: change this documentation to reflect the chat design
+
 As discussed in [Building conditions from user hints](building_conditions_from_user_hints.md) 
 we would like the user experience of building
 rules to include accurate suggestions for conditions based on the change being made to the case,

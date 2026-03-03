@@ -28,13 +28,14 @@ val SIGNATURE_PACKAGE: String = All::class.java.packageName
 
 class ConditionGenerator(
     private val attributeFor: AttributeFor,
-    private val conditionChatService: ConditionChatService,
+    private val conditionChatService: ConditionTransformer,
     private val attributeNames: List<String> = emptyList()
 ) {
     private val logger = lazyLogger
 
     fun conditionFor(userText: String): Condition? {
         if (userText.isBlank()) return null
+        conditionChatService.setAttributeNames(attributeNames)
         return try {
             val spec = runBlocking {
                 conditionChatService.transform(userText)
