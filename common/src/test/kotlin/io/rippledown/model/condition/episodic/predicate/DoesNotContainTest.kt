@@ -47,4 +47,18 @@ class DoesNotContainTest : Base() {
         dnc.description(false) shouldBe "does not contain \"$stuff\""
         dnc.description(true) shouldBe "do not contain \"$stuff\""
     }
+
+    @Test
+    fun `description should not double-quote when toFind already has double quotes`() {
+        val dncQuoted = DoesNotContain("\"2\"")
+        dncQuoted.description(false) shouldBe "does not contain \"2\""
+        dncQuoted.description(true) shouldBe "do not contain \"2\""
+    }
+
+    @Test
+    fun `description should not double-quote when toFind already has single quotes`() {
+        val dncQuoted = DoesNotContain("'2'")
+        dncQuoted.description(false) shouldBe "does not contain \"2\""
+        dncQuoted.description(true) shouldBe "do not contain \"2\""
+    }
 }

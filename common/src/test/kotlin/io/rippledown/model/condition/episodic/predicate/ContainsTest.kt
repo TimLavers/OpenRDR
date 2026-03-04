@@ -63,4 +63,18 @@ class ContainsTest : Base() {
         contains.description(false) shouldBe "contains \"$stuff\""
         contains.description(true) shouldBe "contain \"$stuff\""
     }
+
+    @Test
+    fun `description should not double-quote when toFind already has double quotes`() {
+        val containsQuoted = Contains("\"2\"")
+        containsQuoted.description(false) shouldBe "contains \"2\""
+        containsQuoted.description(true) shouldBe "contain \"2\""
+    }
+
+    @Test
+    fun `description should not double-quote when toFind already has single quotes`() {
+        val containsQuoted = Contains("'2'")
+        containsQuoted.description(false) shouldBe "contains \"2\""
+        containsQuoted.description(true) shouldBe "contain \"2\""
+    }
 }

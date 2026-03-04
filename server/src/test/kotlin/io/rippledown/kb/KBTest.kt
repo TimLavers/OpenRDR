@@ -1100,6 +1100,39 @@ class KBTest {
         slot.captured shouldBeSameAs condition
     }
 
+
+    @Test
+    fun `currentRuleSessionConditionTexts should return empty set when no rule session is active`() {
+        kb.currentRuleSessionConditionTexts() shouldBe emptySet()
+    }
+
+    @Test
+    fun `currentRuleSessionConditionTexts should return empty set when rule session has no conditions`() {
+        val sessionCase = createCase("Case1", value = "1.0")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
+        kb.currentRuleSessionConditionTexts() shouldBe emptySet()
+    }
+
+    @Test
+    fun `currentRuleSessionConditionTexts should return condition texts after adding conditions`() {
+        val sessionCase = createCase("Case1", value = "1.0")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
+        val condition = lessThanOrEqualTo(null, glucose(), 1.2)
+        kb.addConditionToCurrentRuleSession(condition)
+        kb.currentRuleSessionConditionTexts() shouldBe setOf(condition.asText())
+    }
+
+    @Test
+    fun `currentRuleSessionConditionTexts should return texts of all added conditions`() {
+        val sessionCase = createCase("Case1", value = "1.0")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
+        val condition1 = lessThanOrEqualTo(null, glucose(), 1.2)
+        val condition2 = greaterThanOrEqualTo(null, glucose(), 0.5)
+        kb.addConditionToCurrentRuleSession(condition1)
+        kb.addConditionToCurrentRuleSession(condition2)
+        kb.currentRuleSessionConditionTexts() shouldBe setOf(condition1.asText(), condition2.asText())
+    }
+
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")
 
     private fun createCondition(): Condition {
