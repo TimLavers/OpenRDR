@@ -2,6 +2,9 @@ package io.rippledown.kb
 
 import io.ktor.util.logging.*
 import io.rippledown.chat.Conversation
+import io.rippledown.chat.Conversation.Companion.GET_SUGGESTED_CONDITIONS
+import io.rippledown.chat.Conversation.Companion.TRANSFORM_REASON
+import io.rippledown.chat.FunctionCallHandler
 import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
 import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
 import io.rippledown.hints.AttributeFor
@@ -254,9 +257,13 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
 
     override fun hashCode() = kbInfo.hashCode()
 
-    fun conditionHintsForCase(case: RDRCase): ConditionList {
+    override fun conditionHintsForCase(case: RDRCase): ConditionList {
         val suggester = ConditionSuggester(attributeManager.all(), case)
         return ConditionList(suggester.suggestions())
+    }
+
+    override fun currentRuleSessionConditionTexts(): Set<String> {
+        return ruleSession?.conditions?.map { it.asText() }?.toSet() ?: emptySet()
     }
 
     /**
@@ -372,9 +379,14 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         val modelResponder = object : ModelResponder {
             override suspend fun response(message: String): String = chatManager.response(message)
         }
+        val reasonTransformer = createReasonTransformer(viewableCase, this, modelResponder)
+        val functionCallHandlers: Map<String, FunctionCallHandler> = mapOf(
+            TRANSFORM_REASON to ReasonTransformHandler(reasonTransformer),
+            GET_SUGGESTED_CONDITIONS to SuggestedConditionsHandler(viewableCase.case, this)
+        )
         val conversationService = Conversation(
             chatService = chatService,
-            reasonTransformer = createReasonTransformer(viewableCase, this, modelResponder)
+            functionCallHandlers = functionCallHandlers
         )
         chatManager = ChatManager(conversationService, this)
         return chatManager.startConversation(viewableCase)

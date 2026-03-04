@@ -48,7 +48,7 @@ generativeai = { module = "com.google.genai:google-genai", version.ref = "genera
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 jte = { module = "gg.jte:jte-kotlin", version.ref = "jte" }
 kotestAssertions = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
-#junit-platformSuite = { module = "org.junit.platform:junit-platform-suite", version.ref = "junitSuite" }
+junitPlatformSuite = { module = "org.junit.platform:junit-platform-suite", version = "1.9.1" }
 kotlinxCoroutinesCore = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx_coroutines" }
 kotlinxCoroutinesTest = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx_coroutines" }
 kotlinxDateTime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx_datetime" }

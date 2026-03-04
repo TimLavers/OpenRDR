@@ -19,6 +19,7 @@ import kotlin.test.Test
 
 class ConversationTest {
     private lateinit var reasonTransformer: ReasonTransformer
+    private lateinit var functionCallHandlers: Map<String, FunctionCallHandler>
 
     @BeforeEach
     fun setUp() {
@@ -26,6 +27,15 @@ class ConversationTest {
         coEvery { reasonTransformer.transform(any<String>()) } returns ReasonTransformation(
             reasonId = 42,
             message = "Transformed successfully"
+        )
+        functionCallHandlers = mapOf(
+            TRANSFORM_REASON to object : FunctionCallHandler {
+                override suspend fun handle(args: Map<String, Any?>): String {
+                    val reason = args[REASON_PARAMETER]?.toString() ?: ""
+                    val transformation = reasonTransformer.transform(reason)
+                    return "'$reason' evaluation: ${transformation.reasonId}"
+                }
+            }
         )
     }
 
@@ -49,7 +59,7 @@ class ConversationTest {
             // Given
             val expectedResponse = mockResponse(text = "Hello, how can I assist you today?")
             val mockChatService = MockChatService(listOf(expectedResponse))
-            val conversation = Conversation(mockChatService, reasonTransformer)
+            val conversation = Conversation(mockChatService, functionCallHandlers)
 
             // When
             val response = conversation.startConversation()
@@ -65,7 +75,7 @@ class ConversationTest {
             val response1 = mockResponse(text = "Hello, how can I assist you today?")
             val response2 = mockResponse(text = "Hello again, how can I help you further?")
             val mockChatService = MockChatService(listOf(response1, response2))
-            val conversation = Conversation(mockChatService, reasonTransformer)
+            val conversation = Conversation(mockChatService, functionCallHandlers)
             val responseForStartConversation = conversation.startConversation() // Initialize the chat session
             responseForStartConversation shouldBe "Hello, how can I assist you today?"
 
@@ -89,7 +99,7 @@ class ConversationTest {
             )
             val response3 = mockResponse(text = "A beautiful condition was added to the case.")
             val mockChatService = MockChatService(listOf(response1, response2, response3))
-            val conversation = Conversation(mockChatService, reasonTransformer)
+            val conversation = Conversation(mockChatService, functionCallHandlers)
             val responseForStartConversation = conversation.startConversation() // Initialize the chat session
             responseForStartConversation shouldBe "Hello, how can I assist you today?"
 
@@ -114,7 +124,7 @@ class ConversationTest {
             )
             val response3 = mockResponse(text = "A beautiful condition was added to the case.")
             val mockChatService = MockChatService(listOf(response1, response2, response3))
-            val conversation = Conversation(mockChatService, reasonTransformer)
+            val conversation = Conversation(mockChatService, functionCallHandlers)
             val responseForStartConversation = conversation.startConversation() // Initialize the chat session
             responseForStartConversation shouldBe "Hello, how can I assist you today?"
 
@@ -145,7 +155,7 @@ class ConversationTest {
             )
             val response4 = mockResponse(text = "The condition was added.")
             val mockChatService = MockChatService(listOf(response1, response2, response3, response4))
-            val conversation = Conversation(mockChatService, reasonTransformer)
+            val conversation = Conversation(mockChatService, functionCallHandlers)
             conversation.startConversation()
 
             // When

@@ -20,6 +20,7 @@ dependencies {
     testImplementation(libs.bundles.ktor)
     testImplementation(libs.bundles.kotlinx)
     testImplementation(libs.bundles.cucumber)
+    testImplementation(libs.junitPlatformSuite)
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation(libs.mockk)

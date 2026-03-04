@@ -3,6 +3,7 @@ package io.rippledown.kb.chat
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.rule.CornerstoneStatus
 
@@ -24,4 +25,6 @@ interface RuleService {
     fun sendRuleSessionCompleted()
     fun removeCondition(conditionId: Int): CornerstoneStatus
     fun cornerstoneStatus(): CornerstoneStatus
+    fun conditionHintsForCase(case: RDRCase): ConditionList
+    fun currentRuleSessionConditionTexts(): Set<String>
 }

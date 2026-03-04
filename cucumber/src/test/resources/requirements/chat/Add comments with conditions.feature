@@ -1,6 +1,7 @@
 @delay_after_cuke
 Feature: Add comments with conditions
 
+  @single
   Scenario: The user should be able to use the chat to add a comment with a valid condition
     Given case Bondi is provided having data:
       | wave height | 2 |
@@ -8,6 +9,7 @@ Feature: Add comments with conditions
     And I see the case Bondi as the current case
     And the chat is showing
     And I request that the comment "Let's surf." be added
+    And pause
     When I provide only the following reason:
       | wave height is more than 0.5 |
     Then the report should be "Let's surf."

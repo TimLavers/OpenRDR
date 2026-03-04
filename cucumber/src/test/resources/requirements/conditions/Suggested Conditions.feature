@@ -1,6 +1,5 @@
 Feature: When building a rule, the user is provided with candidate conditions that
   can either be directly added or modified and then added.
-
   Scenario: If a suggested condition is not editable, then clicking it
   adds it to the list of conditions for the rule.
     Given case Bondi is provided having data:
@@ -8,6 +7,7 @@ Feature: When building a rule, the user is provided with candidate conditions th
       | Waves | 1.5 |
     And I start the client application
     And I start to build a rule to add the comment "Beach time!"
+    And pause
     And I click the suggested condition "Sun is \"hot\""
     Then the selected conditions should be:
       | Sun is "hot" |
