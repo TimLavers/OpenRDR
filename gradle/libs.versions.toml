@@ -1,6 +1,6 @@
 [versions]
 kotlin = "2.3.0"
-compose = "1.9.3"
+compose = "1.10.1"
 material_icons = "1.7.3"
 kotest = "5.7.2"
 assertjSwing = "3.17.1"
@@ -18,9 +18,10 @@ commonsIo = "2.14.0"
 commonsLang3 = "3.14.0"
 exposed = "0.42.0"
 postgresql = "42.6.0"
-generativeai = "0.9.0-1.1.0"
+generativeai = "1.40.0"
 filepicker = "3.1.0"
 jte = "3.2.1"
+vosk = "0.3.45"
 
 [plugins]
 compose = { id = "org.jetbrains.compose", version.ref = "compose" }
@@ -75,9 +76,10 @@ mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 awaitility = { module = "org.awaitility:awaitility", version.ref = "awaitility" }
 
-generativeai = { module = "dev.shreyaspatil.generativeai:generativeai-google-jvm", version.ref = "generativeai" }
+generativeai = { module = "com.google.genai:google-genai", version.ref = "generativeai" }
 filepicker = { module = "com.darkrockstudios:mpfilepicker", version.ref = "filepicker" }
 jte = { module = "gg.jte:jte-kotlin", version.ref = "jte" }
+vosk = { module = "com.alphacephei:vosk", version.ref = "vosk" }
 
 [bundles]
 ktor = [

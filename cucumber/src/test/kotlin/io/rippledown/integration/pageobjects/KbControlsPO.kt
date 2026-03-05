@@ -73,12 +73,12 @@ class KbControlsPO(private val contextProvider: () -> AccessibleContext) {
     fun exportKB(filePath: String) {
         Thread.sleep(100)
         expandDropdownMenu()
-        Thread.sleep(100)
+        Thread.sleep(2000)
         clickDropdownItem(EXPORT_KB_TEXT)
-        Thread.sleep(1000)
+        Thread.sleep(2000)
         SwingUtilities.invokeAndWait {
-            val dialog = findComposeDialogThatIsShowing()
-            val exportKbOperator = ExportKbOperator(dialog!!)
+            val dialog = waitForComposeDialogToShow()
+            val exportKbOperator = ExportKbOperator(dialog)
             exportKbOperator.importKB(filePath)
         }
     }

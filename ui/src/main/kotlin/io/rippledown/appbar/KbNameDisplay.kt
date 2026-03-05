@@ -1,6 +1,5 @@
 package io.rippledown.appbar
 
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.MaterialTheme.colors
@@ -18,7 +17,6 @@ import io.rippledown.constants.kb.NO_KB_SELECTED
 import io.rippledown.model.KBInfo
 
 @Composable
-@Preview
 fun KbNameDisplay(kbInfo: KBInfo?) {
     Text(
         style = MaterialTheme.typography.h6,

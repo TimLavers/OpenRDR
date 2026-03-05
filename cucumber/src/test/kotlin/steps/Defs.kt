@@ -50,9 +50,9 @@ class Defs {
         println("After scenario  '${scenario.name}', duration: ${stopwatch.elapsed(SECONDS)} seconds")
     }
 
-    @After("@chat")
-    fun afterChatScenario(scenario: Scenario) {
-        println("Delaying for 10 secs after chat scenario to avoid rate limiting")
+    @After("@delay_after_cuke")
+    fun afterGeminiScenario(scenario: Scenario) {
+        println("Delaying for 10 secs after scenario to avoid rate limiting")
         Thread.sleep(10_000)
     }
 

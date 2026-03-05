@@ -15,8 +15,6 @@ import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.server.KBEndpoint
 import io.rippledown.supplyCaseFromFile
 import io.rippledown.util.EntityRetrieval
-import org.apache.commons.io.FileUtils
-import java.io.File
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
@@ -30,8 +28,6 @@ internal class RuleBuildingTest {
     fun setup() {
         val kbInfo = kbManager.createKB(kbName)
         val kb = (kbManager.openKB(kbInfo.id) as EntityRetrieval.Success<KB>).entity
-        val rootDir = File("kbe")
-        FileUtils.cleanDirectory(rootDir)
         kbEndpoint = KBEndpoint(kb)
     }
 

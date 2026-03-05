@@ -66,6 +66,21 @@ fun TypingIndicator() {
             repeatMode = RepeatMode.Restart
         )
     )
+    val dot4Alpha by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = 1200
+                0.3f at 0
+                0.3f at 600
+                1f at 800
+                0.3f at 1000
+                0.3f at 1200
+            },
+            repeatMode = RepeatMode.Restart
+        )
+    )
 
     Row(
         modifier = Modifier
@@ -98,6 +113,11 @@ fun TypingIndicator() {
                     modifier = Modifier
                         .size(5.dp)
                         .background(Color.Gray.copy(alpha = dot3Alpha), CircleShape)
+                )
+                Box(
+                    modifier = Modifier
+                        .size(5.dp)
+                        .background(Color.Gray.copy(alpha = dot4Alpha), CircleShape)
                 )
             }
         }

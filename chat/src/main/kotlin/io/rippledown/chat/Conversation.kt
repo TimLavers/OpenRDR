@@ -1,9 +1,11 @@
 package io.rippledown.chat
 
-import dev.shreyaspatil.ai.client.generativeai.Chat
-import dev.shreyaspatil.ai.client.generativeai.type.FunctionCallPart
-import dev.shreyaspatil.ai.client.generativeai.type.GenerateContentResponse
-import dev.shreyaspatil.ai.client.generativeai.type.content
+import com.google.genai.Chat
+import com.google.genai.types.Content
+import com.google.genai.types.FunctionCall
+import com.google.genai.types.GenerateContentResponse
+import com.google.genai.types.Part
+import io.rippledown.llm.callWithTimeout
 import io.rippledown.llm.retry
 import io.rippledown.log.lazyLogger
 import io.rippledown.stripEnclosingJson
@@ -18,7 +20,7 @@ interface ReasonTransformer {
     suspend fun transform(reason: String): ReasonTransformation
 }
 
-class Conversation(private val chatService: ChatService, private val reasonTransformer: ReasonTransformer?) :
+class Conversation(private val chatService: ChatService, private val reasonTransformer: ReasonTransformer) :
     ConversationService {
     private val logger = lazyLogger
     private lateinit var chat: Chat
@@ -30,48 +32,46 @@ class Conversation(private val chatService: ChatService, private val reasonTrans
         return response("Please assist me with the report for this case.")
     }
 
-    private suspend fun executeFunction(functionCall: FunctionCallPart): String {
-        if (functionCall.name != TRANSFORM_REASON) {
-            logger.warn("Unknown function call: ${functionCall.name}")
-            return "Unknown function: ${functionCall.name}"
+    private suspend fun executeFunction(functionCall: FunctionCall): String {
+        val name = functionCall.name().orElse("")
+        if (name != TRANSFORM_REASON) {
+            logger.warn("Unknown function call: $name")
+            return "Unknown function: $name"
         }
 
-        val reason = functionCall.args?.get(REASON_PARAMETER) ?: ""
-        if (reasonTransformer == null) return "'$reason' evaluation: No reason transformer available."
+        val reason = functionCall.args().map { it[REASON_PARAMETER]?.toString() }.orElse("") ?: ""
         val transformation = reasonTransformer.transform(reason)
-        return "'$reason' evaluation: ${transformation.toJsonString()}"
+        val result = "'$reason' evaluation: ${transformation.toJsonString()}"
+        val cornerstoneStatus = transformation.cornerstoneStatusJson
+        return if (cornerstoneStatus != null) "$result\nCornerstone status: $cornerstoneStatus" else result
     }
 
     override suspend fun response(message: String): String {
         val currentChat = checkNotNull(chat) { "Chat not initialized. Call startConversation first." }
         val response = try {
-            currentChat.sendMessage(message)
+            callWithTimeout { currentChat.sendMessage(message) }
         } catch (e: Exception) {
             logger.error("Failed to send message: $message", e)
             throw e
         }
-        val finalResponse = handleResponse(response)
-        logger.info("initial response json: ${response.text}")
-        logger.info("final response json  : $finalResponse")
-        return finalResponse
+        return handleResponse(response)
     }
 
     private suspend fun handleResponse(response: GenerateContentResponse): String {
-        return if (response.functionCalls.isNotEmpty()) {
-            val functionResults = response.functionCalls.map { executeFunction(it) }
-            val prompt = content { text("Function results: ${functionResults.joinToString(", ")}") }
-            val followUpResponse = chat.sendMessage(prompt)
-            followUpResponse.text?.stripEnclosingJson() ?: "No text response after function execution"
-        } else {
-            response.text?.stripEnclosingJson() ?: "No function call or text response"
+        var currentResponse = response
+        while (currentResponse.functionCalls()?.isNotEmpty() == true) {
+            val functionResults = currentResponse.functionCalls()!!.map { executeFunction(it) }
+            val prompt = Content.fromParts(Part.fromText("Function results: ${functionResults.joinToString(", ")}"))
+            currentResponse = callWithTimeout { chat.sendMessage(prompt) }
         }
+        return currentResponse.text()?.stripEnclosingJson() ?: "No function call or text response"
     }
 
     /**
      * Logs input and output token counts from a response, or estimates if unavailable.
      */
     private fun logTokenCounts(response: GenerateContentResponse, context: String) {
-        logger.info("$context - tokens: ${response.usageMetadata?.totalTokenCount}")
+        logger.info("$context - tokens: ${response.usageMetadata()}")
     }
 
     companion object {

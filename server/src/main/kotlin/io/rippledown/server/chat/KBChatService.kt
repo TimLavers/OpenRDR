@@ -1,7 +1,8 @@
 package io.rippledown.server.chat
 
-import dev.shreyaspatil.ai.client.generativeai.type.FunctionDeclaration
-import dev.shreyaspatil.ai.client.generativeai.type.Schema
+import com.google.genai.types.FunctionDeclaration
+import com.google.genai.types.Schema
+import com.google.genai.types.Type
 import io.rippledown.chat.ChatService
 import io.rippledown.chat.Conversation.Companion.REASON_PARAMETER
 import io.rippledown.chat.Conversation.Companion.TRANSFORM_REASON
@@ -24,17 +25,24 @@ object KBChatService {
         return result
     }
 
-    private val reasonTransformer = FunctionDeclaration(
-        name = TRANSFORM_REASON,
-        description = "This function transforms a user-entered natural language reason into a formal condition. ",
-        parameters = listOf(
-            Schema.str(
-                name = REASON_PARAMETER,
-                description = "The user-entered natural language reason for a condition, e.g. 'The patient has a fever'."
-            )
-        ),
-        requiredParameters = listOf(REASON_PARAMETER)
-    )
+    private val reasonTransformer = FunctionDeclaration.builder()
+        .name(TRANSFORM_REASON)
+        .description("This function transforms a user-entered natural language reason into a formal condition. ")
+        .parameters(
+            Schema.builder()
+                .type(Type.Known.OBJECT)
+                .properties(
+                    mapOf(
+                        REASON_PARAMETER to Schema.builder()
+                            .type(Type.Known.STRING)
+                            .description("The user-entered natural language reason for a condition, e.g. 'The patient has a fever'.")
+                            .build()
+                    )
+                )
+                .required(listOf(REASON_PARAMETER))
+                .build()
+        )
+        .build()
 
     fun createKBChatService(): ChatService {
         val systemInstruction = systemPrompt()

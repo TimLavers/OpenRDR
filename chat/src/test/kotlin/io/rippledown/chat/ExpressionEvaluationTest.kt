@@ -74,7 +74,7 @@ class ExpressionEvaluationTest {
         val result = expressionEvaluation.toJsonString()
 
         // Then
-        Json.parseToJsonElement(result) shouldBe Json.parseToJsonElement("""{"reasonId":42,"message":"Valid condition"}""")
+        Json.parseToJsonElement(result) shouldBe Json.parseToJsonElement("""{"reasonId":42,"message":"Valid condition","cornerstoneStatusJson":null}""")
     }
 
     @Test
@@ -86,7 +86,7 @@ class ExpressionEvaluationTest {
         val result = expressionEvaluation.toJsonString()
 
         // Then
-        Json.parseToJsonElement(result) shouldBe Json.parseToJsonElement("""{"reasonId":null,"message":"Invalid condition"}""")
+        Json.parseToJsonElement(result) shouldBe Json.parseToJsonElement("""{"reasonId":null,"message":"Invalid condition","cornerstoneStatusJson":null}""")
     }
 
 }

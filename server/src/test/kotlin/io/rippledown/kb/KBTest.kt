@@ -975,8 +975,7 @@ class KBTest {
 
         kb.startRuleSession(
             case,
-            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")),
-            true
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever."))
         )
 
         //When
@@ -1004,8 +1003,7 @@ class KBTest {
 
         kb.startRuleSession(
             sessionCase,
-            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")),
-            true
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
         )
 
         //When

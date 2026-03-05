@@ -1,17 +1,20 @@
 package io.rippledown.chat
 
-import dev.shreyaspatil.ai.client.generativeai.Chat
-import dev.shreyaspatil.ai.client.generativeai.type.Content
-import dev.shreyaspatil.ai.client.generativeai.type.FunctionCallPart
-import dev.shreyaspatil.ai.client.generativeai.type.GenerateContentResponse
+import com.google.common.collect.ImmutableList
+import com.google.genai.Chat
+import com.google.genai.types.Content
+import com.google.genai.types.FunctionCall
+import com.google.genai.types.GenerateContentResponse
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
+import io.rippledown.chat.Conversation.Companion.REASON_PARAMETER
 import io.rippledown.chat.Conversation.Companion.TRANSFORM_REASON
-import io.rippledown.constants.chat.REASON
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import java.util.*
 import kotlin.test.Test
 
 class ConversationTest {
@@ -19,19 +22,32 @@ class ConversationTest {
 
     @BeforeEach
     fun setUp() {
-        reasonTransformer = mockk(relaxed = true)
+        reasonTransformer = mockk()
         coEvery { reasonTransformer.transform(any<String>()) } returns ReasonTransformation(
             reasonId = 42,
             message = "Transformed successfully"
         )
     }
 
+    private fun mockResponse(text: String? = null, functionCalls: List<FunctionCall>? = null): GenerateContentResponse {
+        val response = mockk<GenerateContentResponse>()
+        every { response.text() } returns text
+        every { response.functionCalls() } returns functionCalls?.let { ImmutableList.copyOf(it) }
+        return response
+    }
+
+    private fun functionCall(name: String, args: Map<String, Any>): FunctionCall {
+        val fc = mockk<FunctionCall>()
+        every { fc.name() } returns Optional.of(name)
+        every { fc.args() } returns Optional.of(args)
+        return fc
+    }
+
     @Test
     fun `starting a conversation should delegate to the chat service`() =
         runTest {
             // Given
-            val expectedResponse = mockk<GenerateContentResponse>(relaxed = true)
-            coEvery { expectedResponse.text } returns "Hello, how can I assist you today?"
+            val expectedResponse = mockResponse(text = "Hello, how can I assist you today?")
             val mockChatService = MockChatService(listOf(expectedResponse))
             val conversation = Conversation(mockChatService, reasonTransformer)
 
@@ -39,55 +55,49 @@ class ConversationTest {
             val response = conversation.startConversation()
 
             // Then
-            response shouldBe expectedResponse.text
+            response shouldBe "Hello, how can I assist you today?"
         }
 
     @Test
     fun `requesting a response should delegate to the chat service`() =
         runTest {
             // Given
-            val response1 = mockk<GenerateContentResponse>(relaxed = true)
-            val response2 = mockk<GenerateContentResponse>(relaxed = true)
-            coEvery { response1.text } returns "Hello, how can I assist you today?"
-            coEvery { response2.text } returns "Hello again, how can I help you further?"
+            val response1 = mockResponse(text = "Hello, how can I assist you today?")
+            val response2 = mockResponse(text = "Hello again, how can I help you further?")
             val mockChatService = MockChatService(listOf(response1, response2))
             val conversation = Conversation(mockChatService, reasonTransformer)
             val responseForStartConversation = conversation.startConversation() // Initialize the chat session
-            responseForStartConversation shouldBe response1.text
+            responseForStartConversation shouldBe "Hello, how can I assist you today?"
 
             // When
             val response = conversation.response("Hello, bot!")
 
             // Then
-            response shouldBe response2.text
+            response shouldBe "Hello again, how can I help you further?"
         }
 
     @Test
     fun `should handle a function call in a response`() =
         runTest {
             // Given
-            val response1 = mockk<GenerateContentResponse>(relaxed = true)
-            val response2 = mockk<GenerateContentResponse>(relaxed = true)
-            val response3 = mockk<GenerateContentResponse>(relaxed = true)
-            coEvery { response1.text } returns "Hello, how can I assist you today?"
-            coEvery { response2.text } returns "Your expression was valid"
-            coEvery { response2.functionCalls } returns listOf(
-                FunctionCallPart(
-                    name = "isExpressionValid",
-                    args = mapOf("expression" to "x > 0")
+            val response1 = mockResponse(text = "Hello, how can I assist you today?")
+            val response2 = mockResponse(
+                text = "Your expression was valid",
+                functionCalls = listOf(
+                    functionCall("isExpressionValid", mapOf("expression" to "x > 0"))
                 )
             )
-            coEvery { response3.text } returns "A beautiful condition was added to the case."
+            val response3 = mockResponse(text = "A beautiful condition was added to the case.")
             val mockChatService = MockChatService(listOf(response1, response2, response3))
             val conversation = Conversation(mockChatService, reasonTransformer)
             val responseForStartConversation = conversation.startConversation() // Initialize the chat session
-            responseForStartConversation shouldBe response1.text
+            responseForStartConversation shouldBe "Hello, how can I assist you today?"
 
             // When
             val response = conversation.response("Add the condition 'x > 0'.")
 
             // Then
-            response shouldBe response3.text
+            response shouldBe "A beautiful condition was added to the case."
         }
 
     @Test
@@ -95,22 +105,18 @@ class ConversationTest {
         val userExpression = "x is greater than 0"
         runTest {
             // Given
-            val response1 = mockk<GenerateContentResponse>(relaxed = true)
-            val response2 = mockk<GenerateContentResponse>(relaxed = true)
-            val response3 = mockk<GenerateContentResponse>(relaxed = true)
-            coEvery { response1.text } returns "Hello, how can I assist you today?"
-            coEvery { response2.text } returns "Your expression was valid"
-            coEvery { response2.functionCalls } returns listOf(
-                FunctionCallPart(
-                    name = TRANSFORM_REASON,
-                    args = mapOf(REASON to userExpression)
+            val response1 = mockResponse(text = "Hello, how can I assist you today?")
+            val response2 = mockResponse(
+                text = "Your expression was valid",
+                functionCalls = listOf(
+                    functionCall(TRANSFORM_REASON, mapOf(REASON_PARAMETER to userExpression))
                 )
             )
-            coEvery { response3.text } returns "A beautiful condition was added to the case."
+            val response3 = mockResponse(text = "A beautiful condition was added to the case.")
             val mockChatService = MockChatService(listOf(response1, response2, response3))
             val conversation = Conversation(mockChatService, reasonTransformer)
             val responseForStartConversation = conversation.startConversation() // Initialize the chat session
-            responseForStartConversation shouldBe response1.text
+            responseForStartConversation shouldBe "Hello, how can I assist you today?"
 
             // When
             conversation.response("Add the condition '$userExpression'.")
@@ -119,18 +125,49 @@ class ConversationTest {
             coVerify { reasonTransformer.transform(userExpression) }
         }
     }
+
+    @Test
+    fun `should handle multiple rounds of function calls`() =
+        runTest {
+            // Given
+            val firstExpression = "hite > 1"
+            val secondExpression = "height > 1"
+            val response1 = mockResponse(text = "Hello, how can I assist you today?")
+            val response2 = mockResponse(
+                functionCalls = listOf(
+                    functionCall(TRANSFORM_REASON, mapOf(REASON_PARAMETER to firstExpression))
+                )
+            )
+            val response3 = mockResponse(
+                functionCalls = listOf(
+                    functionCall(TRANSFORM_REASON, mapOf(REASON_PARAMETER to secondExpression))
+                )
+            )
+            val response4 = mockResponse(text = "The condition was added.")
+            val mockChatService = MockChatService(listOf(response1, response2, response3, response4))
+            val conversation = Conversation(mockChatService, reasonTransformer)
+            conversation.startConversation()
+
+            // When
+            val response = conversation.response("Add the condition '$firstExpression'.")
+
+            // Then
+            response shouldBe "The condition was added."
+            coVerify { reasonTransformer.transform(firstExpression) }
+            coVerify { reasonTransformer.transform(secondExpression) }
+        }
 }
 
 private class MockChatService(private val responses: List<GenerateContentResponse>) : ChatService {
     private var index = 0
     val chat = mockk<Chat>().apply {
-        coEvery { sendMessage(any<String>()) } coAnswers {
+        every { sendMessage(any<String>()) } answers {
             responses[index++]
         }
-        coEvery { sendMessage(any<Content>()) } coAnswers {
+        every { sendMessage(any<Content>()) } answers {
             responses[index++]
         }
     }
 
-    override fun startChat(history: List<Content>) = chat
+    override fun startChat() = chat
 }

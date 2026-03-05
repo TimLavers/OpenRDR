@@ -15,16 +15,17 @@ import io.rippledown.model.condition.Condition
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ConditionToolTip(condition: Condition, content: @Composable () -> Unit) {
+    val hasUserExpression = condition.userExpression().isNotBlank()
     TooltipArea(
         tooltip = {
-            if (condition.userExpression().isNotBlank()) Text(
+            if (hasUserExpression) Text(
                 text = condition.asText(),
                 modifier = Modifier.padding(4.dp)
-                    .semantics {
-                        contentDescription = "$CONDITION_PREFIX${condition.asText()}"
-                    }
             )
-        }
+        },
+        modifier = if (hasUserExpression) {
+            Modifier.semantics { contentDescription = "$CONDITION_PREFIX${condition.asText()}" }
+        } else Modifier
     ) {
         content()
     }

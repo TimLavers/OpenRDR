@@ -12,7 +12,11 @@ import kotlinx.serialization.Serializable
  * @property message The user-facing message describing the transformation result.
  */
 @Serializable
-data class ReasonTransformation(val reasonId: Int? = null, val message: String) {
+data class ReasonTransformation(
+    val reasonId: Int? = null,
+    val message: String,
+    val cornerstoneStatusJson: String? = null
+) {
     companion object {
         const val OK = "Ok"
         const val TRANSFORMATION_MESSAGE = "Added your reason '%s'."

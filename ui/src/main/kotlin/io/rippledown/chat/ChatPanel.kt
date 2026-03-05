@@ -28,8 +28,11 @@ import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.graphics.Color.Companion.Blue
 import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.input.key.*
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
@@ -66,6 +69,7 @@ const val CHAT_SEND = "CHAT_SEND"
 const val CHAT_TEXT_FIELD = "CHAT_TEXT_FIELD"
 
 const val NUMBER_OF_CHAT_MESSAGES_ = "NumberOfChatMessages_"
+const val CHAT_MIC_BUTTON = "CHAT_MIC_BUTTON"
 
 @Composable
 fun ChatPanel(
@@ -73,9 +77,11 @@ fun ChatPanel(
     sendIsEnabled: Boolean = true,
     messages: List<ChatMessage> = emptyList(),
     onMessageSent: OnMessageSent = {},
+    voiceRecognitionService: VoiceRecognition? = null,
     modifier: Modifier = Modifier
 ) {
     var inputText by remember { mutableStateOf(TextFieldValue()) }
+    var partialSuffixLength by remember { mutableStateOf(0) }
     val listState = rememberLazyListState()
     val textAreaFocusRequester = remember { FocusRequester() }
 
@@ -131,13 +137,18 @@ fun ChatPanel(
                 value = inputText,
                 enabled = sendIsEnabled,
                 textStyle = TextStyle(fontSize = 14.sp),
-                onValueChange = { inputText = it },
+                onValueChange = {
+                    inputText = it
+                    partialSuffixLength = 0
+                },
                 modifier = Modifier
                     .weight(1f)
                     .background(White, RoundedCornerShape(8.dp))
                     .semantics { contentDescription = CHAT_TEXT_FIELD }
                     .onPreviewKeyEvent { event ->
                         if (event.key == Key.Enter && event.type == KeyEventType.KeyDown) {
+                            partialSuffixLength = 0
+                            voiceRecognitionService?.resetAccumulatedText()
                             inputText = sendUserMessage(inputText, onMessageSent, textAreaFocusRequester)
                             true // Consume the event to avoid newline insertion
                         } else {
@@ -147,6 +158,28 @@ fun ChatPanel(
                     .focusRequester(textAreaFocusRequester),
                 placeholder = { Text(text = CHAT_BOT_PLACEHOLDER, style = TextStyle(fontSize = 14.sp)) },
                 trailingIcon = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (voiceRecognitionService != null) {
+                            VoiceInputButton(
+                                voiceRecognitionService = voiceRecognitionService,
+                                enabled = sendIsEnabled,
+                                onPartialResult = { partial ->
+                                    val base = inputText.text.dropLast(partialSuffixLength)
+                                    val suffix = if (partial.isNotBlank()) {
+                                        (if (base.isNotBlank()) " " else "") + partial
+                                    } else ""
+                                    val newText = base + suffix
+                                    partialSuffixLength = suffix.length
+                                    inputText = TextFieldValue(newText, selection = TextRange(newText.length))
+                                },
+                                onSegmentFinalized = { segment ->
+                                    val base = inputText.text.dropLast(partialSuffixLength)
+                                    val newText = if (base.isNotBlank()) "$base $segment" else segment
+                                    partialSuffixLength = 0
+                                    inputText = TextFieldValue(newText, selection = TextRange(newText.length))
+                                }
+                            )
+                        }
                     TooltipArea(
                         tooltip = {
                             Surface(
@@ -163,9 +196,12 @@ fun ChatPanel(
                     ) {
                         FilledIconButton(
                             onClick = {
+                                partialSuffixLength = 0
+                                voiceRecognitionService?.resetAccumulatedText()
                                 inputText = sendUserMessage(inputText, onMessageSent, textAreaFocusRequester)
                             },
                             enabled = inputText.text.isNotBlank(),
+                            modifier = Modifier.size(32.dp).pointerHoverIcon(PointerIcon.Hand),
                             colors = IconButtonDefaults.filledIconButtonColors(
                                 containerColor = LIGHT_BLUE
                             )
@@ -174,11 +210,14 @@ fun ChatPanel(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                 contentDescription = "Send",
                                 tint = if (inputText.text.isNotBlank()) Blue else Color.Gray,
-                                modifier = Modifier.semantics {
-                                    contentDescription = CHAT_SEND
-                                }
+                                modifier = Modifier
+                                    .size(18.dp)
+                                    .semantics {
+                                        contentDescription = CHAT_SEND
+                                    }
                             )
                         }
+                    }
                     }
                 },
                 colors = TextFieldDefaults.textFieldColors(

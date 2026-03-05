@@ -21,4 +21,4 @@ those that justified the first.
 
 A better approach to producing natural language reports from a RippleDown system might be
 to use RippleDown to produce a set of very simple factual statements, and then to get
-a generative AI system to produce a natural langauge report from these statements.
+a generative AI system to produce a natural language report from these statements.

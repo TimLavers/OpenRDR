@@ -1,13 +1,14 @@
 package io.rippledown.hints
 
-import dev.shreyaspatil.ai.client.generativeai.Chat
-import dev.shreyaspatil.ai.client.generativeai.type.GenerateContentResponse
+import com.google.genai.Chat
+import com.google.genai.types.GenerateContentResponse
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
-import io.mockk.coEvery
-import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import kotlin.test.Test
 
@@ -18,6 +19,11 @@ class ConditionChatServiceTest {
     @BeforeEach
     fun setUp() {
         service = ConditionChatService()
+    }
+    @AfterEach
+    fun tearDown() {
+        //avoid model rate limiting
+        Thread.sleep(10_000)
     }
 
     private fun cs(
@@ -241,7 +247,7 @@ class ConditionChatServiceTest {
     fun `should use correct attribute name casing when attributeNames provided`() {
         runBlocking {
             // Given
-            service.updateChatWithAttributeNames(listOf("glucose", "TSH", "x"))
+            service.setAttributeNames(listOf("glucose", "TSH", "x"))
 
             // When - user types "X" but attribute is "x"
             val result = service.transform("X is high")
@@ -268,50 +274,44 @@ class ConditionChatServiceTest {
     }
 
     @Test
-    fun `should provide attribute names when transform is called`() {
+    fun `should include attribute names in transform message`() {
         runBlocking {
             // Given
             val response = mockk<GenerateContentResponse>()
-            coEvery { response.text } returns """{"userExpression":"x is high","attributeName":"x","predicate":{"name":"High","parameters":[]},"signature":{"name":"Current","parameters":[]}}"""
+            every { response.text() } returns """{"userExpression":"x is high","attributeName":"x","predicate":{"name":"High","parameters":[]},"signature":{"name":"Current","parameters":[]}}"""
             val chat = mockk<Chat>()
-            coEvery { chat.sendMessage(any<String>()) } returns response
+            every { chat.sendMessage(any<String>()) } returns response
 
             val serviceWithMock = ConditionChatService { chat }
-            val attributes = listOf("x", "glucose")
+            serviceWithMock.setAttributeNames(listOf("x", "glucose"))
 
             // When
-            serviceWithMock.updateChatWithAttributeNames(attributes)
             serviceWithMock.transform("x is high")
 
             // Then
-            coVerify(exactly = 1) {
-                chat.sendMessage(match<String> { it.startsWith("The attribute names defined in the knowledge base are:") })
+            verify(exactly = 1) {
+                chat.sendMessage(match<String> { it.contains("attribute names") && it.contains("x is high") })
             }
         }
     }
 
     @Test
-    fun `should only provide attribute names once per session`() {
+    fun `should not include attribute context when no attribute names set`() {
         runBlocking {
             // Given
             val response = mockk<GenerateContentResponse>()
-            coEvery { response.text } returns """{"userExpression":"x is high","attributeName":"x","predicate":{"name":"High","parameters":[]},"signature":{"name":"Current","parameters":[]}}"""
+            every { response.text() } returns """{"userExpression":"x is high","attributeName":"x","predicate":{"name":"High","parameters":[]},"signature":{"name":"Current","parameters":[]}}"""
             val chat = mockk<Chat>()
-            coEvery { chat.sendMessage(any<String>()) } returns response
+            every { chat.sendMessage(any<String>()) } returns response
 
             val serviceWithMock = ConditionChatService { chat }
-            val attributes = listOf("x", "glucose")
 
             // When
-            serviceWithMock.updateChatWithAttributeNames(attributes)
-            serviceWithMock.transform("x is high")
             serviceWithMock.transform("x is high")
 
             // Then
-            withClue("the second transform should not send the attributes to the model") {
-                coVerify(exactly = 1) {
-                    chat.sendMessage(match<String> { it.startsWith("The attribute names defined in the knowledge base are:") })
-                }
+            verify(exactly = 1) {
+                chat.sendMessage("x is high")
             }
         }
     }
@@ -320,7 +320,7 @@ class ConditionChatServiceTest {
     fun `should transform condition with misspelled attribute name`() {
         runBlocking {
             // Given
-            service.updateChatWithAttributeNames(listOf("glucose", "LDL", "TSH"))
+            service.setAttributeNames(listOf("glucose", "LDL", "TSH"))
             // When
             val result = service.transform("flucose is elevated")
             // Then

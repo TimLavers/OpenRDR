@@ -37,9 +37,9 @@ class Api(
             json()
         }
         install(HttpTimeout) {
-            this.requestTimeoutMillis = 30_000
-            connectTimeoutMillis = 30_000
-            socketTimeoutMillis = 30_000
+            this.requestTimeoutMillis = 60_000
+            connectTimeoutMillis = 60_000
+            socketTimeoutMillis = 120_000
         }
         install(WebSockets)
     }
@@ -278,6 +278,9 @@ class Api(
             contentType(Json)
             setKBParameter()
             parameter(EXPRESSION, expression)
+            timeout {
+                requestTimeoutMillis = 120_000
+            }
         }.body()
     }
 

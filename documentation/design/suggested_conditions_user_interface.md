@@ -1,4 +1,7 @@
 # Suggested conditions - user interface
+
+TODO: change this documentation to reflect the chat design
+
 When a user is building a rule, they need to add conditions to the rule
 that are true for the session case but false for cases that should not be
 affected by the rule. Selecting or building conditions can be difficult for

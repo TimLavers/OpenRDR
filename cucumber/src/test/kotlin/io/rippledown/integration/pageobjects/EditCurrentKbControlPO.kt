@@ -15,18 +15,18 @@ class EditCurrentKbControlPO(private val contextProvider: () -> AccessibleContex
 
     fun showDescriptionOperator(): KbDescriptionOperator {
         expandDropdownMenu()
-        Thread.sleep(1_000)
+        Thread.sleep(5_000)
         clickDropdownItem(EDIT_KB_DESCRIPTION_BUTTON_TEXT)
-        Thread.sleep(1_000)
+        Thread.sleep(5_000)
         val dialog = findComposeDialogThatIsShowing()
         return KbDescriptionOperator(dialog!!)
     }
 
     fun showUndoLastRuleOperator(): UndoLastRuleOperator {
         expandDropdownMenuWithRetry()
-        Thread.sleep(1_000)
+        Thread.sleep(5_000)
         clickDropdownItem(UNDO_LAST_RULE_BUTTON_TEXT)
-        Thread.sleep(1_000)
+        Thread.sleep(5_000)
         val dialog = findComposeDialogThatIsShowing()
         return UndoLastRuleOperator(dialog!!)
     }
@@ -35,7 +35,7 @@ class EditCurrentKbControlPO(private val contextProvider: () -> AccessibleContex
         try {
             expandDropdownMenu()
         } catch (e: Exception) {
-            Thread.sleep(2500)
+            Thread.sleep(5000)
             expandDropdownMenu()
         }
     }

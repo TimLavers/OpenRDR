@@ -1,8 +1,7 @@
 package io.rippledown.chat
 
-import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
 import org.junit.Rule
 import org.junit.Test
 
@@ -24,15 +23,16 @@ class TypingIndicatorTest {
     }
 
     @Test
-    fun `should display three animated dots`() {
+    fun `should display four animated dots`() {
         with(composeTestRule) {
             // When
             setContent {
                 TypingIndicator()
             }
 
-            // Then the indicator should be visible and contain the animated dots
-            onNodeWithContentDescription(TYPING_INDICATOR).assertIsDisplayed()
+            // Then the indicator should contain four dot children
+            val surface = onNodeWithContentDescription(TYPING_INDICATOR).onChildAt(0)
+            surface.onChildren().assertCountEquals(4)
         }
     }
 
@@ -46,6 +46,37 @@ class TypingIndicatorTest {
 
             // Then
             onNodeWithContentDescription(TYPING_INDICATOR).assertExists()
+        }
+    }
+
+    @Test
+    fun `each dot should be displayed`() {
+        with(composeTestRule) {
+            // When
+            setContent {
+                TypingIndicator()
+            }
+
+            // Then each of the four dots should be displayed
+            val dotsRow = onNodeWithContentDescription(TYPING_INDICATOR).onChildAt(0)
+            for (i in 0..3) {
+                dotsRow.onChildAt(i).assertIsDisplayed()
+            }
+        }
+    }
+
+    @Test
+    fun `should have exactly one top-level child`() {
+        with(composeTestRule) {
+            // When
+            setContent {
+                TypingIndicator()
+            }
+
+            // Then the outer row should contain a single Surface
+            onNodeWithContentDescription(TYPING_INDICATOR)
+                .onChildren()
+                .assertCountEquals(1)
         }
     }
 }

@@ -1,4 +1,4 @@
-@chat
+@delay_after_cuke
 Feature: Remove previous rules
   Scenario: The user should be able to remove the previous rule using the chat
     Given cases are set up as follows:

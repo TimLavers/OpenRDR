@@ -11,7 +11,6 @@ dependencies {
     testImplementation(project(":ui"))
     testImplementation(testFixtures(project(":common")))
     testImplementation(compose.desktop.currentOs)
-    testImplementation(compose.preview)
     testImplementation(libs.composePreviewDesktop)
     testImplementation(libs.kotestAssertions)
     testImplementation(libs.assertJSwing)
@@ -97,6 +96,7 @@ tasks.register<JavaExec>("cucumberFolderTest") {
 fun JavaExec.setupExec() {
     group = "verification"
     maxHeapSize = "4G"
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
     mainClass.set("io.cucumber.core.cli.Main")
     classpath = cukeClassPath
 }

@@ -1,14 +1,12 @@
 package io.rippledown.llm
 
 import io.kotest.matchers.string.shouldContain
-import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 
 class GeminiTest {
     @Test
     fun `should call Gemini`() {
-        runBlocking {
-            generativeModel().generateContent("Highest mountain in the world?").text
-        } shouldContain "Everest"
+        val chat = geminiClient.chats.create(GEMINI_MODEL, generateContentConfig("You are a helpful assistant."))
+        chat.sendMessage("Highest mountain in the world?").text() shouldContain "Everest"
     }
 }
