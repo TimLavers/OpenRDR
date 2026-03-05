@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.mocks.config
 import io.rippledown.mocks.mock
 import io.rippledown.model.*
+import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.*
 import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
 import io.rippledown.model.diff.Addition
@@ -284,7 +285,7 @@ class ApiTest {
         val config = config {
             expectedUserMessage = userMessage
             expectedCaseId = caseId
-            returnResponse = "42"
+            returnResponse = ChatResponse("42")
         }
         val response = Api(mock(config)).sendUserMessage(userMessage, caseId)
         response shouldBe config.returnResponse
@@ -295,7 +296,7 @@ class ApiTest {
         val caseId = 1234L
         val config = config {
             expectedCaseId = caseId
-            returnResponse = "42"
+            returnResponse = ChatResponse("42")
         }
         val response = Api(mock(config)).startConversation(caseId)
         response shouldBe config.returnResponse

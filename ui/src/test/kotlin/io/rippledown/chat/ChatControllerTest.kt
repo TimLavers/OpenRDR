@@ -6,6 +6,7 @@ import androidx.compose.ui.window.application
 import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.constants.chat.CHAT_BOT_NO_RESPONSE_MESSAGE
+import io.rippledown.model.chat.ChatResponse
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
@@ -60,7 +61,7 @@ class ChatControllerTest {
     fun `should update the chat history with the bot response`() {
         val h = object : ChatControllerHandler {
             override fun sendUserMessage(message: String) {}
-            override var onBotMessageReceived: (String) -> Unit = {}
+            override var onBotMessageReceived: (ChatResponse) -> Unit = {}
         }
 
         with(composeTestRule) {
@@ -70,7 +71,7 @@ class ChatControllerTest {
             }
             // When
             val botResponse = "confirm 42?"
-            h.onBotMessageReceived(botResponse)
+            h.onBotMessageReceived(ChatResponse(botResponse))
 
             // Then
             val expected = listOf(
@@ -84,7 +85,7 @@ class ChatControllerTest {
     fun `should update the chat history even if the bot response is the same`() {
         val h = object : ChatControllerHandler {
             override fun sendUserMessage(message: String) {}
-            override var onBotMessageReceived: (String) -> Unit = {}
+            override var onBotMessageReceived: (ChatResponse) -> Unit = {}
         }
 
         with(composeTestRule) {
@@ -93,10 +94,10 @@ class ChatControllerTest {
                 ChatController(handler = h)
             }
             val botResponse = "confirm 42?"
-            h.onBotMessageReceived(botResponse)
+            h.onBotMessageReceived(ChatResponse(botResponse))
 
             // When
-            h.onBotMessageReceived(botResponse)
+            h.onBotMessageReceived(ChatResponse(botResponse))
 
             // Then
             val expected = listOf(
@@ -111,7 +112,7 @@ class ChatControllerTest {
     fun `should give an indication to the user if no bot response is received`() {
         val h = object : ChatControllerHandler {
             override fun sendUserMessage(message: String) {}
-            override var onBotMessageReceived: (String) -> Unit = {}
+            override var onBotMessageReceived: (ChatResponse) -> Unit = {}
         }
 
         with(composeTestRule) {
@@ -123,7 +124,7 @@ class ChatControllerTest {
             typeChatMessageAndClickSend(userMessage)
 
             // When
-            h.onBotMessageReceived("")
+            h.onBotMessageReceived(ChatResponse(""))
 
             // Then
             val expected = listOf(
@@ -147,11 +148,11 @@ fun main() {
                         println("User message sent: $message")
                         // Simulate a delay for the bot response
                         delay(1000)
-                        onBotMessageReceived("The answer to '$message' is 42")
+                        onBotMessageReceived(ChatResponse("The answer to '$message' is 42"))
                     }
                 }
 
-                override var onBotMessageReceived: (String) -> Unit = {}
+                override var onBotMessageReceived: (ChatResponse) -> Unit = {}
             }
             ChatController(handler = handler)
         }

@@ -12,6 +12,7 @@ import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_CONVERSATION_R
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.toJsonString
 import kotlinx.coroutines.test.runTest
@@ -133,7 +134,7 @@ class ChatManagerTest {
         val responseToUser = chatManager.startConversation(viewableCase)
 
         // Then
-        responseToUser shouldBe message
+        responseToUser shouldBe ChatResponse(message)
     }
 
     @Test

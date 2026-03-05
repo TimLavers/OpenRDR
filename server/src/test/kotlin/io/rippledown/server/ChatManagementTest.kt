@@ -11,6 +11,7 @@ import io.rippledown.constants.api.SEND_USER_MESSAGE
 import io.rippledown.constants.api.START_CONVERSATION
 import io.rippledown.constants.server.CASE_ID
 import io.rippledown.constants.server.KB_ID
+import io.rippledown.model.chat.ChatResponse
 import kotlin.test.Test
 
 class ChatManagementTest : OpenRDRServerTestBase() {
@@ -20,7 +21,7 @@ class ChatManagementTest : OpenRDRServerTestBase() {
         //Given
         setupServer()
         val caseId = 42L
-        val response = "Shall I add a surfing comment to the report?"
+        val response = ChatResponse("Shall I add a surfing comment to the report?")
         coEvery { kbEndpoint.startConversation(caseId) } returns response
 
         //When
@@ -40,7 +41,7 @@ class ChatManagementTest : OpenRDRServerTestBase() {
         setupServer()
         val caseId = 42L
         val userMessage = "The report should include a surfing comment"
-        val response = "Shall I add a surfing comment to the report?"
+        val response = ChatResponse("Shall I add a surfing comment to the report?")
         coEvery { kbEndpoint.responseToUserMessage(userMessage) } returns response
 
         //When
@@ -53,6 +54,6 @@ class ChatManagementTest : OpenRDRServerTestBase() {
         //Then
         coVerify { kbEndpoint.responseToUserMessage(userMessage) }
         result.status shouldBe HttpStatusCode.OK
-        result.body<String>() shouldBe response
+        result.body<ChatResponse>() shouldBe response
     }
 }

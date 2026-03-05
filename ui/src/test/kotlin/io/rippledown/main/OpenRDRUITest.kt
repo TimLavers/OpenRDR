@@ -21,6 +21,7 @@ import io.rippledown.constants.kb.CONFIRM_UNDO_LAST_RULE_TEXT
 import io.rippledown.constants.main.APPLICATION_BAR_ID
 import io.rippledown.interpretation.*
 import io.rippledown.model.*
+import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
@@ -861,7 +862,7 @@ fun main() {
     coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
     coEvery { api.cornerstoneStatus() } returns null
     coEvery { api.getCase(any()) } returns createViewableCaseWithInterpretation("case A", 1, listOf("Go to Bondi"))
-    coEvery { api.sendUserMessage(any(), any()) } returns "The answer is 42"
+    coEvery { api.sendUserMessage(any(), any()) } returns ChatResponse("The answer is 42")
 
     applicationFor {
         OpenRDRUI(handler, dispatcher = Unconfined)

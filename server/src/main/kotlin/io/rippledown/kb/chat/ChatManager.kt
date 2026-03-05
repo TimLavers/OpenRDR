@@ -5,6 +5,7 @@ import io.rippledown.extractJsonFragments
 import io.rippledown.fromJsonString
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.chat.ChatResponse
 
 interface ModelResponder {
     suspend fun response(message: String): String
@@ -13,18 +14,32 @@ interface ModelResponder {
 /**
  * Manages the chat conversation with the user, processing messages and actions based on the AI model's responses.
  */
-class ChatManager(val conversationService: ConversationService, val ruleService: RuleService) : ModelResponder {
+class ChatManager(
+    val conversationService: ConversationService,
+    val ruleService: RuleService,
+    private val suggestedConditionsHandler: SuggestedConditionsHandler? = null
+) : ModelResponder {
     private val logger = lazyLogger
     private var currentCase: ViewableCase? = null
 
-    suspend fun startConversation(viewableCase: ViewableCase): String {
+    suspend fun startConversation(viewableCase: ViewableCase): ChatResponse {
         currentCase = viewableCase
         val response = conversationService.startConversation()
         logger.info("$LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE '$response'")
-        return processActionComment(response.sanitizeLlmJson().fromJsonString<ActionComment>())
+        val text = processActionComment(response.sanitizeLlmJson().fromJsonString<ActionComment>())
+        return buildChatResponse(text)
     }
 
     override suspend fun response(message: String): String {
+        return processConversationResponse(message)
+    }
+
+    suspend fun chatResponse(message: String): ChatResponse {
+        val lastResponse = processConversationResponse(message)
+        return buildChatResponse(lastResponse)
+    }
+
+    private suspend fun processConversationResponse(message: String): String {
         logger.info("$LOG_PREFIX_FOR_USER_MESSAGE '$message'")
         val response = conversationService.response(message)
         logger.info("$LOG_PREFIX_FOR_CONVERSATION_RESPONSE $response")
@@ -40,6 +55,11 @@ class ChatManager(val conversationService: ConversationService, val ruleService:
             logger.error("Failed to process ActionComment: $response", e)
             return "System error. See server.log: '$response'"
         }
+    }
+
+    private fun buildChatResponse(text: String): ChatResponse {
+        val suggestions = suggestedConditionsHandler?.consumeSuggestions() ?: emptyList()
+        return ChatResponse(text, suggestions)
     }
 
 

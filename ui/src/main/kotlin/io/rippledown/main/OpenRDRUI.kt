@@ -20,6 +20,7 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.edit.SuggestedCondition
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Diff
@@ -59,7 +60,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     handler.setWindowSize(isShowingCornerstone, isShowingChat)
 
     val chatControllerHandler = object : ChatControllerHandler {
-        override var onBotMessageReceived: (message: String) -> Unit = { }
+        override var onBotMessageReceived: (response: ChatResponse) -> Unit = { }
         override fun sendUserMessage(message: String) {
             val caseId = requireNotNull(currentCaseId) {
                 "currentCaseId should not be null when casesInfo.count > 0"
@@ -102,7 +103,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
             withContext(dispatcher) {
                 currentCaseId?.let {
                     val response = api.startConversation(it)
-                    if (response.isNotBlank()) {
+                    if (response.text.isNotBlank()) {
                         chatControllerHandler.onBotMessageReceived(response)
                         ++chatId // Increment chatId to trigger recomposition in ChatController
                     }
@@ -116,7 +117,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
         withContext(dispatcher) {
             currentCaseId?.let {
                 val response = api.startConversation(it)
-                if (response.isNotBlank()) {
+                if (response.text.isNotBlank()) {
                     chatControllerHandler.onBotMessageReceived(response)
                 }
             }

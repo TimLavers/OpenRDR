@@ -10,6 +10,7 @@ import io.rippledown.casecontrol.waitForCaseToBeShowing
 import io.rippledown.chat.*
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
+import io.rippledown.model.chat.ChatResponse
 import io.rippledown.utils.applicationFor
 import io.rippledown.utils.createViewableCaseWithInterpretation
 import kotlinx.coroutines.Dispatchers
@@ -274,7 +275,7 @@ class OpenRDRUIWithChatTest {
         val initialResponse = "the answer is 42"
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
         coEvery { api.getCase(id) } returns case
-        coEvery { api.startConversation(id) } returns initialResponse
+        coEvery { api.startConversation(id) } returns ChatResponse(initialResponse)
 
         with(composeTestRule) {
             //Given
@@ -301,7 +302,7 @@ class OpenRDRUIWithChatTest {
         val case = createViewableCaseWithInterpretation(caseA, 1, listOf(bondiComment))
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
         coEvery { api.getCase(1) } returns case
-        coEvery { api.sendUserMessage(any(), any<Long>()) } returns answer
+        coEvery { api.sendUserMessage(any(), any<Long>()) } returns ChatResponse(answer)
 
         with(composeTestRule) {
             //Given
@@ -332,7 +333,7 @@ class OpenRDRUIWithChatTest {
             val case = createViewableCaseWithInterpretation(caseA, 1, listOf(bondiComment))
             coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
             coEvery { api.getCase(1) } returns case
-            coEvery { api.sendUserMessage(any(), any<Long>()) } returns answer
+            coEvery { api.sendUserMessage(any(), any<Long>()) } returns ChatResponse(answer)
 
             with(composeTestRule) {
                 //Given
@@ -369,7 +370,7 @@ fun main() {
     coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
 //    coEvery { api.cornerstoneStatus() } returns CornerstoneStatus(caseB, 0, 42)
     coEvery { api.getCase(any()) } returns caseA
-    coEvery { api.sendUserMessage(any(), any()) } returns "The answer is 42"
+    coEvery { api.sendUserMessage(any(), any()) } returns ChatResponse("The answer is 42")
 
     applicationFor {
         OpenRDRUI(handler, dispatcher = Unconfined)

@@ -24,6 +24,7 @@ import io.rippledown.model.Conclusion
 import io.rippledown.model.KBInfo
 import io.rippledown.model.OperationResult
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.rule.*
@@ -284,7 +285,7 @@ class Api(
         }.body()
     }
 
-    suspend fun startConversation(caseId: Long): String {
+    suspend fun startConversation(caseId: Long): ChatResponse {
         return client.post("$API_URL$START_CONVERSATION") {
             contentType(Plain)
             setKBParameter()
@@ -292,7 +293,7 @@ class Api(
         }.body()
     }
 
-    suspend fun sendUserMessage(message: String, caseId: Long): String {
+    suspend fun sendUserMessage(message: String, caseId: Long): ChatResponse {
         return client.post("$API_URL$SEND_USER_MESSAGE") {
             contentType(Plain)
             setKBParameter()

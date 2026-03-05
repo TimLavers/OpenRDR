@@ -17,6 +17,7 @@ import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
@@ -373,22 +374,23 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
      * @param viewableCase The case to start a conversation about
      * @return A string representing the conversation ID or initial response
      */
-    suspend fun startConversation(viewableCase: ViewableCase): String {
+    suspend fun startConversation(viewableCase: ViewableCase): ChatResponse {
         val chatService = KBChatService.createKBChatService(viewableCase)
         // Use a lazy ModelResponder since chatManager isn't created until after Conversation
         val modelResponder = object : ModelResponder {
             override suspend fun response(message: String): String = chatManager.response(message)
         }
         val reasonTransformer = createReasonTransformer(viewableCase, this, modelResponder)
+        val suggestedConditionsHandler = SuggestedConditionsHandler(viewableCase.case, this)
         val functionCallHandlers: Map<String, FunctionCallHandler> = mapOf(
             TRANSFORM_REASON to ReasonTransformHandler(reasonTransformer),
-            GET_SUGGESTED_CONDITIONS to SuggestedConditionsHandler(viewableCase.case, this)
+            GET_SUGGESTED_CONDITIONS to suggestedConditionsHandler
         )
         val conversationService = Conversation(
             chatService = chatService,
             functionCallHandlers = functionCallHandlers
         )
-        chatManager = ChatManager(conversationService, this)
+        chatManager = ChatManager(conversationService, this, suggestedConditionsHandler)
         return chatManager.startConversation(viewableCase)
     }
 
@@ -399,5 +401,5 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     fun createReasonTransformer(viewableCase: ViewableCase, ruleService: RuleService, modelResponder: ModelResponder) =
         KBReasonTransformer(viewableCase.case, ruleService, modelResponder)
 
-    suspend fun responseToUserMessage(message: String) = chatManager.response(message)
+    suspend fun responseToUserMessage(message: String): ChatResponse = chatManager.chatResponse(message)
 }

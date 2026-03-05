@@ -6,6 +6,7 @@ import io.rippledown.kb.export.util.Zipper
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
@@ -91,9 +92,9 @@ class KBEndpoint(val kb: KB) {
 
     fun conditionHintsForCase(id: Long): ConditionList = kb.conditionHintsForCase(case(id))
 
-    suspend fun startConversation(caseId: Long): String = kb.startConversation(viewableCase(caseId))
+    suspend fun startConversation(caseId: Long): ChatResponse = kb.startConversation(viewableCase(caseId))
 
-    suspend fun responseToUserMessage(message: String): String = kb.responseToUserMessage(message)
+    suspend fun responseToUserMessage(message: String): ChatResponse = kb.responseToUserMessage(message)
 
     fun processCase(externalCase: ExternalCase) = kb.processCase(externalCase)
 

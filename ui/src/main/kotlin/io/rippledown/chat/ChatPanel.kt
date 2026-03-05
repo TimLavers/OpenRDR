@@ -61,6 +61,13 @@ data class BotMessage(
     override val isUser: Boolean = false
 }
 
+data class SuggestionListMessage(
+    override val text: String,
+    val suggestions: List<String>
+) : ChatMessage {
+    override val isUser: Boolean = false
+}
+
 typealias OnMessageSent = (UserMessage) -> Unit
 
 const val USER = "USER_"
@@ -70,6 +77,7 @@ const val CHAT_TEXT_FIELD = "CHAT_TEXT_FIELD"
 
 const val NUMBER_OF_CHAT_MESSAGES_ = "NumberOfChatMessages_"
 const val CHAT_MIC_BUTTON = "CHAT_MIC_BUTTON"
+const val SUGGESTION_LIST = "SUGGESTION_LIST_"
 
 @Composable
 fun ChatPanel(
@@ -113,10 +121,10 @@ fun ChatPanel(
             verticalArrangement = Arrangement.Bottom
         ) {
             itemsIndexed(messages) { index, message ->
-                if (message.isUser) {
-                    UserRow(message.text, index)
-                } else {
-                    BotRow(message.text, index)
+                when (message) {
+                    is UserMessage -> UserRow(message.text, index)
+                    is SuggestionListMessage -> SuggestionListRow(message.text, message.suggestions, index)
+                    else -> BotRow(message.text, index)
                 }
             }
             if (!sendIsEnabled) {
