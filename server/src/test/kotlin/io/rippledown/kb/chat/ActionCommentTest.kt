@@ -7,6 +7,9 @@ import io.rippledown.fromJsonString
 import io.rippledown.kb.chat.action.*
 import kotlin.test.Test
 
+/**
+ * @author Cascade AI
+ */
 class ActionCommentTest {
 
     @Test
@@ -243,6 +246,48 @@ class ActionCommentTest {
 
         //Then
         instance.shouldBeInstanceOf<CommitRule>()
+    }
+
+    @Test
+    fun `should parse ActionComment with suggestions from JSON`() {
+        // Given
+        val json = """
+            {
+                "action": "$USER_ACTION",
+                "message": "Here are some suggested conditions.",
+                "suggestions": ["wave height is \"2\"", "case is for a single date"]
+            }
+        """
+
+        // When
+        val actionComment = json.fromJsonString<ActionComment>()
+
+        // Then
+        with(actionComment) {
+            action shouldBe USER_ACTION
+            message shouldBe "Here are some suggested conditions."
+            suggestions shouldBe listOf("wave height is \"2\"", "case is for a single date")
+        }
+    }
+
+    @Test
+    fun `should parse ActionComment without suggestions from JSON`() {
+        // Given
+        val json = """
+            {
+                "action": "$USER_ACTION",
+                "message": "No suggestions here."
+            }
+        """
+
+        // When
+        val actionComment = json.fromJsonString<ActionComment>()
+
+        // Then
+        with(actionComment) {
+            action shouldBe USER_ACTION
+            suggestions shouldBe null
+        }
     }
 
     @Test

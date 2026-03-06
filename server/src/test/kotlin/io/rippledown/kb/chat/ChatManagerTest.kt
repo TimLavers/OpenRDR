@@ -20,6 +20,9 @@ import org.slf4j.Logger
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
+/**
+ * @author Cascade AI
+ */
 class ChatManagerTest {
     lateinit var logger: Logger
     lateinit var conversationService: ConversationService
@@ -56,7 +59,7 @@ class ChatManagerTest {
         val responseToUser = chatManager.processActionComment(actionComment)
 
         // Then
-        responseToUser shouldBe actionComment.message
+        responseToUser shouldBe ChatResponse(actionComment.message!!)
     }
 
     @Test
@@ -68,7 +71,7 @@ class ChatManagerTest {
         val responseToUser = chatManager.processActionComment(actionComment)
 
         // Then
-        responseToUser shouldBe actionComment.message
+        responseToUser shouldBe ChatResponse(actionComment.message!!)
     }
 
     @Test
@@ -138,6 +141,42 @@ class ChatManagerTest {
     }
 
     @Test
+    fun `should return suggestions from ActionComment in ChatResponse`() = runTest {
+        // Given
+        val message = "Here are some suggested conditions."
+        val suggestions = listOf("wave height is \"2\"", "case is for a single date")
+        val responseFromModel = ActionComment(
+            action = USER_ACTION,
+            message = message,
+            suggestions = suggestions
+        ).toJsonString()
+        coEvery { conversationService.startConversation() } returns responseFromModel
+
+        // When
+        val responseToUser = chatManager.startConversation(viewableCase)
+
+        // Then
+        responseToUser shouldBe ChatResponse(message, suggestions)
+    }
+
+    @Test
+    fun `should return empty suggestions when ActionComment has no suggestions`() = runTest {
+        // Given
+        val message = "No suggestions here."
+        val responseFromModel = ActionComment(
+            action = USER_ACTION,
+            message = message,
+        ).toJsonString()
+        coEvery { conversationService.startConversation() } returns responseFromModel
+
+        // When
+        val responseToUser = chatManager.startConversation(viewableCase)
+
+        // Then
+        responseToUser shouldBe ChatResponse(message)
+    }
+
+    @Test
     fun `should return a user message from a response call`() = runTest {
         // Given
         val message = "the answer's 42"
@@ -154,7 +193,7 @@ class ChatManagerTest {
         val responseToUser = chatManager.response("meaning of life?")
 
         // Then
-        responseToUser shouldBe message
+        responseToUser shouldBe ChatResponse(message)
     }
 
     @Test
@@ -173,7 +212,7 @@ class ChatManagerTest {
         val responseToUser = chatManager.response("meaning of life?")
 
         // Then
-        responseToUser shouldBe beBlank()
+        responseToUser.text shouldBe beBlank()
     }
 
     @Test
@@ -368,7 +407,7 @@ class ChatManagerTest {
         val responseToUser = chatManager.response(message)
 
         // Then
-        responseToUser shouldBe "Please confirm you want to add the comment '$message'"
+        responseToUser shouldBe ChatResponse("Please confirm you want to add the comment '$message'")
     }
 
     @Test

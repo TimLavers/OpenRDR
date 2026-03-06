@@ -378,7 +378,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         val chatService = KBChatService.createKBChatService(viewableCase)
         // Use a lazy ModelResponder since chatManager isn't created until after Conversation
         val modelResponder = object : ModelResponder {
-            override suspend fun response(message: String): String = chatManager.response(message)
+            override suspend fun response(message: String): ChatResponse = chatManager.response(message)
         }
         val reasonTransformer = createReasonTransformer(viewableCase, this, modelResponder)
         val suggestedConditionsHandler = SuggestedConditionsHandler(viewableCase.case, this)
@@ -390,7 +390,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
             chatService = chatService,
             functionCallHandlers = functionCallHandlers
         )
-        chatManager = ChatManager(conversationService, this, suggestedConditionsHandler)
+        chatManager = ChatManager(conversationService, this)
         return chatManager.startConversation(viewableCase)
     }
 
@@ -401,5 +401,5 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     fun createReasonTransformer(viewableCase: ViewableCase, ruleService: RuleService, modelResponder: ModelResponder) =
         KBReasonTransformer(viewableCase.case, ruleService, modelResponder)
 
-    suspend fun responseToUserMessage(message: String): ChatResponse = chatManager.chatResponse(message)
+    suspend fun responseToUserMessage(message: String): ChatResponse = chatManager.response(message)
 }

@@ -13,13 +13,19 @@ for the current case.
 
 - The function returns a numbered list of conditions, one per line.
 - Some conditions are marked as [editable], meaning the user can modify the value before accepting.
-- Present the numbered list to the user and ask them to select one or more conditions by number, or to type their own
-  reason in natural language.
+- Put the individual condition texts (without the leading numbers) into the "suggestions" array field.
+- Put a brief message in the "message" field asking the user to select a condition or type their own reason.
+- Do NOT include the numbered list in the "message" field.
 
 ```json
 {
   "action": "{{USER_ACTION}}",
-  "message": "Here are some suggested conditions:\n\n<numbered list>\n\nYou can select a condition by number, or type your own reason."
+  "message": "Here are some suggested reasons. You can select a reason by number, or type your own.",
+  "suggestions": [
+    "condition one",
+    "condition two [editable]",
+    "condition three"
+  ]
 }
 ```
 

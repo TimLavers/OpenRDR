@@ -7,6 +7,7 @@ import io.mockk.mockk
 import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.toJsonString
 import kotlinx.coroutines.test.runTest
@@ -32,7 +33,7 @@ class ExemptCornerstoneTest {
         val ccStatus = CornerstoneStatus(indexOfCornerstoneToReview = 42, numberOfCornerstones = 84)
         coEvery { ruleService.exemptCornerstoneCase() } returns ccStatus
 
-        val responseFromModel = "report change to cornerstone case allowed"
+        val responseFromModel = ChatResponse("report change to cornerstone case allowed")
         coEvery { modelResponder.response(any<String>()) } returns responseFromModel
 
         //When

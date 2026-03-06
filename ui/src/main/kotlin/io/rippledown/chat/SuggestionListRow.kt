@@ -3,11 +3,15 @@ package io.rippledown.chat
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color.Companion.Black
+import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -15,6 +19,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/**
+ * @author Cascade AI
+ */
 @Composable
 fun SuggestionListRow(
     text: String,
@@ -22,12 +29,12 @@ fun SuggestionListRow(
     index: Int
 ) {
     val scrollState = rememberScrollState()
-    val numberedText = suggestions.mapIndexed { i, s -> "${i + 1}. $s" }.joinToString("\n")
+    val editableMarker = " [editable]"
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
+            .padding(top = 8.dp, bottom = 4.dp)
             .semantics { contentDescription = "$BOT${index}" }
     ) {
         if (text.isNotEmpty()) {
@@ -35,27 +42,45 @@ fun SuggestionListRow(
                 text = text,
                 color = Black,
                 style = TextStyle(fontSize = 14.sp),
-                modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+                modifier = Modifier.padding(start = 4.dp)
             )
         }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 120.dp)
+                .heightIn(max = 80.dp)
                 .background(White, RoundedCornerShape(8.dp))
-                .semantics { contentDescription = "$SUGGESTION_LIST$index" }
+                .semantics(mergeDescendants = true) { contentDescription = "$SUGGESTION_LIST$index" }
         ) {
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .verticalScroll(scrollState)
-                    .padding(8.dp)
+                    .padding(start = 16.dp, top = 8.dp, end = 8.dp, bottom = 8.dp)
             ) {
-                Text(
-                    text = numberedText,
-                    color = Black,
-                    style = TextStyle(fontSize = 13.sp)
-                )
+                suggestions.forEachIndexed { i, suggestion ->
+                    val isEditable = suggestion.endsWith(editableMarker)
+                    val displayText = if (isEditable) suggestion.removeSuffix(editableMarker) else suggestion
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "${i + 1}. $displayText",
+                            color = Black,
+                            style = TextStyle(fontSize = 13.sp)
+                        )
+                        if (isEditable) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "editable",
+                                tint = Gray,
+                                modifier = Modifier
+                                    .padding(start = 4.dp)
+                                    .size(14.dp)
+                            )
+                        }
+                    }
+                }
             }
             VerticalScrollbar(
                 modifier = Modifier

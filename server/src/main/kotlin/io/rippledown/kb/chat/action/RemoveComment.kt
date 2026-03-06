@@ -3,6 +3,7 @@ package io.rippledown.kb.chat.action
 import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.toJsonString
 
@@ -11,7 +12,7 @@ class RemoveComment(val comment: String) : ChatAction {
         ruleService: RuleService,
         currentCase: ViewableCase?,
         modelResponder: ModelResponder
-    ): String {
+    ): ChatResponse {
         val sessionCase = currentCase ?: throw IllegalStateException("No current case")
         val cornerstoneStatus = ruleService.startRuleSessionToRemoveComment(sessionCase, comment)
         ruleService.sendCornerstoneStatus()

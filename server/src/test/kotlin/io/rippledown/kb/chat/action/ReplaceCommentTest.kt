@@ -7,6 +7,7 @@ import io.mockk.mockk
 import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.toJsonString
 import kotlinx.coroutines.test.runTest
@@ -35,7 +36,7 @@ class ReplaceCommentTest {
             ruleService.startRuleSessionToReplaceComment(any(), commentToRemove, commentToAdd)
         } returns ccStatus
 
-        val responseFromModel = "There are 84 cornstone cases. Do you want to review them?"
+        val responseFromModel = ChatResponse("There are 84 cornstone cases. Do you want to review them?")
         coEvery { modelResponder.response(any<String>()) } returns responseFromModel
 
         //When
@@ -57,7 +58,7 @@ class ReplaceCommentTest {
             ruleService.startRuleSessionToReplaceComment(any(), comment, replacementComment)
         } returns ccStatus
 
-        val responseFromModel = "There are 84 cornstone cases. Do you want to review them?"
+        val responseFromModel = ChatResponse("There are 84 cornstone cases. Do you want to review them?")
         coEvery { modelResponder.response(any<String>()) } returns responseFromModel
 
         //When

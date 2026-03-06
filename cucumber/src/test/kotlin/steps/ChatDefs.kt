@@ -76,6 +76,11 @@ class ChatDefs {
         waitForBotText(REASON)
     }
 
+    @And("the chatbot has provides some suggestions")
+    fun waitForBotSuggestions() {
+        waitForBotText(SUGGESTION)
+    }
+
     @And("the chatbot has asked if I want to provide any (more )reasons and I decline")
     fun waitForBotQuestionToProvideReasonsThenDecline() {
         waitForBotText(REASON)
@@ -143,7 +148,7 @@ class ChatDefs {
     @And("I provide the following reason(s):")
     fun provideTheseReasons(reasons: DataTable) {
         reasons.asList().forEach { reason ->
-            waitForBotQuestionToProvideReasons()
+            waitForBotSuggestions()
             enterChatTextAndSend(reason)
         }
     }

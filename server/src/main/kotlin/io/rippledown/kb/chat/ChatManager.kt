@@ -8,16 +8,17 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 
 interface ModelResponder {
-    suspend fun response(message: String): String
+    suspend fun response(message: String): ChatResponse
 }
 
 /**
  * Manages the chat conversation with the user, processing messages and actions based on the AI model's responses.
+ *
+ * @author Cascade AI
  */
 class ChatManager(
     val conversationService: ConversationService,
     val ruleService: RuleService,
-    private val suggestedConditionsHandler: SuggestedConditionsHandler? = null
 ) : ModelResponder {
     private val logger = lazyLogger
     private var currentCase: ViewableCase? = null
@@ -26,52 +27,45 @@ class ChatManager(
         currentCase = viewableCase
         val response = conversationService.startConversation()
         logger.info("$LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE '$response'")
-        val text = processActionComment(response.sanitizeLlmJson().fromJsonString<ActionComment>())
-        return buildChatResponse(text)
+        return processActionComment(response.sanitizeLlmJson().fromJsonString<ActionComment>())
     }
 
-    override suspend fun response(message: String): String {
+    override suspend fun response(message: String): ChatResponse {
         return processConversationResponse(message)
     }
 
-    suspend fun chatResponse(message: String): ChatResponse {
-        val lastResponse = processConversationResponse(message)
-        return buildChatResponse(lastResponse)
-    }
-
-    private suspend fun processConversationResponse(message: String): String {
+    private suspend fun processConversationResponse(message: String): ChatResponse {
         logger.info("$LOG_PREFIX_FOR_USER_MESSAGE '$message'")
         val response = conversationService.response(message)
         logger.info("$LOG_PREFIX_FOR_CONVERSATION_RESPONSE $response")
         try {
             // Split response into individual JSON objects and process each
             val jsonFragments = extractJsonFragments(response)
-            var lastResponse = ""
+            var lastResponse = ChatResponse("")
             jsonFragments.forEach { fragment ->
                 lastResponse = processActionComment(fragment.sanitizeLlmJson().fromJsonString<ActionComment>())
             }
             return lastResponse
         } catch (e: Exception) {
             logger.error("Failed to process ActionComment: $response", e)
-            return "System error. See server.log: '$response'"
+            return ChatResponse("System error. See server.log: '$response'")
         }
     }
 
-    private fun buildChatResponse(text: String): ChatResponse {
-        val suggestions = suggestedConditionsHandler?.consumeSuggestions() ?: emptyList()
-        return ChatResponse(text, suggestions)
-    }
-
-
     //Either pass on the model's response to the user or take some action
-    suspend fun processActionComment(actionComment: ActionComment): String {
+    suspend fun processActionComment(actionComment: ActionComment): ChatResponse {
         val chatAction = actionComment.createActionInstance()
-        return if (chatAction != null) {
+        val chatResponse = if (chatAction != null) {
             chatAction.doIt(ruleService, currentCase, this)
         } else {
-                logger.error("Unknown actionComment: ${actionComment.action}")
-                ""
-            }
+            logger.error("Unknown actionComment: ${actionComment.action}")
+            ChatResponse("")
+        }
+        return if (!actionComment.suggestions.isNullOrEmpty()) {
+            ChatResponse(chatResponse.text, actionComment.suggestions)
+        } else {
+            chatResponse
+        }
     }
 
     companion object {

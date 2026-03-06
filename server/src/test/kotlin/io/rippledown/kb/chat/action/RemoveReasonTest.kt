@@ -7,6 +7,7 @@ import io.mockk.mockk
 import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.rule.CornerstoneStatus
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
@@ -48,7 +49,7 @@ class RemoveReasonTest {
             ruleService.removeCondition(reasonId)
         } returns ccStatus
 
-        val responseFromModel = "Reason removed."
+        val responseFromModel = ChatResponse("Reason removed.")
         coEvery { modelResponder.response(any<String>()) } returns responseFromModel
 
         //When

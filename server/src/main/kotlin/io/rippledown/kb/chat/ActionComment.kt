@@ -7,6 +7,9 @@ import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
 
 
+/**
+ * @author Cascade AI
+ */
 @Serializable
 data class ActionComment(
     val action: String,
@@ -18,6 +21,7 @@ data class ActionComment(
     val reasonId: Int? = null,
     val attributeMoved: String? = null,
     val destination: String? = null,
+    val suggestions: List<String>? = null,
 ) {
     companion object {
         val logger = lazyLogger

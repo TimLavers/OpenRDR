@@ -21,7 +21,7 @@ class KBModelIntegrationTest: KBTestBase() {
         val response = kb.startConversation(case)
 
         //Then
-        response shouldBe "Would you like to add a comment to the report?"//todo use some known constant
+        response.text shouldBe "Would you like to add a comment to the report?"//todo use some known constant
     }
 
     @Test
@@ -35,6 +35,6 @@ class KBModelIntegrationTest: KBTestBase() {
         val response = kb.responseToUserMessage(userExpression)
 
         //Then
-        response shouldBe "Please confirm that you want to add the comment: 'Go to Bondi.'"
+        response.text shouldBe "Please confirm that you want to add the comment: 'Go to Bondi.'"
     }
 }

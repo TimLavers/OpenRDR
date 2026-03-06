@@ -1,6 +1,7 @@
 package io.rippledown.chat
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -70,8 +71,6 @@ class SuggestionListRowTest {
             // Given
             val suggestions = listOf("TSH is normal", "FT4 is high", "Glucose is low")
             val index = 2
-            val expectedText = "1. TSH is normal\n2. FT4 is high\n3. Glucose is low"
-
             // When
             setContent {
                 SuggestionListRow(text = "Suggestions:", suggestions = suggestions, index = index)
@@ -80,7 +79,9 @@ class SuggestionListRowTest {
             // Then
             onNodeWithContentDescription("$SUGGESTION_LIST$index")
                 .assertIsDisplayed()
-                .assertTextEquals(expectedText)
+                .assertTextContains("1. TSH is normal")
+                .assertTextContains("2. FT4 is high")
+                .assertTextContains("3. Glucose is low")
         }
     }
 
@@ -121,12 +122,11 @@ class SuggestionListRowTest {
     }
 
     @Test
-    fun `should display suggestions with editable markers`() {
+    fun `should display editable suggestions with edit icon instead of marker text`() {
         with(composeTestRule) {
             // Given
             val suggestions = listOf("TSH is normal [editable]", "FT4 is high")
             val index = 0
-            val expectedText = "1. TSH is normal [editable]\n2. FT4 is high"
 
             // When
             setContent {
@@ -135,7 +135,10 @@ class SuggestionListRowTest {
 
             // Then
             onNodeWithContentDescription("$SUGGESTION_LIST$index")
-                .assertTextEquals(expectedText)
+                .assertTextContains("1. TSH is normal")
+                .assertTextContains("2. FT4 is high")
+            // [editable] text should not appear - it's replaced by an icon
+            onNodeWithContentDescription("editable").assertIsDisplayed()
         }
     }
 
