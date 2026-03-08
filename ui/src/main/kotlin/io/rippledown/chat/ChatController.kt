@@ -27,7 +27,7 @@ fun ChatController(
         chatHistory = if (response.text.isEmpty()) {
             chatHistory + BotMessage(CHAT_BOT_NO_RESPONSE_MESSAGE)
         } else if (response.suggestions.isNotEmpty()) {
-            chatHistory + BotMessage(response.text) + SuggestionListMessage("", response.suggestions)
+            chatHistory + BotMessage(response.text) + SuggestionListMessage(response.suggestions)
         } else {
             chatHistory + BotMessage(response.text)
         }

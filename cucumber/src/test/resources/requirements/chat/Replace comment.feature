@@ -10,17 +10,11 @@ Feature: Replace comment
       | Bring flippers.  |
     And I start the client application
     And I see the case Bondi as the current case
-    And the chat is showing
     And the chatbot has asked if I want to add, remove or replace a comment
     And I enter the following text into the chat panel:
       | Replace the flippers comment by "Don't forget sunscreen." |
-    And the chatbot has asked for confirmation
-    And I confirm
-    And the chatbot has asked if I want to provide any reasons and I confirm
-    And the chatbot has asked for the first reason
-    And I enter the following text into the chat panel:
-      | UV more than 4 |
-    When the chatbot has asked if I want to provide any more reasons and I decline
+    And the chatbot has asked for confirmation and I confirm
+    When I provide only the following reason:
+      | wave height is more than 0.5 |
     Then the report should be "Go to the beach. Don't forget sunscreen."
-    And stop the client application
 

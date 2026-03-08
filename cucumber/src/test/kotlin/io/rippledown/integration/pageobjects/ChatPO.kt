@@ -1,12 +1,11 @@
 package io.rippledown.integration.pageobjects
 
 import io.rippledown.appbar.CHAT_ICON_TOGGLE
-import io.rippledown.chat.BOT
-import io.rippledown.chat.CHAT_SEND
-import io.rippledown.chat.CHAT_TEXT_FIELD
-import io.rippledown.chat.NUMBER_OF_CHAT_MESSAGES_
+import io.rippledown.chat.*
 import io.rippledown.integration.utils.find
 import org.assertj.swing.edt.GuiActionRunner.execute
+import org.awaitility.Awaitility.await
+import java.time.Duration.ofSeconds
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleEditableText
 
@@ -19,8 +18,16 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
     private fun chatEditableTextContext() =
         execute<AccessibleEditableText> { chatTextContext().accessibleEditableText }
 
-    fun enterChatText(text: String) =
-        execute { chatEditableTextContext()?.setTextContents(text) }
+    fun enterChatText(text: String) {
+        await().atMost(ofSeconds(10)).until {
+            try {
+                execute { chatEditableTextContext()?.setTextContents(text) }
+                true
+            } catch (_: Exception) {
+                false
+            }
+        }
+    }
 
     fun clickSend() {
         execute { chatTextContext().find(CHAT_SEND)?.accessibleAction?.doAccessibleAction(0) }
@@ -36,6 +43,15 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
                 terms.all { term -> context.foundText(term) } && context.isBotResponseForIndex(numberOfChatMessages - 1)
             }
             contextProvider().find(matcher) != null
+        }
+    }
+
+    fun mostRecentSuggestionRowContainsTerms(terms: List<String>): Boolean {
+        return execute<Boolean> {
+            val suggestionNode = contextProvider().find({ ctx ->
+                ctx.accessibleDescription?.startsWith(SUGGESTION_LIST) ?: false
+            }) ?: return@execute false
+            terms.all { term -> suggestionNode.find({ ctx -> ctx.foundText(term) }) != null }
         }
     }
 

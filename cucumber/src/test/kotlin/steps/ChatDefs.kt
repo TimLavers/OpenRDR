@@ -76,14 +76,14 @@ class ChatDefs {
         waitForBotText(REASON)
     }
 
-    @And("the chatbot has provides some suggestions")
+    @And("the chatbot has provided some suggestions")
     fun waitForBotSuggestions() {
-        waitForBotText(SUGGESTION)
+        waitForSuggestionText("1.")
     }
 
     @And("the chatbot has asked if I want to provide any (more )reasons and I decline")
     fun waitForBotQuestionToProvideReasonsThenDecline() {
-        waitForBotText(REASON)
+        waitForBotSuggestions() //the suggestions always come after the model's question to provide a reason
         decline()
     }
 
@@ -109,8 +109,14 @@ class ChatDefs {
     }
 
     fun waitForBotText(vararg terms: String) {
-        await().atMost(ofSeconds(120)).until {
+        await().atMost(ofSeconds(60)).until {
             chatPO().mostRecentBotRowContainsTerms(terms.toList())
+        }
+    }
+
+    fun waitForSuggestionText(vararg terms: String) {
+        await().atMost(ofSeconds(10)).until {
+            chatPO().mostRecentSuggestionRowContainsTerms(terms.toList())
         }
     }
 
@@ -128,7 +134,7 @@ class ChatDefs {
         enterChatTextAndSend(comment)
         waitForBotRequestForConfirmation()
         confirm()
-        waitForBotQuestionToProvideReasons()
+        waitForBotSuggestions()
         decline()
         waitForBotToSayDone()
     }
@@ -141,7 +147,7 @@ class ChatDefs {
     }
 
     fun declineToAddMoreReasons() {
-        waitForBotQuestionToProvideReasons()
+        waitForBotSuggestions()
         decline()
     }
 
@@ -164,7 +170,7 @@ class ChatDefs {
     @And("I build a rule to add another comment {string} using the chat")
     fun addAnotherCommentUsingChat(comment: String) {
         requestCommentBeAdded(comment)
-        waitForBotQuestionToProvideReasons()
+        waitForBotSuggestions()
         decline()
         waitForBotToSayDone()
     }
@@ -172,7 +178,7 @@ class ChatDefs {
     @And("I add a comment {string}, allowing the report change to the cornerstone case")
     fun addCommentUsingChatAndAllowCornerstoneReportChange(comment: String) {
         requestCommentBeAdded(comment)
-        waitForBotQuestionToProvideReasons()
+        waitForBotSuggestions()
         decline()
         waitForBotQuestionToAllowReportChangeToCornerstoneThenConfirm()
         waitForBotToSayDone()
@@ -189,6 +195,13 @@ class ChatDefs {
     fun requestCommentBeRemoved() {
         waitForBotQuestion()
         enterChatTextAndSend("Remove the comment")
+        waitForBotRequestForConfirmationAndConfirm()
+    }
+
+    @And("I request that the following comment be removed:")
+    fun requestCommentBeRemoved(comment: String) {
+        waitForBotQuestion()
+        enterChatTextAndSend("Remove $comment")
         waitForBotRequestForConfirmationAndConfirm()
     }
 

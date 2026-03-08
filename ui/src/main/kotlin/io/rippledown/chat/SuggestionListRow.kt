@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.sp
  */
 @Composable
 fun SuggestionListRow(
-    text: String,
     suggestions: List<String>,
     index: Int
 ) {
@@ -37,14 +36,6 @@ fun SuggestionListRow(
             .padding(top = 8.dp, bottom = 4.dp)
             .semantics { contentDescription = "$BOT${index}" }
     ) {
-        if (text.isNotEmpty()) {
-            Text(
-                text = text,
-                color = Black,
-                style = TextStyle(fontSize = 14.sp),
-                modifier = Modifier.padding(start = 4.dp)
-            )
-        }
         Box(
             modifier = Modifier
                 .fillMaxWidth()

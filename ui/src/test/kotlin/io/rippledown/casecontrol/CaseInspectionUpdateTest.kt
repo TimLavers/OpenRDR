@@ -7,7 +7,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import io.mockk.every
 import io.mockk.mockk
 import io.rippledown.model.Attribute
 import io.rippledown.model.CaseId
@@ -100,9 +99,8 @@ fun CaseInspectionWithButton(initialCase: ViewableCase, changedCase: ViewableCas
 
     var currentCase by remember { mutableStateOf(initialCase) }
     val handler = mockk<CaseInspectionHandler>(relaxUnitFun = true)
-    every { handler.allComments() } returns setOf("Malabar.", "Bondi.")
 
-    CaseInspection(currentCase, false, handler)
+    CaseInspection(currentCase, handler)
 
     Button(
         onClick = {

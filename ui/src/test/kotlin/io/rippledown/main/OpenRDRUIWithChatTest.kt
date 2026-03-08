@@ -37,7 +37,7 @@ class OpenRDRUIWithChatTest {
     }
 
     @Test
-    fun `should hide the chat panel by default`() = runTest {
+    fun `should show the chat panel by default`() = runTest {
         val caseA = "case A"
         val caseId1 = CaseId(id = 1, name = caseA)
         val caseIds = listOf(caseId1)
@@ -57,12 +57,12 @@ class OpenRDRUIWithChatTest {
             waitForCaseToBeShowing(caseA)
 
             //Then
-            requireChatPanelIsNotDisplayed()
+            requireChatPanelIsDisplayed()
         }
     }
 
     @Test
-    fun `should show the chat panel if the chat toggle is clicked`() = runTest {
+    fun `should hide the chat panel if the chat toggle is clicked`() = runTest {
         val caseA = "case A"
         val caseId1 = CaseId(id = 1, name = caseA)
         val caseIds = listOf(caseId1)
@@ -76,18 +76,18 @@ class OpenRDRUIWithChatTest {
             setContent {
                 OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
             }
-            requireChatPanelIsNotDisplayed()
+            requireChatPanelIsDisplayed()
 
             //When
             clickChatIconToggle()
 
             //Then
-            requireChatPanelIsDisplayed()
+            requireChatPanelIsNotDisplayed()
         }
     }
 
     @Test
-    fun `focus should be on the chat user text field if a case is showing and the chat toggle icon has been clicked`() =
+    fun `focus should be on the chat user text field if a case is showing`() =
         runTest {
             val caseA = "case A"
             val caseId1 = CaseId(id = 1, name = caseA)
@@ -103,10 +103,9 @@ class OpenRDRUIWithChatTest {
                     OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
                 }
                 requireNamesToBeShowingOnCaseList(caseA)
-                waitForCaseToBeShowing(caseA)
 
                 //When
-                clickChatIconToggle()
+                waitForCaseToBeShowing(caseA)
 
                 //Then
                 requireUserTextFieldFocused()
@@ -135,7 +134,6 @@ class OpenRDRUIWithChatTest {
             }
             requireNamesToBeShowingOnCaseList(caseA)
             waitForCaseToBeShowing(caseA)
-            clickChatIconToggle()
             requireUserTextFieldFocused()
 
             //When
@@ -165,7 +163,6 @@ class OpenRDRUIWithChatTest {
                 OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
             }
             waitForCaseToBeShowing(caseName)
-            clickChatIconToggle()
 
             //When
             val userMessage = "add a comment"
@@ -192,7 +189,6 @@ class OpenRDRUIWithChatTest {
             setContent {
                 OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
             }
-            clickChatIconToggle()
 
             //When
             waitForCaseToBeShowing(caseName)
@@ -201,33 +197,6 @@ class OpenRDRUIWithChatTest {
             coVerify { api.startConversation(id) }
         }
     }
-
-    @Test
-    fun `should not start a conversation with the model when a case is selected if the chat panel is not showing`() =
-        runTest {
-            val caseName = "case A"
-            val caseId = CaseId(id = 1234, name = caseName)
-            val id = caseId.id!!
-            val caseIds = listOf(caseId)
-            val bondiComment = "Go to Bondi"
-            val case = createViewableCaseWithInterpretation(caseName, id, listOf(bondiComment))
-            coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
-            coEvery { api.getCase(id) } returns case
-
-            with(composeTestRule) {
-                //Given
-                setContent {
-                    OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
-                }
-                requireChatPanelIsNotDisplayed()
-
-                //When
-                waitForCaseToBeShowing(caseName)
-
-                //Then
-                coVerify(exactly = 0) { api.startConversation(id) }
-            }
-        }
 
     @Test
     fun `should start a new conversation with the model when another case is selected`() = runTest {
@@ -251,7 +220,6 @@ class OpenRDRUIWithChatTest {
             setContent {
                 OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
             }
-            clickChatIconToggle()
             waitForCaseToBeShowing(caseNameA)
 
             //When
@@ -285,7 +253,6 @@ class OpenRDRUIWithChatTest {
 
             //When
             waitForCaseToBeShowing(caseName)
-            clickChatIconToggle()
 
             //Then
             requireChatMessagesShowing(listOf(BotMessage(initialResponse)))
@@ -310,7 +277,6 @@ class OpenRDRUIWithChatTest {
                 OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
             }
             waitForCaseToBeShowing(caseA)
-            clickChatIconToggle()
 
             //When
             val userMessage = "add a comment"
@@ -323,37 +289,6 @@ class OpenRDRUIWithChatTest {
             )
             requireChatMessagesShowing(expected)
         }
-        @Test
-        fun `should poll for cornerstones if a rule session is started by the chat`() = runTest {
-            val caseA = "case A"
-            val caseId1 = CaseId(id = 1, name = caseA)
-            val caseIds = listOf(caseId1)
-            val bondiComment = "Go to Bondi"
-            val answer = "the answer is 42"
-            val case = createViewableCaseWithInterpretation(caseA, 1, listOf(bondiComment))
-            coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
-            coEvery { api.getCase(1) } returns case
-            coEvery { api.sendUserMessage(any(), any<Long>()) } returns ChatResponse(answer)
-
-            with(composeTestRule) {
-                //Given
-                setContent {
-                    OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
-                }
-
-                //When
-                waitForCaseToBeShowing(caseA)
-                clickChatIconToggle()
-
-                //Then
-                val expected = listOf(
-                    UserMessage("userMessage"),
-                    BotMessage(answer)
-                )
-                requireChatMessagesShowing(expected)
-            }
-        }
-
     }
 }
 

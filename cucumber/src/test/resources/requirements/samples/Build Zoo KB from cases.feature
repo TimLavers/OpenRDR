@@ -189,4 +189,3 @@ Feature: The Zoo KB can be built with the user interface.
       | worm     | mollusc   |
       | wren     | bird      |
 
-    And stop the client application

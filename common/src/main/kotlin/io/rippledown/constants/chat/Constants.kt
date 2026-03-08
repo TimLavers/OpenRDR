@@ -1,7 +1,7 @@
 package io.rippledown.constants.chat
 
 const val CONFIRM = "confirm"
-const val SUGGESTION = "suggestion["
+const val SUGGESTED = "suggested"
 const val REASON = "reason"
 const val MORE_REASONS = "more reasons"
 const val FIRST_REASON = "first reason"

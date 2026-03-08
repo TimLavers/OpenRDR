@@ -89,4 +89,3 @@ Feature: A sample KB can be created that has the Contact Lense Prescription case
     When I select case Case24
     Then the interpretation should be empty
 
-    And stop the client application

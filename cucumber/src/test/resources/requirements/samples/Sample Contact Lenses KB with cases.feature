@@ -176,4 +176,3 @@ Feature: A sample KB can be created that has the Contact Lense Prescription case
       | astigmatism     | astigmatic   |  |
       | tear production | normal       |  |
 
-    And stop the client application

@@ -245,4 +245,3 @@ Feature: The knowledge base described in the TSH paper is implemented by a KB bu
       The low FT4 and profoundly raised TSH are in keeping with severe hypothyroidism.
       """
 
-    And stop the client application

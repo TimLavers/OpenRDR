@@ -32,21 +32,21 @@
 
 ## Step 2 Receive confirmation that the rule session has been started
 
-You will receive a json message from the system with cornerstone case information. This indicates the rule session has
-been started. Wait for the message
+You will receive a message from the system with cornerstone case information. This indicates the rule session has
+been started. Wait for the message which has the format:
 
-```json
-{
-  "cornerstoneToReview": "the current cornerstone case, possibly null",
-  "indexOfCornerstoneToReview": "the index of the current cornerstone case",
-  "numberOfCornerstones": "the total number of cornerstone cases"
-}
+```
+Cornerstone: <name of the current cornerstone case, or null>, Index: <index>, Total: <number of cornerstone cases>
 ```
 
-## Step 3 Ask the user if they want to provide reasons for the report change:
+## Step 3 Present suggested conditions to the user:
 
-- If the user wants to provide reasons for the report change, follow the instructions "Defining the reasons for report
-  change".
-- Otherwise, if there are no remaining cornerstone cases, follow the instructions "Completing the change to the report".
-- Otherwise, if there are remaining cornerstone cases, follow the instructions "Allowing or Disallowing the change to
-  the Cornerstone Case report".
+- Check the cornerstone status message from Step 2. Note the Total number of cornerstone cases — you will need this
+  later.
+- Immediately call the {{GET_SUGGESTED_CONDITIONS}} function and present the suggestions to the user. Do NOT ask the
+  user if they want to provide reasons first — always present the suggestions directly.
+- If the user provides a reason, follow the instructions "Defining the reasons for report change".
+- If the user declines to provide reasons:
+    - If the Total number of cornerstone cases from Step 2 is greater than 0, you MUST follow the instructions
+      "Allowing or Disallowing the change to the Cornerstone Case report". Do NOT skip this step.
+    - Otherwise, follow the instructions "Completing the change to the report".

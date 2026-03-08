@@ -9,7 +9,6 @@ import io.rippledown.kb.chat.RuleService
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.rule.CornerstoneStatus
-import io.rippledown.toJsonString
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -40,7 +39,7 @@ class ExemptCornerstoneTest {
         val response = action.doIt(ruleService, currentCase, modelResponder)
 
         //Then
-        coVerify { modelResponder.response(ccStatus.toJsonString<CornerstoneStatus>()) }
+        coVerify { modelResponder.response(ccStatus.summary()) }
         coVerify { ruleService.sendCornerstoneStatus() }
         response shouldBe responseFromModel
     }

@@ -55,4 +55,3 @@ Feature: The Contact Lenses Prescription KB can be built with the user interface
       | Case22 | soft |
       | Case23 |      |
       | Case24 |      |
-    And stop the client application

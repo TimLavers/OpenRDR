@@ -244,4 +244,3 @@ Feature: The TSH KB can be built with the user interface.
       | 1.4.33 | Amiodarone inhibits T4 to T3 conversion as well as presenting the thyroid with a large iodine load. The suppressed TSH and raised FT4 may suggest amiodarone-induced hyperthyroidism but should be interpreted in the light of clinical findings. |
       | 1.4.35 | The low FT4 and profoundly raised TSH are in keeping with severe hypothyroidism. |
 
-    And stop the client application

@@ -10,7 +10,6 @@ Feature: When entering an expression to be used in a rule, the user is provided 
     And I enter the expression "elevated waves"
     Then the available condition and its tool tip should be:
       | elevated waves | Waves is high |
-    And stop the client application
 
   Scenario: Should provide a warning when the user types an unknown expression
     Given case Bondi is provided with the following values, reference ranges and units:
@@ -24,7 +23,6 @@ Feature: When entering an expression to be used in a rule, the user is provided 
     """
     This condition is not able to be recognised. Please try again.
     """
-    And stop the client application
 
   Scenario: Should provide a warning when the user types a valid condition but which is not true for the case
     Given case Bondi is provided with the following values, reference ranges and units:
@@ -38,5 +36,4 @@ Feature: When entering an expression to be used in a rule, the user is provided 
     """
     This condition is not true for this case. Please try again.
     """
-    And stop the client application
 

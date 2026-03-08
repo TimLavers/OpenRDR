@@ -12,7 +12,6 @@ Feature: The user can make a rule that replaces a comment the interpretive repor
     Then the interpretation should be "Go to Maroubra."
     And select the case Case2
     And  the interpretation should be "Go to Maroubra."
-    And stop the client application
 
   Scenario: The user should be able to build a rule to replace a comment with a condition they have selected
     Given case Bondi is provided having data:
@@ -28,7 +27,6 @@ Feature: The user can make a rule that replaces a comment the interpretive repor
     Then  the interpretation should contain the text "Go to Manly."
     And I select case Bondi
     And  the interpretation should contain the text "Go to Bondi."
-    And stop the client application
 
   Scenario: The conditions shown for a comment that is a replacement should include the conditions for the comment that has been replaced
     Given case Beach is provided having data:
@@ -43,7 +41,6 @@ Feature: The user can make a rule that replaces a comment the interpretive repor
 #    And the conditions showing for the comment "Go to Manly." are:
 #      | Wave is in case |
 #      | Sun is in case  |
-    And stop the client application
 
   Scenario: A comment given for the case must be selected before the user can start a rule to replace it
     Given a case with name Case1 is stored on the server
@@ -53,4 +50,3 @@ Feature: The user can make a rule that replaces a comment the interpretive repor
     And I start to build a rule to replace a comment
     When I enter "Maroubra" as the filter to select a comment to replace
     Then the OK button to start the rule to replace the comment should be disabled
-    And stop the client application

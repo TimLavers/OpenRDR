@@ -12,7 +12,6 @@ Feature: KB available as API enpoint
       | Age     |
       | Sex     |
       | Glucose |
-    And stop the client application
 
   Scenario: Attribute names are case sensitive
     Given I start the client application
@@ -24,7 +23,6 @@ Feature: KB available as API enpoint
     Then I should see these attributes:
       | Age |
       | age |
-    And stop the client application
 
   Scenario: The comments given for a case are returned by the interpretation service
     Given I start the client application

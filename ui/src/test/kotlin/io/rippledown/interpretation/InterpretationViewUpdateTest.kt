@@ -9,7 +9,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.text.TextLayoutResult
 import io.kotest.assertions.withClue
-import io.mockk.every
 import io.mockk.mockk
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
@@ -32,7 +31,6 @@ class InterpretationViewUpdateTest {
     @Before
     fun setUp() {
         handler = mockk(relaxUnitFun = true)
-        every { handler.allComments() } returns emptySet()
     }
 
     val textA = "text for case A"
@@ -81,7 +79,7 @@ class InterpretationViewUpdateTest {
     ) {
         var viewableInterpretation: ViewableInterpretation by remember { mutableStateOf(original) }
 
-        InterpretationView(viewableInterpretation, true, handler)
+        InterpretationView(viewableInterpretation, handler)
 
         Button(
             onClick = {

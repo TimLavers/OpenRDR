@@ -1,7 +1,4 @@
-@file:OptIn(
-    ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class,
-    ExperimentalFoundationApi::class, ExperimentalFoundationApi::class
-)
+@file:OptIn(ExperimentalFoundationApi::class)
 
 package io.rippledown.interpretation
 
@@ -12,8 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.material3.OutlinedCard
-import androidx.compose.runtime.*
-import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -24,52 +20,21 @@ import io.rippledown.constants.interpretation.CONDITION_PREFIX
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
 import io.rippledown.model.interpretationview.ViewableInterpretation
 
-interface InterpretationViewHandler : ReadonlyInterpretationViewHandler, InterpretationActionsHandler {
-    fun allComments(): Set<String>
-}
+interface InterpretationViewHandler : ReadonlyInterpretationViewHandler
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun InterpretationView(
     interpretation: ViewableInterpretation,
-    showChangeIcon: Boolean,
     handler: InterpretationViewHandler
 ) {
-    var comments by remember {
-        mutableStateOf(interpretation.conclusions().map { it.text })
-    }
-
-    LaunchedEffect(interpretation) {
-        comments = interpretation.conclusions().map { it.text }
-    }
-
     OutlinedCard(modifier = Modifier.padding(vertical = 10.dp)) {
         Row(modifier = Modifier.fillMaxWidth()) {
             ReadonlyInterpretationView(
                 interpretation = interpretation,
                 contentDescription = INTERPRETATION_TEXT_FIELD,
-                modifier = Modifier.weight(1f), // Fill the available space, but leaving space for the icon
+                modifier = Modifier.weight(1f),
                 handler = handler
             )
-            if (showChangeIcon) {
-                InterpretationActions(
-                    commentsGivenForCase = comments,
-                    allComments = handler.allComments(),
-                    handler = object : InterpretationActionsHandler {
-                        override fun startRuleToAddComment(comment: String) {
-                            handler.startRuleToAddComment(comment)
-                        }
-
-                        override fun startRuleToReplaceComment(toBeReplaced: String, replacement: String) {
-                            handler.startRuleToReplaceComment(toBeReplaced, replacement)
-                        }
-
-                        override fun startRuleToRemoveComment(comment: String) {
-                            handler.startRuleToRemoveComment(comment)
-                        }
-                    }
-                )
-            }
         }
     }
 }

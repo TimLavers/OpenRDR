@@ -21,12 +21,9 @@ import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
-import io.rippledown.model.condition.edit.SuggestedCondition
-import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Diff
-import io.rippledown.model.diff.Removal
-import io.rippledown.model.diff.Replacement
-import io.rippledown.model.rule.*
+import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.model.rule.UndoRuleDescription
 import io.rippledown.sample.SampleKB
 import kotlinx.coroutines.*
 import org.jetbrains.skiko.MainUIDispatcher
@@ -49,8 +46,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     var kbInfo: KBInfo? by remember { mutableStateOf(null) }
     var rightInformationMessage by remember { mutableStateOf("") }
     var ruleAction: Diff? by remember { mutableStateOf(null) }
-    var conditionHints by remember { mutableStateOf(listOf<SuggestedCondition>()) }
-    var isShowingChat by remember { mutableStateOf(false) }
+    var isShowingChat by remember { mutableStateOf(true) }
     var isChatEnabled by remember { mutableStateOf(true) }
     val voiceRecognitionService = remember { VoiceRecognitionService(defaultModelPath()) }
 
@@ -91,7 +87,6 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                     currentCaseId = casesInfo.caseIds[0].id!!
                 }
                 currentCase = api.getCase(currentCaseId!!)
-                conditionHints = api.conditionHints(currentCaseId!!).suggestions
                 isChatEnabled = true // Enable chat only if there are cases available
             }
         }
@@ -107,18 +102,6 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                         chatControllerHandler.onBotMessageReceived(response)
                         ++chatId // Increment chatId to trigger recomposition in ChatController
                     }
-                }
-            }
-        }
-    }
-
-    //Start a conversation with the model when the chat is made visible
-    LaunchedEffect(isShowingChat) {
-        withContext(dispatcher) {
-            currentCaseId?.let {
-                val response = api.startConversation(it)
-                if (response.text.isNotBlank()) {
-                    chatControllerHandler.onBotMessageReceived(response)
                 }
             }
         }
@@ -232,72 +215,9 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                     CaseControl(
                         currentCase = currentCase,
                         cornerstoneStatus = cornerstoneStatus,
-                        isChatVisible = isShowingChat,
-                        conditionHints = conditionHints,
                         handler = object : CaseControlHandler {
-                            override fun allComments() =
-                                runBlocking(dispatcher) { api.allConclusions().map { it.text }.toSet() }
-
-                            override fun startRuleToAddComment(comment: String) {
-                                ruleAction = Addition(comment)
-                                val sessionStartRequest = SessionStartRequest(
-                                    caseId = currentCase!!.id!!,
-                                    diff = ruleAction as Addition
-                                )
-                                CoroutineScope(dispatcher).launch {
-                                    cornerstoneStatus = api.startRuleSession(sessionStartRequest)
-                                }
-                            }
-
-                            override fun startRuleToReplaceComment(toBeReplaced: String, replacement: String) {
-                                ruleAction = Replacement(toBeReplaced, replacement)
-                                val sessionStartRequest = SessionStartRequest(
-                                    caseId = currentCase!!.id!!,
-                                    diff = ruleAction as Replacement
-                                )
-                                CoroutineScope(dispatcher).launch {
-                                    cornerstoneStatus = api.startRuleSession(sessionStartRequest)
-                                }
-                            }
-
-                            override fun startRuleToRemoveComment(comment: String) {
-                                ruleAction = Removal(comment)
-                                val sessionStartRequest = SessionStartRequest(
-                                    caseId = currentCase!!.id!!,
-                                    diff = ruleAction as Removal
-                                )
-                                CoroutineScope(dispatcher).launch {
-                                    cornerstoneStatus = api.startRuleSession(sessionStartRequest)
-                                }
-                            }
-
-                            override fun endRuleSession() {
-                                CoroutineScope(dispatcher).launch {
-                                    api.cancelRuleSession()
-                                    cornerstoneStatus = null
-                                }
-                            }
-
                             override var setRightInfoMessage: (message: String) -> Unit =
                                 { rightInformationMessage = it }
-
-                            override fun buildRule(ruleRequest: RuleRequest) = runBlocking(dispatcher) {
-                                currentCase = api.commitSession(ruleRequest)
-                                cornerstoneStatus = null
-                            }
-
-                            override fun updateCornerstoneStatus(cornerstoneRequest: UpdateCornerstoneRequest) =
-                                runBlocking(dispatcher) {
-                                    cornerstoneStatus = api.updateCornerstoneStatus(cornerstoneRequest)
-                                }
-
-                            override fun startRuleSession(sessionStartRequest: SessionStartRequest) =
-                                runBlocking(dispatcher) {
-                                    cornerstoneStatus = api.startRuleSession(sessionStartRequest)
-                                }
-
-                            override fun getCase(caseId: Long) =
-                                runBlocking(dispatcher) { currentCase = api.getCase(caseId) }
 
                             override fun swapAttributes(moved: Attribute, target: Attribute) {
                                 runBlocking(dispatcher) {
@@ -312,18 +232,8 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                             override fun exemptCornerstone(index: Int) = runBlocking(dispatcher) {
                                 cornerstoneStatus = api.exemptCornerstone(index)
                             }
-
-                            override fun conditionFor(
-                                conditionText: String,
-                            ) = runBlocking(Dispatchers.IO) {
-                                api.conditionFor(conditionText)
-                            }
                         },
-                        modifier = if (isShowingChat) {
-                            Modifier.weight(0.7f)
-                        } else {
-                            Modifier.fillMaxSize()
-                        }
+                        modifier = Modifier.weight(1f)
                     )
 
                     if (isShowingChat) {
@@ -331,7 +241,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                             id = chatId,
                             chatControllerHandler,
                             voiceRecognitionService = voiceRecognitionService,
-                            modifier = Modifier.weight(0.3f)
+                            modifier = Modifier.width(300.dp)
                         )
                     }
                 }

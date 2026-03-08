@@ -62,9 +62,9 @@ data class BotMessage(
 }
 
 data class SuggestionListMessage(
-    override val text: String,
     val suggestions: List<String>
 ) : ChatMessage {
+    override val text: String = ""
     override val isUser: Boolean = false
 }
 
@@ -123,7 +123,7 @@ fun ChatPanel(
             itemsIndexed(messages) { index, message ->
                 when (message) {
                     is UserMessage -> UserRow(message.text, index)
-                    is SuggestionListMessage -> SuggestionListRow(message.text, message.suggestions, index)
+                    is SuggestionListMessage -> SuggestionListRow(message.suggestions, index)
                     else -> BotRow(message.text, index)
                 }
             }

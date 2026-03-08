@@ -29,14 +29,10 @@
 ## Step 4: Receive cornerstone status from the system:
 
 - After a reason has been transformed, you will receive an input from the system indicating that there may be
-  cornerstone cases to review.
+  cornerstone cases to review. The format is:
 
-```json
-{
-  "Cornerstone": "<name of the current cornerstone case to review>",
-  "Index": "<index of the current cornerstone case to review>",
-  "Total": "<number of cornerstone cases to review>"
-}
+```
+Cornerstone: <name of the current cornerstone case, or null>, Index: <index>, Total: <number of cornerstone cases>
 ```
 
 ## Step 5. Ask for further reasons:

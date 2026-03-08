@@ -4,8 +4,6 @@ import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
-import io.rippledown.model.rule.CornerstoneStatus
-import io.rippledown.toJsonString
 
 data class RemoveReason(val reasonId: Int) : ChatAction {
     override suspend fun doIt(
@@ -15,6 +13,6 @@ data class RemoveReason(val reasonId: Int) : ChatAction {
     ): ChatResponse {
         val cornerstoneStatus = ruleService.removeCondition(reasonId)
         ruleService.sendCornerstoneStatus()
-        return modelResponder.response(cornerstoneStatus.toJsonString<CornerstoneStatus>())
+        return modelResponder.response(cornerstoneStatus.summary())
     }
 }

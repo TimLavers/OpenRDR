@@ -43,4 +43,3 @@ Feature: A sample KB can be created that has the Zoo Animals cases.
       | domestic | false |  |
       | catsize  | false |  |
 
-    And stop the client application

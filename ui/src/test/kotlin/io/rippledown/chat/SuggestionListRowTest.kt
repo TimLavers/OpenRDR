@@ -13,16 +13,15 @@ class SuggestionListRowTest {
     var composeTestRule = createComposeRule()
 
     @Test
-    fun `should display the header text`() {
+    fun `should display the bot content description`() {
         with(composeTestRule) {
             // Given
-            val headerText = "Here are some suggested conditions:"
             val suggestions = listOf("Condition A", "Condition B")
             val index = 0
 
             // When
             setContent {
-                SuggestionListRow(text = headerText, suggestions = suggestions, index = index)
+                SuggestionListRow(suggestions = suggestions, index = index)
             }
 
             // Then
@@ -39,7 +38,7 @@ class SuggestionListRowTest {
 
             // When
             setContent {
-                SuggestionListRow(text = "Suggestions:", suggestions = suggestions, index = index)
+                SuggestionListRow(suggestions = suggestions, index = index)
             }
 
             // Then
@@ -56,7 +55,7 @@ class SuggestionListRowTest {
 
             // When
             setContent {
-                SuggestionListRow(text = "Suggestions:", suggestions = listOf(suggestion), index = index)
+                SuggestionListRow(suggestions = listOf(suggestion), index = index)
             }
 
             // Then
@@ -73,7 +72,7 @@ class SuggestionListRowTest {
             val index = 2
             // When
             setContent {
-                SuggestionListRow(text = "Suggestions:", suggestions = suggestions, index = index)
+                SuggestionListRow(suggestions = suggestions, index = index)
             }
 
             // Then
@@ -94,7 +93,7 @@ class SuggestionListRowTest {
 
             // When
             setContent {
-                SuggestionListRow(text = "No suggestions available.", suggestions = suggestions, index = index)
+                SuggestionListRow(suggestions = suggestions, index = index)
             }
 
             // Then
@@ -112,7 +111,7 @@ class SuggestionListRowTest {
 
             // When
             setContent {
-                SuggestionListRow(text = "Suggestions:", suggestions = suggestions, index = index)
+                SuggestionListRow(suggestions = suggestions, index = index)
             }
 
             // Then
@@ -130,7 +129,7 @@ class SuggestionListRowTest {
 
             // When
             setContent {
-                SuggestionListRow(text = "Suggestions:", suggestions = suggestions, index = index)
+                SuggestionListRow(suggestions = suggestions, index = index)
             }
 
             // Then
@@ -151,7 +150,7 @@ class SuggestionListRowTest {
 
             // When
             setContent {
-                SuggestionListRow(text = "Suggestions:", suggestions = suggestions, index = index)
+                SuggestionListRow(suggestions = suggestions, index = index)
             }
 
             // Then

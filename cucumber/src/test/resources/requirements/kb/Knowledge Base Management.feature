@@ -4,7 +4,6 @@ Feature: Knowledge Base management
     Given A Knowledge Base called Thyroids has been created
     And I start the client application
     Then the displayed KB name is now Thyroids
-    And stop the client application
 
   Scenario: A previously exported Knowledge Base can be imported
     Given A Knowledge Base called Thyroids has been created
@@ -13,7 +12,6 @@ Feature: Knowledge Base management
     When I import the configured zipped Knowledge Base Whatever
     And pause for 2 seconds
     Then the displayed KB name is now Whatever
-    And stop the client application
 
   Scenario: A Knowledge Base can be exported
     Given I start the client application
@@ -26,7 +24,6 @@ Feature: Knowledge Base management
     And pause for 2 seconds
     When I import the previously exported Knowledge Base
     Then the displayed KB name is now Thyroids
-    And stop the client application
 
   Scenario: A Knowledge Base can be created
     Given A Knowledge Base called Thyroids has been created
@@ -34,7 +31,6 @@ Feature: Knowledge Base management
     And the displayed KB name is Thyroids
     When I create a Knowledge Base with the name Glucose
     Then the displayed KB name is now Glucose
-    And stop the client application
 
   Scenario: Available Knowledge Bases are displayed
     Given A Knowledge Base called B has been created
@@ -48,14 +44,12 @@ Feature: Knowledge Base management
       | B |
       | C |
       | Thyroids |
-    And stop the client application
 
   Scenario: An existing Knowledge Base can be opened
     Given A Knowledge Base called Stuff has been created
     And I start the client application
     Then I select the Knowledge Base named Stuff
     Then the displayed KB name is now Stuff
-    And stop the client application
 
   Scenario: The description for a KB can be edited
     Given A Knowledge Base called Irons has been created
@@ -90,5 +84,4 @@ See: https://glucose.rules.info/basic
 A basic Glucose management KB
 See: https://glucose.rules.info/basic
     """
-    And stop the client application
 
