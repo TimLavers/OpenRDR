@@ -1,10 +1,10 @@
 package io.rippledown.chat
 
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertTextContains
-import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import org.junit.Rule
 import org.junit.Test
 
@@ -59,8 +59,7 @@ class SuggestionListRowTest {
             }
 
             // Then
-            onNodeWithContentDescription("$SUGGESTION_LIST$index")
-                .assertTextEquals("1. $suggestion")
+            onNodeWithText("1. $suggestion").assertIsDisplayed()
         }
     }
 
@@ -76,11 +75,9 @@ class SuggestionListRowTest {
             }
 
             // Then
-            onNodeWithContentDescription("$SUGGESTION_LIST$index")
-                .assertIsDisplayed()
-                .assertTextContains("1. TSH is normal")
-                .assertTextContains("2. FT4 is high")
-                .assertTextContains("3. Glucose is low")
+            onNodeWithText("1. TSH is normal").assertIsDisplayed()
+            onNodeWithText("2. FT4 is high").assertIsDisplayed()
+            onNodeWithText("3. Glucose is low").assertIsDisplayed()
         }
     }
 
@@ -133,11 +130,88 @@ class SuggestionListRowTest {
             }
 
             // Then
-            onNodeWithContentDescription("$SUGGESTION_LIST$index")
-                .assertTextContains("1. TSH is normal")
-                .assertTextContains("2. FT4 is high")
+            onNodeWithText("1. TSH is normal").assertIsDisplayed()
+            onNodeWithText("2. FT4 is high").assertIsDisplayed()
             // [editable] text should not appear - it's replaced by an icon
-            onNodeWithContentDescription("editable").assertIsDisplayed()
+            onNodeWithContentDescription("editable", useUnmergedTree = true).assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun `should call onSuggestionClicked with the suggestion text when a suggestion is clicked`() {
+        with(composeTestRule) {
+            // Given
+            var clickedSuggestion: String? = null
+            val suggestion = "TSH is normal"
+            val index = 0
+
+            setContent {
+                SuggestionListRow(
+                    suggestions = listOf(suggestion),
+                    index = index,
+                    onSuggestionClicked = { clickedSuggestion = it }
+                )
+            }
+
+            // When
+            onNodeWithText("1. $suggestion").performClick()
+
+            // Then
+            assert(clickedSuggestion == suggestion) {
+                "Expected '$suggestion' but was '$clickedSuggestion'"
+            }
+        }
+    }
+
+    @Test
+    fun `should call onSuggestionClicked with the correct suggestion when one of multiple suggestions is clicked`() {
+        with(composeTestRule) {
+            // Given
+            var clickedSuggestion: String? = null
+            val suggestions = listOf("TSH is normal", "FT4 is high", "Glucose is low")
+            val index = 0
+
+            setContent {
+                SuggestionListRow(
+                    suggestions = suggestions,
+                    index = index,
+                    onSuggestionClicked = { clickedSuggestion = it }
+                )
+            }
+
+            // When - click the second suggestion
+            onNodeWithText("2. FT4 is high").performClick()
+
+            // Then
+            assert(clickedSuggestion == "FT4 is high") {
+                "Expected 'FT4 is high' but was '$clickedSuggestion'"
+            }
+        }
+    }
+
+    @Test
+    fun `should call onSuggestionClicked with text without editable marker when an editable suggestion is clicked`() {
+        with(composeTestRule) {
+            // Given
+            var clickedSuggestion: String? = null
+            val suggestions = listOf("TSH is normal [editable]", "FT4 is high")
+            val index = 0
+
+            setContent {
+                SuggestionListRow(
+                    suggestions = suggestions,
+                    index = index,
+                    onSuggestionClicked = { clickedSuggestion = it }
+                )
+            }
+
+            // When - click the editable suggestion
+            onNodeWithText("1. TSH is normal").performClick()
+
+            // Then - should not include [editable] marker
+            assert(clickedSuggestion == "TSH is normal") {
+                "Expected 'TSH is normal' but was '$clickedSuggestion'"
+            }
         }
     }
 

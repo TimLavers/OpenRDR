@@ -19,9 +19,7 @@ Feature: Add comments with conditions
     And I start the client application
     And I see the case Bondi as the current case
     And I request that the comment "Let's surf." be added
-    And the chatbot has asked if I want to provide any reasons and I confirm
-    And the chatbot has asked for the first reason
-    When I enter the following text into the chat panel:
+    When I provide the following reason:
       | wave height is more than 2 |
     Then the chatbot indicates that this reason is not true for the current case
 #    todo check that the rule is not added

@@ -123,7 +123,12 @@ fun ChatPanel(
             itemsIndexed(messages) { index, message ->
                 when (message) {
                     is UserMessage -> UserRow(message.text, index)
-                    is SuggestionListMessage -> SuggestionListRow(message.suggestions, index)
+                    is SuggestionListMessage -> SuggestionListRow(
+                        message.suggestions, index
+                    ) { suggestion ->
+                        inputText = TextFieldValue(suggestion, selection = TextRange(suggestion.length))
+                        textAreaFocusRequester.requestFocus()
+                    }
                     else -> BotRow(message.text, index)
                 }
             }

@@ -242,11 +242,6 @@ class RuleMakerStepDefs {
         addConditionsAndFinishRule(conditions)
     }
 
-    @When("I click the suggested condition {string}")
-    fun clickTheSuggestedCondition(text: String) {
-        ruleMakerPO().clickConditionWithText(text)
-    }
-
     @And("the suggested conditions should not contain:")
     fun theSuggestedConditionsShouldNotContain(dataTable: DataTable) {
         val absentConditions = dataTable.asList().toSet()

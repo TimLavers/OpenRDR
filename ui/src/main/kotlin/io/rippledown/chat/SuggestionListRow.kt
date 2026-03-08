@@ -13,6 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.graphics.Color.Companion.White
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -25,7 +27,8 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun SuggestionListRow(
     suggestions: List<String>,
-    index: Int
+    index: Int,
+    onSuggestionClicked: (String) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
     val editableMarker = " [editable]"
@@ -41,7 +44,7 @@ fun SuggestionListRow(
                 .fillMaxWidth()
                 .heightIn(max = 80.dp)
                 .background(White, RoundedCornerShape(8.dp))
-                .semantics(mergeDescendants = true) { contentDescription = "$SUGGESTION_LIST$index" }
+                .semantics { contentDescription = "$SUGGESTION_LIST$index" }
         ) {
             Column(
                 modifier = Modifier
@@ -53,7 +56,10 @@ fun SuggestionListRow(
                     val isEditable = suggestion.endsWith(editableMarker)
                     val displayText = if (isEditable) suggestion.removeSuffix(editableMarker) else suggestion
                     Row(
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .pointerHoverIcon(PointerIcon.Hand)
+                            .clickable { onSuggestionClicked(displayText) }
                     ) {
                         Text(
                             text = "${i + 1}. $displayText",

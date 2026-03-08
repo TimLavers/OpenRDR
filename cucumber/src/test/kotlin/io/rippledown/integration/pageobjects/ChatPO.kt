@@ -55,6 +55,27 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
         }
     }
 
+    fun clickSuggestion(text: String): Boolean {
+        return execute<Boolean> {
+            val suggestionItem = contextProvider().find({ ctx ->
+                ctx.accessibleName?.contains(text) == true && ctx.accessibleAction != null
+            })
+            if (suggestionItem != null) {
+                suggestionItem.accessibleAction.doAccessibleAction(0)
+                true
+            } else {
+                false
+            }
+        }
+    }
+
+    fun chatTextFieldContains(text: String): Boolean {
+        return execute<Boolean> {
+            val chatText = chatTextContext()?.accessibleName ?: ""
+            chatText.contains(text)
+        }
+    }
+
     fun numberOfChatMessages(): Int =
         execute<Int> {
             val matcher = { context: AccessibleContext ->

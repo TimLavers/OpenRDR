@@ -139,6 +139,22 @@ class ChatDefs {
         waitForBotToSayDone()
     }
 
+    @And("I click the suggested condition {string}")
+    fun clickTheSuggestedCondition(text: String) {
+        waitForSuggestionText(text)
+        await().atMost(ofSeconds(10)).until {
+            chatPO().clickSuggestion(text)
+            chatPO().chatTextFieldContains(text)
+        }
+    }
+
+    @And("The user text should be {string}")
+    fun requireUserText(text: String) {
+        await().atMost(ofSeconds(10)).until {
+            chatPO().chatTextFieldContains(text)
+        }
+    }
+
     @And("I provide only the following reason(s):")
     fun provideTheseReasonsThenDeclineToAddMore(reasons: DataTable) {
         provideTheseReasons(reasons)
