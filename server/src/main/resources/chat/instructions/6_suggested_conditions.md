@@ -20,7 +20,7 @@ for the current case.
 ```json
 {
   "action": "{{USER_ACTION}}",
-  "message": "Here are some suggested reasons. You can select a reason by number, or type your own.",
+  "message": "Here are some suggestions. You can select one or enter your own.",
   "suggestions": [
     "condition one",
     "condition two [editable]",

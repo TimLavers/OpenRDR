@@ -3,6 +3,7 @@ package steps
 import io.cucumber.datatable.DataTable
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
+import io.cucumber.java.en.When
 import io.rippledown.constants.chat.*
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
@@ -90,7 +91,11 @@ class ChatDefs {
     @And("the chatbot has asked if I want to provide any (more )reasons and I confirm")
     fun waitForBotQuestionToProvideReasonsThenConfirm() {
         waitForBotText(REASON)
+        val countBefore = chatPO().numberOfChatMessages()
         confirm()
+        await().atMost(ofSeconds(60)).until {
+            chatPO().numberOfChatMessages() > countBefore + 1
+        }
     }
 
     @And("the chatbot has asked for the first reason")
@@ -146,6 +151,12 @@ class ChatDefs {
             chatPO().clickSuggestion(text)
             chatPO().chatTextFieldContains(text)
         }
+    }
+
+    @And("I click and add the suggested condition {string}")
+    fun clickAndAddTheSuggestedCondition(text: String) {
+        clickTheSuggestedCondition(text)
+        chatPO().clickSend()
     }
 
     @And("The user text should be {string}")
@@ -249,6 +260,12 @@ class ChatDefs {
     @And("I ask to see the reasons")
     fun askToSeeReasons() {
         enterChatTextAndSend("What reasons are there?")
+    }
+
+    @When("I remove the condition {string}")
+    fun removeTheCondition(text: String) {
+        enterChatTextAndSend("Remove \"$text\"")
+        waitForBotText("removed")
     }
 
     @And("I request that the {word} reason be removed")

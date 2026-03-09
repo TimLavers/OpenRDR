@@ -16,10 +16,12 @@ import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findComposeDialogThatIsShowing
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
+import org.awaitility.Awaitility.await
+import java.time.Duration.ofSeconds
 import javax.accessibility.AccessibleState
 import javax.accessibility.AccessibleStateSet
 
-class RuleMakerStepDefs {
+class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
 
     @When("(I )complete the rule")
     fun completeRule() {
@@ -45,11 +47,6 @@ class RuleMakerStepDefs {
         ruleMakerPO().clickConditionWithText(text)
     }
 
-    @When("I remove the condition {string}")
-    fun removeTheConditionString(text: String) {
-        ruleMakerPO().removeConditionWithText(text)
-    }
-
     @Then("the conditions showing should be:")
     fun theConditionsShowingShouldBe(dataTable: DataTable) {
         val expectedConditions = dataTable.asList()
@@ -60,15 +57,6 @@ class RuleMakerStepDefs {
     fun theConditionsShowingShouldInclude(dataTable: DataTable) {
         val expectedConditions = dataTable.asList().toSet()
         ruleMakerPO().requireAvailableConditionsContains(expectedConditions)
-    }
-
-    @And("I start to build a rule to add the comment {string}")
-    fun startRuleToAddNewComment(comment: String) {
-        with(interpretationViewPO()) {
-            clickChangeInterpretationButton()
-            clickAddCommentMenu()
-            setAddCommentTextAndClickOK(comment)
-        }
     }
 
     @And("I start to build a rule to add the comment {string} and click Cancel")
@@ -100,7 +88,7 @@ class RuleMakerStepDefs {
     @And("I start to build a rule to add the comment {string} for case {word}")
     fun startToBuildARuleToAddTheCommentForCase(comment: String, caseName: String) {
         caseListPO().select(caseName)
-        startRuleToAddNewComment(comment)
+        chatDefs.requestCommentBeAdded(comment)
     }
 
     @And("I build a rule to add the comment {string} for case {word}")
@@ -116,22 +104,32 @@ class RuleMakerStepDefs {
 
     @And("I build a rule to add the comment {string} with the condition {string}")
     fun buildARuleToAddCommentWithCondition(comment: String, condition: String) {
-        startRuleToAddNewComment(comment)
-        with(ruleMakerPO()) {
-            clickConditionWithText(condition)
-            clickDoneButton()
+        with(chatDefs) {
+            requestCommentBeAdded(comment)
+            waitForBotRequestForConfirmation()
+            confirm()
+            waitForBotSuggestions()
+            enterChatTextAndSend(condition)
+            waitForBotQuestionToProvideReasonsThenDecline()
+            waitForBotToSayDone()
         }
     }
 
     @And("I build a rule to add the comment {string}")
     fun buildRuleToAddNewComment(comment: String) {
-        startRuleToAddNewComment(comment)
-        completeRule()
+        with(chatDefs) {
+            requestCommentBeAdded(comment)
+            waitForBotRequestForConfirmation()
+            confirm()
+            waitForBotSuggestions()
+            decline()
+            waitForBotToSayDone()
+        }
     }
 
     @When("I build a rule to add the comment {string} with conditions")
     fun buildRuleToAddCommentWithConditions(comment: String, conditions: DataTable) {
-        startRuleToAddNewComment(comment)
+        chatDefs.requestCommentBeAdded(comment)
         addConditionsAndFinishRule(conditions)
     }
 
@@ -248,10 +246,19 @@ class RuleMakerStepDefs {
         ruleMakerPO().requireAvailableConditionsDoesNotContain(absentConditions)
     }
 
+    @And("the suggested conditions should not contain {string}")
+    fun waitForSuggestionsToNotContain(term: String) {
+        await().atMost(ofSeconds(10)).until {
+            chatPO().mostRecentSuggestionRowDoesNotContainsTerm(term)
+        }
+    }
+
     @And("the suggested conditions should contain:")
     fun theSuggestedConditionsShouldContain(dataTable: DataTable) {
-        val absentConditions = dataTable.asList().toSet()
-        ruleMakerPO().requireAvailableConditionsContains(absentConditions)
+        val terms = dataTable.asList()
+        await().atMost(ofSeconds(10)).until {
+            chatPO().mostRecentSuggestionRowContainsTerms(terms)
+        }
     }
 
     @And("the available condition and its tool tip should be:")

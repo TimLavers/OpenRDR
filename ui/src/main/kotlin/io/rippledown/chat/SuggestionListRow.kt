@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.sp
 fun SuggestionListRow(
     suggestions: List<String>,
     index: Int,
-    onSuggestionClicked: (String) -> Unit = {}
+    onSuggestionClicked: (String, Boolean) -> Unit = { _, _ -> }
 ) {
     val scrollState = rememberScrollState()
     val editableMarker = " [editable]"
@@ -59,7 +59,7 @@ fun SuggestionListRow(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .pointerHoverIcon(PointerIcon.Hand)
-                            .clickable { onSuggestionClicked(displayText) }
+                            .clickable { onSuggestionClicked(displayText, isEditable) }
                     ) {
                         Text(
                             text = "${i + 1}. $displayText",

@@ -3,6 +3,7 @@ package io.rippledown.integration.pageobjects
 import io.rippledown.appbar.CHAT_ICON_TOGGLE
 import io.rippledown.chat.*
 import io.rippledown.integration.utils.find
+import io.rippledown.integration.utils.findAll
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
@@ -48,10 +49,23 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
 
     fun mostRecentSuggestionRowContainsTerms(terms: List<String>): Boolean {
         return execute<Boolean> {
-            val suggestionNode = contextProvider().find({ ctx ->
+            val suggestionNodes = contextProvider().findAll({ ctx ->
                 ctx.accessibleDescription?.startsWith(SUGGESTION_LIST) ?: false
-            }) ?: return@execute false
-            terms.all { term -> suggestionNode.find({ ctx -> ctx.foundText(term) }) != null }
+            })
+            if (suggestionNodes.isEmpty()) return@execute false
+            val lastSuggestionNode = suggestionNodes.last()
+            terms.all { term -> lastSuggestionNode.find({ ctx -> ctx.foundText(term) }) != null }
+        }
+    }
+
+    fun mostRecentSuggestionRowDoesNotContainsTerm(term: String): Boolean {
+        return execute<Boolean> {
+            val suggestionNodes = contextProvider().findAll({ ctx ->
+                ctx.accessibleDescription?.startsWith(SUGGESTION_LIST) ?: false
+            })
+            if (suggestionNodes.isEmpty()) return@execute false
+            val lastSuggestionNode = suggestionNodes.last()
+            lastSuggestionNode.find({ ctx -> ctx.foundText(term) }) == null
         }
     }
 

@@ -142,6 +142,7 @@ class SuggestionListRowTest {
         with(composeTestRule) {
             // Given
             var clickedSuggestion: String? = null
+            var clickedIsEditable: Boolean? = null
             val suggestion = "TSH is normal"
             val index = 0
 
@@ -149,7 +150,9 @@ class SuggestionListRowTest {
                 SuggestionListRow(
                     suggestions = listOf(suggestion),
                     index = index,
-                    onSuggestionClicked = { clickedSuggestion = it }
+                    onSuggestionClicked = { text, isEditable ->
+                        clickedSuggestion = text; clickedIsEditable = isEditable
+                    }
                 )
             }
 
@@ -160,6 +163,9 @@ class SuggestionListRowTest {
             assert(clickedSuggestion == suggestion) {
                 "Expected '$suggestion' but was '$clickedSuggestion'"
             }
+            assert(clickedIsEditable == false) {
+                "Expected isEditable to be false but was '$clickedIsEditable'"
+            }
         }
     }
 
@@ -168,6 +174,7 @@ class SuggestionListRowTest {
         with(composeTestRule) {
             // Given
             var clickedSuggestion: String? = null
+            var clickedIsEditable: Boolean? = null
             val suggestions = listOf("TSH is normal", "FT4 is high", "Glucose is low")
             val index = 0
 
@@ -175,7 +182,9 @@ class SuggestionListRowTest {
                 SuggestionListRow(
                     suggestions = suggestions,
                     index = index,
-                    onSuggestionClicked = { clickedSuggestion = it }
+                    onSuggestionClicked = { text, isEditable ->
+                        clickedSuggestion = text; clickedIsEditable = isEditable
+                    }
                 )
             }
 
@@ -186,6 +195,9 @@ class SuggestionListRowTest {
             assert(clickedSuggestion == "FT4 is high") {
                 "Expected 'FT4 is high' but was '$clickedSuggestion'"
             }
+            assert(clickedIsEditable == false) {
+                "Expected isEditable to be false but was '$clickedIsEditable'"
+            }
         }
     }
 
@@ -194,6 +206,7 @@ class SuggestionListRowTest {
         with(composeTestRule) {
             // Given
             var clickedSuggestion: String? = null
+            var clickedIsEditable: Boolean? = null
             val suggestions = listOf("TSH is normal [editable]", "FT4 is high")
             val index = 0
 
@@ -201,7 +214,9 @@ class SuggestionListRowTest {
                 SuggestionListRow(
                     suggestions = suggestions,
                     index = index,
-                    onSuggestionClicked = { clickedSuggestion = it }
+                    onSuggestionClicked = { text, isEditable ->
+                        clickedSuggestion = text; clickedIsEditable = isEditable
+                    }
                 )
             }
 
@@ -211,6 +226,9 @@ class SuggestionListRowTest {
             // Then - should not include [editable] marker
             assert(clickedSuggestion == "TSH is normal") {
                 "Expected 'TSH is normal' but was '$clickedSuggestion'"
+            }
+            assert(clickedIsEditable == true) {
+                "Expected isEditable to be true but was '$clickedIsEditable'"
             }
         }
     }

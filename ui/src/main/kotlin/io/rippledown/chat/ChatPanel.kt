@@ -90,6 +90,7 @@ fun ChatPanel(
 ) {
     var inputText by remember { mutableStateOf(TextFieldValue()) }
     var partialSuffixLength by remember { mutableStateOf(0) }
+    var suggestionSendPending by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val textAreaFocusRequester = remember { FocusRequester() }
 
@@ -101,6 +102,9 @@ fun ChatPanel(
     LaunchedEffect(messages) {
         if (messages.isNotEmpty()) {
             listState.scrollToItem(messages.size - 1)
+        }
+        if (messages.lastOrNull() is SuggestionListMessage) {
+            suggestionSendPending = false
         }
     }
 
@@ -125,8 +129,14 @@ fun ChatPanel(
                     is UserMessage -> UserRow(message.text, index)
                     is SuggestionListMessage -> SuggestionListRow(
                         message.suggestions, index
-                    ) { suggestion ->
-                        inputText = TextFieldValue(suggestion, selection = TextRange(suggestion.length))
+                    ) { suggestion, isEditable ->
+                        if (isEditable && sendIsEnabled && !suggestionSendPending) {
+                            suggestionSendPending = true
+                            onMessageSent(UserMessage("$suggestion [editable]"))
+                            inputText = TextFieldValue("")
+                        } else if (!isEditable) {
+                            inputText = TextFieldValue(suggestion, selection = TextRange(suggestion.length))
+                        }
                         textAreaFocusRequester.requestFocus()
                     }
                     else -> BotRow(message.text, index)
