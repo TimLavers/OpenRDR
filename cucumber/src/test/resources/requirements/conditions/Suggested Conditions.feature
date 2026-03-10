@@ -18,7 +18,6 @@ Feature: When building a rule, the user is provided with candidate conditions th
     And the chatbot has asked if I want to provide any more reasons and I confirm
     Then the suggested conditions should not contain "Sun is \"hot\""
 
-  @single
   Scenario: After removing a condition, it is reinstated in the list of suggestions.
     Given case Bondi is provided having data:
       | Sun | hot |
@@ -30,14 +29,15 @@ Feature: When building a rule, the user is provided with candidate conditions th
     Then the suggested conditions should contain:
       | Sun is "hot" |
 
+  @single
   Scenario: Some suggested conditions can be modified before being added
     Given case Bondi is provided having data:
       | Sun   | hot |
       | Waves | 1.5 |
     And I start the client application
     And I request that the comment "Beach time!" be added
-    And I click the suggested condition at index 12
-    When I set the editable value to be "1.3" and click ok
+    And I enter the suggested condition index 12
+    When I set the editable value to be "1.3"
     And the chatbot has asked if I want to provide any more reasons and I decline
     And the chatbot has completed the action
     Then the condition showing for the comment "Beach time!" is:
@@ -49,8 +49,8 @@ Feature: When building a rule, the user is provided with candidate conditions th
       | Waves | 1.5 |
     And I start the client application
     And I request that the comment "Beach time!" be added
-    And I click the suggested condition at index 12
-    When I set the editable value to be "1.3" and click ok
+    And I enter the suggested condition index 12
+    When I set the editable value to be "1.3"
     And the chatbot has asked if I want to provide any more reasons and I confirm
     Then the suggested conditions should not contain:
       | Waves ≥ 1.5 |

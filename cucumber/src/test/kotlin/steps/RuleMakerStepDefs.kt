@@ -278,7 +278,7 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         ruleMakerPO().requireSelectedConditions(dataTable.asList())
     }
 
-    @When("I set the editable value to be {string} and click ok")
+    @When("I set the editable value to be {string}")
     fun setTheEditableValueToBe(text: String) {
         pause(100)
         chatPO().mostRecentBotRowContainsTerms(listOf("you selected", "What value"))

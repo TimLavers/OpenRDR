@@ -150,7 +150,7 @@ class ChatDefs {
         chatPO().clickSuggestion(text)
     }
 
-    @And("I click the suggested condition at index {int}")
+    @And("I enter the suggested condition index {int}")
     fun clickTheSuggestedConditionAtIndex(index: Int) {
         waitForSuggestionText("${index}. ")
         chatPO().enterChatText(index.toString())
