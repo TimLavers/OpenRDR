@@ -69,15 +69,20 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
         }
     }
 
-    fun clickSuggestion(text: String): Boolean {
-        return execute<Boolean> {
-            val suggestionItem = contextProvider().find({ ctx ->
-                ctx.accessibleName?.contains(text) == true && ctx.accessibleAction != null
-            })
-            if (suggestionItem != null) {
-                suggestionItem.accessibleAction.doAccessibleAction(0)
-                true
-            } else {
+    fun clickSuggestion(text: String) {
+        val description = "$SUGGESTION_ITEM$text"
+        await().atMost(ofSeconds(10)).until {
+            try {
+                execute<Boolean> {
+                    val suggestionItem = contextProvider().find(description)
+                    if (suggestionItem != null) {
+                        suggestionItem.accessibleAction?.doAccessibleAction(0)
+                        true
+                    } else {
+                        false
+                    }
+                }
+            } catch (_: Exception) {
                 false
             }
         }

@@ -144,16 +144,20 @@ class ChatDefs {
         waitForBotToSayDone()
     }
 
-    @And("I click the suggested condition {string}")
+    @And("I click the non-editable suggested condition {string}")
     fun clickTheSuggestedCondition(text: String) {
         waitForSuggestionText(text)
-        await().atMost(ofSeconds(10)).until {
-            chatPO().clickSuggestion(text)
-            chatPO().chatTextFieldContains(text)
-        }
+        chatPO().clickSuggestion(text)
     }
 
-    @And("I click and add the suggested condition {string}")
+    @And("I click the suggested condition at index {int}")
+    fun clickTheSuggestedConditionAtIndex(index: Int) {
+        waitForSuggestionText("${index}. ")
+        chatPO().enterChatText(index.toString())
+        chatPO().clickSend()
+    }
+
+    @And("I click and add the non-editable suggested condition {string}")
     fun clickAndAddTheSuggestedCondition(text: String) {
         clickTheSuggestedCondition(text)
         chatPO().clickSend()

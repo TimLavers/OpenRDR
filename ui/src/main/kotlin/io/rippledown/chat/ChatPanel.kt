@@ -17,7 +17,6 @@ import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ElevatedSuggestionChip
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.SuggestionChipDefaults.elevatedSuggestionChipColors
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,9 +39,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.rippledown.constants.chat.CHAT_BOT_PLACEHOLDER
-import io.rippledown.decoration.DARK_GREY
 import io.rippledown.decoration.LIGHT_BLUE
-import io.rippledown.decoration.LIGHT_GREY
 
 interface ChatMessage {
     val text: String
@@ -78,6 +75,8 @@ const val CHAT_TEXT_FIELD = "CHAT_TEXT_FIELD"
 const val NUMBER_OF_CHAT_MESSAGES_ = "NumberOfChatMessages_"
 const val CHAT_MIC_BUTTON = "CHAT_MIC_BUTTON"
 const val SUGGESTION_LIST = "SUGGESTION_LIST_"
+const val SUGGESTION_ITEM = "SUGGESTION_ITEM_"
+const val EDITABLE_MARKER = " [editable]"
 
 @Composable
 fun ChatPanel(
@@ -132,7 +131,7 @@ fun ChatPanel(
                     ) { suggestion, isEditable ->
                         if (isEditable && sendIsEnabled && !suggestionSendPending) {
                             suggestionSendPending = true
-                            onMessageSent(UserMessage("$suggestion [editable]"))
+                            onMessageSent(UserMessage("$suggestion$EDITABLE_MARKER"))
                             inputText = TextFieldValue("")
                         } else if (!isEditable) {
                             inputText = TextFieldValue(suggestion, selection = TextRange(suggestion.length))
@@ -264,36 +263,6 @@ private fun sendUserMessage(
         onMessageSent(UserMessage(messageText))
     }
     return TextFieldValue("")
-}
-
-@Composable
-fun UserRow(
-    text: String,
-    index: Int,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.End
-    ) {
-        ElevatedSuggestionChip(
-            onClick = { },
-            label = {
-                Text(
-                    text = text,
-                    color = DARK_GREY,
-                    style = TextStyle(fontSize = 14.sp)
-                )
-            },
-            colors = elevatedSuggestionChipColors(
-                containerColor = LIGHT_GREY,
-                labelColor = DARK_GREY
-            ),
-            modifier = Modifier
-                .semantics {
-                    contentDescription = "$USER${index}"
-                }
-        )
-    }
 }
 
 @Composable

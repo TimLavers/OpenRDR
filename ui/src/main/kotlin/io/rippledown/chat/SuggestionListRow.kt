@@ -31,7 +31,6 @@ fun SuggestionListRow(
     onSuggestionClicked: (String, Boolean) -> Unit = { _, _ -> }
 ) {
     val scrollState = rememberScrollState()
-    val editableMarker = " [editable]"
 
     Column(
         modifier = Modifier
@@ -53,13 +52,14 @@ fun SuggestionListRow(
                     .padding(start = 16.dp, top = 8.dp, end = 8.dp, bottom = 8.dp)
             ) {
                 suggestions.forEachIndexed { i, suggestion ->
-                    val isEditable = suggestion.endsWith(editableMarker)
-                    val displayText = if (isEditable) suggestion.removeSuffix(editableMarker) else suggestion
+                    val isEditable = suggestion.endsWith(EDITABLE_MARKER)
+                    val displayText = if (isEditable) suggestion.removeSuffix(EDITABLE_MARKER) else suggestion
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .pointerHoverIcon(PointerIcon.Hand)
                             .clickable { onSuggestionClicked(displayText, isEditable) }
+                            .semantics { contentDescription = "$SUGGESTION_ITEM$displayText" }
                     ) {
                         Text(
                             text = "${i + 1}. $displayText",

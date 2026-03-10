@@ -281,8 +281,9 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
     @When("I set the editable value to be {string} and click ok")
     fun setTheEditableValueToBe(text: String) {
         pause(100)
-        ruleMakerPO().setEditableValue(text)
-        pause(100)
+        chatPO().mostRecentBotRowContainsTerms(listOf("you selected", "What value"))
+        chatPO().enterChatText(text)
+        chatPO().clickSend()
     }
 
     @And("the selected conditions should not contain:")
