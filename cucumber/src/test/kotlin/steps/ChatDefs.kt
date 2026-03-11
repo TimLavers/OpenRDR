@@ -34,6 +34,14 @@ class ChatDefs {
         }
     }
 
+    @Then("I allow")
+    fun allow() {
+        with(chatPO()) {
+            enterChatText("allow")
+            clickSend()
+        }
+    }
+
     @Then("I decline")
     fun decline() {
         with(chatPO()) {
@@ -246,13 +254,13 @@ class ChatDefs {
     @And("the chatbot has asked if want to allow the report change to the cornerstone case and I confirm")
     fun waitForBotQuestionToAllowReportChangeToCornerstoneThenConfirm() {
         waitForBotQuestion()
-        confirm()
+        allow()
     }
 
     @And("the chatbot has asked if want to allow the report change to cornerstone case {string} and I confirm")
     fun waitForBotQuestionToAllowReportChangeToCornerstoneThenConfirm(name: String) {
         waitForBotText(name)
-        confirm()
+        allow()
     }
 
     @And("the chatbot lists the following reasons:")
