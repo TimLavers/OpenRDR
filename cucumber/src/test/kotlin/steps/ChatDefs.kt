@@ -206,13 +206,6 @@ class ChatDefs {
         confirm()
     }
 
-    @And("I build a rule to add another comment {string} using the chat")
-    fun addAnotherCommentUsingChat(comment: String) {
-        requestCommentBeAdded(comment)
-        waitForBotSuggestions()
-        decline()
-        waitForBotToSayDone()
-    }
 
     @And("I add a comment {string}, allowing the report change to the cornerstone case")
     fun addCommentUsingChatAndAllowCornerstoneReportChange(comment: String) {

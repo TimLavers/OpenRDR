@@ -119,8 +119,6 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
     fun buildRuleToAddNewComment(comment: String) {
         with(chatDefs) {
             requestCommentBeAdded(comment)
-            waitForBotRequestForConfirmation()
-            confirm()
             waitForBotSuggestions()
             decline()
             waitForBotToSayDone()
