@@ -23,9 +23,44 @@ import javax.accessibility.AccessibleStateSet
 
 class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
 
+    @And("I build a rule to add the comment {string}")
+    fun buildRuleToAddNewComment(comment: String) {
+        with(chatDefs) {
+            requestCommentBeAdded(comment)
+            completeRule()
+        }
+    }
+
+    @When("I build a rule to replace the comment {string} by {string}")
+    fun replaceCommentWithoutConditions(replacement: String) {
+        chatDefs.requestTheOnlyCommentBeReplacedBy(replacement)
+        completeRule()
+    }
+
+    @When("Replace the comment {string} by {string} with the reasons:")
+    fun replaceCommentWithConditions(toBeReplaced: String, replacement: String, conditions: DataTable) {
+        chatDefs.requestCommentBeReplacedBy(toBeReplaced, replacement)
+        completeRuleWithConditions(conditions)
+    }
+
+    fun completeRuleWithConditions(conditions: DataTable) {
+        with(chatDefs) {
+            provideReasonsThenDeclineToAddMore(conditions)
+            waitForBotToSayDone()
+        }
+    }
+
+    fun completeRuleWithCondition(condition: String) {
+        chatDefs.provideTheseReasons(listOf(condition))
+    }
+
     @When("(I )complete the rule")
     fun completeRule() {
-        ruleMakerPO().clickDoneButton()
+        with(chatDefs) {
+            waitForBotSuggestions()
+            decline()
+            waitForBotToSayDone()
+        }
     }
 
     @When("(I )cancel the rule")
@@ -115,15 +150,6 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         }
     }
 
-    @And("I build a rule to add the comment {string}")
-    fun buildRuleToAddNewComment(comment: String) {
-        with(chatDefs) {
-            requestCommentBeAdded(comment)
-            waitForBotSuggestions()
-            decline()
-            waitForBotToSayDone()
-        }
-    }
 
     @When("I build a rule to add the comment {string} with conditions")
     fun buildRuleToAddCommentWithConditions(comment: String, conditions: DataTable) {
@@ -217,24 +243,18 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
 
     @When("I start to build a rule to replace the comment {string} by {string}")
     fun startRuleToReplaceCommentBy(toBeReplaced: String, replacement: String) {
-        startRuleToReplaceComment(toBeReplaced, replacement)
-    }
-
-    @When("I build a rule to replace the comment {string} by {string}")
-    fun buildARuleToReplaceTheComment(toBeReplaced: String, replacement: String) {
-        startRuleToReplaceComment(toBeReplaced, replacement)
-        completeRule()
+        chatDefs.requestCommentBeReplacedBy(toBeReplaced, replacement)
     }
 
     @When("I build a rule to replace the comment {string} by {string} with the condition {string}")
     fun buildARuleToReplaceTheCommentWithCondition(toBeReplaced: String, replacement: String, condition: String) {
-        startRuleToReplaceComment(toBeReplaced, replacement)
+        chatDefs.requestCommentBeReplacedBy(toBeReplaced, replacement)
         completeRuleWithCondition(condition)
     }
 
     @When("I build a rule to replace the comment {string} by {string} with the conditions")
-    fun buildARuleToReplaceTheCommentWithConditionsx(toBeReplaced: String, replacement: String, conditions: DataTable) {
-        startRuleToReplaceComment(toBeReplaced, replacement)
+    fun buildARuleToReplaceTheCommentWithConditions(toBeReplaced: String, replacement: String, conditions: DataTable) {
+        chatDefs.requestCommentBeReplacedBy(toBeReplaced, replacement)
         addConditionsAndFinishRule(conditions)
     }
 
@@ -302,8 +322,8 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         replacement: String,
         conditions: DataTable
     ) {
-        pause(100)
-        startRuleToReplaceComment(toBeReplaced, replacement)
+        chatDefs.requestCommentBeReplacedBy(toBeReplaced, replacement)
+
         pause(100)
         addConditionsAndFinishRule(conditions)
     }
@@ -332,63 +352,39 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
     fun `require alert`(expected: String) {
         ruleMakerPO().requireAlertToBeDisplayed(expected)
     }
-}
 
-fun startRuleToReplaceComment(toBeReplaced: String, replacement: String) {
-    with(interpretationViewPO()) {
-        clickChangeInterpretationButton()
-        clickReplaceCommentMenu()
-        pause(100) //TODO remove
-        selectCommentToReplaceAndEnterItsReplacementAndClickOK(toBeReplaced, replacement)
-        pause(100) //TODO remove
-    }
-}
-
-fun addConditionsAndFinishRule(dataTable: DataTable) {
-    if (dataTable.width() == 1) {
-        addNonEditableConditionsAndFinishRule(dataTable.asList())
-    } else {
-        addConditionsThatMayBeEditable(dataTable.asLists())
-    }
-}
-
-fun addConditionsThatMayBeEditable(conditionsWithHints: List<List<String?>>) {
-    conditionsWithHints.forEach { conditionWithHints ->
-        pause(100)
-        if (conditionWithHints[1]?.isNotBlank() == true) {
-            ruleMakerPO().clickConditionStartingWithText(conditionWithHints[1]!!)
-            pause(200)
-            ruleMakerPO().setEditableValue(conditionWithHints[2]!!)
-            ruleMakerPO().requireSelectedConditionsContains(conditionWithHints[0]!!)
+    fun addConditionsAndFinishRule(dataTable: DataTable) {
+        if (dataTable.width() == 1) {
+            addNonEditableConditionsAndFinishRule(dataTable.asList())
         } else {
-            ruleMakerPO().clickConditionStartingWithText(conditionWithHints[0]!!)
-            pause(100)
+            addConditionsThatMayBeEditable(dataTable.asLists())
         }
     }
-    pause(100)
-    ruleMakerPO().clickDoneButton()
-}
 
-fun addNonEditableConditionsAndFinishRule(conditions: List<String>) {
-    conditions.forEach { condition ->
+    fun addConditionsThatMayBeEditable(conditionsWithHints: List<List<String?>>) {
+        conditionsWithHints.forEach { conditionWithHints ->
+            pause(100)
+            if (conditionWithHints[1]?.isNotBlank() == true) {
+                ruleMakerPO().clickConditionStartingWithText(conditionWithHints[1]!!)
+                pause(200)
+                ruleMakerPO().setEditableValue(conditionWithHints[2]!!)
+                ruleMakerPO().requireSelectedConditionsContains(conditionWithHints[0]!!)
+            } else {
+                ruleMakerPO().clickConditionStartingWithText(conditionWithHints[0]!!)
+                pause(100)
+            }
+        }
         pause(100)
-        ruleMakerPO().clickConditionWithText(condition)
+        ruleMakerPO().clickDoneButton()
     }
-    pause(100)
-    ruleMakerPO().clickDoneButton()
-}
 
-fun startRuleToRemoveComment(comment: String) {
-    with(interpretationViewPO()) {
-        clickChangeInterpretationButton()
-        clickRemoveCommentMenu()
-        selectCommentToRemoveAndClickOK(comment)
+    fun addNonEditableConditionsAndFinishRule(conditions: List<String>) {
+        conditions.forEach { condition ->
+            pause(100)
+            ruleMakerPO().clickConditionWithText(condition)
+        }
+        pause(100)
+        ruleMakerPO().clickDoneButton()
     }
-}
 
-fun completeRuleWithCondition(condition: String) {
-    with(ruleMakerPO()) {
-        clickConditionWithText(condition)
-        clickDoneButton()
-    }
 }

@@ -11,13 +11,6 @@ import java.time.Duration.ofSeconds
 
 class ChatDefs {
 
-    @Then("the chat is showing")
-    fun showChat() {
-        with(chatPO()) {
-            clickChatIconToggle()
-        }
-    }
-
     @Then("I enter the following text into the chat panel:")
     fun enterChatTextAndSend(text: String) {
         with(chatPO()) {
@@ -138,20 +131,6 @@ class ChatDefs {
         waitForBotText(WHAT_COMMENT)
     }
 
-
-    @And("I build a rule to add an initial comment {string} using the chat with no condition")
-    fun addCommentUsingChat(comment: String) {
-        waitForBotQuestion()
-        confirm()
-        waitForBotQuestionToSpecifyAComment()
-        enterChatTextAndSend(comment)
-        waitForBotRequestForConfirmation()
-        confirm()
-        waitForBotSuggestions()
-        decline()
-        waitForBotToSayDone()
-    }
-
     @And("I click the non-editable suggested condition {string}")
     fun clickTheSuggestedCondition(text: String) {
         waitForSuggestionText(text)
@@ -179,7 +158,7 @@ class ChatDefs {
     }
 
     @And("I provide only the following reason(s):")
-    fun provideTheseReasonsThenDeclineToAddMore(reasons: DataTable) {
+    fun provideReasonsThenDeclineToAddMore(reasons: DataTable) {
         provideTheseReasons(reasons)
         declineToAddMoreReasons()
         waitForBotToSayDone()
@@ -191,8 +170,10 @@ class ChatDefs {
     }
 
     @And("I provide the following reason(s):")
-    fun provideTheseReasons(reasons: DataTable) {
-        reasons.asList().forEach { reason ->
+    fun provideTheseReasons(reasons: DataTable) = provideTheseReasons(reasons.asList())
+
+    fun provideTheseReasons(reasons: List<String>) {
+        reasons.forEach { reason ->
             waitForBotSuggestions()
             enterChatTextAndSend(reason)
         }
@@ -238,9 +219,15 @@ class ChatDefs {
     }
 
     @And("I request that the comment be replaced by {string}")
-    fun requestCommentBeReplacedBy(comment: String) {
+    fun requestTheOnlyCommentBeReplacedBy(comment: String) {
         waitForBotQuestion()
         enterChatTextAndSend("Replace the comment by '$comment'")
+        waitForBotRequestForConfirmationAndConfirm()
+    }
+
+    fun requestCommentBeReplacedBy(comment: String, replacement: String) {
+        waitForBotQuestion()
+        enterChatTextAndSend("Replace the '$comment' comment by '$replacement'")
         waitForBotRequestForConfirmationAndConfirm()
     }
 

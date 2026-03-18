@@ -63,12 +63,17 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
             }
             // Use dispatcher to ensure API calls run on the EDT
             CoroutineScope(dispatcher).launch {
-                val response = api.sendUserMessage(message, caseId)
-                onBotMessageReceived(response)
+                try {
+                    val response = api.sendUserMessage(message, caseId)
+                    onBotMessageReceived(response)
 
-                //refresh the case to get the latest interpretation
-                currentCase = api.getCase(caseId)
-                ++chatId // Increment chatId to trigger recomposition in ChatController
+                    //refresh the case to get the latest interpretation
+                    currentCase = api.getCase(caseId)
+                    ++chatId // Increment chatId to trigger recomposition in ChatController
+                } catch (_: Exception) {
+                    //ignore
+                    //a test may shut down the server before this message can be sent
+                }
             }
         }
     }
