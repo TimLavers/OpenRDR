@@ -18,7 +18,6 @@ Feature: Reviewing cornerstone cases
     When I start to build a rule to replace the comment "Go to Bondi." by "Go to Maroubra."
     Then the case Case1 is shown as the cornerstone case
 
-  @single
   Scenario: The user should be able to switch to the next cornerstone case
     Given case Case1 is provided having data:
       | x | 1 |
@@ -34,7 +33,6 @@ Feature: Reviewing cornerstone cases
     When I request that the comment "Comment 4." be added
     And the case Case2 is shown as the cornerstone case
     When I click the next cornerstone case button
-    And pause
     Then the case Case3 is shown as the cornerstone case
 
   Scenario: The user should be able to switch to the previous cornerstone case
@@ -49,7 +47,7 @@ Feature: Reviewing cornerstone cases
     And the interpretation of the case Case3 includes "Comment 3." because of condition "x is in case"
     And I start the client application
     And I see the case Case1 as the current case
-    And I start to build a rule to add the comment "Comment 4."
+    When I request that the comment "Comment 4." be added
     And the cornerstone case indicator shows 1 of 2
     And the case Case2 is shown as the cornerstone case
     And I click the next cornerstone case button
@@ -70,11 +68,13 @@ Feature: Reviewing cornerstone cases
     And the interpretation of the case Case3 includes "Comment 3." because of condition "x is in case"
     And I start the client application
     And I see the case Case1 as the current case
-    And I start to build a rule to add the comment "Comment 4."
+    And I request that the comment "Comment 4." be added
     And the case Case2 is shown as the cornerstone case
-    When I add the condition "y is in case"
+    When I provide only the following reason:
+      | y is in case |
     Then the message "No cornerstone cases to review" should be shown
 
+  @single
   Scenario: The current cornerstone should remain selected if the user adds a condition that does not exclude it
     Given case Case1 is provided having data:
       | x | 1 |
@@ -94,11 +94,13 @@ Feature: Reviewing cornerstone cases
       | Case4 | Comment 4.    | x is in case |
     And I start the client application
     And I see the case Case1 as the current case
-    And I start to build a rule to add the comment "Comment 5."
+    And I request that the comment "Comment 5." be added
     And I click the next cornerstone case button
     And the case Case3 is shown as the cornerstone case
     And the cornerstone case indicator should show 2 of 3
-    And I add the condition "y is in case"
+    When I provide only the following reason:
+      | y is in case |
+#    should not expect the bot to say done at this point. It's asking whether to approve the CC
     And the cornerstone case indicator should show 1 of 1
     And the case Case3 is still shown as the cornerstone case
 
