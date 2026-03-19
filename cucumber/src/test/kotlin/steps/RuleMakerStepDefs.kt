@@ -134,15 +134,14 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
 
     @And("I build another rule to append the comment {string}")
     fun buildAnotherRuleToAppendTheComment(comment: String) {
-        buildRuleToAddNewComment(comment)
+        chatDefs.addComment(comment)
+        completeRule()
     }
 
     @And("I build a rule to add the comment {string} with the condition {string}")
     fun buildARuleToAddCommentWithCondition(comment: String, condition: String) {
         with(chatDefs) {
             requestCommentBeAdded(comment)
-            waitForBotRequestForConfirmation()
-            confirm()
             waitForBotSuggestions()
             enterChatTextAndSend(condition)
             waitForBotQuestionToProvideReasonsThenDecline()
@@ -154,7 +153,7 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
     @When("I build a rule to add the comment {string} with conditions")
     fun buildRuleToAddCommentWithConditions(comment: String, conditions: DataTable) {
         chatDefs.requestCommentBeAdded(comment)
-        addConditionsAndFinishRule(conditions)
+        completeRuleWithConditions(conditions)
     }
 
     @And("I build a rule to add the existing comment {string}")

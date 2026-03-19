@@ -204,6 +204,10 @@ class ChatDefs {
     @And("I request that the comment {string} be added")
     fun requestCommentBeAdded(comment: String) {
         waitForBotQuestion()
+        addComment(comment)
+    }
+
+    fun addComment(comment: String) {
         enterChatTextAndSend("Add the comment: \"$comment\"")
         waitForBotRequestForConfirmationAndConfirm()
     }

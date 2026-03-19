@@ -9,4 +9,4 @@ Feature: The user should be able to determine the order of comments in a report
     When I build another rule to append the comment "And bring your flippers."
     Then the interpretation should contain the text "Go to the beach. And bring your flippers."
     And I select the case Case2
-    And the interpretation should contain the text "Go to the beach. And bring your flippers."
+    Then the interpretation should contain the text "Go to the beach. And bring your flippers."

@@ -32,9 +32,8 @@ Feature: KB available as API enpoint
         | Sex     | M   |
         | Glucose | 3.8 |
     And I select case Case1
-    And I build a rule to add the comment "Normal glucose results." with conditions
-      | Glucose ≤ 5.5 |
-    And case Case2 for KB Glucose gets the interpretation "Normal glucose results." when it is provided having data:
+    When I build a rule to add the comment "Normal glucose results." with the condition "Glucose ≤ 5.5"
+    Then case Case2 for KB Glucose gets the interpretation "Normal glucose results." when it is provided having data:
       | Age     | 51  |
       | Sex     | F   |
       | Glucose | 4.8 |
