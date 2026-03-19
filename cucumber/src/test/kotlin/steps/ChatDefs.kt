@@ -157,6 +157,11 @@ class ChatDefs {
         }
     }
 
+    @And("I provide the following reason(s):")
+    fun provideReasons(reasons: DataTable) {
+        provideTheseReasons(reasons)
+    }
+
     @And("I provide only the following reason(s):")
     fun provideReasonsThenDeclineToAddMore(reasons: DataTable) {
         provideTheseReasons(reasons)
@@ -169,7 +174,6 @@ class ChatDefs {
         decline()
     }
 
-    @And("I provide the following reason(s):")
     fun provideTheseReasons(reasons: DataTable) = provideTheseReasons(reasons.asList())
 
     fun provideTheseReasons(reasons: List<String>) {

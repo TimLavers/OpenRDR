@@ -3,6 +3,8 @@ package steps
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.rippledown.integration.pause
+import org.awaitility.Awaitility.await
+import java.util.concurrent.TimeUnit
 
 class CornerstoneStepDefs {
     @Then("the message {string} should be shown")
@@ -26,7 +28,9 @@ class CornerstoneStepDefs {
 
     @Then("the cornerstone case indicator (should )show(s) {int} of {int}")
     fun theCornerstoneCaseIndicatorShouldShowsIntOfInt(index: Int, numberOfCornerstoneCases: Int) {
-        cornerstonePO().requireIndexAndNumberOfCornerstones(index, numberOfCornerstoneCases)
+        await().atMost(20, TimeUnit.SECONDS).untilAsserted {
+            cornerstonePO().requireIndexAndNumberOfCornerstones(index, numberOfCornerstoneCases)
+        }
     }
 
     @When("I click the {word} cornerstone case button")

@@ -79,7 +79,7 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
 
     @When("I add the condition {string}")
     fun addTheCondition(text: String) {
-        ruleMakerPO().clickConditionWithText(text)
+        chatDefs.provideTheseReasons(listOf(text))
     }
 
     @Then("the conditions showing should be:")
