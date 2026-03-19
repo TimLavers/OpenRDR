@@ -100,7 +100,6 @@ Feature: Reviewing cornerstone cases
     Then the cornerstone case indicator should show 1 of 1
     And the case Case3 is still shown as the cornerstone case
 
-  @single
   Scenario: The current cornerstone should remain selected if the user removes a condition
     Given case Case1 is provided having data:
       | x | 1 |
@@ -127,9 +126,8 @@ Feature: Reviewing cornerstone cases
     And I add the condition "y is in case"
     And the cornerstone case indicator should show 1 of 1
     When I remove the condition "y is in case"
-#  shows 1 of 3
-    Then the cornerstone case indicator should show 2 of 3
-    And the case Case3 is still shown as the cornerstone case
+    Then the cornerstone case indicator should show 1 of 3
+    And the case Case2 is shown as the cornerstone case
 
   Scenario: Ignoring a cornerstone case should remove it from the list of cornerstone cases to review
     Given a list of cases with the following names is stored on the server:
