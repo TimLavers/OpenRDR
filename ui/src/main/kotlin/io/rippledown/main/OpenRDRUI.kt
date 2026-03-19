@@ -227,6 +227,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                             override fun swapAttributes(moved: Attribute, target: Attribute) {
                                 runBlocking(dispatcher) {
                                     api.moveAttribute(moved.id, target.id)
+                                    currentCase = api.getCase(currentCaseId!!)
                                 }
                             }
 

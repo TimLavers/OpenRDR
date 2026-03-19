@@ -30,13 +30,17 @@ Feature: Order of Attributes in Case View
       | A | a |
       | B | b |
       | C | c |
-    When I select the case CaseABC
-    And I move attribute C below attribute A
-    And I move attribute A below attribute B
+    And I select the case CaseABC
+    When I move attribute C below attribute A
     Then I see these case values:
-      | C | c | |
-      | B | b | |
-      | A | a | |
+      | A | a |  |
+      | C | c |  |
+      | B | b |  |
+    When I move attribute A below attribute B
+    Then I see these case values:
+      | C | c |  |
+      | B | b |  |
+      | A | a |  |
 
   Scenario: New Attributes can be created after an Attribute re-ordering
     Given I start the client application

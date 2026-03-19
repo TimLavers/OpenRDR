@@ -108,7 +108,13 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
             val topLeft = accessibleComponent.locationOnScreen
             return Point(topLeft.x + 5, topLeft.y + 5)
         }
-        dragVertically(cellPosition(draggedAttribute), cellPosition(targetAttribute))
+        val targetPos = cellPosition(targetAttribute)
+        val rowSpacing = if (allAttributeCells.size >= 2) {
+            cellPosition(allAttributeCells[1].text()).y - cellPosition(allAttributeCells[0].text()).y
+        } else {
+            30
+        }
+        dragVertically(cellPosition(draggedAttribute), Point(targetPos.x, targetPos.y + rowSpacing / 2))
     }
 
     fun referenceRange(attribute: String): String = contextProvider()
