@@ -15,8 +15,8 @@ import io.rippledown.constants.interpretation.*
 import io.rippledown.decoration.BACKGROUND_COLOR
 import io.rippledown.main.LEFT_INFO_MESSAGE_ID
 import io.rippledown.main.RIGHT_INFO_MESSAGE_ID
-import io.rippledown.rule.waitUntilAsserted
 import io.rippledown.utils.dump
+import io.rippledown.utils.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 
 

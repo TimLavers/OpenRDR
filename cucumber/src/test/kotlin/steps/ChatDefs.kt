@@ -212,6 +212,11 @@ class ChatDefs {
         waitForBotRequestForConfirmationAndConfirm()
     }
 
+    fun removeComment(comment: String) {
+        enterChatTextAndSend("Remove the comment: \"$comment\"")
+        waitForBotRequestForConfirmationAndConfirm()
+    }
+
     @And("I request that the comment be removed")
     fun requestCommentBeRemoved() {
         waitForBotQuestion()
@@ -222,7 +227,11 @@ class ChatDefs {
     @And("I request that the following comment be removed:")
     fun requestCommentBeRemoved(comment: String) {
         waitForBotQuestion()
-        enterChatTextAndSend("Remove $comment")
+        removeSpecificComment(comment)
+    }
+
+    fun removeSpecificComment(comment: String) {
+        enterChatTextAndSend("Remove the comment: \"$comment\"")
         waitForBotRequestForConfirmationAndConfirm()
     }
 

@@ -31,6 +31,14 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         }
     }
 
+    @And("I build a rule to add another comment {string}")
+    fun buildRuleToAddAnotherNewComment(comment: String) {
+        with(chatDefs) {
+            addComment(comment)
+            completeRule()
+        }
+    }
+
     @When("I build a rule to replace the comment {string} by {string}")
     fun replaceCommentWithoutConditions(replacement: String) {
         chatDefs.requestTheOnlyCommentBeReplacedBy(replacement)
@@ -158,14 +166,20 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
 
     @And("I build a rule to add the existing comment {string}")
     fun buildRuleToAddExistingComment(comment: String) {
-        startRuleToAddExistingComment(comment)
+        chatDefs.requestCommentBeAdded(comment)
         completeRule()
     }
 
 
     @When("I build a rule to remove the comment {string}")
     fun buildARuleToRemoveTheComment(comment: String) {
-        startRuleToRemoveComment(comment)
+        chatDefs.requestCommentBeRemoved(comment)
+        completeRule()
+    }
+
+    @When("I build another rule to remove the comment {string}")
+    fun buildAnotherRuleToRemoveTheComment(comment: String) {
+        chatDefs.removeComment(comment)
         completeRule()
     }
 
@@ -179,7 +193,7 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
 
     @When("I build a rule to remove the comment {string} with the condition {string}")
     fun buildARuleToRemoveTheCommentWithCondition(comment: String, condition: String) {
-        startRuleToRemoveComment(comment)
+        chatDefs.requestCommentBeRemoved(comment)
         completeRuleWithCondition(condition)
     }
 
