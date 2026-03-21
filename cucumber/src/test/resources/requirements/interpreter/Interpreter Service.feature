@@ -1,4 +1,4 @@
-Feature: KB available as API enpoint
+Feature: KB available as API endpoint
 
   Scenario: Attributes are created as required from interpreted cases
     Given I start the client application

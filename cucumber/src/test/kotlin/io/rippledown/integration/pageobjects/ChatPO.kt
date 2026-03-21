@@ -88,6 +88,29 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
         }
     }
 
+    fun suggestionsInMostRecentMessage(): List<String> {
+        return execute<List<String>> {
+            val suggestionNodes = contextProvider().findAll({ ctx ->
+                ctx.accessibleDescription?.startsWith(SUGGESTION_LIST) ?: false
+            })
+            if (suggestionNodes.isEmpty()) return@execute emptyList()
+            val lastSuggestionNode = suggestionNodes.last()
+            lastSuggestionNode.findAll({ ctx ->
+                ctx.accessibleDescription?.startsWith(SUGGESTION_ITEM) ?: false
+            }).mapNotNull { ctx ->
+                ctx.accessibleDescription?.removePrefix(SUGGESTION_ITEM)
+            }
+        }
+    }
+
+    fun numberOfSuggestionRows(): Int {
+        return execute<Int> {
+            contextProvider().findAll({ ctx ->
+                ctx.accessibleDescription?.startsWith(SUGGESTION_LIST) ?: false
+            }).size
+        }
+    }
+
     fun chatTextFieldContains(text: String): Boolean {
         return execute<Boolean> {
             val chatText = chatTextContext()?.accessibleName ?: ""

@@ -126,6 +126,12 @@ class ChatDefs {
         }
     }
 
+    fun waitForNewSuggestions(countBefore: Int) {
+        await().atMost(ofSeconds(60)).until {
+            chatPO().numberOfSuggestionRows() > countBefore
+        }
+    }
+
     @And("the chatbot has asked for what comment I want to add")
     fun waitForBotQuestionToSpecifyAComment() {
         waitForBotText(WHAT_COMMENT)
@@ -170,7 +176,8 @@ class ChatDefs {
     }
 
     fun declineToAddMoreReasons() {
-        waitForBotSuggestions()
+        val countBefore = chatPO().numberOfSuggestionRows()
+        waitForNewSuggestions(countBefore)
         decline()
     }
 

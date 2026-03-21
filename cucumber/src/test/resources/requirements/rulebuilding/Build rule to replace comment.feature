@@ -7,8 +7,7 @@ Feature: The user can make a rule that replaces a comment the interpretive repor
     And the interpretation of the case Case1 is "Go to Bondi."
     And I start the client application
     And I should see the case Case1 as the current case
-    And  the interpretation should contain the text "Go to Bondi."
-    When I build a rule to replace the comment "Go to Bondi." by "Go to Maroubra."
+    When I build a rule to replace that comment by "Go to Maroubra."
     Then the interpretation should be "Go to Maroubra."
     And select the case Case2
     And  the interpretation should be "Go to Maroubra."
@@ -22,8 +21,8 @@ Feature: The user can make a rule that replaces a comment the interpretive repor
     And the interpretation of the case Bondi is "Go to Bondi."
     And I start the client application
     And I select case Manly
-    And  the interpretation should contain the text "Go to Bondi."
-    When I build a rule to replace the comment "Go to Bondi." by "Go to Manly." with the condition "Sun is in case"
+    When I build a rule to replace the comment "Go to Bondi." by "Go to Manly." with the condition
+      | "Sun is in case" |
     Then  the interpretation should contain the text "Go to Manly."
     And I select case Bondi
     And  the interpretation should contain the text "Go to Bondi."
@@ -33,9 +32,11 @@ Feature: The user can make a rule that replaces a comment the interpretive repor
       | Sun  | too hot |
       | Wave | poor    |
     And I start the client application
-    And I build a rule to add the comment "Go to Bondi." with the condition "Wave is in case"
+    And I build a rule to add the comment "Go to Bondi." with condition
+      | "Wave is in case" |
     And  the interpretation should be "Go to Bondi."
-    When I build a rule to replace the comment "Go to Bondi." by "Go to Manly." with the condition "Sun is in case"
+    When I build a rule to replace the comment "Go to Bondi." by "Go to Manly." with the condition
+      | "Sun is in case" |
     Then the interpretation should be "Go to Manly."
 #    Doesn't work on TL's computer, TODO fix
 #    And the conditions showing for the comment "Go to Manly." are:

@@ -37,11 +37,14 @@ Cornerstone: <name of the current cornerstone case, or null>, Index: <index>, To
 
 ## Step 5. Ask for further reasons:
 
-- Keep asking for further reasons until the user indicates they do not want to provide any more reasons.
+- After processing each reason (and after handling any cornerstone cases if applicable), you MUST call
+  {{GET_SUGGESTED_CONDITIONS}} to refresh the list of suggested conditions, present the updated suggestions to the user,
+  and ask if they would like to provide another reason. Do this regardless of the cornerstone count.
 - If the number of cornerstone cases to review is greater than 0 after the last reason was transformed, follow the
-  instructions "Allowing or Disallowing the change to the Cornerstone Case report".
-- Only after the user indicates they do not want to provide any more reasons, follow the instructions "Completing the
-  report change".
+  instructions "Allowing or Disallowing the change to the Cornerstone Case report" BEFORE asking for further reasons.
+- Keep asking for further reasons until the user explicitly indicates they do not want to provide any more reasons.
+- ONLY after the user explicitly indicates they do not want to provide any more reasons, follow the instructions
+  "Completing the report change". Do NOT commit the rule until the user has explicitly declined to add more reasons.
 
 ## Step 6. Allow the user to remove a reason:
 

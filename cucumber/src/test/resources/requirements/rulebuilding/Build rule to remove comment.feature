@@ -1,4 +1,3 @@
-@single
 Feature: The user can make a rule that removes a comment from the interpretive report
   Scenario: The user should be able to build a rule to remove a comment
     Given a list of cases with the following names is stored on the server:
@@ -22,7 +21,8 @@ Feature: The user can make a rule that removes a comment from the interpretive r
     And the interpretation of the case Bondi is "Go to the beach."
     And I start the client application
     And I select case Bondi
-    When I build a rule to remove the comment "Go to the beach." with the condition "Sun is in case"
+    When I build a rule to remove the comment "Go to the beach." with condition
+      | "Sun is in case" |
     And  the interpretation should be empty
     And select the case Manly
     And  the interpretation should contain the text "Go to the beach."

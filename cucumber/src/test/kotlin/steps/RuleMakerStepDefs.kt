@@ -5,6 +5,7 @@ import io.cucumber.datatable.DataTable
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
+import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.constants.interpretation.OK_BUTTON_FOR_REMOVE_COMMENT
@@ -39,7 +40,7 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         }
     }
 
-    @When("I build a rule to replace the comment {string} by {string}")
+    @When("I build a rule to replace that comment by {string}")
     fun replaceCommentWithoutConditions(replacement: String) {
         chatDefs.requestTheOnlyCommentBeReplacedBy(replacement)
         completeRule()
@@ -56,10 +57,6 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
             provideReasonsThenDeclineToAddMore(conditions)
             waitForBotToSayDone()
         }
-    }
-
-    fun completeRuleWithCondition(condition: String) {
-        chatDefs.provideTheseReasons(listOf(condition))
     }
 
     @When("(I )complete the rule")
@@ -90,16 +87,10 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         chatDefs.provideTheseReasons(listOf(text))
     }
 
-    @Then("the conditions showing should be:")
-    fun theConditionsShowingShouldBe(dataTable: DataTable) {
-        val expectedConditions = dataTable.asList()
-        ruleMakerPO().requireAvailableConditions(expectedConditions)
-    }
-
-    @Then("the conditions showing should include:")
+    @Then("the suggestions showing should include:")
     fun theConditionsShowingShouldInclude(dataTable: DataTable) {
         val expectedConditions = dataTable.asList().toSet()
-        ruleMakerPO().requireAvailableConditionsContains(expectedConditions)
+        chatPO().suggestionsInMostRecentMessage() shouldContainAll (expectedConditions)
     }
 
     @And("I start to build a rule to add the comment {string} and click Cancel")
@@ -146,19 +137,7 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         completeRule()
     }
 
-    @And("I build a rule to add the comment {string} with the condition {string}")
-    fun buildARuleToAddCommentWithCondition(comment: String, condition: String) {
-        with(chatDefs) {
-            requestCommentBeAdded(comment)
-            waitForBotSuggestions()
-            enterChatTextAndSend(condition)
-            waitForBotQuestionToProvideReasonsThenDecline()
-            waitForBotToSayDone()
-        }
-    }
-
-
-    @When("I build a rule to add the comment {string} with conditions")
+    @When("I build a rule to add the comment {string} with condition(s)")
     fun buildRuleToAddCommentWithConditions(comment: String, conditions: DataTable) {
         chatDefs.requestCommentBeAdded(comment)
         completeRuleWithConditions(conditions)
@@ -191,16 +170,10 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         }
     }
 
-    @When("I build a rule to remove the comment {string} with the condition {string}")
-    fun buildARuleToRemoveTheCommentWithCondition(comment: String, condition: String) {
-        chatDefs.requestCommentBeRemoved(comment)
-        completeRuleWithCondition(condition)
-    }
-
-    @When("I build a rule to remove the comment {string} with conditions")
+    @When("I build a rule to remove the comment {string} with condition(s)")
     fun buildARuleToRemoveCommentWithConditions(comment: String, conditions: DataTable) {
-        startRuleToRemoveComment(comment)
-        addConditionsAndFinishRule(conditions)
+        chatDefs.requestCommentBeRemoved(comment)
+        chatDefs.provideReasonsThenDeclineToAddMore(conditions)
     }
 
     @And("I enter {string} as the filter to select a comment to remove")
@@ -259,22 +232,18 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         chatDefs.requestCommentBeReplacedBy(toBeReplaced, replacement)
     }
 
-    @When("I build a rule to replace the comment {string} by {string} with the condition {string}")
-    fun buildARuleToReplaceTheCommentWithCondition(toBeReplaced: String, replacement: String, condition: String) {
-        chatDefs.requestCommentBeReplacedBy(toBeReplaced, replacement)
-        completeRuleWithCondition(condition)
-    }
-
-    @When("I build a rule to replace the comment {string} by {string} with the conditions")
+    @When("I build a rule to replace the comment {string} by {string} with the condition(s)")
     fun buildARuleToReplaceTheCommentWithConditions(toBeReplaced: String, replacement: String, conditions: DataTable) {
         chatDefs.requestCommentBeReplacedBy(toBeReplaced, replacement)
-        addConditionsAndFinishRule(conditions)
+        chatDefs.provideReasonsThenDeclineToAddMore(conditions)
     }
 
     @And("the suggested conditions should not contain:")
     fun theSuggestedConditionsShouldNotContain(dataTable: DataTable) {
         val absentConditions = dataTable.asList().toSet()
-        ruleMakerPO().requireAvailableConditionsDoesNotContain(absentConditions)
+        absentConditions.forEach {
+            chatPO().mostRecentSuggestionRowDoesNotContainsTerm(it)
+        }
     }
 
     @And("the suggested conditions should not contain {string}")
@@ -292,21 +261,9 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         }
     }
 
-    @And("the available condition and its tool tip should be:")
-    fun requireAvailableConditionAndToolTip(dataTable: DataTable) {
-        val expectedConditionText = dataTable.cell(0, 0)
-        val expectedToolTip = dataTable.cell(0, 1)
-        with(ruleMakerPO()) {
-            waitForOneAvailableCondition()
-            requireAvailableConditions(listOf(expectedConditionText))
-            movePointerToFirstAvailableCondition()
-            requireFirstAvailableConditionToolTip(expectedToolTip)
-        }
-    }
-
-    @And("the selected conditions should be:")
-    fun theSelectedConditionsShouldBe(dataTable: DataTable) {
-        ruleMakerPO().requireSelectedConditions(dataTable.asList())
+    @And("the condition added should be {string}")
+    fun requireMostRecentAddedCondition(expected: String) {
+        chatDefs.waitForBotText(expected)
     }
 
     @When("I set the editable value to be {string}")
@@ -317,18 +274,6 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         chatPO().clickSend()
     }
 
-    @And("the selected conditions should not contain:")
-    fun theSelectedConditionsShouldNotContain(dataTable: DataTable) {
-        val conditions = dataTable.asList().toSet()
-        ruleMakerPO().requireSelectedConditionsDoesNotContain(conditions)
-    }
-
-    @And("the selected conditions should contain:")
-    fun theSelectedConditionsShouldContain(dataTable: DataTable) {
-        val conditions = dataTable.asList().toSet()
-        ruleMakerPO().requireSelectedConditionsContains(conditions)
-    }
-
     @And("I build a rule to replace the comment {string} with the comment {string} with conditions")
     fun buildARuleToReplaceTheCommentWithTheCommentWithConditions(
         toBeReplaced: String,
@@ -336,9 +281,7 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         conditions: DataTable
     ) {
         chatDefs.requestCommentBeReplacedBy(toBeReplaced, replacement)
-
-        pause(100)
-        addConditionsAndFinishRule(conditions)
+        chatDefs.provideReasonsThenDeclineToAddMore(conditions)
     }
 
     @Then("the message indicating the comment {string} is being added should be shown")
@@ -358,46 +301,12 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
 
     @Then("I enter the expression {string}")
     fun `enter expression`(expression: String) {
-        ruleMakerPO().enterExpressionIntoSearchField(expression)
+        chatDefs.provideTheseReasons(listOf(expression))
     }
 
     @Then("an alert should be displayed with the message:")
     fun `require alert`(expected: String) {
-        ruleMakerPO().requireAlertToBeDisplayed(expected)
+        throw NotImplementedError("Not implemented yet")
+//        ruleMakerPO().requireAlertToBeDisplayed(expected)
     }
-
-    fun addConditionsAndFinishRule(dataTable: DataTable) {
-        if (dataTable.width() == 1) {
-            addNonEditableConditionsAndFinishRule(dataTable.asList())
-        } else {
-            addConditionsThatMayBeEditable(dataTable.asLists())
-        }
-    }
-
-    fun addConditionsThatMayBeEditable(conditionsWithHints: List<List<String?>>) {
-        conditionsWithHints.forEach { conditionWithHints ->
-            pause(100)
-            if (conditionWithHints[1]?.isNotBlank() == true) {
-                ruleMakerPO().clickConditionStartingWithText(conditionWithHints[1]!!)
-                pause(200)
-                ruleMakerPO().setEditableValue(conditionWithHints[2]!!)
-                ruleMakerPO().requireSelectedConditionsContains(conditionWithHints[0]!!)
-            } else {
-                ruleMakerPO().clickConditionStartingWithText(conditionWithHints[0]!!)
-                pause(100)
-            }
-        }
-        pause(100)
-        ruleMakerPO().clickDoneButton()
-    }
-
-    fun addNonEditableConditionsAndFinishRule(conditions: List<String>) {
-        conditions.forEach { condition ->
-            pause(100)
-            ruleMakerPO().clickConditionWithText(condition)
-        }
-        pause(100)
-        ruleMakerPO().clickDoneButton()
-    }
-
 }

@@ -6,8 +6,8 @@ Feature: The user can make rules that change the interpretive report
       | Sun  | hot       |
     And I start the client application
     And I see the case Bondi as the current case
-    When I start to build a rule to add the comment "Let's surf"
-    Then the conditions showing should include:
+    When I request that the comment "Let's surf" be added
+    Then the suggestions showing should include:
       | Sun is "hot"        |
       | Sun is in case      |
       | Wave is "excellent" |
@@ -40,7 +40,7 @@ Feature: The user can make rules that change the interpretive report
     Given I start the client application
     And I should see the case Bondi as the current case
     And I start to build a rule to add the comment "Let's surf"
-    And the conditions showing should include:
+    And the suggestions showing should include:
       | Sun is "hot"            |
       | Sun is in case          |
       | Swimming is not in case |
@@ -63,7 +63,7 @@ Feature: The user can make rules that change the interpretive report
     Given I start the client application
     And I should see the case Bondi as the current case
     And I start to build a rule to add the comment "Let's surf"
-    And the conditions showing should include:
+    And the suggestions showing should include:
       | Sun is "hot"            |
       | Sun is in case          |
       | Swimming is not in case |

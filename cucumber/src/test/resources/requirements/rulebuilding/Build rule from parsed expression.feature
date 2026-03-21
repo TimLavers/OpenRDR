@@ -6,9 +6,9 @@ Feature: When entering an expression to be used in a rule, the user is provided 
       | Waves     | 2.1   | 0.5 | 2    | metres |
       | UV        | 4.5   |     | 2.6  |        |
     And I start the client application
-    And I start to build a rule to add the comment "Beach time!"
+    And I request that the comment "Beach time!" be added
     And I enter the expression "elevated waves"
-    Then the available condition and its tool tip should be:
+    Then the condition added should be:
       | elevated waves | Waves is high |
 
   Scenario: Should provide a warning when the user types an unknown expression
@@ -17,7 +17,7 @@ Feature: When entering an expression to be used in a rule, the user is provided 
       | Waves     | 2.1   | 0.5 | 2    | metres |
       | UV        | 4.5   |     | 2.6  |        |
     And I start the client application
-    And I start to build a rule to add the comment "Beach time!"
+    And I request that the comment "Beach time!" be added
     And I enter the expression "below"
     Then an alert should be displayed with the message:
     """
