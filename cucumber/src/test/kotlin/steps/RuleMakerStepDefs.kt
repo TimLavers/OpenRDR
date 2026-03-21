@@ -304,9 +304,18 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         chatDefs.provideTheseReasons(listOf(expression))
     }
 
-    @Then("an alert should be displayed with the message:")
+    @Then("the condition added should be:")
+    fun `require most recent added condition`(expected: String) {
+        chatDefs.waitForBotText(expected)
+    }
+
+    @Then("the model should respond with a message containing:")
     fun `require alert`(expected: String) {
-        throw NotImplementedError("Not implemented yet")
-//        ruleMakerPO().requireAlertToBeDisplayed(expected)
+        chatDefs.waitForBotText(expected)
+    }
+
+    @Then("the model should indicate that the expression is not a valid reason")
+    fun `require invalid reason response`() {
+        chatDefs.waitForBotResponseIndicatingInvalidReason()
     }
 }

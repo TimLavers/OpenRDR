@@ -4,6 +4,7 @@ import io.cucumber.datatable.DataTable
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
+import io.kotest.matchers.shouldBe
 import io.rippledown.constants.chat.*
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
@@ -130,6 +131,16 @@ class ChatDefs {
         await().atMost(ofSeconds(60)).until {
             chatPO().numberOfSuggestionRows() > countBefore
         }
+    }
+
+    fun waitForBotResponseIndicatingInvalidReason() {
+        val suggestionsBefore = chatPO().numberOfSuggestionRows()
+        val messagesBefore = chatPO().numberOfChatMessages()
+        await().atMost(ofSeconds(60)).until {
+            chatPO().numberOfChatMessages() > messagesBefore
+        }
+        //The model should not have presented new suggestions, which would indicate that the reason was accepted
+        chatPO().numberOfSuggestionRows() shouldBe suggestionsBefore
     }
 
     @And("the chatbot has asked for what comment I want to add")
