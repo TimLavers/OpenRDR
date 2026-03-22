@@ -86,7 +86,8 @@ class ChatDefs {
 
     @And("the chatbot has asked if I want to provide any (more )reasons and I decline")
     fun waitForBotQuestionToProvideReasonsThenDecline() {
-        waitForBotSuggestions() //the suggestions always come after the model's question to provide a reason
+        //"1." is the start of a suggestion
+        waitForBotTextToContainAnyOf(REASON, SUGGESTION, "1.")
         decline()
     }
 
@@ -120,6 +121,11 @@ class ChatDefs {
             chatPO().mostRecentBotRowContainsTerms(terms.toList())
         }
     }
+    fun waitForBotTextToContainAnyOf(vararg terms: String) {
+        await().atMost(ofSeconds(60)).until {
+            chatPO().mostRecentBotRowContainsAnyOfTheTerms(terms.toList())
+        }
+    }
 
     fun waitForSuggestionText(vararg terms: String) {
         await().atMost(ofSeconds(10)).until {
@@ -128,6 +134,11 @@ class ChatDefs {
     }
 
     fun waitForNewSuggestions(countBefore: Int) {
+        await().atMost(ofSeconds(60)).until {
+            chatPO().numberOfSuggestionRows() > countBefore
+        }
+    }
+    fun waitForPromptToProvideAnotherReason(countBefore: Int) {
         await().atMost(ofSeconds(60)).until {
             chatPO().numberOfSuggestionRows() > countBefore
         }
@@ -187,9 +198,7 @@ class ChatDefs {
     }
 
     fun declineToAddMoreReasons() {
-        val countBefore = chatPO().numberOfSuggestionRows()
-        waitForNewSuggestions(countBefore)
-        decline()
+        waitForBotQuestionToProvideReasonsThenDecline()
     }
 
     fun provideTheseReasons(reasons: DataTable) = provideTheseReasons(reasons.asList())

@@ -46,6 +46,16 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
             contextProvider().find(matcher) != null
         }
     }
+    fun mostRecentBotRowContainsAnyOfTheTerms(terms: List<String>): Boolean {
+        val numberOfChatMessages = numberOfChatMessages()
+        return execute<Boolean> {
+            val botMatcher = { context: AccessibleContext ->
+                context.isBotResponseForIndex(numberOfChatMessages - 1)
+            }
+            val botRow = contextProvider().find(botMatcher) ?: return@execute false
+            terms.any { term -> botRow.find({ ctx -> ctx.foundText(term) }) != null }
+        }
+    }
 
     fun mostRecentSuggestionRowContainsTerms(terms: List<String>): Boolean {
         return execute<Boolean> {

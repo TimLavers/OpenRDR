@@ -39,13 +39,14 @@ class ChatManager(
         val response = conversationService.response(message)
         logger.info("$LOG_PREFIX_FOR_CONVERSATION_RESPONSE $response")
         try {
-            // Split response into individual JSON objects and process each
+            // Extract the first JSON object from the response (the model may sometimes
+            // return multiple JSON objects, but only the first should be processed since
+            // actions like ExemptCornerstone handle continuations via recursive calls)
             val jsonFragments = extractJsonFragments(response)
-            var lastResponse = ChatResponse("")
-            jsonFragments.forEach { fragment ->
-                lastResponse = processActionComment(fragment.sanitizeLlmJson().fromJsonString<ActionComment>())
+            if (jsonFragments.isEmpty()) {
+                return ChatResponse("")
             }
-            return lastResponse
+            return processActionComment(jsonFragments.first().sanitizeLlmJson().fromJsonString<ActionComment>())
         } catch (e: Exception) {
             logger.error("Failed to process ActionComment: $response", e)
             return ChatResponse("System error. See server.log: '$response'")
