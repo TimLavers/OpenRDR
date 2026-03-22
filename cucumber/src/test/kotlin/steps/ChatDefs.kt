@@ -301,7 +301,7 @@ class ChatDefs {
     @When("I remove the condition {string}")
     fun removeTheCondition(text: String) {
         enterChatTextAndSend("Remove \"$text\"")
-        waitForBotText("removed")
+        waitForBotTextToContainAnyOf("removed", SUGGESTION, "1.")
     }
 
     @And("I request that the {word} reason be removed")

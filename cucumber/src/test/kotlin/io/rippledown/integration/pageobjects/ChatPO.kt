@@ -37,20 +37,30 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
     fun mostRecentBotRowContainsTerms(terms: List<String>): Boolean {
         val numberOfChatMessages = numberOfChatMessages()
         return execute<Boolean> {
-            val matcher = { context: AccessibleContext ->
-                terms.all { term -> context.foundText(term) } && context.isBotResponseForIndex(numberOfChatMessages - 1)
+            // Check the two most recent bot rows, since a response with both
+            // a message and suggestions creates two rows (BotMessage + SuggestionList)
+            val indicesToCheck = listOf(numberOfChatMessages - 1, numberOfChatMessages - 2).filter { it >= 0 }
+            indicesToCheck.any { index ->
+                val matcher = { context: AccessibleContext ->
+                    terms.all { term -> context.foundText(term) } && context.isBotResponseForIndex(index)
+                }
+                contextProvider().find(matcher) != null
             }
-            contextProvider().find(matcher) != null
         }
     }
     fun mostRecentBotRowContainsAnyOfTheTerms(terms: List<String>): Boolean {
         val numberOfChatMessages = numberOfChatMessages()
         return execute<Boolean> {
-            val botMatcher = { context: AccessibleContext ->
-                context.isBotResponseForIndex(numberOfChatMessages - 1)
+            // Check the two most recent bot rows, since a response with both
+            // a message and suggestions creates two rows (BotMessage + SuggestionList)
+            val indicesToCheck = listOf(numberOfChatMessages - 1, numberOfChatMessages - 2).filter { it >= 0 }
+            indicesToCheck.any { index ->
+                val botMatcher = { context: AccessibleContext ->
+                    context.isBotResponseForIndex(index)
+                }
+                val botRow = contextProvider().find(botMatcher) ?: return@any false
+                terms.any { term -> botRow.find({ ctx -> ctx.foundText(term) }) != null }
             }
-            val botRow = contextProvider().find(botMatcher) ?: return@execute false
-            terms.any { term -> botRow.find({ ctx -> ctx.foundText(term) }) != null }
         }
     }
 
