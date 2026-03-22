@@ -1,11 +1,13 @@
 package io.rippledown.caseview
 
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.ui.test.*
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertContentDescriptionEquals
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import io.rippledown.constants.caseview.REFERENCE_RANGE_HEADER_CELL_DESCRIPTION
 import io.rippledown.mocks.DummyRowScope
 import org.junit.Rule

@@ -2,7 +2,6 @@ package io.rippledown.sample
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.sample.SampleKB.*
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 

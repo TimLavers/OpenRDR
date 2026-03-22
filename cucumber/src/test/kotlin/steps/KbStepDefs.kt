@@ -1,9 +1,7 @@
 package steps
 
 import io.cucumber.datatable.DataTable
-import io.cucumber.docstring.DocString
 import io.cucumber.java.en.Then
-import io.cucumber.java.en.When
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.waitUntilAsserted
 

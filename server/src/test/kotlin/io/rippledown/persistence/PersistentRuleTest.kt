@@ -5,7 +5,6 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.Conclusion
 import io.rippledown.model.condition.isNormal
 import io.rippledown.model.rule.Rule
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 

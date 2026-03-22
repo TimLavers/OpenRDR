@@ -3,8 +3,6 @@ package io.rippledown.kb.export
 import io.rippledown.model.rule.Rule
 import io.rippledown.model.rule.RuleTree
 import io.rippledown.persistence.PersistentRule
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 class RuleExporter: Exporter<Rule>, Importer<PersistentRule> {

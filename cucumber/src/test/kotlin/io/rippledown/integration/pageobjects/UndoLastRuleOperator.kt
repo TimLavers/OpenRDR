@@ -5,7 +5,6 @@ import io.rippledown.constants.kb.CLOSE_SHOW_LAST_RULE_DESCRIPTION
 import io.rippledown.constants.kb.CONFIRM_UNDO_LAST_RULE_YES_OPTION_DESCRIPTION
 import io.rippledown.constants.kb.LAST_RULE_DESCRIPTION_DESCRIPTION
 import io.rippledown.constants.kb.UNDO_LAST_RULE_BUTTON_DESCRIPTION
-import io.rippledown.constants.main.CANCEL_DESCRIPTION
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAndClick
 import io.rippledown.integration.waitUntilAsserted
