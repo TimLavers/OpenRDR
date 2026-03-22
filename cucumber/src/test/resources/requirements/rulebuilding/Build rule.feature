@@ -24,7 +24,8 @@ Feature: The user can make rules that change the interpretive report
     And case Malabar is provided having data:
       | Swimming | pleasant |
     And I select case Bondi
-    And I build a rule to add the comment "Go for a surf." with the condition "Sun is in case"
+    And I build a rule to add the comment "Go for a surf." with condition
+      | Sun is in case |
     When I select case Manly
     Then the interpretation should contain the text "Go for a surf."
     And I select case Malabar
@@ -39,7 +40,7 @@ Feature: The user can make rules that change the interpretive report
       | Swimming | pleasant |
     Given I start the client application
     And I should see the case Bondi as the current case
-    And I start to build a rule to add the comment "Let's surf"
+    And I request that the comment "Let's surf." be added
     And the suggestions showing should include:
       | Sun is "hot"            |
       | Sun is in case          |
@@ -62,7 +63,7 @@ Feature: The user can make rules that change the interpretive report
       | Swimming | pleasant |
     Given I start the client application
     And I should see the case Bondi as the current case
-    And I start to build a rule to add the comment "Let's surf"
+    And I request that the comment "Let's surf." be added
     And the suggestions showing should include:
       | Sun is "hot"            |
       | Sun is in case          |
@@ -72,14 +73,15 @@ Feature: The user can make rules that change the interpretive report
     And I select the first condition
     When I cancel the rule
     And the interpretation should be empty
-    When I build a rule to add the comment "Go for a surf." with the condition "Sun is in case"
+    When I build a rule to add the comment "Go for a surf." with condition
+      | Sun is in case |
     Then the interpretation should be "Go for a surf."
 
   Scenario: The KB controls and case list should be disabled when building a rule
     Given a new case is stored on the server
     And I start the client application
     And the KB controls are shown
-    When I start to build a rule to add the comment "Let's surf"
+    And I request that the comment "Let's surf." be added
     Then the KB controls should be hidden
     And the case list should be hidden
     And cancel the rule
@@ -87,7 +89,7 @@ Feature: The user can make rules that change the interpretive report
   Scenario: The KB controls and case list should be re-enabled after cancelling a rule
     Given a new case is stored on the server
     And I start the client application
-    And I start to build a rule to add the comment "Let's surf"
+    And I request that the comment "Let's surf." be added
     And the KB controls are hidden
     And the case list is hidden
     When I cancel the rule
@@ -104,7 +106,7 @@ Feature: The user can make rules that change the interpretive report
     Given a new case is stored on the server
     And I start the client application
     And the change interpretation icon is shown
-    And I start to build a rule to add the comment "Let's surf"
+    And I request that the comment "Let's surf." be added
     And the change interpretation icon is hidden
     When I complete the rule
     Then the change interpretation icon should be shown
@@ -113,7 +115,7 @@ Feature: The user can make rules that change the interpretive report
     Given a new case is stored on the server
     And I start the client application
     And the change interpretation icon is shown
-    And I start to build a rule to add the comment "Let's surf"
+    And I request that the comment "Let's surf." be added
     And the change interpretation icon is hidden
     When I cancel the rule
     Then the change interpretation icon should be shown
@@ -124,7 +126,7 @@ Feature: The user can make rules that change the interpretive report
       | Sun  | hot       |
     And I start the client application
     And I see the case Bondi as the current case
-    When I start to build a rule to add the comment "Let's surf."
+    When I request that the comment "Let's surf." be added
     Then the message indicating the comment "Let's surf." is being added should be shown
 
   Scenario: When the user starts to build a rule to remove a comment, the rule action should be shown

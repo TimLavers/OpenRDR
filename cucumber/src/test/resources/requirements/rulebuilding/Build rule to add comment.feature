@@ -27,7 +27,8 @@ Feature: The user can make a rule that adds a comment to the interpretive report
     And case Bondi is provided having data:
       | Sun  | hot       |
       | Wave | excellent |
-    And I build a rule to add the comment "Go to the beach." with the condition "Sun is in case"
+    And I build a rule to add the comment "Go to the beach." with condition
+      | Sun is in case |
     Then  the interpretation should be "Go to the beach."
     And the condition showing for the comment "Go to the beach." is:
       | Sun is in case |
