@@ -1,6 +1,5 @@
 package io.rippledown.integration.pageobjects
 
-import io.rippledown.appbar.CHAT_ICON_TOGGLE
 import io.rippledown.chat.*
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAll
@@ -34,8 +33,6 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
         execute { chatTextContext().find(CHAT_SEND)?.accessibleAction?.doAccessibleAction(0) }
     }
 
-    fun clickChatIconToggle() =
-        execute { contextProvider().find(CHAT_ICON_TOGGLE)?.accessibleAction?.doAccessibleAction(0) }
 
     fun mostRecentBotRowContainsTerms(terms: List<String>): Boolean {
         val numberOfChatMessages = numberOfChatMessages()

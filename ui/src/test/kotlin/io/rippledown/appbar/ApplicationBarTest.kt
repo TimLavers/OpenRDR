@@ -7,8 +7,6 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
-import io.rippledown.chat.clickChatIconToggle
 import io.rippledown.constants.kb.KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION
 import io.rippledown.constants.kb.KB_CONTROL_ID
 import io.rippledown.constants.kb.KB_NAME_ID
@@ -71,36 +69,6 @@ class ApplicationBarTest {
                 ApplicationBar(KBInfo("Bondi"), handler = handler)
             }
             onNodeWithContentDescription(KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION).assertExists()
-        }
-    }
-
-    @Test
-    fun `should call handler if the the chat icon toggle is clicked and the icon is enabled`() {
-        with(composeTestRule) {
-            //Given
-            setContent {
-                ApplicationBar(KBInfo("Bondi"), isChatEnabled = true, handler = handler)
-            }
-            //When
-            clickChatIconToggle()
-
-            //Then
-            verify { handler.onToggleChat() }
-        }
-    }
-
-    @Test
-    fun `should not call handler if the the chat icon toggle is clicked and the icon is disabled`() {
-        with(composeTestRule) {
-            //Given
-            setContent {
-                ApplicationBar(KBInfo("Bondi"), isChatEnabled = false, handler = handler)
-            }
-            //When
-            clickChatIconToggle()
-
-            //Then
-            verify(exactly = 0) { handler.onToggleChat() }
         }
     }
 }

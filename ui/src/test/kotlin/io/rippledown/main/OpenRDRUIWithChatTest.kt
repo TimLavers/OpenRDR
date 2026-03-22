@@ -62,31 +62,6 @@ class OpenRDRUIWithChatTest {
     }
 
     @Test
-    fun `should hide the chat panel if the chat toggle is clicked`() = runTest {
-        val caseA = "case A"
-        val caseId1 = CaseId(id = 1, name = caseA)
-        val caseIds = listOf(caseId1)
-        val bondiComment = "Go to Bondi"
-        val case = createViewableCaseWithInterpretation(caseA, 1, listOf(bondiComment))
-        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
-        coEvery { api.getCase(1) } returns case
-
-        with(composeTestRule) {
-            //Given
-            setContent {
-                OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
-            }
-            requireChatPanelIsDisplayed()
-
-            //When
-            clickChatIconToggle()
-
-            //Then
-            requireChatPanelIsNotDisplayed()
-        }
-    }
-
-    @Test
     fun `focus should be on the chat user text field if a case is showing`() =
         runTest {
             val caseA = "case A"

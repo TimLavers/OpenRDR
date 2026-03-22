@@ -32,7 +32,7 @@ import java.io.File
 interface Handler {
     var api: Api
     var isClosing: () -> Boolean
-    fun setWindowSize(isShowingCornerstone: Boolean, isShowingChat: Boolean)
+    fun setWindowSize(isShowingCornerstone: Boolean)
 }
 
 @Composable
@@ -46,14 +46,12 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     var kbInfo: KBInfo? by remember { mutableStateOf(null) }
     var rightInformationMessage by remember { mutableStateOf("") }
     var ruleAction: Diff? by remember { mutableStateOf(null) }
-    var isShowingChat by remember { mutableStateOf(true) }
-    var isChatEnabled by remember { mutableStateOf(true) }
     val voiceRecognitionService = remember { VoiceRecognitionService(defaultModelPath()) }
 
     val isShowingCornerstone = cornerstoneStatus?.cornerstoneToReview != null
     val ruleInProgress = cornerstoneStatus != null
 
-    handler.setWindowSize(isShowingCornerstone, isShowingChat)
+    handler.setWindowSize(isShowingCornerstone)
 
     val chatControllerHandler = object : ChatControllerHandler {
         override var onBotMessageReceived: (response: ChatResponse) -> Unit = { }
@@ -92,21 +90,17 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                     currentCaseId = casesInfo.caseIds[0].id!!
                 }
                 currentCase = api.getCase(currentCaseId!!)
-                isChatEnabled = true // Enable chat only if there are cases available
             }
         }
     }
 
     LaunchedEffect(currentCaseId) {
-        // When currentCaseId changes, start a conversation with the model if the chat panel is visible
-        if (isShowingChat) {
-            withContext(dispatcher) {
-                currentCaseId?.let {
-                    val response = api.startConversation(it)
-                    if (response.text.isNotBlank()) {
-                        chatControllerHandler.onBotMessageReceived(response)
-                        ++chatId // Increment chatId to trigger recomposition in ChatController
-                    }
+        withContext(dispatcher) {
+            currentCaseId?.let {
+                val response = api.startConversation(it)
+                if (response.text.isNotBlank()) {
+                    chatControllerHandler.onBotMessageReceived(response)
+                    ++chatId // Increment chatId to trigger recomposition in ChatController
                 }
             }
         }
@@ -122,7 +116,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
 
     Scaffold(
         topBar = {
-            ApplicationBar(kbInfo, isShowingChat, isChatEnabled, object : AppBarHandler {
+            ApplicationBar(kbInfo, object : AppBarHandler {
                 override var isRuleSessionInProgress = ruleInProgress
                 override var selectKB: (id: String) -> Unit = {
                     CoroutineScope(dispatcher).launch {
@@ -161,7 +155,6 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                 override var kbDescription: () -> String = {
                     runBlocking(dispatcher) { api.kbDescription() }
                 }
-                override var onToggleChat: () -> Unit = { isShowingChat = !isShowingChat }
                 override var lastRuleDescription: () -> UndoRuleDescription = { runBlocking { api.lastRuleDescription() } }
                 override var undoLastRule: () -> Unit = {
                     runBlocking {
@@ -242,14 +235,12 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                         modifier = Modifier.weight(1f)
                     )
 
-                    if (isShowingChat) {
-                        ChatController(
-                            id = chatId,
-                            chatControllerHandler,
-                            voiceRecognitionService = voiceRecognitionService,
-                            modifier = Modifier.width(300.dp)
-                        )
-                    }
+                    ChatController(
+                        id = chatId,
+                        chatControllerHandler,
+                        voiceRecognitionService = voiceRecognitionService,
+                        modifier = Modifier.width(300.dp)
+                    )
                 }
             }
         }
