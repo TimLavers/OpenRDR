@@ -232,6 +232,12 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         chatDefs.requestCommentBeReplacedBy(toBeReplaced, replacement)
     }
 
+    @When("I request another change to be made to the report")
+    fun requestAnotherChangeToBeMadeToTheReport() {
+        chatPO().enterChatText("another change to the report please")
+        chatPO().clickSend()
+    }
+
     @When("I build a rule to replace the comment {string} by {string} with the condition(s)")
     fun buildARuleToReplaceTheCommentWithConditions(toBeReplaced: String, replacement: String, conditions: DataTable) {
         chatDefs.requestCommentBeReplacedBy(toBeReplaced, replacement)

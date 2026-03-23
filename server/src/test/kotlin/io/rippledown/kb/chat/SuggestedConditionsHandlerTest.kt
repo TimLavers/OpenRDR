@@ -26,8 +26,21 @@ class SuggestedConditionsHandlerTest {
     }
 
     @Test
+    fun `should return error when no rule session is active`() = runTest {
+        // Given
+        every { ruleService.isRuleSessionActive() } returns false
+
+        // When
+        val result = handler.handle(emptyMap())
+
+        // Then
+        result shouldBe SuggestedConditionsHandler.NO_ACTIVE_RULE_SESSION_ERROR
+    }
+
+    @Test
     fun `should return message when no suggestions are available`() = runTest {
         // Given
+        every { ruleService.isRuleSessionActive() } returns true
         every { ruleService.currentRuleSessionConditionTexts() } returns emptySet()
         every { ruleService.conditionHintsForCase(case) } returns ConditionList()
 
@@ -41,6 +54,7 @@ class SuggestedConditionsHandlerTest {
     @Test
     fun `should return numbered list of suggestions`() = runTest {
         // Given
+        every { ruleService.isRuleSessionActive() } returns true
         every { ruleService.currentRuleSessionConditionTexts() } returns emptySet()
         val suggestion1 = mockk<SuggestedCondition>()
         every { suggestion1.asText() } returns "wave height is \"2\""
@@ -60,6 +74,7 @@ class SuggestedConditionsHandlerTest {
     @Test
     fun `should mark editable suggestions`() = runTest {
         // Given
+        every { ruleService.isRuleSessionActive() } returns true
         every { ruleService.currentRuleSessionConditionTexts() } returns emptySet()
         val suggestion = mockk<SuggestedCondition>()
         every { suggestion.asText() } returns "wave height >= 1.5"
@@ -76,6 +91,7 @@ class SuggestedConditionsHandlerTest {
     @Test
     fun `should filter out already added conditions`() = runTest {
         // Given
+        every { ruleService.isRuleSessionActive() } returns true
         every { ruleService.currentRuleSessionConditionTexts() } returns setOf("wave height is \"2\"")
         val suggestion1 = mockk<SuggestedCondition>()
         every { suggestion1.asText() } returns "wave height is \"2\""
@@ -94,6 +110,7 @@ class SuggestedConditionsHandlerTest {
     @Test
     fun `should return no suggestions message when all conditions already added`() = runTest {
         // Given
+        every { ruleService.isRuleSessionActive() } returns true
         every { ruleService.currentRuleSessionConditionTexts() } returns setOf("wave height is \"2\"")
         val suggestion = mockk<SuggestedCondition>()
         every { suggestion.asText() } returns "wave height is \"2\""

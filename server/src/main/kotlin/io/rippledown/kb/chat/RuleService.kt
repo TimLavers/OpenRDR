@@ -27,4 +27,5 @@ interface RuleService {
     fun cornerstoneStatus(): CornerstoneStatus
     fun conditionHintsForCase(case: RDRCase): ConditionList
     fun currentRuleSessionConditionTexts(): Set<String>
+    fun isRuleSessionActive(): Boolean
 }

@@ -12,6 +12,9 @@ class SuggestedConditionsHandler(
 ) : FunctionCallHandler {
 
     override suspend fun handle(args: Map<String, Any?>): String {
+        if (!ruleService.isRuleSessionActive()) {
+            return NO_ACTIVE_RULE_SESSION_ERROR
+        }
         val addedConditionTexts = ruleService.currentRuleSessionConditionTexts()
         val conditionList = ruleService.conditionHintsForCase(case)
         val suggestions = conditionList.suggestions.filter { it.asText() !in addedConditionTexts }
@@ -22,5 +25,10 @@ class SuggestedConditionsHandler(
             val editable = if (suggestion.isEditable()) " [editable]" else ""
             "${index + 1}. ${suggestion.asText()}$editable"
         }.joinToString("\n")
+    }
+
+    companion object {
+        const val NO_ACTIVE_RULE_SESSION_ERROR =
+            "Error: No rule session is active. You must first output the AddComment, RemoveComment, or ReplaceComment action to start a rule session before calling getSuggestedConditions."
     }
 }

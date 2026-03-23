@@ -35,13 +35,14 @@ Feature: The user can make a rule that replaces a comment the interpretive repor
     And I build a rule to add the comment "Go to Bondi." with condition
       | "Wave is in case" |
     And  the interpretation should be "Go to Bondi."
-    When I build a rule to replace the comment "Go to Bondi." by "Go to Manly." with the condition
+    When I request another change to be made to the report
+    And I build a rule to replace the comment "Go to Bondi." by "Go to Manly." with the condition
       | "Sun is in case" |
     Then the interpretation should be "Go to Manly."
 #    Doesn't work on TL's computer, TODO fix
-#    And the conditions showing for the comment "Go to Manly." are:
-#      | Wave is in case |
-#      | Sun is in case  |
+    And the conditions showing for the comment "Go to Manly." are:
+      | Wave is in case |
+      | Sun is in case  |
 
   Scenario: A comment given for the case must be selected before the user can start a rule to replace it
     Given a case with name Case1 is stored on the server

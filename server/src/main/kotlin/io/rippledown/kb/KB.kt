@@ -267,6 +267,8 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         return ruleSession?.conditions?.map { it.asText() }?.toSet() ?: emptySet()
     }
 
+    override fun isRuleSessionActive(): Boolean = ruleSession != null
+
     /**
      * @param request the request containing the currently selected cornerstone and an updated list of conditions
      *

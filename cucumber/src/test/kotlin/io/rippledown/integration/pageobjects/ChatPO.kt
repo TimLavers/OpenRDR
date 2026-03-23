@@ -19,7 +19,7 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
         execute<AccessibleEditableText> { chatTextContext().accessibleEditableText }
 
     fun enterChatText(text: String) {
-        await().atMost(ofSeconds(10)).until {
+        await().atMost(ofSeconds(30)).until {
             try {
                 execute { chatEditableTextContext()?.setTextContents(text) }
                 true
