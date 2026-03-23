@@ -71,9 +71,10 @@ Feature: The user can make rules that change the interpretive report
       | Wave is "excellent"     |
       | Wave is in case         |
     And I select the first condition
-    When I cancel the rule
+    And I cancel the rule
     And the interpretation should be empty
-    When I build a rule to add the comment "Go for a surf." with condition
+    When I request another change to be made to the report
+    And I build a rule to add the comment "Go for a surf." with condition
       | Sun is in case |
     Then the interpretation should be "Go for a surf."
 
