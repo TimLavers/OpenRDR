@@ -84,8 +84,8 @@ Feature: The user can make rules that change the interpretive report
     And I request that the comment "Let's surf." be added
     Then the KB controls should be hidden
     And the case list should be hidden
-    And cancel the rule
 
+  @single
   Scenario: The KB controls and case list should be re-enabled after cancelling a rule
     Given a new case is stored on the server
     And I start the client application

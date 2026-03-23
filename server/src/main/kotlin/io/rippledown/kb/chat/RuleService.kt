@@ -19,6 +19,7 @@ interface RuleService {
     fun addConditionToCurrentRuleSession(condition: Condition)
     fun conditionForExpression(case: RDRCase, expression: String): ConditionParsingResult
     fun commitCurrentRuleSession()
+    fun cancelCurrentRuleSession()
     fun undoLastRuleSession()
     fun moveAttributeTo(moved: String, destination: String)
     fun sendCornerstoneStatus()

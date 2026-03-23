@@ -180,6 +180,8 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         ruleSession = null
     }
 
+    override fun cancelCurrentRuleSession() = cancelRuleSession()
+
     fun conflictingCasesInCurrentRuleSession(): List<RDRCase> {
         checkSession()
         return ruleSession!!.cornerstoneCases()

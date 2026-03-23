@@ -83,6 +83,7 @@ object KBChatService {
         "11_reordering_the_case_attributes.md",
         "12_json_format_guidelines.md",
         "13_general-guidelines.md",
+        "14_cancelling_the_rule.md",
     )
     val systemPromptExampleSections = listOf(
         "examples.md",
@@ -123,6 +124,7 @@ object KBChatService {
         "UNDO_LAST_RULE" to UNDO_LAST_RULE,
         "MOVE_ATTRIBUTE" to MOVE_ATTRIBUTE,
         "REMOVE_REASON" to REMOVE_REASON,
+        "CANCEL_RULE" to CANCEL_RULE,
 
     )
 

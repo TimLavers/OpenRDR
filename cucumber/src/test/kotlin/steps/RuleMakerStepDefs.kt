@@ -70,7 +70,7 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
 
     @When("(I )cancel the rule")
     fun cancelTheRule() {
-        ruleMakerPO().clickCancelButton()
+        chatDefs.enterChatTextAndSend("cancel this rule")
     }
 
     @When("I select the {word} condition")
