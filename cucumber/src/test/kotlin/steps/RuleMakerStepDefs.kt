@@ -219,17 +219,17 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         }
     }
 
-    @When("I start to build a rule to replace a comment")
-    fun startRuleToReplaceAComment() {
-        with(interpretationViewPO()) {
-            clickChangeInterpretationButton()
-            clickReplaceCommentMenu()
-        }
-    }
-
     @When("I start to build a rule to replace the comment {string} by {string}")
     fun startRuleToReplaceCommentBy(toBeReplaced: String, replacement: String) {
         chatDefs.requestCommentBeReplacedBy(toBeReplaced, replacement)
+    }
+
+    @When("I try to build a rule to replace the non-existing comment {string}")
+    fun startRuleToReplaceNonExistingComment(toBeReplaced: String) {
+        with(chatDefs) {
+            waitForBotQuestion()
+            enterChatTextAndSend("Replace the '$toBeReplaced' comment")
+        }
     }
 
     @When("I request another change to be made to the report")

@@ -44,11 +44,11 @@ Feature: The user can make a rule that replaces a comment the interpretive repor
       | Wave is in case |
       | Sun is in case  |
 
-  Scenario: A comment given for the case must be selected before the user can start a rule to replace it
+  Scenario: A comment given for the case must be identified before the user can start a rule to replace it
     Given a case with name Case1 is stored on the server
     And the interpretation of the case Case1 is "Go to Bondi."
     And I start the client application
     And I should see the case Case1 as the current case
-    And I start to build a rule to replace a comment
-    When I enter "Maroubra" as the filter to select a comment to replace
-    Then the OK button to start the rule to replace the comment should be disabled
+    When I try to build a rule to replace the non-existing comment "Go to Maroubra"
+    Then the model should respond with a message containing:
+      | Go to Bondi |
