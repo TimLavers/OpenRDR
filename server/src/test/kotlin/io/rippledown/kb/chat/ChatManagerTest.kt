@@ -13,7 +13,6 @@ import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_START_CONVERSA
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
-import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.toJsonString
 import kotlinx.coroutines.test.runTest
 import org.slf4j.Logger
@@ -411,24 +410,24 @@ class ChatManagerTest {
     }
 
     @Test
-    fun `should process multiple actions in sequence`() = runTest {
+    fun `should only process the first json fragment when multiple are returned`() = runTest {
         // Given
         val response = """
-            {"action": "ExemptCornerstone"}
             {"action": "CommitRule"}
+            {"action": "CancelRule"}
         """.trimIndent()
         val message = "test message"
 
         coEvery { conversationService.response(message) } returns response
-        coEvery { ruleService.exemptCornerstoneCase() } returns CornerstoneStatus()
         coEvery { ruleService.commitCurrentRuleSession() } returns Unit
+        coEvery { ruleService.sendRuleSessionCompleted() } returns Unit
 
         // When
         chatManager.response(message)
 
         // Then
-        coVerify { ruleService.exemptCornerstoneCase() }
         coVerify { ruleService.commitCurrentRuleSession() }
+        coVerify(exactly = 0) { ruleService.cancelCurrentRuleSession() }
     }
 
 

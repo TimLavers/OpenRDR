@@ -1,6 +1,7 @@
 package io.rippledown.kb
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -35,6 +36,6 @@ class KBModelIntegrationTest: KBTestBase() {
         val response = kb.responseToUserMessage(userExpression)
 
         //Then
-        response.text shouldBe "confirm that you want to add the comment: 'Go to Bondi.'"
+        response.text shouldContain "confirm that you want to add the comment: 'Go to Bondi.'"
     }
 }

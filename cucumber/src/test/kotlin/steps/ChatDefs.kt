@@ -225,6 +225,8 @@ class ChatDefs {
         waitForBotSuggestions()
         decline()
         waitForBotQuestionToAllowReportChangeToCornerstoneThenConfirm()
+        waitForBotSuggestions()
+        decline()
         waitForBotToSayDone()
     }
 
