@@ -20,7 +20,6 @@ class ChatDefs {
         }
     }
 
-    @Then("I confirm")
     fun confirm() {
         with(chatPO()) {
             enterChatText("yes")
@@ -28,7 +27,6 @@ class ChatDefs {
         }
     }
 
-    @Then("I allow")
     fun allow() {
         with(chatPO()) {
             enterChatText("allow")
@@ -36,7 +34,6 @@ class ChatDefs {
         }
     }
 
-    @Then("I decline")
     fun decline() {
         with(chatPO()) {
             enterChatText("no")
@@ -44,20 +41,13 @@ class ChatDefs {
         }
     }
 
-    @Then("the chatbot has asked for confirmation")
     fun waitForBotRequestForConfirmation() {
         waitForBotText(CONFIRM)
     }
 
-    @Then("the chatbot has asked for confirmation and I confirm")
     fun waitForBotRequestForConfirmationAndConfirm() {
         waitForBotText(CONFIRM)
         confirm()
-    }
-
-    @Then("the chatbot has asked for confirmation of the (comment|reason):")
-    fun waitForBotRequestForConfirmation(textToConfirm: String) {
-        waitForBotText(CONFIRM, textToConfirm)
     }
 
     @Then("the chatbot has completed the action")
@@ -79,7 +69,6 @@ class ChatDefs {
         waitForBotText(REASON)
     }
 
-    @And("the chatbot has provided some suggestions")
     fun waitForBotSuggestions() {
         waitForSuggestionText("1.")
     }
@@ -99,11 +88,6 @@ class ChatDefs {
         await().atMost(ofSeconds(60)).until {
             chatPO().numberOfChatMessages() > countBefore + 1
         }
-    }
-
-    @And("the chatbot has asked for the first reason")
-    fun waitForBotRequestForFirstReason() {
-        waitForBotText(FIRST_REASON)
     }
 
     @And("the chatbot indicates that this reason is not true for the current case")
@@ -152,11 +136,6 @@ class ChatDefs {
         }
         //The model should not have presented new suggestions, which would indicate that the reason was accepted
         chatPO().numberOfSuggestionRows() shouldBeLessThanOrEqualTo suggestionsBefore
-    }
-
-    @And("the chatbot has asked for what comment I want to add")
-    fun waitForBotQuestionToSpecifyAComment() {
-        waitForBotText(WHAT_COMMENT)
     }
 
     @And("I click the non-editable suggested condition {string}")
@@ -209,15 +188,6 @@ class ChatDefs {
             enterChatTextAndSend(reason)
         }
     }
-
-    @And("I start to build a rule using the chat to add the comment {string}")
-    fun startToAddCommentUsingChat(comment: String) {
-        waitForBotQuestionToAddRemoveOrReplaceAComment()
-        enterChatTextAndSend("Add the comment: \"$comment\"")
-        waitForBotRequestForConfirmation()
-        confirm()
-    }
-
 
     @And("I add a comment {string}, allowing the report change to the cornerstone case")
     fun addCommentUsingChatAndAllowCornerstoneReportChange(comment: String) {

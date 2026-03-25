@@ -21,7 +21,6 @@ class IntepretationStepDefs {
         interpretationViewPO().requireNoConditionsToBeShowing()
     }
 
-    @And("the condition(s) showing in the interpretation view (are)(is):")
     fun requireConditionsToBeShowing(conditions: DataTable) {
         interpretationViewPO().waitForConditionsToBeShowing(conditions.asList())
     }

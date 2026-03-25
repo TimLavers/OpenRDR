@@ -1,26 +1,13 @@
 package steps
 
-import androidx.compose.ui.awt.ComposeDialog
 import io.cucumber.datatable.DataTable
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.kotest.matchers.collections.shouldContainAll
-import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
-import io.rippledown.constants.interpretation.OK_BUTTON_FOR_REMOVE_COMMENT
-import io.rippledown.constants.interpretation.OK_BUTTON_FOR_REPLACE_COMMENT
-import io.rippledown.constants.interpretation.REMOVE_COMMENT_TEXT_FIELD
-import io.rippledown.constants.interpretation.REPLACED_COMMENT_TEXT_FIELD
 import io.rippledown.integration.pause
-import io.rippledown.integration.utils.find
-import io.rippledown.integration.utils.findComposeDialogThatIsShowing
-import io.rippledown.integration.waitUntilAsserted
-import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
-import javax.accessibility.AccessibleState
-import javax.accessibility.AccessibleStateSet
 
 class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
 
@@ -59,7 +46,6 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         }
     }
 
-    @When("(I )complete the rule")
     fun completeRule() {
         with(chatDefs) {
             waitForBotSuggestions()
@@ -93,29 +79,12 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         chatPO().suggestionsInMostRecentMessage() shouldContainAll (expectedConditions)
     }
 
-    @And("I start to build a rule to add the comment {string} and click Cancel")
-    fun startRuleToAddNewCommentAndClickCancel(comment: String) {
-        with(interpretationViewPO()) {
-            clickChangeInterpretationButton()
-            clickAddCommentMenu()
-            setAddCommentTextAndClickCancel(comment)
-        }
-    }
-
     @And("I start to build a rule to remove the comment {string}")
     fun startRuleToRemoveComment(comment: String) {
         with(interpretationViewPO()) {
             clickChangeInterpretationButton()
             clickRemoveCommentMenu()
             selectCommentToRemoveAndClickOK(comment)
-        }
-    }
-
-    fun startRuleToAddExistingComment(comment: String) {
-        with(interpretationViewPO()) {
-            clickChangeInterpretationButton()
-            clickAddCommentMenu()
-            selectExistingCommentToAddClickOK(comment)
         }
     }
 
@@ -150,73 +119,16 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
     }
 
 
-    @When("I build a rule to remove the comment {string}")
-    fun buildARuleToRemoveTheComment(comment: String) {
-        chatDefs.requestCommentBeRemoved(comment)
-        completeRule()
-    }
-
     @When("I build another rule to remove the comment {string}")
     fun buildAnotherRuleToRemoveTheComment(comment: String) {
         chatDefs.removeComment(comment)
         completeRule()
     }
 
-    @When("I start to build a rule to remove a comment")
-    fun startRuleToRemoveAComment() {
-        with(interpretationViewPO()) {
-            clickChangeInterpretationButton()
-            clickRemoveCommentMenu()
-        }
-    }
-
     @When("I build a rule to remove the comment {string} with condition(s)")
     fun buildARuleToRemoveCommentWithConditions(comment: String, conditions: DataTable) {
         chatDefs.requestCommentBeRemoved(comment)
         chatDefs.provideReasonsThenDeclineToAddMore(conditions)
-    }
-
-    @And("I enter {string} as the filter to select a comment to remove")
-    fun enterFilterTextIntoTheRemoveCommentToRemove(filterText: String) {
-        enterFilterText(filterText, REMOVE_COMMENT_TEXT_FIELD)
-    }
-
-    @And("I enter {string} as the filter to select a comment to replace")
-    fun enterFilterTextIntoTheRemoveCommentToReplace(filterText: String) {
-        enterFilterText(filterText, REPLACED_COMMENT_TEXT_FIELD)
-    }
-
-    private fun enterFilterText(filterText: String, contentDescriptionForTextField: String) {
-        waitUntilAsserted {
-            execute<ComposeDialog> { findComposeDialogThatIsShowing() } shouldNotBe null
-        }
-        val dialog = execute<ComposeDialog> { findComposeDialogThatIsShowing() }
-        with(dialog.accessibleContext) {
-            //Enter the filter text
-            execute { find(contentDescriptionForTextField)!!.accessibleEditableText.setTextContents(filterText) }
-        }
-    }
-
-    @Then("the OK button to start the rule to remove the comment should be disabled")
-    fun theOKButtonToStartTheRuleToRemoveTheCommentShouldBeDisabled() {
-        requireButtonToBeDisabled(OK_BUTTON_FOR_REMOVE_COMMENT)
-    }
-
-    @Then("the OK button to start the rule to replace the comment should be disabled")
-    fun theOKButtonToStartTheRuleToReplaceTheCommentShouldBeDisabled() {
-        requireButtonToBeDisabled(OK_BUTTON_FOR_REPLACE_COMMENT)
-    }
-
-    private fun requireButtonToBeDisabled(contentDescriptionForButton: String) {
-        waitUntilAsserted {
-            execute<ComposeDialog> { findComposeDialogThatIsShowing() } shouldNotBe null
-        }
-        val dialog = execute<ComposeDialog> { findComposeDialogThatIsShowing() }
-        with(dialog.accessibleContext) {
-            val accessibleStateSet =
-                execute<AccessibleStateSet> { find(contentDescriptionForButton)!!.accessibleStateSet }
-            accessibleStateSet.contains(AccessibleState.ENABLED) shouldBe false
-        }
     }
 
     @When("I start to build a rule to replace the comment {string} by {string}")
@@ -267,11 +179,6 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         }
     }
 
-    @And("the condition added should be {string}")
-    fun requireMostRecentAddedCondition(expected: String) {
-        chatDefs.waitForBotText(expected)
-    }
-
     @When("I set the editable value to be {string}")
     fun setTheEditableValueToBe(text: String) {
         pause(100)
@@ -308,11 +215,6 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
     @Then("I enter the expression {string}")
     fun `enter expression`(expression: String) {
         chatDefs.provideTheseReasons(listOf(expression))
-    }
-
-    @Then("the condition added should be:")
-    fun `require most recent added condition`(expected: String) {
-        chatDefs.waitForBotText(expected)
     }
 
     @Then("the model should respond with a message containing:")

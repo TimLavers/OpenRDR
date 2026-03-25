@@ -40,26 +40,6 @@ class KbStepDefs {
         kbControlsPO().selectKB(kbName)
     }
 
-    @Then("the change interpretation icon (is )(should be )hidden")
-    fun theChangeInterpretationIconShouldBeHidden() {
-        interpretationViewPO().requireChangeInterpretationIconToBeHidden()
-    }
-
-    @Then("the change interpretation icon (is )(should be )shown")
-    fun theChangeInterpretationIconShouldBeShown() {
-        interpretationViewPO().requireChangeInterpretationIconToBeShowing()
-    }
-
-    @Then("the change interpretation dropdown menu (is )(should be )shown")
-    fun theChangeInterpretationDropdownMenuShouldBeShown() {
-        interpretationViewPO().requireChangeInterpretationDropDownMenuToBeShowing()
-    }
-
-    @Then("the change interpretation dropdown menu (is )(should be )hidden")
-    fun theChangeInterpretationDropdownMenuShouldBeHidden() {
-        interpretationViewPO().requireChangeInterpretationDropDownMenuToBeHidden()
-    }
-
     @Then("the KB controls (are )(should be )hidden")
     fun theKBControlsAreShouldBeHidden() {
         kbControlsPO().requireKbControlsToBeHidden()

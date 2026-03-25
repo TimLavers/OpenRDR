@@ -11,20 +11,14 @@ import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.kotest.matchers.shouldBe
-import io.rippledown.integration.pause
 import io.rippledown.integration.proxy.ConfiguredTestData
 import io.rippledown.integration.proxy.TestResultDetail
-import org.awaitility.Awaitility
 import steps.StepsInfrastructure.cleanup
-import steps.StepsInfrastructure.reStartWithPostgres
 import steps.StepsInfrastructure.screenshotOnFailure
 import steps.StepsInfrastructure.startClient
 import steps.StepsInfrastructure.startServerWithInMemoryDatabase
 import steps.StepsInfrastructure.startServerWithPostgresDatabase
-import steps.StepsInfrastructure.stopServer
 import java.io.File
-import java.time.Duration
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeUnit.SECONDS
 
 class Defs {
@@ -66,11 +60,6 @@ class Defs {
     @When("I start the client application")
     fun startClientApplication() = startClient()
 
-    @When("(I )stop the client application")
-    fun stopTheClientApplication() {
-        //client application is stopped in the After hook
-    }
-
     @Given("a list of cases with the following names is stored on the server:")
     fun aListOfCasesWithTheFollowingNamesIsStoredOnTheServer(dataTable: DataTable) {
         dataTable.asList().forEach { caseName ->
@@ -89,18 +78,6 @@ class Defs {
             val padded = i.toString().padStart(3, '0')
             labProxy().provideCaseWithName("Case_$padded")
         }
-    }
-
-    @And("I re-start the server application")
-    fun restartTheServerApplication() {
-        stopServer()
-        pause(3000)
-        reStartWithPostgres()
-    }
-
-    @And("I select a case with all three attributes")
-    fun selectACaseWithAllThreeAttributes() {
-        caseListPO().select("CaseABC")
     }
 
     @When("a new case with the name {word} is stored on the server")
@@ -164,13 +141,6 @@ class Defs {
         kbControlsPO().exportKB(exportedZip!!.absolutePath)
     }
 
-    @Then("there is a file called {word} in my downloads directory")
-    fun requireFileInMyDownloadsDirectory(fileName: String) {
-        Awaitility.await().atMost(Duration.ofSeconds(5)).until {
-            File(StepsInfrastructure.uiTestBase.downloadsDir(), fileName).exists()
-        }
-    }
-
     @Given("I import the previously exported Knowledge Base")
     fun importThePreviouslyExportedKnowledgeBase() {
         require(exportedZip != null) {
@@ -212,24 +182,9 @@ class Defs {
         labProxy().provideCase(caseName, details)
     }
 
-    @Then("the displayed product name is 'Open RippleDown'")
-    fun requireProductNameIsOpenRippleDown() {
-        applicationBarPO().title() shouldBe "Open RippleDown"
-    }
-
     @And("pause for {long} second(s)")
     fun pauseSeconds(seconds: Long) {
         Thread.sleep(SECONDS.toMillis(seconds))
-    }
-
-    @And("pause")
-    fun pause() {
-        Thread.sleep(TimeUnit.DAYS.toMillis(1L))
-    }
-
-    @And("pause briefly")
-    fun pauseBriefly() {
-        Thread.sleep(SECONDS.toMillis(20L))
     }
 
     @Then("I (should )see the following cases in the case list:")
@@ -249,11 +204,6 @@ class Defs {
         caseViewPO().waitForNameToShow(caseName)
     }
 
-    @Then("I should not see any current case")
-    fun IShouldNotSeeAnyCurrentCase() {
-        caseViewPO().requireNoNameShowing()
-    }
-
     @Then("Eventually I should not see any cases")
     fun EventuallyIShouldNotSeeAnyCases() {
         caseViewPO().waitForNoNameShowing()
@@ -262,12 +212,6 @@ class Defs {
     @And("(I )select the case {word}")
     fun ISelectTheCaseWord(caseName: String) {
         caseListPO().select(caseName)
-    }
-
-    @And("(I )select the case {word} followed by {word}")
-    fun ISelectTheCaseWordFollowedByWord(caseName1: String, caseName2: String) {
-        caseListPO().select(caseName1)
-        caseListPO().select(caseName2)
     }
 
     @Then("the interpretation should contain the text {string}")
