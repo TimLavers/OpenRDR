@@ -1,11 +1,17 @@
 package io.rippledown.main
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.BottomAppBar
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import io.rippledown.appbar.AppBarHandler
@@ -27,6 +33,7 @@ import io.rippledown.model.rule.UndoRuleDescription
 import io.rippledown.sample.SampleKB
 import kotlinx.coroutines.*
 import org.jetbrains.skiko.MainUIDispatcher
+import java.awt.Cursor
 import java.io.File
 
 interface Handler {
@@ -47,6 +54,8 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     var rightInformationMessage by remember { mutableStateOf("") }
     var ruleAction: Diff? by remember { mutableStateOf(null) }
     val voiceRecognitionService = remember { VoiceRecognitionService(defaultModelPath()) }
+    var chatPanelWidth by remember { mutableStateOf(300.dp) }
+    val density = LocalDensity.current
 
     val isShowingCornerstone = cornerstoneStatus?.cornerstoneToReview != null
     val ruleInProgress = cornerstoneStatus != null
@@ -235,11 +244,27 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                         modifier = Modifier.weight(1f)
                     )
 
+                    // Draggable divider for resizing the chat panel
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .width(4.dp)
+                            .background(Color.LightGray)
+                            .pointerHoverIcon(PointerIcon(Cursor(Cursor.W_RESIZE_CURSOR)))
+                            .pointerInput(Unit) {
+                                detectDragGestures { change, dragAmount ->
+                                    change.consume()
+                                    val deltaWidth = with(density) { (-dragAmount.x).toDp() }
+                                    chatPanelWidth = (chatPanelWidth + deltaWidth).coerceIn(200.dp, 600.dp)
+                                }
+                            }
+                    )
+
                     ChatController(
                         id = chatId,
                         chatControllerHandler,
                         voiceRecognitionService = voiceRecognitionService,
-                        modifier = Modifier.width(300.dp)
+                        modifier = Modifier.width(chatPanelWidth)
                     )
                 }
             }

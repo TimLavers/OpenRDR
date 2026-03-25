@@ -19,6 +19,7 @@ import steps.StepsInfrastructure.startClient
 import steps.StepsInfrastructure.startServerWithInMemoryDatabase
 import steps.StepsInfrastructure.startServerWithPostgresDatabase
 import java.io.File
+import java.util.concurrent.TimeUnit.DAYS
 import java.util.concurrent.TimeUnit.SECONDS
 
 class Defs {
@@ -182,6 +183,10 @@ class Defs {
         labProxy().provideCase(caseName, details)
     }
 
+    @And("pause")
+    fun pause() {
+        Thread.sleep(DAYS.toMillis(1L))
+    }
     @And("pause for {long} second(s)")
     fun pauseSeconds(seconds: Long) {
         Thread.sleep(SECONDS.toMillis(seconds))
