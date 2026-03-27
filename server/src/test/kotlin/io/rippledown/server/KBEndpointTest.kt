@@ -19,10 +19,9 @@ import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.model.condition.isCondition
-import io.rippledown.model.rule.ChangeTreeToAddConclusion
-import io.rippledown.model.rule.ChangeTreeToRemoveConclusion
-import io.rippledown.model.rule.ChangeTreeToReplaceConclusion
-import io.rippledown.model.rule.UndoRuleDescription
+import io.rippledown.model.diff.Addition
+import io.rippledown.model.diff.Replacement
+import io.rippledown.model.rule.*
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.supplyCaseFromFile
 import io.rippledown.toJsonString
@@ -447,6 +446,51 @@ internal class KBEndpointTest {
         conditions.size shouldBe 1
         conditions.single().sameAs(tshCondition) shouldBe true
         rule.conclusion shouldBe conclusion1
+    }
+
+    @Test
+    fun `should set currentDiff on kb when starting a rule session via SessionStartRequest`() {
+        //Given
+        val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
+        val diff = Addition("Go to Bondi.")
+        val sessionStartRequest = SessionStartRequest(id, diff)
+
+        //When
+        endpoint.startRuleSession(sessionStartRequest)
+
+        //Then
+        endpoint.kb.currentDiff shouldBe diff
+    }
+
+    @Test
+    fun `should set currentDiff to Replacement when starting a rule session via SessionStartRequest`() {
+        //Given
+        val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
+        val conclusion = endpoint.kb.conclusionManager.getOrCreate("Go to Bondi.")
+        endpoint.startRuleSessionToAddConclusion(id, conclusion)
+        endpoint.commitCurrentRuleSession()
+        val diff = Replacement("Go to Bondi.", "Go to Maroubra.")
+        val sessionStartRequest = SessionStartRequest(id, diff)
+
+        //When
+        endpoint.startRuleSession(sessionStartRequest)
+
+        //Then
+        endpoint.kb.currentDiff shouldBe diff
+    }
+
+    @Test
+    fun `should include the diff in the cornerstone status returned by startRuleSession`() {
+        //Given
+        val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
+        val diff = Addition("Go to Bondi.")
+        val sessionStartRequest = SessionStartRequest(id, diff)
+
+        //When
+        val status = endpoint.startRuleSession(sessionStartRequest)
+
+        //Then
+        status.diff shouldBe diff
     }
 
     @Test

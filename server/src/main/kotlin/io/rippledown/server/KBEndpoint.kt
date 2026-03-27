@@ -125,6 +125,7 @@ class KBEndpoint(val kb: KB) {
         logger.info("startRuleSession with data $sessionStartRequest")
         val caseId = sessionStartRequest.caseId
         val diff = sessionStartRequest.diff
+        kb.currentDiff = diff
         startRuleSessionForDifference(caseId, diff)
         return kb.cornerstoneStatus(null)
     }

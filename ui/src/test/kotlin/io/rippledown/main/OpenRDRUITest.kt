@@ -1,10 +1,8 @@
 package io.rippledown.main
 
-import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithTag
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -23,6 +21,10 @@ import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.chat.ChatResponse
+import io.rippledown.model.diff.Addition
+import io.rippledown.model.diff.Removal
+import io.rippledown.model.diff.Replacement
+import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.UndoRuleDescription
 import io.rippledown.utils.applicationFor
 import io.rippledown.utils.createViewableCase
@@ -518,6 +520,149 @@ class OpenRDRUITest {
 
             //Then
             coVerify(exactly = 1) { api.startConversation(idB) }
+        }
+    }
+
+    @Test
+    fun `should show Addition diff in InformationPanel when cornerstone status has an Addition diff`() = runTest {
+        //Given
+        var updateCornerstoneStatus: ((CornerstoneStatus) -> Unit)? = null
+        coEvery { api.startWebSocketSession(any(), any()) } coAnswers {
+            updateCornerstoneStatus = firstArg()
+        }
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+
+            //When
+            runOnIdle {
+                updateCornerstoneStatus!!.invoke(CornerstoneStatus(diff = Addition("Go to Bondi.")))
+            }
+            waitForIdle()
+
+            //Then
+            onNodeWithContentDescription(LEFT_INFO_MESSAGE_ID).assertTextEquals("Adding Go to Bondi.")
+        }
+    }
+
+    @Test
+    fun `should show Removal diff in InformationPanel when cornerstone status has a Removal diff`() = runTest {
+        //Given
+        var updateCornerstoneStatus: ((CornerstoneStatus) -> Unit)? = null
+        coEvery { api.startWebSocketSession(any(), any()) } coAnswers {
+            updateCornerstoneStatus = firstArg()
+        }
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+
+            //When
+            runOnIdle {
+                updateCornerstoneStatus!!.invoke(CornerstoneStatus(diff = Removal("Go to Bondi.")))
+            }
+            waitForIdle()
+
+            //Then
+            onNodeWithContentDescription(LEFT_INFO_MESSAGE_ID).assertTextEquals("Removing Go to Bondi.")
+        }
+    }
+
+    @Test
+    fun `should show Replacement diff in InformationPanel when cornerstone status has a Replacement diff`() = runTest {
+        //Given
+        var updateCornerstoneStatus: ((CornerstoneStatus) -> Unit)? = null
+        coEvery { api.startWebSocketSession(any(), any()) } coAnswers {
+            updateCornerstoneStatus = firstArg()
+        }
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+
+            //When
+            runOnIdle {
+                updateCornerstoneStatus!!.invoke(
+                    CornerstoneStatus(diff = Replacement("Go to Bondi.", "Go to Maroubra."))
+                )
+            }
+            waitForIdle()
+
+            //Then
+            onNodeWithContentDescription(LEFT_INFO_MESSAGE_ID)
+                .assertTextEquals("Replacing Go to Bondi. by Go to Maroubra.")
+        }
+    }
+
+    @Test
+    fun `should clear the diff in InformationPanel when the rule session completes`() = runTest {
+        //Given
+        var updateCornerstoneStatus: ((CornerstoneStatus) -> Unit)? = null
+        var ruleSessionCompleted: (() -> Unit)? = null
+        coEvery { api.startWebSocketSession(any(), any()) } coAnswers {
+            updateCornerstoneStatus = firstArg()
+            ruleSessionCompleted = secondArg()
+        }
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            runOnIdle {
+                updateCornerstoneStatus!!.invoke(CornerstoneStatus(diff = Addition("Go to Bondi.")))
+            }
+            waitForIdle()
+            onNodeWithContentDescription(LEFT_INFO_MESSAGE_ID).assertTextEquals("Adding Go to Bondi.")
+
+            //When
+            runOnIdle {
+                ruleSessionCompleted!!.invoke()
+            }
+            waitForIdle()
+
+            //Then
+            onNodeWithContentDescription(LEFT_INFO_MESSAGE_ID).assertTextEquals("")
+        }
+    }
+
+    @Test
+    fun `should show blank left message when cornerstone status has no diff`() = runTest {
+        //Given
+        var updateCornerstoneStatus: ((CornerstoneStatus) -> Unit)? = null
+        coEvery { api.startWebSocketSession(any(), any()) } coAnswers {
+            updateCornerstoneStatus = firstArg()
+        }
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+
+            //When
+            runOnIdle {
+                updateCornerstoneStatus!!.invoke(CornerstoneStatus(diff = null))
+            }
+            waitForIdle()
+
+            //Then
+            onNodeWithContentDescription(LEFT_INFO_MESSAGE_ID).assertTextEquals("")
+        }
+    }
+
+    @Test
+    fun `should show blank left message initially when no cornerstone status has been received`() = runTest {
+        with(composeTestRule) {
+            //When
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+
+            //Then
+            onNodeWithContentDescription(LEFT_INFO_MESSAGE_ID).assertTextEquals("")
         }
     }
 

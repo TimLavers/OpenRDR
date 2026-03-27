@@ -21,6 +21,10 @@ import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
+import io.rippledown.model.diff.Addition
+import io.rippledown.model.diff.Diff
+import io.rippledown.model.diff.Removal
+import io.rippledown.model.diff.Replacement
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistentKB
@@ -43,6 +47,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     internal val caseViewManager = CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
     val ruleTree = ruleManager.ruleTree()
     private var ruleSession: RuleBuildingSession? = null
+    internal var currentDiff: Diff? = null
     private val conditionChatService = ConditionChatService()
 
     private var conditionParser: ConditionParser
@@ -137,12 +142,14 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     }
 
     override fun startRuleSessionToAddComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus {
+        currentDiff = Addition(comment)
         val conclusion = conclusionManager.getOrCreate(comment)
         val action = ChangeTreeToAddConclusion(conclusion)
         return startRuleSession(viewableCase.case, action)
     }
 
     override fun startRuleSessionToRemoveComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus {
+        currentDiff = Removal(comment)
         val conclusion = conclusionManager.getOrCreate(comment)
         val action = ChangeTreeToRemoveConclusion(conclusion)
         return startRuleSession(viewableCase.case, action)
@@ -153,6 +160,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         replacedComment: String,
         replacementComment: String
     ): CornerstoneStatus {
+        currentDiff = Replacement(replacedComment, replacementComment)
         val replacedConclusion = conclusionManager.getOrCreate(replacedComment)
         val replacementConclusion = conclusionManager.getOrCreate(replacementComment)
         val action = ChangeTreeToReplaceConclusion(replacedConclusion, replacementConclusion)
@@ -178,6 +186,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     fun cancelRuleSession() {
         check(ruleSession != null) { "No rule session in progress." }
         ruleSession = null
+        currentDiff = null
     }
 
     override fun cancelCurrentRuleSession() = cancelRuleSession()
@@ -211,6 +220,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         ruleSessionRecorder.recordRuleSessionCommitted(rulesAdded)
         addCornerstoneCase(ruleSession!!.case)
         ruleSession = null
+        currentDiff = null
         checkRuleSessionHistoryConsistency()
     }
 
@@ -331,7 +341,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     internal fun cornerstoneStatus(currentCornerstone: ViewableCase?): CornerstoneStatus {
         checkSession()
         val cornerstones: List<RDRCase> = ruleSession!!.cornerstoneCases()
-        if (cornerstones.isEmpty()) return CornerstoneStatus()
+        if (cornerstones.isEmpty()) return CornerstoneStatus(diff = currentDiff)
 
         //if no cornerstone has been selected yet, or the selected cornerstone is no longer in the list of cornerstones, return the first one
         var index = 0
@@ -341,7 +351,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         index = if (index >= 0) index else 0
         val cornerstone = cornerstones[index]
         val viewableCornerstone = viewableCase(cornerstone)
-        return CornerstoneStatus(viewableCornerstone, index, cornerstones.size)
+        return CornerstoneStatus(viewableCornerstone, index, cornerstones.size, currentDiff)
     }
 
     //Allow a mock parser to be set so we can avoid connecting to Gemini for all the tests

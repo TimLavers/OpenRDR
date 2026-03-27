@@ -27,7 +27,6 @@ import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
-import io.rippledown.model.diff.Diff
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.UndoRuleDescription
 import io.rippledown.sample.SampleKB
@@ -52,7 +51,6 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     var casesInfo by remember { mutableStateOf(CasesInfo()) }
     var kbInfo: KBInfo? by remember { mutableStateOf(null) }
     var rightInformationMessage by remember { mutableStateOf("") }
-    var ruleAction: Diff? by remember { mutableStateOf(null) }
     val voiceRecognitionService = remember { VoiceRecognitionService(defaultModelPath()) }
     var chatPanelWidth by remember { mutableStateOf(300.dp) }
     var conversationCaseId by remember { mutableStateOf<Long?>(null) }
@@ -192,7 +190,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
             BottomAppBar(
                 backgroundColor = Color.White,
             ) {
-                val leftMessage = ruleAction?.toAnnotatedString() ?: AnnotatedString("")
+                val leftMessage = cornerstoneStatus?.diff?.toAnnotatedString() ?: AnnotatedString("")
                 val rightMessage = AnnotatedString(rightInformationMessage)
                 InformationPanel(leftMessage, rightMessage)
             }
@@ -214,7 +212,6 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
             Column(modifier = Modifier.padding(paddingValues)) {
                 Row(modifier = Modifier.weight(1f)) {
                     if (!ruleInProgress) {
-                        ruleAction = null
                         rightInformationMessage = ""
                         Column {
                             CaseSelectorHeader(casesInfo.caseIds.size)

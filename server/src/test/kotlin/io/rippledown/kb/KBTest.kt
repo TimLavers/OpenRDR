@@ -18,6 +18,9 @@ import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals
 import io.rippledown.model.condition.episodic.predicate.High
 import io.rippledown.model.condition.episodic.predicate.Is
 import io.rippledown.model.condition.episodic.signature.Current
+import io.rippledown.model.diff.Addition
+import io.rippledown.model.diff.Removal
+import io.rippledown.model.diff.Replacement
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.external.MeasurementEvent
 import io.rippledown.model.rule.*
@@ -1131,6 +1134,112 @@ class KBTest {
         kb.addConditionToCurrentRuleSession(condition1)
         kb.addConditionToCurrentRuleSession(condition2)
         kb.currentRuleSessionConditionTexts() shouldBe setOf(condition1.asText(), condition2.asText())
+    }
+
+    @Test
+    fun `should set currentDiff to Addition when starting a rule session to add a comment`() {
+        //Given
+        val sessionCase = createCase("Case1", value = "1.0", id = 1)
+        val viewableCase = kb.viewableCase(sessionCase)
+        val comment = "Go to Bondi."
+
+        //When
+        kb.startRuleSessionToAddComment(viewableCase, comment)
+
+        //Then
+        kb.currentDiff shouldBe Addition(comment)
+    }
+
+    @Test
+    fun `should set currentDiff to Removal when starting a rule session to remove a comment`() {
+        //Given
+        val sessionCase = createCase("Case1", value = "1.0", id = 1)
+        val viewableCase = kb.viewableCase(sessionCase)
+        val comment = "Go to Bondi."
+        kb.startRuleSessionToAddComment(viewableCase, comment)
+        kb.commitCurrentRuleSession()
+
+        //When
+        kb.startRuleSessionToRemoveComment(viewableCase, comment)
+
+        //Then
+        kb.currentDiff shouldBe Removal(comment)
+    }
+
+    @Test
+    fun `should set currentDiff to Replacement when starting a rule session to replace a comment`() {
+        //Given
+        val sessionCase = createCase("Case1", value = "1.0", id = 1)
+        val viewableCase = kb.viewableCase(sessionCase)
+        val original = "Go to Bondi."
+        val replacement = "Go to Maroubra."
+        kb.startRuleSessionToAddComment(viewableCase, original)
+        kb.commitCurrentRuleSession()
+
+        //When
+        kb.startRuleSessionToReplaceComment(viewableCase, original, replacement)
+
+        //Then
+        kb.currentDiff shouldBe Replacement(original, replacement)
+    }
+
+    @Test
+    fun `should clear currentDiff when cancelling a rule session`() {
+        //Given
+        val sessionCase = createCase("Case1", value = "1.0", id = 1)
+        val viewableCase = kb.viewableCase(sessionCase)
+        kb.startRuleSessionToAddComment(viewableCase, "Go to Bondi.")
+        kb.currentDiff shouldNotBe null
+
+        //When
+        kb.cancelRuleSession()
+
+        //Then
+        kb.currentDiff shouldBe null
+    }
+
+    @Test
+    fun `should clear currentDiff when committing a rule session`() {
+        //Given
+        val sessionCase = createCase("Case1", value = "1.0", id = 1)
+        val viewableCase = kb.viewableCase(sessionCase)
+        kb.startRuleSessionToAddComment(viewableCase, "Go to Bondi.")
+        kb.currentDiff shouldNotBe null
+
+        //When
+        kb.commitCurrentRuleSession()
+
+        //Then
+        kb.currentDiff shouldBe null
+    }
+
+    @Test
+    fun `should include the diff in the cornerstone status when cornerstones exist`() {
+        //Given
+        kb.addCornerstoneCase(createCase("Case2", value = "2.0"))
+        val sessionCase = createCase("Case1", value = "1.0", id = 1)
+        val viewableCase = kb.viewableCase(sessionCase)
+        val comment = "Go to Bondi."
+
+        //When
+        val status = kb.startRuleSessionToAddComment(viewableCase, comment)
+
+        //Then
+        status.diff shouldBe Addition(comment)
+    }
+
+    @Test
+    fun `should include the diff in the cornerstone status when no cornerstones exist`() {
+        //Given
+        val sessionCase = createCase("Case1", value = "1.0", id = 1)
+        val viewableCase = kb.viewableCase(sessionCase)
+        val comment = "Go to Bondi."
+
+        //When
+        val status = kb.startRuleSessionToAddComment(viewableCase, comment)
+
+        //Then
+        status.diff shouldBe Addition(comment)
     }
 
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")
