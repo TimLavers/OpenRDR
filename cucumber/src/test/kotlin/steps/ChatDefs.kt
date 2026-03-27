@@ -76,8 +76,12 @@ class ChatDefs {
     @And("the chatbot has asked if I want to provide any (more )reasons and I decline")
     fun waitForBotQuestionToProvideReasonsThenDecline() {
         //"1." is the start of a suggestion
-        waitForBotTextToContainAnyOf(REASON, SUGGESTION, "1.")
+        waitForBotQuestionToProvideAnotherReasonOrGiveSuggestions()
         decline()
+    }
+
+    fun waitForBotQuestionToProvideAnotherReasonOrGiveSuggestions() {
+        waitForBotTextToContainAnyOf(REASON, SUGGESTION, "1.")
     }
 
     @And("the chatbot has asked if I want to provide any (more )reasons and I confirm")
@@ -301,6 +305,7 @@ class ChatDefs {
 
     @When("I remove the condition {string}")
     fun removeTheCondition(text: String) {
+        waitForBotQuestionToProvideAnotherReasonOrGiveSuggestions()
         enterChatTextAndSend("Remove \"$text\"")
         waitForBotTextToContainAnyOf("removed", SUGGESTION, "1.")
     }
