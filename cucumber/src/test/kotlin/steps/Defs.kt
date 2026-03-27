@@ -13,14 +13,14 @@ import io.cucumber.java.en.When
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.proxy.ConfiguredTestData
 import io.rippledown.integration.proxy.TestResultDetail
+import org.awaitility.Awaitility
 import steps.StepsInfrastructure.cleanup
 import steps.StepsInfrastructure.screenshotOnFailure
 import steps.StepsInfrastructure.startClient
 import steps.StepsInfrastructure.startServerWithInMemoryDatabase
 import steps.StepsInfrastructure.startServerWithPostgresDatabase
 import java.io.File
-import java.util.concurrent.TimeUnit.DAYS
-import java.util.concurrent.TimeUnit.SECONDS
+import java.util.concurrent.TimeUnit.*
 
 class Defs {
     private var exportedZip: File? = null
@@ -29,6 +29,7 @@ class Defs {
     @Before("not @database")
     fun before(scenario: Scenario) {
         println("\nBefore scenario '${scenario.name}'")
+        Awaitility.setDefaultPollInterval(10, MILLISECONDS)
         stopwatch = Stopwatch.createStarted()
         startServerWithInMemoryDatabase()
     }
@@ -36,6 +37,7 @@ class Defs {
     @Before("@database")
     fun beforeWithDatabase(scenario: Scenario) {
         println("\nDB Before. Scenario: '${scenario.name}'")
+        Awaitility.setDefaultPollInterval(10, MILLISECONDS)
         startServerWithPostgresDatabase()
     }
 

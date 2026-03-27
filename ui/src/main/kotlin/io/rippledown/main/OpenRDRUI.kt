@@ -55,6 +55,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     var ruleAction: Diff? by remember { mutableStateOf(null) }
     val voiceRecognitionService = remember { VoiceRecognitionService(defaultModelPath()) }
     var chatPanelWidth by remember { mutableStateOf(300.dp) }
+    var conversationCaseId by remember { mutableStateOf<Long?>(null) }
     val density = LocalDensity.current
 
     val isShowingCornerstone = cornerstoneStatus?.cornerstoneToReview != null
@@ -71,6 +72,10 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
             // Use dispatcher to ensure API calls run on the EDT
             CoroutineScope(dispatcher).launch {
                 try {
+                    if (conversationCaseId != caseId) {
+                        api.startConversation(caseId)
+                        conversationCaseId = caseId
+                    }
                     val response = api.sendUserMessage(message, caseId)
                     onBotMessageReceived(response)
 
@@ -98,7 +103,9 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                     // No initial case, or it's now been deleted
                     currentCaseId = casesInfo.caseIds[0].id!!
                 }
-                currentCase = api.getCase(currentCaseId!!)
+                if (currentCase?.case?.caseId?.id != currentCaseId) {
+                    currentCase = api.getCase(currentCaseId!!)
+                }
             }
         }
     }
@@ -106,10 +113,13 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     LaunchedEffect(currentCaseId) {
         withContext(dispatcher) {
             currentCaseId?.let {
-                val response = api.startConversation(it)
-                if (response.text.isNotBlank()) {
-                    chatControllerHandler.onBotMessageReceived(response)
-                    ++chatId // Increment chatId to trigger recomposition in ChatController
+                if (conversationCaseId == null) {
+                    val response = api.startConversation(it)
+                    conversationCaseId = it
+                    if (response.text.isNotBlank()) {
+                        chatControllerHandler.onBotMessageReceived(response)
+                        ++chatId // Increment chatId to trigger recomposition in ChatController
+                    }
                 }
             }
         }

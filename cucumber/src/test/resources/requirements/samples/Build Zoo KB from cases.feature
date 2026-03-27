@@ -1,3 +1,4 @@
+@delay_after_cuke
 Feature: The Zoo KB can be built with the user interface.
 
   Scenario: Build the Zoo KB from cases

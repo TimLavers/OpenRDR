@@ -60,14 +60,28 @@ class Conversation(
         return handleResponse(response)
     }
 
-    private suspend fun handleResponse(response: GenerateContentResponse): String {
+    internal suspend fun handleResponse(response: GenerateContentResponse, emptyResponseRetries: Int = 0): String {
         var currentResponse = response
         while (currentResponse.functionCalls()?.isNotEmpty() == true) {
             val functionResults = currentResponse.functionCalls()!!.map { executeFunction(it) }
             val prompt = Content.fromParts(Part.fromText("Function results: ${functionResults.joinToString(", ")}"))
             currentResponse = callWithTimeout { chat.sendMessage(prompt) }
         }
-        return currentResponse.text()?.stripEnclosingJson() ?: "No function call or text response"
+        val text = currentResponse.text()?.stripEnclosingJson()
+        if (text != null) {
+            return text
+        }
+        logEmptyResponse(currentResponse)
+        if (emptyResponseRetries < MAX_EMPTY_RESPONSE_RETRIES) {
+            logger.info("Retrying after empty response (attempt ${emptyResponseRetries + 1} of $MAX_EMPTY_RESPONSE_RETRIES)...")
+            currentResponse = callWithTimeout { chat.sendMessage("Please continue with the appropriate response.") }
+            return handleResponse(currentResponse, emptyResponseRetries + 1)
+        }
+        return "No function call or text response"
+    }
+
+    private fun logEmptyResponse(response: GenerateContentResponse) {
+        logger.warn("Model returned no text and no function calls. Response details: candidates=${response.candidates()}, usageMetadata=${response.usageMetadata()}")
     }
 
     /**
@@ -78,6 +92,7 @@ class Conversation(
     }
 
     companion object {
+        const val MAX_EMPTY_RESPONSE_RETRIES = 2
         const val REASON_PARAMETER = "reason"
         const val TRANSFORM_REASON = "transformReasonToFormalCondition"
         const val GET_SUGGESTED_CONDITIONS = "getSuggestedConditions"

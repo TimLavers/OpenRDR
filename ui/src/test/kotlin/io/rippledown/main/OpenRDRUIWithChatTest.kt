@@ -174,7 +174,7 @@ class OpenRDRUIWithChatTest {
     }
 
     @Test
-    fun `should start a new conversation with the model when another case is selected`() = runTest {
+    fun `should not start a new conversation with the model when just browsing to another case`() = runTest {
         val caseNameA = "case A"
         val caseNameB = "case B"
         val caseIdA = CaseId(id = 1234, name = caseNameA)
@@ -203,7 +203,40 @@ class OpenRDRUIWithChatTest {
 
             //Then
             coVerify(exactly = 1) { api.startConversation(idA) }
-            coVerify(exactly = 1) { api.startConversation(idB) }
+            coVerify(exactly = 0) { api.startConversation(idB) }
+        }
+    }
+
+    @Test
+    fun `should only show the initial conversation message once when browsing multiple cases`() = runTest {
+        // Given
+        val caseNameA = "case A"
+        val caseNameB = "case B"
+        val caseIdA = CaseId(id = 1, name = caseNameA)
+        val caseIdB = CaseId(id = 2, name = caseNameB)
+        val caseIds = listOf(caseIdA, caseIdB)
+        val caseA = createViewableCaseWithInterpretation(caseNameA, 1, listOf("Go to Bondi"))
+        val caseB = createViewableCaseWithInterpretation(caseNameB, 2, listOf("Go to Malabar"))
+        val initialResponse = "Would you like to add a comment to the report?"
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.getCase(1) } returns caseA
+        coEvery { api.getCase(2) } returns caseB
+        coEvery { api.startConversation(1) } returns ChatResponse(initialResponse)
+        coEvery { api.startConversation(2) } returns ChatResponse(initialResponse)
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
+            }
+            waitForCaseToBeShowing(caseNameA)
+            requireChatMessagesShowing(listOf(BotMessage(initialResponse)))
+
+            // When
+            selectCaseByName(caseNameB)
+            waitForCaseToBeShowing(caseNameB)
+
+            // Then
+            requireChatMessagesShowing(listOf(BotMessage(initialResponse)))
         }
     }
 

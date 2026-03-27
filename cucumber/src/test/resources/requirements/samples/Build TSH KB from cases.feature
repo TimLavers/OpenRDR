@@ -1,3 +1,4 @@
+@delay_after_cuke
 Feature: The TSH KB can be built with the user interface.
  Scenario: Build the TSH KB from cases
     Given I start the client application

@@ -112,7 +112,7 @@ class ChatDefs {
     }
 
     fun waitForSuggestionText(vararg terms: String) {
-        await().atMost(ofSeconds(10)).until {
+        await().atMost(ofSeconds(60)).until {
             chatPO().mostRecentSuggestionRowContainsTerms(terms.toList())
         }
     }
@@ -180,12 +180,29 @@ class ChatDefs {
         waitForBotQuestionToProvideReasonsThenDecline()
     }
 
-    fun provideTheseReasons(reasons: DataTable) = provideTheseReasons(reasons.asList())
+    fun provideTheseReasons(reasons: DataTable) {
+        provideTheseReasons(reasons.asLists().map { it[0].trim() })
+    }
 
     fun provideTheseReasons(reasons: List<String>) {
-        reasons.forEach { reason ->
-            waitForBotSuggestions()
+        var previousSuggestionCount = 0
+        var messageCountAfterSend = 0
+        reasons.forEachIndexed { index, reason ->
+            if (index == 0) {
+                waitForBotSuggestions()
+            } else {
+                waitForBotResponseToReason(previousSuggestionCount, messageCountAfterSend)
+            }
+            previousSuggestionCount = chatPO().numberOfSuggestionRows()
             enterChatTextAndSend(reason)
+            messageCountAfterSend = chatPO().numberOfChatMessages()
+        }
+    }
+
+    private fun waitForBotResponseToReason(previousSuggestionCount: Int, messageCountAfterSend: Int) {
+        await().atMost(ofSeconds(60)).until {
+            chatPO().numberOfSuggestionRows() > previousSuggestionCount ||
+                    chatPO().numberOfChatMessages() > messageCountAfterSend
         }
     }
 

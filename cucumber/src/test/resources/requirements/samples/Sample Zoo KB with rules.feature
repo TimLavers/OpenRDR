@@ -1,3 +1,4 @@
+@delay_after_cuke
 Feature: A sample KB can be created that has the Zoo Animals cases and rules.
    Scenario: Single classification Zoo KB
     Given I start the client application

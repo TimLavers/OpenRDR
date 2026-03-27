@@ -1,3 +1,4 @@
+@delay_after_cuke
 Feature: The Contact Lenses Prescription KB can be built with the user interface.
   Scenario: Build the Contact Lenses KB from cases
     Given I start the client application
