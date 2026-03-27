@@ -1,5 +1,6 @@
 Feature: The user can make rules that change the interpretive report
 
+  @single
   Scenario: When the user starts to build a rule, condition hints should be shown
     Given case Bondi is provided having data:
       | Wave | excellent |

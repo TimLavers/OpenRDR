@@ -8,6 +8,7 @@ import io.kotest.matchers.collections.shouldContainAll
 import io.rippledown.integration.pause
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
+import java.util.concurrent.TimeUnit.SECONDS
 
 class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
 
@@ -76,7 +77,9 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
     @Then("the suggestions showing should include:")
     fun theConditionsShowingShouldInclude(dataTable: DataTable) {
         val expectedConditions = dataTable.asList().toSet()
-        chatPO().suggestionsInMostRecentMessage() shouldContainAll (expectedConditions)
+        await().atMost(20, SECONDS).untilAsserted {
+            chatPO().suggestionsInMostRecentMessage() shouldContainAll (expectedConditions)
+        }
     }
 
     @And("I start to build a rule to remove the comment {string}")
