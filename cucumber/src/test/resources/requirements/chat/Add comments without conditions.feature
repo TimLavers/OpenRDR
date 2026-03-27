@@ -30,5 +30,5 @@ Feature: Add comments without conditions
     And the report should be "Let's surf."
     And select the case Case2
     And the interpretation should be "Let's surf."
-    When I add a comment "Bring flippers.", allowing the report change to the cornerstone case
+    When I add another comment "Bring flippers.", allowing the report change to the cornerstone case
     Then the report should be "Let's surf. Bring flippers."
