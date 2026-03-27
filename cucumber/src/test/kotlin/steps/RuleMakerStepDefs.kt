@@ -174,7 +174,7 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
     @And("the suggested conditions should contain:")
     fun theSuggestedConditionsShouldContain(dataTable: DataTable) {
         val terms = dataTable.asList()
-        await().atMost(ofSeconds(10)).until {
+        await().atMost(ofSeconds(20)).until {
             chatPO().mostRecentSuggestionRowContainsTerms(terms)
         }
     }

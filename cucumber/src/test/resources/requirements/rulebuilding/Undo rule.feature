@@ -7,9 +7,10 @@ Feature: The user can undo rules
       | Tide | low       |
     And I start the client application
     And I see the case Bondi as the current case
-    And I build a rule to add the comment "Go to Bondi." with the condition "Sun is hot"
-    Then the interpretation should be "Go to Bondi."
-    And I undo the last rule
+    And I build a rule to add the comment "Go to Bondi." with conditions
+      | Sun is hot |
+    And the interpretation should be "Go to Bondi."
+    When I undo the last rule
     Then the interpretation should be empty
 
   Scenario: Initially, there are no rules to undo

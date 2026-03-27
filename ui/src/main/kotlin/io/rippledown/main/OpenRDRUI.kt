@@ -176,11 +176,8 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                 override var undoLastRule: () -> Unit = {
                     runBlocking {
                         api.undoLastRule()
-                        println("rule undone")
                         if (currentCaseId != null) {
-                            println("refreshing case")
                             currentCase = api.getCase(currentCaseId!!)
-                            println("case refreshed")
                         }
                     }
                 }

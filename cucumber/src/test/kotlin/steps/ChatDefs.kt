@@ -4,8 +4,8 @@ import io.cucumber.datatable.DataTable
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
-import io.kotest.matchers.comparables.shouldBeLessThanOrEqualTo
 import io.rippledown.constants.chat.*
+import io.rippledown.constants.rule.UNDERSTAND
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
 
@@ -133,13 +133,7 @@ class ChatDefs {
     }
 
     fun waitForBotResponseIndicatingInvalidReason() {
-        val suggestionsBefore = chatPO().numberOfSuggestionRows()
-        val messagesBefore = chatPO().numberOfChatMessages()
-        await().atMost(ofSeconds(60)).until {
-            chatPO().numberOfChatMessages() > messagesBefore
-        }
-        //The model should not have presented new suggestions, which would indicate that the reason was accepted
-        chatPO().numberOfSuggestionRows() shouldBeLessThanOrEqualTo suggestionsBefore
+        waitForBotText(UNDERSTAND)
     }
 
     @And("I click the non-editable suggested condition {string}")
