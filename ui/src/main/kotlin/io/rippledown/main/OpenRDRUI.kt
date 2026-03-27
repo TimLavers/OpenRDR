@@ -113,7 +113,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     LaunchedEffect(currentCaseId) {
         withContext(dispatcher) {
             currentCaseId?.let {
-                if (conversationCaseId == null) {
+                if (conversationCaseId != it) {
                     val response = api.startConversation(it)
                     conversationCaseId = it
                     if (response.text.isNotBlank()) {

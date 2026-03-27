@@ -13,6 +13,8 @@ import io.rippledown.casecontrol.requireNamesToBeShowingOnCaseList
 import io.rippledown.casecontrol.requireNumberOfCasesOnCaseList
 import io.rippledown.casecontrol.selectCaseByName
 import io.rippledown.casecontrol.waitForCaseToBeShowing
+import io.rippledown.chat.BotMessage
+import io.rippledown.chat.requireChatMessagesShowing
 import io.rippledown.chat.typeChatMessageAndClickSend
 import io.rippledown.constants.kb.CONFIRM_UNDO_LAST_RULE_TEXT
 import io.rippledown.constants.main.APPLICATION_BAR_ID
@@ -308,6 +310,214 @@ class OpenRDRUITest {
                 api.undoLastRule()
                 api.getCase(1)
             }
+        }
+    }
+
+    @Test
+    fun `should start a new conversation when switching to a different case`() = runTest {
+        val caseNameA = "case A"
+        val caseNameB = "case B"
+        val caseIdA = CaseId(id = 1, name = caseNameA)
+        val caseIdB = CaseId(id = 2, name = caseNameB)
+        val idA = caseIdA.id!!
+        val idB = caseIdB.id!!
+        val caseIds = listOf(caseIdA, caseIdB)
+        val caseA = createViewableCaseWithInterpretation(caseNameA, idA, listOf("Go to Bondi"))
+        val caseB = createViewableCaseWithInterpretation(caseNameB, idB, listOf("Go to Malabar"))
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.getCase(idA) } returns caseA
+        coEvery { api.getCase(idB) } returns caseB
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            //Given
+            waitForCaseToBeShowing(caseNameA)
+            coVerify(exactly = 1) { api.startConversation(idA) }
+
+            //When
+            selectCaseByName(caseNameB)
+            waitForCaseToBeShowing(caseNameB)
+
+            //Then
+            coVerify(exactly = 1) { api.startConversation(idB) }
+        }
+    }
+
+    @Test
+    fun `should start a conversation for each case when switching through multiple cases`() = runTest {
+        val caseNameA = "case A"
+        val caseNameB = "case B"
+        val caseNameC = "case C"
+        val caseIdA = CaseId(id = 1, name = caseNameA)
+        val caseIdB = CaseId(id = 2, name = caseNameB)
+        val caseIdC = CaseId(id = 3, name = caseNameC)
+        val idA = caseIdA.id!!
+        val idB = caseIdB.id!!
+        val idC = caseIdC.id!!
+        val caseIds = listOf(caseIdA, caseIdB, caseIdC)
+        val caseA = createViewableCaseWithInterpretation(caseNameA, idA, listOf("Go to Bondi"))
+        val caseB = createViewableCaseWithInterpretation(caseNameB, idB, listOf("Go to Malabar"))
+        val caseC = createViewableCaseWithInterpretation(caseNameC, idC, listOf("Go to Coogee"))
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.getCase(idA) } returns caseA
+        coEvery { api.getCase(idB) } returns caseB
+        coEvery { api.getCase(idC) } returns caseC
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            //Given
+            waitForCaseToBeShowing(caseNameA)
+            coVerify(exactly = 1) { api.startConversation(idA) }
+
+            //When
+            selectCaseByName(caseNameB)
+            waitForCaseToBeShowing(caseNameB)
+            coVerify(exactly = 1) { api.startConversation(idB) }
+
+            selectCaseByName(caseNameC)
+            waitForCaseToBeShowing(caseNameC)
+
+            //Then
+            coVerify(exactly = 1) { api.startConversation(idA) }
+            coVerify(exactly = 1) { api.startConversation(idB) }
+            coVerify(exactly = 1) { api.startConversation(idC) }
+        }
+    }
+
+    @Test
+    fun `should restart conversation when switching back to a previously viewed case`() = runTest {
+        val caseNameA = "case A"
+        val caseNameB = "case B"
+        val caseIdA = CaseId(id = 1, name = caseNameA)
+        val caseIdB = CaseId(id = 2, name = caseNameB)
+        val idA = caseIdA.id!!
+        val idB = caseIdB.id!!
+        val caseIds = listOf(caseIdA, caseIdB)
+        val caseA = createViewableCaseWithInterpretation(caseNameA, idA, listOf("Go to Bondi"))
+        val caseB = createViewableCaseWithInterpretation(caseNameB, idB, listOf("Go to Malabar"))
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.getCase(idA) } returns caseA
+        coEvery { api.getCase(idB) } returns caseB
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            //Given
+            waitForCaseToBeShowing(caseNameA)
+            coVerify(exactly = 1) { api.startConversation(idA) }
+
+            selectCaseByName(caseNameB)
+            waitForCaseToBeShowing(caseNameB)
+            coVerify(exactly = 1) { api.startConversation(idB) }
+
+            //When
+            selectCaseByName(caseNameA)
+            waitForCaseToBeShowing(caseNameA)
+
+            //Then
+            coVerify(exactly = 2) { api.startConversation(idA) }
+            coVerify(exactly = 1) { api.startConversation(idB) }
+        }
+    }
+
+    @Test
+    fun `should not restart conversation when sending a message on the same case`() = runTest {
+        val caseName = "case A"
+        val caseId = CaseId(id = 1, name = caseName)
+        val id = caseId.id!!
+        val case = createViewableCaseWithInterpretation(caseName, id, listOf("Go to Bondi"))
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.getCase(id) } returns case
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            //Given
+            waitForCaseToBeShowing(caseName)
+            coVerify(exactly = 1) { api.startConversation(id) }
+
+            //When
+            typeChatMessageAndClickSend("add a comment")
+
+            //Then
+            coVerify(exactly = 1) { api.startConversation(id) }
+        }
+    }
+
+    @Test
+    fun `should show bot message from conversation started on case switch`() = runTest {
+        val caseNameA = "case A"
+        val caseNameB = "case B"
+        val caseIdA = CaseId(id = 1, name = caseNameA)
+        val caseIdB = CaseId(id = 2, name = caseNameB)
+        val idA = caseIdA.id!!
+        val idB = caseIdB.id!!
+        val caseIds = listOf(caseIdA, caseIdB)
+        val caseA = createViewableCaseWithInterpretation(caseNameA, idA, listOf("Go to Bondi"))
+        val caseB = createViewableCaseWithInterpretation(caseNameB, idB, listOf("Go to Malabar"))
+        val responseA = "Would you like to add a comment to case A?"
+        val responseB = "Would you like to add a comment to case B?"
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.getCase(idA) } returns caseA
+        coEvery { api.getCase(idB) } returns caseB
+        coEvery { api.startConversation(idA) } returns ChatResponse(responseA)
+        coEvery { api.startConversation(idB) } returns ChatResponse(responseB)
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            //Given
+            waitForCaseToBeShowing(caseNameA)
+            requireChatMessagesShowing(listOf(BotMessage(responseA)))
+
+            //When
+            selectCaseByName(caseNameB)
+            waitForCaseToBeShowing(caseNameB)
+
+            //Then
+            requireChatMessagesShowing(listOf(BotMessage(responseA), BotMessage(responseB)))
+        }
+    }
+
+    @Test
+    fun `should start conversation but not show message when response is blank`() = runTest {
+        val caseNameA = "case A"
+        val caseNameB = "case B"
+        val caseIdA = CaseId(id = 1, name = caseNameA)
+        val caseIdB = CaseId(id = 2, name = caseNameB)
+        val idA = caseIdA.id!!
+        val idB = caseIdB.id!!
+        val caseIds = listOf(caseIdA, caseIdB)
+        val caseA = createViewableCaseWithInterpretation(caseNameA, idA, listOf("Go to Bondi"))
+        val caseB = createViewableCaseWithInterpretation(caseNameB, idB, listOf("Go to Malabar"))
+        val responseA = "Would you like to add a comment?"
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.getCase(idA) } returns caseA
+        coEvery { api.getCase(idB) } returns caseB
+        coEvery { api.startConversation(idA) } returns ChatResponse(responseA)
+        coEvery { api.startConversation(idB) } returns ChatResponse("")
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            //Given
+            waitForCaseToBeShowing(caseNameA)
+            requireChatMessagesShowing(listOf(BotMessage(responseA)))
+
+            //When
+            selectCaseByName(caseNameB)
+            waitForCaseToBeShowing(caseNameB)
+
+            //Then
+            coVerify(exactly = 1) { api.startConversation(idB) }
         }
     }
 

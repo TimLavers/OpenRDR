@@ -82,7 +82,7 @@ class ChatControllerTest {
     }
 
     @Test
-    fun `should update the chat history even if the bot response is the same`() {
+    fun `should not duplicate a consecutive identical bot response`() {
         val h = object : ChatControllerHandler {
             override fun sendUserMessage(message: String) {}
             override var onBotMessageReceived: (ChatResponse) -> Unit = {}
@@ -99,9 +99,8 @@ class ChatControllerTest {
             // When
             h.onBotMessageReceived(ChatResponse(botResponse))
 
-            // Then
+            // Then - only one message, not duplicated
             val expected = listOf(
-                BotMessage(botResponse),
                 BotMessage(botResponse)
             )
             requireChatMessagesShowing(expected)

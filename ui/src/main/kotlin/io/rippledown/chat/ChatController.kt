@@ -24,12 +24,16 @@ fun ChatController(
     var sendIsEnabled: Boolean by remember { mutableStateOf(true) }
 
     handler.onBotMessageReceived = { response ->
-        chatHistory = if (response.text.isEmpty()) {
-            chatHistory + BotMessage(CHAT_BOT_NO_RESPONSE_MESSAGE)
-        } else if (response.suggestions.isNotEmpty()) {
-            chatHistory + BotMessage(response.text) + SuggestionListMessage(response.suggestions)
-        } else {
-            chatHistory + BotMessage(response.text)
+        val lastBotMessage = chatHistory.lastOrNull()
+        val isDuplicate = lastBotMessage is BotMessage && lastBotMessage.text == response.text
+        if (!isDuplicate) {
+            chatHistory = if (response.text.isEmpty()) {
+                chatHistory + BotMessage(CHAT_BOT_NO_RESPONSE_MESSAGE)
+            } else if (response.suggestions.isNotEmpty()) {
+                chatHistory + BotMessage(response.text) + SuggestionListMessage(response.suggestions)
+            } else {
+                chatHistory + BotMessage(response.text)
+            }
         }
         sendIsEnabled = true
     }
