@@ -127,7 +127,7 @@ class OpenRDRUITest {
                 OpenRDRUI(handler, dispatcher = Unconfined)
             }
             waitForCaseToBeShowing(caseName)
-            coVerify(exactly = 2) { api.getCase(id) }
+            coVerify(exactly = 1) { api.getCase(id) }
             requireInterpretation(bondiComment)
 
             //When
@@ -136,7 +136,7 @@ class OpenRDRUITest {
             typeChatMessageAndClickSend(userMessage)
 
             //Then
-            coVerify(exactly = 3) { api.getCase(id) }
+            coVerify(exactly = 2) { api.getCase(id) }
             requireInterpretation(updatedBondiComments)
         }
     }
