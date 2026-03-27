@@ -19,6 +19,8 @@ Feature: When entering an expression to be used in a rule, the user is provided 
       | UV        | 4.5   |     | 2.6  |        |
     And I start the client application
     And I request that the comment "Beach time!" be added
+    And the suggested conditions should contain:
+      | Waves is high |
     When I enter the expression "below"
     Then the model should indicate that the expression is not a valid reason
 
