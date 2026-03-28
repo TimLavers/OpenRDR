@@ -23,7 +23,6 @@ import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.rule.BuildRuleRequest
-import io.rippledown.model.rule.ConditionDescriptor
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.coroutines.runBlocking
@@ -142,7 +141,7 @@ class RESTClient {
         }
     }
 
-    fun buildRule(caseName: String, diff: Diff, conditions: List<ConditionDescriptor>) {
+    fun buildRule(caseName: String, diff: Diff, conditions: List<String>) {
         val request = BuildRuleRequest(caseName, diff, conditions)
         runBlocking { api.buildRule(request) }
     }

@@ -10,9 +10,6 @@ import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
-import io.rippledown.model.condition.EpisodicCondition
-import io.rippledown.model.condition.episodic.predicate.Is
-import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.diff.Removal
@@ -165,7 +162,7 @@ class KBEndpoint(val kb: KB) {
 
     /**
      * Build a complete rule in one call, without using the UI.
-     * All conditions are Is predicates with Current signature.
+     * Condition expressions are parsed deterministically from human-readable text.
      */
     fun buildRule(request: BuildRuleRequest) {
         logger.info("buildRule: case='${request.caseName}', diff=${request.diff}, conditions=${request.conditions}")
@@ -179,13 +176,19 @@ class KBEndpoint(val kb: KB) {
             is Replacement -> kb.startRuleSessionToReplaceComment(viewableCase, diff.originalText, diff.replacementText)
         }
 
-        request.conditions.forEach { (attributeName, value) ->
-            val attribute = kb.attributeManager.getOrCreate(attributeName)
-            val condition = EpisodicCondition(attribute = attribute, predicate = Is(value), signature = Current)
-            kb.addConditionToCurrentRuleSession(condition)
-        }
+        try {
+            val parser = ConditionExpressionParser { kb.attributeManager.getOrCreate(it) }
+            request.conditions.forEach { expression ->
+                val condition = parser.parse(expression)
+                kb.addConditionToCurrentRuleSession(condition)
+            }
 
-        kb.commitCurrentRuleSession()
-        logger.info("buildRule: completed for case='${request.caseName}'")
+            kb.commitCurrentRuleSession()
+            logger.info("buildRule: completed for case='${request.caseName}'")
+        } catch (e: Exception) {
+            logger.error("buildRule: failed for case='${request.caseName}': ${e.message}")
+            kb.cancelRuleSession()
+            throw e
+        }
     }
 }
