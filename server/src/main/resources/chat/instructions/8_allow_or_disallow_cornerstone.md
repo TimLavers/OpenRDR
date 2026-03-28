@@ -39,11 +39,13 @@
 ## Step 4. Complete the review of this cornerstone case:
 
 - Once the change to the cornerstone case has been allowed or disallowed, the system will recalculate the
-  cornerstone cases.
-- If there are remaining cornerstone cases, repeat Step 1.
-- If there are no remaining cornerstone cases and the user has already declined to provide more reasons,
-  you MUST immediately follow the instructions "Completing the change to the report". Do NOT ask for more
-  reasons or call {{GET_SUGGESTED_CONDITIONS}} again — the user has already declined to add more reasons,
-  so the rule should be committed straight away.
-- If there are no remaining cornerstone cases but the user has NOT yet declined to provide more reasons,
-  follow the instructions in "Defining the reasons for report change" Step 5 to ask for further reasons.
+  cornerstone cases and send you a message in the format "Cornerstone: ..., Index: ..., Total: ...".
+- **IMPORTANT: Always check the Total value in the system message.** If Total > 0, there are remaining
+  cornerstone cases and you MUST repeat Step 1 for each one. Do NOT skip any cornerstone cases.
+  Do NOT commit the rule while there are remaining cornerstone cases.
+- Only after ALL cornerstone cases have been reviewed (Total is 0):
+  - If the user has already declined to provide more reasons, you MUST immediately follow the instructions
+    "Completing the change to the report". Do NOT ask for more reasons or call {{GET_SUGGESTED_CONDITIONS}}
+    again — the rule should be committed straight away.
+  - If the user has NOT yet declined to provide more reasons, follow the instructions in
+    "Defining the reasons for report change" Step 5 to ask for further reasons.
