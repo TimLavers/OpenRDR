@@ -11,8 +11,7 @@ class IntepretationStepDefs {
 
     @And("the condition(s) showing for the comment {string} (is)(are):")
     fun requireConditionsForComment(comment: String, conditions: DataTable) {
-        interpretationViewPO().movePointerToComment(comment)
-        requireConditionsToBeShowing(conditions)
+        interpretationViewPO().waitForConditionsForComment(comment, conditions.asList())
     }
 
     @And("no conditions should be showing for the comment {string}")

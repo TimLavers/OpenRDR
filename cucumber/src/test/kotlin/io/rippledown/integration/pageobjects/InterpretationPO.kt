@@ -133,6 +133,20 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         }
     }
 
+    fun waitForConditionsForComment(comment: String, conditions: List<String>) {
+        waitUntilAsserted {
+            // Re-trigger the mouse move on each retry to ensure the tooltip appears
+            val interpretation = interpretationText()
+            val index = interpretation.indexOf(comment)
+            if (index >= 0) {
+                movePointerToCharacterPosition(index)
+            }
+            conditions.forEach { condition ->
+                execute<AccessibleContext> { contextProvider().find("$CONDITION_PREFIX$condition") } shouldNotBe null
+            }
+        }
+    }
+
     fun requireNoConditionsToBeShowing() {
         execute<Set<AccessibleContext>> { contextProvider().findAllByDescriptionPrefix(CONDITION_PREFIX) } shouldHaveSize 0
     }
