@@ -35,7 +35,6 @@ fun SuggestionListRow(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 4.dp)
             .semantics { contentDescription = "$BOT${index}" }
     ) {
         Box(

@@ -13,8 +13,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.ElevatedSuggestionChip
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.runtime.*
@@ -121,7 +119,7 @@ fun ChatPanel(
                 .fillMaxWidth()
                 .padding(start = 8.dp, end = 8.dp, top = 8.dp),
             state = listState,
-            verticalArrangement = Arrangement.Bottom
+            verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.Bottom)
         ) {
             itemsIndexed(messages) { index, message ->
                 when (message) {
@@ -274,24 +272,22 @@ fun BotRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Start
     ) {
-        ElevatedSuggestionChip(
-            onClick = { },
-            label = {
-                Text(
-                    text = text,
-                    color = Black,
-                    style = TextStyle(fontSize = 14.sp)
-                )
-            },
-            colors = AssistChipDefaults.elevatedAssistChipColors(
-                containerColor = White,
-                labelColor = Black
-            ),
+        androidx.compose.material3.Surface(
+            shape = RoundedCornerShape(8.dp),
+            color = White,
+            shadowElevation = 1.dp,
             modifier = Modifier
-                .semantics {
+                .semantics(mergeDescendants = true) {
                     contentDescription = "$BOT${index}"
                 }
-        )
+        ) {
+            Text(
+                text = text,
+                color = Black,
+                style = TextStyle(fontSize = 13.sp),
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+            )
+        }
     }
 }
 
