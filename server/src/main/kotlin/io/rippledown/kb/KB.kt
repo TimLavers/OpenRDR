@@ -364,7 +364,10 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         val condition = conditionParser.parse(expression, attributeFor)
 
         //Only return the condition if non-null and holds for the case
+        val caseAttributeNames = case.attributes.map { it.name }.toSet()
         return if (condition == null) {
+            ConditionParsingResult(errorMessage = DOES_NOT_CORRESPOND_TO_A_CONDITION)
+        } else if (condition.attributeNames().any { it !in caseAttributeNames }) {
             ConditionParsingResult(errorMessage = DOES_NOT_CORRESPOND_TO_A_CONDITION)
         } else if (!condition.holds(case)) {
             ConditionParsingResult(errorMessage = CONDITION_IS_NOT_TRUE)

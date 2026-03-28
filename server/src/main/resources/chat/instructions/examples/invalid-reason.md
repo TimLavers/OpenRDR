@@ -40,7 +40,36 @@ Assistant:
 }
 ```
 
-User: Yes, if the sun is hot.
+User: below
+
+Note: Even though "below" is a single ambiguous word, you MUST still call {{TRANSFORM_REASON}} with it. Never skip the
+function call.
+
+Assistant:
+
+[Internal: Function call to {{TRANSFORM_REASON}}(reason="below")
+
+which returns the JSON:
+
+```json
+{
+  "reasonId": null,
+  "message": "I do not understand this expression. Please try again."
+}
+```
+
+]
+
+Assistant:
+
+```json
+{
+  "action": "USER_ACTION",
+  "message": "I do not understand this expression. Please try again."
+}
+```
+
+User: the sun is hot
 
 Assistant:
 
@@ -50,7 +79,7 @@ which returns the JSON:
 
 ```json
 {
-  "isTransformed": false,
+  "reasonId": null,
   "message": "Your reason is not true for this case. Please rephrase the reason."
 }
 ```
@@ -67,7 +96,7 @@ which returns the JSON:
 
 ```json
 {
-  "isTransformed": true,
+  "reasonId": 42,
   "message": "Your reason is equivalent to: sun is \"out\"."
 }
 ```

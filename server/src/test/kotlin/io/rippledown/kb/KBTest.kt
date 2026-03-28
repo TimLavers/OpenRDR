@@ -9,6 +9,7 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.*
 import io.rippledown.chat.ReasonTransformation
+import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
 import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.model.*
@@ -1017,6 +1018,32 @@ class KBTest {
 
         //Then
         returnedCondition shouldBeSameAs EpisodicCondition(null, waves, High, Current, userExpression)
+    }
+
+    @Test
+    fun `should return error if the parsed condition references an attribute not in the case`() {
+        //Given
+        val waves = kb.attributeManager.getOrCreate("Waves")
+        val unknownAttribute = kb.attributeManager.getOrCreate("x")
+        val height = "0.5"
+        val sessionCase = createCase("Case", attribute = waves, value = height)
+        val conditionParser = mockk<ConditionParser>()
+        val userExpression = "below"
+        val parsedCondition = EpisodicCondition(null, unknownAttribute, High, Current, userExpression)
+        every { conditionParser.parse(any(), any()) } returns parsedCondition
+        kb.setConditionParser(conditionParser)
+
+        kb.startRuleSession(
+            sessionCase,
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
+        )
+
+        //When
+        val result = kb.conditionForExpression(userExpression)
+
+        //Then
+        result.condition shouldBe null
+        result.errorMessage shouldBe DOES_NOT_CORRESPOND_TO_A_CONDITION
     }
 
     @Test
