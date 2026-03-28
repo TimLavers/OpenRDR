@@ -20,7 +20,10 @@ import io.rippledown.model.condition.episodic.predicate.Is
 import io.rippledown.model.condition.episodic.predicate.IsNotBlank
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.diff.Addition
+import io.rippledown.model.diff.Diff
 import io.rippledown.model.external.ExternalCase
+import io.rippledown.model.rule.BuildRuleRequest
+import io.rippledown.model.rule.ConditionDescriptor
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.coroutines.runBlocking
@@ -129,6 +132,19 @@ class RESTClient {
 
         val ruleRequest = RuleRequest(currentCase.id!!, RuleConditionList(listOfConditions))
         return runBlocking { api.commitSession(ruleRequest) }
+    }
+
+    fun selectKBByName(name: String) {
+        runBlocking {
+            val kbList = api.kbList()
+            val kb = kbList.first { it.name == name }
+            api.selectKB(kb.id)
+        }
+    }
+
+    fun buildRule(caseName: String, diff: Diff, conditions: List<ConditionDescriptor>) {
+        val request = BuildRuleRequest(caseName, diff, conditions)
+        runBlocking { api.buildRule(request) }
     }
 
 
