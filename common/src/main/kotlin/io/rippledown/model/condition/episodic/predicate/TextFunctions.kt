@@ -41,7 +41,7 @@ data class Contains(val toFind: String) : TestResultPredicate {
 
 @Serializable
 data class DoesNotContain(val toFind: String) : TestResultPredicate {
-    override fun evaluate(result: TestResult) = !result.value.text.contains(toFind)
+    override fun evaluate(result: TestResult) = !result.value.text.contains(toFind.unquoted())
 
     override fun description(plural: Boolean) =
         if (plural) "do not contain \"${toFind.unquoted()}\"" else "does not contain \"${toFind.unquoted()}\""

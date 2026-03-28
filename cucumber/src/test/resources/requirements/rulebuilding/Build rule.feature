@@ -1,6 +1,5 @@
 Feature: The user can make rules that change the interpretive report
 
-  @single
   Scenario: When the user starts to build a rule, condition hints should be shown
     Given case Bondi is provided having data:
       | Wave | excellent |
@@ -42,16 +41,10 @@ Feature: The user can make rules that change the interpretive report
     Given I start the client application
     And I should see the case Bondi as the current case
     And I request that the comment "Let's surf." be added
-    And the suggestions showing should include:
-      | Sun is "hot"            |
-      | Sun is in case          |
-      | Swimming is not in case |
-      | Wave is "excellent"     |
-      | Wave is in case         |
-    And I select the first condition
+    And I add the condition "Sun is hot"
     When I cancel the rule
     And I select case Bondi
-    And the interpretation should be empty
+    Then the interpretation should be empty
     And I select case Manly
     And the interpretation should be empty
 
@@ -65,13 +58,7 @@ Feature: The user can make rules that change the interpretive report
     Given I start the client application
     And I should see the case Bondi as the current case
     And I request that the comment "Let's surf." be added
-    And the suggestions showing should include:
-      | Sun is "hot"            |
-      | Sun is in case          |
-      | Swimming is not in case |
-      | Wave is "excellent"     |
-      | Wave is in case         |
-    And I select the first condition
+    And I add the condition "Sun is hot"
     And I cancel the rule
     And the interpretation should be empty
     When I request another change to be made to the report

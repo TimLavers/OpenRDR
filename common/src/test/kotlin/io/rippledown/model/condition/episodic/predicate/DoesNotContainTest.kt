@@ -26,6 +26,15 @@ class DoesNotContainTest : Base() {
     }
 
     @Test
+    fun `should should match a string with a forward slash`() {
+        DoesNotContain("/40").evaluate(TestResult("12/40")) shouldBe false
+    }
+
+    @Test
+    fun `should unquote toFind before evaluating`() {
+        DoesNotContain("\"/40\"").evaluate(TestResult("12/40")) shouldBe false
+    }
+    @Test
     fun equalsTest() {
         DoesNotContain("Blah") shouldBe DoesNotContain("Blah")
         DoesNotContain("Blah") shouldNotBe DoesNotContain("blah")

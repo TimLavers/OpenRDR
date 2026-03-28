@@ -60,12 +60,12 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         chatDefs.enterChatTextAndSend("cancel this rule")
     }
 
-    @When("I select the {word} condition")
+    @When("I select the {word} suggestion")
     fun selectTheCondition(position: String) {
         when (position) {
-            "first" -> ruleMakerPO().clickAvailableCondition(0)
-            "second" -> ruleMakerPO().clickAvailableCondition(1)
-            "third" -> ruleMakerPO().clickAvailableCondition(2)
+            "first" -> chatDefs.enterChatTextAndSend("1")
+            "second" -> chatDefs.enterChatTextAndSend("2")
+            "third" -> chatDefs.enterChatTextAndSend("3")
         }
     }
 
@@ -84,11 +84,7 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
 
     @And("I start to build a rule to remove the comment {string}")
     fun startRuleToRemoveComment(comment: String) {
-        with(interpretationViewPO()) {
-            clickChangeInterpretationButton()
-            clickRemoveCommentMenu()
-            selectCommentToRemoveAndClickOK(comment)
-        }
+        chatDefs.requestCommentBeRemoved(comment)
     }
 
     @And("I start to build a rule to add the comment {string} for case {word}")

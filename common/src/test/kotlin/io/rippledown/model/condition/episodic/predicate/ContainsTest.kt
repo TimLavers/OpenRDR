@@ -42,6 +42,11 @@ class ContainsTest : Base() {
     }
 
     @Test
+    fun `should should match a string with a forward slash`() {
+        Contains("/40").evaluate(TestResult("12/40")) shouldBe true
+    }
+
+    @Test
     fun equalsTest() {
         Contains("Blah") shouldBe Contains("Blah")
         Contains("Blah") shouldNotBe Contains("blah")
@@ -77,4 +82,5 @@ class ContainsTest : Base() {
         containsQuoted.description(false) shouldBe "contains \"2\""
         containsQuoted.description(true) shouldBe "contain \"2\""
     }
+
 }
