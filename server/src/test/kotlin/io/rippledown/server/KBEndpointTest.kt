@@ -20,6 +20,7 @@ import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.model.condition.isCondition
 import io.rippledown.model.diff.Addition
+import io.rippledown.model.diff.Removal
 import io.rippledown.model.diff.Replacement
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
@@ -543,5 +544,86 @@ internal class KBEndpointTest {
 
         // Then
         verify { kb.startRuleSession(case, any<ChangeTreeToReplaceConclusion>()) }
+    }
+
+    @Test
+    fun `buildRule should add a comment with Is conditions`() {
+        // Given
+        val case1 = supplyCaseFromFile("Case1", endpoint)
+        val request = BuildRuleRequest(
+            caseName = "Case1",
+            diff = Addition("TSH ok."),
+            conditions = listOf(ConditionDescriptor("TSH", "0.667"))
+        )
+
+        // When
+        endpoint.buildRule(request)
+
+        // Then
+        endpoint.case(case1.caseId.id!!).interpretation.conclusionTexts() shouldBe setOf("TSH ok.")
+    }
+
+    @Test
+    fun `buildRule should remove a comment with Is conditions`() {
+        // Given
+        val case1 = supplyCaseFromFile("Case1", endpoint)
+        val id = case1.caseId.id!!
+        // First add a comment
+        endpoint.buildRule(
+            BuildRuleRequest("Case1", Addition("TSH ok."), listOf(ConditionDescriptor("TSH", "0.667")))
+        )
+        endpoint.case(id).interpretation.conclusionTexts() shouldBe setOf("TSH ok.")
+
+        // When - remove it
+        endpoint.buildRule(
+            BuildRuleRequest("Case1", Removal("TSH ok."), listOf(ConditionDescriptor("ABC", "6.7")))
+        )
+
+        // Then
+        endpoint.case(id).interpretation.conclusionTexts() shouldBe emptySet()
+    }
+
+    @Test
+    fun `buildRule should replace a comment with Is conditions`() {
+        // Given
+        val case1 = supplyCaseFromFile("Case1", endpoint)
+        val id = case1.caseId.id!!
+        // First add a comment
+        endpoint.buildRule(
+            BuildRuleRequest("Case1", Addition("TSH ok."), listOf(ConditionDescriptor("TSH", "0.667")))
+        )
+        endpoint.case(id).interpretation.conclusionTexts() shouldBe setOf("TSH ok.")
+
+        // When - replace it
+        endpoint.buildRule(
+            BuildRuleRequest(
+                "Case1",
+                Replacement("TSH ok.", "TSH normal."),
+                listOf(ConditionDescriptor("ABC", "6.7"))
+            )
+        )
+
+        // Then
+        endpoint.case(id).interpretation.conclusionTexts() shouldBe setOf("TSH normal.")
+    }
+
+    @Test
+    fun `buildRule should handle multiple conditions`() {
+        // Given
+        val case1 = supplyCaseFromFile("Case1", endpoint)
+        val request = BuildRuleRequest(
+            caseName = "Case1",
+            diff = Addition("Both ok."),
+            conditions = listOf(
+                ConditionDescriptor("TSH", "0.667"),
+                ConditionDescriptor("ABC", "6.7")
+            )
+        )
+
+        // When
+        endpoint.buildRule(request)
+
+        // Then
+        endpoint.case(case1.caseId.id!!).interpretation.conclusionTexts() shouldBe setOf("Both ok.")
     }
 }

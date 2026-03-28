@@ -10,6 +10,9 @@ import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
+import io.rippledown.model.condition.EpisodicCondition
+import io.rippledown.model.condition.episodic.predicate.Is
+import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.diff.Removal
@@ -159,4 +162,30 @@ class KBEndpoint(val kb: KB) {
     fun exemptCornerstone(index: Int) = kb.exemptCornerstone(index)
     fun conditionForExpression(expression: String): ConditionParsingResult =
         kb.conditionForExpression(expression)
+
+    /**
+     * Build a complete rule in one call, without using the UI.
+     * All conditions are Is predicates with Current signature.
+     */
+    fun buildRule(request: BuildRuleRequest) {
+        logger.info("buildRule: case='${request.caseName}', diff=${request.diff}, conditions=${request.conditions}")
+        val case = kb.getProcessedCaseByName(request.caseName)
+        kb.interpret(case)
+        val viewableCase = kb.viewableCase(case)
+
+        when (val diff = request.diff) {
+            is Addition -> kb.startRuleSessionToAddComment(viewableCase, diff.addedText)
+            is Removal -> kb.startRuleSessionToRemoveComment(viewableCase, diff.removedText)
+            is Replacement -> kb.startRuleSessionToReplaceComment(viewableCase, diff.originalText, diff.replacementText)
+        }
+
+        request.conditions.forEach { (attributeName, value) ->
+            val attribute = kb.attributeManager.getOrCreate(attributeName)
+            val condition = EpisodicCondition(attribute = attribute, predicate = Is(value), signature = Current)
+            kb.addConditionToCurrentRuleSession(condition)
+        }
+
+        kb.commitCurrentRuleSession()
+        logger.info("buildRule: completed for case='${request.caseName}'")
+    }
 }

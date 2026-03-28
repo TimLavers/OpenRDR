@@ -223,6 +223,17 @@ class Api(
     }
 
     /**
+     * Build a complete rule in one call, without using the UI.
+     */
+    suspend fun buildRule(request: BuildRuleRequest) {
+        client.post("$API_URL$BUILD_RULE") {
+            contentType(Json)
+            setBody(request)
+            setKBParameter()
+        }
+    }
+
+    /**
      * Updates the CornerstoneStatus for the current rule session when the conditions are changed
      *
      * @return the updated CornerstoneStatus
