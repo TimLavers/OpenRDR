@@ -34,8 +34,7 @@ val pathToRequirements = "${projectDir.path}/src/test/resources/requirements"
 fun argsForCuke() = mutableListOf(
     "--plugin", "junit:build/test-results/junit.xml",
     "--plugin", "html:build/test-results-html",
-    "--glue", "steps",
-    "--retry", "1"
+    "--glue", "steps"
 )
 
 val prerequisiteTasks = listOf(
@@ -55,15 +54,55 @@ val featureFolders = listOf(
     "rulebuilding",
     "samples"
 )
+fun runCucumber(cukeArgs: List<String>): Int {
+    val javaHome = System.getProperty("java.home")
+    val javaBin = "$javaHome/bin/java"
+    val cp = cukeClassPath.asPath
+    val cmd = listOf(
+        javaBin,
+        "-Xmx4G",
+        "--enable-native-access=ALL-UNNAMED",
+        "-cp",
+        cp,
+        "io.cucumber.core.cli.Main"
+    ) + cukeArgs
+    val process = ProcessBuilder(cmd)
+        .directory(projectDir)
+        .redirectErrorStream(true)
+        .start()
+    process.inputStream.bufferedReader().use { reader ->
+        reader.lines().forEach { println(it) }
+    }
+    return process.waitFor()
+}
+
 featureFolders.forEach { folderName ->
-    tasks.register<JavaExec>(folderName) {
-        setupExec()
-        args = argsForCuke() + listOf(
-            "$pathToRequirements/$name",
-            "--tags",
-            "not @ignore"
-        )
+    tasks.register(folderName) {
+        group = "verification"
         dependsOn(prerequisiteTasks)
+        doLast {
+            val rerunFile = file("build/rerun_${folderName}.txt")
+            if (rerunFile.exists()) rerunFile.delete()
+
+            val cukeArgs = argsForCuke() + listOf(
+                "--plugin", "rerun:${rerunFile.path}",
+                "$pathToRequirements/$folderName",
+                "--tags", "not @ignore"
+            )
+            val exitCode = runCucumber(cukeArgs)
+
+            if (exitCode != 0 && rerunFile.exists() && rerunFile.readText().isNotBlank()) {
+                println("\nRetrying failed scenarios for '$folderName':")
+                println(rerunFile.readText())
+                val rerunArgs = argsForCuke() + listOf("@${rerunFile.path}")
+                val rerunExitCode = runCucumber(rerunArgs)
+                if (rerunExitCode != 0) {
+                    throw GradleException("Cucumber tests failed for $folderName (after retry)")
+                }
+            } else if (exitCode != 0) {
+                throw GradleException("Cucumber tests failed for $folderName")
+            }
+        }
     }
 }
 
