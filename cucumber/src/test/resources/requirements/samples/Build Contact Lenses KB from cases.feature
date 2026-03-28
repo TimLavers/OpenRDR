@@ -1,33 +1,28 @@
-@delay_after_cuke
-Feature: The Contact Lenses Prescription KB can be built with the user interface.
+Feature: The Contact Lenses Prescription KB can be built from cases.
   Scenario: Build the Contact Lenses KB from cases
     Given I start the client application
     And I create a Knowledge Base with the name ContactLenses based on the "Contact Lense Prescription - cases only" sample
-    And pause for 2 seconds
     Then the count of the number of cases is 24
 
-    And I select case Case2
-    And I build a rule to add the comment "soft" with conditions
+    And the backdoor selects the Knowledge Base "ContactLenses"
+
+    And a backdoor rule is built for case Case2 to add the comment "soft" with conditions:
       | astigmatism is "not_astigmatic" |
       | tear production is "normal"     |
 
-    And I select case Case4
-    And I build a rule to add the comment "hard" with conditions
+    And a backdoor rule is built for case Case4 to add the comment "hard" with conditions:
       | astigmatism is "astigmatic" |
       | tear production is "normal" |
 
-    And I select case Case16
-    And I build a rule to remove the comment "hard" with conditions
+    And a backdoor rule is built for case Case16 to remove the comment "hard" with conditions:
       | age is "pre_presbyopic"        |
       | prescription is "hypermetrope" |
 
-    And I select case Case18
-    And I build a rule to remove the comment "soft" with conditions
+    And a backdoor rule is built for case Case18 to remove the comment "soft" with conditions:
       | age is "presbyopic"     |
       | prescription is "myope" |
 
-    And I select case Case24
-    And I build a rule to remove the comment "hard" with conditions
+    And a backdoor rule is built for case Case24 to remove the comment "hard" with conditions:
       | age is "presbyopic"            |
       | prescription is "hypermetrope" |
 
