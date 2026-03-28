@@ -553,7 +553,7 @@ internal class KBEndpointTest {
         val request = BuildRuleRequest(
             caseName = "Case1",
             diff = Addition("TSH ok."),
-            conditions = listOf(ConditionDescriptor("TSH", "0.667"))
+            conditions = listOf("""TSH is "0.667"""")
         )
 
         // When
@@ -570,13 +570,13 @@ internal class KBEndpointTest {
         val id = case1.caseId.id!!
         // First add a comment
         endpoint.buildRule(
-            BuildRuleRequest("Case1", Addition("TSH ok."), listOf(ConditionDescriptor("TSH", "0.667")))
+            BuildRuleRequest("Case1", Addition("TSH ok."), listOf("""TSH is "0.667""""))
         )
         endpoint.case(id).interpretation.conclusionTexts() shouldBe setOf("TSH ok.")
 
         // When - remove it
         endpoint.buildRule(
-            BuildRuleRequest("Case1", Removal("TSH ok."), listOf(ConditionDescriptor("ABC", "6.7")))
+            BuildRuleRequest("Case1", Removal("TSH ok."), listOf("""ABC is "6.7""""))
         )
 
         // Then
@@ -590,7 +590,7 @@ internal class KBEndpointTest {
         val id = case1.caseId.id!!
         // First add a comment
         endpoint.buildRule(
-            BuildRuleRequest("Case1", Addition("TSH ok."), listOf(ConditionDescriptor("TSH", "0.667")))
+            BuildRuleRequest("Case1", Addition("TSH ok."), listOf("""TSH is "0.667""""))
         )
         endpoint.case(id).interpretation.conclusionTexts() shouldBe setOf("TSH ok.")
 
@@ -599,7 +599,7 @@ internal class KBEndpointTest {
             BuildRuleRequest(
                 "Case1",
                 Replacement("TSH ok.", "TSH normal."),
-                listOf(ConditionDescriptor("ABC", "6.7"))
+                listOf("""ABC is "6.7"""")
             )
         )
 
@@ -615,8 +615,8 @@ internal class KBEndpointTest {
             caseName = "Case1",
             diff = Addition("Both ok."),
             conditions = listOf(
-                ConditionDescriptor("TSH", "0.667"),
-                ConditionDescriptor("ABC", "6.7")
+                """TSH is "0.667"""",
+                """ABC is "6.7""""
             )
         )
 
