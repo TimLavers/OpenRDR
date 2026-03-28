@@ -34,7 +34,8 @@ val pathToRequirements = "${projectDir.path}/src/test/resources/requirements"
 fun argsForCuke() = mutableListOf(
     "--plugin", "junit:build/test-results/junit.xml",
     "--plugin", "html:build/test-results-html",
-    "--glue", "steps"
+    "--glue", "steps",
+    "--retry", "1"
 )
 
 val prerequisiteTasks = listOf(
