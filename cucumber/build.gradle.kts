@@ -58,14 +58,19 @@ fun runCucumber(cukeArgs: List<String>): Int {
     val javaHome = System.getProperty("java.home")
     val javaBin = "$javaHome/bin/java"
     val cp = cukeClassPath.asPath
-    val cmd = listOf(
-        javaBin,
+    // Write JVM args to a temporary argfile to avoid Windows command-line length limits
+    val argFile = File.createTempFile("cucumber-args", ".txt")
+    argFile.deleteOnExit()
+    argFile.writeText(
+        listOf(
         "-Xmx4G",
         "--enable-native-access=ALL-UNNAMED",
         "-cp",
-        cp,
+            "\"${cp.replace("\\", "\\\\")}\"",
         "io.cucumber.core.cli.Main"
-    ) + cukeArgs
+        ).joinToString("\n")
+    )
+    val cmd = listOf(javaBin, "@${argFile.absolutePath}") + cukeArgs
     val process = ProcessBuilder(cmd)
         .directory(projectDir)
         .redirectErrorStream(true)
