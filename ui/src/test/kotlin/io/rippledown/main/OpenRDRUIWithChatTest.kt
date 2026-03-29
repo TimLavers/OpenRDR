@@ -268,6 +268,31 @@ class OpenRDRUIWithChatTest {
     }
 
     @Test
+    fun `should not call startConversation when sending a user message`() = runTest {
+        val caseName = "case A"
+        val caseId = CaseId(id = 1234, name = caseName)
+        val id = caseId.id!!
+        val caseIds = listOf(caseId)
+        val case = createViewableCaseWithInterpretation(caseName, id, listOf("Go to Bondi"))
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.getCase(id) } returns case
+        coEvery { api.startConversation(id) } returns ChatResponse("Hello")
+        coEvery { api.sendUserMessage(any(), any<Long>()) } returns ChatResponse("OK")
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
+            }
+            waitForCaseToBeShowing(caseName)
+
+            val userMessage = "add a comment"
+            typeChatMessageAndClickSend(userMessage)
+
+            coVerify(exactly = 1) { api.startConversation(id) }
+        }
+    }
+
+    @Test
     fun `should update the chat panel when a response to a user message is received`() = runTest {
         val caseA = "case A"
         val caseId1 = CaseId(id = 1, name = caseA)

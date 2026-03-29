@@ -70,10 +70,6 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
             // Use dispatcher to ensure API calls run on the EDT
             CoroutineScope(dispatcher).launch {
                 try {
-                    if (conversationCaseId != caseId) {
-                        api.startConversation(caseId)
-                        conversationCaseId = caseId
-                    }
                     val response = api.sendUserMessage(message, caseId)
                     onBotMessageReceived(response)
 
