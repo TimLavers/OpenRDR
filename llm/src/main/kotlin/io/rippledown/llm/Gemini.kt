@@ -12,7 +12,7 @@ import java.util.concurrent.TimeoutException
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.milliseconds
 
-val GEMINI_MODEL = "gemini-2.5-flash"
+val GEMINI_MODEL = "gemini-3-flash-preview"
 var GEMINI_API_KEY = getenv("API_KEY") ?: ""
 
 val geminiClient: Client by lazy {

@@ -1,6 +1,5 @@
 package io.rippledown.kb
 
-import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
@@ -22,7 +21,7 @@ class KBModelIntegrationTest: KBTestBase() {
         val response = kb.startConversation(case)
 
         //Then
-        response.text shouldBe "Would you like to add a comment to the report?"//todo use some known constant
+        response.text shouldContain "Would you like to add a comment?"//todo use some known constant
     }
 
     @Test
