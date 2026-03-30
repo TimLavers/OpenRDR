@@ -13,17 +13,17 @@ class ServerChatServiceTest {
     @Test
     fun  `the service should recognise a request for the list of KBs`() = runTest{
         val chatService = ServerChatServiceFactory().createChatService()
-        val chat = chatService.startChat(listOf())
+        val chat = chatService.startChat()
         val response = chat.sendMessage("What KBs are available?")
-        extractAction(response.text!!) shouldBe  "ListKnowledgeBases"
+        extractAction(response.text()!!) shouldBe  "ListKnowledgeBases"
     }
 
     @Test
     fun `chat service should recognise when it receives a message not meant for it`() = runTest {
         val chatService = ServerChatServiceFactory().createChatService()
-        val chat = chatService.startChat(listOf())
+        val chat = chatService.startChat()
         val response = chat.sendMessage("Please put glucose above TSH")
-        extractAction(response.text!!) shouldBe  "KnowledgeBaseEditMessageAction"
+        extractAction(response.text()!!) shouldBe  "KnowledgeBaseEditMessageAction"
     }
 
     private fun extractAction(response: String): String? {

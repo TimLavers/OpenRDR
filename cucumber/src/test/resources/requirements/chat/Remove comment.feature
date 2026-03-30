@@ -1,6 +1,7 @@
 @delay_after_cuke
 Feature: Remove comment
 
+#  @single
   Scenario: The user should be able to use the chat to remove a comment with a valid condition
     Given case Bondi is provided having data:
       | wave height | 2 |

@@ -102,7 +102,7 @@ class ChatDefs {
 
     @Then("the chatbot has asked if I want to add, remove or replace a comment")
     fun waitForBotQuestionToAddRemoveOrReplaceAComment() {
-        waitForBotText(WOULD_YOU_LIKE, ADD, REMOVE, REPLACE)
+        waitForBotText(WOULD_YOU_LIKE)
     }
 
     @Then("the chatbot response contains the following phrases:")

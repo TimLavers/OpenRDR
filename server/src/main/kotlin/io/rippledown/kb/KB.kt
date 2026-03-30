@@ -124,6 +124,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         action: RuleTreeChange
     ): CornerstoneStatus {
         logger.info("KB starting rule session for case ${case.name} and action $action")
+        interpret(case)
         check(ruleSession == null) { "Session already in progress." }
         check(action.isApplicable(ruleTree, case)) { "Action $action is not applicable to case ${case.name}" }
         val alignedAction = action.alignWith(conclusionManager)

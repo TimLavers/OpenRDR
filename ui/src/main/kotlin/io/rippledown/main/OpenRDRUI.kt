@@ -127,7 +127,8 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
         withContext(dispatcher) {
             handler.api.startWebSocketSession(
                 updateCornerstoneStatus = { cornerstoneStatus = it },
-                ruleSessionCompleted = { cornerstoneStatus = null })
+                ruleSessionCompleted = { cornerstoneStatus = null },
+                kbInfoUpdated = { kbInfo = it })
         }
     }
 

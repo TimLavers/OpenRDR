@@ -20,7 +20,7 @@ interface ReasonTransformer {
     suspend fun transform(reason: String): ReasonTransformation
 }
 
-class Conversation(private val chatService: ChatService, private val reasonTransformer: ReasonTransformer) :
+class Conversation(private val chatService: ChatService, private val reasonTransformer: ReasonTransformer?) :
     ConversationService {
     private val logger = lazyLogger
     private lateinit var chat: Chat
@@ -40,6 +40,7 @@ class Conversation(private val chatService: ChatService, private val reasonTrans
         }
 
         val reason = functionCall.args().map { it[REASON_PARAMETER]?.toString() }.orElse("") ?: ""
+        if (reasonTransformer == null) return "'$reason' evaluation: No reason transformer available."
         val transformation = reasonTransformer.transform(reason)
         val result = "'$reason' evaluation: ${transformation.toJsonString()}"
         val cornerstoneStatus = transformation.cornerstoneStatusJson
@@ -77,5 +78,18 @@ class Conversation(private val chatService: ChatService, private val reasonTrans
     companion object {
         const val REASON_PARAMETER = "reason"
         const val TRANSFORM_REASON = "transformReasonToFormalCondition"
+        /*
+        Failed scenarios:
+        file:///Users/timlavers/tgl/code/OpenRDR/cucumber/src/test/resources/requirements/chat/Remove%20comment.feature:4 # The user should be able to use the chat to remove a comment with a valid condition
+
+
+        file:///Users/timlavers/tgl/code/OpenRDR/cucumber/src/test/resources/requirements/chat/Replace%20comment.feature:4 # The user should be able to use the chat to replace a comment with a valid condition
+        file:///Users/timlavers/tgl/code/OpenRDR/cucumber/src/test/resources/requirements/chat/Show%20cornerstones.feature:22 # The user should be able to review cornerstones when removing a comment using the chat
+        file:///Users/timlavers/tgl/code/OpenRDR/cucumber/src/test/resources/requirements/chat/Show%20cornerstones.feature:40 # The user should be able to review cornerstones when replacing a comment using the chat
+        file:///Users/timlavers/tgl/code/OpenRDR/cucumber/src/test/resources/requirements/chat/Show%20cornerstones.feature:58 # A cornerstone case should be exempted when a condition is added that evaluates to false for that cornerstone case
+
+
+        file:///Users/timlavers/tgl/code/OpenRDR/cucumber/src/test/resources/requirements/chat/Remove%20previous%20rule.feature:3 # The user should be able to remove the previous rule using the chat
+        */
     }
 }

@@ -12,7 +12,6 @@ import io.rippledown.kb.export.util.Unzipper
 import io.rippledown.kb.sample.loadSampleKB
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.KBInfo
-import io.rippledown.model.ServerChatResult
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.postgres.PostgresPersistenceProvider
@@ -41,12 +40,9 @@ class ServerApplication(
             val kbPersistence = persistenceProvider.kbPersistence(it)
             loadKnownKB(kbPersistence.kbInfo())
         }
-        val chatService = ServerChatServiceFactory().createChatService()
-        val conversation = Conversation(chatService = chatService, null)
         runBlocking{
             startConversation(null, null)
         }
-//        chatManager = ChatManager(conversation, this)
     }
 
     fun getDefaultProject(): KBInfo {
