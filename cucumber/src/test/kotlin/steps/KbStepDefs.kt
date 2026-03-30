@@ -1,9 +1,7 @@
 package steps
 
 import io.cucumber.datatable.DataTable
-import io.cucumber.docstring.DocString
 import io.cucumber.java.en.Then
-import io.cucumber.java.en.When
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.waitUntilAsserted
 
@@ -40,26 +38,6 @@ class KbStepDefs {
     @Then("I select the Knowledge Base named {word}")
     fun selectTheKnowledgeBaseNamed(kbName: String) {
         kbControlsPO().selectKB(kbName)
-    }
-
-    @Then("the change interpretation icon (is )(should be )hidden")
-    fun theChangeInterpretationIconShouldBeHidden() {
-        interpretationViewPO().requireChangeInterpretationIconToBeHidden()
-    }
-
-    @Then("the change interpretation icon (is )(should be )shown")
-    fun theChangeInterpretationIconShouldBeShown() {
-        interpretationViewPO().requireChangeInterpretationIconToBeShowing()
-    }
-
-    @Then("the change interpretation dropdown menu (is )(should be )shown")
-    fun theChangeInterpretationDropdownMenuShouldBeShown() {
-        interpretationViewPO().requireChangeInterpretationDropDownMenuToBeShowing()
-    }
-
-    @Then("the change interpretation dropdown menu (is )(should be )hidden")
-    fun theChangeInterpretationDropdownMenuShouldBeHidden() {
-        interpretationViewPO().requireChangeInterpretationDropDownMenuToBeHidden()
     }
 
     @Then("the KB controls (are )(should be )hidden")

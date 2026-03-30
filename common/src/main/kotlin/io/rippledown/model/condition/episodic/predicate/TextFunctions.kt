@@ -35,15 +35,16 @@ data object IsNotNumeric : TestResultPredicate {
 data class Contains(val toFind: String) : TestResultPredicate {
     override fun evaluate(result: TestResult) = result.value.text.contains(toFind.unquoted())
 
-    override fun description(plural: Boolean) = if (plural) "contain \"$toFind\"" else "contains \"$toFind\""
+    override fun description(plural: Boolean) =
+        if (plural) "contain \"${toFind.unquoted()}\"" else "contains \"${toFind.unquoted()}\""
 }
 
 @Serializable
 data class DoesNotContain(val toFind: String) : TestResultPredicate {
-    override fun evaluate(result: TestResult) = !result.value.text.contains(toFind)
+    override fun evaluate(result: TestResult) = !result.value.text.contains(toFind.unquoted())
 
     override fun description(plural: Boolean) =
-        if (plural) "do not contain \"$toFind\"" else "does not contain \"$toFind\""
+        if (plural) "do not contain \"${toFind.unquoted()}\"" else "does not contain \"${toFind.unquoted()}\""
 }
 
 @Serializable

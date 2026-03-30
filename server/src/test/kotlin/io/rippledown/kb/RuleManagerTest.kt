@@ -2,10 +2,15 @@ package io.rippledown.kb
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.*
-import io.rippledown.model.condition.*
+import io.rippledown.model.Attribute
+import io.rippledown.model.Conclusion
+import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.isHigh
+import io.rippledown.model.condition.isLow
+import io.rippledown.model.condition.isNormal
 import io.rippledown.model.rule.Rule
-import io.rippledown.persistence.*
+import io.rippledown.persistence.PersistentRule
+import io.rippledown.persistence.RuleStore
 import io.rippledown.persistence.inmemory.InMemoryAttributeStore
 import io.rippledown.persistence.inmemory.InMemoryConclusionStore
 import io.rippledown.persistence.inmemory.InMemoryConditionStore

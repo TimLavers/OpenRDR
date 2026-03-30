@@ -20,8 +20,10 @@ The current report for the case is a list of comments. For the current case, the
 ## Step 2: Ask the user what type of change they want to make:
 
 - For add: Collect the comment text.
-- For remove: Ask which comment to remove (e.g., by index or text).
-- For replace: Ask which comment to remove and what to replace it with.
+- For remove: If there is only one comment, use that comment directly without asking the user which one. If there are
+  multiple comments, ask which comment to remove (e.g., by index or text).
+- For replace: If there is only one comment, use that comment as the one to replace without asking which one. If there
+  are multiple comments, ask which comment to replace. Then collect the replacement text.
 
 ```json
 {

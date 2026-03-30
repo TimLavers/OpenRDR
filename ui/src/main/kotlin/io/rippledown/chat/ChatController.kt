@@ -3,12 +3,16 @@ package io.rippledown.chat
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import io.rippledown.constants.chat.CHAT_BOT_NO_RESPONSE_MESSAGE
+import io.rippledown.model.chat.ChatResponse
 
 interface ChatControllerHandler {
     fun sendUserMessage(message: String)
-    var onBotMessageReceived: (message: String) -> Unit
+    var onBotMessageReceived: (response: ChatResponse) -> Unit
 }
 
+/**
+ * @author Cascade AI
+ */
 @Composable
 fun ChatController(
     id: Long = -1L,
@@ -19,13 +23,18 @@ fun ChatController(
     var chatHistory: List<ChatMessage> by remember { mutableStateOf(emptyList()) }
     var sendIsEnabled: Boolean by remember { mutableStateOf(true) }
 
-    handler.onBotMessageReceived = { message ->
-        val botMessage = if (message.isEmpty()) {
-            BotMessage(CHAT_BOT_NO_RESPONSE_MESSAGE)
-        } else {
-            BotMessage(message)
+    handler.onBotMessageReceived = { response ->
+        val lastBotMessage = chatHistory.lastOrNull()
+        val isDuplicate = lastBotMessage is BotMessage && lastBotMessage.text == response.text
+        if (!isDuplicate) {
+            chatHistory = if (response.text.isEmpty()) {
+                chatHistory + BotMessage(CHAT_BOT_NO_RESPONSE_MESSAGE)
+            } else if (response.suggestions.isNotEmpty()) {
+                chatHistory + BotMessage(response.text) + SuggestionListMessage(response.suggestions)
+            } else {
+                chatHistory + BotMessage(response.text)
+            }
         }
-        chatHistory = chatHistory + botMessage
         sendIsEnabled = true
     }
 

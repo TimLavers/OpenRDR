@@ -8,6 +8,7 @@ import io.ktor.server.routing.*
 import io.rippledown.constants.api.*
 import io.rippledown.constants.server.EXPRESSION
 import io.rippledown.log.lazyLogger
+import io.rippledown.model.rule.BuildRuleRequest
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.UpdateCornerstoneRequest
@@ -64,6 +65,14 @@ fun Application.ruleSession(application: ServerApplication) {
             val conditionParsingResult = kbEndpoint(application).conditionForExpression(expression)
             call.respondNullable(HttpStatusCode.OK, conditionParsingResult)
             logger.info("Condition for expression '$expression' was '${conditionParsingResult.condition?.asText()}'")
+        }
+
+        post(BUILD_RULE) {
+            logger.info(BUILD_RULE)
+            val request = call.receive<BuildRuleRequest>()
+            logger.info("build rule request: $request")
+            kbEndpoint(application).buildRule(request)
+            call.respond(HttpStatusCode.OK)
         }
     }
 }

@@ -1,11 +1,17 @@
 package io.rippledown.main
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.BottomAppBar
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import io.rippledown.appbar.AppBarHandler
@@ -20,21 +26,19 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.caseview.ViewableCase
-import io.rippledown.model.condition.edit.SuggestedCondition
-import io.rippledown.model.diff.Addition
-import io.rippledown.model.diff.Diff
-import io.rippledown.model.diff.Removal
-import io.rippledown.model.diff.Replacement
-import io.rippledown.model.rule.*
+import io.rippledown.model.chat.ChatResponse
+import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.model.rule.UndoRuleDescription
 import io.rippledown.sample.SampleKB
 import kotlinx.coroutines.*
 import org.jetbrains.skiko.MainUIDispatcher
+import java.awt.Cursor
 import java.io.File
 
 interface Handler {
     var api: Api
     var isClosing: () -> Boolean
-    fun setWindowSize(isShowingCornerstone: Boolean, isShowingChat: Boolean)
+    fun setWindowSize(isShowingCornerstone: Boolean)
 }
 
 @Composable
@@ -47,31 +51,35 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     var casesInfo by remember { mutableStateOf(CasesInfo()) }
     var kbInfo: KBInfo? by remember { mutableStateOf(null) }
     var rightInformationMessage by remember { mutableStateOf("") }
-    var ruleAction: Diff? by remember { mutableStateOf(null) }
-    var conditionHints by remember { mutableStateOf(listOf<SuggestedCondition>()) }
-    var isShowingChat by remember { mutableStateOf(false) }
-    var isChatEnabled by remember { mutableStateOf(true) }
     val voiceRecognitionService = remember { VoiceRecognitionService(defaultModelPath()) }
+    var chatPanelWidth by remember { mutableStateOf(300.dp) }
+    var conversationCaseId by remember { mutableStateOf<Long?>(null) }
+    val density = LocalDensity.current
 
     val isShowingCornerstone = cornerstoneStatus?.cornerstoneToReview != null
     val ruleInProgress = cornerstoneStatus != null
 
-    handler.setWindowSize(isShowingCornerstone, isShowingChat)
+    handler.setWindowSize(isShowingCornerstone)
 
     val chatControllerHandler = object : ChatControllerHandler {
-        override var onBotMessageReceived: (message: String) -> Unit = { }
+        override var onBotMessageReceived: (response: ChatResponse) -> Unit = { }
         override fun sendUserMessage(message: String) {
             val caseId = requireNotNull(currentCaseId) {
                 "currentCaseId should not be null when casesInfo.count > 0"
             }
             // Use dispatcher to ensure API calls run on the EDT
             CoroutineScope(dispatcher).launch {
-                val response = api.sendUserMessage(message, caseId)
-                onBotMessageReceived(response)
+                try {
+                    val response = api.sendUserMessage(message, caseId)
+                    onBotMessageReceived(response)
 
-                //refresh the case to get the latest interpretation
-                currentCase = api.getCase(caseId)
-                ++chatId // Increment chatId to trigger recomposition in ChatController
+                    //refresh the case to get the latest interpretation
+                    currentCase = api.getCase(caseId)
+                    ++chatId // Increment chatId to trigger recomposition in ChatController
+                } catch (_: Exception) {
+                    //ignore
+                    //a test may shut down the server before this message can be sent
+                }
             }
         }
     }
@@ -89,35 +97,23 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                     // No initial case, or it's now been deleted
                     currentCaseId = casesInfo.caseIds[0].id!!
                 }
-                currentCase = api.getCase(currentCaseId!!)
-                conditionHints = api.conditionHints(currentCaseId!!).suggestions
-                isChatEnabled = true // Enable chat only if there are cases available
-            }
-        }
-    }
-
-    LaunchedEffect(currentCaseId) {
-        // When currentCaseId changes, start a conversation with the model if the chat panel is visible
-        if (isShowingChat) {
-            withContext(dispatcher) {
-                currentCaseId?.let {
-                    val response = api.startConversation(it)
-                    if (response.isNotBlank()) {
-                        chatControllerHandler.onBotMessageReceived(response)
-                        ++chatId // Increment chatId to trigger recomposition in ChatController
-                    }
+                if (currentCase?.case?.caseId?.id != currentCaseId) {
+                    currentCase = api.getCase(currentCaseId!!)
                 }
             }
         }
     }
 
-    //Start a conversation with the model when the chat is made visible
-    LaunchedEffect(isShowingChat) {
+    LaunchedEffect(currentCaseId) {
         withContext(dispatcher) {
             currentCaseId?.let {
-                val response = api.startConversation(it)
-                if (response.isNotBlank()) {
-                    chatControllerHandler.onBotMessageReceived(response)
+                if (conversationCaseId != it) {
+                    val response = api.startConversation(it)
+                    conversationCaseId = it
+                    if (response.text.isNotBlank()) {
+                        chatControllerHandler.onBotMessageReceived(response)
+                        ++chatId // Increment chatId to trigger recomposition in ChatController
+                    }
                 }
             }
         }
@@ -133,7 +129,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
 
     Scaffold(
         topBar = {
-            ApplicationBar(kbInfo, isShowingChat, isChatEnabled, object : AppBarHandler {
+            ApplicationBar(kbInfo, object : AppBarHandler {
                 override var isRuleSessionInProgress = ruleInProgress
                 override var selectKB: (id: String) -> Unit = {
                     CoroutineScope(dispatcher).launch {
@@ -172,16 +168,12 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                 override var kbDescription: () -> String = {
                     runBlocking(dispatcher) { api.kbDescription() }
                 }
-                override var onToggleChat: () -> Unit = { isShowingChat = !isShowingChat }
                 override var lastRuleDescription: () -> UndoRuleDescription = { runBlocking { api.lastRuleDescription() } }
                 override var undoLastRule: () -> Unit = {
                     runBlocking {
                         api.undoLastRule()
-                        println("rule undone")
                         if (currentCaseId != null) {
-                            println("refreshing case")
                             currentCase = api.getCase(currentCaseId!!)
-                            println("case refreshed")
                         }
                     }
                 }
@@ -191,7 +183,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
             BottomAppBar(
                 backgroundColor = Color.White,
             ) {
-                val leftMessage = ruleAction?.toAnnotatedString() ?: AnnotatedString("")
+                val leftMessage = cornerstoneStatus?.diff?.toAnnotatedString() ?: AnnotatedString("")
                 val rightMessage = AnnotatedString(rightInformationMessage)
                 InformationPanel(leftMessage, rightMessage)
             }
@@ -213,7 +205,6 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
             Column(modifier = Modifier.padding(paddingValues)) {
                 Row(modifier = Modifier.weight(1f)) {
                     if (!ruleInProgress) {
-                        ruleAction = null
                         rightInformationMessage = ""
                         Column {
                             CaseSelectorHeader(casesInfo.caseIds.size)
@@ -231,76 +222,14 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                     CaseControl(
                         currentCase = currentCase,
                         cornerstoneStatus = cornerstoneStatus,
-                        isChatVisible = isShowingChat,
-                        conditionHints = conditionHints,
                         handler = object : CaseControlHandler {
-                            override fun allComments() =
-                                runBlocking(dispatcher) { api.allConclusions().map { it.text }.toSet() }
-
-                            override fun startRuleToAddComment(comment: String) {
-                                ruleAction = Addition(comment)
-                                val sessionStartRequest = SessionStartRequest(
-                                    caseId = currentCase!!.id!!,
-                                    diff = ruleAction as Addition
-                                )
-                                CoroutineScope(dispatcher).launch {
-                                    cornerstoneStatus = api.startRuleSession(sessionStartRequest)
-                                }
-                            }
-
-                            override fun startRuleToReplaceComment(toBeReplaced: String, replacement: String) {
-                                ruleAction = Replacement(toBeReplaced, replacement)
-                                val sessionStartRequest = SessionStartRequest(
-                                    caseId = currentCase!!.id!!,
-                                    diff = ruleAction as Replacement
-                                )
-                                CoroutineScope(dispatcher).launch {
-                                    cornerstoneStatus = api.startRuleSession(sessionStartRequest)
-                                }
-                            }
-
-                            override fun startRuleToRemoveComment(comment: String) {
-                                ruleAction = Removal(comment)
-                                val sessionStartRequest = SessionStartRequest(
-                                    caseId = currentCase!!.id!!,
-                                    diff = ruleAction as Removal
-                                )
-                                CoroutineScope(dispatcher).launch {
-                                    cornerstoneStatus = api.startRuleSession(sessionStartRequest)
-                                }
-                            }
-
-                            override fun endRuleSession() {
-                                CoroutineScope(dispatcher).launch {
-                                    api.cancelRuleSession()
-                                    cornerstoneStatus = null
-                                }
-                            }
-
                             override var setRightInfoMessage: (message: String) -> Unit =
                                 { rightInformationMessage = it }
-
-                            override fun buildRule(ruleRequest: RuleRequest) = runBlocking(dispatcher) {
-                                currentCase = api.commitSession(ruleRequest)
-                                cornerstoneStatus = null
-                            }
-
-                            override fun updateCornerstoneStatus(cornerstoneRequest: UpdateCornerstoneRequest) =
-                                runBlocking(dispatcher) {
-                                    cornerstoneStatus = api.updateCornerstoneStatus(cornerstoneRequest)
-                                }
-
-                            override fun startRuleSession(sessionStartRequest: SessionStartRequest) =
-                                runBlocking(dispatcher) {
-                                    cornerstoneStatus = api.startRuleSession(sessionStartRequest)
-                                }
-
-                            override fun getCase(caseId: Long) =
-                                runBlocking(dispatcher) { currentCase = api.getCase(caseId) }
 
                             override fun swapAttributes(moved: Attribute, target: Attribute) {
                                 runBlocking(dispatcher) {
                                     api.moveAttribute(moved.id, target.id)
+                                    currentCase = api.getCase(currentCaseId!!)
                                 }
                             }
 
@@ -311,28 +240,32 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                             override fun exemptCornerstone(index: Int) = runBlocking(dispatcher) {
                                 cornerstoneStatus = api.exemptCornerstone(index)
                             }
-
-                            override fun conditionFor(
-                                conditionText: String,
-                            ) = runBlocking(Dispatchers.IO) {
-                                api.conditionFor(conditionText)
-                            }
                         },
-                        modifier = if (isShowingChat) {
-                            Modifier.weight(0.7f)
-                        } else {
-                            Modifier.fillMaxSize()
-                        }
+                        modifier = Modifier.weight(1f)
                     )
 
-                    if (isShowingChat) {
-                        ChatController(
-                            id = chatId,
-                            chatControllerHandler,
-                            voiceRecognitionService = voiceRecognitionService,
-                            modifier = Modifier.weight(0.3f)
-                        )
-                    }
+                    // Draggable divider for resizing the chat panel
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .width(4.dp)
+                            .background(Color.LightGray)
+                            .pointerHoverIcon(PointerIcon(Cursor(Cursor.W_RESIZE_CURSOR)))
+                            .pointerInput(Unit) {
+                                detectDragGestures { change, dragAmount ->
+                                    change.consume()
+                                    val deltaWidth = with(density) { (-dragAmount.x).toDp() }
+                                    chatPanelWidth = (chatPanelWidth + deltaWidth).coerceIn(200.dp, 600.dp)
+                                }
+                            }
+                    )
+
+                    ChatController(
+                        id = chatId,
+                        chatControllerHandler,
+                        voiceRecognitionService = voiceRecognitionService,
+                        modifier = Modifier.width(chatPanelWidth)
+                    )
                 }
             }
         }

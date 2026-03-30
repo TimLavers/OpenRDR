@@ -1,4 +1,3 @@
-@delay_after_cuke
 Feature: Replace comment
 
   Scenario: The user should be able to use the chat to replace a comment with a valid condition
@@ -10,17 +9,7 @@ Feature: Replace comment
       | Bring flippers.  |
     And I start the client application
     And I see the case Bondi as the current case
-    And the chat is showing
-    And the chatbot has asked if I want to add, remove or replace a comment
-    And I enter the following text into the chat panel:
-      | Replace the flippers comment by "Don't forget sunscreen." |
-    And the chatbot has asked for confirmation
-    And I confirm
-    And the chatbot has asked if I want to provide any reasons and I confirm
-    And the chatbot has asked for the first reason
-    And I enter the following text into the chat panel:
-      | UV more than 4 |
-    When the chatbot has asked if I want to provide any more reasons and I decline
+    When Replace the comment "flippers" by "Don't forget sunscreen." with the reasons:
+      | wave height is more than 0.5 |
     Then the report should be "Go to the beach. Don't forget sunscreen."
-    And stop the client application
 

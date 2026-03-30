@@ -19,10 +19,10 @@ import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.model.condition.isCondition
-import io.rippledown.model.rule.ChangeTreeToAddConclusion
-import io.rippledown.model.rule.ChangeTreeToRemoveConclusion
-import io.rippledown.model.rule.ChangeTreeToReplaceConclusion
-import io.rippledown.model.rule.UndoRuleDescription
+import io.rippledown.model.diff.Addition
+import io.rippledown.model.diff.Removal
+import io.rippledown.model.diff.Replacement
+import io.rippledown.model.rule.*
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.supplyCaseFromFile
 import io.rippledown.toJsonString
@@ -450,6 +450,51 @@ internal class KBEndpointTest {
     }
 
     @Test
+    fun `should set currentDiff on kb when starting a rule session via SessionStartRequest`() {
+        //Given
+        val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
+        val diff = Addition("Go to Bondi.")
+        val sessionStartRequest = SessionStartRequest(id, diff)
+
+        //When
+        endpoint.startRuleSession(sessionStartRequest)
+
+        //Then
+        endpoint.kb.currentDiff shouldBe diff
+    }
+
+    @Test
+    fun `should set currentDiff to Replacement when starting a rule session via SessionStartRequest`() {
+        //Given
+        val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
+        val conclusion = endpoint.kb.conclusionManager.getOrCreate("Go to Bondi.")
+        endpoint.startRuleSessionToAddConclusion(id, conclusion)
+        endpoint.commitCurrentRuleSession()
+        val diff = Replacement("Go to Bondi.", "Go to Maroubra.")
+        val sessionStartRequest = SessionStartRequest(id, diff)
+
+        //When
+        endpoint.startRuleSession(sessionStartRequest)
+
+        //Then
+        endpoint.kb.currentDiff shouldBe diff
+    }
+
+    @Test
+    fun `should include the diff in the cornerstone status returned by startRuleSession`() {
+        //Given
+        val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
+        val diff = Addition("Go to Bondi.")
+        val sessionStartRequest = SessionStartRequest(id, diff)
+
+        //When
+        val status = endpoint.startRuleSession(sessionStartRequest)
+
+        //Then
+        status.diff shouldBe diff
+    }
+
+    @Test
     fun `startRuleSessionToAddConclusion should call startRuleSession`() {
         // Given
         val kb = mockk<KB>(relaxed = true)
@@ -499,5 +544,86 @@ internal class KBEndpointTest {
 
         // Then
         verify { kb.startRuleSession(case, any<ChangeTreeToReplaceConclusion>()) }
+    }
+
+    @Test
+    fun `buildRule should add a comment with Is conditions`() {
+        // Given
+        val case1 = supplyCaseFromFile("Case1", endpoint)
+        val request = BuildRuleRequest(
+            caseName = "Case1",
+            diff = Addition("TSH ok."),
+            conditions = listOf("""TSH is "0.667"""")
+        )
+
+        // When
+        endpoint.buildRule(request)
+
+        // Then
+        endpoint.case(case1.caseId.id!!).interpretation.conclusionTexts() shouldBe setOf("TSH ok.")
+    }
+
+    @Test
+    fun `buildRule should remove a comment with Is conditions`() {
+        // Given
+        val case1 = supplyCaseFromFile("Case1", endpoint)
+        val id = case1.caseId.id!!
+        // First add a comment
+        endpoint.buildRule(
+            BuildRuleRequest("Case1", Addition("TSH ok."), listOf("""TSH is "0.667""""))
+        )
+        endpoint.case(id).interpretation.conclusionTexts() shouldBe setOf("TSH ok.")
+
+        // When - remove it
+        endpoint.buildRule(
+            BuildRuleRequest("Case1", Removal("TSH ok."), listOf("""ABC is "6.7""""))
+        )
+
+        // Then
+        endpoint.case(id).interpretation.conclusionTexts() shouldBe emptySet()
+    }
+
+    @Test
+    fun `buildRule should replace a comment with Is conditions`() {
+        // Given
+        val case1 = supplyCaseFromFile("Case1", endpoint)
+        val id = case1.caseId.id!!
+        // First add a comment
+        endpoint.buildRule(
+            BuildRuleRequest("Case1", Addition("TSH ok."), listOf("""TSH is "0.667""""))
+        )
+        endpoint.case(id).interpretation.conclusionTexts() shouldBe setOf("TSH ok.")
+
+        // When - replace it
+        endpoint.buildRule(
+            BuildRuleRequest(
+                "Case1",
+                Replacement("TSH ok.", "TSH normal."),
+                listOf("""ABC is "6.7"""")
+            )
+        )
+
+        // Then
+        endpoint.case(id).interpretation.conclusionTexts() shouldBe setOf("TSH normal.")
+    }
+
+    @Test
+    fun `buildRule should handle multiple conditions`() {
+        // Given
+        val case1 = supplyCaseFromFile("Case1", endpoint)
+        val request = BuildRuleRequest(
+            caseName = "Case1",
+            diff = Addition("Both ok."),
+            conditions = listOf(
+                """TSH is "0.667"""",
+                """ABC is "6.7""""
+            )
+        )
+
+        // When
+        endpoint.buildRule(request)
+
+        // Then
+        endpoint.case(case1.caseId.id!!).interpretation.conclusionTexts() shouldBe setOf("Both ok.")
     }
 }

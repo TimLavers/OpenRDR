@@ -1,6 +1,7 @@
 package io.rippledown.kb.chat.action
 
 import io.kotest.matchers.shouldBe
+import io.rippledown.model.chat.ChatResponse
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
@@ -14,6 +15,6 @@ class UserActionTest : ActionTestBase() {
         val action = UserAction(message)
 
         //Then
-        action.doIt(ruleService, currentCase, modelResponder) shouldBe message
+        action.doIt(ruleService, currentCase, modelResponder) shouldBe ChatResponse(message)
     }
 }

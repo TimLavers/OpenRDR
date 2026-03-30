@@ -12,13 +12,16 @@ import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_CONVERSATION_R
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
-import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.model.chat.ChatResponse
 import io.rippledown.toJsonString
 import kotlinx.coroutines.test.runTest
 import org.slf4j.Logger
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
+/**
+ * @author Cascade AI
+ */
 class ChatManagerTest {
     lateinit var logger: Logger
     lateinit var conversationService: ConversationService
@@ -55,7 +58,7 @@ class ChatManagerTest {
         val responseToUser = chatManager.processActionComment(actionComment)
 
         // Then
-        responseToUser shouldBe actionComment.message
+        responseToUser shouldBe ChatResponse(actionComment.message!!)
     }
 
     @Test
@@ -67,7 +70,7 @@ class ChatManagerTest {
         val responseToUser = chatManager.processActionComment(actionComment)
 
         // Then
-        responseToUser shouldBe actionComment.message
+        responseToUser shouldBe ChatResponse(actionComment.message!!)
     }
 
     @Test
@@ -133,7 +136,43 @@ class ChatManagerTest {
         val responseToUser = chatManager.startConversation(viewableCase)
 
         // Then
-        responseToUser shouldBe message
+        responseToUser shouldBe ChatResponse(message)
+    }
+
+    @Test
+    fun `should return suggestions from ActionComment in ChatResponse`() = runTest {
+        // Given
+        val message = "Here are some suggested conditions."
+        val suggestions = listOf("wave height is \"2\"", "case is for a single date")
+        val responseFromModel = ActionComment(
+            action = USER_ACTION,
+            message = message,
+            suggestions = suggestions
+        ).toJsonString()
+        coEvery { conversationService.startConversation() } returns responseFromModel
+
+        // When
+        val responseToUser = chatManager.startConversation(viewableCase)
+
+        // Then
+        responseToUser shouldBe ChatResponse(message, suggestions)
+    }
+
+    @Test
+    fun `should return empty suggestions when ActionComment has no suggestions`() = runTest {
+        // Given
+        val message = "No suggestions here."
+        val responseFromModel = ActionComment(
+            action = USER_ACTION,
+            message = message,
+        ).toJsonString()
+        coEvery { conversationService.startConversation() } returns responseFromModel
+
+        // When
+        val responseToUser = chatManager.startConversation(viewableCase)
+
+        // Then
+        responseToUser shouldBe ChatResponse(message)
     }
 
     @Test
@@ -153,7 +192,7 @@ class ChatManagerTest {
         val responseToUser = chatManager.response("meaning of life?")
 
         // Then
-        responseToUser shouldBe message
+        responseToUser shouldBe ChatResponse(message)
     }
 
     @Test
@@ -172,7 +211,7 @@ class ChatManagerTest {
         val responseToUser = chatManager.response("meaning of life?")
 
         // Then
-        responseToUser shouldBe beBlank()
+        responseToUser.text shouldBe beBlank()
     }
 
     @Test
@@ -367,28 +406,28 @@ class ChatManagerTest {
         val responseToUser = chatManager.response(message)
 
         // Then
-        responseToUser shouldBe "Please confirm you want to add the comment '$message'"
+        responseToUser shouldBe ChatResponse("Please confirm you want to add the comment '$message'")
     }
 
     @Test
-    fun `should process multiple actions in sequence`() = runTest {
+    fun `should only process the first json fragment when multiple are returned`() = runTest {
         // Given
         val response = """
-            {"action": "ExemptCornerstone"}
             {"action": "CommitRule"}
+            {"action": "CancelRule"}
         """.trimIndent()
         val message = "test message"
 
         coEvery { conversationService.response(message) } returns response
-        coEvery { ruleService.exemptCornerstoneCase() } returns CornerstoneStatus()
         coEvery { ruleService.commitCurrentRuleSession() } returns Unit
+        coEvery { ruleService.sendRuleSessionCompleted() } returns Unit
 
         // When
         chatManager.response(message)
 
         // Then
-        coVerify { ruleService.exemptCornerstoneCase() }
         coVerify { ruleService.commitCurrentRuleSession() }
+        coVerify(exactly = 0) { ruleService.cancelCurrentRuleSession() }
     }
 
 

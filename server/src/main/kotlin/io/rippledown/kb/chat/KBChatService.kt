@@ -4,6 +4,7 @@ import com.google.genai.types.FunctionDeclaration
 import com.google.genai.types.Schema
 import com.google.genai.types.Type
 import io.rippledown.chat.ChatService
+import io.rippledown.chat.Conversation.Companion.GET_SUGGESTED_CONDITIONS
 import io.rippledown.chat.Conversation.Companion.REASON_PARAMETER
 import io.rippledown.chat.Conversation.Companion.TRANSFORM_REASON
 import io.rippledown.chat.GeminiChatService
@@ -49,11 +50,22 @@ object KBChatService {
         )
         .build()
 
+
+    private val suggestedConditionsRetriever = FunctionDeclaration.builder()
+        .name(GET_SUGGESTED_CONDITIONS)
+        .description("Retrieves a numbered list of suggested conditions for the current case. Call this after the rule session has been started and before asking the user for reasons.")
+        .parameters(
+            Schema.builder()
+                .type(Type.Known.OBJECT)
+                .properties(emptyMap())
+                .build()
+        )
+        .build()
     fun createKBChatService(viewableCase: ViewableCase): ChatService {
         val systemInstruction = systemPrompt(viewableCase)
         return GeminiChatService(
             systemInstruction = systemInstruction,
-            functionDeclarations = listOf(reasonTransformer)
+            functionDeclarations = listOf(reasonTransformer, suggestedConditionsRetriever)
         )
     }
 
@@ -63,7 +75,7 @@ object KBChatService {
         "3_defining_the_report_change.md",
         "4_starting_the_rule_session.md",
         "5_defining_the_reasons.md",
-
+        "6_suggested_conditions.md",
         "7_transform-reason.md",
         "8_allow_or_disallow_cornerstone.md",
         "9_completing_the_report_change.md",
@@ -71,6 +83,7 @@ object KBChatService {
         "11_reordering_the_case_attributes.md",
         "12_json_format_guidelines.md",
         "13_general-guidelines.md",
+        "14_cancelling_the_rule.md",
     )
     val systemPromptExampleSections = listOf(
         "examples.md",
@@ -86,6 +99,7 @@ object KBChatService {
         "ATTRIBUTES" to viewableCase.attributes().joinToString("\n") { it.name },
         "COMMENTS" to viewableCase.case.interpretation.toComments(),
         "TRANSFORM_REASON" to TRANSFORM_REASON,
+        "GET_SUGGESTED_CONDITIONS" to GET_SUGGESTED_CONDITIONS,
         "REASON" to REASON,
         "FIRST_REASON" to FIRST_REASON,
         "MORE_REASONS" to MORE_REASONS,
@@ -110,6 +124,7 @@ object KBChatService {
         "UNDO_LAST_RULE" to UNDO_LAST_RULE,
         "MOVE_ATTRIBUTE" to MOVE_ATTRIBUTE,
         "REMOVE_REASON" to REMOVE_REASON,
+        "CANCEL_RULE" to CANCEL_RULE,
 
     )
 

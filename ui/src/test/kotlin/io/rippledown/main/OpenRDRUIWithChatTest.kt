@@ -10,6 +10,7 @@ import io.rippledown.casecontrol.waitForCaseToBeShowing
 import io.rippledown.chat.*
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
+import io.rippledown.model.chat.ChatResponse
 import io.rippledown.utils.applicationFor
 import io.rippledown.utils.createViewableCaseWithInterpretation
 import kotlinx.coroutines.Dispatchers
@@ -36,7 +37,7 @@ class OpenRDRUIWithChatTest {
     }
 
     @Test
-    fun `should hide the chat panel by default`() = runTest {
+    fun `should show the chat panel by default`() = runTest {
         val caseA = "case A"
         val caseId1 = CaseId(id = 1, name = caseA)
         val caseIds = listOf(caseId1)
@@ -56,37 +57,12 @@ class OpenRDRUIWithChatTest {
             waitForCaseToBeShowing(caseA)
 
             //Then
-            requireChatPanelIsNotDisplayed()
-        }
-    }
-
-    @Test
-    fun `should show the chat panel if the chat toggle is clicked`() = runTest {
-        val caseA = "case A"
-        val caseId1 = CaseId(id = 1, name = caseA)
-        val caseIds = listOf(caseId1)
-        val bondiComment = "Go to Bondi"
-        val case = createViewableCaseWithInterpretation(caseA, 1, listOf(bondiComment))
-        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
-        coEvery { api.getCase(1) } returns case
-
-        with(composeTestRule) {
-            //Given
-            setContent {
-                OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
-            }
-            requireChatPanelIsNotDisplayed()
-
-            //When
-            clickChatIconToggle()
-
-            //Then
             requireChatPanelIsDisplayed()
         }
     }
 
     @Test
-    fun `focus should be on the chat user text field if a case is showing and the chat toggle icon has been clicked`() =
+    fun `focus should be on the chat user text field if a case is showing`() =
         runTest {
             val caseA = "case A"
             val caseId1 = CaseId(id = 1, name = caseA)
@@ -102,10 +78,9 @@ class OpenRDRUIWithChatTest {
                     OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
                 }
                 requireNamesToBeShowingOnCaseList(caseA)
-                waitForCaseToBeShowing(caseA)
 
                 //When
-                clickChatIconToggle()
+                waitForCaseToBeShowing(caseA)
 
                 //Then
                 requireUserTextFieldFocused()
@@ -134,7 +109,6 @@ class OpenRDRUIWithChatTest {
             }
             requireNamesToBeShowingOnCaseList(caseA)
             waitForCaseToBeShowing(caseA)
-            clickChatIconToggle()
             requireUserTextFieldFocused()
 
             //When
@@ -164,7 +138,6 @@ class OpenRDRUIWithChatTest {
                 OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
             }
             waitForCaseToBeShowing(caseName)
-            clickChatIconToggle()
 
             //When
             val userMessage = "add a comment"
@@ -191,7 +164,6 @@ class OpenRDRUIWithChatTest {
             setContent {
                 OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
             }
-            clickChatIconToggle()
 
             //When
             waitForCaseToBeShowing(caseName)
@@ -202,34 +174,7 @@ class OpenRDRUIWithChatTest {
     }
 
     @Test
-    fun `should not start a conversation with the model when a case is selected if the chat panel is not showing`() =
-        runTest {
-            val caseName = "case A"
-            val caseId = CaseId(id = 1234, name = caseName)
-            val id = caseId.id!!
-            val caseIds = listOf(caseId)
-            val bondiComment = "Go to Bondi"
-            val case = createViewableCaseWithInterpretation(caseName, id, listOf(bondiComment))
-            coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
-            coEvery { api.getCase(id) } returns case
-
-            with(composeTestRule) {
-                //Given
-                setContent {
-                    OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
-                }
-                requireChatPanelIsNotDisplayed()
-
-                //When
-                waitForCaseToBeShowing(caseName)
-
-                //Then
-                coVerify(exactly = 0) { api.startConversation(id) }
-            }
-        }
-
-    @Test
-    fun `should start a new conversation with the model when another case is selected`() = runTest {
+    fun `should start a new conversation with the model when browsing to another case`() = runTest {
         val caseNameA = "case A"
         val caseNameB = "case B"
         val caseIdA = CaseId(id = 1234, name = caseNameA)
@@ -250,7 +195,6 @@ class OpenRDRUIWithChatTest {
             setContent {
                 OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
             }
-            clickChatIconToggle()
             waitForCaseToBeShowing(caseNameA)
 
             //When
@@ -260,6 +204,39 @@ class OpenRDRUIWithChatTest {
             //Then
             coVerify(exactly = 1) { api.startConversation(idA) }
             coVerify(exactly = 1) { api.startConversation(idB) }
+        }
+    }
+
+    @Test
+    fun `should not show a duplicate bot message when switching cases with the same response`() = runTest {
+        // Given
+        val caseNameA = "case A"
+        val caseNameB = "case B"
+        val caseIdA = CaseId(id = 1, name = caseNameA)
+        val caseIdB = CaseId(id = 2, name = caseNameB)
+        val caseIds = listOf(caseIdA, caseIdB)
+        val caseA = createViewableCaseWithInterpretation(caseNameA, 1, listOf("Go to Bondi"))
+        val caseB = createViewableCaseWithInterpretation(caseNameB, 2, listOf("Go to Malabar"))
+        val sameResponse = "Would you like to add a comment to the report?"
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.getCase(1) } returns caseA
+        coEvery { api.getCase(2) } returns caseB
+        coEvery { api.startConversation(1) } returns ChatResponse(sameResponse)
+        coEvery { api.startConversation(2) } returns ChatResponse(sameResponse)
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
+            }
+            waitForCaseToBeShowing(caseNameA)
+            requireChatMessagesShowing(listOf(BotMessage(sameResponse)))
+
+            // When
+            selectCaseByName(caseNameB)
+            waitForCaseToBeShowing(caseNameB)
+
+            // Then - only one message, not duplicated
+            requireChatMessagesShowing(listOf(BotMessage(sameResponse)))
         }
     }
 
@@ -274,7 +251,7 @@ class OpenRDRUIWithChatTest {
         val initialResponse = "the answer is 42"
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
         coEvery { api.getCase(id) } returns case
-        coEvery { api.startConversation(id) } returns initialResponse
+        coEvery { api.startConversation(id) } returns ChatResponse(initialResponse)
 
         with(composeTestRule) {
             //Given
@@ -284,10 +261,34 @@ class OpenRDRUIWithChatTest {
 
             //When
             waitForCaseToBeShowing(caseName)
-            clickChatIconToggle()
 
             //Then
             requireChatMessagesShowing(listOf(BotMessage(initialResponse)))
+        }
+    }
+
+    @Test
+    fun `should not call startConversation when sending a user message`() = runTest {
+        val caseName = "case A"
+        val caseId = CaseId(id = 1234, name = caseName)
+        val id = caseId.id!!
+        val caseIds = listOf(caseId)
+        val case = createViewableCaseWithInterpretation(caseName, id, listOf("Go to Bondi"))
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.getCase(id) } returns case
+        coEvery { api.startConversation(id) } returns ChatResponse("Hello")
+        coEvery { api.sendUserMessage(any(), any<Long>()) } returns ChatResponse("OK")
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
+            }
+            waitForCaseToBeShowing(caseName)
+
+            val userMessage = "add a comment"
+            typeChatMessageAndClickSend(userMessage)
+
+            coVerify(exactly = 1) { api.startConversation(id) }
         }
     }
 
@@ -301,7 +302,7 @@ class OpenRDRUIWithChatTest {
         val case = createViewableCaseWithInterpretation(caseA, 1, listOf(bondiComment))
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
         coEvery { api.getCase(1) } returns case
-        coEvery { api.sendUserMessage(any(), any<Long>()) } returns answer
+        coEvery { api.sendUserMessage(any(), any<Long>()) } returns ChatResponse(answer)
 
         with(composeTestRule) {
             //Given
@@ -309,7 +310,6 @@ class OpenRDRUIWithChatTest {
                 OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
             }
             waitForCaseToBeShowing(caseA)
-            clickChatIconToggle()
 
             //When
             val userMessage = "add a comment"
@@ -322,37 +322,6 @@ class OpenRDRUIWithChatTest {
             )
             requireChatMessagesShowing(expected)
         }
-        @Test
-        fun `should poll for cornerstones if a rule session is started by the chat`() = runTest {
-            val caseA = "case A"
-            val caseId1 = CaseId(id = 1, name = caseA)
-            val caseIds = listOf(caseId1)
-            val bondiComment = "Go to Bondi"
-            val answer = "the answer is 42"
-            val case = createViewableCaseWithInterpretation(caseA, 1, listOf(bondiComment))
-            coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
-            coEvery { api.getCase(1) } returns case
-            coEvery { api.sendUserMessage(any(), any<Long>()) } returns answer
-
-            with(composeTestRule) {
-                //Given
-                setContent {
-                    OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
-                }
-
-                //When
-                waitForCaseToBeShowing(caseA)
-                clickChatIconToggle()
-
-                //Then
-                val expected = listOf(
-                    UserMessage("userMessage"),
-                    BotMessage(answer)
-                )
-                requireChatMessagesShowing(expected)
-            }
-        }
-
     }
 }
 
@@ -369,7 +338,7 @@ fun main() {
     coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
 //    coEvery { api.cornerstoneStatus() } returns CornerstoneStatus(caseB, 0, 42)
     coEvery { api.getCase(any()) } returns caseA
-    coEvery { api.sendUserMessage(any(), any()) } returns "The answer is 42"
+    coEvery { api.sendUserMessage(any(), any()) } returns ChatResponse("The answer is 42")
 
     applicationFor {
         OpenRDRUI(handler, dispatcher = Unconfined)

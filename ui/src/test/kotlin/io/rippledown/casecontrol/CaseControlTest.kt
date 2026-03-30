@@ -1,19 +1,8 @@
 package io.rippledown.casecontrol
 
 import androidx.compose.ui.test.junit4.createComposeRule
-import io.kotest.assertions.withClue
 import io.mockk.mockk
-import io.mockk.verify
-import io.rippledown.interpretation.requireChangeInterpretationIconToBeNotShowing
 import io.rippledown.interpretation.requireInterpretation
-import io.rippledown.model.Attribute
-import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
-import io.rippledown.model.condition.hasCurrentValue
-import io.rippledown.model.rule.CornerstoneStatus
-import io.rippledown.rule.clickCancelRuleButton
-import io.rippledown.rule.requireRuleMakerNotToBeDisplayed
-import io.rippledown.rule.requireRuleMakerToBeDisplayed
-import io.rippledown.utils.applicationFor
 import io.rippledown.utils.createViewableCaseWithInterpretation
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -32,7 +21,6 @@ class CaseControlTest {
         handler = mockk<CaseControlHandler>()
     }
 
-
     @Test
     fun `should show the interpretative report of the case`() = runTest {
         val name = "case A"
@@ -44,58 +32,12 @@ class CaseControlTest {
             setContent {
                 CaseControl(
                     currentCase = case,
-                    conditionHints = listOf(),
                     handler = handler
                 )
             }
 
             //Then
             requireInterpretation(bondiComment)
-        }
-    }
-
-    @Test
-    fun `should hide the change interpretation icon if a rule session is in progress`() = runTest {
-        val name = "case A"
-        val bondiComment = "Go to Bondi"
-        val case = createViewableCaseWithInterpretation(name, 1, listOf(bondiComment))
-
-        with(composeTestRule) {
-            //Given
-            setContent {
-                CaseControl(
-                    currentCase = case,
-                    cornerstoneStatus = CornerstoneStatus(case, 42, 84),
-                    conditionHints = listOf(),
-                    handler = handler
-                )
-            }
-
-            //Then
-            requireChangeInterpretationIconToBeNotShowing()
-        }
-    }
-
-    @Test
-    fun `should hide the change interpretation icon if the chat is visible`() = runTest {
-        val name = "case A"
-        val bondiComment = "Go to Bondi"
-        val case = createViewableCaseWithInterpretation(name, 1, listOf(bondiComment))
-
-        with(composeTestRule) {
-            //Given
-            setContent {
-                CaseControl(
-                    currentCase = case,
-                    cornerstoneStatus = null,
-                    isChatVisible = true,
-                    conditionHints = listOf(),
-                    handler = handler
-                )
-            }
-
-            //Then
-            requireChangeInterpretationIconToBeNotShowing()
         }
     }
 
@@ -111,115 +53,10 @@ class CaseControlTest {
             setContent {
                 CaseControl(
                     currentCase = viewableCase,
-                    conditionHints = listOf(),
                     handler = handler
                 )
             }
             waitForCaseToBeShowing("case 1")
         }
-    }
-
-    @Test
-    fun `should show rule builder if the cornerstone status is not null`() = runTest {
-        val name = "Bondi"
-        val bondiComment = "Go to Bondi"
-        val case = createViewableCaseWithInterpretation(name, 1, listOf(bondiComment))
-        val cornerstone = createViewableCaseWithInterpretation("Malabar", 1, listOf(bondiComment))
-        val cornerstoneStatus = CornerstoneStatus(cornerstone, 42, 84)
-
-        with(composeTestRule) {
-            //Given
-            setContent {
-                CaseControl(
-                    currentCase = case,
-                    cornerstoneStatus = cornerstoneStatus,
-                    conditionHints = listOf(),
-                    handler = handler
-                )
-            }
-            requireInterpretation(bondiComment)
-
-            //Then
-            requireRuleMakerToBeDisplayed()
-        }
-    }
-
-    @Test
-    fun `should not show rule builder if the chat is visible`() = runTest {
-        val name = "Bondi"
-        val bondiComment = "Go to Bondi"
-        val case = createViewableCaseWithInterpretation(name, 1, listOf(bondiComment))
-        val cornerstone = createViewableCaseWithInterpretation("Malabar", 1, listOf(bondiComment))
-        val cornerstoneStatus = CornerstoneStatus(cornerstone, 42, 84)
-
-        with(composeTestRule) {
-            //Given
-            setContent {
-                CaseControl(
-                    currentCase = case,
-                    cornerstoneStatus = cornerstoneStatus,
-                    conditionHints = listOf(),
-                    handler = handler,
-                    isChatVisible = true
-                )
-            }
-            requireInterpretation(bondiComment)
-
-            //Then
-            withClue("the user can only use the chat to build a rule if the chat panel is showing") {
-                requireRuleMakerNotToBeDisplayed()
-            }
-        }
-    }
-    @Test
-    fun `should call handler when the rule session is cancelled`() = runTest {
-        val name = "Bondi"
-        val bondiComment = "Go to Bondi"
-        val case = createViewableCaseWithInterpretation(name, 1, listOf(bondiComment))
-
-        with(composeTestRule) {
-            //Given
-            setContent {
-                CaseControl(
-                    currentCase = case,
-                    cornerstoneStatus = CornerstoneStatus(null, 42, 84),
-                    conditionHints = listOf(),
-                    handler = handler
-                )
-            }
-            requireInterpretation(bondiComment)
-            requireRuleMakerToBeDisplayed()
-
-            //when
-            clickCancelRuleButton()
-
-            // Then
-            verify { handler.endRuleSession() }
-
-        }
-    }
-
-}
-
-fun main() {
-    applicationFor {
-        val handler = mockk<CaseControlHandler>()
-
-        val caseName = "Bondi"
-        val id = 45L
-        val bondiComment = "Go to Bondi now!"
-        val viewableCase = createViewableCaseWithInterpretation(
-            name = caseName,
-            caseId = id,
-            conclusionTexts = listOf(bondiComment)
-        )
-        val condition = hasCurrentValue(1, Attribute(2, "Surf 1"))
-        val suggestedCondition = NonEditableSuggestedCondition(condition)
-        CaseControl(
-            currentCase = viewableCase,
-            cornerstoneStatus = CornerstoneStatus(viewableCase, 42, 84),
-            conditionHints = listOf(suggestedCondition),
-            handler = handler
-        )
     }
 }

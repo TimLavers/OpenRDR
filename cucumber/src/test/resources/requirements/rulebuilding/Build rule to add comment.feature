@@ -10,7 +10,6 @@ Feature: The user can make a rule that adds a comment to the interpretive report
     Then the interpretation should be "Go to Bondi."
     And select the case Case2
     And the interpretation should be "Go to Bondi."
-    And stop the client application
 
   Scenario: The user should be able to build a rule to add an existing comment
     Given the configured case Case1 is stored on the server
@@ -28,12 +27,11 @@ Feature: The user can make a rule that adds a comment to the interpretive report
     And case Bondi is provided having data:
       | Sun  | hot       |
       | Wave | excellent |
-    And I build a rule to add the comment "Go to the beach." with the condition "Sun is in case"
+    And I build a rule to add the comment "Go to the beach." with condition
+      | Sun is in case |
     Then  the interpretation should be "Go to the beach."
-#      And pause for 2 seconds TODO this doesn't work on TL's computer, to be fixed
-#    And the condition showing for the comment "Go to the beach." is:
-#      | Sun is in case |
-    And stop the client application
+    And the condition showing for the comment "Go to the beach." is:
+      | Sun is in case |
 
   Scenario: The user should be able to build rules to add several comments
     Given a list of cases with the following names is stored on the server:
@@ -42,9 +40,7 @@ Feature: The user can make a rule that adds a comment to the interpretive report
     And I start the client application
     And I should see the case Case1 as the current case
     When I build a rule to add the comment "Go to Bondi."
-    And I build a rule to add the comment "Grow some trees."
+    And I build a rule to add another comment "Grow some trees."
     Then  the interpretation should be "Go to Bondi. Grow some trees."
     And select the case Case2
     And  the interpretation should be "Go to Bondi. Grow some trees."
-    And stop the client application
-

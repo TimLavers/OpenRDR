@@ -365,4 +365,3 @@ Feature: The cases described in the TSH paper are present in a KB built from the
       | Tests             | TFTs                  |            |
       | Clinical Notes    | Semi-coma.            |            |
 
-    And stop the client application

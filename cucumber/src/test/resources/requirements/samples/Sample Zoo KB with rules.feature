@@ -307,4 +307,3 @@ Feature: A sample KB can be created that has the Zoo Animals cases and rules.
     When I select case wren
     Then the interpretation should be "bird"
 
-    And stop the client application

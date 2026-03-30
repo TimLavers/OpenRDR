@@ -9,6 +9,7 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.*
 import io.rippledown.chat.ReasonTransformation
+import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
 import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.model.*
@@ -18,6 +19,9 @@ import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals
 import io.rippledown.model.condition.episodic.predicate.High
 import io.rippledown.model.condition.episodic.predicate.Is
 import io.rippledown.model.condition.episodic.signature.Current
+import io.rippledown.model.diff.Addition
+import io.rippledown.model.diff.Removal
+import io.rippledown.model.diff.Replacement
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.external.MeasurementEvent
 import io.rippledown.model.rule.*
@@ -1017,6 +1021,32 @@ class KBTest {
     }
 
     @Test
+    fun `should return error if the parsed condition references an attribute not in the case`() {
+        //Given
+        val waves = kb.attributeManager.getOrCreate("Waves")
+        val unknownAttribute = kb.attributeManager.getOrCreate("x")
+        val height = "0.5"
+        val sessionCase = createCase("Case", attribute = waves, value = height)
+        val conditionParser = mockk<ConditionParser>()
+        val userExpression = "below"
+        val parsedCondition = EpisodicCondition(null, unknownAttribute, High, Current, userExpression)
+        every { conditionParser.parse(any(), any()) } returns parsedCondition
+        kb.setConditionParser(conditionParser)
+
+        kb.startRuleSession(
+            sessionCase,
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
+        )
+
+        //When
+        val result = kb.conditionForExpression(userExpression)
+
+        //Then
+        result.condition shouldBe null
+        result.errorMessage shouldBe DOES_NOT_CORRESPOND_TO_A_CONDITION
+    }
+
+    @Test
     fun `should return null if the parsed condition is not true for the session case`() {
         //Given
         val waves = kb.attributeManager.getOrCreate("Waves")
@@ -1098,6 +1128,145 @@ class KBTest {
         val slot = slot<Condition>()
         verify { ruleService.addConditionToCurrentRuleSession(capture(slot)) }
         slot.captured shouldBeSameAs condition
+    }
+
+
+    @Test
+    fun `currentRuleSessionConditionTexts should return empty set when no rule session is active`() {
+        kb.currentRuleSessionConditionTexts() shouldBe emptySet()
+    }
+
+    @Test
+    fun `currentRuleSessionConditionTexts should return empty set when rule session has no conditions`() {
+        val sessionCase = createCase("Case1", value = "1.0")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
+        kb.currentRuleSessionConditionTexts() shouldBe emptySet()
+    }
+
+    @Test
+    fun `currentRuleSessionConditionTexts should return condition texts after adding conditions`() {
+        val sessionCase = createCase("Case1", value = "1.0")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
+        val condition = lessThanOrEqualTo(null, glucose(), 1.2)
+        kb.addConditionToCurrentRuleSession(condition)
+        kb.currentRuleSessionConditionTexts() shouldBe setOf(condition.asText())
+    }
+
+    @Test
+    fun `currentRuleSessionConditionTexts should return texts of all added conditions`() {
+        val sessionCase = createCase("Case1", value = "1.0")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
+        val condition1 = lessThanOrEqualTo(null, glucose(), 1.2)
+        val condition2 = greaterThanOrEqualTo(null, glucose(), 0.5)
+        kb.addConditionToCurrentRuleSession(condition1)
+        kb.addConditionToCurrentRuleSession(condition2)
+        kb.currentRuleSessionConditionTexts() shouldBe setOf(condition1.asText(), condition2.asText())
+    }
+
+    @Test
+    fun `should set currentDiff to Addition when starting a rule session to add a comment`() {
+        //Given
+        val sessionCase = createCase("Case1", value = "1.0", id = 1)
+        val viewableCase = kb.viewableCase(sessionCase)
+        val comment = "Go to Bondi."
+
+        //When
+        kb.startRuleSessionToAddComment(viewableCase, comment)
+
+        //Then
+        kb.currentDiff shouldBe Addition(comment)
+    }
+
+    @Test
+    fun `should set currentDiff to Removal when starting a rule session to remove a comment`() {
+        //Given
+        val sessionCase = createCase("Case1", value = "1.0", id = 1)
+        val viewableCase = kb.viewableCase(sessionCase)
+        val comment = "Go to Bondi."
+        kb.startRuleSessionToAddComment(viewableCase, comment)
+        kb.commitCurrentRuleSession()
+
+        //When
+        kb.startRuleSessionToRemoveComment(viewableCase, comment)
+
+        //Then
+        kb.currentDiff shouldBe Removal(comment)
+    }
+
+    @Test
+    fun `should set currentDiff to Replacement when starting a rule session to replace a comment`() {
+        //Given
+        val sessionCase = createCase("Case1", value = "1.0", id = 1)
+        val viewableCase = kb.viewableCase(sessionCase)
+        val original = "Go to Bondi."
+        val replacement = "Go to Maroubra."
+        kb.startRuleSessionToAddComment(viewableCase, original)
+        kb.commitCurrentRuleSession()
+
+        //When
+        kb.startRuleSessionToReplaceComment(viewableCase, original, replacement)
+
+        //Then
+        kb.currentDiff shouldBe Replacement(original, replacement)
+    }
+
+    @Test
+    fun `should clear currentDiff when cancelling a rule session`() {
+        //Given
+        val sessionCase = createCase("Case1", value = "1.0", id = 1)
+        val viewableCase = kb.viewableCase(sessionCase)
+        kb.startRuleSessionToAddComment(viewableCase, "Go to Bondi.")
+        kb.currentDiff shouldNotBe null
+
+        //When
+        kb.cancelRuleSession()
+
+        //Then
+        kb.currentDiff shouldBe null
+    }
+
+    @Test
+    fun `should clear currentDiff when committing a rule session`() {
+        //Given
+        val sessionCase = createCase("Case1", value = "1.0", id = 1)
+        val viewableCase = kb.viewableCase(sessionCase)
+        kb.startRuleSessionToAddComment(viewableCase, "Go to Bondi.")
+        kb.currentDiff shouldNotBe null
+
+        //When
+        kb.commitCurrentRuleSession()
+
+        //Then
+        kb.currentDiff shouldBe null
+    }
+
+    @Test
+    fun `should include the diff in the cornerstone status when cornerstones exist`() {
+        //Given
+        kb.addCornerstoneCase(createCase("Case2", value = "2.0"))
+        val sessionCase = createCase("Case1", value = "1.0", id = 1)
+        val viewableCase = kb.viewableCase(sessionCase)
+        val comment = "Go to Bondi."
+
+        //When
+        val status = kb.startRuleSessionToAddComment(viewableCase, comment)
+
+        //Then
+        status.diff shouldBe Addition(comment)
+    }
+
+    @Test
+    fun `should include the diff in the cornerstone status when no cornerstones exist`() {
+        //Given
+        val sessionCase = createCase("Case1", value = "1.0", id = 1)
+        val viewableCase = kb.viewableCase(sessionCase)
+        val comment = "Go to Bondi."
+
+        //When
+        val status = kb.startRuleSessionToAddComment(viewableCase, comment)
+
+        //Then
+        status.diff shouldBe Addition(comment)
     }
 
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")

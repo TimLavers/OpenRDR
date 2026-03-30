@@ -1,6 +1,7 @@
 package io.rippledown.constants.chat
 
 const val CONFIRM = "confirm"
+const val SUGGESTION = "suggestion"
 const val REASON = "reason"
 const val MORE_REASONS = "more reasons"
 const val FIRST_REASON = "first reason"
@@ -33,5 +34,6 @@ const val MOVE_ATTRIBUTE = "MoveAttribute"
 const val SHOW_CORNERSTONES = "ShowCornerstones"
 const val RULE_SESSION_COMPLETED = "RuleSessionCompleted"
 const val REMOVE_REASON = "RemoveReason"
+const val CANCEL_RULE = "CancelRule"
 
 

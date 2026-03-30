@@ -19,4 +19,3 @@ Feature: The user should be able to see all test dates and results for a case
       | 12.4 mU/L |
       | 6.7 mU/L |
     And I should see '' as reference range for 'Stuff'
-    And stop the client application

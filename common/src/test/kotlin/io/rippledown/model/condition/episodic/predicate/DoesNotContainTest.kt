@@ -26,6 +26,15 @@ class DoesNotContainTest : Base() {
     }
 
     @Test
+    fun `should should match a string with a forward slash`() {
+        DoesNotContain("/40").evaluate(TestResult("12/40")) shouldBe false
+    }
+
+    @Test
+    fun `should unquote toFind before evaluating`() {
+        DoesNotContain("\"/40\"").evaluate(TestResult("12/40")) shouldBe false
+    }
+    @Test
     fun equalsTest() {
         DoesNotContain("Blah") shouldBe DoesNotContain("Blah")
         DoesNotContain("Blah") shouldNotBe DoesNotContain("blah")
@@ -46,5 +55,19 @@ class DoesNotContainTest : Base() {
     fun description() {
         dnc.description(false) shouldBe "does not contain \"$stuff\""
         dnc.description(true) shouldBe "do not contain \"$stuff\""
+    }
+
+    @Test
+    fun `description should not double-quote when toFind already has double quotes`() {
+        val dncQuoted = DoesNotContain("\"2\"")
+        dncQuoted.description(false) shouldBe "does not contain \"2\""
+        dncQuoted.description(true) shouldBe "do not contain \"2\""
+    }
+
+    @Test
+    fun `description should not double-quote when toFind already has single quotes`() {
+        val dncQuoted = DoesNotContain("'2'")
+        dncQuoted.description(false) shouldBe "does not contain \"2\""
+        dncQuoted.description(true) shouldBe "do not contain \"2\""
     }
 }

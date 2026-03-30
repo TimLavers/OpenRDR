@@ -7,8 +7,8 @@ import io.mockk.mockk
 import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.rule.CornerstoneStatus
-import io.rippledown.toJsonString
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -35,14 +35,14 @@ class RemoveCommentTest {
             ruleService.startRuleSessionToRemoveComment(any(), commentToRemove)
         } returns ccStatus
 
-        val responseFromModel = "There are 84 cornstone cases. Do you want to review them?"
+        val responseFromModel = ChatResponse("There are 84 cornstone cases. Do you want to review them?")
         coEvery { modelResponder.response(any<String>()) } returns responseFromModel
 
         //When
         val response = action.doIt(ruleService, currentCase, modelResponder)
 
         //Then
-        coVerify { modelResponder.response(ccStatus.toJsonString<CornerstoneStatus>()) }
+        coVerify { modelResponder.response(ccStatus.summary()) }
         response shouldBe responseFromModel
     }
 
@@ -56,7 +56,7 @@ class RemoveCommentTest {
             ruleService.startRuleSessionToRemoveComment(any(), comment)
         } returns ccStatus
 
-        val responseFromModel = "There are 84 cornstone cases. Do you want to review them?"
+        val responseFromModel = ChatResponse("There are 84 cornstone cases. Do you want to review them?")
         coEvery { modelResponder.response(any<String>()) } returns responseFromModel
 
         //When

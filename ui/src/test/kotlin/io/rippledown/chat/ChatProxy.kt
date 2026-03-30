@@ -6,7 +6,6 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import io.kotest.assertions.withClue
-import io.rippledown.appbar.CHAT_ICON_TOGGLE
 
 fun ComposeTestRule.requireChatMessagesShowing(expected: List<ChatMessage>) {
     expected.forEachIndexed { idx, message ->
@@ -34,17 +33,11 @@ fun ComposeTestRule.requireEmptyChatHistory() {
     onNodeWithContentDescription(firstBotLabel).assertDoesNotExist()
     onNodeWithContentDescription(firstUserMessage).assertDoesNotExist()
 }
-fun ComposeTestRule.requireChatPanelIsNotDisplayed() {
-    onNodeWithContentDescription(CHAT_TEXT_FIELD).assertDoesNotExist()
-}
 
 fun ComposeTestRule.requireChatPanelIsDisplayed() {
     onNodeWithContentDescription(CHAT_TEXT_FIELD).assertIsDisplayed()
 }
 
-fun ComposeTestRule.clickChatIconToggle() {
-    onNodeWithContentDescription(CHAT_ICON_TOGGLE).performClick()
-}
 
 fun ComposeTestRule.requireUserMessageShowing(index: Int) {
     val expectedLabel = "$USER$index"

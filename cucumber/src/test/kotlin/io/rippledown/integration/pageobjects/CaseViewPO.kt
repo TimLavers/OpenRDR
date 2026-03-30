@@ -7,7 +7,7 @@ import io.rippledown.caseview.valueCellContentDescriptionPrefix
 import io.rippledown.constants.caseview.CASEVIEW_CASE_NAME_ID
 import io.rippledown.constants.caseview.CASE_VIEW_TABLE
 import io.rippledown.constants.caseview.DATE_CELL_DESCRIPTION_PREFIX
-import io.rippledown.integration.pause
+
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
 import org.assertj.swing.edt.GuiActionRunner.execute
@@ -21,10 +21,15 @@ import javax.accessibility.AccessibleRole.LABEL
 class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
 
     init {
-        pause()//Need to wait for the case to render else we get a stale element. todo use a better mechanism
+        //Awaits in waitForNameToShow and waitForRequiredCaseValues handle rendering delays
     }
 
     fun nameShown(): String? = execute<String> { contextProvider().find(CASEVIEW_CASE_NAME_ID, LABEL)?.accessibleName }
+
+    private fun awaitNameShown(): String {
+        await().atMost(ofSeconds(10)).until { nameShown() != null }
+        return nameShown()!!
+    }
 
     fun requireNoNameShowing() {
         contextProvider().find(CASEVIEW_CASE_NAME_ID, LABEL) shouldBe null
@@ -46,7 +51,7 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
         extractMatchingValuesInOrderShown(DATE_CELL_DESCRIPTION_PREFIX) { context -> DateCellPO(context) }
 
     fun attributeNames(): List<String> {
-        val caseName = nameShown()!!
+        val caseName = awaitNameShown()
         val contentDescriptionPrefix = attributeCellContentDescriptionPrefix(caseName)
         return extractMatchingValuesInOrderShown(contentDescriptionPrefix) { context ->
             AttributeCellPO(
@@ -57,7 +62,7 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun valuesForAttribute(attribute: String): List<String> {
-        val caseName = nameShown()!!
+        val caseName = awaitNameShown()
         val contentDescriptionPrefix = valueCellContentDescriptionPrefix(caseName, attribute)
         return extractMatchingValuesInOrderShown(contentDescriptionPrefix) { context ->
             ValueCellPO(
@@ -77,7 +82,7 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     private fun getAttributeCellsInOrderShown(): List<AttributeCellPO> {
-        val caseName = nameShown()!!
+        val caseName = awaitNameShown()
         val contentDescriptionPrefix = attributeCellContentDescriptionPrefix(caseName)
         return contextProvider()
             .find(CASE_VIEW_TABLE)!!//narrow down the context to the table
@@ -108,7 +113,13 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
             val topLeft = accessibleComponent.locationOnScreen
             return Point(topLeft.x + 5, topLeft.y + 5)
         }
-        dragVertically(cellPosition(draggedAttribute), cellPosition(targetAttribute))
+        val targetPos = cellPosition(targetAttribute)
+        val rowSpacing = if (allAttributeCells.size >= 2) {
+            cellPosition(allAttributeCells[1].text()).y - cellPosition(allAttributeCells[0].text()).y
+        } else {
+            30
+        }
+        dragVertically(cellPosition(draggedAttribute), Point(targetPos.x, targetPos.y + rowSpacing / 2))
     }
 
     fun referenceRange(attribute: String): String = contextProvider()

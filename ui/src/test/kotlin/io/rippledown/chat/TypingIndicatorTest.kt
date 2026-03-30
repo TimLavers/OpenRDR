@@ -23,16 +23,16 @@ class TypingIndicatorTest {
     }
 
     @Test
-    fun `should display four animated dots`() {
+    fun `should display three animated dots`() {
         with(composeTestRule) {
             // When
             setContent {
                 TypingIndicator()
             }
 
-            // Then the indicator should contain four dot children
+            // Then the indicator should contain three dot children
             val surface = onNodeWithContentDescription(TYPING_INDICATOR).onChildAt(0)
-            surface.onChildren().assertCountEquals(4)
+            surface.onChildren().assertCountEquals(3)
         }
     }
 
@@ -57,9 +57,9 @@ class TypingIndicatorTest {
                 TypingIndicator()
             }
 
-            // Then each of the four dots should be displayed
+            // Then each of the three dots should be displayed
             val dotsRow = onNodeWithContentDescription(TYPING_INDICATOR).onChildAt(0)
-            for (i in 0..3) {
+            for (i in 0..2) {
                 dotsRow.onChildAt(i).assertIsDisplayed()
             }
         }

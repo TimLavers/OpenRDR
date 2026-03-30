@@ -2,6 +2,9 @@ package io.rippledown.kb
 
 import io.ktor.util.logging.*
 import io.rippledown.chat.Conversation
+import io.rippledown.chat.Conversation.Companion.GET_SUGGESTED_CONDITIONS
+import io.rippledown.chat.Conversation.Companion.TRANSFORM_REASON
+import io.rippledown.chat.FunctionCallHandler
 import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
 import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
 import io.rippledown.hints.AttributeFor
@@ -14,9 +17,14 @@ import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
+import io.rippledown.model.diff.Addition
+import io.rippledown.model.diff.Diff
+import io.rippledown.model.diff.Removal
+import io.rippledown.model.diff.Replacement
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistentKB
@@ -39,6 +47,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     internal val caseViewManager = CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
     val ruleTree = ruleManager.ruleTree()
     private var ruleSession: RuleBuildingSession? = null
+    internal var currentDiff: Diff? = null
     private val conditionChatService = ConditionChatService()
 
     private var conditionParser: ConditionParser
@@ -133,12 +142,14 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     }
 
     override fun startRuleSessionToAddComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus {
+        currentDiff = Addition(comment)
         val conclusion = conclusionManager.getOrCreate(comment)
         val action = ChangeTreeToAddConclusion(conclusion)
         return startRuleSession(viewableCase.case, action)
     }
 
     override fun startRuleSessionToRemoveComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus {
+        currentDiff = Removal(comment)
         val conclusion = conclusionManager.getOrCreate(comment)
         val action = ChangeTreeToRemoveConclusion(conclusion)
         return startRuleSession(viewableCase.case, action)
@@ -149,6 +160,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         replacedComment: String,
         replacementComment: String
     ): CornerstoneStatus {
+        currentDiff = Replacement(replacedComment, replacementComment)
         val replacedConclusion = conclusionManager.getOrCreate(replacedComment)
         val replacementConclusion = conclusionManager.getOrCreate(replacementComment)
         val action = ChangeTreeToReplaceConclusion(replacedConclusion, replacementConclusion)
@@ -174,7 +186,10 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     fun cancelRuleSession() {
         check(ruleSession != null) { "No rule session in progress." }
         ruleSession = null
+        currentDiff = null
     }
+
+    override fun cancelCurrentRuleSession() = cancelRuleSession()
 
     fun conflictingCasesInCurrentRuleSession(): List<RDRCase> {
         checkSession()
@@ -205,6 +220,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         ruleSessionRecorder.recordRuleSessionCommitted(rulesAdded)
         addCornerstoneCase(ruleSession!!.case)
         ruleSession = null
+        currentDiff = null
         checkRuleSessionHistoryConsistency()
     }
 
@@ -254,10 +270,16 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
 
     override fun hashCode() = kbInfo.hashCode()
 
-    fun conditionHintsForCase(case: RDRCase): ConditionList {
+    override fun conditionHintsForCase(case: RDRCase): ConditionList {
         val suggester = ConditionSuggester(attributeManager.all(), case)
         return ConditionList(suggester.suggestions())
     }
+
+    override fun currentRuleSessionConditionTexts(): Set<String> {
+        return ruleSession?.conditions?.map { it.asText() }?.toSet() ?: emptySet()
+    }
+
+    override fun isRuleSessionActive(): Boolean = ruleSession != null
 
     /**
      * @param request the request containing the currently selected cornerstone and an updated list of conditions
@@ -319,7 +341,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     internal fun cornerstoneStatus(currentCornerstone: ViewableCase?): CornerstoneStatus {
         checkSession()
         val cornerstones: List<RDRCase> = ruleSession!!.cornerstoneCases()
-        if (cornerstones.isEmpty()) return CornerstoneStatus()
+        if (cornerstones.isEmpty()) return CornerstoneStatus(diff = currentDiff)
 
         //if no cornerstone has been selected yet, or the selected cornerstone is no longer in the list of cornerstones, return the first one
         var index = 0
@@ -329,7 +351,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         index = if (index >= 0) index else 0
         val cornerstone = cornerstones[index]
         val viewableCornerstone = viewableCase(cornerstone)
-        return CornerstoneStatus(viewableCornerstone, index, cornerstones.size)
+        return CornerstoneStatus(viewableCornerstone, index, cornerstones.size, currentDiff)
     }
 
     //Allow a mock parser to be set so we can avoid connecting to Gemini for all the tests
@@ -342,7 +364,10 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         val condition = conditionParser.parse(expression, attributeFor)
 
         //Only return the condition if non-null and holds for the case
+        val caseAttributeNames = case.attributes.map { it.name }.toSet()
         return if (condition == null) {
+            ConditionParsingResult(errorMessage = DOES_NOT_CORRESPOND_TO_A_CONDITION)
+        } else if (condition.attributeNames().any { it !in caseAttributeNames }) {
             ConditionParsingResult(errorMessage = DOES_NOT_CORRESPOND_TO_A_CONDITION)
         } else if (!condition.holds(case)) {
             ConditionParsingResult(errorMessage = CONDITION_IS_NOT_TRUE)
@@ -366,15 +391,21 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
      * @param viewableCase The case to start a conversation about
      * @return A string representing the conversation ID or initial response
      */
-    suspend fun startConversation(viewableCase: ViewableCase): String {
+    suspend fun startConversation(viewableCase: ViewableCase): ChatResponse {
         val chatService = KBChatService.createKBChatService(viewableCase)
         // Use a lazy ModelResponder since chatManager isn't created until after Conversation
         val modelResponder = object : ModelResponder {
-            override suspend fun response(message: String): String = chatManager.response(message)
+            override suspend fun response(message: String): ChatResponse = chatManager.response(message)
         }
+        val reasonTransformer = createReasonTransformer(viewableCase, this, modelResponder)
+        val suggestedConditionsHandler = SuggestedConditionsHandler(viewableCase.case, this)
+        val functionCallHandlers: Map<String, FunctionCallHandler> = mapOf(
+            TRANSFORM_REASON to ReasonTransformHandler(reasonTransformer),
+            GET_SUGGESTED_CONDITIONS to suggestedConditionsHandler
+        )
         val conversationService = Conversation(
             chatService = chatService,
-            reasonTransformer = createReasonTransformer(viewableCase, this, modelResponder)
+            functionCallHandlers = functionCallHandlers
         )
         chatManager = ChatManager(conversationService, this)
         return chatManager.startConversation(viewableCase)
@@ -387,5 +418,5 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     fun createReasonTransformer(viewableCase: ViewableCase, ruleService: RuleService, modelResponder: ModelResponder) =
         KBReasonTransformer(viewableCase.case, ruleService, modelResponder)
 
-    suspend fun responseToUserMessage(message: String) = chatManager.response(message)
+    suspend fun responseToUserMessage(message: String): ChatResponse = chatManager.response(message)
 }

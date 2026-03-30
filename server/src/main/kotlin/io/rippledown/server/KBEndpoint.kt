@@ -6,6 +6,7 @@ import io.rippledown.kb.export.util.Zipper
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
@@ -91,9 +92,9 @@ class KBEndpoint(val kb: KB) {
 
     fun conditionHintsForCase(id: Long): ConditionList = kb.conditionHintsForCase(case(id))
 
-    suspend fun startConversation(caseId: Long): String = kb.startConversation(viewableCase(caseId))
+    suspend fun startConversation(caseId: Long): ChatResponse = kb.startConversation(viewableCase(caseId))
 
-    suspend fun responseToUserMessage(message: String): String = kb.responseToUserMessage(message)
+    suspend fun responseToUserMessage(message: String): ChatResponse = kb.responseToUserMessage(message)
 
     fun processCase(externalCase: ExternalCase) = kb.processCase(externalCase)
 
@@ -124,6 +125,7 @@ class KBEndpoint(val kb: KB) {
         logger.info("startRuleSession with data $sessionStartRequest")
         val caseId = sessionStartRequest.caseId
         val diff = sessionStartRequest.diff
+        kb.currentDiff = diff
         startRuleSessionForDifference(caseId, diff)
         return kb.cornerstoneStatus(null)
     }
@@ -157,4 +159,36 @@ class KBEndpoint(val kb: KB) {
     fun exemptCornerstone(index: Int) = kb.exemptCornerstone(index)
     fun conditionForExpression(expression: String): ConditionParsingResult =
         kb.conditionForExpression(expression)
+
+    /**
+     * Build a complete rule in one call, without using the UI.
+     * Condition expressions are parsed deterministically from human-readable text.
+     */
+    fun buildRule(request: BuildRuleRequest) {
+        logger.info("buildRule: case='${request.caseName}', diff=${request.diff}, conditions=${request.conditions}")
+        val case = kb.getProcessedCaseByName(request.caseName)
+        kb.interpret(case)
+        val viewableCase = kb.viewableCase(case)
+
+        when (val diff = request.diff) {
+            is Addition -> kb.startRuleSessionToAddComment(viewableCase, diff.addedText)
+            is Removal -> kb.startRuleSessionToRemoveComment(viewableCase, diff.removedText)
+            is Replacement -> kb.startRuleSessionToReplaceComment(viewableCase, diff.originalText, diff.replacementText)
+        }
+
+        try {
+            val parser = ConditionExpressionParser { kb.attributeManager.getOrCreate(it) }
+            request.conditions.forEach { expression ->
+                val condition = parser.parse(expression)
+                kb.addConditionToCurrentRuleSession(condition)
+            }
+
+            kb.commitCurrentRuleSession()
+            logger.info("buildRule: completed for case='${request.caseName}'")
+        } catch (e: Exception) {
+            logger.error("buildRule: failed for case='${request.caseName}': ${e.message}")
+            kb.cancelRuleSession()
+            throw e
+        }
+    }
 }

@@ -3,6 +3,8 @@ package steps
 import io.cucumber.datatable.DataTable
 import io.cucumber.java.en.Then
 import io.kotest.matchers.shouldBe
+import org.awaitility.Awaitility.waitAtMost
+import java.util.concurrent.TimeUnit.SECONDS
 
 class CaseViewStepDefs {
     @Then("I (should )see these episode dates:")
@@ -28,6 +30,12 @@ class CaseViewStepDefs {
     }
 
     @Then("I (should )see these case values:")
+    fun waitForRequiredCaseValues(dataTable: DataTable) {
+        waitAtMost(10, SECONDS).untilAsserted {
+            requireCaseValues(dataTable)
+        }
+    }
+
     fun requireCaseValues(dataTable: DataTable) {
         val caseViewPO = caseViewPO()
         val valuesShown = caseViewPO.valuesShown()

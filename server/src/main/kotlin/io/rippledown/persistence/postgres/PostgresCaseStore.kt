@@ -3,13 +3,16 @@ package io.rippledown.persistence.postgres
 import io.rippledown.kb.AttributeProvider
 import io.rippledown.model.*
 import io.rippledown.persistence.CaseStore
-import org.jetbrains.exposed.dao.LongEntity
-import org.jetbrains.exposed.dao.LongEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.LongIdTable
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.StdOutSqlLogger
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.dao.LongEntity
+import org.jetbrains.exposed.v1.dao.LongEntityClass
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 class PostgresCaseStore(private val db: Database): CaseStore {
     init {
@@ -114,7 +117,7 @@ class PostgresCaseStore(private val db: Database): CaseStore {
     }
 
     private fun caseId(pgCaseId: PGCaseId): CaseId {
-        val type = CaseType.values()[pgCaseId.type!!]
+        val type = CaseType.entries[pgCaseId.type!!]
         return CaseId(pgCaseId.id.value, pgCaseId.name!!, type)
     }
 

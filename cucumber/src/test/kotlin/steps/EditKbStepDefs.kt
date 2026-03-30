@@ -1,12 +1,9 @@
 package steps
 
-import io.cucumber.datatable.DataTable
 import io.cucumber.docstring.DocString
-import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.kotest.matchers.shouldBe
-import io.rippledown.integration.waitUntilAsserted
 
 class EditKbStepDefs {
     @When("I set the KB description to:")
@@ -36,9 +33,4 @@ class EditKbStepDefs {
         operator.cancel()
     }
 
-    @Then("There is no last rule to undo")
-    fun there_is_no_last_rule_to_undo() {
-        val operator = editCurrentKbControlPO().showUndoLastRuleOperator()
-        operator.undoLastRule()
-    }
 }

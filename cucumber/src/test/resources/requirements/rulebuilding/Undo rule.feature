@@ -7,16 +7,15 @@ Feature: The user can undo rules
       | Tide | low       |
     And I start the client application
     And I see the case Bondi as the current case
-    And I build a rule to add the comment "Go to Bondi." with the condition "Sun is hot"
-    Then the interpretation should be "Go to Bondi."
-    And I undo the last rule
+    And I build a rule to add the comment "Go to Bondi." with conditions
+      | Sun is hot |
+    And the interpretation should be "Go to Bondi."
+    When I undo the last rule
     Then the interpretation should be empty
-    And stop the client application
 
   Scenario: Initially, there are no rules to undo
     Given I start the client application
     Then the undo last rule dialog shows that no rule is available for undoing
-    And stop the client application
 
   Scenario: Undo rules from sample KB
     Given I start the client application
@@ -26,4 +25,3 @@ Feature: The user can undo rules
     And the interpretation should be empty
     When I undo the last rule
     Then the interpretation should be "hard"
-    And stop the client application

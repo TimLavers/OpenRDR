@@ -9,7 +9,6 @@ Feature: Move attributes using the chat bot
       | ldl     | 3.8 |
     And I start the client application
     And I see the case Bondi as the current case
-    And the chat is showing
     And the chatbot has asked if I would like to add a comment
     And I enter the following text into the chat panel:
       | No. Please move age above glucose |
@@ -20,5 +19,4 @@ Feature: Move attributes using the chat bot
       | sex     |
       | hdl     |
       | ldl     |
-    And stop the client application
 

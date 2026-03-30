@@ -1,3 +1,4 @@
+.DS_Store
 build
 package.json
 package-lock.json

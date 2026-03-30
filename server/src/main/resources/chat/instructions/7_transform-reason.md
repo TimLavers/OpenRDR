@@ -1,7 +1,12 @@
 # Transform reason
 
 You have access to the {{TRANSFORM_REASON}} function, which takes a natural language reason and returns a formal
-condition. Use this function whenever a reason is provided.
+condition.
+
+IMPORTANT: You MUST ALWAYS call {{TRANSFORM_REASON}} for ANY text the user enters during the reason-collection phase,
+no matter how ambiguous, incomplete, or unclear it seems. NEVER try to interpret, clarify, or reject the user's input
+yourself. The function will handle invalid or unrecognisable input and return an appropriate error message. Your job is
+only to pass the user's input to the function and relay the result.
 
 When a reason is provided, respond only with a function call to `{{TRANSFORM_REASON}}` using the API’s function-calling
 mechanism. Do not include text describing the call. For example, internally generate a function call with name

@@ -1,6 +1,5 @@
 package io.rippledown.integration
 
-import io.rippledown.constants.interpretation.DEBOUNCE_WAIT_PERIOD_MILLIS
 import org.awaitility.Awaitility.await
 import org.awaitility.core.ThrowingRunnable
 import java.lang.Runtime.getRuntime
@@ -16,9 +15,6 @@ fun pause(millis: Long) {
     Thread.sleep(millis)
 }
 
-fun waitForDebounce() {
-    pause(DEBOUNCE_WAIT_PERIOD_MILLIS + 100)
-}
 fun waitUntilAsserted(seconds: Long = 60, assertion: ThrowingRunnable) {
     await().atMost(ofSeconds(seconds)).untilAsserted(assertion)
 }

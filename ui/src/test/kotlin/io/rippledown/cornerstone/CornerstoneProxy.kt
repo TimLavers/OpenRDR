@@ -10,7 +10,7 @@ import io.rippledown.constants.navigation.INDEX_AND_TOTAL_ID
 import io.rippledown.constants.navigation.NEXT_BUTTON
 import io.rippledown.constants.navigation.OF
 import io.rippledown.constants.navigation.PREVIOUS_BUTTON
-import io.rippledown.rule.waitUntilAsserted
+import io.rippledown.utils.waitUntilAsserted
 
 fun ComposeTestRule.clickNext() = onNodeWithContentDescription(NEXT_BUTTON).performClick()
 fun ComposeTestRule.clickPrevious() = onNodeWithContentDescription(PREVIOUS_BUTTON).performClick()

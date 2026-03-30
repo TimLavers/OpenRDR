@@ -44,6 +44,12 @@ as the value of an environment variable named `API_KEY`. To create a Google API 
 ## Development
 Import the Gradle project into IntelliJ.
 
+### Update dependencies to latest versions
+
+```
+./gradlew versionCatalogUpdate
+```
+
 ## Running the tests
 There are two layers of tests:
 

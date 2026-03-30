@@ -1,4 +1,3 @@
-@delay_after_cuke
 Feature: Remove comment
 
   Scenario: The user should be able to use the chat to remove a comment with a valid condition
@@ -9,18 +8,10 @@ Feature: Remove comment
       | Bring flippers.  |
     And I start the client application
     And I see the case Bondi as the current case
-    And the chat is showing
     And the chatbot has asked if I want to add, remove or replace a comment
-    And I enter the following text into the chat panel:
-      | Remove the flippers comment |
-    And the chatbot has asked for confirmation
-    And I confirm
-    And the chatbot has asked if I want to provide any reasons and I confirm
-    And the chatbot has asked for the first reason
-    And I enter the following text into the chat panel:
+    And I request that the following comment be removed:
+      | Bring flippers. |
+    And I provide only the following reason:
       | wave height is more than 0.5 |
-    When the chatbot has asked if I want to provide any more reasons and I decline
-    And the chatbot has completed the action
     Then the report should be "Go to the beach."
-    And stop the client application
 

@@ -9,10 +9,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
@@ -293,6 +291,109 @@ class ChatPanelTest {
             // Then
             requireTypingIndicatorShowing()
             onNodeWithContentDescription(CHAT_TEXT_FIELD).assertIsNotEnabled()
+        }
+    }
+
+    @Test
+    fun `clicking a non-editable suggestion should populate the text field`() {
+        with(composeTestRule) {
+            // Given
+            val messages = listOf<ChatMessage>(
+                BotMessage("Here are some suggestions."),
+                SuggestionListMessage(listOf("Waves is in case", "Sun is in case"))
+            )
+            setContent {
+                ChatPanel(id = 0L, sendIsEnabled = true, messages = messages, onMessageSent)
+            }
+
+            // When
+            onNodeWithText("1. Waves is in case").performClick()
+
+            // Then - text field should contain the suggestion text
+            onNodeWithContentDescription(CHAT_TEXT_FIELD).assertTextContains("Waves is in case")
+            verify(exactly = 0) { onMessageSent.invoke(any()) }
+        }
+    }
+
+    @Test
+    fun `clicking an editable suggestion should auto-send the message`() {
+        with(composeTestRule) {
+            // Given
+            val messages = listOf<ChatMessage>(
+                BotMessage("Here are some suggestions."),
+                SuggestionListMessage(listOf("Waves ≥ 1.5 [editable]", "Sun is in case"))
+            )
+            setContent {
+                ChatPanel(id = 0L, sendIsEnabled = true, messages = messages, onMessageSent)
+            }
+
+            // When
+            onNodeWithText("1. Waves ≥ 1.5").performClick()
+
+            // Then - message should be sent automatically with [editable] marker
+            verify(exactly = 1) { onMessageSent.invoke(UserMessage("Waves ≥ 1.5 [editable]")) }
+        }
+    }
+
+    @Test
+    fun `clicking an editable suggestion should not populate the text field`() {
+        with(composeTestRule) {
+            // Given
+            val messages = listOf<ChatMessage>(
+                BotMessage("Here are some suggestions."),
+                SuggestionListMessage(listOf("Waves ≥ 1.5 [editable]"))
+            )
+            setContent {
+                ChatPanel(id = 0L, sendIsEnabled = true, messages = messages, onMessageSent)
+            }
+
+            // When
+            onNodeWithText("1. Waves ≥ 1.5").performClick()
+
+            // Then - send button should be disabled (text field is empty)
+            requireSendButtonDisabled()
+        }
+    }
+
+    @Test
+    fun `clicking an editable suggestion when sendIsEnabled is false should not send`() {
+        with(composeTestRule) {
+            // Given
+            val messages = listOf<ChatMessage>(
+                BotMessage("Here are some suggestions."),
+                SuggestionListMessage(listOf("Waves ≥ 1.5 [editable]"))
+            )
+            setContent {
+                ChatPanel(id = 0L, sendIsEnabled = false, messages = messages, onMessageSent)
+            }
+
+            // When
+            onNodeWithText("1. Waves ≥ 1.5").performClick()
+
+            // Then - no message should be sent
+            verify(exactly = 0) { onMessageSent.invoke(any()) }
+        }
+    }
+
+    @Test
+    fun `clicking an editable suggestion multiple times should only send once`() {
+        with(composeTestRule) {
+            // Given
+            val messages = listOf<ChatMessage>(
+                BotMessage("Here are some suggestions."),
+                SuggestionListMessage(listOf("Waves ≥ 1.5 [editable]"))
+            )
+            setContent {
+                ChatPanel(id = 0L, sendIsEnabled = true, messages = messages, onMessageSent)
+            }
+
+            // When - click multiple times
+            onNodeWithText("1. Waves ≥ 1.5").performClick()
+            onNodeWithText("1. Waves ≥ 1.5").performClick()
+            onNodeWithText("1. Waves ≥ 1.5").performClick()
+
+            // Then - should only have sent once
+            verify(exactly = 1) { onMessageSent.invoke(UserMessage("Waves ≥ 1.5 [editable]")) }
         }
     }
 }

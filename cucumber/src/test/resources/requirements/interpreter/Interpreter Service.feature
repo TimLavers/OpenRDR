@@ -1,4 +1,4 @@
-Feature: KB available as API enpoint
+Feature: KB available as API endpoint
 
   Scenario: Attributes are created as required from interpreted cases
     Given I start the client application
@@ -12,7 +12,6 @@ Feature: KB available as API enpoint
       | Age     |
       | Sex     |
       | Glucose |
-    And stop the client application
 
   Scenario: Attribute names are case sensitive
     Given I start the client application
@@ -24,7 +23,6 @@ Feature: KB available as API enpoint
     Then I should see these attributes:
       | Age |
       | age |
-    And stop the client application
 
   Scenario: The comments given for a case are returned by the interpretation service
     Given I start the client application
@@ -34,9 +32,9 @@ Feature: KB available as API enpoint
         | Sex     | M   |
         | Glucose | 3.8 |
     And I select case Case1
-    And I build a rule to add the comment "Normal glucose results." with conditions
+    When I build a rule to add the comment "Normal glucose results." with condition
       | Glucose ≤ 5.5 |
-    And case Case2 for KB Glucose gets the interpretation "Normal glucose results." when it is provided having data:
+    Then case Case2 for KB Glucose gets the interpretation "Normal glucose results." when it is provided having data:
       | Age     | 51  |
       | Sex     | F   |
       | Glucose | 4.8 |

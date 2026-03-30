@@ -5,7 +5,6 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
 import io.rippledown.persistence.AttributeStore
-import kotlin.IllegalArgumentException
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 

@@ -12,9 +12,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.sun.org.apache.xalan.internal.lib.ExsltStrings.padding
 import io.rippledown.constants.kb.*
 import io.rippledown.model.rule.UndoRuleDescription
 

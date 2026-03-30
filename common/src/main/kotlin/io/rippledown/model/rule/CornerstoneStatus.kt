@@ -1,6 +1,7 @@
 package io.rippledown.model.rule
 
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.diff.Diff
 import kotlinx.serialization.Serializable
 
 /**
@@ -10,7 +11,8 @@ import kotlinx.serialization.Serializable
 data class CornerstoneStatus(
     val cornerstoneToReview: ViewableCase? = null,
     val indexOfCornerstoneToReview: Int = -1,
-    val numberOfCornerstones: Int = 0
+    val numberOfCornerstones: Int = 0,
+    val diff: Diff? = null
 ) {
     init {
         require(indexOfCornerstoneToReview < numberOfCornerstones) { "index of the cornerstone to show is between -1 and the number of cornerstones" }

@@ -13,11 +13,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.ElevatedSuggestionChip
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.SuggestionChipDefaults.elevatedSuggestionChipColors
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,9 +37,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.rippledown.constants.chat.CHAT_BOT_PLACEHOLDER
-import io.rippledown.decoration.DARK_GREY
 import io.rippledown.decoration.LIGHT_BLUE
-import io.rippledown.decoration.LIGHT_GREY
 
 interface ChatMessage {
     val text: String
@@ -61,6 +56,13 @@ data class BotMessage(
     override val isUser: Boolean = false
 }
 
+data class SuggestionListMessage(
+    val suggestions: List<String>
+) : ChatMessage {
+    override val text: String = ""
+    override val isUser: Boolean = false
+}
+
 typealias OnMessageSent = (UserMessage) -> Unit
 
 const val USER = "USER_"
@@ -70,6 +72,9 @@ const val CHAT_TEXT_FIELD = "CHAT_TEXT_FIELD"
 
 const val NUMBER_OF_CHAT_MESSAGES_ = "NumberOfChatMessages_"
 const val CHAT_MIC_BUTTON = "CHAT_MIC_BUTTON"
+const val SUGGESTION_LIST = "SUGGESTION_LIST_"
+const val SUGGESTION_ITEM = "SUGGESTION_ITEM_"
+const val EDITABLE_MARKER = " [editable]"
 
 @Composable
 fun ChatPanel(
@@ -82,6 +87,7 @@ fun ChatPanel(
 ) {
     var inputText by remember { mutableStateOf(TextFieldValue()) }
     var partialSuffixLength by remember { mutableStateOf(0) }
+    var suggestionSendPending by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val textAreaFocusRequester = remember { FocusRequester() }
 
@@ -93,6 +99,9 @@ fun ChatPanel(
     LaunchedEffect(messages) {
         if (messages.isNotEmpty()) {
             listState.scrollToItem(messages.size - 1)
+        }
+        if (messages.lastOrNull() is SuggestionListMessage) {
+            suggestionSendPending = false
         }
     }
 
@@ -110,13 +119,24 @@ fun ChatPanel(
                 .fillMaxWidth()
                 .padding(start = 8.dp, end = 8.dp, top = 8.dp),
             state = listState,
-            verticalArrangement = Arrangement.Bottom
+            verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.Bottom)
         ) {
             itemsIndexed(messages) { index, message ->
-                if (message.isUser) {
-                    UserRow(message.text, index)
-                } else {
-                    BotRow(message.text, index)
+                when (message) {
+                    is UserMessage -> UserRow(message.text, index)
+                    is SuggestionListMessage -> SuggestionListRow(
+                        message.suggestions, index
+                    ) { suggestion, isEditable ->
+                        if (isEditable && sendIsEnabled && !suggestionSendPending) {
+                            suggestionSendPending = true
+                            onMessageSent(UserMessage("$suggestion$EDITABLE_MARKER"))
+                            inputText = TextFieldValue("")
+                        } else if (!isEditable) {
+                            inputText = TextFieldValue(suggestion, selection = TextRange(suggestion.length))
+                        }
+                        textAreaFocusRequester.requestFocus()
+                    }
+                    else -> BotRow(message.text, index)
                 }
             }
             if (!sendIsEnabled) {
@@ -130,7 +150,7 @@ fun ChatPanel(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 8.dp),
+                .padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             TextField(
@@ -244,36 +264,6 @@ private fun sendUserMessage(
 }
 
 @Composable
-fun UserRow(
-    text: String,
-    index: Int,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.End
-    ) {
-        ElevatedSuggestionChip(
-            onClick = { },
-            label = {
-                Text(
-                    text = text,
-                    color = DARK_GREY,
-                    style = TextStyle(fontSize = 14.sp)
-                )
-            },
-            colors = elevatedSuggestionChipColors(
-                containerColor = LIGHT_GREY,
-                labelColor = DARK_GREY
-            ),
-            modifier = Modifier
-                .semantics {
-                    contentDescription = "$USER${index}"
-                }
-        )
-    }
-}
-
-@Composable
 fun BotRow(
     text: String,
     index: Int
@@ -282,24 +272,22 @@ fun BotRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Start
     ) {
-        ElevatedSuggestionChip(
-            onClick = { },
-            label = {
-                Text(
-                    text = text,
-                    color = Black,
-                    style = TextStyle(fontSize = 14.sp)
-                )
-            },
-            colors = AssistChipDefaults.elevatedAssistChipColors(
-                containerColor = White,
-                labelColor = Black
-            ),
+        androidx.compose.material3.Surface(
+            shape = RoundedCornerShape(8.dp),
+            color = White,
+            shadowElevation = 1.dp,
             modifier = Modifier
-                .semantics {
+                .semantics(mergeDescendants = true) {
                     contentDescription = "$BOT${index}"
                 }
-        )
+        ) {
+            Text(
+                text = text,
+                color = Black,
+                style = TextStyle(fontSize = 13.sp),
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+            )
+        }
     }
 }
 

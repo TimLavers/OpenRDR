@@ -9,7 +9,6 @@ Feature: Remove previous rules
     And I start the client application
     And I see the case Case1 as the current case
     And the report is "Comment 1. Comment 2. Comment 3."
-    And the chat is showing
     And the chatbot has asked if I want to add, remove or replace a comment
     When I enter the following text into the chat panel:
       | Please remove the previous rule |

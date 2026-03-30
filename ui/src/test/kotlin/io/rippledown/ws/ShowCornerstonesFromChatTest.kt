@@ -4,8 +4,6 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import io.mockk.coEvery
 import io.mockk.mockk
 import io.rippledown.casecontrol.waitForCaseToBeShowing
-import io.rippledown.chat.clickChatIconToggle
-import io.rippledown.chat.requireChatPanelIsDisplayed
 import io.rippledown.cornerstone.requireCornerstoneCase
 import io.rippledown.cornerstone.requireIndexAndTotalToBeDisplayed
 import io.rippledown.cornerstone.requireNoCornerstoneCaseToBeShowing
@@ -71,8 +69,6 @@ class ShowCornerstonesFromChatTest {
                 OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
             }
             waitForCaseToBeShowing(caseA)
-            clickChatIconToggle()
-            requireChatPanelIsDisplayed()
 
             //When
             updateCornerstoneStatus.invoke(expectedStatus)
@@ -117,8 +113,6 @@ class ShowCornerstonesFromChatTest {
                 OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
             }
             waitForCaseToBeShowing(caseA)
-            clickChatIconToggle()
-            requireChatPanelIsDisplayed()
 
             updateCornerstoneStatus.invoke(expectedStatus)
             requireIndexAndTotalToBeDisplayed(1, 3)

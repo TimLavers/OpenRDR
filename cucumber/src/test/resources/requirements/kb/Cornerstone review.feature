@@ -4,7 +4,7 @@ Feature: Reviewing cornerstone cases
     Given a new case with the name Case1 is stored on the server
     And I start the client application
     And I see the case Case1 as the current case
-    When I start to build a rule to add the comment "Go to Bondi."
+    When I request that the comment "Go to Bondi." be added
     Then the message indicating no cornerstone cases to review should be shown
 
   Scenario: The first cornerstone case should be shown to the user
@@ -30,7 +30,7 @@ Feature: Reviewing cornerstone cases
     And the interpretation of the case Case3 includes "Comment 3." because of condition "x is in case"
     And I start the client application
     And I see the case Case1 as the current case
-    And I start to build a rule to add the comment "Comment 4."
+    When I request that the comment "Comment 4." be added
     And the case Case2 is shown as the cornerstone case
     When I click the next cornerstone case button
     Then the case Case3 is shown as the cornerstone case
@@ -47,7 +47,7 @@ Feature: Reviewing cornerstone cases
     And the interpretation of the case Case3 includes "Comment 3." because of condition "x is in case"
     And I start the client application
     And I see the case Case1 as the current case
-    And I start to build a rule to add the comment "Comment 4."
+    When I request that the comment "Comment 4." be added
     And the cornerstone case indicator shows 1 of 2
     And the case Case2 is shown as the cornerstone case
     And I click the next cornerstone case button
@@ -68,7 +68,7 @@ Feature: Reviewing cornerstone cases
     And the interpretation of the case Case3 includes "Comment 3." because of condition "x is in case"
     And I start the client application
     And I see the case Case1 as the current case
-    And I start to build a rule to add the comment "Comment 4."
+    And I request that the comment "Comment 4." be added
     And the case Case2 is shown as the cornerstone case
     When I add the condition "y is in case"
     Then the message "No cornerstone cases to review" should be shown
@@ -92,12 +92,12 @@ Feature: Reviewing cornerstone cases
       | Case4 | Comment 4.    | x is in case |
     And I start the client application
     And I see the case Case1 as the current case
-    And I start to build a rule to add the comment "Comment 5."
+    And I request that the comment "Comment 5." be added
     And I click the next cornerstone case button
     And the case Case3 is shown as the cornerstone case
     And the cornerstone case indicator should show 2 of 3
-    And I add the condition "y is in case"
-    And the cornerstone case indicator should show 1 of 1
+    When I add the condition "y is in case"
+    Then the cornerstone case indicator should show 1 of 1
     And the case Case3 is still shown as the cornerstone case
 
   Scenario: The current cornerstone should remain selected if the user removes a condition
@@ -119,15 +119,15 @@ Feature: Reviewing cornerstone cases
       | Case4 | Comment 4.    | x is in case |
     And I start the client application
     And I see the case Case1 as the current case
-    And I start to build a rule to add the comment "Comment 5."
+    And I request that the comment "Comment 5." be added
     And I click the next cornerstone case button
     And the cornerstone case indicator should show 2 of 3
     And the case Case3 is shown as the cornerstone case
     And I add the condition "y is in case"
     And the cornerstone case indicator should show 1 of 1
     When I remove the condition "y is in case"
-    Then the cornerstone case indicator should show 2 of 3
-    And the case Case3 is still shown as the cornerstone case
+    Then the cornerstone case indicator should show 1 of 3
+    And the case Case2 is shown as the cornerstone case
 
   Scenario: Ignoring a cornerstone case should remove it from the list of cornerstone cases to review
     Given a list of cases with the following names is stored on the server:

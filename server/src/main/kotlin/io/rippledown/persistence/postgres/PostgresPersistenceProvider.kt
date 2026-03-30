@@ -3,7 +3,7 @@ package io.rippledown.persistence.postgres
 import io.rippledown.model.KBInfo
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.PersistentKB
-import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.v1.jdbc.Database
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.sql.ResultSet
@@ -36,7 +36,7 @@ fun allDatabasesInSystem(): Set<String> {
 
 fun createDatabase(name: String) {
     ConnectionProvider.systemConnection().use {
-        it.createStatement().executeUpdate("CREATE DATABASE $name WITH ENCODING 'UTF8' TEMPLATE template0")
+        it.createStatement().executeUpdate("CREATE DATABASE \"$name\" WITH ENCODING 'UTF8' TEMPLATE template0")
     }
 }
 
@@ -74,7 +74,7 @@ class PostgresPersistenceProvider: PersistenceProvider {
 
     override fun destroyKBPersistence(kbInfo: KBInfo) {
         ConnectionProvider.systemConnection().use {
-            it.createStatement().executeUpdate("DROP DATABASE IF EXISTS ${kbInfo.id}")
+            it.createStatement().executeUpdate("DROP DATABASE IF EXISTS \"${kbInfo.id}\"")
         }
         idStore.remove(kbInfo.id)
     }

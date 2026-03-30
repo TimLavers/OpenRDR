@@ -7,6 +7,7 @@ import io.rippledown.constants.chat.CHAT_BOT_DONE_MESSAGE
 import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.chat.ChatResponse
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -29,7 +30,7 @@ class CommitRuleTest {
 
         //Then
         coVerify { ruleService.commitCurrentRuleSession() }
-        response shouldBe CHAT_BOT_DONE_MESSAGE
+        response shouldBe ChatResponse(CHAT_BOT_DONE_MESSAGE)
     }
 
     @Test

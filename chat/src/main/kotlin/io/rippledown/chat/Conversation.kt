@@ -9,7 +9,6 @@ import io.rippledown.llm.callWithTimeout
 import io.rippledown.llm.retry
 import io.rippledown.log.lazyLogger
 import io.rippledown.stripEnclosingJson
-import io.rippledown.toJsonString
 
 interface ConversationService {
     suspend fun startConversation(): String = ""
@@ -20,7 +19,14 @@ interface ReasonTransformer {
     suspend fun transform(reason: String): ReasonTransformation
 }
 
-class Conversation(private val chatService: ChatService, private val reasonTransformer: ReasonTransformer) :
+interface FunctionCallHandler {
+    suspend fun handle(args: Map<String, Any?>): String
+}
+
+class Conversation(
+    private val chatService: ChatService,
+    private val functionCallHandlers: Map<String, FunctionCallHandler>
+) :
     ConversationService {
     private val logger = lazyLogger
     private lateinit var chat: Chat
@@ -34,16 +40,13 @@ class Conversation(private val chatService: ChatService, private val reasonTrans
 
     private suspend fun executeFunction(functionCall: FunctionCall): String {
         val name = functionCall.name().orElse("")
-        if (name != TRANSFORM_REASON) {
+        val handler = functionCallHandlers[name]
+        if (handler == null) {
             logger.warn("Unknown function call: $name")
             return "Unknown function: $name"
         }
-
-        val reason = functionCall.args().map { it[REASON_PARAMETER]?.toString() }.orElse("") ?: ""
-        val transformation = reasonTransformer.transform(reason)
-        val result = "'$reason' evaluation: ${transformation.toJsonString()}"
-        val cornerstoneStatus = transformation.cornerstoneStatusJson
-        return if (cornerstoneStatus != null) "$result\nCornerstone status: $cornerstoneStatus" else result
+        val args = functionCall.args().orElse(emptyMap()).mapValues { it.value }
+        return handler.handle(args)
     }
 
     override suspend fun response(message: String): String {
@@ -57,14 +60,28 @@ class Conversation(private val chatService: ChatService, private val reasonTrans
         return handleResponse(response)
     }
 
-    private suspend fun handleResponse(response: GenerateContentResponse): String {
+    internal suspend fun handleResponse(response: GenerateContentResponse, emptyResponseRetries: Int = 0): String {
         var currentResponse = response
         while (currentResponse.functionCalls()?.isNotEmpty() == true) {
             val functionResults = currentResponse.functionCalls()!!.map { executeFunction(it) }
             val prompt = Content.fromParts(Part.fromText("Function results: ${functionResults.joinToString(", ")}"))
             currentResponse = callWithTimeout { chat.sendMessage(prompt) }
         }
-        return currentResponse.text()?.stripEnclosingJson() ?: "No function call or text response"
+        val text = currentResponse.text()?.stripEnclosingJson()
+        if (text != null) {
+            return text
+        }
+        logEmptyResponse(currentResponse)
+        if (emptyResponseRetries < MAX_EMPTY_RESPONSE_RETRIES) {
+            logger.info("Retrying after empty response (attempt ${emptyResponseRetries + 1} of $MAX_EMPTY_RESPONSE_RETRIES)...")
+            currentResponse = callWithTimeout { chat.sendMessage("Please continue with the appropriate response.") }
+            return handleResponse(currentResponse, emptyResponseRetries + 1)
+        }
+        return "No function call or text response"
+    }
+
+    private fun logEmptyResponse(response: GenerateContentResponse) {
+        logger.warn("Model returned no text and no function calls. Response details: candidates=${response.candidates()}, usageMetadata=${response.usageMetadata()}")
     }
 
     /**
@@ -75,7 +92,9 @@ class Conversation(private val chatService: ChatService, private val reasonTrans
     }
 
     companion object {
+        const val MAX_EMPTY_RESPONSE_RETRIES = 2
         const val REASON_PARAMETER = "reason"
         const val TRANSFORM_REASON = "transformReasonToFormalCondition"
+        const val GET_SUGGESTED_CONDITIONS = "getSuggestedConditions"
     }
 }

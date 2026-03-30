@@ -22,7 +22,6 @@ Feature: Order of Attributes in Case View
       | A |
       | B |
       | C |
-    And stop the client application
 
   Scenario: Attributes can be re-ordered by drag-and-drop
     Given I start the client application
@@ -31,14 +30,17 @@ Feature: Order of Attributes in Case View
       | A | a |
       | B | b |
       | C | c |
-    When I select the case CaseABC
-    And I move attribute C below attribute A
-    And I move attribute A below attribute B
+    And I select the case CaseABC
+    When I move attribute C below attribute A
     Then I see these case values:
-      | C | c | |
-      | B | b | |
-      | A | a | |
-    And stop the client application
+      | A | a |  |
+      | C | c |  |
+      | B | b |  |
+    When I move attribute A below attribute B
+    Then I see these case values:
+      | C | c |  |
+      | B | b |  |
+      | A | a |  |
 
   Scenario: New Attributes can be created after an Attribute re-ordering
     Given I start the client application
@@ -65,4 +67,3 @@ Feature: Order of Attributes in Case View
       | B |
       | A |
       | D |
-    And stop the client application
