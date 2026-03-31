@@ -7,6 +7,7 @@ import io.rippledown.chat.Conversation.Companion.TRANSFORM_REASON
 import io.rippledown.chat.FunctionCallHandler
 import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
 import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
+import io.rippledown.constants.rule.INTERPRETED_CONDITION_IS_NOT_TRUE
 import io.rippledown.hints.AttributeFor
 import io.rippledown.hints.ConditionChatService
 import io.rippledown.hints.ConditionGenerator
@@ -370,7 +371,12 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         } else if (condition.attributeNames().any { it !in caseAttributeNames }) {
             ConditionParsingResult(errorMessage = DOES_NOT_CORRESPOND_TO_A_CONDITION)
         } else if (!condition.holds(case)) {
-            ConditionParsingResult(errorMessage = CONDITION_IS_NOT_TRUE)
+            val message = if (expression.trim().lowercase() != condition.asText().trim().lowercase()) {
+                INTERPRETED_CONDITION_IS_NOT_TRUE.format(expression, condition.asText())
+            } else {
+                CONDITION_IS_NOT_TRUE
+            }
+            ConditionParsingResult(errorMessage = message)
         } else {
             //if this a new condition, the following will store it with its user expression, else the existing condition will be returned
             ConditionParsingResult(conditionManager.getOrCreate(condition))

@@ -133,7 +133,7 @@ class ChatDefs {
     }
 
     fun waitForBotResponseIndicatingInvalidReason() {
-        waitForBotText(UNDERSTAND)
+        waitForBotTextToContainAnyOf(UNDERSTAND, "means")
     }
 
     @And("I click the non-editable suggested condition {string}")

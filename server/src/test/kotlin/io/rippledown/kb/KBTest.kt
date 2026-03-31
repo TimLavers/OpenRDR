@@ -9,15 +9,14 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.*
 import io.rippledown.chat.ReasonTransformation
+import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
 import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
+import io.rippledown.constants.rule.INTERPRETED_CONDITION_IS_NOT_TRUE
 import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.model.*
 import io.rippledown.model.condition.*
-import io.rippledown.model.condition.episodic.predicate.Contains
-import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals
-import io.rippledown.model.condition.episodic.predicate.High
-import io.rippledown.model.condition.episodic.predicate.Is
+import io.rippledown.model.condition.episodic.predicate.*
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Removal
@@ -1069,6 +1068,56 @@ class KBTest {
         //Then
         verify { conditionParser.parse(userExpression, any()) }
         returnedCondition shouldBe null
+    }
+
+    @Test
+    fun `should return interpreted error message when expression differs from condition text and condition is not true`() {
+        //Given
+        val waves = kb.attributeManager.getOrCreate("Waves")
+        val height = "2.1"
+        val sessionCase = createCase("Case", attribute = waves, value = height)
+        val conditionParser = mockk<ConditionParser>()
+        val userExpression = "below"
+        val parsedCondition = EpisodicCondition(null, waves, Low, Current, userExpression)
+        every { conditionParser.parse(any(), any()) } returns parsedCondition
+        kb.setConditionParser(conditionParser)
+
+        kb.startRuleSession(
+            sessionCase,
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
+        )
+
+        //When
+        val result = kb.conditionForExpression(userExpression)
+
+        //Then
+        result.condition shouldBe null
+        result.errorMessage shouldBe INTERPRETED_CONDITION_IS_NOT_TRUE.format(userExpression, parsedCondition.asText())
+    }
+
+    @Test
+    fun `should return standard error message when expression matches condition text and condition is not true`() {
+        //Given
+        val waves = kb.attributeManager.getOrCreate("Waves")
+        val height = "0.5" //less than 1.0
+        val sessionCase = createCase("Case", attribute = waves, value = height)
+        val conditionParser = mockk<ConditionParser>()
+        val userExpression = "Waves ≥ 1.0"
+        val parsedCondition = EpisodicCondition(null, waves, GreaterThanOrEquals(1.0), Current, userExpression)
+        every { conditionParser.parse(any(), any()) } returns parsedCondition
+        kb.setConditionParser(conditionParser)
+
+        kb.startRuleSession(
+            sessionCase,
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
+        )
+
+        //When
+        val result = kb.conditionForExpression(userExpression)
+
+        //Then
+        result.condition shouldBe null
+        result.errorMessage shouldBe CONDITION_IS_NOT_TRUE
     }
 
     @Test
