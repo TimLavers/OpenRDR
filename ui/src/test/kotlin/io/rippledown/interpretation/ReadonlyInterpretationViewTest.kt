@@ -16,6 +16,9 @@ import io.mockk.mockk
 import io.rippledown.constants.interpretation.CONDITION_PREFIX
 import io.rippledown.decoration.BACKGROUND_COLOR
 import io.rippledown.model.Conclusion
+import io.rippledown.model.diff.Addition
+import io.rippledown.model.diff.Removal
+import io.rippledown.model.diff.Replacement
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.utils.createViewableInterpretation
 import kotlinx.coroutines.test.runTest
@@ -336,6 +339,149 @@ class ReadonlyInterpretationViewTest {
             val annotatedString = highlightItem(1)
             requireStyleForCommentInAnnotatedStringToHaveBackground(annotatedString, this[0], Color.Unspecified)
             requireStyleForCommentInAnnotatedStringToHaveBackground(annotatedString, this[1], BACKGROUND_COLOR)
+        }
+    }
+
+    @Test
+    fun `unhighlighted with Addition diff should append addition text with green background`() {
+        val comments = listOf("Bondi.")
+        val diff = Addition("Beach time!")
+        val annotatedString = comments.unhighlighted(diff)
+        annotatedString.text shouldBe "Bondi. Beach time!"
+        annotatedString.spanStyles.size shouldBe 1
+        val span = annotatedString.spanStyles[0]
+        span.item.background shouldBe DIFF_ADDITION_COLOR
+        span.start shouldBe "Bondi. ".length
+        span.end shouldBe "Bondi. Beach time!".length
+    }
+
+    @Test
+    fun `unhighlighted with Addition diff and empty comments should show only the addition`() {
+        val comments = emptyList<String>()
+        val diff = Addition("Beach time!")
+        val annotatedString = comments.unhighlighted(diff)
+        annotatedString.text shouldBe "Beach time!"
+        annotatedString.spanStyles.size shouldBe 1
+        val span = annotatedString.spanStyles[0]
+        span.item.background shouldBe DIFF_ADDITION_COLOR
+        span.start shouldBe 0
+        span.end shouldBe "Beach time!".length
+    }
+
+    @Test
+    fun `unhighlighted with Removal diff should style removed comment with red background`() {
+        val comments = listOf("Bondi.", "Malabar.")
+        val diff = Removal("Bondi.")
+        val annotatedString = comments.unhighlighted(diff)
+        annotatedString.text shouldBe "Bondi. Malabar."
+        annotatedString.spanStyles.size shouldBe 1
+        val span = annotatedString.spanStyles[0]
+        span.item.background shouldBe DIFF_REMOVAL_COLOR
+        span.start shouldBe 0
+        span.end shouldBe "Bondi.".length
+    }
+
+    @Test
+    fun `unhighlighted with Replacement diff should style original red and append replacement green`() {
+        val comments = listOf("Bondi.")
+        val diff = Replacement("Bondi.", "Maroubra.")
+        val annotatedString = comments.unhighlighted(diff)
+        annotatedString.text shouldBe "Bondi. Maroubra."
+        annotatedString.spanStyles.size shouldBe 2
+        val redSpan = annotatedString.spanStyles.first { it.item.background == DIFF_REMOVAL_COLOR }
+        redSpan.start shouldBe 0
+        redSpan.end shouldBe "Bondi.".length
+        val greenSpan = annotatedString.spanStyles.first { it.item.background == DIFF_ADDITION_COLOR }
+        greenSpan.start shouldBe "Bondi. ".length
+        greenSpan.end shouldBe "Bondi. Maroubra.".length
+    }
+
+    @Test
+    fun `highlightItem should not apply hover highlight to a Removal diff target`() {
+        val comments = listOf("Bondi.")
+        val diff = Removal("Bondi.")
+        val annotatedString = comments.highlightItem(0, diff)
+        annotatedString.spanStyles.size shouldBe 1
+        val span = annotatedString.spanStyles[0]
+        span.item.background shouldBe DIFF_REMOVAL_COLOR
+    }
+
+    @Test
+    fun `highlightItem should not apply hover highlight to a Replacement diff target`() {
+        val comments = listOf("Bondi.")
+        val diff = Replacement("Bondi.", "Maroubra.")
+        val annotatedString = comments.highlightItem(0, diff)
+        val backgrounds = annotatedString.spanStyles.map { it.item.background }
+        backgrounds shouldBe listOf(DIFF_REMOVAL_COLOR, DIFF_ADDITION_COLOR)
+    }
+
+    @Test
+    fun `should show addition diff appended to existing interpretation`() = runTest {
+        val bondiComment = "Go to Bondi."
+        val addedComment = "Beach time!"
+        val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
+        with(composeTestRule) {
+            setContent {
+                ReadonlyInterpretationView(
+                    interpretation,
+                    diff = Addition(addedComment),
+                    modifier = modifier,
+                    handler = handler
+                )
+            }
+            requireInterpretationForCornerstone("$bondiComment $addedComment")
+        }
+    }
+
+    @Test
+    fun `should show addition diff as first text when interpretation is blank`() = runTest {
+        val addedComment = "Beach time!"
+        val interpretation = createViewableInterpretation()
+        with(composeTestRule) {
+            setContent {
+                ReadonlyInterpretationView(
+                    interpretation,
+                    diff = Addition(addedComment),
+                    modifier = modifier,
+                    handler = handler
+                )
+            }
+            requireInterpretationForCornerstone(addedComment)
+        }
+    }
+
+    @Test
+    fun `should show removal diff with existing comment still visible`() = runTest {
+        val bondiComment = "Go to Bondi."
+        val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
+        with(composeTestRule) {
+            setContent {
+                ReadonlyInterpretationView(
+                    interpretation,
+                    diff = Removal(bondiComment),
+                    modifier = modifier,
+                    handler = handler
+                )
+            }
+            requireInterpretationForCornerstone(bondiComment)
+        }
+    }
+
+    @Test
+    fun `should show replacement diff with original and replacement text`() = runTest {
+        val bondiComment = "Go to Bondi."
+        val replacementComment = "Go to Maroubra."
+        val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
+        with(composeTestRule) {
+            setContent {
+                ReadonlyInterpretationView(
+                    interpretation,
+                    diff = Replacement(bondiComment, replacementComment),
+                    modifier = modifier,
+                    handler = handler
+                )
+            }
+            requireInterpretationForCornerstone("$bondiComment $replacementComment")
         }
     }
 }

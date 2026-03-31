@@ -24,6 +24,9 @@ import io.rippledown.model.diff.Removal
 import io.rippledown.model.diff.Replacement
 import io.rippledown.model.interpretationview.ViewableInterpretation
 
+val DIFF_ADDITION_COLOR = androidx.compose.ui.graphics.Color(0xFFC8E6C9)
+val DIFF_REMOVAL_COLOR = androidx.compose.ui.graphics.Color(0xFFFFCDD2)
+
 interface InterpretationViewHandler : ReadonlyInterpretationViewHandler
 
 @Composable
