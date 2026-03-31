@@ -1121,6 +1121,31 @@ class KBTest {
     }
 
     @Test
+    fun `should return standard error message when expression differs from condition text only by quoted constants`() {
+        //Given
+        val uv = kb.attributeManager.getOrCreate("UV")
+        val sessionCase = createCase("Case", attribute = uv, value = "4.5")
+        val conditionParser = mockk<ConditionParser>()
+        val userExpression = "UV is 5.6"
+        // The parsed condition text would be: UV is "5.6"
+        val parsedCondition = EpisodicCondition(null, uv, Is("5.6"), Current, userExpression)
+        every { conditionParser.parse(any(), any()) } returns parsedCondition
+        kb.setConditionParser(conditionParser)
+
+        kb.startRuleSession(
+            sessionCase,
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
+        )
+
+        //When
+        val result = kb.conditionForExpression(userExpression)
+
+        //Then
+        result.condition shouldBe null
+        result.errorMessage shouldBe CONDITION_IS_NOT_TRUE
+    }
+
+    @Test
     fun `should return null if no condition can be parsed from the user expression`() {
         //Given
         val waves = kb.attributeManager.getOrCreate("Waves")

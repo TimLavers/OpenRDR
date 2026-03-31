@@ -371,7 +371,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         } else if (condition.attributeNames().any { it !in caseAttributeNames }) {
             ConditionParsingResult(errorMessage = DOES_NOT_CORRESPOND_TO_A_CONDITION)
         } else if (!condition.holds(case)) {
-            val message = if (expression.trim().lowercase() != condition.asText().trim().lowercase()) {
+            val message = if (expression.normalizeForComparison() != condition.asText().normalizeForComparison()) {
                 INTERPRETED_CONDITION_IS_NOT_TRUE.format(expression, condition.asText())
             } else {
                 CONDITION_IS_NOT_TRUE
@@ -426,3 +426,6 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
 
     suspend fun responseToUserMessage(message: String): ChatResponse = chatManager.response(message)
 }
+
+internal fun String.normalizeForComparison() =
+    lowercase().replace("\"", "").replace("'", "").replace(Regex("\\s+"), " ").trim()
