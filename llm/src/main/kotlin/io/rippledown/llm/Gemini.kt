@@ -29,6 +29,7 @@ fun generateContentConfig(
     val builder = GenerateContentConfig.builder()
         .temperature(0f)
         .topP(0.995f)
+        .thinkingConfig(noThinking())
         .safetySettings(noSafetySettings())
         .systemInstruction(Content.fromParts(Part.fromText(systemInstruction)))
 
@@ -38,6 +39,8 @@ fun generateContentConfig(
 
     return builder.build()
 }
+
+private fun noThinking(): ThinkingConfig? = ThinkingConfig.builder().thinkingBudget(0).build()
 
 fun noSafetySettings(): List<SafetySetting> =
     listOf(

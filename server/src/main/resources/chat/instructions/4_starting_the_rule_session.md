@@ -45,6 +45,9 @@ Cornerstone: <name of the current cornerstone case, or null>, Index: <index>, To
   later.
 - Immediately call the {{GET_SUGGESTED_CONDITIONS}} function and present the suggestions to the user. Do NOT ask the
   user if they want to provide reasons first — always present the suggestions directly.
+- **IMPORTANT**: This step is ONLY about asking the user for reasons. Do NOT mention cornerstone cases in this
+  response. Do NOT ask about allowing or disallowing changes to cornerstone cases yet. The cornerstone question
+  comes later, only after the user has responded about reasons.
 - If the user provides a reason, follow the instructions "Defining the reasons for report change".
 - If the user declines to provide reasons:
     - If the Total number of cornerstone cases from Step 2 is greater than 0, you MUST follow the instructions
