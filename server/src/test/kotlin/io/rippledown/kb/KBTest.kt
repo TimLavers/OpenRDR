@@ -728,7 +728,7 @@ class KBTest {
         }
         val condition = lessThanOrEqualTo(null, glucose(), 0.5) //false for the cornerstone
         val updateRequest = UpdateCornerstoneRequest(currentCCStatus, RuleConditionList(listOf(condition)))
-        kb.updateCornerstone(updateRequest) shouldBe CornerstoneStatus()
+        kb.updateCornerstone(updateRequest) shouldBe CornerstoneStatus(ruleConditions = listOf(condition.asText()))
     }
 
     @Test
@@ -744,7 +744,7 @@ class KBTest {
         }
         val condition = lessThanOrEqualTo(null, glucose(), 1.0) //true for the cornerstone
         val updateRequest = UpdateCornerstoneRequest(currentCCStatus, RuleConditionList(listOf(condition)))
-        kb.updateCornerstone(updateRequest) shouldBe currentCCStatus
+        kb.updateCornerstone(updateRequest) shouldBe currentCCStatus.copy(ruleConditions = listOf(condition.asText()))
     }
 
     @Test
@@ -763,7 +763,7 @@ class KBTest {
         }
         val condition = greaterThanOrEqualTo(null, glucose(), 1.5) //false for the current cornerstone
         val updateRequest = UpdateCornerstoneRequest(currentCCStatus, RuleConditionList(listOf(condition)))
-        val expected = CornerstoneStatus(vcc2, 0, 2)
+        val expected = CornerstoneStatus(vcc2, 0, 2, ruleConditions = listOf(condition.asText()))
         kb.updateCornerstone(updateRequest) shouldBe expected
     }
 
@@ -782,7 +782,7 @@ class KBTest {
         }
         val condition = lessThanOrEqualTo(null, glucose(), 2.5) //true for the current cornerstone and cc2
         val updateRequest = UpdateCornerstoneRequest(currentCCStatus, RuleConditionList(listOf(condition)))
-        val expected = CornerstoneStatus(vcc1, 0, 2)
+        val expected = CornerstoneStatus(vcc1, 0, 2, ruleConditions = listOf(condition.asText()))
         kb.updateCornerstone(updateRequest) shouldBe expected
     }
 
@@ -805,7 +805,7 @@ class KBTest {
         }
         val condition = lessThanOrEqualTo(null, glucose(), 2.5) //true for cc1 and the current cornerstone cc2
         var updateRequest = UpdateCornerstoneRequest(originalCCStatus, RuleConditionList(listOf(condition)))
-        val expected = CornerstoneStatus(vcc2, 1, 2)
+        val expected = CornerstoneStatus(vcc2, 1, 2, ruleConditions = listOf(condition.asText()))
         kb.updateCornerstone(updateRequest) shouldBe expected
         kb.cornerstoneStatus(vcc2) shouldBe expected
 
@@ -835,7 +835,7 @@ class KBTest {
         val condition =
             lessThanOrEqualTo(null, glucose(), 2.5) //true for cc1 and the current cornerstone. false for cc3
         val updateRequest = UpdateCornerstoneRequest(currentCCStatus, RuleConditionList(listOf(condition)))
-        val expected = CornerstoneStatus(vcc2, 1, 2)
+        val expected = CornerstoneStatus(vcc2, 1, 2, ruleConditions = listOf(condition.asText()))
         kb.updateCornerstone(updateRequest) shouldBe expected
     }
 
@@ -1160,6 +1160,7 @@ class KBTest {
                 reason
             )
         } returns ConditionParsingResult(condition)
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
 
         //When
         kb.startConversation(viewableCase)
@@ -1316,6 +1317,45 @@ class KBTest {
 
         //Then
         status.diff shouldBe Addition(comment)
+    }
+
+    @Test
+    fun `cornerstoneStatus should have empty ruleConditions when no conditions have been added and there are no cornerstones`() {
+        val sessionCase = createCase("Case1", value = "1.0")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        val ccStatus = kb.cornerstoneStatus(null)
+        ccStatus.ruleConditions shouldBe emptyList()
+    }
+
+    @Test
+    fun `cornerstoneStatus should have empty ruleConditions when no conditions have been added and there are cornerstones`() {
+        val cc1 = kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
+        kb.viewableCase(cc1)
+        val sessionCase = createCase("Case2", value = "2.0")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        val ccStatus = kb.cornerstoneStatus(null)
+        ccStatus.ruleConditions shouldBe emptyList()
+    }
+
+    @Test
+    fun `cornerstoneStatus should include ruleConditions after conditions have been added and there are no cornerstones`() {
+        val sessionCase = createCase("Case1", value = "1.0")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        val condition = lessThanOrEqualTo(null, glucose(), 1.2)
+        kb.addConditionToCurrentRuleSession(condition)
+        val ccStatus = kb.cornerstoneStatus(null)
+        ccStatus.ruleConditions shouldBe listOf(condition.asText())
+    }
+
+    @Test
+    fun `cornerstoneStatus should include ruleConditions after conditions have been added and there are cornerstones`() {
+        kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
+        val sessionCase = createCase("Case2", value = "2.0")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        val condition = lessThanOrEqualTo(null, glucose(), 2.5) //true for session case, true for cornerstone
+        kb.addConditionToCurrentRuleSession(condition)
+        val ccStatus = kb.cornerstoneStatus(null)
+        ccStatus.ruleConditions shouldBe listOf(condition.asText())
     }
 
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")
