@@ -12,7 +12,8 @@ data class CornerstoneStatus(
     val cornerstoneToReview: ViewableCase? = null,
     val indexOfCornerstoneToReview: Int = -1,
     val numberOfCornerstones: Int = 0,
-    val diff: Diff? = null
+    val diff: Diff? = null,
+    val ruleConditions: List<String> = emptyList()
 ) {
     init {
         require(indexOfCornerstoneToReview < numberOfCornerstones) { "index of the cornerstone to show is between -1 and the number of cornerstones" }

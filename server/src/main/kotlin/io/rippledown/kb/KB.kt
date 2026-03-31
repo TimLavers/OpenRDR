@@ -342,7 +342,8 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     internal fun cornerstoneStatus(currentCornerstone: ViewableCase?): CornerstoneStatus {
         checkSession()
         val cornerstones: List<RDRCase> = ruleSession!!.cornerstoneCases()
-        if (cornerstones.isEmpty()) return CornerstoneStatus(diff = currentDiff)
+        val conditionTexts = ruleSession!!.conditions.map { it.asText() }
+        if (cornerstones.isEmpty()) return CornerstoneStatus(diff = currentDiff, ruleConditions = conditionTexts)
 
         //if no cornerstone has been selected yet, or the selected cornerstone is no longer in the list of cornerstones, return the first one
         var index = 0
@@ -352,7 +353,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         index = if (index >= 0) index else 0
         val cornerstone = cornerstones[index]
         val viewableCornerstone = viewableCase(cornerstone)
-        return CornerstoneStatus(viewableCornerstone, index, cornerstones.size, currentDiff)
+        return CornerstoneStatus(viewableCornerstone, index, cornerstones.size, currentDiff, conditionTexts)
     }
 
     //Allow a mock parser to be set so we can avoid connecting to Gemini for all the tests

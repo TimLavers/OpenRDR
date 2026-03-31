@@ -22,6 +22,7 @@ interface ReadonlyInterpretationViewHandler {
 fun ReadonlyInterpretationView(
     interpretation: ViewableInterpretation,
     diff: Diff? = null,
+    ruleConditions: List<String> = emptyList(),
     contentDescription: String = INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE,
     modifier: Modifier,
     handler: ReadonlyInterpretationViewHandler
@@ -33,6 +34,7 @@ fun ReadonlyInterpretationView(
     var unstyledText by remember { mutableStateOf(comments.unhighlighted(diff)) }
     var styledText by remember { mutableStateOf(unstyledText) }
     var commentIndex by remember { mutableStateOf(-1) }
+    var isOverDiffText by remember { mutableStateOf(false) }
 
     LaunchedEffect(interpretation, diff) {
         comments = interpretation.conclusions().map { it.text }
@@ -43,7 +45,11 @@ fun ReadonlyInterpretationView(
     TooltipArea(
         modifier = modifier.fillMaxWidth(),
         tooltip = {
-            ToolTipForNonEmptyInterpretation(commentIndex, conclusionList, interpretation)
+            if (isOverDiffText && ruleConditions.isNotEmpty()) {
+                ConditionTooltip(ruleConditions)
+            } else {
+                ToolTipForNonEmptyInterpretation(commentIndex, conclusionList, interpretation)
+            }
         },
         content = {
             AnnotatedTextView(
@@ -55,12 +61,19 @@ fun ReadonlyInterpretationView(
                     }
 
                     override fun onPointerEnter(characterOffset: Int) {
-                        commentIndex = comments.commentIndexForOffset(characterOffset)
-                        styledText = comments.highlightItem(commentIndex, diff)
+                        isOverDiffText = unstyledText.spanStyles.any { span ->
+                            characterOffset in span.start until span.end &&
+                                    (span.item.background == DIFF_ADDITION_COLOR || span.item.background == DIFF_REMOVAL_COLOR)
+                        }
+                        if (!isOverDiffText) {
+                            commentIndex = comments.commentIndexForOffset(characterOffset)
+                            styledText = comments.highlightItem(commentIndex, diff)
+                        }
                     }
 
                     override fun onPointerExit() {
                         commentIndex = -1
+                        isOverDiffText = false
                     }
                 }
             )

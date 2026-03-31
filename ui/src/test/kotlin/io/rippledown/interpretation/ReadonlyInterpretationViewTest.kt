@@ -484,6 +484,132 @@ class ReadonlyInterpretationViewTest {
             requireInterpretationForCornerstone("$bondiComment $replacementComment")
         }
     }
+
+    @Test
+    fun `should show rule conditions tooltip when hovering over addition diff text`() = runTest {
+        val addedComment = "Beach time!"
+        val ruleConditions = listOf("UV is high", "Waves is high")
+        val interpretation = createViewableInterpretation()
+        var textLayoutResult: TextLayoutResult? = null
+        val handler = object : ReadonlyInterpretationViewHandler by handler {
+            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
+                textLayoutResult = layoutResult
+            }
+        }
+        with(composeTestRule) {
+            setContent {
+                ReadonlyInterpretationView(
+                    interpretation,
+                    diff = Addition(addedComment),
+                    ruleConditions = ruleConditions,
+                    modifier = modifier,
+                    handler = handler
+                )
+            }
+            requireInterpretationForCornerstone(addedComment)
+
+            //When
+            movePointerOverComment(addedComment, textLayoutResult!!)
+
+            //Then
+            requireConditionsToBeShowing(ruleConditions)
+        }
+    }
+
+    @Test
+    fun `should show rule conditions tooltip when hovering over removal diff text`() = runTest {
+        val bondiComment = "Go to Bondi."
+        val ruleConditions = listOf("UV is high")
+        val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
+        var textLayoutResult: TextLayoutResult? = null
+        val handler = object : ReadonlyInterpretationViewHandler by handler {
+            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
+                textLayoutResult = layoutResult
+            }
+        }
+        with(composeTestRule) {
+            setContent {
+                ReadonlyInterpretationView(
+                    interpretation,
+                    diff = Removal(bondiComment),
+                    ruleConditions = ruleConditions,
+                    modifier = modifier,
+                    handler = handler
+                )
+            }
+            requireInterpretationForCornerstone(bondiComment)
+
+            //When
+            movePointerOverComment(bondiComment, textLayoutResult!!)
+
+            //Then
+            requireConditionsToBeShowing(ruleConditions)
+        }
+    }
+
+    @Test
+    fun `should show rule conditions tooltip when hovering over replacement diff text`() = runTest {
+        val bondiComment = "Go to Bondi."
+        val replacementComment = "Go to Maroubra."
+        val ruleConditions = listOf("UV is high", "Waves is high")
+        val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
+        var textLayoutResult: TextLayoutResult? = null
+        val handler = object : ReadonlyInterpretationViewHandler by handler {
+            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
+                textLayoutResult = layoutResult
+            }
+        }
+        with(composeTestRule) {
+            setContent {
+                ReadonlyInterpretationView(
+                    interpretation,
+                    diff = Replacement(bondiComment, replacementComment),
+                    ruleConditions = ruleConditions,
+                    modifier = modifier,
+                    handler = handler
+                )
+            }
+            requireInterpretationForCornerstone("$bondiComment $replacementComment")
+
+            //When
+            movePointerOverComment(replacementComment, textLayoutResult!!)
+
+            //Then
+            requireConditionsToBeShowing(ruleConditions)
+        }
+    }
+
+    @Test
+    fun `should not show rule conditions tooltip when hovering over non-diff text`() = runTest {
+        val bondiComment = "Go to Bondi."
+        val addedComment = "Beach time!"
+        val ruleConditions = listOf("UV is high")
+        val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
+        var textLayoutResult: TextLayoutResult? = null
+        val handler = object : ReadonlyInterpretationViewHandler by handler {
+            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
+                textLayoutResult = layoutResult
+            }
+        }
+        with(composeTestRule) {
+            setContent {
+                ReadonlyInterpretationView(
+                    interpretation,
+                    diff = Addition(addedComment),
+                    ruleConditions = ruleConditions,
+                    modifier = modifier,
+                    handler = handler
+                )
+            }
+            requireInterpretationForCornerstone("$bondiComment $addedComment")
+
+            //When
+            movePointerOverComment(bondiComment, textLayoutResult!!)
+
+            //Then
+            requireNoConditionsToBeShowing()
+        }
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)

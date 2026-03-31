@@ -33,6 +33,7 @@ interface InterpretationViewHandler : ReadonlyInterpretationViewHandler
 fun InterpretationView(
     interpretation: ViewableInterpretation,
     diff: Diff? = null,
+    ruleConditions: List<String> = emptyList(),
     handler: InterpretationViewHandler
 ) {
     OutlinedCard(
@@ -46,6 +47,7 @@ fun InterpretationView(
                 ReadonlyInterpretationView(
                     interpretation = interpretation,
                     diff = diff,
+                    ruleConditions = ruleConditions,
                     contentDescription = INTERPRETATION_TEXT_FIELD,
                     modifier = Modifier.weight(1f),
                     handler = handler
