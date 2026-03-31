@@ -35,7 +35,12 @@ fun InterpretationView(
     diff: Diff? = null,
     handler: InterpretationViewHandler
 ) {
-    OutlinedCard(modifier = Modifier.padding(vertical = 10.dp)) {
+    OutlinedCard(
+        modifier = Modifier.padding(vertical = 10.dp),
+        colors = androidx.compose.material3.CardDefaults.outlinedCardColors(
+            containerColor = androidx.compose.ui.graphics.Color.White
+        )
+    ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(modifier = Modifier.fillMaxWidth()) {
                 ReadonlyInterpretationView(
