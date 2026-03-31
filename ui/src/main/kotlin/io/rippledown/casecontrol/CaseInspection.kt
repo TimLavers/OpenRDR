@@ -10,11 +10,12 @@ import io.rippledown.interpretation.InterpretationView
 import io.rippledown.interpretation.InterpretationViewHandler
 import io.rippledown.model.Attribute
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.diff.Diff
 
 interface CaseInspectionHandler : CaseViewHandler, InterpretationViewHandler
 
 @Composable
-fun CaseInspection(case: ViewableCase, handler: CaseInspectionHandler) {
+fun CaseInspection(case: ViewableCase, diff: Diff? = null, handler: CaseInspectionHandler) {
     Column(
         verticalArrangement = Arrangement.Top,
         modifier = Modifier
@@ -30,6 +31,7 @@ fun CaseInspection(case: ViewableCase, handler: CaseInspectionHandler) {
         })
         InterpretationView(
             interpretation = case.viewableInterpretation,
+            diff = diff,
             handler = handler
         )
     }

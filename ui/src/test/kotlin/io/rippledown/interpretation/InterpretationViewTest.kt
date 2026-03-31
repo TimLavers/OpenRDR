@@ -31,7 +31,7 @@ class InterpretationViewTest {
             setContent {
                 InterpretationView(
                     interpretation = interpretation,
-                    handler
+                    handler = handler
                 )
             }
 

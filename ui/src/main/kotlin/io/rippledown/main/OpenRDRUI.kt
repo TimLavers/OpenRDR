@@ -21,7 +21,6 @@ import io.rippledown.chat.ChatController
 import io.rippledown.chat.ChatControllerHandler
 import io.rippledown.chat.VoiceRecognitionService
 import io.rippledown.chat.VoiceRecognitionService.Companion.defaultModelPath
-import io.rippledown.interpretation.toAnnotatedString
 import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
@@ -183,9 +182,8 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
             BottomAppBar(
                 backgroundColor = Color.White,
             ) {
-                val leftMessage = cornerstoneStatus?.diff?.toAnnotatedString() ?: AnnotatedString("")
                 val rightMessage = AnnotatedString(rightInformationMessage)
-                InformationPanel(leftMessage, rightMessage)
+                InformationPanel(AnnotatedString(""), rightMessage)
             }
         },
     ) { paddingValues ->

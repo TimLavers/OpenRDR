@@ -31,7 +31,7 @@ class CaseInspectionTest {
 
         with(composeTestRule) {
             setContent {
-                CaseInspection(case, handler)
+                CaseInspection(case, handler = handler)
             }
             waitForCaseToBeShowing(caseName)
         }
@@ -43,7 +43,7 @@ class CaseInspectionTest {
         val case = createViewableCaseWithInterpretation(name = "case a", caseId = 1L, conclusionTexts = listOf(text))
         with(composeTestRule) {
             setContent {
-                CaseInspection(case, handler)
+                CaseInspection(case, handler = handler)
             }
             requireInterpretation(text)
         }
@@ -53,6 +53,6 @@ class CaseInspectionTest {
 fun main() {
     val case = createViewableCase(name = "Bondi", caseId = 45L)
     applicationFor {
-        CaseInspection(case, mockk())
+        CaseInspection(case, handler = mockk())
     }
 }

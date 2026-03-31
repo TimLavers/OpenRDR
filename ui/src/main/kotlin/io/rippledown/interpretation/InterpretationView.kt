@@ -18,6 +18,10 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.interpretation.CONDITION_PREFIX
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
+import io.rippledown.model.diff.Addition
+import io.rippledown.model.diff.Diff
+import io.rippledown.model.diff.Removal
+import io.rippledown.model.diff.Replacement
 import io.rippledown.model.interpretationview.ViewableInterpretation
 
 interface InterpretationViewHandler : ReadonlyInterpretationViewHandler
@@ -25,16 +29,20 @@ interface InterpretationViewHandler : ReadonlyInterpretationViewHandler
 @Composable
 fun InterpretationView(
     interpretation: ViewableInterpretation,
+    diff: Diff? = null,
     handler: InterpretationViewHandler
 ) {
     OutlinedCard(modifier = Modifier.padding(vertical = 10.dp)) {
-        Row(modifier = Modifier.fillMaxWidth()) {
-            ReadonlyInterpretationView(
-                interpretation = interpretation,
-                contentDescription = INTERPRETATION_TEXT_FIELD,
-                modifier = Modifier.weight(1f),
-                handler = handler
-            )
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                ReadonlyInterpretationView(
+                    interpretation = interpretation,
+                    diff = diff,
+                    contentDescription = INTERPRETATION_TEXT_FIELD,
+                    modifier = Modifier.weight(1f),
+                    handler = handler
+                )
+            }
         }
     }
 }
@@ -67,11 +75,17 @@ fun List<String>.commentIndexForOffset(offset: Int): Int {
     return -1
 }
 
-fun List<String>.unhighlighted() = highlightItem(-1)
+fun List<String>.unhighlighted(diff: Diff? = null) = highlightItem(-1, diff)
 
-fun List<String>.highlightItem(index: Int) = buildAnnotatedString {
+fun List<String>.highlightItem(index: Int, diff: Diff? = null) = buildAnnotatedString {
     forEachIndexed { i, text ->
-        if (i == index) {
+        val isDiffTarget = when (diff) {
+            is Removal -> text == diff.removedText
+            is Replacement -> text == diff.originalText
+            else -> false
+        }
+
+        if (i == index && !isDiffTarget) {
             addStyle(
                 style = SpanStyle(
                     background = io.rippledown.decoration.BACKGROUND_COLOR
@@ -80,10 +94,30 @@ fun List<String>.highlightItem(index: Int) = buildAnnotatedString {
                 end = length + text.length
             )
         }
-        append(text)
+        if (isDiffTarget) {
+            val start = length
+            append(text)
+            addStyle(SpanStyle(background = DIFF_REMOVAL_COLOR), start, length)
+        } else {
+            append(text)
+        }
+
+        if (diff is Replacement && text == diff.originalText) {
+            append(" ")
+            val start = length
+            append(diff.replacementText)
+            addStyle(SpanStyle(background = DIFF_ADDITION_COLOR), start, length)
+        }
+
         if (i < size - 1) {
             // Add space before the next comment
             append(" ")
         }
+    }
+    if (diff is Addition) {
+        if (isNotEmpty()) append(" ")
+        val start = length
+        append(diff.addedText)
+        addStyle(SpanStyle(background = DIFF_ADDITION_COLOR), start, length)
     }
 }

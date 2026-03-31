@@ -79,7 +79,7 @@ class InterpretationViewUpdateTest {
     ) {
         var viewableInterpretation: ViewableInterpretation by remember { mutableStateOf(original) }
 
-        InterpretationView(viewableInterpretation, handler)
+        InterpretationView(viewableInterpretation, handler = handler)
 
         Button(
             onClick = {

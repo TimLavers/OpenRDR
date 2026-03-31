@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextLayoutResult
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE
 import io.rippledown.model.Conclusion
+import io.rippledown.model.diff.Diff
 import io.rippledown.model.interpretationview.ViewableInterpretation
 
 interface ReadonlyInterpretationViewHandler {
@@ -20,6 +21,7 @@ interface ReadonlyInterpretationViewHandler {
 @Composable
 fun ReadonlyInterpretationView(
     interpretation: ViewableInterpretation,
+    diff: Diff? = null,
     contentDescription: String = INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE,
     modifier: Modifier,
     handler: ReadonlyInterpretationViewHandler
@@ -28,13 +30,13 @@ fun ReadonlyInterpretationView(
     var comments by remember {
         mutableStateOf(interpretation.conclusions().map { it.text })
     }
-    var unstyledText by remember { mutableStateOf(comments.unhighlighted()) }
+    var unstyledText by remember { mutableStateOf(comments.unhighlighted(diff)) }
     var styledText by remember { mutableStateOf(unstyledText) }
     var commentIndex by remember { mutableStateOf(-1) }
 
-    LaunchedEffect(interpretation) {
+    LaunchedEffect(interpretation, diff) {
         comments = interpretation.conclusions().map { it.text }
-        unstyledText = comments.unhighlighted()
+        unstyledText = comments.unhighlighted(diff)
         styledText = unstyledText
     }
 
@@ -54,7 +56,7 @@ fun ReadonlyInterpretationView(
 
                     override fun onPointerEnter(characterOffset: Int) {
                         commentIndex = comments.commentIndexForOffset(characterOffset)
-                        styledText = comments.highlightItem(commentIndex)
+                        styledText = comments.highlightItem(commentIndex, diff)
                     }
 
                     override fun onPointerExit() {
