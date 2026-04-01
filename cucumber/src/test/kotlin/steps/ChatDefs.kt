@@ -204,7 +204,20 @@ class ChatDefs {
         }
     }
 
-    private fun buildRuleToAddCommentAllowingCC(comment: String) {
+    @And("I add a comment {string}, allowing the report change to the cornerstone case")
+    fun addCommentUsingChatAndAllowCornerstoneReportChange(comment: String) {
+        buildRuleToAddCommentAllowingCC(comment)
+    }
+
+    @And("I add another comment {string}, allowing the report change to the cornerstone case")
+    fun addAnotherCommentUsingChatAndAllowCornerstoneReportChange(comment: String) {
+        buildRuleToAddCommentAllowingCC(comment, false)
+    }
+
+    private fun buildRuleToAddCommentAllowingCC(comment: String, waitForBotQuestionFirst: Boolean = true) {
+        if (waitForBotQuestionFirst) {
+            waitForBotQuestion()
+        }
         waitForBotQuestion()
         addComment(comment)
         waitForBotSuggestions()
