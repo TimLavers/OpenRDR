@@ -45,7 +45,8 @@ class CornerstoneStatusTest {
                 "cornerstoneToReview": null,
                 "indexOfCornerstoneToReview": -1,
                 "numberOfCornerstones": 0,
-                "diff": null
+                "diff": null,
+                "ruleConditions": []
             }
         """.trimIndent()
     }
