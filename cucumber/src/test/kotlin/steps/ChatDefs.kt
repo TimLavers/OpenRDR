@@ -218,6 +218,7 @@ class ChatDefs {
         if (waitForBotQuestionFirst) {
             waitForBotQuestion()
         }
+        waitForBotQuestion()
         addComment(comment)
         waitForBotSuggestions()
         decline()
@@ -239,6 +240,7 @@ class ChatDefs {
     }
 
     fun removeComment(comment: String) {
+        waitForBotQuestion()
         enterChatTextAndSend("Remove the comment: \"$comment\"")
         waitForBotRequestForConfirmationAndConfirm()
     }
