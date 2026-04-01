@@ -204,20 +204,8 @@ class ChatDefs {
         }
     }
 
-    @And("I add a comment {string}, allowing the report change to the cornerstone case")
-    fun addCommentUsingChatAndAllowCornerstoneReportChange(comment: String) {
-        buildRuleToAddCommentAllowingCC(comment)
-    }
-
-    @And("I add another comment {string}, allowing the report change to the cornerstone case")
-    fun addAnotherCommentUsingChatAndAllowCornerstoneReportChange(comment: String) {
-        buildRuleToAddCommentAllowingCC(comment, false)
-    }
-
-    private fun buildRuleToAddCommentAllowingCC(comment: String, waitForBotQuestionFirst: Boolean = true) {
-        if (waitForBotQuestionFirst) {
-            waitForBotQuestion()
-        }
+    private fun buildRuleToAddCommentAllowingCC(comment: String) {
+        waitForBotQuestion()
         addComment(comment)
         waitForBotSuggestions()
         decline()
@@ -239,6 +227,7 @@ class ChatDefs {
     }
 
     fun removeComment(comment: String) {
+        waitForBotQuestion()
         enterChatTextAndSend("Remove the comment: \"$comment\"")
         waitForBotRequestForConfirmationAndConfirm()
     }
