@@ -20,10 +20,9 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         }
     }
 
-    @And("I build a rule to add another comment {string}")
-    fun buildRuleToAddAnotherNewComment(comment: String) {
+    @And("I build a rule to add another comment for the same case {string}")
+    fun buildRuleToAddAnotherAnotherCommentForTheSameCase(comment: String) {
         with(chatDefs) {
-            waitForBotQuestion()
             addComment(comment)
             completeRule()
         }
