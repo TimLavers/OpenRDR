@@ -1,4 +1,6 @@
 Feature: When entering an expression to be used in a rule, the user is provided with a syntactically correct condition
+
+  @single
   Scenario: Should provide a condition tip when the user types an expression
     Given case Bondi is provided with the following values, reference ranges and units:
       | Attribute | Value | Low | High | Units  |
@@ -7,6 +9,7 @@ Feature: When entering an expression to be used in a rule, the user is provided 
     And I start the client application
     And I request that the comment "Beach time!" be added
     When I enter the expression "elevated waves"
+    And pause
     Then the model should respond with a message containing:
       """
       Waves is high
