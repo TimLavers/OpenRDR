@@ -172,4 +172,5 @@ class ConditionGeneratorUserTextTest {
         //Then
         condition shouldBe EpisodicCondition(null, attribute, Low, AtLeast(3), userText)
     }
+
 }

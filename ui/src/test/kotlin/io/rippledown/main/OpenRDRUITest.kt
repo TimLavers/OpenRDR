@@ -1,8 +1,10 @@
 package io.rippledown.main
 
-import androidx.compose.ui.test.*
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -524,8 +526,11 @@ class OpenRDRUITest {
     }
 
     @Test
-    fun `should show Addition diff in InformationPanel when cornerstone status has an Addition diff`() = runTest {
+    fun `should show Addition diff in InterpretationView when cornerstone status has an Addition diff`() = runTest {
         //Given
+        val caseId = CaseId(id = 1, name = "case A")
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("case A", 1)
         var updateCornerstoneStatus: ((CornerstoneStatus) -> Unit)? = null
         coEvery { api.startWebSocketSession(any(), any()) } coAnswers {
             updateCornerstoneStatus = firstArg()
@@ -535,6 +540,7 @@ class OpenRDRUITest {
             setContent {
                 OpenRDRUI(handler, dispatcher = Unconfined)
             }
+            waitForCaseToBeShowing("case A")
 
             //When
             runOnIdle {
@@ -543,13 +549,17 @@ class OpenRDRUITest {
             waitForIdle()
 
             //Then
-            onNodeWithContentDescription(LEFT_INFO_MESSAGE_ID).assertTextEquals("Adding Go to Bondi.")
+            requireInterpretation("Go to Bondi.")
         }
     }
 
     @Test
-    fun `should show Removal diff in InformationPanel when cornerstone status has a Removal diff`() = runTest {
+    fun `should show Removal diff in InterpretationView when cornerstone status has a Removal diff`() = runTest {
         //Given
+        val bondiComment = "Go to Bondi."
+        val caseId = CaseId(id = 1, name = "case A")
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("case A", 1, listOf(bondiComment))
         var updateCornerstoneStatus: ((CornerstoneStatus) -> Unit)? = null
         coEvery { api.startWebSocketSession(any(), any()) } coAnswers {
             updateCornerstoneStatus = firstArg()
@@ -559,21 +569,29 @@ class OpenRDRUITest {
             setContent {
                 OpenRDRUI(handler, dispatcher = Unconfined)
             }
+            waitForCaseToBeShowing("case A")
+            requireInterpretation(bondiComment)
 
             //When
             runOnIdle {
-                updateCornerstoneStatus!!.invoke(CornerstoneStatus(diff = Removal("Go to Bondi.")))
+                updateCornerstoneStatus!!.invoke(CornerstoneStatus(diff = Removal(bondiComment)))
             }
             waitForIdle()
 
             //Then
-            onNodeWithContentDescription(LEFT_INFO_MESSAGE_ID).assertTextEquals("Removing Go to Bondi.")
+            requireInterpretation(bondiComment)
         }
     }
 
     @Test
-    fun `should show Replacement diff in InformationPanel when cornerstone status has a Replacement diff`() = runTest {
+    fun `should show Replacement diff in InterpretationView when cornerstone status has a Replacement diff`() =
+        runTest {
         //Given
+            val bondiComment = "Go to Bondi."
+            val maroubraComment = "Go to Maroubra."
+            val caseId = CaseId(id = 1, name = "case A")
+            coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+            coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("case A", 1, listOf(bondiComment))
         var updateCornerstoneStatus: ((CornerstoneStatus) -> Unit)? = null
         coEvery { api.startWebSocketSession(any(), any()) } coAnswers {
             updateCornerstoneStatus = firstArg()
@@ -583,24 +601,28 @@ class OpenRDRUITest {
             setContent {
                 OpenRDRUI(handler, dispatcher = Unconfined)
             }
+            waitForCaseToBeShowing("case A")
+            requireInterpretation(bondiComment)
 
             //When
             runOnIdle {
                 updateCornerstoneStatus!!.invoke(
-                    CornerstoneStatus(diff = Replacement("Go to Bondi.", "Go to Maroubra."))
+                    CornerstoneStatus(diff = Replacement(bondiComment, maroubraComment))
                 )
             }
             waitForIdle()
 
             //Then
-            onNodeWithContentDescription(LEFT_INFO_MESSAGE_ID)
-                .assertTextEquals("Replacing Go to Bondi. by Go to Maroubra.")
+            requireInterpretation("$bondiComment $maroubraComment")
         }
     }
 
     @Test
-    fun `should clear the diff in InformationPanel when the rule session completes`() = runTest {
+    fun `should clear the diff in InterpretationView when the rule session completes`() = runTest {
         //Given
+        val caseId = CaseId(id = 1, name = "case A")
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("case A", 1)
         var updateCornerstoneStatus: ((CornerstoneStatus) -> Unit)? = null
         var ruleSessionCompleted: (() -> Unit)? = null
         coEvery { api.startWebSocketSession(any(), any()) } coAnswers {
@@ -612,11 +634,12 @@ class OpenRDRUITest {
             setContent {
                 OpenRDRUI(handler, dispatcher = Unconfined)
             }
+            waitForCaseToBeShowing("case A")
             runOnIdle {
                 updateCornerstoneStatus!!.invoke(CornerstoneStatus(diff = Addition("Go to Bondi.")))
             }
             waitForIdle()
-            onNodeWithContentDescription(LEFT_INFO_MESSAGE_ID).assertTextEquals("Adding Go to Bondi.")
+            requireInterpretation("Go to Bondi.")
 
             //When
             runOnIdle {
@@ -625,13 +648,16 @@ class OpenRDRUITest {
             waitForIdle()
 
             //Then
-            onNodeWithContentDescription(LEFT_INFO_MESSAGE_ID).assertTextEquals("")
+            requireInterpretation("")
         }
     }
 
     @Test
-    fun `should show blank left message when cornerstone status has no diff`() = runTest {
+    fun `should not show diff in InterpretationView when cornerstone status has no diff`() = runTest {
         //Given
+        val caseId = CaseId(id = 1, name = "case A")
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("case A", 1)
         var updateCornerstoneStatus: ((CornerstoneStatus) -> Unit)? = null
         coEvery { api.startWebSocketSession(any(), any()) } coAnswers {
             updateCornerstoneStatus = firstArg()
@@ -641,6 +667,7 @@ class OpenRDRUITest {
             setContent {
                 OpenRDRUI(handler, dispatcher = Unconfined)
             }
+            waitForCaseToBeShowing("case A")
 
             //When
             runOnIdle {
@@ -649,20 +676,7 @@ class OpenRDRUITest {
             waitForIdle()
 
             //Then
-            onNodeWithContentDescription(LEFT_INFO_MESSAGE_ID).assertTextEquals("")
-        }
-    }
-
-    @Test
-    fun `should show blank left message initially when no cornerstone status has been received`() = runTest {
-        with(composeTestRule) {
-            //When
-            setContent {
-                OpenRDRUI(handler, dispatcher = Unconfined)
-            }
-
-            //Then
-            onNodeWithContentDescription(LEFT_INFO_MESSAGE_ID).assertTextEquals("")
+            requireInterpretation("")
         }
     }
 

@@ -31,10 +31,12 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun movePointerToCharacterPosition(characterPosition: Int) {
-        val interpretationTextContext = interpretationTextContext()!!
+        val interpretationTextContext = interpretationTextContext()
+            ?: throw AssertionError("Interpretation text field not found in accessibility tree")
         val rectangle =
             execute<Rectangle> { interpretationTextContext.accessibleText?.getCharacterBounds(characterPosition) }
-        val loc = interpretationTextContext.accessibleComponent.locationOnScreen
+                ?: return
+        val loc = interpretationTextContext.accessibleComponent?.locationOnScreen ?: return
         Robot().mouseMove(loc.x + rectangle.x, loc.y)
     }
 

@@ -25,7 +25,12 @@ class ChatManager(
 
     suspend fun startConversation(viewableCase: ViewableCase): ChatResponse {
         currentCase = viewableCase
-        val response = conversationService.startConversation()
+        val response = try {
+            conversationService.startConversation()
+        } catch (e: Exception) {
+            logger.error("Failed to start conversation", e)
+            return ChatResponse(AI_UNAVAILABLE_MESSAGE)
+        }
         logger.info("$LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE '$response'")
         return processActionComment(response.sanitizeLlmJson().fromJsonString<ActionComment>())
     }
@@ -36,7 +41,12 @@ class ChatManager(
 
     private suspend fun processConversationResponse(message: String): ChatResponse {
         logger.info("$LOG_PREFIX_FOR_USER_MESSAGE '$message'")
-        val response = conversationService.response(message)
+        val response = try {
+            conversationService.response(message)
+        } catch (e: Exception) {
+            logger.error("Failed to send message: $message", e)
+            return ChatResponse(AI_UNAVAILABLE_MESSAGE)
+        }
         logger.info("$LOG_PREFIX_FOR_CONVERSATION_RESPONSE $response")
         try {
             // Extract the first JSON object from the response (the model may sometimes
@@ -73,6 +83,7 @@ class ChatManager(
         const val LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE = "Start conversation response:"
         const val LOG_PREFIX_FOR_CONVERSATION_RESPONSE = "Conversation response:"
         const val LOG_PREFIX_FOR_USER_MESSAGE = "User message:"
+        const val AI_UNAVAILABLE_MESSAGE = "The AI assistant is temporarily unavailable. Please try again later."
     }
 }
 

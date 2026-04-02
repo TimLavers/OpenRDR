@@ -14,4 +14,6 @@ const val ADD_CONDITION_TEXT = "Add this condition to the rule"
 const val UNDERSTAND = "understand"
 const val DOES_NOT_CORRESPOND_TO_A_CONDITION = "I do not $UNDERSTAND this expression. Please try again."
 const val CONDITION_IS_NOT_TRUE = "This condition is not true for this case. Please try again."
+const val INTERPRETED_CONDITION_IS_NOT_TRUE =
+    "If '%s' means '%s', this reason is not true for the case. Please try again."
 

@@ -1,4 +1,5 @@
 Feature: The user can make a rule that removes a comment from the interpretive report
+
   Scenario: The user should be able to build a rule to remove a comment
     Given a list of cases with the following names is stored on the server:
       | Case1 |

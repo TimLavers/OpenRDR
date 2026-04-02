@@ -35,6 +35,7 @@ fun AnnotatedTextView(
 ) {
     var pointerEnter by remember { mutableStateOf(false) }
     var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
+    val currentHandler by rememberUpdatedState(handler)
 
     Text(
         text = text,
@@ -47,9 +48,9 @@ fun AnnotatedTextView(
                         textLayoutResult.let { layoutResult ->
                             if (pointerEnter) {
                                 val characterOffset = layoutResult!!.getOffsetForPosition(position)
-                                handler.onPointerEnter(characterOffset)
+                                currentHandler.onPointerEnter(characterOffset)
                             } else {
-                                handler.onPointerExit()
+                                currentHandler.onPointerExit()
                             }
                         }
                     }

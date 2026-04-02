@@ -7,6 +7,7 @@ import io.rippledown.chat.Conversation.Companion.TRANSFORM_REASON
 import io.rippledown.chat.FunctionCallHandler
 import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
 import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
+import io.rippledown.constants.rule.INTERPRETED_CONDITION_IS_NOT_TRUE
 import io.rippledown.hints.AttributeFor
 import io.rippledown.hints.ConditionChatService
 import io.rippledown.hints.ConditionGenerator
@@ -341,7 +342,8 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     internal fun cornerstoneStatus(currentCornerstone: ViewableCase?): CornerstoneStatus {
         checkSession()
         val cornerstones: List<RDRCase> = ruleSession!!.cornerstoneCases()
-        if (cornerstones.isEmpty()) return CornerstoneStatus(diff = currentDiff)
+        val conditionTexts = ruleSession!!.conditions.map { it.asText() }
+        if (cornerstones.isEmpty()) return CornerstoneStatus(diff = currentDiff, ruleConditions = conditionTexts)
 
         //if no cornerstone has been selected yet, or the selected cornerstone is no longer in the list of cornerstones, return the first one
         var index = 0
@@ -351,7 +353,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         index = if (index >= 0) index else 0
         val cornerstone = cornerstones[index]
         val viewableCornerstone = viewableCase(cornerstone)
-        return CornerstoneStatus(viewableCornerstone, index, cornerstones.size, currentDiff)
+        return CornerstoneStatus(viewableCornerstone, index, cornerstones.size, currentDiff, conditionTexts)
     }
 
     //Allow a mock parser to be set so we can avoid connecting to Gemini for all the tests
@@ -370,7 +372,12 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         } else if (condition.attributeNames().any { it !in caseAttributeNames }) {
             ConditionParsingResult(errorMessage = DOES_NOT_CORRESPOND_TO_A_CONDITION)
         } else if (!condition.holds(case)) {
-            ConditionParsingResult(errorMessage = CONDITION_IS_NOT_TRUE)
+            val message = if (expression.normalizeForComparison() != condition.asText().normalizeForComparison()) {
+                INTERPRETED_CONDITION_IS_NOT_TRUE.format(expression, condition.asText())
+            } else {
+                CONDITION_IS_NOT_TRUE
+            }
+            ConditionParsingResult(errorMessage = message)
         } else {
             //if this a new condition, the following will store it with its user expression, else the existing condition will be returned
             ConditionParsingResult(conditionManager.getOrCreate(condition))
@@ -420,3 +427,6 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
 
     suspend fun responseToUserMessage(message: String): ChatResponse = chatManager.response(message)
 }
+
+internal fun String.normalizeForComparison() =
+    lowercase().replace("\"", "").replace("'", "").replace(Regex("\\s+"), " ").trim()

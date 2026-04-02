@@ -2,6 +2,8 @@
 
 package io.rippledown.interpretation
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.text.AnnotatedString
@@ -9,6 +11,7 @@ import androidx.compose.ui.text.TextLayoutResult
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
+import io.rippledown.utils.waitUntilAsserted
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -166,6 +169,64 @@ class AnnotatedTextViewTest {
 
             //Then
             pointerExit shouldBe true
+        }
+    }
+
+    @Test
+    fun `should use updated handler when handler changes`() = runTest {
+        //Given
+        val bondiComment = "Bondi"
+        val malabarComment = "Malabar"
+        val commentList = listOf(bondiComment, malabarComment)
+        var offsetFromFirstHandler = -1
+        var offsetFromSecondHandler = -1
+        var textLayoutResult: TextLayoutResult? = null
+
+        val firstHandler = object : AnnotatedTextViewHandler {
+            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
+                textLayoutResult = layoutResult
+            }
+
+            override fun onPointerEnter(characterOffset: Int) {
+                offsetFromFirstHandler = characterOffset
+            }
+
+            override fun onPointerExit() {}
+        }
+        val secondHandler = object : AnnotatedTextViewHandler {
+            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
+                textLayoutResult = layoutResult
+            }
+
+            override fun onPointerEnter(characterOffset: Int) {
+                offsetFromSecondHandler = characterOffset
+            }
+
+            override fun onPointerExit() {}
+        }
+        val handlerState: MutableState<AnnotatedTextViewHandler> = mutableStateOf(firstHandler)
+
+        with(composeTestRule) {
+            setContent {
+                AnnotatedTextView(
+                    text = commentList.unhighlighted(),
+                    handler = handlerState.value
+                )
+            }
+            requireInterpretation(commentList.unhighlighted().text)
+
+            // Hover over first comment - should call first handler
+            movePointerOverComment(bondiComment, textLayoutResult!!)
+            waitUntilAsserted { offsetFromFirstHandler shouldBe 0 }
+            offsetFromSecondHandler shouldBe -1
+
+            // Swap to the second handler
+            runOnIdle { handlerState.value = secondHandler }
+            waitForIdle()
+
+            // Move pointer to second comment - should call second handler, not first
+            movePointerOverComment(malabarComment, textLayoutResult!!)
+            waitUntilAsserted { offsetFromSecondHandler shouldBe "$bondiComment ".length }
         }
     }
 }

@@ -9,15 +9,14 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.*
 import io.rippledown.chat.ReasonTransformation
+import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
 import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
+import io.rippledown.constants.rule.INTERPRETED_CONDITION_IS_NOT_TRUE
 import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.model.*
 import io.rippledown.model.condition.*
-import io.rippledown.model.condition.episodic.predicate.Contains
-import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals
-import io.rippledown.model.condition.episodic.predicate.High
-import io.rippledown.model.condition.episodic.predicate.Is
+import io.rippledown.model.condition.episodic.predicate.*
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Removal
@@ -729,7 +728,7 @@ class KBTest {
         }
         val condition = lessThanOrEqualTo(null, glucose(), 0.5) //false for the cornerstone
         val updateRequest = UpdateCornerstoneRequest(currentCCStatus, RuleConditionList(listOf(condition)))
-        kb.updateCornerstone(updateRequest) shouldBe CornerstoneStatus()
+        kb.updateCornerstone(updateRequest) shouldBe CornerstoneStatus(ruleConditions = listOf(condition.asText()))
     }
 
     @Test
@@ -745,7 +744,7 @@ class KBTest {
         }
         val condition = lessThanOrEqualTo(null, glucose(), 1.0) //true for the cornerstone
         val updateRequest = UpdateCornerstoneRequest(currentCCStatus, RuleConditionList(listOf(condition)))
-        kb.updateCornerstone(updateRequest) shouldBe currentCCStatus
+        kb.updateCornerstone(updateRequest) shouldBe currentCCStatus.copy(ruleConditions = listOf(condition.asText()))
     }
 
     @Test
@@ -764,7 +763,7 @@ class KBTest {
         }
         val condition = greaterThanOrEqualTo(null, glucose(), 1.5) //false for the current cornerstone
         val updateRequest = UpdateCornerstoneRequest(currentCCStatus, RuleConditionList(listOf(condition)))
-        val expected = CornerstoneStatus(vcc2, 0, 2)
+        val expected = CornerstoneStatus(vcc2, 0, 2, ruleConditions = listOf(condition.asText()))
         kb.updateCornerstone(updateRequest) shouldBe expected
     }
 
@@ -783,7 +782,7 @@ class KBTest {
         }
         val condition = lessThanOrEqualTo(null, glucose(), 2.5) //true for the current cornerstone and cc2
         val updateRequest = UpdateCornerstoneRequest(currentCCStatus, RuleConditionList(listOf(condition)))
-        val expected = CornerstoneStatus(vcc1, 0, 2)
+        val expected = CornerstoneStatus(vcc1, 0, 2, ruleConditions = listOf(condition.asText()))
         kb.updateCornerstone(updateRequest) shouldBe expected
     }
 
@@ -806,7 +805,7 @@ class KBTest {
         }
         val condition = lessThanOrEqualTo(null, glucose(), 2.5) //true for cc1 and the current cornerstone cc2
         var updateRequest = UpdateCornerstoneRequest(originalCCStatus, RuleConditionList(listOf(condition)))
-        val expected = CornerstoneStatus(vcc2, 1, 2)
+        val expected = CornerstoneStatus(vcc2, 1, 2, ruleConditions = listOf(condition.asText()))
         kb.updateCornerstone(updateRequest) shouldBe expected
         kb.cornerstoneStatus(vcc2) shouldBe expected
 
@@ -836,7 +835,7 @@ class KBTest {
         val condition =
             lessThanOrEqualTo(null, glucose(), 2.5) //true for cc1 and the current cornerstone. false for cc3
         val updateRequest = UpdateCornerstoneRequest(currentCCStatus, RuleConditionList(listOf(condition)))
-        val expected = CornerstoneStatus(vcc2, 1, 2)
+        val expected = CornerstoneStatus(vcc2, 1, 2, ruleConditions = listOf(condition.asText()))
         kb.updateCornerstone(updateRequest) shouldBe expected
     }
 
@@ -1072,6 +1071,81 @@ class KBTest {
     }
 
     @Test
+    fun `should return interpreted error message when expression differs from condition text and condition is not true`() {
+        //Given
+        val waves = kb.attributeManager.getOrCreate("Waves")
+        val height = "2.1"
+        val sessionCase = createCase("Case", attribute = waves, value = height)
+        val conditionParser = mockk<ConditionParser>()
+        val userExpression = "below"
+        val parsedCondition = EpisodicCondition(null, waves, Low, Current, userExpression)
+        every { conditionParser.parse(any(), any()) } returns parsedCondition
+        kb.setConditionParser(conditionParser)
+
+        kb.startRuleSession(
+            sessionCase,
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
+        )
+
+        //When
+        val result = kb.conditionForExpression(userExpression)
+
+        //Then
+        result.condition shouldBe null
+        result.errorMessage shouldBe INTERPRETED_CONDITION_IS_NOT_TRUE.format(userExpression, parsedCondition.asText())
+    }
+
+    @Test
+    fun `should return standard error message when expression matches condition text and condition is not true`() {
+        //Given
+        val waves = kb.attributeManager.getOrCreate("Waves")
+        val height = "0.5" //less than 1.0
+        val sessionCase = createCase("Case", attribute = waves, value = height)
+        val conditionParser = mockk<ConditionParser>()
+        val userExpression = "Waves ≥ 1.0"
+        val parsedCondition = EpisodicCondition(null, waves, GreaterThanOrEquals(1.0), Current, userExpression)
+        every { conditionParser.parse(any(), any()) } returns parsedCondition
+        kb.setConditionParser(conditionParser)
+
+        kb.startRuleSession(
+            sessionCase,
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
+        )
+
+        //When
+        val result = kb.conditionForExpression(userExpression)
+
+        //Then
+        result.condition shouldBe null
+        result.errorMessage shouldBe CONDITION_IS_NOT_TRUE
+    }
+
+    @Test
+    fun `should return standard error message when expression differs from condition text only by quoted constants`() {
+        //Given
+        val uv = kb.attributeManager.getOrCreate("UV")
+        val sessionCase = createCase("Case", attribute = uv, value = "4.5")
+        val conditionParser = mockk<ConditionParser>()
+        val userExpression = "UV is 5.6"
+        // The parsed condition text would be: UV is "5.6"
+        val parsedCondition = EpisodicCondition(null, uv, Is("5.6"), Current, userExpression)
+        every { conditionParser.parse(any(), any()) } returns parsedCondition
+        kb.setConditionParser(conditionParser)
+
+        kb.startRuleSession(
+            sessionCase,
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
+        )
+
+        //When
+        val result = kb.conditionForExpression(userExpression)
+
+        //Then
+        result.condition shouldBe null
+        result.errorMessage shouldBe CONDITION_IS_NOT_TRUE
+    }
+
+    @Test
     fun `should return null if no condition can be parsed from the user expression`() {
         //Given
         val waves = kb.attributeManager.getOrCreate("Waves")
@@ -1111,6 +1185,7 @@ class KBTest {
                 reason
             )
         } returns ConditionParsingResult(condition)
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
 
         //When
         kb.startConversation(viewableCase)
@@ -1267,6 +1342,45 @@ class KBTest {
 
         //Then
         status.diff shouldBe Addition(comment)
+    }
+
+    @Test
+    fun `cornerstoneStatus should have empty ruleConditions when no conditions have been added and there are no cornerstones`() {
+        val sessionCase = createCase("Case1", value = "1.0")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        val ccStatus = kb.cornerstoneStatus(null)
+        ccStatus.ruleConditions shouldBe emptyList()
+    }
+
+    @Test
+    fun `cornerstoneStatus should have empty ruleConditions when no conditions have been added and there are cornerstones`() {
+        val cc1 = kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
+        kb.viewableCase(cc1)
+        val sessionCase = createCase("Case2", value = "2.0")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        val ccStatus = kb.cornerstoneStatus(null)
+        ccStatus.ruleConditions shouldBe emptyList()
+    }
+
+    @Test
+    fun `cornerstoneStatus should include ruleConditions after conditions have been added and there are no cornerstones`() {
+        val sessionCase = createCase("Case1", value = "1.0")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        val condition = lessThanOrEqualTo(null, glucose(), 1.2)
+        kb.addConditionToCurrentRuleSession(condition)
+        val ccStatus = kb.cornerstoneStatus(null)
+        ccStatus.ruleConditions shouldBe listOf(condition.asText())
+    }
+
+    @Test
+    fun `cornerstoneStatus should include ruleConditions after conditions have been added and there are cornerstones`() {
+        kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
+        val sessionCase = createCase("Case2", value = "2.0")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        val condition = lessThanOrEqualTo(null, glucose(), 2.5) //true for session case, true for cornerstone
+        kb.addConditionToCurrentRuleSession(condition)
+        val ccStatus = kb.cornerstoneStatus(null)
+        ccStatus.ruleConditions shouldBe listOf(condition.asText())
     }
 
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")

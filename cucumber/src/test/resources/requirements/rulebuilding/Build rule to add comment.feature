@@ -40,7 +40,7 @@ Feature: The user can make a rule that adds a comment to the interpretive report
     And I start the client application
     And I should see the case Case1 as the current case
     When I build a rule to add the comment "Go to Bondi."
-    And I build a rule to add another comment "Grow some trees."
+    And I build a rule to add another comment for the same case "Grow some trees."
     Then  the interpretation should be "Go to Bondi. Grow some trees."
     And select the case Case2
     And  the interpretation should be "Go to Bondi. Grow some trees."

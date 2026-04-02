@@ -30,7 +30,12 @@ fun CaseControl(
     )
     {
         if (currentCase != null) {
-            CaseInspection(currentCase, handler)
+            CaseInspection(
+                currentCase,
+                cornerstoneStatus?.diff,
+                cornerstoneStatus?.ruleConditions ?: emptyList(),
+                handler
+            )
         }
         if (ruleInProgress) {
             if (cornerstoneStatus.cornerstoneToReview == null) {

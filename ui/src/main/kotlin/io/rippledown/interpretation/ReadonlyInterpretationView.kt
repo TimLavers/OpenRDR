@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextLayoutResult
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE
 import io.rippledown.model.Conclusion
+import io.rippledown.model.diff.Diff
 import io.rippledown.model.interpretationview.ViewableInterpretation
 
 interface ReadonlyInterpretationViewHandler {
@@ -20,6 +21,8 @@ interface ReadonlyInterpretationViewHandler {
 @Composable
 fun ReadonlyInterpretationView(
     interpretation: ViewableInterpretation,
+    diff: Diff? = null,
+    ruleConditions: List<String> = emptyList(),
     contentDescription: String = INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE,
     modifier: Modifier,
     handler: ReadonlyInterpretationViewHandler
@@ -28,20 +31,25 @@ fun ReadonlyInterpretationView(
     var comments by remember {
         mutableStateOf(interpretation.conclusions().map { it.text })
     }
-    var unstyledText by remember { mutableStateOf(comments.unhighlighted()) }
+    var unstyledText by remember { mutableStateOf(comments.unhighlighted(diff)) }
     var styledText by remember { mutableStateOf(unstyledText) }
     var commentIndex by remember { mutableStateOf(-1) }
+    var isOverDiffText by remember { mutableStateOf(false) }
 
-    LaunchedEffect(interpretation) {
+    LaunchedEffect(interpretation, diff) {
         comments = interpretation.conclusions().map { it.text }
-        unstyledText = comments.unhighlighted()
+        unstyledText = comments.unhighlighted(diff)
         styledText = unstyledText
     }
 
     TooltipArea(
         modifier = modifier.fillMaxWidth(),
         tooltip = {
-            ToolTipForNonEmptyInterpretation(commentIndex, conclusionList, interpretation)
+            if (isOverDiffText && ruleConditions.isNotEmpty()) {
+                ConditionTooltip(ruleConditions)
+            } else {
+                ToolTipForNonEmptyInterpretation(commentIndex, conclusionList, interpretation)
+            }
         },
         content = {
             AnnotatedTextView(
@@ -53,12 +61,19 @@ fun ReadonlyInterpretationView(
                     }
 
                     override fun onPointerEnter(characterOffset: Int) {
-                        commentIndex = comments.commentIndexForOffset(characterOffset)
-                        styledText = comments.highlightItem(commentIndex)
+                        isOverDiffText = unstyledText.spanStyles.any { span ->
+                            characterOffset in span.start until span.end &&
+                                    (span.item.background == DIFF_ADDITION_COLOR || span.item.background == DIFF_REMOVAL_COLOR)
+                        }
+                        if (!isOverDiffText) {
+                            commentIndex = comments.commentIndexForOffset(characterOffset)
+                            styledText = comments.highlightItem(commentIndex, diff)
+                        }
                     }
 
                     override fun onPointerExit() {
                         commentIndex = -1
+                        isOverDiffText = false
                     }
                 }
             )

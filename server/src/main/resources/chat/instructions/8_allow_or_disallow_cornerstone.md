@@ -44,8 +44,14 @@
   cornerstone cases and you MUST repeat Step 1 for each one. Do NOT skip any cornerstone cases.
   Do NOT commit the rule while there are remaining cornerstone cases.
 - Only after ALL cornerstone cases have been reviewed (Total is 0):
-  - If the user has already declined to provide more reasons, you MUST immediately follow the instructions
-    "Completing the change to the report". Do NOT ask for more reasons or call {{GET_SUGGESTED_CONDITIONS}}
-    again — the rule should be committed straight away.
-  - If the user has NOT yet declined to provide more reasons, follow the instructions in
+  - If the user has already declined to provide reasons at any earlier point in the conversation
+    (e.g. they said "no" when presented with suggestions, or said "no" when asked if they want to provide
+    more reasons), you MUST immediately respond with:
+    ```json
+    {
+      "action": "{{COMMIT_RULE}}"
+    }
+    ```
+    Do NOT ask for more reasons. Do NOT call {{GET_SUGGESTED_CONDITIONS}}. Commit immediately.
+  - If the user has NOT yet been asked about reasons or has not yet declined, follow the instructions in
     "Defining the reasons for report change" Step 5 to ask for further reasons.

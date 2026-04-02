@@ -45,7 +45,8 @@ class CornerstoneStatusTest {
                 "cornerstoneToReview": null,
                 "indexOfCornerstoneToReview": -1,
                 "numberOfCornerstones": 0,
-                "diff": null
+                "diff": null,
+                "ruleConditions": []
             }
         """.trimIndent()
     }
@@ -107,6 +108,150 @@ class CornerstoneStatusTest {
 
         //Then
         cornerstoneStatus.diff shouldBe null
+    }
+
+    @Test
+    fun `should default ruleConditions to empty list`() {
+        //Given
+        val cornerstoneStatus = CornerstoneStatus()
+
+        //Then
+        cornerstoneStatus.ruleConditions shouldBe emptyList()
+    }
+
+    @Test
+    fun `should serialize and deserialize with a single rule condition`() {
+        //Given
+        val cornerstoneStatus = CornerstoneStatus(
+            ruleConditions = listOf("Sun is in case")
+        )
+
+        //When
+        val deserialized = serializeDeserialize(cornerstoneStatus)
+
+        //Then
+        deserialized shouldBe cornerstoneStatus
+        deserialized.ruleConditions shouldBe listOf("Sun is in case")
+    }
+
+    @Test
+    fun `should serialize and deserialize with multiple rule conditions`() {
+        //Given
+        val cornerstoneStatus = CornerstoneStatus(
+            ruleConditions = listOf("Sun is in case", "Wave is in case", "UV > 5.0")
+        )
+
+        //When
+        val deserialized = serializeDeserialize(cornerstoneStatus)
+
+        //Then
+        deserialized shouldBe cornerstoneStatus
+        deserialized.ruleConditions shouldBe listOf("Sun is in case", "Wave is in case", "UV > 5.0")
+    }
+
+    @Test
+    fun `should serialize and deserialize with rule conditions and Addition diff`() {
+        //Given
+        val cornerstoneStatus = CornerstoneStatus(
+            diff = Addition("Go to Bondi."),
+            ruleConditions = listOf("Sun is in case", "Wave is in case")
+        )
+
+        //When
+        val deserialized = serializeDeserialize(cornerstoneStatus)
+
+        //Then
+        deserialized shouldBe cornerstoneStatus
+        deserialized.diff shouldBe Addition("Go to Bondi.")
+        deserialized.ruleConditions shouldBe listOf("Sun is in case", "Wave is in case")
+    }
+
+    @Test
+    fun `should serialize and deserialize with rule conditions and Removal diff`() {
+        //Given
+        val cornerstoneStatus = CornerstoneStatus(
+            diff = Removal("Go to Bondi."),
+            ruleConditions = listOf("UV > 5.0")
+        )
+
+        //When
+        val deserialized = serializeDeserialize(cornerstoneStatus)
+
+        //Then
+        deserialized shouldBe cornerstoneStatus
+        deserialized.diff shouldBe Removal("Go to Bondi.")
+        deserialized.ruleConditions shouldBe listOf("UV > 5.0")
+    }
+
+    @Test
+    fun `should serialize and deserialize with rule conditions and Replacement diff`() {
+        //Given
+        val cornerstoneStatus = CornerstoneStatus(
+            diff = Replacement("Go to Bondi.", "Go to Maroubra."),
+            ruleConditions = listOf("Sun is in case", "Wave is in case")
+        )
+
+        //When
+        val deserialized = serializeDeserialize(cornerstoneStatus)
+
+        //Then
+        deserialized shouldBe cornerstoneStatus
+        deserialized.diff shouldBe Replacement("Go to Bondi.", "Go to Maroubra.")
+        deserialized.ruleConditions shouldBe listOf("Sun is in case", "Wave is in case")
+    }
+
+    @Test
+    fun `should serialize and deserialize with rule conditions and a cornerstone case`() {
+        //Given
+        val rdrCase = createCase("Case1")
+        val viewableCase = ViewableCase(rdrCase, caseViewProperties())
+        val cornerstoneStatus = CornerstoneStatus(
+            cornerstoneToReview = viewableCase,
+            indexOfCornerstoneToReview = 0,
+            numberOfCornerstones = 1,
+            diff = Addition("Go to Bondi."),
+            ruleConditions = listOf("Sun is in case", "Wave is in case")
+        )
+
+        //When
+        val deserialized = serializeDeserialize(cornerstoneStatus)
+
+        //Then
+        deserialized shouldBe cornerstoneStatus
+        deserialized.ruleConditions shouldBe listOf("Sun is in case", "Wave is in case")
+    }
+
+    @Test
+    fun checkJsonWithRuleConditions() {
+        val cornerstoneStatus = CornerstoneStatus(
+            diff = Addition("Go to Bondi."),
+            ruleConditions = listOf("Sun is in case", "Wave is in case")
+        )
+
+        cornerstoneStatus.toJsonString() shouldBe """
+            {
+                "cornerstoneToReview": null,
+                "indexOfCornerstoneToReview": -1,
+                "numberOfCornerstones": 0,
+                "diff": {
+                    "type": "io.rippledown.model.diff.Addition",
+                    "addedText": "Go to Bondi."
+                },
+                "ruleConditions": [
+                    "Sun is in case",
+                    "Wave is in case"
+                ]
+            }
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should be thread safe with rule conditions`() {
+        val cornerstoneStatus = CornerstoneStatus(
+            diff = Addition("Go to Bondi."),
+            ruleConditions = listOf("Sun is in case", "Wave is in case")
+        )
+        checkSerializationIsThreadSafe(cornerstoneStatus)
     }
 
     private fun caseViewProperties() = CaseViewProperties(listOf(abc, tsh, xyz))
