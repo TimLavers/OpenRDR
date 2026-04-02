@@ -37,6 +37,5 @@ Feature: While building a rule, hovering over the rule action in the interpretat
     When I provide the following reasons:
       | Sun is in case |
     And the chatbot has asked if I want to provide any more reasons
-    And pause
     Then the condition showing for the comment "Go to Manly." is:
       | Sun is in case |
