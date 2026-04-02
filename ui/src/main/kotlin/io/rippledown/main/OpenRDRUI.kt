@@ -3,7 +3,6 @@ package io.rippledown.main
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.BottomAppBar
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -12,7 +11,6 @@ import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import io.rippledown.appbar.AppBarHandler
 import io.rippledown.appbar.ApplicationBar
@@ -49,7 +47,6 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     var cornerstoneStatus: CornerstoneStatus? by remember { mutableStateOf(null) }
     var casesInfo by remember { mutableStateOf(CasesInfo()) }
     var kbInfo: KBInfo? by remember { mutableStateOf(null) }
-    var rightInformationMessage by remember { mutableStateOf("") }
     val voiceRecognitionService = remember { VoiceRecognitionService(defaultModelPath()) }
     var chatPanelWidth by remember { mutableStateOf(300.dp) }
     var conversationCaseId by remember { mutableStateOf<Long?>(null) }
@@ -178,14 +175,6 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                 }
             })
         },
-        bottomBar = {
-            BottomAppBar(
-                backgroundColor = Color.White,
-            ) {
-                val rightMessage = AnnotatedString(rightInformationMessage)
-                InformationPanel(AnnotatedString(""), rightMessage)
-            }
-        },
     ) { paddingValues ->
         CasePoller(object : CasePollerHandler {
             override var onUpdate: (updated: CasesInfo) -> Unit = {
@@ -203,7 +192,6 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
             Column(modifier = Modifier.padding(paddingValues)) {
                 Row(modifier = Modifier.weight(1f)) {
                     if (!ruleInProgress) {
-                        rightInformationMessage = ""
                         Column {
                             CaseSelectorHeader(casesInfo.caseIds.size)
                             Spacer(modifier = Modifier.height(8.dp))
@@ -221,22 +209,11 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                         currentCase = currentCase,
                         cornerstoneStatus = cornerstoneStatus,
                         handler = object : CaseControlHandler {
-                            override var setRightInfoMessage: (message: String) -> Unit =
-                                { rightInformationMessage = it }
-
                             override fun swapAttributes(moved: Attribute, target: Attribute) {
                                 runBlocking(dispatcher) {
                                     api.moveAttribute(moved.id, target.id)
                                     currentCase = api.getCase(currentCaseId!!)
                                 }
-                            }
-
-                            override fun selectCornerstone(index: Int) = runBlocking(dispatcher) {
-                                cornerstoneStatus = api.selectCornerstone(index)
-                            }
-
-                            override fun exemptCornerstone(index: Int) = runBlocking(dispatcher) {
-                                cornerstoneStatus = api.exemptCornerstone(index)
                             }
                         },
                         modifier = Modifier.weight(1f)

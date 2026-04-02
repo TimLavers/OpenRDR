@@ -228,6 +228,8 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     //TODO allow the user to exempt a cornerstone case other than the first
     override fun exemptCornerstoneCase() = exemptCornerstone(0)
 
+    override fun selectCornerstoneCase(index: Int) = selectCornerstone(index)
+
     fun descriptionOfMostRecentRule(): UndoRuleDescription {
         val record = ruleSessionRecorder.idsOfRulesAddedInMostRecentSession()
             ?: return UndoRuleDescription("There are no rules to undo.", false)
