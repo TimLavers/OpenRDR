@@ -5,7 +5,6 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
-import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.persistence.inmemory.InMemoryKB
@@ -15,6 +14,7 @@ import kotlin.test.Test
 
 class KBExemptCornerstoneTest {
     private lateinit var kb: KB
+    private lateinit var rsm: RuleSessionManager
 
     @BeforeTest
     fun setup() {
@@ -30,12 +30,12 @@ class KBExemptCornerstoneTest {
         val sessionCase = createCase("Case3")
 
         //When
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
         val currentCCStatus = CornerstoneStatus(vcc1, 0, 1)
         withClue("sanity check") {
-            kb.cornerstoneStatus(vcc1) shouldBe currentCCStatus
+            rsm.cornerstoneStatus(vcc1) shouldBe currentCCStatus
         }
-        val ccStatus = kb.exemptCornerstone(0)
+        val ccStatus = rsm.exemptCornerstone(0)
 
         //Then
         ccStatus shouldBe CornerstoneStatus()
@@ -52,13 +52,13 @@ class KBExemptCornerstoneTest {
         val sessionCase = createCase("Session")
 
         //When
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
 
         val currentCCStatus = CornerstoneStatus(vcc1, 0, 3)
         withClue("sanity check") {
-            kb.cornerstoneStatus(vcc1) shouldBe currentCCStatus
+            rsm.cornerstoneStatus(vcc1) shouldBe currentCCStatus
         }
-        val ccStatus = kb.exemptCornerstone(0)
+        val ccStatus = rsm.exemptCornerstone(0)
 
         //Then
         ccStatus shouldBe CornerstoneStatus(vcc2, 0, 2)
@@ -76,13 +76,13 @@ class KBExemptCornerstoneTest {
         val sessionCase = createCase("Session")
 
         //When
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
 
         val currentCCStatus = CornerstoneStatus(vcc3, 2, 3)
         withClue("sanity check") {
-            kb.cornerstoneStatus(vcc3) shouldBe currentCCStatus
+            rsm.cornerstoneStatus(vcc3) shouldBe currentCCStatus
         }
-        val ccStatus = kb.exemptCornerstone(2)
+        val ccStatus = rsm.exemptCornerstone(2)
 
         //Then
         ccStatus shouldBe CornerstoneStatus(vcc2, 1, 2)
@@ -97,5 +97,9 @@ class KBExemptCornerstoneTest {
         }
     }
 
-    private fun createKB(kbInfo: KBInfo) = KB(InMemoryKB(kbInfo))
+    private fun createKB(kbInfo: KBInfo): KB {
+        val newKb = KB(InMemoryKB(kbInfo))
+        rsm = KBSession(newKb).ruleSessionManager
+        return newKb
+    }
 }

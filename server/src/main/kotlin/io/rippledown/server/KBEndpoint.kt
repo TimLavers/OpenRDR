@@ -1,6 +1,6 @@
 package io.rippledown.server
 
-import io.rippledown.kb.KB
+import io.rippledown.kb.KBSession
 import io.rippledown.kb.export.KBExporter
 import io.rippledown.kb.export.util.Zipper
 import io.rippledown.log.lazyLogger
@@ -19,7 +19,8 @@ import io.rippledown.model.rule.*
 import java.io.File
 import kotlin.io.path.createTempDirectory
 
-class KBEndpoint(val kb: KB) {
+class KBEndpoint(val session: KBSession) {
+    val kb get() = session.kb
     val logger = lazyLogger
 
     fun kbInfo(): KBInfo {
@@ -28,6 +29,7 @@ class KBEndpoint(val kb: KB) {
     }
 
     private fun startRuleSessionForDifference(caseId: Long, diff: Diff) {
+        val rsm = session.ruleSessionManager
         when (diff) {
             is Addition -> startRuleSessionToAddConclusion(caseId, kb.conclusionManager.getOrCreate(diff.right()))
             is Removal -> startRuleSessionToRemoveConclusion(caseId, kb.conclusionManager.getOrCreate(diff.left()))
@@ -45,10 +47,10 @@ class KBEndpoint(val kb: KB) {
         kb.setDescription(newDescription)
     }
 
-    fun descriptionOfMostRecentRule() = kb.descriptionOfMostRecentRule()
+    fun descriptionOfMostRecentRule() = session.ruleSessionManager.descriptionOfMostRecentRule()
 
     fun undoLastRule() {
-        kb.undoLastRuleSession()
+        session.ruleSessionManager.undoLastRuleSession()
     }
 
     fun exportKBToZip(): File {
@@ -61,24 +63,24 @@ class KBEndpoint(val kb: KB) {
     }
 
     fun startRuleSessionToAddConclusion(caseId: Long, conclusion: Conclusion) {
-        kb.startRuleSession(case(caseId), ChangeTreeToAddConclusion(conclusion))
+        session.ruleSessionManager.startRuleSession(case(caseId), ChangeTreeToAddConclusion(conclusion))
     }
 
     fun startRuleSessionToRemoveConclusion(caseId: Long, conclusion: Conclusion) {
-        kb.startRuleSession(case(caseId), ChangeTreeToRemoveConclusion(conclusion))
+        session.ruleSessionManager.startRuleSession(case(caseId), ChangeTreeToRemoveConclusion(conclusion))
     }
 
     fun startRuleSessionToReplaceConclusion(caseId: Long, toGo: Conclusion, replacement: Conclusion) {
-        kb.startRuleSession(case(caseId), ChangeTreeToReplaceConclusion(toGo, replacement))
+        session.ruleSessionManager.startRuleSession(case(caseId), ChangeTreeToReplaceConclusion(toGo, replacement))
     }
 
-    fun cancelRuleSession() = kb.cancelRuleSession()
+    fun cancelRuleSession() = session.ruleSessionManager.cancelRuleSession()
 
     fun addConditionToCurrentRuleBuildingSession(condition: Condition) {
-        kb.addConditionToCurrentRuleSession(condition)
+        session.ruleSessionManager.addConditionToCurrentRuleSession(condition)
     }
 
-    fun commitCurrentRuleSession() = kb.commitCurrentRuleSession()
+    fun commitCurrentRuleSession() = session.ruleSessionManager.commitCurrentRuleSession()
 
     fun waitingCasesInfo() = CasesInfo(kb.processedCaseIds(), kb.kbInfo.name)
 
@@ -90,11 +92,11 @@ class KBEndpoint(val kb: KB) {
 
     fun viewableCase(id: Long) = kb.viewableCase(uninterpretedCase(id))
 
-    fun conditionHintsForCase(id: Long): ConditionList = kb.conditionHintsForCase(case(id))
+    fun conditionHintsForCase(id: Long): ConditionList = session.ruleSessionManager.conditionHintsForCase(case(id))
 
-    suspend fun startConversation(caseId: Long): ChatResponse = kb.startConversation(viewableCase(caseId))
+    suspend fun startConversation(caseId: Long): ChatResponse = session.startConversation(viewableCase(caseId))
 
-    suspend fun responseToUserMessage(message: String): ChatResponse = kb.responseToUserMessage(message)
+    suspend fun responseToUserMessage(message: String): ChatResponse = session.responseToUserMessage(message)
 
     fun processCase(externalCase: ExternalCase) = kb.processCase(externalCase)
 
@@ -125,9 +127,9 @@ class KBEndpoint(val kb: KB) {
         logger.info("startRuleSession with data $sessionStartRequest")
         val caseId = sessionStartRequest.caseId
         val diff = sessionStartRequest.diff
-        kb.currentDiff = diff
+        session.ruleSessionManager.currentDiff = diff
         startRuleSessionForDifference(caseId, diff)
-        return kb.cornerstoneStatus(null)
+        return session.ruleSessionManager.cornerstoneStatus(null)
     }
 
     fun commitRuleSession(ruleRequest: RuleRequest): ViewableCase {
@@ -151,14 +153,15 @@ class KBEndpoint(val kb: KB) {
         return case
     }
 
+
     fun uninterpretedCase(id: Long) =
         kb.getProcessedCase(id) ?: throw IllegalArgumentException("Case with id $id not found")
 
-    fun updateCornerstone(request: UpdateCornerstoneRequest) = kb.updateCornerstone(request)
-    fun selectCornerstone(index: Int) = kb.selectCornerstone(index)
-    fun exemptCornerstone(index: Int) = kb.exemptCornerstone(index)
+    fun updateCornerstone(request: UpdateCornerstoneRequest) = session.ruleSessionManager.updateCornerstone(request)
+    fun selectCornerstone(index: Int) = session.ruleSessionManager.selectCornerstone(index)
+    fun exemptCornerstone(index: Int) = session.ruleSessionManager.exemptCornerstone(index)
     fun conditionForExpression(expression: String): ConditionParsingResult =
-        kb.conditionForExpression(expression)
+        session.ruleSessionManager.conditionForExpression(expression)
 
     /**
      * Build a complete rule in one call, without using the UI.
@@ -166,28 +169,33 @@ class KBEndpoint(val kb: KB) {
      */
     fun buildRule(request: BuildRuleRequest) {
         logger.info("buildRule: case='${request.caseName}', diff=${request.diff}, conditions=${request.conditions}")
+        val rsm = session.ruleSessionManager
         val case = kb.getProcessedCaseByName(request.caseName)
         kb.interpret(case)
         val viewableCase = kb.viewableCase(case)
 
         when (val diff = request.diff) {
-            is Addition -> kb.startRuleSessionToAddComment(viewableCase, diff.addedText)
-            is Removal -> kb.startRuleSessionToRemoveComment(viewableCase, diff.removedText)
-            is Replacement -> kb.startRuleSessionToReplaceComment(viewableCase, diff.originalText, diff.replacementText)
+            is Addition -> rsm.startRuleSessionToAddComment(viewableCase, diff.addedText)
+            is Removal -> rsm.startRuleSessionToRemoveComment(viewableCase, diff.removedText)
+            is Replacement -> rsm.startRuleSessionToReplaceComment(
+                viewableCase,
+                diff.originalText,
+                diff.replacementText
+            )
         }
 
         try {
             val parser = ConditionExpressionParser { kb.attributeManager.getOrCreate(it) }
             request.conditions.forEach { expression ->
                 val condition = parser.parse(expression)
-                kb.addConditionToCurrentRuleSession(condition)
+                rsm.addConditionToCurrentRuleSession(condition)
             }
 
-            kb.commitCurrentRuleSession()
+            rsm.commitCurrentRuleSession()
             logger.info("buildRule: completed for case='${request.caseName}'")
         } catch (e: Exception) {
             logger.error("buildRule: failed for case='${request.caseName}': ${e.message}")
-            kb.cancelRuleSession()
+            rsm.cancelRuleSession()
             throw e
         }
     }

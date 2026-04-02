@@ -55,6 +55,9 @@ class KBExporter(destination: File, val kb: KB) : KBExportImport(destination) {
 
         // Rule sessions
         ruleSessionsDirectory.mkdirs()
-        IdentifiedObjectExporter(ruleSessionsDirectory, RuleSessionRecordsSource(kb.ruleSessionHistories())).export()
+        IdentifiedObjectExporter(
+            ruleSessionsDirectory,
+            RuleSessionRecordsSource(kb.ruleSessionRecorder.allRuleSessionHistories())
+        ).export()
     }
 }

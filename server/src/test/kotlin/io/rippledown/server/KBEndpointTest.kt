@@ -10,9 +10,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.CaseTestUtils
-import io.rippledown.kb.ConditionParser
-import io.rippledown.kb.KB
-import io.rippledown.kb.KBManager
+import io.rippledown.kb.*
 import io.rippledown.model.Conclusion
 import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
@@ -38,7 +36,7 @@ internal class KBEndpointTest {
 
     private val kbName = "KBEndpointTest"
     private val persistenceProvider = InMemoryPersistenceProvider()
-    private val kbManager = KBManager(persistenceProvider, mockk())
+    private val kbManager = KBManager(persistenceProvider)
 
     private lateinit var endpoint: KBEndpoint
     private lateinit var conditionParser: ConditionParser
@@ -49,8 +47,9 @@ internal class KBEndpointTest {
         val kbInfo = kbManager.createKB(kbName)
         val kb = (kbManager.openKB(kbInfo.id) as EntityRetrieval.Success<KB>).entity
         conditionParser = mockk()
-        kb.setConditionParser(conditionParser)
-        endpoint = KBEndpoint(kb)
+        val session = KBSession(kb)
+        session.ruleSessionManager.setConditionParser(conditionParser)
+        endpoint = KBEndpoint(session)
 //        FileUtils.cleanDirectory(endpoint.casesDir)
 //        FileUtils.cleanDirectory(endpoint.interpretationsDir)
     }
@@ -71,32 +70,38 @@ internal class KBEndpointTest {
     @Test
     fun descriptionOfMostRecentRuleTest() {
         val undoDescription = UndoRuleDescription("Cool rule!", false)
-        val kb = mockk<KB>(relaxed = true)
-        every { kb.descriptionOfMostRecentRule() } returns undoDescription
-        KBEndpoint(kb).descriptionOfMostRecentRule() shouldBe undoDescription
+        val rsm = mockk<RuleSessionManager>()
+        every { rsm.descriptionOfMostRecentRule() } returns undoDescription
+        val session = mockk<KBSession>()
+        every { session.ruleSessionManager } returns rsm
+        KBEndpoint(session).descriptionOfMostRecentRule() shouldBe undoDescription
     }
 
     @Test
     fun undoLastRuleTest() {
-        val kb = mockk<KB>(relaxed = true)
-        KBEndpoint(kb).undoLastRule()
-        verify { kb.undoLastRuleSession() }
+        val rsm = mockk<RuleSessionManager>()
+        val session = mockk<KBSession>()
+        every { session.ruleSessionManager } returns rsm
+        KBEndpoint(session).undoLastRule()
+        verify { rsm.undoLastRuleSession() }
     }
 
     @Test
-    fun `should delegate parsing a condition to the KB`() {
+    fun `should delegate parsing a condition to the RuleSessionManager`() {
         // Given
-        val kb = mockk<KB>()
+        val rsm = mockk<RuleSessionManager>()
         val condition = mockk<Condition>()
-        every { kb.conditionForExpression(any()) } returns ConditionParsingResult(condition)
-        val endpoint = KBEndpoint(kb)
+        every { rsm.conditionForExpression(any<String>()) } returns ConditionParsingResult(condition)
+        val session = mockk<KBSession>()
+        every { session.ruleSessionManager } returns rsm
+        val endpoint = KBEndpoint(session)
         val userExpression = "TSH is depressed"
 
         // When
         val parsed = endpoint.conditionForExpression(userExpression).condition
 
         // Then
-        verify { kb.conditionForExpression(userExpression) }
+        verify { rsm.conditionForExpression(userExpression) }
         parsed shouldBe condition
     }
 
@@ -112,10 +117,10 @@ internal class KBEndpointTest {
         retrieved.interpretation.conclusions().size shouldBe 0
         // Add a rule.
         val conclusion = endpoint.kb.conclusionManager.getOrCreate("ABC ok.")
-        endpoint.kb.startRuleSession(retrieved, ChangeTreeToAddConclusion(conclusion))
+        endpoint.session.ruleSessionManager.startRuleSession(retrieved, ChangeTreeToAddConclusion(conclusion))
         val abc = retrieved.getAttribute("ABC")
-        endpoint.kb.addConditionToCurrentRuleSession(greaterThanOrEqualTo(null, abc, 5.0))
-        endpoint.kb.commitCurrentRuleSession()
+        endpoint.session.ruleSessionManager.addConditionToCurrentRuleSession(greaterThanOrEqualTo(null, abc, 5.0))
+        endpoint.session.ruleSessionManager.commitCurrentRuleSession()
         val retrievedAgain = endpoint.case(caseId.id!!)
         retrievedAgain.interpretation.conclusions() shouldContainExactly setOf(conclusion)
     }
@@ -139,7 +144,7 @@ internal class KBEndpointTest {
         val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
         val case = endpoint.case(id)
         val hintConditions = endpoint.conditionHintsForCase(id)
-        hintConditions shouldBe endpoint.kb.conditionHintsForCase(case)
+        hintConditions shouldBe endpoint.session.ruleSessionManager.conditionHintsForCase(case)
     }
 
     @Test
@@ -179,10 +184,10 @@ internal class KBEndpointTest {
         retrieved.viewableInterpretation.interpretation.conclusions().size shouldBe 0
         // Add a rule.
         val conclusion = endpoint.kb.conclusionManager.getOrCreate("ABC ok.")
-        endpoint.kb.startRuleSession(retrieved.case, ChangeTreeToAddConclusion(conclusion))
+        endpoint.session.ruleSessionManager.startRuleSession(retrieved.case, ChangeTreeToAddConclusion(conclusion))
         val abc = retrieved.case.getAttribute("ABC")
-        endpoint.kb.addConditionToCurrentRuleSession(greaterThanOrEqualTo(null, abc, 5.0))
-        endpoint.kb.commitCurrentRuleSession()
+        endpoint.session.ruleSessionManager.addConditionToCurrentRuleSession(greaterThanOrEqualTo(null, abc, 5.0))
+        endpoint.session.ruleSessionManager.commitCurrentRuleSession()
         val retrievedAgain = endpoint.viewableCase(id)
         retrievedAgain.viewableInterpretation.interpretation.conclusions() shouldContainExactly setOf(conclusion)
     }
@@ -380,7 +385,7 @@ internal class KBEndpointTest {
 
         //Then
         shouldThrow<IllegalStateException> {
-            endpoint.kb.conflictingCasesInCurrentRuleSession()
+            endpoint.session.ruleSessionManager.conflictingCasesInCurrentRuleSession()
         }.message shouldBe "Rule session not started."
     }
 
@@ -450,7 +455,7 @@ internal class KBEndpointTest {
     }
 
     @Test
-    fun `should set currentDiff on kb when starting a rule session via SessionStartRequest`() {
+    fun `should set currentDiff on ruleSessionManager when starting a rule session via SessionStartRequest`() {
         //Given
         val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
         val diff = Addition("Go to Bondi.")
@@ -460,7 +465,7 @@ internal class KBEndpointTest {
         endpoint.startRuleSession(sessionStartRequest)
 
         //Then
-        endpoint.kb.currentDiff shouldBe diff
+        endpoint.session.ruleSessionManager.currentDiff shouldBe diff
     }
 
     @Test
@@ -477,7 +482,7 @@ internal class KBEndpointTest {
         endpoint.startRuleSession(sessionStartRequest)
 
         //Then
-        endpoint.kb.currentDiff shouldBe diff
+        endpoint.session.ruleSessionManager.currentDiff shouldBe diff
     }
 
     @Test
@@ -497,53 +502,65 @@ internal class KBEndpointTest {
     @Test
     fun `startRuleSessionToAddConclusion should call startRuleSession`() {
         // Given
-        val kb = mockk<KB>(relaxed = true)
+        val kb = mockk<KB>()
+        val rsm = mockk<RuleSessionManager>()
         val case = mockk<RDRCase>()
         val conclusion = mockk<Conclusion>()
         every { kb.getProcessedCase(any()) } returns case
         every { kb.interpret(any()) } returns mockk()
-        val endpoint = KBEndpoint(kb)
+        val session = mockk<KBSession>()
+        every { session.kb } returns kb
+        every { session.ruleSessionManager } returns rsm
+        val endpoint = KBEndpoint(session)
 
         // When
         endpoint.startRuleSessionToAddConclusion(1L, conclusion)
 
         // Then
-        verify { kb.startRuleSession(case, any<ChangeTreeToAddConclusion>()) }
+        verify { rsm.startRuleSession(case, any<ChangeTreeToAddConclusion>()) }
     }
 
     @Test
     fun `startRuleSessionToRemoveConclusion should call startRuleSession`() {
         // Given
-        val kb = mockk<KB>(relaxed = true)
+        val kb = mockk<KB>()
+        val rsm = mockk<RuleSessionManager>()
         val case = mockk<RDRCase>()
         val conclusion = mockk<Conclusion>()
         every { kb.getProcessedCase(any()) } returns case
         every { kb.interpret(any()) } returns mockk()
-        val endpoint = KBEndpoint(kb)
+        val session = mockk<KBSession>()
+        every { session.kb } returns kb
+        every { session.ruleSessionManager } returns rsm
+        val endpoint = KBEndpoint(session)
 
         // When
         endpoint.startRuleSessionToRemoveConclusion(1L, conclusion)
 
         // Then
-        verify { kb.startRuleSession(case, any<ChangeTreeToRemoveConclusion>()) }
+        verify { rsm.startRuleSession(case, any<ChangeTreeToRemoveConclusion>()) }
     }
 
     @Test
     fun `startRuleSessionToReplaceConclusion should call startRuleSession`() {
         // Given
-        val kb = mockk<KB>(relaxed = true)
+        val kb = mockk<KB>()
+        val rsm = mockk<RuleSessionManager>()
         val case = mockk<RDRCase>()
         val toGo = mockk<Conclusion>()
         val replacement = mockk<Conclusion>()
         every { kb.getProcessedCase(any()) } returns case
         every { kb.interpret(any()) } returns mockk()
-        val endpoint = KBEndpoint(kb)
+        val session = mockk<KBSession>()
+        every { session.kb } returns kb
+        every { session.ruleSessionManager } returns rsm
+        val endpoint = KBEndpoint(session)
 
         // When
         endpoint.startRuleSessionToReplaceConclusion(1L, toGo, replacement)
 
         // Then
-        verify { kb.startRuleSession(case, any<ChangeTreeToReplaceConclusion>()) }
+        verify { rsm.startRuleSession(case, any<ChangeTreeToReplaceConclusion>()) }
     }
 
     @Test

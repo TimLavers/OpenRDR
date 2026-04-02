@@ -6,7 +6,6 @@ import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.startWith
-import io.mockk.mockk
 import io.rippledown.model.KBInfo
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.util.EntityRetrieval
@@ -21,7 +20,7 @@ class KBManagerTest {
     @BeforeTest
     fun setup() {
         persistenceProvider = InMemoryPersistenceProvider()
-        kbManager = KBManager(persistenceProvider, mockk())
+        kbManager = KBManager(persistenceProvider)
     }
 
     @Test //KBM-1
@@ -42,7 +41,7 @@ class KBManagerTest {
         retrievedKB.kbInfo shouldBe info
 
         // Rebuild the KBManager.
-        kbManager = KBManager(persistenceProvider, mockk())
+        kbManager = KBManager(persistenceProvider)
         kbManager.all() shouldContain info
         // Check that the kb can be retrieved.
         val retrievedKBAfterRebuild = (kbManager.openKB(info.id) as EntityRetrieval.Success).entity

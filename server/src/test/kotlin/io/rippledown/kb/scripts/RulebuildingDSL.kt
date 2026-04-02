@@ -2,6 +2,8 @@ package io.rippledown.kb.scripts
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.kb.KB
+import io.rippledown.kb.KBSession
+import io.rippledown.kb.RuleSessionManager
 import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
@@ -26,6 +28,8 @@ fun build(f: BuildTemplate.() -> Unit): BuildTemplate {
 class BuildTemplate {
     private val defaultDate = 1659752689505
     private val kb = KB(InMemoryKB(KBInfo("TestKB")))
+    private val session = KBSession(kb)
+    private val rsm = session.ruleSessionManager
 
     fun cornerstoneCase(name: String, data: String) {
         val caseBuilder = RDRCaseBuilder()
@@ -60,7 +64,7 @@ class BuildTemplate {
     }
 
     fun session(s: SessionTemplate.() -> Unit): SessionTemplate {
-        val template = SessionTemplate(kb)
+        val template = SessionTemplate(kb, rsm)
         template.s()
         return template
     }
@@ -72,11 +76,11 @@ class BuildTemplate {
     }
 
     fun undoLastRuleSession() {
-        kb.undoLastRuleSession()
+        rsm.undoLastRuleSession()
     }
 }
 
-class SessionTemplate( val kb: KB) {
+class SessionTemplate(val kb: KB, val rsm: RuleSessionManager) {
     lateinit var case: RDRCase
 
     fun selectCase(name: String) {
@@ -91,16 +95,16 @@ class SessionTemplate( val kb: KB) {
     fun condition(c: String) {
         val textAttribute = kb.attributeManager.getOrCreate(text)
         val condition = containsText(null, textAttribute, c)
-        kb.addConditionToCurrentRuleSession(condition)
+        rsm.addConditionToCurrentRuleSession(condition)
     }
 
     fun condition(i: Int) {
         val numberAttribute = kb.attributeManager.getOrCreate(value)
-        kb.addConditionToCurrentRuleSession(greaterThanOrEqualTo(attribute = numberAttribute, d = i.toDouble()))
+        rsm.addConditionToCurrentRuleSession(greaterThanOrEqualTo(attribute = numberAttribute, d = i.toDouble()))
     }
 
     fun requireCornerstones(vararg expectedCornerstones: String) {
-        kb.conflictingCasesInCurrentRuleSession().map { it.name }.toSet() shouldBe expectedCornerstones.toSet()
+        rsm.conflictingCasesInCurrentRuleSession().map { it.name }.toSet() shouldBe expectedCornerstones.toSet()
     }
 
     operator fun String.unaryPlus() {
@@ -109,7 +113,7 @@ class SessionTemplate( val kb: KB) {
 
     private fun addConclusion(conclusion: String) {
         val action = ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate(conclusion))
-        kb.startRuleSession(case, action)
+        rsm.startRuleSession(case, action)
     }
 
     operator fun String.unaryMinus() {
@@ -118,15 +122,15 @@ class SessionTemplate( val kb: KB) {
 
     private fun removeConclusion(conclusion: String) {
         val action = ChangeTreeToRemoveConclusion(kb.conclusionManager.getOrCreate(conclusion))
-        kb.startRuleSession(case, action)
+        rsm.startRuleSession(case, action)
     }
 
     private fun replaceConclusion(conclusion: String, replacement: String) {
         val action = ChangeTreeToReplaceConclusion(kb.conclusionManager.getOrCreate(conclusion), kb.conclusionManager.getOrCreate(replacement))
-        kb.startRuleSession(case, action)
+        rsm.startRuleSession(case, action)
     }
 
     fun commit() {
-        kb.commitCurrentRuleSession()
+        rsm.commitCurrentRuleSession()
     }
 }

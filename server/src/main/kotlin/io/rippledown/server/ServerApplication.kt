@@ -3,6 +3,7 @@ package io.rippledown.server
 import io.rippledown.constants.server.DEFAULT_PROJECT_NAME
 import io.rippledown.kb.KB
 import io.rippledown.kb.KBManager
+import io.rippledown.kb.KBSession
 import io.rippledown.kb.export.KBImporter
 import io.rippledown.kb.export.util.Unzipper
 import io.rippledown.kb.sample.loadSampleKB
@@ -23,7 +24,7 @@ class ServerApplication(
     private val logger = lazyLogger
 
     //    val kbDataDir = File("data").apply { mkdirs() }
-    private val kbManager = KBManager(persistenceProvider, webSocketManager)
+    private val kbManager = KBManager(persistenceProvider)
     private val idToKBEndpoint = mutableMapOf<String, KBEndpoint>()
 
     init {
@@ -94,7 +95,7 @@ class ServerApplication(
         return kb.kbInfo
     }
 
-    private fun kbEndpoint(kb: KB) = KBEndpoint(kb)
+    private fun kbEndpoint(kb: KB) = KBEndpoint(KBSession(kb, webSocketManager))
 
     private fun loadKnownKB(kbInfo: KBInfo) {
         val kb = (kbManager.openKB(kbInfo.id) as EntityRetrieval.Success<KB>).entity
