@@ -8,6 +8,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.rippledown.chat.ConversationService
 import io.rippledown.constants.chat.*
+import io.rippledown.kb.chat.ChatManager.Companion.AI_UNAVAILABLE_MESSAGE
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_CONVERSATION_RESPONSE
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE
 import io.rippledown.model.RDRCase
@@ -47,6 +48,7 @@ class ChatManagerTest {
         loggerField.isAccessible = true
         loggerField.set(chatManager, logger)
         every { logger.isInfoEnabled } returns true
+        every { logger.isErrorEnabled } returns true
     }
 
     @Test
@@ -490,6 +492,34 @@ class ChatManagerTest {
 
         // Then
         result shouldBe input
+    }
+
+    @Test
+    fun `should return unavailable message when startConversation throws`() = runTest {
+        // Given
+        val exception = RuntimeException("429 Resource exhausted")
+        coEvery { conversationService.startConversation() } throws exception
+
+        // When
+        val response = chatManager.startConversation(viewableCase)
+
+        // Then
+        response shouldBe ChatResponse(AI_UNAVAILABLE_MESSAGE)
+        coVerify { logger.error("Failed to start conversation", exception) }
+    }
+
+    @Test
+    fun `should return unavailable message when response throws`() = runTest {
+        // Given
+        val exception = RuntimeException("429 Resource exhausted")
+        coEvery { conversationService.response(any()) } throws exception
+
+        // When
+        val response = chatManager.response("hello")
+
+        // Then
+        response shouldBe ChatResponse(AI_UNAVAILABLE_MESSAGE)
+        coVerify { logger.error("Failed to send message: hello", exception) }
     }
 
     @Test
