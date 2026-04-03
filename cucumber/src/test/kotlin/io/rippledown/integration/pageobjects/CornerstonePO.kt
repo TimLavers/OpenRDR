@@ -3,6 +3,7 @@ package io.rippledown.integration.pageobjects
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.constants.cornerstone.CORNERSTONE_CASE_NAME_ID
+import io.rippledown.constants.cornerstone.CORNERSTONE_ID
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
@@ -29,6 +30,13 @@ class CornerstonePO(private val contextProvider: () -> AccessibleContext) {
     fun requireCornerstoneCaseNotToBeShowing(ccName: String) {
         waitUntilAsserted {
             contextProvider().find(CORNERSTONE_CASE_NAME_ID)?.accessibleName shouldNotBe ccName
+        }
+    }
+
+    fun requireCornerstoneLabel(expectedLabel: String) {
+        await().atMost(Duration.ofSeconds(10)).untilAsserted {
+            val label = execute<String> { contextProvider().find(CORNERSTONE_ID)?.accessibleName }
+            label shouldBe expectedLabel
         }
     }
 }

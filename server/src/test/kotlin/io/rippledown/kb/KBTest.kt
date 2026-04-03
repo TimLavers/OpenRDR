@@ -134,6 +134,86 @@ class KBTest {
     }
 
     @Test
+    fun `cornerstoneStatus should return the correct index after selectCornerstone`() {
+        //Given
+        kb.addCornerstoneCase(createCase("Case1"))
+        val cc2 = kb.addCornerstoneCase(createCase("Case2"))
+        kb.addCornerstoneCase(createCase("Case3"))
+        val vcc2 = kb.viewableCase(cc2)
+        val sessionCase = createCase("Session")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+
+        //When
+        kb.selectCornerstone(1)
+        val status = kb.cornerstoneStatus()
+
+        //Then
+        status.cornerstoneToReview shouldBe vcc2
+        status.indexOfCornerstoneToReview shouldBe 1
+        status.numberOfCornerstones shouldBe 3
+    }
+
+    @Test
+    fun `cornerstoneStatus should return index 0 when no selection has been made`() {
+        //Given
+        val cc1 = kb.addCornerstoneCase(createCase("Case1"))
+        kb.addCornerstoneCase(createCase("Case2"))
+        val vcc1 = kb.viewableCase(cc1)
+        val sessionCase = createCase("Session")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+
+        //When
+        val status = kb.cornerstoneStatus()
+
+        //Then
+        status.cornerstoneToReview shouldBe vcc1
+        status.indexOfCornerstoneToReview shouldBe 0
+        status.numberOfCornerstones shouldBe 2
+    }
+
+    @Test
+    fun `cornerstoneStatus should reflect the most recent selectCornerstone call`() {
+        //Given
+        kb.addCornerstoneCase(createCase("Case1"))
+        kb.addCornerstoneCase(createCase("Case2"))
+        val cc3 = kb.addCornerstoneCase(createCase("Case3"))
+        val vcc3 = kb.viewableCase(cc3)
+        val sessionCase = createCase("Session")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+
+        //When
+        kb.selectCornerstone(0)
+        kb.selectCornerstone(2)
+        val status = kb.cornerstoneStatus()
+
+        //Then
+        status.cornerstoneToReview shouldBe vcc3
+        status.indexOfCornerstoneToReview shouldBe 2
+        status.numberOfCornerstones shouldBe 3
+    }
+
+    @Test
+    fun `cornerstoneStatus should return correct index for navigating back after selecting last`() {
+        //Given
+        val cc1 = kb.addCornerstoneCase(createCase("Case1"))
+        kb.addCornerstoneCase(createCase("Case2"))
+        kb.addCornerstoneCase(createCase("Case3"))
+        val vcc1 = kb.viewableCase(cc1)
+        val sessionCase = createCase("Session")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+
+        //When - select last, then select first
+        kb.selectCornerstone(2)
+        kb.selectCornerstone(0)
+        val status = kb.cornerstoneStatus()
+
+        //Then
+        status.cornerstoneToReview shouldBe vcc1
+        status.indexOfCornerstoneToReview shouldBe 0
+        status.numberOfCornerstones shouldBe 3
+    }
+
+    @Test
     fun `should call web socket manager when sending rule session completed`() = runTest {
         //Given
         val sessionCase = createCase("Case1")

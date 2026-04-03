@@ -339,7 +339,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         return CornerstoneStatus(viewable, index, cornerstones.size)
     }
 
-    override fun cornerstoneStatus(): CornerstoneStatus = cornerstoneStatus(null)
+    override fun cornerstoneStatus(): CornerstoneStatus = cornerstoneStatus(selectedCornerstone)
 
     /**
      * @return the CornerstoneStatus for the current session where the specified cornerstone should remain selected if it is still in the list of cornerstones
