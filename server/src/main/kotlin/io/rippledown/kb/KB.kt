@@ -49,6 +49,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     val ruleTree = ruleManager.ruleTree()
     private var ruleSession: RuleBuildingSession? = null
     internal var currentDiff: Diff? = null
+    private var selectedCornerstone: ViewableCase? = null
     private val conditionChatService = ConditionChatService()
 
     private var conditionParser: ConditionParser
@@ -169,7 +170,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     }
 
     override fun sendCornerstoneStatus() {
-        val cornerstoneStatus = cornerstoneStatus(null)
+        val cornerstoneStatus = cornerstoneStatus(selectedCornerstone)
         runBlocking { webSocketManager?.sendStatus(cornerstoneStatus) }
     }
 
@@ -333,7 +334,9 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         // the case with a new interpretation (copy is not deep)
         // to make this thread safe.
         val newCC = caseInstance.copy(interpretation = Interpretation(caseInstance.caseId))
-        return CornerstoneStatus(viewableCase(newCC), index, cornerstones.size)
+        val viewable = viewableCase(newCC)
+        selectedCornerstone = viewable
+        return CornerstoneStatus(viewable, index, cornerstones.size)
     }
 
     override fun cornerstoneStatus(): CornerstoneStatus = cornerstoneStatus(null)

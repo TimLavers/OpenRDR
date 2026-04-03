@@ -59,7 +59,12 @@ fun CornerstoneInspection(case: ViewableCase, index: Int = 0, total: Int = 0) {
         }
         Spacer(modifier = Modifier.height(10.dp))
         CaseTable(case)
-        OutlinedCard(modifier = Modifier.padding(vertical = 10.dp)) {
+        OutlinedCard(
+            modifier = Modifier.padding(vertical = 10.dp),
+            colors = androidx.compose.material3.CardDefaults.outlinedCardColors(
+                containerColor = androidx.compose.ui.graphics.Color.White
+            )
+        ) {
             ReadonlyInterpretationView(
                 case.viewableInterpretation,
                 modifier = Modifier.fillMaxWidth(),
