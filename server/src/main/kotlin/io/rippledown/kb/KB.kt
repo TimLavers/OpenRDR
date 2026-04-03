@@ -226,8 +226,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         checkRuleSessionHistoryConsistency()
     }
 
-    //TODO allow the user to exempt a cornerstone case other than the first
-    override fun exemptCornerstoneCase() = exemptCornerstone(0)
+    override fun exemptCornerstoneCase() = exemptCornerstone(cornerstoneStatus().indexOfCornerstoneToReview)
 
     override fun selectCornerstoneCase(index: Int) = selectCornerstone(index)
 
@@ -315,10 +314,13 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
 
         val cornerstones = ruleSession!!.cornerstoneCases()
         return if (cornerstones.isEmpty()) {
+            selectedCornerstone = null
             CornerstoneStatus()
         } else {
             val newCC = cornerstones[index.coerceAtMost(cornerstones.size - 1)]
-            cornerstoneStatus(viewableCase(newCC))
+            val viewable = viewableCase(newCC)
+            selectedCornerstone = viewable
+            cornerstoneStatus(viewable)
         }
     }
 

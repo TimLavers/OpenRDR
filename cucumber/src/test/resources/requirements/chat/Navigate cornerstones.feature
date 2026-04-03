@@ -30,7 +30,6 @@ Feature: Navigate cornerstones via chat
     And the cornerstone index of 2 and total of 2 is displayed
     And the chatbot has mentioned the cornerstone case "Case3"
 
-  @single
   Scenario: The user should be able to navigate to the previous cornerstone case via chat
     Given cases are set up as follows:
       | Case name | attribute name | value | comment    | condition    |
