@@ -19,8 +19,6 @@ fun CaseControl(
     handler: CaseControlHandler,
     modifier: Modifier = Modifier
 ) {
-    val ruleInProgress = cornerstoneStatus != null
-
     Row(
         modifier = modifier
             .padding(8.dp)
@@ -34,8 +32,13 @@ fun CaseControl(
                 handler
             )
         }
-        if (ruleInProgress && cornerstoneStatus.cornerstoneToReview != null) {
-            CornerstoneInspection(cornerstoneStatus.cornerstoneToReview!!)
+        val cornerstoneToReview = cornerstoneStatus?.cornerstoneToReview
+        if (cornerstoneToReview != null) {
+            CornerstoneInspection(
+                cornerstoneToReview,
+                index = cornerstoneStatus.indexOfCornerstoneToReview,
+                total = cornerstoneStatus.numberOfCornerstones
+            )
         }
     }
 }

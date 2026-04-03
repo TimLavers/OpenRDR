@@ -23,7 +23,7 @@ import io.rippledown.model.caseview.ViewableCase
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun CornerstoneInspection(case: ViewableCase) {
+fun CornerstoneInspection(case: ViewableCase, index: Int = 0, total: Int = 0) {
     Column(
         verticalArrangement = Arrangement.Top,
         modifier = Modifier
@@ -35,16 +35,6 @@ fun CornerstoneInspection(case: ViewableCase) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = CORNERSTONE_TITLE,
-                style = ItalicGrey,
-                textAlign = TextAlign.Start,
-                modifier = Modifier
-                    .semantics {
-                        contentDescription = CORNERSTONE_ID
-                    }
-            )
-            Spacer(modifier = Modifier.width(20.dp))
-            Text(
                 text = case.name,
                 style = MaterialTheme.typography.subtitle1,
                 fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
@@ -53,6 +43,17 @@ fun CornerstoneInspection(case: ViewableCase) {
                 modifier = Modifier
                     .semantics {
                         contentDescription = CORNERSTONE_CASE_NAME_ID
+                    }
+            )
+            Spacer(modifier = Modifier.width(20.dp))
+            val cornerstoneLabel = if (total > 0) "$CORNERSTONE_TITLE ${index + 1} of $total" else CORNERSTONE_TITLE
+            Text(
+                text = cornerstoneLabel,
+                style = ItalicGrey,
+                textAlign = TextAlign.Start,
+                modifier = Modifier
+                    .semantics {
+                        contentDescription = CORNERSTONE_ID
                     }
             )
         }
