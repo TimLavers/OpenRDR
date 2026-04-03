@@ -1,6 +1,8 @@
 package steps
 
+import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
+import io.cucumber.java.en.When
 import io.rippledown.constants.cornerstone.CORNERSTONE_TITLE
 
 class CornerstoneStepDefs {
@@ -9,6 +11,7 @@ class CornerstoneStepDefs {
     fun theCornerstoneIndexAndTotalIsDisplayed(index: Int, total: Int) {
         cornerstonePO().requireCornerstoneLabel("$CORNERSTONE_TITLE $index of $total")
     }
+
     @Then("the message {string} should be shown")
     fun theMessageStringShouldBeShown(message: String) {
     }
@@ -26,5 +29,35 @@ class CornerstoneStepDefs {
     @Then("there are no cornerstone cases showing")
     fun requireNoCornerstoneCases() {
         cornerstonePO().requireNoCornerstoneCases()
+    }
+
+    @Then("the message indicating no cornerstone cases to review should be shown")
+    fun requireNoCornerstonesToReviewMessage() {
+        cornerstonePO().requireNoCornerstonesToReviewMessage()
+    }
+
+    @And("the cornerstone case indicator shows {int} of {int}")
+    fun theCornerstoneCaseIndicatorShows(index: Int, total: Int) {
+        cornerstonePO().requireCornerstoneIndicator(index, total)
+    }
+
+    @Then("the cornerstone case indicator should show {int} of {int}")
+    fun theCornerstoneCaseIndicatorShouldShow(index: Int, total: Int) {
+        cornerstonePO().requireCornerstoneIndicator(index, total)
+    }
+
+    @When("I click the next cornerstone case button")
+    fun clickNextCornerstoneCaseButton() {
+        cornerstonePO().clickNextButton()
+    }
+
+    @When("I click the previous cornerstone case button")
+    fun clickPreviousCornerstoneCaseButton() {
+        cornerstonePO().clickPreviousButton()
+    }
+
+    @When("I approve the cornerstone case")
+    fun approveTheCornerstoneCase() {
+        cornerstonePO().clickExemptButton()
     }
 }
