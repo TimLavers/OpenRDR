@@ -90,11 +90,9 @@ class KBExemptCornerstoneTest {
     @Test
     fun `exemptCornerstoneCase should exempt the currently selected cornerstone`() {
         //Given
-        val cc1 = kb.addCornerstoneCase(createCase("Case1"))
+        kb.addCornerstoneCase(createCase("Case1"))
         kb.addCornerstoneCase(createCase("Case2"))
-        val cc3 = kb.addCornerstoneCase(createCase("Case3"))
-        val vcc1 = kb.viewableCase(cc1)
-        val vcc3 = kb.viewableCase(cc3)
+        kb.addCornerstoneCase(createCase("Case3"))
         val sessionCase = createCase("Session")
         kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
 
