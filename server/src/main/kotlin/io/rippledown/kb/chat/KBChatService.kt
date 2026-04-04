@@ -127,6 +127,7 @@ object KBChatService {
         "MOVE_ATTRIBUTE" to MOVE_ATTRIBUTE,
         "REMOVE_REASON" to REMOVE_REASON,
         "CANCEL_RULE" to CANCEL_RULE,
+        "SELECT_SUGGESTION" to SELECT_SUGGESTION,
 
     )
 

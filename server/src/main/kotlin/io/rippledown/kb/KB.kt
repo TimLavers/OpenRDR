@@ -278,6 +278,12 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         return ConditionList(suggester.suggestions())
     }
 
+    override fun conditionForSuggestionText(case: RDRCase, conditionText: String): Condition? {
+        return conditionHintsForCase(case).suggestions
+            .firstOrNull { !it.isEditable() && it.asText() == conditionText }
+            ?.initialSuggestion()
+    }
+
     override fun currentRuleSessionConditionTexts(): Set<String> {
         return ruleSession?.conditions?.map { it.asText() }?.toSet() ?: emptySet()
     }
