@@ -6,7 +6,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -31,9 +30,7 @@ fun CornerstoneInspection(case: ViewableCase, index: Int = 0, total: Int = 0) {
             .padding(start = 5.dp)
             .width(500.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+        Row {
             Text(
                 text = case.name,
                 style = MaterialTheme.typography.subtitle1,
@@ -41,6 +38,7 @@ fun CornerstoneInspection(case: ViewableCase, index: Int = 0, total: Int = 0) {
                 color = MaterialTheme.colors.primary,
                 textAlign = TextAlign.Start,
                 modifier = Modifier
+                    .alignByBaseline()
                     .semantics {
                         contentDescription = CORNERSTONE_CASE_NAME_ID
                     }
@@ -52,6 +50,7 @@ fun CornerstoneInspection(case: ViewableCase, index: Int = 0, total: Int = 0) {
                 style = ItalicGrey,
                 textAlign = TextAlign.Start,
                 modifier = Modifier
+                    .alignByBaseline()
                     .semantics {
                         contentDescription = CORNERSTONE_ID
                     }

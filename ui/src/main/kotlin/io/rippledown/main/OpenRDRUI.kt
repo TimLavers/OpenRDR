@@ -192,7 +192,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
             Column(modifier = Modifier.padding(paddingValues)) {
                 Row(modifier = Modifier.weight(1f)) {
                     if (!ruleInProgress) {
-                        Column {
+                        Column(modifier = Modifier.padding(top = 12.dp)) {
                             CaseSelectorHeader(casesInfo.caseIds.size)
                             Spacer(modifier = Modifier.height(8.dp))
                             CaseSelector(casesInfo.caseIds, object : CaseSelectorHandler, Handler by handler {

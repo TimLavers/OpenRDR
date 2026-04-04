@@ -41,21 +41,6 @@ class CornerstoneStepDefs {
         cornerstonePO().requireCornerstoneIndicator(index, total)
     }
 
-    @Then("the cornerstone case indicator should show {int} of {int}")
-    fun theCornerstoneCaseIndicatorShouldShow(index: Int, total: Int) {
-        cornerstonePO().requireCornerstoneIndicator(index, total)
-    }
-
-    @When("I click the next cornerstone case button")
-    fun clickNextCornerstoneCaseButton() {
-        cornerstonePO().clickNextButton()
-    }
-
-    @When("I click the previous cornerstone case button")
-    fun clickPreviousCornerstoneCaseButton() {
-        cornerstonePO().clickPreviousButton()
-    }
-
     @When("I approve the cornerstone case")
     fun approveTheCornerstoneCase() {
         cornerstonePO().clickExemptButton()
