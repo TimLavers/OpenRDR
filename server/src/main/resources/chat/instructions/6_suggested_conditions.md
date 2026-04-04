@@ -32,20 +32,14 @@ for the current case.
 ## Handling the user's selection
 
 - If the user selects a non-editable condition (one that is NOT marked as [editable]) by number, by clicking, or by
-  typing its exact text, output a {{SELECT_SUGGESTION}} action with the condition text in the "comment" field.
-  Do NOT call {{TRANSFORM_REASON}} for non-editable suggestions. For example:
-
-```json
-{
-  "action": "{{SELECT_SUGGESTION}}",
-  "comment": "ABC is not in case"
-}
-```
-
+  typing its exact text, call the {{SELECT_SUGGESTION}} function with the exact condition text.
+  Do NOT call {{TRANSFORM_REASON}} for non-editable suggestions.
 - If a condition is marked as [editable], ask the user what value they would like before calling {{TRANSFORM_REASON}}.
   For example, if the condition is "Waves ≥ 1.5 [editable]", ask the user what value they want instead of 1.5, then
   use the modified condition text as the reason.
 - If the user types a free-text reason instead of selecting a suggestion, call {{TRANSFORM_REASON}} with that text
   directly.
+- Both {{SELECT_SUGGESTION}} and {{TRANSFORM_REASON}} return a reasonId that you must use if the user later asks to
+  remove that condition.
 - After each condition is accepted, you may call {{GET_SUGGESTED_CONDITIONS}} again to refresh the list if the user
   wants to add more conditions.

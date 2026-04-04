@@ -37,6 +37,5 @@ const val SHOW_CORNERSTONES = "ShowCornerstones"
 const val RULE_SESSION_COMPLETED = "RuleSessionCompleted"
 const val REMOVE_REASON = "RemoveReason"
 const val CANCEL_RULE = "CancelRule"
-const val SELECT_SUGGESTION = "SelectSuggestion"
 
 

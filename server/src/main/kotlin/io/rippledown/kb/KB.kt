@@ -3,6 +3,7 @@ package io.rippledown.kb
 import io.ktor.util.logging.*
 import io.rippledown.chat.Conversation
 import io.rippledown.chat.Conversation.Companion.GET_SUGGESTED_CONDITIONS
+import io.rippledown.chat.Conversation.Companion.SELECT_SUGGESTED_CONDITION
 import io.rippledown.chat.Conversation.Companion.TRANSFORM_REASON
 import io.rippledown.chat.FunctionCallHandler
 import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
@@ -181,6 +182,14 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     override fun removeCondition(conditionId: Int): CornerstoneStatus {
         check(ruleSession != null) { "No rule session in progress." }
         val condition = conditionManager.getById(conditionId)
+        ruleSession!!.removeCondition(condition)
+        return cornerstoneStatus(null)
+    }
+
+    override fun removeConditionByText(conditionText: String): CornerstoneStatus {
+        check(ruleSession != null) { "No rule session in progress." }
+        val condition = ruleSession!!.conditions.firstOrNull { it.asText() == conditionText }
+            ?: throw IllegalArgumentException("Condition not found in current rule session: $conditionText")
         ruleSession!!.removeCondition(condition)
         return cornerstoneStatus(null)
     }
@@ -419,9 +428,11 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         }
         val reasonTransformer = createReasonTransformer(viewableCase, this, modelResponder)
         val suggestedConditionsHandler = SuggestedConditionsHandler(viewableCase.case, this)
+        val selectSuggestionHandler = SelectSuggestionHandler(viewableCase.case, this)
         val functionCallHandlers: Map<String, FunctionCallHandler> = mapOf(
             TRANSFORM_REASON to ReasonTransformHandler(reasonTransformer),
-            GET_SUGGESTED_CONDITIONS to suggestedConditionsHandler
+            GET_SUGGESTED_CONDITIONS to suggestedConditionsHandler,
+            SELECT_SUGGESTED_CONDITION to selectSuggestionHandler
         )
         val conversationService = Conversation(
             chatService = chatService,

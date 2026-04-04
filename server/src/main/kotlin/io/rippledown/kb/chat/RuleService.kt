@@ -26,6 +26,7 @@ interface RuleService {
     fun sendCornerstoneStatus()
     fun sendRuleSessionCompleted()
     fun removeCondition(conditionId: Int): CornerstoneStatus
+    fun removeConditionByText(conditionText: String): CornerstoneStatus
     fun cornerstoneStatus(): CornerstoneStatus
     fun conditionHintsForCase(case: RDRCase): ConditionList
     fun conditionForSuggestionText(case: RDRCase, conditionText: String): Condition?
