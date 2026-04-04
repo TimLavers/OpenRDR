@@ -3,9 +3,7 @@ package io.rippledown.casecontrol
 import androidx.compose.ui.test.junit4.createComposeRule
 import io.mockk.mockk
 import io.rippledown.constants.cornerstone.CORNERSTONE_TITLE
-import io.rippledown.cornerstone.requireCornerstoneCase
-import io.rippledown.cornerstone.requireCornerstoneLabel
-import io.rippledown.cornerstone.requireNoCornerstoneLabel
+import io.rippledown.cornerstone.*
 import io.rippledown.interpretation.requireInterpretation
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.utils.createViewableCase
@@ -145,6 +143,61 @@ class CaseControlTest {
                 )
             }
             requireNoCornerstoneLabel()
+        }
+    }
+
+    @Test
+    fun `should show no cornerstones to review message when cornerstone status has no cornerstone to review`() =
+        runTest {
+            val currentCase = createViewableCaseWithInterpretation("case A", 1, listOf())
+            val status = CornerstoneStatus()
+
+            with(composeTestRule) {
+                setContent {
+                    CaseControl(
+                        currentCase = currentCase,
+                        cornerstoneStatus = status,
+                        handler = handler
+                    )
+                }
+                requireNoCornerstonesToReviewMessage()
+            }
+        }
+
+    @Test
+    fun `should not show no cornerstones to review message when cornerstone status is null`() = runTest {
+        val currentCase = createViewableCaseWithInterpretation("case A", 1, listOf())
+
+        with(composeTestRule) {
+            setContent {
+                CaseControl(
+                    currentCase = currentCase,
+                    handler = handler
+                )
+            }
+            requireNoNoCornerstonesToReviewMessage()
+        }
+    }
+
+    @Test
+    fun `should not show no cornerstones to review message when there are cornerstones`() = runTest {
+        val currentCase = createViewableCaseWithInterpretation("case A", 1, listOf())
+        val cornerstoneCase = createViewableCase("cornerstone B", 2)
+        val status = CornerstoneStatus(
+            cornerstoneToReview = cornerstoneCase,
+            indexOfCornerstoneToReview = 0,
+            numberOfCornerstones = 3
+        )
+
+        with(composeTestRule) {
+            setContent {
+                CaseControl(
+                    currentCase = currentCase,
+                    cornerstoneStatus = status,
+                    handler = handler
+                )
+            }
+            requireNoNoCornerstonesToReviewMessage()
         }
     }
 }

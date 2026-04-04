@@ -5,6 +5,8 @@ import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import io.rippledown.constants.cornerstone.CORNERSTONE_CASE_NAME_ID
 import io.rippledown.constants.cornerstone.CORNERSTONE_ID
+import io.rippledown.constants.cornerstone.NO_CORNERSTONES_TO_REVIEW_ID
+import io.rippledown.constants.cornerstone.NO_CORNERSTONES_TO_REVIEW_MSG
 
 fun ComposeTestRule.requireCornerstoneCase(name: String) {
     onNodeWithContentDescription(CORNERSTONE_CASE_NAME_ID)
@@ -22,5 +24,15 @@ fun ComposeTestRule.requireCornerstoneLabel(expected: String) {
 
 fun ComposeTestRule.requireNoCornerstoneLabel() {
     onNodeWithContentDescription(CORNERSTONE_ID)
+        .assertDoesNotExist()
+}
+
+fun ComposeTestRule.requireNoCornerstonesToReviewMessage() {
+    onNodeWithContentDescription(NO_CORNERSTONES_TO_REVIEW_ID)
+        .assertTextEquals(NO_CORNERSTONES_TO_REVIEW_MSG)
+}
+
+fun ComposeTestRule.requireNoNoCornerstonesToReviewMessage() {
+    onNodeWithContentDescription(NO_CORNERSTONES_TO_REVIEW_ID)
         .assertDoesNotExist()
 }
