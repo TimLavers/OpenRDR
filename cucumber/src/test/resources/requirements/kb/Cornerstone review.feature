@@ -7,7 +7,6 @@ Feature: Reviewing cornerstone cases
     When I request that the comment "Go to Bondi." be added
     Then the message indicating no cornerstone cases to review should be shown
 
-  @single
   Scenario: The first cornerstone case should be shown to the user
     Given a list of cases with the following names is stored on the server:
       | Case1 |
@@ -18,7 +17,6 @@ Feature: Reviewing cornerstone cases
     And I select the case Case2
     When I start to build a rule to replace the comment "Go to Bondi." by "Go to Maroubra."
     Then the case Case1 is shown as the cornerstone case
-    And pause
 
   Scenario: The user should be able to switch to the next cornerstone case
     Given case Case1 is provided having data:
