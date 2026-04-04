@@ -87,4 +87,4 @@ class ChatManager(
     }
 }
 
-fun String.sanitizeLlmJson() = replace("\\'", "'")
+fun String.sanitizeLlmJson() = replace("\\'", "'").replace("\\\\n", "\\n")
