@@ -62,7 +62,6 @@ Feature: A sample KB can be created that has the Contact Lense Prescription case
     Then the interpretation should be empty
 
     When I select case Case16
-    And pause for 2 seconds
     Then the interpretation should be empty
 
     When I select case Case17

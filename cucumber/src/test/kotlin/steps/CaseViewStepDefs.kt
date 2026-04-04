@@ -3,14 +3,17 @@ package steps
 import io.cucumber.datatable.DataTable
 import io.cucumber.java.en.Then
 import io.kotest.matchers.shouldBe
+import org.awaitility.Awaitility.await
 import org.awaitility.Awaitility.waitAtMost
 import java.util.concurrent.TimeUnit.SECONDS
 
 class CaseViewStepDefs {
     @Then("I (should )see these episode dates:")
     fun requireEpisodeDates(dataTable: DataTable) {
-        val expectedDates = dataTable.asList()
-        caseViewPO().datesShown() shouldBe expectedDates
+        await().atMost(1, SECONDS).untilAsserted {
+            val expectedDates = dataTable.asList()
+            caseViewPO().datesShown().map { it.replace("\n", " ") } shouldBe expectedDates
+        }
     }
 
     @Then("I (should )see these attributes:")
