@@ -36,7 +36,10 @@ The current report for the case is a list of comments. For the current case, the
 
 - If the user specifies a comment ending in a period, for example, "Go to Bondi.", do not remove the period from the end
   of the comment.
-- Summarize the report change and ask the user to confirm.
+- If the user has already provided the exact comment text in quotes (e.g., Add the comment: "Beach time!"), skip
+  confirmation and proceed directly to Step 4 by outputting the ADD_COMMENT action immediately. DO NOT call any
+  transform functions - the quoted text is the comment to be added, not a reason to be transformed.
+- Otherwise, summarize the report change and ask the user to confirm.
 
 ```json
 {
@@ -47,4 +50,5 @@ The current report for the case is a list of comments. For the current case, the
 
 ## Step 4: Inform the system to start a rule session:
 
-- Once the user confirms the report change, follow the instructions "Starting the rule session".
+- Once the user confirms the report change (or if confirmation was skipped because the comment was quoted),
+  follow the instructions "Starting the rule session".

@@ -11,18 +11,7 @@ Assistant:
 
 User: Add "Bring flippers."
 
-Assistant:
-
-```json
-{
-  "action": "USER_ACTION",
-  "message": "Please {{CONFIRM}} that you want to {{ADD}} the comment: 'Bring flippers.'"
-}
-```
-
-User: Yes.
-
-Assistant:
+Assistant (the user provided the comment in quotes, so skip confirmation):
 
 ```json
 {

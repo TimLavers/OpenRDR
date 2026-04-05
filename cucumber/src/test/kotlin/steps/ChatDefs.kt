@@ -219,7 +219,7 @@ class ChatDefs {
             waitForBotQuestion()
         }
         waitForBotQuestion()
-        addComment(comment)
+        addCommentWithoutConfirmation(comment)
         waitForBotSuggestions()
         decline()
         waitForBotQuestionToAllowReportChangeToCornerstoneThenConfirm()
@@ -231,18 +231,16 @@ class ChatDefs {
     @And("I request that the comment {string} be added")
     fun requestCommentBeAdded(comment: String) {
         waitForBotQuestion()
-        addComment(comment)
+        addCommentWithoutConfirmation(comment)
     }
 
-    fun addComment(comment: String) {
+    fun addCommentWithoutConfirmation(comment: String) {
         enterChatTextAndSend("Add the comment: \"$comment\"")
-        waitForBotRequestForConfirmationAndConfirm()
     }
 
-    fun removeComment(comment: String) {
+    fun removeCommentWithoutConfirmation(comment: String) {
         waitForBotQuestion()
         enterChatTextAndSend("Remove the comment: \"$comment\"")
-        waitForBotRequestForConfirmationAndConfirm()
     }
 
     @And("I request that the comment be removed")
@@ -255,25 +253,22 @@ class ChatDefs {
     @And("I request that the following comment be removed:")
     fun requestCommentBeRemoved(comment: String) {
         waitForBotQuestion()
-        removeSpecificComment(comment)
+        removeSpecificCommentWithoutConfirmation(comment)
     }
 
-    fun removeSpecificComment(comment: String) {
+    fun removeSpecificCommentWithoutConfirmation(comment: String) {
         enterChatTextAndSend("Remove the comment: \"$comment\"")
-        waitForBotRequestForConfirmationAndConfirm()
     }
 
     @And("I request that the comment be replaced by {string}")
-    fun requestTheOnlyCommentBeReplacedBy(comment: String) {
+    fun requestTheOnlyCommentBeReplacedWithoutConfirmationBy(comment: String) {
         waitForBotQuestion()
         enterChatTextAndSend("Replace the comment by '$comment'")
-        waitForBotRequestForConfirmationAndConfirm()
     }
 
-    fun requestCommentBeReplacedBy(comment: String, replacement: String) {
+    fun requestCommentBeReplacedWithoutConfirmationBy(comment: String, replacement: String) {
         waitForBotQuestion()
         enterChatTextAndSend("Replace the '$comment' comment by '$replacement'")
-        waitForBotRequestForConfirmationAndConfirm()
     }
 
     @And("the chatbot has asked if want to allow the report change to the cornerstone case and I confirm")

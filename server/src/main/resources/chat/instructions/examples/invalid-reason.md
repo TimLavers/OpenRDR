@@ -9,20 +9,9 @@ Assistant:
 }
 ```
 
-User: Yes, "Let's go to the beach."
+User: Add the comment: "Let's go to the beach."
 
-Assistant:
-
-```json
-{
-  "action": "USER_ACTION",
-  "message": "Please {{CONFIRM}} that you want to {{ADD}} the comment: 'Let's go to the beach.'"
-}
-```
-
-User: Yes.
-
-Assistant:
+Assistant (the user provided the comment in quotes, so skip confirmation):
 
 ```json
 {
