@@ -9,14 +9,15 @@ Assistant:
 }
 ```
 
-User: Add the comment: "Let's go to the beach."
+User: Add the comment: "Let's surf."
 
-Assistant (the user provided the comment in quotes, so skip confirmation and add the comment directly):
+Assistant (the comment is in double quotes — the apostrophe in "Let's" is part of the comment, not a quote delimiter —
+so skip confirmation and add the comment directly):
 
 ```json
 {
   "action": "{{ADD_COMMENT}}",
-  "comment": "Let's go to the beach."
+  "comment": "Let's surf."
 }
 ```
 

@@ -36,9 +36,11 @@ The current report for the case is a list of comments. For the current case, the
 
 - If the user specifies a comment ending in a period, for example, "Go to Bondi.", do not remove the period from the end
   of the comment.
-- If the user has already provided the exact comment text in quotes (e.g., Add the comment: "Beach time!"), skip
-  confirmation and proceed directly to Step 4 by outputting the ADD_COMMENT action immediately. DO NOT call any
-  transform functions - the quoted text is the comment to be added, not a reason to be transformed.
+- If the user has already provided the comment text in double quotes (e.g., Add the comment: "Beach time!" or
+  Add the comment: "Let's surf"), skip confirmation and proceed directly to Step 4 by outputting the
+  ADD_COMMENT action immediately. Note: apostrophes inside the double quotes (like "Let's") are part of the
+  comment text, not quote delimiters. DO NOT call any transform functions and DO NOT ask for confirmation -
+  the quoted text is the comment to be added, not a reason to be transformed.
 - Otherwise, summarize the report change and ask the user to confirm.
 
 ```json
