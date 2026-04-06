@@ -10,12 +10,12 @@ import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.condition.RuleConditionList
 import io.rippledown.model.condition.lessThanOrEqualTo
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Removal
 import io.rippledown.model.diff.Replacement
-import io.rippledown.model.rule.ChangeTreeToAddConclusion
-import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.model.rule.*
 import io.rippledown.persistence.inmemory.InMemoryKB
 import io.rippledown.server.websocket.WebSocketManager
 import io.rippledown.utils.defaultDate
@@ -559,6 +559,115 @@ class RuleSessionManagerTest {
 
         // Then
         kb.containsCornerstoneCaseWithName("Case1") shouldBe true
+    }
+
+    // --- startRuleSession(SessionStartRequest) ---
+
+    @Test
+    fun `should start a rule session for an Addition via SessionStartRequest`() {
+        // Given
+        val storedCase = kb.addProcessedCase(createCase("Case1"))
+        val diff = Addition("Go.")
+        val request = SessionStartRequest(storedCase.caseId.id!!, diff)
+
+        // When
+        rsm.startRuleSession(request)
+
+        // Then
+        rsm.isRuleSessionActive() shouldBe true
+        rsm.currentDiff shouldBe diff
+    }
+
+    @Test
+    fun `should start a rule session for a Removal via SessionStartRequest`() {
+        // Given
+        val storedCase = kb.addProcessedCase(createCase("Case1"))
+        val conclusion = kb.conclusionManager.getOrCreate("Go.")
+        rsm.startRuleSession(storedCase, ChangeTreeToAddConclusion(conclusion))
+        rsm.commitCurrentRuleSession()
+        kb.interpret(storedCase)
+        val diff = Removal("Go.")
+        val request = SessionStartRequest(storedCase.caseId.id!!, diff)
+
+        // When
+        rsm.startRuleSession(request)
+
+        // Then
+        rsm.isRuleSessionActive() shouldBe true
+        rsm.currentDiff shouldBe diff
+    }
+
+    @Test
+    fun `should start a rule session for a Replacement via SessionStartRequest`() {
+        // Given
+        val storedCase = kb.addProcessedCase(createCase("Case1"))
+        val conclusion = kb.conclusionManager.getOrCreate("Go.")
+        rsm.startRuleSession(storedCase, ChangeTreeToAddConclusion(conclusion))
+        rsm.commitCurrentRuleSession()
+        kb.interpret(storedCase)
+        val diff = Replacement("Go.", "Stop.")
+        val request = SessionStartRequest(storedCase.caseId.id!!, diff)
+
+        // When
+        rsm.startRuleSession(request)
+
+        // Then
+        rsm.isRuleSessionActive() shouldBe true
+        rsm.currentDiff shouldBe diff
+    }
+
+    @Test
+    fun `should throw when starting a rule session via SessionStartRequest with unknown case id`() {
+        // Given
+        val request = SessionStartRequest(9999L, Addition("Go."))
+
+        // When/Then
+        shouldThrow<IllegalArgumentException> {
+            rsm.startRuleSession(request)
+        }.message shouldBe "Case with id 9999 not found"
+    }
+
+    // --- commitRuleSession(RuleRequest) ---
+
+    @Test
+    fun `should commit a rule session via RuleRequest and return the updated case`() {
+        // Given
+        val storedCase = kb.addProcessedCase(createCase("Case1", value = "1.0"))
+        val caseId = storedCase.caseId.id!!
+        kb.interpret(storedCase)
+        val diff = Addition("Go.")
+        rsm.startRuleSession(SessionStartRequest(caseId, diff))
+        val ruleRequest = RuleRequest(caseId)
+
+        // When
+        val result = rsm.commitRuleSession(ruleRequest)
+
+        // Then
+        rsm.isRuleSessionActive() shouldBe false
+        result.viewableInterpretation.interpretation.conclusionTexts() shouldBe setOf("Go.")
+    }
+
+    // --- buildRule(BuildRuleRequest) ---
+
+    @Test
+    fun `should build a rule via BuildRuleRequest`() {
+        // Given
+        val glucose = glucose()
+        val storedCase = kb.addProcessedCase(createCase("Case1", value = "1.0"))
+        kb.interpret(storedCase)
+        val request = BuildRuleRequest(
+            caseName = "Case1",
+            diff = Addition("Glucose ok."),
+            conditions = listOf("Glucose ≤ 1.5")
+        )
+
+        // When
+        rsm.buildRule(request)
+
+        // Then
+        val reinterpreted = kb.addProcessedCase(createCase("Case2", value = "1.0"))
+        kb.interpret(reinterpreted)
+        reinterpreted.interpretation.conclusionTexts() shouldBe setOf("Glucose ok.")
     }
 
     // --- moveAttributeTo ---

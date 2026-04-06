@@ -19,6 +19,7 @@ import io.rippledown.model.diff.Diff
 import io.rippledown.model.diff.Removal
 import io.rippledown.model.diff.Replacement
 import io.rippledown.model.rule.*
+import io.rippledown.server.ConditionExpressionParser
 import io.rippledown.server.websocket.WebSocketManager
 import kotlinx.coroutines.runBlocking
 
@@ -286,5 +287,72 @@ class RuleSessionManager(
         val attributeMoved = kb.attributeManager.all().first { it.name.equals(moved) }
         val attributeDestination = kb.attributeManager.all().first { it.name.equals(destination) }
         kb.caseViewManager.move(attributeMoved, attributeDestination)
+    }
+
+    fun startRuleSession(sessionStartRequest: SessionStartRequest): CornerstoneStatus {
+        logger.info("startRuleSession with data $sessionStartRequest")
+        val caseId = sessionStartRequest.caseId
+        val diff = sessionStartRequest.diff
+        currentDiff = diff
+        val case = kb.getProcessedCase(caseId) ?: throw IllegalArgumentException("Case with id $caseId not found")
+        kb.interpret(case)
+        return when (diff) {
+            is Addition -> startRuleSession(case, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate(diff.right())))
+            is Removal -> startRuleSession(case, ChangeTreeToRemoveConclusion(kb.conclusionManager.getOrCreate(diff.left())))
+            is Replacement -> startRuleSession(
+                case,
+                ChangeTreeToReplaceConclusion(
+                    kb.conclusionManager.getOrCreate(diff.left()),
+                    kb.conclusionManager.getOrCreate(diff.right())
+                )
+            )
+        }
+    }
+
+    fun commitRuleSession(ruleRequest: RuleRequest): ViewableCase {
+        logger.info("Committing rule session for $ruleRequest")
+        val caseId = ruleRequest.caseId
+        val case = kb.viewableCase(
+            kb.getProcessedCase(caseId) ?: throw IllegalArgumentException("Case with id $caseId not found")
+        )
+        ruleRequest.conditions.conditions.forEach { condition ->
+            logger.info("adding condition: $condition")
+            addConditionToCurrentRuleSession(condition)
+        }
+        commitCurrentRuleSession()
+        logger.info("rule session committed")
+        val updatedInterpretation = kb.interpret(case.case)
+        case.viewableInterpretation = kb.interpretationViewManager.viewableInterpretation(updatedInterpretation)
+        logger.info("Updated interpretation after committing the rule: $updatedInterpretation")
+        return case
+    }
+
+    /**
+     * Build a complete rule in one call, without using the UI.
+     * Condition expressions are parsed deterministically from human-readable text.
+     */
+    fun buildRule(request: BuildRuleRequest) {
+        logger.info("buildRule: case='${request.caseName}', diff=${request.diff}, conditions=${request.conditions}")
+        val case = kb.getProcessedCaseByName(request.caseName)
+        kb.interpret(case)
+        val viewableCase = kb.viewableCase(case)
+        when (val diff = request.diff) {
+            is Addition -> startRuleSessionToAddComment(viewableCase, diff.addedText)
+            is Removal -> startRuleSessionToRemoveComment(viewableCase, diff.removedText)
+            is Replacement -> startRuleSessionToReplaceComment(viewableCase, diff.originalText, diff.replacementText)
+        }
+        try {
+            val parser = ConditionExpressionParser { kb.attributeManager.getOrCreate(it) }
+            request.conditions.forEach { expression ->
+                val condition = parser.parse(expression)
+                addConditionToCurrentRuleSession(condition)
+            }
+            commitCurrentRuleSession()
+            logger.info("buildRule: completed for case='${request.caseName}'")
+        } catch (e: Exception) {
+            logger.error("buildRule: failed for case='${request.caseName}': ${e.message}")
+            cancelRuleSession()
+            throw e
+        }
     }
 }
