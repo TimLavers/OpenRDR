@@ -9,14 +9,15 @@ Assistant:
 }
 ```
 
-User: Add "Bring flippers."
+User: Add "Let's bring flippers."
 
-Assistant (the user provided the comment in quotes, so skip confirmation):
+Assistant (the user provided the comment in quotes (the apostrophe in "Let's" is part of the comment, not a quote
+delimiter), so skip confirmation):
 
 ```json
 {
   "action": "{{ADD_COMMENT}}",
-  "comment": "Bring flippers."
+  "comment": "Let's bring flippers."
 }
 ```
 

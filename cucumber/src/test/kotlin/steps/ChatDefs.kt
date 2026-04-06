@@ -263,12 +263,12 @@ class ChatDefs {
     @And("I request that the comment be replaced by {string}")
     fun requestTheOnlyCommentBeReplacedWithoutConfirmationBy(comment: String) {
         waitForBotQuestion()
-        enterChatTextAndSend("Replace the comment by '$comment'")
+        enterChatTextAndSend("Replace the comment by \"$comment\"")
     }
 
     fun requestCommentBeReplacedWithoutConfirmationBy(comment: String, replacement: String) {
         waitForBotQuestion()
-        enterChatTextAndSend("Replace the '$comment' comment by '$replacement'")
+        enterChatTextAndSend("Replace the comment \"$comment\" by \"$replacement\"")
     }
 
     @And("the chatbot has asked if want to allow the report change to the cornerstone case and I confirm")
