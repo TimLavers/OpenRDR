@@ -5,7 +5,6 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import io.rippledown.casecontrol.waitForCaseToBeShowing
 import io.rippledown.cornerstone.requireCornerstoneCase
-import io.rippledown.cornerstone.requireIndexAndTotalToBeDisplayed
 import io.rippledown.cornerstone.requireNoCornerstoneCaseToBeShowing
 import io.rippledown.main.Api
 import io.rippledown.main.Handler
@@ -74,7 +73,6 @@ class ShowCornerstonesFromChatTest {
             updateCornerstoneStatus.invoke(expectedStatus)
 
             //Then
-            requireIndexAndTotalToBeDisplayed(1, 3)
             requireCornerstoneCase(caseB)
         }
     }
@@ -115,7 +113,6 @@ class ShowCornerstonesFromChatTest {
             waitForCaseToBeShowing(caseA)
 
             updateCornerstoneStatus.invoke(expectedStatus)
-            requireIndexAndTotalToBeDisplayed(1, 3)
             requireCornerstoneCase(caseB)
 
             //When

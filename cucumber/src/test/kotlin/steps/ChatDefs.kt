@@ -311,4 +311,21 @@ class ChatDefs {
         enterChatTextAndSend("Remove the $index reason")
     }
 
+    @When("I ask the chatbot to show the next cornerstone case")
+    fun askToShowNextCornerstoneCase() {
+        waitForBotQuestion()
+        enterChatTextAndSend("show me the next cornerstone case")
+    }
+
+    @When("I ask the chatbot to show the previous cornerstone case")
+    fun askToShowPreviousCornerstoneCase() {
+        waitForBotQuestion()
+        enterChatTextAndSend("show me the previous cornerstone case")
+    }
+
+    @Then("the chatbot has mentioned the cornerstone case {string}")
+    fun waitForBotToMentionCornerstoneCase(name: String) {
+        waitForBotText(name)
+    }
+
 }

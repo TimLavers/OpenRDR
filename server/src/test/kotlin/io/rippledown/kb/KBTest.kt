@@ -62,6 +62,158 @@ class KBTest {
     }
 
     @Test
+    fun `sendCornerstoneStatus should send the selected cornerstone after selectCornerstone`() = runTest {
+        //Given
+        kb.addCornerstoneCase(createCase("Case1"))
+        val cc2 = kb.addCornerstoneCase(createCase("Case2"))
+        kb.addCornerstoneCase(createCase("Case3"))
+        val vcc2 = kb.viewableCase(cc2)
+        val sessionCase = createCase("Session")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+
+        //When
+        kb.selectCornerstone(1)
+        kb.sendCornerstoneStatus()
+
+        //Then
+        coVerify { webSocketManager.sendStatus(match { it.cornerstoneToReview == vcc2 && it.indexOfCornerstoneToReview == 1 }) }
+    }
+
+    @Test
+    fun `sendCornerstoneStatus should send the last cornerstone after selecting it`() = runTest {
+        //Given
+        kb.addCornerstoneCase(createCase("Case1"))
+        kb.addCornerstoneCase(createCase("Case2"))
+        val cc3 = kb.addCornerstoneCase(createCase("Case3"))
+        val vcc3 = kb.viewableCase(cc3)
+        val sessionCase = createCase("Session")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+
+        //When
+        kb.selectCornerstone(2)
+        kb.sendCornerstoneStatus()
+
+        //Then
+        coVerify { webSocketManager.sendStatus(match { it.cornerstoneToReview == vcc3 && it.indexOfCornerstoneToReview == 2 }) }
+    }
+
+    @Test
+    fun `sendCornerstoneStatus should send the first cornerstone when no selection has been made`() = runTest {
+        //Given
+        val cc1 = kb.addCornerstoneCase(createCase("Case1"))
+        kb.addCornerstoneCase(createCase("Case2"))
+        kb.addCornerstoneCase(createCase("Case3"))
+        val vcc1 = kb.viewableCase(cc1)
+        val sessionCase = createCase("Session")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+
+        //When
+        kb.sendCornerstoneStatus()
+
+        //Then
+        coVerify { webSocketManager.sendStatus(match { it.cornerstoneToReview == vcc1 && it.indexOfCornerstoneToReview == 0 }) }
+    }
+
+    @Test
+    fun `sendCornerstoneStatus should reflect the most recent selectCornerstone call`() = runTest {
+        //Given
+        kb.addCornerstoneCase(createCase("Case1"))
+        val cc2 = kb.addCornerstoneCase(createCase("Case2"))
+        val cc3 = kb.addCornerstoneCase(createCase("Case3"))
+        val vcc3 = kb.viewableCase(cc3)
+        val sessionCase = createCase("Session")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+
+        //When - select second, then select third
+        kb.selectCornerstone(1)
+        kb.selectCornerstone(2)
+        kb.sendCornerstoneStatus()
+
+        //Then - should send the third (most recent selection)
+        coVerify { webSocketManager.sendStatus(match { it.cornerstoneToReview == vcc3 && it.indexOfCornerstoneToReview == 2 }) }
+    }
+
+    @Test
+    fun `cornerstoneStatus should return the correct index after selectCornerstone`() {
+        //Given
+        kb.addCornerstoneCase(createCase("Case1"))
+        val cc2 = kb.addCornerstoneCase(createCase("Case2"))
+        kb.addCornerstoneCase(createCase("Case3"))
+        val vcc2 = kb.viewableCase(cc2)
+        val sessionCase = createCase("Session")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+
+        //When
+        kb.selectCornerstone(1)
+        val status = kb.cornerstoneStatus()
+
+        //Then
+        status.cornerstoneToReview shouldBe vcc2
+        status.indexOfCornerstoneToReview shouldBe 1
+        status.numberOfCornerstones shouldBe 3
+    }
+
+    @Test
+    fun `cornerstoneStatus should return index 0 when no selection has been made`() {
+        //Given
+        val cc1 = kb.addCornerstoneCase(createCase("Case1"))
+        kb.addCornerstoneCase(createCase("Case2"))
+        val vcc1 = kb.viewableCase(cc1)
+        val sessionCase = createCase("Session")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+
+        //When
+        val status = kb.cornerstoneStatus()
+
+        //Then
+        status.cornerstoneToReview shouldBe vcc1
+        status.indexOfCornerstoneToReview shouldBe 0
+        status.numberOfCornerstones shouldBe 2
+    }
+
+    @Test
+    fun `cornerstoneStatus should reflect the most recent selectCornerstone call`() {
+        //Given
+        kb.addCornerstoneCase(createCase("Case1"))
+        kb.addCornerstoneCase(createCase("Case2"))
+        val cc3 = kb.addCornerstoneCase(createCase("Case3"))
+        val vcc3 = kb.viewableCase(cc3)
+        val sessionCase = createCase("Session")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+
+        //When
+        kb.selectCornerstone(0)
+        kb.selectCornerstone(2)
+        val status = kb.cornerstoneStatus()
+
+        //Then
+        status.cornerstoneToReview shouldBe vcc3
+        status.indexOfCornerstoneToReview shouldBe 2
+        status.numberOfCornerstones shouldBe 3
+    }
+
+    @Test
+    fun `cornerstoneStatus should return correct index for navigating back after selecting last`() {
+        //Given
+        val cc1 = kb.addCornerstoneCase(createCase("Case1"))
+        kb.addCornerstoneCase(createCase("Case2"))
+        kb.addCornerstoneCase(createCase("Case3"))
+        val vcc1 = kb.viewableCase(cc1)
+        val sessionCase = createCase("Session")
+        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+
+        //When - select last, then select first
+        kb.selectCornerstone(2)
+        kb.selectCornerstone(0)
+        val status = kb.cornerstoneStatus()
+
+        //Then
+        status.cornerstoneToReview shouldBe vcc1
+        status.indexOfCornerstoneToReview shouldBe 0
+        status.numberOfCornerstones shouldBe 3
+    }
+
+    @Test
     fun `should call web socket manager when sending rule session completed`() = runTest {
         //Given
         val sessionCase = createCase("Case1")
@@ -690,6 +842,48 @@ class KBTest {
             kb.attributeManager.all(),
             caseWithGlucoseAttribute
         ).suggestions().toSet()
+    }
+
+    @Test
+    fun `should return condition for matching non-editable suggestion text`() {
+        // Given
+        val caseWithGlucoseAttribute = createCase("A", value = "1.0")
+        val hints = kb.conditionHintsForCase(caseWithGlucoseAttribute)
+        val nonEditableSuggestion = hints.suggestions.first { !it.isEditable() }
+        val conditionText = nonEditableSuggestion.asText()
+
+        // When
+        val condition = kb.conditionForSuggestionText(caseWithGlucoseAttribute, conditionText)
+
+        // Then
+        condition shouldNotBe null
+        condition!!.asText() shouldBe conditionText
+    }
+
+    @Test
+    fun `should return null when no suggestion matches the text`() {
+        // Given
+        val caseWithGlucoseAttribute = createCase("A", value = "1.0")
+
+        // When
+        val condition = kb.conditionForSuggestionText(caseWithGlucoseAttribute, "no such condition")
+
+        // Then
+        condition shouldBe null
+    }
+
+    @Test
+    fun `should not return condition for editable suggestion text`() {
+        // Given
+        val caseWithGlucoseAttribute = createCase("A", value = "1.0")
+        val hints = kb.conditionHintsForCase(caseWithGlucoseAttribute)
+        val editableSuggestion = hints.suggestions.firstOrNull { it.isEditable() }
+
+        // When/Then - if there is an editable suggestion, looking it up should return null
+        if (editableSuggestion != null) {
+            val condition = kb.conditionForSuggestionText(caseWithGlucoseAttribute, editableSuggestion.asText())
+            condition shouldBe null
+        }
     }
 
     @Test // Conc-4

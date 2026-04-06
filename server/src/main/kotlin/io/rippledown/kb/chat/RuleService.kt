@@ -16,6 +16,7 @@ interface RuleService {
         replacementComment: String
     ): CornerstoneStatus
     fun exemptCornerstoneCase(): CornerstoneStatus
+    fun selectCornerstoneCase(index: Int): CornerstoneStatus
     fun addConditionToCurrentRuleSession(condition: Condition)
     fun conditionForExpression(case: RDRCase, expression: String): ConditionParsingResult
     fun commitCurrentRuleSession()
@@ -25,8 +26,10 @@ interface RuleService {
     fun sendCornerstoneStatus()
     fun sendRuleSessionCompleted()
     fun removeCondition(conditionId: Int): CornerstoneStatus
+    fun removeConditionByText(conditionText: String): CornerstoneStatus
     fun cornerstoneStatus(): CornerstoneStatus
     fun conditionHintsForCase(case: RDRCase): ConditionList
+    fun conditionForSuggestionText(case: RDRCase, conditionText: String): Condition?
     fun currentRuleSessionConditionTexts(): Set<String>
     fun isRuleSessionActive(): Boolean
 }

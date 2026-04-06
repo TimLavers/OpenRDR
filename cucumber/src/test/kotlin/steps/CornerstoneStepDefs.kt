@@ -1,12 +1,17 @@
 package steps
 
+import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
-import io.rippledown.integration.pause
-import org.awaitility.Awaitility.await
-import java.util.concurrent.TimeUnit
+import io.rippledown.constants.cornerstone.CORNERSTONE_TITLE
 
 class CornerstoneStepDefs {
+
+    @Then("the cornerstone index of {int} and total of {int} is displayed")
+    fun theCornerstoneIndexAndTotalIsDisplayed(index: Int, total: Int) {
+        cornerstonePO().requireCornerstoneLabel("$CORNERSTONE_TITLE $index of $total")
+    }
+
     @Then("the message {string} should be shown")
     fun theMessageStringShouldBeShown(message: String) {
     }
@@ -26,30 +31,18 @@ class CornerstoneStepDefs {
         cornerstonePO().requireNoCornerstoneCases()
     }
 
-    @Then("the cornerstone case indicator (should )show(s) {int} of {int}")
-    fun theCornerstoneCaseIndicatorShouldShowsIntOfInt(index: Int, numberOfCornerstoneCases: Int) {
-        await().atMost(20, TimeUnit.SECONDS).untilAsserted {
-            cornerstonePO().requireIndexAndNumberOfCornerstones(index, numberOfCornerstoneCases)
-        }
-    }
-
-    @When("I click the {word} cornerstone case button")
-    fun IClickTheWordCornerstoneCaseButton(direction: String) {
-        when (direction) {
-            "previous" -> cornerstonePO().selectPreviousCornerstoneCase()
-            "next" -> cornerstonePO().selectNextCornerstoneCase()
-            else -> throw IllegalArgumentException("Unknown direction: $direction")
-        }
-        pause(2_000) //TODO remove this
-    }
-
     @Then("the message indicating no cornerstone cases to review should be shown")
-    fun theMessageIndicatingNoCornerstoneCasesToReviewShouldBeShown() {
-        cornerstonePO().requireMessageForNoCornerstones()
+    fun requireNoCornerstonesToReviewMessage() {
+        cornerstonePO().requireNoCornerstonesToReviewMessage()
+    }
+
+    @And("the cornerstone case indicator shows {int} of {int}")
+    fun theCornerstoneCaseIndicatorShows(index: Int, total: Int) {
+        cornerstonePO().requireCornerstoneIndicator(index, total)
     }
 
     @When("I approve the cornerstone case")
-    fun IApproveTheCornerstoneCase() {
-        cornerstonePO().exemptCornerstoneCase()
+    fun approveTheCornerstoneCase() {
+        cornerstonePO().clickExemptButton()
     }
 }

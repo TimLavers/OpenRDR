@@ -94,7 +94,9 @@ class Conversation(
     companion object {
         const val MAX_EMPTY_RESPONSE_RETRIES = 2
         const val REASON_PARAMETER = "reason"
+        const val CONDITION_TEXT_PARAMETER = "conditionText"
         const val TRANSFORM_REASON = "transformReasonToFormalCondition"
         const val GET_SUGGESTED_CONDITIONS = "getSuggestedConditions"
+        const val SELECT_SUGGESTED_CONDITION = "selectSuggestedCondition"
     }
 }

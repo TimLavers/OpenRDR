@@ -686,8 +686,10 @@ class OpenRDRUITest {
         assertEditKbDescriptionMenuItemIsShowing()
         clickUndoLastRuleMenuItem()
         waitUntilExactlyOneExists(hasText(descriptionText))
+        waitForIdle()
         clickUndoLastRule()
         waitUntilExactlyOneExists(hasText(CONFIRM_UNDO_LAST_RULE_TEXT))
+        waitForIdle()
         assertUndoLastRuleButtonIsNotShowing()
         clickUndoLastRuleConfirmationYesButton()
     }

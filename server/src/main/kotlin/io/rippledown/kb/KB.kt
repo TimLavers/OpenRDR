@@ -3,6 +3,7 @@ package io.rippledown.kb
 import io.ktor.util.logging.*
 import io.rippledown.chat.Conversation
 import io.rippledown.chat.Conversation.Companion.GET_SUGGESTED_CONDITIONS
+import io.rippledown.chat.Conversation.Companion.SELECT_SUGGESTED_CONDITION
 import io.rippledown.chat.Conversation.Companion.TRANSFORM_REASON
 import io.rippledown.chat.FunctionCallHandler
 import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
@@ -49,6 +50,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     val ruleTree = ruleManager.ruleTree()
     private var ruleSession: RuleBuildingSession? = null
     internal var currentDiff: Diff? = null
+    private var selectedCornerstone: ViewableCase? = null
     private val conditionChatService = ConditionChatService()
 
     private var conditionParser: ConditionParser
@@ -169,7 +171,7 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     }
 
     override fun sendCornerstoneStatus() {
-        val cornerstoneStatus = cornerstoneStatus(null)
+        val cornerstoneStatus = cornerstoneStatus(selectedCornerstone)
         runBlocking { webSocketManager?.sendStatus(cornerstoneStatus) }
     }
 
@@ -180,6 +182,14 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     override fun removeCondition(conditionId: Int): CornerstoneStatus {
         check(ruleSession != null) { "No rule session in progress." }
         val condition = conditionManager.getById(conditionId)
+        ruleSession!!.removeCondition(condition)
+        return cornerstoneStatus(null)
+    }
+
+    override fun removeConditionByText(conditionText: String): CornerstoneStatus {
+        check(ruleSession != null) { "No rule session in progress." }
+        val condition = ruleSession!!.conditions.firstOrNull { it.asText() == conditionText }
+            ?: throw IllegalArgumentException("Condition not found in current rule session: $conditionText")
         ruleSession!!.removeCondition(condition)
         return cornerstoneStatus(null)
     }
@@ -225,8 +235,9 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         checkRuleSessionHistoryConsistency()
     }
 
-    //TODO allow the user to exempt a cornerstone case other than the first
-    override fun exemptCornerstoneCase() = exemptCornerstone(0)
+    override fun exemptCornerstoneCase() = exemptCornerstone(cornerstoneStatus().indexOfCornerstoneToReview)
+
+    override fun selectCornerstoneCase(index: Int) = selectCornerstone(index)
 
     fun descriptionOfMostRecentRule(): UndoRuleDescription {
         val record = ruleSessionRecorder.idsOfRulesAddedInMostRecentSession()
@@ -276,6 +287,12 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         return ConditionList(suggester.suggestions())
     }
 
+    override fun conditionForSuggestionText(case: RDRCase, conditionText: String): Condition? {
+        return conditionHintsForCase(case).suggestions
+            .firstOrNull { !it.isEditable() && it.asText() == conditionText }
+            ?.initialSuggestion()
+    }
+
     override fun currentRuleSessionConditionTexts(): Set<String> {
         return ruleSession?.conditions?.map { it.asText() }?.toSet() ?: emptySet()
     }
@@ -312,10 +329,13 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
 
         val cornerstones = ruleSession!!.cornerstoneCases()
         return if (cornerstones.isEmpty()) {
+            selectedCornerstone = null
             CornerstoneStatus()
         } else {
             val newCC = cornerstones[index.coerceAtMost(cornerstones.size - 1)]
-            cornerstoneStatus(viewableCase(newCC))
+            val viewable = viewableCase(newCC)
+            selectedCornerstone = viewable
+            cornerstoneStatus(viewable)
         }
     }
 
@@ -331,10 +351,12 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         // the case with a new interpretation (copy is not deep)
         // to make this thread safe.
         val newCC = caseInstance.copy(interpretation = Interpretation(caseInstance.caseId))
-        return CornerstoneStatus(viewableCase(newCC), index, cornerstones.size)
+        val viewable = viewableCase(newCC)
+        selectedCornerstone = viewable
+        return CornerstoneStatus(viewable, index, cornerstones.size)
     }
 
-    override fun cornerstoneStatus(): CornerstoneStatus = cornerstoneStatus(null)
+    override fun cornerstoneStatus(): CornerstoneStatus = cornerstoneStatus(selectedCornerstone)
 
     /**
      * @return the CornerstoneStatus for the current session where the specified cornerstone should remain selected if it is still in the list of cornerstones
@@ -406,9 +428,11 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         }
         val reasonTransformer = createReasonTransformer(viewableCase, this, modelResponder)
         val suggestedConditionsHandler = SuggestedConditionsHandler(viewableCase.case, this)
+        val selectSuggestionHandler = SelectSuggestionHandler(viewableCase.case, this)
         val functionCallHandlers: Map<String, FunctionCallHandler> = mapOf(
             TRANSFORM_REASON to ReasonTransformHandler(reasonTransformer),
-            GET_SUGGESTED_CONDITIONS to suggestedConditionsHandler
+            GET_SUGGESTED_CONDITIONS to suggestedConditionsHandler,
+            SELECT_SUGGESTED_CONDITION to selectSuggestionHandler
         )
         val conversationService = Conversation(
             chatService = chatService,

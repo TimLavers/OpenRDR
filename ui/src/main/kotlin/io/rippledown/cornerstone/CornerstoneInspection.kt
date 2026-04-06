@@ -6,7 +6,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -23,7 +22,7 @@ import io.rippledown.model.caseview.ViewableCase
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun CornerstoneInspection(case: ViewableCase) {
+fun CornerstoneInspection(case: ViewableCase, index: Int = 0, total: Int = 0) {
     Column(
         verticalArrangement = Arrangement.Top,
         modifier = Modifier
@@ -31,19 +30,7 @@ fun CornerstoneInspection(case: ViewableCase) {
             .padding(start = 5.dp)
             .width(500.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = CORNERSTONE_TITLE,
-                style = ItalicGrey,
-                textAlign = TextAlign.Start,
-                modifier = Modifier
-                    .semantics {
-                        contentDescription = CORNERSTONE_ID
-                    }
-            )
-            Spacer(modifier = Modifier.width(20.dp))
+        Row {
             Text(
                 text = case.name,
                 style = MaterialTheme.typography.subtitle1,
@@ -51,14 +38,32 @@ fun CornerstoneInspection(case: ViewableCase) {
                 color = MaterialTheme.colors.primary,
                 textAlign = TextAlign.Start,
                 modifier = Modifier
+                    .alignByBaseline()
                     .semantics {
                         contentDescription = CORNERSTONE_CASE_NAME_ID
+                    }
+            )
+            Spacer(modifier = Modifier.width(20.dp))
+            val cornerstoneLabel = if (total > 0) "$CORNERSTONE_TITLE ${index + 1} of $total" else CORNERSTONE_TITLE
+            Text(
+                text = cornerstoneLabel,
+                style = ItalicGrey,
+                textAlign = TextAlign.Start,
+                modifier = Modifier
+                    .alignByBaseline()
+                    .semantics {
+                        contentDescription = CORNERSTONE_ID
                     }
             )
         }
         Spacer(modifier = Modifier.height(10.dp))
         CaseTable(case)
-        OutlinedCard(modifier = Modifier.padding(vertical = 10.dp)) {
+        OutlinedCard(
+            modifier = Modifier.padding(vertical = 10.dp),
+            colors = androidx.compose.material3.CardDefaults.outlinedCardColors(
+                containerColor = androidx.compose.ui.graphics.Color.White
+            )
+        ) {
             ReadonlyInterpretationView(
                 case.viewableInterpretation,
                 modifier = Modifier.fillMaxWidth(),

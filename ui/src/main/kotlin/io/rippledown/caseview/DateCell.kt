@@ -47,5 +47,5 @@ fun formatDate(date: Long): String {
     }
     val minutesString = pad(minutesRounded)
     val timePart = "$hoursString:$minutesString"
-    return "$datePart $timePart"
+    return "$datePart\n$timePart"
 }
