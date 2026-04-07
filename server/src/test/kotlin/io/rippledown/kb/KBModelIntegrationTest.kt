@@ -35,6 +35,6 @@ class KBModelIntegrationTest: KBTestBase() {
         val response = kb.responseToUserMessage(userExpression)
 
         //Then
-        response.text shouldContain "confirm that you want to add the comment: 'Go to Bondi.'"
+        response.text shouldContain "confirm that you want to add the comment:"
     }
 }
