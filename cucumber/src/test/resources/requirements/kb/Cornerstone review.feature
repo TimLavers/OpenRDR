@@ -81,26 +81,25 @@ Feature: Reviewing cornerstone cases
       | y | 1 |
     And case Case2 is provided having data:
       | x | 1 |
+      | y | 1 |
     And case Case3 is provided having data:
       | x | 1 |
       | y | 1 |
-    And case Case4 is provided having data:
-      | x | 1 |
     And the following rules have been defined:
       | CASE  | COMMENT ADDED | CONDITION    |
       | Case1 | Comment 1.    | x is in case |
       | Case2 | Comment 2.    | x is in case |
       | Case3 | Comment 3.    | x is in case |
-      | Case4 | Comment 4.    | x is in case |
     And I start the client application
     And I see the case Case1 as the current case
-    And I request that the comment "Comment 5." be added
-    And the chatbot has asked if I want to provide any reasons and I decline
-    When I ask the chatbot to show the next cornerstone case
+    And I request that the comment "Comment 4." be added
+    And the case Case2 is shown as the cornerstone case
+    And the cornerstone index of 1 and total of 2 is displayed
+    And I ask the chatbot to show the next cornerstone case
     And the case Case3 is shown as the cornerstone case
-    And the cornerstone index of 2 and total of 3 is displayed
+    And the cornerstone index of 2 and total of 2 is displayed
     When I add the condition "y is in case"
-    And the cornerstone index of 1 and total of 1 is displayed
+    Then the cornerstone index of 2 and total of 2 is displayed
     And the case Case3 is still shown as the cornerstone case
 
   Scenario: The current cornerstone should remain selected if the user removes a condition
@@ -109,6 +108,7 @@ Feature: Reviewing cornerstone cases
       | y | 1 |
     And case Case2 is provided having data:
       | x | 1 |
+      | y | 1 |
     And case Case3 is provided having data:
       | x | 1 |
       | y | 1 |
@@ -119,20 +119,21 @@ Feature: Reviewing cornerstone cases
       | Case1 | Comment 1.    | x is in case |
       | Case2 | Comment 2.    | x is in case |
       | Case3 | Comment 3.    | x is in case |
-      | Case4 | Comment 4.    | x is in case |
     And I start the client application
     And I see the case Case1 as the current case
-    And I request that the comment "Comment 5." be added
-    And the chatbot has asked if I want to provide any reasons and I decline
+    And I request that the comment "Comment 4." be added
+    And the cornerstone index of 1 and total of 2 is displayed
+    And the case Case2 is shown as the cornerstone case
     And I ask the chatbot to show the next cornerstone case
-    And the cornerstone index of 2 and total of 3 is displayed
+    And the cornerstone index of 2 and total of 2 is displayed
     And the case Case3 is shown as the cornerstone case
+    When the chatbot has asked if want to allow the report change to the cornerstone case and I decline
     And I add the condition "y is in case"
-    And the case Case3 is shown as the cornerstone case
-    And the cornerstone index of 1 and total of 1 is displayed
+    And the cornerstone index of 2 and total of 2 is displayed
+    And the case Case3 is still shown as the cornerstone case
     When I remove the condition "y is in case"
-    Then the cornerstone index of 2 and total of 3 is displayed
-    And the case Case3 is shown as the cornerstone case
+    Then the cornerstone index of 2 and total of 2 is displayed
+    And the case Case3 is still shown as the cornerstone case
 
   Scenario: Ignoring a cornerstone case should remove it from the list of cornerstone cases to review
     Given a list of cases with the following names is stored on the server:

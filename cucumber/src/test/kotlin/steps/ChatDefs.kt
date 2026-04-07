@@ -277,6 +277,12 @@ class ChatDefs {
         allow()
     }
 
+    @And("the chatbot has asked if want to allow the report change to the cornerstone case and I decline")
+    fun waitForBotQuestionToAllowReportChangeToCornerstoneThenDecline() {
+        waitForBotQuestion()
+        decline()
+    }
+
     @And("the chatbot has asked if want to allow the report change to cornerstone case {string} and I confirm")
     fun waitForBotQuestionToAllowReportChangeToCornerstoneThenConfirm(name: String) {
         waitForBotText(name)
