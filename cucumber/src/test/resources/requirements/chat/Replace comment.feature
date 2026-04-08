@@ -9,7 +9,7 @@ Feature: Replace comment
       | Bring flippers.  |
     And I start the client application
     And I see the case Bondi as the current case
-    When Replace the comment "flippers" by "Don't forget sunscreen." with the reasons:
+    When Replace the comment "Bring flippers." by "Don't forget sunscreen." with the reasons:
       | wave height is more than 0.5 |
     Then the report should be "Go to the beach. Don't forget sunscreen."
 

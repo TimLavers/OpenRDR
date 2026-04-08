@@ -118,8 +118,12 @@ class Defs {
 
     @And("I move attribute {word} below attribute {word}")
     fun moveAttributeBelowAttribute(moved: String, target: String) {
-        caseViewPO().dragAttribute(moved, target)
-        Thread.sleep(1000)
+        val originalOrder = caseViewPO().attributeNames()
+        repeat(3) {
+            caseViewPO().dragAttribute(moved, target)
+            Thread.sleep(1000)
+            if (caseViewPO().attributeNames() != originalOrder) return
+        }
     }
 
     @Given("the initial Attribute order is A, B, C")
