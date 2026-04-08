@@ -1,5 +1,7 @@
 package io.rippledown.integration.pageobjects
 
+import io.kotest.assertions.withClue
+import io.kotest.matchers.shouldBe
 import io.rippledown.chat.*
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAll
@@ -61,6 +63,21 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
                 val botRow = contextProvider().find(botMatcher) ?: return@any false
                 terms.any { term -> botRow.find({ ctx -> ctx.foundText(term) }) != null }
             }
+        }
+    }
+
+    fun mostRecentBotRowDoesNotContainTheTerm(term: String) {
+        val numberOfChatMessages = numberOfChatMessages()
+        val found = execute<Boolean> {
+            val indexToCheck = numberOfChatMessages - 1
+            val botMatcher = { context: AccessibleContext ->
+                context.isBotResponseForIndex(indexToCheck)
+            }
+            val botRow = contextProvider().find(botMatcher) ?: return@execute false
+            botRow.find({ ctx -> ctx.foundText(term) }) != null
+        }
+        withClue("did not expect to find the text $term") {
+            found shouldBe false
         }
     }
 

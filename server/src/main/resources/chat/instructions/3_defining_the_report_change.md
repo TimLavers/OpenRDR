@@ -7,8 +7,10 @@ The current report for the case is a list of comments. For the current case, the
 ## Step 1: Ask the user if they want to change the report for the case:
 
 - If there are no comments, ask the user if they want to add a comment.
-- Else, if there is at least one comment, display the comments with an index and ask the user if they want to add,
+- Else, if there is at least one comment, display the comments and ask the user if they want to add,
   remove, or replace a comment.
+- If there is only one comment, display the comment without an index and ask the user if they want to remove or replace
+  it.
 
 ```json
 {
