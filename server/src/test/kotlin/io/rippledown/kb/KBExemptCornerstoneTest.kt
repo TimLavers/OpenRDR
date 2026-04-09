@@ -88,6 +88,79 @@ class KBExemptCornerstoneTest {
         ccStatus shouldBe CornerstoneStatus(vcc2, 1, 2)
     }
 
+    @Test
+    fun `exemptCornerstoneCase should exempt the currently selected cornerstone`() {
+        //Given
+        kb.addCornerstoneCase(createCase("Case1"))
+        kb.addCornerstoneCase(createCase("Case2"))
+        kb.addCornerstoneCase(createCase("Case3"))
+        val sessionCase = createCase("Session")
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+
+        //When - select Case3 (index 2), then exempt via exemptCornerstoneCase
+        rsm.selectCornerstone(2)
+        val ccStatus = rsm.exemptCornerstoneCase()
+
+        //Then - Case3 was exempted, Case1 and Case2 remain, selected should be Case2 (coerced from index 2 to 1)
+        ccStatus.numberOfCornerstones shouldBe 2
+        ccStatus.cornerstoneToReview shouldBe kb.viewableCase(kb.allCornerstoneCases()[1])
+    }
+
+    @Test
+    fun `exemptCornerstoneCase should exempt the first cornerstone when no selection has been made`() {
+        //Given
+        val cc1 = kb.addCornerstoneCase(createCase("Case1"))
+        val cc2 = kb.addCornerstoneCase(createCase("Case2"))
+        val vcc2 = kb.viewableCase(cc2)
+        val sessionCase = createCase("Session")
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+
+        //When - no selectCornerstone call, so default is index 0
+        val ccStatus = rsm.exemptCornerstoneCase()
+
+        //Then - Case1 (index 0) was exempted, only Case2 remains
+        ccStatus.numberOfCornerstones shouldBe 1
+        ccStatus.cornerstoneToReview shouldBe vcc2
+        ccStatus.indexOfCornerstoneToReview shouldBe 0
+    }
+
+    @Test
+    fun `exemptCornerstoneCase should return empty status when last remaining cornerstone is exempted`() {
+        //Given
+        kb.addCornerstoneCase(createCase("Case1"))
+        val cc2 = kb.addCornerstoneCase(createCase("Case2"))
+        val sessionCase = createCase("Session")
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+
+        //When - select Case2 (index 1), exempt it, then exempt the remaining Case1
+        rsm.selectCornerstone(1)
+        rsm.exemptCornerstoneCase()
+        // Now only Case1 remains at index 0, and selectedCornerstone was updated
+        val ccStatus = rsm.exemptCornerstoneCase()
+
+        //Then
+        ccStatus shouldBe CornerstoneStatus()
+    }
+
+    @Test
+    fun `cornerstoneStatus should reflect updated selection after exemptCornerstoneCase`() {
+        //Given
+        val cc1 = kb.addCornerstoneCase(createCase("Case1"))
+        kb.addCornerstoneCase(createCase("Case2"))
+        kb.addCornerstoneCase(createCase("Case3"))
+        val sessionCase = createCase("Session")
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+
+        //When - select Case3 (index 2), exempt it
+        rsm.selectCornerstone(2)
+        rsm.exemptCornerstoneCase()
+        val status = rsm.cornerstoneStatus()
+
+        //Then - Case3 exempted, Case1 and Case2 remain, selected should be Case2 (coerced index)
+        status.numberOfCornerstones shouldBe 2
+        status.indexOfCornerstoneToReview shouldBe 1
+    }
+
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")
 
     private fun createCase(caseName: String, glucoseValue: String = "0.667", id: Long? = null): RDRCase {

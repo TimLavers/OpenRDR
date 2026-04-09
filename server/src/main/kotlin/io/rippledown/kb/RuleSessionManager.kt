@@ -31,6 +31,7 @@ class RuleSessionManager(
 
     private var ruleSession: RuleBuildingSession? = null
     internal var currentDiff: Diff? = null
+    private var selectedCornerstone: ViewableCase? = null
     private val conditionChatService = ConditionChatService()
     private var conditionParser: ConditionParser
 
@@ -81,7 +82,7 @@ class RuleSessionManager(
     }
 
     override fun sendCornerstoneStatus() {
-        val cornerstoneStatus = cornerstoneStatus(null)
+        val cornerstoneStatus = cornerstoneStatus(selectedCornerstone)
         runBlocking { webSocketManager?.sendStatus(cornerstoneStatus) }
     }
 
@@ -205,9 +206,12 @@ class RuleSessionManager(
 
         val cornerstones = ruleSession!!.cornerstoneCases()
         return if (cornerstones.isEmpty()) {
+            selectedCornerstone = null
             CornerstoneStatus()
         } else {
             val newCC = cornerstones[index.coerceAtMost(cornerstones.size - 1)]
+            val viewable = viewableCase(newCC)
+            selectedCornerstone = viewable
             cornerstoneStatus(kb.viewableCase(newCC))
         }
     }
@@ -224,10 +228,12 @@ class RuleSessionManager(
         // the case with a new interpretation (copy is not deep)
         // to make this thread safe.
         val newCC = caseInstance.copy(interpretation = Interpretation(caseInstance.caseId))
-        return CornerstoneStatus(kb.viewableCase(newCC), index, cornerstones.size)
+        val viewable = viewableCase(newCC)
+        selectedCornerstone = viewable
+        return CornerstoneStatus(viewable, index, cornerstones.size)
     }
 
-    override fun cornerstoneStatus(): CornerstoneStatus = cornerstoneStatus(null)
+    override fun cornerstoneStatus(): CornerstoneStatus = cornerstoneStatus(selectedCornerstone)
 
     /**
      * @return the CornerstoneStatus for the current session where the specified cornerstone should remain selected if it is still in the list of cornerstones
@@ -282,6 +288,10 @@ class RuleSessionManager(
     }
 
     fun conditionForExpression(expression: String) = conditionForExpression(ruleSession!!.case, expression)
+
+    private fun viewableCase(case: RDRCase): ViewableCase {
+        return kb.viewableCase(case)
+    }
 
     override fun moveAttributeTo(moved: String, destination: String) {
         val attributeMoved = kb.attributeManager.all().first { it.name.equals(moved) }
