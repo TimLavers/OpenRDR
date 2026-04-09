@@ -100,6 +100,8 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
 
     fun allCornerstoneCases() = caseManager.all(CaseType.Cornerstone)
 
+    fun cornerstoneCaseIds() = caseManager.ids(CaseType.Cornerstone)
+
     fun processedCaseIds() = caseManager.ids(CaseType.Processed)
 
     fun allProcessedCases() = caseManager.all(CaseType.Processed)

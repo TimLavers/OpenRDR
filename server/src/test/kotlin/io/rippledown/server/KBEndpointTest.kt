@@ -328,6 +328,21 @@ internal class KBEndpointTest {
     }
 
     @Test
+    fun `waitingCasesInfo should include cornerstone cases`() {
+        val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
+        endpoint.waitingCasesInfo().cornerstoneCaseIds shouldHaveSize 0
+
+        val conclusion = endpoint.kb.conclusionManager.getOrCreate("Whatever")
+        endpoint.startRuleSessionToAddConclusion(id, conclusion)
+        endpoint.commitCurrentRuleSession()
+
+        val info = endpoint.waitingCasesInfo()
+        info.cornerstoneCaseIds shouldHaveSize 1
+        info.cornerstoneCaseIds[0].name shouldBe "Case1"
+        info.count shouldBe info.caseIds.size + info.cornerstoneCaseIds.size
+    }
+
+    @Test
     fun kbName() {
         endpoint.kbInfo().name shouldBe kbName
     }
@@ -500,7 +515,7 @@ internal class KBEndpointTest {
         val kb = mockk<KB>(relaxed = true)
         val case = mockk<RDRCase>()
         val conclusion = mockk<Conclusion>()
-        every { kb.getProcessedCase(any()) } returns case
+        every { kb.getCase(any()) } returns case
         every { kb.interpret(any()) } returns mockk()
         val endpoint = KBEndpoint(kb)
 
@@ -517,7 +532,7 @@ internal class KBEndpointTest {
         val kb = mockk<KB>(relaxed = true)
         val case = mockk<RDRCase>()
         val conclusion = mockk<Conclusion>()
-        every { kb.getProcessedCase(any()) } returns case
+        every { kb.getCase(any()) } returns case
         every { kb.interpret(any()) } returns mockk()
         val endpoint = KBEndpoint(kb)
 
@@ -535,7 +550,7 @@ internal class KBEndpointTest {
         val case = mockk<RDRCase>()
         val toGo = mockk<Conclusion>()
         val replacement = mockk<Conclusion>()
-        every { kb.getProcessedCase(any()) } returns case
+        every { kb.getCase(any()) } returns case
         every { kb.interpret(any()) } returns mockk()
         val endpoint = KBEndpoint(kb)
 

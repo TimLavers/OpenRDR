@@ -210,6 +210,16 @@ class Defs {
         caseCountPO().requireCaseCountToBeHidden()
     }
 
+    @Then("the cornerstone case list should contain:")
+    fun theCornerstoneCaseListShouldContain(dataTable: DataTable) {
+        caseListPO().requireCornerstoneCaseNamesToBe(dataTable.asList())
+    }
+
+    @Then("the processed case list should contain:")
+    fun theProcessedCaseListShouldContain(dataTable: DataTable) {
+        caseListPO().requireProcessedCaseNamesToBe(dataTable.asList())
+    }
+
     @Then("I (should )see the case {word} as the current case")
     fun IShouldSeeTheCaseWordAsTheCurrentCase(caseName: String) {
         caseViewPO().waitForNameToShow(caseName)
@@ -284,6 +294,22 @@ class Defs {
                 val conditionText = row[4]
                 labProxy().provideCase(caseName, mapOf(attributeName to attributeValue))
                 if (comment != null) createRuleToAddComment(caseName, comment, conditionText)
+            }
+    }
+
+    @Given("cornerstone cases are set up as follows:")
+    fun cornerstoneCasesAreSetUpAsFollows(dataTable: DataTable) {
+        dataTable.cells()
+            .drop(1) // Drop the header row
+            .forEach { row ->
+                val caseName = row[0]
+                val attributeName = row[1]
+                val attributeValue = row[2]
+                val comment = row[3]
+                val conditionText = row[4]
+                labProxy().provideCase(caseName, mapOf(attributeName to attributeValue))
+                if (comment != null) createRuleToAddComment(caseName, comment, conditionText)
+                restClient().deleteProcessedCaseWithName(caseName)
             }
     }
 

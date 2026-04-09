@@ -64,7 +64,8 @@ class RESTClient {
             val casesInfo: CasesInfo = jsonClient.get(endpoint + WAITING_CASES) {
                 parameter(KB_ID, currentKB.get()!!.id)
             }.body()
-            val caseId = casesInfo.caseIds.first { it.name == name }
+            val allCaseIds = casesInfo.caseIds + casesInfo.cornerstoneCaseIds
+            val caseId = allCaseIds.first { it.name == name }
             currentCase = jsonClient.get(endpoint + CASE) {
                 parameter(CASE_ID, caseId.id)
                 parameter(KB_ID, currentKB.get()!!.id)

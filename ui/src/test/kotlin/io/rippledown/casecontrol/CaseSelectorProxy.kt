@@ -33,7 +33,7 @@ fun ComposeTestRule.requireCaseToBeFocused(caseName: String) {
 fun caseMatcher(caseName: String) = hasContentDescriptionExactly("$CASE_NAME_PREFIX$caseName")
 
 fun ComposeTestRule.requireNumberOfCasesOnCaseList(expected: Int) {
-    onNodeWithContentDescription(CASELIST_ID).onChildren().assertCountEquals(expected)
+    onAllNodes(hasContentDescription(CASE_NAME_PREFIX, substring = true)).assertCountEquals(expected)
 }
 
 @OptIn(ExperimentalTestApi::class)

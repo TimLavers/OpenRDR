@@ -80,7 +80,11 @@ class KBEndpoint(val kb: KB) {
 
     fun commitCurrentRuleSession() = kb.commitCurrentRuleSession()
 
-    fun waitingCasesInfo() = CasesInfo(kb.processedCaseIds(), kb.kbInfo.name)
+    fun waitingCasesInfo() = CasesInfo(
+        caseIds = kb.processedCaseIds(),
+        cornerstoneCaseIds = kb.cornerstoneCaseIds(),
+        kbName = kb.kbInfo.name
+    )
 
     fun case(id: Long): RDRCase {
         val case = uninterpretedCase(id)
@@ -152,7 +156,7 @@ class KBEndpoint(val kb: KB) {
     }
 
     fun uninterpretedCase(id: Long) =
-        kb.getProcessedCase(id) ?: throw IllegalArgumentException("Case with id $id not found")
+        kb.getCase(id) ?: throw IllegalArgumentException("Case with id $id not found")
 
     fun updateCornerstone(request: UpdateCornerstoneRequest) = kb.updateCornerstone(request)
     fun selectCornerstone(index: Int) = kb.selectCornerstone(index)
