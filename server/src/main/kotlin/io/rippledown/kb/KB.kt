@@ -87,6 +87,15 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         return caseManager.add(case.copyWithoutId(CaseType.Cornerstone))
     }
 
+    fun addCornerstoneCase(externalCase: ExternalCase): RDRCase {
+        val builder = RDRCaseBuilder().apply { setCaseType(CaseType.Cornerstone) }
+        externalCase.data.forEach {
+            val attribute = attributeManager.getOrCreate(it.key.testName)
+            builder.addResult(attribute, it.key.testTime, it.value)
+        }
+        return caseManager.add(builder.build(externalCase.name))
+    }
+
     fun addProcessedCase(case: RDRCase): RDRCase {
         return caseManager.add(case)
     }

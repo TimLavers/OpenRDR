@@ -158,16 +158,17 @@ class Defs {
 
     @Given("case {word} is provided having data:")
     fun provideCaseWithData(caseName: String, dataTable: DataTable) {
-        val attributeNameToValue = mutableMapOf<String, String>()
-        dataTable.asMap().forEach { (t, u) -> attributeNameToValue[t] = u }
-        labProxy().provideCase(caseName, attributeNameToValue)
+        labProxy().provideCase(caseName, dataTable.asMap())
+    }
+
+    @Given("cornerstone case {word} is provided having data:")
+    fun provideCornerstoneWithData(caseName: String, dataTable: DataTable) {
+        labProxy().addCornerstoneCase(caseName, dataTable.asMap())
     }
 
     @Given("case {word} for KB {word} is provided having data:")
     fun provideCaseWithDataForKB(caseName: String, kbName: String, dataTable: DataTable) {
-        val attributeNameToValue = mutableMapOf<String, String>()
-        dataTable.asMap().forEach { (t, u) -> attributeNameToValue[t] = u }
-        labProxy().provideCaseForKb(kbName, caseName, attributeNameToValue)
+        labProxy().provideCaseForKb(kbName, caseName, dataTable.asMap())
     }
 
     @Given("case {word} for KB {word} gets the interpretation {string} when it is provided having data:")
@@ -305,11 +306,7 @@ class Defs {
                 val caseName = row[0]
                 val attributeName = row[1]
                 val attributeValue = row[2]
-                val comment = row[3]
-                val conditionText = row[4]
-                labProxy().provideCase(caseName, mapOf(attributeName to attributeValue))
-                if (comment != null) createRuleToAddComment(caseName, comment, conditionText)
-                restClient().deleteProcessedCaseWithName(caseName)
+                labProxy().addCornerstoneCase(caseName, mapOf(attributeName to attributeValue))
             }
     }
 

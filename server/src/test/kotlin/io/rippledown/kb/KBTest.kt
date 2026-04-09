@@ -948,6 +948,53 @@ class KBTest {
     }
 
     @Test
+    fun `addCornerstoneCase from ExternalCase should store the case as a cornerstone`() {
+        kb.cornerstoneCaseIds() shouldHaveSize 0
+        val externalCase = createExternalCase("CC1")
+        val stored = kb.addCornerstoneCase(externalCase)
+        stored.name shouldBe "CC1"
+        stored.caseId.id shouldNotBe null
+        kb.cornerstoneCaseIds() shouldHaveSize 1
+        kb.cornerstoneCaseIds().first().name shouldBe "CC1"
+    }
+
+    @Test
+    fun `addCornerstoneCase from ExternalCase should not create a processed case`() {
+        val externalCase = createExternalCase("CC1")
+        kb.addCornerstoneCase(externalCase)
+        kb.processedCaseIds() shouldHaveSize 0
+        kb.cornerstoneCaseIds() shouldHaveSize 1
+    }
+
+    @Test
+    fun `addCornerstoneCase from ExternalCase should preserve the case data`() {
+        val externalCase = createExternalCase("CC1", glucoseValue = "5.5")
+        val stored = kb.addCornerstoneCase(externalCase)
+        val retrieved = kb.getCase(stored.caseId.id!!)
+        retrieved shouldNotBe null
+        retrieved!!.name shouldBe "CC1"
+        retrieved.getLatest(kb.attributeManager.getOrCreate("Glucose"))!!.value.text shouldBe "5.5"
+    }
+
+    @Test
+    fun `addCornerstoneCase from ExternalCase should allow multiple cornerstone cases`() {
+        kb.addCornerstoneCase(createExternalCase("CC1"))
+        kb.addCornerstoneCase(createExternalCase("CC2"))
+        kb.cornerstoneCaseIds() shouldHaveSize 2
+        kb.cornerstoneCaseIds().map { it.name } shouldBe listOf("CC1", "CC2")
+    }
+
+    @Test
+    fun `addCornerstoneCase from ExternalCase should not affect existing processed cases`() {
+        val processed = kb.processCase(createExternalCase("P1"))
+        kb.addCornerstoneCase(createExternalCase("CC1"))
+        kb.processedCaseIds() shouldHaveSize 1
+        kb.processedCaseIds().first().name shouldBe "P1"
+        kb.cornerstoneCaseIds() shouldHaveSize 1
+        kb.cornerstoneCaseIds().first().name shouldBe "CC1"
+    }
+
+    @Test
     fun `should update the cornerstone status when the conditions change`() {
         val cc1 = kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
         val vcc1 = kb.viewableCase(cc1)

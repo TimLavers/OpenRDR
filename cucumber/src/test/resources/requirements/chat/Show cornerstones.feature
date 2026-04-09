@@ -48,6 +48,25 @@ Feature: Show cornerstones
     And the chatbot has completed the action
     And the report should be "Comment 2."
 
+  @single
+  Scenario: Processed and cornerstone cases should appear in their respective lists
+    Given case Case1 is provided having data:
+      | x | 1 |
+    And case Case2 is provided having data:
+      | x | 2 |
+    And cornerstone case Case3 is provided having data:
+      | x | 3 |
+    And cornerstone case Case4 is provided having data:
+      | x | 4 |
+    When I start the client application
+    And I see the case Case1 as the current case
+    Then the processed case list should contain:
+      | Case1 |
+      | Case2 |
+    And the cornerstone case list should contain:
+      | Case3 |
+      | Case4 |
+
   Scenario: A cornerstone case should be exempted when a condition is added that evaluates to false for that cornerstone case
     Given cases are set up as follows:
       | Case name | attribute name | value | comment    | condition    |

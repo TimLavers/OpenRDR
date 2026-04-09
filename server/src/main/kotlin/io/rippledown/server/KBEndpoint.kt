@@ -102,6 +102,8 @@ class KBEndpoint(val kb: KB) {
 
     fun processCase(externalCase: ExternalCase) = kb.processCase(externalCase)
 
+    fun addCornerstoneCase(externalCase: ExternalCase) = kb.addCornerstoneCase(externalCase)
+
     fun deleteCase(name: String) = kb.deletedProcessedCaseWithName(name)
 
     fun moveAttribute(movedId: Int, targetId: Int) {

@@ -28,6 +28,13 @@ fun AccessibleContext.find(description: String, debug: Boolean = false): Accessi
     return find(matcher, debug)
 }
 
+fun AccessibleContext.findExact(description: String, debug: Boolean = false): AccessibleContext? {
+    val matcher = { context: AccessibleContext? ->
+        context != null && context.accessibleDescription == description
+    }
+    return find(matcher, debug)
+}
+
 fun AccessibleContext.findByName(name: String, role: AccessibleRole): AccessibleContext? {
     val matcher = { context: AccessibleContext ->
         (name == context.accessibleName && role == context.accessibleRole)

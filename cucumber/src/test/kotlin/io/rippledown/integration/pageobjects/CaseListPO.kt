@@ -7,6 +7,8 @@ import io.rippledown.constants.caseview.CASE_NAME_PREFIX
 import io.rippledown.constants.caseview.CORNERSTONE_SECTION_ID
 import io.rippledown.constants.caseview.PROCESSED_SECTION_ID
 import io.rippledown.integration.utils.find
+import io.rippledown.integration.utils.findAllByDescriptionPrefix
+import io.rippledown.integration.utils.findExact
 import io.rippledown.integration.utils.findLabelChildren
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
@@ -61,19 +63,24 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
 
     fun requireCornerstoneCaseNamesToBe(expectedCaseNames: List<String>) {
         waitUntilAsserted {
-            val section = execute<AccessibleContext?> { contextProvider().find(CORNERSTONE_SECTION_ID) }
+            val section = execute<AccessibleContext?> { contextProvider().findExact(CORNERSTONE_SECTION_ID) }
             section shouldNotBe null
-            val names = execute<List<String>> { section!!.findLabelChildren() }
+            val names = execute<List<String>> { caseNamesInSection(section!!) }
             names shouldBe expectedCaseNames
         }
     }
 
     fun requireProcessedCaseNamesToBe(expectedCaseNames: List<String>) {
         waitUntilAsserted {
-            val section = execute<AccessibleContext?> { contextProvider().find(PROCESSED_SECTION_ID) }
+            val section = execute<AccessibleContext?> { contextProvider().findExact(PROCESSED_SECTION_ID) }
             section shouldNotBe null
-            val names = execute<List<String>> { section!!.findLabelChildren() }
+            val names = execute<List<String>> { caseNamesInSection(section!!) }
             names shouldBe expectedCaseNames
         }
+    }
+
+    private fun caseNamesInSection(section: AccessibleContext): List<String> {
+        return section.findAllByDescriptionPrefix(CASE_NAME_PREFIX)
+            .map { it.accessibleDescription.removePrefix(CASE_NAME_PREFIX) }
     }
 }

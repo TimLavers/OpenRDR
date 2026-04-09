@@ -112,6 +112,16 @@ class RESTClient {
         }
         return result
     }
+    fun addCornerstoneCase(externalCase: ExternalCase): RDRCase {
+        val result = runBlocking {
+            jsonClient.put(endpoint + ADD_CORNERSTONE_CASE) {
+                contentType(ContentType.Application.Json)
+                setBody(externalCase)
+                parameter(KB_ID, currentKB.get().id)
+            }.body<RDRCase>()
+        }
+        return result
+    }
 
     fun provideCaseForKB(kbName: String, externalCase: ExternalCase) = runBlocking {
         jsonClient.put(endpoint + INTERPRET_CASE) {
