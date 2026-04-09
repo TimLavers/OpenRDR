@@ -17,9 +17,11 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import io.rippledown.constants.caseview.*
-import io.rippledown.decoration.ItalicGrey
 import io.rippledown.model.CaseId
 import java.awt.event.KeyEvent.VK_DOWN
 import java.awt.event.KeyEvent.VK_UP
@@ -63,7 +65,7 @@ fun CaseSelector(
     ) {
         Column(
             modifier = Modifier
-                .size(100.dp, 800.dp)
+                .size(150.dp, 800.dp)
                 .padding(start = 5.dp)
                 .verticalScroll(scrollState)
                 .semantics {
@@ -81,6 +83,7 @@ fun CaseSelector(
                     modifier = Modifier.semantics {
                         contentDescription = PROCESSED_SECTION_ID
                     }
+                        .padding(start = 14.dp)
                 ) {
                     caseIds.forEachIndexed { index, caseId ->
                         focusRequestors.add(FocusRequester())
@@ -110,6 +113,7 @@ fun CaseSelector(
                     modifier = Modifier.semantics {
                         contentDescription = CORNERSTONE_SECTION_ID
                     }
+                        .padding(start = 14.dp)
                 ) {
                     cornerstoneCaseIds.forEachIndexed { csIndex, caseId ->
                         val globalIndex = caseIds.size + csIndex
@@ -153,14 +157,30 @@ private fun CollapsibleSectionHeader(
     semanticId: String
 ) {
     val arrow = if (expanded) "▾" else "▸"
-    Text(
-        text = "$arrow $title",
-        style = ItalicGrey,
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .clickable { onToggle() }
             .padding(vertical = 4.dp)
             .semantics { contentDescription = semanticId }
-    )
+    ) {
+        Text(
+            text = arrow,
+            style = TextStyle(
+                color = Color.DarkGray,
+                fontSize = 20.sp
+            )
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = title,
+            style = TextStyle(
+                color = Color.DarkGray,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 13.sp
+            )
+        )
+    }
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -175,6 +195,7 @@ private fun CaseNameItem(
 ) {
     Text(
         text = caseId.name,
+        fontSize = 12.sp,
         modifier = Modifier
             .focusRequester(focusRequester)
             .clickable { onClick() }

@@ -43,6 +43,9 @@ Cornerstone: <name of the current cornerstone case, or null>, Index: <index>, To
 
 - Check the cornerstone status message from Step 2. Note the Total number of cornerstone cases — you will need this
   later.
+- **CRITICAL**: After receiving the cornerstone status, you MUST call the {{GET_SUGGESTED_CONDITIONS}} function.
+  Do NOT call {{TRANSFORM_REASON}}. The comment text from Step 1 is NOT a reason — it is the report change itself.
+  Never pass the comment text to {{TRANSFORM_REASON}}.
 - Immediately call the {{GET_SUGGESTED_CONDITIONS}} function and present the suggestions to the user. Do NOT ask the
   user if they want to provide reasons first — always present the suggestions directly.
 - **IMPORTANT**: This step is ONLY about asking the user for reasons. Do NOT mention cornerstone cases in this
