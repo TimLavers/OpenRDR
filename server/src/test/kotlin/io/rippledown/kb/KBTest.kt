@@ -910,6 +910,44 @@ class KBTest {
     }
 
     @Test
+    fun `cornerstoneCaseIds should return ids of cornerstone cases only`() {
+        kb.cornerstoneCaseIds() shouldHaveSize 0
+        val cc = kb.addCornerstoneCase(createCase("CC1", value = "1.0"))
+        kb.cornerstoneCaseIds() shouldHaveSize 1
+        kb.cornerstoneCaseIds().first().name shouldBe "CC1"
+    }
+
+    @Test
+    fun `cornerstoneCaseIds should not include processed cases`() {
+        val externalCase = createExternalCase("Processed1")
+        kb.processCase(externalCase)
+        kb.processedCaseIds() shouldHaveSize 1
+        kb.cornerstoneCaseIds() shouldHaveSize 0
+    }
+
+    @Test
+    fun `getCase should return a processed case by id`() {
+        val externalCase = createExternalCase("Processed1")
+        val processed = kb.processCase(externalCase)
+        val retrieved = kb.getCase(processed.caseId.id!!)
+        retrieved shouldNotBe null
+        retrieved!!.name shouldBe "Processed1"
+    }
+
+    @Test
+    fun `getCase should return a cornerstone case by id`() {
+        val cc = kb.addCornerstoneCase(createCase("CC1", value = "1.0"))
+        val retrieved = kb.getCase(cc.caseId.id!!)
+        retrieved shouldNotBe null
+        retrieved!!.name shouldBe "CC1"
+    }
+
+    @Test
+    fun `getCase should return null for unknown id`() {
+        kb.getCase(999L) shouldBe null
+    }
+
+    @Test
     fun `should update the cornerstone status when the conditions change`() {
         val cc1 = kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
         val vcc1 = kb.viewableCase(cc1)
