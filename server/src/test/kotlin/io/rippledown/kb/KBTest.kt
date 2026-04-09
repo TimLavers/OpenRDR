@@ -846,6 +846,48 @@ class KBTest {
         ).suggestions().toSet()
     }
 
+    @Test
+    fun `should return condition for matching non-editable suggestion text`() {
+        // Given
+        val caseWithGlucoseAttribute = createCase("A", value = "1.0")
+        val hints = kb.conditionHintsForCase(caseWithGlucoseAttribute)
+        val nonEditableSuggestion = hints.suggestions.first { !it.isEditable() }
+        val conditionText = nonEditableSuggestion.asText()
+
+        // When
+        val condition = kb.conditionForSuggestionText(caseWithGlucoseAttribute, conditionText)
+
+        // Then
+        condition shouldNotBe null
+        condition!!.asText() shouldBe conditionText
+    }
+
+    @Test
+    fun `should return null when no suggestion matches the text`() {
+        // Given
+        val caseWithGlucoseAttribute = createCase("A", value = "1.0")
+
+        // When
+        val condition = kb.conditionForSuggestionText(caseWithGlucoseAttribute, "no such condition")
+
+        // Then
+        condition shouldBe null
+    }
+
+    @Test
+    fun `should not return condition for editable suggestion text`() {
+        // Given
+        val caseWithGlucoseAttribute = createCase("A", value = "1.0")
+        val hints = kb.conditionHintsForCase(caseWithGlucoseAttribute)
+        val editableSuggestion = hints.suggestions.firstOrNull { it.isEditable() }
+
+        // When/Then - if there is an editable suggestion, looking it up should return null
+        if (editableSuggestion != null) {
+            val condition = kb.conditionForSuggestionText(caseWithGlucoseAttribute, editableSuggestion.asText())
+            condition shouldBe null
+        }
+    }
+
     @Test // Conc-4
     fun `conclusions are aligned when building rules`() {
         val conclusionToAdd = kb.conclusionManager.getOrCreate("Whatever")

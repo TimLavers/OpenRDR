@@ -19,7 +19,7 @@
 }
 ```
 
-- Go to Step 4.
+- Go to Step 5.
 
 ## Step 3. Do not allow the cornerstone case report to change:
 
@@ -34,9 +34,30 @@
 ```
 
 - Transform the reason using the "{{TRANSFORM_REASON}}" function. Follow the instructions "Transform reason"
-- Go to Step 4.
+- Go to Step 5.
 
-## Step 4. Complete the review of this cornerstone case:
+## Step 4. Navigate between cornerstone cases:
+
+- If the user asks to see the next cornerstone case, navigate to it:
+
+```json
+{
+  "action": "{{NEXT_CORNERSTONE}}"
+}
+```
+
+- If the user asks to see the previous cornerstone case, navigate to it:
+
+```json
+{
+  "action": "{{PREVIOUS_CORNERSTONE}}"
+}
+```
+
+- After navigating, the system will send an updated cornerstone status message. Repeat Step 1 for the new cornerstone
+  case.
+
+## Step 5. Complete the review of this cornerstone case:
 
 - Once the change to the cornerstone case has been allowed or disallowed, the system will recalculate the
   cornerstone cases and send you a message in the format "Cornerstone: ..., Index: ..., Total: ...".

@@ -5,13 +5,15 @@ import io.rippledown.kb.chat.RuleService
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 
-data class RemoveReason(val comment: String) : ChatAction {
+class NextCornerstone() : ChatAction {
     override suspend fun doIt(
         ruleService: RuleService,
         currentCase: ViewableCase?,
         modelResponder: ModelResponder
     ): ChatResponse {
-        val cornerstoneStatus = ruleService.removeConditionByText(comment)
+        val currentStatus = ruleService.cornerstoneStatus()
+        val nextIndex = currentStatus.indexOfCornerstoneToReview + 1
+        val cornerstoneStatus = ruleService.selectCornerstoneCase(nextIndex)
         ruleService.sendCornerstoneStatus()
         return modelResponder.response(cornerstoneStatus.summary())
     }

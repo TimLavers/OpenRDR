@@ -3,7 +3,6 @@ package io.rippledown.integration.pageobjects
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
-import io.rippledown.constants.caseview.NUMBER_OF_CASES_LABEL
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
@@ -22,22 +21,25 @@ class CaseCountPO(private val contextProvider: () -> AccessibleContext) {
 
     private fun countOfTheNumberOfCases(): Int {
         waitUntilAsserted { contextForCaseCount() shouldNotBe null }
-        return execute<Int> { contextForCaseCount()?.accessibleName?.toInt() ?: 0 }
+        return execute<Int> {
+            contextForCaseCount()?.accessibleName
+                ?.substringBefore(" ")
+                ?.toIntOrNull() ?: 0
+        }
     }
 
     private fun contextForCaseCount() = execute<AccessibleContext?> { contextProvider().find(NUMBER_OF_CASES_ID) }
-    private fun contextForCasesLabel() = execute<AccessibleContext?> { contextProvider().find(NUMBER_OF_CASES_LABEL) }
 
     fun requireCaseCountToBeHidden() {
         waitUntilAsserted { contextForCaseCount() shouldBe null }
     }
 
     fun requireCasesLabelToBeHidden() {
-        waitUntilAsserted { contextForCasesLabel() shouldBe null }
+        waitUntilAsserted { contextForCaseCount() shouldBe null }
     }
 
     fun requireCasesLabelToBeShown() {
-        waitUntilAsserted { contextForCasesLabel() shouldNotBe null }
+        waitUntilAsserted { contextForCaseCount() shouldNotBe null }
     }
 
     fun requireCaseCountToBeShown() {

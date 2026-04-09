@@ -4,8 +4,10 @@ import com.google.genai.types.FunctionDeclaration
 import com.google.genai.types.Schema
 import com.google.genai.types.Type
 import io.rippledown.chat.ChatService
+import io.rippledown.chat.Conversation.Companion.CONDITION_TEXT_PARAMETER
 import io.rippledown.chat.Conversation.Companion.GET_SUGGESTED_CONDITIONS
 import io.rippledown.chat.Conversation.Companion.REASON_PARAMETER
+import io.rippledown.chat.Conversation.Companion.SELECT_SUGGESTED_CONDITION
 import io.rippledown.chat.Conversation.Companion.TRANSFORM_REASON
 import io.rippledown.chat.GeminiChatService
 import io.rippledown.constants.chat.*
@@ -61,11 +63,31 @@ object KBChatService {
                 .build()
         )
         .build()
+
+    private val selectSuggestionDeclaration = FunctionDeclaration.builder()
+        .name(SELECT_SUGGESTED_CONDITION)
+        .description("Selects a non-editable suggested condition and adds it directly to the rule session. Use this instead of transformReasonToFormalCondition when the user selects a non-editable suggestion.")
+        .parameters(
+            Schema.builder()
+                .type(Type.Known.OBJECT)
+                .properties(
+                    mapOf(
+                        CONDITION_TEXT_PARAMETER to Schema.builder()
+                            .type(Type.Known.STRING)
+                            .description("The exact text of the non-editable suggested condition to add.")
+                            .build()
+                    )
+                )
+                .required(listOf(CONDITION_TEXT_PARAMETER))
+                .build()
+        )
+        .build()
+
     fun createKBChatService(viewableCase: ViewableCase): ChatService {
         val systemInstruction = systemPrompt(viewableCase)
         return GeminiChatService(
             systemInstruction = systemInstruction,
-            functionDeclarations = listOf(reasonTransformer, suggestedConditionsRetriever)
+            functionDeclarations = listOf(reasonTransformer, suggestedConditionsRetriever, selectSuggestionDeclaration)
         )
     }
 
@@ -121,10 +143,13 @@ object KBChatService {
         "USER_ACTION" to USER_ACTION,
         "COMMIT_RULE" to COMMIT_RULE,
         "EXEMPT_CORNERSTONE" to EXEMPT_CORNERSTONE,
+        "NEXT_CORNERSTONE" to NEXT_CORNERSTONE,
+        "PREVIOUS_CORNERSTONE" to PREVIOUS_CORNERSTONE,
         "UNDO_LAST_RULE" to UNDO_LAST_RULE,
         "MOVE_ATTRIBUTE" to MOVE_ATTRIBUTE,
         "REMOVE_REASON" to REMOVE_REASON,
         "CANCEL_RULE" to CANCEL_RULE,
+        "SELECT_SUGGESTION" to SELECT_SUGGESTED_CONDITION,
 
     )
 

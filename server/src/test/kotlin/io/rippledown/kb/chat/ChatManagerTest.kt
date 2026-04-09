@@ -539,4 +539,26 @@ class ChatManagerTest {
         result shouldBe input
     }
 
+    @Test
+    fun `should convert double-escaped newline to proper json newline`() {
+        // Given - LLM outputs \\n (literal backslash-n) instead of \n (JSON newline)
+        val input = """
+            {
+                "action": "UserAction",
+                "message": "1. Go to Bondi.\\n"
+            }
+        """.trimIndent()
+
+        // When
+        val result = input.sanitizeLlmJson()
+
+        // Then
+        result shouldBe """
+            {
+                "action": "UserAction",
+                "message": "1. Go to Bondi.\n"
+            }
+        """.trimIndent()
+    }
+
 }

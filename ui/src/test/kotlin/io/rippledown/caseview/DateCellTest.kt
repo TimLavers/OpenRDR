@@ -31,25 +31,25 @@ class DateCellTest {
             rowScope.DateCell( 1, date, columnWidths)
         }
         with(composeTestRule) {
-            waitUntilExactlyOneExists(hasText("2010-06-01 22:20"))
+            waitUntilExactlyOneExists(hasText("2010-06-01\n22:20"))
         }
     }
 
     @Test
     fun dateFormatting() {
         val date1 = Instant.parse("2010-06-01T22:19:44.475Z").toEpochMilliseconds()
-        formatDate(date1) shouldBe "2010-06-01 22:20"
+        formatDate(date1) shouldBe "2010-06-01\n22:20"
 
         val date2 = Instant.parse("2010-06-01T22:19:24.475Z").toEpochMilliseconds()
-        formatDate(date2) shouldBe "2010-06-01 22:19"
+        formatDate(date2) shouldBe "2010-06-01\n22:19"
 
         val date3 = Instant.parse("2010-06-01T22:19:29.999Z").toEpochMilliseconds()
-        formatDate(date3) shouldBe "2010-06-01 22:19"
+        formatDate(date3) shouldBe "2010-06-01\n22:19"
 
         val date4 = Instant.parse("2010-06-01T22:19:30.000Z").toEpochMilliseconds()
-        formatDate(date4) shouldBe "2010-06-01 22:20"
+        formatDate(date4) shouldBe "2010-06-01\n22:20"
 
         val date5 = Instant.parse("2010-06-01T22:19:31.000Z").toEpochMilliseconds()
-        formatDate(date5) shouldBe "2010-06-01 22:20"
+        formatDate(date5) shouldBe "2010-06-01\n22:20"
     }
 }

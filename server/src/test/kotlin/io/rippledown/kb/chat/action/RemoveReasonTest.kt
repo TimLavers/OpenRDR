@@ -28,25 +28,25 @@ class RemoveReasonTest {
     @Test
     fun `should remove the condition from the rule session`() = runTest {
         //Given
-        val reasonId = 42
-        val action = RemoveReason(reasonId)
+        val conditionText = "Sun is \"hot\""
+        val action = RemoveReason(conditionText)
 
         //When
         action.doIt(ruleService, currentCase, modelResponder)
 
         //Then
-        coVerify { ruleService.removeCondition(reasonId) }
+        coVerify { ruleService.removeConditionByText(conditionText) }
     }
 
     @Test
     fun `should send CornerstoneStatus after removing a reason`() = runTest {
         //Given
-        val reasonId = 42
-        val action = RemoveReason(reasonId)
+        val conditionText = "Sun is \"hot\""
+        val action = RemoveReason(conditionText)
 
         val ccStatus = CornerstoneStatus(indexOfCornerstoneToReview = 42, numberOfCornerstones = 84)
         coEvery {
-            ruleService.removeCondition(reasonId)
+            ruleService.removeConditionByText(conditionText)
         } returns ccStatus
 
         val responseFromModel = ChatResponse("Reason removed.")

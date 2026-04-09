@@ -49,12 +49,12 @@ Cornerstone: <name of the current cornerstone case, or null>, Index: <index>, To
 
 ## Step 6. Allow the user to remove a reason:
 
-- If the user indicates that a reason be removed, output the following:
+- If the user indicates that a reason be removed, output the following with the exact condition text:
 
 ```json
 {
   "action": "{{REMOVE_REASON}}",
-  "reasonId": "<reason id of the reason to remove>"
+  "comment": "Sun is \"hot\""
 }
 ```
 

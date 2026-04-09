@@ -4,19 +4,19 @@ awaitility = "4.3.0"
 commonsCodec = "1.21.0"
 commonsIo = "2.21.0"
 commonsLang3 = "3.20.0"
-compose = "1.10.1"
-cucumber = "7.34.2"
-exposed = "1.1.1"
+compose = "1.10.3"
+cucumber = "7.34.3"
+exposed = "1.2.0"
 filepicker = "3.1.0"
-generativeai = "1.41.0"
+generativeai = "1.46.0"
 guava = "33.5.0-jre"
 jte = "3.2.3"
-kotest = "6.1.4"
-kotlin = "2.3.10"
+kotest = "6.1.10"
+kotlin = "2.3.20"
 kotlinx_coroutines = "1.10.2"
 kotlinx_datetime = "0.7.1"
 kotlinx_serialization = "1.10.0"
-ktor = "3.4.0"
+ktor = "3.4.2"
 logback = "1.5.32"
 material_icons = "1.7.3"
 mockk = "1.14.9"
@@ -25,7 +25,6 @@ versionCatalogUpdate = "1.1.0"
 vosk = "0.3.45"
 
 [plugins]
-#benManesVersions = { id = "com.github.ben-manes.versions", version.ref = "benManesVersions" }
 compose = { id = "org.jetbrains.compose", version.ref = "compose" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 versionCatalogUpdate = { id = "nl.littlerobots.version-catalog-update", version.ref = "versionCatalogUpdate" }
@@ -47,8 +46,8 @@ filepicker = { module = "com.darkrockstudios:mpfilepicker", version.ref = "filep
 generativeai = { module = "com.google.genai:google-genai", version.ref = "generativeai" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 jte = { module = "gg.jte:jte-kotlin", version.ref = "jte" }
+junitPlatformSuite = "org.junit.platform:junit-platform-suite:6.0.3"
 kotestAssertions = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
-junitPlatformSuite = { module = "org.junit.platform:junit-platform-suite", version = "1.9.1" }
 kotlinxCoroutinesCore = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx_coroutines" }
 kotlinxCoroutinesTest = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx_coroutines" }
 kotlinxDateTime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx_datetime" }

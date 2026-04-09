@@ -104,6 +104,11 @@ class ChatDefs {
         waitForBotText(WOULD_YOU_LIKE, ADD, REMOVE, REPLACE)
     }
 
+    @Then("the chatbot response does not contain {string}")
+    fun requireChatbotResponseToNotContain(text: String) {
+        chatPO().mostRecentBotRowDoesNotContainTheTerm(text)
+    }
+
     fun waitForBotText(vararg terms: String) {
         await().atMost(ofSeconds(60)).until {
             chatPO().mostRecentBotRowContainsTerms(terms.toList())
@@ -219,7 +224,7 @@ class ChatDefs {
             waitForBotQuestion()
         }
         waitForBotQuestion()
-        addComment(comment)
+        addCommentWithoutConfirmation(comment)
         waitForBotSuggestions()
         decline()
         waitForBotQuestionToAllowReportChangeToCornerstoneThenConfirm()
@@ -231,18 +236,16 @@ class ChatDefs {
     @And("I request that the comment {string} be added")
     fun requestCommentBeAdded(comment: String) {
         waitForBotQuestion()
-        addComment(comment)
+        addCommentWithoutConfirmation(comment)
     }
 
-    fun addComment(comment: String) {
+    fun addCommentWithoutConfirmation(comment: String) {
         enterChatTextAndSend("Add the comment: \"$comment\"")
-        waitForBotRequestForConfirmationAndConfirm()
     }
 
-    fun removeComment(comment: String) {
+    fun removeCommentWithoutConfirmation(comment: String) {
         waitForBotQuestion()
         enterChatTextAndSend("Remove the comment: \"$comment\"")
-        waitForBotRequestForConfirmationAndConfirm()
     }
 
     @And("I request that the comment be removed")
@@ -255,31 +258,34 @@ class ChatDefs {
     @And("I request that the following comment be removed:")
     fun requestCommentBeRemoved(comment: String) {
         waitForBotQuestion()
-        removeSpecificComment(comment)
+        removeSpecificCommentWithoutConfirmation(comment)
     }
 
-    fun removeSpecificComment(comment: String) {
+    fun removeSpecificCommentWithoutConfirmation(comment: String) {
         enterChatTextAndSend("Remove the comment: \"$comment\"")
-        waitForBotRequestForConfirmationAndConfirm()
     }
 
     @And("I request that the comment be replaced by {string}")
-    fun requestTheOnlyCommentBeReplacedBy(comment: String) {
+    fun requestTheOnlyCommentBeReplacedWithoutConfirmationBy(comment: String) {
         waitForBotQuestion()
-        enterChatTextAndSend("Replace the comment by '$comment'")
-        waitForBotRequestForConfirmationAndConfirm()
+        enterChatTextAndSend("Replace the comment by \"$comment\"")
     }
 
-    fun requestCommentBeReplacedBy(comment: String, replacement: String) {
+    fun requestCommentBeReplacedWithoutConfirmationBy(comment: String, replacement: String) {
         waitForBotQuestion()
-        enterChatTextAndSend("Replace the '$comment' comment by '$replacement'")
-        waitForBotRequestForConfirmationAndConfirm()
+        enterChatTextAndSend("Replace the comment \"$comment\" by \"$replacement\"")
     }
 
     @And("the chatbot has asked if want to allow the report change to the cornerstone case and I confirm")
     fun waitForBotQuestionToAllowReportChangeToCornerstoneThenConfirm() {
         waitForBotQuestion()
         allow()
+    }
+
+    @And("the chatbot has asked if want to allow the report change to the cornerstone case and I decline")
+    fun waitForBotQuestionToAllowReportChangeToCornerstoneThenDecline() {
+        waitForBotQuestion()
+        decline()
     }
 
     @And("the chatbot has asked if want to allow the report change to cornerstone case {string} and I confirm")
@@ -309,6 +315,23 @@ class ChatDefs {
     @And("I request that the {word} reason be removed")
     fun removeReason(index: String) {
         enterChatTextAndSend("Remove the $index reason")
+    }
+
+    @When("I ask the chatbot to show the next cornerstone case")
+    fun askToShowNextCornerstoneCase() {
+        waitForBotQuestion()
+        enterChatTextAndSend("show me the next cornerstone case")
+    }
+
+    @When("I ask the chatbot to show the previous cornerstone case")
+    fun askToShowPreviousCornerstoneCase() {
+        waitForBotQuestion()
+        enterChatTextAndSend("show me the previous cornerstone case")
+    }
+
+    @Then("the chatbot has mentioned the cornerstone case {string}")
+    fun waitForBotToMentionCornerstoneCase(name: String) {
+        waitForBotText(name)
     }
 
 }

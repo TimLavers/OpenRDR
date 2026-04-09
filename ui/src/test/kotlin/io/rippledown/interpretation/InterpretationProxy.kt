@@ -13,8 +13,6 @@ import io.kotest.matchers.ints.shouldBeLessThanOrEqual
 import io.kotest.matchers.shouldBe
 import io.rippledown.constants.interpretation.*
 import io.rippledown.decoration.BACKGROUND_COLOR
-import io.rippledown.main.LEFT_INFO_MESSAGE_ID
-import io.rippledown.main.RIGHT_INFO_MESSAGE_ID
 import io.rippledown.utils.dump
 import io.rippledown.utils.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
@@ -295,19 +293,6 @@ fun requireStyleForCommentInAnnotatedStringToHaveBackground(
             }
         }
     }
-}
-
-fun ComposeTestRule.requireLeftInformationMessage(message: String) {
-    waitUntil { onNodeWithContentDescription(LEFT_INFO_MESSAGE_ID).isDisplayed() }
-    onNodeWithContentDescription(LEFT_INFO_MESSAGE_ID)
-        .assertIsDisplayed()
-        .assertTextEquals(message)
-}
-
-fun ComposeTestRule.requireRightInformationMessage(message: String) {
-    onNodeWithContentDescription(RIGHT_INFO_MESSAGE_ID)
-        .assertIsDisplayed()
-        .assertTextEquals(message)
 }
 
 private fun ComposeTestRule.performMouseInput(action: MouseInjectionScope.() -> Unit) {

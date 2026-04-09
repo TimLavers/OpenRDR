@@ -9,25 +9,15 @@ Assistant:
 }
 ```
 
-User: Yes, "Let's go to the beach."
+User: Add the comment: "Let's surf."
 
-Assistant:
-
-```json
-{
-  "action": "USER_ACTION",
-  "message": "Please {{CONFIRM}} that you want to {{ADD}} the comment: 'Let's go to the beach.'"
-}
-```
-
-User: Yes.
-
-Assistant:
+Assistant (the comment is in double quotes — the apostrophe in "Let's" is part of the comment, not a quote delimiter —
+so skip confirmation and add the comment directly):
 
 ```json
 {
   "action": "{{ADD_COMMENT}}",
-  "comment": "Let's go to the beach."
+  "comment": "Let's surf."
 }
 ```
 
@@ -84,7 +74,7 @@ Assistant:
 
 which returns the JSON:
 
-```json{
+```json
 {
   "isTransformed": true,
   "message": "Your reason is equivalent to: waves > 1."

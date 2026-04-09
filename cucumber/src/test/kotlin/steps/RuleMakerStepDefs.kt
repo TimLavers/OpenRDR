@@ -23,20 +23,20 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
     @And("I build a rule to add another comment for the same case {string}")
     fun buildRuleToAddAnotherAnotherCommentForTheSameCase(comment: String) {
         with(chatDefs) {
-            addComment(comment)
+            addCommentWithoutConfirmation(comment)
             completeRule()
         }
     }
 
     @When("I build a rule to replace that comment by {string}")
     fun replaceCommentWithoutConditions(replacement: String) {
-        chatDefs.requestTheOnlyCommentBeReplacedBy(replacement)
+        chatDefs.requestTheOnlyCommentBeReplacedWithoutConfirmationBy(replacement)
         completeRule()
     }
 
     @When("Replace the comment {string} by {string} with the reasons:")
     fun replaceCommentWithConditions(toBeReplaced: String, replacement: String, conditions: DataTable) {
-        chatDefs.requestCommentBeReplacedBy(toBeReplaced, replacement)
+        chatDefs.requestCommentBeReplacedWithoutConfirmationBy(toBeReplaced, replacement)
         completeRuleWithConditions(conditions)
     }
 
@@ -101,7 +101,7 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
 
     @And("I build another rule to append the comment {string}")
     fun buildAnotherRuleToAppendTheComment(comment: String) {
-        chatDefs.addComment(comment)
+        chatDefs.addCommentWithoutConfirmation(comment)
         completeRule()
     }
 
@@ -120,7 +120,7 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
 
     @When("I build another rule to remove the comment {string}")
     fun buildAnotherRuleToRemoveTheComment(comment: String) {
-        chatDefs.removeComment(comment)
+        chatDefs.removeCommentWithoutConfirmation(comment)
         completeRule()
     }
 
@@ -132,7 +132,7 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
 
     @When("I start to build a rule to replace the comment {string} by {string}")
     fun startRuleToReplaceCommentBy(toBeReplaced: String, replacement: String) {
-        chatDefs.requestCommentBeReplacedBy(toBeReplaced, replacement)
+        chatDefs.requestCommentBeReplacedWithoutConfirmationBy(toBeReplaced, replacement)
     }
 
     @When("I try to build a rule to replace the non-existing comment {string}")
@@ -151,7 +151,7 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
 
     @When("I build a rule to replace the comment {string} by {string} with the condition(s)")
     fun buildARuleToReplaceTheCommentWithConditions(toBeReplaced: String, replacement: String, conditions: DataTable) {
-        chatDefs.requestCommentBeReplacedBy(toBeReplaced, replacement)
+        chatDefs.requestCommentBeReplacedWithoutConfirmationBy(toBeReplaced, replacement)
         chatDefs.provideReasonsThenDeclineToAddMore(conditions)
     }
 
@@ -192,7 +192,7 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         replacement: String,
         conditions: DataTable
     ) {
-        chatDefs.requestCommentBeReplacedBy(toBeReplaced, replacement)
+        chatDefs.requestCommentBeReplacedWithoutConfirmationBy(toBeReplaced, replacement)
         chatDefs.provideReasonsThenDeclineToAddMore(conditions)
     }
 

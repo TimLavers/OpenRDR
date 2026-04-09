@@ -47,7 +47,6 @@ Feature: Reviewing the interpretation of a case
     And I should see the case Bondi as the current case
     And the interpretation should contain the text "Go to Bondi."
     And move pointer to the comment "Go to Bondi."
-    And pause for 1 second
     And the interpretation should be "Go to Bondi."
     Then no conditions should be showing for the comment "Go to Bondi."
 
@@ -59,7 +58,6 @@ Feature: Reviewing the interpretation of a case
     And I should see the case Bondi as the current case
     When I build a rule to add the comment "Go to Bondi."
     And move pointer to the comment "Go to Bondi."
-    And pause for 1 second
     And the interpretation should be "Go to Bondi."
     Then no conditions should be showing for the comment "Go to Bondi."
 

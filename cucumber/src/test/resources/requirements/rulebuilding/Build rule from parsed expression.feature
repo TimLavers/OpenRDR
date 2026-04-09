@@ -31,7 +31,7 @@ Feature: When entering an expression to be used in a rule, the user is provided 
       | Waves     | 2.1   | 0.5 | 2    | metres |
       | UV        | 4.5   |     | 2.6  |        |
     And I start the client application
-    And I request that the comment "Beach time1" be added
+    And I request that the comment "Beach time." be added
     When I enter the expression "UV is 5.6"
     Then the model should respond with a message containing:
     """

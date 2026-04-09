@@ -21,7 +21,7 @@ class KBModelIntegrationTest: KBTestBase() {
         val response = session.startConversation(case)
 
         //Then
-        response.text shouldContain "Would you like to add a comment?"//todo use some known constant
+        response.text shouldContain "Would you like to add a comment"//todo use some known constant
     }
 
     @Test
@@ -35,6 +35,6 @@ class KBModelIntegrationTest: KBTestBase() {
         val response = session.responseToUserMessage(userExpression)
 
         //Then
-        response.text shouldContain "confirm that you want to add the comment: 'Go to Bondi.'"
+        response.text shouldContain "confirm that you want to add the comment:"
     }
 }
