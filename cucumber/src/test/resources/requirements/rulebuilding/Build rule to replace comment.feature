@@ -27,7 +27,6 @@ Feature: The user can make a rule that replaces a comment the interpretive repor
     And I select case Bondi
     And  the interpretation should contain the text "Go to Bondi."
 
-  @single
   Scenario: The conditions shown for a comment that is a replacement should include the conditions for the comment that has been replaced
     Given case Beach is provided having data:
       | Sun  | too hot |

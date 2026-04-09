@@ -104,6 +104,11 @@ class ChatDefs {
         waitForBotText(WOULD_YOU_LIKE, ADD, REMOVE, REPLACE)
     }
 
+    @Then("the chatbot response does not contain {string}")
+    fun requireChatbotResponseToNotContain(text: String) {
+        chatPO().mostRecentBotRowDoesNotContainTheTerm(text)
+    }
+
     fun waitForBotText(vararg terms: String) {
         await().atMost(ofSeconds(60)).until {
             chatPO().mostRecentBotRowContainsTerms(terms.toList())

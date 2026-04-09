@@ -15,3 +15,13 @@ Feature: Remove comment
       | wave height is more than 0.5 |
     Then the report should be "Go to the beach."
 
+  Scenario: If there is only one comment then the chatbot should not show it prefixed with a 1.
+    Given case Bondi is provided having data:
+      | wave height | 2 |
+    And the interpretation of the case Bondi consists of the following comment:
+      | Go to the beach. |
+    When I start the client application
+    And I see the case Bondi as the current case
+    And the chatbot has asked if I want to add, remove or replace a comment
+    Then the chatbot response does not contain "1."
+

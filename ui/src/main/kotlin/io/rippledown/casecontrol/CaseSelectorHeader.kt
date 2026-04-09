@@ -13,7 +13,11 @@ import io.rippledown.decoration.ItalicGrey
 
 @Composable
 fun CaseSelectorHeader(numberOfCases: Int) {
-    val label = "$numberOfCases cases"
+    val label = when (numberOfCases) {
+        1 -> "1 case"
+        0 -> "no cases"
+        else -> "$numberOfCases cases"
+    }
     Text(
         text = label,
         style = ItalicGrey,
