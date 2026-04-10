@@ -87,6 +87,15 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         return caseManager.add(case.copyWithoutId(CaseType.Cornerstone))
     }
 
+    fun addCornerstoneCase(externalCase: ExternalCase): RDRCase {
+        val builder = RDRCaseBuilder().apply { setCaseType(CaseType.Cornerstone) }
+        externalCase.data.forEach {
+            val attribute = attributeManager.getOrCreate(it.key.testName)
+            builder.addResult(attribute, it.key.testTime, it.value)
+        }
+        return caseManager.add(builder.build(externalCase.name))
+    }
+
     fun addProcessedCase(case: RDRCase): RDRCase {
         return caseManager.add(case)
     }
@@ -99,6 +108,8 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     fun getProcessedCaseByName(caseName: String) = allProcessedCases().first { caseName == it.name } // todo test
 
     fun allCornerstoneCases() = caseManager.all(CaseType.Cornerstone)
+
+    fun cornerstoneCaseIds() = caseManager.ids(CaseType.Cornerstone)
 
     fun processedCaseIds() = caseManager.ids(CaseType.Processed)
 
@@ -324,7 +335,12 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     fun exemptCornerstone(index: Int): CornerstoneStatus {
         checkSession()
 
-        val toExempt = ruleSession!!.cornerstoneCases()[index]
+        val currentCornerstones = ruleSession!!.cornerstoneCases()
+        if (index < 0 || currentCornerstones.isEmpty()) {
+            selectedCornerstone = null
+            return CornerstoneStatus()
+        }
+        val toExempt = currentCornerstones[index]
         ruleSession!!.exemptCornerstone(toExempt)
 
         val cornerstones = ruleSession!!.cornerstoneCases()

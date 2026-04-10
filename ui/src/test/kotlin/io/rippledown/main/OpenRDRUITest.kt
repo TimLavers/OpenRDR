@@ -4,6 +4,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -16,6 +17,7 @@ import io.rippledown.casecontrol.waitForCaseToBeShowing
 import io.rippledown.chat.BotMessage
 import io.rippledown.chat.requireChatMessagesShowing
 import io.rippledown.chat.typeChatMessageAndClickSend
+import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import io.rippledown.constants.kb.CONFIRM_UNDO_LAST_RULE_TEXT
 import io.rippledown.constants.main.APPLICATION_BAR_ID
 import io.rippledown.interpretation.requireInterpretation
@@ -272,6 +274,65 @@ class OpenRDRUITest {
         }
     }
 
+
+    @Test
+    fun `should show cornerstone cases in the case list`() = runTest {
+        val processed = listOf(CaseId(id = 1, name = "p1"))
+        val cornerstones = listOf(CaseId(id = 2, name = "c1"))
+        coEvery { api.getCase(1) } returns createViewableCase(CaseId(id = 1, name = "p1"))
+        coEvery { api.getCase(2) } returns createViewableCase(CaseId(id = 2, name = "c1"))
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(
+            caseIds = processed,
+            cornerstoneCaseIds = cornerstones
+        )
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            requireNumberOfCasesOnCaseList(2)
+            requireNamesToBeShowingOnCaseList("p1", "c1")
+        }
+    }
+
+    @Test
+    fun `should select a cornerstone case when clicked`() = runTest {
+        val cornerstones = listOf(
+            CaseId(id = 1, name = "c1"),
+            CaseId(id = 2, name = "c2")
+        )
+        val case1 = createViewableCase(CaseId(id = 1, name = "c1"))
+        val case2 = createViewableCase(CaseId(id = 2, name = "c2"))
+        coEvery { api.getCase(1) } returns case1
+        coEvery { api.getCase(2) } returns case2
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(cornerstoneCaseIds = cornerstones)
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            waitForCaseToBeShowing("c1")
+
+            selectCaseByName("c2")
+
+            waitForCaseToBeShowing("c2")
+        }
+    }
+
+    @Test
+    fun `should not show the total case count header`() = runTest {
+        val caseId = CaseId(id = 1, name = "case a")
+        coEvery { api.getCase(1) } returns createViewableCase(caseId)
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            requireNumberOfCasesOnCaseList(1)
+            onNodeWithContentDescription(NUMBER_OF_CASES_ID).assertDoesNotExist()
+        }
+    }
 
     @OptIn(ExperimentalTestApi::class)
     @Test

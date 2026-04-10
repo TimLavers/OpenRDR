@@ -14,7 +14,7 @@ Feature: Navigate cornerstones via chat
     Then the cornerstone index of 1 and total of 3 is displayed
 
   Scenario: The user should be able to navigate to the next cornerstone case via chat
-    Given cases are set up as follows:
+    Given cornerstone cases are set up as follows:
       | Case name | attribute name | value | comment    | condition    |
       | Case1     | x              | 1     | Comment 1. | x is in case |
       | Case2     | x              | 2     | Comment 2. | x is in case |
