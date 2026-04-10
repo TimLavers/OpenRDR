@@ -2,7 +2,7 @@ package io.rippledown.integration.pageobjects
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
+import io.rippledown.constants.caseview.PROCESSED_SECTION_HEADER_ID
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
@@ -19,16 +19,18 @@ class CaseCountPO(private val contextProvider: () -> AccessibleContext) {
         }
     }
 
+    private val countPattern = Regex("\\((\\d+)\\)")
+
     private fun countOfTheNumberOfCases(): Int {
-        waitUntilAsserted { contextForCaseCount() shouldNotBe null }
+        val context = contextForCaseCount() ?: return 0
         return execute<Int> {
-            contextForCaseCount()?.accessibleName
-                ?.substringBefore(" ")
-                ?.toIntOrNull() ?: 0
+            val name = context.accessibleName ?: ""
+            countPattern.find(name)?.groupValues?.get(1)?.toInt() ?: 0
         }
     }
 
-    private fun contextForCaseCount() = execute<AccessibleContext?> { contextProvider().find(NUMBER_OF_CASES_ID) }
+    private fun contextForCaseCount() =
+        execute<AccessibleContext?> { contextProvider().find(PROCESSED_SECTION_HEADER_ID) }
 
     fun requireCaseCountToBeHidden() {
         waitUntilAsserted { contextForCaseCount() shouldBe null }
