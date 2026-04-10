@@ -335,7 +335,12 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     fun exemptCornerstone(index: Int): CornerstoneStatus {
         checkSession()
 
-        val toExempt = ruleSession!!.cornerstoneCases()[index]
+        val currentCornerstones = ruleSession!!.cornerstoneCases()
+        if (index < 0 || currentCornerstones.isEmpty()) {
+            selectedCornerstone = null
+            return CornerstoneStatus()
+        }
+        val toExempt = currentCornerstones[index]
         ruleSession!!.exemptCornerstone(toExempt)
 
         val cornerstones = ruleSession!!.cornerstoneCases()
