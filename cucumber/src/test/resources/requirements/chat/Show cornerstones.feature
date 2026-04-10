@@ -48,7 +48,6 @@ Feature: Show cornerstones
     And the chatbot has completed the action
     And the report should be "Comment 2."
 
-  @single
   Scenario: Processed and cornerstone cases should appear in their respective lists
     Given case Case1 is provided having data:
       | x | 1 |
