@@ -13,6 +13,7 @@ import kotlin.test.Test
 
 class KBSelectCornerstoneTest {
     private lateinit var kb: KB
+    private lateinit var rsm: RuleSessionManager
 
     @BeforeTest
     fun setup() {
@@ -26,10 +27,10 @@ class KBSelectCornerstoneTest {
         val cc1 = kb.addCornerstoneCase(createCase("Case1"))
         val vcc1 = kb.viewableCase(cc1)
         val sessionCase = createCase("Session")
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
 
         //When
-        val ccStatus = kb.selectCornerstoneCase(0)
+        val ccStatus = rsm.selectCornerstoneCase(0)
 
         //Then
         ccStatus shouldBe CornerstoneStatus(vcc1, 0, 1)
@@ -43,10 +44,10 @@ class KBSelectCornerstoneTest {
         kb.addCornerstoneCase(createCase("Case3"))
         val vcc2 = kb.viewableCase(cc2)
         val sessionCase = createCase("Session")
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
 
         //When
-        val ccStatus = kb.selectCornerstoneCase(1)
+        val ccStatus = rsm.selectCornerstoneCase(1)
 
         //Then
         ccStatus shouldBe CornerstoneStatus(vcc2, 1, 3)
@@ -60,10 +61,10 @@ class KBSelectCornerstoneTest {
         val cc3 = kb.addCornerstoneCase(createCase("Case3"))
         val vcc3 = kb.viewableCase(cc3)
         val sessionCase = createCase("Session")
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
 
         //When
-        val ccStatus = kb.selectCornerstoneCase(2)
+        val ccStatus = rsm.selectCornerstoneCase(2)
 
         //Then
         ccStatus shouldBe CornerstoneStatus(vcc3, 2, 3)
@@ -78,5 +79,9 @@ class KBSelectCornerstoneTest {
         }
     }
 
-    private fun createKB(kbInfo: KBInfo) = KB(InMemoryKB(kbInfo))
+    private fun createKB(kbInfo: KBInfo): KB {
+        val newKb = KB(InMemoryKB(kbInfo))
+        rsm = KBSession(newKb).ruleSessionManager
+        return newKb
+    }
 }

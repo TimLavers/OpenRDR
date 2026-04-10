@@ -850,12 +850,12 @@ class KBTest {
     fun `should return condition for matching non-editable suggestion text`() {
         // Given
         val caseWithGlucoseAttribute = createCase("A", value = "1.0")
-        val hints = kb.conditionHintsForCase(caseWithGlucoseAttribute)
+        val hints = rsm.conditionHintsForCase(caseWithGlucoseAttribute)
         val nonEditableSuggestion = hints.suggestions.first { !it.isEditable() }
         val conditionText = nonEditableSuggestion.asText()
 
         // When
-        val condition = kb.conditionForSuggestionText(caseWithGlucoseAttribute, conditionText)
+        val condition = rsm.conditionForSuggestionText(caseWithGlucoseAttribute, conditionText)
 
         // Then
         condition shouldNotBe null
@@ -868,7 +868,7 @@ class KBTest {
         val caseWithGlucoseAttribute = createCase("A", value = "1.0")
 
         // When
-        val condition = kb.conditionForSuggestionText(caseWithGlucoseAttribute, "no such condition")
+        val condition = rsm.conditionForSuggestionText(caseWithGlucoseAttribute, "no such condition")
 
         // Then
         condition shouldBe null
@@ -878,12 +878,12 @@ class KBTest {
     fun `should not return condition for editable suggestion text`() {
         // Given
         val caseWithGlucoseAttribute = createCase("A", value = "1.0")
-        val hints = kb.conditionHintsForCase(caseWithGlucoseAttribute)
+        val hints = rsm.conditionHintsForCase(caseWithGlucoseAttribute)
         val editableSuggestion = hints.suggestions.firstOrNull { it.isEditable() }
 
         // When/Then - if there is an editable suggestion, looking it up should return null
         if (editableSuggestion != null) {
-            val condition = kb.conditionForSuggestionText(caseWithGlucoseAttribute, editableSuggestion.asText())
+            val condition = rsm.conditionForSuggestionText(caseWithGlucoseAttribute, editableSuggestion.asText())
             condition shouldBe null
         }
     }

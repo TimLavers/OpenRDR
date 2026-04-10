@@ -97,6 +97,14 @@ class RuleSessionManager(
         return cornerstoneStatus(null)
     }
 
+    override fun removeConditionByText(conditionText: String): CornerstoneStatus {
+        check(ruleSession != null) { "No rule session in progress." }
+        val condition = ruleSession!!.conditions.firstOrNull { it.asText() == conditionText }
+            ?: throw IllegalArgumentException("Condition not found in current rule session: $conditionText")
+        ruleSession!!.removeCondition(condition)
+        return cornerstoneStatus(null)
+    }
+
     fun cancelRuleSession() {
         check(ruleSession != null) { "No rule session in progress." }
         ruleSession = null
@@ -138,8 +146,9 @@ class RuleSessionManager(
         checkRuleSessionHistoryConsistency()
     }
 
-    //TODO allow the user to exempt a cornerstone case other than the first
-    override fun exemptCornerstoneCase() = exemptCornerstone(0)
+    override fun exemptCornerstoneCase() = exemptCornerstone(cornerstoneStatus().indexOfCornerstoneToReview)
+
+    override fun selectCornerstoneCase(index: Int) = selectCornerstone(index)
 
     fun descriptionOfMostRecentRule(): UndoRuleDescription {
         val record = kb.ruleSessionRecorder.idsOfRulesAddedInMostRecentSession()
@@ -168,6 +177,12 @@ class RuleSessionManager(
     override fun conditionHintsForCase(case: RDRCase): ConditionList {
         val suggester = ConditionSuggester(kb.attributeManager.all(), case)
         return ConditionList(suggester.suggestions())
+    }
+
+    override fun conditionForSuggestionText(case: RDRCase, conditionText: String): Condition? {
+        return conditionHintsForCase(case).suggestions
+            .firstOrNull { !it.isEditable() && it.asText() == conditionText }
+            ?.initialSuggestion()
     }
 
     override fun currentRuleSessionConditionTexts(): Set<String> {
