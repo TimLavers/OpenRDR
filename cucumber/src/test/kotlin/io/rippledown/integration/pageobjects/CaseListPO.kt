@@ -20,10 +20,10 @@ import javax.accessibility.AccessibleRole.SCROLL_PANE
 class CaseListPO(private val contextProvider: () -> AccessibleContext) {
     private fun casesListed(): List<String> {
         waitTillCaseListContextIsAccessible()
+        val context = caseListContext() ?: return emptyList()
         return execute<List<String>> {
-            caseListContext()?.findAllByDescriptionPrefix(CASE_NAME_PREFIX)
-                ?.map { it.accessibleDescription.removePrefix(CASE_NAME_PREFIX) }
-                ?: emptyList()
+            context.findAllByDescriptionPrefix(CASE_NAME_PREFIX)
+                .map { it.accessibleDescription.removePrefix(CASE_NAME_PREFIX) }
         }
     }
 
