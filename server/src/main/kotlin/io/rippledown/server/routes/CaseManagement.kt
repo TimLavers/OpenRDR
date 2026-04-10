@@ -6,10 +6,7 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.rippledown.constants.api.CASE
-import io.rippledown.constants.api.DELETE_CASE_WITH_NAME
-import io.rippledown.constants.api.PROCESS_CASE
-import io.rippledown.constants.api.WAITING_CASES
+import io.rippledown.constants.api.*
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.server.ServerApplication
@@ -43,6 +40,12 @@ fun Application.caseManagement(application: ServerApplication) {
             val str = call.receiveText()
             val externalCase = jsonAllowSMK.decodeFromString(ExternalCase.serializer(), str)
             val case = kbEndpoint(application).processCase(externalCase)
+            call.respond(HttpStatusCode.Accepted, case)
+        }
+        put(ADD_CORNERSTONE_CASE) {
+            val str = call.receiveText()
+            val externalCase = jsonAllowSMK.decodeFromString(ExternalCase.serializer(), str)
+            val case = kbEndpoint(application).addCornerstoneCase(externalCase)
             call.respond(HttpStatusCode.Accepted, case)
         }
         delete(DELETE_CASE_WITH_NAME) {

@@ -49,19 +49,29 @@ class LabProxy(tempDir: File, val restProxy: RESTClient) {
     }
 
     fun provideCase(name: String, attributeNameToValue: Map<String, String>) {
+        val case = externalCase(attributeNameToValue, name)
+        restProxy.provideCase(case)
+    }
+
+    fun addCornerstoneCase(name: String, attributeNameToValue: Map<String, String>) {
+        val case = externalCase(attributeNameToValue, name)
+        restProxy.addCornerstoneCase(case)
+    }
+
+    fun provideCaseForKb(kbName: String, caseName: String, attributeNameToValue: Map<String, String>): RDRCase {
+        val case = externalCase(attributeNameToValue, caseName)
+        return restProxy.provideCaseForKB(kbName, case)
+    }
+
+    private fun externalCase(
+        attributeNameToValue: Map<String, String>,
+        name: String
+    ): ExternalCase {
         val now = now().toEpochMilli()
         val data = mutableMapOf<MeasurementEvent, TestResult>()
         attributeNameToValue.forEach { data[MeasurementEvent(it.key, now)] = TestResult(it.value) }
         val case = ExternalCase(name, data)
-        restProxy.provideCase(case)
-    }
-
-    fun provideCaseForKb(kbName: String, caseName: String, attributeNameToValue: Map<String, String>): RDRCase {
-        val now = now().toEpochMilli()
-        val data = mutableMapOf<MeasurementEvent, TestResult>()
-        attributeNameToValue.forEach { data[MeasurementEvent(it.key, now)] = TestResult(it.value) }
-        val case = ExternalCase(caseName, data)
-        return restProxy.provideCaseForKB(kbName, case)
+        return case
     }
 
     fun provideCase(caseName: String, details: List<TestResultDetail>) {

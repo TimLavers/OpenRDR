@@ -88,10 +88,11 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
 
     LaunchedEffect(casesInfo, currentCaseId) {
         withContext(dispatcher) {
-            if (casesInfo.caseIds.isNotEmpty()) {
-                if (currentCaseId == null || currentCaseId !in casesInfo.caseIds.map { it.id }) {
+            val allIds = casesInfo.caseIds + casesInfo.cornerstoneCaseIds
+            if (allIds.isNotEmpty()) {
+                if (currentCaseId == null || currentCaseId !in allIds.map { it.id }) {
                     // No initial case, or it's now been deleted
-                    currentCaseId = casesInfo.caseIds[0].id!!
+                    currentCaseId = allIds[0].id!!
                 }
                 if (currentCase?.case?.caseId?.id != currentCaseId) {
                     currentCase = api.getCase(currentCaseId!!)
@@ -193,9 +194,10 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                 Row(modifier = Modifier.weight(1f)) {
                     if (!ruleInProgress) {
                         Column(modifier = Modifier.padding(top = 12.dp)) {
-                            CaseSelectorHeader(casesInfo.caseIds.size)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            CaseSelector(casesInfo.caseIds, object : CaseSelectorHandler, Handler by handler {
+                            CaseSelector(
+                                casesInfo.caseIds,
+                                casesInfo.cornerstoneCaseIds,
+                                object : CaseSelectorHandler, Handler by handler {
                                 override var selectCase = { id: Long ->
                                     ++chatId
                                     currentCase = runBlocking(dispatcher) { api.getCase(id) }

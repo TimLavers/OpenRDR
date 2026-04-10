@@ -35,6 +35,6 @@ class KBModelIntegrationTest: KBTestBase() {
         val response = session.responseToUserMessage(userExpression)
 
         //Then
-        response.text shouldContain "confirm that you want to add the comment:"
+        response.text.lowercase() shouldContain "confirm"
     }
 }

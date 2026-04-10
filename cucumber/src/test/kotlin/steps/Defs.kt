@@ -158,16 +158,17 @@ class Defs {
 
     @Given("case {word} is provided having data:")
     fun provideCaseWithData(caseName: String, dataTable: DataTable) {
-        val attributeNameToValue = mutableMapOf<String, String>()
-        dataTable.asMap().forEach { (t, u) -> attributeNameToValue[t] = u }
-        labProxy().provideCase(caseName, attributeNameToValue)
+        labProxy().provideCase(caseName, dataTable.asMap())
+    }
+
+    @Given("cornerstone case {word} is provided having data:")
+    fun provideCornerstoneWithData(caseName: String, dataTable: DataTable) {
+        labProxy().addCornerstoneCase(caseName, dataTable.asMap())
     }
 
     @Given("case {word} for KB {word} is provided having data:")
     fun provideCaseWithDataForKB(caseName: String, kbName: String, dataTable: DataTable) {
-        val attributeNameToValue = mutableMapOf<String, String>()
-        dataTable.asMap().forEach { (t, u) -> attributeNameToValue[t] = u }
-        labProxy().provideCaseForKb(kbName, caseName, attributeNameToValue)
+        labProxy().provideCaseForKb(kbName, caseName, dataTable.asMap())
     }
 
     @Given("case {word} for KB {word} gets the interpretation {string} when it is provided having data:")
@@ -208,6 +209,16 @@ class Defs {
     @Then("I should see no cases in the case list")
     fun IShouldSeeNoCasesInTheCaseList() {
         caseCountPO().requireCaseCountToBeHidden()
+    }
+
+    @Then("the cornerstone case list should contain:")
+    fun theCornerstoneCaseListShouldContain(dataTable: DataTable) {
+        caseListPO().requireCornerstoneCaseNamesToBe(dataTable.asList())
+    }
+
+    @Then("the processed case list should contain:")
+    fun theProcessedCaseListShouldContain(dataTable: DataTable) {
+        caseListPO().requireProcessedCaseNamesToBe(dataTable.asList())
     }
 
     @Then("I (should )see the case {word} as the current case")
@@ -284,6 +295,18 @@ class Defs {
                 val conditionText = row[4]
                 labProxy().provideCase(caseName, mapOf(attributeName to attributeValue))
                 if (comment != null) createRuleToAddComment(caseName, comment, conditionText)
+            }
+    }
+
+    @Given("cornerstone cases are set up as follows:")
+    fun cornerstoneCasesAreSetUpAsFollows(dataTable: DataTable) {
+        dataTable.cells()
+            .drop(1) // Drop the header row
+            .forEach { row ->
+                val caseName = row[0]
+                val attributeName = row[1]
+                val attributeValue = row[2]
+                labProxy().addCornerstoneCase(caseName, mapOf(attributeName to attributeValue))
             }
     }
 

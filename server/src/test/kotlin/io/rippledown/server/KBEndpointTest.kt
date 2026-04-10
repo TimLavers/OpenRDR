@@ -5,6 +5,7 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.mockk.every
 import io.mockk.mockk
@@ -159,6 +160,51 @@ internal class KBEndpointTest {
         val case2 = endpoint.processCase(externalCase1)
         val retrieved2 = endpoint.kb.getProcessedCase(case2.caseId.id!!)!!
         endpoint.kb.allProcessedCases() shouldBe listOf(retrieved1, retrieved2)
+    }
+
+    @Test
+    fun `addCornerstoneCase should store the case as a cornerstone`() {
+        endpoint.kb.allCornerstoneCases() shouldHaveSize 0
+        val externalCase = CaseTestUtils.getCase("Case1")
+        val stored = endpoint.addCornerstoneCase(externalCase)
+        stored.name shouldBe externalCase.name
+        stored.caseId.id shouldNotBe null
+        endpoint.kb.allCornerstoneCases() shouldHaveSize 1
+        endpoint.kb.allCornerstoneCases().first().name shouldBe externalCase.name
+    }
+
+    @Test
+    fun `addCornerstoneCase should not create a processed case`() {
+        val externalCase = CaseTestUtils.getCase("Case1")
+        endpoint.addCornerstoneCase(externalCase)
+        endpoint.kb.allProcessedCases() shouldHaveSize 0
+        endpoint.kb.allCornerstoneCases() shouldHaveSize 1
+    }
+
+    @Test
+    fun `addCornerstoneCase should be retrievable by id`() {
+        val externalCase = CaseTestUtils.getCase("Case1")
+        val stored = endpoint.addCornerstoneCase(externalCase)
+        val retrieved = endpoint.kb.getCase(stored.caseId.id!!)
+        retrieved shouldNotBe null
+        retrieved!!.name shouldBe externalCase.name
+    }
+
+    @Test
+    fun `addCornerstoneCase should allow multiple cornerstone cases`() {
+        endpoint.addCornerstoneCase(CaseTestUtils.getCase("Case1"))
+        endpoint.addCornerstoneCase(CaseTestUtils.getCase("Case2"))
+        endpoint.kb.allCornerstoneCases() shouldHaveSize 2
+    }
+
+    @Test
+    fun `addCornerstoneCase should not affect existing processed cases`() {
+        val processed = endpoint.processCase(CaseTestUtils.getCase("Case1"))
+        endpoint.addCornerstoneCase(CaseTestUtils.getCase("Case2"))
+        endpoint.kb.allProcessedCases() shouldHaveSize 1
+        endpoint.kb.allProcessedCases().first().name shouldBe "Case1"
+        endpoint.kb.allCornerstoneCases() shouldHaveSize 1
+        endpoint.kb.allCornerstoneCases().first().name shouldBe "Case2"
     }
 
     @Test
@@ -330,6 +376,21 @@ internal class KBEndpointTest {
         assertEquals(ci2.count, 2)
         assertEquals(ci2.caseIds[0].name, "Case2")
         assertEquals(ci2.caseIds[1].name, "Case3")
+    }
+
+    @Test
+    fun `waitingCasesInfo should include cornerstone cases`() {
+        val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
+        endpoint.waitingCasesInfo().cornerstoneCaseIds shouldHaveSize 0
+
+        val conclusion = endpoint.kb.conclusionManager.getOrCreate("Whatever")
+        endpoint.startRuleSessionToAddConclusion(id, conclusion)
+        endpoint.commitCurrentRuleSession()
+
+        val info = endpoint.waitingCasesInfo()
+        info.cornerstoneCaseIds shouldHaveSize 1
+        info.cornerstoneCaseIds[0].name shouldBe "Case1"
+        info.count shouldBe info.caseIds.size + info.cornerstoneCaseIds.size
     }
 
     @Test
@@ -506,7 +567,7 @@ internal class KBEndpointTest {
         val rsm = mockk<RuleSessionManager>()
         val case = mockk<RDRCase>()
         val conclusion = mockk<Conclusion>()
-        every { kb.getProcessedCase(any()) } returns case
+        every { kb.getCase(any()) } returns case
         every { kb.interpret(any()) } returns mockk()
         val session = mockk<KBSession>()
         every { session.kb } returns kb
@@ -527,7 +588,7 @@ internal class KBEndpointTest {
         val rsm = mockk<RuleSessionManager>()
         val case = mockk<RDRCase>()
         val conclusion = mockk<Conclusion>()
-        every { kb.getProcessedCase(any()) } returns case
+        every { kb.getCase(any()) } returns case
         every { kb.interpret(any()) } returns mockk()
         val session = mockk<KBSession>()
         every { session.kb } returns kb
@@ -549,7 +610,7 @@ internal class KBEndpointTest {
         val case = mockk<RDRCase>()
         val toGo = mockk<Conclusion>()
         val replacement = mockk<Conclusion>()
-        every { kb.getProcessedCase(any()) } returns case
+        every { kb.getCase(any()) } returns case
         every { kb.interpret(any()) } returns mockk()
         val session = mockk<KBSession>()
         every { session.kb } returns kb

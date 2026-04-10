@@ -64,7 +64,11 @@ class KBEndpoint(val session: KBSession) {
 
     fun commitCurrentRuleSession() = ruleSessionManager().commitCurrentRuleSession()
 
-    fun waitingCasesInfo() = CasesInfo(kb.processedCaseIds(), kb.kbInfo.name)
+    fun waitingCasesInfo() = CasesInfo(
+        caseIds = kb.processedCaseIds(),
+        cornerstoneCaseIds = kb.cornerstoneCaseIds(),
+        kbName = kb.kbInfo.name
+    )
 
     fun case(id: Long): RDRCase {
         val case = uninterpretedCase(id)
@@ -81,6 +85,8 @@ class KBEndpoint(val session: KBSession) {
     suspend fun responseToUserMessage(message: String): ChatResponse = session.responseToUserMessage(message)
 
     fun processCase(externalCase: ExternalCase) = kb.processCase(externalCase)
+
+    fun addCornerstoneCase(externalCase: ExternalCase) = kb.addCornerstoneCase(externalCase)
 
     fun deleteCase(name: String) = kb.deletedProcessedCaseWithName(name)
 
