@@ -9,7 +9,6 @@ import io.rippledown.constants.caseview.PROCESSED_SECTION_ID
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
 import io.rippledown.integration.utils.findExact
-import io.rippledown.integration.utils.findLabelChildren
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
@@ -21,7 +20,11 @@ import javax.accessibility.AccessibleRole.SCROLL_PANE
 class CaseListPO(private val contextProvider: () -> AccessibleContext) {
     private fun casesListed(): List<String> {
         waitTillCaseListContextIsAccessible()
-        return execute<List<String>> { caseListContext()?.findLabelChildren() ?: emptyList() }
+        return execute<List<String>> {
+            caseListContext()?.findAllByDescriptionPrefix(CASE_NAME_PREFIX)
+                ?.map { it.accessibleDescription.removePrefix(CASE_NAME_PREFIX) }
+                ?: emptyList()
+        }
     }
 
     private fun waitTillCaseListContextIsAccessible() =
