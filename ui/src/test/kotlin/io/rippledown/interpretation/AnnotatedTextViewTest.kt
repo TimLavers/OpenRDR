@@ -123,7 +123,7 @@ class AnnotatedTextViewTest {
             pointerExit shouldBe false
 
             //When
-            y
+            movePointerBelowTheText(textLayoutResult)
 
             //Then
             pointerExit shouldBe true
