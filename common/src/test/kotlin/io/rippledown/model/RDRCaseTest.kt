@@ -110,13 +110,13 @@ class RDRCaseTest {
         assertEquals(tshInCase.value.text, "0.67")
         assertEquals(tshInCase.units, "mU/L")
         assertEquals(tshInCase.referenceRange!!.lower, 0.5F)
-        assertEquals(tshInCase.referenceRange!!.upper, 4.0F)
+        assertEquals(tshInCase.referenceRange.upper, 4.0F)
 
         val freeT4InCase = case1.getLatest(ft4)!!
         assertEquals(freeT4InCase.value.text, "16")
         assertEquals(freeT4InCase.units, "pmol/L")
         assertEquals(freeT4InCase.referenceRange!!.lower, 10F)
-        assertEquals(freeT4InCase.referenceRange!!.upper, 20F)
+        assertEquals(freeT4InCase.referenceRange.upper, 20F)
     }
 
     @Test
@@ -404,7 +404,7 @@ class RDRCaseTest {
             with(getLatest(tsh)!!) {
                 value.text shouldBe "0.67"
                 referenceRange!!.lower shouldBe "0.5".toFloat()
-                referenceRange!!.upper shouldBe "4.0".toFloat()
+                referenceRange.upper shouldBe "4.0".toFloat()
                 units shouldBe "mU/L"
             }
             with(getLatest(abc)!!) {
@@ -415,7 +415,7 @@ class RDRCaseTest {
             with(getLatest(def)!!) {
                 value.text shouldBe "100"
                 referenceRange!!.lower shouldBe "90".toFloat()
-                referenceRange!!.upper shouldBe "400".toFloat()
+                referenceRange.upper shouldBe "400".toFloat()
                 units shouldBe null
             }
         }

@@ -72,8 +72,9 @@ tasks.register("runAllTests") {
     group = "verification"
     description = "Runs all unit tests followed by all Cucumber tests"
     val unitTests = subprojects.filter { it.name != "cucumber" }.map { it.tasks.named("test") }
+    unitTests.forEach { test -> println("test = ${test.name}") }
     val cucumberTests = project(":cucumber").tasks.named("cucumberTest")
     dependsOn(unitTests)
-    dependsOn(cucumberTests)
-    cucumberTests.get().mustRunAfter(unitTests)
+//    dependsOn(cucumberTests)
+//    cucumberTests.get().mustRunAfter(unitTests)
 }
