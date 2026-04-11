@@ -18,7 +18,7 @@ class KBModelIntegrationTest: KBTestBase() {
         val case = createCase("Case")
 
         //When
-        val response = kb.startConversation(case)
+        val response = session.startConversation(case)
 
         //Then
         response.text shouldContain "Would you like to add a comment"//todo use some known constant
@@ -28,11 +28,11 @@ class KBModelIntegrationTest: KBTestBase() {
     fun `should delegate user message to the ChatManager using Gemini`() = runTest {
         //Given
         val case = createCase("Case")
-        kb.startConversation(case)
+        session.startConversation(case)
         val userExpression = "Please add the comment 'Go to Bondi.'."
 
         //When
-        val response = kb.responseToUserMessage(userExpression)
+        val response = session.responseToUserMessage(userExpression)
 
         //Then
         response.text.lowercase() shouldContain "confirm"

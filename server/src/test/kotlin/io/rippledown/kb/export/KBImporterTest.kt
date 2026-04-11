@@ -5,6 +5,7 @@ import io.kotest.matchers.equality.shouldBeEqualToComparingFields
 import io.kotest.matchers.maps.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.rippledown.kb.KB
+import io.rippledown.kb.KBSession
 import io.rippledown.kb.export.util.Unzipper
 import io.rippledown.kb.export.util.Zipper
 import io.rippledown.model.KBInfo
@@ -55,7 +56,7 @@ class KBImporterTest : ExporterTestBase() {
         rebuilt.allCornerstoneCases().size shouldBe 0
         rebuilt.caseViewManager.allInOrder().size shouldBe 0
         rebuilt.ruleTree.size() shouldBe 1
-        rebuilt.ruleSessionHistories().size shouldBe 0
+        rebuilt.ruleSessionRecorder.allRuleSessionHistories().size shouldBe 0
     }
 
     @Test
@@ -84,7 +85,7 @@ class KBImporterTest : ExporterTestBase() {
         rebuiltFirstRule.structurallyEqual(kb.ruleTree.root.childRules().first()) shouldBe true
         rebuiltFirstRule.conditions.iterator().next().userExpression() shouldBe userExpression
 
-        with(rebuilt.ruleSessionHistories()) {
+        with(rebuilt.ruleSessionRecorder.allRuleSessionHistories()) {
             size shouldBe 1
             first().idsOfRulesAddedInSession shouldContain rebuiltFirstRule.id
         }
@@ -120,10 +121,11 @@ class KBImporterTest : ExporterTestBase() {
         kb.addProcessedCase(case3)
 
         // Add a rule.
-        kb.startRuleSession(case1, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Glucose ok.")))
+        val rsm = KBSession(kb).ruleSessionManager
+        rsm.startRuleSession(case1, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Glucose ok.")))
         val condition = EpisodicCondition(null, glucose, LessThanOrEquals(4.1), Current, userExpression)
-        kb.addConditionToCurrentRuleSession(condition)
-        kb.commitCurrentRuleSession()
+        rsm.addConditionToCurrentRuleSession(condition)
+        rsm.commitCurrentRuleSession()
 
         // Set up the case view.
         kb.caseViewManager.set(listOf(hdl, ldl, glucose))

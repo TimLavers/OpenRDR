@@ -1,30 +1,34 @@
 package io.rippledown.server
 
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import io.rippledown.kb.KB
+import io.rippledown.kb.KBSession
+import io.rippledown.kb.RuleSessionManager
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 internal class KBEndpointDelegationTest {
 
-    private lateinit var kb: KB
-
+    private lateinit var rsm: RuleSessionManager
+    private lateinit var session: KBSession
     private lateinit var endpoint: KBEndpoint
 
     @BeforeTest
     fun setup() {
-        kb = mockk<KB>()
-        endpoint = KBEndpoint(kb)
+        rsm = mockk<RuleSessionManager>()
+        session = mockk<KBSession>()
+        every { session.ruleSessionManager } returns rsm
+        endpoint = KBEndpoint(session)
     }
 
     @Test
-    fun `should delegate to the kb to cancel a rule session`() {
+    fun `should delegate to the ruleSessionManager to cancel a rule session`() {
         // When
         endpoint.cancelRuleSession()
 
         // Then
-        verify { kb.cancelRuleSession() }
+        verify { rsm.cancelRuleSession() }
     }
 
 }

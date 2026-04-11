@@ -3,9 +3,9 @@ package io.rippledown.kb.sample
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.mockk.mockk
 import io.rippledown.kb.KB
 import io.rippledown.kb.KBManager
+import io.rippledown.kb.KBSession
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.sample.SampleKB.*
 import io.rippledown.server.KBEndpoint
@@ -18,7 +18,7 @@ import kotlin.test.Test
 class SampleKBLoaderTest {
     private val kbName = "Whatever"
     private val persistenceProvider = InMemoryPersistenceProvider()
-    private val kbManager = KBManager(persistenceProvider, mockk())
+    private val kbManager = KBManager(persistenceProvider)
 
     private lateinit var endpoint: KBEndpoint
 
@@ -27,7 +27,7 @@ class SampleKBLoaderTest {
         val rootDir = File("kbe")
         val kbInfo = kbManager.createKB(kbName)
         val kb = (kbManager.openKB(kbInfo.id) as EntityRetrieval.Success<KB>).entity
-        endpoint = KBEndpoint(kb)
+        endpoint = KBEndpoint(KBSession(kb))
 //        FileUtils.cleanDirectory(endpoint.casesDir)
 //        FileUtils.cleanDirectory(endpoint.interpretationsDir)
     }

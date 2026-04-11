@@ -1,21 +1,19 @@
 package io.rippledown.kb
 
-import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
 import io.rippledown.model.caseview.CaseViewProperties
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.persistence.inmemory.InMemoryKB
 import io.rippledown.utils.defaultDate
-import kotlinx.coroutines.test.runTest
-import kotlin.test.BeforeTest
-import kotlin.test.Test
 
 open class KBTestBase {
     val kbInfo = KBInfo("id123", "MyKB")
     lateinit var kb: KB
+    lateinit var session: KBSession
 
     open fun setup() {
         kb = KB(InMemoryKB(kbInfo))
+        session = KBSession(kb)
     }
 
     fun glucose() = kb.attributeManager.getOrCreate("Glucose")

@@ -2,9 +2,9 @@ package io.rippledown.server
 
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
-import io.mockk.mockk
 import io.rippledown.kb.KB
 import io.rippledown.kb.KBManager
+import io.rippledown.kb.KBSession
 import io.rippledown.model.COMMENT_SEPARATOR
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Removal
@@ -20,14 +20,14 @@ import kotlin.test.Test
 internal class RuleBuildingTest {
     private val kbName = "KBEndpointTest"
     private val persistenceProvider = InMemoryPersistenceProvider()
-    private val kbManager = KBManager(persistenceProvider, mockk())
+    private val kbManager = KBManager(persistenceProvider)
     private lateinit var kbEndpoint: KBEndpoint
 
     @BeforeTest
     fun setup() {
         val kbInfo = kbManager.createKB(kbName)
         val kb = (kbManager.openKB(kbInfo.id) as EntityRetrieval.Success<KB>).entity
-        kbEndpoint = KBEndpoint(kb)
+        kbEndpoint = KBEndpoint(KBSession(kb))
     }
 
     @Test

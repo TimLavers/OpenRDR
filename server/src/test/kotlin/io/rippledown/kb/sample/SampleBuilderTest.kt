@@ -1,8 +1,8 @@
 package io.rippledown.kb.sample
 
-import io.mockk.mockk
 import io.rippledown.kb.KB
 import io.rippledown.kb.KBManager
+import io.rippledown.kb.KBSession
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.server.KBEndpoint
 import io.rippledown.util.EntityRetrieval
@@ -13,7 +13,7 @@ import kotlin.test.BeforeTest
 open class SampleBuilderTest {
     private val kbName = "Whatever"
     private val persistenceProvider = InMemoryPersistenceProvider()
-    private val kbManager = KBManager(persistenceProvider, mockk())
+    private val kbManager = KBManager(persistenceProvider)
     lateinit var endpoint: KBEndpoint
 
     @BeforeTest
@@ -21,7 +21,7 @@ open class SampleBuilderTest {
         val rootDir = File("kbe")
         val kbInfo = kbManager.createKB(kbName)
         val kb = (kbManager.openKB(kbInfo.id) as EntityRetrieval.Success<KB>).entity
-        endpoint = KBEndpoint(kb)
+        endpoint = KBEndpoint(KBSession(kb))
 //        FileUtils.cleanDirectory(endpoint.casesDir)
 //        FileUtils.cleanDirectory(endpoint.interpretationsDir)
     }

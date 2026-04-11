@@ -1,40 +1,16 @@
 package io.rippledown.kb
 
-import io.ktor.util.logging.*
-import io.rippledown.chat.Conversation
-import io.rippledown.chat.Conversation.Companion.GET_SUGGESTED_CONDITIONS
-import io.rippledown.chat.Conversation.Companion.SELECT_SUGGESTED_CONDITION
-import io.rippledown.chat.Conversation.Companion.TRANSFORM_REASON
-import io.rippledown.chat.FunctionCallHandler
-import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
-import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
-import io.rippledown.constants.rule.INTERPRETED_CONDITION_IS_NOT_TRUE
-import io.rippledown.hints.AttributeFor
-import io.rippledown.hints.ConditionChatService
-import io.rippledown.hints.ConditionGenerator
-import io.rippledown.kb.chat.*
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.CaseType
-import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.caseview.ViewableCase
-import io.rippledown.model.chat.ChatResponse
-import io.rippledown.model.condition.Condition
-import io.rippledown.model.condition.ConditionList
-import io.rippledown.model.condition.ConditionParsingResult
-import io.rippledown.model.diff.Addition
-import io.rippledown.model.diff.Diff
-import io.rippledown.model.diff.Removal
-import io.rippledown.model.diff.Replacement
 import io.rippledown.model.external.ExternalCase
-import io.rippledown.model.rule.*
+import io.rippledown.model.rule.RuleSessionRecorder
 import io.rippledown.persistence.PersistentKB
-import io.rippledown.server.websocket.WebSocketManager
-import kotlinx.coroutines.runBlocking
 
 
-class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = null) : RuleService {
+class KB(persistentKB: PersistentKB) {
     val logger = lazyLogger
 
     val kbInfo = persistentKB.kbInfo()
@@ -44,30 +20,10 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     val conditionManager = ConditionManager(attributeManager, persistentKB.conditionStore())
     val interpretationViewManager = InterpretationViewManager(persistentKB.conclusionOrderStore(), conclusionManager)
     val ruleSessionRecorder = RuleSessionRecorder(persistentKB.ruleSessionRecordStore())
-    private val ruleManager = RuleManager(conclusionManager, conditionManager, persistentKB.ruleStore())
+    internal val ruleManager = RuleManager(conclusionManager, conditionManager, persistentKB.ruleStore())
     private val caseManager = CaseManager(persistentKB.caseStore(), attributeManager)
     internal val caseViewManager = CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
     val ruleTree = ruleManager.ruleTree()
-    private var ruleSession: RuleBuildingSession? = null
-    internal var currentDiff: Diff? = null
-    private var selectedCornerstone: ViewableCase? = null
-    private val conditionChatService = ConditionChatService()
-
-    private var conditionParser: ConditionParser
-    private lateinit var chatManager: ChatManager
-
-    init {
-        conditionParser = object : ConditionParser {
-            override fun parse(expression: String, attributeFor: AttributeFor) =
-                ConditionGenerator(attributeFor, conditionChatService, attributeNames()).conditionFor(expression)
-        }
-    }
-
-    override fun moveAttributeTo(moved: String, destination: String) {
-        val attributeMoved = attributeManager.all().first { it.name.equals(moved) }
-        val attributeDestination = attributeManager.all().first { it.name.equals(destination) }
-        caseViewManager.move(attributeMoved, attributeDestination)
-    }
 
     fun attributeNames() = attributeManager.all().map { it.name }
 
@@ -142,138 +98,6 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
         return builder.build(case.name)
     }
 
-    fun startRuleSession(
-        case: RDRCase,
-        action: RuleTreeChange
-    ): CornerstoneStatus {
-        logger.info("KB starting rule session for case ${case.name} and action $action")
-        check(ruleSession == null) { "Session already in progress." }
-        check(action.isApplicable(ruleTree, case)) { "Action $action is not applicable to case ${case.name}" }
-        val alignedAction = action.alignWith(conclusionManager)
-        ruleSession = RuleBuildingSession(ruleManager, ruleTree, case, alignedAction, allCornerstoneCases())
-        logger.info("KB rule session created")
-        return cornerstoneStatus(null)
-    }
-
-    override fun startRuleSessionToAddComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus {
-        currentDiff = Addition(comment)
-        val conclusion = conclusionManager.getOrCreate(comment)
-        val action = ChangeTreeToAddConclusion(conclusion)
-        return startRuleSession(viewableCase.case, action)
-    }
-
-    override fun startRuleSessionToRemoveComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus {
-        currentDiff = Removal(comment)
-        val conclusion = conclusionManager.getOrCreate(comment)
-        val action = ChangeTreeToRemoveConclusion(conclusion)
-        return startRuleSession(viewableCase.case, action)
-    }
-
-    override fun startRuleSessionToReplaceComment(
-        viewableCase: ViewableCase,
-        replacedComment: String,
-        replacementComment: String
-    ): CornerstoneStatus {
-        currentDiff = Replacement(replacedComment, replacementComment)
-        val replacedConclusion = conclusionManager.getOrCreate(replacedComment)
-        val replacementConclusion = conclusionManager.getOrCreate(replacementComment)
-        val action = ChangeTreeToReplaceConclusion(replacedConclusion, replacementConclusion)
-        return startRuleSession(viewableCase.case, action)
-    }
-
-    override fun sendCornerstoneStatus() {
-        val cornerstoneStatus = cornerstoneStatus(selectedCornerstone)
-        runBlocking { webSocketManager?.sendStatus(cornerstoneStatus) }
-    }
-
-    override fun sendRuleSessionCompleted() {
-        runBlocking { webSocketManager?.sendRuleSessionCompleted() }
-    }
-
-    override fun removeCondition(conditionId: Int): CornerstoneStatus {
-        check(ruleSession != null) { "No rule session in progress." }
-        val condition = conditionManager.getById(conditionId)
-        ruleSession!!.removeCondition(condition)
-        return cornerstoneStatus(null)
-    }
-
-    override fun removeConditionByText(conditionText: String): CornerstoneStatus {
-        check(ruleSession != null) { "No rule session in progress." }
-        val condition = ruleSession!!.conditions.firstOrNull { it.asText() == conditionText }
-            ?: throw IllegalArgumentException("Condition not found in current rule session: $conditionText")
-        ruleSession!!.removeCondition(condition)
-        return cornerstoneStatus(null)
-    }
-
-    fun cancelRuleSession() {
-        check(ruleSession != null) { "No rule session in progress." }
-        ruleSession = null
-        currentDiff = null
-    }
-
-    override fun cancelCurrentRuleSession() = cancelRuleSession()
-
-    fun conflictingCasesInCurrentRuleSession(): List<RDRCase> {
-        checkSession()
-        return ruleSession!!.cornerstoneCases()
-    }
-
-    override fun addConditionToCurrentRuleSession(condition: Condition) {
-        checkSession()
-        // Align the provided condition with that in the condition manager.
-        val conditionToUse = if (condition.id == null) {
-            conditionManager.getOrCreate(condition)
-        } else {
-            val existing = conditionManager.getById(condition.id!!)
-            // Check that there's no confusion between the condition provided
-            // and the one that already exists (here we're defending against test code
-            // that might have mixed things up).
-            require(existing.sameAs(condition)) {
-                "Condition provided does not match that in the condition manager."
-            }
-            existing
-        }
-        ruleSession!!.addCondition(conditionToUse)
-    }
-
-    override fun commitCurrentRuleSession() {
-        checkSession()
-        val rulesAdded = ruleSession!!.commit()
-        ruleSessionRecorder.recordRuleSessionCommitted(rulesAdded)
-        addCornerstoneCase(ruleSession!!.case)
-        ruleSession = null
-        currentDiff = null
-        checkRuleSessionHistoryConsistency()
-    }
-
-    override fun exemptCornerstoneCase() = exemptCornerstone(cornerstoneStatus().indexOfCornerstoneToReview)
-
-    override fun selectCornerstoneCase(index: Int) = selectCornerstone(index)
-
-    fun descriptionOfMostRecentRule(): UndoRuleDescription {
-        val record = ruleSessionRecorder.idsOfRulesAddedInMostRecentSession()
-            ?: return UndoRuleDescription("There are no rules to undo.", false)
-        val idOfExemplar = record.idsOfRulesAddedInSession.random()
-        val exemplar = ruleTree.ruleForId(idOfExemplar)
-        return UndoRuleDescription(exemplar.actionSummary(), true)
-    }
-
-    fun ruleSessionHistories() = ruleSessionRecorder.allRuleSessionHistories()
-
-    override fun undoLastRuleSession() {
-        val record = ruleSessionRecorder.idsOfRulesAddedInMostRecentSession()!!
-        record.idsOfRulesAddedInSession.forEach{
-            val toDelete = ruleTree.ruleForId(it)
-            ruleManager.deleteLeafRule(toDelete)
-        }
-        ruleSessionRecorder.delete(ruleSessionRecorder.allRuleSessionHistories().last())
-    }
-
-    private fun checkSession() {
-        logger.debug { "checking session in KB ${this.kbInfo}" }
-        check(ruleSession != null) { "Rule session not started." }
-    }
-
     fun interpret(case: RDRCase) = ruleTree.apply(case)
 
     fun viewableCase(case: RDRCase): ViewableCase {
@@ -292,180 +116,6 @@ class KB(persistentKB: PersistentKB, val webSocketManager: WebSocketManager? = n
     }
 
     override fun hashCode() = kbInfo.hashCode()
-
-    override fun conditionHintsForCase(case: RDRCase): ConditionList {
-        val suggester = ConditionSuggester(attributeManager.all(), case)
-        return ConditionList(suggester.suggestions())
-    }
-
-    override fun conditionForSuggestionText(case: RDRCase, conditionText: String): Condition? {
-        return conditionHintsForCase(case).suggestions
-            .firstOrNull { !it.isEditable() && it.asText() == conditionText }
-            ?.initialSuggestion()
-    }
-
-    override fun currentRuleSessionConditionTexts(): Set<String> {
-        return ruleSession?.conditions?.map { it.asText() }?.toSet() ?: emptySet()
-    }
-
-    override fun isRuleSessionActive(): Boolean = ruleSession != null
-
-    /**
-     * @param request the request containing the currently selected cornerstone and an updated list of conditions
-     *
-     * @return the CornerstoneStatus for the current session where the cornerstone specified in the request should remain selected if it is still in the list of cornerstones
-     * after the new set of conditions have been applied
-     */
-    fun updateCornerstone(request: UpdateCornerstoneRequest): CornerstoneStatus {
-        checkSession()
-
-        //replace the conditions in the current session with the updated ones
-        ruleSession!!.conditions = request.conditionList.conditions.toMutableSet()
-
-        //update the cornerstone status
-        val currentCC = request.cornerstoneStatus.cornerstoneToReview
-        return cornerstoneStatus(currentCC)
-    }
-
-    /**
-     * @param index the index of the cornerstone to be exempted
-     *
-     * @return the CornerstoneStatus for the current session after the specified cornerstone has been exempted
-     */
-    fun exemptCornerstone(index: Int): CornerstoneStatus {
-        checkSession()
-
-        val currentCornerstones = ruleSession!!.cornerstoneCases()
-        if (index < 0 || currentCornerstones.isEmpty()) {
-            selectedCornerstone = null
-            return CornerstoneStatus()
-        }
-        val toExempt = currentCornerstones[index]
-        ruleSession!!.exemptCornerstone(toExempt)
-
-        val cornerstones = ruleSession!!.cornerstoneCases()
-        return if (cornerstones.isEmpty()) {
-            selectedCornerstone = null
-            CornerstoneStatus()
-        } else {
-            val newCC = cornerstones[index.coerceAtMost(cornerstones.size - 1)]
-            val viewable = viewableCase(newCC)
-            selectedCornerstone = viewable
-            cornerstoneStatus(viewable)
-        }
-    }
-
-    /**
-     * @param index the index of the cornerstone to be selected
-     * @return the CornerstoneStatus for the current session after the specified cornerstone has been selected
-     */
-    fun selectCornerstone(index: Int): CornerstoneStatus {
-        checkSession()
-        val cornerstones = ruleSession!!.cornerstoneCases()
-        val caseInstance = cornerstones[index]
-        // Because Interpretation is not immutable, we need to copy
-        // the case with a new interpretation (copy is not deep)
-        // to make this thread safe.
-        val newCC = caseInstance.copy(interpretation = Interpretation(caseInstance.caseId))
-        val viewable = viewableCase(newCC)
-        selectedCornerstone = viewable
-        return CornerstoneStatus(viewable, index, cornerstones.size)
-    }
-
-    override fun cornerstoneStatus(): CornerstoneStatus = cornerstoneStatus(selectedCornerstone)
-
-    /**
-     * @return the CornerstoneStatus for the current session where the specified cornerstone should remain selected if it is still in the list of cornerstones
-     */
-    internal fun cornerstoneStatus(currentCornerstone: ViewableCase?): CornerstoneStatus {
-        checkSession()
-        val cornerstones: List<RDRCase> = ruleSession!!.cornerstoneCases()
-        val conditionTexts = ruleSession!!.conditions.map { it.asText() }
-        if (cornerstones.isEmpty()) return CornerstoneStatus(diff = currentDiff, ruleConditions = conditionTexts)
-
-        //if no cornerstone has been selected yet, or the selected cornerstone is no longer in the list of cornerstones, return the first one
-        var index = 0
-        if (currentCornerstone != null) {
-            index = cornerstones.indexOf(currentCornerstone.case)
-        }
-        index = if (index >= 0) index else 0
-        val cornerstone = cornerstones[index]
-        val viewableCornerstone = viewableCase(cornerstone)
-        return CornerstoneStatus(viewableCornerstone, index, cornerstones.size, currentDiff, conditionTexts)
-    }
-
-    //Allow a mock parser to be set so we can avoid connecting to Gemini for all the tests
-    fun setConditionParser(parser: ConditionParser) {
-        conditionParser = parser
-    }
-
-    override fun conditionForExpression(case: RDRCase, expression: String): ConditionParsingResult {
-        val attributeFor: AttributeFor = { attributeManager.getOrCreate(it) }
-        val condition = conditionParser.parse(expression, attributeFor)
-
-        //Only return the condition if non-null and holds for the case
-        val caseAttributeNames = case.attributes.map { it.name }.toSet()
-        return if (condition == null) {
-            ConditionParsingResult(errorMessage = DOES_NOT_CORRESPOND_TO_A_CONDITION)
-        } else if (condition.attributeNames().any { it !in caseAttributeNames }) {
-            ConditionParsingResult(errorMessage = DOES_NOT_CORRESPOND_TO_A_CONDITION)
-        } else if (!condition.holds(case)) {
-            val message = if (expression.normalizeForComparison() != condition.asText().normalizeForComparison()) {
-                INTERPRETED_CONDITION_IS_NOT_TRUE.format(expression, condition.asText())
-            } else {
-                CONDITION_IS_NOT_TRUE
-            }
-            ConditionParsingResult(errorMessage = message)
-        } else {
-            //if this a new condition, the following will store it with its user expression, else the existing condition will be returned
-            ConditionParsingResult(conditionManager.getOrCreate(condition))
-        }
-    }
-
-    private fun checkRuleSessionHistoryConsistency() {
-        val idsOfNonRootRulesInTree = ruleTree.rules().filter { it.parent != null }.map { it.id }.toSet()
-//        val ruleIdsFromSessions = ruleSessionRecorder.idsOfAllSessionRules()
-//        assert(idsOfNonRootRulesInTree == ruleIdsFromSessions) {"Ids of rules in sessions don't match non-root tree rules."}
-    }
-
-    fun conditionForExpression(expression: String) = conditionForExpression(ruleSession!!.case, expression)
-
-    /**
-     * Starts a new conversation for the given viewable case.
-     *
-     * @param viewableCase The case to start a conversation about
-     * @return A string representing the conversation ID or initial response
-     */
-    suspend fun startConversation(viewableCase: ViewableCase): ChatResponse {
-        val chatService = KBChatService.createKBChatService(viewableCase)
-        // Use a lazy ModelResponder since chatManager isn't created until after Conversation
-        val modelResponder = object : ModelResponder {
-            override suspend fun response(message: String): ChatResponse = chatManager.response(message)
-        }
-        val reasonTransformer = createReasonTransformer(viewableCase, this, modelResponder)
-        val suggestedConditionsHandler = SuggestedConditionsHandler(viewableCase.case, this)
-        val selectSuggestionHandler = SelectSuggestionHandler(viewableCase.case, this)
-        val functionCallHandlers: Map<String, FunctionCallHandler> = mapOf(
-            TRANSFORM_REASON to ReasonTransformHandler(reasonTransformer),
-            GET_SUGGESTED_CONDITIONS to suggestedConditionsHandler,
-            SELECT_SUGGESTED_CONDITION to selectSuggestionHandler
-        )
-        val conversationService = Conversation(
-            chatService = chatService,
-            functionCallHandlers = functionCallHandlers
-        )
-        chatManager = ChatManager(conversationService, this)
-        return chatManager.startConversation(viewableCase)
-    }
-
-    /**
-     * Creates a transformer that converts a natural language reason into a rule condition and
-     * adds it to the current rule session if it is valid.
-     */
-    fun createReasonTransformer(viewableCase: ViewableCase, ruleService: RuleService, modelResponder: ModelResponder) =
-        KBReasonTransformer(viewableCase.case, ruleService, modelResponder)
-
-    suspend fun responseToUserMessage(message: String): ChatResponse = chatManager.response(message)
 }
 
 internal fun String.normalizeForComparison() =
