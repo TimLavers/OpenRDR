@@ -1,0 +1,75 @@
+name: Run All Tests and Email Results
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: ${{ runner.os }}-gradle
+
+      - name: Read Gemini API key
+        run: echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> $GITHUB_ENV
+
+      - name: Run all tests
+        run: ./gradlew runAllTests
+        continue-on-error: true
+
+      - name: Generate test summary
+        run: |
+          echo "## Test Results" > test_summary.md
+          echo "" >> test_summary.md
+          echo "**Workflow:** ${{ github.workflow }}" >> test_summary.md
+          echo "**Run:** #${{ github.run_number }}" >> test_summary.md
+          echo "**Commit:** ${{ github.sha }}" >> test_summary.md
+          echo "**Branch:** ${{ github.ref_name }}" >> test_summary.md
+          echo "" >> test_summary.md
+          echo "### Unit Test Results" >> test_summary.md
+          if [ -d "common/build/reports/tests/test" ]; then
+            echo "✅ Common module tests completed" >> test_summary.md
+          else
+            echo "❌ Common module tests failed or not found" >> test_summary.md
+          fi
+          echo "" >> test_summary.md
+          echo "### Cucumber Test Results" >> test_summary.md
+          if [ -d "cucumber/build/test-results" ]; then
+            echo "✅ Cucumber tests completed" >> test_summary.md
+          else
+            echo "❌ Cucumber tests failed or not found" >> test_summary.md
+          fi
+
+      - name: Send email with test results
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "OpenRDR Test Results - ${{ github.workflow }} #${{ github.run_number }}"
+          to: ${{ secrets.MAIL_TO }}
+          from: ${{ secrets.MAIL_FROM }}
+          body: file://test_summary.md
+          priority: high

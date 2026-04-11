@@ -67,3 +67,13 @@ version = "1.0-SNAPSHOT"
 application {
     mainClass.set("io.rippledown.server.OpenRDRServerKt")
 }
+
+tasks.register("runAllTests") {
+    group = "verification"
+    description = "Runs all unit tests followed by all Cucumber tests"
+    val unitTests = subprojects.filter { it.name != "cucumber" }.map { it.tasks.named("test") }
+    val cucumberTests = project(":cucumber").tasks.named("cucumberTest")
+    dependsOn(unitTests)
+    dependsOn(cucumberTests)
+    cucumberTests.get().mustRunAfter(unitTests)
+}

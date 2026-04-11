@@ -123,7 +123,7 @@ class AnnotatedTextViewTest {
             pointerExit shouldBe false
 
             //When
-            movePointerBelowTheText(textLayoutResult!!)
+            y
 
             //Then
             pointerExit shouldBe true
@@ -165,7 +165,7 @@ class AnnotatedTextViewTest {
             actualIndex shouldBe "$bondiComment ".length
 
             //When
-            movePointerBelowTheText(textLayoutResult!!)
+            movePointerBelowTheText(textLayoutResult)
 
             //Then
             pointerExit shouldBe true
@@ -225,7 +225,7 @@ class AnnotatedTextViewTest {
             waitForIdle()
 
             // Move pointer to second comment - should call second handler, not first
-            movePointerOverComment(malabarComment, textLayoutResult!!)
+            movePointerOverComment(malabarComment, textLayoutResult)
             waitUntilAsserted { offsetFromSecondHandler shouldBe "$bondiComment ".length }
         }
     }

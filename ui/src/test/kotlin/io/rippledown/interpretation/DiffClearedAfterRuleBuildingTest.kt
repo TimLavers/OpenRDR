@@ -79,7 +79,7 @@ class DiffClearedAfterRuleBuildingTest {
             requireInterpretationForCornerstone(bondiComment)
 
             // Hover over the comment - should still show only the comment, no diff
-            movePointerOverComment(bondiComment, textLayoutResult!!)
+            movePointerOverComment(bondiComment, textLayoutResult)
             waitForIdle()
             requireInterpretationForCornerstone(bondiComment)
         }
@@ -114,7 +114,7 @@ class DiffClearedAfterRuleBuildingTest {
             requireInterpretationForCornerstone(bondiComment)
 
             // Hover over the comment - should not show removal styling
-            movePointerOverComment(bondiComment, textLayoutResult!!)
+            movePointerOverComment(bondiComment, textLayoutResult)
             waitForIdle()
             requireInterpretationForCornerstone(bondiComment)
         }
@@ -152,7 +152,7 @@ class DiffClearedAfterRuleBuildingTest {
             requireInterpretationForCornerstone(bondiComment)
 
             // Hover - should show only the original comment
-            movePointerOverComment(bondiComment, textLayoutResult!!)
+            movePointerOverComment(bondiComment, textLayoutResult)
             waitForIdle()
             requireInterpretationForCornerstone(bondiComment)
         }
@@ -183,7 +183,7 @@ class DiffClearedAfterRuleBuildingTest {
             requireInterpretationForCornerstone("$bondiComment $addedComment")
 
             // Hover over diff text to establish pointer state at a different position
-            movePointerOverComment(addedComment, textLayoutResult!!)
+            movePointerOverComment(addedComment, textLayoutResult)
             waitForIdle()
 
             // Clear diff programmatically (simulates WebSocket rule completion)
@@ -191,11 +191,11 @@ class DiffClearedAfterRuleBuildingTest {
             waitForIdle()
 
             // Move pointer to comment (different position from where it was)
-            movePointerOverComment(bondiComment, textLayoutResult!!)
+            movePointerOverComment(bondiComment, textLayoutResult)
 
             // Should have normal hover highlight, not diff colours
             waitUntilAsserted {
-                requireCommentToBeHighlighted(bondiComment, textLayoutResult!!)
+                requireCommentToBeHighlighted(bondiComment, textLayoutResult)
             }
         }
     }
@@ -226,11 +226,11 @@ class DiffClearedAfterRuleBuildingTest {
             requireInterpretationForCornerstone("$bondiComment $addedComment")
 
             // Hover over diff text - should show rule conditions
-            movePointerOverComment(addedComment, textLayoutResult!!)
+            movePointerOverComment(addedComment, textLayoutResult)
             requireConditionsToBeShowing(ruleConditions)
 
             // Move pointer away
-            movePointerBelowTheText(textLayoutResult!!)
+            movePointerBelowTheText(textLayoutResult)
             waitForIdle()
 
             // Clear the diff (simulates rule completion)
@@ -238,7 +238,7 @@ class DiffClearedAfterRuleBuildingTest {
             waitForIdle()
 
             // Hover over the regular comment - should NOT show rule conditions
-            movePointerOverComment(bondiComment, textLayoutResult!!)
+            movePointerOverComment(bondiComment, textLayoutResult)
             waitForIdle()
             requireNoConditionsToBeShowing()
         }
@@ -272,7 +272,7 @@ class DiffClearedAfterRuleBuildingTest {
             requireInterpretationForCornerstone("$bondiComment $addedComment")
 
             // Hover over comment to establish pointer state
-            movePointerOverComment(bondiComment, textLayoutResult!!)
+            movePointerOverComment(bondiComment, textLayoutResult)
             waitForIdle()
 
             // Clear diff programmatically (simulates WebSocket rule completion)
@@ -280,7 +280,7 @@ class DiffClearedAfterRuleBuildingTest {
             waitForIdle()
 
             // Move pointer to trigger handler with updated diff
-            movePointerOverComment(bondiComment, textLayoutResult!!)
+            movePointerOverComment(bondiComment, textLayoutResult)
             requireConditionsToBeShowing(bondiConditions)
         }
     }
@@ -321,12 +321,12 @@ class DiffClearedAfterRuleBuildingTest {
                 requireInterpretationForCornerstone("$bondiComment $addedComment")
 
                 // Hover over the original comment - no green diff, just regular highlight
-                movePointerOverComment(bondiComment, textLayoutResult!!)
+                movePointerOverComment(bondiComment, textLayoutResult)
                 waitForIdle()
                 requireInterpretationForCornerstone("$bondiComment $addedComment")
 
                 // The added comment should not have diff styling - it's now a real comment
-                val annotatedText = textLayoutResult!!.layoutInput.text
+                val annotatedText = textLayoutResult.layoutInput.text
                 val diffSpans = annotatedText.spanStyles.filter {
                     it.item.background == DIFF_ADDITION_COLOR || it.item.background == DIFF_REMOVAL_COLOR
                 }

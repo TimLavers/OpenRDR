@@ -3,7 +3,6 @@ package io.rippledown.main
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.awt.ComposeWindow
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.ApplicationScope
@@ -64,7 +63,7 @@ class MainApplicationTest {
 
         // Perform accessibility checks
         execute {
-            val accessibleContext0 = window!!.accessibleContext
+            val accessibleContext0 = window.accessibleContext
             val kbRow = accessibleContext0.find(KB_CONTROL_DESCRIPTION, AccessibleRole.UNKNOWN)
             val expandDropdownButton = kbRow!!.find(KB_CONTROL_DROPDOWN_DESCRIPTION, AccessibleRole.PUSH_BUTTON)
             val action = expandDropdownButton!!.accessibleAction

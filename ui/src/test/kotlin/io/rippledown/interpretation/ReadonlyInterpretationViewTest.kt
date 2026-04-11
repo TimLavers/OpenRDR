@@ -129,11 +129,11 @@ class ReadonlyInterpretationViewTest {
             requireInterpretationForCornerstone(bondiComment)
 
             //When
-            movePointerOverComment(bondiComment, textLayoutResult!!)
+            movePointerOverComment(bondiComment, textLayoutResult)
             waitForIdle()
 
             //Then
-            requireCommentToBeHighlighted(bondiComment, textLayoutResult!!)
+            requireCommentToBeHighlighted(bondiComment, textLayoutResult)
         }
     }
 
@@ -159,11 +159,11 @@ class ReadonlyInterpretationViewTest {
             requireInterpretationForCornerstone(unhighlighted)
 
             //When
-            movePointerOverComment(malabarComment, textLayoutResult!!)
+            movePointerOverComment(malabarComment, textLayoutResult)
             waitForIdle()
 
             //Then
-            requireCommentToBeHighlighted(malabarComment, textLayoutResult!!)
+            requireCommentToBeHighlighted(malabarComment, textLayoutResult)
         }
     }
 
@@ -185,16 +185,16 @@ class ReadonlyInterpretationViewTest {
                 ReadonlyInterpretationView(interpretation, modifier = modifier, handler = handler)
             }
             requireInterpretationForCornerstone(unhighlighted)
-            movePointerOverComment(bondiComment, textLayoutResult!!)
+            movePointerOverComment(bondiComment, textLayoutResult)
             waitForIdle()
-            requireCommentToBeHighlighted(bondiComment, textLayoutResult!!)
+            requireCommentToBeHighlighted(bondiComment, textLayoutResult)
 
             //When
-            movePointerToTheRightOfTheComment(bondiComment, textLayoutResult!!)
+            movePointerToTheRightOfTheComment(bondiComment, textLayoutResult)
             waitForIdle()
 
             //Then
-            requireCommentToBeNotHighlighted(textLayoutResult!!)
+            requireCommentToBeNotHighlighted(textLayoutResult)
         }
     }
 
@@ -225,7 +225,7 @@ class ReadonlyInterpretationViewTest {
             requireInterpretationForCornerstone(interpretationText)
 
             //When
-            movePointerOverComment(malabarComment, textLayoutResult!!)
+            movePointerOverComment(malabarComment, textLayoutResult)
 
             //Then
             requireConditionsToBeShowing(malabarConditions)
@@ -254,7 +254,7 @@ class ReadonlyInterpretationViewTest {
                 requireInterpretationForCornerstone(bondiComment)
 
                 //When
-                movePointerOverComment(bondiComment, textLayoutResult!!)
+                movePointerOverComment(bondiComment, textLayoutResult)
 
                 //Then
                 requireNoConditionsToBeShowing()
@@ -283,7 +283,7 @@ class ReadonlyInterpretationViewTest {
             requireInterpretationForCornerstone(bondiComment)
 
             //When
-            movePointerToTheRightOfTheComment(bondiComment, textLayoutResult!!)
+            movePointerToTheRightOfTheComment(bondiComment, textLayoutResult)
 
             //Then
             requireNoConditionsToBeShowing()
@@ -509,7 +509,7 @@ class ReadonlyInterpretationViewTest {
             requireInterpretationForCornerstone(addedComment)
 
             //When
-            movePointerOverComment(addedComment, textLayoutResult!!)
+            movePointerOverComment(addedComment, textLayoutResult)
 
             //Then
             requireConditionsToBeShowing(ruleConditions)
@@ -540,7 +540,7 @@ class ReadonlyInterpretationViewTest {
             requireInterpretationForCornerstone(bondiComment)
 
             //When
-            movePointerOverComment(bondiComment, textLayoutResult!!)
+            movePointerOverComment(bondiComment, textLayoutResult)
 
             //Then
             requireConditionsToBeShowing(ruleConditions)
@@ -572,7 +572,7 @@ class ReadonlyInterpretationViewTest {
             requireInterpretationForCornerstone("$bondiComment $replacementComment")
 
             //When
-            movePointerOverComment(replacementComment, textLayoutResult!!)
+            movePointerOverComment(replacementComment, textLayoutResult)
 
             //Then
             requireConditionsToBeShowing(ruleConditions)
@@ -604,7 +604,7 @@ class ReadonlyInterpretationViewTest {
             requireInterpretationForCornerstone("$bondiComment $addedComment")
 
             //When
-            movePointerOverComment(bondiComment, textLayoutResult!!)
+            movePointerOverComment(bondiComment, textLayoutResult)
 
             //Then
             requireNoConditionsToBeShowing()
