@@ -52,7 +52,7 @@ class DiffClearedAfterRuleBuildingTest {
         val bondiComment = "Go to Bondi."
         val addedComment = "Beach time!"
         val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
-        var textLayoutResult: TextLayoutResult? = null
+        lateinit var textLayoutResult: TextLayoutResult
         val handler = object : ReadonlyInterpretationViewHandler by handler {
             override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
                 textLayoutResult = layoutResult
@@ -89,7 +89,7 @@ class DiffClearedAfterRuleBuildingTest {
     fun `should not show removal diff on hover after diff is cleared`() = runTest {
         val bondiComment = "Go to Bondi."
         val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
-        var textLayoutResult: TextLayoutResult? = null
+        lateinit var textLayoutResult: TextLayoutResult
         val handler = object : ReadonlyInterpretationViewHandler by handler {
             override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
                 textLayoutResult = layoutResult
@@ -125,7 +125,7 @@ class DiffClearedAfterRuleBuildingTest {
         val bondiComment = "Go to Bondi."
         val replacementComment = "Go to Maroubra."
         val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
-        var textLayoutResult: TextLayoutResult? = null
+        lateinit var textLayoutResult: TextLayoutResult
         val handler = object : ReadonlyInterpretationViewHandler by handler {
             override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
                 textLayoutResult = layoutResult
@@ -163,7 +163,7 @@ class DiffClearedAfterRuleBuildingTest {
         val bondiComment = "Go to Bondi."
         val addedComment = "Beach time!"
         val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
-        var textLayoutResult: TextLayoutResult? = null
+        lateinit var textLayoutResult: TextLayoutResult
         val handler = object : ReadonlyInterpretationViewHandler by handler {
             override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
                 textLayoutResult = layoutResult
@@ -206,7 +206,7 @@ class DiffClearedAfterRuleBuildingTest {
         val addedComment = "Beach time!"
         val ruleConditions = listOf("UV is high", "Waves is high")
         val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
-        var textLayoutResult: TextLayoutResult? = null
+        lateinit var textLayoutResult: TextLayoutResult
         val handler = object : ReadonlyInterpretationViewHandler by handler {
             override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
                 textLayoutResult = layoutResult
@@ -251,7 +251,7 @@ class DiffClearedAfterRuleBuildingTest {
         val bondiConditions = listOf("Bring your flippers.", "And your sunscreen.")
         val ruleConditions = listOf("UV is high")
         val interpretation = createViewableInterpretation(mapOf(bondiComment to bondiConditions))
-        var textLayoutResult: TextLayoutResult? = null
+        lateinit var textLayoutResult: TextLayoutResult
         val handler = object : ReadonlyInterpretationViewHandler by handler {
             override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
                 textLayoutResult = layoutResult
@@ -293,7 +293,7 @@ class DiffClearedAfterRuleBuildingTest {
             val originalInterpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
             val updatedInterpretation =
                 createViewableInterpretation(mapOf(bondiComment to emptyList(), addedComment to emptyList()))
-            var textLayoutResult: TextLayoutResult? = null
+            lateinit var textLayoutResult: TextLayoutResult
             val handler = object : ReadonlyInterpretationViewHandler by handler {
                 override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
                     textLayoutResult = layoutResult

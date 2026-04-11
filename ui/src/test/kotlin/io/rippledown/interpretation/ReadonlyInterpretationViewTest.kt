@@ -115,7 +115,7 @@ class ReadonlyInterpretationViewTest {
         //Given
         val bondiComment = "Bondi."
         val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
-        var textLayoutResult: TextLayoutResult? = null
+        lateinit var textLayoutResult: TextLayoutResult
         val handler = object : ReadonlyInterpretationViewHandler by handler {
             override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
                 textLayoutResult = layoutResult
@@ -146,7 +146,7 @@ class ReadonlyInterpretationViewTest {
             createViewableInterpretation(mapOf(bondiComment to emptyList(), malabarComment to emptyList()))
         val conclusionTexts = interpretation.conclusions().map { it.text }
         val unhighlighted = conclusionTexts.unhighlighted().text
-        var textLayoutResult: TextLayoutResult? = null
+        lateinit var textLayoutResult: TextLayoutResult
         val handler = object : ReadonlyInterpretationViewHandler by handler {
             override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
                 textLayoutResult = layoutResult
@@ -174,7 +174,7 @@ class ReadonlyInterpretationViewTest {
         val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
         val conclusionTexts = interpretation.conclusions().map { it.text }
         val unhighlighted = conclusionTexts.unhighlighted().text
-        var textLayoutResult: TextLayoutResult? = null
+        lateinit var textLayoutResult: TextLayoutResult
         val handler = object : ReadonlyInterpretationViewHandler by handler {
             override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
                 textLayoutResult = layoutResult
@@ -212,7 +212,7 @@ class ReadonlyInterpretationViewTest {
                 malabarComment to malabarConditions
             )
         )
-        var textLayoutResult: TextLayoutResult? = null
+        lateinit var textLayoutResult: TextLayoutResult
         val handler = object : ReadonlyInterpretationViewHandler by handler {
             override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
                 textLayoutResult = layoutResult
@@ -241,7 +241,7 @@ class ReadonlyInterpretationViewTest {
             val interpretation = createViewableInterpretation(
                 mapOf(bondiComment to listOf())
             )
-            var textLayoutResult: TextLayoutResult? = null
+            lateinit var textLayoutResult: TextLayoutResult
             val handler = object : ReadonlyInterpretationViewHandler by handler {
                 override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
                     textLayoutResult = layoutResult
@@ -270,7 +270,7 @@ class ReadonlyInterpretationViewTest {
         val interpretation = createViewableInterpretation(
             mapOf(bondiComment to listOf())
         )
-        var textLayoutResult: TextLayoutResult? = null
+        lateinit var textLayoutResult: TextLayoutResult
         val handler = object : ReadonlyInterpretationViewHandler by handler {
             override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
                 textLayoutResult = layoutResult
@@ -490,7 +490,7 @@ class ReadonlyInterpretationViewTest {
         val addedComment = "Beach time!"
         val ruleConditions = listOf("UV is high", "Waves is high")
         val interpretation = createViewableInterpretation()
-        var textLayoutResult: TextLayoutResult? = null
+        lateinit var textLayoutResult: TextLayoutResult
         val handler = object : ReadonlyInterpretationViewHandler by handler {
             override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
                 textLayoutResult = layoutResult
@@ -521,7 +521,7 @@ class ReadonlyInterpretationViewTest {
         val bondiComment = "Go to Bondi."
         val ruleConditions = listOf("UV is high")
         val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
-        var textLayoutResult: TextLayoutResult? = null
+        lateinit var textLayoutResult: TextLayoutResult
         val handler = object : ReadonlyInterpretationViewHandler by handler {
             override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
                 textLayoutResult = layoutResult
@@ -553,7 +553,7 @@ class ReadonlyInterpretationViewTest {
         val replacementComment = "Go to Maroubra."
         val ruleConditions = listOf("UV is high", "Waves is high")
         val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
-        var textLayoutResult: TextLayoutResult? = null
+        lateinit var textLayoutResult: TextLayoutResult
         val handler = object : ReadonlyInterpretationViewHandler by handler {
             override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
                 textLayoutResult = layoutResult
@@ -585,7 +585,7 @@ class ReadonlyInterpretationViewTest {
         val addedComment = "Beach time!"
         val ruleConditions = listOf("UV is high")
         val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
-        var textLayoutResult: TextLayoutResult? = null
+        lateinit var textLayoutResult: TextLayoutResult
         val handler = object : ReadonlyInterpretationViewHandler by handler {
             override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
                 textLayoutResult = layoutResult
