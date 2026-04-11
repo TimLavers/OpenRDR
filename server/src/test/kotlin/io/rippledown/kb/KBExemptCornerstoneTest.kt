@@ -149,21 +149,21 @@ class KBExemptCornerstoneTest {
         val cc1 = kb.addCornerstoneCase(createCase("Case1", "5.0"))
         val cc2 = kb.addCornerstoneCase(createCase("Case2", "6.0"))
         val sessionCase = createCase("Session", "0.667")
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
 
         // Sanity check: initially there are 2 cornerstones
-        kb.cornerstoneStatus().numberOfCornerstones shouldBe 2
+        rsm.cornerstoneStatus().numberOfCornerstones shouldBe 2
 
         // Add a condition that filters out all cornerstones (Glucose is "0.667" only for Session)
         val conditionSuggester = ConditionSuggester(kb.attributeManager.all(), sessionCase)
         val isCondition = conditionSuggester.suggestions().first { it.asText() == "Glucose is \"0.667\"" }
-        kb.addConditionToCurrentRuleSession(isCondition.initialSuggestion())
+        rsm.addConditionToCurrentRuleSession(isCondition.initialSuggestion())
 
         // Now all cornerstones are filtered out
-        kb.cornerstoneStatus().numberOfCornerstones shouldBe 0
+        rsm.cornerstoneStatus().numberOfCornerstones shouldBe 0
 
         //When - LLM erroneously sends ExemptCornerstone despite no cornerstones
-        val ccStatus = kb.exemptCornerstoneCase()
+        val ccStatus = rsm.exemptCornerstoneCase()
 
         //Then - should return empty status without crashing
         ccStatus shouldBe CornerstoneStatus()
@@ -175,10 +175,10 @@ class KBExemptCornerstoneTest {
         kb.addCornerstoneCase(createCase("Case1"))
         kb.addCornerstoneCase(createCase("Case2"))
         val sessionCase = createCase("Session")
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
 
         //When
-        val ccStatus = kb.exemptCornerstone(-1)
+        val ccStatus = rsm.exemptCornerstone(-1)
 
         //Then
         ccStatus shouldBe CornerstoneStatus()
@@ -189,10 +189,10 @@ class KBExemptCornerstoneTest {
         //Given
         kb.addCornerstoneCase(createCase("Case1"))
         val sessionCase = createCase("Session")
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
 
         //When
-        val ccStatus = kb.exemptCornerstone(-42)
+        val ccStatus = rsm.exemptCornerstone(-42)
 
         //Then
         ccStatus shouldBe CornerstoneStatus()
@@ -202,10 +202,10 @@ class KBExemptCornerstoneTest {
     fun `exemptCornerstone should return empty status when no cornerstones were ever added`() {
         //Given - no cornerstone cases added at all
         val sessionCase = createCase("Session")
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
 
         //When
-        val ccStatus = kb.exemptCornerstone(0)
+        val ccStatus = rsm.exemptCornerstone(0)
 
         //Then
         ccStatus shouldBe CornerstoneStatus()
@@ -215,10 +215,10 @@ class KBExemptCornerstoneTest {
     fun `exemptCornerstoneCase should return empty status when no cornerstones were ever added`() {
         //Given - no cornerstone cases added at all
         val sessionCase = createCase("Session")
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
 
         //When
-        val ccStatus = kb.exemptCornerstoneCase()
+        val ccStatus = rsm.exemptCornerstoneCase()
 
         //Then
         ccStatus shouldBe CornerstoneStatus()
@@ -230,17 +230,17 @@ class KBExemptCornerstoneTest {
         val cc1 = kb.addCornerstoneCase(createCase("Case1"))
         kb.addCornerstoneCase(createCase("Case2"))
         val sessionCase = createCase("Session")
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
 
         // Select a cornerstone first
-        kb.selectCornerstone(0)
-        kb.cornerstoneStatus().cornerstoneToReview shouldBe kb.viewableCase(cc1)
+        rsm.selectCornerstone(0)
+        rsm.cornerstoneStatus().cornerstoneToReview shouldBe kb.viewableCase(cc1)
 
         //When
-        kb.exemptCornerstone(-1)
+        rsm.exemptCornerstone(-1)
 
         //Then - selectedCornerstone should be cleared, so cornerstoneStatus falls back to first
-        val status = kb.cornerstoneStatus()
+        val status = rsm.cornerstoneStatus()
         status.numberOfCornerstones shouldBe 2
         status.indexOfCornerstoneToReview shouldBe 0
     }
@@ -251,17 +251,17 @@ class KBExemptCornerstoneTest {
         kb.addCornerstoneCase(createCase("Case1", "5.0"))
         kb.addCornerstoneCase(createCase("Case2", "6.0"))
         val sessionCase = createCase("Session", "0.667")
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
 
         // Add a condition that filters out all cornerstones
         val conditionSuggester = ConditionSuggester(kb.attributeManager.all(), sessionCase)
         val isCondition = conditionSuggester.suggestions().first { it.asText() == "Glucose is \"0.667\"" }
-        kb.addConditionToCurrentRuleSession(isCondition.initialSuggestion())
-        kb.cornerstoneStatus().numberOfCornerstones shouldBe 0
+        rsm.addConditionToCurrentRuleSession(isCondition.initialSuggestion())
+        rsm.cornerstoneStatus().numberOfCornerstones shouldBe 0
 
         //When - call exemptCornerstoneCase multiple times
-        val ccStatus1 = kb.exemptCornerstoneCase()
-        val ccStatus2 = kb.exemptCornerstoneCase()
+        val ccStatus1 = rsm.exemptCornerstoneCase()
+        val ccStatus2 = rsm.exemptCornerstoneCase()
 
         //Then - both should return empty status without crashing
         ccStatus1 shouldBe CornerstoneStatus()
@@ -274,21 +274,21 @@ class KBExemptCornerstoneTest {
         kb.addCornerstoneCase(createCase("Case1", "0.667"))  // same as session case
         kb.addCornerstoneCase(createCase("Case2", "5.0"))    // different
         val sessionCase = createCase("Session", "0.667")
-        kb.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
 
         // Sanity: initially 2 cornerstones
-        kb.cornerstoneStatus().numberOfCornerstones shouldBe 2
+        rsm.cornerstoneStatus().numberOfCornerstones shouldBe 2
 
         // Add a condition that filters out Case2 but keeps Case1
         val conditionSuggester = ConditionSuggester(kb.attributeManager.all(), sessionCase)
         val isCondition = conditionSuggester.suggestions().first { it.asText() == "Glucose is \"0.667\"" }
-        kb.addConditionToCurrentRuleSession(isCondition.initialSuggestion())
+        rsm.addConditionToCurrentRuleSession(isCondition.initialSuggestion())
 
         // Now only Case1 remains
-        kb.cornerstoneStatus().numberOfCornerstones shouldBe 1
+        rsm.cornerstoneStatus().numberOfCornerstones shouldBe 1
 
         //When - exempt the remaining cornerstone
-        val ccStatus = kb.exemptCornerstoneCase()
+        val ccStatus = rsm.exemptCornerstoneCase()
 
         //Then
         ccStatus shouldBe CornerstoneStatus()

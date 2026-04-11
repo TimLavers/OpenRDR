@@ -567,7 +567,7 @@ internal class KBEndpointTest {
         val rsm = mockk<RuleSessionManager>()
         val case = mockk<RDRCase>()
         val conclusion = mockk<Conclusion>()
-        every { kb.getCase(any()) } returns case
+        every { kb.getProcessedCase(any()) } returns case
         every { kb.interpret(any()) } returns mockk()
         val session = mockk<KBSession>()
         every { session.kb } returns kb
@@ -588,7 +588,7 @@ internal class KBEndpointTest {
         val rsm = mockk<RuleSessionManager>()
         val case = mockk<RDRCase>()
         val conclusion = mockk<Conclusion>()
-        every { kb.getCase(any()) } returns case
+        every { kb.getProcessedCase(any()) } returns case
         every { kb.interpret(any()) } returns mockk()
         val session = mockk<KBSession>()
         every { session.kb } returns kb
@@ -610,7 +610,7 @@ internal class KBEndpointTest {
         val case = mockk<RDRCase>()
         val toGo = mockk<Conclusion>()
         val replacement = mockk<Conclusion>()
-        every { kb.getCase(any()) } returns case
+        every { kb.getProcessedCase(any()) } returns case
         every { kb.interpret(any()) } returns mockk()
         val session = mockk<KBSession>()
         every { session.kb } returns kb

@@ -216,7 +216,12 @@ class RuleSessionManager(
     fun exemptCornerstone(index: Int): CornerstoneStatus {
         checkSession()
 
-        val toExempt = ruleSession!!.cornerstoneCases()[index]
+        val currentCornerstones = ruleSession!!.cornerstoneCases()
+        if (index < 0 || currentCornerstones.isEmpty()) {
+            selectedCornerstone = null
+            return CornerstoneStatus()
+        }
+        val toExempt = currentCornerstones[index]
         ruleSession!!.exemptCornerstone(toExempt)
 
         val cornerstones = ruleSession!!.cornerstoneCases()
@@ -227,7 +232,7 @@ class RuleSessionManager(
             val newCC = cornerstones[index.coerceAtMost(cornerstones.size - 1)]
             val viewable = viewableCase(newCC)
             selectedCornerstone = viewable
-            cornerstoneStatus(kb.viewableCase(newCC))
+            cornerstoneStatus(viewable)
         }
     }
 
