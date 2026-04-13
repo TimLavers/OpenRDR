@@ -52,7 +52,8 @@ val featureFolders = listOf(
     "interpreter",
     "kb",
     "rulebuilding",
-    "samples"
+    "samples",
+    "trial-matching"
 )
 fun runCucumber(cukeArgs: List<String>): Int {
     val javaHome = System.getProperty("java.home")
