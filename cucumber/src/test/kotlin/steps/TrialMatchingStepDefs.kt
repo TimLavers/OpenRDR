@@ -19,7 +19,6 @@ class TrialMatchingStepDefs {
                 "normalised" to normalised,
                 "canonical" to canonical
             )
-            println("sending case $caseName to $kbName")
             labProxy().provideCaseForKb(kbName, caseName, attributeNameToValue)
         }
     }

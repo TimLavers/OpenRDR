@@ -5,9 +5,8 @@ Feature: A sample KB can be created for Clinical Trial Matching.
     Given I start the client application
     And I create a Knowledge Base with the name OncoTreeMatch
     Then I send a case to "OncoTreeMatch" for each row in the trial-conditions file
-    And pause
-    Then the count of the number of cases is 1508
     And the backdoor selects the Knowledge Base "OncoTreeMatch"
+    And the count of the number of cases is 1508
 
     And a backdoor rule is built for case 1 to add the comment "NSCLC" with conditions:
       | canonical contains "cervical cancer" |
@@ -27,4 +26,3 @@ Feature: A sample KB can be created for Clinical Trial Matching.
     And a backdoor rule is built for case 8 to replace the comment "AML" with "AMLMRC" with conditions:
       | canonical contains "myelodysplastic" |
 
-    And pause for 30 seconds
