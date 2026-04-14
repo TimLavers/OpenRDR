@@ -10,7 +10,6 @@ import io.rippledown.constants.api.*
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.server.ServerApplication
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 
 private val jsonAllowSMK = Json {
@@ -43,7 +42,7 @@ fun Application.caseManagement(application: ServerApplication) {
             val externalCase = jsonAllowSMK.decodeFromString(ExternalCase.serializer(), str)
             val case = endpoint.processCase(externalCase)
             call.respond(HttpStatusCode.Accepted, case)
-            runBlocking { application.webSocketManager.sendCasesInfo(endpoint.waitingCasesInfo()) }
+            application.webSocketManager.sendCasesInfo(endpoint.waitingCasesInfo())
         }
         put(ADD_CORNERSTONE_CASE) {
             val endpoint = kbEndpoint(application)
@@ -51,14 +50,14 @@ fun Application.caseManagement(application: ServerApplication) {
             val externalCase = jsonAllowSMK.decodeFromString(ExternalCase.serializer(), str)
             val case = endpoint.addCornerstoneCase(externalCase)
             call.respond(HttpStatusCode.Accepted, case)
-            runBlocking { application.webSocketManager.sendCasesInfo(endpoint.waitingCasesInfo()) }
+            application.webSocketManager.sendCasesInfo(endpoint.waitingCasesInfo())
         }
         delete(DELETE_CASE_WITH_NAME) {
             val endpoint = kbEndpoint(application)
             val caseName = call.parameters["name"] ?: error("Invalid case name.")
             endpoint.deleteCase(caseName)
             call.respond(HttpStatusCode.OK)
-            runBlocking { application.webSocketManager.sendCasesInfo(endpoint.waitingCasesInfo()) }
+            application.webSocketManager.sendCasesInfo(endpoint.waitingCasesInfo())
         }
     }
 }

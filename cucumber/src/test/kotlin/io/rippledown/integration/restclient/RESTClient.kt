@@ -124,7 +124,7 @@ class RESTClient {
     }
 
     fun provideCaseForKB(kbName: String, externalCase: ExternalCase) = runBlocking {
-        jsonClient.put(endpoint + INTERPRET_CASE) {
+        jsonClient.put(endpoint + PROCESS_CASE) {
             contentType(ContentType.Application.Json)
             setBody(externalCase)
             parameter(KB_NAME, kbName)

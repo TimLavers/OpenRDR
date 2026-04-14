@@ -1,11 +1,11 @@
-Feature: A sample KB can be created that has the Zoo Animals cases and rules.
+Feature: A sample KB can be created for Clinical Trial Matching.
 
   @single
-  Scenario: Single classification Zoo KB
+  Scenario: Clinical Trial Matching KB
     Given I start the client application
     And I create a Knowledge Base with the name OncoTreeMatch
     Then I send a case to "OncoTreeMatch" for each row in the trial-conditions file
-    And pause for 30 seconds
+    And pause
     Then the count of the number of cases is 1508
     And the backdoor selects the Knowledge Base "OncoTreeMatch"
 
