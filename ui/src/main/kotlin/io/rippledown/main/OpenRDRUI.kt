@@ -192,25 +192,25 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
             })
         },
     ) { paddingValues ->
-        if (casesInfo.count > 0) {
-            Column(modifier = Modifier.padding(paddingValues)) {
-                Row(modifier = Modifier.weight(1f)) {
-                    if (!ruleInProgress) {
-                        Column(modifier = Modifier.padding(top = 12.dp)) {
-                            CaseSelector(
-                                casesInfo.caseIds,
-                                casesInfo.cornerstoneCaseIds,
-                                caseSelectorHandler
-                            )
-                        }
-
-                        // Set the selectCase callback after caseSelectorHandler is created
-                        caseSelectorHandler.selectCase = { id: Long ->
-                            currentCase = runBlocking(dispatcher) { api.getCase(id) }
-                            currentCaseId = id
-                        }
+        Column(modifier = Modifier.padding(paddingValues)) {
+            Row(modifier = Modifier.weight(1f)) {
+                if (casesInfo.count > 0 && !ruleInProgress) {
+                    Column(modifier = Modifier.padding(top = 12.dp)) {
+                        CaseSelector(
+                            casesInfo.caseIds,
+                            casesInfo.cornerstoneCaseIds,
+                            caseSelectorHandler
+                        )
                     }
 
+                    // Set the selectCase callback after caseSelectorHandler is created
+                    caseSelectorHandler.selectCase = { id: Long ->
+                        currentCase = runBlocking(dispatcher) { api.getCase(id) }
+                        currentCaseId = id
+                    }
+                }
+
+                if (casesInfo.count > 0) {
                     CaseControl(
                         currentCase = currentCase,
                         cornerstoneStatus = cornerstoneStatus,
@@ -224,35 +224,35 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                         },
                         modifier = Modifier.weight(1f)
                     )
-
-                    // Draggable divider for resizing the chat panel
-                    Box(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .width(4.dp)
-                            .background(Color.LightGray)
-                            .pointerHoverIcon(PointerIcon(Cursor(Cursor.W_RESIZE_CURSOR)))
-                            .pointerInput(Unit) {
-                                detectDragGestures { change, dragAmount ->
-                                    change.consume()
-                                    val deltaWidth = with(density) { (-dragAmount.x).toDp() }
-                                    chatPanelWidth = (chatPanelWidth + deltaWidth).coerceIn(200.dp, 600.dp)
-                                }
-                            }
-                    )
-
-                    ChatController(
-                        id = chatId,
-                        chatControllerHandler,
-                        voiceRecognitionService = voiceRecognitionService,
-                        modifier = Modifier.width(chatPanelWidth)
-                    )
                 }
-                LaunchedEffect(pendingConversationResponse) {
-                    pendingConversationResponse?.let {
-                        chatControllerHandler.onBotMessageReceived(it)
-                        pendingConversationResponse = null
-                    }
+
+                // Draggable divider for resizing the chat panel
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(4.dp)
+                        .background(Color.LightGray)
+                        .pointerHoverIcon(PointerIcon(Cursor(Cursor.W_RESIZE_CURSOR)))
+                        .pointerInput(Unit) {
+                            detectDragGestures { change, dragAmount ->
+                                change.consume()
+                                val deltaWidth = with(density) { (-dragAmount.x).toDp() }
+                                chatPanelWidth = (chatPanelWidth + deltaWidth).coerceIn(200.dp, 600.dp)
+                            }
+                        }
+                )
+
+                ChatController(
+                    id = chatId,
+                    chatControllerHandler,
+                    voiceRecognitionService = voiceRecognitionService,
+                    modifier = Modifier.width(chatPanelWidth)
+                )
+            }
+            LaunchedEffect(pendingConversationResponse) {
+                pendingConversationResponse?.let {
+                    chatControllerHandler.onBotMessageReceived(it)
+                    pendingConversationResponse = null
                 }
             }
         }

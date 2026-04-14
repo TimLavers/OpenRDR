@@ -110,7 +110,7 @@ class Defs {
         labProxy().restProxy.deleteProcessedCaseWithName(caseName)
     }
 
-    @And("I select case {word} on the processed case list")
+    @And("I select case {word}( on the processed case list)")
     fun selectCase(caseName: String) {
         caseListPO().select(caseName)
         caseViewPO().waitForNameToShow(caseName)

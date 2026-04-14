@@ -13,6 +13,7 @@ import io.rippledown.appbar.*
 import io.rippledown.casecontrol.*
 import io.rippledown.chat.BotMessage
 import io.rippledown.chat.requireChatMessagesShowing
+import io.rippledown.chat.requireChatPanelIsDisplayed
 import io.rippledown.chat.typeChatMessageAndClickSend
 import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import io.rippledown.constants.kb.CONFIRM_UNDO_LAST_RULE_TEXT
@@ -821,6 +822,21 @@ class OpenRDRUITest {
 
             //Then
             requireCaseSelectorNotToBeDisplayed()
+        }
+    }
+
+    @Test
+    fun `should show chat panel when there are no cases`() = runTest {
+        //Given - start with empty CasesInfo
+        coEvery { api.waitingCasesInfo() } returns CasesInfo()
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+
+            //Then - chat panel should still be visible
+            requireChatPanelIsDisplayed()
         }
     }
 
