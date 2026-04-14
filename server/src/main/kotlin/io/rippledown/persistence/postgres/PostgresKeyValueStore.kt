@@ -2,7 +2,6 @@ package io.rippledown.persistence.postgres
 
 import io.rippledown.persistence.KeyValue
 import io.rippledown.persistence.KeyValueStore
-import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.dao.IntEntity
@@ -17,7 +16,7 @@ class PostgresKeyValueStore(private val db: Database) : KeyValueStore {
 
     init {
         transaction(db) {
-            addLogger(StdOutSqlLogger)
+            // addLogger(StdOutSqlLogger)
             SchemaUtils.create(PGKeyValues)
         }
     }

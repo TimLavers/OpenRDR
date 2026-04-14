@@ -3,7 +3,6 @@ package io.rippledown.persistence.postgres
 import io.rippledown.model.rule.RuleSessionRecord
 import io.rippledown.model.rule.parseToIds
 import io.rippledown.persistence.RuleSessionRecordStore
-import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.dao.IntEntity
@@ -17,7 +16,7 @@ const val RULE_SESSIONS_TABLE = "rule_sessions"
 class PostgresRuleSessionRecordStore(private val db: Database) : RuleSessionRecordStore {
     init {
         transaction(db) {
-            addLogger(StdOutSqlLogger)
+            // addLogger(StdOutSqlLogger)
             SchemaUtils.create(PGRuleSessionRecords)
         }
     }

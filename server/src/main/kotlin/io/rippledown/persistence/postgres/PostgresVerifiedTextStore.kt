@@ -1,7 +1,6 @@
 package io.rippledown.persistence.postgres
 
 import io.rippledown.persistence.VerifiedTextStore
-import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -20,7 +19,7 @@ class PostgresVerifiedTextStore(private val db: Database) : VerifiedTextStore {
 
     init {
         transaction(db) {
-            addLogger(StdOutSqlLogger)
+            // addLogger(StdOutSqlLogger)
             SchemaUtils.create(PGStringTable)
         }
     }
