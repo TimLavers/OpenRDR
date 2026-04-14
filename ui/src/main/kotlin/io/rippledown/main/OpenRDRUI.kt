@@ -7,6 +7,7 @@ import androidx.compose.material.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.pointerInput
@@ -14,7 +15,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import io.rippledown.appbar.AppBarHandler
 import io.rippledown.appbar.ApplicationBar
-import io.rippledown.casecontrol.*
+import io.rippledown.casecontrol.CaseControl
+import io.rippledown.casecontrol.CaseControlHandler
+import io.rippledown.casecontrol.CaseSelector
+import io.rippledown.casecontrol.CaseSelectorHandler
 import io.rippledown.chat.ChatController
 import io.rippledown.chat.ChatControllerHandler
 import io.rippledown.chat.VoiceRecognitionService
@@ -50,7 +54,18 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     val voiceRecognitionService = remember { VoiceRecognitionService(defaultModelPath()) }
     var chatPanelWidth by remember { mutableStateOf(300.dp) }
     var conversationCaseId by remember { mutableStateOf<Long?>(null) }
+    var pendingConversationResponse by remember { mutableStateOf<ChatResponse?>(null) }
     val density = LocalDensity.current
+
+    // Create CaseSelectorHandler reference
+    val caseSelectorHandler = remember {
+        object : CaseSelectorHandler {
+            override var selectCase: (id: Long) -> Unit = { }
+            override var requestFocusOnSelectedCase: () -> Unit = { }
+            override var navigateDown: () -> Unit = { }
+            override var navigateUp: () -> Unit = { }
+        }
+    }
 
     val isShowingCornerstone = cornerstoneStatus?.cornerstoneToReview != null
     val ruleInProgress = cornerstoneStatus != null
@@ -83,6 +98,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     LaunchedEffect(Unit) {
         withContext(dispatcher) {
             kbInfo = api.kbList().firstOrNull()
+            casesInfo = api.waitingCasesInfo()
         }
     }
 
@@ -108,8 +124,8 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                     val response = api.startConversation(it)
                     conversationCaseId = it
                     if (response.text.isNotBlank()) {
-                        chatControllerHandler.onBotMessageReceived(response)
-                        ++chatId // Increment chatId to trigger recomposition in ChatController
+                        pendingConversationResponse = response
+                        ++chatId
                     }
                 }
             }
@@ -120,11 +136,39 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
         withContext(dispatcher) {
             handler.api.startWebSocketSession(
                 updateCornerstoneStatus = { cornerstoneStatus = it },
-                ruleSessionCompleted = { cornerstoneStatus = null })
+                ruleSessionCompleted = { cornerstoneStatus = null },
+                updateCasesInfo = { casesInfo = it })
         }
     }
 
     Scaffold(
+        modifier = Modifier.onPreviewKeyEvent { event ->
+            if (event.type == KeyEventType.KeyDown) {
+                when (event.key) {
+                    Key.DirectionDown -> {
+                        if (!ruleInProgress) {
+                            caseSelectorHandler.navigateDown()
+                            true // Consume the event
+                        } else {
+                            false
+                        }
+                    }
+
+                    Key.DirectionUp -> {
+                        if (!ruleInProgress) {
+                            caseSelectorHandler.navigateUp()
+                            true // Consume the event
+                        } else {
+                            false
+                        }
+                    }
+
+                    else -> false
+                }
+            } else {
+                false
+            }
+        },
         topBar = {
             ApplicationBar(kbInfo, object : AppBarHandler {
                 override var isRuleSessionInProgress = ruleInProgress
@@ -171,24 +215,13 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                         api.undoLastRule()
                         if (currentCaseId != null) {
                             currentCase = api.getCase(currentCaseId!!)
+                            ++chatId
                         }
                     }
                 }
             })
         },
     ) { paddingValues ->
-        CasePoller(object : CasePollerHandler {
-            override var onUpdate: (updated: CasesInfo) -> Unit = {
-                casesInfo = it
-            }
-            override var updateCasesInfo = {
-                runBlocking(dispatcher) {
-                    api.waitingCasesInfo()
-                }
-            }
-            override var isClosing = handler.isClosing
-        }, dispatcher)
-
         if (casesInfo.count > 0) {
             Column(modifier = Modifier.padding(paddingValues)) {
                 Row(modifier = Modifier.weight(1f)) {
@@ -197,13 +230,14 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                             CaseSelector(
                                 casesInfo.caseIds,
                                 casesInfo.cornerstoneCaseIds,
-                                object : CaseSelectorHandler, Handler by handler {
-                                override var selectCase = { id: Long ->
-                                    ++chatId
-                                    currentCase = runBlocking(dispatcher) { api.getCase(id) }
-                                    currentCaseId = id
-                                }
-                            })
+                                caseSelectorHandler
+                            )
+                        }
+
+                        // Set the selectCase callback after caseSelectorHandler is created
+                        caseSelectorHandler.selectCase = { id: Long ->
+                            currentCase = runBlocking(dispatcher) { api.getCase(id) }
+                            currentCaseId = id
                         }
                     }
 
@@ -243,6 +277,12 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                         voiceRecognitionService = voiceRecognitionService,
                         modifier = Modifier.width(chatPanelWidth)
                     )
+                }
+                LaunchedEffect(pendingConversationResponse) {
+                    pendingConversationResponse?.let {
+                        chatControllerHandler.onBotMessageReceived(it)
+                        pendingConversationResponse = null
+                    }
                 }
             }
         }

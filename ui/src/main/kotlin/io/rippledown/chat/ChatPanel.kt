@@ -18,8 +18,6 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.graphics.Color.Companion.Blue
@@ -89,12 +87,6 @@ fun ChatPanel(
     var partialSuffixLength by remember { mutableStateOf(0) }
     var suggestionSendPending by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
-    val textAreaFocusRequester = remember { FocusRequester() }
-
-    // Request focus when the id of the case changes
-    LaunchedEffect(id) {
-        textAreaFocusRequester.requestFocus()
-    }
 
     LaunchedEffect(messages) {
         if (messages.isNotEmpty()) {
@@ -134,7 +126,6 @@ fun ChatPanel(
                         } else if (!isEditable) {
                             inputText = TextFieldValue(suggestion, selection = TextRange(suggestion.length))
                         }
-                        textAreaFocusRequester.requestFocus()
                     }
                     else -> BotRow(message.text, index)
                 }
@@ -169,13 +160,12 @@ fun ChatPanel(
                         if (event.key == Key.Enter && event.type == KeyEventType.KeyDown) {
                             partialSuffixLength = 0
                             voiceRecognitionService?.resetAccumulatedText()
-                            inputText = sendUserMessage(inputText, onMessageSent, textAreaFocusRequester)
+                            inputText = sendUserMessage(inputText, onMessageSent)
                             true // Consume the event to avoid newline insertion
                         } else {
                             false // Allow other events to be handled
                         }
-                    }
-                    .focusRequester(textAreaFocusRequester),
+                    },
                 placeholder = { Text(text = CHAT_BOT_PLACEHOLDER, style = TextStyle(fontSize = 14.sp)) },
                 trailingIcon = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -218,7 +208,7 @@ fun ChatPanel(
                             onClick = {
                                 partialSuffixLength = 0
                                 voiceRecognitionService?.resetAccumulatedText()
-                                inputText = sendUserMessage(inputText, onMessageSent, textAreaFocusRequester)
+                                inputText = sendUserMessage(inputText, onMessageSent)
                             },
                             enabled = inputText.text.isNotBlank(),
                             modifier = Modifier.size(32.dp).pointerHoverIcon(PointerIcon.Hand),
@@ -252,11 +242,9 @@ fun ChatPanel(
 
 private fun sendUserMessage(
     inputText: TextFieldValue,
-    onMessageSent: OnMessageSent,
-    textAreaFocusRequester: FocusRequester
+    onMessageSent: OnMessageSent
 ): TextFieldValue {
     if (inputText.text.isNotBlank()) {
-        textAreaFocusRequester.requestFocus() // Retain focus after button click
         val messageText = inputText.text.trim()
         onMessageSent(UserMessage(messageText))
     }

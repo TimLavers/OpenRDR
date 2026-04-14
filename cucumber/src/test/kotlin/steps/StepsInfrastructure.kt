@@ -60,6 +60,7 @@ fun labProxy() = uiTestBase.labProxy
 fun restClient() = uiTestBase.restClient
 fun applicationBarPO() = client().applicationBarPO()
 fun caseListPO() = client().caseListPO()
+fun cornerstoneCaseListPO() = client().cornerstoneCaseListPO()
 fun caseCountPO() = client().caseCountPO()
 fun kbControlsPO() = client().kbControlsPO()
 fun editCurrentKbControlPO() = client().editCurrentKbControlPO()

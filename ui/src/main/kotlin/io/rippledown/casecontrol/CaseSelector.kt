@@ -23,11 +23,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.rippledown.constants.caseview.*
 import io.rippledown.model.CaseId
-import java.awt.event.KeyEvent.VK_DOWN
-import java.awt.event.KeyEvent.VK_UP
+import kotlinx.coroutines.delay
 
 interface CaseSelectorHandler {
     var selectCase: (id: Long) -> Unit
+    var requestFocusOnSelectedCase: () -> Unit
+    var navigateDown: () -> Unit
+    var navigateUp: () -> Unit
 }
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
@@ -41,9 +43,48 @@ fun CaseSelector(
     val scrollState = rememberScrollState()
     val hoverOverScroll = remember { mutableStateOf(false) }
     var selectedCaseIndex by remember { mutableStateOf(0) }
-    val focusRequestors = mutableListOf<FocusRequester>()
+    val focusRequestors = remember(allCaseIds) { List(allCaseIds.size) { FocusRequester() } }
     var processedExpanded by remember { mutableStateOf(true) }
     var cornerstoneExpanded by remember { mutableStateOf(true) }
+
+    // Implement the callback to request focus on the selected case
+    handler.requestFocusOnSelectedCase = {
+        if (selectedCaseIndex < focusRequestors.size) {
+            focusRequestors[selectedCaseIndex].requestFocus()
+        }
+    }
+
+    // Implement navigation callbacks
+    handler.navigateDown = {
+        val newIndex = if (selectedCaseIndex + 1 >= allCaseIds.size) {
+            allCaseIds.size - 1
+        } else {
+            selectedCaseIndex + 1
+        }
+        selectedCaseIndex = newIndex
+        val caseId = allCaseIds[selectedCaseIndex]
+        handler.selectCase(caseId.id!!)
+        focusRequestors[selectedCaseIndex].requestFocus()
+    }
+    handler.navigateUp = {
+        val newIndex = if (selectedCaseIndex - 1 < 1) {
+            0
+        } else {
+            selectedCaseIndex - 1
+        }
+        selectedCaseIndex = newIndex
+        val caseId = allCaseIds[selectedCaseIndex]
+        handler.selectCase(caseId.id!!)
+        focusRequestors[selectedCaseIndex].requestFocus()
+    }
+
+    // Request focus after a delay to ensure chat panel has finished composing
+    LaunchedEffect(Unit) {
+        delay(500) // Initial delay to ensure UI is stable
+        if (selectedCaseIndex < focusRequestors.size) {
+            focusRequestors[selectedCaseIndex].requestFocus()
+        }
+    }
 
     fun indexSelected(index: Int) {
         selectedCaseIndex = if (index < 1) { // Arrow up at top.
@@ -86,7 +127,6 @@ fun CaseSelector(
                         .padding(start = 14.dp)
                 ) {
                     caseIds.forEachIndexed { index, caseId ->
-                        focusRequestors.add(FocusRequester())
                         CaseNameItem(
                             caseId = caseId,
                             isSelected = index == selectedCaseIndex,
@@ -96,10 +136,6 @@ fun CaseSelector(
                             onUpArrow = { indexSelected(index - 1) }
                         )
                     }
-                }
-            } else {
-                caseIds.forEachIndexed { index, _ ->
-                    focusRequestors.add(FocusRequester())
                 }
             }
             CollapsibleSectionHeader(
@@ -117,7 +153,6 @@ fun CaseSelector(
                 ) {
                     cornerstoneCaseIds.forEachIndexed { csIndex, caseId ->
                         val globalIndex = caseIds.size + csIndex
-                        focusRequestors.add(FocusRequester())
                         CaseNameItem(
                             caseId = caseId,
                             isSelected = globalIndex == selectedCaseIndex,
@@ -127,10 +162,6 @@ fun CaseSelector(
                             onUpArrow = { indexSelected(globalIndex - 1) }
                         )
                     }
-                }
-            } else {
-                cornerstoneCaseIds.forEachIndexed { csIndex, _ ->
-                    focusRequestors.add(FocusRequester())
                 }
             }
         }
@@ -203,20 +234,21 @@ private fun CaseNameItem(
             .onKeyEvent { keyEvent ->
                 if (downArrowKeyWasPressed(keyEvent)) {
                     onDownArrow()
+                    true
                 } else if (upArrowKeyWasPressed(keyEvent)) {
                     onUpArrow()
+                    true
+                } else {
+                    false
                 }
-                false
             }
             .semantics { contentDescription = "$CASE_NAME_PREFIX${caseId.name}" }
     )
 }
 
 private fun downArrowKeyWasPressed(keyEvent: KeyEvent) =
-    ((keyEvent.type == KeyDown) && (keyEvent.key == Key.DirectionDown))//detect event generated from ComposeTestRule
-            || keyEvent == KeyEvent(VK_DOWN) //detect event generated from keyboard
+    (keyEvent.type == KeyDown) && (keyEvent.key == Key.DirectionDown)
 
 private fun upArrowKeyWasPressed(keyEvent: KeyEvent) =
-    ((keyEvent.type == KeyDown) && (keyEvent.key == Key.DirectionUp)) //detect event generated from ComposeTestRule
-            || keyEvent == KeyEvent(VK_UP) //detect event generated from keyboard
+    (keyEvent.type == KeyDown) && (keyEvent.key == Key.DirectionUp)
 

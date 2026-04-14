@@ -7,7 +7,9 @@ import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import io.rippledown.constants.api.WEB_SOCKET
+import io.rippledown.constants.chat.CASES_INFO_PREFIX
 import io.rippledown.constants.chat.RULE_SESSION_COMPLETED
+import io.rippledown.model.CasesInfo
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.toJsonString
 import kotlinx.coroutines.delay
@@ -52,5 +54,23 @@ fun startServerAndSendRulesSessionCompleted(): TestServerInfo {
     }.start(wait = false)
     val actualPort = runBlocking { server.engine.resolvedConnectors().first().port }
     println("Server with websocket started on port $actualPort")
+    return TestServerInfo(server, actualPort)
+}
+
+fun startServerAndSendCasesInfo(casesInfo: CasesInfo): TestServerInfo {
+    val server = embeddedServer(Netty, port = 0) {
+        install(WebSockets)
+        routing {
+            webSocket(WEB_SOCKET) {
+                // Send expected data
+                send(Frame.Text(CASES_INFO_PREFIX + casesInfo.toJsonString<CasesInfo>()))
+
+                // Keep open briefly so client receives it, then close
+                delay(100)
+                close(CloseReason(CloseReason.Codes.NORMAL, "Test Complete"))
+            }
+        }
+    }.start(wait = false)
+    val actualPort = runBlocking { server.engine.resolvedConnectors().first().port }
     return TestServerInfo(server, actualPort)
 }

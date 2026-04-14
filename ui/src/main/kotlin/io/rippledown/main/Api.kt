@@ -58,9 +58,10 @@ class Api(
 
     suspend fun startWebSocketSession(
         updateCornerstoneStatus: (CornerstoneStatus) -> Unit,
-        ruleSessionCompleted: () -> Unit
+        ruleSessionCompleted: () -> Unit,
+        updateCasesInfo: (CasesInfo) -> Unit = {}
     ) {
-        webSocketManager.startSession(updateCornerstoneStatus, ruleSessionCompleted)
+        webSocketManager.startSession(updateCornerstoneStatus, ruleSessionCompleted, updateCasesInfo)
     }
     fun shutdown() {
         // client.close() // Uncomment if needed, but not required for CIO engine

@@ -6,6 +6,7 @@ import io.rippledown.constants.caseview.CASELIST_ID
 import io.rippledown.constants.caseview.CASE_NAME_PREFIX
 import io.rippledown.constants.caseview.CORNERSTONE_SECTION_ID
 import io.rippledown.constants.caseview.PROCESSED_SECTION_ID
+import io.rippledown.integration.utils.Cyborg
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
 import io.rippledown.integration.utils.findExact
@@ -85,5 +86,13 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
     private fun caseNamesInSection(section: AccessibleContext): List<String> {
         return section.findAllByDescriptionPrefix(CASE_NAME_PREFIX)
             .map { it.accessibleDescription.removePrefix(CASE_NAME_PREFIX) }
+    }
+
+    fun pressDownArrow() {
+        Cyborg().downArrow()
+    }
+
+    fun pressUpArrow() {
+        Cyborg().upArrow()
     }
 }

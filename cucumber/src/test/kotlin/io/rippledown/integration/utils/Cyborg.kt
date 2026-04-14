@@ -16,6 +16,10 @@ class Cyborg {
 
     fun tab() = pressAndRelease(KeyEvent.VK_TAB)
 
+    fun downArrow() = pressAndRelease(KeyEvent.VK_DOWN)
+
+    fun upArrow() = pressAndRelease(KeyEvent.VK_UP)
+
     fun type(text: String) = text.forEach {
         typeChar(it)
     }

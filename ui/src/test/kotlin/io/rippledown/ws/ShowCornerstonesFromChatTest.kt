@@ -32,6 +32,8 @@ class ShowCornerstonesFromChatTest {
         api = mockk<Api>()
         handler = mockk<Handler>()
         coEvery { api.cornerstoneStatus() } returns null
+        coEvery { api.kbList() } returns emptyList()
+        coEvery { api.waitingCasesInfo() } returns CasesInfo()
         coEvery { handler.api } returns api
         coEvery { handler.isClosing } returns { true }
     }
@@ -57,7 +59,8 @@ class ShowCornerstonesFromChatTest {
         coEvery {
             api.startWebSocketSession(
                 updateCornerstoneStatus = any(),
-                ruleSessionCompleted = any()
+                ruleSessionCompleted = any(),
+                updateCasesInfo = any()
             )
         } coAnswers {
             updateCornerstoneStatus = firstArg()
@@ -99,7 +102,8 @@ class ShowCornerstonesFromChatTest {
         coEvery {
             api.startWebSocketSession(
                 updateCornerstoneStatus = any(),
-                ruleSessionCompleted = any()
+                ruleSessionCompleted = any(),
+                updateCasesInfo = any()
             )
         } coAnswers {
             updateCornerstoneStatus = firstArg()

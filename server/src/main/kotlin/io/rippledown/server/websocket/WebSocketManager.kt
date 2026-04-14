@@ -1,8 +1,10 @@
 package io.rippledown.server.websocket
 
 import io.ktor.websocket.*
+import io.rippledown.constants.chat.CASES_INFO_PREFIX
 import io.rippledown.constants.chat.RULE_SESSION_COMPLETED
 import io.rippledown.log.lazyLogger
+import io.rippledown.model.CasesInfo
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.toJsonString
 
@@ -27,6 +29,10 @@ class WebSocketManager {
 
     suspend fun sendStatus(status: CornerstoneStatus) {
         send(status.toJsonString<CornerstoneStatus>())
+    }
+
+    suspend fun sendCasesInfo(casesInfo: CasesInfo) {
+        send(CASES_INFO_PREFIX + casesInfo.toJsonString<CasesInfo>())
     }
 
     suspend fun sendRuleSessionCompleted() {

@@ -110,7 +110,7 @@ class Defs {
         labProxy().restProxy.deleteProcessedCaseWithName(caseName)
     }
 
-    @And("I select case {word}")
+    @And("I select case {word} on the processed case list")
     fun selectCase(caseName: String) {
         caseListPO().select(caseName)
         caseViewPO().waitForNameToShow(caseName)
@@ -222,7 +222,7 @@ class Defs {
     }
 
     @Then("I (should )see the case {word} as the current case")
-    fun IShouldSeeTheCaseWordAsTheCurrentCase(caseName: String) {
+    fun requireCaseToBeShowing(caseName: String) {
         caseViewPO().waitForNameToShow(caseName)
     }
 
@@ -234,6 +234,28 @@ class Defs {
     @And("(I )select the case {word}")
     fun ISelectTheCaseWord(caseName: String) {
         caseListPO().select(caseName)
+    }
+
+    @And("I select the case {word} on the cornerstone case list")
+    fun ISelectTheCornerstoneCase(caseName: String) {
+        cornerstoneCaseListPO().select(caseName)
+    }
+
+    @Given("a list of cornerstone cases with the following names is stored on the server:")
+    fun aListOfCornerstoneCasesIsStoredOnTheServer(dataTable: DataTable) {
+        dataTable.asList().forEach { caseName ->
+            labProxy().addCornerstoneCase(caseName, mapOf("x" to caseName))
+        }
+    }
+
+    @When("I press the down arrow key")
+    fun pressDownArrowKey() {
+        caseListPO().pressDownArrow()
+    }
+
+    @When("I press the up arrow key")
+    fun pressUpArrowKey() {
+        caseListPO().pressUpArrow()
     }
 
     @Then("the interpretation should contain the text {string}")

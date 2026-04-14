@@ -18,6 +18,10 @@ class RippleDownUIOperator(private val window: ComposeWindow) {
         context()
     }
 
+    fun cornerstoneCaseListPO() = CornerstoneCaseListPO {
+        context()
+    }
+
     fun caseCountPO() = CaseCountPO {
         context()
     }
