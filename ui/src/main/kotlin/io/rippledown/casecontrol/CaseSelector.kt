@@ -23,13 +23,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.rippledown.constants.caseview.*
 import io.rippledown.model.CaseId
-import kotlinx.coroutines.delay
 
 interface CaseSelectorHandler {
     var selectCase: (id: Long) -> Unit
     var requestFocusOnSelectedCase: () -> Unit
-    var navigateDown: () -> Unit
-    var navigateUp: () -> Unit
 }
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
@@ -49,38 +46,6 @@ fun CaseSelector(
 
     // Implement the callback to request focus on the selected case
     handler.requestFocusOnSelectedCase = {
-        if (selectedCaseIndex < focusRequestors.size) {
-            focusRequestors[selectedCaseIndex].requestFocus()
-        }
-    }
-
-    // Implement navigation callbacks
-    handler.navigateDown = {
-        val newIndex = if (selectedCaseIndex + 1 >= allCaseIds.size) {
-            allCaseIds.size - 1
-        } else {
-            selectedCaseIndex + 1
-        }
-        selectedCaseIndex = newIndex
-        val caseId = allCaseIds[selectedCaseIndex]
-        handler.selectCase(caseId.id!!)
-        focusRequestors[selectedCaseIndex].requestFocus()
-    }
-    handler.navigateUp = {
-        val newIndex = if (selectedCaseIndex - 1 < 1) {
-            0
-        } else {
-            selectedCaseIndex - 1
-        }
-        selectedCaseIndex = newIndex
-        val caseId = allCaseIds[selectedCaseIndex]
-        handler.selectCase(caseId.id!!)
-        focusRequestors[selectedCaseIndex].requestFocus()
-    }
-
-    // Request focus after a delay to ensure chat panel has finished composing
-    LaunchedEffect(Unit) {
-        delay(500) // Initial delay to ensure UI is stable
         if (selectedCaseIndex < focusRequestors.size) {
             focusRequestors[selectedCaseIndex].requestFocus()
         }

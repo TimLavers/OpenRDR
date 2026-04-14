@@ -56,6 +56,7 @@ fun ComposeTestRule.requireCaseSelectorNotToBeDisplayed() {
 fun ComposeTestRule.downArrowOnCase(caseName: String) {
     onNode(caseMatcher(caseName), true).performKeyInput {
         keyDown(Key.Companion.DirectionDown)
+        keyUp(Key.Companion.DirectionDown)
     }
     waitForIdle()
 }
@@ -63,6 +64,7 @@ fun ComposeTestRule.downArrowOnCase(caseName: String) {
 fun ComposeTestRule.upArrowOnCase(caseName: String) {
     onNode(caseMatcher(caseName), true).performKeyInput {
         keyDown(Key.Companion.DirectionUp)
+        keyUp(Key.Companion.DirectionUp)
     }
     waitForIdle()
 }

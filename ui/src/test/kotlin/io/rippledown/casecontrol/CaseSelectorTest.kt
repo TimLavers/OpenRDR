@@ -543,6 +543,7 @@ fun main() = application {
         }
         CaseSelector(caseIds, handler = object : CaseSelectorHandler {
             override var selectCase: (id: Long) -> Unit = { println("selectCaseID = $it") }
+            override var requestFocusOnSelectedCase: () -> Unit = {}
         })
     }
 }

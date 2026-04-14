@@ -7,7 +7,6 @@ import androidx.compose.material.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.pointerInput
@@ -62,8 +61,6 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
         object : CaseSelectorHandler {
             override var selectCase: (id: Long) -> Unit = { }
             override var requestFocusOnSelectedCase: () -> Unit = { }
-            override var navigateDown: () -> Unit = { }
-            override var navigateUp: () -> Unit = { }
         }
     }
 
@@ -123,9 +120,9 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                 if (conversationCaseId != it) {
                     val response = api.startConversation(it)
                     conversationCaseId = it
+                    ++chatId
                     if (response.text.isNotBlank()) {
                         pendingConversationResponse = response
-                        ++chatId
                     }
                 }
             }
@@ -142,33 +139,6 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     }
 
     Scaffold(
-        modifier = Modifier.onPreviewKeyEvent { event ->
-            if (event.type == KeyEventType.KeyDown) {
-                when (event.key) {
-                    Key.DirectionDown -> {
-                        if (!ruleInProgress) {
-                            caseSelectorHandler.navigateDown()
-                            true // Consume the event
-                        } else {
-                            false
-                        }
-                    }
-
-                    Key.DirectionUp -> {
-                        if (!ruleInProgress) {
-                            caseSelectorHandler.navigateUp()
-                            true // Consume the event
-                        } else {
-                            false
-                        }
-                    }
-
-                    else -> false
-                }
-            } else {
-                false
-            }
-        },
         topBar = {
             ApplicationBar(kbInfo, object : AppBarHandler {
                 override var isRuleSessionInProgress = ruleInProgress
