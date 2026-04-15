@@ -13,8 +13,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.key.KeyEventType.Companion.KeyDown
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -37,8 +35,6 @@ fun CaseSelector(
     handler: CaseSelectorHandler
 ) {
     val allCaseIds = caseIds + cornerstoneCaseIds
-    val scrollState = rememberScrollState()
-    val hoverOverScroll = remember { mutableStateOf(false) }
     var selectedCaseIndex by remember { mutableStateOf(0) }
     val focusRequestors = remember(allCaseIds) { List(allCaseIds.size) { FocusRequester() } }
     var processedExpanded by remember { mutableStateOf(true) }
@@ -73,7 +69,6 @@ fun CaseSelector(
             modifier = Modifier
                 .size(150.dp, 800.dp)
                 .padding(start = 5.dp)
-                .verticalScroll(scrollState)
                 .semantics {
                     contentDescription = CASELIST_ID
                 }
@@ -85,22 +80,35 @@ fun CaseSelector(
                 semanticId = PROCESSED_SECTION_HEADER_ID
             )
             if (processedExpanded) {
-                Column(
-                    modifier = Modifier.semantics {
-                        contentDescription = PROCESSED_SECTION_ID
+                Box(modifier = Modifier.weight(1f)) {
+                    val processedScrollState = rememberScrollState()
+                    Column(
+                        modifier = Modifier
+                            .semantics {
+                                contentDescription = PROCESSED_SECTION_ID
+                            }
+                            .padding(start = 14.dp, end = 20.dp)
+                            .fillMaxSize()
+                            .verticalScroll(processedScrollState)
+                    ) {
+                        caseIds.forEachIndexed { index, caseId ->
+                            CaseNameItem(
+                                caseId = caseId,
+                                isSelected = index == selectedCaseIndex,
+                                focusRequester = focusRequestors[index],
+                                onClick = { indexSelected(index) },
+                                onDownArrow = { indexSelected(index + 1) },
+                                onUpArrow = { indexSelected(index - 1) }
+                            )
+                        }
                     }
-                        .padding(start = 14.dp)
-                ) {
-                    caseIds.forEachIndexed { index, caseId ->
-                        CaseNameItem(
-                            caseId = caseId,
-                            isSelected = index == selectedCaseIndex,
-                            focusRequester = focusRequestors[index],
-                            onClick = { indexSelected(index) },
-                            onDownArrow = { indexSelected(index + 1) },
-                            onUpArrow = { indexSelected(index - 1) }
-                        )
-                    }
+                    // Show scrollbar 
+                    VerticalScrollbar(
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .width(8.dp),
+                        adapter = rememberScrollbarAdapter(processedScrollState)
+                    )
                 }
             }
             CollapsibleSectionHeader(
@@ -110,38 +118,39 @@ fun CaseSelector(
                 semanticId = CORNERSTONE_SECTION_HEADER_ID
             )
             if (cornerstoneExpanded) {
-                Column(
-                    modifier = Modifier.semantics {
-                        contentDescription = CORNERSTONE_SECTION_ID
+                Box(modifier = Modifier.weight(1f)) {
+                    val cornerstoneScrollState = rememberScrollState()
+                    Column(
+                        modifier = Modifier
+                            .semantics {
+                                contentDescription = CORNERSTONE_SECTION_ID
+                            }
+                            .padding(start = 14.dp, end = 20.dp)
+                            .fillMaxSize()
+                            .verticalScroll(cornerstoneScrollState)
+                    ) {
+                        cornerstoneCaseIds.forEachIndexed { csIndex, caseId ->
+                            val globalIndex = caseIds.size + csIndex
+                            CaseNameItem(
+                                caseId = caseId,
+                                isSelected = globalIndex == selectedCaseIndex,
+                                focusRequester = focusRequestors[globalIndex],
+                                onClick = { indexSelected(globalIndex) },
+                                onDownArrow = { indexSelected(globalIndex + 1) },
+                                onUpArrow = { indexSelected(globalIndex - 1) }
+                            )
+                        }
                     }
-                        .padding(start = 14.dp)
-                ) {
-                    cornerstoneCaseIds.forEachIndexed { csIndex, caseId ->
-                        val globalIndex = caseIds.size + csIndex
-                        CaseNameItem(
-                            caseId = caseId,
-                            isSelected = globalIndex == selectedCaseIndex,
-                            focusRequester = focusRequestors[globalIndex],
-                            onClick = { indexSelected(globalIndex) },
-                            onDownArrow = { indexSelected(globalIndex + 1) },
-                            onUpArrow = { indexSelected(globalIndex - 1) }
-                        )
-                    }
+                    // Show scrollbar 
+                    VerticalScrollbar(
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .width(8.dp),
+                        adapter = rememberScrollbarAdapter(cornerstoneScrollState)
+                    )
                 }
             }
         }
-        VerticalScrollbar(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .onPointerEvent(PointerEventType.Enter) {
-                    hoverOverScroll.value = true
-                }
-                .onPointerEvent(PointerEventType.Exit) {
-                    hoverOverScroll.value = false
-                }
-                .requiredWidth(if (hoverOverScroll.value) 10.dp else 5.dp),
-            adapter = rememberScrollbarAdapter(scrollState)
-        )
     }
 }
 

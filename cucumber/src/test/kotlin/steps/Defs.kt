@@ -268,6 +268,15 @@ class Defs {
         interpretationViewPO().waitForInterpretationText(text)
     }
 
+    @Then("the interpretation of each case should be as follows:")
+    fun requireInterpretationForCases(expectation: DataTable) {
+        expectation.asMap().forEach { (caseName, code) ->
+            println("selecting caseName = ${caseName}")
+            caseListPO().select(caseName)
+            interpretationViewPO().waitForInterpretationTextToContain(code?.trim() ?: "")
+        }
+    }
+
     @Then("the interpretation should be this:")
     fun theInterpretationShouldBeThis(text: DocString) {
         interpretationViewPO().waitForInterpretationText(text.content)

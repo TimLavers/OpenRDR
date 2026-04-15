@@ -43,7 +43,6 @@ class WebSocketManager {
         try {
             if (::connection.isInitialized) {
                 connection.send(message)
-                logger.info("Sent ws message: $message")
             }
         } catch (e: Exception) {
             e.printStackTrace()
