@@ -179,8 +179,8 @@ class CaseSelectorTest {
                 CaseSelector(caseIds, handler = handler)
             }
 
-            // With LazyColumn, we can only assert that items within the viewport exist
-            // Items outside the viewport are not composed until they become visible
+            // With Column + verticalScroll, all items are composed regardless of viewport
+            // Items outside the viewport still exist in the composition tree
             // So we verify that early cases exist and are displayed
             onNodeWithContentDescription(contentDescription(0)).assertIsDisplayed()
             onNodeWithContentDescription(contentDescription(1)).assertIsDisplayed()
@@ -190,11 +190,11 @@ class CaseSelectorTest {
             val caseNodes = onAllNodes(hasContentDescription(CASE_NAME_PREFIX, substring = true))
                 .fetchSemanticsNodes()
 
-            // Verify we have multiple cases visible (LazyColumn should compose items within viewport)
+            // Verify we have multiple cases visible (Column composes all items)
             assert(caseNodes.isNotEmpty()) { "Should have at least some case nodes visible" }
 
-            // The fact that we created 101 cases but only a subset are visible confirms LazyColumn behavior
-            // Items outside viewport are not composed until scrolled into view
+            // With Column + verticalScroll, all 101 cases are composed regardless of viewport
+            // Items outside viewport are still present in the composition tree
         }
     }
 
@@ -581,8 +581,8 @@ class CaseSelectorTest {
             onNodeWithContentDescription("${CASE_NAME_PREFIX}case 2").assertIsDisplayed()
             onNodeWithContentDescription("${CASE_NAME_PREFIX}case 3").assertIsDisplayed()
 
-            // With LazyColumn, we can't assert that later items exist without scrolling
-            // Instead, we verify that we have more cases than can fit in the viewport
+            // With Column + verticalScroll, all items exist regardless of viewport
+            // We verify that we have more cases than can fit in the viewport
             // The height limit is 300dp and each case is ~16dp, so we can fit ~18-19 cases
             // Having 30 cases means scrolling is required, which indicates scrollbars would be visible
 
@@ -590,10 +590,10 @@ class CaseSelectorTest {
             val caseNodes = onAllNodes(hasContentDescription(CASE_NAME_PREFIX, substring = true))
                 .fetchSemanticsNodes()
 
-            // Verify we have multiple cases (LazyColumn should compose items within viewport)
+            // Verify we have multiple cases (Column composes all items)
             assert(caseNodes.isNotEmpty()) { "Should have at least some case nodes visible" }
 
-            // The fact that we created 30 cases and the LazyColumn has a height limit
+            // The fact that we created 30 cases and the Column has a height limit
             // means scrolling functionality is available and scrollbars would appear when needed
         }
     }
@@ -715,11 +715,11 @@ class CaseSelectorTest {
             val caseNodes = onAllNodes(hasContentDescription(CASE_NAME_PREFIX, substring = true))
                 .fetchSemanticsNodes()
 
-            // Verify we have multiple cases visible (LazyColumn should compose items within viewport)
+            // Verify we have multiple cases visible (Column composes all items)
             assert(caseNodes.isNotEmpty()) { "Should have at least some case nodes visible" }
 
-            // The fact that we created 100 cases and only a subset are visible confirms scrolling capability
-            // LazyColumn's behavior of only composing visible items indicates scrolling is working
+            // The fact that we created 100 cases and only some are visible in the viewport confirms scrolling capability
+            // Column's behavior of composing all items but only showing viewport items indicates scrolling is working
         }
     }
 
@@ -742,11 +742,11 @@ class CaseSelectorTest {
             val allCaseNodes = onAllNodes(hasContentDescription(CASE_NAME_PREFIX, substring = true))
                 .fetchSemanticsNodes()
 
-            // Verify we have multiple cases visible (LazyColumn should compose items within viewport)
+            // Verify we have multiple cases visible (Column composes all items)
             assert(allCaseNodes.isNotEmpty()) { "Should have at least some case nodes visible" }
 
-            // The fact that we created 49 cornerstone cases and only a subset are visible confirms scrolling capability
-            // LazyColumn's behavior of only composing visible items indicates scrolling is working
+            // The fact that we created 49 cornerstone cases and only some are visible in the viewport confirms scrolling capability
+            // Column's behavior of composing all items but only showing viewport items indicates scrolling is working
         }
     }
 
@@ -777,7 +777,7 @@ class CaseSelectorTest {
             assert(allCaseNodes.isNotEmpty()) { "Should have at least some case nodes visible" }
 
             // The existence of many items in both sections with limited viewport confirms scrolling capability
-            // LazyColumn's behavior of only composing visible items indicates scrolling is working
+            // Column's behavior of composing all items but only showing viewport items indicates scrolling is working
         }
     }
 
