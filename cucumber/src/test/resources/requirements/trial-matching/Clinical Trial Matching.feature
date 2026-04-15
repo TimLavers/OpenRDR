@@ -38,5 +38,4 @@ Feature: A sample KB can be created for Clinical Trial Matching.
       | 14 | ALAL   |
       | 15 | MNM    |
       | 16 | ALL    |
-    And pause
 

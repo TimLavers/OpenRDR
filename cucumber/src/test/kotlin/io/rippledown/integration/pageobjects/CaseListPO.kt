@@ -20,7 +20,7 @@ import javax.accessibility.AccessibleRole.LABEL
 import javax.accessibility.AccessibleRole.SCROLL_PANE
 
 class CaseListPO(private val contextProvider: () -> AccessibleContext) {
-    private fun casesListed(): List<String> {
+    fun casesListed(): List<String> {
         waitTillCaseListContextIsAccessible()
         val context = caseListContext() ?: return emptyList()
         return execute<List<String>> {
