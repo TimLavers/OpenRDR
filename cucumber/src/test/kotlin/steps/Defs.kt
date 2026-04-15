@@ -14,14 +14,12 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.integration.proxy.ConfiguredTestData
 import io.rippledown.integration.proxy.TestResultDetail
 import org.awaitility.Awaitility
-import org.awaitility.Awaitility.await
 import steps.StepsInfrastructure.cleanup
 import steps.StepsInfrastructure.screenshotOnFailure
 import steps.StepsInfrastructure.startClient
 import steps.StepsInfrastructure.startServerWithInMemoryDatabase
 import steps.StepsInfrastructure.startServerWithPostgresDatabase
 import java.io.File
-import java.time.Duration.ofSeconds
 import java.util.concurrent.TimeUnit.*
 
 class Defs {
@@ -273,20 +271,14 @@ class Defs {
     @Then("the interpretation of each case should be as follows:")
     fun requireInterpretationForCases(expectation: DataTable) {
         expectation.asMap().forEach { (caseName, code) ->
-            println("selecting caseName = ${caseName}")
-            caseListPO().select(caseName)
-            interpretationViewPO().waitForInterpretationTextToContain(code?.trim() ?: "")
-            // Wait for accessibility system to stabilize before next selection
-            await().atMost(ofSeconds(2)).until {
-                try {
-                    // Try to access the case list context to ensure it's stable
-                    caseListPO().casesListed()
-                    true
-                } catch (e: Exception) {
-                    false
-                }
-            }
+            println("checking caseName = ${caseName}")
+            checkInterpretationViaRestClient(caseName, code?.trim() ?: "")
         }
+    }
+
+    private fun checkInterpretationViaRestClient(caseName: String, expectedInterpretation: String) {
+        val actualInterpretation = restClient().getProcessedCaseWithName(caseName).viewableInterpretation.latestText()
+        actualInterpretation shouldBe expectedInterpretation
     }
 
     @Then("the interpretation should be this:")

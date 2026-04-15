@@ -10,7 +10,10 @@ import io.ktor.serialization.kotlinx.json.*
 import io.rippledown.constants.api.*
 import io.rippledown.constants.server.*
 import io.rippledown.main.Api
-import io.rippledown.model.*
+import io.rippledown.model.Attribute
+import io.rippledown.model.Conclusion
+import io.rippledown.model.KBInfo
+import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.EpisodicCondition
@@ -35,7 +38,7 @@ class RESTClient {
     private val endpoint = "http://localhost:$PORT"
     private val api = Api()
 
-    private val jsonClient = HttpClient(CIO) {
+    private val client = HttpClient(CIO) {
         install(ContentNegotiation) {
             json(Json {
                 prettyPrint = true
@@ -51,7 +54,7 @@ class RESTClient {
     fun serverIsRunning(): Boolean {
         return runBlocking {
             try {
-                jsonClient.get("$endpoint$PING")
+                client.get("$endpoint$PING")
                 true
             } catch (_: Exception) {
                 false
@@ -59,21 +62,13 @@ class RESTClient {
         }
     }
 
-    fun getCaseWithName(name: String): ViewableCase? {
-        runBlocking {
-            val casesInfo: CasesInfo = jsonClient.get(endpoint + WAITING_CASES) {
-                parameter(KB_ID, currentKB.get()!!.id)
-            }.body()
-            val allCaseIds = casesInfo.caseIds + casesInfo.cornerstoneCaseIds
-            val caseId = allCaseIds.first { it.name == name }
-            currentCase = jsonClient.get(endpoint + CASE) {
-                parameter(CASE_ID, caseId.id)
-                parameter(KB_ID, currentKB.get()!!.id)
-            }.body()
+    fun getProcessedCaseWithName(name: String): ViewableCase {
+        return runBlocking {
+            val waitingCasesInfo = api.waitingCasesInfo()
+            val caseId = waitingCasesInfo.caseIds.firstOrNull { it.name == name }!!
+            api.getCase(caseId.id!!)!!
         }
-        return currentCase
     }
-
     fun deleteProcessedCaseWithName(name: String) {
         runBlocking {
             Api().deleteCase(name)
@@ -81,21 +76,21 @@ class RESTClient {
     }
 
     fun getOrCreateAttribute(name: String): Attribute = runBlocking {
-        jsonClient.post(endpoint + GET_OR_CREATE_ATTRIBUTE) {
+        client.post(endpoint + GET_OR_CREATE_ATTRIBUTE) {
             setBody(name)
             parameter(KB_ID, currentKB.get().id)
         }.body()
     }
 
     fun getOrCreateConclusion(text: String): Conclusion = runBlocking {
-        jsonClient.post(endpoint + GET_OR_CREATE_CONCLUSION) {
+        client.post(endpoint + GET_OR_CREATE_CONCLUSION) {
             setBody(text)
             parameter(KB_ID, currentKB.get().id)
         }.body()
     }
 
     fun getOrCreateCondition(prototype: Condition): Condition = runBlocking {
-        jsonClient.post(endpoint + GET_OR_CREATE_CONDITION) {
+        client.post(endpoint + GET_OR_CREATE_CONDITION) {
             contentType(ContentType.Application.Json)
             setBody(prototype)
             parameter(KB_ID, currentKB.get().id)
@@ -104,7 +99,7 @@ class RESTClient {
 
     fun provideCase(externalCase: ExternalCase): RDRCase {
         val result = runBlocking {
-            jsonClient.put(endpoint + PROCESS_CASE) {
+            client.put(endpoint + PROCESS_CASE) {
                 contentType(ContentType.Application.Json)
                 setBody(externalCase)
                 parameter(KB_ID, currentKB.get().id)
@@ -112,9 +107,12 @@ class RESTClient {
         }
         return result
     }
+
+    suspend fun getCase(caseId: Long): ViewableCase? = api.getCase(caseId)
+
     fun addCornerstoneCase(externalCase: ExternalCase): RDRCase {
         val result = runBlocking {
-            jsonClient.put(endpoint + ADD_CORNERSTONE_CASE) {
+            client.put(endpoint + ADD_CORNERSTONE_CASE) {
                 contentType(ContentType.Application.Json)
                 setBody(externalCase)
                 parameter(KB_ID, currentKB.get().id)
@@ -124,7 +122,7 @@ class RESTClient {
     }
 
     fun provideCaseForKB(kbName: String, externalCase: ExternalCase) = runBlocking {
-        jsonClient.put(endpoint + INTERPRET_CASE) {
+        client.put(endpoint + INTERPRET_CASE) {
             contentType(ContentType.Application.Json)
             setBody(externalCase)
             parameter(KB_NAME, kbName)
@@ -132,7 +130,7 @@ class RESTClient {
     }
 
     fun createRuleToAddText(caseName: String, text: String, vararg conditions: String = arrayOf()): ViewableCase {
-        val currentCase = getCaseWithName(caseName)!!
+        val currentCase = getProcessedCaseWithName(caseName)!!
         val sessionStartRequest = SessionStartRequest(currentCase.id!!, Addition(text))
         runBlocking { api.startRuleSession(sessionStartRequest) }
 
@@ -169,11 +167,11 @@ class RESTClient {
 
     fun shutdown(): Unit = runBlocking {
         try {
-            jsonClient.post("$endpoint$SHUTDOWN")
+            client.post("$endpoint$SHUTDOWN")
         } catch (_: Exception) {
             //expected
         } finally {
-            jsonClient.close()
+            client.close()
         }
     }
 }
