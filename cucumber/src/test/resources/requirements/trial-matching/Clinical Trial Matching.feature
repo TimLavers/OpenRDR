@@ -24,55 +24,56 @@ Feature: A sample KB can be created for Clinical Trial Matching.
       | 22   | AML    |        | canonical contains "myeloid leukemia"          |
       | 27   | AML    |        | canonical contains "promyelocytic"             |
       | 28   | MNM    |        | canonical contains "undifferentiated leukemia" |
+    And pause for 300 seconds
     Then the interpretation of each case should be as follows:
       | 1  | CERVIX |
       | 2  | BRAIN  |
       | 3  |        |
       | 4  | NSCLC  |
-      | 5  | ALL    |
-      | 6  | ALL    |
+      | 5  | BLL TLL    |
+      | 6  | BLL,TLL    |
       | 7  | AML    |
       | 8  | AMLMRC |
       | 9  | AML    |
-      | 10 | AMLMRC |
+      | 10 | AML MDS |
       | 11 |        |
-      | 12 | MEL    |
-      | 13 | MNM    |
+      | 12 | ACRM    |
+      | 13 | ALAL    |
       | 14 | ALAL   |
-      | 15 | MNM    |
-      | 16 | ALL    |
-      | 17 | ALL    |
-      | 18 | ALL    |
-      | 19 | ALL    |
-      | 20 | ALL    |
+      | 15 | ALAL AML    |
+      | 16 | BLL TLL    |
+      | 17 | BLL TLL    |
+      | 18 | BLL TLL    |
+      | 19 | BLL TLL    |
+      | 20 | BLL TLL    |
       | 21 | AML    |
       | 22 | AML    |
       | 23 | AML    |
       | 24 | AML    |
       | 25 | AML    |
       | 26 | AML    |
-      | 27 | AML    |
-      | 28 | MNM    |
+      | 27 | APLPMLRARA    |
+      | 28 | AUL    |
       | 29 |        |
-      | 30 |        |
+      | 30 | ACYC     |
       | 31 |        |
       | 32 |        |
       | 33 |        |
       | 34 |        |
-      | 35 |        |
-      | 36 | ALL    |
-      | 37 |        |
+      | 35 | ADRENAL_GLAND       |
+      | 36 | BLL    |
+      | 37 | WT       |
       | 38 |        |
-      | 39 | ALL    |
-      | 40 |        |
+      | 39 | TLL    |
+      | 40 | TLL       |
       | 41 |        |
       | 42 |        |
-      | 43 |        |
-      | 44 |        |
-      | 45 |        |
+      | 43 | BILIARY_TRACT       |
+      | 44 | BREAST       |
+      | 45 | GBC       |
       | 46 |        |
-      | 47 |        |
-      | 48 |        |
-      | 49 |        |
-      | 50 |        |
+      | 47 | CHOL HCCIHCH       |
+      | 48 | CCRCC       |
+      | 49 | COADREAD,CMC |
+      | 50 | CSCC       |
 
