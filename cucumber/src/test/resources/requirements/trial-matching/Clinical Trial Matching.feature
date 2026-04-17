@@ -27,7 +27,7 @@ Feature: A sample KB can be created for Clinical Trial Matching.
     Then the interpretation of each case should be as follows:
       | 1  | CERVIX |
       | 2  | BRAIN  |
-      | 3  |        |
+      | 3   | UNK                      |
       | 4  | NSCLC  |
       | 5  | ALL    |
       | 6  | ALL    |
@@ -35,7 +35,7 @@ Feature: A sample KB can be created for Clinical Trial Matching.
       | 8  | AMLMRC |
       | 9  | AML    |
       | 10 | AMLMRC |
-      | 11 |        |
+      | 11  | UNK                      |
       | 12 | MEL    |
       | 13 | MNM    |
       | 14 | ALAL   |
@@ -53,26 +53,328 @@ Feature: A sample KB can be created for Clinical Trial Matching.
       | 26 | AML    |
       | 27 | AML    |
       | 28 | MNM    |
-      | 29 |        |
+      | 29  | UNK                      |
       | 30 |        |
-      | 31 |        |
-      | 32 |        |
-      | 33 |        |
-      | 34 |        |
+      | 31  | UNK                      |
+      | 32  | UNK                      |
+      | 33  | UNK                      |
+      | 34  | UNK                      |
       | 35 |        |
       | 36 | ALL    |
       | 37 |        |
-      | 38 |        |
+      | 38  | UNK                      |
       | 39 | ALL    |
-      | 40 |        |
-      | 41 |        |
-      | 42 |        |
+      | 40  | TLL                      |
+      | 41  | UNK                      |
+      | 42  | UNK                      |
       | 43 |        |
       | 44 |        |
-      | 45 |        |
+      | 45  | UNK                      |
       | 46 |        |
       | 47 |        |
       | 48 |        |
-      | 49 |        |
+      | 49  | COADREAD,CMC             |
       | 50 |        |
+      | 53  | STOMACH                  |
+      | 54  | GEJ                      |
+      | 60  | UNK                      |
+      | 61  | OVT                      |
+      | 66  | UNK                      |
+      | 67  | UNK                      |
+      | 68  | UNK                      |
+      | 69  | UNK                      |
+      | 70  | UNK                      |
+      | 73  | NSCLC                    |
+      | 74  | NSCLC                    |
+      | 75  | NSCLC                    |
+      | 76  | NSCLC                    |
+      | 78  | PAAD                     |
+      | 83  | UNK                      |
+      | 84  | UNK                      |
+      | 85  | UNK                      |
+      | 86  | UNK                      |
+      | 87  | UNK                      |
+      | 88  | UNK                      |
+      | 89  | UNK                      |
+      | 90  | UNK                      |
+      | 91  | UNK                      |
+      | 92  | UNK                      |
+      | 93  | UNK                      |
+      | 94  | UNK                      |
+      | 97  | EGC                      |
+      | 102 | UNK                      |
+      | 104 | NSCLC                    |
+      | 105 | NSCLC                    |
+      | 106 | NSCLC                    |
+      | 107 | NSCLC                    |
+      | 108 | UNK                      |
+      | 109 | NSCLC                    |
+      | 110 | NSCLC                    |
+      | 111 | UNK                      |
+      | 113 | LYMPH                    |
+      | 114 | ANKL                     |
+      | 116 | STOMACH                  |
+      | 118 | UNK                      |
+      | 119 | UNK                      |
+      | 120 | BOWEL                    |
+      | 121 | ADIFG                    |
+      | 124 | LNM                      |
+      | 125 | ODG                      |
+      | 127 | PROSTATE                 |
+      | 128 | PROSTATE                 |
+      | 129 | PROSTATE                 |
+      | 130 | PROSTATE                 |
+      | 131 | UNK                      |
+      | 132 | UNK                      |
+      | 134 | NHL                      |
+      | 136 | NHL                      |
+      | 137 | NHL                      |
+      | 139 | NHL                      |
+      | 140 | NHL                      |
+      | 141 | NHL                      |
+      | 143 | NHL                      |
+      | 144 | NHL                      |
+      | 146 | BOWEL                    |
+      | 147 | UNK                      |
+      | 148 | UNK                      |
+      | 149 | UNK                      |
+      | 150 | UNK                      |
+      | 151 | UNK                      |
+      | 152 | UNK                      |
+      | 154 | ASTR                     |
+      | 155 | ASTR                     |
+      | 156 | ASTR                     |
+      | 157 | ASTR                     |
+      | 158 | ASTR                     |
+      | 160 | UNK                      |
+      | 161 | NHL                      |
+      | 162 | NHL                      |
+      | 163 | MBN                      |
+      | 164 | MBN                      |
+      | 166 | NHL                      |
+      | 167 | NHL                      |
+      | 170 | NHL                      |
+      | 171 | NHL                      |
+      | 172 | MBN                      |
+      | 173 | MBN                      |
+      | 174 | MBN                      |
+      | 178 | BPDCN                    |
+      | 179 | UNK                      |
+      | 180 | UNK                      |
+      | 182 | UNK                      |
+      | 183 | UNK                      |
+      | 185 | BILIARY_TRACT            |
+      | 186 | BILIARY_TRACT            |
+      | 193 | UNK                      |
+      | 195 | BRAIN                    |
+      | 196 | BRAIN                    |
+      | 197 | BRAIN                    |
+      | 199 | BRAIN                    |
+      | 210 | UNK                      |
+      | 211 | UNK                      |
+      | 212 | UNK                      |
+      | 213 | CLLSLL                   |
+      | 214 | UNK                      |
+      | 215 | BRAIN                    |
+      | 216 | UNK                      |
+      | 217 | BOWEL                    |
+      | 218 | BOWEL                    |
+      | 219 | UNK                      |
+      | 221 | UNK                      |
+      | 222 | UNK                      |
+      | 225 | UNK                      |
+      | 226 | UCEC                     |
+      | 230 | STOMACH                  |
+      | 235 | UNK                      |
+      | 241 | BOWEL                    |
+      | 242 | LIVER                    |
+      | 246 | OVT                      |
+      | 247 | RCC                      |
+      | 248 | UNK                      |
+      | 249 | UNK                      |
+      | 250 | UNK                      |
+      | 251 | UNK                      |
+      | 253 | PROSTATE                 |
+      | 254 | PROSTATE                 |
+      | 257 | MBN                      |
+      | 258 | MBN                      |
+      | 262 | CERVIX                   |
+      | 263 | CERVIX                   |
+      | 264 | CERVIX                   |
+      | 268 | NHL                      |
+      | 269 | NHL                      |
+      | 270 | NHL                      |
+      | 271 | BRAIN                    |
+      | 272 | UNK                      |
+      | 273 | EGCT,OGCT,NSGCT,SEM,VGCT |
+      | 278 | NHL                      |
+      | 279 | UNK                      |
+      | 280 | NHL                      |
+      | 284 | CHGL                     |
+      | 287 | UNK                      |
+      | 288 | UNK                      |
+      | 289 | CLLSLL                   |
+      | 291 | CLLSLL                   |
+      | 292 | CLLSLL                   |
+      | 293 | CLLSLL                   |
+      | 300 | UNK                      |
+      | 304 | CCRCC                    |
+      | 305 | CCRCC                    |
+      | 306 | CCRCC                    |
+      | 307 | CCRCC                    |
+      | 308 | UNK                      |
+      | 310 | BOWEL                    |
+      | 311 | UNK                      |
+      | 312 | BOWEL                    |
+      | 314 | BOWEL                    |
+      | 315 | BOWEL                    |
+      | 316 | BOWEL                    |
+      | 317 | BOWEL                    |
+      | 318 | BOWEL                    |
+      | 319 | BOWEL                    |
+      | 320 | BOWEL                    |
+      | 321 | UNK                      |
+      | 322 | UCEC                     |
+      | 326 | UNK                      |
+      | 330 | UNK                      |
+      | 331 | UNK                      |
+      | 332 | UNK                      |
+      | 333 | UNK                      |
+      | 335 | PTCL                     |
+      | 336 | BRAIN                    |
+      | 338 | MBN                      |
+      | 339 | MBN                      |
+      | 340 | UNK                      |
+      | 343 | UNK                      |
+      | 345 | DES                      |
+      | 346 | DES                      |
+      | 348 | DSRCT                    |
+      | 349 | UNK                      |
+      | 352 | DHG                      |
+      | 354 | DIFG                     |
+      | 355 | DIFG                     |
+      | 356 | MBN                      |
+      | 357 | MBN                      |
+      | 358 | DLBCLNOS                 |
+      | 359 | MBN                      |
+      | 360 | MBN                      |
+      | 361 | DMG                      |
+      | 362 | DMG                      |
+      | 363 | DMG                      |
+      | 364 | UNK                      |
+      | 365 | STOMACH                  |
+      | 366 | UNK                      |
+      | 367 | UNK                      |
+      | 368 | UNK                      |
+      | 369 | UNK                      |
+      | 371 | UNK                      |
+      | 372 | UNK                      |
+      | 373 | UNK                      |
+      | 374 | UNK                      |
+      | 375 | UNK                      |
+      | 376 | UNK                      |
+      | 377 | UNK                      |
+      | 378 | UNK                      |
+      | 379 | UNK                      |
+      | 380 | UNK                      |
+      | 381 | UNK                      |
+      | 382 | UNK                      |
+      | 391 | UNK                      |
+      | 392 | UNK                      |
+      | 395 | UCEC                     |
+      | 396 | UCEC                     |
+      | 398 | UCEC                     |
+      | 399 | UCEC                     |
+      | 401 | MTNN                     |
+      | 402 | UNK                      |
+      | 403 | OVT                      |
+      | 404 | OVT                      |
+      | 405 | EMBC,EMYOCA,OVT,TET      |
+      | 407 | UNK                      |
+      | 409 | STOMACH                  |
+      | 410 | ESCC                     |
+      | 417 | UNK                      |
+      | 418 | UNK                      |
+      | 419 | SCLC                     |
+      | 421 | SCLC                     |
+      | 422 | SCLC                     |
+      | 423 | SCLC                     |
+      | 424 | SCLC                     |
+      | 425 | SCLC                     |
+      | 429 | UNK                      |
+      | 430 | ENKL                     |
+      | 433 | UNK                      |
+      | 434 | UNK                      |
+      | 435 | UNK                      |
+      | 436 | UNK                      |
+      | 437 | UNK                      |
+      | 438 | UNK                      |
+      | 439 | UNK                      |
+      | 440 | UNK                      |
+      | 441 | UNK                      |
+      | 442 | FL                       |
+      | 443 | UNK                      |
+      | 447 | UNK                      |
+      | 448 | UTERUS,OVARY             |
+      | 451 | UNK                      |
+      | 452 | FL                       |
+      | 453 | FL                       |
+      | 460 | UNK                      |
+      | 462 | GB                       |
+      | 463 | GIST                     |
+      | 464 | GBC                      |
+      | 465 | GBC                      |
+      | 471 | STOMACH                  |
+      | 472 | EGC                      |
+      | 473 | EGC                      |
+      | 474 | STOMACH                  |
+      | 475 | STOMACH                  |
+      | 476 | STOMACH                  |
+      | 478 | STOMACH                  |
+      | 479 | STOMACH                  |
+      | 482 | STOMACH                  |
+      | 485 | STOMACH                  |
+      | 486 | STOMACH                  |
+      | 487 | STOMACH                  |
+      | 488 | UNK                      |
+      | 489 | STOMACH                  |
+      | 492 | UNK                      |
+      | 493 | UNK                      |
+      | 494 | UNK                      |
+      | 497 | DIFG                     |
+      | 498 | UNK                      |
+      | 500 | ADIFG                    |
+      | 501 | ADIFG                    |
+      | 504 | UCEC                     |
+      | 505 | DIFG,ENCG                |
+      | 506 | UNK                      |
+      | 507 | UNK                      |
+      | 509 | UNK                      |
+      | 510 | DIFG,ENCG                |
+      | 511 | HCC                      |
+      | 512 | UNK                      |
+      | 514 | UNK                      |
+      | 515 | UNK                      |
+      | 516 | UNK                      |
+      | 519 | UNK                      |
+      | 520 | UNK                      |
+      | 528 | UNK                      |
+      | 530 | UNK                      |
+      | 533 | UNK                      |
+      | 535 | STOMACH                  |
+      | 537 | UNK                      |
+      | 538 | UNK                      |
+      | 539 | UNK                      |
+      | 540 | UNK                      |
+      | 541 | UNK                      |
+      | 542 | UNK                      |
+      | 543 | UNK                      |
+      | 548 | UNK                      |
+      | 549 | UNK                      |
+      | 550 | HEAD_NECK                |
+      | 558 | UNK                      |
+      | 559 | UNK                      |
+      | 560 | UNK                      |
+      | 561 | UNK                      |
+      | 562 | UNK                      |
 
