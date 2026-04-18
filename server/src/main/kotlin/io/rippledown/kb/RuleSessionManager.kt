@@ -8,6 +8,7 @@ import io.rippledown.hints.ConditionChatService
 import io.rippledown.hints.ConditionGenerator
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.log.lazyLogger
+import io.rippledown.model.CasesInfo
 import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
@@ -144,6 +145,12 @@ class RuleSessionManager(
         ruleSession = null
         currentDiff = null
         checkRuleSessionHistoryConsistency()
+        val casesInfo = CasesInfo(
+            caseIds = kb.processedCaseIds(),
+            cornerstoneCaseIds = kb.cornerstoneCaseIds(),
+            kbName = kb.kbInfo.name
+        )
+        runBlocking { webSocketManager?.sendCasesInfo(casesInfo) }
     }
 
     override fun exemptCornerstoneCase() = exemptCornerstone(cornerstoneStatus().indexOfCornerstoneToReview)

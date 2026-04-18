@@ -20,6 +20,7 @@ Feature: Add comments without conditions
     When  I build a rule to add the comment "Bring flippers."
     Then the report should be "Bring flippers."
 
+  @single
   Scenario: Building a rule should create a cornerstone copy of the processed case
     Given case Bondi is provided having data:
       | Wave | excellent |
@@ -31,6 +32,7 @@ Feature: Add comments without conditions
     Then the report should be "Bring flippers."
     And the processed case list should contain:
       | Bondi |
+    And pause
     And the cornerstone case list should contain:
       | Bondi |
 
