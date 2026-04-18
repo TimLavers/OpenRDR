@@ -95,6 +95,11 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     LaunchedEffect(Unit) {
         withContext(dispatcher) {
             kbInfo = api.kbList().firstOrNull()
+        }
+    }
+
+    LaunchedEffect(kbInfo) {
+        withContext(dispatcher) {
             casesInfo = api.waitingCasesInfo()
         }
     }

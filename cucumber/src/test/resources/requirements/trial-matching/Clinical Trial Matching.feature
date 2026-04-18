@@ -1,6 +1,6 @@
 Feature: A sample KB can be created for Clinical Trial Matching.
 
-  @single
+#  @single
   Scenario: Clinical Trial Matching KB
     Given I start the client application
     And I create a Knowledge Base with the name OncoTreeMatch
@@ -24,7 +24,6 @@ Feature: A sample KB can be created for Clinical Trial Matching.
       | 22   | AML    |        | canonical contains "myeloid leukemia"          |
       | 27   | AML    |        | canonical contains "promyelocytic"             |
       | 28   | MNM    |        | canonical contains "undifferentiated leukemia" |
-    And pause for 300 seconds
     Then the interpretation of each case should be as follows:
       | 1    | CERVIX                                                         | "2L+ Cervical Cancer" — cervical cancer in 2nd-line-or-later treatment setting. Histology is unspecified (not explicitly SCC/adeno/adenosquamous), so the cervical site parent CERVIX is used rather than a subtype (CESC, CEAD, CEAIS). Line-of-therapy ("2L+") is not a histology/site distinguisher.                                                                                                                                                         |
       | 2    | UNK                                                            | ***differs from manual assignment of BRAIN*** "ALK Fusion-positive Solid or CNS Tumors" is a pan-tumor molecular-biomarker basket spanning any ALK-rearranged malignancy regardless of site/histology — includes NSCLC, inflammatory myofibroblastic tumor, ALCL, neuroblastoma, some gliomas. No single oncotree code captures a molecular state across heterogeneous sites. Manual BRAIN is too narrow because the trial text explicitly says "Solid OR CNS". |
