@@ -6,10 +6,7 @@ import io.rippledown.constants.caseview.CASELIST_ID
 import io.rippledown.constants.caseview.CASE_NAME_PREFIX
 import io.rippledown.constants.caseview.CORNERSTONE_SECTION_ID
 import io.rippledown.constants.caseview.PROCESSED_SECTION_ID
-import io.rippledown.integration.utils.Cyborg
-import io.rippledown.integration.utils.find
-import io.rippledown.integration.utils.findAllByDescriptionPrefix
-import io.rippledown.integration.utils.findExact
+import io.rippledown.integration.utils.*
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
@@ -68,6 +65,13 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
         execute {
             caseNameContext.accessibleAction.doAccessibleAction(0)
         }
+    }
+
+    /** See [CornerstoneCaseListPO.mouseClick]. */
+    fun mouseClick(caseName: String) {
+        waitForCaseListToContain(caseName)
+        val ctx = caseNameContext(caseName) ?: return
+        ctx.mouseClickAtCentre()
     }
 
     private fun caseNameContext(caseName: String) = contextProvider().find("$CASE_NAME_PREFIX$caseName", LABEL)

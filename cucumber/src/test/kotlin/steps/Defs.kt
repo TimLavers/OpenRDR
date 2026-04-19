@@ -121,7 +121,13 @@ class Defs {
     fun selectCase(caseName: String) {
         caseListPO().select(caseName)
         caseViewPO().waitForNameToShow(caseName)
-        refocusLastSelectedCase = { caseListPO().select(caseName) }
+        // After the case loads, OpenRDRUI's LaunchedEffect(currentCaseId) calls
+        // startConversation which eventually increments chatId and ChatPanel's
+        // LaunchedEffect(id) then steals focus to the chat text field. Wait
+        // deterministically for that steal to happen before returning, so any
+        // subsequent refocus of the case element is not raced against it.
+        chatPO().waitForChatToBeFocused()
+        refocusLastSelectedCase = { caseListPO().mouseClick(caseName) }
     }
 
     @And("I move attribute {word} below attribute {word}")
@@ -242,13 +248,17 @@ class Defs {
     @And("(I )select the case {word}")
     fun ISelectTheCaseWord(caseName: String) {
         caseListPO().select(caseName)
-        refocusLastSelectedCase = { caseListPO().select(caseName) }
+        caseViewPO().waitForNameToShow(caseName)
+        chatPO().waitForChatToBeFocused()
+        refocusLastSelectedCase = { caseListPO().mouseClick(caseName) }
     }
 
     @And("I select the case {word} on the cornerstone case list")
     fun ISelectTheCornerstoneCase(caseName: String) {
         cornerstoneCaseListPO().select(caseName)
-        refocusLastSelectedCase = { cornerstoneCaseListPO().select(caseName) }
+        caseViewPO().waitForNameToShow(caseName)
+        chatPO().waitForChatToBeFocused()
+        refocusLastSelectedCase = { cornerstoneCaseListPO().mouseClick(caseName) }
     }
 
     @Given("a list of cornerstone cases with the following names is stored on the server:")
@@ -260,14 +270,22 @@ class Defs {
 
     @When("I press the down arrow key")
     fun pressDownArrowKey() {
-        refocusLastSelectedCase?.invoke()
-        caseListPO().pressDownArrow()
+        StepsInfrastructure.client().withWindowOnTop {
+            refocusLastSelectedCase?.invoke()
+            Thread.sleep(300) // let compose propagate focus to the case item
+            caseListPO().pressDownArrow()
+            Thread.sleep(100)
+        }
     }
 
     @When("I press the up arrow key")
     fun pressUpArrowKey() {
-        refocusLastSelectedCase?.invoke()
-        caseListPO().pressUpArrow()
+        StepsInfrastructure.client().withWindowOnTop {
+            refocusLastSelectedCase?.invoke()
+            Thread.sleep(300) // let compose propagate focus to the case item
+            caseListPO().pressUpArrow()
+            Thread.sleep(100)
+        }
     }
 
     @Then("the interpretation should contain the text {string}")

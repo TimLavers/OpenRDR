@@ -147,6 +147,34 @@ fun ComposeWindow.isReadyForTesting(): Boolean {
     return this.isActive && this.isEnabled && this.isFocusable
 }
 
+/**
+ * Performs an OS-level mouse click at the centre of the component backing this
+ * AccessibleContext. Unlike [javax.accessibility.AccessibleAction.doAccessibleAction],
+ * which invokes the click callback without moving native focus, a Robot mouse
+ * click moves OS-level focus onto the target compose element so that subsequent
+ * Robot key presses are delivered to it.
+ */
+fun AccessibleContext.mouseClickAtCentre() {
+    val component = accessibleComponent ?: return
+    val location = execute<java.awt.Point?> {
+        try {
+            component.locationOnScreen
+        } catch (_: Exception) {
+            null
+        }
+    } ?: return
+    val size = execute<java.awt.Dimension?> { component.size } ?: return
+    val cx = location.x + size.width / 2
+    val cy = location.y + size.height / 2
+    val robot = java.awt.Robot()
+    robot.mouseMove(cx, cy)
+    Thread.sleep(80)
+    robot.mousePress(java.awt.event.InputEvent.BUTTON1_DOWN_MASK)
+    Thread.sleep(80) // Compose needs a non-zero press duration to treat this as a tap
+    robot.mouseRelease(java.awt.event.InputEvent.BUTTON1_DOWN_MASK)
+    Thread.sleep(80)
+}
+
 fun ComposeWindow.waitForWindowToShow() {
     var loop = 0
     while (!isReadyForTesting() && loop++ < 50) {

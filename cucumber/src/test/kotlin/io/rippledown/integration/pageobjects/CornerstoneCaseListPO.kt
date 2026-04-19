@@ -6,6 +6,7 @@ import io.rippledown.constants.caseview.CORNERSTONE_SECTION_ID
 import io.rippledown.integration.utils.Cyborg
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
 import io.rippledown.integration.utils.findExact
+import io.rippledown.integration.utils.mouseClickAtCentre
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
@@ -35,6 +36,19 @@ class CornerstoneCaseListPO(private val contextProvider: () -> AccessibleContext
         execute {
             caseNameContext.accessibleAction.doAccessibleAction(0)
         }
+    }
+
+    /**
+     * Performs an OS-level mouse click on the case. Use this when subsequent
+     * Robot key presses must be routed to this case (e.g. for arrow-key
+     * navigation); [select] goes through the accessibility API and does not
+     * reliably move native focus when another compose focus request (such as
+     * chat's LaunchedEffect) may race with it.
+     */
+    fun mouseClick(caseName: String) {
+        waitForCornerstoneCaseListToContain(caseName)
+        val ctx = caseNameContext(caseName) ?: return
+        ctx.mouseClickAtCentre()
     }
 
     private fun caseNameContext(caseName: String): AccessibleContext? {

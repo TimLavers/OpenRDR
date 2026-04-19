@@ -40,7 +40,7 @@ object StepsInfrastructure {
     fun screenshotOnFailure(scenario: Scenario) {
         if (scenario.isFailed && ::launchedClient.isInitialized) {
             val file = File(failureDir(scenario), "screenshot.png")
-            println("Scenario failed — saving screenshot to ${file.absolutePath}")
+            println("Scenario failed - saving screenshot to ${file.absolutePath}")
             try {
                 launchedClient.screenshot(file)
             } catch (e: Exception) {
@@ -62,7 +62,7 @@ object StepsInfrastructure {
             try {
                 val dst = File(targetDir, src.name)
                 src.copyTo(dst, overwrite = true)
-                println("Scenario failed — saved ${src.name} to ${dst.absolutePath}")
+                println("Scenario failed - saved ${src.name} to ${dst.absolutePath}")
             } catch (e: Exception) {
                 println("Failed to copy ${src.name}: ${e.message}")
             }
