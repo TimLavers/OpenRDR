@@ -121,12 +121,6 @@ class Defs {
     fun selectCase(caseName: String) {
         caseListPO().select(caseName)
         caseViewPO().waitForNameToShow(caseName)
-        // After the case loads, OpenRDRUI's LaunchedEffect(currentCaseId) calls
-        // startConversation which eventually increments chatId and ChatPanel's
-        // LaunchedEffect(id) then steals focus to the chat text field. Wait
-        // deterministically for that steal to happen before returning, so any
-        // subsequent refocus of the case element is not raced against it.
-        chatPO().waitForChatToBeFocused()
         refocusLastSelectedCase = { caseListPO().mouseClick(caseName) }
     }
 
@@ -249,7 +243,6 @@ class Defs {
     fun ISelectTheCaseWord(caseName: String) {
         caseListPO().select(caseName)
         caseViewPO().waitForNameToShow(caseName)
-        chatPO().waitForChatToBeFocused()
         refocusLastSelectedCase = { caseListPO().mouseClick(caseName) }
     }
 
@@ -257,7 +250,6 @@ class Defs {
     fun ISelectTheCornerstoneCase(caseName: String) {
         cornerstoneCaseListPO().select(caseName)
         caseViewPO().waitForNameToShow(caseName)
-        chatPO().waitForChatToBeFocused()
         refocusLastSelectedCase = { cornerstoneCaseListPO().mouseClick(caseName) }
     }
 
@@ -270,9 +262,11 @@ class Defs {
 
     @When("I press the down arrow key")
     fun pressDownArrowKey() {
+        // Wait for chat focus-steal to finish before refocusing the case, so
+        // our mouse-click is not raced by ChatPanel's LaunchedEffect(id).
+        chatPO().waitForChatToBeFocused()
         StepsInfrastructure.client().withWindowOnTop {
             refocusLastSelectedCase?.invoke()
-            Thread.sleep(300) // let compose propagate focus to the case item
             caseListPO().pressDownArrow()
             Thread.sleep(100)
         }
@@ -280,9 +274,9 @@ class Defs {
 
     @When("I press the up arrow key")
     fun pressUpArrowKey() {
+        chatPO().waitForChatToBeFocused()
         StepsInfrastructure.client().withWindowOnTop {
             refocusLastSelectedCase?.invoke()
-            Thread.sleep(300) // let compose propagate focus to the case item
             caseListPO().pressUpArrow()
             Thread.sleep(100)
         }
