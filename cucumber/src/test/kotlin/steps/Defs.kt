@@ -15,6 +15,7 @@ import io.rippledown.integration.proxy.ConfiguredTestData
 import io.rippledown.integration.proxy.TestResultDetail
 import org.awaitility.Awaitility
 import steps.StepsInfrastructure.cleanup
+import steps.StepsInfrastructure.saveServerLogsOnFailure
 import steps.StepsInfrastructure.screenshotOnFailure
 import steps.StepsInfrastructure.startClient
 import steps.StepsInfrastructure.startServerWithInMemoryDatabase
@@ -45,6 +46,7 @@ class Defs {
     fun after(scenario: Scenario) {
         stopwatch.stop()
         screenshotOnFailure(scenario)
+        saveServerLogsOnFailure(scenario)
         cleanup()
         println("After scenario  '${scenario.name}', duration: ${stopwatch.elapsed(SECONDS)} seconds")
     }
