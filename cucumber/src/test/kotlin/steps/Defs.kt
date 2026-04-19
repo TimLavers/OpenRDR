@@ -27,6 +27,11 @@ class Defs {
     private var exportedZip: File? = null
     private lateinit var stopwatch: Stopwatch
 
+    // Restores keyboard focus to the last-selected case before an arrow-key press.
+    // After a case is selected, ChatPanel's LaunchedEffect(id) steals focus to the
+    // chat text field, which would otherwise absorb subsequent arrow-key presses.
+    private var refocusLastSelectedCase: (() -> Unit)? = null
+
     @Before("not @database")
     fun before(scenario: Scenario) {
         println("\nBefore scenario '${scenario.name}'")
@@ -116,6 +121,7 @@ class Defs {
     fun selectCase(caseName: String) {
         caseListPO().select(caseName)
         caseViewPO().waitForNameToShow(caseName)
+        refocusLastSelectedCase = { caseListPO().select(caseName) }
     }
 
     @And("I move attribute {word} below attribute {word}")
@@ -236,11 +242,13 @@ class Defs {
     @And("(I )select the case {word}")
     fun ISelectTheCaseWord(caseName: String) {
         caseListPO().select(caseName)
+        refocusLastSelectedCase = { caseListPO().select(caseName) }
     }
 
     @And("I select the case {word} on the cornerstone case list")
     fun ISelectTheCornerstoneCase(caseName: String) {
         cornerstoneCaseListPO().select(caseName)
+        refocusLastSelectedCase = { cornerstoneCaseListPO().select(caseName) }
     }
 
     @Given("a list of cornerstone cases with the following names is stored on the server:")
@@ -252,11 +260,13 @@ class Defs {
 
     @When("I press the down arrow key")
     fun pressDownArrowKey() {
+        refocusLastSelectedCase?.invoke()
         caseListPO().pressDownArrow()
     }
 
     @When("I press the up arrow key")
     fun pressUpArrowKey() {
+        refocusLastSelectedCase?.invoke()
         caseListPO().pressUpArrow()
     }
 
