@@ -35,6 +35,13 @@ class Api(
     engine: HttpClientEngine = CIO.create(),
     private val webSocketPort: Int = PORT
 ) {
+    // @Volatile ensures that writes to `currentKB` from coroutines resumed on
+    // background I/O threads (e.g. inside [createKBFromSample]) are visible to
+    // coroutines resumed on other threads that subsequently build requests via
+    // [setKBParameter]. Without this, tests that use Dispatchers.Unconfined
+    // (see TestClientLauncher) can send requests with a stale kb id, hitting
+    // the wrong KB on the server (e.g. kb=thyroids&caseId=1 → 500).
+    @Volatile
     private var currentKB: KBInfo? = null
     val client = HttpClient(engine) {
         install(ContentNegotiation) {
@@ -298,20 +305,31 @@ class Api(
     }
 
     suspend fun startConversation(caseId: Long): ChatResponse {
-        return client.post("$API_URL$START_CONVERSATION") {
-            contentType(Plain)
-            setKBParameter()
-            setCaseIdParameter(caseId)
-        }.body()
+        return try {
+            val response = client.post("$API_URL$START_CONVERSATION") {
+                contentType(Plain)
+                setKBParameter()
+                setCaseIdParameter(caseId)
+            }
+            if (!response.status.isSuccess()) ChatResponse("") else response.body()
+        } catch (_: Exception) {
+            // Stale kb id during a KB switch, or case not in current kb, etc.
+            ChatResponse("")
+        }
     }
 
     suspend fun sendUserMessage(message: String, caseId: Long): ChatResponse {
-        return client.post("$API_URL$SEND_USER_MESSAGE") {
-            contentType(Plain)
-            setKBParameter()
-            setCaseIdParameter(caseId)
-            setBody(message)
-        }.body()
+        return try {
+            val response = client.post("$API_URL$SEND_USER_MESSAGE") {
+                contentType(Plain)
+                setKBParameter()
+                setCaseIdParameter(caseId)
+                setBody(message)
+            }
+            if (!response.status.isSuccess()) ChatResponse("") else response.body()
+        } catch (_: Exception) {
+            ChatResponse("")
+        }
     }
 
     suspend fun lastRuleDescription(): UndoRuleDescription {
