@@ -123,11 +123,17 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
         withContext(dispatcher) {
             currentCaseId?.let {
                 if (conversationCaseId != it) {
-                    val response = api.startConversation(it)
-                    conversationCaseId = it
-                    ++chatId
-                    if (response.text.isNotBlank()) {
-                        pendingConversationResponse = response
+                    try {
+                        val response = api.startConversation(it)
+                        conversationCaseId = it
+                        ++chatId
+                        if (response.text.isNotBlank()) {
+                            pendingConversationResponse = response
+                        }
+                    } catch (_: Exception) {
+                        // Swallow transient failures (e.g. stale kb id during a kb switch,
+                        // or a case that is not (yet) in the current kb). The effect will
+                        // re-fire when currentCaseId changes again.
                     }
                 }
             }
@@ -139,7 +145,18 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
             handler.api.startWebSocketSession(
                 updateCornerstoneStatus = { cornerstoneStatus = it },
                 ruleSessionCompleted = { cornerstoneStatus = null },
-                updateCasesInfo = { casesInfo = it })
+                updateCasesInfo = { incoming ->
+                    // Ignore updates that belong to a different KB than the one
+                    // the UI is currently showing. Otherwise a sample-KB build
+                    // on the server can push casesInfo for the new KB before
+                    // the UI has finished switching, leaving casesInfo and
+                    // Api.currentKB out of sync (causing 500s on follow-up
+                    // calls like startConversation).
+                    val current = kbInfo?.name
+                    if (current == null || incoming.kbName.isBlank() || incoming.kbName == current) {
+                        casesInfo = incoming
+                    }
+                })
         }
     }
 
