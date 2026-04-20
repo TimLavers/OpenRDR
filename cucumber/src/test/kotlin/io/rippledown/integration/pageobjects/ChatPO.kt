@@ -28,16 +28,34 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
      * happen first (otherwise it races against later key presses).
      */
     fun waitForChatToBeFocused() {
-        await().atMost(ofSeconds(10)).until {
-            try {
-                execute<Boolean> {
-                    chatTextContext()?.accessibleStateSet
-                        ?.contains(javax.accessibility.AccessibleState.FOCUSED) ?: false
-                }
-            } catch (_: Exception) {
-                false
-            }
+        await().atMost(ofSeconds(10)).until { isChatFocused() }
+    }
+
+    /**
+     * Like [waitForChatToBeFocused] but returns quietly if the chat never
+     * becomes focused within [timeoutSeconds]. This is appropriate for
+     * best-effort serialization before an arrow-key press: if the previous
+     * case selection did not change the current case, or if accessibility
+     * actions already moved focus away from chat, no focus-steal is pending
+     * and we should simply proceed rather than hanging for 10 seconds.
+     *
+     * @return true if the chat ended up focused before the timeout.
+     */
+    fun waitForChatToBeFocusedQuietly(timeoutSeconds: Long = 2): Boolean =
+        try {
+            await().atMost(ofSeconds(timeoutSeconds)).until { isChatFocused() }
+            true
+        } catch (_: Throwable) {
+            false
         }
+
+    private fun isChatFocused(): Boolean = try {
+        execute<Boolean> {
+            chatTextContext()?.accessibleStateSet
+                ?.contains(javax.accessibility.AccessibleState.FOCUSED) ?: false
+        }
+    } catch (_: Exception) {
+        false
     }
 
     fun enterChatText(text: String) {

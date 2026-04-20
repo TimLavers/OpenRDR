@@ -1,3 +1,4 @@
+@delay_after_cuke
 Feature: Navigate cases via up and down arrow keys
 
   Scenario: The user should be able to navigate to the next case via the down arrow key

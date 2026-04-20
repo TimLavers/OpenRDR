@@ -10,6 +10,7 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.http.ContentType.Application.Json
 import io.ktor.http.ContentType.Text.Plain
@@ -321,32 +322,44 @@ class Api(
         }.body()
     }
 
-    suspend fun startConversation(caseId: Long): ChatResponse {
-        return try {
-            val response = client.post("$API_URL$START_CONVERSATION") {
-                contentType(Plain)
-                setKBParameter()
-                setCaseIdParameter(caseId)
-            }
-            if (!response.status.isSuccess()) ChatResponse("") else response.body()
-        } catch (_: Exception) {
-            // Stale kb id during a KB switch, or case not in current kb, etc.
-            ChatResponse("")
+    suspend fun startConversation(caseId: Long): ChatResponse = try {
+        val response = client.post("$API_URL$START_CONVERSATION") {
+            contentType(Plain)
+            setKBParameter()
+            setCaseIdParameter(caseId)
         }
+        decodeChatResponseOrEmpty(response)
+    } catch (_: Throwable) {
+        // Stale kb id during a KB switch, or case not in current kb, etc.
+        ChatResponse("")
     }
 
-    suspend fun sendUserMessage(message: String, caseId: Long): ChatResponse {
-        return try {
-            val response = client.post("$API_URL$SEND_USER_MESSAGE") {
-                contentType(Plain)
-                setKBParameter()
-                setCaseIdParameter(caseId)
-                setBody(message)
-            }
-            if (!response.status.isSuccess()) ChatResponse("") else response.body()
-        } catch (_: Exception) {
-            ChatResponse("")
+    suspend fun sendUserMessage(message: String, caseId: Long): ChatResponse = try {
+        val response = client.post("$API_URL$SEND_USER_MESSAGE") {
+            contentType(Plain)
+            setKBParameter()
+            setCaseIdParameter(caseId)
+            setBody(message)
         }
+        decodeChatResponseOrEmpty(response)
+    } catch (_: Throwable) {
+        ChatResponse("")
+    }
+
+    /**
+     * Reads the chat response defensively. [HttpResponse.body] is an inline
+     * suspending function and the Kotlin compiler's generated exception table
+     * for the enclosing suspending function does not cover its resumption
+     * point, so a [io.ktor.client.call.NoTransformationFoundException] thrown
+     * by the content-negotiation pipeline (e.g. when the server responds with
+     * `text/plain` on a 500) can escape an outer `try`/`catch`. Isolating the
+     * call behind a non-inline boundary ([runCatching]) forces the exception
+     * to be caught here and never propagate to the coroutine's uncaught
+     * handler.
+     */
+    private suspend fun decodeChatResponseOrEmpty(response: HttpResponse): ChatResponse {
+        if (!response.status.isSuccess()) return ChatResponse("")
+        return runCatching { response.body<ChatResponse>() }.getOrElse { ChatResponse("") }
     }
 
     suspend fun lastRuleDescription(): UndoRuleDescription {

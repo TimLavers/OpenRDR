@@ -262,9 +262,12 @@ class Defs {
 
     @When("I press the down arrow key")
     fun pressDownArrowKey() {
-        // Wait for chat focus-steal to finish before refocusing the case, so
-        // our mouse-click is not raced by ChatPanel's LaunchedEffect(id).
-        chatPO().waitForChatToBeFocused()
+        // Best-effort: give any pending ChatPanel.LaunchedEffect(id) focus-steal
+        // a chance to finish before we refocus the case list. If no focus-steal
+        // is pending (e.g. the prior `select case` resolved to the already-current
+        // case, so currentCaseId did not change and chatId did not increment),
+        // we simply proceed rather than hanging for the full timeout.
+        chatPO().waitForChatToBeFocusedQuietly()
         StepsInfrastructure.client().withWindowOnTop {
             refocusLastSelectedCase?.invoke()
             caseListPO().pressDownArrow()
@@ -274,7 +277,7 @@ class Defs {
 
     @When("I press the up arrow key")
     fun pressUpArrowKey() {
-        chatPO().waitForChatToBeFocused()
+        chatPO().waitForChatToBeFocusedQuietly()
         StepsInfrastructure.client().withWindowOnTop {
             refocusLastSelectedCase?.invoke()
             caseListPO().pressUpArrow()
