@@ -10,6 +10,7 @@ import io.cucumber.java.en.And
 import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
+import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.proxy.ConfiguredTestData
 import io.rippledown.integration.proxy.TestResultDetail
@@ -295,17 +296,21 @@ class Defs {
         interpretationViewPO().waitForInterpretationText(text)
     }
 
-    @Then("the interpretation of each case should be as follows:")
-    fun requireInterpretationForCases(expectation: DataTable) {
-        expectation.asMap().forEach { (caseName, code) ->
-            println("checking caseName = ${caseName}")
+    @Then("the interpretation of each case for the first {int} cases should be:")
+    fun requireInterpretationForCases(restriction: Int, expectation: DataTable) {
+        expectation.cells()
+            .drop(1) //skip header
+            .take(restriction) //check only the first N rows
+            .forEach { (caseName, code, _, _) ->
             checkInterpretationViaRestClient(caseName, code?.trim() ?: "")
         }
     }
 
     private fun checkInterpretationViaRestClient(caseName: String, expectedInterpretation: String) {
         val actualInterpretation = restClient().getProcessedCaseWithName(caseName).viewableInterpretation.latestText()
-        actualInterpretation shouldBe expectedInterpretation
+        withClue("unexpected classification for case $caseName") {
+            actualInterpretation shouldBe expectedInterpretation
+        }
     }
 
     @Then("the interpretation should be this:")
