@@ -39,6 +39,14 @@ fun argsForCuke() = mutableListOf(
 
 val prerequisiteTasks = listOf(
     ":server:shadowJar",
+    // The cucumber runtime classpath resolves project(":ui") via its packaged
+    // jar in ui/build/libs, NOT the classes directory. Without an explicit
+    // dependency on :ui:jar, Gradle's incremental build does not rebuild the
+    // jar when only ui sources change, and cukes will silently run against a
+    // stale ui.jar from a previous build. This was the root cause of cuke
+    // failures continuing to reference pre-fix synthetic line numbers in
+    // Api.kt even after the source/class files had been updated.
+    ":ui:jar",
     tasks.compileTestJava,
     tasks.processTestResources,
     tasks.getByName("testClasses")
@@ -52,7 +60,8 @@ val featureFolders = listOf(
     "interpreter",
     "kb",
     "rulebuilding",
-    "samples"
+    "samples",
+    "trial-matching"
 )
 fun runCucumber(cukeArgs: List<String>): Int {
     val javaHome = System.getProperty("java.home")

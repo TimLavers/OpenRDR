@@ -13,19 +13,18 @@ Feature: The user can make a rule that replaces a comment the interpretive repor
     And  the interpretation should be "Go to Maroubra."
 
   Scenario: The user should be able to build a rule to replace a comment with a condition they have selected
-    Given case Bondi is provided having data:
-      | Wave | poor |
-    And case Manly is provided having data:
+    Given case Manly is provided having data:
       | Sun      | hot      |
       | Swimming | pleasant |
-    And the interpretation of the case Bondi is "Go to Bondi."
+    And the interpretation of the case Manly is "Go to Bondi."
     And I start the client application
-    And I select case Manly
     When I build a rule to replace the comment "Go to Bondi." by "Go to Manly." with the condition
       | "Sun is in case" |
     Then  the interpretation should contain the text "Go to Manly."
+    And case Bondi is provided having data:
+      | Wave | poor |
     And I select case Bondi
-    And  the interpretation should contain the text "Go to Bondi."
+    And  the interpretation report should be is empty
 
   Scenario: The conditions shown for a comment that is a replacement should include the conditions for the comment that has been replaced
     Given case Beach is provided having data:

@@ -60,8 +60,9 @@ class KB(persistentKB: PersistentKB) {
         return caseManager.all().first { caseName == it.name }
     }
 
-    fun getCornerstoneCaseByName(caseName: String) = allCornerstoneCases().first { caseName == it.name } // todo test
-    fun getProcessedCaseByName(caseName: String) = allProcessedCases().first { caseName == it.name } // todo test
+    fun getCornerstoneCaseByName(caseName: String) = allCornerstoneCases().first { caseName == it.name }
+
+    fun getProcessedCaseByName(caseName: String) = allProcessedCases().first { caseName == it.name }
 
     fun allCornerstoneCases() = caseManager.all(CaseType.Cornerstone)
 

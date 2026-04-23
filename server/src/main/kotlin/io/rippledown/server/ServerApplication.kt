@@ -19,7 +19,7 @@ import kotlin.io.path.createTempDirectory
 
 class ServerApplication(
     private val persistenceProvider: PersistenceProvider = PostgresPersistenceProvider(),
-    private val webSocketManager: WebSocketManager
+    val webSocketManager: WebSocketManager
 ) {
     private val logger = lazyLogger
 

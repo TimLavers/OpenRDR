@@ -1,7 +1,6 @@
 package io.rippledown.persistence.postgres
 
 import io.rippledown.persistence.OrderStore
-import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.dao.IntEntity
@@ -17,7 +16,7 @@ class PostgresConclusionOrderStore(private val db: Database) : OrderStore {
 
     init {
         transaction(db) {
-            addLogger(StdOutSqlLogger)
+            // addLogger(StdOutSqlLogger)
             SchemaUtils.create(PGConclusionIndexes)
         }
     }

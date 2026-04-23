@@ -305,6 +305,17 @@ class ConditionChatServiceExamplesTest {
     }
 
     @Test
+    fun `should generate ContainsWord conditions`() = runBlocking {
+        verify(
+            sortedMapOf(
+                cs("glucose contains word undefined", "glucose", "ContainsWord", listOf("\"undefined\""), "Current"),
+                cs("glucose includes word undefined", "glucose", "ContainsWord", listOf("\"undefined\""), "Current"),
+                cs("glucose contains word \"all\"", "glucose", "ContainsWord", listOf("\"all\""), "Current"),
+            )
+        )
+    }
+
+    @Test
     fun `should generate DoesNotContain conditions`() = runBlocking {
         verify(
             sortedMapOf(

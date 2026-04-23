@@ -3,7 +3,6 @@ package io.rippledown.persistence.postgres
 import io.rippledown.kb.AttributeProvider
 import io.rippledown.model.*
 import io.rippledown.persistence.CaseStore
-import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.eq
@@ -17,7 +16,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 class PostgresCaseStore(private val db: Database): CaseStore {
     init {
         transaction(db) {
-            addLogger(StdOutSqlLogger)
+            // addLogger(StdOutSqlLogger)
             SchemaUtils.create(PGCaseIds)
             SchemaUtils.create(PGCaseValues)
         }

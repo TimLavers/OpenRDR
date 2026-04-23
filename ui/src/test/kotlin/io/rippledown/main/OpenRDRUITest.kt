@@ -1,21 +1,16 @@
 package io.rippledown.main
 
-import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.onNodeWithTag
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.rippledown.appbar.*
-import io.rippledown.casecontrol.requireNamesToBeShowingOnCaseList
-import io.rippledown.casecontrol.requireNumberOfCasesOnCaseList
-import io.rippledown.casecontrol.selectCaseByName
-import io.rippledown.casecontrol.waitForCaseToBeShowing
+import io.rippledown.casecontrol.*
 import io.rippledown.chat.BotMessage
 import io.rippledown.chat.requireChatMessagesShowing
+import io.rippledown.chat.requireChatPanelIsDisplayed
 import io.rippledown.chat.typeChatMessageAndClickSend
 import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import io.rippledown.constants.kb.CONFIRM_UNDO_LAST_RULE_TEXT
@@ -51,6 +46,9 @@ class OpenRDRUITest {
     fun setUp() {
         api = mockk<Api>()
         coEvery { api.cornerstoneStatus() } returns null
+        coEvery { api.kbList() } returns emptyList()
+        coEvery { api.waitingCasesInfo() } returns CasesInfo()
+        coEvery { api.startWebSocketSession(any(), any(), any()) } returns Unit
         handler = mockk<Handler>()
         coEvery { handler.api } returns api
         coEvery { handler.isClosing } returns { true }
@@ -65,7 +63,13 @@ class OpenRDRUITest {
             }
 
             //Then
-            coVerify { api.startWebSocketSession(updateCornerstoneStatus = any(), ruleSessionCompleted = any()) }
+            coVerify {
+                api.startWebSocketSession(
+                    updateCornerstoneStatus = any(),
+                    ruleSessionCompleted = any(),
+                    updateCasesInfo = any()
+                )
+            }
         }
     }
 
@@ -593,7 +597,7 @@ class OpenRDRUITest {
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("case A", 1)
         var updateCornerstoneStatus: ((CornerstoneStatus) -> Unit)? = null
-        coEvery { api.startWebSocketSession(any(), any()) } coAnswers {
+        coEvery { api.startWebSocketSession(any(), any(), any()) } coAnswers {
             updateCornerstoneStatus = firstArg()
         }
 
@@ -622,7 +626,7 @@ class OpenRDRUITest {
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("case A", 1, listOf(bondiComment))
         var updateCornerstoneStatus: ((CornerstoneStatus) -> Unit)? = null
-        coEvery { api.startWebSocketSession(any(), any()) } coAnswers {
+        coEvery { api.startWebSocketSession(any(), any(), any()) } coAnswers {
             updateCornerstoneStatus = firstArg()
         }
 
@@ -654,7 +658,7 @@ class OpenRDRUITest {
             coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
             coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("case A", 1, listOf(bondiComment))
         var updateCornerstoneStatus: ((CornerstoneStatus) -> Unit)? = null
-        coEvery { api.startWebSocketSession(any(), any()) } coAnswers {
+            coEvery { api.startWebSocketSession(any(), any(), any()) } coAnswers {
             updateCornerstoneStatus = firstArg()
         }
 
@@ -686,7 +690,7 @@ class OpenRDRUITest {
         coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("case A", 1)
         var updateCornerstoneStatus: ((CornerstoneStatus) -> Unit)? = null
         var ruleSessionCompleted: (() -> Unit)? = null
-        coEvery { api.startWebSocketSession(any(), any()) } coAnswers {
+        coEvery { api.startWebSocketSession(any(), any(), any()) } coAnswers {
             updateCornerstoneStatus = firstArg()
             ruleSessionCompleted = secondArg()
         }
@@ -720,7 +724,7 @@ class OpenRDRUITest {
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("case A", 1)
         var updateCornerstoneStatus: ((CornerstoneStatus) -> Unit)? = null
-        coEvery { api.startWebSocketSession(any(), any()) } coAnswers {
+        coEvery { api.startWebSocketSession(any(), any(), any()) } coAnswers {
             updateCornerstoneStatus = firstArg()
         }
 
@@ -738,6 +742,188 @@ class OpenRDRUITest {
 
             //Then
             requireInterpretation("")
+        }
+    }
+
+    @Test
+    fun `should fetch initial casesInfo on startup`() = runTest {
+        //Given
+        val caseId = CaseId(id = 1, name = "case A")
+        val initialCasesInfo = CasesInfo(listOf(caseId))
+        coEvery { api.waitingCasesInfo() } returns initialCasesInfo
+        coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("case A", 1)
+
+        with(composeTestRule) {
+            //When
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+
+            //Then
+            waitForCaseToBeShowing("case A")
+            coVerify { api.waitingCasesInfo() }
+        }
+    }
+
+    @Test
+    fun `should update case list when CasesInfo is pushed via WebSocket`() = runTest {
+        //Given
+        val caseIdA = CaseId(id = 1, name = "case A")
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseIdA))
+        coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("case A", 1)
+        var updateCasesInfo: ((CasesInfo) -> Unit)? = null
+        coEvery { api.startWebSocketSession(any(), any(), any()) } coAnswers {
+            updateCasesInfo = thirdArg()
+        }
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            waitForCaseToBeShowing("case A")
+            requireNamesToBeShowingOnCaseList("case A")
+
+            //When - simulate server pushing new CasesInfo with an additional case
+            val caseIdB = CaseId(id = 2, name = "case B")
+            coEvery { api.getCase(2) } returns createViewableCaseWithInterpretation("case B", 2)
+            runOnIdle {
+                updateCasesInfo?.invoke(CasesInfo(listOf(caseIdA, caseIdB)))
+            }
+
+            //Then
+            requireNamesToBeShowingOnCaseList("case A", "case B")
+        }
+    }
+
+    @Test
+    fun `should show no cases when WebSocket pushes empty CasesInfo`() = runTest {
+        //Given
+        val caseId = CaseId(id = 1, name = "case A")
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("case A", 1)
+        var updateCasesInfo: ((CasesInfo) -> Unit)? = null
+        coEvery { api.startWebSocketSession(any(), any(), any()) } coAnswers {
+            updateCasesInfo = thirdArg()
+        }
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            waitForCaseToBeShowing("case A")
+
+            //When - simulate server pushing empty CasesInfo (all cases deleted)
+            runOnIdle {
+                updateCasesInfo?.invoke(CasesInfo())
+            }
+
+            //Then
+            requireCaseSelectorNotToBeDisplayed()
+        }
+    }
+
+    @Test
+    fun `should show chat panel when there are no cases`() = runTest {
+        //Given - start with empty CasesInfo
+        coEvery { api.waitingCasesInfo() } returns CasesInfo()
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+
+            //Then - chat panel should still be visible
+            requireChatPanelIsDisplayed()
+        }
+    }
+
+    @Test
+    fun `should refetch casesInfo when the selected KB changes`() = runTest {
+        //Given two KBs on the server. Initially KB-A is current with one case.
+        val kbA = KBInfo("id_a", "KB_A")
+        val kbB = KBInfo("id_b", "KB_B")
+        val caseIdA = CaseId(id = 1, name = "case A")
+        val caseIdB = CaseId(id = 2, name = "case B")
+        coEvery { api.kbList() } returns listOf(kbA, kbB)
+        coEvery { api.selectKB("id_b") } returns kbB
+        var casesForCurrentKb = CasesInfo(listOf(caseIdA))
+        coEvery { api.waitingCasesInfo() } coAnswers { casesForCurrentKb }
+        coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("case A", 1)
+        coEvery { api.getCase(2) } returns createViewableCaseWithInterpretation("case B", 2)
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            //Given - initial load shows KB-A's case
+            waitForCaseToBeShowing("case A")
+            coVerify(atLeast = 1) { api.waitingCasesInfo() }
+
+            //When - user selects KB-B from the dropdown; server state now reflects KB-B's cases
+            casesForCurrentKb = CasesInfo(listOf(caseIdB))
+            clickDropdown()
+            onNodeWithContentDescription("${KB_INFO_ITEM}KB_B").performClick()
+
+            //Then - casesInfo was refetched and KB-B's case is shown
+            waitForCaseToBeShowing("case B")
+            coVerify { api.selectKB("id_b") }
+            coVerify(atLeast = 2) { api.waitingCasesInfo() }
+        }
+    }
+
+    @Test
+    fun `should update case list after switching KBs to reflect new KB's cases`() = runTest {
+        //Given
+        val kbA = KBInfo("id_a", "KB_A")
+        val kbB = KBInfo("id_b", "KB_B")
+        val caseA1 = CaseId(id = 1, name = "a-1")
+        val caseA2 = CaseId(id = 2, name = "a-2")
+        val caseB1 = CaseId(id = 3, name = "b-1")
+        coEvery { api.kbList() } returns listOf(kbA, kbB)
+        coEvery { api.selectKB("id_b") } returns kbB
+        coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("a-1", 1)
+        coEvery { api.getCase(2) } returns createViewableCaseWithInterpretation("a-2", 2)
+        coEvery { api.getCase(3) } returns createViewableCaseWithInterpretation("b-1", 3)
+        var casesForCurrentKb = CasesInfo(listOf(caseA1, caseA2))
+        coEvery { api.waitingCasesInfo() } coAnswers { casesForCurrentKb }
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            //Given - KB-A cases are displayed
+            waitForCaseToBeShowing("a-1")
+            requireNamesToBeShowingOnCaseList("a-1", "a-2")
+
+            //When - user selects KB-B, which has different cases
+            casesForCurrentKb = CasesInfo(listOf(caseB1))
+            clickDropdown()
+            onNodeWithContentDescription("${KB_INFO_ITEM}KB_B").performClick()
+
+            //Then - list now shows only KB-B's case
+            waitForCaseToBeShowing("b-1")
+            requireNamesToBeShowingOnCaseList("b-1")
+        }
+    }
+
+    @Test
+    fun `should refetch casesInfo on initial load`() = runTest {
+        //Given
+        val kbInfo = KBInfo("id_a", "KB_A")
+        val caseId = CaseId(id = 1, name = "case A")
+        coEvery { api.kbList() } returns listOf(kbInfo)
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("case A", 1)
+
+        with(composeTestRule) {
+            //When
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+
+            //Then - waitingCasesInfo is called at least once for the initial KB
+            waitForCaseToBeShowing("case A")
+            coVerify(atLeast = 1) { api.waitingCasesInfo() }
         }
     }
 

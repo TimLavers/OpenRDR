@@ -5,13 +5,11 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.verify
 import io.rippledown.CaseTestUtils
-import io.rippledown.constants.api.CASE
-import io.rippledown.constants.api.DELETE_CASE_WITH_NAME
-import io.rippledown.constants.api.PROCESS_CASE
-import io.rippledown.constants.api.WAITING_CASES
+import io.rippledown.constants.api.*
 import io.rippledown.constants.server.CASE_ID
 import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.CaseId
@@ -109,6 +107,7 @@ class CaseManagementTest : OpenRDRServerTestBase() {
         val caseData = case.serialize()
         val returnCase = createViewableCase("Case2").case
         every { kbEndpoint.processCase(case) } returns returnCase
+        every { kbEndpoint.waitingCasesInfo() } returns CasesInfo()
         val result = httpClient.put(PROCESS_CASE) {
             contentType(ContentType.Application.Json)
             setBody(caseData)
@@ -120,10 +119,59 @@ class CaseManagementTest : OpenRDRServerTestBase() {
     }
 
     @Test
+    fun `should push CasesInfo via WebSocket after processing a case`() = testApplication {
+        //Given
+        setupServer()
+        val case = CaseTestUtils.getCase("Case1")
+        val caseData = case.serialize()
+        val returnCase = createViewableCase("Case1").case
+        val updatedCasesInfo = CasesInfo(listOf(CaseId(id = 1, name = "Case1")), kbName = "TestKB")
+        every { kbEndpoint.processCase(case) } returns returnCase
+        every { kbEndpoint.waitingCasesInfo() } returns updatedCasesInfo
+
+        //When
+        httpClient.put(PROCESS_CASE) {
+            contentType(ContentType.Application.Json)
+            setBody(caseData)
+            parameter(KB_ID, kbId)
+        }
+
+        //Then
+        coVerify { webSocketManager.sendCasesInfo(updatedCasesInfo) }
+    }
+
+    @Test
+    fun `should push CasesInfo via WebSocket after adding a cornerstone case`() = testApplication {
+        //Given
+        setupServer()
+        val case = CaseTestUtils.getCase("Case3")
+        val caseData = case.serialize()
+        val returnCase = createViewableCase("Case3").case
+        val updatedCasesInfo = CasesInfo(
+            cornerstoneCaseIds = listOf(CaseId(id = 1, name = "Case3")),
+            kbName = "TestKB"
+        )
+        every { kbEndpoint.addCornerstoneCase(case) } returns returnCase
+        every { kbEndpoint.waitingCasesInfo() } returns updatedCasesInfo
+
+        //When
+        val result = httpClient.put(ADD_CORNERSTONE_CASE) {
+            contentType(ContentType.Application.Json)
+            setBody(caseData)
+            parameter(KB_ID, kbId)
+        }
+
+        //Then
+        result.status shouldBe HttpStatusCode.Accepted
+        coVerify { webSocketManager.sendCasesInfo(updatedCasesInfo) }
+    }
+
+    @Test
     fun deleteProcessedCaseWithName() = testApplication {
         setupServer()
         val caseName = "The Case"
         every { kbEndpoint.deleteCase(caseName) } returns Unit
+        every { kbEndpoint.waitingCasesInfo() } returns CasesInfo()
         val result = httpClient.delete(DELETE_CASE_WITH_NAME) {
             contentType(ContentType.Application.Json)
             parameter(KB_ID, kbId)
@@ -131,5 +179,25 @@ class CaseManagementTest : OpenRDRServerTestBase() {
         }
         result.status shouldBe HttpStatusCode.OK
         verify { kbEndpoint.deleteCase(caseName) }
+    }
+
+    @Test
+    fun `should push CasesInfo via WebSocket after deleting a case`() = testApplication {
+        //Given
+        setupServer()
+        val caseName = "DeleteMe"
+        val updatedCasesInfo = CasesInfo(listOf(CaseId(id = 2, name = "Remaining")), kbName = "TestKB")
+        every { kbEndpoint.deleteCase(caseName) } returns Unit
+        every { kbEndpoint.waitingCasesInfo() } returns updatedCasesInfo
+
+        //When
+        httpClient.delete(DELETE_CASE_WITH_NAME) {
+            contentType(ContentType.Application.Json)
+            parameter(KB_ID, kbId)
+            parameter("name", caseName)
+        }
+
+        //Then
+        coVerify { webSocketManager.sendCasesInfo(updatedCasesInfo) }
     }
 }

@@ -13,5 +13,7 @@ object ConfiguredTestData {
         return File("${resourcesRoot}export/$fileName.zip")
     }
 
+    fun trialDataFile() = File("${resourcesRoot}trial-matching/trial-conditions.tsv")
+
     fun testDataFile(relativePath: String) = File("$resourcesRoot/$relativePath")
 }

@@ -604,6 +604,114 @@ class KBTest {
         retrieved.getLatest(glucose())!!.value.text shouldBe "1.2"
     }
 
+    // --- getProcessedCaseByName ---
+
+    @Test
+    fun `getProcessedCaseByName should return the case with the given name`() {
+        kb.addProcessedCase(createCase("Case1", value = "1.0"))
+        kb.addProcessedCase(createCase("Case2", value = "2.0"))
+        val retrieved = kb.getProcessedCaseByName("Case2")
+        retrieved.name shouldBe "Case2"
+        retrieved.getLatest(glucose())!!.value.text shouldBe "2.0"
+    }
+
+    @Test
+    fun `getProcessedCaseByName should throw when there are no processed cases`() {
+        shouldThrow<NoSuchElementException> {
+            kb.getProcessedCaseByName("Case1")
+        }
+    }
+
+    @Test
+    fun `getProcessedCaseByName should throw when the name does not match any processed case`() {
+        kb.addProcessedCase(createCase("Case1"))
+        shouldThrow<NoSuchElementException> {
+            kb.getProcessedCaseByName("Unknown")
+        }
+    }
+
+    @Test
+    fun `getProcessedCaseByName should not find cornerstone cases`() {
+        kb.addCornerstoneCase(createCase("Case1"))
+        shouldThrow<NoSuchElementException> {
+            kb.getProcessedCaseByName("Case1")
+        }
+    }
+
+    @Test
+    fun `getProcessedCaseByName should return the first match when there are duplicates`() {
+        val first = kb.addProcessedCase(createCase("Case1", value = "1.0"))
+        kb.addProcessedCase(createCase("Case1", value = "2.0"))
+        val retrieved = kb.getProcessedCaseByName("Case1")
+        retrieved.caseId.id shouldBe first.caseId.id
+    }
+
+    @Test
+    fun `getProcessedCaseByName should retrieve each case among several`() {
+        for (i in 1..5) {
+            kb.addProcessedCase(createCase("Case$i", value = "$i.0"))
+        }
+        for (i in 1..5) {
+            val retrieved = kb.getProcessedCaseByName("Case$i")
+            retrieved.name shouldBe "Case$i"
+            retrieved.getLatest(glucose())!!.value.text shouldBe "$i.0"
+        }
+    }
+
+    // --- getCornerstoneCaseByName ---
+
+    @Test
+    fun `getCornerstoneCaseByName should return the case with the given name`() {
+        kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
+        kb.addCornerstoneCase(createCase("Case2", value = "2.0"))
+        val retrieved = kb.getCornerstoneCaseByName("Case2")
+        retrieved.name shouldBe "Case2"
+        retrieved.getLatest(glucose())!!.value.text shouldBe "2.0"
+    }
+
+    @Test
+    fun `getCornerstoneCaseByName should throw when there are no cornerstone cases`() {
+        shouldThrow<NoSuchElementException> {
+            kb.getCornerstoneCaseByName("Case1")
+        }
+    }
+
+    @Test
+    fun `getCornerstoneCaseByName should throw when the name does not match any cornerstone case`() {
+        kb.addCornerstoneCase(createCase("Case1"))
+        shouldThrow<NoSuchElementException> {
+            kb.getCornerstoneCaseByName("Unknown")
+        }
+    }
+
+    @Test
+    fun `getCornerstoneCaseByName should not find processed cases`() {
+        kb.addProcessedCase(createCase("Case1"))
+        shouldThrow<NoSuchElementException> {
+            kb.getCornerstoneCaseByName("Case1")
+        }
+    }
+
+    @Test
+    fun `getCornerstoneCaseByName should return the first match when there are duplicates`() {
+        val first = kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
+        kb.addCornerstoneCase(createCase("Case1", value = "2.0"))
+        val retrieved = kb.getCornerstoneCaseByName("Case1")
+        retrieved.caseId.id shouldBe first.caseId.id
+    }
+
+    @Test
+    fun `getCornerstoneCaseByName should retrieve each case among several`() {
+        for (i in 1..5) {
+            kb.addCornerstoneCase(createCase("Case$i", value = "$i.0"))
+        }
+        for (i in 1..5) {
+            val retrieved = kb.getCornerstoneCaseByName("Case$i")
+            retrieved.name shouldBe "Case$i"
+            retrieved.getLatest(glucose())!!.value.text shouldBe "$i.0"
+        }
+    }
+
     @Test
     fun allCornerstoneCases() {
         kb.allCornerstoneCases() shouldBe emptyList()

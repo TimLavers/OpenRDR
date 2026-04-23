@@ -2,7 +2,6 @@ package io.rippledown.persistence.postgres
 
 import io.rippledown.persistence.PersistentRule
 import io.rippledown.persistence.RuleStore
-import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.eq
@@ -19,7 +18,7 @@ class PostgresRuleStore(private val db: Database): RuleStore {
 
     init {
         transaction(db) {
-            addLogger(StdOutSqlLogger)
+            // addLogger(StdOutSqlLogger)
             SchemaUtils.create(PGRules)
         }
     }

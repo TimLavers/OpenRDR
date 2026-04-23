@@ -48,6 +48,17 @@ data class DoesNotContain(val toFind: String) : TestResultPredicate {
 }
 
 @Serializable
+data class ContainsWord(val word: String): TestResultPredicate {
+    override fun evaluate(result: TestResult) = result.value.text.split(",", ";", "-", ".", " ")
+        .map { it.trim().unquoted() }
+        .toSet().contains(word.unquoted())
+
+    override fun description(plural: Boolean) =
+        if (plural) "contain word \"${word.unquoted()}\"" else "contains word \"${word.unquoted()}\""
+
+}
+
+@Serializable
 data class Is(val toFind: String) : TestResultPredicate {
     val unquotedToFind = toFind.unquoted()
 

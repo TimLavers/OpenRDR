@@ -91,11 +91,6 @@ fun ChatPanel(
     val listState = rememberLazyListState()
     val textAreaFocusRequester = remember { FocusRequester() }
 
-    // Request focus when the id of the case changes
-    LaunchedEffect(id) {
-        textAreaFocusRequester.requestFocus()
-    }
-
     LaunchedEffect(messages) {
         if (messages.isNotEmpty()) {
             listState.scrollToItem(messages.size - 1)
@@ -103,6 +98,10 @@ fun ChatPanel(
         if (messages.lastOrNull() is SuggestionListMessage) {
             suggestionSendPending = false
         }
+    }
+
+    LaunchedEffect(id) {
+        textAreaFocusRequester.requestFocus()
     }
 
     Column(

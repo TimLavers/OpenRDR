@@ -1,7 +1,6 @@
 package io.rippledown.persistence.postgres
 
 import io.rippledown.persistence.PersistentKBIds
-import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.eq
@@ -18,7 +17,7 @@ const val KB_IDS_TABLE = "kb_ids"
 class PostgresKBIds(private val db: Database): PersistentKBIds {
     init {
         transaction(db) {
-            addLogger(StdOutSqlLogger)
+            // addLogger(StdOutSqlLogger)
             SchemaUtils.create(KBIds)
         }
     }

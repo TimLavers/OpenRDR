@@ -170,6 +170,25 @@ EXPECTED PREDICATE: DoesNotContain, "pending"
 EXPECTED SIGNATURE: Current
 x does not contain pending
 
+EXPECTED PREDICATE: ContainsWord, "abc"
+EXPECTED SIGNATURE: Current
+x contains word abc
+x contains the word abc
+x contains word "abc"
+x includes word "abc"
+
+EXPECTED PREDICATE: ContainsWord, "abc"
+EXPECTED SIGNATURE: All
+all x contains word abc
+all x contains the word abc
+every x contains word "abc"
+
+EXPECTED PREDICATE: ContainsWord, "abc"
+EXPECTED SIGNATURE: No
+no x contains word abc
+no x contains the word abc
+none of the x results contain "abc"
+
 EXPECTED PREDICATE: IsSingleEpisodeCase
 case is for a single date
 case has one episode

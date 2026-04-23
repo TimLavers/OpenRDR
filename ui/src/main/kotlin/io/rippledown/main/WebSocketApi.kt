@@ -7,9 +7,11 @@ import io.ktor.websocket.*
 import io.rippledown.constants.api.HOST
 import io.rippledown.constants.api.PORT
 import io.rippledown.constants.api.WEB_SOCKET
+import io.rippledown.constants.chat.CASES_INFO_PREFIX
 import io.rippledown.constants.chat.RULE_SESSION_COMPLETED
 import io.rippledown.fromJsonString
 import io.rippledown.log.lazyLogger
+import io.rippledown.model.CasesInfo
 import io.rippledown.model.rule.CornerstoneStatus
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.filterIsInstance
@@ -19,7 +21,8 @@ open class WebSocketApi(private val client: HttpClient, private val port: Int = 
 
     open suspend fun startSession(
         updateCornerstoneStatus: (CornerstoneStatus) -> Unit,
-        ruleSessionCompleted: () -> Unit
+        ruleSessionCompleted: () -> Unit,
+        updateCasesInfo: (CasesInfo) -> Unit = {}
     ) {
         client.webSocket(
             method = HttpMethod.Get,
@@ -37,6 +40,10 @@ open class WebSocketApi(private val client: HttpClient, private val port: Int = 
                                 ruleSessionCompleted()
                             }
 
+                            receivedText.startsWith(CASES_INFO_PREFIX) -> {
+                                handleCasesInfo(receivedText, updateCasesInfo)
+                            }
+
                             else -> handleCornerstoneStatus(receivedText, updateCornerstoneStatus)
                         }
                     }
@@ -47,6 +54,19 @@ open class WebSocketApi(private val client: HttpClient, private val port: Int = 
                     logger.error("WebSocket connection error", e)
                 }
             }
+        }
+    }
+
+    private fun handleCasesInfo(
+        message: String,
+        updateCasesInfo: (CasesInfo) -> Unit
+    ) {
+        try {
+            val json = message.removePrefix(CASES_INFO_PREFIX)
+            val casesInfo = json.fromJsonString<CasesInfo>()
+            updateCasesInfo(casesInfo)
+        } catch (e: Exception) {
+            logger.error("Error parsing cases info", e)
         }
     }
 

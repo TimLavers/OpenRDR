@@ -5,12 +5,9 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.coVerify
 import io.mockk.mockk
-import io.rippledown.model.Attribute
-import io.rippledown.model.KBInfo
-import io.rippledown.model.RDRCase
-import io.rippledown.model.RDRCaseBuilder
+import io.mockk.slot
+import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
-import io.rippledown.model.condition.RuleConditionList
 import io.rippledown.model.condition.lessThanOrEqualTo
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Removal
@@ -558,6 +555,187 @@ class RuleSessionManagerTest {
         rsm.commitCurrentRuleSession()
 
         // Then
+        kb.containsCornerstoneCaseWithName("Case1") shouldBe true
+    }
+
+    // --- commit should push updated CasesInfo over the websocket ---
+
+    @Test
+    fun `should send updated CasesInfo via websocket when a rule session is committed`() {
+        // Given
+        val sessionCase = createCase("Case1", value = "1.0")
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go.")))
+
+        // When
+        rsm.commitCurrentRuleSession()
+
+        // Then
+        coVerify { webSocketManager.sendCasesInfo(any()) }
+    }
+
+    @Test
+    fun `sent CasesInfo should include the newly added cornerstone case`() {
+        // Given
+        val sessionCase = createCase("Bondi", value = "1.0")
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go.")))
+        val capturedCasesInfo = slot<CasesInfo>()
+
+        // When
+        rsm.commitCurrentRuleSession()
+
+        // Then
+        coVerify { webSocketManager.sendCasesInfo(capture(capturedCasesInfo)) }
+        capturedCasesInfo.captured.cornerstoneCaseIds.map { it.name } shouldBe listOf("Bondi")
+    }
+
+    @Test
+    fun `sent CasesInfo should include existing cornerstones plus the newly added one`() {
+        // Given
+        kb.addCornerstoneCase(createCase("Existing1", value = "1.0"))
+        kb.addCornerstoneCase(createCase("Existing2", value = "2.0"))
+        val sessionCase = createCase("Bondi", value = "3.0")
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go.")))
+        val capturedCasesInfo = slot<CasesInfo>()
+
+        // When
+        rsm.commitCurrentRuleSession()
+
+        // Then
+        coVerify { webSocketManager.sendCasesInfo(capture(capturedCasesInfo)) }
+        capturedCasesInfo.captured.cornerstoneCaseIds.map { it.name } shouldBe
+                listOf("Existing1", "Existing2", "Bondi")
+    }
+
+    @Test
+    fun `sent CasesInfo should include processed case ids`() {
+        // Given
+        val processed1 = kb.addProcessedCase(createCase("Processed1", value = "1.0"))
+        val processed2 = kb.addProcessedCase(createCase("Processed2", value = "2.0"))
+        kb.interpret(processed1)
+        val diff = Addition("Go.")
+        rsm.startRuleSession(SessionStartRequest(processed1.caseId.id!!, diff))
+        val capturedCasesInfo = slot<CasesInfo>()
+
+        // When
+        rsm.commitCurrentRuleSession()
+
+        // Then
+        coVerify { webSocketManager.sendCasesInfo(capture(capturedCasesInfo)) }
+        capturedCasesInfo.captured.caseIds.map { it.name } shouldBe
+                listOf(processed1.name, processed2.name)
+    }
+
+    @Test
+    fun `sent CasesInfo should carry the KB name`() {
+        // Given
+        val sessionCase = createCase("Case1", value = "1.0")
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go.")))
+        val capturedCasesInfo = slot<CasesInfo>()
+
+        // When
+        rsm.commitCurrentRuleSession()
+
+        // Then
+        coVerify { webSocketManager.sendCasesInfo(capture(capturedCasesInfo)) }
+        capturedCasesInfo.captured.kbName shouldBe kb.kbInfo.name
+    }
+
+    @Test
+    fun `CasesInfo should be sent exactly once per commit`() {
+        // Given
+        val sessionCase = createCase("Case1", value = "1.0")
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go.")))
+
+        // When
+        rsm.commitCurrentRuleSession()
+
+        // Then
+        coVerify(exactly = 1) { webSocketManager.sendCasesInfo(any()) }
+    }
+
+    @Test
+    fun `multiple commits should each push a CasesInfo reflecting the accumulated cornerstones`() {
+        // Given
+        val case1 = createCase("Case1", value = "1.0")
+        rsm.startRuleSession(case1, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go.")))
+        rsm.commitCurrentRuleSession()
+
+        val case2 = createCase("Case2", value = "2.0")
+        kb.interpret(case2)
+        rsm.startRuleSession(case2, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Stop.")))
+        val capturedCasesInfo = mutableListOf<CasesInfo>()
+
+        // When
+        rsm.commitCurrentRuleSession()
+
+        // Then
+        coVerify(exactly = 2) { webSocketManager.sendCasesInfo(capture(capturedCasesInfo)) }
+        capturedCasesInfo[0].cornerstoneCaseIds.map { it.name } shouldBe listOf("Case1")
+        capturedCasesInfo[1].cornerstoneCaseIds.map { it.name } shouldBe listOf("Case1", "Case2")
+    }
+
+    @Test
+    fun `CasesInfo should not be sent when commit fails because no session is active`() {
+        // Given - no active session
+
+        // When
+        shouldThrow<IllegalStateException> {
+            rsm.commitCurrentRuleSession()
+        }
+
+        // Then
+        coVerify(exactly = 0) { webSocketManager.sendCasesInfo(any()) }
+    }
+
+    @Test
+    fun `commit via RuleRequest should also push updated CasesInfo`() {
+        // Given
+        val storedCase = kb.addProcessedCase(createCase("Case1", value = "1.0"))
+        val caseId = storedCase.caseId.id!!
+        kb.interpret(storedCase)
+        rsm.startRuleSession(SessionStartRequest(caseId, Addition("Go.")))
+        val capturedCasesInfo = slot<CasesInfo>()
+
+        // When
+        rsm.commitRuleSession(RuleRequest(caseId))
+
+        // Then
+        coVerify { webSocketManager.sendCasesInfo(capture(capturedCasesInfo)) }
+        capturedCasesInfo.captured.cornerstoneCaseIds.map { it.name } shouldBe listOf("Case1")
+    }
+
+    @Test
+    fun `buildRule should push updated CasesInfo via the websocket`() {
+        // Given
+        val storedCase = kb.addProcessedCase(createCase("Case1", value = "1.0"))
+        kb.interpret(storedCase)
+        val request = BuildRuleRequest(
+            caseName = "Case1",
+            diff = Addition("Glucose ok."),
+            conditions = listOf("Glucose ≤ 1.5")
+        )
+        val capturedCasesInfo = slot<CasesInfo>()
+
+        // When
+        rsm.buildRule(request)
+
+        // Then
+        coVerify { webSocketManager.sendCasesInfo(capture(capturedCasesInfo)) }
+        capturedCasesInfo.captured.cornerstoneCaseIds.map { it.name } shouldBe listOf("Case1")
+    }
+
+    @Test
+    fun `commit should not throw when webSocketManager is null`() {
+        // Given
+        val rsmWithoutWs = RuleSessionManager(kb, null)
+        val sessionCase = createCase("Case1", value = "1.0")
+        rsmWithoutWs.startRuleSession(
+            sessionCase,
+            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go."))
+        )
+
+        // When / Then - no exception thrown and cornerstone still persisted
+        rsmWithoutWs.commitCurrentRuleSession()
         kb.containsCornerstoneCaseWithName("Case1") shouldBe true
     }
 

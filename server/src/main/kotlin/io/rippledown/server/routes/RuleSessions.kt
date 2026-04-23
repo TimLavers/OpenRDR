@@ -73,6 +73,8 @@ fun Application.ruleSession(application: ServerApplication) {
             logger.info("build rule request: $request")
             kbEndpoint(application).buildRule(request)
             call.respond(HttpStatusCode.OK)
+            val endpoint = kbEndpoint(application)
+            application.webSocketManager.sendCasesInfo(endpoint.waitingCasesInfo())
         }
     }
 }

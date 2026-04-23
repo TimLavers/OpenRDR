@@ -5,11 +5,13 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.verify
 import io.rippledown.CaseTestUtils
 import io.rippledown.constants.api.INTERPRET_CASE
 import io.rippledown.constants.server.KB_NAME
+import io.rippledown.model.CasesInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.external.serialize
 import io.rippledown.utils.createViewableCase
@@ -32,5 +34,22 @@ class InterpreterTest : OpenRDRServerTestBase() {
         result.status shouldBe HttpStatusCode.Accepted
         result.body<RDRCase>() shouldBe returnCase
         verify { kbEndpoint.processCase(case) }
+    }
+
+    @Test
+    fun interpretCaseSendsWebSocketUpdate() = testApplication {
+        setupServer()
+        val case = CaseTestUtils.getCase("Case2")
+        val caseData = case.serialize()
+        val returnCase = createViewableCase("Case2").case
+        val casesInfo = CasesInfo(emptyList(), emptyList(), kbName)
+        every { kbEndpoint.processCase(case) } returns returnCase
+        every { kbEndpoint.waitingCasesInfo() } returns casesInfo
+        httpClient.put(INTERPRET_CASE) {
+            contentType(ContentType.Application.Json)
+            setBody(caseData)
+            parameter(KB_NAME, kbName)
+        }
+        coVerify { webSocketManager.sendCasesInfo(casesInfo) }
     }
 }

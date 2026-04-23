@@ -2,7 +2,6 @@ package io.rippledown.persistence.postgres
 
 import io.rippledown.model.KBInfo
 import io.rippledown.persistence.PersistentKB
-import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.dao.LongEntity
@@ -22,7 +21,7 @@ fun createPostgresKB(kbInfo: KBInfo): PostgresKB {
     logger.info("Database created. About to connect.")
     val db = Database.connect({ConnectionProvider.connection(kbInfo.id)})
     transaction(db) {
-        addLogger(StdOutSqlLogger)
+        // addLogger(StdOutSqlLogger)
         SchemaUtils.create(PKBInfos)
         logger.info("KBInfos table created.")
         PKBInfo.new{

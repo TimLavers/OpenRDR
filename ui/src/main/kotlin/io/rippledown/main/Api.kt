@@ -10,6 +10,7 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.http.ContentType.Application.Json
 import io.ktor.http.ContentType.Text.Plain
@@ -29,13 +30,28 @@ import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.rule.*
 import io.rippledown.sample.SampleKB
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.io.File
 
 class Api(
     engine: HttpClientEngine = CIO.create(),
     private val webSocketPort: Int = PORT
 ) {
+    // @Volatile ensures that writes to `currentKB` from coroutines resumed on
+    // background I/O threads (e.g. inside [createKBFromSample]) are visible to
+    // coroutines resumed on other threads that subsequently build requests via
+    // [setKBParameter]. Without this, tests that use Dispatchers.Unconfined
+    // (see TestClientLauncher) can send requests with a stale kb id, hitting
+    // the wrong KB on the server (e.g. kb=thyroids&caseId=1 → 500).
+    @Volatile
     private var currentKB: KBInfo? = null
+
+    // Serialises the lazy "fetch default KB" path in [kbInfo] so that a
+    // concurrently-executing [createKBFromSample]/[selectKB]/[createKB] cannot
+    // have its write to [currentKB] clobbered by a late-arriving default-KB
+    // response.
+    private val kbInfoMutex = Mutex()
     val client = HttpClient(engine) {
         install(ContentNegotiation) {
             json()
@@ -58,9 +74,10 @@ class Api(
 
     suspend fun startWebSocketSession(
         updateCornerstoneStatus: (CornerstoneStatus) -> Unit,
-        ruleSessionCompleted: () -> Unit
+        ruleSessionCompleted: () -> Unit,
+        updateCasesInfo: (CasesInfo) -> Unit = {}
     ) {
-        webSocketManager.startSession(updateCornerstoneStatus, ruleSessionCompleted)
+        webSocketManager.startSession(updateCornerstoneStatus, ruleSessionCompleted, updateCasesInfo)
     }
     fun shutdown() {
         // client.close() // Uncomment if needed, but not required for CIO engine
@@ -94,8 +111,17 @@ class Api(
     @OptIn(InternalComposeApi::class)
     suspend fun kbInfo(): KBInfo {
         currentKB?.let { return it }
-        currentKB = client.get("$API_URL$DEFAULT_KB").body<KBInfo>()
-        return currentKB ?: throw IllegalStateException("No default KB available")
+        return kbInfoMutex.withLock {
+            // Re-check under the lock: another caller may have populated it
+            // while we were waiting, or an explicit [createKBFromSample] /
+            // [selectKB] / [createKB] may have set it to a more-specific KB.
+            currentKB?.let { return@withLock it }
+            val fetched = client.get("$API_URL$DEFAULT_KB").body<KBInfo>()
+            // Only adopt [fetched] if nothing else set [currentKB] while the
+            // GET was in flight. If something did, that value is always more
+            // authoritative than the server's "default" KB.
+            currentKB ?: fetched.also { currentKB = it }
+        }
     }
 
     suspend fun kbList() = client.get("$API_URL$KB_LIST").body<List<KBInfo>>()
@@ -296,21 +322,44 @@ class Api(
         }.body()
     }
 
-    suspend fun startConversation(caseId: Long): ChatResponse {
-        return client.post("$API_URL$START_CONVERSATION") {
+    suspend fun startConversation(caseId: Long): ChatResponse = try {
+        val response = client.post("$API_URL$START_CONVERSATION") {
             contentType(Plain)
             setKBParameter()
             setCaseIdParameter(caseId)
-        }.body()
+        }
+        decodeChatResponseOrEmpty(response)
+    } catch (_: Throwable) {
+        // Stale kb id during a KB switch, or case not in current kb, etc.
+        ChatResponse("")
     }
 
-    suspend fun sendUserMessage(message: String, caseId: Long): ChatResponse {
-        return client.post("$API_URL$SEND_USER_MESSAGE") {
+    suspend fun sendUserMessage(message: String, caseId: Long): ChatResponse = try {
+        val response = client.post("$API_URL$SEND_USER_MESSAGE") {
             contentType(Plain)
             setKBParameter()
             setCaseIdParameter(caseId)
             setBody(message)
-        }.body()
+        }
+        decodeChatResponseOrEmpty(response)
+    } catch (_: Throwable) {
+        ChatResponse("")
+    }
+
+    /**
+     * Reads the chat response defensively. [HttpResponse.body] is an inline
+     * suspending function and the Kotlin compiler's generated exception table
+     * for the enclosing suspending function does not cover its resumption
+     * point, so a [io.ktor.client.call.NoTransformationFoundException] thrown
+     * by the content-negotiation pipeline (e.g. when the server responds with
+     * `text/plain` on a 500) can escape an outer `try`/`catch`. Isolating the
+     * call behind a non-inline boundary ([runCatching]) forces the exception
+     * to be caught here and never propagate to the coroutine's uncaught
+     * handler.
+     */
+    private suspend fun decodeChatResponseOrEmpty(response: HttpResponse): ChatResponse {
+        if (!response.status.isSuccess()) return ChatResponse("")
+        return runCatching { response.body<ChatResponse>() }.getOrElse { ChatResponse("") }
     }
 
     suspend fun lastRuleDescription(): UndoRuleDescription {

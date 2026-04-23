@@ -6,19 +6,18 @@ import io.rippledown.constants.caseview.CASELIST_ID
 import io.rippledown.constants.caseview.CASE_NAME_PREFIX
 import io.rippledown.constants.caseview.CORNERSTONE_SECTION_ID
 import io.rippledown.constants.caseview.PROCESSED_SECTION_ID
-import io.rippledown.integration.utils.find
-import io.rippledown.integration.utils.findAllByDescriptionPrefix
-import io.rippledown.integration.utils.findExact
+import io.rippledown.integration.utils.*
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
 import javax.accessibility.AccessibleContext
+import javax.accessibility.AccessibleRole
 import javax.accessibility.AccessibleRole.LABEL
 import javax.accessibility.AccessibleRole.SCROLL_PANE
 
 class CaseListPO(private val contextProvider: () -> AccessibleContext) {
-    private fun casesListed(): List<String> {
+    fun casesListed(): List<String> {
         waitTillCaseListContextIsAccessible()
         val context = caseListContext() ?: return emptyList()
         return execute<List<String>> {
@@ -30,7 +29,30 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
     private fun waitTillCaseListContextIsAccessible() =
         waitUntilAsserted { caseListContext() shouldNotBe null }
 
-    private fun caseListContext() = execute<AccessibleContext?> { contextProvider().find(CASELIST_ID, SCROLL_PANE) }
+    private fun caseListContext(): AccessibleContext? {
+        return execute<AccessibleContext?> {
+            val provider = contextProvider()
+
+            // Try finding without role first
+            val foundNoRole = provider.find(CASELIST_ID)
+
+            if (foundNoRole != null) {
+                return@execute foundNoRole
+            }
+
+            // Try SCROLL_PANE
+            val foundScroll = provider.find(CASELIST_ID, SCROLL_PANE)
+
+            if (foundScroll != null) {
+                return@execute foundScroll
+            }
+
+            // Try PANEL
+            val panelFound = provider.find(CASELIST_ID, AccessibleRole.PANEL)
+
+            panelFound
+        }
+    }
 
     fun requireCaseNamesToBe(expectedCaseNames: List<String>) {
         casesListed() shouldBe expectedCaseNames
@@ -43,6 +65,13 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
         execute {
             caseNameContext.accessibleAction.doAccessibleAction(0)
         }
+    }
+
+    /** See [CornerstoneCaseListPO.mouseClick]. */
+    fun mouseClick(caseName: String) {
+        waitForCaseListToContain(caseName)
+        val ctx = caseNameContext(caseName) ?: return
+        ctx.mouseClickAtCentre()
     }
 
     private fun caseNameContext(caseName: String) = contextProvider().find("$CASE_NAME_PREFIX$caseName", LABEL)
@@ -85,5 +114,13 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
     private fun caseNamesInSection(section: AccessibleContext): List<String> {
         return section.findAllByDescriptionPrefix(CASE_NAME_PREFIX)
             .map { it.accessibleDescription.removePrefix(CASE_NAME_PREFIX) }
+    }
+
+    fun pressDownArrow() {
+        Cyborg().downArrow()
+    }
+
+    fun pressUpArrow() {
+        Cyborg().upArrow()
     }
 }

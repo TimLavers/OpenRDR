@@ -3,7 +3,6 @@ package io.rippledown.persistence.postgres
 import io.rippledown.model.condition.Condition
 import io.rippledown.persistence.ConditionStore
 import kotlinx.serialization.json.Json
-import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.dao.IntEntity
@@ -21,7 +20,7 @@ class PostgresConditionStore(private val db: Database): ConditionStore {
 
     init {
         transaction(db) {
-            addLogger(StdOutSqlLogger)
+            // addLogger(StdOutSqlLogger)
             SchemaUtils.create(PGConditions)
         }
     }

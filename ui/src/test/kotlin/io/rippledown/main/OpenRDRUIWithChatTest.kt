@@ -32,6 +32,9 @@ class OpenRDRUIWithChatTest {
         api = mockk<Api>()
         handler = mockk<Handler>()
         coEvery { api.cornerstoneStatus() } returns null
+        coEvery { api.kbList() } returns emptyList()
+        coEvery { api.waitingCasesInfo() } returns CasesInfo()
+        coEvery { api.startWebSocketSession(any(), any(), any()) } returns Unit
         coEvery { handler.api } returns api
         coEvery { handler.isClosing } returns { true }
     }

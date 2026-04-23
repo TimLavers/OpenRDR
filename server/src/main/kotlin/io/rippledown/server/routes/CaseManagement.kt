@@ -37,21 +37,27 @@ fun Application.caseManagement(application: ServerApplication) {
             logger.info("viewable case written")
         }
         put(PROCESS_CASE) {
+            val endpoint = kbEndpoint(application)
             val str = call.receiveText()
             val externalCase = jsonAllowSMK.decodeFromString(ExternalCase.serializer(), str)
-            val case = kbEndpoint(application).processCase(externalCase)
+            val case = endpoint.processCase(externalCase)
             call.respond(HttpStatusCode.Accepted, case)
+            application.webSocketManager.sendCasesInfo(endpoint.waitingCasesInfo())
         }
         put(ADD_CORNERSTONE_CASE) {
+            val endpoint = kbEndpoint(application)
             val str = call.receiveText()
             val externalCase = jsonAllowSMK.decodeFromString(ExternalCase.serializer(), str)
-            val case = kbEndpoint(application).addCornerstoneCase(externalCase)
+            val case = endpoint.addCornerstoneCase(externalCase)
             call.respond(HttpStatusCode.Accepted, case)
+            application.webSocketManager.sendCasesInfo(endpoint.waitingCasesInfo())
         }
         delete(DELETE_CASE_WITH_NAME) {
+            val endpoint = kbEndpoint(application)
             val caseName = call.parameters["name"] ?: error("Invalid case name.")
-            kbEndpoint(application).deleteCase(caseName)
+            endpoint.deleteCase(caseName)
             call.respond(HttpStatusCode.OK)
+            application.webSocketManager.sendCasesInfo(endpoint.waitingCasesInfo())
         }
     }
 }

@@ -14,7 +14,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import io.rippledown.appbar.AppBarHandler
 import io.rippledown.appbar.ApplicationBar
-import io.rippledown.casecontrol.*
+import io.rippledown.casecontrol.CaseControl
+import io.rippledown.casecontrol.CaseControlHandler
+import io.rippledown.casecontrol.CaseSelector
+import io.rippledown.casecontrol.CaseSelectorHandler
 import io.rippledown.chat.ChatController
 import io.rippledown.chat.ChatControllerHandler
 import io.rippledown.chat.VoiceRecognitionService
@@ -50,7 +53,16 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     val voiceRecognitionService = remember { VoiceRecognitionService(defaultModelPath()) }
     var chatPanelWidth by remember { mutableStateOf(300.dp) }
     var conversationCaseId by remember { mutableStateOf<Long?>(null) }
+    var pendingConversationResponse by remember { mutableStateOf<ChatResponse?>(null) }
     val density = LocalDensity.current
+
+    // Create CaseSelectorHandler reference
+    val caseSelectorHandler = remember {
+        object : CaseSelectorHandler {
+            override var selectCase: (id: Long) -> Unit = { }
+            override var requestFocusOnSelectedCase: () -> Unit = { }
+        }
+    }
 
     val isShowingCornerstone = cornerstoneStatus?.cornerstoneToReview != null
     val ruleInProgress = cornerstoneStatus != null
@@ -86,6 +98,12 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
         }
     }
 
+    LaunchedEffect(kbInfo) {
+        withContext(dispatcher) {
+            casesInfo = api.waitingCasesInfo()
+        }
+    }
+
     LaunchedEffect(casesInfo, currentCaseId) {
         withContext(dispatcher) {
             val allIds = casesInfo.caseIds + casesInfo.cornerstoneCaseIds
@@ -105,11 +123,17 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
         withContext(dispatcher) {
             currentCaseId?.let {
                 if (conversationCaseId != it) {
-                    val response = api.startConversation(it)
-                    conversationCaseId = it
-                    if (response.text.isNotBlank()) {
-                        chatControllerHandler.onBotMessageReceived(response)
-                        ++chatId // Increment chatId to trigger recomposition in ChatController
+                    try {
+                        val response = api.startConversation(it)
+                        conversationCaseId = it
+                        ++chatId
+                        if (response.text.isNotBlank()) {
+                            pendingConversationResponse = response
+                        }
+                    } catch (_: Exception) {
+                        // Swallow transient failures (e.g. stale kb id during a kb switch,
+                        // or a case that is not (yet) in the current kb). The effect will
+                        // re-fire when currentCaseId changes again.
                     }
                 }
             }
@@ -120,7 +144,19 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
         withContext(dispatcher) {
             handler.api.startWebSocketSession(
                 updateCornerstoneStatus = { cornerstoneStatus = it },
-                ruleSessionCompleted = { cornerstoneStatus = null })
+                ruleSessionCompleted = { cornerstoneStatus = null },
+                updateCasesInfo = { incoming ->
+                    // Ignore updates that belong to a different KB than the one
+                    // the UI is currently showing. Otherwise a sample-KB build
+                    // on the server can push casesInfo for the new KB before
+                    // the UI has finished switching, leaving casesInfo and
+                    // Api.currentKB out of sync (causing 500s on follow-up
+                    // calls like startConversation).
+                    val current = kbInfo?.name
+                    if (current == null || incoming.kbName.isBlank() || incoming.kbName == current) {
+                        casesInfo = incoming
+                    }
+                })
         }
     }
 
@@ -171,42 +207,32 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                         api.undoLastRule()
                         if (currentCaseId != null) {
                             currentCase = api.getCase(currentCaseId!!)
+                            ++chatId
                         }
                     }
                 }
             })
         },
     ) { paddingValues ->
-        CasePoller(object : CasePollerHandler {
-            override var onUpdate: (updated: CasesInfo) -> Unit = {
-                casesInfo = it
-            }
-            override var updateCasesInfo = {
-                runBlocking(dispatcher) {
-                    api.waitingCasesInfo()
-                }
-            }
-            override var isClosing = handler.isClosing
-        }, dispatcher)
-
-        if (casesInfo.count > 0) {
-            Column(modifier = Modifier.padding(paddingValues)) {
-                Row(modifier = Modifier.weight(1f)) {
-                    if (!ruleInProgress) {
-                        Column(modifier = Modifier.padding(top = 12.dp)) {
-                            CaseSelector(
-                                casesInfo.caseIds,
-                                casesInfo.cornerstoneCaseIds,
-                                object : CaseSelectorHandler, Handler by handler {
-                                override var selectCase = { id: Long ->
-                                    ++chatId
-                                    currentCase = runBlocking(dispatcher) { api.getCase(id) }
-                                    currentCaseId = id
-                                }
-                            })
-                        }
+        Column(modifier = Modifier.padding(paddingValues)) {
+            Row(modifier = Modifier.weight(1f)) {
+                if (casesInfo.count > 0 && !ruleInProgress) {
+                    Column(modifier = Modifier.padding(top = 12.dp)) {
+                        CaseSelector(
+                            casesInfo.caseIds,
+                            casesInfo.cornerstoneCaseIds,
+                            caseSelectorHandler
+                        )
                     }
 
+                    // Set the selectCase callback after caseSelectorHandler is created
+                    caseSelectorHandler.selectCase = { id: Long ->
+                        currentCase = runBlocking(dispatcher) { api.getCase(id) }
+                        currentCaseId = id
+                    }
+                }
+
+                if (casesInfo.count > 0) {
                     CaseControl(
                         currentCase = currentCase,
                         cornerstoneStatus = cornerstoneStatus,
@@ -220,29 +246,35 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                         },
                         modifier = Modifier.weight(1f)
                     )
+                }
 
-                    // Draggable divider for resizing the chat panel
-                    Box(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .width(4.dp)
-                            .background(Color.LightGray)
-                            .pointerHoverIcon(PointerIcon(Cursor(Cursor.W_RESIZE_CURSOR)))
-                            .pointerInput(Unit) {
-                                detectDragGestures { change, dragAmount ->
-                                    change.consume()
-                                    val deltaWidth = with(density) { (-dragAmount.x).toDp() }
-                                    chatPanelWidth = (chatPanelWidth + deltaWidth).coerceIn(200.dp, 600.dp)
-                                }
+                // Draggable divider for resizing the chat panel
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(4.dp)
+                        .background(Color.LightGray)
+                        .pointerHoverIcon(PointerIcon(Cursor(Cursor.W_RESIZE_CURSOR)))
+                        .pointerInput(Unit) {
+                            detectDragGestures { change, dragAmount ->
+                                change.consume()
+                                val deltaWidth = with(density) { (-dragAmount.x).toDp() }
+                                chatPanelWidth = (chatPanelWidth + deltaWidth).coerceIn(200.dp, 600.dp)
                             }
-                    )
+                        }
+                )
 
-                    ChatController(
-                        id = chatId,
-                        chatControllerHandler,
-                        voiceRecognitionService = voiceRecognitionService,
-                        modifier = Modifier.width(chatPanelWidth)
-                    )
+                ChatController(
+                    id = chatId,
+                    chatControllerHandler,
+                    voiceRecognitionService = voiceRecognitionService,
+                    modifier = Modifier.width(chatPanelWidth)
+                )
+            }
+            LaunchedEffect(pendingConversationResponse) {
+                pendingConversationResponse?.let {
+                    chatControllerHandler.onBotMessageReceived(it)
+                    pendingConversationResponse = null
                 }
             }
         }

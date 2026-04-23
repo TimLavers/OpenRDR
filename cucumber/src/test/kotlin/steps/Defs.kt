@@ -10,11 +10,13 @@ import io.cucumber.java.en.And
 import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
+import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.proxy.ConfiguredTestData
 import io.rippledown.integration.proxy.TestResultDetail
 import org.awaitility.Awaitility
 import steps.StepsInfrastructure.cleanup
+import steps.StepsInfrastructure.saveServerLogsOnFailure
 import steps.StepsInfrastructure.screenshotOnFailure
 import steps.StepsInfrastructure.startClient
 import steps.StepsInfrastructure.startServerWithInMemoryDatabase
@@ -25,6 +27,11 @@ import java.util.concurrent.TimeUnit.*
 class Defs {
     private var exportedZip: File? = null
     private lateinit var stopwatch: Stopwatch
+
+    // Restores keyboard focus to the last-selected case before an arrow-key press.
+    // After a case is selected, ChatPanel's LaunchedEffect(id) steals focus to the
+    // chat text field, which would otherwise absorb subsequent arrow-key presses.
+    private var refocusLastSelectedCase: (() -> Unit)? = null
 
     @Before("not @database")
     fun before(scenario: Scenario) {
@@ -45,6 +52,7 @@ class Defs {
     fun after(scenario: Scenario) {
         stopwatch.stop()
         screenshotOnFailure(scenario)
+        saveServerLogsOnFailure(scenario)
         cleanup()
         println("After scenario  '${scenario.name}', duration: ${stopwatch.elapsed(SECONDS)} seconds")
     }
@@ -110,10 +118,11 @@ class Defs {
         labProxy().restProxy.deleteProcessedCaseWithName(caseName)
     }
 
-    @And("I select case {word}")
+    @And("I select case {word}( on the processed case list)")
     fun selectCase(caseName: String) {
         caseListPO().select(caseName)
         caseViewPO().waitForNameToShow(caseName)
+        refocusLastSelectedCase = { caseListPO().mouseClick(caseName) }
     }
 
     @And("I move attribute {word} below attribute {word}")
@@ -222,7 +231,7 @@ class Defs {
     }
 
     @Then("I (should )see the case {word} as the current case")
-    fun IShouldSeeTheCaseWordAsTheCurrentCase(caseName: String) {
+    fun requireCaseToBeShowing(caseName: String) {
         caseViewPO().waitForNameToShow(caseName)
     }
 
@@ -234,6 +243,47 @@ class Defs {
     @And("(I )select the case {word}")
     fun ISelectTheCaseWord(caseName: String) {
         caseListPO().select(caseName)
+        caseViewPO().waitForNameToShow(caseName)
+        refocusLastSelectedCase = { caseListPO().mouseClick(caseName) }
+    }
+
+    @And("I select the case {word} on the cornerstone case list")
+    fun ISelectTheCornerstoneCase(caseName: String) {
+        cornerstoneCaseListPO().select(caseName)
+        caseViewPO().waitForNameToShow(caseName)
+        refocusLastSelectedCase = { cornerstoneCaseListPO().mouseClick(caseName) }
+    }
+
+    @Given("a list of cornerstone cases with the following names is stored on the server:")
+    fun aListOfCornerstoneCasesIsStoredOnTheServer(dataTable: DataTable) {
+        dataTable.asList().forEach { caseName ->
+            labProxy().addCornerstoneCase(caseName, mapOf("x" to caseName))
+        }
+    }
+
+    @When("I press the down arrow key")
+    fun pressDownArrowKey() {
+        // Best-effort: give any pending ChatPanel.LaunchedEffect(id) focus-steal
+        // a chance to finish before we refocus the case list. If no focus-steal
+        // is pending (e.g. the prior `select case` resolved to the already-current
+        // case, so currentCaseId did not change and chatId did not increment),
+        // we simply proceed rather than hanging for the full timeout.
+        chatPO().waitForChatToBeFocusedQuietly()
+        StepsInfrastructure.client().withWindowOnTop {
+            refocusLastSelectedCase?.invoke()
+            caseListPO().pressDownArrow()
+            Thread.sleep(100)
+        }
+    }
+
+    @When("I press the up arrow key")
+    fun pressUpArrowKey() {
+        chatPO().waitForChatToBeFocusedQuietly()
+        StepsInfrastructure.client().withWindowOnTop {
+            refocusLastSelectedCase?.invoke()
+            caseListPO().pressUpArrow()
+            Thread.sleep(100)
+        }
     }
 
     @Then("the interpretation should contain the text {string}")
@@ -244,6 +294,23 @@ class Defs {
     @Then("the (interpretation )(report )(should be )(is ){string}")
     fun theInterpretationShouldBeString(text: String) {
         interpretationViewPO().waitForInterpretationText(text)
+    }
+
+    @Then("the interpretation of each case for the first {int} cases should be:")
+    fun requireInterpretationForCases(restriction: Int, expectation: DataTable) {
+        expectation.cells()
+            .drop(1) //skip header
+            .take(restriction) //check only the first N rows
+            .forEach { (caseName, code, _, _) ->
+            checkInterpretationViaRestClient(caseName, code?.trim() ?: "")
+        }
+    }
+
+    private fun checkInterpretationViaRestClient(caseName: String, expectedInterpretation: String) {
+        val actualInterpretation = restClient().getProcessedCaseWithName(caseName).viewableInterpretation.latestText()
+        withClue("unexpected classification for case $caseName") {
+            actualInterpretation shouldBe expectedInterpretation
+        }
     }
 
     @Then("the interpretation should be this:")

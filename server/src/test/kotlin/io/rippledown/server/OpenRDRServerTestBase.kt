@@ -5,9 +5,11 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.testing.*
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.rippledown.server.routes.*
+import io.rippledown.server.websocket.WebSocketManager
 import kotlinx.serialization.json.Json
 
 open class OpenRDRServerTestBase {
@@ -15,11 +17,15 @@ open class OpenRDRServerTestBase {
     val kbName = "Wisdom"
     lateinit var kbEndpoint: KBEndpoint
     lateinit var serverApplication: ServerApplication
+    lateinit var webSocketManager: WebSocketManager
     lateinit var httpClient: HttpClient
 
     fun ApplicationTestBuilder.setupServer() {
         kbEndpoint = mockk<KBEndpoint>()
         serverApplication = mockk<ServerApplication>()
+        webSocketManager = mockk<WebSocketManager>()
+        coEvery { webSocketManager.sendCasesInfo(any()) } returns Unit
+        every { serverApplication.webSocketManager } returns webSocketManager
         every { serverApplication.kbForId(kbId) } returns kbEndpoint
         every { serverApplication.kbForName(kbName) } returns kbEndpoint
         httpClient = createClient {
