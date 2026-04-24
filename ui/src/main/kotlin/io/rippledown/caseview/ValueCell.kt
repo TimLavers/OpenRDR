@@ -9,14 +9,14 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import io.rippledown.model.Attribute
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 
 @Composable
 fun RowScope.ValueCell(
     caseName: String,
     attribute: Attribute,
     index: Int,
-    result: TestResult,
+    result: Result,
     columnWidths: ColumnWidths
 ) {
     Text(
@@ -29,7 +29,8 @@ fun RowScope.ValueCell(
         textAlign = TextAlign.Center
     )
 }
-fun resultText(result: TestResult): String {
+
+fun resultText(result: Result): String {
     val value = result.value.text
     return if (result.units == null) {
         value

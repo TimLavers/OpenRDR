@@ -8,7 +8,7 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.mocks.DummyRowScope
 import io.rippledown.model.Attribute
 import io.rippledown.model.ReferenceRange
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import org.junit.Rule
 import org.junit.Test
 
@@ -20,10 +20,10 @@ class ReferenceRangeCellTest {
 
     @Test
     fun `show result that does not have units`() {
-        val testResult = TestResult("12.8", null, null)
+        val Result = Result("12.8", null, null)
         val rowScope: RowScope = DummyRowScope()
         composeTestRule.setContent {
-            rowScope.ReferenceRangeCell( tsh, testResult, 0.1F)
+            rowScope.ReferenceRangeCell(tsh, Result, 0.1F)
         }
         with(composeTestRule) {
             waitUntilExactlyOneExists(hasText(""))
@@ -32,10 +32,10 @@ class ReferenceRangeCellTest {
 
     @Test
     fun `show result with two-sided range`() {
-        val testResult = TestResult("12.8", ReferenceRange("1.0", "2.5"), null)
+        val Result = Result("12.8", ReferenceRange("1.0", "2.5"), null)
         val rowScope: RowScope = DummyRowScope()
         composeTestRule.setContent {
-            rowScope.ReferenceRangeCell( tsh, testResult, 0.1F)
+            rowScope.ReferenceRangeCell(tsh, Result, 0.1F)
         }
         with(composeTestRule) {
             waitUntilExactlyOneExists(hasText("1.0 - 2.5"))

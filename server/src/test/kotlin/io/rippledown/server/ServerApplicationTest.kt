@@ -9,7 +9,7 @@ import io.rippledown.CaseTestUtils
 import io.rippledown.constants.server.DEFAULT_PROJECT_NAME
 import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCase
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.sample.SampleKB
@@ -22,7 +22,7 @@ fun RDRCase.getAttribute(attributeName: String): Attribute {
     return attributes.first { attribute -> attribute.name == attributeName }
 }
 
-fun RDRCase.getLatest(attributeName: String): TestResult? {
+fun RDRCase.getLatest(attributeName: String): Result? {
     return getLatest(getAttribute(attributeName))
 }
 

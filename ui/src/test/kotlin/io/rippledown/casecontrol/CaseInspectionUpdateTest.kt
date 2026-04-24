@@ -10,7 +10,7 @@ import androidx.compose.ui.test.performClick
 import io.mockk.mockk
 import io.rippledown.model.Attribute
 import io.rippledown.model.CaseId
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.utils.AttributeWithValue
 import io.rippledown.utils.createViewableCase
@@ -55,8 +55,8 @@ class CaseInspectionUpdateTest {
         val caseId = CaseId(id = 1, name = bondi)
         val a = Attribute(1, "a")
         val b = Attribute(2, "b")
-        val attributeWithValueA = AttributeWithValue(a, TestResult("42"))
-        val attributeWithValueB = AttributeWithValue(b, TestResult("43"))
+        val attributeWithValueA = AttributeWithValue(a, Result("42"))
+        val attributeWithValueB = AttributeWithValue(b, Result("43"))
         val initialCase = createViewableCase(caseId, listOf(attributeWithValueA, attributeWithValueB))
         val caseWithReorderedAttributes = createViewableCase(caseId, listOf(attributeWithValueB, attributeWithValueA))
 

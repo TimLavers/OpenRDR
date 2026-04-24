@@ -2,7 +2,7 @@ package io.rippledown.model.condition.episodic.predicate
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.ReferenceRange
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import io.rippledown.model.Value
 import io.rippledown.utils.serializeDeserialize
 import kotlin.test.Test
@@ -14,34 +14,34 @@ class HighTest : Base() {
 
     @Test
     fun valueBlank() {
-        high.evaluate(TestResult(Value(""), range, units)) shouldBe false
+        high.evaluate(Result(Value(""), range, units)) shouldBe false
     }
 
     @Test
     fun valueHasNoRange() {
-        high.evaluate(TestResult(Value(""), null, units)) shouldBe false
-        high.evaluate(TestResult(Value("1.2"), null, units)) shouldBe false
+        high.evaluate(Result(Value(""), null, units)) shouldBe false
+        high.evaluate(Result(Value("1.2"), null, units)) shouldBe false
     }
 
     @Test
     fun valueNotNumeric() {
-        high.evaluate(TestResult(Value("whatever"), range, units)) shouldBe false
+        high.evaluate(Result(Value("whatever"), range, units)) shouldBe false
     }
 
     @Test
     fun valueNormal() {
-        high.evaluate(TestResult(Value("1.8"), range, units)) shouldBe false
-        high.evaluate(TestResult(Value("1.0"), range, units)) shouldBe false
+        high.evaluate(Result(Value("1.8"), range, units)) shouldBe false
+        high.evaluate(Result(Value("1.0"), range, units)) shouldBe false
     }
 
     @Test
     fun valueLow() {
-        high.evaluate(TestResult(Value("0.8"), range, units)) shouldBe false
+        high.evaluate(Result(Value("0.8"), range, units)) shouldBe false
     }
 
     @Test
     fun valueHigh() {
-        high.evaluate(TestResult(Value("5.0"), range, units)) shouldBe true
+        high.evaluate(Result(Value("5.0"), range, units)) shouldBe true
     }
 
     @Test

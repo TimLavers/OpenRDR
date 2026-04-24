@@ -117,28 +117,28 @@ class PostgresCaseStoreTest : PostgresStoreTest() {
 
     @Test
     fun `create case with test result with units`() {
-        val testResult = TestResult("4.5", null, "furlongs/fortnight")
+        val Result = Result("4.5", null, "furlongs/fortnight")
         val builder = RDRCaseBuilder()
-        builder.addResult(a, today, testResult)
+        builder.addResult(a, today, Result)
         val unitsCase = builder.build("Units Case")
         val stored = store.put(unitsCase)
         with(store.get(stored.id!!, attributeProvider)!!) {
-            values(a)!![0] shouldBe testResult
+            values(a)!![0] shouldBe Result
             data shouldBe stored.data
         }
 
         reload()
         with(store.get(stored.id!!, attributeProvider)!!) {
-            values(a)!![0] shouldBe testResult
+            values(a)!![0] shouldBe Result
             data shouldBe stored.data
         }
     }
 
     @Test
     fun `put case with test result with reference range`() {
-        val lowRangeResult = TestResult("1.0", ReferenceRange("0.5", null), null)
-        val highRangeResult = TestResult("2.0", ReferenceRange(null, "2.0"), "mmol/L")
-        val rangeResult = TestResult("3.0", ReferenceRange("1.0", "5.0"), "mmol/L")
+        val lowRangeResult = Result("1.0", ReferenceRange("0.5", null), null)
+        val highRangeResult = Result("2.0", ReferenceRange(null, "2.0"), "mmol/L")
+        val rangeResult = Result("3.0", ReferenceRange("1.0", "5.0"), "mmol/L")
         val builder = RDRCaseBuilder()
         builder.addResult(a, today, lowRangeResult)
         builder.addResult(b, today, highRangeResult)

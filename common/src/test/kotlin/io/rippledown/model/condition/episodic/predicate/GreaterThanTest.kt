@@ -3,7 +3,7 @@ package io.rippledown.model.condition.episodic.predicate
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.model.ReferenceRange
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import io.rippledown.model.Value
 import io.rippledown.utils.serializeDeserialize
 import kotlin.test.Test
@@ -15,18 +15,18 @@ class GreaterThanTest : Base() {
 
     @Test
     fun valueNotNumeric() {
-        gt.evaluate(TestResult(Value(""), range, units)) shouldBe false
-        gt.evaluate(TestResult(Value("whatever"), range, units)) shouldBe false
+        gt.evaluate(Result(Value(""), range, units)) shouldBe false
+        gt.evaluate(Result(Value("whatever"), range, units)) shouldBe false
     }
 
     @Test
     fun valueNumeric() {
-        gt.evaluate(TestResult(Value("1.8"), range, units)) shouldBe true
-        gt.evaluate(TestResult("1.8")) shouldBe true
-        gt.evaluate(TestResult("1.2")) shouldBe false
-        gt.evaluate(TestResult("1.19999")) shouldBe false
-        gt.evaluate(TestResult("1.15")) shouldBe false
-        gt.evaluate(TestResult("0")) shouldBe false
+        gt.evaluate(Result(Value("1.8"), range, units)) shouldBe true
+        gt.evaluate(Result("1.8")) shouldBe true
+        gt.evaluate(Result("1.2")) shouldBe false
+        gt.evaluate(Result("1.19999")) shouldBe false
+        gt.evaluate(Result("1.15")) shouldBe false
+        gt.evaluate(Result("0")) shouldBe false
     }
 
     @Test

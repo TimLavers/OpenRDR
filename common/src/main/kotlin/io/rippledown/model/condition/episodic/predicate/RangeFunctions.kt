@@ -1,27 +1,27 @@
 package io.rippledown.model.condition.episodic.predicate
 
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 
 import kotlinx.serialization.Serializable
 import kotlin.math.abs
 
 @Serializable
 data object Low: TestResultPredicate {
-    override fun evaluate(result: TestResult) = result.isLow()
+    override fun evaluate(result: Result) = result.isLow()
 
     override fun description(plural: Boolean) = "${isOrAre(plural)} low"
 }
 
 @Serializable
 data object Normal: TestResultPredicate {
-    override fun evaluate(result: TestResult) = result.isNormal()
+    override fun evaluate(result: Result) = result.isNormal()
 
     override fun description(plural: Boolean) = "${isOrAre(plural)} normal"
 }
 
 @Serializable
 data object High: TestResultPredicate {
-    override fun evaluate(result: TestResult) = result.isHigh()
+    override fun evaluate(result: Result) = result.isHigh()
 
     override fun description(plural: Boolean) = "${isOrAre(plural)} high"
 }
@@ -29,28 +29,28 @@ data object High: TestResultPredicate {
  // The following predicates are required for technical reasons and won't be used in rules.
 @Serializable
 data object LowOrNormal: TestResultPredicate {
-    override fun evaluate(result: TestResult) = result.isLow() || result.isNormal()
+     override fun evaluate(result: Result) = result.isLow() || result.isNormal()
 
     override fun description(plural: Boolean) = "${isOrAre(plural)} low or normal"
 }
 
 @Serializable
 data object HighOrNormal: TestResultPredicate {
-    override fun evaluate(result: TestResult) = result.isHigh() || result.isNormal()
+    override fun evaluate(result: Result) = result.isHigh() || result.isNormal()
 
     override fun description(plural: Boolean) = "${isOrAre(plural)} high or normal"
 }
 
 @Serializable
 data object HighOrNormalOrLow: TestResultPredicate {
-    override fun evaluate(result: TestResult) = result.isHigh() || result.isNormal() || result.isLow()
+    override fun evaluate(result: Result) = result.isHigh() || result.isNormal() || result.isLow()
 
     override fun description(plural: Boolean) = "${isOrAre(plural)} high or normal or low"
 }
 
 @Serializable
 sealed class ExtendedRangeFunction(private val rangeComparison: ExpandedRangeComparison): TestResultPredicate {
-    override fun evaluate(result: TestResult) = rangeComparison.evaluate(result)
+    override fun evaluate(result: Result) = rangeComparison.evaluate(result)
 }
 
 @Serializable
@@ -86,7 +86,7 @@ sealed class ExpandedRangeComparison(private val lowerCutoffExpansionPercentage:
 
     open fun includeNormalResults() = true
 
-    fun evaluate(result: TestResult): Boolean {
+    fun evaluate(result: Result): Boolean {
         // Get the real value of the test result and the
         // range limits for the result's  normal range,
         // returning false if any of these are null.

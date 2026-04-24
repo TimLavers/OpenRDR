@@ -1,7 +1,7 @@
 package io.rippledown.model.condition.series
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 
@@ -70,7 +70,7 @@ class IncreasingTest {
         serializeDeserialize(Increasing) shouldBe Increasing
     }
 
-    private fun series(vararg values: String) = values.map { TestResult(it) }
+    private fun series(vararg values: String) = values.map { Result(it) }
 
     fun serializeDeserialize(predicate: SeriesPredicate): SeriesPredicate {
         val serialized = Json.encodeToString(predicate)

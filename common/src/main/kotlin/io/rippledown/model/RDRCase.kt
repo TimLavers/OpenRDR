@@ -11,15 +11,15 @@ import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.*
 
 class RDRCaseBuilder {
-    private val caseData: MutableMap<TestEvent, TestResult> = mutableMapOf()
+    private val caseData: MutableMap<TestEvent, Result> = mutableMapOf()
     private var caseType = CaseType.Processed
 
     fun addValue(attribute: Attribute, date: Long, value: String) {
-        val result = TestResult(value)
+        val result = Result(value)
         addResult(attribute, date, result)
     }
 
-    fun addResult(attribute: Attribute, date: Long, result: TestResult) {
+    fun addResult(attribute: Attribute, date: Long, result: Result) {
         val testEvent = TestEvent(attribute, date)
         caseData[testEvent] = result
     }
@@ -34,7 +34,7 @@ class RDRCaseBuilder {
 
 object RDRCaseSerializer : KSerializer<RDRCase> {
     private val idSerializer = CaseId.serializer()
-    private val mapSerializer = MapSerializer(TestEvent.serializer(), TestResult.serializer())
+    private val mapSerializer = MapSerializer(TestEvent.serializer(), Result.serializer())
     private val interpretationRulesSerializer = SetSerializer(RuleSummary.serializer())
     override val descriptor: SerialDescriptor =
         buildClassSerialDescriptor("RDRCase") {
@@ -53,7 +53,7 @@ object RDRCaseSerializer : KSerializer<RDRCase> {
 
     override fun deserialize(decoder: Decoder): RDRCase {
         var id = CaseId("")
-        var map: Map<TestEvent, TestResult> = emptyMap()
+        var map: Map<TestEvent, Result> = emptyMap()
         var rules: Set<RuleSummary> = emptySet()
         decoder.decodeStructure(descriptor) {
             // Loop label needed so that break statement works in js.
@@ -74,40 +74,40 @@ object RDRCaseSerializer : KSerializer<RDRCase> {
 }
 
 /**
- * An RDRCase is a set of (TestEvent, TestResult) pairs in which
+ * An RDRCase is a set of (TestEvent, Result) pairs in which
  * no two TestEvents have the same attribute and date.
  * The case can be organised as a table of TestResults,
  * in which columns represent TestResults with
  * the same date and rows represent results for
  * the same attribute. In this arrangement,
- * a blank TestResult is given on dates at which
+ * a blank Result is given on dates at which
  * there was no TestEvent for an Attribute.
  */
 @Serializable(RDRCaseSerializer::class)
 data class RDRCase(
     val caseId: CaseId,
-    val data: Map<TestEvent, TestResult> = emptyMap(),
+    val data: Map<TestEvent, Result> = emptyMap(),
     var interpretation: Interpretation = Interpretation(caseId)
 ) {
     val name = caseId.name
     val id = caseId.id
     val dates: List<Long>
     val attributes: Set<Attribute>
-    private val dateToEpisode: Map<Long, Map<Attribute, TestResult>>
+    private val dateToEpisode: Map<Long, Map<Attribute, Result>>
 
     init {
         val uniqueDates = mutableSetOf<Long>()
         data.keys.forEach { uniqueDates.add(it.date) }
         dates = uniqueDates.sorted()
         attributes = data.keys.map { it.attribute }.toSet()
-        val dateToEpisodeMutable = mutableMapOf<Long, Map<Attribute, TestResult>>()
+        val dateToEpisodeMutable = mutableMapOf<Long, Map<Attribute, Result>>()
 
         dates.forEach {
-            val attributeMap = mutableMapOf<Attribute, TestResult>()
+            val attributeMap = mutableMapOf<Attribute, Result>()
 
             attributes.forEach { attribute ->
                 val key = TestEvent(attribute, it)
-                val result = data[key] ?: TestResult("")
+                val result = data[key] ?: Result("")
                 attributeMap[attribute] = result
             }
             dateToEpisodeMutable[it] = attributeMap.toMap()
@@ -115,11 +115,11 @@ data class RDRCase(
         dateToEpisode = dateToEpisodeMutable.toMap()
     }
 
-    fun values(attribute: Attribute): List<TestResult>? {
+    fun values(attribute: Attribute): List<Result>? {
         if (!attributes.contains(attribute)) {
             return null
         }
-        val result = mutableListOf<TestResult>()
+        val result = mutableListOf<Result>()
         dates.forEach {
             result.add(dateToEpisode[it]!![attribute]!!)
         }
@@ -135,7 +135,7 @@ data class RDRCase(
         return ResultsList(values(attribute)!!)
     }
 
-    fun getLatest(attribute: Attribute): TestResult? {
+    fun getLatest(attribute: Attribute): Result? {
         return dateToEpisode[dates.last()]!![attribute]
     }
 

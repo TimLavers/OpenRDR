@@ -8,7 +8,7 @@ import io.rippledown.kb.OrderedEntityManager.Companion.UNKNOWN_ENTITY
 import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.persistence.OrderStore
 import io.rippledown.persistence.inmemory.InMemoryAttributeStore
@@ -229,7 +229,7 @@ class CaseViewManagerTest {
         val date = Instant.now()
         val builder = RDRCaseBuilder()
         attributes.forEach{
-            builder.addResult(it, date.toEpochMilli(), TestResult(it.name + " value") )
+            builder.addResult(it, date.toEpochMilli(), Result(it.name + " value"))
         }
         return builder.build( name)
     }

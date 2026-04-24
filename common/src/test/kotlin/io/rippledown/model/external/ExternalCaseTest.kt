@@ -3,7 +3,7 @@ package io.rippledown.model.external
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.rippledown.json
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import io.rippledown.utils.defaultDate
 import kotlin.test.Test
 
@@ -14,8 +14,8 @@ internal class ExternalCaseTest {
     private val date2 = date1 - 100_034
     private val eventG1 = MeasurementEvent("Glucose", date1)
     private val eventG2 = MeasurementEvent("Glucose", date2)
-    private val tr1 = TestResult("5.0")
-    private val tr2 = TestResult("5.1")
+    private val tr1 = Result("5.0")
+    private val tr2 = Result("5.1")
 
     @Test
     fun nameNotEmpty() {

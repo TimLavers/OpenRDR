@@ -114,8 +114,8 @@ class CaseManagerTest {
 
     private fun makeCase(name: String, glucoseValue: String = "3.2", ft4Value: String = "1.2"): RDRCase {
         val builder = RDRCaseBuilder()
-        builder.addResult(glucose, defaultDate, TestResult(glucoseValue))
-        builder.addResult(ft4, defaultDate, TestResult(ft4Value))
+        builder.addResult(glucose, defaultDate, Result(glucoseValue))
+        builder.addResult(ft4, defaultDate, Result(ft4Value))
         return builder.build(name)
     }
 }

@@ -42,7 +42,7 @@ val lastWeek = daysAgo(7)
 val glucose = Attribute(1, "Glucose")
 
 data class AttributeWithValue(
-    val attribute: Attribute = glucose, val result: TestResult = TestResult(
+    val attribute: Attribute = glucose, val result: Result = Result(
         DEFAULT_GLUCOSE_VALUE.toString()
     )
 )

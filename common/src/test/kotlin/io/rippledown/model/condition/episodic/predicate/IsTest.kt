@@ -2,7 +2,7 @@ package io.rippledown.model.condition.episodic.predicate
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import io.rippledown.utils.serializeDeserialize
 import kotlin.test.Test
 
@@ -12,41 +12,41 @@ class IsTest : Base() {
 
     @Test
     fun valueBlank() {
-        predicate.evaluate(TestResult("")) shouldBe false
+        predicate.evaluate(Result("")) shouldBe false
     }
 
     @Test
     fun valueNotBlank() {
         val isGoat = Is("goat")
-        isGoat.evaluate(TestResult("")) shouldBe false
-        isGoat.evaluate(TestResult("sheep")) shouldBe false
-        isGoat.evaluate(TestResult("goat")) shouldBe true
-        isGoat.evaluate(TestResult("goats")) shouldBe false
-        isGoat.evaluate(TestResult("Goat")) shouldBe false
+        isGoat.evaluate(Result("")) shouldBe false
+        isGoat.evaluate(Result("sheep")) shouldBe false
+        isGoat.evaluate(Result("goat")) shouldBe true
+        isGoat.evaluate(Result("goats")) shouldBe false
+        isGoat.evaluate(Result("Goat")) shouldBe false
     }
 
     @Test
     fun `evaluation should ignore surrounding quotesin the value being compared with`() {
         val isGoat = Is("goat")
-        isGoat.evaluate(TestResult("\"goat\"")) shouldBe true
+        isGoat.evaluate(Result("\"goat\"")) shouldBe true
     }
 
     @Test
     fun `evaluation should ignore surrounding quotes in the condition parameter`() {
         val isGoat = Is("\"goat\"")
-        isGoat.evaluate(TestResult("goat")) shouldBe true
+        isGoat.evaluate(Result("goat")) shouldBe true
     }
 
     @Test
     fun `evaluation should ignore surrounding apostrophes in the value being compared with`() {
         val isGoat = Is("goat")
-        isGoat.evaluate(TestResult("'goat'")) shouldBe true
+        isGoat.evaluate(Result("'goat'")) shouldBe true
     }
 
     @Test
     fun `evaluation should ignore surrounding apostrophes in the condition parameter`() {
         val isGoat = Is("'goat'")
-        isGoat.evaluate(TestResult("goat")) shouldBe true
+        isGoat.evaluate(Result("goat")) shouldBe true
     }
 
     @Test

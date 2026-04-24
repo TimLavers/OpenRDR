@@ -1,6 +1,8 @@
 package io.rippledown.model.rule
 
-import io.rippledown.model.*
+import io.rippledown.model.Attribute
+import io.rippledown.model.RDRCase
+import io.rippledown.model.Result
 import io.rippledown.model.condition.CaseStructureCondition
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.SeriesCondition
@@ -14,7 +16,7 @@ import io.rippledown.model.condition.structural.IsAbsentFromCase
 import io.rippledown.model.condition.structural.IsPresentInCase
 import io.rippledown.model.condition.structural.IsSingleEpisodeCase
 
-typealias SuggestionFunction = (Attribute, TestResult?) -> SuggestedCondition?
+typealias SuggestionFunction = (Attribute, Result?) -> SuggestedCondition?
 
 class ConditionSuggester(
     attributes: Set<Attribute>,
@@ -119,14 +121,14 @@ class Sorter : Comparator<SuggestedCondition> {
     }
 }
 
-fun editableReal(testResult: TestResult?): EditableValue? {
-    val cutoff = testResult?.value?.real
-    return if (cutoff == null) null else EditableValue(testResult.value.text, Type.Real)
+fun editableReal(Result: Result?): EditableValue? {
+    val cutoff = Result?.value?.real
+    return if (cutoff == null) null else EditableValue(Result.value.text, Type.Real)
 }
 
 class IsNumericSuggestion(private val signature: Signature = Current) : SuggestionFunction {
-    override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
-        return if (testResult?.value?.real == null) null else NonEditableSuggestedCondition(
+    override fun invoke(attribute: Attribute, Result: Result?): SuggestedCondition? {
+        return if (Result?.value?.real == null) null else NonEditableSuggestedCondition(
             EpisodicCondition(
                 attribute,
                 IsNumeric,
@@ -138,8 +140,8 @@ class IsNumericSuggestion(private val signature: Signature = Current) : Suggesti
 
 abstract class CutoffSuggestion(val signature: Signature) : SuggestionFunction {
     abstract fun createEditableCondition(attribute: Attribute, editableValue: EditableValue): EditableCondition
-    override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
-        val editableValue = editableReal(testResult) ?: return null
+    override fun invoke(attribute: Attribute, Result: Result?): SuggestedCondition? {
+        val editableValue = editableReal(Result) ?: return null
         return EditableSuggestedCondition(createEditableCondition(attribute, editableValue))
     }
 }
@@ -158,8 +160,8 @@ class LessThanOrEqualsSuggestion(signature: Signature) : CutoffSuggestion(signat
 
 abstract class ExtendedRangeSuggestion : SuggestionFunction {
     abstract fun createEditableCondition(attribute: Attribute): EditableCondition
-    override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
-        if (testResult == null) return null
+    override fun invoke(attribute: Attribute, Result: Result?): SuggestedCondition? {
+        if (Result == null) return null
         return EditableSuggestedCondition(createEditableCondition(attribute))
     }
 }
@@ -183,15 +185,15 @@ class ExtendedHighRangeSuggestion(private val signature: Signature) : ExtendedRa
         EditableExtendedHighRangeCondition(attribute, signature)
 }
 class ContainsSuggestion(private val signature: Signature) : SuggestionFunction {
-    override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
-        val value = testResult?.value?.text ?: return null
+    override fun invoke(attribute: Attribute, Result: Result?): SuggestedCondition? {
+        val value = Result?.value?.text ?: return null
         return EditableSuggestedCondition(EditableContainsCondition(attribute, value, signature))
     }
 }
 
 class DoesNotContainSuggestion(private val signature: Signature) : SuggestionFunction {
-    override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
-        return if (testResult == null) null else EditableSuggestedCondition(
+    override fun invoke(attribute: Attribute, Result: Result?): SuggestedCondition? {
+        return if (Result == null) null else EditableSuggestedCondition(
             EditableDoesNotContainCondition(
                 attribute,
                 signature
@@ -201,31 +203,31 @@ class DoesNotContainSuggestion(private val signature: Signature) : SuggestionFun
 }
 
 class IsSuggestion(private val signature: Signature) : SuggestionFunction {
-    override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
-        val value = testResult?.value?.text ?: return null
+    override fun invoke(attribute: Attribute, Result: Result?): SuggestedCondition? {
+        val value = Result?.value?.text ?: return null
         return NonEditableSuggestedCondition(EpisodicCondition(attribute, Is(value), signature))
     }
 }
 
 class NonEditableConditionSuggester(private val predicate: TestResultPredicate, private val signature: Signature) :
     SuggestionFunction {
-    override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
-        if (testResult == null) return null
+    override fun invoke(attribute: Attribute, Result: Result?): SuggestedCondition? {
+        if (Result == null) return null
         return NonEditableSuggestedCondition(EpisodicCondition(attribute, predicate, signature))
     }
 }
 class RangeConditionSuggester(private val predicate: TestResultPredicate, private val signature: Signature) :
     SuggestionFunction {
-    override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
-        if (testResult == null) return null
+    override fun invoke(attribute: Attribute, Result: Result?): SuggestedCondition? {
+        if (Result == null) return null
         val filter = EpisodicCondition(attribute, HighOrNormalOrLow, AtLeast(1))
         return NonEditableSuggestedCondition(EpisodicCondition(attribute, predicate, signature), filter)
     }
 }
 
 class TrendSuggestion(private val trend: Trend) : SuggestionFunction {
-    override fun invoke(attribute: Attribute, testResult: TestResult?): SuggestedCondition? {
-        testResult?.value?.real ?: return null
+    override fun invoke(attribute: Attribute, Result: Result?): SuggestedCondition? {
+        Result?.value?.real ?: return null
         return NonEditableSuggestedCondition(SeriesCondition(null, attribute, trend))
     }
 }

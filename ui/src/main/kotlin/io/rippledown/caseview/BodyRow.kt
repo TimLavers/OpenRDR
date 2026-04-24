@@ -1,12 +1,15 @@
 package io.rippledown.caseview
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import io.rippledown.model.Attribute
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 
 @Composable
 fun BodyRow(
@@ -14,7 +17,7 @@ fun BodyRow(
     caseName: String,
     attribute: Attribute,
     columnWidths: ColumnWidths,
-    results: List<TestResult>,
+    results: List<Result>,
     displacementOffset: Float? = null,
 ) {
     Row(
@@ -24,8 +27,8 @@ fun BodyRow(
             .fillMaxHeight(),
     ) {
         AttributeCell(index, caseName, attribute, columnWidths)
-        results.forEachIndexed { columnIndex: Int, testResult: TestResult ->
-            ValueCell(caseName, attribute, columnIndex, testResult, columnWidths)
+        results.forEachIndexed { columnIndex: Int, Result: Result ->
+            ValueCell(caseName, attribute, columnIndex, Result, columnWidths)
         }
         ReferenceRangeCell(attribute, results.last(), columnWidths.referenceRangeColumnWeight)
     }

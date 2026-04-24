@@ -1,10 +1,10 @@
 package io.rippledown.model.condition.series
 
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import kotlinx.serialization.Serializable
 
 @Serializable
 sealed interface SeriesPredicate {
-    fun evaluate(testResults: List<TestResult>): Boolean
+    fun evaluate(testResults: List<Result>): Boolean
     fun description(attributeName: String): String
 }

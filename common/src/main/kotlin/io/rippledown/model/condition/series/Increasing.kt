@@ -1,11 +1,11 @@
 package io.rippledown.model.condition.series
 
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import kotlinx.serialization.Serializable
 
 @Serializable
 sealed class Trend: SeriesPredicate {
-    override fun evaluate(testResults: List<TestResult>): Boolean {
+    override fun evaluate(testResults: List<Result>): Boolean {
         val numericalValues = testResults.mapNotNull { it.value.real }
         val length = numericalValues.size
         if (length < 2) return false

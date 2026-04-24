@@ -2,7 +2,7 @@ package io.rippledown.model.condition.episodic.predicate
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import io.rippledown.utils.serializeDeserialize
 import kotlin.test.Test
 
@@ -12,17 +12,17 @@ class IsNotTest : Base() {
 
     @Test
     fun valueBlank() {
-        predicate.evaluate(TestResult("")) shouldBe true
+        predicate.evaluate(Result("")) shouldBe true
     }
 
     @Test
     fun valueNotBlank() {
         val isNotGoat = IsNot("goat")
-        isNotGoat.evaluate(TestResult("")) shouldBe true
-        isNotGoat.evaluate(TestResult("sheep")) shouldBe true
-        isNotGoat.evaluate(TestResult("goat")) shouldBe false
-        isNotGoat.evaluate(TestResult("goats")) shouldBe true
-        isNotGoat.evaluate(TestResult("Goat")) shouldBe true
+        isNotGoat.evaluate(Result("")) shouldBe true
+        isNotGoat.evaluate(Result("sheep")) shouldBe true
+        isNotGoat.evaluate(Result("goat")) shouldBe false
+        isNotGoat.evaluate(Result("goats")) shouldBe true
+        isNotGoat.evaluate(Result("Goat")) shouldBe true
     }
 
     @Test
