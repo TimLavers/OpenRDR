@@ -1,9 +1,9 @@
 {
-  "name": "The name of this case is too long to display",
+  "caseName": "The name of this case is too long to display",
   "data": [
     {
       "attribute": {
-        "name": "TSH",
+        "caseName": "TSH",
         "id": 1
       },
       "date": 1659752689505
@@ -19,7 +19,7 @@
       "units": "mU/L"
     },{
       "attribute": {
-        "name": "TSH",
+        "caseName": "TSH",
         "id": 1
       },
       "date": 1659702689505
@@ -36,7 +36,7 @@
     },
     {
       "attribute": {
-        "name": "Stuff",
+        "caseName": "Stuff",
         "id": 4
       },
       "date": 1659752689505
@@ -50,7 +50,7 @@
     },
     {
       "attribute": {
-        "name": "Stuff",
+        "caseName": "Stuff",
         "id": 4
       },
       "date": 1659702689505

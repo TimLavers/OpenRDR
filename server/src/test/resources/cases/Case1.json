@@ -1,9 +1,9 @@
 {
-  "name": "Case1",
+  "caseName": "Case1",
   "data": [
     {
-      "testName": "TSH",
-      "testTime": 1659752689505
+      "name": "TSH",
+      "time": 1659752689505
     },
     {
       "value": {
@@ -16,8 +16,8 @@
       "units": "mU/L"
     },
     {
-      "testName": "ABC",
-      "testTime": 1659752689505
+      "name": "ABC",
+      "time": 1659752689505
     },
     {
       "value": {

@@ -35,7 +35,7 @@ internal class ExternalCaseTest {
     fun construction() {
         val data = mapOf(eventG1 to tr1, eventG2 to tr2)
         val case = ExternalCase("Stuff", data)
-        case.name shouldBe "Stuff"
+        case.caseName shouldBe "Stuff"
         case.data shouldBe data
     }
 

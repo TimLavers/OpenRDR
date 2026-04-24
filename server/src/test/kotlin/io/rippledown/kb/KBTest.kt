@@ -247,7 +247,7 @@ class KBTest {
         val caseId1 = kb.processCase(externalCase1).caseId
         kb.allProcessedCases() shouldHaveSize 1
         val case = kb.allProcessedCases().first()
-        case.name shouldBe externalCase1.name
+        case.name shouldBe externalCase1.caseName
         case.caseId shouldBe caseId1
     }
 
@@ -297,7 +297,7 @@ class KBTest {
             val externalCase = createExternalCase("Case$it", "$it")
             val caseId = kb.processCase(externalCase).caseId
             val retrieved = kb.getProcessedCase(caseId.id!!)!!
-            retrieved.name shouldBe externalCase.name
+            retrieved.name shouldBe externalCase.caseName
         }
         kb.getProcessedCase(99994) shouldBe null
     }
@@ -306,7 +306,7 @@ class KBTest {
     fun deleteProcessedCaseWithName() {
         val externalCase1 = createExternalCase("Case1", "g1")
         kb.processCase(externalCase1)
-        kb.deletedProcessedCaseWithName(externalCase1.name)
+        kb.deletedProcessedCaseWithName(externalCase1.caseName)
         kb.allProcessedCases() shouldBe emptyList()
     }
 
@@ -320,7 +320,7 @@ class KBTest {
         val case3 = kb.processCase(externalCase3)
         val externalCase4 = createExternalCase("Case1", "g4")
         kb.processCase(externalCase4)
-        kb.deletedProcessedCaseWithName(externalCase1.name)
+        kb.deletedProcessedCaseWithName(externalCase1.caseName)
 
         kb.allProcessedCases().size shouldBe 3
         kb.getProcessedCase(case1.caseId.id!!) shouldBe null
@@ -388,7 +388,7 @@ class KBTest {
         val xy = kb.attributeManager.getOrCreate("XY")
         kb.attributeManager.all().size shouldBe 2 // The two calls to getOrCreate got.
 
-        rdrCase.name shouldBe externalCase.name
+        rdrCase.name shouldBe externalCase.caseName
         rdrCase.attributes shouldBe setOf(abc, xy)
         val abcValues = rdrCase.values(abc)!!
         abcValues.size shouldBe 3

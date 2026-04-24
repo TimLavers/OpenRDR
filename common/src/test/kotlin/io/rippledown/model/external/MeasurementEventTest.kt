@@ -10,8 +10,8 @@ internal class MeasurementEventTest {
     @Test
     fun construction() {
         val event = MeasurementEvent("Glucose", defaultDate)
-        event.testName shouldBe "Glucose"
-        event.testTime shouldBe defaultDate
+        event.name shouldBe "Glucose"
+        event.time shouldBe defaultDate
     }
 
     @Test
