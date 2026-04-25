@@ -5,8 +5,10 @@ import io.rippledown.constants.kb.KB_CONTROL_DROPDOWN_DESCRIPTION
 import io.rippledown.constants.main.KBS_DROPDOWN_DESCRIPTION
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAndClick
-import io.rippledown.integration.utils.findComposeDialogThatIsShowing
+import io.rippledown.integration.utils.waitForComposeDialogToShow
 import org.assertj.swing.edt.GuiActionRunner.execute
+import org.awaitility.Awaitility.await
+import java.time.Duration.ofSeconds
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleRole
 
@@ -14,22 +16,30 @@ class EditCurrentKbControlPO(private val contextProvider: () -> AccessibleContex
 
     fun showDescriptionOperator(): KbDescriptionOperator {
         expandDropdownMenu()
-        Thread.sleep(5_000)
         clickDropdownItem(EDIT_KB_DESCRIPTION_BUTTON_TEXT)
-        Thread.sleep(5_000)
-        val dialog = findComposeDialogThatIsShowing()
-        return KbDescriptionOperator(dialog!!)
+        return KbDescriptionOperator(waitForComposeDialogToShow())
     }
 
     private fun expandDropdownMenu() {
         execute { contextProvider().findAndClick(KB_CONTROL_DROPDOWN_DESCRIPTION) }
     }
 
+    /**
+     * Waits for the popup item to appear in the accessibility tree before
+     * clicking it. The popup is realized asynchronously, so a single lookup
+     * right after expanding can race ahead of it.
+     */
     private fun clickDropdownItem(description: String) {
-        execute {
-            val dropDown =
-                contextProvider().find(KBS_DROPDOWN_DESCRIPTION, AccessibleRole.COMBO_BOX)
-            dropDown!!.findAndClick(description)
-        }
+        val item = await().atMost(ofSeconds(10)).until(
+            {
+                execute<AccessibleContext?> {
+                    contextProvider()
+                        .find(KBS_DROPDOWN_DESCRIPTION, AccessibleRole.COMBO_BOX)
+                        ?.find(description)
+                }
+            },
+            { it != null }
+        )!!
+        execute { item.accessibleAction.doAccessibleAction(0) }
     }
 }
