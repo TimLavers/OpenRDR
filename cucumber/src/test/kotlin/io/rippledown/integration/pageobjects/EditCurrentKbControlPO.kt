@@ -1,9 +1,9 @@
 package io.rippledown.integration.pageobjects
 
-import io.rippledown.constants.kb.EDIT_CURRENT_KB_CONTROL_DROPDOWN_BUTTON_DESCRIPTION
-import io.rippledown.constants.kb.EDIT_CURRENT_KB_CONTROL_DROPDOWN_DESCRIPTION
 import io.rippledown.constants.kb.EDIT_KB_DESCRIPTION_BUTTON_TEXT
+import io.rippledown.constants.kb.KB_CONTROL_DROPDOWN_DESCRIPTION
 import io.rippledown.constants.kb.UNDO_LAST_RULE_BUTTON_TEXT
+import io.rippledown.constants.main.KBS_DROPDOWN_DESCRIPTION
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAndClick
 import io.rippledown.integration.utils.findComposeDialogThatIsShowing
@@ -41,13 +41,13 @@ class EditCurrentKbControlPO(private val contextProvider: () -> AccessibleContex
     }
 
     private fun expandDropdownMenu() {
-        execute { contextProvider().findAndClick(EDIT_CURRENT_KB_CONTROL_DROPDOWN_BUTTON_DESCRIPTION) }
+        execute { contextProvider().findAndClick(KB_CONTROL_DROPDOWN_DESCRIPTION) }
     }
 
     private fun clickDropdownItem(description: String) {
         execute {
             val dropDown =
-                contextProvider().find(EDIT_CURRENT_KB_CONTROL_DROPDOWN_DESCRIPTION, AccessibleRole.COMBO_BOX)
+                contextProvider().find(KBS_DROPDOWN_DESCRIPTION, AccessibleRole.COMBO_BOX)
             dropDown!!.findAndClick(description)
         }
     }

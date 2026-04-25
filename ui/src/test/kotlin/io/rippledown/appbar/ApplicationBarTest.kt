@@ -37,7 +37,7 @@ class ApplicationBarTest {
                 ApplicationBar(bondiInfo, handler = handler)
             }
             assertKbNameIs(bondiInfo.name)
-            onNodeWithTag(testTag = KB_NAME_ID).assertExists()
+            onNodeWithTag(testTag = KB_NAME_ID, useUnmergedTree = true).assertExists()
         }
     }
 

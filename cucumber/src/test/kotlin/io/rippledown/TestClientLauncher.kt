@@ -52,6 +52,7 @@ class TestClientLauncher {
                     state = WindowState(size = windowSize)//allow for resizing
                 ) {
                     composeWindow = this.window
+                    applyAppIcon(this.window)
                     OpenRDRUI(handler, dispatcher = Unconfined)
                 }
             }

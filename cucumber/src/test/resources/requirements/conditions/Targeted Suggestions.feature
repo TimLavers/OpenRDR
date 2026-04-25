@@ -5,6 +5,7 @@ Feature: Suggested conditions should be targeted to the rule action.
     Given a case with name Einstein is stored on the server
     And a cornerstone case with name Planck is stored on the server
     And I start the client application
+    And pause
     And I request that the comment "Abnormal haemoglobin" be added
     And the case Planck is shown as the cornerstone case
     When I provide only the following reason:
