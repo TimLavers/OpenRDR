@@ -6,13 +6,15 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import io.rippledown.constants.kb.*
+import io.rippledown.constants.kb.EDIT_KB_DESCRIPTION_BUTTON_TEXT
+import io.rippledown.constants.kb.KB_CONTROL_DROPDOWN_DESCRIPTION
+import io.rippledown.constants.kb.KB_NAME_ID
+import io.rippledown.constants.kb.NO_KB_SELECTED
 import io.rippledown.constants.main.CREATE_KB_FROM_SAMPLE_TEXT
 import io.rippledown.constants.main.CREATE_KB_TEXT
 import io.rippledown.constants.main.EXPORT_KB_TEXT
 import io.rippledown.constants.main.IMPORT_KB_TEXT
 import io.rippledown.model.KBInfo
-import io.rippledown.model.rule.UndoRuleDescription
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -32,7 +34,6 @@ class KbAnchorMenuTest {
     private val glucoseInfo = KBInfo("glucose_id", "Glucose")
     private val bondiInfo = KBInfo("bondi_id", "Bondi")
 
-    private val undoDescription = UndoRuleDescription("Not a bad rule!", true)
     private val kbDescription = "A knowledge base about water quality"
 
     private lateinit var handler: AppBarHandler
@@ -42,7 +43,6 @@ class KbAnchorMenuTest {
         handler = mockk<AppBarHandler>(relaxed = true)
         every { handler.kbList } returns { emptyList() }
         every { handler.kbDescription } returns { kbDescription }
-        every { handler.lastRuleDescription } returns { undoDescription }
     }
 
     // -----------------------------------------------------------------------
@@ -79,7 +79,6 @@ class KbAnchorMenuTest {
         with(composeTestRule) {
             assertCreateKbMenuItemIsNotShowing()
             assertKbDescriptionMenuItemIsNotShowing()
-            assertUndoLastRuleMenuItemIsNotShowing()
         }
     }
 
@@ -94,7 +93,6 @@ class KbAnchorMenuTest {
         //Then all top-level menu items appear
         with(composeTestRule) {
             assertEditKbDescriptionMenuItemIsShowing()
-            onNodeWithText(UNDO_LAST_RULE_BUTTON_TEXT).assertIsEnabled()
             assertCreateKbMenuItemIsShowing()
             assertCreateKbFromSampleMenuItemIsShowing()
             assertImportKbMenuItemIsShowing()
@@ -119,7 +117,6 @@ class KbAnchorMenuTest {
         //invoked without a current KB.)
         with(composeTestRule) {
             onNodeWithText(EDIT_KB_DESCRIPTION_BUTTON_TEXT).assertIsEnabled()
-            onNodeWithText(UNDO_LAST_RULE_BUTTON_TEXT).assertIsEnabled()
             onNodeWithText(CREATE_KB_TEXT).assertIsEnabled()
             onNodeWithText(CREATE_KB_FROM_SAMPLE_TEXT).assertIsEnabled()
             onNodeWithText(IMPORT_KB_TEXT).assertIsEnabled()
@@ -217,19 +214,6 @@ class KbAnchorMenuTest {
 
         //When the KB description item is clicked
         composeTestRule.clickKbDescriptionMenuItem()
-
-        //Then the other dropdown items are no longer showing
-        composeTestRule.assertCreateKbMenuItemIsNotShowing()
-    }
-
-    @Test
-    fun `should close the dropdown when Undo last rule is clicked`() = runTest {
-        //Given an open menu
-        composeTestRule.setContent { KbAnchorMenu(bondiInfo, handler) }
-        composeTestRule.clickDropdown()
-
-        //When the Undo item is clicked
-        composeTestRule.clickUndoLastRuleMenuItem()
 
         //Then the other dropdown items are no longer showing
         composeTestRule.assertCreateKbMenuItemIsNotShowing()

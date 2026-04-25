@@ -2,7 +2,6 @@ package io.rippledown.integration.pageobjects
 
 import io.rippledown.constants.kb.EDIT_KB_DESCRIPTION_BUTTON_TEXT
 import io.rippledown.constants.kb.KB_CONTROL_DROPDOWN_DESCRIPTION
-import io.rippledown.constants.kb.UNDO_LAST_RULE_BUTTON_TEXT
 import io.rippledown.constants.main.KBS_DROPDOWN_DESCRIPTION
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAndClick
@@ -20,24 +19,6 @@ class EditCurrentKbControlPO(private val contextProvider: () -> AccessibleContex
         Thread.sleep(5_000)
         val dialog = findComposeDialogThatIsShowing()
         return KbDescriptionOperator(dialog!!)
-    }
-
-    fun showUndoLastRuleOperator(): UndoLastRuleOperator {
-        expandDropdownMenuWithRetry()
-        Thread.sleep(5_000)
-        clickDropdownItem(UNDO_LAST_RULE_BUTTON_TEXT)
-        Thread.sleep(5_000)
-        val dialog = findComposeDialogThatIsShowing()
-        return UndoLastRuleOperator(dialog!!)
-    }
-
-    private fun expandDropdownMenuWithRetry() {
-        try {
-            expandDropdownMenu()
-        } catch (e: Exception) {
-            Thread.sleep(5000)
-            expandDropdownMenu()
-        }
     }
 
     private fun expandDropdownMenu() {

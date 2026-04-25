@@ -28,7 +28,6 @@ import io.rippledown.model.KBInfo
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.rule.CornerstoneStatus
-import io.rippledown.model.rule.UndoRuleDescription
 import io.rippledown.sample.SampleKB
 import kotlinx.coroutines.*
 import org.jetbrains.skiko.MainUIDispatcher
@@ -200,16 +199,6 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                 }
                 override var kbDescription: () -> String = {
                     runBlocking(dispatcher) { api.kbDescription() }
-                }
-                override var lastRuleDescription: () -> UndoRuleDescription = { runBlocking { api.lastRuleDescription() } }
-                override var undoLastRule: () -> Unit = {
-                    runBlocking {
-                        api.undoLastRule()
-                        if (currentCaseId != null) {
-                            currentCase = api.getCase(currentCaseId!!)
-                            ++chatId
-                        }
-                    }
                 }
             })
         },

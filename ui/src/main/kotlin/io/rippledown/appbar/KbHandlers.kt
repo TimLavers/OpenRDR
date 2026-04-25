@@ -1,7 +1,6 @@
 package io.rippledown.appbar
 
 import io.rippledown.model.KBInfo
-import io.rippledown.model.rule.UndoRuleDescription
 import io.rippledown.sample.SampleKB
 import java.io.File
 
@@ -19,6 +18,4 @@ interface KBControlHandler {
 interface KbEditControlHandler {
     var setKbDescription: (name: String) -> Unit
     var kbDescription: () -> String
-    var lastRuleDescription: () -> UndoRuleDescription
-    var undoLastRule: () -> Unit
 }

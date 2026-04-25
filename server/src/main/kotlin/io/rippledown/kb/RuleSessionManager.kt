@@ -157,7 +157,7 @@ class RuleSessionManager(
 
     override fun selectCornerstoneCase(index: Int) = selectCornerstone(index)
 
-    fun descriptionOfMostRecentRule(): UndoRuleDescription {
+    override fun descriptionOfMostRecentRule(): UndoRuleDescription {
         val record = kb.ruleSessionRecorder.idsOfRulesAddedInMostRecentSession()
             ?: return UndoRuleDescription("There are no rules to undo.", false)
         val idOfExemplar = record.idsOfRulesAddedInSession.random()

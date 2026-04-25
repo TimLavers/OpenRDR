@@ -44,7 +44,6 @@ fun KbAnchorMenu(kbInfo: KBInfo?, handler: AppBarHandler) {
     var importKbDialog by remember { mutableStateOf(false) }
     var exportKbDialog by remember { mutableStateOf(false) }
     var kbDescriptionDialog by remember { mutableStateOf(false) }
-    var undoLastRuleDialog by remember { mutableStateOf(false) }
 
     val availableKBs = remember { mutableStateListOf<KBInfo>() }
     LaunchedEffect(kbInfo) {
@@ -78,11 +77,6 @@ fun KbAnchorMenu(kbInfo: KBInfo?, handler: AppBarHandler) {
         onDismiss = { kbDescriptionDialog = false },
         onSave = { handler.setKbDescription(it); kbDescriptionDialog = false }
     )
-    if (undoLastRuleDialog) UndoLastRuleDialog(
-        description = handler.lastRuleDescription(),
-        onDismiss = { undoLastRuleDialog = false },
-        onUndo = { handler.undoLastRule(); undoLastRuleDialog = false }
-    )
 
     Box(
         Modifier
@@ -107,11 +101,6 @@ fun KbAnchorMenu(kbInfo: KBInfo?, handler: AppBarHandler) {
                 text = EDIT_KB_DESCRIPTION_BUTTON_TEXT,
                 description = EDIT_KB_DESCRIPTION_BUTTON_TEXT,
                 onClick = { expanded = false; kbDescriptionDialog = true }
-            )
-            MenuItem(
-                text = UNDO_LAST_RULE_BUTTON_TEXT,
-                description = UNDO_LAST_RULE_BUTTON_TEXT,
-                onClick = { expanded = false; undoLastRuleDialog = true }
             )
 
             Divider(startIndent = 2.dp, thickness = 1.dp)
@@ -307,18 +296,3 @@ private fun KbDescriptionDialog(
     }
 }
 
-@Composable
-private fun UndoLastRuleDialog(
-    description: io.rippledown.model.rule.UndoRuleDescription,
-    onDismiss: () -> Unit,
-    onUndo: () -> Unit,
-) {
-    val state = rememberDialogState(size = DpSize(640.dp, 280.dp))
-    DialogWindow(onCloseRequest = onDismiss, title = UNDO_LAST_RULE_MENU_ITEM, state = state) {
-        UndoRuleDescriptionDisplay(object : UndoRuleDescriptionDisplayHandler {
-            override fun description() = description
-            override fun cancel() = onDismiss()
-            override fun undoLastRule() = onUndo()
-        })
-    }
-}
