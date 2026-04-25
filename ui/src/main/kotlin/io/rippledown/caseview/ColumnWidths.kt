@@ -6,7 +6,8 @@ class ColumnWidths(numberOfDates: Int) {
             "There must be a positive number of columns (i.e. dates)."
         }
     }
-    val attributeColumnWeight = 0.2F
+
+    val attributeColumnWeight = 0.3F
     val referenceRangeColumnWeight = 0.2F
     private val dataColumnWeight = ((1.0 - attributeColumnWeight - referenceRangeColumnWeight) / numberOfDates).toFloat()
 

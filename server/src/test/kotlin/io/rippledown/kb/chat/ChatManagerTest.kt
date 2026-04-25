@@ -9,11 +9,13 @@ import io.mockk.mockk
 import io.rippledown.chat.ConversationService
 import io.rippledown.constants.chat.*
 import io.rippledown.kb.chat.ChatManager.Companion.AI_UNAVAILABLE_MESSAGE
+import io.rippledown.kb.chat.ChatManager.Companion.CURRENT_CORNERSTONE_STATUS_PREFIX
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_CONVERSATION_RESPONSE
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
+import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.toJsonString
 import kotlinx.coroutines.test.runTest
 import org.slf4j.Logger
@@ -38,6 +40,7 @@ class ChatManagerTest {
         viewableCase = mockk()
         case = mockk()
         every { viewableCase.case } returns case
+        every { ruleService.isRuleSessionActive() } returns false
         chatManager = ChatManager(conversationService, ruleService)
         setupLogger()
     }
@@ -388,6 +391,40 @@ class ChatManagerTest {
         chatManager.response("blah")
 
         coVerify { ruleService.moveAttributeTo("Glucose",  "Lipids") }
+    }
+
+    @Test
+    fun `should prepend the current cornerstone status to user messages while a rule session is active`() = runTest {
+        // Given
+        every { ruleService.isRuleSessionActive() } returns true
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
+        val responseFromModel = ActionComment(USER_ACTION, message = "ok").toJsonString()
+        coEvery { conversationService.response(any<String>()) } returns responseFromModel
+
+        // When
+        chatManager.response("no")
+
+        // Then - the model receives the current cornerstone status alongside the user's message,
+        // so it can never act on a stale Total from earlier in the conversation.
+        coVerify {
+            conversationService.response(match<String> {
+                it.startsWith(CURRENT_CORNERSTONE_STATUS_PREFIX) && it.endsWith("\nno")
+            })
+        }
+    }
+
+    @Test
+    fun `should not prepend cornerstone status when no rule session is active`() = runTest {
+        // Given
+        every { ruleService.isRuleSessionActive() } returns false
+        val responseFromModel = ActionComment(USER_ACTION, message = "hi").toJsonString()
+        coEvery { conversationService.response(any<String>()) } returns responseFromModel
+
+        // When
+        chatManager.response("hello")
+
+        // Then
+        coVerify { conversationService.response("hello") }
     }
 
     @Test

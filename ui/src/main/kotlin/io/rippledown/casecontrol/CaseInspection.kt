@@ -1,6 +1,9 @@
 package io.rippledown.casecontrol
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -19,20 +22,24 @@ fun CaseInspection(
     case: ViewableCase,
     diff: Diff? = null,
     ruleConditions: List<String> = emptyList(),
-    handler: CaseInspectionHandler
+    handler: CaseInspectionHandler,
+    modifier: Modifier = Modifier
 ) {
     Column(
         verticalArrangement = Arrangement.Top,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxHeight()
             .padding(start = 5.dp)
-            .width(500.dp)
     ) {
-        CaseView(case, handler = object : CaseViewHandler {
-            override fun swapAttributes(moved: Attribute, target: Attribute) {
-                handler.swapAttributes(moved, target)
-            }
-        })
+        CaseView(
+            case = case,
+            handler = object : CaseViewHandler {
+                override fun swapAttributes(moved: Attribute, target: Attribute) {
+                    handler.swapAttributes(moved, target)
+                }
+            },
+            modifier = Modifier.weight(1f, fill = false)
+        )
         InterpretationView(
             interpretation = case.viewableInterpretation,
             diff = diff,

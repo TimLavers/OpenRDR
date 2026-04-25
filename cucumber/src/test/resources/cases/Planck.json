@@ -1,0 +1,861 @@
+{
+  "caseName": "Planck",
+  "data": [
+    {
+      "name": "Patient Name",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "Max Planck"
+      },
+      "referenceRange": null,
+      "units": null
+    },
+    {
+      "name": "Address",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "Wangenheimstrasse 21, Berlin, 14193"
+      },
+      "referenceRange": null,
+      "units": null
+    },
+    {
+      "name": "DOB",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "23/04/1858"
+      },
+      "referenceRange": null,
+      "units": null
+    },
+    {
+      "name": "Sex",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "M"
+      },
+      "referenceRange": null,
+      "units": null
+    },
+    {
+      "name": "Tel",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "0408662607"
+      },
+      "referenceRange": null,
+      "units": null
+    },
+    {
+      "name": "Ref",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "6626000"
+      },
+      "referenceRange": null,
+      "units": null
+    },
+    {
+      "name": "Lab No",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "25-82422904"
+      },
+      "referenceRange": null,
+      "units": null
+    },
+    {
+      "name": "Referring Doctor",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "Dr Marie Curie"
+      },
+      "referenceRange": null,
+      "units": null
+    },
+    {
+      "name": "Clinical Notes",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "cvd risk factors review. mild fatigue, on atorvastatin"
+      },
+      "referenceRange": null,
+      "units": null
+    },
+    {
+      "name": "HAEMOGLOBIN",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "139"
+      },
+      "referenceRange": {
+        "lowerString": "130",
+        "upperString": "180"
+      },
+      "units": "g/L"
+    },
+    {
+      "name": "RBC",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "4.6"
+      },
+      "referenceRange": {
+        "lowerString": "4.3",
+        "upperString": "6.5"
+      },
+      "units": "10^12/L"
+    },
+    {
+      "name": "HCT",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "0.42"
+      },
+      "referenceRange": {
+        "lowerString": "0.40",
+        "upperString": "0.54"
+      },
+      "units": null
+    },
+    {
+      "name": "MCV",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "91.3"
+      },
+      "referenceRange": {
+        "lowerString": "80.0",
+        "upperString": "100.0"
+      },
+      "units": "fL"
+    },
+    {
+      "name": "MCH",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "30"
+      },
+      "referenceRange": {
+        "lowerString": "27",
+        "upperString": "34"
+      },
+      "units": "pg"
+    },
+    {
+      "name": "MCHC",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "331"
+      },
+      "referenceRange": {
+        "lowerString": "300",
+        "upperString": "360"
+      },
+      "units": "g/L"
+    },
+    {
+      "name": "RDW",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "12.4"
+      },
+      "referenceRange": {
+        "lowerString": "10.0",
+        "upperString": "15.0"
+      },
+      "units": "%"
+    },
+    {
+      "name": "WCC",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "5.2"
+      },
+      "referenceRange": {
+        "lowerString": "4.0",
+        "upperString": "11.0"
+      },
+      "units": "10^9/L"
+    },
+    {
+      "name": "Neutrophils",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "2.8"
+      },
+      "referenceRange": {
+        "lowerString": "2.0",
+        "upperString": "8.0"
+      },
+      "units": "10^9/L"
+    },
+    {
+      "name": "Lymphocytes",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "1.9"
+      },
+      "referenceRange": {
+        "lowerString": "1.0",
+        "upperString": "4.0"
+      },
+      "units": "10^9/L"
+    },
+    {
+      "name": "Monocytes",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "0.4"
+      },
+      "referenceRange": {
+        "lowerString": "0.1",
+        "upperString": "1.1"
+      },
+      "units": "10^9/L"
+    },
+    {
+      "name": "Eosinophils",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "0.1"
+      },
+      "referenceRange": {
+        "lowerString": null,
+        "upperString": "0.9"
+      },
+      "units": "10^9/L"
+    },
+    {
+      "name": "Basophils",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "0.0"
+      },
+      "referenceRange": {
+        "lowerString": null,
+        "upperString": "0.3"
+      },
+      "units": "10^9/L"
+    },
+    {
+      "name": "PLATELETS",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "244"
+      },
+      "referenceRange": {
+        "lowerString": "150",
+        "upperString": "450"
+      },
+      "units": "10^9/L"
+    },
+    {
+      "name": "MPV",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "10.6"
+      },
+      "referenceRange": {
+        "lowerString": "6.5",
+        "upperString": "15.0"
+      },
+      "units": "fL"
+    },
+    {
+      "name": "FBC Comment",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "No abnormalities detected."
+      },
+      "referenceRange": null,
+      "units": null
+    },
+    {
+      "name": "Sodium",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "139"
+      },
+      "referenceRange": {
+        "lowerString": "135",
+        "upperString": "145"
+      },
+      "units": "mmol/L"
+    },
+    {
+      "name": "Potassium",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "4.2"
+      },
+      "referenceRange": {
+        "lowerString": "3.5",
+        "upperString": "5.3"
+      },
+      "units": "mmol/L"
+    },
+    {
+      "name": "Chloride",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "104"
+      },
+      "referenceRange": {
+        "lowerString": "95",
+        "upperString": "110"
+      },
+      "units": "mmol/L"
+    },
+    {
+      "name": "Bicarbonate",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "27"
+      },
+      "referenceRange": {
+        "lowerString": "22",
+        "upperString": "32"
+      },
+      "units": "mmol/L"
+    },
+    {
+      "name": "Anion Gap",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "12"
+      },
+      "referenceRange": {
+        "lowerString": "8",
+        "upperString": "19"
+      },
+      "units": "mmol/L"
+    },
+    {
+      "name": "Urea",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "5.8"
+      },
+      "referenceRange": {
+        "lowerString": "3.2",
+        "upperString": "8.2"
+      },
+      "units": "mmol/L"
+    },
+    {
+      "name": "Creatinine",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "88"
+      },
+      "referenceRange": {
+        "lowerString": "60",
+        "upperString": "110"
+      },
+      "units": "umol/L"
+    },
+    {
+      "name": "eGFR",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "78"
+      },
+      "referenceRange": {
+        "lowerString": "59",
+        "upperString": null
+      },
+      "units": null
+    },
+    {
+      "name": "Urate",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "0.31"
+      },
+      "referenceRange": {
+        "lowerString": "0.20",
+        "upperString": "0.45"
+      },
+      "units": "mmol/L"
+    },
+    {
+      "name": "Total Protein",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "68"
+      },
+      "referenceRange": {
+        "lowerString": "60",
+        "upperString": "80"
+      },
+      "units": "g/L"
+    },
+    {
+      "name": "Globulin",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "28"
+      },
+      "referenceRange": {
+        "lowerString": "23",
+        "upperString": "39"
+      },
+      "units": "g/L"
+    },
+    {
+      "name": "Albumin",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "40"
+      },
+      "referenceRange": {
+        "lowerString": "34",
+        "upperString": "50"
+      },
+      "units": "g/L"
+    },
+    {
+      "name": "Bilirubin Total",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "11"
+      },
+      "referenceRange": {
+        "lowerString": null,
+        "upperString": "21"
+      },
+      "units": "umol/L"
+    },
+    {
+      "name": "Alk. Phosphatase",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "71"
+      },
+      "referenceRange": {
+        "lowerString": "30",
+        "upperString": "110"
+      },
+      "units": "U/L"
+    },
+    {
+      "name": "Gamma GT",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "22"
+      },
+      "referenceRange": {
+        "lowerString": null,
+        "upperString": "51"
+      },
+      "units": "U/L"
+    },
+    {
+      "name": "ALT",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "24"
+      },
+      "referenceRange": {
+        "lowerString": null,
+        "upperString": "40"
+      },
+      "units": "U/L"
+    },
+    {
+      "name": "AST",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "27"
+      },
+      "referenceRange": {
+        "lowerString": null,
+        "upperString": "35"
+      },
+      "units": "U/L"
+    },
+    {
+      "name": "CK",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "143"
+      },
+      "referenceRange": {
+        "lowerString": "40",
+        "upperString": "200"
+      },
+      "units": "U/L"
+    },
+    {
+      "name": "Calcium",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "2.31"
+      },
+      "referenceRange": {
+        "lowerString": "2.10",
+        "upperString": "2.60"
+      },
+      "units": "mmol/L"
+    },
+    {
+      "name": "Adj. Calcium",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "2.33"
+      },
+      "referenceRange": {
+        "lowerString": "2.10",
+        "upperString": "2.60"
+      },
+      "units": "mmol/L"
+    },
+    {
+      "name": "Phosphate",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "1.12"
+      },
+      "referenceRange": {
+        "lowerString": "0.75",
+        "upperString": "1.50"
+      },
+      "units": "mmol/L"
+    },
+    {
+      "name": "Haemolysis",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "-"
+      },
+      "referenceRange": null,
+      "units": null
+    },
+    {
+      "name": "Icterus",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "-"
+      },
+      "referenceRange": null,
+      "units": null
+    },
+    {
+      "name": "Lipaemia",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "-"
+      },
+      "referenceRange": null,
+      "units": null
+    },
+    {
+      "name": "Glucose Fasting",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "5.1"
+      },
+      "referenceRange": {
+        "lowerString": "3.0",
+        "upperString": "5.4"
+      },
+      "units": "mmol/L"
+    },
+    {
+      "name": "Glucose Comment",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "Diabetes unlikely (no documented laboratory history of diabetes). Retest every 3 years if low risk."
+      },
+      "referenceRange": null,
+      "units": null
+    },
+    {
+      "name": "C-Reactive Prot.",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "1.4"
+      },
+      "referenceRange": {
+        "lowerString": null,
+        "upperString": "3.3"
+      },
+      "units": "mg/L"
+    },
+    {
+      "name": "CRP Comment",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "Please note change of Reference Range from 06/6/2025."
+      },
+      "referenceRange": null,
+      "units": null
+    },
+    {
+      "name": "Lipid Status",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "Fasting"
+      },
+      "referenceRange": null,
+      "units": null
+    },
+    {
+      "name": "Cholesterol",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "4.6"
+      },
+      "referenceRange": {
+        "lowerString": null,
+        "upperString": "5.6"
+      },
+      "units": "mmol/L"
+    },
+    {
+      "name": "Triglyceride",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "1.1"
+      },
+      "referenceRange": {
+        "lowerString": null,
+        "upperString": "2.1"
+      },
+      "units": "mmol/L"
+    },
+    {
+      "name": "HDL-c",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "1.7"
+      },
+      "referenceRange": {
+        "lowerString": "0.9",
+        "upperString": null
+      },
+      "units": "mmol/L"
+    },
+    {
+      "name": "LDL-c",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "2.4"
+      },
+      "referenceRange": {
+        "lowerString": null,
+        "upperString": "3.1"
+      },
+      "units": "mmol/L"
+    },
+    {
+      "name": "TC/HDL-c",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "2.7"
+      },
+      "referenceRange": {
+        "lowerString": null,
+        "upperString": "4.5"
+      },
+      "units": null
+    },
+    {
+      "name": "Non-HDL-c",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "2.9"
+      },
+      "referenceRange": {
+        "lowerString": null,
+        "upperString": "4.1"
+      },
+      "units": "mmol/L"
+    },
+    {
+      "name": "25-OH Vit D",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "62"
+      },
+      "referenceRange": {
+        "lowerString": "50",
+        "upperString": "200"
+      },
+      "units": "nmol/L"
+    },
+    {
+      "name": "PSA Total(Siemens)",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "0.47"
+      },
+      "referenceRange": {
+        "lowerString": "0.30",
+        "upperString": "6.50"
+      },
+      "units": "ug/L"
+    },
+    {
+      "name": "PSA Comment",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "In men aged 70 years and over, the median total PSA is 1.5 ug/L. PSA result is consistent with low risk of prostatic neoplasia. Recommend offering further review of PSA in 2 years if the risk/benefit has been explained to the patient."
+      },
+      "referenceRange": null,
+      "units": null
+    },
+    {
+      "name": "TSH",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "2.15"
+      },
+      "referenceRange": {
+        "lowerString": "0.50",
+        "upperString": "4.00"
+      },
+      "units": "mIU/L"
+    },
+    {
+      "name": "Thyroid Comment",
+      "time": 1762203900000
+    },
+    {
+      "value": {
+        "text": "Euthyroid."
+      },
+      "referenceRange": null,
+      "units": null
+    }
+  ]
+}

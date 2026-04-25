@@ -1,6 +1,7 @@
 package io.rippledown.caseview
 
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -8,6 +9,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import io.rippledown.constants.caseview.ATTRIBUTE_CELL_DESCRIPTION_PREFIX
 import io.rippledown.model.Attribute
 
@@ -16,6 +18,7 @@ fun RowScope.AttributeCell(index: Int, caseName: String, attribute: Attribute, c
     Text(
         text = attribute.name,
         modifier = Modifier.weight(columnWidths.attributeColumnWeight)
+            .padding(end = 12.dp)
             .semantics {
                 contentDescription = attributeCellContentDescription(index, caseName)
             },

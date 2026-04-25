@@ -25,6 +25,10 @@ class LabProxy(tempDir: File, val restProxy: RESTClient) {
         val data = readCaseData(caseName)
         provideCaseFromString(data)
     }
+    fun provideCornerstoneCase(caseName: String) {
+        val data = readCaseData(caseName)
+        provideCornerstoneCaseFromString(data)
+    }
 
     private fun readCaseData(caseName: String) = ConfiguredTestData.caseFile(caseName).readText()
 
@@ -32,6 +36,11 @@ class LabProxy(tempDir: File, val restProxy: RESTClient) {
         val jsonBuilder = Json { allowStructuredMapKeys = true }
         val case: ExternalCase = jsonBuilder.decodeFromString(data)
         restProxy.provideCase(case)
+    }
+    private fun provideCornerstoneCaseFromString(data: String) {
+        val jsonBuilder = Json { allowStructuredMapKeys = true }
+        val case: ExternalCase = jsonBuilder.decodeFromString(data)
+        restProxy.addCornerstoneCase(case)
     }
 
     fun provideCaseWithName(caseName: String) {

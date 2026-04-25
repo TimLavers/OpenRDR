@@ -1,8 +1,6 @@
 package io.rippledown.caseview
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -10,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.caseview.CASEVIEW_CASE_NAME_ID
@@ -27,27 +26,36 @@ interface CaseViewHandler {
  *  ORD2
  */
 @Composable
-fun CaseView(case: ViewableCase, handler: CaseViewHandler) {
+fun CaseView(case: ViewableCase, handler: CaseViewHandler, modifier: Modifier = Modifier) {
+    val columnWidths = ColumnWidths(case.numberOfColumns)
     Column(
-        modifier = Modifier
+        modifier = modifier
             .semantics {
                 contentDescription = CASE_HEADING
             },
     ) {
-        Text(
-            text = case.name,
-            style = MaterialTheme.typography.subtitle1,
-            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-            color = MaterialTheme.colors.primary,
-            textAlign = TextAlign.Start,
-            modifier = Modifier
-                .testTag("$CASEVIEW_CASE_NAME_ID${case.name}")
-                .semantics {
-                    contentDescription = CASEVIEW_CASE_NAME_ID
-                }
-        )
-        Spacer(modifier = Modifier.height(10.dp))
-        CaseTable(case) { a: Attribute, b: Attribute ->
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = case.name,
+                style = MaterialTheme.typography.subtitle1,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colors.onSurface,
+                textAlign = TextAlign.End,
+                modifier = Modifier
+                    .weight(columnWidths.attributeColumnWeight)
+                    .padding(end = 12.dp)
+                    .testTag("$CASEVIEW_CASE_NAME_ID${case.name}")
+                    .semantics {
+                        contentDescription = CASEVIEW_CASE_NAME_ID
+                    }
+            )
+            Spacer(modifier = Modifier.weight(1f - columnWidths.attributeColumnWeight))
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        CaseTable(
+            viewableCase = case,
+            modifier = Modifier.weight(1f, fill = false)
+        ) { a: Attribute, b: Attribute ->
             handler.swapAttributes(a, b)
         }
     }

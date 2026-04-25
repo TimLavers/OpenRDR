@@ -6,6 +6,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.width
 import io.kotest.matchers.shouldBe
+import io.rippledown.constants.caseview.CASE_VIEW_SCROLL_BAR
+import io.rippledown.constants.caseview.CASE_VIEW_TABLE
 import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.caseview.CaseViewProperties
@@ -84,6 +86,48 @@ class CaseTableTest {
             }
             dragged shouldBe ft4
             target shouldBe xyz
+        }
+    }
+
+    @Test
+    fun `vertical scrollbar is shown for the case view`() = runTest {
+        composeTestRule.setContent {
+            CaseTable(viewableCase) { _: Attribute, _: Attribute -> }
+        }
+        with(composeTestRule) {
+            waitUntilExactlyOneExists(hasContentDescription(CASE_VIEW_SCROLL_BAR))
+            onNodeWithContentDescription(CASE_VIEW_SCROLL_BAR).assertExists()
+        }
+    }
+
+    @Test
+    fun `can scroll to an attribute that is initially off screen`() = runTest {
+        // Build a case with many attributes so it must scroll.
+        val builder = RDRCaseBuilder()
+        val manyAttributes = (1..80).map { Attribute(100 + it, "Attr$it") }
+        manyAttributes.forEach { builder.addValue(it, defaultDate, "v${it.name}") }
+        val case = builder.build("BigCase")
+        val viewableBigCase = ViewableCase(case, CaseViewProperties(manyAttributes))
+
+        composeTestRule.setContent {
+            CaseTable(viewableBigCase) { _: Attribute, _: Attribute -> }
+        }
+        with(composeTestRule) {
+            // The first attribute is visible...
+            waitUntilExactlyOneExists(hasText("Attr1"))
+            onNodeWithText("Attr1").assertIsDisplayed()
+            // ...but an attribute near the bottom of the list is not yet displayed.
+            val lastAttributeName = manyAttributes.last().name
+            onAllNodesWithText(lastAttributeName).fetchSemanticsNodes().size shouldBe 0
+
+            // Scroll the case view to the last attribute.
+            onNodeWithContentDescription(CASE_VIEW_TABLE)
+                .onChildren()
+                .filterToOne(hasScrollAction())
+                .performScrollToNode(hasText(lastAttributeName))
+
+            waitUntilExactlyOneExists(hasText(lastAttributeName))
+            onNodeWithText(lastAttributeName).assertIsDisplayed()
         }
     }
 }

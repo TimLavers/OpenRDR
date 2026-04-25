@@ -41,8 +41,9 @@ class ChatManager(
 
     private suspend fun processConversationResponse(message: String): ChatResponse {
         logger.info("$LOG_PREFIX_FOR_USER_MESSAGE '$message'")
+        val messageToSend = augmentWithCornerstoneStatus(message)
         val response = try {
-            conversationService.response(message)
+            conversationService.response(messageToSend)
         } catch (e: Exception) {
             logger.error("Failed to send message: $message", e)
             return ChatResponse(AI_UNAVAILABLE_MESSAGE)
@@ -79,11 +80,18 @@ class ChatManager(
         }
     }
 
+    private fun augmentWithCornerstoneStatus(message: String): String {
+        if (!ruleService.isRuleSessionActive()) return message
+        val status = ruleService.cornerstoneStatus()
+        return "$CURRENT_CORNERSTONE_STATUS_PREFIX${status.summary()}]\n$message"
+    }
+
     companion object {
         const val LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE = "Start conversation response:"
         const val LOG_PREFIX_FOR_CONVERSATION_RESPONSE = "Conversation response:"
         const val LOG_PREFIX_FOR_USER_MESSAGE = "User message:"
         const val AI_UNAVAILABLE_MESSAGE = "The AI assistant is temporarily unavailable. Please try again later."
+        const val CURRENT_CORNERSTONE_STATUS_PREFIX = "[Current cornerstone status: "
     }
 }
 

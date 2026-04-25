@@ -2,11 +2,13 @@ package io.rippledown.caseview
 
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import io.mockk.every
 import io.mockk.mockk
-import io.rippledown.constants.caseview.ATTRIBUTE_HEADER_CELL_TEXT
+import io.rippledown.constants.caseview.ATTRIBUTE_HEADER_CELL_DESCRIPTION
+import io.rippledown.constants.caseview.REFERENCE_RANGE_HEADER_CELL_DESCRIPTION
 import io.rippledown.mocks.DummyLazyItemScope
 import io.rippledown.utils.lastWeek
 import io.rippledown.utils.today
@@ -30,10 +32,10 @@ class HeaderRowTest {
             HeaderRow( columnWidths, dates)
         }
         with(composeTestRule) {
-            waitUntilExactlyOneExists(hasText(ATTRIBUTE_HEADER_CELL_TEXT))
+            waitUntilExactlyOneExists(hasContentDescription(ATTRIBUTE_HEADER_CELL_DESCRIPTION))
             waitUntilExactlyOneExists(hasText(formatDate(lastWeek)))
             waitUntilExactlyOneExists(hasText(formatDate(today)))
-            waitUntilExactlyOneExists(hasText(""))
+            waitUntilExactlyOneExists(hasContentDescription(REFERENCE_RANGE_HEADER_CELL_DESCRIPTION))
         }
     }
 }

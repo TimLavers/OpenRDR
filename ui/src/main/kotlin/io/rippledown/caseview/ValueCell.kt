@@ -26,7 +26,7 @@ fun RowScope.ValueCell(
                 contentDescription = valueCellContentDescription(caseName, attribute.name, index)
             },
         fontWeight = FontWeight.Normal,
-        textAlign = TextAlign.Center
+        textAlign = TextAlign.Start
     )
 }
 

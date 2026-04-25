@@ -76,7 +76,7 @@ class PostgresCaseStore(private val db: Database): CaseStore {
         attributeProvider: AttributeProvider
     ) = PGCaseValue.find {
         PGCaseValues.caseId eq id
-    }.associateBy({ TestEvent(attributeProvider.getById(it.attributeId), it.date) }, { Result(it) })
+    }.associateBy({ Event(attributeProvider.getById(it.attributeId), it.date) }, { Result(it) })
 
     override fun delete(id: Long) {
         transaction(db) {
@@ -89,7 +89,7 @@ class PostgresCaseStore(private val db: Database): CaseStore {
     }
 
     /**
-     * The number of stored case data items (TestEvent, Result) pairs.
+     * The number of stored case data items (Event, Result) pairs.
      * Mainly provided for testing.
      */
     fun dataPointsCount() = transaction(db) {

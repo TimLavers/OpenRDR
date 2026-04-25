@@ -23,7 +23,7 @@ fun RowScope.DateCell(index: Int, date: Long, columnWidths: ColumnWidths) {
                 contentDescription = dateCellContentDescription(index)
             },
         fontWeight = FontWeight.Bold,
-        textAlign = TextAlign.Center
+        textAlign = TextAlign.Start
     )
 }
 

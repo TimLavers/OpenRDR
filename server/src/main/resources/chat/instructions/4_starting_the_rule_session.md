@@ -53,6 +53,10 @@ Cornerstone: <name of the current cornerstone case, or null>, Index: <index>, To
   comes later, only after the user has responded about reasons.
 - If the user provides a reason, follow the instructions "Defining the reasons for report change".
 - If the user declines to provide reasons:
-    - If the Total number of cornerstone cases from Step 2 is greater than 0, you MUST follow the instructions
+    - Use the **most recent** cornerstone status you have received (either the one from Step 2, or any
+      later status returned by {{TRANSFORM_REASON}} or {{SELECT_SUGGESTION}}, or the
+      `[Current cornerstone status: ...]` prefix on the latest user message). Adding a condition can eliminate
+      cornerstone cases, so the initial Total from Step 2 may now be out of date.
+    - If the most recent Total is greater than 0, you MUST follow the instructions
       "Allowing or Disallowing the change to the Cornerstone Case report". Do NOT skip this step.
     - Otherwise, follow the instructions "Completing the change to the report".

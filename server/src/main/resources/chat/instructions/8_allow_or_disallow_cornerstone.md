@@ -61,9 +61,13 @@
 
 - Once the change to the cornerstone case has been allowed or disallowed, the system will recalculate the
   cornerstone cases and send you a message in the format "Cornerstone: ..., Index: ..., Total: ...".
-- **IMPORTANT: Always check the Total value in the system message.** If Total > 0, there are remaining
-  cornerstone cases and you MUST repeat Step 1 for each one. Do NOT skip any cornerstone cases.
-  Do NOT commit the rule while there are remaining cornerstone cases.
+- **IMPORTANT: Always use the MOST RECENT cornerstone status.** Earlier conversation turns may show a
+  different Total — ignore those. The authoritative source, in order of preference, is:
+  1. the `[Current cornerstone status: ...]` prefix attached to the latest user message;
+  2. the cornerstone status returned by the most recent {{TRANSFORM_REASON}}, {{SELECT_SUGGESTION}},
+     {{EXEMPT_CORNERSTONE}}, {{NEXT_CORNERSTONE}} or {{PREVIOUS_CORNERSTONE}} call.
+     If the most recent Total > 0, there are remaining cornerstone cases and you MUST repeat Step 1 for each one.
+     Do NOT skip any cornerstone cases. Do NOT commit the rule while there are remaining cornerstone cases.
 - Only after ALL cornerstone cases have been reviewed (Total is 0):
   - If the user has already declined to provide reasons at any earlier point in the conversation
     (e.g. they said "no" when presented with suggestions, or said "no" when asked if they want to provide

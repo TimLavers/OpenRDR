@@ -9,9 +9,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.rippledown.caseview.CaseTable
+import io.rippledown.caseview.ColumnWidths
 import io.rippledown.constants.cornerstone.CORNERSTONE_CASE_NAME_ID
 import io.rippledown.constants.cornerstone.CORNERSTONE_ID
 import io.rippledown.constants.cornerstone.CORNERSTONE_TITLE
@@ -30,20 +32,22 @@ fun CornerstoneInspection(case: ViewableCase, index: Int = 0, total: Int = 0) {
             .padding(start = 5.dp)
             .width(500.dp)
     ) {
-        Row {
+        val columnWidths = ColumnWidths(case.numberOfColumns)
+        Row(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = case.name,
                 style = MaterialTheme.typography.subtitle1,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                color = MaterialTheme.colors.primary,
-                textAlign = TextAlign.Start,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colors.onSurface,
+                textAlign = TextAlign.End,
                 modifier = Modifier
                     .alignByBaseline()
+                    .weight(columnWidths.attributeColumnWeight)
+                    .padding(end = 12.dp)
                     .semantics {
                         contentDescription = CORNERSTONE_CASE_NAME_ID
                     }
             )
-            Spacer(modifier = Modifier.width(20.dp))
             val cornerstoneLabel = if (total > 0) "$CORNERSTONE_TITLE ${index + 1} of $total" else CORNERSTONE_TITLE
             Text(
                 text = cornerstoneLabel,
@@ -51,13 +55,17 @@ fun CornerstoneInspection(case: ViewableCase, index: Int = 0, total: Int = 0) {
                 textAlign = TextAlign.Start,
                 modifier = Modifier
                     .alignByBaseline()
+                    .weight(1f - columnWidths.attributeColumnWeight)
                     .semantics {
                         contentDescription = CORNERSTONE_ID
                     }
             )
         }
-        Spacer(modifier = Modifier.height(10.dp))
-        CaseTable(case)
+        Spacer(modifier = Modifier.height(16.dp))
+        CaseTable(
+            viewableCase = case,
+            modifier = Modifier.weight(1f, fill = false)
+        )
         OutlinedCard(
             modifier = Modifier.padding(vertical = 10.dp),
             colors = androidx.compose.material3.CardDefaults.outlinedCardColors(

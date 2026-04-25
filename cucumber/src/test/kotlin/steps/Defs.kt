@@ -79,8 +79,13 @@ class Defs {
     }
 
     @Given("a case with name {word} is stored on the server")
-    fun aCaseWithNameIsStoredOnTheServer(caseName: String) {
+    fun caseWithNameIsStoredOnTheServer(caseName: String) {
         labProxy().provideCase(caseName)
+    }
+
+    @Given("a cornerstone case with name {word} is stored on the server")
+    fun cornerstoneCaseWithNameIsStoredOnTheServer(caseName: String) {
+        labProxy().provideCornerstoneCase(caseName)
     }
 
     @Given("a list of {long} cases is stored on the server")
