@@ -51,12 +51,10 @@ Feature: Knowledge Base management
     Then I select the Knowledge Base named Stuff
     Then the displayed KB name is now Stuff
 
-  @single
   Scenario: The description for a KB can be edited
     Given A Knowledge Base called Irons has been created
     And A Knowledge Base called Glucose has been created
     And I start the client application
-    And pause
     And I select the Knowledge Base named Glucose
     Then the KB description is:
     """

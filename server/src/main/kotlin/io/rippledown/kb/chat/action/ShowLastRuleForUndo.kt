@@ -25,7 +25,7 @@ class ShowLastRuleForUndo : ChatAction {
             return ChatResponse(description.description)
         }
         val message = "The last rule was: \"${description.description}\".\n\n" +
-                "Reply \"yes\" to remove it, or anything else to cancel."
+                "Please confirm you wish to remove it."
         return ChatResponse(message)
     }
 }

@@ -12,10 +12,13 @@ Feature: Remove previous rules
     And the chatbot has asked if I want to add, remove or replace a comment
     When I enter the following text into the chat panel:
       | Please remove the previous rule |
+    And I confirm
     Then the report should be "Comment 1. Comment 2."
     When I enter the following text into the chat panel:
       | and again please |
+    And I confirm
     Then the report should be "Comment 1."
     When I enter the following text into the chat panel:
       | and again please |
+    And I confirm
     Then the report should be empty
