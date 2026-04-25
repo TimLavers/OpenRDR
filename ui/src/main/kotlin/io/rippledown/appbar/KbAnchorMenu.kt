@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
+import io.rippledown.constants.interpretation.OK
 import io.rippledown.constants.kb.*
 import io.rippledown.constants.main.*
 import io.rippledown.model.KBInfo
@@ -191,12 +192,15 @@ private fun MenuItem(
 ) {
     DropdownMenuItem(
         onClick = onClick,
-        modifier = Modifier.semantics(mergeDescendants = true) {
-            role = Button
-            contentDescription = description
-        }
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
+        modifier = Modifier
+            .height(28.dp)
+            .semantics(mergeDescendants = true) {
+                role = Button
+                contentDescription = description
+            }
     ) {
-        Text(text = text)
+        Text(text = text, style = MaterialTheme.typography.body2)
     }
 }
 
@@ -293,9 +297,9 @@ private fun KbDescriptionDialog(
         TextInputWithCancel(object : TextInputHandler {
             override fun isValidInput(input: String) = true
             override fun initialText() = initialDescription
-            override fun labelText() = EDIT_KB_DESCRIPTION_TEXT
+            override fun labelText() = ""
             override fun inputFieldDescription() = EDIT_KB_DESCRIPTION_TEXT_DESCRIPTION
-            override fun confirmButtonText() = EDIT
+            override fun confirmButtonText() = OK
             override fun confirmButtonDescription() = EDIT_KB_DESCRIPTION_OK_BUTTON_DESCRIPTION
             override fun handleInput(value: String) = onSave(value)
             override fun cancel() = onDismiss()
