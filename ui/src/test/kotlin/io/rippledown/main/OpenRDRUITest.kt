@@ -14,6 +14,7 @@ import io.rippledown.chat.requireChatPanelIsDisplayed
 import io.rippledown.chat.typeChatMessageAndClickSend
 import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import io.rippledown.constants.kb.CONFIRM_UNDO_LAST_RULE_TEXT
+import io.rippledown.constants.kb.UNDO_LAST_RULE_BUTTON_DESCRIPTION
 import io.rippledown.constants.main.APPLICATION_BAR_ID
 import io.rippledown.interpretation.requireInterpretation
 import io.rippledown.model.CaseId
@@ -935,9 +936,16 @@ class OpenRDRUITest {
         waitUntilExactlyOneExists(hasText(descriptionText), timeoutMillis = 5000)
         waitForIdle()
         clickUndoLastRule()
+        // The "Undo last rule" button toggles into a "Are you sure?" row.
+        // Wait for the button to disappear first (the actual state change)
+        // before asserting on the confirmation text, otherwise IDE-launched
+        // tests can race the DialogWindow's separate frame clock.
+        waitUntil(timeoutMillis = 5000) {
+            onAllNodesWithContentDescription(UNDO_LAST_RULE_BUTTON_DESCRIPTION)
+                .fetchSemanticsNodes().isEmpty()
+        }
         waitUntilExactlyOneExists(hasText(CONFIRM_UNDO_LAST_RULE_TEXT), timeoutMillis = 5000)
         waitForIdle()
-        assertUndoLastRuleButtonIsNotShowing()
         clickUndoLastRuleConfirmationYesButton()
     }
 }
