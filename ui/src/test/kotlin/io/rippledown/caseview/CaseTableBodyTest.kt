@@ -1,5 +1,8 @@
 package io.rippledown.caseview
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -101,7 +104,9 @@ class CaseTableBodyTest {
             val ft4Bounds = onNodeWithText(ft4.name).getBoundsInRoot()
             val xyzBounds = onNodeWithText(xyz.name).getBoundsInRoot()
             onNodeWithText(ft4.name).performMouseInput {
-                val relativeEnd = xyzBounds.center(density) - ft4Bounds.center(density)
+                // Drag a few pixels past XYZ's center so the dragged row's
+                // center is unambiguously past XYZ's midpoint.
+                val relativeEnd = xyzBounds.center(density) - ft4Bounds.center(density) + Offset(0f, 5f)
                 dragAndDrop(Offset(0f, 0f), relativeEnd)
             }
         }
@@ -109,6 +114,47 @@ class CaseTableBodyTest {
         // Then the listener is told FT4 was the dragged attribute and XYZ the target
         dragged shouldBe ft4
         target shouldBe xyz
+    }
+
+    @Test
+    fun `dragging after a case swap does not throw and reports against the new case`() = runTest {
+        // Given a body bound to a swappable case state, starting on a single-attribute case
+        val singleAttributeCase = run {
+            val builder = RDRCaseBuilder()
+            builder.addValue(tsh, defaultDate, "1.0")
+            ViewableCase(builder.build("Single"), CaseViewProperties(listOf(tsh)))
+        }
+        var dragged: Attribute? = null
+        var target: Attribute? = null
+        var current by mutableStateOf(singleAttributeCase)
+        composeTestRule.setContent {
+            val columnWidths = ColumnWidths(current.numberOfColumns)
+            CaseTableBody(current, columnWidths) { a, b ->
+                dragged = a
+                target = b
+            }
+        }
+        with(composeTestRule) {
+            waitUntilExactlyOneExists(hasText(tsh.name))
+
+            // When the case is swapped to one with several attributes
+            current = viewableCase
+            waitUntilExactlyOneExists(hasText(ft4.name))
+            waitUntilExactlyOneExists(hasText(xyz.name))
+
+            // And the user drags FT4 onto XYZ on the new case
+            val ft4Bounds = onNodeWithText(ft4.name).getBoundsInRoot()
+            val xyzBounds = onNodeWithText(xyz.name).getBoundsInRoot()
+            onNodeWithText(ft4.name).performMouseInput {
+                val relativeEnd = xyzBounds.center(density) - ft4Bounds.center(density) + Offset(0f, 5f)
+                dragAndDrop(Offset(0f, 0f), relativeEnd)
+            }
+
+            // Then the drag completes against the new case (no IndexOutOfBounds)
+            // and the listener fires for the swapped case's attributes.
+            dragged shouldBe ft4
+            target shouldBe xyz
+        }
     }
 
     @Test

@@ -3,9 +3,6 @@ package io.rippledown.caseview
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import io.rippledown.constants.caseview.CASE_VIEW_TABLE
 import io.rippledown.model.Attribute
 import io.rippledown.model.caseview.ViewableCase
 
@@ -22,7 +19,7 @@ fun CaseTable(
     attributeMoveListener: (Attribute, Attribute) -> Unit = { _, _ -> }
 ) {
     val columnWidths = ColumnWidths(viewableCase.numberOfColumns)
-    Column(modifier = modifier.semantics { contentDescription = CASE_VIEW_TABLE }) {
+    Column(modifier = modifier) {
         HeaderRow(columnWidths, viewableCase.dates)
         CaseTableBody(
             viewableCase = viewableCase,

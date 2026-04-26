@@ -5,16 +5,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import io.rippledown.constants.caseview.CASE_VIEW_TABLE
+import io.rippledown.dragdrop.DragDropState
 import io.rippledown.dragdrop.move
-import io.rippledown.dragdrop.rememberDragDropState
 import io.rippledown.model.Attribute
 import io.rippledown.model.caseview.ViewableCase
 
@@ -35,29 +37,42 @@ fun CaseTableBody(
     }
     var draggedAttribute: Attribute? = null
     var targetAttribute: Attribute? = null
-    val dragDropState = rememberDragDropState(
-        onDragStarted = {
-            draggedAttribute = attributes[it]
-            targetAttribute = null
-        },
-        onMove = { a, b ->
-            targetAttribute = attributes[b]
-            attributes.move(a, b)
-        },
-        onDragFinished = {
-            if (draggedAttribute != null && targetAttribute != null) {
-                attributeMoveListener(draggedAttribute!!, targetAttribute!!)
+    // The drag-drop state is keyed on `viewableCase` so that selecting a
+    // different case (which may have a different number of attributes)
+    // discards any stale row-bounds tracking from the previous case. Without
+    // this, an in-flight pointer event arriving after the case swap could be
+    // hit-tested against rows that no longer exist and index past the end of
+    // `attributes`.
+    val dragDropState = remember(viewableCase) {
+        DragDropState(
+            onDragStarted = {
+                if (it in attributes.indices) {
+                    draggedAttribute = attributes[it]
+                    targetAttribute = null
+                }
+            },
+            onMove = { a, b ->
+                if (b in attributes.indices && a in attributes.indices) {
+                    targetAttribute = attributes[b]
+                    attributes.move(a, b)
+                }
+            },
+            onDragFinished = {
+                if (draggedAttribute != null && targetAttribute != null) {
+                    attributeMoveListener(draggedAttribute!!, targetAttribute!!)
+                }
+                draggedAttribute = null
+                targetAttribute = null
             }
-            draggedAttribute = null
-            targetAttribute = null
-        }
-    )
-    LaunchedEffect(attributes.size) { dragDropState.ensureCapacity(attributes.size) }
+        )
+    }
+    dragDropState.ensureCapacity(attributes.size)
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(5.dp)
+            .semantics { contentDescription = CASE_VIEW_TABLE }
             .pointerInput(Unit) {
                 // See credits.md
                 detectVerticalDragGestures(

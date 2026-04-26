@@ -62,17 +62,34 @@ class DragDropStateTest {
     }
 
     @Test
-    fun `reportRowBounds with an out-of-range index is silently ignored`() {
+    fun `reportRowBounds grows the tracking arrays on demand`() {
+        // Given a state sized for two rows but with bounds reported eagerly
+        var started = -1
+        val state = DragDropState({ started = it }, { _, _ -> }, {})
+        state.ensureCapacity(2)
+
+        // When an index beyond the current capacity is reported
+        // (e.g. `onGloballyPositioned` fires before `ensureCapacity` has been
+        // called for the new row count)
+        state.reportRowBounds(index = 4, top = 100f, height = 20f)
+
+        // Then a drag inside that newly-tracked row picks it up
+        state.onDragStart(Offset(0f, 110f))
+        started shouldBe 4
+    }
+
+    @Test
+    fun `reportRowBounds ignores negative indices`() {
         // Given a state sized for 2 rows
         var started = -1
         val state = DragDropState({ started = it }, { _, _ -> }, {})
         state.ensureCapacity(2)
 
-        // When an index outside the range is reported
-        state.reportRowBounds(index = 5, top = 100f, height = 20f)
+        // When a negative index is reported
+        state.reportRowBounds(index = -1, top = 0f, height = 20f)
 
-        // Then no drag start matches that phantom row
-        state.onDragStart(Offset(0f, 110f))
+        // Then no drag is started for it
+        state.onDragStart(Offset(0f, 5f))
         started shouldBe -1
     }
 
@@ -103,14 +120,14 @@ class DragDropStateTest {
     }
 
     @Test
-    fun `onDrag moves the dragged row past a downstream row once its midpoint is crossed`() {
-        // Given a drag started on row 0 and a move-listener
+    fun `onDrag moves the dragged row past a downstream row once its center crosses the neighbour midpoint`() {
+        // Given a drag started on row 0 (rows are y in [0,20], [20,40], [40,60])
         val moves = mutableListOf<Pair<Int, Int>>()
         val state = newState(onMove = { from, to -> moves += from to to })
-        state.onDragStart(Offset(0f, 5f)) // row 0
+        state.onDragStart(Offset(0f, 5f)) // row 0; initial center at y=10
 
-        // When dragging downwards by 11 (less than the midpoint of row 1 at y=30 - bottom of row 0 at 20 = 10)
-        state.onDrag(11f)
+        // When dragging downwards far enough that row 0's center crosses row 1's midpoint at y=30
+        state.onDrag(21f)
 
         // Then row 0 has been moved to position 1
         moves shouldBe listOf(0 to 1)
@@ -132,13 +149,13 @@ class DragDropStateTest {
 
     @Test
     fun `onDrag moves the dragged row upwards past the previous row`() {
-        // Given a drag started on the last row
+        // Given a drag started on the last row (initial center at y=50)
         val moves = mutableListOf<Pair<Int, Int>>()
         val state = newState(onMove = { from, to -> moves += from to to })
         state.onDragStart(Offset(0f, 50f)) // row 2
 
-        // When dragged upwards far enough that the dragged top crosses the midpoint of row 1
-        state.onDrag(-15f)
+        // When dragged upwards far enough that the dragged center crosses row 1's midpoint at y=30
+        state.onDrag(-21f)
 
         // Then row 2 reorders to position 1
         moves shouldBe listOf(2 to 1)
@@ -191,7 +208,7 @@ class DragDropStateTest {
         var finalIndex = -2
         val state = newState(onDragFinished = { finalIndex = it })
         state.onDragStart(Offset(0f, 5f))
-        state.onDrag(11f) // moves 0 -> 1
+        state.onDrag(21f) // moves 0 -> 1 (center crosses row 1 midpoint)
 
         // When the drag is interrupted
         state.onDragInterrupted()

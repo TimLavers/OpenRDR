@@ -51,10 +51,10 @@ class DragDropState(
     }
 
     fun reportRowBounds(index: Int, top: Float, height: Float) {
-        if (index in rowTops.indices) {
-            rowTops[index] = top
-            rowHeights[index] = height
-        }
+        if (index < 0) return
+        if (index >= rowTops.size) ensureCapacity(index + 1)
+        rowTops[index] = top
+        rowHeights[index] = height
     }
 
     /**
@@ -87,14 +87,18 @@ class DragDropState(
         draggedDistance += delta
         val current = currentIndexOfDraggedItem
         val currentHeight = rowHeights.getOrElse(current) { 0f }
-        val draggedTop = initialTopOfDraggedItem + draggedDistance
-        val draggedBottom = draggedTop + currentHeight
+        // Use the dragged row's center as the hit-test point so that a swap
+        // happens only when the row has visually moved past a neighbour's
+        // midpoint, rather than as soon as either edge crosses it. This
+        // matches the "drop where the row's center lands" semantics expected
+        // by the integration tests and avoids over-shooting through several
+        // neighbours during a single drag.
+        val draggedCenter = initialTopOfDraggedItem + draggedDistance + currentHeight / 2f
 
-        // Walk neighbours and reorder past the first one whose midpoint we've crossed.
         val target = rowTops.indices.firstOrNull { i ->
             if (i == current) return@firstOrNull false
             val rowMid = rowTops[i] + rowHeights[i] / 2f
-            if (i > current) draggedBottom > rowMid else draggedTop < rowMid
+            if (i > current) draggedCenter >= rowMid else draggedCenter <= rowMid
         }
         if (target != null && target != current) {
             onMove(current, target)
