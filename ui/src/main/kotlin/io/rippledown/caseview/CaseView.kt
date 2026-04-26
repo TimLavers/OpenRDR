@@ -53,8 +53,7 @@ fun CaseView(case: ViewableCase, handler: CaseViewHandler, modifier: Modifier = 
         }
         Spacer(modifier = Modifier.height(16.dp))
         CaseTable(
-            viewableCase = case,
-            modifier = Modifier.weight(1f, fill = false)
+            viewableCase = case
         ) { a: Attribute, b: Attribute ->
             handler.swapAttributes(a, b)
         }

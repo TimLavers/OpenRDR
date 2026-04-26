@@ -43,7 +43,7 @@ class EditKbStepDefs {
         // The bot must have produced its preview / "reply yes to confirm" message
         // before we send the affirmation, otherwise the LLM has no context for
         // interpreting "yes" as an undo confirmation.
-        chatDefs.waitForBotText("yes")
+        chatDefs.waitForBotText("Please confirm")
         val countBefore = chatPO().numberOfChatMessages()
         chatDefs.enterChatTextAndSend("yes")
         await().atMost(ofSeconds(60)).until {

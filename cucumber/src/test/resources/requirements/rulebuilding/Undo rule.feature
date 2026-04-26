@@ -4,6 +4,7 @@ Feature: The user can undo rules via the chatbot
   undo, the chatbot previews the rule that would be removed and asks for
   confirmation, and only an explicit affirmation actually performs the undo.
 
+  @single
   Scenario: When a rule is undone, the interpretation of a case changes back to what is was prior to the rule being built
     Given case Bondi is provided having data:
       | Wave | excellent |
@@ -11,6 +12,7 @@ Feature: The user can undo rules via the chatbot
       | Tide | low       |
     And I start the client application
     And I see the case Bondi as the current case
+    And pause
     And I build a rule to add the comment "Go to Bondi." with conditions
       | Sun is hot |
     And the interpretation should be "Go to Bondi."

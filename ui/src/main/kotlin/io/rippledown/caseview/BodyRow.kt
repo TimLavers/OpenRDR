@@ -1,7 +1,6 @@
 package io.rippledown.caseview
 
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -19,12 +18,13 @@ fun BodyRow(
     columnWidths: ColumnWidths,
     results: List<Result>,
     displacementOffset: Float? = null,
+    modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = Modifier.padding(2.dp)
+        modifier = modifier
+            .padding(2.dp)
             .graphicsLayer { translationY = displacementOffset ?: 0f }
-            .fillMaxWidth()
-            .fillMaxHeight(),
+            .fillMaxWidth(),
     ) {
         AttributeCell(index, caseName, attribute, columnWidths)
         results.forEachIndexed { columnIndex: Int, Result: Result ->
