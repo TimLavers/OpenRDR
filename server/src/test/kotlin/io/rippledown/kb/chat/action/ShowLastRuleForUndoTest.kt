@@ -1,9 +1,9 @@
 package io.rippledown.kb.chat.action
 
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
 import io.mockk.coVerify
 import io.mockk.every
+import io.rippledown.kb.chat.action.ShowLastRuleForUndo.Companion.confirmRemovalMessage
 import io.rippledown.model.rule.UndoRuleDescription
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -13,15 +13,15 @@ class ShowLastRuleForUndoTest : ActionTestBase() {
     @Test
     fun `shows the last rule description and asks for confirmation when a rule can be removed`() = runTest {
         //Given there is a removable last rule
+        val ruleDescription = "Add comment 'Abnormal haemoglobin' if Hb is high"
         every { ruleService.descriptionOfMostRecentRule() } returns
-                UndoRuleDescription("Add comment 'Abnormal haemoglobin' if Hb is high", true)
+                UndoRuleDescription(ruleDescription, true)
 
         //When the action runs
         val response = ShowLastRuleForUndo().doIt(ruleService, currentCase, modelResponder)
 
-        //Then the user sees the rule description and a confirmation prompt
-        response.text shouldContain "Add comment 'Abnormal haemoglobin' if Hb is high"
-        response.text shouldContain "yes"
+        //Then the user sees the rule description together with the confirmation prompt
+        response.text shouldBe confirmRemovalMessage(ruleDescription)
     }
 
     @Test

@@ -24,8 +24,12 @@ class ShowLastRuleForUndo : ChatAction {
         if (!description.canRemove) {
             return ChatResponse(description.description)
         }
-        val message = "The last rule was: \"${description.description}\".\n\n" +
-                "Please confirm you wish to remove it."
-        return ChatResponse(message)
+        return ChatResponse(confirmRemovalMessage(description.description))
+    }
+
+    companion object {
+        fun confirmRemovalMessage(ruleDescription: String): String =
+            "The last rule was: \"$ruleDescription\".\n\n" +
+                    "Please confirm you wish to remove it."
     }
 }
