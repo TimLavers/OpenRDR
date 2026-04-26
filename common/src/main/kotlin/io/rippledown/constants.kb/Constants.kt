@@ -8,6 +8,7 @@ const val NO_KB_SELECTED = "No KB selected"
 const val KB_CONTROL_DESCRIPTION = "Knowledge Base Management Controls"
 const val KB_CONTROL_DROPDOWN_DESCRIPTION = "Show controls menu"
 const val KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION = "Current Knowledge Base"
+const val SWITCH_KB_HEADER_TEXT = "Switch knowledge base"
 
 const val KB_IMPORT_DIALOG = "kb_import_dialog"
 const val KB_CREATE_DIALOG = "kb_create_dialog"

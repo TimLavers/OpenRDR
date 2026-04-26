@@ -93,7 +93,12 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
 
     LaunchedEffect(Unit) {
         withContext(dispatcher) {
-            kbInfo = api.kbList().firstOrNull()
+            // Pick the first KB and explicitly select it on the server so
+            // that Api.currentKB matches what the UI displays. Just reading
+            // kbList() leaves Api.currentKB unset, which would later cause
+            // the lazy `kbInfo()` path to fetch the default KB and route
+            // subsequent requests to the wrong KB.
+            kbInfo = api.kbList().firstOrNull()?.let { api.selectKB(it.id) }
         }
     }
 

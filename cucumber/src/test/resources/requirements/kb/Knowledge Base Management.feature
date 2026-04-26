@@ -38,9 +38,10 @@ Feature: Knowledge Base management
     And A Knowledge Base called A has been created
     And I start the client application
     And I activate the KB management control
-    Then pause for 5 seconds
+    # The current KB ("A", the most recently created) acts as the dropdown
+    # trigger and is therefore excluded from the switcher list, which only
+    # offers the *other* available KBs to switch to.
     Then I should see this list of available KBs:
-      | A |
       | B |
       | C |
       | Thyroids |

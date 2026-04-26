@@ -196,7 +196,7 @@ private fun MenuItem(
 @Composable
 private fun SwitchKbHeader() {
     Text(
-        text = "Switch knowledge base",
+        text = SWITCH_KB_HEADER_TEXT,
         style = MaterialTheme.typography.caption,
         color = Color.Gray,
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)

@@ -86,12 +86,50 @@ class OpenRDRUITest {
 
     @Test
     fun `should show the first project if there is one`() = runTest {
-        coEvery { api.kbList() } returns listOf(KBInfo("Bondi"), KBInfo("Malabar"))
+        val bondi = KBInfo("Bondi")
+        val malabar = KBInfo("Malabar")
+        coEvery { api.kbList() } returns listOf(bondi, malabar)
+        coEvery { api.selectKB(bondi.id) } returns bondi
         with(composeTestRule) {
             setContent {
                 OpenRDRUI(handler, dispatcher = Unconfined)
             }
             assertKbNameIs("Bondi")
+        }
+    }
+
+    @Test
+    fun `should select the first KB on the server on startup so Api currentKB is in sync`() = runTest {
+        // Regression: previously the UI set its kbInfo state from
+        // api.kbList().firstOrNull() without telling the server which KB was
+        // current. Api.currentKB then stayed null and the next request would
+        // lazy-fetch the default KB, routing follow-up calls (e.g. setting a
+        // KB description) to the wrong KB.
+        val bondi = KBInfo("Bondi")
+        val malabar = KBInfo("Malabar")
+        coEvery { api.kbList() } returns listOf(bondi, malabar)
+        coEvery { api.selectKB(bondi.id) } returns bondi
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            assertKbNameIs("Bondi")
+            coVerify { api.selectKB(bondi.id) }
+        }
+    }
+
+    @Test
+    fun `should not call selectKB on startup when there are no KBs`() = runTest {
+        // Sanity check: no KBs means nothing to select; the handler must not
+        // call selectKB with a null/empty id.
+        coEvery { api.kbList() } returns emptyList()
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            coVerify(exactly = 0) { api.selectKB(any()) }
         }
     }
 
@@ -802,6 +840,7 @@ class OpenRDRUITest {
         val caseIdA = CaseId(id = 1, name = "case A")
         val caseIdB = CaseId(id = 2, name = "case B")
         coEvery { api.kbList() } returns listOf(kbA, kbB)
+        coEvery { api.selectKB("id_a") } returns kbA
         coEvery { api.selectKB("id_b") } returns kbB
         var casesForCurrentKb = CasesInfo(listOf(caseIdA))
         coEvery { api.waitingCasesInfo() } coAnswers { casesForCurrentKb }
@@ -837,6 +876,7 @@ class OpenRDRUITest {
         val caseA2 = CaseId(id = 2, name = "a-2")
         val caseB1 = CaseId(id = 3, name = "b-1")
         coEvery { api.kbList() } returns listOf(kbA, kbB)
+        coEvery { api.selectKB("id_a") } returns kbA
         coEvery { api.selectKB("id_b") } returns kbB
         coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("a-1", 1)
         coEvery { api.getCase(2) } returns createViewableCaseWithInterpretation("a-2", 2)

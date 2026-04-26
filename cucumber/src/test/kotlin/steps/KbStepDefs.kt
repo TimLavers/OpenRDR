@@ -22,7 +22,9 @@ class KbStepDefs {
     @Then("I (should )see this list of available KBs:")
     fun requireListOfAvailableKBs(dataTable: DataTable) {
         val expectedKBs = dataTable.asList()
-        kbControlsPO().availableKBs() shouldBe expectedKBs
+        waitUntilAsserted {
+            kbControlsPO().availableKBs() shouldBe expectedKBs
+        }
     }
 
     @Then("I create a Knowledge Base with the name {word}")

@@ -18,7 +18,6 @@ Feature: When building a rule, the user is provided with candidate conditions th
     And the chatbot has asked if I want to provide any more reasons and I confirm
     Then the suggested conditions should not contain "Sun is \"hot\""
 
-  @single
   Scenario: After removing a condition, it is reinstated in the list of suggestions.
     Given case Bondi is provided having data:
       | Sun | hot |
