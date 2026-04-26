@@ -79,7 +79,7 @@ class CaseTableTest {
                 // corner of the node on which it operates. So our start point
                 // can be (0, 0) and our end point is the displacement, which is the
                 // difference between the offsets of the destination and source nodes.
-                val relativeEnd = xyzBounds.center(density) - ft4Bounds.center(density)
+                val relativeEnd = xyzBounds.center(density) - ft4Bounds.center(density) + Offset(0f, 5f)
                 dragAndDrop(Offset(0F,0F), relativeEnd)
             }
             dragged shouldBe ft4

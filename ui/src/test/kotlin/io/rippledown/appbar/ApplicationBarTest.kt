@@ -52,13 +52,18 @@ class ApplicationBarTest {
     }
 
     @Test
-    fun `should remove KB selector if rule building`() {
+    fun `should remove KB selector but keep read-only KB name while rule building`() {
         every { handler.isRuleSessionInProgress } returns true
         with(composeTestRule) {
             setContent {
                 ApplicationBar(KBInfo("Bondi"), handler = handler)
             }
+            // The interactive selector (dropdown trigger + menu) must not be
+            // present during rule building so the user cannot switch or edit
+            // the knowledge base.
             onNodeWithTag(testTag = KB_CONTROL_ID).assertDoesNotExist()
+            // But the current KB name is still visible as read-only context.
+            assertKbNameIs("Bondi")
         }
     }
 

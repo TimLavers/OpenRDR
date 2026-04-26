@@ -16,7 +16,7 @@ import io.rippledown.caseview.CaseViewHandler
 import io.rippledown.caseview.ColumnWidths
 import io.rippledown.caseview.HeaderRow
 import io.rippledown.constants.caseview.CASEVIEW_CASE_NAME_ID
-import io.rippledown.constants.caseview.CASE_HEADING
+import io.rippledown.constants.caseview.CASE_VIEW_TABLE
 import io.rippledown.interpretation.InterpretationView
 import io.rippledown.interpretation.InterpretationViewHandler
 import io.rippledown.model.caseview.ViewableCase
@@ -37,7 +37,11 @@ fun CaseInspection(
         modifier = modifier
             .fillMaxHeight()
             .padding(start = 5.dp)
-            .semantics { contentDescription = CASE_HEADING },
+            // Tag the header + body + interpretation as a single
+            // accessibility region so the integration page-object can narrow
+            // queries (date cells live in the fixed header, attribute and
+            // value cells live in the scrolling body) to one container.
+            .semantics { contentDescription = CASE_VIEW_TABLE },
         caseHeader = {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Row(modifier = Modifier.fillMaxWidth()) {
