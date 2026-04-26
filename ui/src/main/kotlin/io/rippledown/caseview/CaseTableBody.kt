@@ -30,9 +30,9 @@ fun CaseTableBody(
     modifier: Modifier = Modifier,
     attributeMoveListener: (Attribute, Attribute) -> Unit = { _, _ -> }
 ) {
-    val attributes = remember { mutableStateListOf<Attribute>() }
-    attributes.clear()
-    attributes.addAll(viewableCase.attributes())
+    val attributes = remember(viewableCase) {
+        mutableStateListOf<Attribute>().apply { addAll(viewableCase.attributes()) }
+    }
     var draggedAttribute: Attribute? = null
     var targetAttribute: Attribute? = null
     val dragDropState = rememberDragDropState(
