@@ -7,7 +7,7 @@ import java.awt.event.InputEvent
 
 /**
  * Performs drag and drop of web elements
- * The current implementation uses a Robot since Selenium drag and drop doesn't work.
+ * The current implementation uses a Robot
  */
 fun dragVertically(from: Point, to: Point) {
     val robot = Robot()

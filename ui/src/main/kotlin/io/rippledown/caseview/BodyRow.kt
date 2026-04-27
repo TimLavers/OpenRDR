@@ -69,13 +69,12 @@ fun BodyRow(
                 }
             }
         }
-        if (expanded) {
-            // No reference range / units to show for text rows; reserve the
-            // same fixed slot so columns line up across rows.
-            Spacer(modifier = Modifier.weight(rangeWeight + unitsWeight))
-        } else {
-            ReferenceRangeCell(attribute, lastResult, rangeWeight)
-            UnitsCell(attribute, lastResult, unitsWeight)
-        }
+        // Always render the fixed reference range and units cells (even
+        // when the row has neither — they render as empty Text). Beyond
+        // keeping columns aligned across rows, this preserves the
+        // semantic / accessibility nodes that integration tests look up
+        // by content description on every attribute row.
+        ReferenceRangeCell(attribute, lastResult, rangeWeight)
+        UnitsCell(attribute, lastResult, unitsWeight)
     }
 }
