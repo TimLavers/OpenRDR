@@ -1,6 +1,7 @@
 package io.rippledown.caseview
 
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -31,14 +32,21 @@ fun BodyRow(
     val hasRange = rangeText(lastResult.referenceRange).isNotEmpty()
     val hasUnits = !lastResult.units.isNullOrBlank()
     val baseValueWeight = columnWidths.valueColumnWeight()
-    val lastValueWeight = baseValueWeight +
-            (if (hasRange) 0F else columnWidths.referenceRangeColumnWeight) +
-            (if (hasRange || hasUnits) 0F else columnWidths.unitsColumnWeight)
-    // Numeric values look much tidier right-aligned (sitting next to their
-    // reference range), but text values that have been allowed to expand
-    // across the trailing columns should remain left-aligned so they read
-    // naturally.
+    // Text rows (no reference range AND no units) let the value cell
+    // absorb the gap, range and units columns so long comments don't wrap
+    // prematurely.
     val expanded = !hasRange && !hasUnits
+    val lastValueWeight = if (expanded) {
+        baseValueWeight +
+                columnWidths.valueRangeGapWeight +
+                columnWidths.referenceRangeColumnWeight +
+                columnWidths.unitsColumnWeight
+    } else {
+        baseValueWeight
+    }
+    // Numeric values look much tidier right-aligned (sitting just to the
+    // left of the reference-range gap), but expanded text values should
+    // remain left-aligned so they read naturally.
     val lastValueAlignment = if (expanded) TextAlign.Start else TextAlign.End
     Row(
         modifier = modifier
@@ -55,13 +63,12 @@ fun BodyRow(
                 textAlign = if (isLast) lastValueAlignment else TextAlign.End
             )
         }
-        if (hasRange) {
+        if (!expanded) {
+            // Visual gap between the value column and the reference range.
+            Spacer(modifier = Modifier.weight(columnWidths.valueRangeGapWeight))
+            // The reference-range and units cells render even when blank for
+            // this particular row, to keep their columns aligned across rows.
             ReferenceRangeCell(attribute, lastResult, columnWidths.referenceRangeColumnWeight)
-        }
-        // Render the units cell whenever there is a reference range OR units
-        // to display, to keep the reference-range column aligned across rows.
-        // Only collapse it away when the value cell has already absorbed it.
-        if (hasRange || hasUnits) {
             UnitsCell(attribute, lastResult, columnWidths.unitsColumnWeight)
         }
     }

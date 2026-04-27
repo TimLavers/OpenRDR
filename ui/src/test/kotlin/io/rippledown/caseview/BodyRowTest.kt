@@ -28,7 +28,8 @@ class BodyRowTest {
 
     init {
         every { columnWidths.attributeColumnWeight }.returns(0.2F)
-        every { columnWidths.valueColumnWeight() }.returns(0.3F)
+        every { columnWidths.valueColumnWeight() }.returns(0.2F)
+        every { columnWidths.valueRangeGapWeight }.returns(0.1F)
         every { columnWidths.referenceRangeColumnWeight }.returns(0.2F)
         every { columnWidths.unitsColumnWeight }.returns(0.1F)
     }

@@ -52,7 +52,7 @@ fun formatUnits(units: String): AnnotatedString {
         for (match in powerOfTenRegex.findAll(withMu)) {
             append(withMu.substring(cursor, match.range.first))
             append("10")
-            withStyle(SpanStyle(baselineShift = BaselineShift.Superscript, fontSize = 0.7.em)) {
+            withStyle(SpanStyle(baselineShift = BaselineShift.Superscript, fontSize = 0.9.em)) {
                 append(match.groupValues[1])
             }
             cursor = match.range.last + 1

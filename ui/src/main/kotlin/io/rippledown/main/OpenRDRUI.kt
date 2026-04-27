@@ -50,7 +50,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     var casesInfo by remember { mutableStateOf(CasesInfo()) }
     var kbInfo: KBInfo? by remember { mutableStateOf(null) }
     val voiceRecognitionService = remember { VoiceRecognitionService(defaultModelPath()) }
-    var chatPanelWidth by remember { mutableStateOf(300.dp) }
+    var chatPanelWidth by remember { mutableStateOf(350.dp) }
     var conversationCaseId by remember { mutableStateOf<Long?>(null) }
     var pendingConversationResponse by remember { mutableStateOf<ChatResponse?>(null) }
     val density = LocalDensity.current
