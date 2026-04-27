@@ -29,8 +29,10 @@ import io.rippledown.model.caseview.ViewableCase
 fun CaseTableBody(
     viewableCase: ViewableCase,
     columnWidths: ColumnWidths,
-    modifier: Modifier = Modifier,
-    attributeMoveListener: (Attribute, Attribute) -> Unit = { _, _ -> }
+    modifier: Modifier = Modifier.fillMaxWidth(),
+    hScrollState: androidx.compose.foundation.ScrollState =
+        androidx.compose.foundation.rememberScrollState(),
+    attributeMoveListener: (Attribute, Attribute) -> Unit = { _, _ -> },
 ) {
     val attributes = remember(viewableCase) {
         mutableStateListOf<Attribute>().apply { addAll(viewableCase.attributes()) }
@@ -70,7 +72,6 @@ fun CaseTableBody(
 
     Column(
         modifier = modifier
-            .fillMaxWidth()
             .padding(5.dp)
             .semantics { contentDescription = CASE_VIEW_TABLE }
             .pointerInput(Unit) {
@@ -96,6 +97,7 @@ fun CaseTableBody(
                 columnWidths = columnWidths,
                 results = resultsList,
                 displacementOffset = displacementOffset,
+                hScrollState = hScrollState,
                 modifier = Modifier.onGloballyPositioned { coords ->
                     dragDropState.reportRowBounds(
                         index = index,

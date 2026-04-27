@@ -30,6 +30,7 @@ class HeaderRowTest {
         every { columnWidths.valueRangeGapWeight }.returns(0.1F)
         every { columnWidths.referenceRangeColumnWeight }.returns(0.2F)
         every { columnWidths.unitsColumnWeight }.returns(0.1F)
+        every { columnWidths.scrollableAreaWeight() }.returns(0.4F)
         val lazyItemScope: LazyItemScope = DummyLazyItemScope()
         composeTestRule.setContent {
             HeaderRow( columnWidths, dates)

@@ -1,11 +1,16 @@
 package io.rippledown.cornerstone
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.HorizontalScrollbar
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -22,11 +27,22 @@ import io.rippledown.decoration.ItalicGrey
 import io.rippledown.interpretation.ReadonlyInterpretationView
 import io.rippledown.interpretation.ReadonlyInterpretationViewHandler
 import io.rippledown.model.caseview.ViewableCase
+import kotlinx.coroutines.flow.first
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CornerstoneInspection(case: ViewableCase, index: Int = 0, total: Int = 0) {
     val columnWidths = ColumnWidths(case.numberOfColumns)
+    val hScrollState = rememberScrollState()
+    val hScrollbarAdapter = rememberScrollbarAdapter(hScrollState)
+    val multiEpisode = case.dates.size > 1
+    LaunchedEffect(case) {
+        if (multiEpisode) {
+            snapshotFlow { hScrollState.maxValue }
+                .first { it > 0 }
+                .let { hScrollState.scrollTo(it) }
+        }
+    }
     io.rippledown.casecontrol.CaseInspectionLayout(
         modifier = Modifier
             .fillMaxHeight()
@@ -64,24 +80,42 @@ fun CornerstoneInspection(case: ViewableCase, index: Int = 0, total: Int = 0) {
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-                HeaderRow(columnWidths, case.dates)
+                HeaderRow(
+                    columnWidths = columnWidths,
+                    dates = case.dates,
+                    hScrollState = hScrollState,
+                )
             }
         },
         caseBody = {
-            CaseTableBody(viewableCase = case, columnWidths = columnWidths)
+            CaseTableBody(
+                viewableCase = case,
+                columnWidths = columnWidths,
+                hScrollState = hScrollState,
+            )
         },
         interpretationContent = {
-            OutlinedCard(
-                modifier = Modifier.padding(vertical = 10.dp),
-                colors = androidx.compose.material3.CardDefaults.outlinedCardColors(
-                    containerColor = androidx.compose.ui.graphics.Color.White
-                )
-            ) {
-                ReadonlyInterpretationView(
-                    case.viewableInterpretation,
-                    modifier = Modifier.fillMaxWidth(),
-                    handler = object : ReadonlyInterpretationViewHandler {}
-                )
+            Column(modifier = Modifier.fillMaxWidth()) {
+                if (multiEpisode) {
+                    HorizontalScrollbar(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp),
+                        adapter = hScrollbarAdapter
+                    )
+                }
+                OutlinedCard(
+                    modifier = Modifier.padding(vertical = 10.dp),
+                    colors = androidx.compose.material3.CardDefaults.outlinedCardColors(
+                        containerColor = androidx.compose.ui.graphics.Color.White
+                    )
+                ) {
+                    ReadonlyInterpretationView(
+                        case.viewableInterpretation,
+                        modifier = Modifier.fillMaxWidth(),
+                        handler = object : ReadonlyInterpretationViewHandler {}
+                    )
+                }
             }
         }
     )

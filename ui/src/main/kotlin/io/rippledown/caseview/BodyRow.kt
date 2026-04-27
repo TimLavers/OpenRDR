@@ -1,9 +1,9 @@
 package io.rippledown.caseview
 
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -21,33 +21,24 @@ fun BodyRow(
     results: List<Result>,
     displacementOffset: Float? = null,
     modifier: Modifier = Modifier,
+    hScrollState: ScrollState = rememberScrollState(),
 ) {
-    // The last result drives whether we collapse the trailing columns into
-    // the value cell:
-    //   * no reference range -> value absorbs the reference-range column
-    //   * also no units      -> value additionally absorbs the units column
-    // This lets long text values (e.g. comments) extend across the row
-    // without wrapping prematurely.
+    // The attribute, reference range and units columns stay fixed; only the
+    // dates and per-episode values scroll horizontally between them. The
+    // reference range and units shown are taken from the most recent
+    // (last) result for this attribute.
     val lastResult = results.last()
     val hasRange = rangeText(lastResult.referenceRange).isNotEmpty()
     val hasUnits = !lastResult.units.isNullOrBlank()
     val baseValueWeight = columnWidths.valueColumnWeight()
-    // Text rows (no reference range AND no units) let the value cell
-    // absorb the gap, range and units columns so long comments don't wrap
-    // prematurely.
+    val gapWeight = columnWidths.valueRangeGapWeight
+    val rangeWeight = columnWidths.referenceRangeColumnWeight
+    val unitsWeight = columnWidths.unitsColumnWeight
+    val scrollableWeight = columnWidths.scrollableAreaWeight()
+    // Text-only rows (no reference range and no units) let the value cell
+    // fill the full per-episode block so long comments read naturally
+    // without wrapping prematurely.
     val expanded = !hasRange && !hasUnits
-    val lastValueWeight = if (expanded) {
-        baseValueWeight +
-                columnWidths.valueRangeGapWeight +
-                columnWidths.referenceRangeColumnWeight +
-                columnWidths.unitsColumnWeight
-    } else {
-        baseValueWeight
-    }
-    // Numeric values look much tidier right-aligned (sitting just to the
-    // left of the reference-range gap), but expanded text values should
-    // remain left-aligned so they read naturally.
-    val lastValueAlignment = if (expanded) TextAlign.Start else TextAlign.End
     Row(
         modifier = modifier
             .padding(2.dp)
@@ -55,21 +46,36 @@ fun BodyRow(
             .fillMaxWidth(),
     ) {
         AttributeCell(index, caseName, attribute, columnWidths)
-        results.forEachIndexed { columnIndex: Int, Result: Result ->
-            val isLast = columnIndex == results.lastIndex
-            ValueCell(
-                caseName, attribute, columnIndex, Result, columnWidths,
-                widthWeight = if (isLast) lastValueWeight else baseValueWeight,
-                textAlign = if (isLast) lastValueAlignment else TextAlign.End
-            )
+        BoxWithConstraints(modifier = Modifier.weight(scrollableWeight)) {
+            val episodeBlockDp = maxWidth
+            Box(modifier = Modifier.fillMaxWidth().horizontalScroll(hScrollState)) {
+                Row(modifier = Modifier.width(episodeBlockDp * results.size)) {
+                    results.forEachIndexed { columnIndex: Int, result: Result ->
+                        if (expanded) {
+                            ValueCell(
+                                caseName, attribute, columnIndex, result, columnWidths,
+                                widthWeight = baseValueWeight + gapWeight,
+                                textAlign = TextAlign.Start,
+                            )
+                        } else {
+                            ValueCell(
+                                caseName, attribute, columnIndex, result, columnWidths,
+                                widthWeight = baseValueWeight,
+                                textAlign = TextAlign.End,
+                            )
+                            Spacer(modifier = Modifier.weight(gapWeight))
+                        }
+                    }
+                }
+            }
         }
-        if (!expanded) {
-            // Visual gap between the value column and the reference range.
-            Spacer(modifier = Modifier.weight(columnWidths.valueRangeGapWeight))
-            // The reference-range and units cells render even when blank for
-            // this particular row, to keep their columns aligned across rows.
-            ReferenceRangeCell(attribute, lastResult, columnWidths.referenceRangeColumnWeight)
-            UnitsCell(attribute, lastResult, columnWidths.unitsColumnWeight)
+        if (expanded) {
+            // No reference range / units to show for text rows; reserve the
+            // same fixed slot so columns line up across rows.
+            Spacer(modifier = Modifier.weight(rangeWeight + unitsWeight))
+        } else {
+            ReferenceRangeCell(attribute, lastResult, rangeWeight)
+            UnitsCell(attribute, lastResult, unitsWeight)
         }
     }
 }

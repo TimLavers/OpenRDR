@@ -32,6 +32,7 @@ class BodyRowTest {
         every { columnWidths.valueRangeGapWeight }.returns(0.1F)
         every { columnWidths.referenceRangeColumnWeight }.returns(0.2F)
         every { columnWidths.unitsColumnWeight }.returns(0.1F)
+        every { columnWidths.scrollableAreaWeight() }.returns(0.3F)
     }
 
     @Test
