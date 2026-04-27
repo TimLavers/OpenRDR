@@ -4,10 +4,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.unit.dp
+import io.kotest.matchers.comparables.shouldBeLessThan
 import io.mockk.mockk
 import io.rippledown.caseview.dateCellContentDescription
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
@@ -78,13 +79,18 @@ class CaseInspectionTest {
                     CaseInspection(case, handler = handler)
                 }
             }
-            // Recent episode (index 1) should be visible after auto-scroll;
-            // the older one is to the left of the viewport so its date cell
-            // is clipped out.
-            onNodeWithContentDescription(dateCellContentDescription(1))
+            // After auto-scrolling fully right, the most-recent episode's
+            // date cell (index 1) should be rendered near the start of the
+            // scrollable area (just past the fixed attribute column on the
+            // left). Without auto-scrolling it would render one full
+            // episode-block-width further to the right, well into the
+            // second half of the panel. Bounds are reported with the scroll
+            // offset applied, so a small left value here proves the
+            // auto-scroll fired.
+            val date1Bounds = onNodeWithContentDescription(dateCellContentDescription(1))
                 .assertIsDisplayed()
-            onNodeWithContentDescription(dateCellContentDescription(0))
-                .assertIsNotDisplayed()
+                .getBoundsInRoot()
+            date1Bounds.left shouldBeLessThan 150.dp
         }
     }
 
