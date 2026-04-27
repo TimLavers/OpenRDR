@@ -16,9 +16,13 @@ import kotlin.time.Instant
 
 @Composable
 fun RowScope.DateCell(index: Int, date: Long, columnWidths: ColumnWidths) {
+    // Take the full per-episode block width (value + value/range gap) so the
+    // date label ("YYYY-MM-DD") doesn't wrap inside the narrower value
+    // column. The gap to the right of the value is empty in the body, so
+    // letting the date extend over it costs nothing visually.
     Text(
         text = formatDate(date),
-        modifier = Modifier.weight(columnWidths.valueColumnWeight())
+        modifier = Modifier.weight(columnWidths.scrollableAreaWeight())
             .semantics{
                 contentDescription = dateCellContentDescription(index)
             },

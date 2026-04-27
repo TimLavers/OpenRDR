@@ -27,7 +27,6 @@ fun HeaderRow(
                 Row(modifier = Modifier.width(episodeBlockDp * dates.size)) {
                     dates.forEachIndexed { i, date ->
                         DateCell(i, date, columnWidths)
-                        Spacer(modifier = Modifier.weight(columnWidths.valueRangeGapWeight))
                     }
                 }
             }
