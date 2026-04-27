@@ -43,14 +43,16 @@ fun CaseInspection(
             // value cells live in the scrolling body) to one container.
             .semantics { contentDescription = CASE_VIEW_TABLE },
         caseHeader = {
-            Column(modifier = Modifier.fillMaxWidth()) {
+            // Match the horizontal padding applied inside CaseTableBody so the
+            // case name and the date header line up with the attribute column.
+            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp)) {
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text = case.name,
                         style = MaterialTheme.typography.subtitle1,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colors.onSurface,
-                        textAlign = TextAlign.End,
+                        textAlign = TextAlign.Start,
                         modifier = Modifier
                             .weight(columnWidths.attributeColumnWeight)
                             .padding(end = 12.dp)

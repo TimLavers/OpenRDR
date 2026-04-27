@@ -18,5 +18,6 @@ fun HeaderRow(columnWidths: ColumnWidths, dates: List<Long>) {
             DateCell(i, date, columnWidths)
         }
         this.ReferenceRangesHeaderCell(columnWidths)
+        UnitsHeaderCell(columnWidths)
     }
 }

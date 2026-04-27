@@ -9,6 +9,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.rippledown.constants.caseview.ATTRIBUTE_HEADER_CELL_DESCRIPTION
 import io.rippledown.constants.caseview.REFERENCE_RANGE_HEADER_CELL_DESCRIPTION
+import io.rippledown.constants.caseview.UNITS_HEADER_CELL_DESCRIPTION
 import io.rippledown.mocks.DummyLazyItemScope
 import io.rippledown.utils.lastWeek
 import io.rippledown.utils.today
@@ -27,6 +28,7 @@ class HeaderRowTest {
         every { columnWidths.attributeColumnWeight }.returns(0.2F)
         every { columnWidths.valueColumnWeight() }.returns(0.3F)
         every { columnWidths.referenceRangeColumnWeight }.returns(0.2F)
+        every { columnWidths.unitsColumnWeight }.returns(0.1F)
         val lazyItemScope: LazyItemScope = DummyLazyItemScope()
         composeTestRule.setContent {
             HeaderRow( columnWidths, dates)
@@ -36,6 +38,7 @@ class HeaderRowTest {
             waitUntilExactlyOneExists(hasText(formatDate(lastWeek)))
             waitUntilExactlyOneExists(hasText(formatDate(today)))
             waitUntilExactlyOneExists(hasContentDescription(REFERENCE_RANGE_HEADER_CELL_DESCRIPTION))
+            waitUntilExactlyOneExists(hasContentDescription(UNITS_HEADER_CELL_DESCRIPTION))
         }
     }
 }

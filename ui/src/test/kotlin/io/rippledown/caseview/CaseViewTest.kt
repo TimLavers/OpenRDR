@@ -42,7 +42,7 @@ class CaseViewTest {
             }
             waitUntilExactlyOneExists(hasText(case1.name))
             waitUntilExactlyOneExists(hasText(tsh.name))
-            waitUntilExactlyOneExists(hasText(resultText(viewableCase.case.getLatest(tsh)!!)))
+            waitUntilExactlyOneExists(hasText(viewableCase.case.getLatest(tsh)!!.value.text))
         }
     }
 

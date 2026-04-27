@@ -50,7 +50,7 @@ class CaseTableTest {
             waitUntilExactlyOneExists(hasText(tsh.name))
             viewableCase.attributes().forEach {
                 val value = viewableCase.case.getLatest(it)!!
-                waitUntilExactlyOneExists(hasText(resultText(value)))
+                waitUntilExactlyOneExists(hasText(value.value.text))
             }
         }
     }
@@ -69,7 +69,7 @@ class CaseTableTest {
             waitUntilExactlyOneExists(hasText(tsh.name))
             viewableCase.attributes().forEach {
                 val value = viewableCase.case.getLatest(it)!!
-                waitUntilExactlyOneExists(hasText(resultText(value)))
+                waitUntilExactlyOneExists(hasText(value.value.text))
             }
             val ft4Bounds = onNodeWithText(ft4.name).getBoundsInRoot()
             val xyzBounds = onNodeWithText(xyz.name).getBoundsInRoot()

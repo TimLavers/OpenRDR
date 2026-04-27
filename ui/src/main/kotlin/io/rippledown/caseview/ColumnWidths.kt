@@ -9,7 +9,9 @@ class ColumnWidths(numberOfDates: Int) {
 
     val attributeColumnWeight = 0.3F
     val referenceRangeColumnWeight = 0.2F
-    private val dataColumnWeight = ((1.0 - attributeColumnWeight - referenceRangeColumnWeight) / numberOfDates).toFloat()
+    val unitsColumnWeight = 0.1F
+    private val dataColumnWeight =
+        ((1.0 - attributeColumnWeight - referenceRangeColumnWeight - unitsColumnWeight) / numberOfDates).toFloat()
 
     fun valueColumnWeight() = dataColumnWeight
 }

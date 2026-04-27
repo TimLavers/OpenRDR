@@ -23,7 +23,7 @@ fun RowScope.AttributeCell(index: Int, caseName: String, attribute: Attribute, c
                 contentDescription = attributeCellContentDescription(index, caseName)
             },
         fontWeight = FontWeight.Bold,
-        textAlign = TextAlign.End
+        textAlign = TextAlign.Start
     )
 }
 

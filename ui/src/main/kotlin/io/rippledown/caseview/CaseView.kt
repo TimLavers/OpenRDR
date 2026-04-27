@@ -40,7 +40,7 @@ fun CaseView(case: ViewableCase, handler: CaseViewHandler, modifier: Modifier = 
                 style = MaterialTheme.typography.subtitle1,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colors.onSurface,
-                textAlign = TextAlign.End,
+                textAlign = TextAlign.Start,
                 modifier = Modifier
                     .weight(columnWidths.attributeColumnWeight)
                     .padding(end = 12.dp)

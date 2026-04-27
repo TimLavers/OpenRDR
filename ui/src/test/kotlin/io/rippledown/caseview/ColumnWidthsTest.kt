@@ -19,8 +19,14 @@ class ColumnWidthsTest {
     }
 
     @Test
+    fun unitsColumnWeight() {
+        ColumnWidths(1).unitsColumnWeight shouldBe 0.1F
+        ColumnWidths(10).unitsColumnWeight shouldBe 0.1F
+    }
+
+    @Test
     fun valueColumnWeight() {
-        ColumnWidths(1).valueColumnWeight() shouldBe (0.5F plusOrMinus 1e-6F)
-        ColumnWidths(10).valueColumnWeight() shouldBe (0.05F plusOrMinus 1e-6F)
+        ColumnWidths(1).valueColumnWeight() shouldBe (0.4F plusOrMinus 1e-6F)
+        ColumnWidths(10).valueColumnWeight() shouldBe (0.04F plusOrMinus 1e-6F)
     }
 }

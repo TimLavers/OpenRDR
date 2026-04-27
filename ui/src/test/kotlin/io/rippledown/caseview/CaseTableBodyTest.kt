@@ -79,7 +79,7 @@ class CaseTableBodyTest {
         with(composeTestRule) {
             viewableCase.attributes().forEach {
                 val value = viewableCase.case.getLatest(it)!!
-                waitUntilExactlyOneExists(hasText(resultText(value)))
+                waitUntilExactlyOneExists(hasText(value.value.text))
             }
         }
     }
