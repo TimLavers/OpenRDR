@@ -61,7 +61,7 @@ fun BodyRow(
                             ValueCell(
                                 caseName, attribute, columnIndex, result, columnWidths,
                                 widthWeight = baseValueWeight,
-                                textAlign = TextAlign.End,
+                                textAlign = TextAlign.Start,
                             )
                             Spacer(modifier = Modifier.weight(gapWeight))
                         }
