@@ -12,7 +12,7 @@ import java.util.concurrent.TimeoutException
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.milliseconds
 
-val GEMINI_MODEL = "gemini-3-flash-preview"
+val GEMINI_MODEL = "gemini-2.5-flash"
 var GEMINI_API_KEY = getenv("API_KEY") ?: ""
 
 val geminiClient: Client by lazy {
@@ -29,7 +29,6 @@ fun generateContentConfig(
     val builder = GenerateContentConfig.builder()
         .temperature(0f)
         .topP(0.995f)
-        .thinkingConfig(noThinking())
         .safetySettings(noSafetySettings())
         .systemInstruction(Content.fromParts(Part.fromText(systemInstruction)))
 
@@ -39,8 +38,6 @@ fun generateContentConfig(
 
     return builder.build()
 }
-
-private fun noThinking(): ThinkingConfig? = ThinkingConfig.builder().thinkingBudget(0).build()
 
 fun noSafetySettings(): List<SafetySetting> =
     listOf(

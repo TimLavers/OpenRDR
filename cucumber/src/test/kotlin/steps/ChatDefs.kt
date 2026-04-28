@@ -203,6 +203,12 @@ class ChatDefs {
             enterChatTextAndSend(reason)
             messageCountAfterSend = chatPO().numberOfChatMessages()
         }
+        // Wait for the bot to respond to the final reason before returning,
+        // so the next step doesn't race the server/LLM while the chat input
+        // is still disabled (e.g. a slow Gemini call on "Sun is hot").
+        if (reasons.isNotEmpty()) {
+            waitForBotResponseToReason(previousSuggestionCount, messageCountAfterSend)
+        }
     }
 
     private fun waitForBotResponseToReason(previousSuggestionCount: Int, messageCountAfterSend: Int) {
