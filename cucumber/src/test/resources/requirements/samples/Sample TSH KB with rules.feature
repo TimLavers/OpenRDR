@@ -11,8 +11,8 @@ Feature: The knowledge base described in the TSH paper is implemented by a KB bu
     Then I see these case values:
       | Sex               | F                 |            |
       | Age               | 28                |            |
-      | TSH               | 0.67 mU/L         | 0.50 - 4.0 |
-      | Free T4           | 16 pmol/L         |   10 - 20  |
+      | TSH              | 0.67              | 0.50 - 4.0 |
+      | Free T4          | 16                | 10 - 20    |
       | Patient Location  | General Practice. |            |
       | Tests             | TFTs              |            |
       | Clinical Notes    | Lethargy.         |            |
@@ -24,7 +24,7 @@ Feature: The knowledge base described in the TSH paper is implemented by a KB bu
     Then I see these case values:
       | Sex               | F                 |            |
       | Age               | 28                |            |
-      | TSH               | 0.67 mU/L         | 0.50 - 4.0 |
+      | TSH              | 0.67              | 0.50 - 4.0 |
       | Patient Location  | General Practice. |            |
       | Tests             | TFTs              |            |
       | Clinical Notes    | Lethargy.         |            |
@@ -37,8 +37,8 @@ Feature: The knowledge base described in the TSH paper is implemented by a KB bu
     Then I see these case values:
       | Sex               | F                 |            |
       | Age               | 36                |            |
-      | TSH               | 0.74 mU/L         | 0.50 - 4.0 |
-      | Free T4           | 8 pmol/L          |   10 - 20  |
+      | TSH              | 0.74              | 0.50 - 4.0 |
+      | Free T4          | 8                 | 10 - 20    |
       | Patient Location  | General Practice. |            |
       | Tests             | TFTs              |            |
       | Clinical Notes    | Weight loss.      |            |
