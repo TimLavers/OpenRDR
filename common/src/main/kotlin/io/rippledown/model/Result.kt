@@ -28,4 +28,6 @@ data class Result(val value: Value, val referenceRange: ReferenceRange?, val uni
         referenceRange ?: return false
         return referenceRange.isNormal(value)
     }
+
+    fun isAbnormal() = isHigh() || isLow()
 }

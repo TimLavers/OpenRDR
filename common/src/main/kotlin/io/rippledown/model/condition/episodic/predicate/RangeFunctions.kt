@@ -20,6 +20,13 @@ data object Normal: TestResultPredicate {
 }
 
 @Serializable
+data object Abnormal : TestResultPredicate {
+    override fun evaluate(result: Result) = result.isAbnormal()
+
+    override fun description(plural: Boolean) = "${isOrAre(plural)} abnormal"
+}
+
+@Serializable
 data object High: TestResultPredicate {
     override fun evaluate(result: Result) = result.isHigh()
 

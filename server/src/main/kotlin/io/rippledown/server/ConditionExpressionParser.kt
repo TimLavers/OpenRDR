@@ -127,6 +127,12 @@ class ConditionExpressionParser(private val attributeFor: (String) -> Attribute)
             return EpisodicCondition(null, attributeFor(attrName), Normal, Current, text)
         }
 
+        // ATTR is abnormal
+        if (text.endsWith(" is abnormal")) {
+            val attrName = text.removeSuffix(" is abnormal")
+            return EpisodicCondition(null, attributeFor(attrName), Abnormal, Current, text)
+        }
+
         // ATTR is high
         if (text.endsWith(" is high")) {
             val attrName = text.removeSuffix(" is high")
