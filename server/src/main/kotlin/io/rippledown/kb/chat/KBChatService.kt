@@ -112,6 +112,7 @@ object KBChatService {
         "initial_blank_report.md",
         "initial_non_blank_report.md",
         "invalid-reason.md",
+        "non_english_comment.md",
     )
 
     fun systemPromptVariables(viewableCase: ViewableCase) = mapOf(

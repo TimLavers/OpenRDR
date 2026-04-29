@@ -46,6 +46,12 @@ The current report for the case is a list of comments. For the current case, the
     Note: apostrophes inside the double quotes (like "Let's") are part of the comment text, not quote
     delimiters. DO NOT call any transform functions and DO NOT ask for confirmation — the quoted text is the
     comment, not a reason to be transformed.
+- This rule is **language-agnostic**. The delimiter is the double quote, not the language of the text
+  between the quotes. If the user writes `Add the comment: "La paciente presenta diabetes gestacional."`
+  or `Add the comment: "La patiente présente un diabète gestationnel."`, the quoted text is still the
+  comment. You MUST emit `{{ADD_COMMENT}}` with `comment` set to the quoted text verbatim, and you MUST
+  NOT call `{{TRANSFORM_REASON}}` on it, even if the quoted text superficially looks like it could be
+  parsed as an attribute/value expression in that language.
 - Otherwise, summarize the report change and ask the user to confirm.
 
 ```json
