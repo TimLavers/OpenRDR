@@ -19,6 +19,7 @@ interface ModelResponder {
 class ChatManager(
     val conversationService: ConversationService,
     val ruleService: RuleService,
+    private val suggestionsBuffer: SuggestionsBuffer = SuggestionsBuffer(),
 ) : ModelResponder {
     private val logger = lazyLogger
     private var currentCase: ViewableCase? = null
@@ -73,10 +74,11 @@ class ChatManager(
             logger.error("Unknown actionComment: ${actionComment.action}")
             ChatResponse("")
         }
-        return if (!actionComment.suggestions.isNullOrEmpty()) {
-            ChatResponse(chatResponse.text, actionComment.suggestions)
-        } else {
-            chatResponse
+        val bufferedSuggestions = suggestionsBuffer.consume()
+        return when {
+            bufferedSuggestions != null -> ChatResponse(chatResponse.text, bufferedSuggestions)
+            !actionComment.suggestions.isNullOrEmpty() -> ChatResponse(chatResponse.text, actionComment.suggestions)
+            else -> chatResponse
         }
     }
 

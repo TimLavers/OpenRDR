@@ -16,13 +16,15 @@ import kotlin.test.Test
 class SuggestedConditionsHandlerTest {
     lateinit var case: RDRCase
     lateinit var ruleService: RuleService
+    lateinit var suggestionsBuffer: SuggestionsBuffer
     lateinit var handler: SuggestedConditionsHandler
 
     @BeforeTest
     fun setUp() {
         case = mockk()
         ruleService = mockk()
-        handler = SuggestedConditionsHandler(case, ruleService)
+        suggestionsBuffer = SuggestionsBuffer()
+        handler = SuggestedConditionsHandler(case, ruleService, suggestionsBuffer)
     }
 
     @Test
@@ -49,10 +51,11 @@ class SuggestedConditionsHandlerTest {
 
         // Then
         result shouldBe "No suggested conditions available for this case."
+        suggestionsBuffer.suggestions shouldBe emptyList()
     }
 
     @Test
-    fun `should return numbered list of suggestions`() = runTest {
+    fun `should buffer suggestions and return delivery instruction`() = runTest {
         // Given
         every { ruleService.isRuleSessionActive() } returns true
         every { ruleService.currentRuleSessionConditionTexts() } returns emptySet()
@@ -68,7 +71,11 @@ class SuggestedConditionsHandlerTest {
         val result = handler.handle(emptyMap())
 
         // Then
-        result shouldBe "1. wave height is \"2\"\n2. case is for a single date"
+        result shouldBe SuggestedConditionsHandler.SUGGESTIONS_DELIVERED_INSTRUCTION
+        suggestionsBuffer.suggestions shouldBe listOf(
+            "wave height is \"2\"",
+            "case is for a single date"
+        )
     }
 
     @Test
@@ -85,7 +92,8 @@ class SuggestedConditionsHandlerTest {
         val result = handler.handle(emptyMap())
 
         // Then
-        result shouldBe "1. wave height >= 1.5 [editable]"
+        result shouldBe SuggestedConditionsHandler.SUGGESTIONS_DELIVERED_INSTRUCTION
+        suggestionsBuffer.suggestions shouldBe listOf("wave height >= 1.5 [editable]")
     }
 
     @Test
@@ -104,7 +112,8 @@ class SuggestedConditionsHandlerTest {
         val result = handler.handle(emptyMap())
 
         // Then
-        result shouldBe "1. case is for a single date"
+        result shouldBe SuggestedConditionsHandler.SUGGESTIONS_DELIVERED_INSTRUCTION
+        suggestionsBuffer.suggestions shouldBe listOf("case is for a single date")
     }
 
     @Test
@@ -121,5 +130,6 @@ class SuggestedConditionsHandlerTest {
 
         // Then
         result shouldBe "No suggested conditions available for this case."
+        suggestionsBuffer.suggestions shouldBe emptyList()
     }
 }

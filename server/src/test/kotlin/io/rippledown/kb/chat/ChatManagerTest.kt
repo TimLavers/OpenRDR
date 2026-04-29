@@ -31,6 +31,7 @@ class ChatManagerTest {
     lateinit var ruleService: RuleService
     lateinit var case: RDRCase
     lateinit var viewableCase: ViewableCase
+    lateinit var suggestionsBuffer: SuggestionsBuffer
     lateinit var chatManager: ChatManager
 
     @BeforeTest
@@ -39,9 +40,10 @@ class ChatManagerTest {
         ruleService = mockk()
         viewableCase = mockk()
         case = mockk()
+        suggestionsBuffer = SuggestionsBuffer()
         every { viewableCase.case } returns case
         every { ruleService.isRuleSessionActive() } returns false
-        chatManager = ChatManager(conversationService, ruleService)
+        chatManager = ChatManager(conversationService, ruleService, suggestionsBuffer)
         setupLogger()
     }
 
@@ -161,6 +163,28 @@ class ChatManagerTest {
 
         // Then
         responseToUser shouldBe ChatResponse(message, suggestions)
+    }
+
+    @Test
+    fun `buffered suggestions take precedence over ActionComment suggestions`() = runTest {
+        // Given
+        val message = "Here are some suggestions."
+        val bufferedSuggestions = listOf("buffered one", "buffered two [editable]")
+        suggestionsBuffer.suggestions = bufferedSuggestions
+        val responseFromModel = ActionComment(
+            action = USER_ACTION,
+            message = message,
+            suggestions = listOf("model echoed should be ignored")
+        ).toJsonString()
+        coEvery { conversationService.startConversation() } returns responseFromModel
+
+        // When
+        val responseToUser = chatManager.startConversation(viewableCase)
+
+        // Then
+        responseToUser shouldBe ChatResponse(message, bufferedSuggestions)
+        // Buffer is consumed
+        suggestionsBuffer.suggestions shouldBe null
     }
 
     @Test
