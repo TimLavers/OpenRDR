@@ -26,7 +26,7 @@ import io.rippledown.interpretation.InterpretationView
 import io.rippledown.interpretation.InterpretationViewHandler
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.diff.Diff
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 interface CaseInspectionHandler : CaseViewHandler, InterpretationViewHandler
 
@@ -46,16 +46,25 @@ fun CaseInspection(
     val hScrollState = rememberScrollState()
     val hScrollbarAdapter = rememberScrollbarAdapter(hScrollState)
     val multiEpisode = case.dates.size > 1
-    // When a case with multiple episodes is first shown, scroll the case
-    // table fully right so the most recent episode is visible. Using
-    // snapshotFlow lets us wait for the table to be measured (maxValue
-    // becomes > 0) before snapping the scroll position; the effect is
-    // re-run whenever a different case is shown.
+    // When a case with multiple episodes is shown, auto-scroll the table
+    // fully right so the most recent episode is visible. We collect
+    // maxValue (rather than just taking the first non-zero value) because
+    // the slot width can shrink after the initial layout — e.g. when a
+    // rule session starts and the cornerstone panel appears next to this
+    // one — which grows maxValue. We re-anchor to the new max only while
+    // the user is still pinned at the previous max, so manual scrolls are
+    // never overridden.
     LaunchedEffect(case) {
         if (multiEpisode) {
+            var lastMax = 0
             snapshotFlow { hScrollState.maxValue }
-                .first { it > 0 }
-                .let { hScrollState.scrollTo(it) }
+                .distinctUntilChanged()
+                .collect { newMax ->
+                    if (newMax > 0 && (lastMax == 0 || hScrollState.value == lastMax)) {
+                        hScrollState.scrollTo(newMax)
+                    }
+                    lastMax = newMax
+                }
         }
     }
     CaseInspectionLayout(

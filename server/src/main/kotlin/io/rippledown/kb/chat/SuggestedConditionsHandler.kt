@@ -28,16 +28,24 @@ class SuggestedConditionsHandler(
             "${suggestion.asText()}$editable"
         }
         suggestionsBuffer.suggestions = suggestionTexts
-        return SUGGESTIONS_DELIVERED_INSTRUCTION
+        return formatSuggestionsForLlm(suggestionTexts)
+    }
+
+    private fun formatSuggestionsForLlm(suggestionTexts: List<String>): String {
+        val numbered = suggestionTexts
+            .mapIndexed { i, text -> "${i + 1}. $text" }
+            .joinToString("\n")
+        return "$SUGGESTIONS_DELIVERED_PREAMBLE\n$numbered"
     }
 
     companion object {
         const val NO_ACTIVE_RULE_SESSION_ERROR =
             "Error: No rule session is active. You must first output the AddComment, RemoveComment, or ReplaceComment action to start a rule session before calling getSuggestedConditions."
         const val EDITABLE_MARKER = "[editable]"
-        const val SUGGESTIONS_DELIVERED_INSTRUCTION =
+        const val SUGGESTIONS_DELIVERED_PREAMBLE =
             "Suggested conditions have already been displayed to the user by the system. " +
-                    "Reply with a brief UserAction message asking the user to select a condition or enter their own reason. " +
-                    "Do NOT include a 'suggestions' array in the JSON, and do NOT list the suggestions in the message."
+                    "Do NOT include a 'suggestions' array in your JSON response and do NOT list these suggestions back in the 'message' field. " +
+                    "Use the list below only to resolve the user's selection (by number or by text) to the exact condition text. " +
+                    "The list is:"
     }
 }

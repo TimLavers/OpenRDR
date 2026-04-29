@@ -11,8 +11,9 @@ suggested conditions to the user directly. You do NOT need to repeat the suggest
 
 ## How to present the suggested conditions
 
-- The system has already shown the suggestions to the user when the function was called. The function's return value
-  is just a confirmation; you do NOT need to read or echo the suggestion texts.
+- The system has already shown the numbered suggestions to the user when the function was called.
+- The function's return value contains the same numbered list. Use it ONLY to resolve the user's later selection
+  (by number or by text) to the exact condition text. Do NOT read it back to the user.
 - Reply with a brief "message" asking the user to select a condition or type their own reason.
 - Do NOT include the suggestion texts in the "message" field.
 - Do NOT include a "suggestions" array in your JSON response — the system attaches the suggestions for you.

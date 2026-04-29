@@ -71,7 +71,8 @@ class SuggestedConditionsHandlerTest {
         val result = handler.handle(emptyMap())
 
         // Then
-        result shouldBe SuggestedConditionsHandler.SUGGESTIONS_DELIVERED_INSTRUCTION
+        result shouldBe SuggestedConditionsHandler.SUGGESTIONS_DELIVERED_PREAMBLE +
+                "\n1. wave height is \"2\"\n2. case is for a single date"
         suggestionsBuffer.suggestions shouldBe listOf(
             "wave height is \"2\"",
             "case is for a single date"
@@ -92,7 +93,8 @@ class SuggestedConditionsHandlerTest {
         val result = handler.handle(emptyMap())
 
         // Then
-        result shouldBe SuggestedConditionsHandler.SUGGESTIONS_DELIVERED_INSTRUCTION
+        result shouldBe SuggestedConditionsHandler.SUGGESTIONS_DELIVERED_PREAMBLE +
+                "\n1. wave height >= 1.5 [editable]"
         suggestionsBuffer.suggestions shouldBe listOf("wave height >= 1.5 [editable]")
     }
 
@@ -112,7 +114,8 @@ class SuggestedConditionsHandlerTest {
         val result = handler.handle(emptyMap())
 
         // Then
-        result shouldBe SuggestedConditionsHandler.SUGGESTIONS_DELIVERED_INSTRUCTION
+        result shouldBe SuggestedConditionsHandler.SUGGESTIONS_DELIVERED_PREAMBLE +
+                "\n1. case is for a single date"
         suggestionsBuffer.suggestions shouldBe listOf("case is for a single date")
     }
 
