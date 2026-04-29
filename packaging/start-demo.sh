@@ -34,8 +34,8 @@ if [ -z "$UI_LAUNCHER" ]; then
     exit 1
 fi
 
-echo "Starting OpenRDR server (in-memory mode, port 9090) ..."
-java -jar "$SERVER_JAR" InMemory &
+echo "Starting OpenRDR server (in-memory mode, port 9090, with Demo KB) ..."
+java -jar "$SERVER_JAR" InMemory Demo &
 SERVER_PID=$!
 trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
 

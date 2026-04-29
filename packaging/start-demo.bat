@@ -31,8 +31,8 @@ if not defined UI_EXE (
     exit /b 1
 )
 
-echo Starting OpenRDR server (in-memory mode, port 9090) ...
-start "OpenRDR Server" cmd /k "java -jar ""!SERVER_JAR!"" InMemory"
+echo Starting OpenRDR server (in-memory mode, port 9090, with Demo KB) ...
+start "OpenRDR Server" cmd /k "java -jar ""!SERVER_JAR!"" InMemory Demo"
 
 echo Waiting for the server to accept connections ...
 set /a tries=0

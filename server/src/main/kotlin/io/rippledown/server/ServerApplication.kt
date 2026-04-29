@@ -53,6 +53,21 @@ class ServerApplication(
         return kbInfo
     }
 
+    /**
+     * Idempotent: ensures a KB with [name] exists, creating it from
+     * [sampleKB] if it does not. Used by the server's `Demo` startup mode
+     * to pre-populate a demo KB without the user having to do anything in
+     * the UI.
+     */
+    fun ensureSampleKB(name: String, sampleKB: SampleKB): KBInfo {
+        val existing = kbManager.all().firstOrNull { it.name == name }
+        if (existing != null) {
+            logger.info("Sample KB '$name' already exists; skipping seed.")
+            return existing
+        }
+        return createKBFromSample(name, sampleKB)
+    }
+
     fun selectKB(id: String): KBInfo {
         logger.info("Selecting kb with id: $id")
         return kbForId(id).kbInfo()
