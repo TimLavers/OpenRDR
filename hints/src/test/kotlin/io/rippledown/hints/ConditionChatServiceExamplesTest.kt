@@ -82,6 +82,18 @@ class ConditionChatServiceExamplesTest {
     }
 
     @Test
+    fun `should generate Abnormal conditions`() = runBlocking {
+        verify(
+            sortedMapOf(
+                cs("x is not OK", "x", "Abnormal", signature = "Current"),
+                cs("x is either high or low", "x", "Abnormal", signature = "Current"),
+                cs("x is not normal", "x", "Abnormal", signature = "Current"),
+                cs("x is outside the acceptable range", "x", "Abnormal", signature = "Current"),
+            )
+        )
+    }
+
+    @Test
     fun `should generate HighOrNormal conditions`() = runBlocking {
         verify(
             sortedMapOf(

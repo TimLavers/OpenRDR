@@ -39,6 +39,13 @@ all x are abnormal
 all x results are abnormal
 every x results is abnormal
 
+EXPECTED PREDICATE: Abnormal
+EXPECTED SIGNATURE: Current
+x is not within range
+x is abnormal
+x is not normal
+x is either high or low
+
 EXPECTED PREDICATE: Is, y
 EXPECTED SIGNATURE: Current
 x is equal to y
