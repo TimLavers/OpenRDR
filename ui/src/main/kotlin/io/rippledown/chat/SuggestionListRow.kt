@@ -32,6 +32,16 @@ fun SuggestionListRow(
 ) {
     val scrollState = rememberScrollState()
 
+    // Pre-compute the numbered suggestion text that's actually rendered
+    // below, and fold it into this row's accessibility description. This
+    // lets cucumber polling substring-match terms (e.g. "1.", "reason")
+    // off a single description read rather than recursing into the row's
+    // children — see [BotRow] for the performance rationale.
+    val encodedSuggestions = suggestions.mapIndexed { i, suggestion ->
+        val displayText = suggestion.removeSuffix(EDITABLE_MARKER)
+        "${i + 1}. $displayText"
+    }.joinToString("\n")
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -42,7 +52,7 @@ fun SuggestionListRow(
                 .fillMaxWidth()
                 .heightIn(max = 80.dp)
                 .background(White, RoundedCornerShape(8.dp))
-                .semantics { contentDescription = "$SUGGESTION_LIST$index" }
+                .semantics { contentDescription = "$SUGGESTION_LIST$index:$encodedSuggestions" }
         ) {
             Column(
                 modifier = Modifier

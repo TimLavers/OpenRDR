@@ -40,18 +40,41 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         Robot().mouseMove(loc.x + rectangle.x, loc.y)
     }
 
-    fun interpretationText(): String = execute<String> {
-        contextProvider().find(INTERPRETATION_TEXT_FIELD)?.accessibleName ?: ""
+    fun interpretationText(): String = POTiming.time("InterpretationPO.interpretationText") {
+        execute<String> {
+            contextProvider().find(INTERPRETATION_TEXT_FIELD)?.accessibleName ?: ""
+        }
     }
 
     fun waitForInterpretationText(expected: String): InterpretationPO {
-        await()
-            .atMost(ofSeconds(30))
-            .until {
-                interpretationText() == expected
-            }
+        // Track the most recent observed text so we can include it in
+        // the timeout failure message — helps distinguish "the UI never
+        // received the update" from "the UI received the update but the
+        // string doesn't exactly match" (trailing whitespace, newline,
+        // etc.). Without this diagnostic the scenario fails with just an
+        // Awaitility timeout and no indication of the actual content.
+        val lastObserved = java.util.concurrent.atomic.AtomicReference<String>("<never read>")
+        try {
+            await()
+                .atMost(ofSeconds(30))
+                .until {
+                    val actual = interpretationText()
+                    lastObserved.set(actual)
+                    actual == expected
+                }
+        } catch (e: org.awaitility.core.ConditionTimeoutException) {
+            throw AssertionError(
+                "waitForInterpretationText timed out.\n" +
+                        "  expected : ${expected.escape()}\n" +
+                        "  lastSeen : ${lastObserved.get().escape()}",
+                e
+            )
+        }
         return this
     }
+
+    private fun String.escape(): String =
+        "\"" + this.replace("\\", "\\\\").replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t") + "\""
 
     fun waitForInterpretationTextToContain(expected: String) {
         await().atMost(ofSeconds(30)).until {

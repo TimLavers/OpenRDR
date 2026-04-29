@@ -29,7 +29,6 @@ Feature: When building a rule, the user is provided with candidate conditions th
     Then the suggested conditions should contain:
       | Sun is "hot" |
 
-  @single
   Scenario: Some suggested conditions can be modified before being added
     Given case Bondi is provided having data:
       | Sun   | hot |

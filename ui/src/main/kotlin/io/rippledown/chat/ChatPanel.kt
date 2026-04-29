@@ -91,6 +91,16 @@ fun ChatPanel(
     val listState = rememberLazyListState()
     val textAreaFocusRequester = remember { FocusRequester() }
 
+    // Publish the current chat state to [ChatTestHook] so in-JVM
+    // integration tests (cucumber) can observe bot/suggestion text
+    // without paying the cost of an accessibility-tree walk. See the
+    // docs on [ChatTestHook] for why this matters. SideEffect fires
+    // after every successful composition, so the hook is always in sync
+    // with what this Composable was asked to render.
+    SideEffect {
+        ChatTestHook.update(messages = messages, sendIsEnabled = sendIsEnabled)
+    }
+
     LaunchedEffect(messages) {
         if (messages.isNotEmpty()) {
             listState.scrollToItem(messages.size - 1)
@@ -260,34 +270,6 @@ private fun sendUserMessage(
         onMessageSent(UserMessage(messageText))
     }
     return TextFieldValue("")
-}
-
-@Composable
-fun BotRow(
-    text: String,
-    index: Int
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Start
-    ) {
-        androidx.compose.material3.Surface(
-            shape = RoundedCornerShape(8.dp),
-            color = White,
-            shadowElevation = 1.dp,
-            modifier = Modifier
-                .semantics(mergeDescendants = true) {
-                    contentDescription = "$BOT${index}"
-                }
-        ) {
-            Text(
-                text = text,
-                color = Black,
-                style = TextStyle(fontSize = 13.sp),
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-            )
-        }
-    }
 }
 
 fun main() = application {

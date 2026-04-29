@@ -22,6 +22,7 @@ import io.rippledown.chat.ChatController
 import io.rippledown.chat.ChatControllerHandler
 import io.rippledown.chat.VoiceRecognitionService
 import io.rippledown.chat.VoiceRecognitionService.Companion.defaultModelPath
+import io.rippledown.cornerstone.CornerstoneTestHook
 import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
@@ -66,6 +67,15 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     val isShowingCornerstone = cornerstoneStatus?.cornerstoneToReview != null
     val ruleInProgress = cornerstoneStatus != null
 
+    // Publish the cornerstone state to [CornerstoneTestHook] so in-JVM
+    // integration tests (cucumber) can poll it without walking the
+    // accessibility tree. Same rationale as [ChatTestHook]; see those
+    // class docs for why the accessibility bridge is unusable on a
+    // window containing a large case table.
+    SideEffect {
+        CornerstoneTestHook.update(cornerstoneStatus)
+    }
+
     handler.setWindowSize(isShowingCornerstone)
 
     val chatControllerHandler = object : ChatControllerHandler {
@@ -81,9 +91,20 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                     onBotMessageReceived(response)
 
                     //refresh the case to get the latest interpretation
-                    currentCase = api.getCase(caseId)
+                    val refreshed = api.getCase(caseId)
+                    System.err.println(
+                        "[OpenRDRUI.sendUserMessage] post-bot getCase(caseId=$caseId) " +
+                                "responseAction=${response.text.take(60)} " +
+                                "refreshed.name=${refreshed?.case?.name} " +
+                                "interpretation.text=\"${
+                                    refreshed?.viewableInterpretation?.interpretation?.conclusionTexts()
+                                        ?.joinToString(",")
+                                }\""
+                    )
+                    currentCase = refreshed
                     ++chatId // Increment chatId to trigger recomposition in ChatController
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    System.err.println("[OpenRDRUI.sendUserMessage] threw ${e::class.simpleName}: ${e.message}")
                     //ignore
                     //a test may shut down the server before this message can be sent
                 }
@@ -111,13 +132,32 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     LaunchedEffect(casesInfo, currentCaseId) {
         withContext(dispatcher) {
             val allIds = casesInfo.caseIds + casesInfo.cornerstoneCaseIds
+            System.err.println(
+                "[OpenRDRUI.LE.casesInfo] count=${casesInfo.count} " +
+                        "caseIds=${casesInfo.caseIds.map { it.id }} " +
+                        "cornerstoneIds=${casesInfo.cornerstoneCaseIds.map { it.id }} " +
+                        "currentCaseId=$currentCaseId currentCase.id=${currentCase?.case?.caseId?.id} " +
+                        "currentCase.interp=\"${
+                            currentCase?.viewableInterpretation?.interpretation?.conclusionTexts()?.joinToString(",")
+                        }\""
+            )
             if (allIds.isNotEmpty()) {
                 if (currentCaseId == null || currentCaseId !in allIds.map { it.id }) {
                     // No initial case, or it's now been deleted
                     currentCaseId = allIds[0].id!!
+                    System.err.println("[OpenRDRUI.LE.casesInfo] -> currentCaseId reassigned to $currentCaseId")
                 }
                 if (currentCase?.case?.caseId?.id != currentCaseId) {
-                    currentCase = api.getCase(currentCaseId!!)
+                    val refreshed = api.getCase(currentCaseId!!)
+                    System.err.println(
+                        "[OpenRDRUI.LE.casesInfo] -> refetching currentCase(caseId=$currentCaseId) " +
+                                "name=${refreshed?.case?.name} " +
+                                "interp=\"${
+                                    refreshed?.viewableInterpretation?.interpretation?.conclusionTexts()
+                                        ?.joinToString(",")
+                                }\""
+                    )
+                    currentCase = refreshed
                 }
             }
         }
@@ -147,8 +187,14 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     LaunchedEffect(Unit) {
         withContext(dispatcher) {
             handler.api.startWebSocketSession(
-                updateCornerstoneStatus = { cornerstoneStatus = it },
-                ruleSessionCompleted = { cornerstoneStatus = null },
+                updateCornerstoneStatus = {
+                    System.err.println("[OpenRDRUI.ws.cornerstoneStatus] cornerstoneToReview=${it.cornerstoneToReview?.case?.name} index=${it.indexOfCornerstoneToReview}/${it.numberOfCornerstones}")
+                    cornerstoneStatus = it
+                },
+                ruleSessionCompleted = {
+                    System.err.println("[OpenRDRUI.ws.ruleSessionCompleted]")
+                    cornerstoneStatus = null
+                },
                 updateCasesInfo = { incoming ->
                     // Ignore updates that belong to a different KB than the one
                     // the UI is currently showing. Otherwise a sample-KB build
@@ -226,6 +272,16 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                     }
                 }
 
+                run {
+                    System.err.println(
+                        "[OpenRDRUI.render] casesInfo.count=${casesInfo.count} ruleInProgress=$ruleInProgress " +
+                                "currentCaseId=$currentCaseId currentCase.name=${currentCase?.case?.name} " +
+                                "currentCase.interp=\"${
+                                    currentCase?.viewableInterpretation?.interpretation?.conclusionTexts()
+                                        ?.joinToString(",")
+                                }\""
+                    )
+                }
                 if (casesInfo.count > 0) {
                     CaseControl(
                         currentCase = currentCase,
