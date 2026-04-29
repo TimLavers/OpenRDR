@@ -188,6 +188,47 @@ class ChatManagerTest {
     }
 
     @Test
+    fun `startConversation should surface a prose response as a plain bot message rather than 500`() = runTest {
+        // Given: the model ignored the JSON protocol and returned prose,
+        // as it does when the case already has comments. Previously this
+        // path threw a JsonDecodingException out of the KBEndpoint; the
+        // client would see an HTTP 500 and wedge. The manager must now
+        // echo the prose back as a plain bot message so the chat panel
+        // can render it and the user (and the cucumber suite) can
+        // continue the scenario.
+        val prose = """
+            This case has the following comments:
+            "Comment 1.",
+            "Comment 2.",
+            "Comment 3.".
+            Would you like to add another one, or replace or remove one of them?
+        """.trimIndent()
+        coEvery { conversationService.startConversation() } returns prose
+
+        // When
+        val responseToUser = chatManager.startConversation(viewableCase)
+
+        // Then
+        responseToUser shouldBe ChatResponse(prose)
+    }
+
+    @Test
+    fun `startConversation should surface malformed JSON-looking text rather than 500`() = runTest {
+        // Given: the model emitted something that started with '{' but
+        // isn't a valid ActionComment (e.g. truncated output). The old
+        // implementation propagated the JsonDecodingException out of the
+        // HTTP handler. Now we must fall back to delivering the raw text.
+        val garbage = "{ this is not valid JSON"
+        coEvery { conversationService.startConversation() } returns garbage
+
+        // When
+        val responseToUser = chatManager.startConversation(viewableCase)
+
+        // Then
+        responseToUser shouldBe ChatResponse(garbage)
+    }
+
+    @Test
     fun `should return empty suggestions when ActionComment has no suggestions`() = runTest {
         // Given
         val message = "No suggestions here."

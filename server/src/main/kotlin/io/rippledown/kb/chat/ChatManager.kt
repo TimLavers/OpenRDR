@@ -33,7 +33,24 @@ class ChatManager(
             return ChatResponse(AI_UNAVAILABLE_MESSAGE)
         }
         logger.info("$LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE '$response'")
-        return processActionComment(response.sanitizeLlmJson().fromJsonString<ActionComment>())
+        // When the case already has comments the model replies in prose
+        // (e.g. "This case has the following comments: ... Would you
+        // like to add another one, or replace or remove one of them?")
+        // instead of emitting a JSON ActionComment. Mirror the robustness
+        // of `processConversationResponse` here: extract any JSON
+        // fragments and, if there are none, surface the raw text as a
+        // plain bot message rather than 500ing.
+        return try {
+            val jsonFragments = extractJsonFragments(response)
+            if (jsonFragments.isEmpty()) {
+                ChatResponse(response)
+            } else {
+                processActionComment(jsonFragments.first().sanitizeLlmJson().fromJsonString<ActionComment>())
+            }
+        } catch (e: Exception) {
+            logger.error("Failed to process start-conversation ActionComment: $response", e)
+            ChatResponse(response)
+        }
     }
 
     override suspend fun response(message: String): ChatResponse {
