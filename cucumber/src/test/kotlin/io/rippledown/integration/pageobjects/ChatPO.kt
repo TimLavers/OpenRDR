@@ -203,7 +203,7 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
 }
 
 fun AccessibleContext.foundText(text: String): Boolean =
-    accessibleName?.contains(text) ?: false
+    accessibleName?.contains(text, ignoreCase = true) ?: false
 
 fun AccessibleContext.isBotResponseForIndex(index: Int): Boolean =
     accessibleDescription == "$BOT$index"
