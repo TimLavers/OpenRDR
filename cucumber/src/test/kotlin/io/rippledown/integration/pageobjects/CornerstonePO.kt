@@ -59,7 +59,19 @@ class CornerstonePO(private val contextProvider: () -> AccessibleContext) {
         await().atMost(Duration.ofSeconds(10)).untilAsserted {
             val label = POTiming.time("CornerstonePO.requireCornerstoneLabel.poll") {
                 val s = CornerstoneTestHook.snapshot()
-                if (s.isShowing) "$CORNERSTONE_TITLE ${s.indexOfCornerstoneToReview} of ${s.numberOfCornerstones}" else null
+                // Mirror the formatting in `CornerstoneInspection`:
+                //   total > 0 -> "Cornerstone ${index + 1} of $total"
+                //   total == 0 -> just "Cornerstone"
+                // The +1 converts the server's 0-based
+                // indexOfCornerstoneToReview into the 1-based label
+                // shown to the user.
+                if (!s.isShowing) {
+                    null
+                } else if (s.numberOfCornerstones > 0) {
+                    "$CORNERSTONE_TITLE ${s.indexOfCornerstoneToReview + 1} of ${s.numberOfCornerstones}"
+                } else {
+                    CORNERSTONE_TITLE
+                }
             }
             label shouldBe expectedLabel
         }
