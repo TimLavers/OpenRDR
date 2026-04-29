@@ -18,6 +18,9 @@ enum class SampleKB {
     },
     ZOO_CASES {
         override fun title() = "Zoo Animals - cases only"
+    },
+    DEMO {
+        override fun title() = "Demo"
     };
 
     abstract fun title(): String

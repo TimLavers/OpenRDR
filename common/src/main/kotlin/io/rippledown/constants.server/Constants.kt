@@ -3,6 +3,8 @@ package io.rippledown.constants.server
 const val SHUTDOWN = "/api/shutdown"
 const val PING = "/api/ping"
 const val IN_MEMORY = "InMemory"
+const val DEMO_ARG = "Demo"
+const val DEMO_KB_NAME = "Demo"
 
 const val STARTING_SERVER = "Starting server"
 const val STOPPING_SERVER = "Stopping server"
