@@ -33,12 +33,12 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "Main"
+        mainClass = "io.rippledown.main.MainKt"
         jvmArgs("--enable-native-access=ALL-UNNAMED")
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi)
-            packageName = "ui"
+            packageName = "OpenRDR"
             packageVersion = "1.0.0"
         }
     }
