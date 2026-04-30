@@ -13,6 +13,6 @@ class ExemptCornerstone() : ChatAction {
     ): ChatResponse {
         val cornerstoneStatus = ruleService.exemptCornerstoneCase()
         ruleService.sendCornerstoneStatus()
-        return modelResponder.response(cornerstoneStatus.summary())
+        return modelResponder.response(cornerstoneStatus.endOfReviewMessage())
     }
 }

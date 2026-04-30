@@ -13,6 +13,6 @@ data class RemoveReason(val comment: String) : ChatAction {
     ): ChatResponse {
         val cornerstoneStatus = ruleService.removeConditionByText(comment)
         ruleService.sendCornerstoneStatus()
-        return modelResponder.response(cornerstoneStatus.summary())
+        return modelResponder.response(cornerstoneStatus.endOfReviewMessage())
     }
 }

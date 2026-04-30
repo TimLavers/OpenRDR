@@ -15,6 +15,6 @@ class PreviousCornerstone() : ChatAction {
         val previousIndex = currentStatus.indexOfCornerstoneToReview - 1
         val cornerstoneStatus = ruleService.selectCornerstoneCase(previousIndex)
         ruleService.sendCornerstoneStatus()
-        return modelResponder.response(cornerstoneStatus.summary())
+        return modelResponder.response(cornerstoneStatus.endOfReviewMessage())
     }
 }
