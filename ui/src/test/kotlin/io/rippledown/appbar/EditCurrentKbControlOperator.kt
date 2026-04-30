@@ -4,10 +4,12 @@ package io.rippledown.appbar
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
-import io.rippledown.constants.kb.*
-import io.rippledown.constants.main.*
+import io.rippledown.constants.kb.EDIT_KB_DESCRIPTION_BUTTON_TEXT
+import io.rippledown.constants.kb.KB_CONTROL_DROPDOWN_DESCRIPTION
+import io.rippledown.constants.main.EDIT_KB_DESCRIPTION_OK_BUTTON_DESCRIPTION
+import io.rippledown.constants.main.EDIT_KB_DESCRIPTION_TEXT_DESCRIPTION
 
-fun ComposeTestRule.clickEditKbDropdown() = onNodeWithContentDescription(EDIT_CURRENT_KB_CONTROL_DROPDOWN_BUTTON_DESCRIPTION).performClick()
+fun ComposeTestRule.clickEditKbDropdown() = onNodeWithContentDescription(KB_CONTROL_DROPDOWN_DESCRIPTION).performClick()
 
 fun ComposeTestRule.assertEditKbDescriptionMenuItemIsShowing() {
     onNodeWithText(EDIT_KB_DESCRIPTION_BUTTON_TEXT).assertIsEnabled()
@@ -26,6 +28,3 @@ fun ComposeTestRule.enterKbDescription(description: String) {
 }
 fun ComposeTestRule.clickConfirmDescriptionButton() = onNodeWithContentDescription(EDIT_KB_DESCRIPTION_OK_BUTTON_DESCRIPTION).performClick()
 
-fun ComposeTestRule.assertUndoLastRuleMenuItemIsNotShowing() = onAllNodesWithText(UNDO_LAST_RULE_BUTTON_TEXT).assertCountEquals(0)
-
-fun ComposeTestRule.clickUndoLastRuleMenuItem() = onNodeWithText(UNDO_LAST_RULE_BUTTON_TEXT).performClick()

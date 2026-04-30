@@ -12,7 +12,7 @@ A well-defined concept understood by experts and used by them to make classifica
 a clinical test such as TSH or LDL Cholesterol.
 See [Attribute Requirements](attributes.md)
 
-**TestEvent:**
+**Event:**
 An `Attribute` and a point in time, representing a specific measurement for a patient.
 
 **Value:**

@@ -24,20 +24,32 @@ data class CaseTemplate(var name: String = "", var tsh: String = "", var freeT4:
     var location: String = "General Practice."
     var clinicalNotes: String = ""
     var tests: String = "TFTs"
-    private val extraResults = mutableMapOf<String, TestResult>()
+    private val extraResults = mutableMapOf<String, Result>()
 
     fun build(attributeFactory: AttributeManager): RDRCase {
         val result = RDRCaseBuilder()
         result.addValue(attributeFactory.getOrCreate("Sex"), defaultDate, sex )
         result.addValue(attributeFactory.getOrCreate("Age"), defaultDate, age.toString())
         if (tsh.isNotBlank()) {
-            result.addResult(attributeFactory.getOrCreate("TSH"), defaultDate, TestResult(Value(tsh), defaultTSHRange, " mU/L"))
+            result.addResult(
+                attributeFactory.getOrCreate("TSH"),
+                defaultDate,
+                Result(Value(tsh), defaultTSHRange, " mU/L")
+            )
         }
         if (freeT4.isNotBlank()) {
-            result.addResult(attributeFactory.getOrCreate("Free T4"), defaultDate, TestResult(Value(freeT4), defaultFreeT4Range, " pmol/L"))
+            result.addResult(
+                attributeFactory.getOrCreate("Free T4"),
+                defaultDate,
+                Result(Value(freeT4), defaultFreeT4Range, " pmol/L")
+            )
         }
         if (freeT3.isNotBlank()) {
-            result.addResult(attributeFactory.getOrCreate("Free T3"), defaultDate, TestResult(Value(freeT3), defaultFreeT3Range, " pmol/L"))
+            result.addResult(
+                attributeFactory.getOrCreate("Free T3"),
+                defaultDate,
+                Result(Value(freeT3), defaultFreeT3Range, " pmol/L")
+            )
         }
         result.addValue(attributeFactory.getOrCreate("Patient Location"), defaultDate,  location)
         result.addValue(attributeFactory.getOrCreate("Tests"), defaultDate, tests)
@@ -61,12 +73,12 @@ class TestResultTemplate(var attribute: String = "", var value: String = "") {
     var upperBound: String? = null
     var units: String? = null
 
-    fun result(): TestResult {
+    fun result(): Result {
         var range: ReferenceRange? = null
         if (lowerBound != null || upperBound != null) {
             range = ReferenceRange(lowerBound, upperBound)
         }
-        return TestResult(Value(value), range, units)
+        return Result(Value(value), range, units)
     }
 }
 
@@ -78,7 +90,7 @@ fun multiEpisodeCase(attributeFactory: AttributeManager, lambda: MultiEpisodeCas
 
 data class MultiEpisodeCaseTemplate(val attributeFactory: AttributeManager, var name: String = "") {
     private var dates: List<Long> = emptyList()
-    private var attributeToValues = mutableMapOf<Attribute, List<TestResult>>()
+    private var attributeToValues = mutableMapOf<Attribute, List<Result>>()
     var sex = "F"
 
     fun build(): RDRCase {
@@ -90,10 +102,10 @@ data class MultiEpisodeCaseTemplate(val attributeFactory: AttributeManager, var 
         }
         dates.forEachIndexed { index, date ->
             attributeToValues.forEach {
-                val testResult = it.value[index]
-                builder.addResult(it.key, date, testResult)
+                val Result = it.value[index]
+                builder.addResult(it.key, date, Result)
             }
-            builder.addResult(attributeFactory.getOrCreate("Sex"), date,TestResult( sex))
+            builder.addResult(attributeFactory.getOrCreate("Sex"), date, Result(sex))
         }
         return builder.build( name)
     }
@@ -137,17 +149,17 @@ class TestResultsTemplate(var attribute: String = "", var valuesCSL: String = ""
     var upperBound: String? = null
     var units: String? = null
 
-    fun results(): List<TestResult> {
+    fun results(): List<Result> {
         var range: ReferenceRange? = null
         if (lowerBound != null || upperBound != null) {
             range = ReferenceRange(lowerBound, upperBound)
         }
-        return valuesCSL.split(",").map{ s: String -> TestResult(s.trim(), range, units) }
+        return valuesCSL.split(",").map { s: String -> Result(s.trim(), range, units) }
     }
 }
 class ClinicalNotesTemplate(var attribute: String = "Clinical Notes", var values_separated: String = "") {
 
-    fun results(): List<TestResult> {
-        return values_separated.split("_").map { s: String -> TestResult(s.trim(), null, null) }
+    fun results(): List<Result> {
+        return values_separated.split("_").map { s: String -> Result(s.trim(), null, null) }
     }
 }

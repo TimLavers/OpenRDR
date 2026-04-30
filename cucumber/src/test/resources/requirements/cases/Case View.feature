@@ -11,10 +11,10 @@ Feature: The user should be able to see all test dates and results for a case
       | TSH |
       | Stuff |
     And I should see these values for 'TSH':
-      | 0.67 mU/L |
-      | 2.75 mU/L |
+      | 0.67 |
+      | 2.75 |
     And I should see '0.50 - 4.0' as reference range for 'TSH'
     And I should see these values for 'Stuff':
-      | 12.4 mU/L |
-      | 6.7 mU/L |
+      | 12.4 |
+      | 6.7  |
     And I should see '' as reference range for 'Stuff'

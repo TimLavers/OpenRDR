@@ -3,7 +3,7 @@ package io.rippledown.integration.proxy
 import io.rippledown.integration.restclient.RESTClient
 import io.rippledown.model.RDRCase
 import io.rippledown.model.ReferenceRange
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.external.MeasurementEvent
 import kotlinx.serialization.json.Json
@@ -25,6 +25,10 @@ class LabProxy(tempDir: File, val restProxy: RESTClient) {
         val data = readCaseData(caseName)
         provideCaseFromString(data)
     }
+    fun provideCornerstoneCase(caseName: String) {
+        val data = readCaseData(caseName)
+        provideCornerstoneCaseFromString(data)
+    }
 
     private fun readCaseData(caseName: String) = ConfiguredTestData.caseFile(caseName).readText()
 
@@ -32,6 +36,11 @@ class LabProxy(tempDir: File, val restProxy: RESTClient) {
         val jsonBuilder = Json { allowStructuredMapKeys = true }
         val case: ExternalCase = jsonBuilder.decodeFromString(data)
         restProxy.provideCase(case)
+    }
+    private fun provideCornerstoneCaseFromString(data: String) {
+        val jsonBuilder = Json { allowStructuredMapKeys = true }
+        val case: ExternalCase = jsonBuilder.decodeFromString(data)
+        restProxy.addCornerstoneCase(case)
     }
 
     fun provideCaseWithName(caseName: String) {
@@ -43,7 +52,7 @@ class LabProxy(tempDir: File, val restProxy: RESTClient) {
     fun provideCase(rdrCase: RDRCase) {
         // For now we convert the RDRCase into an ExternalCase
         // and provide that. TODO change this - make the parameter an ExternalCase
-        val data = mutableMapOf<MeasurementEvent, TestResult>()
+        val data = mutableMapOf<MeasurementEvent, Result>()
         rdrCase.data.forEach { data[MeasurementEvent(it.key.attribute.name, it.key.date)] = it.value }
         restProxy.provideCase(ExternalCase(rdrCase.name, data))
     }
@@ -68,8 +77,8 @@ class LabProxy(tempDir: File, val restProxy: RESTClient) {
         name: String
     ): ExternalCase {
         val now = now().toEpochMilli()
-        val data = mutableMapOf<MeasurementEvent, TestResult>()
-        attributeNameToValue.forEach { data[MeasurementEvent(it.key, now)] = TestResult(it.value) }
+        val data = mutableMapOf<MeasurementEvent, Result>()
+        attributeNameToValue.forEach { data[MeasurementEvent(it.key, now)] = Result(it.value) }
         val case = ExternalCase(name, data)
         return case
     }
@@ -78,7 +87,7 @@ class LabProxy(tempDir: File, val restProxy: RESTClient) {
         val now = now().toEpochMilli()
         val data = details.associate {
             val referenceRange = if (it.lowReferenceRange != null || it.highReferenceRange != null ) ReferenceRange(it.lowReferenceRange, it.highReferenceRange) else null
-            MeasurementEvent(it.attributeName, now) to TestResult(it.result, referenceRange, it.units)
+            MeasurementEvent(it.attributeName, now) to Result(it.result, referenceRange, it.units)
         }
         val case = ExternalCase(caseName, data)
         restProxy.provideCase(case)

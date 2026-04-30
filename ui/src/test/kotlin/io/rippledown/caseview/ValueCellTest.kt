@@ -2,15 +2,17 @@ package io.rippledown.caseview
 
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.rippledown.mocks.DummyRowScope
 import io.rippledown.model.Attribute
 import io.rippledown.model.ReferenceRange
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import org.junit.Rule
 import org.junit.Test
 
@@ -24,10 +26,10 @@ class ValueCellTest {
 
     @Test
     fun `show result that does not have units`() {
-        val testResult = TestResult("12.8", null, null)
+        val Result = Result("12.8", null, null)
         val rowScope: RowScope = DummyRowScope()
         composeTestRule.setContent {
-            rowScope.ValueCell("Bondi", tsh, 1, testResult, columnWidths)
+            rowScope.ValueCell("Bondi", tsh, 1, Result, columnWidths)
         }
         with(composeTestRule) {
             waitUntilExactlyOneExists(hasText("12.8"))
@@ -39,32 +41,88 @@ class ValueCellTest {
         val columnWidths = mockk<ColumnWidths>()
         every { columnWidths.valueColumnWeight() }.returns(0.5F)
 
-        val testResult = TestResult("12.8", null, null)
+        val Result = Result("12.8", null, null)
         val rowScope: RowScope = DummyRowScope()
         composeTestRule.setContent {
-            rowScope.ValueCell("Bondi", tsh, 1, testResult, columnWidths)
+            rowScope.ValueCell("Bondi", tsh, 1, Result, columnWidths)
         }
     }
 
     @Test
-    fun `show result that has units`() {
-        val testResult = TestResult("12.8", null, "waves / sec")
+    fun `value cell shows only the numeric value, not the units`() {
+        // Units are rendered in the dedicated UnitsCell (see BodyRow), not
+        // inside ValueCell, so a result with units should still display only
+        // the numeric value here.
+        val Result = Result("12.8", null, "waves / sec")
         val rowScope: RowScope = DummyRowScope()
         composeTestRule.setContent {
-            rowScope.ValueCell("Bondi", tsh, 1, testResult, columnWidths)
+            rowScope.ValueCell("Bondi", tsh, 1, Result, columnWidths)
         }
         with(composeTestRule) {
-            waitUntilExactlyOneExists(hasText("12.8 waves / sec"))
+            waitUntilExactlyOneExists(hasText("12.8"))
+            onAllNodesWithText("waves / sec", substring = true).assertCountEquals(0)
+        }
+    }
+
+    @Test
+    fun `show out-of-range marker when value is above the upper bound`() {
+        val Result = Result("12.8", ReferenceRange("1", "10"), null)
+        val rowScope: RowScope = DummyRowScope()
+        composeTestRule.setContent {
+            rowScope.ValueCell("Bondi", tsh, 1, Result, columnWidths)
+        }
+        with(composeTestRule) {
+            waitUntilExactlyOneExists(hasText("12.8"))
+            waitUntilExactlyOneExists(hasText("*"))
+        }
+    }
+
+    @Test
+    fun `show out-of-range marker when value is below the lower bound`() {
+        val Result = Result("0.5", ReferenceRange("1", "10"), null)
+        val rowScope: RowScope = DummyRowScope()
+        composeTestRule.setContent {
+            rowScope.ValueCell("Bondi", tsh, 1, Result, columnWidths)
+        }
+        with(composeTestRule) {
+            waitUntilExactlyOneExists(hasText("0.5"))
+            waitUntilExactlyOneExists(hasText("*"))
+        }
+    }
+
+    @Test
+    fun `do not show marker when value is within the reference range`() {
+        val Result = Result("5.0", ReferenceRange("1", "10"), null)
+        val rowScope: RowScope = DummyRowScope()
+        composeTestRule.setContent {
+            rowScope.ValueCell("Bondi", tsh, 1, Result, columnWidths)
+        }
+        with(composeTestRule) {
+            waitUntilExactlyOneExists(hasText("5.0"))
+            onAllNodes(hasText("*")).assertCountEquals(0)
+        }
+    }
+
+    @Test
+    fun `do not show marker when there is no reference range`() {
+        val Result = Result("12.8", null, null)
+        val rowScope: RowScope = DummyRowScope()
+        composeTestRule.setContent {
+            rowScope.ValueCell("Bondi", tsh, 1, Result, columnWidths)
+        }
+        with(composeTestRule) {
+            waitUntilExactlyOneExists(hasText("12.8"))
+            onAllNodes(hasText("*")).assertCountEquals(0)
         }
     }
 
     @Test
     fun resultTextTest() {
-        resultText(TestResult("44.1", null, null)) shouldBe "44.1"
-        resultText(TestResult("44.1", ReferenceRange("1", "2"), null)) shouldBe "44.1"
-        resultText(TestResult("44.1", null, "furlongs / fortnight")) shouldBe "44.1 furlongs / fortnight"
-        resultText(TestResult("10", null, "mmol/L")) shouldBe "10 mmol/L"
-        resultText(TestResult("10", null, " mmol/L ")) shouldBe "10 mmol/L"
+        resultText(Result("44.1", null, null)) shouldBe "44.1"
+        resultText(Result("44.1", ReferenceRange("1", "2"), null)) shouldBe "44.1"
+        resultText(Result("44.1", null, "furlongs / fortnight")) shouldBe "44.1 furlongs / fortnight"
+        resultText(Result("10", null, "mmol/L")) shouldBe "10 mmol/L"
+        resultText(Result("10", null, " mmol/L ")) shouldBe "10 mmol/L"
     }
 }
 

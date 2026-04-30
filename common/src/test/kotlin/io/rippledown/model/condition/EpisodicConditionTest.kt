@@ -4,7 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.rippledown.model.RDRCaseBuilder
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import io.rippledown.model.condition.episodic.predicate.Contains
 import io.rippledown.model.condition.episodic.predicate.Low
 import io.rippledown.model.condition.episodic.predicate.Normal
@@ -55,7 +55,7 @@ class EpisodicConditionTest: ConditionTestBase() {
 
         // Value is low.
         val builder1 = RDRCaseBuilder()
-        builder1.addResult(tsh, defaultDate, TestResult("0.067", tshRange, "pmol/L"))
+        builder1.addResult(tsh, defaultDate, Result("0.067", tshRange, "pmol/L"))
         val case = builder1.build("Case")
         tshLow.holds(case) shouldBe true
 

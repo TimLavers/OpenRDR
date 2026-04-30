@@ -10,9 +10,6 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import io.rippledown.constants.main.TITLE
-import openrdr.ui.generated.resources.Res.drawable
-import openrdr.ui.generated.resources.water_wave_icon
-import org.jetbrains.compose.resources.painterResource
 
 val DEFAULT_WINDOW_SIZE = DpSize(1_000.dp, 800.dp)
 val EXPANDED_WINDOW_SIZE = DpSize(1_400.dp, 800.dp)
@@ -29,10 +26,10 @@ fun main() = application {
             exitApplication()
             closing = true
         },
-        icon = painterResource(drawable.water_wave_icon),
         title = TITLE,
         state = WindowState(size = windowSize)//allow for resizing
     ) {
+        applyAppIcon(window)
         OpenRDRUI(object : Handler {
             override var isClosing = { closing }
             override var api: Api = Api()

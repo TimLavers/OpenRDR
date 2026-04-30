@@ -2,7 +2,7 @@ package io.rippledown.model.rule
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.episodic.predicate.High
 import io.rippledown.model.condition.episodic.predicate.IsNumeric
@@ -20,18 +20,18 @@ class NonEditableConditionSuggesterTest: ConditionFactoryTestBase()  {
         NonEditableConditionSuggester(High, Current).invoke(tsh, null) shouldBe null
         NonEditableConditionSuggester(High, Current).invoke(tsh, tr("whatever")) shouldNotBe null
         NonEditableConditionSuggester(High, Current).invoke(tsh, tr("2.3")) shouldNotBe null
-        NonEditableConditionSuggester(High, Current).invoke(tsh, TestResult("2.3", null, "m/L")) shouldNotBe null
-        with(NonEditableConditionSuggester(High, Current).invoke(tsh, TestResult("2.3", rr("1.2", null), "m/L"))!!) {
+        NonEditableConditionSuggester(High, Current).invoke(tsh, Result("2.3", null, "m/L")) shouldNotBe null
+        with(NonEditableConditionSuggester(High, Current).invoke(tsh, Result("2.3", rr("1.2", null), "m/L"))!!) {
             isEditable() shouldBe false
             initialSuggestion() shouldBe EpisodicCondition(tsh, High, Current)
             editableCondition() shouldBe null
         }
-        with(NonEditableConditionSuggester(Normal, Current).invoke(tsh, TestResult("2.3", rr("1.2", "2.0"), "m/L"))!!) {
+        with(NonEditableConditionSuggester(Normal, Current).invoke(tsh, Result("2.3", rr("1.2", "2.0"), "m/L"))!!) {
             isEditable() shouldBe false
             initialSuggestion() shouldBe EpisodicCondition(tsh, Normal, Current)
             editableCondition() shouldBe null
         }
-        with(NonEditableConditionSuggester(Low, Current).invoke(tsh, TestResult("", rr(null,"2.0"), "m/L"))!!) {
+        with(NonEditableConditionSuggester(Low, Current).invoke(tsh, Result("", rr(null, "2.0"), "m/L"))!!) {
             initialSuggestion() shouldBe EpisodicCondition(tsh, Low, Current)
         }
     }

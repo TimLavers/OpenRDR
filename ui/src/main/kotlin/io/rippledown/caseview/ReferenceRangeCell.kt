@@ -10,10 +10,10 @@ import androidx.compose.ui.text.style.TextAlign
 import io.rippledown.constants.caseview.REFERENCE_RANGE_CELL_DESCRIPTION_PREFIX
 import io.rippledown.model.Attribute
 import io.rippledown.model.ReferenceRange
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 
 @Composable
-fun RowScope.ReferenceRangeCell(attribute: Attribute, result: TestResult, widthWeight: Float) {
+fun RowScope.ReferenceRangeCell(attribute: Attribute, result: Result, widthWeight: Float) {
     Text(
         text = rangeText(result.referenceRange),
         modifier = Modifier.weight(widthWeight)

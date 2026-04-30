@@ -1,6 +1,7 @@
 package io.rippledown.kb.sample
 
 import io.rippledown.kb.sample.contactlenses.ContactLensesSampleBuilder
+import io.rippledown.kb.sample.demo.DemoSampleBuilder
 import io.rippledown.kb.sample.vltsh.TSHSampleBuilder
 import io.rippledown.kb.sample.zoo.ZooSampleBuilder
 import io.rippledown.sample.SampleKB
@@ -20,5 +21,6 @@ fun loadSampleKB(kbEndpoint: KBEndpoint, sampleKB: SampleKB) {
         CONTACT_LENSES_CASES -> ContactLensesSampleBuilder(kbEndpoint).setupCases()
         ZOO -> ZooSampleBuilder(kbEndpoint).buildRules()
         ZOO_CASES -> ZooSampleBuilder(kbEndpoint).setupCases()
+        DEMO -> DemoSampleBuilder(kbEndpoint).setupCases()
     }
 }

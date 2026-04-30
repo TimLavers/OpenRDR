@@ -11,7 +11,7 @@ import io.rippledown.kb.export.util.Zipper
 import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.episodic.predicate.LessThanOrEquals
 import io.rippledown.model.condition.episodic.signature.Current
@@ -108,9 +108,9 @@ class KBImporterTest : ExporterTestBase() {
         val episodeDate = Instant.now().toEpochMilli()
         fun buildCase(name: String, glucoseValue: String, ldlValue: String, hdlValue: String): RDRCase {
             val rdrCaseBuilder = RDRCaseBuilder()
-            rdrCaseBuilder.addResult(glucose, episodeDate, TestResult(glucoseValue))
-            rdrCaseBuilder.addResult(ldl, episodeDate, TestResult(ldlValue))
-            rdrCaseBuilder.addResult(hdl, episodeDate, TestResult(hdlValue))
+            rdrCaseBuilder.addResult(glucose, episodeDate, Result(glucoseValue))
+            rdrCaseBuilder.addResult(ldl, episodeDate, Result(ldlValue))
+            rdrCaseBuilder.addResult(hdl, episodeDate, Result(hdlValue))
             return rdrCaseBuilder.build(name)
         }
 

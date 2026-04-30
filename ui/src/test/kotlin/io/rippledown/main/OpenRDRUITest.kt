@@ -1,19 +1,21 @@
 package io.rippledown.main
 
-import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import io.rippledown.appbar.*
+import io.rippledown.appbar.KB_INFO_ITEM
+import io.rippledown.appbar.assertKbNameIs
+import io.rippledown.appbar.clickDropdown
 import io.rippledown.casecontrol.*
 import io.rippledown.chat.BotMessage
 import io.rippledown.chat.requireChatMessagesShowing
 import io.rippledown.chat.requireChatPanelIsDisplayed
 import io.rippledown.chat.typeChatMessageAndClickSend
 import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
-import io.rippledown.constants.kb.CONFIRM_UNDO_LAST_RULE_TEXT
 import io.rippledown.constants.main.APPLICATION_BAR_ID
 import io.rippledown.interpretation.requireInterpretation
 import io.rippledown.model.CaseId
@@ -24,7 +26,6 @@ import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Removal
 import io.rippledown.model.diff.Replacement
 import io.rippledown.model.rule.CornerstoneStatus
-import io.rippledown.model.rule.UndoRuleDescription
 import io.rippledown.utils.applicationFor
 import io.rippledown.utils.createViewableCase
 import io.rippledown.utils.createViewableCaseWithInterpretation
@@ -85,12 +86,50 @@ class OpenRDRUITest {
 
     @Test
     fun `should show the first project if there is one`() = runTest {
-        coEvery { api.kbList() } returns listOf(KBInfo("Bondi"), KBInfo("Malabar"))
+        val bondi = KBInfo("Bondi")
+        val malabar = KBInfo("Malabar")
+        coEvery { api.kbList() } returns listOf(bondi, malabar)
+        coEvery { api.selectKB(bondi.id) } returns bondi
         with(composeTestRule) {
             setContent {
                 OpenRDRUI(handler, dispatcher = Unconfined)
             }
             assertKbNameIs("Bondi")
+        }
+    }
+
+    @Test
+    fun `should select the first KB on the server on startup so Api currentKB is in sync`() = runTest {
+        // Regression: previously the UI set its kbInfo state from
+        // api.kbList().firstOrNull() without telling the server which KB was
+        // current. Api.currentKB then stayed null and the next request would
+        // lazy-fetch the default KB, routing follow-up calls (e.g. setting a
+        // KB description) to the wrong KB.
+        val bondi = KBInfo("Bondi")
+        val malabar = KBInfo("Malabar")
+        coEvery { api.kbList() } returns listOf(bondi, malabar)
+        coEvery { api.selectKB(bondi.id) } returns bondi
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            assertKbNameIs("Bondi")
+            coVerify { api.selectKB(bondi.id) }
+        }
+    }
+
+    @Test
+    fun `should not call selectKB on startup when there are no KBs`() = runTest {
+        // Sanity check: no KBs means nothing to select; the handler must not
+        // call selectKB with a null/empty id.
+        coEvery { api.kbList() } returns emptyList()
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            coVerify(exactly = 0) { api.selectKB(any()) }
         }
     }
 
@@ -335,50 +374,6 @@ class OpenRDRUITest {
             }
             requireNumberOfCasesOnCaseList(1)
             onNodeWithContentDescription(NUMBER_OF_CASES_ID).assertDoesNotExist()
-        }
-    }
-
-    @OptIn(ExperimentalTestApi::class)
-    @Test
-    fun `when a rule is undone and there is no current case, the case is not refreshed`() = runTest {
-        val descriptionText = "This is the last rule!"
-        val lastRuleDescription = UndoRuleDescription(descriptionText, true)
-
-        coEvery { api.lastRuleDescription() } returns lastRuleDescription
-        with(composeTestRule) {
-            setContent {
-                OpenRDRUI(handler, dispatcher = Unconfined)
-            }
-            undoLastRule(descriptionText)
-            coVerify {
-                api.undoLastRule()
-            }
-            coVerify(exactly = 0) {
-                api.getCase(any())
-            }
-        }
-    }
-
-    @OptIn(ExperimentalTestApi::class)
-    @Test
-    fun `when a rule is undone the current case should be refreshed`() = runTest {
-        val caseName = "case a"
-        val caseId = CaseId(id = 1, name = caseName)
-        val case = createViewableCaseWithInterpretation(caseId.name, caseId.id, listOf())
-        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
-        coEvery { api.getCase(any()) } returns case
-        val descriptionText = "This is the last rule!"
-        val lastRuleDescription = UndoRuleDescription(descriptionText, true)
-        coEvery { api.lastRuleDescription() } returns lastRuleDescription
-        with(composeTestRule) {
-            setContent {
-                OpenRDRUI(handler, dispatcher = Unconfined)
-            }
-            undoLastRule(descriptionText)
-            coVerify {
-                api.undoLastRule()
-                api.getCase(1)
-            }
         }
     }
 
@@ -845,6 +840,7 @@ class OpenRDRUITest {
         val caseIdA = CaseId(id = 1, name = "case A")
         val caseIdB = CaseId(id = 2, name = "case B")
         coEvery { api.kbList() } returns listOf(kbA, kbB)
+        coEvery { api.selectKB("id_a") } returns kbA
         coEvery { api.selectKB("id_b") } returns kbB
         var casesForCurrentKb = CasesInfo(listOf(caseIdA))
         coEvery { api.waitingCasesInfo() } coAnswers { casesForCurrentKb }
@@ -880,6 +876,7 @@ class OpenRDRUITest {
         val caseA2 = CaseId(id = 2, name = "a-2")
         val caseB1 = CaseId(id = 3, name = "b-1")
         coEvery { api.kbList() } returns listOf(kbA, kbB)
+        coEvery { api.selectKB("id_a") } returns kbA
         coEvery { api.selectKB("id_b") } returns kbB
         coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("a-1", 1)
         coEvery { api.getCase(2) } returns createViewableCaseWithInterpretation("a-2", 2)
@@ -927,19 +924,6 @@ class OpenRDRUITest {
         }
     }
 
-    @OptIn(ExperimentalTestApi::class)
-    private fun ComposeContentTestRule.undoLastRule(descriptionText: String) {
-        clickEditKbDropdown()
-        assertEditKbDescriptionMenuItemIsShowing()
-        clickUndoLastRuleMenuItem()
-        waitUntilExactlyOneExists(hasText(descriptionText), timeoutMillis = 5000)
-        waitForIdle()
-        clickUndoLastRule()
-        waitUntilExactlyOneExists(hasText(CONFIRM_UNDO_LAST_RULE_TEXT), timeoutMillis = 5000)
-        waitForIdle()
-        assertUndoLastRuleButtonIsNotShowing()
-        clickUndoLastRuleConfirmationYesButton()
-    }
 }
 
 fun main() {

@@ -1,11 +1,11 @@
 package io.rippledown.model.condition.episodic.predicate
 
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class GreaterThanOrEquals(val d: Double) : TestResultPredicate {
-    override fun evaluate(result: TestResult): Boolean {
+    override fun evaluate(result: Result): Boolean {
         val real = result.value.real ?: return false
         return real >= d
     }
@@ -15,7 +15,7 @@ data class GreaterThanOrEquals(val d: Double) : TestResultPredicate {
 
 @Serializable
 data class GreaterThan(val d: Double) : TestResultPredicate {
-    override fun evaluate(result: TestResult): Boolean {
+    override fun evaluate(result: Result): Boolean {
         val real = result.value.real ?: return false
         return real > d
     }
@@ -25,7 +25,7 @@ data class GreaterThan(val d: Double) : TestResultPredicate {
 
 @Serializable
 data class LessThanOrEquals(val d: Double) : TestResultPredicate {
-    override fun evaluate(result: TestResult): Boolean {
+    override fun evaluate(result: Result): Boolean {
         val real = result.value.real ?: return false
         return real <= d
     }
@@ -35,7 +35,7 @@ data class LessThanOrEquals(val d: Double) : TestResultPredicate {
 
 @Serializable
 data class LessThan(val d: Double) : TestResultPredicate {
-    override fun evaluate(result: TestResult): Boolean {
+    override fun evaluate(result: Result): Boolean {
         val real = result.value.real ?: return false
         return real < d
     }

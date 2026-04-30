@@ -1,12 +1,19 @@
 package io.rippledown.cornerstone
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.unit.dp
 import io.rippledown.constants.cornerstone.CORNERSTONE_CASE_NAME_ID
 import io.rippledown.constants.cornerstone.CORNERSTONE_ID
 import io.rippledown.constants.cornerstone.CORNERSTONE_TITLE
+import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE
 import io.rippledown.utils.applicationFor
+import io.rippledown.utils.createLargeViewableCaseWithInterpretation
 import io.rippledown.utils.createViewableCase
 import org.junit.Rule
 import org.junit.Test
@@ -70,6 +77,25 @@ class CornerstoneInspectionTest {
             }
             onNodeWithContentDescription(CORNERSTONE_ID)
                 .assertTextEquals("$CORNERSTONE_TITLE 5 of 5")
+        }
+    }
+
+    @Test
+    fun `interpretation should remain visible when the cornerstone has many attributes`() {
+        val largeCase = createLargeViewableCaseWithInterpretation(
+            name = "Greta",
+            caseId = 2L,
+            numberOfAttributes = 80,
+            conclusionTexts = listOf("Go to Bondi")
+        )
+        with(composeTestRule) {
+            setContent {
+                Box(modifier = Modifier.size(width = 600.dp, height = 500.dp)) {
+                    CornerstoneInspection(largeCase, index = 0, total = 1)
+                }
+            }
+            onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE, useUnmergedTree = true)
+                .assertIsDisplayed()
         }
     }
 

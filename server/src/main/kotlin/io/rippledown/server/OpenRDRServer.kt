@@ -15,12 +15,15 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.rippledown.constants.api.PORT
+import io.rippledown.constants.server.DEMO_ARG
+import io.rippledown.constants.server.DEMO_KB_NAME
 import io.rippledown.constants.server.IN_MEMORY
 import io.rippledown.constants.server.STARTING_SERVER
 import io.rippledown.log.lazyLogger
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.persistence.postgres.PostgresPersistenceProvider
+import io.rippledown.sample.SampleKB
 import io.rippledown.server.routes.*
 import io.rippledown.server.websocket.WebSocketManager
 import org.slf4j.event.Level
@@ -30,6 +33,7 @@ lateinit var server: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngi
 
 private lateinit var persistenceProvider: PersistenceProvider
 private lateinit var webSocketManager: WebSocketManager
+private var seedDemoOnStart: Boolean = false
 
 object OpenRDRServer {
     val logger = OpenRDRServer.lazyLogger
@@ -42,6 +46,7 @@ fun main(args: Array<String>) {
     } else {
         PostgresPersistenceProvider()
     }
+    seedDemoOnStart = args.any { it == DEMO_ARG }
 
     server = embeddedServer(factory = Netty, port = PORT) {
         module()
@@ -89,6 +94,14 @@ fun Application.module() {
     }
     webSocketManager = WebSocketManager()
     val application = ServerApplication(persistenceProvider, webSocketManager)
+    if (seedDemoOnStart) {
+        try {
+            application.ensureSampleKB(DEMO_KB_NAME, SampleKB.DEMO)
+            OpenRDRServer.logger.info("Demo KB seeded.")
+        } catch (e: Exception) {
+            OpenRDRServer.logger.error("Failed to seed Demo KB", e)
+        }
+    }
     serverManagement()
     kbManagement(application)
     kbEditing(application)

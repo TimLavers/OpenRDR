@@ -71,6 +71,12 @@ Cornerstone: <name of the current cornerstone case, or null>, Index: <index>, To
 }
 ```
 
+- If the user then confirms they want to provide more reasons (for example by responding "yes"),
+  you MUST call {{GET_SUGGESTED_CONDITIONS}} to refresh the list of suggested conditions (the removed
+  condition will typically be reinstated in this list) and present the updated suggestions to the user
+  together with a prompt to select one or enter their own, exactly as in Step 5. Do NOT simply ask
+  "What is the reason?" without showing the refreshed suggestions.
+
 ## Step 7. Allow the user to see all reasons:
 
 - If the user asks to see the reasons entered so far, list them to the user as a numbered list with one reason per line,

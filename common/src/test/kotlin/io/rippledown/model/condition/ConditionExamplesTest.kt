@@ -23,24 +23,24 @@ class ConditionExamplesTest: ConditionTestBase() {
     private val ft4 = Attribute(55, "Free T4")
     private val ft3 = Attribute(58, "Free T3")
     private val twoEpisodeCase = RDRCaseBuilder().run {
-        addResult(tsh, today, TestResult(Value("3.6"), tshRange, "mU/L"))
-        addResult(ft4, today, TestResult(Value("12"), ft4Range, "pmol/L"))
-        addResult(tsh, sixMonthsAgo, TestResult(Value("4.3"), tshRange, "mU/L"))
-        addResult(ft4, sixMonthsAgo, TestResult(Value("13"), ft4Range, "pmol/L"))
+        addResult(tsh, today, Result(Value("3.6"), tshRange, "mU/L"))
+        addResult(ft4, today, Result(Value("12"), ft4Range, "pmol/L"))
+        addResult(tsh, sixMonthsAgo, Result(Value("4.3"), tshRange, "mU/L"))
+        addResult(ft4, sixMonthsAgo, Result(Value("13"), ft4Range, "pmol/L"))
         build("Case 1.4.18")
     }
     private val case21 = RDRCaseBuilder().run {
-        addResult(tsh, today, TestResult(Value("<0.01"), tshRange, "mU/L"))
-        addResult(ft4, today, TestResult(Value("16"), ft4Range, "pmol/L"))
-        addResult(ft3, today, TestResult(Value("5.5"), ft3Range, "pmol/L"))
-        addResult(tsh, sixMonthsAgo, TestResult(Value("<0.01"), tshRange, "mU/L"))
-        addResult(ft4, sixMonthsAgo, TestResult(Value("17"), ft4Range, "pmol/L"))
-        addResult(ft3, sixMonthsAgo, TestResult(Value("6.1"), ft3Range, "pmol/L"))
+        addResult(tsh, today, Result(Value("<0.01"), tshRange, "mU/L"))
+        addResult(ft4, today, Result(Value("16"), ft4Range, "pmol/L"))
+        addResult(ft3, today, Result(Value("5.5"), ft3Range, "pmol/L"))
+        addResult(tsh, sixMonthsAgo, Result(Value("<0.01"), tshRange, "mU/L"))
+        addResult(ft4, sixMonthsAgo, Result(Value("17"), ft4Range, "pmol/L"))
+        addResult(ft3, sixMonthsAgo, Result(Value("6.1"), ft3Range, "pmol/L"))
         build("Case 1.4.21")
     }
     private val oneEpisodeCase =         RDRCaseBuilder().run {
-        addResult(tsh, today, TestResult(Value("3.6"), tshRange, "mU/L"))
-        addResult(ft4, today, TestResult(Value("12"), ft4Range, "pmol/L"))
+        addResult(tsh, today, Result(Value("3.6"), tshRange, "mU/L"))
+        addResult(ft4, today, Result(Value("12"), ft4Range, "pmol/L"))
         build("One Episode")
     }
 

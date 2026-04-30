@@ -43,4 +43,39 @@ class ExemptCornerstoneTest {
         coVerify { ruleService.sendCornerstoneStatus() }
         response shouldBe responseFromModel
     }
+
+    @Test
+    fun `should tell the model to commit the rule when no cornerstones remain`() = runTest {
+        // Given: the user has just allowed the change to the last cornerstone
+        // case, so the rule engine reports Total = 0. Without an explicit
+        // directive in the same turn, the model has been observed (e.g. on
+        // the chat/Show cornerstones.feature 'allow a change to the report
+        // of a cornerstone case' scenario) to fall back into "Here are some
+        // suggestions" instead of committing the rule, leaving the cuke
+        // harness waiting for a "Done" that never arrives.
+        val action = ExemptCornerstone()
+        val ccStatus = CornerstoneStatus(indexOfCornerstoneToReview = -1, numberOfCornerstones = 0)
+        coEvery { ruleService.exemptCornerstoneCase() } returns ccStatus
+
+        val responseFromModel = ChatResponse("rule committed")
+        coEvery { modelResponder.response(any<String>()) } returns responseFromModel
+
+        // When
+        val response = action.doIt(ruleService, currentCase, modelResponder)
+
+        // Then: the message must include both the bare summary AND a clear
+        // CommitRule directive so the model has no excuse to ask for more
+        // reasons.
+        coVerify {
+            modelResponder.response(
+                match<String> { msg ->
+                    msg.contains(ccStatus.summary()) &&
+                            msg.contains("CommitRule") &&
+                            msg.contains("All cornerstone cases have been reviewed")
+                }
+            )
+        }
+        coVerify { ruleService.sendCornerstoneStatus() }
+        response shouldBe responseFromModel
+    }
 }

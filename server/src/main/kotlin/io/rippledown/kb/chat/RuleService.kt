@@ -6,6 +6,7 @@ import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.model.rule.UndoRuleDescription
 
 interface RuleService {
     fun startRuleSessionToAddComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus
@@ -22,6 +23,7 @@ interface RuleService {
     fun commitCurrentRuleSession()
     fun cancelCurrentRuleSession()
     fun undoLastRuleSession()
+    fun descriptionOfMostRecentRule(): UndoRuleDescription
     fun moveAttributeTo(moved: String, destination: String)
     fun sendCornerstoneStatus()
     fun sendRuleSessionCompleted()

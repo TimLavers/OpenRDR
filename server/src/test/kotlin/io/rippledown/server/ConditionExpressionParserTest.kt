@@ -140,6 +140,15 @@ internal class ConditionExpressionParserTest {
     }
 
     @Test
+    fun `should parse is abnormal`() {
+        val condition = parser.parse("TSH is abnormal")
+        assertIs<EpisodicCondition>(condition)
+        assertEquals("TSH", condition.attribute.name)
+        assertEquals(Abnormal, condition.predicate)
+        assertEquals(Current, condition.signature)
+    }
+
+    @Test
     fun `should parse is high`() {
         val condition = parser.parse("TSH is high")
         assertIs<EpisodicCondition>(condition)

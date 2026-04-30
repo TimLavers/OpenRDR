@@ -20,6 +20,7 @@ class ChatDefs {
         }
     }
 
+    @And("I confirm")
     fun confirm() {
         with(chatPO()) {
             enterChatText("yes")
@@ -114,6 +115,7 @@ class ChatDefs {
             chatPO().mostRecentBotRowContainsTerms(terms.toList())
         }
     }
+
     fun waitForBotTextToContainAnyOf(vararg terms: String) {
         await().atMost(ofSeconds(60)).until {
             chatPO().mostRecentBotRowContainsAnyOfTheTerms(terms.toList())
@@ -131,6 +133,7 @@ class ChatDefs {
             chatPO().numberOfSuggestionRows() > countBefore
         }
     }
+
     fun waitForPromptToProvideAnotherReason(countBefore: Int) {
         await().atMost(ofSeconds(60)).until {
             chatPO().numberOfSuggestionRows() > countBefore
@@ -199,6 +202,12 @@ class ChatDefs {
             previousSuggestionCount = chatPO().numberOfSuggestionRows()
             enterChatTextAndSend(reason)
             messageCountAfterSend = chatPO().numberOfChatMessages()
+        }
+        // Wait for the bot to respond to the final reason before returning,
+        // so the next step doesn't race the server/LLM while the chat input
+        // is still disabled (e.g. a slow Gemini call on "Sun is hot").
+        if (reasons.isNotEmpty()) {
+            waitForBotResponseToReason(previousSuggestionCount, messageCountAfterSend)
         }
     }
 

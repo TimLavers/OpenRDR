@@ -4,7 +4,7 @@ package io.rippledown.model
  * A list of TestResults for an Attribute in a case,
  * and having the same (or no) units.
  */
-data class ResultsList(val results: List<TestResult>): List<TestResult> by results {
+data class ResultsList(val results: List<Result>) : List<Result> by results {
     val units: String?
     init {
         // Check that there is at least one entry.

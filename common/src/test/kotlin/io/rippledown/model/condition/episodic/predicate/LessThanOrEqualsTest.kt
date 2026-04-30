@@ -3,7 +3,7 @@ package io.rippledown.model.condition.episodic.predicate
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.model.ReferenceRange
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import io.rippledown.model.Value
 import io.rippledown.utils.serializeDeserialize
 import kotlin.test.Test
@@ -15,18 +15,18 @@ class LessThanOrEqualsTest: Base() {
 
     @Test
     fun valueNotNumeric() {
-        lte.evaluate(TestResult(Value(""), range, units)) shouldBe false
-        lte.evaluate(TestResult(Value("whatever"), range, units)) shouldBe false
+        lte.evaluate(Result(Value(""), range, units)) shouldBe false
+        lte.evaluate(Result(Value("whatever"), range, units)) shouldBe false
     }
 
     @Test
     fun valueNumeric() {
-        lte.evaluate(TestResult(Value("0.8"), range, units)) shouldBe true
-        lte.evaluate(TestResult("1.8")) shouldBe false
-        lte.evaluate(TestResult("1.5")) shouldBe true
-        lte.evaluate(TestResult("1.49999")) shouldBe true
-        lte.evaluate(TestResult("1.500001")) shouldBe false
-        lte.evaluate(TestResult("0")) shouldBe true
+        lte.evaluate(Result(Value("0.8"), range, units)) shouldBe true
+        lte.evaluate(Result("1.8")) shouldBe false
+        lte.evaluate(Result("1.5")) shouldBe true
+        lte.evaluate(Result("1.49999")) shouldBe true
+        lte.evaluate(Result("1.500001")) shouldBe false
+        lte.evaluate(Result("0")) shouldBe true
     }
 
     @Test

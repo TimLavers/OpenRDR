@@ -2,7 +2,7 @@ package io.rippledown.model.condition.episodic.predicate
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import io.rippledown.utils.serializeDeserialize
 import kotlin.test.Test
 
@@ -12,24 +12,24 @@ class ContainsWordTest : Base() {
 
     @Test
     fun valueBlank() {
-        contains.evaluate(TestResult("")) shouldBe false
+        contains.evaluate(Result("")) shouldBe false
     }
 
     @Test
     fun evaluateTest() {
         val containsGoat = ContainsWord("all")
-        containsGoat.evaluate(TestResult("")) shouldBe false
-        containsGoat.evaluate(TestResult("or")) shouldBe false
-        containsGoat.evaluate(TestResult("tall")) shouldBe false
-        containsGoat.evaluate(TestResult("gall-bladder")) shouldBe false
-        containsGoat.evaluate(TestResult("not small")) shouldBe false
-        containsGoat.evaluate(TestResult("all")) shouldBe true
-        containsGoat.evaluate(TestResult("all, childhood")) shouldBe true
-        containsGoat.evaluate(TestResult("all; childhood")) shouldBe true
-        containsGoat.evaluate(TestResult("all. childhood")) shouldBe true
-        containsGoat.evaluate(TestResult("all-encompassing")) shouldBe true
-        containsGoat.evaluate(TestResult("not all")) shouldBe true
-        containsGoat.evaluate(TestResult("not all the time")) shouldBe true
+        containsGoat.evaluate(Result("")) shouldBe false
+        containsGoat.evaluate(Result("or")) shouldBe false
+        containsGoat.evaluate(Result("tall")) shouldBe false
+        containsGoat.evaluate(Result("gall-bladder")) shouldBe false
+        containsGoat.evaluate(Result("not small")) shouldBe false
+        containsGoat.evaluate(Result("all")) shouldBe true
+        containsGoat.evaluate(Result("all, childhood")) shouldBe true
+        containsGoat.evaluate(Result("all; childhood")) shouldBe true
+        containsGoat.evaluate(Result("all. childhood")) shouldBe true
+        containsGoat.evaluate(Result("all-encompassing")) shouldBe true
+        containsGoat.evaluate(Result("not all")) shouldBe true
+        containsGoat.evaluate(Result("not all the time")) shouldBe true
     }
 
     @Test

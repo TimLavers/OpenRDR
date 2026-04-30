@@ -42,7 +42,7 @@ val lastWeek = daysAgo(7)
 val glucose = Attribute(1, "Glucose")
 
 data class AttributeWithValue(
-    val attribute: Attribute = glucose, val result: TestResult = TestResult(
+    val attribute: Attribute = glucose, val result: Result = Result(
         DEFAULT_GLUCOSE_VALUE.toString()
     )
 )
@@ -103,6 +103,35 @@ fun createViewableCaseWithInterpretation(
     val text = interp.conclusionTexts().joinToString(" ")
     val viewableInterp = ViewableInterpretation(interpretation = interp, textGivenByRules = text)
     case.viewableInterpretation = viewableInterp
+    return case
+}
+
+fun createLargeViewableCaseWithInterpretation(
+    name: String = "",
+    caseId: Long? = null,
+    numberOfAttributes: Int = 80,
+    conclusionTexts: List<String> = listOf(),
+): ViewableCase {
+    val attributesWithValues = (1..numberOfAttributes).map {
+        AttributeWithValue(
+            attribute = Attribute(it, "Attr$it"),
+            result = Result(it.toString())
+        )
+    }
+    val case = createViewableCase(name, caseId, attributesWithResults = attributesWithValues)
+    var conclusionId = 10
+    val interp = Interpretation(case.case.caseId).apply {
+        conclusionTexts.forEach { text ->
+            add(
+                RuleSummary(
+                    conclusion = Conclusion(conclusionId++, text),
+                    conditionTextsFromRoot = listOf("Condition for $text")
+                )
+            )
+        }
+    }
+    val text = interp.conclusionTexts().joinToString(" ")
+    case.viewableInterpretation = ViewableInterpretation(interpretation = interp, textGivenByRules = text)
     return case
 }
 

@@ -5,7 +5,6 @@ import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.kotest.matchers.collections.shouldContainAll
-import io.rippledown.integration.pause
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
 import java.util.concurrent.TimeUnit.SECONDS
@@ -180,8 +179,7 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
 
     @When("I set the editable value to be {string}")
     fun setTheEditableValueToBe(text: String) {
-        pause(100)
-        chatPO().mostRecentBotRowContainsTerms(listOf("you selected", "What value"))
+        chatDefs.waitForBotText("you selected", "What value")
         chatPO().enterChatText(text)
         chatPO().clickSend()
     }

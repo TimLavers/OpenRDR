@@ -2,7 +2,7 @@ package io.rippledown.model.condition.episodic.predicate
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import io.rippledown.utils.serializeDeserialize
 import kotlin.test.Test
 
@@ -12,38 +12,38 @@ class ContainsTest : Base() {
 
     @Test
     fun valueBlank() {
-        contains.evaluate(TestResult("")) shouldBe false
+        contains.evaluate(Result("")) shouldBe false
     }
 
     @Test
     fun valueNotBlank() {
         val containsGoat = Contains("goat")
-        containsGoat.evaluate(TestResult("")) shouldBe false
-        containsGoat.evaluate(TestResult("sheep")) shouldBe false
-        containsGoat.evaluate(TestResult("goat")) shouldBe true
-        containsGoat.evaluate(TestResult("goats")) shouldBe true
-        containsGoat.evaluate(TestResult("sheep and goats")) shouldBe true
-        containsGoat.evaluate(TestResult("Goat")) shouldBe false
-        containsGoat.evaluate(TestResult("goatherd")) shouldBe true
+        containsGoat.evaluate(Result("")) shouldBe false
+        containsGoat.evaluate(Result("sheep")) shouldBe false
+        containsGoat.evaluate(Result("goat")) shouldBe true
+        containsGoat.evaluate(Result("goats")) shouldBe true
+        containsGoat.evaluate(Result("sheep and goats")) shouldBe true
+        containsGoat.evaluate(Result("Goat")) shouldBe false
+        containsGoat.evaluate(Result("goatherd")) shouldBe true
     }
 
     @Test
     fun `should strip enclosing double quotes from the text to be matched`() {
         val containsGoat = Contains("\"goat\"")
-        containsGoat.evaluate(TestResult("goat")) shouldBe true
-        containsGoat.evaluate(TestResult("goatherd")) shouldBe true
+        containsGoat.evaluate(Result("goat")) shouldBe true
+        containsGoat.evaluate(Result("goatherd")) shouldBe true
     }
 
     @Test
     fun `should strip enclosing single quotes from the text to be matched`() {
         val containsGoat = Contains("'goat'")
-        containsGoat.evaluate(TestResult("goat")) shouldBe true
-        containsGoat.evaluate(TestResult("goatherd")) shouldBe true
+        containsGoat.evaluate(Result("goat")) shouldBe true
+        containsGoat.evaluate(Result("goatherd")) shouldBe true
     }
 
     @Test
     fun `should should match a string with a forward slash`() {
-        Contains("/40").evaluate(TestResult("12/40")) shouldBe true
+        Contains("/40").evaluate(Result("12/40")) shouldBe true
     }
 
     @Test

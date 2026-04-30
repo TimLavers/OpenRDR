@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.constants.kb.KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION
 import io.rippledown.constants.kb.KB_CONTROL_DROPDOWN_DESCRIPTION
+import io.rippledown.constants.kb.SWITCH_KB_HEADER_TEXT
 import io.rippledown.constants.main.*
 import io.rippledown.integration.utils.*
 import io.rippledown.integration.waitUntilAsserted
@@ -28,64 +29,75 @@ class KbControlsPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun createKB(name: String) {
-        expandDropdownMenu()
-        Thread.sleep(1_000)
+        openDropdownMenu()
         clickDropdownItem(CREATE_KB_TEXT)
-        Thread.sleep(1_000)
-        val dialog = findComposeDialogThatIsShowing()
-        val createKbOperator = CreateKbOperator(dialog!!)
-        createKbOperator.createKB(name)
+        val dialog = waitForComposeDialogToShow()
+        CreateKbOperator(dialog).createKB(name)
     }
 
     fun createKBFromSample(name: String, sampleTitle: String) {
-        expandDropdownMenu()
-        Thread.sleep(1_000)
+        openDropdownMenu()
         clickDropdownItem(CREATE_KB_FROM_SAMPLE_TEXT)
-        Thread.sleep(1_000)
         val dialog = waitForComposeDialogToShow()
-        val createKbOperator = CreateKbFromSampleOperator(dialog)
-        createKbOperator.createKbFromSample(name, sampleTitle)
+        CreateKbFromSampleOperator(dialog).createKbFromSample(name, sampleTitle)
     }
 
     fun selectKB(name: String) {
-        expandDropdownMenu()
-        Thread.sleep(1_000)
-        val dropDown = contextProvider().find(KBS_DROPDOWN_DESCRIPTION, AccessibleRole.COMBO_BOX)!!
-        Thread.sleep(1_000)
-        val menuItem = dropDown.findByName(name, AccessibleRole.LABEL)!!
+        // The current KB is shown as the dropdown trigger and is excluded from
+        // the switcher list, so "selecting" it again is a no-op.
+        if (currentKB() == name) return
+        openDropdownMenu()
+        // Poll until the named KB appears as a child of the dropdown — the
+        // accessibility tree can lag the visual render by a few frames.
+        lateinit var menuItem: AccessibleContext
+        waitUntilAsserted {
+            val dropDown = contextProvider().find(KBS_DROPDOWN_DESCRIPTION, AccessibleRole.COMBO_BOX)
+            menuItem = dropDown?.findByName(name, AccessibleRole.LABEL)
+                ?: throw AssertionError("KB '$name' not yet available in dropdown")
+        }
         menuItem.accessibleAction.doAccessibleAction(0)
-        Thread.sleep(1_000)
     }
 
     fun importKB(filePath: String) {
-        Thread.sleep(100)
-        expandDropdownMenu()
-        Thread.sleep(2000)
+        openDropdownMenu()
         clickDropdownItem(IMPORT_KB_TEXT)
-        Thread.sleep(2000)
+        // Wait for the dialog *off* the EDT — `waitForComposeDialogToShow`
+        // sleeps in a poll loop, and blocking the EDT would prevent Compose
+        // from ever creating the dialog window.
+        val dialog = waitForComposeDialogToShow()
         SwingUtilities.invokeAndWait {
-            val dialog = findComposeDialogThatIsShowing()
-            val importKbOperator = ImportKbOperator(dialog!!)
-            importKbOperator.importKB(filePath)
+            ImportKbOperator(dialog).importKB(filePath)
         }
     }
 
     fun exportKB(filePath: String) {
-        Thread.sleep(100)
-        expandDropdownMenu()
-        Thread.sleep(2000)
+        openDropdownMenu()
         clickDropdownItem(EXPORT_KB_TEXT)
-        Thread.sleep(2000)
+        val dialog = waitForComposeDialogToShow()
         SwingUtilities.invokeAndWait {
-            val dialog = waitForComposeDialogToShow()
-            val exportKbOperator = ExportKbOperator(dialog)
-            exportKbOperator.importKB(filePath)
+            ExportKbOperator(dialog).importKB(filePath)
+        }
+    }
+
+    private fun openDropdownMenu() {
+        expandDropdownMenu()
+        // Wait for the menu accessibility node to be present before any caller
+        // tries to interact with its children.
+        waitUntilAsserted {
+            contextProvider().find(KBS_DROPDOWN_DESCRIPTION, AccessibleRole.COMBO_BOX) shouldNotBe null
         }
     }
 
     fun availableKBs(): List<String> {
-        val dropDown = contextProvider().find(KBS_DROPDOWN_DESCRIPTION, AccessibleRole.COMBO_BOX)!!
-        return dropDown.findLabelChildren()
+        // The dropdown may not have rendered yet when this is called; return
+        // an empty list so callers using `waitUntilAsserted` see an
+        // AssertionError (not an NPE) and keep polling.
+        val dropDown = contextProvider().find(KBS_DROPDOWN_DESCRIPTION, AccessibleRole.COMBO_BOX)
+            ?: return emptyList()
+        // The dropdown has a non-selectable section header above the list of
+        // KBs ("Switch knowledge base"); strip it out so callers only see the
+        // actual KB names.
+        return dropDown.findLabelChildren().filter { it != SWITCH_KB_HEADER_TEXT }
     }
 
     fun expandDropdownMenu() {

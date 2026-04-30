@@ -40,5 +40,3 @@ const val EDIT_CONDITION_TEXT_2_DESCRIPTION = "Condition constant text part 2"
 const val EDIT_CONDITION_FIELD_DESCRIPTION = "Condition variable"
 const val EDIT_CONDITION_OK_BUTTON_DESCRIPTION = "Edit condition confirmation button"
 const val EDIT_CONDITION_CANCEL_BUTTON_DESCRIPTION = "Edit condition cancel button"
-
-const val UNDO_LAST_RULE_MENU_ITEM = "Undo last rule"

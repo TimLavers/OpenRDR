@@ -1,16 +1,16 @@
 package io.rippledown.model.external
 
 import io.rippledown.json
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class MeasurementEvent(val testName: String, val testTime: Long)
+data class MeasurementEvent(val name: String, val time: Long)
 
 @Serializable
-data class ExternalCase(val name: String, val data: Map<MeasurementEvent, TestResult>) {
+data class ExternalCase(val caseName: String, val data: Map<MeasurementEvent, Result>) {
     init {
-        require(name.isNotBlank()) { "Name should not be blank." }
+        require(caseName.isNotBlank()) { "Name should not be blank." }
         require(data.isNotEmpty()) { "Data map should not be empty." }
     }
 }

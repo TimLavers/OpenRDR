@@ -2,8 +2,8 @@ package io.rippledown.kb
 
 import io.rippledown.chat.Conversation
 import io.rippledown.chat.Conversation.Companion.GET_SUGGESTED_CONDITIONS
-import io.rippledown.chat.Conversation.Companion.TRANSFORM_REASON
 import io.rippledown.chat.Conversation.Companion.SELECT_SUGGESTED_CONDITION
+import io.rippledown.chat.Conversation.Companion.TRANSFORM_REASON
 import io.rippledown.chat.FunctionCallHandler
 import io.rippledown.kb.chat.*
 import io.rippledown.model.caseview.ViewableCase
@@ -27,7 +27,9 @@ class ChatSessionManager(
             override suspend fun response(message: String): ChatResponse = chatManager.response(message)
         }
         val reasonTransformer = createReasonTransformer(viewableCase, ruleSessionManager, modelResponder)
-        val suggestedConditionsHandler = SuggestedConditionsHandler(viewableCase.case, ruleSessionManager)
+        val suggestionsBuffer = SuggestionsBuffer()
+        val suggestedConditionsHandler =
+            SuggestedConditionsHandler(viewableCase.case, ruleSessionManager, suggestionsBuffer)
         val selectSuggestionHandler = SelectSuggestionHandler(viewableCase.case, ruleSessionManager)
         val functionCallHandlers: Map<String, FunctionCallHandler> = mapOf(
             TRANSFORM_REASON to ReasonTransformHandler(reasonTransformer),
@@ -38,7 +40,7 @@ class ChatSessionManager(
             chatService = chatService,
             functionCallHandlers = functionCallHandlers
         )
-        chatManager = ChatManager(conversationService, ruleSessionManager)
+        chatManager = ChatManager(conversationService, ruleSessionManager, suggestionsBuffer)
         return chatManager.startConversation(viewableCase)
     }
 

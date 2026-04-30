@@ -1,7 +1,7 @@
 package io.rippledown.model.condition.episodic.predicate
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import io.rippledown.utils.serializeDeserialize
 import kotlin.test.Test
 
@@ -10,18 +10,18 @@ class IsNotBlankTest: Base() {
 
     @Test
     fun valueBlank() {
-        notBlank.evaluate(TestResult("")) shouldBe false
+        notBlank.evaluate(Result("")) shouldBe false
     }
 
     @Test
     fun valueNotBlank() {
-        notBlank.evaluate(TestResult("whatever")) shouldBe true
+        notBlank.evaluate(Result("whatever")) shouldBe true
     }
 
     @Test
     fun whitespace() {
         // Not sure what to do here. Should blank values be allowed?
-        notBlank.evaluate(TestResult(" ")) shouldBe false
+        notBlank.evaluate(Result(" ")) shouldBe false
     }
 
     @Test

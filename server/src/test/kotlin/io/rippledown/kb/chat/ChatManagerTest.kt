@@ -9,11 +9,13 @@ import io.mockk.mockk
 import io.rippledown.chat.ConversationService
 import io.rippledown.constants.chat.*
 import io.rippledown.kb.chat.ChatManager.Companion.AI_UNAVAILABLE_MESSAGE
+import io.rippledown.kb.chat.ChatManager.Companion.CURRENT_CORNERSTONE_STATUS_PREFIX
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_CONVERSATION_RESPONSE
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
+import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.toJsonString
 import kotlinx.coroutines.test.runTest
 import org.slf4j.Logger
@@ -29,6 +31,7 @@ class ChatManagerTest {
     lateinit var ruleService: RuleService
     lateinit var case: RDRCase
     lateinit var viewableCase: ViewableCase
+    lateinit var suggestionsBuffer: SuggestionsBuffer
     lateinit var chatManager: ChatManager
 
     @BeforeTest
@@ -37,8 +40,10 @@ class ChatManagerTest {
         ruleService = mockk()
         viewableCase = mockk()
         case = mockk()
+        suggestionsBuffer = SuggestionsBuffer()
         every { viewableCase.case } returns case
-        chatManager = ChatManager(conversationService, ruleService)
+        every { ruleService.isRuleSessionActive() } returns false
+        chatManager = ChatManager(conversationService, ruleService, suggestionsBuffer)
         setupLogger()
     }
 
@@ -158,6 +163,91 @@ class ChatManagerTest {
 
         // Then
         responseToUser shouldBe ChatResponse(message, suggestions)
+    }
+
+    @Test
+    fun `buffered suggestions take precedence over ActionComment suggestions`() = runTest {
+        // Given
+        val message = "Here are some suggestions."
+        val bufferedSuggestions = listOf("buffered one", "buffered two [editable]")
+        suggestionsBuffer.suggestions = bufferedSuggestions
+        val responseFromModel = ActionComment(
+            action = USER_ACTION,
+            message = message,
+            suggestions = listOf("model echoed should be ignored")
+        ).toJsonString()
+        coEvery { conversationService.startConversation() } returns responseFromModel
+
+        // When
+        val responseToUser = chatManager.startConversation(viewableCase)
+
+        // Then
+        responseToUser shouldBe ChatResponse(message, bufferedSuggestions)
+        // Buffer is consumed
+        suggestionsBuffer.suggestions shouldBe null
+    }
+
+    @Test
+    fun `startConversation should surface a prose response as a plain bot message rather than 500`() = runTest {
+        // Given: the model ignored the JSON protocol and returned prose,
+        // as it does when the case already has comments. Previously this
+        // path threw a JsonDecodingException out of the KBEndpoint; the
+        // client would see an HTTP 500 and wedge. The manager must now
+        // echo the prose back as a plain bot message so the chat panel
+        // can render it and the user (and the cucumber suite) can
+        // continue the scenario.
+        val prose = """
+            This case has the following comments:
+            "Comment 1.",
+            "Comment 2.",
+            "Comment 3.".
+            Would you like to add another one, or replace or remove one of them?
+        """.trimIndent()
+        coEvery { conversationService.startConversation() } returns prose
+
+        // When
+        val responseToUser = chatManager.startConversation(viewableCase)
+
+        // Then
+        responseToUser shouldBe ChatResponse(prose)
+    }
+
+    @Test
+    fun `startConversation should surface malformed JSON-looking text rather than 500`() = runTest {
+        // Given: the model emitted something that started with '{' but
+        // isn't a valid ActionComment (e.g. truncated output). The old
+        // implementation propagated the JsonDecodingException out of the
+        // HTTP handler. Now we must fall back to delivering the raw text.
+        val garbage = "{ this is not valid JSON"
+        coEvery { conversationService.startConversation() } returns garbage
+
+        // When
+        val responseToUser = chatManager.startConversation(viewableCase)
+
+        // Then
+        responseToUser shouldBe ChatResponse(garbage)
+    }
+
+    @Test
+    fun `response should surface a prose response as a plain bot message rather than empty`() = runTest {
+        // Given: the model replied to a user message in prose (no JSON
+        // fragments) — for example because it went off-script and asked
+        // a clarifying question instead of emitting an ActionComment.
+        // Previously the manager returned ChatResponse("") here, leaving
+        // the chat panel silent and causing cucumber scenarios such as
+        // "The comments given for a case are returned by the
+        // interpretation service" to hang for 60s waiting for
+        // suggestions that never arrived. The manager must now echo the
+        // prose so the user (and the cucumber suite) can see what the
+        // model actually said.
+        val prose = "I'm not sure what you mean. Could you rephrase that?"
+        coEvery { conversationService.response(any()) } returns prose
+
+        // When
+        val responseToUser = chatManager.response("hello")
+
+        // Then
+        responseToUser shouldBe ChatResponse(prose)
     }
 
     @Test
@@ -388,6 +478,40 @@ class ChatManagerTest {
         chatManager.response("blah")
 
         coVerify { ruleService.moveAttributeTo("Glucose",  "Lipids") }
+    }
+
+    @Test
+    fun `should prepend the current cornerstone status to user messages while a rule session is active`() = runTest {
+        // Given
+        every { ruleService.isRuleSessionActive() } returns true
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
+        val responseFromModel = ActionComment(USER_ACTION, message = "ok").toJsonString()
+        coEvery { conversationService.response(any<String>()) } returns responseFromModel
+
+        // When
+        chatManager.response("no")
+
+        // Then - the model receives the current cornerstone status alongside the user's message,
+        // so it can never act on a stale Total from earlier in the conversation.
+        coVerify {
+            conversationService.response(match<String> {
+                it.startsWith(CURRENT_CORNERSTONE_STATUS_PREFIX) && it.endsWith("\nno")
+            })
+        }
+    }
+
+    @Test
+    fun `should not prepend cornerstone status when no rule session is active`() = runTest {
+        // Given
+        every { ruleService.isRuleSessionActive() } returns false
+        val responseFromModel = ActionComment(USER_ACTION, message = "hi").toJsonString()
+        coEvery { conversationService.response(any<String>()) } returns responseFromModel
+
+        // When
+        chatManager.response("hello")
+
+        // Then
+        coVerify { conversationService.response("hello") }
     }
 
     @Test

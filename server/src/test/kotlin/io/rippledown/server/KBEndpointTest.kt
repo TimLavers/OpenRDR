@@ -153,7 +153,7 @@ internal class KBEndpointTest {
         endpoint.kb.allProcessedCases() shouldBe emptyList()
         val externalCase1 = CaseTestUtils.getCase("Case1")
         val case1 = endpoint.processCase(externalCase1)
-        case1.name shouldBe externalCase1.name
+        case1.name shouldBe externalCase1.caseName
         val retrieved1 = endpoint.kb.getProcessedCase(case1.caseId.id!!)!!
         retrieved1.caseId shouldBe case1.caseId
         // Supply it again.
@@ -167,10 +167,10 @@ internal class KBEndpointTest {
         endpoint.kb.allCornerstoneCases() shouldHaveSize 0
         val externalCase = CaseTestUtils.getCase("Case1")
         val stored = endpoint.addCornerstoneCase(externalCase)
-        stored.name shouldBe externalCase.name
+        stored.name shouldBe externalCase.caseName
         stored.caseId.id shouldNotBe null
         endpoint.kb.allCornerstoneCases() shouldHaveSize 1
-        endpoint.kb.allCornerstoneCases().first().name shouldBe externalCase.name
+        endpoint.kb.allCornerstoneCases().first().name shouldBe externalCase.caseName
     }
 
     @Test
@@ -187,7 +187,7 @@ internal class KBEndpointTest {
         val stored = endpoint.addCornerstoneCase(externalCase)
         val retrieved = endpoint.kb.getCase(stored.caseId.id!!)
         retrieved shouldNotBe null
-        retrieved!!.name shouldBe externalCase.name
+        retrieved!!.name shouldBe externalCase.caseName
     }
 
     @Test

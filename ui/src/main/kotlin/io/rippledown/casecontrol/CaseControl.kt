@@ -35,7 +35,8 @@ fun CaseControl(
                 currentCase,
                 cornerstoneStatus?.diff,
                 cornerstoneStatus?.ruleConditions ?: emptyList(),
-                handler
+                handler,
+                modifier = Modifier.weight(1f)
             )
         }
         val cornerstoneToReview = cornerstoneStatus?.cornerstoneToReview

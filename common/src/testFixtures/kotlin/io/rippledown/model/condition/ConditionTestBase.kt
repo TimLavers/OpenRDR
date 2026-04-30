@@ -68,10 +68,10 @@ fun atMostNumeric(count: Int, attribute: Attribute, id: Int? = null) =
     EpisodicCondition(id, attribute, IsNumeric, AtMost(count))
 
 fun rr(low: String?, high: String?) = ReferenceRange(low, high)
-fun tr(value: String) = TestResult(value, null, null)
-fun tr(value: String, referenceRange: ReferenceRange) = TestResult(value, referenceRange)
-fun tr(value: String, units: String) = TestResult(value, null, units)
-fun tr(value: String, referenceRange: ReferenceRange,units: String) = TestResult(value, referenceRange, units)
+fun tr(value: String) = Result(value, null, null)
+fun tr(value: String, referenceRange: ReferenceRange) = Result(value, referenceRange)
+fun tr(value: String, units: String) = Result(value, null, units)
+fun tr(value: String, referenceRange: ReferenceRange, units: String) = Result(value, referenceRange, units)
 fun v(value: String) = Value(value)
 
 open class ConditionTestBase {
@@ -116,32 +116,32 @@ open class ConditionTestBase {
 
     fun highTSHCase(): RDRCase {
         val builder1 = RDRCaseBuilder()
-        builder1.addResult(tsh, defaultDate, TestResult("9.667", tshRange, "pmol/L"))
+        builder1.addResult(tsh, defaultDate, Result("9.667", tshRange, "pmol/L"))
         return builder1.build("HighTSHCase")
     }
 
     fun highTSHWithOneSidedRangeCase(): RDRCase {
         val builder1 = RDRCaseBuilder()
         val range = ReferenceRange(null, "6.0")
-        builder1.addResult(tsh, defaultDate, TestResult("9.667", range, "pmol/L"))
+        builder1.addResult(tsh, defaultDate, Result("9.667", range, "pmol/L"))
         return builder1.build("HighTSHWithOneSidedRangeCase")
     }
 
     fun lowTSHCase(): RDRCase {
         val builder1 = RDRCaseBuilder()
-        builder1.addResult(tsh, defaultDate, TestResult("0.30", tshRange, "pmol/L"))
+        builder1.addResult(tsh, defaultDate, Result("0.30", tshRange, "pmol/L"))
         return builder1.build("LowTSHCase")
     }
 
     fun normalTSHCase(): RDRCase {
         val builder1 = RDRCaseBuilder()
-        builder1.addResult(tsh, defaultDate, TestResult("1.30", tshRange, "pmol/L"))
+        builder1.addResult(tsh, defaultDate, Result("1.30", tshRange, "pmol/L"))
         return builder1.build("NormalTSHCase")
     }
 
     fun tshValueNonNumericCase(): RDRCase {
         val builder1 = RDRCaseBuilder()
-        builder1.addResult(tsh, defaultDate, TestResult("n.a.", tshRange, "pmol/L"))
+        builder1.addResult(tsh, defaultDate, Result("n.a.", tshRange, "pmol/L"))
         return builder1.build("TSHValueNonNumeric")
     }
 
@@ -153,22 +153,22 @@ open class ConditionTestBase {
 
     fun singleEpisodeCaseWithTSHNormal(): RDRCase {
         val builder1 = RDRCaseBuilder()
-        builder1.addResult(tsh, defaultDate, TestResult("0.667", tshRange, "pmol/L"))
+        builder1.addResult(tsh, defaultDate, Result("0.667", tshRange, "pmol/L"))
         return builder1.build("TSHNormal")
     }
 
     fun singleEpisodeCaseWithTSHAsGiven(value: String): RDRCase {
         val builder1 = RDRCaseBuilder()
-        builder1.addResult(tsh, defaultDate, TestResult(value))
+        builder1.addResult(tsh, defaultDate, Result(value))
         return builder1.build("TSHCase")
     }
 
     fun twoEpisodeCaseWithBothTSHValuesNormal(): RDRCase {
         val builder = RDRCaseBuilder()
-        val tshResult1 = TestResult(Value("0.67"), tshRange, "mU/L")
+        val tshResult1 = Result(Value("0.67"), tshRange, "mU/L")
         builder.addResult(tsh, defaultDate, tshResult1)
         val range0 = ReferenceRange("0.25", "2.90")
-        val tshResult0 = TestResult(Value("2.10"), range0, "mU/L")
+        val tshResult0 = Result(Value("2.10"), range0, "mU/L")
         val yesterday = daysAgo(1)
         builder.addResult(tsh, yesterday, tshResult0)
         return builder.build("Two Episodes")
@@ -176,10 +176,10 @@ open class ConditionTestBase {
 
     fun twoEpisodeCaseWithFirstTSHLowSecondNormal(): RDRCase {
         val builder = RDRCaseBuilder()
-        val tshResult1 = TestResult(Value("0.67"), tshRange, "mU/L")
+        val tshResult1 = Result(Value("0.67"), tshRange, "mU/L")
         builder.addResult(tsh, defaultDate, tshResult1)
         val range0 = ReferenceRange("0.25", "2.90")
-        val tshResult0 = TestResult(Value("0.08"), range0, "mU/L")
+        val tshResult0 = Result(Value("0.08"), range0, "mU/L")
         val yesterday = daysAgo(1)
         builder.addResult(tsh, yesterday, tshResult0)
         return builder.build("Two Episodes")
@@ -187,65 +187,65 @@ open class ConditionTestBase {
 
     fun twoEpisodeCaseWithFirstTSHNormalSecondHigh(): RDRCase {
         val builder = RDRCaseBuilder()
-        val tshResult1 = TestResult(Value("4.67"), tshRange, "mU/L")
+        val tshResult1 = Result(Value("4.67"), tshRange, "mU/L")
         builder.addResult(tsh, today, tshResult1)
         val range0 = ReferenceRange("0.25", "2.90")
-        val tshResult0 = TestResult(Value("1.20"), range0, "mU/L")
+        val tshResult0 = Result(Value("1.20"), range0, "mU/L")
         builder.addResult(tsh, yesterday, tshResult0)
         return builder.build("Two Episodes")
     }
 
     fun twoEpisodeCaseWithFirstTSHNormalSecondLow(): RDRCase {
         val builder = RDRCaseBuilder()
-        val tshResult1 = TestResult(Value("0.05"), tshRange, "mU/L")
+        val tshResult1 = Result(Value("0.05"), tshRange, "mU/L")
         builder.addResult(tsh, today, tshResult1)
         val range0 = ReferenceRange("0.25", "2.90")
-        val tshResult0 = TestResult(Value("1.20"), range0, "mU/L")
+        val tshResult0 = Result(Value("1.20"), range0, "mU/L")
         builder.addResult(tsh, yesterday, tshResult0)
         return builder.build("Two Episodes")
     }
 
     fun threeEpisodeCaseWithEachTshLow(): RDRCase {
         val builder = RDRCaseBuilder()
-        val tshResult2 = TestResult(Value("0.08"), tshRange, "mU/L")
+        val tshResult2 = Result(Value("0.08"), tshRange, "mU/L")
         builder.addResult(tsh, today, tshResult2)
-        val tshResult1 = TestResult(Value("0.05"), tshRange, "mU/L")
+        val tshResult1 = Result(Value("0.05"), tshRange, "mU/L")
         builder.addResult(tsh, yesterday, tshResult1)
         val range0 = ReferenceRange("0.25", "2.90")
-        val tshResult0 = TestResult(Value("0.20"), range0, "mU/L")
+        val tshResult0 = Result(Value("0.20"), range0, "mU/L")
         builder.addResult(tsh, lastWeek, tshResult0)
         return builder.build("Two Episodes")
     }
 
     fun twoEpisodeCaseWithFirstTSHHighSecondNormal(): RDRCase {
         val builder = RDRCaseBuilder()
-        val tshResult1 = TestResult(Value("1.67"), tshRange, "mU/L")
+        val tshResult1 = Result(Value("1.67"), tshRange, "mU/L")
         builder.addResult(tsh, today, tshResult1)
         val range0 = ReferenceRange("0.25", "2.90")
-        val tshResult0 = TestResult(Value("5.20"), range0, "mU/L")
+        val tshResult0 = Result(Value("5.20"), range0, "mU/L")
         builder.addResult(tsh, yesterday, tshResult0)
         return builder.build("Two Episodes")
     }
 
     fun twoEpisodeCase(attribute: Attribute, firstValue: String, secondValue: String): RDRCase {
         val builder = RDRCaseBuilder()
-        val tshResult1 = TestResult(Value("0.67"), tshRange, "mU/L")
+        val tshResult1 = Result(Value("0.67"), tshRange, "mU/L")
         builder.addResult(tsh, defaultDate, tshResult1)
         val range0 = ReferenceRange("0.25", "2.90")
-        val tshResult0 = TestResult(Value("0.08"), range0, "mU/L")
+        val tshResult0 = Result(Value("0.08"), range0, "mU/L")
         val yesterday = daysAgo(1)
         builder.addResult(tsh, yesterday, tshResult0)
-        builder.addResult(attribute, yesterday, TestResult(firstValue))
-        builder.addResult(attribute, today, TestResult(secondValue))
+        builder.addResult(attribute, yesterday, Result(firstValue))
+        builder.addResult(attribute, today, Result(secondValue))
         return builder.build("Two Episodes")
     }
 
     fun twoEpisodeCaseWithCurrentTSHValueBlank(): RDRCase {
         val builder = RDRCaseBuilder()
-        val tshResult1 = TestResult("")
+        val tshResult1 = Result("")
         builder.addResult(tsh, defaultDate, tshResult1)
         val range0 = ReferenceRange("0.25", "2.90")
-        val tshResult0 = TestResult(Value("0.8"), range0, "mU/L")
+        val tshResult0 = Result(Value("0.8"), range0, "mU/L")
         val yesterday = daysAgo(1)
         builder.addResult(tsh, yesterday, tshResult0)
         return builder.build("Case")
@@ -253,10 +253,10 @@ open class ConditionTestBase {
 
     fun twoEpisodeCaseWithFirstTSHValueBlank(): RDRCase {
         val builder = RDRCaseBuilder()
-        val tshResult1 = TestResult("4.94")
+        val tshResult1 = Result("4.94")
         builder.addResult(tsh, defaultDate, tshResult1)
         val range0 = ReferenceRange("0.25", "2.90")
-        val tshResult0 = TestResult(Value(""), range0, "mU/L")
+        val tshResult0 = Result(Value(""), range0, "mU/L")
         val yesterday = daysAgo(1)
         builder.addResult(tsh, yesterday, tshResult0)
         return builder.build("Case")
@@ -264,10 +264,10 @@ open class ConditionTestBase {
 
     fun twoEpisodeCaseWithCurrentTSHValueNonNumeric(): RDRCase {
         val builder = RDRCaseBuilder()
-        val tshResult1 = TestResult("Blah")
+        val tshResult1 = Result("Blah")
         builder.addResult(tsh, defaultDate, tshResult1)
         val range0 = ReferenceRange("0.25", "2.90")
-        val tshResult0 = TestResult(Value(""), range0, "mU/L")
+        val tshResult0 = Result(Value(""), range0, "mU/L")
         val yesterday = daysAgo(1)
         builder.addResult(tsh, yesterday, tshResult0)
         return builder.build("Case")

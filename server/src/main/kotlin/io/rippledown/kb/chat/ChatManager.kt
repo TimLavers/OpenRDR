@@ -19,6 +19,7 @@ interface ModelResponder {
 class ChatManager(
     val conversationService: ConversationService,
     val ruleService: RuleService,
+    private val suggestionsBuffer: SuggestionsBuffer = SuggestionsBuffer(),
 ) : ModelResponder {
     private val logger = lazyLogger
     private var currentCase: ViewableCase? = null
@@ -32,7 +33,24 @@ class ChatManager(
             return ChatResponse(AI_UNAVAILABLE_MESSAGE)
         }
         logger.info("$LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE '$response'")
-        return processActionComment(response.sanitizeLlmJson().fromJsonString<ActionComment>())
+        // When the case already has comments the model replies in prose
+        // (e.g. "This case has the following comments: ... Would you
+        // like to add another one, or replace or remove one of them?")
+        // instead of emitting a JSON ActionComment. Mirror the robustness
+        // of `processConversationResponse` here: extract any JSON
+        // fragments and, if there are none, surface the raw text as a
+        // plain bot message rather than 500ing.
+        return try {
+            val jsonFragments = extractJsonFragments(response)
+            if (jsonFragments.isEmpty()) {
+                ChatResponse(response)
+            } else {
+                processActionComment(jsonFragments.first().sanitizeLlmJson().fromJsonString<ActionComment>())
+            }
+        } catch (e: Exception) {
+            logger.error("Failed to process start-conversation ActionComment: $response", e)
+            ChatResponse(response)
+        }
     }
 
     override suspend fun response(message: String): ChatResponse {
@@ -41,8 +59,9 @@ class ChatManager(
 
     private suspend fun processConversationResponse(message: String): ChatResponse {
         logger.info("$LOG_PREFIX_FOR_USER_MESSAGE '$message'")
+        val messageToSend = augmentWithCornerstoneStatus(message)
         val response = try {
-            conversationService.response(message)
+            conversationService.response(messageToSend)
         } catch (e: Exception) {
             logger.error("Failed to send message: $message", e)
             return ChatResponse(AI_UNAVAILABLE_MESSAGE)
@@ -54,7 +73,15 @@ class ChatManager(
             // actions like ExemptCornerstone handle continuations via recursive calls)
             val jsonFragments = extractJsonFragments(response)
             if (jsonFragments.isEmpty()) {
-                return ChatResponse("")
+                // Mirror startConversation: when the model replies in prose
+                // rather than JSON (e.g. an off-script clarifying question),
+                // surface the raw text as a plain bot message rather than
+                // returning an empty response that leaves the chat panel
+                // silent. An empty ChatResponse here previously caused
+                // cucumber scenarios such as "The comments given for a case
+                // are returned by the interpretation service" to hang for
+                // 60s waiting for suggestions that never arrived.
+                return ChatResponse(response)
             }
             return processActionComment(jsonFragments.first().sanitizeLlmJson().fromJsonString<ActionComment>())
         } catch (e: Exception) {
@@ -72,11 +99,18 @@ class ChatManager(
             logger.error("Unknown actionComment: ${actionComment.action}")
             ChatResponse("")
         }
-        return if (!actionComment.suggestions.isNullOrEmpty()) {
-            ChatResponse(chatResponse.text, actionComment.suggestions)
-        } else {
-            chatResponse
+        val bufferedSuggestions = suggestionsBuffer.consume()
+        return when {
+            bufferedSuggestions != null -> ChatResponse(chatResponse.text, bufferedSuggestions)
+            !actionComment.suggestions.isNullOrEmpty() -> ChatResponse(chatResponse.text, actionComment.suggestions)
+            else -> chatResponse
         }
+    }
+
+    private fun augmentWithCornerstoneStatus(message: String): String {
+        if (!ruleService.isRuleSessionActive()) return message
+        val status = ruleService.cornerstoneStatus()
+        return "$CURRENT_CORNERSTONE_STATUS_PREFIX${status.summary()}]\n$message"
     }
 
     companion object {
@@ -84,6 +118,7 @@ class ChatManager(
         const val LOG_PREFIX_FOR_CONVERSATION_RESPONSE = "Conversation response:"
         const val LOG_PREFIX_FOR_USER_MESSAGE = "User message:"
         const val AI_UNAVAILABLE_MESSAGE = "The AI assistant is temporarily unavailable. Please try again later."
+        const val CURRENT_CORNERSTONE_STATUS_PREFIX = "[Current cornerstone status: "
     }
 }
 

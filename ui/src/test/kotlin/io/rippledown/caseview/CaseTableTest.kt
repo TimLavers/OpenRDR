@@ -50,7 +50,7 @@ class CaseTableTest {
             waitUntilExactlyOneExists(hasText(tsh.name))
             viewableCase.attributes().forEach {
                 val value = viewableCase.case.getLatest(it)!!
-                waitUntilExactlyOneExists(hasText(resultText(value)))
+                waitUntilExactlyOneExists(hasText(value.value.text))
             }
         }
     }
@@ -69,7 +69,7 @@ class CaseTableTest {
             waitUntilExactlyOneExists(hasText(tsh.name))
             viewableCase.attributes().forEach {
                 val value = viewableCase.case.getLatest(it)!!
-                waitUntilExactlyOneExists(hasText(resultText(value)))
+                waitUntilExactlyOneExists(hasText(value.value.text))
             }
             val ft4Bounds = onNodeWithText(ft4.name).getBoundsInRoot()
             val xyzBounds = onNodeWithText(xyz.name).getBoundsInRoot()
@@ -79,13 +79,17 @@ class CaseTableTest {
                 // corner of the node on which it operates. So our start point
                 // can be (0, 0) and our end point is the displacement, which is the
                 // difference between the offsets of the destination and source nodes.
-                val relativeEnd = xyzBounds.center(density) - ft4Bounds.center(density)
+                val relativeEnd = xyzBounds.center(density) - ft4Bounds.center(density) + Offset(0f, 5f)
                 dragAndDrop(Offset(0F,0F), relativeEnd)
             }
             dragged shouldBe ft4
             target shouldBe xyz
         }
     }
+
+    // Scrollbar / overflow behaviour now lives in `CaseInspectionLayout` and is
+    // covered by `CaseInspectionLayoutTest`. `CaseTable` itself simply renders
+    // its rows inline.
 }
 fun DpRect.center(density: Float): Offset {
     val cx = (left.value + width.value/2) * density

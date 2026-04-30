@@ -1,9 +1,9 @@
 {
-  "name": "Case4",
+  "caseName": "Case4",
   "data": [
     {
-      "testName": "TSH",
-      "testTime": 1659752689505
+      "name": "TSH",
+      "time": 1659752689505
     },
     {
       "value": {
@@ -16,8 +16,8 @@
       "units": "mU/L"
     },
     {
-      "testName": "TSH",
-      "testTime": 1659702689505
+      "name": "TSH",
+      "time": 1659702689505
     },
     {
       "value": {
@@ -30,8 +30,8 @@
       "units": "mU/L"
     },
     {
-      "testName": "Stuff",
-      "testTime": 1659752689505
+      "name": "Stuff",
+      "time": 1659752689505
     },
     {
       "value": {
@@ -41,8 +41,8 @@
       "units": "mU/L"
     },
     {
-      "testName": "Stuff",
-      "testTime": 1659702689505
+      "name": "Stuff",
+      "time": 1659702689505
     },
     {
       "value": {

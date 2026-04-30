@@ -22,13 +22,13 @@ import io.rippledown.chat.ChatController
 import io.rippledown.chat.ChatControllerHandler
 import io.rippledown.chat.VoiceRecognitionService
 import io.rippledown.chat.VoiceRecognitionService.Companion.defaultModelPath
+import io.rippledown.cornerstone.CornerstoneTestHook
 import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.rule.CornerstoneStatus
-import io.rippledown.model.rule.UndoRuleDescription
 import io.rippledown.sample.SampleKB
 import kotlinx.coroutines.*
 import org.jetbrains.skiko.MainUIDispatcher
@@ -51,7 +51,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     var casesInfo by remember { mutableStateOf(CasesInfo()) }
     var kbInfo: KBInfo? by remember { mutableStateOf(null) }
     val voiceRecognitionService = remember { VoiceRecognitionService(defaultModelPath()) }
-    var chatPanelWidth by remember { mutableStateOf(300.dp) }
+    var chatPanelWidth by remember { mutableStateOf(350.dp) }
     var conversationCaseId by remember { mutableStateOf<Long?>(null) }
     var pendingConversationResponse by remember { mutableStateOf<ChatResponse?>(null) }
     val density = LocalDensity.current
@@ -66,6 +66,15 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
 
     val isShowingCornerstone = cornerstoneStatus?.cornerstoneToReview != null
     val ruleInProgress = cornerstoneStatus != null
+
+    // Publish the cornerstone state to [CornerstoneTestHook] so in-JVM
+    // integration tests (cucumber) can poll it without walking the
+    // accessibility tree. Same rationale as [ChatTestHook]; see those
+    // class docs for why the accessibility bridge is unusable on a
+    // window containing a large case table.
+    SideEffect {
+        CornerstoneTestHook.update(cornerstoneStatus)
+    }
 
     handler.setWindowSize(isShowingCornerstone)
 
@@ -82,7 +91,8 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                     onBotMessageReceived(response)
 
                     //refresh the case to get the latest interpretation
-                    currentCase = api.getCase(caseId)
+                    val refreshed = api.getCase(caseId)
+                    currentCase = refreshed
                     ++chatId // Increment chatId to trigger recomposition in ChatController
                 } catch (_: Exception) {
                     //ignore
@@ -94,7 +104,12 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
 
     LaunchedEffect(Unit) {
         withContext(dispatcher) {
-            kbInfo = api.kbList().firstOrNull()
+            // Pick the first KB and explicitly select it on the server so
+            // that Api.currentKB matches what the UI displays. Just reading
+            // kbList() leaves Api.currentKB unset, which would later cause
+            // the lazy `kbInfo()` path to fetch the default KB and route
+            // subsequent requests to the wrong KB.
+            kbInfo = api.kbList().firstOrNull()?.let { api.selectKB(it.id) }
         }
     }
 
@@ -143,8 +158,12 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     LaunchedEffect(Unit) {
         withContext(dispatcher) {
             handler.api.startWebSocketSession(
-                updateCornerstoneStatus = { cornerstoneStatus = it },
-                ruleSessionCompleted = { cornerstoneStatus = null },
+                updateCornerstoneStatus = {
+                    cornerstoneStatus = it
+                },
+                ruleSessionCompleted = {
+                    cornerstoneStatus = null
+                },
                 updateCasesInfo = { incoming ->
                     // Ignore updates that belong to a different KB than the one
                     // the UI is currently showing. Otherwise a sample-KB build
@@ -200,16 +219,6 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                 }
                 override var kbDescription: () -> String = {
                     runBlocking(dispatcher) { api.kbDescription() }
-                }
-                override var lastRuleDescription: () -> UndoRuleDescription = { runBlocking { api.lastRuleDescription() } }
-                override var undoLastRule: () -> Unit = {
-                    runBlocking {
-                        api.undoLastRule()
-                        if (currentCaseId != null) {
-                            currentCase = api.getCase(currentCaseId!!)
-                            ++chatId
-                        }
-                    }
                 }
             })
         },

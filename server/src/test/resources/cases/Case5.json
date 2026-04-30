@@ -1,9 +1,9 @@
 {
-  "name": "Case5",
+  "caseName": "Case5",
   "data": [
     {
-      "testName": "ABC",
-      "testTime": 1659752689505
+      "name": "ABC",
+      "time": 1659752689505
     },
     {
       "value": {
@@ -13,8 +13,8 @@
       "units": null
     },
     {
-      "testName": "DEF",
-      "testTime": 1659752689505
+      "name": "DEF",
+      "time": 1659752689505
     },
     {
       "value": {
@@ -24,8 +24,8 @@
       "units": null
     },
     {
-      "testName": "GHI",
-      "testTime": 1659752689505
+      "name": "GHI",
+      "time": 1659752689505
     },
     {
       "value": {
@@ -35,8 +35,8 @@
       "units": null
     },
     {
-      "testName": "JKL",
-      "testTime": 1659752689505
+      "name": "JKL",
+      "time": 1659752689505
     },
     {
       "value": {

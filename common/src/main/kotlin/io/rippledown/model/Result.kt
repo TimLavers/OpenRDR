@@ -3,12 +3,16 @@ package io.rippledown.model
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class TestResult(val value: Value, val referenceRange: ReferenceRange?, val units: String?) {
+data class Result(val value: Value, val referenceRange: ReferenceRange?, val units: String?) {
     constructor(resultValue: String) : this(Value(resultValue), null, null)
 
-    constructor(resultValue: String, referenceRange: ReferenceRange?, units: String?) : this(Value(resultValue), referenceRange, units )
+    constructor(resultValue: String, referenceRange: ReferenceRange?, units: String?) : this(
+        Value(resultValue),
+        referenceRange,
+        units
+    )
 
-    constructor(resultValue: String, referenceRange: ReferenceRange?) : this(Value(resultValue), referenceRange, null )
+    constructor(resultValue: String, referenceRange: ReferenceRange?) : this(Value(resultValue), referenceRange, null)
 
     fun isHigh(): Boolean {
         referenceRange ?: return false
@@ -24,4 +28,6 @@ data class TestResult(val value: Value, val referenceRange: ReferenceRange?, val
         referenceRange ?: return false
         return referenceRange.isNormal(value)
     }
+
+    fun isAbnormal() = isHigh() || isLow()
 }

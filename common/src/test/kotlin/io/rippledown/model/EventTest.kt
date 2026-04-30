@@ -7,32 +7,32 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
 // ORD1
-internal class TestEventTest {
+internal class EventTest {
     val tsh = Attribute(3, "TSH")
 
     @Test
     fun construction() {
-        val te = TestEvent(tsh, defaultDate)
+        val te = Event(tsh, defaultDate)
         assertEquals(te.attribute, tsh)
         assertEquals(te.date, defaultDate)
     }
 
     @Test
     fun equalityRequiresSameDate() {
-        val te1 = TestEvent(tsh, defaultDate)
-        val te2 = TestEvent(tsh, defaultDate + 1234L)
+        val te1 = Event(tsh, defaultDate)
+        val te2 = Event(tsh, defaultDate + 1234L)
         assertNotEquals(te1, te2)
     }
 
     @Test
     fun jsonSerialisation() {
-        val te = TestEvent(tsh, defaultDate)
+        val te = Event(tsh, defaultDate)
         val sd = serializeDeserialize(te)
         assertEquals(sd, te)
     }
 
-    private fun serializeDeserialize(testEvent: TestEvent):TestEvent {
-        val serialized = Json.encodeToString(testEvent)
+    private fun serializeDeserialize(Event: Event): Event {
+        val serialized = Json.encodeToString(Event)
         return Json.decodeFromString(serialized)
     }
 }

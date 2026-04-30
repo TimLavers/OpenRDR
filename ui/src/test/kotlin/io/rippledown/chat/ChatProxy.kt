@@ -9,19 +9,28 @@ import io.kotest.assertions.withClue
 
 fun ComposeTestRule.requireChatMessagesShowing(expected: List<ChatMessage>) {
     expected.forEachIndexed { idx, message ->
-        val expectedLabel = if (expected[idx].isUser) {
-            "$USER$idx"
-        } else {
-            "$BOT$idx"
+        val expectedLabel = when {
+            message.isUser -> "$USER$idx"
+            // BotRow now encodes the visible bot text into its own
+            // contentDescription as "$BOT$idx:$text" so that integration
+            // tests can substring-match against it without recursing into
+            // descendants. SuggestionListMessage's outer row keeps the
+            // original "$BOT$idx" form because it has no text of its own.
+            message is SuggestionListMessage -> "$BOT$idx"
+            else -> "$BOT$idx:${message.text}"
         }
         onNodeWithContentDescription(expectedLabel).assertTextEquals(message.text)
     }
     //And no more messages should be showing
     val size = expected.size
     val unwantedUserLabel = "$USER$size"
-    val unwantedBotLabel = "$BOT$size"
     withClue("should be no more user or bot messages") {
-        onNodeWithContentDescription(unwantedBotLabel).assertDoesNotExist()
+        // Any bot or suggestion row at index `size` would yield an
+        // accessibility node whose description begins with "$BOT$size" —
+        // either exactly (SuggestionList) or with a ":text" suffix (bot
+        // message). Asserting on that prefix via substring-match covers
+        // both cases in one check.
+        onAllNodesWithContentDescription("$BOT$size", substring = true).assertCountEquals(0)
         onNodeWithContentDescription(unwantedUserLabel).assertDoesNotExist()
     }
 

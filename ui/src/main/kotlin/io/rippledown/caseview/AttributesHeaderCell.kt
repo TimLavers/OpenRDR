@@ -20,6 +20,6 @@ fun RowScope.AttributesHeaderCell(columnWidths: ColumnWidths) {
                 contentDescription = ATTRIBUTE_HEADER_CELL_DESCRIPTION
             },
         fontWeight = FontWeight.Bold,
-        textAlign = TextAlign.End
+        textAlign = TextAlign.Start
     )
 }

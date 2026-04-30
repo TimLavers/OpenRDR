@@ -2,7 +2,7 @@ package io.rippledown.model.condition.episodic.predicate
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import io.rippledown.utils.serializeDeserialize
 import kotlin.test.Test
 
@@ -12,27 +12,27 @@ class DoesNotContainTest : Base() {
 
     @Test
     fun valueBlank() {
-        dnc.evaluate(TestResult("")) shouldBe true
+        dnc.evaluate(Result("")) shouldBe true
     }
 
     @Test
     fun valueNotBlank() {
         val noGoat = DoesNotContain("goat")
-        noGoat.evaluate(TestResult("")) shouldBe true
-        noGoat.evaluate(TestResult("sheep")) shouldBe true
-        noGoat.evaluate(TestResult("goat")) shouldBe false
-        noGoat.evaluate(TestResult("goats")) shouldBe false
-        noGoat.evaluate(TestResult("Goat")) shouldBe true
+        noGoat.evaluate(Result("")) shouldBe true
+        noGoat.evaluate(Result("sheep")) shouldBe true
+        noGoat.evaluate(Result("goat")) shouldBe false
+        noGoat.evaluate(Result("goats")) shouldBe false
+        noGoat.evaluate(Result("Goat")) shouldBe true
     }
 
     @Test
     fun `should should match a string with a forward slash`() {
-        DoesNotContain("/40").evaluate(TestResult("12/40")) shouldBe false
+        DoesNotContain("/40").evaluate(Result("12/40")) shouldBe false
     }
 
     @Test
     fun `should unquote toFind before evaluating`() {
-        DoesNotContain("\"/40\"").evaluate(TestResult("12/40")) shouldBe false
+        DoesNotContain("\"/40\"").evaluate(Result("12/40")) shouldBe false
     }
     @Test
     fun equalsTest() {

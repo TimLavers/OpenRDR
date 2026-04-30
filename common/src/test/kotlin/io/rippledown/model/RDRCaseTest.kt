@@ -62,7 +62,7 @@ class RDRCaseTest {
         val builder = RDRCaseBuilder()
         builder.addValue(tsh, defaultDate, "0.667")
         val case = builder.build("Case1")
-        case.getLatest(tsh) shouldBe TestResult("0.667")
+        case.getLatest(tsh) shouldBe Result("0.667")
         case.getLatest(ft4) shouldBe null
     }
 
@@ -70,7 +70,7 @@ class RDRCaseTest {
     fun latestValue() {
         val builder = RDRCaseBuilder()
         builder.addValue(tsh, defaultDate, "0.667")
-        builder.addResult(ft4, defaultDate, TestResult("", ft4Range, "kilos"))
+        builder.addResult(ft4, defaultDate, Result("", ft4Range, "kilos"))
         val case = builder.build("Case1")
         case.latestValue(tsh) shouldBe "0.667"
         case.latestValue(ft4) shouldBe ""
@@ -99,9 +99,9 @@ class RDRCaseTest {
     @Test
     fun addResult() {
         val builder1 = RDRCaseBuilder()
-        val tshResult = TestResult(Value("0.67"), ReferenceRange("0.5", "4.0"), "mU/L")
+        val tshResult = Result(Value("0.67"), ReferenceRange("0.5", "4.0"), "mU/L")
         builder1.addResult(tsh, defaultDate, tshResult)
-        val freeT4Result = TestResult(Value("16"), ReferenceRange("10", "20.0"), "pmol/L")
+        val freeT4Result = Result(Value("16"), ReferenceRange("10", "20.0"), "pmol/L")
         builder1.addResult(ft4, defaultDate, freeT4Result)
 
         val case1 = builder1.build("Case1")
@@ -123,10 +123,10 @@ class RDRCaseTest {
     fun oneAttributeTwoEpisodes() {
         val builder = RDRCaseBuilder()
         val range1 = ReferenceRange("0.5", "4.0")
-        val tshResult1 = TestResult(Value("0.67"), range1, "mU/L")
+        val tshResult1 = Result(Value("0.67"), range1, "mU/L")
         builder.addResult(tsh, defaultDate, tshResult1)
         val range0 = ReferenceRange("0.25", "2.90")
-        val tshResult0 = TestResult(Value("0.08"), range0, "mU/L")
+        val tshResult0 = Result(Value("0.08"), range0, "mU/L")
         val yesterday = daysAgo(1)
         builder.addResult(tsh, yesterday, tshResult0)
         val case = builder.build("Case1")
@@ -145,14 +145,14 @@ class RDRCaseTest {
         assertEquals(0, RDRCase(CaseId(8, "Empty"), emptyMap()).dates.size)
 
         val builder1 = RDRCaseBuilder()
-        builder1.addResult(tsh, yesterday, TestResult("9.4"))
+        builder1.addResult(tsh, yesterday, Result("9.4"))
         assertEquals(1, builder1.build("1").dates.size)
         assertEquals(yesterday, builder1.build("1").dates[0])
 
         val builder2 = RDRCaseBuilder()
-        builder2.addResult(tsh, yesterday, TestResult("9.4"))
-        builder2.addResult(tsh, lastWeek, TestResult("9.4"))
-        builder2.addResult(tsh, today, TestResult("9.9"))
+        builder2.addResult(tsh, yesterday, Result("9.4"))
+        builder2.addResult(tsh, lastWeek, Result("9.4"))
+        builder2.addResult(tsh, today, Result("9.9"))
         val case2 = builder2.build("1")
         assertEquals(3, case2.dates.size)
         assertEquals(lastWeek, case2.dates[0])
@@ -165,13 +165,13 @@ class RDRCaseTest {
         RDRCase(CaseId(8, "Empty"), emptyMap()).numberOfEpisodes() shouldBe 0
 
         val builder1 = RDRCaseBuilder()
-        builder1.addResult(tsh, yesterday, TestResult("9.4"))
+        builder1.addResult(tsh, yesterday, Result("9.4"))
         builder1.build("1").numberOfEpisodes() shouldBe 1
 
         val builder2 = RDRCaseBuilder()
-        builder2.addResult(tsh, yesterday, TestResult("9.4"))
-        builder2.addResult(tsh, lastWeek, TestResult("9.4"))
-        builder2.addResult(tsh, today, TestResult("9.9"))
+        builder2.addResult(tsh, yesterday, Result("9.4"))
+        builder2.addResult(tsh, lastWeek, Result("9.4"))
+        builder2.addResult(tsh, today, Result("9.9"))
         builder2.build("3").numberOfEpisodes() shouldBe 3
     }
 
@@ -180,19 +180,19 @@ class RDRCaseTest {
         assertEquals(0, RDRCase(CaseId(77, "Empty"), emptyMap()).attributes.size)
 
         val builder1 = RDRCaseBuilder()
-        builder1.addResult(tsh, yesterday, TestResult("9.4"))
+        builder1.addResult(tsh, yesterday, Result("9.4"))
         assertEquals(1, builder1.build("1").attributes.size)
         assertEquals(tsh, builder1.build("1").attributes.first())
 
         val builder2 = RDRCaseBuilder()
-        builder2.addResult(tsh, yesterday, TestResult("9.4"))
-        builder2.addResult(tsh, lastWeek, TestResult("9.4"))
-        builder2.addResult(tsh, today, TestResult("9.9"))
+        builder2.addResult(tsh, yesterday, Result("9.4"))
+        builder2.addResult(tsh, lastWeek, Result("9.4"))
+        builder2.addResult(tsh, today, Result("9.9"))
         val case2 = builder2.build("2")
         assertEquals(1, case2.attributes.size)
         assertEquals(tsh, case2.attributes.first())
 
-        val ft4Result = TestResult(Value("0.08"), ft4Range, "mU/L")
+        val ft4Result = Result(Value("0.08"), ft4Range, "mU/L")
         builder2.addResult(ft4, yesterday, ft4Result)
         val case3 = builder2.build("3")
         assertEquals(2, case3.attributes.size)
@@ -202,8 +202,8 @@ class RDRCaseTest {
 
     @Test
     fun twoAttributesWithSamplesOnDifferentDates() {
-        val tshResult = TestResult(Value("0.67"), tshRange, "mU/L")
-        val ft4Result = TestResult(Value("0.08"), ft4Range, "mU/L")
+        val tshResult = Result(Value("0.67"), tshRange, "mU/L")
+        val ft4Result = Result(Value("0.08"), ft4Range, "mU/L")
 
         val builder = RDRCaseBuilder()
         builder.addResult(tsh, defaultDate, tshResult)
@@ -272,9 +272,9 @@ class RDRCaseTest {
     @Test
     fun addResultTwice() {
         val builder1 = RDRCaseBuilder()
-        val tshResult = TestResult(Value("0.67"), ReferenceRange("0.5", "4.0"), "mU/L")
+        val tshResult = Result(Value("0.67"), ReferenceRange("0.5", "4.0"), "mU/L")
         builder1.addResult(tsh, defaultDate, tshResult)
-        val tshResult2 = TestResult(Value("0.68"), ReferenceRange("0.5", "4.0"), "mU/L")
+        val tshResult2 = Result(Value("0.68"), ReferenceRange("0.5", "4.0"), "mU/L")
         builder1.addResult(tsh, defaultDate, tshResult2)
         val case1 = builder1.build("Case1")
         assertEquals(1, case1.dates.size)
@@ -355,11 +355,11 @@ class RDRCaseTest {
 
         val builder3 = RDRCaseBuilder()
         builder3.addValue(age, defaultDate, "52")
-        val tshResult = TestResult(Value("0.67"), ReferenceRange("0.5", "4.0"), "mU/L")
+        val tshResult = Result(Value("0.67"), ReferenceRange("0.5", "4.0"), "mU/L")
         builder3.addResult(tsh, defaultDate, tshResult)
-        val abcResult = TestResult(Value("0.67"), null, "mU/L")
+        val abcResult = Result(Value("0.67"), null, "mU/L")
         builder3.addResult(abc, defaultDate, abcResult)
-        val defResult = TestResult(Value("100"), ReferenceRange("90", "400"), null)
+        val defResult = Result(Value("100"), ReferenceRange("90", "400"), null)
         builder3.addResult(def, defaultDate, defResult)
         val case3 = builder3.build("Case3")
         val sd3 = serializeDeserialize(case3)
@@ -387,9 +387,9 @@ class RDRCaseTest {
 
     @Test
     fun serialisationWithReferenceRange() {
-        val tshResult = TestResult(Value("0.67"), ReferenceRange("0.5", "4.0"), "mU/L")
-        val abcResult = TestResult(Value("0.87"), null, "mg/dl")
-        val defResult = TestResult(Value("100"), ReferenceRange("90", "400"), null)
+        val tshResult = Result(Value("0.67"), ReferenceRange("0.5", "4.0"), "mU/L")
+        val abcResult = Result(Value("0.87"), null, "mg/dl")
+        val defResult = Result(Value("100"), ReferenceRange("90", "400"), null)
         val case = with(RDRCaseBuilder()) {
             addValue(age, defaultDate, "52")
             addResult(tsh, defaultDate, tshResult)

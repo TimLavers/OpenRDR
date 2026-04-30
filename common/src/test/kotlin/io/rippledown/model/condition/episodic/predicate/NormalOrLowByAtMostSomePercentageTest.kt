@@ -3,7 +3,7 @@ package io.rippledown.model.condition.episodic.predicate
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.model.ReferenceRange
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import io.rippledown.utils.serializeDeserialize
 import kotlin.test.Test
 
@@ -14,7 +14,7 @@ class NormalOrLowByAtMostSomePercentageTest: Base() {
     @Test
     fun valueNormal() {
         val range = ReferenceRange("1.0", "5.0")
-        tenPercentLow.evaluate(TestResult("2.4", range, null)) shouldBe true
+        tenPercentLow.evaluate(Result("2.4", range, null)) shouldBe true
     }
 
     @Test

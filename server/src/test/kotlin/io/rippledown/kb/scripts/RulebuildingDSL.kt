@@ -7,7 +7,7 @@ import io.rippledown.kb.RuleSessionManager
 import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import io.rippledown.model.condition.containsText
 import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
@@ -34,7 +34,7 @@ class BuildTemplate {
     fun cornerstoneCase(name: String, data: String) {
         val caseBuilder = RDRCaseBuilder()
         val textAttribute = kb.attributeManager.getOrCreate(text)
-        caseBuilder.addResult(textAttribute, defaultDate, TestResult(data))
+        caseBuilder.addResult(textAttribute, defaultDate, Result(data))
         val case = caseBuilder.build(name)
         kb.addCornerstoneCase(case)
     }
@@ -42,7 +42,7 @@ class BuildTemplate {
     fun case(name: String, data: String) {
         val caseBuilder = RDRCaseBuilder()
         val textAttribute = kb.attributeManager.getOrCreate(text)
-        caseBuilder.addResult(textAttribute, defaultDate, TestResult(data))
+        caseBuilder.addResult(textAttribute, defaultDate, Result(data))
         val case = caseBuilder.build(name)
         kb.addProcessedCase(case)
     }
@@ -50,7 +50,7 @@ class BuildTemplate {
     fun case(i: Int) {
         val caseBuilder = RDRCaseBuilder()
         val numberAttribute = kb.attributeManager.getOrCreate(value)
-        caseBuilder.addResult(numberAttribute, defaultDate, TestResult("$i"))
+        caseBuilder.addResult(numberAttribute, defaultDate, Result("$i"))
         val case = caseBuilder.build("$i")
         kb.addProcessedCase(case)
     }
@@ -58,7 +58,7 @@ class BuildTemplate {
     fun cornerstoneCase(i: Int) {
         val caseBuilder = RDRCaseBuilder()
         val numberAttribute = kb.attributeManager.getOrCreate(value)
-        caseBuilder.addResult(numberAttribute, defaultDate, TestResult("$i"))
+        caseBuilder.addResult(numberAttribute, defaultDate, Result("$i"))
         val case = caseBuilder.build("$i")
         kb.addCornerstoneCase(case)
     }

@@ -26,8 +26,8 @@ open class KBTestBase {
         id: Long? = null
     ): ViewableCase {
         with(RDRCaseBuilder()) {
-            val testResult = TestResult(value, range)
-            addResult(attribute, defaultDate, testResult)
+            val Result = Result(value, range)
+            addResult(attribute, defaultDate, Result)
             val case = build(caseName, id)
             val caseViewProperties = CaseViewProperties(listOf(attribute))
             return ViewableCase(case, caseViewProperties)

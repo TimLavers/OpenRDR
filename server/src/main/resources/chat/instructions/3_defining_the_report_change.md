@@ -39,13 +39,34 @@ The current report for the case is a list of comments. For the current case, the
 - If the user specifies a comment ending in a period, for example, "Go to Bondi.", do not remove the period from the end
   of the comment.
 - If the user has already provided the comment text in double quotes, skip confirmation and proceed directly
-  to Step 4 by outputting the appropriate action immediately. This applies to all operations:
-  - Add: e.g., Add the comment: "Beach time!" → output ADD_COMMENT immediately.
-  - Remove: e.g., Remove the comment "Go to Bondi." → output REMOVE_COMMENT immediately.
-  - Replace: e.g., Replace the comment "Go to Bondi." by "Go to Manly." → output REPLACE_COMMENT immediately.
+  to Step 4 by emitting the appropriate JSON action immediately. This applies to all operations:
+  - Add: e.g., Add the comment: "Beach time!" → emit a JSON object with `"action": "{{ADD_COMMENT}}"` immediately.
+  - Remove: e.g., Remove the comment "Go to Bondi." → emit a JSON object with `"action": "{{REMOVE_COMMENT}}"`
+    immediately.
+  - Replace: e.g., Replace the comment "Go to Bondi." by "Go to Manly." → emit a JSON object with
+    `"action": "{{REPLACE_COMMENT}}"` immediately.
     Note: apostrophes inside the double quotes (like "Let's") are part of the comment text, not quote
     delimiters. DO NOT call any transform functions and DO NOT ask for confirmation — the quoted text is the
     comment, not a reason to be transformed.
+- **CRITICAL**: `{{ADD_COMMENT}}`, `{{REMOVE_COMMENT}}` and `{{REPLACE_COMMENT}}` are JSON action values,
+  NOT callable functions. NEVER invoke them through the function-calling API. The only functions you may
+  call are `{{TRANSFORM_REASON}}`, `{{GET_SUGGESTED_CONDITIONS}}` and `{{SELECT_SUGGESTION}}`. To request
+  an add/remove/replace, emit a JSON object whose `action` field is the corresponding name — for example:
+
+  ```json
+  {
+    "action": "{{ADD_COMMENT}}",
+    "comment": "Normal glucose results.",
+    "reasons": []
+  }
+  ```
+
+- This rule is **language-agnostic**. The delimiter is the double quote, not the language of the text
+  between the quotes. If the user writes `Add the comment: "La paciente presenta diabetes gestacional."`
+  or `Add the comment: "La patiente présente un diabète gestationnel."`, the quoted text is still the
+  comment. You MUST emit a JSON object with `"action": "{{ADD_COMMENT}}"` and `comment` set to the quoted
+  text verbatim, and you MUST NOT call `{{TRANSFORM_REASON}}` on it, even if the quoted text superficially
+  looks like it could be parsed as an attribute/value expression in that language.
 - Otherwise, summarize the report change and ask the user to confirm.
 
 ```json

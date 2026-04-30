@@ -1,10 +1,7 @@
 package io.rippledown.chat
 
-import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
 import org.junit.Rule
 import org.junit.Test
 
@@ -42,7 +39,10 @@ class SuggestionListRowTest {
             }
 
             // Then
-            onNodeWithContentDescription("$SUGGESTION_LIST$index").assertIsDisplayed()
+            // The suggestion list row encodes the rendered numbered text
+            // into its contentDescription ($SUGGESTION_LIST$index:<text>),
+            // so we match the prefix rather than the exact value.
+            onNodeWithContentDescription("$SUGGESTION_LIST$index", substring = true).assertIsDisplayed()
         }
     }
 
@@ -95,7 +95,7 @@ class SuggestionListRowTest {
 
             // Then
             onNodeWithContentDescription("$BOT$index").assertIsDisplayed()
-            onNodeWithContentDescription("$SUGGESTION_LIST$index").assertIsDisplayed()
+            onNodeWithContentDescription("$SUGGESTION_LIST$index", substring = true).assertIsDisplayed()
         }
     }
 
@@ -113,7 +113,7 @@ class SuggestionListRowTest {
 
             // Then
             onNodeWithContentDescription("$BOT$index").assertIsDisplayed()
-            onNodeWithContentDescription("$SUGGESTION_LIST$index").assertIsDisplayed()
+            onNodeWithContentDescription("$SUGGESTION_LIST$index", substring = true).assertIsDisplayed()
         }
     }
 
@@ -246,8 +246,8 @@ class SuggestionListRowTest {
             }
 
             // Then
-            onNodeWithContentDescription("${SUGGESTION_LIST}0").assertDoesNotExist()
-            onNodeWithContentDescription("$SUGGESTION_LIST$index").assertIsDisplayed()
+            onAllNodesWithContentDescription("${SUGGESTION_LIST}0", substring = true).assertCountEquals(0)
+            onNodeWithContentDescription("$SUGGESTION_LIST$index", substring = true).assertIsDisplayed()
         }
     }
 }

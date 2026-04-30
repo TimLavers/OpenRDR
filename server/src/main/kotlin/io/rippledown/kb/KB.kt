@@ -46,10 +46,10 @@ class KB(persistentKB: PersistentKB) {
     fun addCornerstoneCase(externalCase: ExternalCase): RDRCase {
         val builder = RDRCaseBuilder().apply { setCaseType(CaseType.Cornerstone) }
         externalCase.data.forEach {
-            val attribute = attributeManager.getOrCreate(it.key.testName)
-            builder.addResult(attribute, it.key.testTime, it.value)
+            val attribute = attributeManager.getOrCreate(it.key.name)
+            builder.addResult(attribute, it.key.time, it.value)
         }
-        return caseManager.add(builder.build(externalCase.name))
+        return caseManager.add(builder.build(externalCase.caseName))
     }
 
     fun addProcessedCase(case: RDRCase): RDRCase {
@@ -93,10 +93,10 @@ class KB(persistentKB: PersistentKB) {
     fun createRDRCase(case: ExternalCase): RDRCase {
         val builder = RDRCaseBuilder()
         case.data.forEach {
-            val attribute = attributeManager.getOrCreate(it.key.testName)
-            builder.addResult(attribute, it.key.testTime, it.value)
+            val attribute = attributeManager.getOrCreate(it.key.name)
+            builder.addResult(attribute, it.key.time, it.value)
         }
-        return builder.build(case.name)
+        return builder.build(case.caseName)
     }
 
     fun interpret(case: RDRCase) = ruleTree.apply(case)

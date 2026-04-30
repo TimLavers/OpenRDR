@@ -3,7 +3,7 @@ package io.rippledown.model.rule
 import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
-import io.rippledown.model.TestResult
+import io.rippledown.model.Result
 import io.rippledown.model.condition.tr
 import io.rippledown.utils.daysAfter
 import io.rippledown.utils.defaultDate
@@ -15,7 +15,7 @@ fun case(vararg pairs: Pair<Attribute, String>, name: String = "SessionCase"): R
     }
     return builder.build(name)
 }
-fun makeCase(vararg pairs: Pair<Attribute, TestResult>, name: String = "SessionCase"): RDRCase {
+fun makeCase(vararg pairs: Pair<Attribute, Result>, name: String = "SessionCase"): RDRCase {
     val builder = RDRCaseBuilder()
     pairs.forEach {
         builder.addResult(it.first, defaultDate, it.second)

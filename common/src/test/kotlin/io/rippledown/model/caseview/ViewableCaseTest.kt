@@ -35,9 +35,9 @@ class ViewableCaseTest {
     @Test
     fun dates() {
         val builder = RDRCaseBuilder()
-        val tshResult1 = TestResult(Value("0.67"), null, "mU/L")
+        val tshResult1 = Result(Value("0.67"), null, "mU/L")
         builder.addResult(tsh, defaultDate, tshResult1)
-        val tshResult0 = TestResult(Value("0.08"), null, "mU/L")
+        val tshResult0 = Result(Value("0.08"), null, "mU/L")
         val yesterday = daysAgo(1)
         builder.addResult(tsh, yesterday, tshResult0)
         val properties = CaseViewProperties(listOf(tsh))

@@ -1,6 +1,5 @@
 Feature: A sample KB can be created for Clinical Trial Matching.
 
-  @single
   Scenario: Clinical Trial Matching KB
     Given I start the client application
     And I create a Knowledge Base with the name OncoTreeMatch
