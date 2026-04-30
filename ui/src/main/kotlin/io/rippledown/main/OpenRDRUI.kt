@@ -92,19 +92,9 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
 
                     //refresh the case to get the latest interpretation
                     val refreshed = api.getCase(caseId)
-                    System.err.println(
-                        "[OpenRDRUI.sendUserMessage] post-bot getCase(caseId=$caseId) " +
-                                "responseAction=${response.text.take(60)} " +
-                                "refreshed.name=${refreshed?.case?.name} " +
-                                "interpretation.text=\"${
-                                    refreshed?.viewableInterpretation?.interpretation?.conclusionTexts()
-                                        ?.joinToString(",")
-                                }\""
-                    )
                     currentCase = refreshed
                     ++chatId // Increment chatId to trigger recomposition in ChatController
-                } catch (e: Exception) {
-                    System.err.println("[OpenRDRUI.sendUserMessage] threw ${e::class.simpleName}: ${e.message}")
+                } catch (_: Exception) {
                     //ignore
                     //a test may shut down the server before this message can be sent
                 }
@@ -132,32 +122,13 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     LaunchedEffect(casesInfo, currentCaseId) {
         withContext(dispatcher) {
             val allIds = casesInfo.caseIds + casesInfo.cornerstoneCaseIds
-            System.err.println(
-                "[OpenRDRUI.LE.casesInfo] count=${casesInfo.count} " +
-                        "caseIds=${casesInfo.caseIds.map { it.id }} " +
-                        "cornerstoneIds=${casesInfo.cornerstoneCaseIds.map { it.id }} " +
-                        "currentCaseId=$currentCaseId currentCase.id=${currentCase?.case?.caseId?.id} " +
-                        "currentCase.interp=\"${
-                            currentCase?.viewableInterpretation?.interpretation?.conclusionTexts()?.joinToString(",")
-                        }\""
-            )
             if (allIds.isNotEmpty()) {
                 if (currentCaseId == null || currentCaseId !in allIds.map { it.id }) {
                     // No initial case, or it's now been deleted
                     currentCaseId = allIds[0].id!!
-                    System.err.println("[OpenRDRUI.LE.casesInfo] -> currentCaseId reassigned to $currentCaseId")
                 }
                 if (currentCase?.case?.caseId?.id != currentCaseId) {
-                    val refreshed = api.getCase(currentCaseId!!)
-                    System.err.println(
-                        "[OpenRDRUI.LE.casesInfo] -> refetching currentCase(caseId=$currentCaseId) " +
-                                "name=${refreshed?.case?.name} " +
-                                "interp=\"${
-                                    refreshed?.viewableInterpretation?.interpretation?.conclusionTexts()
-                                        ?.joinToString(",")
-                                }\""
-                    )
-                    currentCase = refreshed
+                    currentCase = api.getCase(currentCaseId!!)
                 }
             }
         }
@@ -188,11 +159,9 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
         withContext(dispatcher) {
             handler.api.startWebSocketSession(
                 updateCornerstoneStatus = {
-                    System.err.println("[OpenRDRUI.ws.cornerstoneStatus] cornerstoneToReview=${it.cornerstoneToReview?.case?.name} index=${it.indexOfCornerstoneToReview}/${it.numberOfCornerstones}")
                     cornerstoneStatus = it
                 },
                 ruleSessionCompleted = {
-                    System.err.println("[OpenRDRUI.ws.ruleSessionCompleted]")
                     cornerstoneStatus = null
                 },
                 updateCasesInfo = { incoming ->
@@ -272,16 +241,6 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                     }
                 }
 
-                run {
-                    System.err.println(
-                        "[OpenRDRUI.render] casesInfo.count=${casesInfo.count} ruleInProgress=$ruleInProgress " +
-                                "currentCaseId=$currentCaseId currentCase.name=${currentCase?.case?.name} " +
-                                "currentCase.interp=\"${
-                                    currentCase?.viewableInterpretation?.interpretation?.conclusionTexts()
-                                        ?.joinToString(",")
-                                }\""
-                    )
-                }
                 if (casesInfo.count > 0) {
                     CaseControl(
                         currentCase = currentCase,

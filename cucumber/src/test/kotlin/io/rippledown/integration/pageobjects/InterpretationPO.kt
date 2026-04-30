@@ -40,11 +40,10 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         Robot().mouseMove(loc.x + rectangle.x, loc.y)
     }
 
-    fun interpretationText(): String = POTiming.time("InterpretationPO.interpretationText") {
+    fun interpretationText(): String =
         execute<String> {
             contextProvider().find(INTERPRETATION_TEXT_FIELD)?.accessibleName ?: ""
         }
-    }
 
     fun waitForInterpretationText(expected: String): InterpretationPO {
         // Track the most recent observed text so we can include it in

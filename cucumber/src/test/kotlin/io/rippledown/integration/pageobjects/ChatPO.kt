@@ -188,21 +188,15 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun mostRecentBotRowContainsTerms(terms: List<String>): Boolean {
-        val t0 = System.nanoTime()
         // Read the in-JVM test hook rather than walking the accessibility
         // tree — see [ChatTestHook] for the rationale.
         val text = ChatTestHook.snapshot().mostRecentBotText
-        val result = text != null && terms.all { it -> text.contains(it, ignoreCase = true) }
-        ChatPOTiming.log("mostRecentBotRowContainsTerms", t0, t0, t0, terms, result)
-        return result
+        return text != null && terms.all { it -> text.contains(it, ignoreCase = true) }
     }
 
     fun mostRecentBotRowContainsAnyOfTheTerms(terms: List<String>): Boolean {
-        val t0 = System.nanoTime()
         val text = ChatTestHook.snapshot().mostRecentBotText
-        val result = text != null && terms.any { it -> text.contains(it, ignoreCase = true) }
-        ChatPOTiming.log("mostRecentBotRowContainsAnyOfTheTerms", t0, t0, t0, terms, result)
-        return result
+        return text != null && terms.any { it -> text.contains(it, ignoreCase = true) }
     }
 
     fun mostRecentBotRowDoesNotContainTheTerm(term: String) {
@@ -272,11 +266,8 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun mostRecentSuggestionRowContainsTerms(terms: List<String>): Boolean {
-        val t0 = System.nanoTime()
         val text = ChatTestHook.snapshot().mostRecentSuggestionText
-        val result = text != null && terms.all { it -> text.contains(it, ignoreCase = true) }
-        ChatPOTiming.log("mostRecentSuggestionRowContainsTerms", t0, t0, t0, terms, result)
-        return result
+        return text != null && terms.all { it -> text.contains(it, ignoreCase = true) }
     }
 
     fun mostRecentSuggestionRowDoesNotContainsTerm(term: String): Boolean {

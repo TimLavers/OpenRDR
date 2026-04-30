@@ -30,48 +30,37 @@ class CornerstonePO(private val contextProvider: () -> AccessibleContext) {
     // `ChatTestHook` for full context.
     fun requireCornerstoneCase(expectedCaseName: String) {
         await().atMost(Duration.ofSeconds(10)).untilAsserted {
-            val ccName = POTiming.time("CornerstonePO.requireCornerstoneCase.poll") {
-                CornerstoneTestHook.snapshot().cornerstoneCaseName
-            }
-            ccName shouldBe expectedCaseName
+            CornerstoneTestHook.snapshot().cornerstoneCaseName shouldBe expectedCaseName
         }
     }
 
     fun requireNoCornerstoneCases() {
         waitUntilAsserted {
-            val isShowing = POTiming.time("CornerstonePO.requireNoCornerstoneCases.poll") {
-                CornerstoneTestHook.snapshot().isShowing
-            }
-            isShowing shouldBe false
+            CornerstoneTestHook.snapshot().isShowing shouldBe false
         }
     }
 
     fun requireCornerstoneCaseNotToBeShowing(ccName: String) {
         waitUntilAsserted {
-            val name = POTiming.time("CornerstonePO.requireCornerstoneCaseNotToBeShowing.poll") {
-                CornerstoneTestHook.snapshot().cornerstoneCaseName
-            }
-            name shouldNotBe ccName
+            CornerstoneTestHook.snapshot().cornerstoneCaseName shouldNotBe ccName
         }
     }
 
     fun requireCornerstoneLabel(expectedLabel: String) {
         await().atMost(Duration.ofSeconds(10)).untilAsserted {
-            val label = POTiming.time("CornerstonePO.requireCornerstoneLabel.poll") {
-                val s = CornerstoneTestHook.snapshot()
-                // Mirror the formatting in `CornerstoneInspection`:
-                //   total > 0 -> "Cornerstone ${index + 1} of $total"
-                //   total == 0 -> just "Cornerstone"
-                // The +1 converts the server's 0-based
-                // indexOfCornerstoneToReview into the 1-based label
-                // shown to the user.
-                if (!s.isShowing) {
-                    null
-                } else if (s.numberOfCornerstones > 0) {
-                    "$CORNERSTONE_TITLE ${s.indexOfCornerstoneToReview + 1} of ${s.numberOfCornerstones}"
-                } else {
-                    CORNERSTONE_TITLE
-                }
+            val s = CornerstoneTestHook.snapshot()
+            // Mirror the formatting in `CornerstoneInspection`:
+            //   total > 0 -> "Cornerstone ${index + 1} of $total"
+            //   total == 0 -> just "Cornerstone"
+            // The +1 converts the server's 0-based
+            // indexOfCornerstoneToReview into the 1-based label
+            // shown to the user.
+            val label = if (!s.isShowing) {
+                null
+            } else if (s.numberOfCornerstones > 0) {
+                "$CORNERSTONE_TITLE ${s.indexOfCornerstoneToReview + 1} of ${s.numberOfCornerstones}"
+            } else {
+                CORNERSTONE_TITLE
             }
             label shouldBe expectedLabel
         }
