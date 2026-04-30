@@ -73,7 +73,15 @@ class ChatManager(
             // actions like ExemptCornerstone handle continuations via recursive calls)
             val jsonFragments = extractJsonFragments(response)
             if (jsonFragments.isEmpty()) {
-                return ChatResponse("")
+                // Mirror startConversation: when the model replies in prose
+                // rather than JSON (e.g. an off-script clarifying question),
+                // surface the raw text as a plain bot message rather than
+                // returning an empty response that leaves the chat panel
+                // silent. An empty ChatResponse here previously caused
+                // cucumber scenarios such as "The comments given for a case
+                // are returned by the interpretation service" to hang for
+                // 60s waiting for suggestions that never arrived.
+                return ChatResponse(response)
             }
             return processActionComment(jsonFragments.first().sanitizeLlmJson().fromJsonString<ActionComment>())
         } catch (e: Exception) {

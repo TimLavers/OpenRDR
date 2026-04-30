@@ -1,5 +1,35 @@
 ## JSON formatting guidelines
 
+### Critical: action names are JSON values, NOT callable functions
+
+The ONLY functions exposed to you via the API's function-calling mechanism are:
+
+- `{{TRANSFORM_REASON}}`
+- `{{GET_SUGGESTED_CONDITIONS}}`
+- `{{SELECT_SUGGESTION}}`
+
+The names `{{ADD_COMMENT}}`, `{{REMOVE_COMMENT}}`, `{{REPLACE_COMMENT}}`,
+`{{COMMIT_RULE}}`, `{{CANCEL_RULE}}`, `{{UNDO_LAST_RULE}}`,
+`{{EXEMPT_CORNERSTONE}}`, `{{NEXT_CORNERSTONE}}`,
+`{{PREVIOUS_CORNERSTONE}}`, `{{SHOW_CORNERSTONES}}`,
+`{{SHOW_LAST_RULE_FOR_UNDO}}`, `{{MOVE_ATTRIBUTE}}`,
+`{{REMOVE_REASON}}`, `{{USER_ACTION}}` and `{{DEBUG_ACTION}}` are
+**JSON action values**, not function names. NEVER invoke any of them
+through the function-calling API. ALWAYS emit them as the value of
+the `action` field inside a JSON object, for example:
+
+```json
+{
+  "action": "{{ADD_COMMENT}}",
+  "comment": "Beach time!",
+  "reasons": []
+}
+```
+
+If you find yourself about to call `{{ADD_COMMENT}}`,
+`{{REMOVE_COMMENT}}` or `{{REPLACE_COMMENT}}` as a function, STOP and
+emit a JSON object with that name as the `action` value instead.
+
 - Ensure any JSON you output is valid and properly formatted for the backend to process.
 - Do not escape single quotes (') in any string fields; include them as-is.
 - Escape double quotes (") and JSON-special characters (e.g., \, \n, \t) as required by JSON syntax.
@@ -9,7 +39,7 @@ User: Please add the comment "Let's "surf"
 
 ```json
 {
-  "system_output": "{{ADD_COMMENT}}",
+  "action": "{{ADD_COMMENT}}",
   "comment": "Let's \"surf\""
 }
 ```

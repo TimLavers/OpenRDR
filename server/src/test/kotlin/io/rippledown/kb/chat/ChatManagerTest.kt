@@ -229,6 +229,28 @@ class ChatManagerTest {
     }
 
     @Test
+    fun `response should surface a prose response as a plain bot message rather than empty`() = runTest {
+        // Given: the model replied to a user message in prose (no JSON
+        // fragments) — for example because it went off-script and asked
+        // a clarifying question instead of emitting an ActionComment.
+        // Previously the manager returned ChatResponse("") here, leaving
+        // the chat panel silent and causing cucumber scenarios such as
+        // "The comments given for a case are returned by the
+        // interpretation service" to hang for 60s waiting for
+        // suggestions that never arrived. The manager must now echo the
+        // prose so the user (and the cucumber suite) can see what the
+        // model actually said.
+        val prose = "I'm not sure what you mean. Could you rephrase that?"
+        coEvery { conversationService.response(any()) } returns prose
+
+        // When
+        val responseToUser = chatManager.response("hello")
+
+        // Then
+        responseToUser shouldBe ChatResponse(prose)
+    }
+
+    @Test
     fun `should return empty suggestions when ActionComment has no suggestions`() = runTest {
         // Given
         val message = "No suggestions here."

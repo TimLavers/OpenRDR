@@ -71,7 +71,121 @@ for performance.
 - `./gradlew :server:shadowJar` — built after the prompt changes so
   the fat jar the cucumber harness uses is current.
 
-## What still needs doing
+## Session continuation (2026-04-30 morning, second workstation)
+
+8. `server/src/main/kotlin/io/rippledown/kb/chat/ChatManager.kt`
+   - Mirror of step 3 applied to `processConversationResponse`: when
+     the model's reply has no JSON fragments, return
+     `ChatResponse(response)` instead of `ChatResponse("")` so the
+     chat panel surfaces the prose. Previously an empty response
+     left the cuke harness staring at a silent panel for 60s with
+     no diagnostic.
+
+9. `server/src/test/kotlin/io/rippledown/kb/chat/ChatManagerTest.kt`
+   - New regression test
+     `response should surface a prose response as a plain bot message rather than empty`
+     locks in the symmetric behaviour for the normal conversation
+     path. All ChatManagerTest tests pass.
+
+## Findings from re-run of `:cucumber:interpreter`
+- The fix above made the failure mode **observable**. The scenario
+  "The comments given for a case are returned by the interpretation
+  service" still fails (twice — original + retry), but the saved
+  `server.log` and the `[OpenRDRUI.sendUserMessage]` line now show
+  the actual LLM behaviour:
+    INFO  ChatManager - User message: 'Add the comment: "Normal glucose results."'
+    WARN  Conversation - Unknown function call: AddComment
+    INFO  ChatManager - Conversation response: I apologize for the error.
+      It seems I made a mistake in calling the `AddComment` function. ...
+- Root cause: the model is invoking `AddComment` as a **Gemini tool
+  call** (native function-call channel) rather than emitting the
+  JSON `{"action": "AddComment", ...}` the protocol requires. Only
+  3 functions are actually registered in
+  `KBChatService.createKBChatService` (TRANSFORM_REASON,
+  GET_SUGGESTED_CONDITIONS, SELECT_SUGGESTED_CONDITION). The
+  `AddComment` "tool" the model is trying to invoke does not exist.
+- Likely contributing prompt phrasing in
+  `3_defining_the_report_change.md` Step 3:
+    "Add the comment: 'Beach time!' → **output ADD_COMMENT** immediately."
+  + later "you MUST emit `{{ADD_COMMENT}}`". With tool-use enabled
+  and `{{ADD_COMMENT}}` expanding to the bare token `AddComment`,
+  the model conflates "output/emit AddComment" with "call the
+  AddComment function". Note the prompt elsewhere is careful to use
+  "call" only for actual functions ("you MUST NOT call
+  `{{TRANSFORM_REASON}}`") — but in the same sentence it then says
+  to emit AddComment, which the model evidently misreads.
+
+## Prompt fix applied (this session)
+
+10. `server/src/main/resources/chat/instructions/12_json_format_guidelines.md`
+    - Added a "Critical: action names are JSON values, NOT callable
+      functions" callout up front, listing the 3 real functions
+      (TRANSFORM_REASON, GET_SUGGESTED_CONDITIONS, SELECT_SUGGESTION)
+      and explicitly enumerating the JSON-action names the model
+      must NOT invoke as functions.
+    - Fixed a long-standing typo in the special-character escaping
+      example: `"system_output"` -> `"action"` (line ~12 of original
+      file). The wrong key in that example was almost certainly
+      adding to the model's confusion about what the JSON contract
+      is.
+
+11. `server/src/main/resources/chat/instructions/3_defining_the_report_change.md`
+    - Replaced "output ADD_COMMENT immediately" / "MUST emit
+      `{{ADD_COMMENT}}`" with explicit "emit a JSON object with
+      `\"action\": \"{{ADD_COMMENT}}\"` immediately" wording, plus
+      an inline JSON example. Added a CRITICAL bullet that mirrors
+      the new callout in 12_json_format_guidelines.md.
+
+## Verification of prompt fix
+
+- `:cucumber:interpreter` — ALL 3 scenarios pass on first attempt
+  (27 s total, no retry). The previously-failing scenario "The
+  comments given for a case are returned by the interpretation
+  service" now resolves to:
+    [OpenRDRUI.sendUserMessage] post-bot getCase(caseId=1)
+      responseAction=Done refreshed.name=Case1
+      interpretation.text="Normal glucose results."
+
+- `:cucumber:cucumberTest` — `attributes` is still flaky on the
+  same drag-and-drop scenarios as before the prompt change
+  (Attribute ordering.feature:26 and :45). Confirmed unrelated to
+  chat/LLM: the assertion is on UI attribute order
+  (`expected:<C> but was:<B>` / `<A>`). Pre-existing flake.
+
+- `:cucumber:chat` — 1st pass: 3 of 41-ish scenarios failed; on
+  retry, 2 still failed:
+    1. `Add comments with conditions.feature:4` "use the chat to
+       add a comment with a valid condition". Server log shows
+       the rule was successfully committed
+       (`{"action":"CommitRule"}`, `--- rule created ---`); the
+       failure is therefore a UI-side assertion race, not a chat
+       protocol issue.
+    2. `Show cornerstones.feature:35` "review cornerstones when
+       replacing a comment". Bot timed out at
+       `waitForBotQuestionToAllowReportChangeToCornerstoneThenConfirm`.
+       This is in the cornerstone-navigation cluster called out in
+       step 1 of the carried-over TODO below. The Spanish scenario
+       (the one this session's prompt work was originally aimed at)
+       passed in 31 s.
+
+## Next steps (deferred)
+
+- Investigate the cornerstone-navigation flake on
+  `Show cornerstones.feature:35` — server.log of the failure is
+  saved under
+  `cucumber/build/failures/The_user_should_be_able_to_review_cornerstones_when_replacing_a_comment_using_the_chat/`
+  and should show whether the model is again getting confused
+  about an action vs a function call, or whether it's a genuine
+  cornerstone-status race.
+
+- Investigate the `Add comments with conditions.feature:4` UI race
+  — server side completed cleanly but the cuke saw a stale state.
+
+- The `attributes` drag-and-drop flake is independent of all of
+  the above and is also worth a separate look.
+
+## Pre-existing TODO carried over
+
 1. Re-run `./gradlew cuT` after the prompt changes and confirm:
    - All `cucumber:attributes` and `cucumber:cases` folders still
      green (they were on the last two runs).
