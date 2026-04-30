@@ -95,7 +95,7 @@ Feature: The cases described in the TSH paper are present in a KB built from the
       | Age              | 32                 |            |
       | TSH              | 4.6                | 0.50 - 4.0 |
       | Free T4          | 13                 | 10 - 20    |
-      | TPO Antibodies   | 33 kU/L            | < 6        |
+      | TPO Antibodies   | 33                 | < 6        |
       | Patient Location | General Practice.  |            |
       | Tests            | TFTs               |            |
       | Clinical Notes   | Trying for a baby. |            |
@@ -255,8 +255,8 @@ Feature: The cases described in the TSH paper are present in a KB built from the
     Then I see these case values:
       | Sex                | F                                               |     |
       | Age                | 64                                              |     |
-      | Thyroglobulin      | 31 μg/L                                         |     |
-      | Anti-Thyroglobulin | <1 kU/L                                         | < 4 |
+      | Thyroglobulin      | 31                                              |     |
+      | Anti-Thyroglobulin | <1                                              | < 4 |
       | Patient Location   | Oncology Clinic.                                |     |
       | Tests              | Tg/TgAb                                         |     |
       | Clinical Notes     | Thyroid cancer. Post thyroidectomy, monitoring. |     |
@@ -265,8 +265,8 @@ Feature: The cases described in the TSH paper are present in a KB built from the
     Then I see these case values:
       | Sex                | F                                               |     |
       | Age                | 64                                              |     |
-      | Thyroglobulin      | <0.1 μg/L                                       |     |
-      | Anti-Thyroglobulin | 14 kU/L                                         | < 4 |
+      | Thyroglobulin      | <0.1                                            |     |
+      | Anti-Thyroglobulin | 14                                              | < 4 |
       | Patient Location   | Oncology Clinic.                                |     |
       | Tests              | Tg/TgAb                                         |     |
       | Clinical Notes     | Thyroid cancer. Post thyroidectomy, monitoring. |     |
@@ -278,7 +278,7 @@ Feature: The cases described in the TSH paper are present in a KB built from the
       | TSH              | 4.2                                | 0.50 - 4.0 |
       | Free T4          | 11                                 | 10 - 20    |
       | Free T3          | 5.6                                | 3.0 - 5.5  |
-      | TPO Antibodies   | 876 kU/L                           | < 6        |
+      | TPO Antibodies   | 876                                | < 6        |
       | Patient Location | General Practice.                  |            |
       | Tests            | TFTs                               |            |
       | Clinical Notes   | Family history of thyroid disease. |            |
@@ -322,12 +322,12 @@ Feature: The cases described in the TSH paper are present in a KB built from the
       | TSH              | <0.01               | 0.50 - 4.0 |
       | Free T4          | 43                  | 10 - 20    |
       | Free T3          | 22                  | 3.0 - 5.5  |
-      | Sodium           | 143 mmol/L          | 134 - 146  |
-      | Potassium        | 2.4 mmol/L          | 3.4 - 5.0  |
-      | Bicarbonate      | 18 mmol/L           | 22 - 32    |
-      | Urea             | 6.0 mmol/L          | 3.0 - 8.0  |
-      | Creatinine       | 62 μmol/L           | 60 - 110   |
-      | eGFR             | >90 mL/min/1.73 m∧2 |            |
+      | Sodium           | 143               | 134 - 146  |
+      | Potassium        | 2.4               | 3.4 - 5.0  |
+      | Bicarbonate      | 18                | 22 - 32    |
+      | Urea             | 6.0               | 3.0 - 8.0  |
+      | Creatinine       | 62                | 60 - 110   |
+      | eGFR             | >90               |            |
       | Patient Location | Emergency Dept.     |            |
       | Tests            | TFTs                |            |
       | Clinical Notes   | General weakness.   |            |
