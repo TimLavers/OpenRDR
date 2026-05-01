@@ -140,7 +140,7 @@ tasks.register<Zip>("demoZip") {
 
 // ---------------------------------------------------------------------------
 // `./gradlew verifyDemoZip` builds the demo zip and runs the
-// :packaging-smoke end-to-end test against the produced artefact. Kept as a
+// :packaging end-to-end test against the produced artefact. Kept as a
 // dedicated task so it is NOT included in the default `check` aggregate
 // (it takes 30-60s and binds to a fixed port).
 // ---------------------------------------------------------------------------
@@ -155,16 +155,16 @@ tasks.register("verifyDemoZip") {
         val zipFile = zipTask.archiveFile.get().asFile
         require(zipFile.exists()) { "demoZip task did not produce $zipFile" }
         // Forward to the smoke test JVM via system properties.
-        val smokeTest = project(":packaging-smoke").tasks.named<Test>("test").get()
+        val smokeTest = project(":packaging").tasks.named<Test>("test").get()
         smokeTest.systemProperty("demoZip.path", zipFile.absolutePath)
         smokeTest.systemProperty(
             "demoZip.extractRoot",
-            project(":packaging-smoke").layout.buildDirectory.dir("tmp/demo-zip-smoke").get().asFile.absolutePath
+            project(":packaging").layout.buildDirectory.dir("tmp/demo-zip-smoke").get().asFile.absolutePath
         )
         // Always re-run; the test has external side-effects (process,
         // network) that Gradle's up-to-date checks don't see.
         smokeTest.outputs.upToDateWhen { false }
     }
 
-    finalizedBy(":packaging-smoke:test")
+    finalizedBy(":packaging:test")
 }
