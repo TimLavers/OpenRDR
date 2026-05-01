@@ -1,6 +1,5 @@
-apply(from = "../repositories.gradle.kts")
-
 plugins {
+    id("kotlin-library-conventions")
     kotlin("plugin.serialization")
 }
 

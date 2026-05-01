@@ -1,8 +1,5 @@
-
-apply(from = "../repositories.gradle.kts")
-
 plugins {
-    java
+    id("kotlin-library-conventions")
     alias(libs.plugins.compose)
     alias(libs.plugins.composeCompiler)
 }

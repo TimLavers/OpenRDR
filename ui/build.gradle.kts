@@ -1,8 +1,7 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
-apply(from = "../repositories.gradle.kts")
-
 plugins {
+    id("kotlin-library-conventions")
     alias(libs.plugins.compose)
     alias(libs.plugins.composeCompiler)
 }

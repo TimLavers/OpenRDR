@@ -1,11 +1,10 @@
 import org.gradle.jvm.toolchain.JavaLanguageVersion.of
 
-apply(from = "repositories.gradle.kts")
-
 plugins {
-    kotlin("jvm") version "2.2.0"
-    kotlin("plugin.serialization") version "2.2.0"
+    kotlin("jvm")
+    kotlin("plugin.serialization")
     id("io.ktor.plugin") version "3.2.3"
+    id("repositories-conventions")
     idea
     alias(libs.plugins.compose) apply false
     alias(libs.plugins.composeCompiler) apply false
@@ -25,39 +24,6 @@ kotlin {
 java {
     toolchain {
         languageVersion = of(21)
-    }
-}
-
-subprojects {
-    apply(from = "../repositories.gradle.kts")
-
-    apply {
-        plugin("kotlin")
-        plugin("java-library")
-    }
-
-    dependencies {
-        testImplementation(kotlin("test"))
-    }
-
-    sourceSets {
-        main {
-            resources {
-                srcDir(rootProject.projectDir.resolve("shared-resources"))
-            }
-        }
-        test {
-            resources {
-                srcDir(rootProject.projectDir.resolve("shared-test-resources"))
-            }
-        }
-    }
-
-    tasks.test {
-        if (project.name != "ui") {
-            useJUnitPlatform()
-        }
-        jvmArgs("-Xshare:off", "-XX:+EnableDynamicAgentLoading")
     }
 }
 
