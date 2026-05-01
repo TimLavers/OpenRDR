@@ -10,9 +10,9 @@ if [ -z "${API_KEY:-}" ]; then
     echo
 fi
 
-SERVER_JAR=$(ls server/openrdr-*.jar 2>/dev/null | head -n1 || true)
+SERVER_JAR=$(ls server/*-all.jar server/openrdr-*.jar 2>/dev/null | head -n1 || true)
 if [ -z "$SERVER_JAR" ]; then
-    echo "ERROR: could not find server/openrdr-*.jar" >&2
+    echo "ERROR: could not find server fat jar under server/" >&2
     exit 1
 fi
 
@@ -34,13 +34,25 @@ if [ -z "$UI_LAUNCHER" ]; then
     exit 1
 fi
 
+mkdir -p logs
 echo "Starting OpenRDR server (in-memory mode, port 9090, with Demo KB) ..."
-java -jar "$SERVER_JAR" InMemory Demo &
+echo "  Server output -> logs/server-console.log"
+java \
+    -DlogFilePath="$(pwd)/logs/server.log" \
+    --enable-native-access=ALL-UNNAMED \
+    -jar "$SERVER_JAR" InMemory Demo \
+    >logs/server-console.log 2>&1 &
 SERVER_PID=$!
 trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
 
 echo "Waiting for the server to accept connections ..."
 for i in $(seq 1 60); do
+    if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+        echo "ERROR: server process exited before accepting connections. See logs/server-console.log:" >&2
+        echo "---" >&2
+        tail -n 80 logs/server-console.log >&2
+        exit 1
+    fi
     if (echo >/dev/tcp/localhost/9090) >/dev/null 2>&1; then
         break
     fi

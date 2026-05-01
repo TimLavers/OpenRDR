@@ -77,22 +77,26 @@ tasks.register<Zip>("demoZip") {
 
     // UI distributable -> <top>/ui/
     //
-    // createDistributable produces:
-    //   ui/build/compose/binaries/main/app/<packageName>/...
-    // We strip the leading "<packageName>/" so the UI tree lands directly
-    // under <top>/ui/ regardless of packageName.
+    // createDistributable produces ui/build/compose/binaries/main/app/
+    // containing the top-level launcher (e.g. OpenRDR.app on macOS,
+    // OpenRDR/ with bin+lib on Windows/Linux). Copy as-is.
     val uiDistRoot = project(":ui").layout.buildDirectory
         .dir("compose/binaries/main/app")
     from(uiDistRoot) {
         into("$topLevel/ui")
+        // Gradle's Zip task does not preserve source file permissions.
+        // The .app launcher binary and any bin/ launchers (Linux/Windows)
+        // must be executable when extracted.
         eachFile {
-            // Drop the first path segment (the Compose packageName directory).
-            val segments = relativePath.segments
-            if (segments.size > 1) {
-                relativePath = RelativePath(true, *segments.drop(1).toTypedArray())
+            val p = relativePath.pathString
+            if (p.contains("/Contents/MacOS/") ||
+                p.contains("/bin/") ||
+                p.endsWith(".dylib") ||
+                p.endsWith(".so")
+            ) {
+                permissions { unix("755") }
             }
         }
-        includeEmptyDirs = false
     }
 
     // Unix launcher needs +x when extracted on macOS/Linux.

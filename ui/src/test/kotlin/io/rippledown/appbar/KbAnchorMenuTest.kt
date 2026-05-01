@@ -3,7 +3,8 @@ package io.rippledown.appbar
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import io.kotest.matchers.shouldBe
-import io.mockk.every
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.constants.kb.EDIT_KB_DESCRIPTION_BUTTON_TEXT
@@ -41,8 +42,8 @@ class KbAnchorMenuTest {
     @Before
     fun setup() {
         handler = mockk<AppBarHandler>(relaxed = true)
-        every { handler.kbList } returns { emptyList() }
-        every { handler.kbDescription } returns { kbDescription }
+        coEvery { handler.kbList() } returns emptyList()
+        coEvery { handler.kbDescription() } returns kbDescription
     }
 
     // -----------------------------------------------------------------------
@@ -131,7 +132,7 @@ class KbAnchorMenuTest {
     @Test
     fun `should list other KBs under the switch-KB header`() = runTest {
         //Given the workspace has Bondi (current), Lipids, and Glucose
-        every { handler.kbList } returns { listOf(bondiInfo, lipidsInfo, glucoseInfo) }
+        coEvery { handler.kbList() } returns listOf(bondiInfo, lipidsInfo, glucoseInfo)
         composeTestRule.setContent { KbAnchorMenu(bondiInfo, handler) }
 
         //When the menu is opened
@@ -149,7 +150,7 @@ class KbAnchorMenuTest {
     @Test
     fun `should hide the switch-KB section when there are no other KBs`() = runTest {
         //Given the workspace has only the current KB
-        every { handler.kbList } returns { listOf(bondiInfo) }
+        coEvery { handler.kbList() } returns listOf(bondiInfo)
         composeTestRule.setContent { KbAnchorMenu(bondiInfo, handler) }
 
         //When the menu is opened
@@ -162,7 +163,7 @@ class KbAnchorMenuTest {
     @Test
     fun `should call selectKB with the chosen KB id when a switch item is clicked`() = runTest {
         //Given the workspace has Bondi (current) and Lipids
-        every { handler.kbList } returns { listOf(bondiInfo, lipidsInfo) }
+        coEvery { handler.kbList() } returns listOf(bondiInfo, lipidsInfo)
         composeTestRule.setContent { KbAnchorMenu(bondiInfo, handler) }
         composeTestRule.clickDropdown()
 
@@ -177,7 +178,7 @@ class KbAnchorMenuTest {
     @Test
     fun `should close the dropdown after selecting a switch item`() = runTest {
         //Given the workspace has Bondi (current) and Lipids and the menu is open
-        every { handler.kbList } returns { listOf(bondiInfo, lipidsInfo) }
+        coEvery { handler.kbList() } returns listOf(bondiInfo, lipidsInfo)
         composeTestRule.setContent { KbAnchorMenu(bondiInfo, handler) }
         composeTestRule.clickDropdown()
         composeTestRule.waitUntilExactlyOneExists(hasText(lipidsInfo.name))
@@ -226,14 +227,14 @@ class KbAnchorMenuTest {
     @Test
     fun `should fetch kbList only on first composition`() = runTest {
         //Given a known kbList provider
-        every { handler.kbList } returns { listOf(bondiInfo, lipidsInfo) }
+        coEvery { handler.kbList() } returns listOf(bondiInfo, lipidsInfo)
 
         //When the menu is rendered
         composeTestRule.setContent { KbAnchorMenu(bondiInfo, handler) }
         composeTestRule.waitForIdle()
 
         //Then the provider was consulted at least once
-        verify(atLeast = 1) { handler.kbList }
+        coVerify(atLeast = 1) { handler.kbList() }
     }
 
     @Test
@@ -242,7 +243,7 @@ class KbAnchorMenuTest {
         val zebra = KBInfo("zebra_id", "Zebra")
         val alpha = KBInfo("alpha_id", "Alpha")
         val middle = KBInfo("middle_id", "Middle")
-        every { handler.kbList } returns { listOf(zebra, middle, alpha, bondiInfo) }
+        coEvery { handler.kbList() } returns listOf(zebra, middle, alpha, bondiInfo)
         composeTestRule.setContent { KbAnchorMenu(bondiInfo, handler) }
 
         //When the menu is opened

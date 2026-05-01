@@ -15,9 +15,9 @@ if "%API_KEY%"=="" (
 
 rem --- locate the server fat jar (version-independent) ---
 set "SERVER_JAR="
-for %%f in ("server\openrdr-*.jar") do set "SERVER_JAR=%%f"
+for %%f in ("server\*-all.jar" "server\openrdr-*.jar") do if not defined SERVER_JAR set "SERVER_JAR=%%f"
 if not defined SERVER_JAR (
-    echo ERROR: could not find server\openrdr-*.jar
+    echo ERROR: could not find server fat jar under server\
     pause
     exit /b 1
 )
@@ -31,8 +31,9 @@ if not defined UI_EXE (
     exit /b 1
 )
 
+if not exist logs mkdir logs
 echo Starting OpenRDR server (in-memory mode, port 9090, with Demo KB) ...
-start "OpenRDR Server" cmd /k "java -jar ""!SERVER_JAR!"" InMemory Demo"
+start "OpenRDR Server" cmd /k "java -DlogFilePath=%CD%\logs\server.log --enable-native-access=ALL-UNNAMED -jar ""!SERVER_JAR!"" InMemory Demo"
 
 echo Waiting for the server to accept connections ...
 set /a tries=0

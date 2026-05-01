@@ -11,11 +11,11 @@ interface KBControlHandler {
     var createKBFromSample: (name: String, sample: SampleKB) -> Unit
     var importKB: (data: File) -> Unit
     var exportKB: (data: File) -> Unit
-    val kbList: () -> List<KBInfo>
+    suspend fun kbList(): List<KBInfo>
 }
 
 /** Operations on the currently-selected knowledge base. */
 interface KbEditControlHandler {
     var setKbDescription: (name: String) -> Unit
-    var kbDescription: () -> String
+    suspend fun kbDescription(): String
 }

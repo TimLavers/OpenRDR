@@ -30,7 +30,10 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.sample.SampleKB
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.jetbrains.skiko.MainUIDispatcher
 import java.awt.Cursor
 import java.io.File
@@ -209,17 +212,13 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                         api.exportKBToZip(it)
                     }
                 }
-                override val kbList: () -> List<KBInfo> = {
-                    runBlocking(dispatcher) { api.kbList() }
-                }
+                override suspend fun kbList(): List<KBInfo> = api.kbList()
                 override var setKbDescription: (description: String) -> Unit = {
                     CoroutineScope(dispatcher).launch {
                         api.setKbDescription(it)
                     }
                 }
-                override var kbDescription: () -> String = {
-                    runBlocking(dispatcher) { api.kbDescription() }
-                }
+                override suspend fun kbDescription(): String = api.kbDescription()
             })
         },
     ) { paddingValues ->
@@ -236,8 +235,10 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
 
                     // Set the selectCase callback after caseSelectorHandler is created
                     caseSelectorHandler.selectCase = { id: Long ->
-                        currentCase = runBlocking(dispatcher) { api.getCase(id) }
-                        currentCaseId = id
+                        CoroutineScope(dispatcher).launch {
+                            currentCase = api.getCase(id)
+                            currentCaseId = id
+                        }
                     }
                 }
 
@@ -247,7 +248,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
                         cornerstoneStatus = cornerstoneStatus,
                         handler = object : CaseControlHandler {
                             override fun swapAttributes(moved: Attribute, target: Attribute) {
-                                runBlocking(dispatcher) {
+                                CoroutineScope(dispatcher).launch {
                                     api.moveAttribute(moved.id, target.id)
                                     currentCase = api.getCase(currentCaseId!!)
                                 }
