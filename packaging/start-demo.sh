@@ -20,6 +20,7 @@ fi
 UI_LAUNCHER=""
 for candidate in \
     ui/OpenRDR.app/Contents/MacOS/OpenRDR \
+    ui/OpenRDR/bin/OpenRDR \
     ui/bin/OpenRDR \
     ui/bin/ui \
     ui/OpenRDR \
@@ -34,10 +35,24 @@ if [ -z "$UI_LAUNCHER" ]; then
     exit 1
 fi
 
+# Prefer the JRE bundled with the UI distributable; fall back to system java.
+JAVA_BIN=""
+for candidate in \
+    ui/OpenRDR.app/Contents/runtime/Contents/Home/bin/java \
+    ui/OpenRDR/runtime/bin/java; do
+    if [ -x "$candidate" ]; then
+        JAVA_BIN="$candidate"
+        break
+    fi
+done
+if [ -z "$JAVA_BIN" ]; then
+    JAVA_BIN="java"
+fi
+
 mkdir -p logs
 echo "Starting OpenRDR server (in-memory mode, port 9090, with Demo KB) ..."
 echo "  Server output -> logs/server-console.log"
-java \
+"$JAVA_BIN" \
     -DlogFilePath="$(pwd)/logs/server.log" \
     --enable-native-access=ALL-UNNAMED \
     -jar "$SERVER_JAR" InMemory Demo \

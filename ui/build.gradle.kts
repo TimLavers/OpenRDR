@@ -35,6 +35,13 @@ compose.desktop {
         mainClass = "io.rippledown.main.MainKt"
         jvmArgs("--enable-native-access=ALL-UNNAMED")
 
+        // Use the JDK Gradle is running on (must be >= the project's bytecode
+        // target) for the bundled runtime that ships with createDistributable.
+        // Without this, Compose Desktop 1.10.3 jlinks its default JetBrains
+        // Runtime (Java 20), which fails to load classes compiled to
+        // bytecode 65 (Java 21) with UnsupportedClassVersionError.
+        javaHome = System.getProperty("java.home")
+
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi)
             packageName = "OpenRDR"

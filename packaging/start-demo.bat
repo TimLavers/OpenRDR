@@ -24,16 +24,20 @@ if not defined SERVER_JAR (
 
 rem --- locate the UI launcher ---
 set "UI_EXE="
-for %%f in ("ui\OpenRDR.exe" "ui\ui.exe") do if exist "%%~f" set "UI_EXE=%%~f"
+for %%f in ("ui\OpenRDR\OpenRDR.exe" "ui\OpenRDR.exe" "ui\ui.exe") do if exist "%%~f" set "UI_EXE=%%~f"
 if not defined UI_EXE (
     echo ERROR: could not find the OpenRDR UI launcher under ui\
     pause
     exit /b 1
 )
 
+rem --- prefer the JRE bundled with the UI; fall back to system java ---
+set "JAVA_EXE=ui\OpenRDR\runtime\bin\java.exe"
+if not exist "%JAVA_EXE%" set "JAVA_EXE=java"
+
 if not exist logs mkdir logs
 echo Starting OpenRDR server (in-memory mode, port 9090, with Demo KB) ...
-start "OpenRDR Server" cmd /k "java -DlogFilePath=%CD%\logs\server.log --enable-native-access=ALL-UNNAMED -jar ""!SERVER_JAR!"" InMemory Demo"
+start "OpenRDR Server" cmd /k ""!JAVA_EXE!" -DlogFilePath=%CD%\logs\server.log --enable-native-access=ALL-UNNAMED -jar ""!SERVER_JAR!"" InMemory Demo"
 
 echo Waiting for the server to accept connections ...
 set /a tries=0

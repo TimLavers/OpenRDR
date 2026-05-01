@@ -99,6 +99,31 @@ tasks.register<Zip>("demoZip") {
         }
     }
 
+    // The UI distributable bundles a private JRE under runtime/, but Compose
+    // Desktop's jpackage strips the `java` / `java.exe` launcher binary from
+    // it (only the GUI launcher is needed for the UI). The server is run as
+    // `java -jar ...`, so we add the launcher binary back from the JDK Gradle
+    // is using. This lets the demo run with no system Java installed.
+    val javaHomeBin = file("${System.getProperty("java.home")}/bin")
+    when (demoOsClassifier) {
+        "windows" -> from(javaHomeBin) {
+            include("java.exe", "javaw.exe")
+            into("$topLevel/ui/OpenRDR/runtime/bin")
+        }
+
+        "linux" -> from(javaHomeBin) {
+            include("java")
+            into("$topLevel/ui/OpenRDR/runtime/bin")
+            filePermissions { unix("755") }
+        }
+
+        "macos" -> from(javaHomeBin) {
+            include("java")
+            into("$topLevel/ui/OpenRDR.app/Contents/runtime/Contents/Home/bin")
+            filePermissions { unix("755") }
+        }
+    }
+
     // Unix launcher needs +x when extracted on macOS/Linux.
     from(rootProject.file("packaging")) {
         into(topLevel)
