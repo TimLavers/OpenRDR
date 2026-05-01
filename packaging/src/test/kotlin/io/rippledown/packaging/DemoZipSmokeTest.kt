@@ -299,14 +299,11 @@ class DemoZipSmokeTest {
 
             installRoot?.let { root ->
                 runCatching {
-                    val script = """
-                        ${'$'}procs = Get-CimInstance Win32_Process | Where-Object { ${'$'}_.CommandLine -and ${'$'}_.CommandLine -like '*${
-                        psEscape(
-                            root.absolutePath
-                        )
-                    }*' }
-                        foreach (${'$'}p in ${'$'}procs) { Stop-Process -Id ${'$'}p.ProcessId -Force -ErrorAction SilentlyContinue }
-                    """.trimIndent()
+                    val needle = psEscape(root.absolutePath)
+                    val script = "Get-CimInstance Win32_Process | Where-Object { " +
+                            "(${'$'}_.CommandLine -and ${'$'}_.CommandLine -like '*$needle*') -or " +
+                            "(${'$'}_.ExecutablePath -and ${'$'}_.ExecutablePath -like '*$needle*') " +
+                            "} | ForEach-Object { Stop-Process -Id ${'$'}_.ProcessId -Force -ErrorAction SilentlyContinue }"
                     ProcessBuilder("powershell.exe", "-NoProfile", "-Command", script)
                         .redirectErrorStream(true)
                         .inheritIO()
@@ -318,11 +315,23 @@ class DemoZipSmokeTest {
         }
 
         private fun openRdrProcesses(demoRoot: File): List<WinProc> {
-            val script = """
-                Get-CimInstance Win32_Process |
-                    Where-Object { ${'$'}_.CommandLine -and ${'$'}_.CommandLine -like '*${psEscape(demoRoot.absolutePath)}*' } |
-                    ForEach-Object { "${'$'}(${'$'}_.ProcessId)`t${'$'}(${'$'}_.Name)" }
-            """.trimIndent()
+            // Match on either CommandLine OR ExecutablePath referencing the
+            // install dir. The bat launches the UI with a relative path
+            // (start "" "ui\OpenRDR\OpenRDR.exe"), so the OpenRDR.exe
+            // process's CommandLine does not contain the install dir --
+            // but its ExecutablePath always does. Kept as one line because
+            // multi-line scripts passed via powershell.exe -Command are
+            // fragile under Java's ProcessBuilder argument marshalling.
+            val needle = psEscape(demoRoot.absolutePath)
+            // Output uses string concatenation with [char]9 to emit a tab,
+            // avoiding any double-quoted string literal. PowerShell's
+            // -Command parser combined with Java's Windows argv quoting
+            // mangles '"' inside the script otherwise, silently making
+            // the ForEach-Object block emit nothing.
+            val script = "Get-CimInstance Win32_Process | Where-Object { " +
+                    "(${'$'}_.CommandLine -and ${'$'}_.CommandLine -like '*$needle*') -or " +
+                    "(${'$'}_.ExecutablePath -and ${'$'}_.ExecutablePath -like '*$needle*') " +
+                    "} | ForEach-Object { ${'$'}_.ProcessId.ToString() + [char]9 + ${'$'}_.Name }"
             val proc = ProcessBuilder("powershell.exe", "-NoProfile", "-Command", script)
                 .redirectErrorStream(true)
                 .start()
