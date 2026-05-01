@@ -8,18 +8,28 @@ dependencies {
     testImplementation(libs.kotestAssertions)
 }
 
-// The smoke test launches the actual zip distribution, so it needs the zip
-// to exist. We do NOT auto-trigger :demoZip from the regular `test` task
-// because that would slow every Gradle build; instead the dedicated
-// `verifyDemoZip` task in the root build wires the dependency in.
+// The smoke test launches the actual zip distribution, so we always make
+// it depend on `:demoZip` producing the artefact. This means
+// `./gradlew :packaging:test` (or `./gradlew clean :packaging:test`)
+// just works end-to-end, and up-to-date checks ensure the zip is only
+// rebuilt when inputs change.
+val demoZipTask = rootProject.tasks.named<Zip>("demoZip")
+
 tasks.test {
-    // Forward the location of the demo zip + extraction root from Gradle to
-    // the test JVM. The root build's verifyDemoZip task sets these.
-    systemProperty("demoZip.path", System.getProperty("demoZip.path") ?: "")
+    dependsOn(demoZipTask)
+    // Re-run whenever the produced zip changes so a fresh build is
+    // exercised rather than a stale extract.
+    inputs.file(demoZipTask.flatMap { it.archiveFile }).withPropertyName("demoZip")
+    // The test has external side-effects (spawns processes, binds port
+    // 9090) that Gradle's output checks can't see, so always re-run.
+    outputs.upToDateWhen { false }
+
+    doFirst {
+        systemProperty("demoZip.path", demoZipTask.get().archiveFile.get().asFile.absolutePath)
+    }
     systemProperty(
         "demoZip.extractRoot",
-        System.getProperty("demoZip.extractRoot")
-            ?: layout.buildDirectory.dir("tmp/demo-zip-smoke").get().asFile.absolutePath
+        layout.buildDirectory.dir("tmp/demo-zip-smoke").get().asFile.absolutePath
     )
     // Stream the test's stdout/stderr so progress is visible during the
     // long-running smoke (extract + JVM start + UI launch ~30-60s).
