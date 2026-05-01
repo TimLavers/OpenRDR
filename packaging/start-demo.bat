@@ -2,13 +2,25 @@
 setlocal enabledelayedexpansion
 cd /d "%~dp0"
 
+rem --- load API_KEY from api-key.txt next to this script, if present ---
+rem An existing environment variable always wins. The file should contain
+rem the Gemini API key on a single line; lines starting with "#" are ignored.
+if "%API_KEY%"=="" if exist "%~dp0api-key.txt" (
+    for /f "usebackq tokens=* eol=#" %%L in ("%~dp0api-key.txt") do (
+        if not defined API_KEY if not "%%L"=="" set "API_KEY=%%L"
+    )
+    if defined API_KEY echo Loaded API_KEY from api-key.txt
+)
+
 if "%API_KEY%"=="" (
     echo.
-    echo WARNING: API_KEY environment variable is not set.
+    echo WARNING: API_KEY is not set.
     echo   Rule-condition generation via Google Gemini will not work until it is set.
-    echo   You can set it for this session with:
+    echo   Easiest option: create a file named api-key.txt next to this script
+    echo   and paste the Gemini key into it on a single line.
+    echo   Or set the environment variable for this session:
     echo       set API_KEY=your-google-gemini-api-key
-    echo   Or permanently with:
+    echo   Or permanently:
     echo       setx API_KEY "your-google-gemini-api-key"
     echo.
 )
@@ -37,7 +49,11 @@ if not exist "%JAVA_EXE%" set "JAVA_EXE=java"
 
 if not exist logs mkdir logs
 echo Starting OpenRDR server (in-memory mode, port 9090, with Demo KB) ...
-start "OpenRDR Server" cmd /k ""!JAVA_EXE!" -DlogFilePath=%CD%\logs\server.log --enable-native-access=ALL-UNNAMED -jar ""!SERVER_JAR!"" InMemory Demo"
+rem -Djavax.net.ssl.trustStoreType=WINDOWS-ROOT makes the JVM trust whatever
+rem certificates Windows trusts. This is needed on corporate machines that
+rem MITM outbound HTTPS with a private root CA -- without it, calls to the
+rem Google Gemini API fail with PKIX path building errors.
+start "OpenRDR Server" cmd /k """!JAVA_EXE!"" -DlogFilePath=%CD%\logs\server.log -Djavax.net.ssl.trustStoreType=WINDOWS-ROOT --enable-native-access=ALL-UNNAMED -jar ""!SERVER_JAR!"" InMemory Demo"
 
 echo Waiting for the server to accept connections ...
 set /a tries=0

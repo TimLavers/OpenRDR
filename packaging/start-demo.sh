@@ -2,11 +2,31 @@
 set -e
 cd "$(dirname "$0")"
 
+# Load API_KEY from api-key.txt next to this script, if present and the
+# environment variable isn't already set. First non-blank, non-comment
+# line wins; CRs stripped to tolerate files edited on Windows.
+if [ -z "${API_KEY:-}" ] && [ -f "./api-key.txt" ]; then
+    while IFS= read -r line || [ -n "$line" ]; do
+        line=${line%$'\r'}
+        case "$line" in
+            ''|\#*) continue ;;
+            *) API_KEY="$line"; break ;;
+        esac
+    done < ./api-key.txt
+    if [ -n "${API_KEY:-}" ]; then
+        export API_KEY
+        echo "Loaded API_KEY from api-key.txt"
+    fi
+fi
+
 if [ -z "${API_KEY:-}" ]; then
     echo
-    echo "WARNING: API_KEY environment variable is not set."
+    echo "WARNING: API_KEY is not set."
     echo "  Rule-condition generation via Google Gemini will not work until it is."
-    echo "  export API_KEY=your-google-gemini-api-key"
+    echo "  Easiest option: create a file named api-key.txt next to this script"
+    echo "  containing the Gemini key on a single line."
+    echo "  Or export it in your shell:"
+    echo "      export API_KEY=your-google-gemini-api-key"
     echo
 fi
 

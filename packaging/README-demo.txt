@@ -17,21 +17,24 @@ Prerequisites
 
 - Windows 10+ / macOS 12+ / modern Linux. Native binaries are for the OS
   that built this zip (see the zip filename).
-- For the rule-condition assistant to work, a Google Gemini API key must be
-  available in the environment variable API_KEY. Without it the UI still
-  runs; only rule-condition suggestions generated from free-text expressions
-  will fail.
+- For the rule-condition assistant to work, a Google Gemini API key is
+  required. Without it the UI still runs; only rule-condition suggestions
+  generated from free-text expressions will fail.
 
   To get a key: https://ai.google.dev/gemini-api/docs/api-key
 
-  Set it (Windows, per session):
-      set API_KEY=your-google-gemini-api-key
+  Easiest option (all platforms, no admin / env-var setup required):
+      Create a plain-text file named api-key.txt next to start-demo.bat /
+      start-demo.sh and paste your key into it on a single line. Save.
+      The launcher will pick it up automatically on the next run.
+      (Lines starting with # are ignored, so you can leave a comment.)
 
-  Set it (Windows, permanent -- new shells only):
-      setx API_KEY "your-google-gemini-api-key"
+  Or set the API_KEY environment variable instead (it always wins over
+  api-key.txt if both are present):
 
-  Set it (macOS/Linux):
-      export API_KEY=your-google-gemini-api-key
+      Windows, per session:        set API_KEY=your-google-gemini-api-key
+      Windows, permanent:          setx API_KEY "your-google-gemini-api-key"
+      macOS/Linux:                 export API_KEY=your-google-gemini-api-key
 
 Running
 -------
