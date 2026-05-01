@@ -60,4 +60,5 @@ for i in $(seq 1 60); do
 done
 
 echo "Launching OpenRDR UI ..."
-"$UI_LAUNCHER"
+echo "  UI output -> logs/ui-console.log"
+"$UI_LAUNCHER" >logs/ui-console.log 2>&1
