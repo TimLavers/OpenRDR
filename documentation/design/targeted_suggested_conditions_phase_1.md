@@ -24,10 +24,17 @@ In:
   `CornerstoneDiscriminationScorer`.
 - A `RelevanceRanker` replacing `Sorter` at
   `server/src/main/kotlin/io/rippledown/model/rule/ConditionSuggester.kt:118`.
+- A **hard cap of 20 suggestions** applied after ranking — see
+  "Suggestion cap" below.
 - Plumbing: `RuleSessionManager.conditionHintsForCase` populates context
   from the active session.
 - Unit tests for each scorer plus integration tests through
   `RuleSessionManager`.
+- Cucumber acceptance specification covering the three scorers and the
+  cap — see
+  `cucumber/src/test/resources/requirements/conditions/Targeted Suggested Conditions Phase 1.feature`
+  with new ordering steps in
+  `cucumber/src/test/kotlin/steps/SuggestionOrderingStepDefs.kt`.
 
 Out (deferred to Phase 2 / 3):
 
@@ -266,7 +273,7 @@ Inputs: `ctx.cornerstones`, `ctx.sessionCase`.
 - Empty cornerstones → score 0 for all; ranker falls back to other
   signals.
 
-### 5. `RelevanceRanker`
+### 5. `RelevanceRanker` and the suggestion cap
 
 Internal, three signals ordered by reliability:
 
@@ -288,6 +295,27 @@ Rationale for ordering:
   cluster on the right attribute and we need to pick among them.
 - **Alphabetic last** — preserves today's ordering as a stable tiebreak;
   keeps tests deterministic.
+
+#### Suggestion cap
+
+After ranking, take the top **20** suggestions and drop the rest. The
+cap exists for two reasons:
+
+- **UX.** The chat UI shows ~5 suggestions by default, expandable to
+  ~10. Twenty is roughly four pages of expansion — the realistic
+  scrollable maximum. Anything beyond is read by no one.
+- **LLM resolution.** `SuggestedConditionsHandler` formats the list for
+  the bot to map back from "the third one" / "MCV high" to a concrete
+  suggestion. Twenty entries is meaningfully easier to disambiguate
+  than fifty.
+
+The cap is a single `MAX_SUGGESTIONS` constant in the suggester (or on
+`SuggestionContext`) so Phases 2 / 3 can tune it without touching the
+ranker. Likely Phase 3 trajectory: drop to 10–15 once LLM / embedding
+signals consistently push the right answer into the top 10.
+
+The cap applies *after* ranking, so it removes the lowest-relevance
+entries — never a top-ranked candidate.
 
 ### 6. Wire context through `RuleSessionManager`
 
@@ -353,6 +381,8 @@ no dead code.
     - Historical beats overlap beats discrimination beats alphabetic.
     - All-zero → alphabetic order matches today's `Sorter` exactly
       (regression).
+  - List is truncated to `MAX_SUGGESTIONS` (= 20) after ranking; kept
+    entries are the top-ranked ones, dropped entries are the lowest.
 
 ### Updated
 
@@ -398,13 +428,15 @@ no dead code.
 1. Expose `RuleBuildingSession.action`; introduce `SuggestionContext`;
    move `ConditionSuggester` to `io.rippledown.suggestions` package and
    migrate its constructor (no behaviour change — alphabetic fallback
-   only).
+   only). Apply the 20-suggestion cap at the end of `suggestions()`.
 2. Add `HistoricalRuleScorer` + tests; ranker uses it.
 3. Add `CommentTokenOverlapScorer` + tests; ranker uses it.
 4. Add `CornerstoneDiscriminationScorer` + tests; ranker uses it.
 5. Wire `RuleSessionManager.conditionHintsForCase` to populate the
    context; integration tests through `RuleSessionManager` and
    `SuggestedConditionsHandler`.
-6. Remove the old `Sorter`; tighten test order assertions.
+6. Remove the old `Sorter`; tighten test order assertions; wire the
+   ordering cucumber steps in `SuggestionOrderingStepDefs.kt` and the
+   `I work through any cornerstone cases` placeholder.
 
 Each commit is independently green and reviewable.
