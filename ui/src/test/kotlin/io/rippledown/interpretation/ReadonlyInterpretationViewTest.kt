@@ -133,7 +133,7 @@ class ReadonlyInterpretationViewTest {
             waitForIdle()
 
             //Then
-            requireCommentToBeHighlighted(bondiComment, textLayoutResult!!)
+            requireCommentToBeHighlighted(bondiComment, textLayoutResult)
         }
     }
 
@@ -163,7 +163,7 @@ class ReadonlyInterpretationViewTest {
             waitForIdle()
 
             //Then
-            requireCommentToBeHighlighted(malabarComment, textLayoutResult!!)
+            requireCommentToBeHighlighted(malabarComment, textLayoutResult)
         }
     }
 
@@ -187,14 +187,14 @@ class ReadonlyInterpretationViewTest {
             requireInterpretationForCornerstone(unhighlighted)
             movePointerOverComment(bondiComment, textLayoutResult!!)
             waitForIdle()
-            requireCommentToBeHighlighted(bondiComment, textLayoutResult!!)
+            requireCommentToBeHighlighted(bondiComment, textLayoutResult)
 
             //When
-            movePointerToTheRightOfTheComment(bondiComment, textLayoutResult!!)
+            movePointerToTheRightOfTheComment(bondiComment, textLayoutResult)
             waitForIdle()
 
             //Then
-            requireCommentToBeNotHighlighted(textLayoutResult!!)
+            requireCommentToBeNotHighlighted(textLayoutResult)
         }
     }
 
