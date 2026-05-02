@@ -100,3 +100,21 @@ Phase 1 alone removes most of the irrelevant suggestions that prompted the featu
 deterministic, unit-testable code. The subsequent phases are optional and can be driven by real user feedback once Phase
 1 is in place.
 
+---
+
+# Detailed plans
+
+- **Phase 1** — see `targeted_suggested_conditions_phase_1.md`.
+  Threads the action + cornerstones into `ConditionSuggester`, adds three
+  deterministic scorers (historical rule mining, comment-token overlap,
+  cornerstone discrimination) and a relevance-aware ranker. No new
+  modules, no LLM, no protocol change.
+- **Phase 2** — not yet written. Will cover the pluggable strategy
+  pipeline and extraction of a `suggestions` module.
+- **Phase 3** — follow-up Q&A in
+  `targeted_suggested_conditions_qna.md`, including `ExpressionCondition`
+  and the AST discussion.
+
+Detailed design for each phase lives in its own document so this file
+stays scannable; keep this document for the high-level approaches and
+trade-offs above.
