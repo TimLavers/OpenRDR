@@ -17,10 +17,10 @@ class DemoSampleBuilderTest : SampleBuilderTest() {
         endpoint.kb.ruleTree.size() shouldBe 1
 
         val processedNames = endpoint.kb.allProcessedCases().map { it.name }
-        processedNames shouldContainExactlyInAnyOrder listOf("Lindsay", "Einstein")
+        processedNames shouldContainExactlyInAnyOrder listOf("Lindsay")
 
         val cornerstoneNames = endpoint.kb.allCornerstoneCases().map { it.name }
-        cornerstoneNames shouldContainExactlyInAnyOrder listOf("Planck")
+        cornerstoneNames shouldContainExactlyInAnyOrder listOf("Jane")
     }
 
     @Test
@@ -48,23 +48,27 @@ class DemoSampleBuilderTest : SampleBuilderTest() {
     }
 
     @Test
-    fun `Einstein and Planck are loaded with their full attribute panels`() {
+    fun `Jane cornerstone case shares Lindsay's attributes with different values`() {
         DemoSampleBuilder(endpoint).setupCases()
 
-        // The Einstein and Planck JSON resources are pathology panels with
-        // many attributes; we don't pin the exact count here (it would
-        // couple the test to the resource file), but we do require that
-        // each has substantially more attributes than Lindsay's three.
-        val einstein = endpoint.kb.getProcessedCaseByName("Einstein")
-        einstein.attributes.size shouldBe einstein.attributes.size // sanity
-        check(einstein.attributes.size > 10) {
-            "Expected Einstein to have many attributes; got ${einstein.attributes.size}."
-        }
+        val jane = endpoint.kb.getCornerstoneCaseByName("Jane")
+        val attributeNames = jane.attributes.map { it.name }
+        attributeNames shouldContainExactlyInAnyOrder listOf("Glucose", "Pregnant", "Age")
 
-        val planck = endpoint.kb.getCornerstoneCaseByName("Planck")
-        check(planck.attributes.size > 10) {
-            "Expected Planck to have many attributes; got ${planck.attributes.size}."
+        val glucose = endpoint.kb.attributeManager.getOrCreate("Glucose")
+        val glucoseResult = jane.getLatest(glucose).shouldNotBeNull()
+        glucoseResult.value.text shouldBe "4.8"
+        glucoseResult.referenceRange.shouldNotBeNull().run {
+            lowerString shouldBe null
+            upperString shouldBe "5.1"
         }
+        glucoseResult.units shouldBe " mmol/L"
+
+        val pregnant = endpoint.kb.attributeManager.getOrCreate("Pregnant")
+        jane.getLatest(pregnant).shouldNotBeNull().value.text shouldBe "N"
+
+        val age = endpoint.kb.attributeManager.getOrCreate("Age")
+        jane.getLatest(age).shouldNotBeNull().value.text shouldBe "35"
     }
 
     @Test
@@ -73,7 +77,7 @@ class DemoSampleBuilderTest : SampleBuilderTest() {
 
         // No rules are seeded; the demo expects the user to build them live.
         endpoint.kb.ruleTree.size() shouldBe 1
-        endpoint.kb.allProcessedCases() shouldHaveSize 2
+        endpoint.kb.allProcessedCases() shouldHaveSize 1
         endpoint.kb.allCornerstoneCases() shouldHaveSize 1
     }
 }

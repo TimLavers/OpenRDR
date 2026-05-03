@@ -6,12 +6,14 @@ import io.rippledown.chat.Conversation.Companion.SELECT_SUGGESTED_CONDITION
 import io.rippledown.chat.Conversation.Companion.TRANSFORM_REASON
 import io.rippledown.chat.FunctionCallHandler
 import io.rippledown.kb.chat.*
+import io.rippledown.log.lazyLogger
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 
 class ChatSessionManager(
     private val ruleSessionManager: RuleSessionManager
 ) {
+    private val logger = lazyLogger
     private lateinit var chatManager: ChatManager
 
     /**
@@ -51,5 +53,18 @@ class ChatSessionManager(
     fun createReasonTransformer(viewableCase: ViewableCase, ruleService: RuleService, modelResponder: ModelResponder) =
         KBReasonTransformer(viewableCase.case, ruleService, modelResponder)
 
-    suspend fun responseToUserMessage(message: String): ChatResponse = chatManager.response(message)
+    suspend fun responseToUserMessage(message: String): ChatResponse {
+        if (!::chatManager.isInitialized) {
+            logger.warn(
+                "responseToUserMessage called before startConversation; " +
+                        "message='$message'. The request was probably routed " +
+                        "to a different KB than the one whose conversation is active."
+            )
+            return ChatResponse(
+                "No conversation is active for this knowledge base. " +
+                        "Select a case to start one."
+            )
+        }
+        return chatManager.response(message)
+    }
 }

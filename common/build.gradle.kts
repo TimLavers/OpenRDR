@@ -1,4 +1,5 @@
 plugins {
+    id("kotlin-library-conventions")
     kotlin("plugin.serialization")
     `java-test-fixtures`
 }

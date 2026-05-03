@@ -28,6 +28,8 @@ temp/
 logs/
 node_modules/
 downloads/
+# Gemini API key loaded by start-demo scripts at runtime
+api-key.txt
 interpretations/
 ```
 temp.txt

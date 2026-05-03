@@ -1,11 +1,10 @@
 import org.gradle.jvm.toolchain.JavaLanguageVersion.of
 
-apply(from = "repositories.gradle.kts")
-
 plugins {
-    kotlin("jvm") version "2.2.0"
-    kotlin("plugin.serialization") version "2.2.0"
+    kotlin("jvm")
+    kotlin("plugin.serialization")
     id("io.ktor.plugin") version "3.2.3"
+    id("repositories-conventions")
     idea
     alias(libs.plugins.compose) apply false
     alias(libs.plugins.composeCompiler) apply false
@@ -25,39 +24,6 @@ kotlin {
 java {
     toolchain {
         languageVersion = of(21)
-    }
-}
-
-subprojects {
-    apply(from = "../repositories.gradle.kts")
-
-    apply {
-        plugin("kotlin")
-        plugin("java-library")
-    }
-
-    dependencies {
-        testImplementation(kotlin("test"))
-    }
-
-    sourceSets {
-        main {
-            resources {
-                srcDir(rootProject.projectDir.resolve("shared-resources"))
-            }
-        }
-        test {
-            resources {
-                srcDir(rootProject.projectDir.resolve("shared-test-resources"))
-            }
-        }
-    }
-
-    tasks.test {
-        if (project.name != "ui") {
-            useJUnitPlatform()
-        }
-        jvmArgs("-Xshare:off", "-XX:+EnableDynamicAgentLoading")
     }
 }
 
@@ -111,22 +77,51 @@ tasks.register<Zip>("demoZip") {
 
     // UI distributable -> <top>/ui/
     //
-    // createDistributable produces:
-    //   ui/build/compose/binaries/main/app/<packageName>/...
-    // We strip the leading "<packageName>/" so the UI tree lands directly
-    // under <top>/ui/ regardless of packageName.
+    // createDistributable produces ui/build/compose/binaries/main/app/
+    // containing the top-level launcher (e.g. OpenRDR.app on macOS,
+    // OpenRDR/ with bin+lib on Windows/Linux). Copy as-is.
     val uiDistRoot = project(":ui").layout.buildDirectory
         .dir("compose/binaries/main/app")
     from(uiDistRoot) {
         into("$topLevel/ui")
+        // Gradle's Zip task does not preserve source file permissions.
+        // The .app launcher binary and any bin/ launchers (Linux/Windows)
+        // must be executable when extracted.
         eachFile {
-            // Drop the first path segment (the Compose packageName directory).
-            val segments = relativePath.segments
-            if (segments.size > 1) {
-                relativePath = RelativePath(true, *segments.drop(1).toTypedArray())
+            val p = relativePath.pathString
+            if (p.contains("/Contents/MacOS/") ||
+                p.contains("/bin/") ||
+                p.endsWith(".dylib") ||
+                p.endsWith(".so")
+            ) {
+                permissions { unix("755") }
             }
         }
-        includeEmptyDirs = false
+    }
+
+    // The UI distributable bundles a private JRE under runtime/, but Compose
+    // Desktop's jpackage strips the `java` / `java.exe` launcher binary from
+    // it (only the GUI launcher is needed for the UI). The server is run as
+    // `java -jar ...`, so we add the launcher binary back from the JDK Gradle
+    // is using. This lets the demo run with no system Java installed.
+    val javaHomeBin = file("${System.getProperty("java.home")}/bin")
+    when (demoOsClassifier) {
+        "windows" -> from(javaHomeBin) {
+            include("java.exe", "javaw.exe")
+            into("$topLevel/ui/OpenRDR/runtime/bin")
+        }
+
+        "linux" -> from(javaHomeBin) {
+            include("java")
+            into("$topLevel/ui/OpenRDR/runtime/bin")
+            filePermissions { unix("755") }
+        }
+
+        "macos" -> from(javaHomeBin) {
+            include("java")
+            into("$topLevel/ui/OpenRDR.app/Contents/runtime/Contents/Home/bin")
+            filePermissions { unix("755") }
+        }
     }
 
     // Unix launcher needs +x when extracted on macOS/Linux.
@@ -141,4 +136,17 @@ tasks.register<Zip>("demoZip") {
         include("start-demo.bat", "README-demo.txt")
         filePermissions { unix("644") }
     }
+}
+
+// ---------------------------------------------------------------------------
+// `./gradlew verifyDemoZip` is an alias for the packaging smoke test. The
+// :packaging:test task itself already depends on :demoZip and wires in
+// the produced artefact (see packaging/build.gradle.kts), so this is
+// just a convenience entry point. Kept OUT of the default `check`
+// aggregate because the smoke takes 30-60 s and binds port 9090.
+// ---------------------------------------------------------------------------
+tasks.register("verifyDemoZip") {
+    group = "verification"
+    description = "Builds the demo zip and runs the packaging smoke test against it."
+    dependsOn(":packaging:test")
 }

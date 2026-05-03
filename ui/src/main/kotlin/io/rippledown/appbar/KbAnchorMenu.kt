@@ -44,6 +44,7 @@ fun KbAnchorMenu(kbInfo: KBInfo?, handler: AppBarHandler) {
     var importKbDialog by remember { mutableStateOf(false) }
     var exportKbDialog by remember { mutableStateOf(false) }
     var kbDescriptionDialog by remember { mutableStateOf(false) }
+    var kbDescriptionText by remember { mutableStateOf<String?>(null) }
 
     val availableKBs = remember { mutableStateListOf<KBInfo>() }
     LaunchedEffect(kbInfo) {
@@ -51,6 +52,14 @@ fun KbAnchorMenu(kbInfo: KBInfo?, handler: AppBarHandler) {
             val others = handler.kbList().filter { it != kbInfo }.sorted()
             availableKBs.clear()
             availableKBs.addAll(others)
+        }
+    }
+
+    LaunchedEffect(kbDescriptionDialog) {
+        if (kbDescriptionDialog) {
+            kbDescriptionText = handler.kbDescription()
+        } else {
+            kbDescriptionText = null
         }
     }
 
@@ -72,11 +81,15 @@ fun KbAnchorMenu(kbInfo: KBInfo?, handler: AppBarHandler) {
         onDismiss = { exportKbDialog = false },
         onExport = { handler.exportKB(it); exportKbDialog = false }
     )
-    if (kbDescriptionDialog) KbDescriptionDialog(
-        initialDescription = handler.kbDescription(),
-        onDismiss = { kbDescriptionDialog = false },
-        onSave = { handler.setKbDescription(it); kbDescriptionDialog = false }
-    )
+    if (kbDescriptionDialog) {
+        kbDescriptionText?.let { description ->
+            KbDescriptionDialog(
+                initialDescription = description,
+                onDismiss = { kbDescriptionDialog = false },
+                onSave = { handler.setKbDescription(it); kbDescriptionDialog = false }
+            )
+        }
+    }
 
     Box(
         Modifier

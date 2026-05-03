@@ -1,8 +1,7 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
-apply(from = "../repositories.gradle.kts")
-
 plugins {
+    id("kotlin-library-conventions")
     alias(libs.plugins.compose)
     alias(libs.plugins.composeCompiler)
 }
@@ -36,10 +35,37 @@ compose.desktop {
         mainClass = "io.rippledown.main.MainKt"
         jvmArgs("--enable-native-access=ALL-UNNAMED")
 
+        // Use the JDK Gradle is running on (must be >= the project's bytecode
+        // target) for the bundled runtime that ships with createDistributable.
+        // Without this, Compose Desktop 1.10.3 jlinks its default JetBrains
+        // Runtime (Java 20), which fails to load classes compiled to
+        // bytecode 65 (Java 21) with UnsupportedClassVersionError.
+        javaHome = System.getProperty("java.home")
+
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi)
             packageName = "OpenRDR"
             packageVersion = "1.0.0"
+
+            // The bundled runtime is also used to run the server fat jar
+            // (see packaging/start-demo.{bat,sh}). Because the server jar is
+            // not on the module path, jlink can't auto-detect its module
+            // requirements, so we list them explicitly. On Windows we also
+            // include jdk.crypto.mscapi, which supplies the WINDOWS-ROOT
+            // keystore used when -Djavax.net.ssl.trustStoreType=WINDOWS-ROOT
+            // is set to trust Windows-installed (e.g. corporate MITM) root CAs.
+            val baseModules = listOf(
+                "java.naming",
+                "java.net.http",
+                "java.sql",
+                "java.management",
+                "java.security.jgss",
+                "jdk.crypto.cryptoki",
+                "jdk.unsupported",
+            )
+            val platformModules = if (org.gradle.internal.os.OperatingSystem.current().isWindows)
+                baseModules + "jdk.crypto.mscapi" else baseModules
+            modules(*platformModules.toTypedArray())
         }
     }
 }

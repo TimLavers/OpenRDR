@@ -33,6 +33,4 @@ fun OutOfRangeMarker(caseName: String, attribute: Attribute) {
 fun outOfRangeMarkerContentDescription(caseName: String, attributeName: String) =
     "$OUT_OF_RANGE_MARKER_DESCRIPTION_PREFIX $caseName $attributeName"
 
-fun Result.isHigh() = referenceRange?.isHigh(value) == true
-fun Result.isLow() = referenceRange?.isLow(value) == true
 fun Result.isOutOfRange() = isHigh() || isLow()
