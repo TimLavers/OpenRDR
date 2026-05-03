@@ -30,9 +30,10 @@ class ConditionSuggester(private val ctx: SuggestionContext) {
      * Exposed for unit tests that assert on the full generator output; production
      * call sites should always go through [suggestions].
      */
-    internal fun allSuggestions(): List<SuggestedCondition> =
-        (caseStructureSuggestions() + episodicConditionSuggestions() + seriesConditionSuggestions()).toList()
-            .sortedWith(Sorter())
+    internal fun allSuggestions(): List<SuggestedCondition> {
+        val generated = caseStructureSuggestions() + episodicConditionSuggestions() + seriesConditionSuggestions()
+        return RelevanceRanker(ctx).rank(generated)
+    }
 
     private fun episodicConditionSuggestions() = createSuggestions(episodicFactories())
 
@@ -117,12 +118,6 @@ private fun trendFactories(): List<SuggestionFunction> {
         TrendSuggestion(Increasing),
         TrendSuggestion(Decreasing)
     )
-}
-
-class Sorter : Comparator<SuggestedCondition> {
-    override fun compare(o1: SuggestedCondition?, o2: SuggestedCondition?): Int {
-        return o1!!.initialSuggestion().asText().compareTo(o2!!.initialSuggestion().asText())
-    }
 }
 
 fun editableReal(Result: Result?): EditableValue? {
