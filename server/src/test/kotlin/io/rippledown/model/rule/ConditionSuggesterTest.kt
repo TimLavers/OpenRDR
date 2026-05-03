@@ -1,7 +1,6 @@
 package io.rippledown.model.rule
 
 import io.kotest.matchers.collections.shouldContain
-import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
@@ -61,13 +60,16 @@ internal class ConditionSuggesterTest {
     fun `single attribute single episode with textual value`() {
         val sessionCase = case(a to stuff)
         with(conditionSuggester(setOf(a), sessionCase).suggestions()) {
-            this shouldHaveSize 6
             this shouldContain isSingleEpisodeCaseSuggestion()
-            this shouldContain isPresentSuggestion(a)
-            this shouldContain isValueSuggestion( a, stuff)
+            this shouldContain isValueSuggestion(a, stuff)
             this shouldContain containsTextSuggestion(a, stuff)
             this shouldContain doesNotContainTextSuggestion(a)
-            this shouldContain notNumericSuggestion(a, Current)
+            // IsPresentInCase (`attribute is in case`) was pruned: it is
+            // tautological for attributes already in the session case.
+            this shouldNotContain isPresentSuggestion(a)
+            // IsNotNumeric/IsNumeric suggestions were pruned as low value.
+            this shouldNotContain notNumericSuggestion(a, Current)
+            this shouldNotContain isNumericSuggestion(a, Current)
         }
     }
 
@@ -75,38 +77,25 @@ internal class ConditionSuggesterTest {
     fun `single attribute multiple episodes with two identical textual values`() {
         val sessionCase = multiEpisodeCase(a, things, things)
         with(conditionSuggester(setOf(a), sessionCase).suggestions()) {
-            this.size shouldBe 26
-            this shouldContain isPresentSuggestion(a)
+            // Only Current / All / No signatures are generated now; the
+            // AtLeast(n) / AtMost(n) signatures were pruned as noise.
+            this shouldContain isValueSuggestion(a, things, Current)
+            this shouldContain isValueSuggestion(a, things, All)
+            this shouldNotContain isValueSuggestion(a, things, AtLeast(1))
+            this shouldNotContain isValueSuggestion(a, things, AtLeast(2))
+            this shouldNotContain isValueSuggestion(a, things, AtMost(2))
 
-            this shouldContain isValueSuggestion( a, things, Current)
-            this shouldContain isValueSuggestion( a, things, All)
-            this shouldContain isValueSuggestion( a, things, AtLeast(1))
-            this shouldContain isValueSuggestion( a, things, AtLeast(2))
-            this shouldContain isValueSuggestion( a, things, AtMost(2))
-
+            // Contains/DoesNotContain are only generated for the Current
+            // signature (and only for non-numeric values) after the prune.
             this shouldContain doesNotContainTextSuggestion(a, Current)
-            this shouldContain doesNotContainTextSuggestion(a, All)
-            this shouldContain doesNotContainTextSuggestion(a, AtLeast(1))
-            this shouldContain doesNotContainTextSuggestion(a, AtLeast(2))
-            this shouldContain doesNotContainTextSuggestion(a, AtMost(1))
-            this shouldContain doesNotContainTextSuggestion(a, AtMost(2))
-            this shouldContain doesNotContainTextSuggestion(a, No)
-
             this shouldContain containsTextSuggestion(a, things, Current)
-            this shouldContain containsTextSuggestion(a, things, All)
-            this shouldContain containsTextSuggestion(a, things, AtLeast(1))
-            this shouldContain containsTextSuggestion(a, things, AtLeast(2))
-            this shouldContain containsTextSuggestion(a, things, AtMost(2))
+            this shouldNotContain doesNotContainTextSuggestion(a, All)
+            this shouldNotContain containsTextSuggestion(a, things, All)
 
-            this shouldContain notNumericSuggestion(a, Current)
-            this shouldContain notNumericSuggestion(a, All)
-            this shouldContain notNumericSuggestion(a, AtLeast(1))
-            this shouldContain notNumericSuggestion(a, AtLeast(2))
-            this shouldContain notNumericSuggestion(a, AtMost(2))
-
-            this shouldContain isNumericSuggestion(a, AtMost(1))
-            this shouldContain isNumericSuggestion(a, AtMost(2))
-            this shouldContain isNumericSuggestion(a, No)
+            // IsPresent / IsNumeric / IsNotNumeric all pruned.
+            this shouldNotContain isPresentSuggestion(a)
+            this shouldNotContain notNumericSuggestion(a, Current)
+            this shouldNotContain isNumericSuggestion(a, AtMost(1))
         }
     }
 
@@ -114,44 +103,19 @@ internal class ConditionSuggesterTest {
     fun `single attribute multiple episodes with three identical textual values`() {
         val sessionCase = multiEpisodeCase(a, things, things, things)
         with(conditionSuggester(setOf(a), sessionCase).suggestions()) {
-            this.size shouldBe 32
-            this shouldContain isPresentSuggestion(a)
-
-            this shouldContain isValueSuggestion( a, things, Current)
-            this shouldContain isValueSuggestion( a, things, All)
-            this shouldContain isValueSuggestion( a, things, AtLeast(1))
-            this shouldContain isValueSuggestion( a, things, AtLeast(2))
-            this shouldContain isValueSuggestion( a, things, AtLeast(3))
-            this shouldContain isValueSuggestion( a, things, AtMost(3))
+            this shouldContain isValueSuggestion(a, things, Current)
+            this shouldContain isValueSuggestion(a, things, All)
+            this shouldNotContain isValueSuggestion(a, things, AtLeast(1))
+            this shouldNotContain isValueSuggestion(a, things, AtMost(3))
 
             this shouldContain doesNotContainTextSuggestion(a, Current)
-            this shouldContain doesNotContainTextSuggestion(a, All)
-            this shouldContain doesNotContainTextSuggestion(a, AtLeast(1))
-            this shouldContain doesNotContainTextSuggestion(a, AtLeast(2))
-            this shouldContain doesNotContainTextSuggestion(a, AtLeast(3))
-            this shouldContain doesNotContainTextSuggestion(a, AtMost(1))
-            this shouldContain doesNotContainTextSuggestion(a, AtMost(2))
-            this shouldContain doesNotContainTextSuggestion(a, AtMost(3))
-            this shouldContain doesNotContainTextSuggestion(a, No)
-
             this shouldContain containsTextSuggestion(a, things, Current)
-            this shouldContain containsTextSuggestion(a, things, All)
-            this shouldContain containsTextSuggestion(a, things, AtLeast(1))
-            this shouldContain containsTextSuggestion(a, things, AtLeast(2))
-            this shouldContain containsTextSuggestion(a, things, AtLeast(3))
-            this shouldContain containsTextSuggestion(a, things, AtMost(3))
+            this shouldNotContain doesNotContainTextSuggestion(a, All)
+            this shouldNotContain containsTextSuggestion(a, things, All)
 
-            this shouldContain notNumericSuggestion(a, Current)
-            this shouldContain notNumericSuggestion(a, All)
-            this shouldContain notNumericSuggestion(a, AtLeast(1))
-            this shouldContain notNumericSuggestion(a, AtLeast(2))
-            this shouldContain notNumericSuggestion(a, AtLeast(3))
-            this shouldContain notNumericSuggestion(a, AtMost(3))
-
-            this shouldContain isNumericSuggestion(a, AtMost(1))
-            this shouldContain isNumericSuggestion(a, AtMost(2))
-            this shouldContain isNumericSuggestion(a, AtMost(3))
-            this shouldContain isNumericSuggestion(a, No)
+            this shouldNotContain isPresentSuggestion(a)
+            this shouldNotContain notNumericSuggestion(a, Current)
+            this shouldNotContain isNumericSuggestion(a, AtMost(1))
         }
     }
 
@@ -159,41 +123,18 @@ internal class ConditionSuggesterTest {
     fun `single attribute multiple episodes with four identical textual values`() {
         val sessionCase = multiEpisodeCase(a, things, things, things, things)
         with(conditionSuggester(setOf(a), sessionCase).suggestions()) {
-            this.size shouldBe 29
-            this shouldContain isPresentSuggestion(a)
-
-            this shouldContain isValueSuggestion( a, things, Current)
-            this shouldContain isValueSuggestion( a, things, All)
-            this shouldContain isValueSuggestion( a, things, AtLeast(1))
-            this shouldContain isValueSuggestion( a, things, AtLeast(2))
-            this shouldContain isValueSuggestion( a, things, AtLeast(3))
+            this shouldContain isValueSuggestion(a, things, Current)
+            this shouldContain isValueSuggestion(a, things, All)
+            this shouldNotContain isValueSuggestion(a, things, AtLeast(1))
 
             this shouldContain doesNotContainTextSuggestion(a, Current)
-            this shouldContain doesNotContainTextSuggestion(a, All)
-            this shouldContain doesNotContainTextSuggestion(a, AtLeast(1))
-            this shouldContain doesNotContainTextSuggestion(a, AtLeast(2))
-            this shouldContain doesNotContainTextSuggestion(a, AtLeast(3))
-            this shouldContain doesNotContainTextSuggestion(a, AtMost(1))
-            this shouldContain doesNotContainTextSuggestion(a, AtMost(2))
-            this shouldContain doesNotContainTextSuggestion(a, AtMost(3))
-            this shouldContain doesNotContainTextSuggestion(a, No)
-
             this shouldContain containsTextSuggestion(a, things, Current)
-            this shouldContain containsTextSuggestion(a, things, All)
-            this shouldContain containsTextSuggestion(a, things, AtLeast(1))
-            this shouldContain containsTextSuggestion(a, things, AtLeast(2))
-            this shouldContain containsTextSuggestion(a, things, AtLeast(3))
+            this shouldNotContain doesNotContainTextSuggestion(a, All)
+            this shouldNotContain containsTextSuggestion(a, things, All)
 
-            this shouldContain notNumericSuggestion(a, Current)
-            this shouldContain notNumericSuggestion(a, All)
-            this shouldContain notNumericSuggestion(a, AtLeast(1))
-            this shouldContain notNumericSuggestion(a, AtLeast(2))
-            this shouldContain notNumericSuggestion(a, AtLeast(3))
-
-            this shouldContain isNumericSuggestion(a, AtMost(1))
-            this shouldContain isNumericSuggestion(a, AtMost(2))
-            this shouldContain isNumericSuggestion(a, AtMost(3))
-            this shouldContain isNumericSuggestion(a, No)
+            this shouldNotContain isPresentSuggestion(a)
+            this shouldNotContain notNumericSuggestion(a, Current)
+            this shouldNotContain isNumericSuggestion(a, AtMost(1))
         }
     }
 
@@ -201,51 +142,28 @@ internal class ConditionSuggesterTest {
     fun `single attribute multiple episodes with three textual values`() {
         val sessionCase = multiEpisodeCase(a, stuff, things, whatever)
         with(conditionSuggester(setOf(a), sessionCase).suggestions()) {
-            this.size shouldBe 31
-            this shouldContain isPresentSuggestion(a)
+            // Contains / DoesNotContain are generated only at the Current
+            // signature now.
+            this shouldContain containsTextSuggestion(a, whatever, Current)
+            this shouldContain doesNotContainTextSuggestion(a, Current)
+            this shouldNotContain containsTextSuggestion(a, whatever, All)
+            this shouldNotContain containsTextSuggestion(a, whatever, AtLeast(1))
+            this shouldNotContain doesNotContainTextSuggestion(a, All)
 
-            this shouldContain containsTextSuggestion(a, whatever)
-            this shouldContain containsTextSuggestion(a, whatever, AtLeast(1))
-            this shouldContain containsTextSuggestion(a, whatever, AtLeast(2))
-            this shouldContain containsTextSuggestion(a, whatever, AtLeast(3))
-            this shouldContain containsTextSuggestion(a, whatever, AtMost(3))
-            this shouldContain containsTextSuggestion(a, whatever, All)
+            this shouldContain isValueSuggestion(a, whatever, Current)
+            this shouldNotContain isValueSuggestion(a, whatever, AtLeast(1))
+            this shouldNotContain isValueSuggestion(a, whatever, AtMost(1))
 
-            this shouldContain doesNotContainTextSuggestion(a)
-            this shouldContain doesNotContainTextSuggestion(a, AtLeast(1))
-            this shouldContain doesNotContainTextSuggestion(a, AtLeast(2))
-            this shouldContain doesNotContainTextSuggestion(a, AtLeast(3))
-            this shouldContain doesNotContainTextSuggestion(a, AtMost(1))
-            this shouldContain doesNotContainTextSuggestion(a, AtMost(2))
-            this shouldContain doesNotContainTextSuggestion(a, AtMost(3))
-            this shouldContain doesNotContainTextSuggestion(a, All)
-            this shouldContain doesNotContainTextSuggestion(a, No)
-
-            this shouldContain isValueSuggestion( a, whatever)
-            this shouldContain isValueSuggestion( a, whatever, AtLeast(1))
-            this shouldContain isValueSuggestion( a, whatever, AtMost(1))
-            this shouldContain isValueSuggestion( a, whatever, AtMost(2))
-            this shouldContain isValueSuggestion( a, whatever, AtMost(3))
-
-            this shouldContain notNumericSuggestion(a, Current)
-            this shouldContain notNumericSuggestion(a, AtLeast(1))
-            this shouldContain notNumericSuggestion(a, AtLeast(2))
-            this shouldContain notNumericSuggestion(a, AtLeast(3))
-            this shouldContain notNumericSuggestion(a, All)
-
-            this shouldContain isNumericSuggestion(a, AtMost(1))
-            this shouldContain isNumericSuggestion(a, AtMost(2))
-            this shouldContain isNumericSuggestion(a, AtMost(3))
-            this shouldContain isNumericSuggestion(a, No)
-
-
+            this shouldNotContain isPresentSuggestion(a)
+            this shouldNotContain notNumericSuggestion(a, Current)
+            this shouldNotContain isNumericSuggestion(a, AtMost(1))
         }
     }
 
     @Test
     fun `single attribute multiple episodes with increasing numerical values`() {
         with(conditionSuggester(setOf(a), multiEpisodeCase(a, "1", "2", "3")).suggestions()) {
-            checkContainsStandard6ForNumericValue(this, a, "3")
+            checkContainsStandard3ForNumericValue(this, a, "3")
             this shouldContain valuesIncreasingSuggestion(a)
             this shouldNotContain valuesDecreasingSuggestion(a)
         }
@@ -254,7 +172,7 @@ internal class ConditionSuggesterTest {
     @Test
     fun `single attribute multiple episodes with mixed numerical values`() {
         with(conditionSuggester(setOf(a), multiEpisodeCase(a, "1", "5", "3")).suggestions()) {
-            checkContainsStandard6ForNumericValue(this, a, "3")
+            checkContainsStandard3ForNumericValue(this, a, "3")
             this shouldNotContain valuesIncreasingSuggestion(a)
             this shouldNotContain valuesDecreasingSuggestion(a)
         }
@@ -263,7 +181,7 @@ internal class ConditionSuggesterTest {
     @Test
     fun `single attribute multiple episodes with decreasing numerical values`() {
         with(conditionSuggester(setOf(a), multiEpisodeCase(a, "10", "5", "3")).suggestions()) {
-            checkContainsStandard6ForNumericValue(this,a, "3")
+            checkContainsStandard3ForNumericValue(this, a, "3")
             this shouldNotContain valuesIncreasingSuggestion(a)
             this shouldContain valuesDecreasingSuggestion(a)
         }
@@ -273,7 +191,7 @@ internal class ConditionSuggesterTest {
     fun `single attribute single episode with numerical value`() {
         val sessionCase = case(a to "1")
         with(conditionSuggester(setOf(a), sessionCase).suggestions()) {
-            checkContainsStandard6ForNumericValue(this,a, "1")
+            checkContainsStandard3ForNumericValue(this, a, "1")
             this shouldNotContain valuesIncreasingSuggestion(a)
             this shouldNotContain valuesDecreasingSuggestion(a)
         }
@@ -283,13 +201,13 @@ internal class ConditionSuggesterTest {
     fun `single attribute single episode with low value`() {
         val sessionCase = makeCase(a to tr("1.0", rr("2.0", "10") ))
         with(conditionSuggester(setOf(a), sessionCase).suggestions()) {
-            checkContainsStandard6ForNumericValue(this,a, "1.0")
+            checkContainsStandard3ForNumericValue(this, a, "1.0")
             this shouldContain isLowSuggestion(a)
-            this shouldContain lowByAtMostSuggestion(a)
             this shouldNotContain isNormalSuggestion(a)
             this shouldNotContain isHighSuggestion(a)
-            this shouldContain lowByAtMostSuggestion(a)
-            this shouldContain normalOrLowByAtMostSuggestion(a)
+            // ExtendedRange ("by at most N%") suggestions were pruned.
+            this shouldNotContain lowByAtMostSuggestion(a)
+            this shouldNotContain normalOrLowByAtMostSuggestion(a)
             this shouldNotContain normalOrHighByAtMostSuggestion(a)
             this shouldNotContain highByAtMostSuggestion(a)
         }
@@ -299,13 +217,13 @@ internal class ConditionSuggesterTest {
     fun `single attribute single episode with normal value`() {
         val sessionCase = makeCase(a to tr("1.0", rr("0", "10") ))
         with(conditionSuggester(setOf(a), sessionCase).suggestions()) {
-            checkContainsStandard6ForNumericValue(this,a, "1.0")
+            checkContainsStandard3ForNumericValue(this, a, "1.0")
             this shouldNotContain isLowSuggestion(a)
             this shouldContain isNormalSuggestion(a)
             this shouldNotContain isHighSuggestion(a)
             this shouldNotContain lowByAtMostSuggestion(a)
-            this shouldContain normalOrLowByAtMostSuggestion(a)
-            this shouldContain normalOrHighByAtMostSuggestion(a)
+            this shouldNotContain normalOrLowByAtMostSuggestion(a)
+            this shouldNotContain normalOrHighByAtMostSuggestion(a)
             this shouldNotContain highByAtMostSuggestion(a)
         }
     }
@@ -314,15 +232,14 @@ internal class ConditionSuggesterTest {
     fun `single attribute single episode with high value`() {
         val sessionCase = makeCase(a to tr("3.0", rr("0", "2.0") ))
         with(conditionSuggester(setOf(a), sessionCase).suggestions()) {
-            this.size shouldBe 11
-            checkContainsStandard6ForNumericValue(this,a, "3.0")
+            checkContainsStandard3ForNumericValue(this, a, "3.0")
             this shouldNotContain isLowSuggestion(a)
             this shouldNotContain isNormalSuggestion(a)
             this shouldContain isHighSuggestion(a)
             this shouldNotContain lowByAtMostSuggestion(a)
             this shouldNotContain normalOrLowByAtMostSuggestion(a)
-            this shouldContain normalOrHighByAtMostSuggestion(a)
-            this shouldContain highByAtMostSuggestion(a)
+            this shouldNotContain normalOrHighByAtMostSuggestion(a)
+            this shouldNotContain highByAtMostSuggestion(a)
         }
     }
 
@@ -330,13 +247,15 @@ internal class ConditionSuggesterTest {
     fun `two attributes, one in of which is not in the case, one episode`() {
         val sessionCase = case(a to stuff)
         with(conditionSuggester(setOf(a, b), sessionCase).suggestions()) {
-            this.size shouldBe 7
-            checkContainsStandard3(this, a, stuff)
+            checkContainsStandard2(this, a, stuff)
             this shouldContain isSingleEpisodeCaseSuggestion()
             this shouldContain doesNotContainTextSuggestion(a)
-            this shouldContain notNumericSuggestion(a, Current)
+            // IsNotNumeric was pruned.
+            this shouldNotContain notNumericSuggestion(a, Current)
 
-            this shouldContain isAbsentSuggestion(b)
+            // IsAbsentFromCase (`attribute is not in case`) was pruned as
+            // low value alongside IsPresentInCase.
+            this shouldNotContain isAbsentSuggestion(b)
         }
     }
 
@@ -344,14 +263,13 @@ internal class ConditionSuggesterTest {
     fun `two attributes, both of which are in the case, one episode`() {
         val sessionCase = case(a to stuff, b to things)
         with(conditionSuggester(setOf(a, b), sessionCase).suggestions()) {
-            this.size shouldBe 11
-            checkContainsStandard3(this, a, stuff)
+            checkContainsStandard2(this, a, stuff)
             this shouldContain doesNotContainTextSuggestion(a)
-            this shouldContain notNumericSuggestion(a, Current)
+            this shouldNotContain notNumericSuggestion(a, Current)
 
-            checkContainsStandard3(this, b, things)
+            checkContainsStandard2(this, b, things)
             this shouldContain doesNotContainTextSuggestion(b)
-            this shouldContain notNumericSuggestion(b, Current)
+            this shouldNotContain notNumericSuggestion(b, Current)
 
             this shouldContain isSingleEpisodeCaseSuggestion()
         }
@@ -371,16 +289,34 @@ internal class ConditionSuggesterTest {
         editableReal(tr("123.99")) shouldBe EditableValue("123.99", Type.Real)
     }
 
-    private fun checkContainsStandard3(conditions: List<SuggestedCondition>, attribute: Attribute, value: String) {
-        conditions shouldContain isPresentSuggestion(attribute)
+    /**
+     * Baseline suggestions expected for a TEXT-valued attribute in the
+     * case after the prune: an `is <value>` equality suggestion plus a
+     * free-text `contains <value>` (Current signature only). IsPresent
+     * was dropped as tautological.
+     */
+    private fun checkContainsStandard2(conditions: List<SuggestedCondition>, attribute: Attribute, value: String) {
         conditions shouldContain isValueSuggestion(attribute, value)
         conditions shouldContain containsTextSuggestion(attribute, value)
+        conditions shouldNotContain isPresentSuggestion(attribute)
     }
 
-    private fun checkContainsStandard6ForNumericValue(conditions: List<SuggestedCondition>, attribute: Attribute, value: String) {
-        checkContainsStandard3(conditions, attribute, value)
-        conditions shouldContain greaterThanOrEqualsSuggestion( attribute, value)
-        conditions shouldContain lessThanOrEqualsSuggestion( attribute, value)
-        conditions shouldContain isNumericSuggestion( attribute, Current)
+    /**
+     * Baseline suggestions expected for a NUMERIC-valued attribute in the
+     * case. Contains / DoesNotContain are not generated for numeric
+     * values (they produce nonsense like `contains "194"`), IsNumeric and
+     * IsPresent are pruned. Editable >=/<= cutoffs remain.
+     */
+    private fun checkContainsStandard3ForNumericValue(
+        conditions: List<SuggestedCondition>,
+        attribute: Attribute,
+        value: String
+    ) {
+        conditions shouldContain isValueSuggestion(attribute, value)
+        conditions shouldContain greaterThanOrEqualsSuggestion(attribute, value)
+        conditions shouldContain lessThanOrEqualsSuggestion(attribute, value)
+        conditions shouldNotContain containsTextSuggestion(attribute, value)
+        conditions shouldNotContain isNumericSuggestion(attribute, Current)
+        conditions shouldNotContain isPresentSuggestion(attribute)
     }
 }

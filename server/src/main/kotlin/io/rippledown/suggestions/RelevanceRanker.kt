@@ -1,13 +1,10 @@
 package io.rippledown.suggestions
 
 import io.rippledown.model.condition.edit.SuggestedCondition
-import io.rippledown.suggestions.scorer.CommentTokenOverlapScorer
-import io.rippledown.suggestions.scorer.CornerstoneDiscriminationScorer
-import io.rippledown.suggestions.scorer.HistoricalRuleScorer
-import io.rippledown.suggestions.scorer.ScoredSuggestion
+import io.rippledown.suggestions.scorer.*
 
 /**
- * Orders generated suggestions by Phase 1's three deterministic signals,
+ * Orders generated suggestions by Phase 1's deterministic signals,
  * falling back to alphabetic order for a stable tiebreak.
  *
  * Ordering (all `desc` except the final tiebreak):
@@ -18,7 +15,12 @@ import io.rippledown.suggestions.scorer.ScoredSuggestion
  *                             tokens.
  *  3. `discriminationScore` — cornerstones this condition would filter out
  *                             (case- and cornerstone-specific tiebreak).
- *  4. `asText()` ascending  — preserves the behaviour of the previous
+ *  4. `outOfRangeScore`     — candidates whose attribute is currently low
+ *                             or high in the case rank above ones whose
+ *                             attribute is in normal range. Pure tiebreak;
+ *                             only kicks in when the upstream signals are
+ *                             tied.
+ *  5. `asText()` ascending  — preserves the behaviour of the previous
  *                             `Sorter` as a deterministic final tiebreak.
  */
 internal class RelevanceRanker(ctx: SuggestionContext) {
@@ -26,6 +28,7 @@ internal class RelevanceRanker(ctx: SuggestionContext) {
     private val historical = HistoricalRuleScorer(ctx)
     private val commentOverlap = CommentTokenOverlapScorer(ctx)
     private val discrimination = CornerstoneDiscriminationScorer(ctx)
+    private val outOfRange = OutOfRangeScorer(ctx)
 
     fun rank(candidates: Collection<SuggestedCondition>): List<SuggestedCondition> =
         candidates
@@ -38,6 +41,7 @@ internal class RelevanceRanker(ctx: SuggestionContext) {
         historicalScore = historical.score(s),
         commentOverlapScore = commentOverlap.score(s),
         discriminationScore = discrimination.score(s),
+        outOfRangeScore = outOfRange.score(s),
     )
 
     companion object {
@@ -45,6 +49,7 @@ internal class RelevanceRanker(ctx: SuggestionContext) {
             compareByDescending<ScoredSuggestion> { it.historicalScore }
                 .thenByDescending { it.commentOverlapScore }
                 .thenByDescending { it.discriminationScore }
+                .thenByDescending { it.outOfRangeScore }
                 .thenBy { it.suggestion.initialSuggestion().asText() }
     }
 }

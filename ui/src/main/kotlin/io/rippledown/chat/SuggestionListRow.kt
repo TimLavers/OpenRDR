@@ -50,7 +50,10 @@ fun SuggestionListRow(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 80.dp)
+                // Each row is ~16.dp tall at 13.sp. 180.dp + the 8.dp top
+                // and bottom padding below fits ~10 rows before scrolling,
+                // up from ~5 at the previous 80.dp cap.
+                .heightIn(max = 180.dp)
                 .background(White, RoundedCornerShape(8.dp))
                 .semantics { contentDescription = "$SUGGESTION_LIST$index:$encodedSuggestions" }
         ) {

@@ -12,8 +12,6 @@ import io.rippledown.model.condition.episodic.signature.*
 import io.rippledown.model.condition.series.Decreasing
 import io.rippledown.model.condition.series.Increasing
 import io.rippledown.model.condition.series.Trend
-import io.rippledown.model.condition.structural.IsAbsentFromCase
-import io.rippledown.model.condition.structural.IsPresentInCase
 import io.rippledown.model.condition.structural.IsSingleEpisodeCase
 
 typealias SuggestionFunction = (Attribute, Result?) -> SuggestedCondition?
@@ -21,7 +19,6 @@ typealias SuggestionFunction = (Attribute, Result?) -> SuggestedCondition?
 class ConditionSuggester(private val ctx: SuggestionContext) {
     private val sessionCase: RDRCase = ctx.sessionCase
     private val attributesInCase = sessionCase.attributes
-    private val attributesNotInCase = ctx.attributes - attributesInCase
 
     fun suggestions(): List<SuggestedCondition> = allSuggestions().take(MAX_SUGGESTIONS)
 
@@ -32,7 +29,40 @@ class ConditionSuggester(private val ctx: SuggestionContext) {
      */
     internal fun allSuggestions(): List<SuggestedCondition> {
         val generated = caseStructureSuggestions() + episodicConditionSuggestions() + seriesConditionSuggestions()
-        return RelevanceRanker(ctx).rank(generated)
+        return RelevanceRanker(ctx).rank(pruneSubsumed(generated))
+    }
+
+    /**
+     * Drops candidates that are strictly implied by other candidates in
+     * the same set. The only subsumption rule modelled today:
+     *
+     *   `all <attr> are <X>` (signature `All`, range predicate Low / Normal
+     *   / High) implies `no <attr> is <Y>` for every other range predicate
+     *   Y, since the three range predicates are mutually exclusive.
+     *
+     * Without this, a HAEMOGLOBIN-is-high case yields `all HAEMOGLOBIN are
+     * high`, `no HAEMOGLOBIN is low` and `no HAEMOGLOBIN is normal` side
+     * by side — the last two are tautological consequences of the first
+     * and add no information for the user.
+     */
+    private fun pruneSubsumed(candidates: Collection<SuggestedCondition>): Collection<SuggestedCondition> {
+        val rangePredicates = setOf(Low, Normal, High)
+        val attributesAllOfRange: Set<Pair<Attribute, TestResultPredicate>> = candidates
+            .mapNotNull { c ->
+                val cond = c.initialSuggestion() as? EpisodicCondition ?: return@mapNotNull null
+                if (cond.signature == All && cond.predicate in rangePredicates) {
+                    cond.attribute to cond.predicate
+                } else null
+            }.toSet()
+
+        if (attributesAllOfRange.isEmpty()) return candidates
+        return candidates.filterNot { c ->
+            val cond = c.initialSuggestion() as? EpisodicCondition ?: return@filterNot false
+            if (cond.signature != No || cond.predicate !in rangePredicates) return@filterNot false
+            attributesAllOfRange.any { (attr, allPred) ->
+                attr == cond.attribute && allPred != cond.predicate
+            }
+        }
     }
 
     private fun episodicConditionSuggestions() = createSuggestions(episodicFactories())
@@ -53,8 +83,7 @@ class ConditionSuggester(private val ctx: SuggestionContext) {
         return firstCut.filter { it.shouldBeSuggestedForCase(sessionCase) }.toSet()
     }
 
-    private fun caseStructureSuggestions() =
-        attributeInCaseConditions() + attributeNotInCaseConditions() + episodeCountConditions()
+    private fun caseStructureSuggestions() = episodeCountConditions()
 
     private fun episodeCountConditions(): List<SuggestedCondition> {
         return if (sessionCase.numberOfEpisodes() == 1) {
@@ -62,54 +91,41 @@ class ConditionSuggester(private val ctx: SuggestionContext) {
         } else emptyList()
     }
 
-    private fun attributeInCaseConditions() = attributesInCase
-        .map { isInCase(it) }
-        .map { NonEditableSuggestedCondition(it) }
-        .toSet()
-
-    private fun attributeNotInCaseConditions() = attributesNotInCase
-        .map { isNotInCase(it) }
-        .map { NonEditableSuggestedCondition(it) }
-        .toSet()
-
-    private fun isInCase(attribute: Attribute) = CaseStructureCondition(null, IsPresentInCase(attribute))
-
-    private fun isNotInCase(attribute: Attribute) = CaseStructureCondition(null, IsAbsentFromCase(attribute))
-
     private fun episodicFactories(): List<SuggestionFunction> {
+        // Signature vocabulary kept deliberately small: "current" (now),
+        // "all" (holds across every episode) and "no" (holds for none).
+        // The AtLeast(n) / AtMost(n) shapes were judged to add more noise
+        // than value and were dropped after the Phase 1 review.
         val signaturesToUse = mutableListOf<Signature>(Current)
-        if (sessionCase.numberOfEpisodes() > 2) {
-            signaturesToUse.add(AtMost(3))
-            signaturesToUse.add(AtLeast(3))
-        }
         if (sessionCase.numberOfEpisodes() > 1) {
             signaturesToUse.add(All)
-            signaturesToUse.add(AtMost(1))
-            signaturesToUse.add(AtLeast(1))
-            signaturesToUse.add(AtMost(2))
-            signaturesToUse.add(AtLeast(2))
             signaturesToUse.add(No)
         }
         return signaturesToUse.flatMap { episodicFactoriesForSignature(it) }
     }
 
     private fun episodicFactoriesForSignature(signature: Signature): List<SuggestionFunction> {
-        return listOf(
+        // Value-predicate shapes kept for every signature (Current, All,
+        // AtLeast/AtMost, No). The previously-generated IsNumeric /
+        // IsNotNumeric and ExtendedRange ("by at most N%") variants were
+        // judged to add no clinical value and were removed to stop them
+        // crowding the top-20.
+        val factories = mutableListOf<SuggestionFunction>(
             IsSuggestion(signature),
-            NonEditableConditionSuggester(IsNumeric, signature),
-            NonEditableConditionSuggester(IsNotNumeric, signature),
             RangeConditionSuggester(Low, signature),
             RangeConditionSuggester(Normal, signature),
             RangeConditionSuggester(High, signature),
-            ExtendedLowRangeSuggestion(signature),
-            ExtendedLowNormalRangeSuggestion(signature),
-            ExtendedHighNormalRangeSuggestion(signature),
-            ExtendedHighRangeSuggestion(signature),
             GreaterThanOrEqualsSuggestion(signature),
             LessThanOrEqualsSuggestion(signature),
-            ContainsSuggestion(signature),
-            DoesNotContainSuggestion(signature),
         )
+        // Text-predicate shapes (Contains / DoesNotContain) only make sense
+        // for the current episode of a non-numeric value. "All", "at least
+        // 1", etc. variants of Contains on a numeric value are useless.
+        if (signature == Current) {
+            factories += ContainsSuggestion(signature)
+            factories += DoesNotContainSuggestion(signature)
+        }
+        return factories
     }
 }
 
@@ -187,18 +203,23 @@ class ExtendedHighRangeSuggestion(private val signature: Signature) : ExtendedRa
 class ContainsSuggestion(private val signature: Signature) : SuggestionFunction {
     override fun invoke(attribute: Attribute, Result: Result?): SuggestedCondition? {
         val value = Result?.value?.text ?: return null
+        // "contains" only makes clinical sense for free-text values.
+        // For numeric values (e.g. HAEMOGLOBIN 194) it produces noise
+        // like `contains "194"` that crowds the top-20.
+        if (Result.value.real != null) return null
+        if (value.isBlank()) return null
         return EditableSuggestedCondition(EditableContainsCondition(attribute, value, signature))
     }
 }
 
 class DoesNotContainSuggestion(private val signature: Signature) : SuggestionFunction {
     override fun invoke(attribute: Attribute, Result: Result?): SuggestedCondition? {
-        return if (Result == null) null else EditableSuggestedCondition(
-            EditableDoesNotContainCondition(
-                attribute,
-                signature
-            )
-        )
+        if (Result == null) return null
+        // Mirror ContainsSuggestion: only offer for non-numeric,
+        // non-empty text. `does not contain ""` is never useful.
+        if (Result.value.real != null) return null
+        if (Result.value.text.isBlank()) return null
+        return EditableSuggestedCondition(EditableDoesNotContainCondition(attribute, signature))
     }
 }
 

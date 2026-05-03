@@ -14,6 +14,7 @@ internal data class ScoredSuggestion(
     val historicalScore: Int = 0,
     val commentOverlapScore: Int = 0,
     val discriminationScore: Int = 0,
+    val outOfRangeScore: Int = 0,
 )
 
 internal interface SuggestionScorer {
