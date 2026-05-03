@@ -20,8 +20,8 @@ In:
 
 - New `SuggestionContext` carrying action, cornerstones and rule tree into
   the suggester.
-- Three scorers: `HistoricalRuleScorer`, `CommentTokenOverlapScorer`,
-  `CornerstoneDiscriminationScorer`.
+- Four scorers: `HistoricalRuleScorer`, `CommentTokenOverlapScorer`,
+  `CornerstoneDiscriminationScorer`, `OutOfRangeScorer`.
 - A `RelevanceRanker` replacing `Sorter` at
   `server/src/main/kotlin/io/rippledown/model/rule/ConditionSuggester.kt:118`.
 - A **hard cap of 20 suggestions** applied after ranking — see
@@ -60,6 +60,7 @@ server/src/main/kotlin/io/rippledown/suggestions/
         HistoricalRuleScorer.kt
         CommentTokenOverlapScorer.kt
         CornerstoneDiscriminationScorer.kt
+        OutOfRangeScorer.kt
 ```
 
 Supporting classes that are currently in `io.rippledown.model.rule` and
@@ -172,7 +173,8 @@ internal data class ScoredSuggestion(
     val suggestion: SuggestedCondition,
     val historicalScore: Int,           // historical rules that used this condition for the target conclusion
     val commentOverlapScore: Int,       // intersection size of comment tokens with condition tokens
-    val discriminationScore: Int        // cornerstones this condition excludes
+    val discriminationScore: Int,       // cornerstones this condition excludes
+    val outOfRangeScore: Int            // 1 if the candidate's attribute is low/high in the session case, else 0
 )
 
 internal interface SuggestionScorer {
@@ -273,15 +275,43 @@ Inputs: `ctx.cornerstones`, `ctx.sessionCase`.
 - Empty cornerstones → score 0 for all; ranker falls back to other
   signals.
 
+#### 4d. `OutOfRangeScorer`
+
+Inputs: `ctx.sessionCase`.
+
+A pure tiebreak scorer. When the upstream signals leave a set of
+candidates equivalent, candidates whose attribute is out of reference
+range in the session case rank above ones whose attribute is in range.
+The intent is: a rule is almost always more interesting on the
+abnormal attribute (e.g. AST high) than on the normal one sitting
+alongside it (e.g. ALT normal).
+
+- Score `1` if `case.getLatest(attr).isLow() || .isHigh()` for the
+  candidate's attribute.
+- Score `0` for normal values, attributes without a reference range,
+  non-numeric values, and conditions with no meaningful attribute
+  (e.g. `IsSingleEpisodeCase`).
+- The score is per-attribute, not per-predicate: every condition
+  referencing an out-of-range attribute inherits the bonus. This
+  avoids special-casing predicate shapes and keeps the scorer
+  agnostic of the predicate taxonomy.
+- Results are cached per attribute in the scorer's constructor — a
+  single case lookup per attribute covers every candidate.
+
+The scorer is deliberately placed **below** the three original signals
+in the ordering: historical / comment / discrimination all encode
+stronger intent. Out-of-range only fires when those are tied.
+
 ### 5. `RelevanceRanker` and the suggestion cap
 
-Internal, three signals ordered by reliability:
+Internal, four signals ordered by reliability:
 
 ```
-primary   : historicalScore     desc   // strongest, action-conclusion specific
-secondary : commentOverlapScore desc   // works at cold start
-tertiary  : discriminationScore desc   // case / cornerstone specific
-final tie : asText()            asc    // deterministic, regression-safe
+primary     : historicalScore     desc   // strongest, action-conclusion specific
+secondary   : commentOverlapScore desc   // works at cold start
+tertiary    : discriminationScore desc   // case / cornerstone specific
+quaternary  : outOfRangeScore     desc   // abnormal-attribute tiebreak
+final tie   : asText()            asc    // deterministic, regression-safe
 ```
 
 Rationale for ordering:
@@ -293,6 +323,9 @@ Rationale for ordering:
   than an accidental discrimination win.
 - **Discrimination third** — shines when several candidates already
   cluster on the right attribute and we need to pick among them.
+- **Out-of-range fourth** — when the first three tie, prefer the
+  attribute that is actually abnormal in the case. Pure tiebreak; it
+  never overrides an explicit comment / historical signal.
 - **Alphabetic last** — preserves today's ordering as a stable tiebreak;
   keeps tests deterministic.
 
@@ -377,6 +410,14 @@ no dead code.
     - No cornerstones → all zero.
     - Candidate excludes 0 / 1 / all cornerstones.
     - Editable suggestion uses its initial condition.
+- `OutOfRangeScorerTest`
+    - Attribute whose latest value is low or high scores 1; in-range
+      attribute scores 0.
+    - Score is per-attribute and ignores the candidate's predicate
+      (`is high` on a high attribute and `increasing` on the same
+      attribute both score 1).
+    - Attribute without a reference range scores 0.
+    - Conditions with no attribute (e.g. `IsSingleEpisodeCase`) score 0.
 - `RelevanceRankerTest`
     - Historical beats overlap beats discrimination beats alphabetic.
     - All-zero → alphabetic order matches today's `Sorter` exactly
@@ -432,10 +473,12 @@ no dead code.
 2. Add `HistoricalRuleScorer` + tests; ranker uses it.
 3. Add `CommentTokenOverlapScorer` + tests; ranker uses it.
 4. Add `CornerstoneDiscriminationScorer` + tests; ranker uses it.
-5. Wire `RuleSessionManager.conditionHintsForCase` to populate the
+5. Add `OutOfRangeScorer` + tests; ranker uses it as the last signal
+   before the alphabetic tiebreak.
+6. Wire `RuleSessionManager.conditionHintsForCase` to populate the
    context; integration tests through `RuleSessionManager` and
    `SuggestedConditionsHandler`.
-6. Remove the old `Sorter`; tighten test order assertions; wire the
+7. Remove the old `Sorter`; tighten test order assertions; wire the
    ordering cucumber steps in `SuggestionOrderingStepDefs.kt` and the
    `I work through any cornerstone cases` placeholder.
 
