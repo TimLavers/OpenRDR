@@ -184,8 +184,14 @@ class RuleSessionManager(
     }
 
     override fun conditionHintsForCase(case: RDRCase): ConditionList {
-        val suggester = ConditionSuggester(SuggestionContext(case, kb.attributeManager.all()))
-        return ConditionList(suggester.suggestions())
+        val ctx = SuggestionContext(
+            sessionCase = case,
+            attributes = kb.attributeManager.all(),
+            action = ruleSession?.action,
+            cornerstones = ruleSession?.cornerstoneCases().orEmpty(),
+            ruleTree = kb.ruleTree,
+        )
+        return ConditionList(ConditionSuggester(ctx).suggestions())
     }
 
     override fun conditionForSuggestionText(case: RDRCase, conditionText: String): Condition? {

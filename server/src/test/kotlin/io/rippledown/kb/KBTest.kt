@@ -956,6 +956,75 @@ class KBTest {
     }
 
     @Test
+    fun `conditionHintsForCase threads the active session's action into the suggester`() {
+        //Given a case with two attributes (Glucose and Sodium), and an active
+        //rule session whose comment mentions Glucose
+        val glucose = kb.attributeManager.getOrCreate("Glucose")
+        val sodium = kb.attributeManager.getOrCreate("Sodium")
+        val sessionCase = with(RDRCaseBuilder()) {
+            addValue(glucose, defaultDate, "5.0")
+            addValue(sodium, defaultDate, "140")
+            build("Session")
+        }
+        val conclusion = kb.conclusionManager.getOrCreate("Glucose looks high.")
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(conclusion))
+
+        //When
+        val suggestions = rsm.conditionHintsForCase(sessionCase).suggestions
+        val texts = suggestions.map { it.asText() }
+        val firstGlucoseIdx = texts.indexOfFirst { it.contains("Glucose", ignoreCase = true) }
+        val firstSodiumIdx = texts.indexOfFirst { it.contains("Sodium", ignoreCase = true) }
+
+        //Then both attributes are present and Glucose suggestions outrank
+        //Sodium ones \u2014 the comment-overlap signal flowed through the wiring
+        firstGlucoseIdx shouldNotBe -1
+        firstSodiumIdx shouldNotBe -1
+        (firstGlucoseIdx < firstSodiumIdx) shouldBe true
+    }
+
+    @Test
+    fun `conditionHintsForCase threads historical rules into the suggester`() {
+        //Given a backdoor rule for "Routine review." that uses two conditions
+        //(Glucose is numeric AND Sodium is numeric). The session case has only
+        //Glucose, so the rule does not fire on it (Sodium is absent), keeping
+        //the Add action applicable while the historical Glucose-is-numeric
+        //condition is still relevant.
+        val glucose = kb.attributeManager.getOrCreate("Glucose")
+        val sodium = kb.attributeManager.getOrCreate("Sodium")
+        val potassium = kb.attributeManager.getOrCreate("Potassium")
+        val historicalCase = with(RDRCaseBuilder()) {
+            addValue(glucose, defaultDate, "5.0")
+            addValue(sodium, defaultDate, "140")
+            build("Historical")
+        }
+        val conclusion = kb.conclusionManager.getOrCreate("Routine review.")
+        rsm.startRuleSession(historicalCase, ChangeTreeToAddConclusion(conclusion))
+        rsm.addConditionToCurrentRuleSession(EpisodicCondition(glucose, IsNumeric, Current))
+        rsm.addConditionToCurrentRuleSession(EpisodicCondition(sodium, IsNumeric, Current))
+        rsm.commitCurrentRuleSession()
+
+        //When the user starts a new session for the same comment, on a case
+        //where the historical rule does not apply (no Sodium)
+        val sessionCase = with(RDRCaseBuilder()) {
+            addValue(glucose, defaultDate, "7.0")
+            addValue(potassium, defaultDate, "4.0")
+            build("Session")
+        }
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(conclusion))
+        val texts = rsm.conditionHintsForCase(sessionCase).suggestions.map { it.asText() }
+
+        //Then the historical "Glucose is numeric" condition surfaces above the
+        //unrelated Potassium suggestions
+        val historicalIdx = texts.indexOfFirst {
+            it.contains("Glucose", ignoreCase = true) && it.contains("numeric", ignoreCase = true)
+        }
+        val firstPotassiumIdx = texts.indexOfFirst { it.contains("Potassium", ignoreCase = true) }
+        historicalIdx shouldNotBe -1
+        firstPotassiumIdx shouldNotBe -1
+        (historicalIdx < firstPotassiumIdx) shouldBe true
+    }
+
+    @Test
     fun `should return condition for matching non-editable suggestion text`() {
         // Given
         val caseWithGlucoseAttribute = createCase("A", value = "1.0")
