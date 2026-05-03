@@ -15,7 +15,7 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
   #           previously used for a comment; those conditions surface at
   #           the top when the same comment is added again.
   #
-  # Plus one limit scenario at the start.
+  # Plus one limit scenario at the start to verify the cap on the total number of suggestions.
 
   ##############################################################################
   # Hard cap on number of suggestions
@@ -23,12 +23,12 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
 
   Scenario: The number of suggestions presented to the user is capped at 20
     # Cap chosen so the list is comfortably scannable end-to-end. Ranking
-    # places the right answer near the top; the cap is a safety net, not
+    # places the best suggestions near the top; the cap is a safety net, not
     # the primary UX. May be tightened once Phase 3 LLM/embedding signals
-    # consistently push the right answer into the top 10.
+    # consistently push the best suggestions into the top 10.
     Given a case with name Einstein is stored on the server
     And I start the client application
-    When I request that the comment "Routine review" be added
+    When I request that the comment "Routine review." be added
     Then the number of suggested conditions should be at most 20
 
   ##############################################################################
@@ -36,26 +36,26 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
   #
   # Einstein has Haemoglobin 194 (high), MCV 100.2 (high), Sodium 141 (normal),
   # Sex M, etc. With no rules and no cornerstones, only the comment-text
-  # overlap signal varies, so ranking changes ONLY when the comment changes.
+  # varies, so ranking changes ONLY when the comment changes.
   ##############################################################################
 
   Scenario: When adding a comment, suggestions whose attribute or direction match the comment text rank above unrelated suggestions
     Given a case with name Einstein is stored on the server
     And I start the client application
-    When I request that the comment "haemoglobin is high" be added
+    When I request that the comment "Elevated haemoglobin may be significant." be added
     Then the suggested condition "HAEMOGLOBIN" should appear before "Sodium"
     And the suggested condition "HAEMOGLOBIN" should appear before "Sex is \"M\""
 
   Scenario: A different comment changes the ranking accordingly
     Given a case with name Einstein is stored on the server
     And I start the client application
-    When I request that the comment "MCV is high" be added
+    When I request that the comment "Elevated MCV may be significant." be added
     Then the suggested condition "MCV" should appear before "HAEMOGLOBIN"
     And the suggested condition "MCV" should appear before "Sodium"
 
   Scenario: When removing a comment, suggestions matching the comment text rank above unrelated suggestions
     Given a case with name Einstein is stored on the server
-    And a backdoor rule is built for case Einstein to add the comment "MCV elevated" with conditions:
+    And a backdoor rule is built for case Einstein to add the comment "MCV elevated." with conditions:
       | Sex is "M" |
     And I start the client application
     When I request that the following comment be removed:
@@ -65,10 +65,10 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
 
   Scenario: When replacing a comment, suggestions matching the REPLACEMENT comment rank above those matching the original
     Given a case with name Einstein is stored on the server
-    And a backdoor rule is built for case Einstein to add the comment "haemoglobin is high" with conditions:
+    And a backdoor rule is built for case Einstein to add the comment "Elevated haemoglobin may be significant." with conditions:
       | Sex is "M" |
     And I start the client application
-    When I request that the comment "haemoglobin is high" be replaced by "macrocytosis MCV"
+    When I request that the comment be replaced by "macrocytosis MCV."
     Then the suggested condition "MCV" should appear before "HAEMOGLOBIN"
     And the suggested condition "MCV" should appear before "Sodium"
 
@@ -78,7 +78,7 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
   # Planck has Haemoglobin 139 (normal), MCV 91.3 (normal), Sex M.
   # Einstein has Haemoglobin 194 (high), MCV 100.2 (high), Sex M.
   # The session comment is deliberately chosen to have NO predicate-vocabulary
-  # tokens, so comment-overlap is zero for every candidate and ranking is
+  # tokens (i.e. nothing matching the attributes), so comment-overlap is zero for every candidate and ranking is
   # driven entirely by cornerstone discrimination.
   ##############################################################################
 
@@ -90,19 +90,13 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
     #   Albumin:     Einstein 38, Planck 40 — both normal, does NOT discriminate.
     # Alphabetically Albumin < HAEMOGLOBIN and Albumin < MCV, so without
     # discrimination Albumin would win on tiebreak.
-    # Two attributes are checked deliberately:
-    #   1. To guard against attribute-specific regressions (e.g. an
-    #      accidental hard-coding of "haemoglobin" in the scorer would
-    #      still pass the HAEMOGLOBIN line).
-    #   2. To prove the signal works for both clearly-high values
-    #      (HAEMOGLOBIN 194 vs upper bound 180) and marginally-high
-    #      values (MCV 100.2 vs upper bound 100).
+    # Both discriminatory attributes (Haemoglobin and MCV) should rank higher than Albumin
     Given a case with name Einstein is stored on the server
     And a case with name Planck is stored on the server
-    And a backdoor rule is built for case Planck to add the comment "Routine review" with conditions:
+    And a backdoor rule is built for case Planck to add the comment "Routine review." with conditions:
       | Sex is "M" |
     And I start the client application
-    When I request that the comment "Investigate further" be added
+    When I request that the comment "Investigate further." be added
     And the case Planck is shown as the cornerstone case
     Then the suggested condition "HAEMOGLOBIN" should appear before "Albumin"
     And the suggested condition "MCV" should appear before "Albumin"
@@ -112,17 +106,17 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
     # HAEMOGLOBIN ≥ 180 holds only for Einstein (discrimination = 1).
     Given a case with name Einstein is stored on the server
     And a case with name Planck is stored on the server
-    And a backdoor rule is built for case Planck to add the comment "Routine review" with conditions:
+    And a backdoor rule is built for case Planck to add the comment "Routine review." with conditions:
       | Sex is "M" |
     And I start the client application
-    When I request that the comment "Investigate further" be added
+    When I request that the comment "Investigate further." be added
     And the case Planck is shown as the cornerstone case
     Then the suggested condition "HAEMOGLOBIN" should appear before "Sex is \"M\""
 
   ##############################################################################
   # Set C — Historical conditions
   #
-  # Several backdoor rules establish "Abnormal haemoglobin" with the same
+  # Several backdoor rules establish "Elevated haemoglobin may be significant." with the same
   # condition "eGFR ≥ 70" across multiple cases. When the user later adds
   # the SAME comment to Einstein, "eGFR ≥ 70" surfaces high purely on
   # historical signal — even though it has no comment-text overlap and no
@@ -133,16 +127,17 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
   Scenario: Conditions historically used for the same comment rank above unrelated suggestions
     Given a case with name Einstein is stored on the server
     And a case with name Planck is stored on the server
-    And a backdoor rule is built for case Planck to add the comment "Abnormal haemoglobin" with conditions:
+    And a backdoor rule is built for case Planck to add the comment "Elevated haemoglobin may be significant." with conditions:
       | eGFR ≥ 70 |
     And I start the client application
-    When I request that the comment "Abnormal haemoglobin" be added
-    And I work through any cornerstone cases
-    Then the suggested condition "eGFR ≥ 70" should appear before "Sodium"
-    And the suggested condition "eGFR ≥ 70" should appear before "Bicarbonate"
+    And I see the case Einstein as the current case
+    When I request that the comment "Elevated haemoglobin may be significant." be added
+    And the case Planck is shown as the cornerstone case
+    Then the suggested condition "eGFR ≥ 70" should appear before "HAEMOGLOBIN"
+    And the suggested condition "eGFR ≥ 70" should appear before "Sodium"
 
   Scenario: Conditions used by multiple historical rules for the same comment rank above conditions used only once
-    # Two historical rules for "Abnormal haemoglobin" both use "eGFR ≥ 70";
+    # Two historical rules for "Elevated haemoglobin may be significant" both use "eGFR ≥ 70";
     # one rule for the same comment uses "Bilirubin Total ≤ 20". The
     # historical scorer counts matching rules, so eGFR (count 2) ranks
     # above Bilirubin Total (count 1).
@@ -154,25 +149,25 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
     And case Bohr is provided having data:
       | eGFR            | 78 |
       | Bilirubin Total | 10 |
-    And a backdoor rule is built for case Planck to add the comment "Abnormal haemoglobin" with conditions:
+    And a backdoor rule is built for case Planck to add the comment "Elevated haemoglobin may be significant." with conditions:
       | eGFR ≥ 70 |
-    And a backdoor rule is built for case Curie to add the comment "Abnormal haemoglobin" with conditions:
+    And a backdoor rule is built for case Curie to add the comment "Elevated haemoglobin may be significant." with conditions:
       | eGFR ≥ 70 |
-    And a backdoor rule is built for case Bohr to add the comment "Abnormal haemoglobin" with conditions:
+    And a backdoor rule is built for case Bohr to add the comment "Elevated haemoglobin may be significant." with conditions:
       | Bilirubin Total ≤ 20 |
     And I start the client application
-    When I request that the comment "Abnormal haemoglobin" be added
-    And I work through any cornerstone cases
+    When I request that the comment "Elevated haemoglobin may be significant." be added
+    And the cornerstone case indicator shows 1 of 3
     Then the suggested condition "eGFR ≥ 70" should appear before "Bilirubin Total ≤ 20"
 
   Scenario: Historical signal applies only to rules whose conclusion matches the action's target conclusion
     # The backdoor rule uses a DIFFERENT comment, so the historical scorer
-    # must not surface its condition for "Abnormal haemoglobin".
+    # must not surface its condition for "Elevated haemoglobin may be significant".
     Given a case with name Einstein is stored on the server
     And a case with name Planck is stored on the server
-    And a backdoor rule is built for case Planck to add the comment "Some other finding" with conditions:
+    And a backdoor rule is built for case Planck to add the comment "Some other finding." with conditions:
       | eGFR ≥ 70 |
     And I start the client application
-    When I request that the comment "Abnormal haemoglobin" be added
-    And I work through any cornerstone cases
+    When I request that the comment "Elevated haemoglobin may be significant." be added
+    And the case Planck is shown as the cornerstone case
     Then the suggested condition "eGFR ≥ 70" should NOT be the first suggestion

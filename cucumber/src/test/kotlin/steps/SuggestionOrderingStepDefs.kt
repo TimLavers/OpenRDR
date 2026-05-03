@@ -1,8 +1,6 @@
 package steps
 
-import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
-import io.kotest.matchers.shouldBe
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
 
@@ -28,18 +26,16 @@ class SuggestionOrderingStepDefs {
 
     @Then("the suggested condition {string} should appear before {string}")
     fun suggestedConditionShouldAppearBefore(earlier: String, later: String) {
-        await().atMost(ofSeconds(20)).until {
+        await().atMost(ofSeconds(20)).untilAsserted {
             val list = currentSuggestions()
             val earlierIdx = list.indexOfFirst { it.contains(earlier, ignoreCase = true) }
             val laterIdx = list.indexOfFirst { it.contains(later, ignoreCase = true) }
-            earlierIdx in 0 until (if (laterIdx == -1) Int.MAX_VALUE else laterIdx)
+            check(earlierIdx >= 0) { "No suggestion containing '$earlier'. Suggestions: $list" }
+            check(laterIdx >= 0) { "No suggestion containing '$later'. Suggestions: $list" }
+            check(earlierIdx < laterIdx) {
+                "Expected '$earlier' (idx $earlierIdx) to appear before '$later' (idx $laterIdx). Suggestions: $list"
+            }
         }
-        val list = currentSuggestions()
-        val earlierIdx = list.indexOfFirst { it.contains(earlier, ignoreCase = true) }
-        val laterIdx = list.indexOfFirst { it.contains(later, ignoreCase = true) }
-        check(earlierIdx >= 0) { "No suggestion containing '$earlier'. Suggestions: $list" }
-        check(laterIdx >= 0) { "No suggestion containing '$later'. Suggestions: $list" }
-        (earlierIdx < laterIdx) shouldBe true
     }
 
     @Then("the first suggested condition is {string}")
@@ -61,10 +57,15 @@ class SuggestionOrderingStepDefs {
     @Then("the suggested conditions, in order, should start with:")
     fun suggestedConditionsInOrderShouldStartWith(table: io.cucumber.datatable.DataTable) {
         val expectedPrefix = table.asList()
-        await().atMost(ofSeconds(20)).until {
+        await().atMost(ofSeconds(20)).untilAsserted {
             val list = currentSuggestions()
-            list.size >= expectedPrefix.size && expectedPrefix.withIndex().all { (i, expected) ->
-                list[i].contains(expected, ignoreCase = true)
+            check(list.size >= expectedPrefix.size) {
+                "Expected at least ${expectedPrefix.size} suggestions, got ${list.size}: $list"
+            }
+            expectedPrefix.forEachIndexed { i, expected ->
+                check(list[i].contains(expected, ignoreCase = true)) {
+                    "Suggestion at index $i was '${list[i]}', expected to contain '$expected'. Full list: $list"
+                }
             }
         }
     }
@@ -81,17 +82,6 @@ class SuggestionOrderingStepDefs {
             "Expected '$text' NOT to be the first suggestion, but first was '$first'. " +
                     "Full list: $list"
         }
-    }
-
-    @And("I work through any cornerstone cases")
-    fun workThroughAnyCornerstoneCases() {
-        // Phase 1 ranking is computed once cornerstones have been resolved
-        // and the bot is asking for a reason. If a cornerstone is showing,
-        // confirm it; otherwise no-op. This step exists so historical-signal
-        // scenarios can ignore the cornerstone-handling preamble.
-        // Implementation will follow the existing cornerstone-confirmation
-        // chat flow; left as TODO for the human implementing Phase 1.
-        TODO("Wire up to existing cornerstone-confirmation chat steps once Phase 1 wires the historical scorer.")
     }
 
     private fun currentSuggestions(): List<String> = chatPO().suggestionsInMostRecentMessage()
