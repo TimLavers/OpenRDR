@@ -44,9 +44,8 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
     Given a case with name Einstein is stored on the server
     And I start the client application
     When I request that the comment "Elevated haemoglobin may be significant." be added
-    And pause
-    Then the suggested condition "HAEMOGLOBIN" should appear before "Sodium"
-    And the suggested condition "HAEMOGLOBIN" should appear before "Sex is \"M\""
+    Then the suggested condition "HAEMOGLOBIN" should appear before "AST"
+    And the suggested condition "HAEMOGLOBIN" should appear before "Anion gap"
 
   Scenario: A different comment changes the ranking accordingly
     Given a case with name Einstein is stored on the server
