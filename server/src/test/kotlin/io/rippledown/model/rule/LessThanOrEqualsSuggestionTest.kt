@@ -7,6 +7,7 @@ import io.rippledown.model.condition.edit.Type
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.lessThanOrEqualTo
 import io.rippledown.model.condition.tr
+import io.rippledown.suggestions.LessThanOrEqualsSuggestion
 import kotlin.test.Test
 
 class LessThanOrEqualsSuggestionTest: ConditionFactoryTestBase() {

@@ -8,6 +8,7 @@ import io.rippledown.model.condition.episodic.signature.AtMost
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.model.condition.tr
+import io.rippledown.suggestions.GreaterThanOrEqualsSuggestion
 import kotlin.test.Test
 
 class GreaterThanOrEqualsSuggestionTest: ConditionFactoryTestBase() {

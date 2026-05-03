@@ -7,6 +7,7 @@ import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.episodic.signature.No
 import io.rippledown.model.condition.isCondition
 import io.rippledown.model.condition.tr
+import io.rippledown.suggestions.IsSuggestion
 import kotlin.test.Test
 
 class IsSuggestionTest: ConditionFactoryTestBase() {

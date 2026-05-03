@@ -22,6 +22,8 @@ import io.rippledown.model.diff.Replacement
 import io.rippledown.model.rule.*
 import io.rippledown.server.ConditionExpressionParser
 import io.rippledown.server.websocket.WebSocketManager
+import io.rippledown.suggestions.ConditionSuggester
+import io.rippledown.suggestions.SuggestionContext
 import kotlinx.coroutines.runBlocking
 
 class RuleSessionManager(
@@ -182,7 +184,7 @@ class RuleSessionManager(
     }
 
     override fun conditionHintsForCase(case: RDRCase): ConditionList {
-        val suggester = ConditionSuggester(kb.attributeManager.all(), case)
+        val suggester = ConditionSuggester(SuggestionContext(case, kb.attributeManager.all()))
         return ConditionList(suggester.suggestions())
     }
 

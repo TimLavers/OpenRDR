@@ -2,10 +2,13 @@ package io.rippledown.model.rule
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.rippledown.model.condition.*
 import io.rippledown.model.condition.edit.EditableExtendedHighRangeCondition
 import io.rippledown.model.condition.episodic.signature.All
 import io.rippledown.model.condition.episodic.signature.Current
+import io.rippledown.model.condition.rr
+import io.rippledown.model.condition.slightlyHigh
+import io.rippledown.model.condition.tr
+import io.rippledown.suggestions.ExtendedHighRangeSuggestion
 import kotlin.test.Test
 
 class ExtendedHighRangeSuggestionTest: ConditionFactoryTestBase() {

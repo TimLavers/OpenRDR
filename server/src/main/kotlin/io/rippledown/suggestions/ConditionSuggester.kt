@@ -1,4 +1,4 @@
-package io.rippledown.model.rule
+package io.rippledown.suggestions
 
 import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCase
@@ -18,17 +18,21 @@ import io.rippledown.model.condition.structural.IsSingleEpisodeCase
 
 typealias SuggestionFunction = (Attribute, Result?) -> SuggestedCondition?
 
-class ConditionSuggester(
-    attributes: Set<Attribute>,
-    private val sessionCase: RDRCase
-) {
+class ConditionSuggester(private val ctx: SuggestionContext) {
+    private val sessionCase: RDRCase = ctx.sessionCase
     private val attributesInCase = sessionCase.attributes
-    private val attributesNotInCase = attributes - attributesInCase
+    private val attributesNotInCase = ctx.attributes - attributesInCase
 
-    fun suggestions(): List<SuggestedCondition> {
-        return (caseStructureSuggestions() + episodicConditionSuggestions() + seriesConditionSuggestions()).toList()
+    fun suggestions(): List<SuggestedCondition> = allSuggestions().take(MAX_SUGGESTIONS)
+
+    /**
+     * All generated suggestions in ranking order, *without* the [MAX_SUGGESTIONS] cap.
+     * Exposed for unit tests that assert on the full generator output; production
+     * call sites should always go through [suggestions].
+     */
+    internal fun allSuggestions(): List<SuggestedCondition> =
+        (caseStructureSuggestions() + episodicConditionSuggestions() + seriesConditionSuggestions()).toList()
             .sortedWith(Sorter())
-    }
 
     private fun episodicConditionSuggestions() = createSuggestions(episodicFactories())
 
@@ -184,6 +188,7 @@ class ExtendedHighRangeSuggestion(private val signature: Signature) : ExtendedRa
     override fun createEditableCondition(attribute: Attribute) =
         EditableExtendedHighRangeCondition(attribute, signature)
 }
+
 class ContainsSuggestion(private val signature: Signature) : SuggestionFunction {
     override fun invoke(attribute: Attribute, Result: Result?): SuggestedCondition? {
         val value = Result?.value?.text ?: return null
@@ -216,6 +221,7 @@ class NonEditableConditionSuggester(private val predicate: TestResultPredicate, 
         return NonEditableSuggestedCondition(EpisodicCondition(attribute, predicate, signature))
     }
 }
+
 class RangeConditionSuggester(private val predicate: TestResultPredicate, private val signature: Signature) :
     SuggestionFunction {
     override fun invoke(attribute: Attribute, Result: Result?): SuggestedCondition? {

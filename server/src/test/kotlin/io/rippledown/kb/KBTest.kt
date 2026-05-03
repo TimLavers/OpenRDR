@@ -26,6 +26,8 @@ import io.rippledown.model.external.MeasurementEvent
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.inmemory.InMemoryKB
 import io.rippledown.server.websocket.WebSocketManager
+import io.rippledown.suggestions.ConditionSuggester
+import io.rippledown.suggestions.SuggestionContext
 import io.rippledown.util.shouldBeSameAs
 import io.rippledown.utils.DEFAULT_GLUCOSE_VALUE
 import io.rippledown.utils.createViewableCase
@@ -949,8 +951,7 @@ class KBTest {
         val caseWithGlucoseAttribute = createCase("A", value = "1.0")
         val conditionList = rsm.conditionHintsForCase(caseWithGlucoseAttribute)
         conditionList.suggestions.toSet() shouldBe ConditionSuggester(
-            kb.attributeManager.all(),
-            caseWithGlucoseAttribute
+            SuggestionContext(caseWithGlucoseAttribute, kb.attributeManager.all())
         ).suggestions().toSet()
     }
 

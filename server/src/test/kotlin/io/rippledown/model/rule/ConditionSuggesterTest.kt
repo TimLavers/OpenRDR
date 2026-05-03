@@ -5,11 +5,28 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
+import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.*
 import io.rippledown.model.condition.edit.*
 import io.rippledown.model.condition.episodic.predicate.HighOrNormalOrLow
 import io.rippledown.model.condition.episodic.signature.*
+import io.rippledown.suggestions.ConditionSuggester
+import io.rippledown.suggestions.SuggestionContext
+import io.rippledown.suggestions.editableReal
 import kotlin.test.Test
+
+/**
+ * Test-only wrapper that exposes the uncapped generator output. The production
+ * [ConditionSuggester.suggestions] caps the list at `MAX_SUGGESTIONS`, but every
+ * assertion here is about the generator itself, independent of the cap.
+ */
+private class TestConditionSuggester(attributes: Set<Attribute>, sessionCase: RDRCase) {
+    private val delegate = ConditionSuggester(SuggestionContext(sessionCase, attributes))
+    fun suggestions() = delegate.allSuggestions()
+}
+
+private fun conditionSuggester(attributes: Set<Attribute>, sessionCase: RDRCase) =
+    TestConditionSuggester(attributes, sessionCase)
 
 internal class ConditionSuggesterTest {
     private val stuff = "stuff"
@@ -43,7 +60,7 @@ internal class ConditionSuggesterTest {
     @Test
     fun `single attribute single episode with textual value`() {
         val sessionCase = case(a to stuff)
-        with(ConditionSuggester(setOf(a), sessionCase).suggestions()) {
+        with(conditionSuggester(setOf(a), sessionCase).suggestions()) {
             this shouldHaveSize 6
             this shouldContain isSingleEpisodeCaseSuggestion()
             this shouldContain isPresentSuggestion(a)
@@ -57,7 +74,7 @@ internal class ConditionSuggesterTest {
     @Test
     fun `single attribute multiple episodes with two identical textual values`() {
         val sessionCase = multiEpisodeCase(a, things, things)
-        with(ConditionSuggester(setOf(a), sessionCase).suggestions()) {
+        with(conditionSuggester(setOf(a), sessionCase).suggestions()) {
             this.size shouldBe 26
             this shouldContain isPresentSuggestion(a)
 
@@ -96,7 +113,7 @@ internal class ConditionSuggesterTest {
     @Test
     fun `single attribute multiple episodes with three identical textual values`() {
         val sessionCase = multiEpisodeCase(a, things, things, things)
-        with(ConditionSuggester(setOf(a), sessionCase).suggestions()) {
+        with(conditionSuggester(setOf(a), sessionCase).suggestions()) {
             this.size shouldBe 32
             this shouldContain isPresentSuggestion(a)
 
@@ -141,7 +158,7 @@ internal class ConditionSuggesterTest {
     @Test
     fun `single attribute multiple episodes with four identical textual values`() {
         val sessionCase = multiEpisodeCase(a, things, things, things, things)
-        with(ConditionSuggester(setOf(a), sessionCase).suggestions()) {
+        with(conditionSuggester(setOf(a), sessionCase).suggestions()) {
             this.size shouldBe 29
             this shouldContain isPresentSuggestion(a)
 
@@ -183,7 +200,7 @@ internal class ConditionSuggesterTest {
     @Test
     fun `single attribute multiple episodes with three textual values`() {
         val sessionCase = multiEpisodeCase(a, stuff, things, whatever)
-        with(ConditionSuggester(setOf(a), sessionCase).suggestions()) {
+        with(conditionSuggester(setOf(a), sessionCase).suggestions()) {
             this.size shouldBe 31
             this shouldContain isPresentSuggestion(a)
 
@@ -227,7 +244,7 @@ internal class ConditionSuggesterTest {
 
     @Test
     fun `single attribute multiple episodes with increasing numerical values`() {
-        with(ConditionSuggester(setOf(a), multiEpisodeCase(a, "1", "2", "3")).suggestions()) {
+        with(conditionSuggester(setOf(a), multiEpisodeCase(a, "1", "2", "3")).suggestions()) {
             checkContainsStandard6ForNumericValue(this, a, "3")
             this shouldContain valuesIncreasingSuggestion(a)
             this shouldNotContain valuesDecreasingSuggestion(a)
@@ -236,7 +253,7 @@ internal class ConditionSuggesterTest {
 
     @Test
     fun `single attribute multiple episodes with mixed numerical values`() {
-        with(ConditionSuggester(setOf(a), multiEpisodeCase(a, "1", "5", "3")).suggestions()) {
+        with(conditionSuggester(setOf(a), multiEpisodeCase(a, "1", "5", "3")).suggestions()) {
             checkContainsStandard6ForNumericValue(this, a, "3")
             this shouldNotContain valuesIncreasingSuggestion(a)
             this shouldNotContain valuesDecreasingSuggestion(a)
@@ -245,7 +262,7 @@ internal class ConditionSuggesterTest {
 
     @Test
     fun `single attribute multiple episodes with decreasing numerical values`() {
-        with(ConditionSuggester(setOf(a), multiEpisodeCase(a, "10", "5", "3")).suggestions()) {
+        with(conditionSuggester(setOf(a), multiEpisodeCase(a, "10", "5", "3")).suggestions()) {
             checkContainsStandard6ForNumericValue(this,a, "3")
             this shouldNotContain valuesIncreasingSuggestion(a)
             this shouldContain valuesDecreasingSuggestion(a)
@@ -255,7 +272,7 @@ internal class ConditionSuggesterTest {
     @Test
     fun `single attribute single episode with numerical value`() {
         val sessionCase = case(a to "1")
-        with(ConditionSuggester(setOf(a), sessionCase).suggestions()) {
+        with(conditionSuggester(setOf(a), sessionCase).suggestions()) {
             checkContainsStandard6ForNumericValue(this,a, "1")
             this shouldNotContain valuesIncreasingSuggestion(a)
             this shouldNotContain valuesDecreasingSuggestion(a)
@@ -265,7 +282,7 @@ internal class ConditionSuggesterTest {
     @Test
     fun `single attribute single episode with low value`() {
         val sessionCase = makeCase(a to tr("1.0", rr("2.0", "10") ))
-        with(ConditionSuggester(setOf(a), sessionCase).suggestions()) {
+        with(conditionSuggester(setOf(a), sessionCase).suggestions()) {
             checkContainsStandard6ForNumericValue(this,a, "1.0")
             this shouldContain isLowSuggestion(a)
             this shouldContain lowByAtMostSuggestion(a)
@@ -281,7 +298,7 @@ internal class ConditionSuggesterTest {
     @Test
     fun `single attribute single episode with normal value`() {
         val sessionCase = makeCase(a to tr("1.0", rr("0", "10") ))
-        with(ConditionSuggester(setOf(a), sessionCase).suggestions()) {
+        with(conditionSuggester(setOf(a), sessionCase).suggestions()) {
             checkContainsStandard6ForNumericValue(this,a, "1.0")
             this shouldNotContain isLowSuggestion(a)
             this shouldContain isNormalSuggestion(a)
@@ -296,7 +313,7 @@ internal class ConditionSuggesterTest {
     @Test
     fun `single attribute single episode with high value`() {
         val sessionCase = makeCase(a to tr("3.0", rr("0", "2.0") ))
-        with(ConditionSuggester(setOf(a), sessionCase).suggestions()) {
+        with(conditionSuggester(setOf(a), sessionCase).suggestions()) {
             this.size shouldBe 11
             checkContainsStandard6ForNumericValue(this,a, "3.0")
             this shouldNotContain isLowSuggestion(a)
@@ -312,7 +329,7 @@ internal class ConditionSuggesterTest {
     @Test
     fun `two attributes, one in of which is not in the case, one episode`() {
         val sessionCase = case(a to stuff)
-        with(ConditionSuggester(setOf(a, b), sessionCase).suggestions()) {
+        with(conditionSuggester(setOf(a, b), sessionCase).suggestions()) {
             this.size shouldBe 7
             checkContainsStandard3(this, a, stuff)
             this shouldContain isSingleEpisodeCaseSuggestion()
@@ -326,7 +343,7 @@ internal class ConditionSuggesterTest {
     @Test
     fun `two attributes, both of which are in the case, one episode`() {
         val sessionCase = case(a to stuff, b to things)
-        with(ConditionSuggester(setOf(a, b), sessionCase).suggestions()) {
+        with(conditionSuggester(setOf(a, b), sessionCase).suggestions()) {
             this.size shouldBe 11
             checkContainsStandard3(this, a, stuff)
             this shouldContain doesNotContainTextSuggestion(a)
@@ -343,7 +360,7 @@ internal class ConditionSuggesterTest {
     @Test
     fun `conditions are sorted`() {
         val sessionCase = case(a to "1", b to "2")
-        val conditions = ConditionSuggester(setOf(a, b), sessionCase).suggestions().map { it.asText() }
+        val conditions = conditionSuggester(setOf(a, b), sessionCase).suggestions().map { it.asText() }
         conditions.sorted() shouldBe conditions
     }
 

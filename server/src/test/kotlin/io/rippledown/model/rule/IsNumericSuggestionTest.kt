@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.model.condition.isNumeric
 import io.rippledown.model.condition.rr
 import io.rippledown.model.condition.tr
+import io.rippledown.suggestions.IsNumericSuggestion
 import kotlin.test.Test
 
 class IsNumericSuggestionTest: ConditionFactoryTestBase() {

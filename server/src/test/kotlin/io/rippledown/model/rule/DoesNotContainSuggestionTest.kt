@@ -7,6 +7,7 @@ import io.rippledown.model.condition.edit.EditableDoesNotContainCondition
 import io.rippledown.model.condition.episodic.signature.All
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.tr
+import io.rippledown.suggestions.DoesNotContainSuggestion
 import kotlin.test.Test
 
 class DoesNotContainSuggestionTest: ConditionFactoryTestBase() {
