@@ -51,8 +51,11 @@ class HistoricalRuleScorerTest {
             ruleTree = ruleTreeWith(rule),
         )
 
-        //When / Then
-        HistoricalRuleScorer(ctx).score(suggestionFor(tshHigh)) shouldBe 0
+        //When
+        val score = HistoricalRuleScorer(ctx).score(suggestionFor(tshHigh))
+
+        //Then
+        score shouldBe 0
     }
 
     /**
@@ -62,7 +65,7 @@ class HistoricalRuleScorerTest {
      */
     @Test
     fun `returns 0 when no rule in the tree matches the target conclusion`() {
-        //Given
+        //Given a tree whose only rule has an unrelated conclusion
         val unrelatedRule = Rule(1, null, otherConclusion, setOf(tshHigh))
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
@@ -71,8 +74,11 @@ class HistoricalRuleScorerTest {
             ruleTree = ruleTreeWith(unrelatedRule),
         )
 
-        //When / Then
-        HistoricalRuleScorer(ctx).score(suggestionFor(tshHigh)) shouldBe 0
+        //When
+        val score = HistoricalRuleScorer(ctx).score(suggestionFor(tshHigh))
+
+        //Then
+        score shouldBe 0
     }
 
     /**
@@ -82,7 +88,7 @@ class HistoricalRuleScorerTest {
      */
     @Test
     fun `scores 1 when one historical rule uses the condition for the target conclusion`() {
-        //Given
+        //Given one historical rule using tshHigh for the target conclusion
         val historical = Rule(1, null, goToBondi, setOf(tshHigh))
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
@@ -94,7 +100,7 @@ class HistoricalRuleScorerTest {
         //When
         val scorer = HistoricalRuleScorer(ctx)
 
-        //Then
+        //Then the matching condition scores 1, others score 0
         scorer.score(suggestionFor(tshHigh)) shouldBe 1
         scorer.score(suggestionFor(tshLow)) shouldBe 0
         scorer.score(suggestionFor(mcvHigh)) shouldBe 0
@@ -119,8 +125,10 @@ class HistoricalRuleScorerTest {
             ruleTree = ruleTreeWith(r1, r2, r3, unrelated),
         )
 
-        //When / Then
+        //When
         val scorer = HistoricalRuleScorer(ctx)
+
+        //Then tshHigh accumulates across the three matching rules; mcvHigh from r2 only
         scorer.score(suggestionFor(tshHigh)) shouldBe 3
         scorer.score(suggestionFor(mcvHigh)) shouldBe 1
     }
@@ -132,9 +140,9 @@ class HistoricalRuleScorerTest {
      */
     @Test
     fun `matches the target conclusion by id, not by reference identity`() {
-        //Given
+        //Given a historical rule, and a freshly constructed Conclusion sharing
+        //its id (modelling a KB reload that re-instantiates Conclusion objects)
         val historical = Rule(1, null, goToBondi, setOf(tshHigh))
-        //Same id, but freshly constructed — models a KB reload.
         val reloadedGoToBondi = Conclusion(goToBondi.id, goToBondi.text)
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
@@ -143,8 +151,11 @@ class HistoricalRuleScorerTest {
             ruleTree = ruleTreeWith(historical),
         )
 
-        //When / Then
-        HistoricalRuleScorer(ctx).score(suggestionFor(tshHigh)) shouldBe 1
+        //When
+        val score = HistoricalRuleScorer(ctx).score(suggestionFor(tshHigh))
+
+        //Then the historical rule is found despite the new Conclusion instance
+        score shouldBe 1
     }
 
     /**
@@ -155,7 +166,8 @@ class HistoricalRuleScorerTest {
      */
     @Test
     fun `replace action uses the replacement conclusion, not the one being replaced`() {
-        //Given
+        //Given two rules — one using tshHigh for goToBondi (the replacement),
+        //one using mcvHigh for otherConclusion (the comment being replaced)
         val usingTshHigh = Rule(1, null, goToBondi, setOf(tshHigh))
         val usingMcvHigh = Rule(2, null, otherConclusion, setOf(mcvHigh))
         val ctx = SuggestionContext(
@@ -168,8 +180,10 @@ class HistoricalRuleScorerTest {
             ruleTree = ruleTreeWith(usingTshHigh, usingMcvHigh),
         )
 
-        //When / Then: tshHigh is historical for the replacement conclusion
+        //When
         val scorer = HistoricalRuleScorer(ctx)
+
+        //Then only the rule keyed off the replacement contributes
         scorer.score(suggestionFor(tshHigh)) shouldBe 1
         scorer.score(suggestionFor(mcvHigh)) shouldBe 0
     }
@@ -181,7 +195,7 @@ class HistoricalRuleScorerTest {
      */
     @Test
     fun `remove action scores conditions that gated the removed conclusion in`() {
-        //Given
+        //Given a historical rule that gated the to-be-removed conclusion in
         val historical = Rule(1, null, goToBondi, setOf(tshHigh))
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
@@ -190,7 +204,10 @@ class HistoricalRuleScorerTest {
             ruleTree = ruleTreeWith(historical),
         )
 
-        //When / Then
-        HistoricalRuleScorer(ctx).score(suggestionFor(tshHigh)) shouldBe 1
+        //When
+        val score = HistoricalRuleScorer(ctx).score(suggestionFor(tshHigh))
+
+        //Then the historical condition is surfaced as a positive signal
+        score shouldBe 1
     }
 }

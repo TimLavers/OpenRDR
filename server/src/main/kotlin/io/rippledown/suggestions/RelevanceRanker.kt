@@ -2,6 +2,7 @@ package io.rippledown.suggestions
 
 import io.rippledown.model.condition.edit.SuggestedCondition
 import io.rippledown.suggestions.scorer.CommentTokenOverlapScorer
+import io.rippledown.suggestions.scorer.CornerstoneDiscriminationScorer
 import io.rippledown.suggestions.scorer.HistoricalRuleScorer
 import io.rippledown.suggestions.scorer.ScoredSuggestion
 
@@ -16,17 +17,15 @@ import io.rippledown.suggestions.scorer.ScoredSuggestion
  *                             and the candidate's attribute / direction
  *                             tokens.
  *  3. `discriminationScore` — cornerstones this condition would filter out
- *                             (added in a later commit).
+ *                             (case- and cornerstone-specific tiebreak).
  *  4. `asText()` ascending  — preserves the behaviour of the previous
  *                             `Sorter` as a deterministic final tiebreak.
- *
- * Commit 4 of Phase 1 will populate `discriminationScore`; until then it is
- * 0 and the ranker degrades to `historical → comment overlap → alphabetic`.
  */
 internal class RelevanceRanker(ctx: SuggestionContext) {
 
     private val historical = HistoricalRuleScorer(ctx)
     private val commentOverlap = CommentTokenOverlapScorer(ctx)
+    private val discrimination = CornerstoneDiscriminationScorer(ctx)
 
     fun rank(candidates: Collection<SuggestedCondition>): List<SuggestedCondition> =
         candidates
@@ -38,6 +37,7 @@ internal class RelevanceRanker(ctx: SuggestionContext) {
         suggestion = s,
         historicalScore = historical.score(s),
         commentOverlapScore = commentOverlap.score(s),
+        discriminationScore = discrimination.score(s),
     )
 
     companion object {

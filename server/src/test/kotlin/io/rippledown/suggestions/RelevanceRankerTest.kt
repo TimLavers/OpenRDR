@@ -62,7 +62,7 @@ class RelevanceRankerTest {
         //When
         val ranked = RelevanceRanker(ctx).rank(candidates)
 
-        //Then: alphabetic by asText()
+        //Then the ranked order is alphabetic by initial suggestion text
         ranked.map { it.initialSuggestion().asText() } shouldBe
                 candidates.map { it.initialSuggestion().asText() }.sorted()
     }
@@ -74,7 +74,8 @@ class RelevanceRankerTest {
      */
     @Test
     fun `historical score beats alphabetic tiebreak`() {
-        //Given a history where tshHigh has been used for goToBondi
+        //Given a history where tshHigh has been used for goToBondi, and a
+        //candidate set in which mcvHigh would win on alphabetic order alone
         val history = Rule(1, null, goToBondi, setOf(tshHigh))
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
@@ -82,16 +83,15 @@ class RelevanceRankerTest {
             action = ChangeTreeToAddConclusion(goToBondi),
             ruleTree = ruleTreeWith(history),
         )
-
-        //Sanity check: alphabetically, mcvHigh comes before tshHigh
         val candidates = listOf(suggestionFor(mcvHigh), suggestionFor(tshHigh))
+        //Sanity: alphabetically mcvHigh sorts before tshHigh
         candidates.map { it.initialSuggestion().asText() }.sorted()
             .first() shouldBe mcvHigh.asText()
 
         //When
         val ranked = RelevanceRanker(ctx).rank(candidates)
 
-        //Then: tshHigh wins on history, despite alphabetic loss
+        //Then tshHigh wins on history, despite the alphabetic disadvantage
         ranked.first().initialSuggestion() shouldBe tshHigh
     }
 
@@ -115,7 +115,7 @@ class RelevanceRankerTest {
         //When
         val ranked = RelevanceRanker(ctx).rank(candidates)
 
-        //Then
+        //Then alphabetic order resolves the historical-score tie
         ranked.map { it.initialSuggestion() } shouldBe listOf(mcvHigh, tshHigh)
     }
 
@@ -144,7 +144,7 @@ class RelevanceRankerTest {
         //When
         val ranked = RelevanceRanker(ctx).rank(candidates)
 
-        //Then
+        //Then candidates are ordered by descending historical score
         ranked.map { it.initialSuggestion() } shouldBe listOf(tshHigh, mcvHigh, tshLow)
     }
 }
