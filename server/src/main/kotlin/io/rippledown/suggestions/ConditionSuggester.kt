@@ -226,6 +226,16 @@ class DoesNotContainSuggestion(private val signature: Signature) : SuggestionFun
 class IsSuggestion(private val signature: Signature) : SuggestionFunction {
     override fun invoke(attribute: Attribute, Result: Result?): SuggestedCondition? {
         val value = Result?.value?.text ?: return null
+        // `is "<numeric value>"` is almost never what the user wants:
+        // the threshold is pinned to this case's exact reading and the
+        // next case a hundredth of a unit away fails it. The
+        // `≥ <editable>` / `≤ <editable>` candidates already cover the
+        // numeric-threshold intent with a user-editable cutoff, and
+        // `is high` / `is low` cover the symbolic intent. So for
+        // numeric values the `Is` variant is redundant clutter. Keep it
+        // for short coded text values (`Sex is "M"`, `Status is "stable"`).
+        if (Result.value.real != null) return null
+        if (value.isBlank()) return null
         return NonEditableSuggestedCondition(EpisodicCondition(attribute, Is(value), signature))
     }
 }

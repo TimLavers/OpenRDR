@@ -163,6 +163,48 @@ File: `server/src/main/kotlin/io/rippledown/model/rule/ConditionSuggester.kt`
 - Delete `Sorter` (its alphabetic role moves into the ranker as the final
   tiebreak).
 
+#### Generator-level prunes
+
+A handful of suggestion shapes are suppressed *before* ranking because
+they are reliably low value and otherwise fill the 20-slot budget with
+near-duplicates. These prunes live in the relevant `SuggestionFunction`
+implementations, not in the ranker — the ranker should not need to
+demote candidates that have no business being generated in the first
+place.
+
+- **`Is(<numeric value>)` is dropped for numeric attributes.**
+  `HAEMOGLOBIN is "194"` pins the predicate to the case's exact reading
+  and fails the moment the next case reads a hundredth of a unit
+  higher. The numeric-threshold intent is already covered by the
+  `≥ <editable>` / `≤ <editable>` cutoff suggestions (which pre-fill
+  the editable threshold with the case value but let the user adjust
+  it), and the symbolic-direction intent is covered by `is high` /
+  `is low` / `is normal`. So the equality variant is redundant clutter.
+
+  The suppression is local to `IsSuggestion`: when
+  `Result.value.real != null`, return `null`. Short coded text values
+  (`Sex is "M"`, `Status is "stable"`) still flow through unchanged.
+  Long free-text values (e.g. `PSA Comment is "<paragraph>"`) are not
+  suppressed at generation time, but the comment scorer's value-token
+  cap (see 4b) stops them gaming the overlap signal.
+
+- **`Contains` / `DoesNotContain` are dropped for numeric attributes.**
+  Same rationale: `contains "194"` is nonsense for a quantitative
+  reading. Suppressed in `ContainsSuggestion` / `DoesNotContainSuggestion`
+  on the same `Result.value.real != null` predicate.
+
+- **Subsumed `No <attr> is <range>` candidates are dropped when
+  `all <attr> are <other range>` is also generated.** The three range
+  predicates are mutually exclusive, so `all HAEMOGLOBIN are high`
+  already implies `no HAEMOGLOBIN is low` and `no HAEMOGLOBIN is
+  normal`; surfacing all three side by side is redundant. Implemented
+  in `pruneSubsumed`.
+
+- **`IsNumeric` / `IsNotNumeric`, `ExtendedRange` ("by at most N%"),
+  `AtLeast(n)` / `AtMost(n)` signatures, `IsPresentInCase` /
+  `IsAbsentFromCase`** were judged to add no clinical value and removed
+  from the factory list outright.
+
 ### 4. Scorers
 
 New file:

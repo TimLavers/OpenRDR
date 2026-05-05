@@ -155,9 +155,9 @@ class KBExemptCornerstoneTest {
         // Sanity check: initially there are 2 cornerstones
         rsm.cornerstoneStatus().numberOfCornerstones shouldBe 2
 
-        // Add a condition that filters out all cornerstones (Glucose is "0.667" only for Session)
+        // Add a condition that filters out all cornerstones (Glucose ≤ 0.667 only for Session)
         val conditionSuggester = ConditionSuggester(SuggestionContext(sessionCase, kb.attributeManager.all()))
-        val isCondition = conditionSuggester.suggestions().first { it.asText() == "Glucose is \"0.667\"" }
+        val isCondition = conditionSuggester.suggestions().first { it.asText() == "Glucose ≤ 0.667" }
         rsm.addConditionToCurrentRuleSession(isCondition.initialSuggestion())
 
         // Now all cornerstones are filtered out
@@ -256,7 +256,7 @@ class KBExemptCornerstoneTest {
 
         // Add a condition that filters out all cornerstones
         val conditionSuggester = ConditionSuggester(SuggestionContext(sessionCase, kb.attributeManager.all()))
-        val isCondition = conditionSuggester.suggestions().first { it.asText() == "Glucose is \"0.667\"" }
+        val isCondition = conditionSuggester.suggestions().first { it.asText() == "Glucose ≤ 0.667" }
         rsm.addConditionToCurrentRuleSession(isCondition.initialSuggestion())
         rsm.cornerstoneStatus().numberOfCornerstones shouldBe 0
 
@@ -282,7 +282,7 @@ class KBExemptCornerstoneTest {
 
         // Add a condition that filters out Case2 but keeps Case1
         val conditionSuggester = ConditionSuggester(SuggestionContext(sessionCase, kb.attributeManager.all()))
-        val isCondition = conditionSuggester.suggestions().first { it.asText() == "Glucose is \"0.667\"" }
+        val isCondition = conditionSuggester.suggestions().first { it.asText() == "Glucose ≤ 0.667" }
         rsm.addConditionToCurrentRuleSession(isCondition.initialSuggestion())
 
         // Now only Case1 remains

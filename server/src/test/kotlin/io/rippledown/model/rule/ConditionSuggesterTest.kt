@@ -305,14 +305,18 @@ internal class ConditionSuggesterTest {
      * Baseline suggestions expected for a NUMERIC-valued attribute in the
      * case. Contains / DoesNotContain are not generated for numeric
      * values (they produce nonsense like `contains "194"`), IsNumeric and
-     * IsPresent are pruned. Editable >=/<= cutoffs remain.
+     * IsPresent are pruned. The exact-equality `is "<value>"` variant is
+     * also pruned for numeric values: it pins the threshold to this
+     * case's reading and the `≥ <editable>` / `≤ <editable>` cutoffs
+     * already cover the numeric-threshold intent with a user-editable
+     * cutoff. Editable >=/<= cutoffs remain.
      */
     private fun checkContainsStandard3ForNumericValue(
         conditions: List<SuggestedCondition>,
         attribute: Attribute,
         value: String
     ) {
-        conditions shouldContain isValueSuggestion(attribute, value)
+        conditions shouldNotContain isValueSuggestion(attribute, value)
         conditions shouldContain greaterThanOrEqualsSuggestion(attribute, value)
         conditions shouldContain lessThanOrEqualsSuggestion(attribute, value)
         conditions shouldNotContain containsTextSuggestion(attribute, value)
