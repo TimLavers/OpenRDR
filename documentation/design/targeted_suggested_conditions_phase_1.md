@@ -244,8 +244,8 @@ Algorithm:
 | `GreaterThanOrEqualsSuggestion`                      | `attr.name` + `"high"`, `"above"`, `"greater"`       |
 | `LessThanOrEqualsSuggestion`                         | `attr.name` + `"low"`, `"below"`, `"less"`           |
 | `IsNumeric` / `IsNotNumeric`                         | `attr.name` + `"numeric"`                            |
-| `Is(value)` (`IsSuggestion`)                         | `attr.name` + tokenised `value`                      |
-| `Contains` / `DoesNotContain`                        | `attr.name` + tokenised value when available         |
+| `Is(value)` / `IsNot(value)`                         | `attr.name` + value tokens (capped, see below)       |
+| `Contains` / `DoesNotContain`                        | `attr.name` + value tokens (capped, see below)       |
 | `SeriesCondition(attr, Increasing)`                  | `attr.name` + `"increasing"`, `"rising"`, `"trend"`  |
 | `SeriesCondition(attr, Decreasing)`                  | `attr.name` + `"decreasing"`, `"falling"`, `"trend"` |
 | `CaseStructureCondition(IsPresentInCase)`            | `attr.name` + `"present"`                            |
@@ -255,6 +255,32 @@ Algorithm:
 Signature tokens (`Current`, `All`, `AtLeast(n)`, `AtMost(n)`, `No`) are
 **excluded**: they pollute scores ("at least 1" matches comments
 containing "at"), and users rarely phrase comments in those terms.
+
+##### Value-token cap (`MAX_VALUE_TOKENS = 3`)
+
+`Is` / `IsNot` / `Contains` / `DoesNotContain` predicates tokenise their
+`toFind` value, but only if the tokenised value has **at most 3 tokens**.
+If it has more, the value contributes **no** tokens — only the
+attribute name survives.
+
+Motivation: comment-style attributes (e.g. `PSA Comment`, `FBC Comment`,
+`Thyroid Comment`) routinely store multi-sentence clinical narratives.
+Without a cap, `PSA Comment is "<40-word paragraph>"` accumulates dozens
+of generic words (`further`, `review`, `patient`, `consistent`, …) and
+wins on accidental collisions with the action comment — a rule-of-thumb
+ordering bug, not a ranking feature.
+
+Short code-like values (`"M"`, `"stable"`, `"low risk"`) are the
+legitimate use case and comfortably fit under the cap.
+
+A reused long `Contains` condition is not penalised by the cap: it
+surfaces via `HistoricalRuleScorer`, which runs *ahead* of the comment
+scorer in the ranker ordering. The cap only removes the accidental
+overlap boost for long values; provenance is unaffected.
+
+The threshold is a private constant in `CommentTokenOverlapScorer`;
+tuning it (or replacing the whole mechanism with embeddings) is Phase 3
+territory.
 
 The token map is a single `private fun tokensFor(condition: Condition):
 Set<String>` in `CommentTokenOverlapScorer.kt`, dispatching on the sealed
@@ -406,6 +432,10 @@ no dead code.
     - `ChangeTreeToReplaceConclusion` uses replacement text, not the
       original.
     - Null action → all zero.
+  - Long value text (>3 tokens) contributes no value tokens:
+    `PSA Comment is "<paragraph containing 'further'>"` does not
+    score on `"Investigate further."` beyond the attribute name.
+    Short values (`Contains("further")`) still score.
 - `CornerstoneDiscriminationScorerTest`
     - No cornerstones → all zero.
     - Candidate excludes 0 / 1 / all cornerstones.

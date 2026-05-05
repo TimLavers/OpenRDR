@@ -39,7 +39,6 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
   # varies, so ranking changes ONLY when the comment changes.
   ##############################################################################
 
-  @single
   Scenario: When adding a comment, suggestions whose attribute or direction match the comment text rank above unrelated suggestions
     Given a case with name Einstein is stored on the server
     And I start the client application
@@ -51,8 +50,7 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
     Given a case with name Einstein is stored on the server
     And I start the client application
     When I request that the comment "Elevated MCV may be significant." be added
-    Then the suggested condition "MCV" should appear before "HAEMOGLOBIN"
-    And the suggested condition "MCV" should appear before "Sodium"
+    Then the suggested condition "MCV" should appear before "AST"
 
   Scenario: When removing a comment, suggestions matching the comment text rank above unrelated suggestions
     Given a case with name Einstein is stored on the server
@@ -60,9 +58,8 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
       | Sex is "M" |
     And I start the client application
     When I request that the following comment be removed:
-      | MCV elevated |
-    Then the suggested condition "MCV" should appear before "Sodium"
-    And the suggested condition "MCV" should appear before "HAEMOGLOBIN"
+      | MCV elevated. |
+    Then the suggested condition "MCV" should appear before "AST"
 
   Scenario: When replacing a comment, suggestions matching the REPLACEMENT comment rank above those matching the original
     Given a case with name Einstein is stored on the server
@@ -70,8 +67,8 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
       | Sex is "M" |
     And I start the client application
     When I request that the comment be replaced by "macrocytosis MCV."
-    Then the suggested condition "MCV" should appear before "HAEMOGLOBIN"
-    And the suggested condition "MCV" should appear before "Sodium"
+    Then the suggested condition "MCV" should appear before "AST"
+    And the condition containing "HAEMOGLOBIN" should NOT appear
 
   ##############################################################################
   # Set B — Cornerstone discrimination (Einstein session, Planck cornerstone)
@@ -83,6 +80,7 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
   # driven entirely by cornerstone discrimination.
   ##############################################################################
 
+  @single
   Scenario: When a cornerstone is shown, suggestions that distinguish the case from the cornerstone rank above those that hold for both
     # Two assertions, both showing "discriminating beats non-discriminating
     # even when alphabetically disadvantaged":

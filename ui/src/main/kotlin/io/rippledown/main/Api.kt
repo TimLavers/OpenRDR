@@ -116,7 +116,6 @@ class Api(
             // while we were waiting, or an explicit [createKBFromSample] /
             // [selectKB] / [createKB] may have set it to a more-specific KB.
             currentKB?.let { return@withLock it }
-            logger.warn("Api.kbInfo() falling back to GET defaultKB because currentKB is null")
             val fetched = client.get("$API_URL$DEFAULT_KB").body<KBInfo>()
             // Only adopt [fetched] if nothing else set [currentKB] while the
             // GET was in flight. If something did, that value is always more

@@ -7,10 +7,7 @@ import io.rippledown.model.condition.CaseStructureCondition
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.SeriesCondition
 import io.rippledown.model.condition.edit.*
-import io.rippledown.model.condition.episodic.predicate.High
-import io.rippledown.model.condition.episodic.predicate.Is
-import io.rippledown.model.condition.episodic.predicate.IsNumeric
-import io.rippledown.model.condition.episodic.predicate.Low
+import io.rippledown.model.condition.episodic.predicate.*
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.series.Decreasing
 import io.rippledown.model.condition.series.Increasing
@@ -294,6 +291,33 @@ class CommentTokenOverlapScorerTest {
 
         //Then both "tsh" and "stable" match
         scorer.score(nonEdit(EpisodicCondition(tsh, Is("stable"), Current))) shouldBe 2
+    }
+
+    /**
+     * Long free-text values stored on "comment-style" attributes must NOT
+     * contribute value tokens, otherwise accidental collisions on generic
+     * clinical words (`further`, `review`, `patient`, …) let a
+     * non-discriminating `Contains`/`Is` outrank targeted candidates. See
+     * `MAX_VALUE_TOKENS` in `CommentTokenOverlapScorer`.
+     */
+    @Test
+    fun `long value text contributes no value tokens`() {
+        //Given a long clinical paragraph as the Contains value
+        val longText = "In men aged 70 years and over, the median total PSA is 1.5 ug/L. " +
+                "PSA result is consistent with low risk of prostatic neoplasia. " +
+                "Recommend offering further review of PSA in 2 years."
+        //And a comment that accidentally shares one common word ("further")
+        val ctx = ctxFor("Investigate further.")
+        val longContains = nonEdit(EpisodicCondition(mcv, Contains(longText), Current))
+        val shortContains = nonEdit(EpisodicCondition(mcv, Contains("further"), Current))
+
+        //When
+        val scorer = CommentTokenOverlapScorer(ctx)
+
+        //Then the long value drops its tokens entirely (score = attribute only = 0,
+        //since "mcv" isn't in the comment); the short value still contributes.
+        scorer.score(longContains) shouldBe 0
+        scorer.score(shortContains) shouldBe 1
     }
 
     /**

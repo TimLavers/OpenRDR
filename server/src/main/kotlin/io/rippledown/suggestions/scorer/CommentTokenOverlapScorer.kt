@@ -79,6 +79,24 @@ internal class CommentTokenOverlapScorer(
             .filter { it.isNotEmpty() && it !in STOPWORDS }
             .toSet()
 
+        /**
+         * Maximum number of tokens an `Is`/`Contains` value may contribute.
+         * Short, code-like values (`"M"`, `"stable"`, `"low risk"`) are the
+         * legitimate use case. Long free-text values — typically stored on
+         * comment-style attributes such as `PSA Comment` — would otherwise
+         * accumulate dozens of generic tokens (`further`, `review`, `patient`,
+         * …) and win on accidental collisions with the action comment, which
+         * is exactly the bug this cap prevents. Provenance-based surfacing of
+         * previously-used long `Contains` conditions is still handled by
+         * [HistoricalRuleScorer], which runs ahead of this scorer.
+         */
+        private const val MAX_VALUE_TOKENS = 3
+
+        internal fun valueTokens(value: String): Set<String> {
+            val tokens = tokenise(value)
+            return if (tokens.size > MAX_VALUE_TOKENS) emptySet() else tokens
+        }
+
         internal fun tokensFor(condition: Condition): Set<String> = when (condition) {
             is EpisodicCondition -> tokensFor(condition.attribute) + tokensFor(condition.predicate)
             is SeriesCondition -> tokensFor(condition.attribute) + tokensFor(condition.seriesPredicate)
@@ -99,10 +117,10 @@ internal class CommentTokenOverlapScorer(
             is GreaterThanOrEquals, is GreaterThan -> setOf("high", "above", "greater")
             is LessThanOrEquals, is LessThan -> setOf("low", "below", "less")
             IsNumeric, IsNotNumeric -> setOf("numeric")
-            is Is -> tokenise(p.toFind)
-            is IsNot -> tokenise(p.toFind)
-            is Contains -> tokenise(p.toFind)
-            is DoesNotContain -> tokenise(p.toFind)
+            is Is -> valueTokens(p.toFind)
+            is IsNot -> valueTokens(p.toFind)
+            is Contains -> valueTokens(p.toFind)
+            is DoesNotContain -> valueTokens(p.toFind)
             else -> emptySet()
         }
 

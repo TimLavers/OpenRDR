@@ -115,5 +115,20 @@ class SuggestionOrderingStepDefs {
         }
     }
 
+    @Then("the condition containing {string} should NOT appear")
+    fun suggestedConditionShouldNotAppear(text: String) {
+        await().atMost(ofSeconds(20)).until { currentSuggestions().isNotEmpty() }
+        val list = currentSuggestions()
+        val contains = list.firstOrNull {
+            it.contains(text, ignoreCase = true)
+        }
+        if (contains != null) {
+            throw AssertionError(
+                "Expected '$text' NOT to be in the suggestions.\n" +
+                        "Full list:\n $list"
+            )
+        }
+    }
+
     private fun currentSuggestions(): List<String> = chatPO().suggestionsInMostRecentMessage()
 }
