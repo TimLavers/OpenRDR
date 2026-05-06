@@ -59,7 +59,7 @@ tasks.register<Zip>("demoZip") {
     group = "distribution"
     description = "Builds a portable zip containing the OpenRDR server and UI for demo use."
 
-    dependsOn(":server:shadowJar", ":ui:createDistributable")
+    dependsOn(":server:shadowJar", ":ui:createDistributable", ":common:obfuscate")
 
     archiveBaseName.set("openrdr-demo")
     archiveClassifier.set(demoOsClassifier)

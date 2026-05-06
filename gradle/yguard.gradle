@@ -1,0 +1,50 @@
+// Applied from a module's build.gradle.kts via:
+//     apply(from = "$rootDir/gradle/yguard.gradle")
+//
+// Adds an `obfuscate` task that:
+//   1. Runs `jar`.
+//   2. Renames the produced jar to <name>_unobf.jar.
+//   3. Runs yGuard, writing the obfuscated jar back to the original path.
+//   4. Writes a rename log to build/<project-name>_renamelog.xml.
+//
+// yGuard ships as an Ant task; we drive it via Gradle's built-in ant integration.
+
+configurations {
+    yguard
+}
+
+dependencies {
+    yguard 'com.yworks:yguard:5.0.0'
+}
+
+tasks.register('obfuscate') {
+    group = 'yGuard'
+    description = 'Obfuscates the jar produced by the `jar` task using yGuard.'
+    dependsOn tasks.named('jar')
+
+    doLast {
+        def archivePath = tasks.named('jar').get().archiveFile.get().asFile.path
+        def unobfJar = archivePath.replace('.jar', '_unobf.jar')
+
+        ant.move(file: archivePath, tofile: unobfJar, verbose: true)
+
+        ant.taskdef(
+                name: 'yguard',
+                classname: 'com.yworks.yguard.YGuardTask',
+                classpath: configurations.yguard.asPath
+        )
+
+        ant.yguard {
+            inoutpair(in: unobfJar, out: archivePath)
+
+            // Keep all public API so the obfuscated jar stays usable from other
+            // modules. yGuard will still rename non-public classes, methods,
+            // and fields. Drop or tighten this for a more aggressive run.
+            rename(logfile: "${buildDir}/${project.name}_renamelog.xml") {
+                keep {
+                    'class'(classes: 'public', methods: 'public', fields: 'public')
+                }
+            }
+        }
+    }
+}
