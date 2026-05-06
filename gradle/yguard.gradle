@@ -5,7 +5,7 @@
 //   1. Runs `jar`.
 //   2. Renames the produced jar to <name>_unobf.jar.
 //   3. Runs yGuard, writing the obfuscated jar back to the original path.
-//   4. Writes a rename log to build/<project-name>_renamelog.xml.
+//   4. Writes a rename log to build/libs/yguardlog.xml.
 //
 // yGuard ships as an Ant task; we drive it via Gradle's built-in ant integration.
 
@@ -40,7 +40,7 @@ tasks.register('obfuscate') {
             // Keep all public API so the obfuscated jar stays usable from other
             // modules. yGuard will still rename non-public classes, methods,
             // and fields. Drop or tighten this for a more aggressive run.
-            rename(logfile: "${buildDir}/${project.name}_renamelog.xml") {
+            rename(logfile: "${buildDir}/libs/yguardlog.xml") {
                 keep {
                     'class'(classes: 'public', methods: 'public', fields: 'public')
                 }
