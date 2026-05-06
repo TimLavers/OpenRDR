@@ -82,14 +82,17 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
 
   @single
   Scenario: When a cornerstone is shown, suggestions that distinguish the case from the cornerstone rank above those that hold for both
-    # Two assertions, both showing "discriminating beats non-discriminating
-    # even when alphabetically disadvantaged":
+    # Two assertions, both showing "discriminating beats non-discriminating":
     #   HAEMOGLOBIN: Einstein 194 (clearly high), Planck 139 (normal).
     #   MCV:         Einstein 100.2 (marginally high), Planck 91.3 (normal).
-    #   Albumin:     Einstein 38, Planck 40 — both normal, does NOT discriminate.
-    # Alphabetically Albumin < HAEMOGLOBIN and Albumin < MCV, so without
-    # discrimination Albumin would win on tiebreak.
-    # Both discriminatory attributes (Haemoglobin and MCV) should rank higher than Albumin
+    #   25-OH Vit D: holds for both Einstein and Planck — non-discriminating.
+    # Both discriminatory attributes (HAEMOGLOBIN and MCV) should rank
+    # higher than the non-discriminating 25-OH Vit D suggestion.
+    # (Albumin would be the more obvious alphabetic-tiebreak target, but
+    # several non-discriminating attributes are alphabetically ahead of
+    # Albumin and consume the slack within the 20-suggestion cap, so
+    # Albumin does not survive the cut. 25-OH Vit D is one of the
+    # non-discriminating suggestions that does survive.)
     Given a case with name Einstein is stored on the server
     And a case with name Planck is stored on the server
     And a backdoor rule is built for case Planck to add the comment "Routine review." with conditions:
@@ -97,8 +100,8 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
     And I start the client application
     When I request that the comment "Investigate further." be added
     And the case Planck is shown as the cornerstone case
-    Then the suggested condition "HAEMOGLOBIN" should appear before "Albumin"
-    And the suggested condition "MCV" should appear before "Albumin"
+    Then the suggested condition "HAEMOGLOBIN" should appear before "25-OH Vit D"
+    And the suggested condition "MCV" should appear before "25-OH Vit D"
 
   Scenario: A condition that holds for both the session case and the cornerstone is not preferred
     # Sex is "M" holds for both Einstein and Planck (discrimination = 0).

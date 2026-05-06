@@ -121,11 +121,37 @@ class ConditionSuggester(private val ctx: SuggestionContext) {
         // Text-predicate shapes (Contains / DoesNotContain) only make sense
         // for the current episode of a non-numeric value. "All", "at least
         // 1", etc. variants of Contains on a numeric value are useless.
+        // Furthermore, restrict them to attributes the user has *already*
+        // matched on with a substring predicate in some existing rule. Free
+        // text fields (e.g. addresses, comments) otherwise produce noise like
+        // `Address contains "Unionstrasse 4, ..."` and `Address does not
+        // contain ""` that crowd the top-20 with values the user never asked
+        // to substring-match.
         if (signature == Current) {
-            factories += ContainsSuggestion(signature)
-            factories += DoesNotContainSuggestion(signature)
+            val allowed = attributesUsedInSubstringRules()
+            factories += ContainsSuggestion(signature, allowed)
+            factories += DoesNotContainSuggestion(signature, allowed)
         }
         return factories
+    }
+
+    /**
+     * Attributes that appear in some existing rule with a [Contains] or
+     * [DoesNotContain] predicate. Only these attributes are eligible for
+     * substring-style suggestions; see [episodicFactoriesForSignature].
+     */
+    private fun attributesUsedInSubstringRules(): Set<Attribute> {
+        val result = mutableSetOf<Attribute>()
+        ctx.ruleTree.rules().forEach { rule ->
+            rule.conditions.forEach { condition ->
+                if (condition is EpisodicCondition &&
+                    (condition.predicate is Contains || condition.predicate is DoesNotContain)
+                ) {
+                    result.add(condition.attribute)
+                }
+            }
+        }
+        return result
     }
 }
 
@@ -200,8 +226,20 @@ class ExtendedHighRangeSuggestion(private val signature: Signature) : ExtendedRa
         EditableExtendedHighRangeCondition(attribute, signature)
 }
 
-class ContainsSuggestion(private val signature: Signature) : SuggestionFunction {
+/**
+ * Substring-style suggestions are restricted to attributes the user has
+ * already substring-matched on in some existing rule. [allowedAttributes] is
+ * that allowlist; pass `null` (the default) to keep the suggestion factory
+ * unconstrained, which is convenient for unit tests of the factory itself.
+ * Production wiring goes through [ConditionSuggester], which always supplies
+ * a non-null allowlist computed from the rule tree.
+ */
+class ContainsSuggestion(
+    private val signature: Signature,
+    private val allowedAttributes: Set<Attribute>? = null,
+) : SuggestionFunction {
     override fun invoke(attribute: Attribute, Result: Result?): SuggestedCondition? {
+        if (allowedAttributes != null && attribute !in allowedAttributes) return null
         val value = Result?.value?.text ?: return null
         // "contains" only makes clinical sense for free-text values.
         // For numeric values (e.g. HAEMOGLOBIN 194) it produces noise
@@ -212,8 +250,12 @@ class ContainsSuggestion(private val signature: Signature) : SuggestionFunction 
     }
 }
 
-class DoesNotContainSuggestion(private val signature: Signature) : SuggestionFunction {
+class DoesNotContainSuggestion(
+    private val signature: Signature,
+    private val allowedAttributes: Set<Attribute>? = null,
+) : SuggestionFunction {
     override fun invoke(attribute: Attribute, Result: Result?): SuggestedCondition? {
+        if (allowedAttributes != null && attribute !in allowedAttributes) return null
         if (Result == null) return null
         // Mirror ContainsSuggestion: only offer for non-numeric,
         // non-empty text. `does not contain ""` is never useful.

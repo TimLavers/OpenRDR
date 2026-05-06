@@ -193,6 +193,35 @@ place.
   reading. Suppressed in `ContainsSuggestion` / `DoesNotContainSuggestion`
   on the same `Result.value.real != null` predicate.
 
+- **`Contains` / `DoesNotContain` are restricted to attributes
+  previously substring-matched in some rule.** Free-text attributes
+  (addresses, comment fields, narrative columns) otherwise produce
+  noise like `Address contains "Unionstrasse 4, Zurich, 8001"` and
+  `Address does not contain ""` that crowds the top-20 with literals
+  the user never asked to substring-match. The substring shapes are
+  only useful when the user has *already* expressed intent to match a
+  substring of the attribute's value somewhere in the rule tree;
+  surfacing them on attributes that have never been used that way is
+  pure clutter.
+
+  Implementation: `ConditionSuggester` walks `ctx.ruleTree` once,
+  collects every attribute referenced by an `EpisodicCondition` whose
+  predicate is `Contains` or `DoesNotContain`, and passes that
+  allowlist into `ContainsSuggestion` / `DoesNotContainSuggestion` via
+  a new `allowedAttributes: Set<Attribute>?` constructor parameter.
+  Each factory short-circuits to `null` for attributes outside the
+  allowlist. The default of `null` means "no filter" — convenient for
+  the unit tests that exercise the factory in isolation. Production
+  call sites always pass a non-null allowlist computed from the rule
+  tree.
+
+  Note that the allowlist is keyed on `Attribute`, not on the specific
+  substring used: once the user has substring-matched on `Notes` once,
+  `Notes contains "<latest value>"` is offered for every subsequent
+  case. That matches how RDR rules typically evolve (one substring
+  pattern in one rule, refinements layered on top), and avoids
+  per-rule, per-substring bookkeeping.
+
 - **Subsumed `No <attr> is <range>` candidates are dropped when
   `all <attr> are <other range>` is also generated.** The three range
   predicates are mutually exclusive, so `all HAEMOGLOBIN are high`

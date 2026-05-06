@@ -7,6 +7,7 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.*
 import io.rippledown.model.condition.edit.*
+import io.rippledown.model.condition.episodic.predicate.Contains
 import io.rippledown.model.condition.episodic.predicate.HighOrNormalOrLow
 import io.rippledown.model.condition.episodic.signature.*
 import io.rippledown.suggestions.ConditionSuggester
@@ -18,14 +19,50 @@ import kotlin.test.Test
  * Test-only wrapper that exposes the uncapped generator output. The production
  * [ConditionSuggester.suggestions] caps the list at `MAX_SUGGESTIONS`, but every
  * assertion here is about the generator itself, independent of the cap.
+ *
+ * [substringAttributes] is the set of attributes that should be treated as
+ * having been substring-matched in some prior rule, so that
+ * [ConditionSuggester] generates `contains` / `does not contain` suggestions
+ * for them. The wrapper builds a tiny rule tree with one child rule per such
+ * attribute carrying a `Contains("")` predicate; the suggester only inspects
+ * the rule tree to determine attribute eligibility for substring suggestions,
+ * never to evaluate the rule.
  */
-private class TestConditionSuggester(attributes: Set<Attribute>, sessionCase: RDRCase) {
-    private val delegate = ConditionSuggester(SuggestionContext(sessionCase, attributes))
+private class TestConditionSuggester(
+    attributes: Set<Attribute>,
+    sessionCase: RDRCase,
+    substringAttributes: Set<Attribute> = emptySet(),
+) {
+    private val delegate = ConditionSuggester(
+        SuggestionContext(
+            sessionCase = sessionCase,
+            attributes = attributes,
+            ruleTree = ruleTreeWithSubstringRulesFor(substringAttributes),
+        )
+    )
+
     fun suggestions() = delegate.allSuggestions()
+
+    companion object {
+        private fun ruleTreeWithSubstringRulesFor(attrs: Set<Attribute>): RuleTree {
+            val tree = RuleTree()
+            attrs.forEachIndexed { idx, attr ->
+                val rule = Rule(
+                    id = idx + 1,
+                    conditions = setOf(EpisodicCondition(attr, Contains(""), Current)),
+                )
+                tree.root.addChild(rule)
+            }
+            return tree
+        }
+    }
 }
 
-private fun conditionSuggester(attributes: Set<Attribute>, sessionCase: RDRCase) =
-    TestConditionSuggester(attributes, sessionCase)
+private fun conditionSuggester(
+    attributes: Set<Attribute>,
+    sessionCase: RDRCase,
+    substringAttributes: Set<Attribute> = emptySet(),
+) = TestConditionSuggester(attributes, sessionCase, substringAttributes)
 
 internal class ConditionSuggesterTest {
     private val stuff = "stuff"
@@ -59,7 +96,7 @@ internal class ConditionSuggesterTest {
     @Test
     fun `single attribute single episode with textual value`() {
         val sessionCase = case(a to stuff)
-        with(conditionSuggester(setOf(a), sessionCase).suggestions()) {
+        with(conditionSuggester(setOf(a), sessionCase, substringAttributes = setOf(a)).suggestions()) {
             this shouldContain isSingleEpisodeCaseSuggestion()
             this shouldContain isValueSuggestion(a, stuff)
             this shouldContain containsTextSuggestion(a, stuff)
@@ -76,7 +113,7 @@ internal class ConditionSuggesterTest {
     @Test
     fun `single attribute multiple episodes with two identical textual values`() {
         val sessionCase = multiEpisodeCase(a, things, things)
-        with(conditionSuggester(setOf(a), sessionCase).suggestions()) {
+        with(conditionSuggester(setOf(a), sessionCase, substringAttributes = setOf(a)).suggestions()) {
             // Only Current / All / No signatures are generated now; the
             // AtLeast(n) / AtMost(n) signatures were pruned as noise.
             this shouldContain isValueSuggestion(a, things, Current)
@@ -102,7 +139,7 @@ internal class ConditionSuggesterTest {
     @Test
     fun `single attribute multiple episodes with three identical textual values`() {
         val sessionCase = multiEpisodeCase(a, things, things, things)
-        with(conditionSuggester(setOf(a), sessionCase).suggestions()) {
+        with(conditionSuggester(setOf(a), sessionCase, substringAttributes = setOf(a)).suggestions()) {
             this shouldContain isValueSuggestion(a, things, Current)
             this shouldContain isValueSuggestion(a, things, All)
             this shouldNotContain isValueSuggestion(a, things, AtLeast(1))
@@ -122,7 +159,7 @@ internal class ConditionSuggesterTest {
     @Test
     fun `single attribute multiple episodes with four identical textual values`() {
         val sessionCase = multiEpisodeCase(a, things, things, things, things)
-        with(conditionSuggester(setOf(a), sessionCase).suggestions()) {
+        with(conditionSuggester(setOf(a), sessionCase, substringAttributes = setOf(a)).suggestions()) {
             this shouldContain isValueSuggestion(a, things, Current)
             this shouldContain isValueSuggestion(a, things, All)
             this shouldNotContain isValueSuggestion(a, things, AtLeast(1))
@@ -141,7 +178,7 @@ internal class ConditionSuggesterTest {
     @Test
     fun `single attribute multiple episodes with three textual values`() {
         val sessionCase = multiEpisodeCase(a, stuff, things, whatever)
-        with(conditionSuggester(setOf(a), sessionCase).suggestions()) {
+        with(conditionSuggester(setOf(a), sessionCase, substringAttributes = setOf(a)).suggestions()) {
             // Contains / DoesNotContain are generated only at the Current
             // signature now.
             this shouldContain containsTextSuggestion(a, whatever, Current)
@@ -246,7 +283,7 @@ internal class ConditionSuggesterTest {
     @Test
     fun `two attributes, one in of which is not in the case, one episode`() {
         val sessionCase = case(a to stuff)
-        with(conditionSuggester(setOf(a, b), sessionCase).suggestions()) {
+        with(conditionSuggester(setOf(a, b), sessionCase, substringAttributes = setOf(a, b)).suggestions()) {
             checkContainsStandard2(this, a, stuff)
             this shouldContain isSingleEpisodeCaseSuggestion()
             this shouldContain doesNotContainTextSuggestion(a)
@@ -262,7 +299,7 @@ internal class ConditionSuggesterTest {
     @Test
     fun `two attributes, both of which are in the case, one episode`() {
         val sessionCase = case(a to stuff, b to things)
-        with(conditionSuggester(setOf(a, b), sessionCase).suggestions()) {
+        with(conditionSuggester(setOf(a, b), sessionCase, substringAttributes = setOf(a, b)).suggestions()) {
             checkContainsStandard2(this, a, stuff)
             this shouldContain doesNotContainTextSuggestion(a)
             this shouldNotContain notNumericSuggestion(a, Current)
