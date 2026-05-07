@@ -266,7 +266,27 @@ Inputs: `ctx.ruleTree`, `ctx.action`.
 - Walk `ctx.ruleTree` via `Rule.visit { ... }` and collect every rule whose
   `conclusion?.id == targetConclusionId`.
 - Score for a candidate `s`: number of historical rules whose `conditions`
-  contain a condition with `it.sameAs(s.initialSuggestion())`.
+  contain a condition that *matches* `s` (definition below).
+- **Matching rule.** For most candidates `match` is `it.sameAs(s.initialSuggestion())`.
+  For *editable* numeric-threshold candidates
+  (`EditableGreaterThanEqualsCondition` / `EditableLessThanEqualsCondition`)
+  matching is **family-wise** instead: same `(attribute, signature,
+  comparison direction)`, regardless of the cutoff value. Rationale:
+  `EditableSuggestedCondition.initialSuggestion()` auto-pins the
+  threshold to the current case's reading, so exact predicate equality
+  would only fire on the lucky coincidence that the historical rule
+  happens to have been written against the same number. The historical
+  signal we want to capture is "the KB has used `eGFR ≥ <something>`
+  for this conclusion before"; the precise cutoff is editable and
+  incidental. Family-wise matching is implemented in
+  `historicalMatcherFor` in
+  `server/src/main/kotlin/io/rippledown/suggestions/scorer/HistoricalRuleScorer.kt`,
+  and crucially does NOT cross:
+    - comparison directions (`≥` ↔ `≤`),
+    - attributes,
+    - signatures (`Current` vs `All` vs `No`),
+    - predicate families (a historical `is high` does not promote an
+      editable `≥` candidate, and vice versa).
 - `Rule.conditions` are the rule's *own* conditions, not the path. That
   matches "conditions historically used with this comment". Including
   `conditionTextsFromRoot()` is Phase 3 territory.
@@ -487,6 +507,16 @@ no dead code.
     - Conclusion match by id, not by reference identity (KBs reload).
     - Action types: Add uses `toBeAdded`; Replace uses `replacement`;
       Remove uses `toBeRemoved`.
+  - Editable `≥` / `≤` candidates match historical conditions
+    family-wise: same direction with a different cutoff scores; same
+    attribute with the *opposite* direction does not, nor does a
+    different attribute, a different signature, or a symbolic range
+    predicate (`is high`). Cumulative across multiple historical
+    rules with varying cutoffs. Each historical rule still counts
+    once even if several of its conditions match the family.
+  - Non-editable candidates remain on strict `sameAs` matching
+    (regression guard against the editable branch loosening
+    everybody's matching).
 - `CommentTokenOverlapScorerTest`
     - "TSH is high" → `EpisodicCondition(TSH, High, Current)` scores 2;
       same attr with `Low` scores 1.

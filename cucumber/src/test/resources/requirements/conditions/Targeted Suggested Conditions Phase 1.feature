@@ -5,15 +5,9 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
   # documentation/design/targeted_suggested_conditions_phase_1.md).
   #
   # Three sets of scenarios:
-  #   Set A — Action targeting (Einstein only, no cornerstones, no rules).
-  #           Ranking is driven by the comment text of the rule action,
-  #           verified across Add / Remove / Replace.
-  #   Set B — Cornerstone discrimination (Einstein + Planck as a CC).
-  #           Suggestions that distinguish Einstein from Planck rank above
-  #           those that hold for both cases.
-  #   Set C — Historical conditions. Backdoor rules establish conditions
-  #           previously used for a comment; those conditions surface at
-  #           the top when the same comment is added again.
+  #   Set A — Action targeting
+  #   Set B — Cornerstone discrimination
+  #   Set C — Historical conditions.
   #
   # Plus one limit scenario at the start to verify the cap on the total number of suggestions.
 
@@ -23,19 +17,16 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
 
   Scenario: The number of suggestions presented to the user is capped at 20
     # Cap chosen so the list is comfortably scannable end-to-end. Ranking
-    # places the best suggestions near the top; the cap is a safety net, not
-    # the primary UX. May be tightened once Phase 3 LLM/embedding signals
-    # consistently push the best suggestions into the top 10.
+    # places the best suggestions near the top;
     Given a case with name Einstein is stored on the server
     And I start the client application
     When I request that the comment "Routine review." be added
     Then the number of suggested conditions should be at most 20
 
   ##############################################################################
-  # Set A — Action targeting (Einstein only, no rules, no cornerstones)
+  # Set A — Action targeting
   #
-  # Einstein has Haemoglobin 194 (high), MCV 100.2 (high), Sodium 141 (normal),
-  # Sex M, etc. With no rules and no cornerstones, only the comment-text
+  # With no rules and no cornerstones, only the comment-text
   # varies, so ranking changes ONLY when the comment changes.
   ##############################################################################
 
@@ -71,49 +62,36 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
     And the condition containing "HAEMOGLOBIN" should NOT appear
 
   ##############################################################################
-  # Set B — Cornerstone discrimination (Einstein session, Planck cornerstone)
+  # Set B — Cornerstone discrimination
   #
-  # Planck has Haemoglobin 139 (normal), MCV 91.3 (normal), Sex M.
-  # Einstein has Haemoglobin 194 (high), MCV 100.2 (high), Sex M.
   # The session comment is deliberately chosen to have NO predicate-vocabulary
   # tokens (i.e. nothing matching the attributes), so comment-overlap is zero for every candidate and ranking is
   # driven entirely by cornerstone discrimination.
   ##############################################################################
 
-  @single
-  Scenario: When a cornerstone is shown, suggestions that distinguish the case from the cornerstone rank above those that hold for both
-    # Two assertions, both showing "discriminating beats non-discriminating":
-    #   HAEMOGLOBIN: Einstein 194 (clearly high), Planck 139 (normal).
-    #   MCV:         Einstein 100.2 (marginally high), Planck 91.3 (normal).
-    #   25-OH Vit D: holds for both Einstein and Planck — non-discriminating.
-    # Both discriminatory attributes (HAEMOGLOBIN and MCV) should rank
-    # higher than the non-discriminating 25-OH Vit D suggestion.
-    # (Albumin would be the more obvious alphabetic-tiebreak target, but
-    # several non-discriminating attributes are alphabetically ahead of
-    # Albumin and consume the slack within the 20-suggestion cap, so
-    # Albumin does not survive the cut. 25-OH Vit D is one of the
-    # non-discriminating suggestions that does survive.)
-    Given a case with name Einstein is stored on the server
-    And a case with name Planck is stored on the server
-    And a backdoor rule is built for case Planck to add the comment "Routine review." with conditions:
-      | Sex is "M" |
+  Scenario: A condition that discriminates between the session case and the cornerstone is preferred
+    # Waves ≤ 1.5 holds only for Bondi (discrimination = 1).
+    # Waves ≥ 1.5 holds for both (discrimination = 0).
+    # Sun is "hot" holds for both (discrimination = 0).
+    # UV index ≤ 1 and UV index ≥ 1 hold for both (discrimination = 0).
+    # The Einstein and Planck cases cannot be used as there are more that 20 discriminatory suggestions
+    Given case Bondi is provided having data:
+      | Sun      | hot |
+      | UV index | 1   |
+      | Waves    | 1.5 |
+    And cornerstone case Malabar is provided having data:
+      | Sun      | hot |
+      | UV index | 1   |
+      | Waves    | 2.0 |
     And I start the client application
-    When I request that the comment "Investigate further." be added
-    And the case Planck is shown as the cornerstone case
-    Then the suggested condition "HAEMOGLOBIN" should appear before "25-OH Vit D"
-    And the suggested condition "MCV" should appear before "25-OH Vit D"
-
-  Scenario: A condition that holds for both the session case and the cornerstone is not preferred
-    # Sex is "M" holds for both Einstein and Planck (discrimination = 0).
-    # HAEMOGLOBIN ≥ 180 holds only for Einstein (discrimination = 1).
-    Given a case with name Einstein is stored on the server
-    And a case with name Planck is stored on the server
-    And a backdoor rule is built for case Planck to add the comment "Routine review." with conditions:
-      | Sex is "M" |
-    And I start the client application
-    When I request that the comment "Investigate further." be added
-    And the case Planck is shown as the cornerstone case
-    Then the suggested condition "HAEMOGLOBIN" should appear before "Sex is \"M\""
+    When I request that the comment "Go to the beach" be added
+    And the case Malabar is shown as the cornerstone case
+    Then the suggested condition "Waves ≤ 1.5" should appear before all of the following suggestions:
+      | Waves ≥ 1.5               |
+      | Sun is "hot"              |
+      | UV index ≤ 1.0            |
+      | UV index ≥ 1.0            |
+      | case is for a single date |
 
   ##############################################################################
   # Set C — Historical conditions
@@ -125,16 +103,16 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
   # cornerstone-discrimination advantage (it holds for the historical
   # cornerstones too).
   ##############################################################################
-
+  @single
   Scenario: Conditions historically used for the same comment rank above unrelated suggestions
     Given a case with name Einstein is stored on the server
     And a case with name Planck is stored on the server
-    And a backdoor rule is built for case Planck to add the comment "Elevated haemoglobin may be significant." with conditions:
-      | eGFR ≥ 70 |
+    And a backdoor rule is built for case Planck to add the comment "Elevated Hb may be significant." with conditions:
+      | eGFR ≥ 70             |
+      | HAEMOGLOBIN is normal |
     And I start the client application
     And I see the case Einstein as the current case
-    When I request that the comment "Elevated haemoglobin may be significant." be added
-    And the case Planck is shown as the cornerstone case
+    When I request that the comment "Elevated Hb may be significant." be added
     Then the suggested condition "eGFR ≥ 70" should appear before "HAEMOGLOBIN"
     And the suggested condition "eGFR ≥ 70" should appear before "Sodium"
 
