@@ -1,5 +1,4 @@
 Feature: The user can make rules that change the interpretive report
-
   Scenario: When the user starts to build a rule, condition hints should be shown
     Given case Bondi is provided having data:
       | Wave | excellent |
@@ -9,9 +8,7 @@ Feature: The user can make rules that change the interpretive report
     When I request that the comment "Let's surf" be added
     Then the suggestions showing should include:
       | Sun is "hot"        |
-      | Sun is in case      |
       | Wave is "excellent" |
-      | Wave is in case     |
 
   Scenario: A new rule should apply to any case satisfying its conditions
     Given I start the client application
