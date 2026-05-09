@@ -4,6 +4,7 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCase
 import io.rippledown.model.Result
 import io.rippledown.model.condition.CaseStructureCondition
+import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.SeriesCondition
 import io.rippledown.model.condition.edit.*
@@ -13,6 +14,7 @@ import io.rippledown.model.condition.series.Decreasing
 import io.rippledown.model.condition.series.Increasing
 import io.rippledown.model.condition.series.Trend
 import io.rippledown.model.condition.structural.IsSingleEpisodeCase
+import io.rippledown.suggestions.scorer.targetConclusionId
 
 typealias SuggestionFunction = (Attribute, Result?) -> SuggestedCondition?
 
@@ -29,7 +31,46 @@ class ConditionSuggester(private val ctx: SuggestionContext) {
      */
     internal fun allSuggestions(): List<SuggestedCondition> {
         val generated = caseStructureSuggestions() + episodicConditionSuggestions() + seriesConditionSuggestions()
-        return RelevanceRanker(ctx).rank(pruneSubsumed(generated))
+        val withHistorical = generated + historicalConditionSuggestions(generated)
+        return RelevanceRanker(ctx).rank(pruneSubsumed(withHistorical))
+    }
+
+    /**
+     * Injects, as candidates in their own right, the literal conditions of every
+     * rule in [SuggestionContext.ruleTree] whose conclusion id matches the
+     * action's target conclusion id, restricted to those that hold on the session
+     * case. See "Historical-condition injection" in
+     * `documentation/design/targeted_suggested_conditions_phase_1.md` for the
+     * rationale: pathology cutoffs in existing rules are usually the clinically
+     * defensible ones (evidence-based guideline thresholds, departmental
+     * conventions), so surfacing the literal `eGFR ≥ 70` alongside the
+     * case-pinned editable `eGFR ≥ 74` lets the user pick the clinical cutoff
+     * with one click while [HistoricalRuleScorer] boosts it via plain `sameAs`.
+     *
+     * Dedup is by `sameAs` against [alreadyGenerated]: a historical condition
+     * that some existing candidate already covers is dropped, so we never offer
+     * two structurally identical entries. The dedup keeps the editable form when
+     * cutoffs coincide, since editables remain user-adjustable.
+     */
+    private fun historicalConditionSuggestions(
+        alreadyGenerated: Collection<SuggestedCondition>,
+    ): List<SuggestedCondition> {
+        val targetConclusionId = ctx.action?.targetConclusionId() ?: return emptyList()
+        val existing = alreadyGenerated.map { it.initialSuggestion() }
+        val seen = mutableListOf<Condition>()
+        val results = mutableListOf<SuggestedCondition>()
+        ctx.ruleTree.rulesMatching { rule ->
+            rule.conclusion?.id == targetConclusionId
+        }.forEach { rule ->
+            rule.conditions.forEach { condition ->
+                if (!condition.holds(sessionCase)) return@forEach
+                if (existing.any { it.sameAs(condition) }) return@forEach
+                if (seen.any { it.sameAs(condition) }) return@forEach
+                seen.add(condition)
+                results.add(NonEditableSuggestedCondition(condition))
+            }
+        }
+        return results
     }
 
     /**

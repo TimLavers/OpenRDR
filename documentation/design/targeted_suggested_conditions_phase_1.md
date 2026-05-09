@@ -163,6 +163,40 @@ File: `server/src/main/kotlin/io/rippledown/model/rule/ConditionSuggester.kt`
 - Delete `Sorter` (its alphabetic role moves into the ranker as the final
   tiebreak).
 
+#### Historical-condition injection
+
+In addition to the suggestions generated from the case data and predicate
+catalogue, `ConditionSuggester` injects, as candidates in their own right,
+the **literal conditions** of every rule in the tree whose conclusion id
+matches the action's target conclusion id, restricted to those that
+`holds(sessionCase)`.
+
+Motivation: in pathology the cutoffs that appear in existing rules are
+often the clinically defensible ones — evidence-based guideline
+thresholds, departmental conventions, etc. The generator's editable
+cutoff candidates pin to the *case's* current reading (e.g. `eGFR ≥ 74.0`
+for a case whose eGFR happens to be 74), which is rarely the number the
+user actually wants. Surfacing the historical literal `eGFR ≥ 70.0` as a
+sibling candidate lets the user pick the clinical cutoff with one click,
+and lets the historical scorer boost it via plain `sameAs` rather than a
+bespoke family-wise relaxation.
+
+Dedup rule: a historical condition is dropped if some already-generated
+candidate's `initialSuggestion()` is `sameAs` it. This keeps
+`eGFR ≥ 74.0` (editable, case-pinned) and `eGFR ≥ 70.0` (literal,
+historical) side by side when their cutoffs differ, but collapses to a
+single entry when they happen to coincide — preferring the editable form
+so the user can still adjust the threshold.
+
+The `holds(sessionCase)` filter is essential: a historical `eGFR ≥ 70` on
+a case with eGFR = 60 would never fire, so we don't surface it. This
+matches the wider invariant that every offered suggestion holds for the
+session case (`shouldBeSuggestedForCase`).
+
+Non-comparison conditions (`is high`, range predicates, trends, equality,
+`Contains`, etc.) are injected the same way; the dedup reduces them to
+at most one entry per `sameAs` equivalence class.
+
 #### Generator-level prunes
 
 A handful of suggestion shapes are suppressed *before* ranking because
@@ -267,26 +301,17 @@ Inputs: `ctx.ruleTree`, `ctx.action`.
   `conclusion?.id == targetConclusionId`.
 - Score for a candidate `s`: number of historical rules whose `conditions`
   contain a condition that *matches* `s` (definition below).
-- **Matching rule.** For most candidates `match` is `it.sameAs(s.initialSuggestion())`.
-  For *editable* numeric-threshold candidates
+- **Matching rule.** Plain `it.sameAs(s.initialSuggestion())` for every
+  candidate, editable or not. Editable numeric-threshold candidates
   (`EditableGreaterThanEqualsCondition` / `EditableLessThanEqualsCondition`)
-  matching is **family-wise** instead: same `(attribute, signature,
-  comparison direction)`, regardless of the cutoff value. Rationale:
-  `EditableSuggestedCondition.initialSuggestion()` auto-pins the
-  threshold to the current case's reading, so exact predicate equality
-  would only fire on the lucky coincidence that the historical rule
-  happens to have been written against the same number. The historical
-  signal we want to capture is "the KB has used `eGFR ≥ <something>`
-  for this conclusion before"; the precise cutoff is editable and
-  incidental. Family-wise matching is implemented in
-  `historicalMatcherFor` in
-  `server/src/main/kotlin/io/rippledown/suggestions/scorer/HistoricalRuleScorer.kt`,
-  and crucially does NOT cross:
-    - comparison directions (`≥` ↔ `≤`),
-    - attributes,
-    - signatures (`Current` vs `All` vs `No`),
-    - predicate families (a historical `is high` does not promote an
-      editable `≥` candidate, and vice versa).
+  thus only match historical conditions with the *same cutoff*. The
+  editable's case-pinned threshold (e.g. `eGFR ≥ 74` on a case reading
+  74) will not score against a historical `eGFR ≥ 70` — instead, the
+      literal `eGFR ≥ 70` is injected as its own candidate by
+      `ConditionSuggester` (see "Historical-condition injection" above) and
+      scores 1 against itself via `sameAs`. This gives the clinically
+      meaningful threshold a deterministic top-of-list position without the
+      family-wise relaxation the earlier design used.
 - `Rule.conditions` are the rule's *own* conditions, not the path. That
   matches "conditions historically used with this comment". Including
   `conditionTextsFromRoot()` is Phase 3 territory.
@@ -507,16 +532,16 @@ no dead code.
     - Conclusion match by id, not by reference identity (KBs reload).
     - Action types: Add uses `toBeAdded`; Replace uses `replacement`;
       Remove uses `toBeRemoved`.
-  - Editable `≥` / `≤` candidates match historical conditions
-    family-wise: same direction with a different cutoff scores; same
-    attribute with the *opposite* direction does not, nor does a
-    different attribute, a different signature, or a symbolic range
-    predicate (`is high`). Cumulative across multiple historical
-    rules with varying cutoffs. Each historical rule still counts
-    once even if several of its conditions match the family.
-  - Non-editable candidates remain on strict `sameAs` matching
-    (regression guard against the editable branch loosening
-    everybody's matching).
+  - Editable `≥` / `≤` candidates only match historical conditions
+    via exact `sameAs` (i.e. same cutoff). Different cutoff, different
+    direction, different attribute, different signature and symbolic
+    predicates (`is high`) all score 0. The clinical-cutoff signal is
+    delivered by injecting historical literals as candidates in
+    `ConditionSuggester`, not by relaxing the scorer's matcher.
+  - `ConditionSuggester` injects historical conditions whose rules
+    target the action's conclusion and that hold on the session case;
+    they are deduped against existing candidates by `sameAs`, dropped
+    when subsumed.
 - `CommentTokenOverlapScorerTest`
     - "TSH is high" → `EpisodicCondition(TSH, High, Current)` scores 2;
       same attr with `Low` scores 1.
