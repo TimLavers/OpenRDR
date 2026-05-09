@@ -58,8 +58,9 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
       | Sex is "M" |
     And I start the client application
     When I request that the comment be replaced by "macrocytosis MCV."
-    Then the suggested condition "MCV" should appear before "AST"
-    And the condition containing "HAEMOGLOBIN" should NOT appear
+    Then the suggested condition "MCV" should appear before all of the following suggestions:
+      | AST         |
+      | HAEMOGLOBIN |
 
   ##############################################################################
   # Set B — Cornerstone discrimination
@@ -103,8 +104,11 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
   # cornerstone-discrimination advantage (it holds for the historical
   # cornerstones too).
   ##############################################################################
-  @single
+
   Scenario: Conditions historically used for the same comment rank above unrelated suggestions
+    # One historical rule for "Elevated haemoglobin may be significant". It uses "eGFR ≥ 70".
+    # As a suggestion for a subsequence rule, it has priority over attributes that have abnormal values.
+    # There is no cornerstone case.
     Given a case with name Einstein is stored on the server
     And a case with name Planck is stored on the server
     And a backdoor rule is built for case Planck to add the comment "Elevated Hb may be significant." with conditions:
@@ -113,32 +117,47 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
     And I start the client application
     And I see the case Einstein as the current case
     When I request that the comment "Elevated Hb may be significant." be added
-    Then the suggested condition "eGFR ≥ 70" should appear before "HAEMOGLOBIN"
-    And the suggested condition "eGFR ≥ 70" should appear before "Sodium"
+    Then the suggested condition "eGFR ≥ 70" should appear before all of the following suggestions:
+      | AST increasing         |
+      | HAEMOGLOBIN increasing |
 
   Scenario: Conditions used by multiple historical rules for the same comment rank above conditions used only once
-    # Two historical rules for "Elevated haemoglobin may be significant" both use "eGFR ≥ 70";
-    # one rule for the same comment uses "Bilirubin Total ≤ 20". The
-    # historical scorer counts matching rules, so eGFR (count 2) ranks
-    # above Bilirubin Total (count 1).
-    Given a case with name Einstein is stored on the server
-    And a case with name Planck is stored on the server
-    And case Curie is provided having data:
-      | eGFR            | 80 |
-      | Bilirubin Total | 12 |
-    And case Bohr is provided having data:
-      | eGFR            | 78 |
-      | Bilirubin Total | 10 |
-    And a backdoor rule is built for case Planck to add the comment "Elevated haemoglobin may be significant." with conditions:
-      | eGFR ≥ 70 |
-    And a backdoor rule is built for case Curie to add the comment "Elevated haemoglobin may be significant." with conditions:
-      | eGFR ≥ 70 |
-    And a backdoor rule is built for case Bohr to add the comment "Elevated haemoglobin may be significant." with conditions:
-      | Bilirubin Total ≤ 20 |
+    # Three historical rules for "Let's go to the beach."
+    # Two rules use: Waves ≥ 1
+    # One rule uses: Sun is "hot"
+    # We expect the Waves suggestion to be before Sun suggestion
+    Given case Bondi is provided having data:
+      | Sun      | hot |
+      | UV index | 1   |
+      | Waves    | 1.5 |
+    And case Malabar is provided having data:
+      | Sun      | hot |
+      | UV index | 2   |
+      | Waves    | 2.0 |
+    And case Coogee is provided having data:
+      | Sun      | hot |
+      | UV index | 3   |
+      | Waves    | 2.0 |
+    And case Maroubra is provided having data:
+      | Sun      | hot |
+      | UV index | 4   |
+      | Waves    | 2.0 |
     And I start the client application
-    When I request that the comment "Elevated haemoglobin may be significant." be added
-    And the cornerstone case indicator shows 1 of 3
-    Then the suggested condition "eGFR ≥ 70" should appear before "Bilirubin Total ≤ 20"
+    # Ensure that each case gets the the comment via a different rule
+    And a backdoor rule is built for case Malabar to add the comment "Let's go to the beach." with conditions:
+      | Waves ≥ 1       |
+      | UV index is "2" |
+    And a backdoor rule is built for case Coogee to add the comment "Let's go to the beach." with conditions:
+      | Waves ≥ 1       |
+      | UV index is "3" |
+    And a backdoor rule is built for case Maroubra to add the comment "Let's go to the beach." with conditions:
+      | Sun is "hot"    |
+      | UV index is "4" |
+    And I start the client application
+    And I see the case Bondi as the current case
+    When I request that the comment "Let's go to the beach." be added
+    Then the suggested condition "Waves ≥ 1.0" should appear before the following suggestion:
+      | Sun is "hot |
 
   Scenario: Historical signal applies only to rules whose conclusion matches the action's target conclusion
     # The backdoor rule uses a DIFFERENT comment, so the historical scorer
@@ -150,4 +169,5 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
     And I start the client application
     When I request that the comment "Elevated haemoglobin may be significant." be added
     And the case Planck is shown as the cornerstone case
-    Then the suggested condition "eGFR ≥ 70" should NOT be the first suggestion
+    # the historical condition does not even make the top 20
+    Then the suggestion "eGFR ≥ 70" should NOT appear

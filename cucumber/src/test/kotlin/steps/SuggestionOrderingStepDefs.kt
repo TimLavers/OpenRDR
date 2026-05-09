@@ -1,6 +1,7 @@
 package steps
 
 import io.cucumber.java.en.Then
+import io.kotest.matchers.collections.shouldNotContain
 import io.rippledown.chat.ChatTestHook
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
@@ -90,7 +91,7 @@ class SuggestionOrderingStepDefs {
         if (count > max) throw AssertionError("Expected at most $max suggestions, got $count")
     }
 
-    @Then("the suggested condition {string} should appear before all of the following suggestions:")
+    @Then("the suggested condition {string} should appear before (all of )the following suggestion(s):")
     fun suggestedConditionShouldAppearBeforeAll(earlier: String, table: io.cucumber.datatable.DataTable) {
         awaitSuggestedConditionAppearsBeforeAll(earlier, table.asList())
     }
@@ -132,7 +133,7 @@ class SuggestionOrderingStepDefs {
     }
 
     @Then("the condition containing {string} should NOT appear")
-    fun suggestedConditionShouldNotAppear(text: String) {
+    fun suggestedConditionContainingShouldNotAppear(text: String) {
         await().atMost(ofSeconds(20)).until { currentSuggestions().isNotEmpty() }
         val list = currentSuggestions()
         val contains = list.firstOrNull {
@@ -144,6 +145,12 @@ class SuggestionOrderingStepDefs {
                         "Full list:\n $list"
             )
         }
+    }
+
+    @Then("the suggestion {string} should NOT appear")
+    fun suggestedConditionShouldNotAppear(text: String) {
+        await().atMost(ofSeconds(20)).until { currentSuggestions().isNotEmpty() }
+        currentSuggestions() shouldNotContain text
     }
 
     private fun currentSuggestions(): List<String> = chatPO().suggestionsInMostRecentMessage()
