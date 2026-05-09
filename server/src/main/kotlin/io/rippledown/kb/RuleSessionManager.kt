@@ -48,6 +48,7 @@ class RuleSessionManager(
         action: RuleTreeChange
     ): CornerstoneStatus {
         logger.info("Starting rule session for case ${case.name} and action $action")
+        logger.info("Current conclusions are: ${case.interpretation.conclusionTexts()} ")
         check(ruleSession == null) { "Session already in progress." }
         check(action.isApplicable(kb.ruleTree, case)) { "Action $action is not applicable to case ${case.name}" }
         val alignedAction = action.alignWith(kb.conclusionManager)
