@@ -65,9 +65,13 @@ class TestClientLauncher {
     }
 
     fun stopClient() {
+        // Dispatch WINDOW_CLOSING so onCloseRequest runs (api.shutdown + exitApplication),
+        // letting Compose's application{} block tear the Window down on its own.
+        // Calling composeWindow.dispose() here races with Compose's pending UpdateEffects
+        // (e.g. setComponentOrientation), producing
+        // "IllegalArgumentException: ComposeContainer is disposed" on the EDT.
         SwingUtilities.invokeAndWait {
             composeWindow.dispatchEvent(WindowEvent(composeWindow, WINDOW_CLOSING))
-            composeWindow.dispose()
         }
         thread.join()
     }
