@@ -95,8 +95,12 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
         descriptionPrefix: String,
         contextToPO: (AccessibleContext) -> CellPO
     ): List<String> = execute<List<String>> {
-        contextProvider()
-            .find(CASE_VIEW_TABLE)!!//narrow down the context to the table
+        //The table may not yet be rendered when this runs inside an awaitility
+        //retry (e.g. right after switching to a newly-created KB in the Zoo
+        //sample scenario). Returning an empty list lets the caller re-poll
+        //instead of throwing an NPE that would escape the retry harness.
+        val table = contextProvider().find(CASE_VIEW_TABLE) ?: return@execute emptyList()
+        table
             .findAllByDescriptionPrefix(descriptionPrefix)
             .map { contextToPO(it) }
             .sorted()
