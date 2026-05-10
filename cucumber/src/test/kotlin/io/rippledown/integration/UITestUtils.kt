@@ -16,7 +16,11 @@ fun pause(millis: Long) {
 }
 
 fun waitUntilAsserted(seconds: Long = 60, assertion: ThrowingRunnable) {
-    await().atMost(ofSeconds(seconds)).untilAsserted(assertion)
+    // ignoreExceptions() so that transient errors thrown while the Compose
+    // accessibility tree catches up (e.g. NPEs from `find(...)!!` page-object
+    // lookups) are treated as poll failures rather than fatally aborting the
+    // wait — matching how AssertionError is already retried by untilAsserted.
+    await().atMost(ofSeconds(seconds)).ignoreExceptions().untilAsserted(assertion)
 }
 
 fun memUsage(): String {
