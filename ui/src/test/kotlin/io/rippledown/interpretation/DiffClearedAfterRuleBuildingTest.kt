@@ -191,11 +191,11 @@ class DiffClearedAfterRuleBuildingTest {
             waitForIdle()
 
             // Move pointer to comment (different position from where it was)
-            movePointerOverComment(bondiComment, textLayoutResult!!)
+            movePointerOverComment(bondiComment, textLayoutResult)
 
             // Should have normal hover highlight, not diff colours
             waitUntilAsserted {
-                requireCommentToBeHighlighted(bondiComment, textLayoutResult!!)
+                requireCommentToBeHighlighted(bondiComment, textLayoutResult)
             }
         }
     }
@@ -230,7 +230,7 @@ class DiffClearedAfterRuleBuildingTest {
             requireConditionsToBeShowing(ruleConditions)
 
             // Move pointer away
-            movePointerBelowTheText(textLayoutResult!!)
+            movePointerBelowTheText(textLayoutResult)
             waitForIdle()
 
             // Clear the diff (simulates rule completion)
@@ -238,7 +238,7 @@ class DiffClearedAfterRuleBuildingTest {
             waitForIdle()
 
             // Hover over the regular comment - should NOT show rule conditions
-            movePointerOverComment(bondiComment, textLayoutResult!!)
+            movePointerOverComment(bondiComment, textLayoutResult)
             waitForIdle()
             requireNoConditionsToBeShowing()
         }
@@ -280,7 +280,7 @@ class DiffClearedAfterRuleBuildingTest {
             waitForIdle()
 
             // Move pointer to trigger handler with updated diff
-            movePointerOverComment(bondiComment, textLayoutResult!!)
+            movePointerOverComment(bondiComment, textLayoutResult)
             requireConditionsToBeShowing(bondiConditions)
         }
     }
@@ -326,7 +326,7 @@ class DiffClearedAfterRuleBuildingTest {
                 requireInterpretationForCornerstone("$bondiComment $addedComment")
 
                 // The added comment should not have diff styling - it's now a real comment
-                val annotatedText = textLayoutResult!!.layoutInput.text
+                val annotatedText = textLayoutResult.layoutInput.text
                 val diffSpans = annotatedText.spanStyles.filter {
                     it.item.background == DIFF_ADDITION_COLOR || it.item.background == DIFF_REMOVAL_COLOR
                 }

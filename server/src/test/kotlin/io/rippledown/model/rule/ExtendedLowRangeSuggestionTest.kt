@@ -2,10 +2,14 @@ package io.rippledown.model.rule
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.rippledown.model.condition.*
 import io.rippledown.model.condition.edit.EditableExtendedLowRangeCondition
 import io.rippledown.model.condition.episodic.signature.All
 import io.rippledown.model.condition.episodic.signature.Current
+import io.rippledown.model.condition.rr
+import io.rippledown.model.condition.slightlyLow
+import io.rippledown.model.condition.tr
+import io.rippledown.suggestions.ExtendedLowNormalRangeSuggestion
+import io.rippledown.suggestions.ExtendedLowRangeSuggestion
 import kotlin.test.Test
 
 class ExtendedLowRangeSuggestionTest: ConditionFactoryTestBase() {

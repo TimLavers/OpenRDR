@@ -6,9 +6,10 @@ import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
-import io.rippledown.model.rule.ConditionSuggester
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.persistence.inmemory.InMemoryKB
+import io.rippledown.suggestions.ConditionSuggester
+import io.rippledown.suggestions.SuggestionContext
 import io.rippledown.utils.defaultDate
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -154,9 +155,9 @@ class KBExemptCornerstoneTest {
         // Sanity check: initially there are 2 cornerstones
         rsm.cornerstoneStatus().numberOfCornerstones shouldBe 2
 
-        // Add a condition that filters out all cornerstones (Glucose is "0.667" only for Session)
-        val conditionSuggester = ConditionSuggester(kb.attributeManager.all(), sessionCase)
-        val isCondition = conditionSuggester.suggestions().first { it.asText() == "Glucose is \"0.667\"" }
+        // Add a condition that filters out all cornerstones (Glucose ≤ 0.667 only for Session)
+        val conditionSuggester = ConditionSuggester(SuggestionContext(sessionCase, kb.attributeManager.all()))
+        val isCondition = conditionSuggester.suggestions().first { it.asText() == "Glucose ≤ 0.667" }
         rsm.addConditionToCurrentRuleSession(isCondition.initialSuggestion())
 
         // Now all cornerstones are filtered out
@@ -254,8 +255,8 @@ class KBExemptCornerstoneTest {
         rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
 
         // Add a condition that filters out all cornerstones
-        val conditionSuggester = ConditionSuggester(kb.attributeManager.all(), sessionCase)
-        val isCondition = conditionSuggester.suggestions().first { it.asText() == "Glucose is \"0.667\"" }
+        val conditionSuggester = ConditionSuggester(SuggestionContext(sessionCase, kb.attributeManager.all()))
+        val isCondition = conditionSuggester.suggestions().first { it.asText() == "Glucose ≤ 0.667" }
         rsm.addConditionToCurrentRuleSession(isCondition.initialSuggestion())
         rsm.cornerstoneStatus().numberOfCornerstones shouldBe 0
 
@@ -280,8 +281,8 @@ class KBExemptCornerstoneTest {
         rsm.cornerstoneStatus().numberOfCornerstones shouldBe 2
 
         // Add a condition that filters out Case2 but keeps Case1
-        val conditionSuggester = ConditionSuggester(kb.attributeManager.all(), sessionCase)
-        val isCondition = conditionSuggester.suggestions().first { it.asText() == "Glucose is \"0.667\"" }
+        val conditionSuggester = ConditionSuggester(SuggestionContext(sessionCase, kb.attributeManager.all()))
+        val isCondition = conditionSuggester.suggestions().first { it.asText() == "Glucose ≤ 0.667" }
         rsm.addConditionToCurrentRuleSession(isCondition.initialSuggestion())
 
         // Now only Case1 remains

@@ -295,19 +295,21 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
         }
     }
 
+    /**
+     * Suggestions in the most recent suggestion list, in display order.
+     *
+     * Sourced from `ChatTestHook.snapshot().mostRecentSuggestionText` (a
+     * numbered, newline-separated string like "1. alpha\n2. beta") rather
+     * than the accessibility tree, because Compose's lazy list rendering
+     * does not consistently emit accessibility nodes for off-screen items.
+     */
     fun suggestionsInMostRecentMessage(): List<String> {
-        return execute<List<String>> {
-            val root = chatRoot() ?: return@execute emptyList()
-            val suggestionNodes = root.findAll({ ctx ->
-                ctx.accessibleDescription?.startsWith(SUGGESTION_LIST) ?: false
-            })
-            if (suggestionNodes.isEmpty()) return@execute emptyList()
-            val lastSuggestionNode = suggestionNodes.last()
-            lastSuggestionNode.findAll({ ctx ->
-                ctx.accessibleDescription?.startsWith(SUGGESTION_ITEM) ?: false
-            }).mapNotNull { ctx ->
-                ctx.accessibleDescription?.removePrefix(SUGGESTION_ITEM)
-            }
+        val text = ChatTestHook.snapshot().mostRecentSuggestionText ?: return emptyList()
+        if (text.isEmpty()) return emptyList()
+        return text.lines().map { line ->
+            // Each line is "<n>. <suggestion text>"; strip the numbering prefix.
+            val dot = line.indexOf(". ")
+            if (dot >= 0) line.substring(dot + 2) else line
         }
     }
 

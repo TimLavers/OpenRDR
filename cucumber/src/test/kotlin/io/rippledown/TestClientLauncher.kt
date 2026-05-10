@@ -20,6 +20,35 @@ import javax.swing.SwingUtilities
 
 val clientCIO = CIO.create()
 
+/**
+ * Compose Desktop's `Window` schedules `UpdateEffect` continuations on the EDT
+ * that can run AFTER the `ComposeContainer` has been disposed during teardown
+ * (e.g. `setComponentOrientation` reacting to a snapshot read). The result is a
+ * harmless `IllegalArgumentException("ComposeContainer is disposed")` logged on
+ * the EDT after a scenario finishes. There is no public API to drain these
+ * pending effects, so we install a default uncaught-exception handler that
+ * swallows this one specific exception and delegates everything else.
+ *
+ * Idempotent: only installs the filter once per JVM.
+ */
+@Volatile
+private var composeDisposalFilterInstalled = false
+
+private fun installComposeDisposalExceptionFilter() {
+    if (composeDisposalFilterInstalled) return
+    composeDisposalFilterInstalled = true
+    val previous = Thread.getDefaultUncaughtExceptionHandler()
+    Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+        if (throwable is IllegalArgumentException &&
+            throwable.message == "ComposeContainer is disposed"
+        ) {
+            // Known-harmless Compose teardown race; ignore.
+            return@setDefaultUncaughtExceptionHandler
+        }
+        previous?.uncaughtException(thread, throwable) ?: throwable.printStackTrace()
+    }
+}
+
 class TestClientLauncher {
 
     private lateinit var composeWindow: ComposeWindow
@@ -27,6 +56,7 @@ class TestClientLauncher {
 
     fun launchClient(): ComposeWindow {
         val api = Api(clientCIO)
+        installComposeDisposalExceptionFilter()
         thread = Thread {
             application(exitProcessOnExit = false) {
                 var windowSize by remember { mutableStateOf(DEFAULT_WINDOW_SIZE) }
@@ -65,9 +95,13 @@ class TestClientLauncher {
     }
 
     fun stopClient() {
+        // Dispatch WINDOW_CLOSING so onCloseRequest runs (api.shutdown + exitApplication),
+        // letting Compose's application{} block tear the Window down on its own.
+        // Calling composeWindow.dispose() here races with Compose's pending UpdateEffects
+        // (e.g. setComponentOrientation), producing
+        // "IllegalArgumentException: ComposeContainer is disposed" on the EDT.
         SwingUtilities.invokeAndWait {
             composeWindow.dispatchEvent(WindowEvent(composeWindow, WINDOW_CLOSING))
-            composeWindow.dispose()
         }
         thread.join()
     }

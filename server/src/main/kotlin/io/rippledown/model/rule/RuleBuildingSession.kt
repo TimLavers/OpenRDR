@@ -10,7 +10,7 @@ class RuleBuildingSession(
     private val ruleFactory: RuleFactory,
     private val tree: RuleTree,
     val case: RDRCase,
-    private val action: RuleTreeChange,
+    val action: RuleTreeChange,
     cornerstones: List<RDRCase>
 ) {
     var conditions = mutableSetOf<Condition>()

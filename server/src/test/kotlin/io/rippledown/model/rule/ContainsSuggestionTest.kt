@@ -8,6 +8,7 @@ import io.rippledown.model.condition.episodic.predicate.Contains
 import io.rippledown.model.condition.episodic.signature.AtMost
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.condition.tr
+import io.rippledown.suggestions.ContainsSuggestion
 import kotlin.test.Test
 
 class ContainsSuggestionTest: ConditionFactoryTestBase() {

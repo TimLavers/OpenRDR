@@ -24,4 +24,8 @@ data class EditableDoesNotContainCondition(val attribute: Attribute,
     override fun condition(value: String): Condition {
         return EpisodicCondition(attribute = attribute, predicate = DoesNotContain(value), signature = signature)
     }
+
+    // The initial `""` is a placeholder the user must edit; the
+    // case-holds check is not meaningful here.
+    override fun initialValueRepresentsHoldingCondition() = false
 }

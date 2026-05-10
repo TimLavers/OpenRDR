@@ -5,6 +5,7 @@ import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.kotest.matchers.shouldBe
+import io.rippledown.integration.waitUntilAsserted
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
 
@@ -22,7 +23,11 @@ class EditKbStepDefs {
     fun the_KBDescriptionIsNow(description: DocString) {
         val expectedText = description.content ?: ""
         val descriptionOperator = editCurrentKbControlPO().showDescriptionOperator()
-        descriptionOperator.description() shouldBe expectedText
+        // Poll: the dialog's text-field accessibility node can lag a frame or
+        // two behind waitForComposeDialogToShow(), so a single read can NPE.
+        waitUntilAsserted {
+            descriptionOperator.description() shouldBe expectedText
+        }
         descriptionOperator.cancel()
     }
 

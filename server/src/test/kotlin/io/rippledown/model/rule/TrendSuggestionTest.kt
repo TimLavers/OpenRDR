@@ -6,6 +6,7 @@ import io.rippledown.model.condition.increasing
 import io.rippledown.model.condition.series.Decreasing
 import io.rippledown.model.condition.series.Increasing
 import io.rippledown.model.condition.tr
+import io.rippledown.suggestions.TrendSuggestion
 import kotlin.test.Test
 
 class TrendSuggestionTest: ConditionFactoryTestBase() {

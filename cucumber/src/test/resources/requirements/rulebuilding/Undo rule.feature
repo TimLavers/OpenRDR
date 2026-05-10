@@ -24,6 +24,7 @@ Feature: The user can undo rules via the chatbot
       | Sun  | hot       |
     And I start the client application
     And I see the case Bondi as the current case
+    And the chatbot has asked if I would like to add a comment
     When I ask the chatbot to undo the last rule
     Then the chatbot says there are no rules to undo
 
