@@ -30,11 +30,9 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
   # varies, so ranking changes ONLY when the comment changes.
   ##############################################################################
 
-  @single
   Scenario: When adding a comment, suggestions whose attribute or direction match the comment text rank above unrelated suggestions
     Given a case with name Einstein is stored on the server
     And I start the client application
-    And pause
     When I request that the comment "Elevated haemoglobin may be significant." be added
     Then the suggested condition "HAEMOGLOBIN" should appear before "AST"
     And the suggested condition "HAEMOGLOBIN" should appear before "Anion gap"
