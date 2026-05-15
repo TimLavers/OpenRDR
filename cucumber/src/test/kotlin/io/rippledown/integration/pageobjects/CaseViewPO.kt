@@ -4,12 +4,10 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.caseview.attributeCellContentDescriptionPrefix
 import io.rippledown.caseview.referenceRangeCellContentDescription
 import io.rippledown.caseview.valueCellContentDescriptionPrefix
-import io.rippledown.constants.caseview.CASEVIEW_CASE_NAME_ID
-import io.rippledown.constants.caseview.CASE_VIEW_TABLE
-import io.rippledown.constants.caseview.DATE_CELL_DESCRIPTION_PREFIX
-
+import io.rippledown.constants.caseview.*
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
+import io.rippledown.integration.utils.findAndClick
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
 import java.awt.Point
@@ -129,6 +127,29 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
     fun referenceRange(attribute: String): String = contextProvider()
         .find(referenceRangeCellContentDescription(attribute), LABEL)!!
         .accessibleName
+
+    /**
+     * Replaces the case-view filter field's contents with [text]. The same
+     * filter governs the current case and any cornerstone case displayed
+     * alongside it; see [io.rippledown.casecontrol.CaseViewFilterField].
+     */
+    fun enterFilter(text: String) {
+        await().atMost(ofSeconds(5)).until {
+            contextProvider().find(CASE_VIEW_FILTER_FIELD_DESCRIPTION) != null
+        }
+        val field = contextProvider().find(CASE_VIEW_FILTER_FIELD_DESCRIPTION)!!
+        execute {
+            field.accessibleEditableText.setTextContents(text)
+        }
+    }
+
+    /**
+     * Clicks the filter's clear (×) button. The button is rendered only when
+     * the filter has a value, so this assumes a non-empty filter is active.
+     */
+    fun clearFilter() {
+        contextProvider().findAndClick(CASE_VIEW_FILTER_CLEAR_DESCRIPTION)
+    }
 }
 
 open class CellPO(val context: AccessibleContext, descriptionPrefix: String) : Comparable<CellPO> {

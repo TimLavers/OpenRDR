@@ -2,6 +2,7 @@ package steps
 
 import io.cucumber.datatable.DataTable
 import io.cucumber.java.en.Then
+import io.cucumber.java.en.When
 import io.kotest.matchers.shouldBe
 import org.awaitility.Awaitility.await
 import org.awaitility.Awaitility.waitAtMost
@@ -59,6 +60,16 @@ class CaseViewStepDefs {
             val referenceRangeShown = caseViewPO.referenceRange(attribute)
             expectedReferenceRange shouldBe referenceRangeShown
         }
+    }
+
+    @When("I enter the filter text {string}")
+    fun enterFilterText(text: String) {
+        caseViewPO().enterFilter(text)
+    }
+
+    @When("I clear the case-view filter")
+    fun clearCaseViewFilter() {
+        caseViewPO().clearFilter()
     }
 
     @Then("the case should show the attributes in order:")

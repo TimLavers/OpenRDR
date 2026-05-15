@@ -1,9 +1,10 @@
 package io.rippledown.casecontrol
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -25,35 +26,46 @@ fun CaseControl(
     handler: CaseControlHandler,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier
-            .padding(8.dp)
-    )
-    {
-        if (currentCase != null) {
-            CaseInspection(
-                currentCase,
-                cornerstoneStatus?.diff,
-                cornerstoneStatus?.ruleConditions ?: emptyList(),
-                handler,
-                modifier = Modifier.weight(1f)
-            )
-        }
-        val cornerstoneToReview = cornerstoneStatus?.cornerstoneToReview
-        if (cornerstoneToReview != null) {
-            CornerstoneInspection(
-                cornerstoneToReview,
-                index = cornerstoneStatus.indexOfCornerstoneToReview,
-                total = cornerstoneStatus.numberOfCornerstones
-            )
-        } else if (cornerstoneStatus != null) {
-            Text(
-                text = NO_CORNERSTONES_TO_REVIEW_MSG,
-                style = ItalicGrey,
-                modifier = Modifier.semantics {
-                    contentDescription = NO_CORNERSTONES_TO_REVIEW_ID
-                }
-            )
+    // The case-view filter is owned here so that a single string applies
+    // uniformly to the current case AND the cornerstone case shown beside
+    // it, and survives across case-selection and cornerstone changes (the
+    // call site of CaseControl in OpenRDRUI is stable, so `remember` is
+    // retained when `currentCase` or `cornerstoneStatus` parameters change).
+    var filter by remember { mutableStateOf("") }
+    Column(modifier = modifier.padding(8.dp)) {
+        CaseViewFilterField(
+            value = filter,
+            onValueChange = { filter = it },
+            onClear = { filter = "" }
+        )
+        Row {
+            if (currentCase != null) {
+                CaseInspection(
+                    currentCase,
+                    cornerstoneStatus?.diff,
+                    cornerstoneStatus?.ruleConditions ?: emptyList(),
+                    handler,
+                    modifier = Modifier.weight(1f),
+                    filter = filter
+                )
+            }
+            val cornerstoneToReview = cornerstoneStatus?.cornerstoneToReview
+            if (cornerstoneToReview != null) {
+                CornerstoneInspection(
+                    cornerstoneToReview,
+                    index = cornerstoneStatus.indexOfCornerstoneToReview,
+                    total = cornerstoneStatus.numberOfCornerstones,
+                    filter = filter
+                )
+            } else if (cornerstoneStatus != null) {
+                Text(
+                    text = NO_CORNERSTONES_TO_REVIEW_MSG,
+                    style = ItalicGrey,
+                    modifier = Modifier.semantics {
+                        contentDescription = NO_CORNERSTONES_TO_REVIEW_ID
+                    }
+                )
+            }
         }
     }
 }

@@ -259,7 +259,7 @@ private fun ImportKbDialog(onDismiss: () -> Unit, onImport: (File) -> Unit) {
                 val file = File(input); return file.isFile && file.exists()
             }
 
-            override fun labelText() = IMPORT_KB_TEXT
+            override fun labelText() = IMPORT_KB_NAME_FIELD_DESCRIPTION
             override fun inputFieldDescription() = IMPORT_KB_NAME_FIELD_DESCRIPTION
             override fun confirmButtonText() = IMPORT
             override fun confirmButtonDescription() = IMPORT_KB_OK_BUTTON_DESCRIPTION
@@ -278,7 +278,7 @@ private fun ExportKbDialog(onDismiss: () -> Unit, onExport: (File) -> Unit) {
                 val file = File(input); return file.isFile && !file.exists()
             }
 
-            override fun labelText() = EXPORT_KB_TEXT
+            override fun labelText() = EXPORT_KB_NAME_FIELD_DESCRIPTION
             override fun inputFieldDescription() = EXPORT_KB_NAME_FIELD_DESCRIPTION
             override fun confirmButtonText() = EXPORT
             override fun confirmButtonDescription() = EXPORT_KB_OK_BUTTON_DESCRIPTION

@@ -32,10 +32,20 @@ fun CaseTableBody(
     modifier: Modifier = Modifier.fillMaxWidth(),
     hScrollState: androidx.compose.foundation.ScrollState =
         androidx.compose.foundation.rememberScrollState(),
+    filter: String = "",
     attributeMoveListener: (Attribute, Attribute) -> Unit = { _, _ -> },
 ) {
     val attributes = remember(viewableCase) {
         mutableStateListOf<Attribute>().apply { addAll(viewableCase.attributes()) }
+    }
+    // Filter the displayed attribute list without touching the underlying
+    // drag-drop source-of-truth list above. Filtering is purely a view
+    // operation; reordering must always apply to the full attribute set.
+    val filterActive = filter.isNotBlank()
+    val displayed = if (filterActive) {
+        attributes.filter { matchesFilter(viewableCase, it, filter) }
+    } else {
+        attributes.toList()
     }
     var draggedAttribute: Attribute? = null
     var targetAttribute: Attribute? = null
@@ -70,37 +80,46 @@ fun CaseTableBody(
     }
     dragDropState.ensureCapacity(attributes.size)
 
+    // Drag-and-drop is suppressed while a filter is active: reordering a
+    // filtered subset is ambiguous (the unseen rows still have positions),
+    // so we render plain non-draggable rows and skip pointer wiring entirely.
+    val dragModifier = if (filterActive) Modifier else Modifier
+        .pointerInput(Unit) {
+            // See credits.md
+            detectVerticalDragGestures(
+                onDragStart = { offset -> dragDropState.onDragStart(offset) },
+                onVerticalDrag = { change, dragAmount ->
+                    change.consume()
+                    dragDropState.onDrag(dragAmount)
+                },
+                onDragCancel = { dragDropState.onDragInterrupted() },
+                onDragEnd = { dragDropState.onDragInterrupted() }
+            )
+        }
     Column(
         modifier = modifier
             .padding(5.dp)
             .semantics { contentDescription = CASE_VIEW_TABLE }
-            .pointerInput(Unit) {
-                // See credits.md
-                detectVerticalDragGestures(
-                    onDragStart = { offset -> dragDropState.onDragStart(offset) },
-                    onVerticalDrag = { change, dragAmount ->
-                        change.consume()
-                        dragDropState.onDrag(dragAmount)
-                    },
-                    onDragCancel = { dragDropState.onDragInterrupted() },
-                    onDragEnd = { dragDropState.onDragInterrupted() }
-                )
-            }
+            .then(dragModifier)
     ) {
-        attributes.forEachIndexed { index, attribute ->
+        displayed.forEachIndexed { renderIndex, attribute ->
             val resultsList = viewableCase.case.resultsFor(attribute)!!
-            val displacementOffset = dragDropState.elementDisplacementFor(index)
+            // Drag-drop bookkeeping is keyed on the full attribute list's
+            // index; when filtered we don't register any row bounds so drag
+            // becomes a no-op even if pointer events arrive.
+            val fullIndex = attributes.indexOf(attribute)
+            val displacementOffset = if (filterActive) 0f else dragDropState.elementDisplacementFor(fullIndex)
             BodyRow(
-                index = index,
+                index = renderIndex,
                 caseName = viewableCase.name,
                 attribute = attribute,
                 columnWidths = columnWidths,
                 results = resultsList,
                 displacementOffset = displacementOffset,
                 hScrollState = hScrollState,
-                modifier = Modifier.onGloballyPositioned { coords ->
+                modifier = if (filterActive) Modifier else Modifier.onGloballyPositioned { coords ->
                     dragDropState.reportRowBounds(
-                        index = index,
+                        index = fullIndex,
                         top = coords.positionInParent().y,
                         height = coords.size.height.toFloat()
                     )

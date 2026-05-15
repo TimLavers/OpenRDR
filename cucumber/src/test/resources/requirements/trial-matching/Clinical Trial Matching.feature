@@ -6,7 +6,7 @@ Feature: A sample KB can be created for Clinical Trial Matching.
     And I send a case to "OncoTreeMatch" for each row in the trial-conditions file
     And the backdoor selects the Knowledge Base "OncoTreeMatch"
     And the count of the number of cases is 1508
-    When backdoor rules are built as follows:
+    And pause    When backdoor rules are built as follows:
       | Case | Add          | Remove | Conditions                                     |
       | 1    | CERVIX       |        | canonical contains "cervical cancer"           |
       | 2    | BRAIN        |        | canonical contains "cns"                       |
