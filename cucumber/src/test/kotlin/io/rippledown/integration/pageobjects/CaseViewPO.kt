@@ -124,9 +124,12 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
         dragVertically(cellPosition(draggedAttribute), Point(targetPos.x, targetPos.y + rowSpacing / 2))
     }
 
+    // Returns "" rather than throwing NPE if the cell is not yet present. This
+    // method is typically called inside an awaitility `untilAsserted` retry,
+    // which only catches AssertionError — not NPE
     fun referenceRange(attribute: String): String = contextProvider()
-        .find(referenceRangeCellContentDescription(attribute), LABEL)!!
-        .accessibleName
+        .find(referenceRangeCellContentDescription(attribute), LABEL)
+        ?.accessibleName.orEmpty()
 
     /**
      * Replaces the case-view filter field's contents with [text]. The same
