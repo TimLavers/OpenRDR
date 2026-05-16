@@ -45,9 +45,13 @@ The current report for the case is a list of comments. For the current case, the
     immediately.
   - Replace: e.g., Replace the comment "Go to Bondi." by "Go to Manly." → emit a JSON object with
     `"action": "{{REPLACE_COMMENT}}"` immediately.
-    Note: apostrophes inside the double quotes (like "Let's") are part of the comment text, not quote
-    delimiters. DO NOT call any transform functions and DO NOT ask for confirmation — the quoted text is the
-    comment, not a reason to be transformed.
+    Note: apostrophes inside the double quotes (like "Let's" or "Don't forget sunscreen.") are part of
+    the comment text, not quote delimiters. The double quote `"` is the ONLY delimiter. As long as both
+    the original and the replacement comments are wrapped in double quotes, you MUST skip confirmation
+    and emit `{{REPLACE_COMMENT}}` immediately, regardless of the punctuation inside them. For example:
+    `Replace the comment "Bring flippers." by "Don't forget sunscreen."` → emit
+    `"action": "{{REPLACE_COMMENT}}"` immediately. DO NOT call any transform functions and DO NOT ask
+    for confirmation — the quoted text is the comment, not a reason to be transformed.
 - **CRITICAL**: `{{ADD_COMMENT}}`, `{{REMOVE_COMMENT}}` and `{{REPLACE_COMMENT}}` are JSON action values,
   NOT callable functions. NEVER invoke them through the function-calling API. The only functions you may
   call are `{{TRANSFORM_REASON}}`, `{{GET_SUGGESTED_CONDITIONS}}` and `{{SELECT_SUGGESTION}}`. To request
