@@ -51,5 +51,22 @@ suggested conditions to the user directly. You do NOT need to repeat the suggest
   directly.
 - Both {{SELECT_SUGGESTION}} and {{TRANSFORM_REASON}} return a reasonId that you must use if the user later asks to
   remove that condition.
-- After each condition is accepted, you may call {{GET_SUGGESTED_CONDITIONS}} again to refresh the list if the user
-  wants to add more conditions.
+
+## After a suggestion is accepted
+
+After {{SELECT_SUGGESTION}} returns successfully, your very next response MUST be a message that:
+
+1. confirms which condition was added (use the condition text the user selected), and
+2. asks the user whether they want to add any more reasons.
+
+Do NOT call {{GET_SUGGESTED_CONDITIONS}} again at this point — only call it later if the user replies that they would
+like to add another reason. This mirrors the free-text path described in "Transform reason".
+
+For example, if the user selected "TSH is normal", respond with:
+
+```json
+{
+  "action": "{{USER_ACTION}}",
+  "message": "Added the condition \"TSH is normal\". Do you want to provide any more reasons?"
+}
+```
