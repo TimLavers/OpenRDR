@@ -42,6 +42,15 @@ fun SuggestionListRow(
         "${i + 1}. $displayText"
     }.joinToString("\n")
 
+    // ~10 single-line rows fit within MAX_PANEL_HEIGHT; beyond that the panel
+    // becomes scrollable and capped. The scroll/cap machinery is applied
+    // ONLY when needed because `verticalScroll(...) + heightIn(max = ...) +
+    // VerticalScrollbar(fillMaxHeight)` keeps the panel at the full cap
+    // height even when the content is short — i.e. leaves blank space below
+    // a short list. Skipping the machinery for short lists lets the panel
+    // wrap to content cleanly.
+    val needsScroll = suggestions.size > ROWS_BEFORE_SCROLL
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -50,17 +59,14 @@ fun SuggestionListRow(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                // Each row is ~16.dp tall at 13.sp. 180.dp + the 8.dp top
-                // and bottom padding below fits ~10 rows before scrolling,
-                // up from ~5 at the previous 80.dp cap.
-                .heightIn(max = 180.dp)
+                .then(if (needsScroll) Modifier.heightIn(max = MAX_PANEL_HEIGHT) else Modifier)
                 .background(White, RoundedCornerShape(8.dp))
                 .semantics { contentDescription = "$SUGGESTION_LIST$index:$encodedSuggestions" }
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .verticalScroll(scrollState)
+                    .then(if (needsScroll) Modifier.verticalScroll(scrollState) else Modifier)
                     .padding(start = 16.dp, top = 8.dp, end = 8.dp, bottom = 8.dp)
             ) {
                 suggestions.forEachIndexed { i, suggestion ->
@@ -91,12 +97,17 @@ fun SuggestionListRow(
                     }
                 }
             }
-            VerticalScrollbar(
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .fillMaxHeight(),
-                adapter = rememberScrollbarAdapter(scrollState)
-            )
+            if (needsScroll) {
+                VerticalScrollbar(
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .fillMaxHeight(),
+                    adapter = rememberScrollbarAdapter(scrollState)
+                )
+            }
         }
     }
 }
+
+private const val ROWS_BEFORE_SCROLL = 10
+private val MAX_PANEL_HEIGHT = 180.dp
