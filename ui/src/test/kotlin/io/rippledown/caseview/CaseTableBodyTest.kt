@@ -158,6 +158,111 @@ class CaseTableBodyTest {
     }
 
     @Test
+    fun `filter restricts rows to attributes whose name matches the query`() = runTest {
+        // Given a case with several attributes
+        val columnWidths = ColumnWidths(viewableCase.numberOfColumns)
+
+        // When the body is rendered with a filter that matches one attribute name
+        composeTestRule.setContent {
+            CaseTableBody(viewableCase, columnWidths, filter = "abc")
+        }
+
+        // Then only the matching attribute row is visible
+        with(composeTestRule) {
+            waitUntilExactlyOneExists(hasText(abc.name))
+            onAllNodesWithText(ft4.name).assertCountEquals(0)
+            onAllNodesWithText(xyz.name).assertCountEquals(0)
+            onAllNodesWithText(tsh.name).assertCountEquals(0)
+            onAllNodesWithText(clinicalNotes.name).assertCountEquals(0)
+        }
+    }
+
+    @Test
+    fun `filter is case-insensitive`() = runTest {
+        val columnWidths = ColumnWidths(viewableCase.numberOfColumns)
+
+        composeTestRule.setContent {
+            CaseTableBody(viewableCase, columnWidths, filter = "TsH")
+        }
+
+        with(composeTestRule) {
+            waitUntilExactlyOneExists(hasText(tsh.name))
+            onAllNodesWithText(ft4.name).assertCountEquals(0)
+        }
+    }
+
+    @Test
+    fun `filter matches against a value text`() = runTest {
+        val columnWidths = ColumnWidths(viewableCase.numberOfColumns)
+
+        // FT4 is the only attribute with value 12.8
+        composeTestRule.setContent {
+            CaseTableBody(viewableCase, columnWidths, filter = "12.8")
+        }
+
+        with(composeTestRule) {
+            waitUntilExactlyOneExists(hasText(ft4.name))
+            onAllNodesWithText(tsh.name).assertCountEquals(0)
+            onAllNodesWithText(abc.name).assertCountEquals(0)
+        }
+    }
+
+    @Test
+    fun `blank filter is equivalent to no filter`() = runTest {
+        val columnWidths = ColumnWidths(viewableCase.numberOfColumns)
+
+        composeTestRule.setContent {
+            CaseTableBody(viewableCase, columnWidths, filter = "   ")
+        }
+
+        with(composeTestRule) {
+            viewableCase.attributes().forEach { waitUntilExactlyOneExists(hasText(it.name)) }
+        }
+    }
+
+    @Test
+    fun `filter that matches nothing hides every row`() = runTest {
+        val columnWidths = ColumnWidths(viewableCase.numberOfColumns)
+
+        composeTestRule.setContent {
+            CaseTableBody(viewableCase, columnWidths, filter = "no_such_substring_anywhere")
+        }
+
+        with(composeTestRule) {
+            viewableCase.attributes().forEach {
+                onAllNodesWithText(it.name).assertCountEquals(0)
+            }
+        }
+    }
+
+    @Test
+    fun `drag-and-drop is disabled while a filter is active`() = runTest {
+        // Given a body with an active filter that retains two rows
+        var listenerCalled = false
+        val columnWidths = ColumnWidths(viewableCase.numberOfColumns)
+        composeTestRule.setContent {
+            CaseTableBody(viewableCase, columnWidths, filter = "1") { _, _ -> listenerCalled = true }
+        }
+
+        with(composeTestRule) {
+            // FT4 (12.8) and ABC (12.9) and XYZ (1.9) all have a "1" in their value text.
+            waitUntilExactlyOneExists(hasText(ft4.name))
+            waitUntilExactlyOneExists(hasText(xyz.name))
+
+            // When the user attempts to drag FT4 onto XYZ
+            val ft4Bounds = onNodeWithText(ft4.name).getBoundsInRoot()
+            val xyzBounds = onNodeWithText(xyz.name).getBoundsInRoot()
+            onNodeWithText(ft4.name).performMouseInput {
+                val relativeEnd = xyzBounds.center(density) - ft4Bounds.center(density) + Offset(0f, 5f)
+                dragAndDrop(Offset(0f, 0f), relativeEnd)
+            }
+        }
+
+        // Then the move listener is never called: drag-and-drop is suppressed under a filter
+        listenerCalled shouldBe false
+    }
+
+    @Test
     fun `should not invoke the listener when no row is dragged`() = runTest {
         // Given a body that records drag-and-drop callbacks
         var listenerCalled = false

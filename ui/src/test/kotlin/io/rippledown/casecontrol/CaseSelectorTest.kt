@@ -222,13 +222,13 @@ class CaseSelectorTest {
     }
 
     @Test
-    fun `should show cornerstone section header even when no cornerstone cases`() = runTest {
+    fun `should not show cornerstone section header when no cornerstone cases`() = runTest {
         val caseIds = listOf(CaseId(id = 1, name = "case a"))
         with(composeTestRule) {
             setContent {
                 CaseSelector(caseIds, handler = handler)
             }
-            onNodeWithContentDescription(CORNERSTONE_SECTION_HEADER_ID).assertIsDisplayed()
+            onAllNodesWithContentDescription(CORNERSTONE_SECTION_HEADER_ID).assertCountEquals(0)
         }
     }
 

@@ -45,9 +45,21 @@ The current report for the case is a list of comments. For the current case, the
     immediately.
   - Replace: e.g., Replace the comment "Go to Bondi." by "Go to Manly." → emit a JSON object with
     `"action": "{{REPLACE_COMMENT}}"` immediately.
-    Note: apostrophes inside the double quotes (like "Let's") are part of the comment text, not quote
-    delimiters. DO NOT call any transform functions and DO NOT ask for confirmation — the quoted text is the
-    comment, not a reason to be transformed.
+    Note: apostrophes inside the double quotes (like "Let's" or "Don't forget sunscreen.") are part of
+    the comment text, not quote delimiters. The double quote `"` is the ONLY delimiter.
+    **The trigger for skipping confirmation is that the REPLACEMENT comment is wrapped in double quotes.**
+    The original comment does NOT need to be quoted — it may be omitted entirely (when there is only one
+    existing comment, or the user says "this one"/"the comment"), referenced by index, or quoted. In all
+    these cases, if the replacement is in double quotes, you MUST skip confirmation and emit
+    `{{REPLACE_COMMENT}}` immediately, regardless of the punctuation inside the quotes. Examples that
+    MUST skip confirmation:
+    - `Replace the comment "Bring flippers." by "Don't forget sunscreen."`
+    - `Replace the comment by "macrocytosis MCV."` (when there is only one existing comment)
+    - `Replace this one with "Elevated TSH."`
+    - `Replace comment 2 with "Normal glucose."`
+      DO NOT call any transform functions and DO NOT ask for confirmation — the quoted text is the
+      replacement comment, not a reason to be transformed. Identify the original comment from the comment
+      list above (use the only comment if there is one, or the indexed/referenced comment otherwise).
 - **CRITICAL**: `{{ADD_COMMENT}}`, `{{REMOVE_COMMENT}}` and `{{REPLACE_COMMENT}}` are JSON action values,
   NOT callable functions. NEVER invoke them through the function-calling API. The only functions you may
   call are `{{TRANSFORM_REASON}}`, `{{GET_SUGGESTED_CONDITIONS}}` and `{{SELECT_SUGGESTION}}`. To request

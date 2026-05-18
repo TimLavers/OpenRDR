@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.first
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun CornerstoneInspection(case: ViewableCase, index: Int = 0, total: Int = 0) {
+fun CornerstoneInspection(case: ViewableCase, index: Int = 0, total: Int = 0, filter: String = "") {
     val columnWidths = ColumnWidths(case.numberOfColumns)
     val hScrollState = rememberScrollState()
     val hScrollbarAdapter = rememberScrollbarAdapter(hScrollState)
@@ -92,6 +92,7 @@ fun CornerstoneInspection(case: ViewableCase, index: Int = 0, total: Int = 0) {
                 viewableCase = case,
                 columnWidths = columnWidths,
                 hScrollState = hScrollState,
+                filter = filter,
             )
         },
         interpretationContent = {

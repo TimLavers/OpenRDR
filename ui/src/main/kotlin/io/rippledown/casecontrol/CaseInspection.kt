@@ -36,7 +36,8 @@ fun CaseInspection(
     diff: Diff? = null,
     ruleConditions: List<String> = emptyList(),
     handler: CaseInspectionHandler,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    filter: String = ""
 ) {
     val columnWidths = ColumnWidths(case.numberOfColumns)
     // Header dates row and attribute body share a single horizontal scroll
@@ -111,6 +112,7 @@ fun CaseInspection(
                 columnWidths = columnWidths,
                 attributeMoveListener = handler::swapAttributes,
                 hScrollState = hScrollState,
+                filter = filter,
             )
         },
         interpretationContent = {

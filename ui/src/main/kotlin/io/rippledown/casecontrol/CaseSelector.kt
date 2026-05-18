@@ -111,13 +111,15 @@ fun CaseSelector(
                     )
                 }
             }
-            CollapsibleSectionHeader(
-                title = "Cornerstones (${cornerstoneCaseIds.size})",
-                expanded = cornerstoneExpanded,
-                onToggle = { cornerstoneExpanded = !cornerstoneExpanded },
-                semanticId = CORNERSTONE_SECTION_HEADER_ID
-            )
-            if (cornerstoneExpanded) {
+            if (cornerstoneCaseIds.isNotEmpty()) {
+                CollapsibleSectionHeader(
+                    title = "Cornerstones (${cornerstoneCaseIds.size})",
+                    expanded = cornerstoneExpanded,
+                    onToggle = { cornerstoneExpanded = !cornerstoneExpanded },
+                    semanticId = CORNERSTONE_SECTION_HEADER_ID
+                )
+            }
+            if (cornerstoneCaseIds.isNotEmpty() && cornerstoneExpanded) {
                 Box(modifier = Modifier.weight(1f)) {
                     val cornerstoneScrollState = rememberScrollState()
                     Column(

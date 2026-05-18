@@ -34,7 +34,7 @@ data class ActionComment(
                 .asSubclass(ChatAction::class.java)
                 .kotlin
         } catch (e: Exception) {
-            logger.error("Failed to create action instance from '$action'", e)
+            logger.error("Failed to create action instance from '$action': ${e.message}")
             return null
         }
 
