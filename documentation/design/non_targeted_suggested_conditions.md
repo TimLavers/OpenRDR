@@ -1,6 +1,11 @@
-# Suggested conditions - version 1
+# Suggested conditions — non-targeted generation
 
-TODO: change this documentation to reflect the chat design
+This document describes the deterministic generator that enumerates the
+candidate conditions offered to the user. It is the foundation that the
+chat-driven and targeted variants build on; ranking and action-aware
+filtering are covered in
+[Targeted suggested conditions](targeted_suggested_conditions.md) and its
+Phase 1 detailed plan.
 
 As discussed in [Building conditions from user hints](building_conditions_from_user_hints.md) 
 we would like the user experience of building

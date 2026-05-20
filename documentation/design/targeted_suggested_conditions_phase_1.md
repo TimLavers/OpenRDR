@@ -1,5 +1,13 @@
 # Targeted Suggested Conditions — Phase 1 detailed plan
 
+> **Status:** Phase 1 has been implemented. The plan below describes the
+> shipped design: `ConditionSuggester` now lives in
+> `server/src/main/kotlin/io/rippledown/suggestions/`, the four scorers
+> sit under `suggestions/scorer/`, `RelevanceRanker` replaces the old
+> `Sorter`, and `RuleSessionManager.conditionHintsForCase` populates a
+> `SuggestionContext` exactly as drafted. The "Suggested commit
+> breakdown" section is retained as the historical staging plan.
+
 Detailed implementation plan for Phase 1 of the staged work described in
 `targeted_suggested_conditions.md`. Phases 2 and 3, and the Q&A around
 `ExpressionCondition` / ASTs, live in their own documents.
@@ -135,7 +143,7 @@ File: `server/src/main/kotlin/io/rippledown/model/rule/RuleBuildingSession.kt`
 ### 2. Introduce `SuggestionContext`
 
 New file:
-`server/src/main/kotlin/io/rippledown/model/rule/SuggestionContext.kt`
+`server/src/main/kotlin/io/rippledown/suggestions/SuggestionContext.kt`
 
 ```kotlin
 data class SuggestionContext(
@@ -153,7 +161,7 @@ back to alphabetic order, matching today's behaviour.
 
 ### 3. Refactor `ConditionSuggester`
 
-File: `server/src/main/kotlin/io/rippledown/model/rule/ConditionSuggester.kt`
+File: `server/src/main/kotlin/io/rippledown/suggestions/ConditionSuggester.kt`
 
 - Change to `class ConditionSuggester(private val ctx: SuggestionContext)`.
 - Keep the current generation logic verbatim — it operates on
@@ -270,8 +278,11 @@ place.
 
 ### 4. Scorers
 
-New file:
-`server/src/main/kotlin/io/rippledown/model/rule/SuggestionScorers.kt`
+New files under
+`server/src/main/kotlin/io/rippledown/suggestions/scorer/`: one file per
+scorer (`HistoricalRuleScorer.kt`, `CommentTokenOverlapScorer.kt`,
+`CornerstoneDiscriminationScorer.kt`, `OutOfRangeScorer.kt`) plus a
+shared `SuggestionScorer.kt` for the common types:
 
 ```kotlin
 internal data class ScoredSuggestion(
