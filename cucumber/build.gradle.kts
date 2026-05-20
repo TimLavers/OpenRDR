@@ -68,14 +68,20 @@ fun runCucumber(cukeArgs: List<String>): Int {
     // Write JVM args to a temporary argfile to avoid Windows command-line length limits
     val argFile = File.createTempFile("cucumber-args", ".txt")
     argFile.deleteOnExit()
+    val forwardedSystemProps = listOf("voice.real")
+        .mapNotNull { name ->
+            val value = System.getProperty(name) ?: return@mapNotNull null
+            "-D$name=$value"
+        }
     argFile.writeText(
-        listOf(
+        (listOf(
         "-Xmx4G",
-        "--enable-native-access=ALL-UNNAMED",
+            "--enable-native-access=ALL-UNNAMED"
+        ) + forwardedSystemProps + listOf(
         "-cp",
             "\"${cp.replace("\\", "\\\\")}\"",
         "io.cucumber.core.cli.Main"
-        ).joinToString("\n")
+        )).joinToString("\n")
     )
     val cmd = listOf(javaBin, "@${argFile.absolutePath}") + cukeArgs
     val process = ProcessBuilder(cmd)
@@ -149,6 +155,12 @@ fun JavaExec.setupExec() {
     group = "verification"
     maxHeapSize = "4G"
     jvmArgs("--enable-native-access=ALL-UNNAMED")
+    // Forward selected system properties from the Gradle JVM to the
+    // cucumber JVM so e.g. `-Dvoice.real=true` can opt out of the
+    // FakeVoiceRecognition and use the real microphone + Gemini.
+    listOf("voice.real").forEach { name ->
+        System.getProperty(name)?.let { systemProperty(name, it) }
+    }
     mainClass.set("io.cucumber.core.cli.Main")
     classpath = cukeClassPath
 }
