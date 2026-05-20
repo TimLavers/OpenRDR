@@ -1,4 +1,5 @@
 @single
+@voice-is-fake
 Feature: Voice recognition
 
   The chat panel supports voice input. Clicking the microphone button

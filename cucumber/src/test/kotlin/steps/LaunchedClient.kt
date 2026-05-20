@@ -12,23 +12,22 @@ class LaunchedClient {
     private val testClientLauncher = TestClientLauncher()
 
     /**
-     * Set `-Dvoice.real=true` on the cuke JVM to bypass the fake and use
-     * a real [io.rippledown.voice.VoiceRecognitionService] (real mic +
-     * Gemini transcription). Intended for paused, hands-on debugging
-     * sessions — e.g. add an `And pause` step, run a single scenario,
-     * click the mic in the live window, speak, and inspect the result.
-     * In this mode `voiceRecognition()` will fail because there is no
-     * fake to drive; do not combine `-Dvoice.real=true` with the
-     * voice.feature scenarios that call `simulateUtterance`.
+     * Scenarios tagged `@voice-is-fake` install a [FakeVoiceRecognition]
+     * so steps can drive the chat panel's voice-input wiring via
+     * `simulateUtterance` without touching a real microphone or the
+     * Gemini transcription API. Untagged scenarios get the production
+     * pipeline (real mic + Gemini), which is what you want for paused
+     * free-play debugging — just add `And pause` and click the mic in
+     * the live window. The flag is set by the `@Before("@voice-is-fake")`
+     * hook in [Defs] before this constructor runs.
      */
-    private val useRealVoice: Boolean = System.getProperty("voice.real") == "true"
     private val fakeVoiceRecognition: FakeVoiceRecognition? =
-        if (useRealVoice) null else FakeVoiceRecognition()
+        if (StepsInfrastructure.useFakeVoice) FakeVoiceRecognition() else null
     private val composeWindow = testClientLauncher.launchClient(fakeVoiceRecognition)
     private val rdUiOperator = RippleDownUIOperator(composeWindow)
 
     fun voiceRecognition(): FakeVoiceRecognition = fakeVoiceRecognition
-        ?: error("voiceRecognition() requested but the cuke is running with -Dvoice.real=true (real Gemini-backed service)")
+        ?: error("voiceRecognition() requested but the scenario is not tagged @voice-is-fake")
 
     fun bringToFront() {
         SwingUtilities.invokeAndWait {

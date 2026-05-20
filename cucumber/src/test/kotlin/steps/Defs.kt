@@ -48,6 +48,16 @@ class Defs {
         startServerWithPostgresDatabase()
     }
 
+    // Scenarios tagged @voice-is-fake get a FakeVoiceRecognition wired
+    // into the chat panel instead of the real mic + Gemini pipeline. The
+    // flag is consumed by [LaunchedClient] when the client application
+    // is started, so this hook must run before the `I start the client
+    // application` step (which all @Before hooks do).
+    @Before("@voice-is-fake")
+    fun beforeVoiceIsFake() {
+        StepsInfrastructure.useFakeVoice = true
+    }
+
     @After
     fun after(scenario: Scenario) {
         stopwatch.stop()
