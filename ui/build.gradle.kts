@@ -19,7 +19,7 @@ dependencies {
     implementation(libs.bundles.ktor)
     implementation(libs.bundles.kotlinx)
     implementation(libs.commonsCodec)
-    implementation(libs.vosk)
+    implementation(project(":llm"))
 
     testImplementation(testFixtures(project(":common")))
     testImplementation(compose.desktop.uiTestJUnit4)

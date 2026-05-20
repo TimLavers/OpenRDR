@@ -1,6 +1,7 @@
 package steps
 
 import io.rippledown.TestClientLauncher
+import io.rippledown.integration.FakeVoiceRecognition
 import io.rippledown.integration.pageobjects.RippleDownUIOperator
 import java.awt.Robot
 import java.io.File
@@ -9,8 +10,11 @@ import javax.swing.SwingUtilities
 
 class LaunchedClient {
     private val testClientLauncher = TestClientLauncher()
-    private val composeWindow = testClientLauncher.launchClient()
+    private val fakeVoiceRecognition = FakeVoiceRecognition()
+    private val composeWindow = testClientLauncher.launchClient(fakeVoiceRecognition)
     private val rdUiOperator = RippleDownUIOperator(composeWindow)
+
+    fun voiceRecognition() = fakeVoiceRecognition
 
     fun bringToFront() {
         SwingUtilities.invokeAndWait {

@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.chat.*
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAll
+import io.rippledown.voice.CHAT_MIC_BUTTON
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
@@ -116,6 +117,20 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
     fun clickSend() {
         waitForChatReady()
         execute { chatTextContext().find(CHAT_SEND)?.accessibleAction?.doAccessibleAction(0) }
+    }
+
+    fun clickMic() {
+        await().atMost(ofSeconds(10)).until {
+            try {
+                execute<Boolean> {
+                    val node = chatTextContext().find(CHAT_MIC_BUTTON) ?: return@execute false
+                    node.accessibleAction?.doAccessibleAction(0)
+                    true
+                }
+            } catch (_: Exception) {
+                false
+            }
+        }
     }
 
 

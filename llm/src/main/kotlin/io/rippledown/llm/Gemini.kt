@@ -42,6 +42,44 @@ fun generateContentConfig(
 
 private fun noThinking(): ThinkingConfig = ThinkingConfig.builder().thinkingBudget(0).build()
 
+/**
+ * Transcription system prompt: bias the model toward verbatim transcription
+ * and away from helpful rewriting or invention on unclear audio.
+ */
+const val TRANSCRIPTION_SYSTEM_INSTRUCTION =
+    "Transcribe the user's speech literally and return only the transcript text. " +
+            "Do not add commentary, headings, quotation marks, or formatting. " +
+            "Do not rephrase, summarise, translate or correct grammar. " +
+            "If a word is unclear, write [?] in its place. " +
+            "If the audio contains no intelligible speech, return an empty string."
+
+/**
+ * Send a recorded audio clip to Gemini and return its transcript.
+ *
+ * The audio bytes must be a complete, self-contained clip in one of the
+ * formats Gemini accepts (`audio/wav`, `audio/mp3`, `audio/flac`, ...).
+ * The call is synchronous and is wrapped in [callWithTimeout] so a hung
+ * request cannot block the UI indefinitely.
+ */
+fun transcribeAudio(
+    audioBytes: ByteArray,
+    mimeType: String = "audio/wav",
+    timeoutMs: Long = 60_000
+): String {
+    if (audioBytes.isEmpty()) return ""
+    val config = GenerateContentConfig.builder()
+        .temperature(0f)
+        .topP(0.995f)
+        .thinkingConfig(noThinking())
+        .safetySettings(noSafetySettings())
+        .systemInstruction(Content.fromParts(Part.fromText(TRANSCRIPTION_SYSTEM_INSTRUCTION)))
+        .build()
+    val content = Content.fromParts(Part.fromBytes(audioBytes, mimeType))
+    return callWithTimeout(timeoutMs) {
+        geminiClient.models.generateContent(GEMINI_MODEL, content, config).text() ?: ""
+    }.trim()
+}
+
 fun noSafetySettings(): List<SafetySetting> =
     listOf(
         HarmCategory.Known.HARM_CATEGORY_HATE_SPEECH,

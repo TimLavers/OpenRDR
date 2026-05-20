@@ -4,6 +4,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import io.rippledown.constants.chat.CHAT_BOT_NO_RESPONSE_MESSAGE
 import io.rippledown.model.chat.ChatResponse
+import io.rippledown.voice.VoiceRecognition
 
 interface ChatControllerHandler {
     fun sendUserMessage(message: String)

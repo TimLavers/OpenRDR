@@ -20,8 +20,6 @@ import io.rippledown.casecontrol.CaseSelector
 import io.rippledown.casecontrol.CaseSelectorHandler
 import io.rippledown.chat.ChatController
 import io.rippledown.chat.ChatControllerHandler
-import io.rippledown.chat.VoiceRecognitionService
-import io.rippledown.chat.VoiceRecognitionService.Companion.defaultModelPath
 import io.rippledown.cornerstone.CornerstoneTestHook
 import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
@@ -30,6 +28,8 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.sample.SampleKB
+import io.rippledown.voice.VoiceRecognition
+import io.rippledown.voice.VoiceRecognitionService
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -45,7 +45,11 @@ interface Handler {
 }
 
 @Composable
-fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatcher) {
+fun OpenRDRUI(
+    handler: Handler,
+    dispatcher: CoroutineDispatcher = MainUIDispatcher,
+    voiceRecognition: VoiceRecognition? = null
+) {
     val api = handler.api
     var currentCase by remember { mutableStateOf<ViewableCase?>(null) }
     var currentCaseId by remember { mutableStateOf<Long?>(null) }
@@ -53,7 +57,7 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
     var cornerstoneStatus: CornerstoneStatus? by remember { mutableStateOf(null) }
     var casesInfo by remember { mutableStateOf(CasesInfo()) }
     var kbInfo: KBInfo? by remember { mutableStateOf(null) }
-    val voiceRecognitionService = remember { VoiceRecognitionService(defaultModelPath()) }
+    val voiceRecognitionService = voiceRecognition ?: remember { VoiceRecognitionService() }
     var chatPanelWidth by remember { mutableStateOf(350.dp) }
     var conversationCaseId by remember { mutableStateOf<Long?>(null) }
     var pendingConversationResponse by remember { mutableStateOf<ChatResponse?>(null) }
