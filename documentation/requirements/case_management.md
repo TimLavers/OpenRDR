@@ -23,6 +23,11 @@ To de-clutter a KB it is sometimes necessary to delete cases.
 - It is not possible to delete Cornerstone Cases
 - If a case has been copied from one case list to another, then either the original or the copy can be deleted without affecting the other case (except that deleting Cornerstone Cases is not possible).
 
+## Cornerstone cases
+Because Cornerstone Cases are used to test the effects of changes to a Knowledge Base, no two Cornerstone Cases should have the
+same data. A special instance of this is that if a case is used to build more than one rule, only one copy of it should be
+stored as a Cornerstone.
+
 
 
 
