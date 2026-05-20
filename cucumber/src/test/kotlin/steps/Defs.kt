@@ -303,12 +303,27 @@ class Defs {
 
     @Then("the interpretation of each case for the first {int} cases should be:")
     fun requireInterpretationForCases(restriction: Int, expectation: DataTable) {
+        val errors = mutableListOf<Pair<String, String>>()
         expectation.cells()
             .drop(1) //skip header
             .take(restriction) //check only the first N rows
             .forEach { (caseName, code, _, _) ->
-            checkInterpretationViaRestClient(caseName, code?.trim() ?: "")
+                run {
+                    val expectedInterpretation = code?.trim() ?: ""
+                    val actualInterpretation =
+                        restClient().getProcessedCaseWithName(caseName).viewableInterpretation.latestText()
+                    if (expectedInterpretation != actualInterpretation) {
+                        errors.add(caseName to actualInterpretation)
+                    }
+                }
         }
+        if (!errors.isEmpty()) {
+            println("Got wrong interps, as follows:")
+            errors.forEach {
+                println("Case: ${it.first}, got: ${it.second}")
+            }
+        }
+        errors shouldBe emptyList()
     }
 
     private fun checkInterpretationViaRestClient(caseName: String, expectedInterpretation: String) {
