@@ -1,6 +1,7 @@
 package io.rippledown.voice
 
 import io.rippledown.llm.transcribeAudio
+import io.rippledown.log.lazyLogger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,6 +34,8 @@ class VoiceRecognitionService(
     private val transcribe: (ByteArray) -> String = { transcribeAudio(it) }
 ) : VoiceRecognition {
 
+    private val logger = lazyLogger
+
     private val _isListening = MutableStateFlow(false)
     override val isListening: StateFlow<Boolean> = _isListening
 
@@ -51,9 +54,11 @@ class VoiceRecognitionService(
         val format = pcmFormat(sampleRate)
         val openedLine = try {
             microphoneFactory(format).also { it.open(format); it.start() }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.warn("VoiceRecognitionService: failed to open microphone: ${e.message}", e)
             return
         }
+        logger.info("VoiceRecognitionService: started listening (sampleRate=${sampleRate.toInt()} Hz)")
         line = openedLine
         synchronized(pcmBuffer) { pcmBuffer.reset() }
         _isListening.value = true
@@ -75,16 +80,34 @@ class VoiceRecognitionService(
             }
 
             val pcmBytes = synchronized(pcmBuffer) { pcmBuffer.toByteArray() }
+            val nonZeroSamples = pcmBytes.count { it != 0.toByte() }
+            logger.info("VoiceRecognitionService: stopped listening, captured ${pcmBytes.size} bytes (${nonZeroSamples} non-zero)")
+            if (pcmBytes.isNotEmpty() && nonZeroSamples == 0) {
+                logger.warn(
+                    "VoiceRecognitionService: captured PCM is entirely silent. " +
+                            "On macOS this typically means TCC denied microphone access " +
+                            "to this JVM (no Info.plist / no NSMicrophoneUsageDescription). " +
+                            "Grant the parent process (e.g. Terminal, IntelliJ) microphone " +
+                            "access in System Settings \u2192 Privacy & Security \u2192 Microphone, " +
+                            "then retry."
+                )
+            }
             val result = if (pcmBytes.isEmpty()) {
                 ""
             } else {
                 val wav = pcmToWav(pcmBytes, sampleRate)
-                runCatching {
+                try {
                     withContext(Dispatchers.IO) { transcribe(wav) }
-                }.getOrDefault("")
+                } catch (e: Exception) {
+                    logger.warn("VoiceRecognitionService: transcription failed: ${e.message}", e)
+                    ""
+                }
             }
             if (result.isNotBlank()) {
+                logger.info("VoiceRecognitionService: transcription delivered (${result.length} chars)")
                 onFinalResult(result.trim())
+            } else if (pcmBytes.isNotEmpty()) {
+                logger.info("VoiceRecognitionService: transcription returned empty string; nothing delivered")
             }
             _partialResult.value = ""
             _isListening.value = false

@@ -1,4 +1,3 @@
-@single
 @voice-is-fake
 Feature: Voice recognition
 
