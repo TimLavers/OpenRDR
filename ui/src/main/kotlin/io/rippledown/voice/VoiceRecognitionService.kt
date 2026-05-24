@@ -8,10 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import javax.sound.sampled.AudioFormat
-import javax.sound.sampled.AudioSystem
-import javax.sound.sampled.DataLine
-import javax.sound.sampled.TargetDataLine
+import javax.sound.sampled.*
 
 /**
  * Captures microphone audio while the user is "listening" and, on stop,
@@ -83,13 +80,15 @@ class VoiceRecognitionService(
             val nonZeroSamples = pcmBytes.count { it != 0.toByte() }
             logger.info("VoiceRecognitionService: stopped listening, captured ${pcmBytes.size} bytes (${nonZeroSamples} non-zero)")
             if (pcmBytes.isNotEmpty() && nonZeroSamples == 0) {
+                val available = listInputMixers()
                 logger.warn(
                     "VoiceRecognitionService: captured PCM is entirely silent. " +
-                            "On macOS this typically means TCC denied microphone access " +
-                            "to this JVM (no Info.plist / no NSMicrophoneUsageDescription). " +
-                            "Grant the parent process (e.g. Terminal, IntelliJ) microphone " +
-                            "access in System Settings \u2192 Privacy & Security \u2192 Microphone, " +
-                            "then retry."
+                            "Either microphone access is denied to this JVM, or the macOS / " +
+                            "system default input device is not the one you are speaking into. " +
+                            "On macOS, check System Settings \u2192 Privacy & Security \u2192 Microphone " +
+                            "(grant OpenRDR / the launching app) and System Settings \u2192 Sound " +
+                            "\u2192 Input (pick the actual mic, watch the level meter move). " +
+                            "Available input devices visible to Java Sound: $available"
                 )
             }
             val result = if (pcmBytes.isEmpty()) {
@@ -149,10 +148,47 @@ class VoiceRecognitionService(
             false
         )
 
+        /**
+         * Opens a [TargetDataLine] for capture at [format].
+         *
+         * If the system property `io.rippledown.voice.inputMixer` (or the
+         * environment variable `OPENRDR_VOICE_INPUT_MIXER`) is set, the
+         * first input mixer whose name contains that substring (case
+         * insensitive) is preferred. Useful when the macOS default input
+         * device is a virtual / silent device and you want to force a
+         * specific physical mic without changing system Sound settings.
+         *
+         * Otherwise the platform default is used (current behaviour).
+         */
         fun openDefaultMicrophone(format: AudioFormat): TargetDataLine {
             val info = DataLine.Info(TargetDataLine::class.java, format)
+            val preferred = System.getProperty("io.rippledown.voice.inputMixer")
+                ?: System.getenv("OPENRDR_VOICE_INPUT_MIXER")
+            if (!preferred.isNullOrBlank()) {
+                inputMixerInfos(info)
+                    .firstOrNull { it.name.contains(preferred, ignoreCase = true) }
+                    ?.let { mixerInfo ->
+                        return AudioSystem.getMixer(mixerInfo).getLine(info) as TargetDataLine
+                    }
+            }
             return AudioSystem.getLine(info) as TargetDataLine
         }
+
+        /**
+         * Names of every [Mixer] visible to Java Sound that can supply a
+         * [TargetDataLine] in the requested format. Surfaced in the silent-
+         * capture warning so users / logs can see what alternatives exist.
+         */
+        fun listInputMixers(format: AudioFormat = pcmFormat(DEFAULT_SAMPLE_RATE)): List<String> {
+            val info = DataLine.Info(TargetDataLine::class.java, format)
+            return inputMixerInfos(info).map { it.name }
+        }
+
+        private fun inputMixerInfos(info: DataLine.Info): List<Mixer.Info> =
+            AudioSystem.getMixerInfo()
+                .filter { mi ->
+                    runCatching { AudioSystem.getMixer(mi).isLineSupported(info) }.getOrDefault(false)
+                }
 
         fun pcmToWav(pcm: ByteArray, sampleRate: Float): ByteArray {
             val channels = 1

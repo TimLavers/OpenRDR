@@ -111,3 +111,19 @@ The next iteration will use **Gemini audio input** behind the existing
 - **Hybrid**: use Gemini for free-form chat dictation and Cloud STT (with phrase
   hints) specifically for the rule-building dictation flow, where hallucination risk
   matters most.
+
+### Problems encountered
+
+If no text appears, the following may be the reasons:
+
+- No live partial transcript — by design (Gemini is single-shot, transcribes only after stop). You need to turn off the
+  mic before the text is processed.
+- ./gradlew cuST ran the JVM as a child of Terminal — Terminal needed mic permission. Fixed by granting Terminal mic +
+  restarting Gradle daemon.
+- OpenRDR.app was launched via its inner Mach-O binary instead of LaunchServices, so its NSMicrophoneUsageDescription
+  was ignored. Fixed in start-demo.sh:97-115 to use open -W for the .app.
+- Bundle's ad-hoc signature was broken (spctl reported "a sealed resource is missing or invalid"), so on macOS Tahoe TCC
+  silently denied with no prompt. Fixed by codesign --force --deep --sign - after assembly.
+- The grant finally appeared, but capture was still silent because Java Sound uses the macOS system default input
+  device, which was the (non-working) built-in MacBook mic, not the Pro Stream webcam. Fixed by switching the system
+  default input.

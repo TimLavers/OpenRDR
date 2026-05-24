@@ -96,4 +96,29 @@ done
 
 echo "Launching OpenRDR UI ..."
 echo "  UI output -> logs/ui-console.log"
-"$UI_LAUNCHER" >logs/ui-console.log 2>&1
+# If the UI is the macOS .app bundle, launch it via LaunchServices (`open`)
+# rather than invoking the inner Mach-O binary directly. Otherwise macOS
+# attributes microphone (TCC) requests to the parent terminal instead of to
+# OpenRDR.app, and the bundle's NSMicrophoneUsageDescription is ignored - so
+# you never get the right consent prompt and the JVM silently records zeros.
+#
+# JAVA_TOOL_OPTIONS is honoured automatically by the bundled JRE, so we use
+# it to pass -DlogFilePath. Without it the shared logback.xml falls back to
+# the literal string "logFilePath_IS_UNDEFINED" and tries to open it
+# relative to the .app's CWD (which is "/" when launched via `open`),
+# producing a Read-only file system error in ui-console.log.
+UI_LOG_FILE="$(pwd)/logs/ui.log"
+case "$UI_LAUNCHER" in
+    ui/OpenRDR.app/Contents/MacOS/OpenRDR)
+        open -W \
+            --env API_KEY="${API_KEY:-}" \
+            --env JAVA_TOOL_OPTIONS="-DlogFilePath=$UI_LOG_FILE" \
+            --stdout "$(pwd)/logs/ui-console.log" \
+            --stderr "$(pwd)/logs/ui-console.log" \
+            ui/OpenRDR.app
+        ;;
+    *)
+        JAVA_TOOL_OPTIONS="-DlogFilePath=$UI_LOG_FILE" \
+            "$UI_LAUNCHER" >logs/ui-console.log 2>&1
+        ;;
+esac

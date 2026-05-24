@@ -38,6 +38,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.rippledown.constants.chat.CHAT_BOT_PLACEHOLDER
 import io.rippledown.decoration.LIGHT_BLUE
+import io.rippledown.voice.RecordingIndicator
 import io.rippledown.voice.VoiceInputButton
 import io.rippledown.voice.VoiceRecognition
 
@@ -154,6 +155,13 @@ fun ChatPanel(
                     TypingIndicator()
                 }
             }
+        }
+
+        // Visible cue while voice capture is active. Gemini does not stream
+        // partial transcriptions, so without this users may keep talking
+        // forever wondering why nothing appears in the field.
+        if (voiceRecognitionService != null) {
+            RecordingIndicator(voiceRecognitionService)
         }
 
         // User input area
