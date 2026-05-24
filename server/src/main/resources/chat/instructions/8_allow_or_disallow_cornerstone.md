@@ -2,10 +2,14 @@
 
 ## Step 1. Ask user whether to allow the change to the report of the cornerstone case:
 
+- The `message` MUST include the **name of the current cornerstone case** (taken from the most recent
+  `Cornerstone: <name>, Index: ..., Total: ...` status). Naming the case explicitly removes ambiguity
+  when there are multiple cornerstone cases to review.
+
 ```json
 {
   "action": "{{USER_ACTION}}",
-  "message": "<your question to the user about whether to allow the report change to this cornerstone case>"
+  "message": "<your question to the user about whether to allow the report change to this cornerstone case — must contain the cornerstone case name>"
 }
 ```
 
