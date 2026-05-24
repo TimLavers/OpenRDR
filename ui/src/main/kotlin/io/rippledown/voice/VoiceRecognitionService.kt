@@ -81,7 +81,7 @@ class VoiceRecognitionService(
 
             val pcmBytes = synchronized(pcmBuffer) { pcmBuffer.toByteArray() }
             val nonZeroSamples = pcmBytes.count { it != 0.toByte() }
-            logger.info("VoiceRecognitionService: stopped listening, captured ${pcmBytes.size} bytes (${nonZeroSamples} non-zero)")
+            logger.debug("VoiceRecognitionService: stopped listening, captured ${pcmBytes.size} bytes (${nonZeroSamples} non-zero)")
             if (pcmBytes.isNotEmpty() && nonZeroSamples == 0) {
                 val available = listInputMixers()
                 logger.warn(
@@ -111,10 +111,10 @@ class VoiceRecognitionService(
                 }
             }
             if (result.isNotBlank()) {
-                logger.info("VoiceRecognitionService: transcription delivered (${result.length} chars)")
+                logger.debug("VoiceRecognitionService: transcription delivered (${result.length} chars)")
                 onFinalResult(result.trim())
             } else if (pcmBytes.isNotEmpty()) {
-                logger.info("VoiceRecognitionService: transcription returned empty string; nothing delivered")
+                logger.debug("VoiceRecognitionService: transcription returned empty string; nothing delivered")
             }
             _partialResult.value = ""
             _isListening.value = false

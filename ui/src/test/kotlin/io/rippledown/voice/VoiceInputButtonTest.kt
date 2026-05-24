@@ -293,4 +293,33 @@ class VoiceInputButtonTest {
             onNodeWithContentDescription(CHAT_MIC_BUTTON).assertExists()
         }
     }
+
+    @Test
+    fun `should call onSegmentFinalized with correct text when voice recognition completes`() {
+        val receivedTexts = mutableListOf<String>()
+        val callbackSlot = slot<(String) -> Unit>()
+        every {
+            voiceRecognitionService.startListening(any(), capture(callbackSlot))
+        } answers {
+            // Simulate voice recognition completing
+            callbackSlot.captured("hello world")
+        }
+
+        with(composeTestRule) {
+            // Given
+            setContent {
+                VoiceInputButton(
+                    voiceRecognitionService = voiceRecognitionService,
+                    onSegmentFinalized = { receivedTexts.add(it) }
+                )
+            }
+
+            // When
+            onNodeWithContentDescription(CHAT_MIC_BUTTON).performClick()
+            waitForIdle()
+
+            // Then
+            receivedTexts shouldContain "hello world"
+        }
+    }
 }

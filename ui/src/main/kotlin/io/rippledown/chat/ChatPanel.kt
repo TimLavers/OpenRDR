@@ -206,7 +206,11 @@ fun ChatPanel(
                                 voiceRecognitionService = voiceRecognitionService,
                                 enabled = sendIsEnabled && microphoneAvailable,
                                 onPartialResult = { partial ->
-                                    val base = inputText.text.dropLast(partialSuffixLength)
+                                    val base = if (partialSuffixLength <= inputText.text.length) {
+                                        inputText.text.dropLast(partialSuffixLength)
+                                    } else {
+                                        inputText.text
+                                    }
                                     val suffix = if (partial.isNotBlank()) {
                                         (if (base.isNotBlank()) " " else "") + partial
                                     } else ""
@@ -215,10 +219,15 @@ fun ChatPanel(
                                     inputText = TextFieldValue(newText, selection = TextRange(newText.length))
                                 },
                                 onSegmentFinalized = { segment ->
-                                    val base = inputText.text.dropLast(partialSuffixLength)
+                                    val base = if (partialSuffixLength <= inputText.text.length) {
+                                        inputText.text.dropLast(partialSuffixLength)
+                                    } else {
+                                        inputText.text
+                                    }
                                     val newText = if (base.isNotBlank()) "$base $segment" else segment
                                     partialSuffixLength = 0
                                     inputText = TextFieldValue(newText, selection = TextRange(newText.length))
+                                    textAreaFocusRequester.requestFocus()
                                 }
                             )
                         }
