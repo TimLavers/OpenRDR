@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.chat.*
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAll
+import io.rippledown.integration.utils.renderedText
 import io.rippledown.voice.CHAT_MIC_BUTTON
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
@@ -332,8 +333,12 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
 
     fun chatTextFieldContains(text: String): Boolean {
         return execute<Boolean> {
-            val chatText = chatTextContext()?.accessibleName ?: ""
-            chatText.contains(text)
+            // Compose 1.11's accessibility bridge overrides accessibleName
+            // on Text-like nodes with the contentDescription used to locate
+            // the chat field. Read the actual edited characters via
+            // AccessibleText (renderedText) instead.
+            val ctx = chatTextContext() ?: return@execute false
+            renderedText(ctx).contains(text)
         }
     }
 
