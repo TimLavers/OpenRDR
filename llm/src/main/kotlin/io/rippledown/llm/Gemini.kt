@@ -50,8 +50,37 @@ const val TRANSCRIPTION_SYSTEM_INSTRUCTION =
     "Transcribe the user's speech literally and return only the transcript text. " +
             "Do not add commentary, headings, quotation marks, or formatting. " +
             "Do not rephrase, summarise, translate or correct grammar. " +
+            "Do NOT prefix the transcript with timestamps, durations, or any " +
+            "bracketed metadata such as [00:00:03], [0m0s - 0m10s] or [0m0s]. " +
+            "Return only the spoken words. " +
             "If a word is unclear, write [?] in its place. " +
             "If the audio contains no intelligible speech, return an empty string."
+
+/**
+ * Regex that matches a single leading "timestamp-like" bracketed group such
+ * as `[ 00:00:03 ]`, `[ 0m0s700ms - 0m1s100ms ]` or `[ 0m0s ]`. The bracket
+ * body must start with a digit and may only contain digits, the unit
+ * letters m/s/h, colons, dots, dashes and whitespace. Crucially this does
+ * NOT match the `[?]` unclear-word marker the prompt asks the model to
+ * emit, because the body starts with `?` rather than a digit.
+ */
+private val TIMESTAMP_BRACKET = Regex("""^\s*\[\s*\d[\d\smshMSH:.\-]*]\s*""")
+
+/**
+ * Strip leading timestamp-style bracketed metadata that Gemini sometimes
+ * emits despite the prompt forbidding it. Repeats until no further leading
+ * bracket matches, then trims. Leaves `[?]` unclear-word markers and any
+ * bracketed text appearing mid-transcript untouched.
+ */
+internal fun cleanTranscript(raw: String): String {
+    var s = raw
+    while (true) {
+        val next = s.replaceFirst(TIMESTAMP_BRACKET, "")
+        if (next == s) break
+        s = next
+    }
+    return s.trim()
+}
 
 /**
  * Send a recorded audio clip to Gemini and return its transcript.
@@ -75,9 +104,10 @@ fun transcribeAudio(
         .systemInstruction(Content.fromParts(Part.fromText(TRANSCRIPTION_SYSTEM_INSTRUCTION)))
         .build()
     val content = Content.fromParts(Part.fromBytes(audioBytes, mimeType))
-    return callWithTimeout(timeoutMs) {
+    val raw = callWithTimeout(timeoutMs) {
         geminiClient.models.generateContent(GEMINI_MODEL, content, config).text() ?: ""
-    }.trim()
+    }
+    return cleanTranscript(raw)
 }
 
 fun noSafetySettings(): List<SafetySetting> =

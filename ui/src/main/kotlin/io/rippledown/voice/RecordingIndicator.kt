@@ -63,7 +63,7 @@ fun RecordingIndicator(voiceRecognitionService: VoiceRecognition) {
                     .background(Color(0xFFD32F2F), CircleShape)
             )
             Text(
-                text = "  Recording\u2026 click the mic again to stop and transcribe",
+                text = " Recording\u2026 click the mic again when finished speaking",
                 color = Color(0xFFB71C1C),
                 style = TextStyle(fontSize = 12.sp)
             )

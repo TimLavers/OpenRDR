@@ -4,6 +4,7 @@ package io.rippledown.voice
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.TooltipArea
+import androidx.compose.foundation.TooltipPlacement
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Icon
@@ -16,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Black
@@ -25,6 +27,7 @@ import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
@@ -56,6 +59,16 @@ fun VoiceInputButton(
                 )
             }
         },
+        // Default placement anchors at the cursor and so floats directly on
+        // top of the mic icon, intercepting the click. Anchor the tooltip's
+        // bottom edge to the top of the button so it sits just above, with a
+        // gap, instead of either covering the button or floating up into
+        // the chat messages.
+        tooltipPlacement = TooltipPlacement.ComponentRect(
+            anchor = Alignment.TopCenter,
+            alignment = Alignment.BottomCenter,
+            offset = DpOffset(x = 0.dp, y = (-20).dp)
+        ),
     ) {
         androidx.compose.material3.IconButton(
             onClick = {
