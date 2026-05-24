@@ -42,7 +42,7 @@ fun RowScope.ValueCell(
         Text(
             text = result.value.text,
             modifier = Modifier.semantics {
-                contentDescription = result.value.text.ifBlank { "$caseName ${attribute.name} value $index" }
+                contentDescription = valueCellContentDescription(caseName, attribute.name, index)
             },
             color = color,
             fontWeight = weight,
