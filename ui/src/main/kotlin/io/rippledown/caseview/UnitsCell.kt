@@ -20,11 +20,12 @@ import io.rippledown.model.Result
 @Composable
 fun RowScope.UnitsCell(attribute: Attribute, result: Result, widthWeight: Float) {
     val raw = result.units?.trim().orEmpty()
+    val formattedUnits = formatUnits(raw)
     Text(
-        text = formatUnits(raw),
+        text = formattedUnits,
         modifier = Modifier.weight(widthWeight)
             .semantics {
-                contentDescription = unitsCellContentDescription(attribute.name)
+                contentDescription = formattedUnits.text.ifBlank { "Units for ${attribute.name}" }
             },
         textAlign = TextAlign.Start
     )

@@ -20,7 +20,7 @@ fun RowScope.AttributeCell(index: Int, caseName: String, attribute: Attribute, c
         modifier = Modifier.weight(columnWidths.attributeColumnWeight)
             .padding(end = 12.dp)
             .semantics {
-                contentDescription = attributeCellContentDescription(index, caseName)
+                contentDescription = attribute.name
             },
         fontWeight = FontWeight.Bold,
         textAlign = TextAlign.Start
