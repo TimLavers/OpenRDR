@@ -11,6 +11,7 @@ import io.rippledown.constants.navigation.PREVIOUS_BUTTON
 import io.rippledown.cornerstone.CornerstoneTestHook
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAndClick
+import io.rippledown.integration.utils.renderedText
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
@@ -84,7 +85,9 @@ class CornerstonePO(private val contextProvider: () -> AccessibleContext) {
 
     fun requireNoCornerstonesToReviewMessage() {
         waitUntilAsserted {
-            val message = execute<String> { contextProvider().find(NO_CORNERSTONES_TO_REVIEW_ID)?.accessibleName }
+            val message = execute<String> {
+                contextProvider().find(NO_CORNERSTONES_TO_REVIEW_ID)?.let { renderedText(it) }
+            }
             message shouldBe NO_CORNERSTONES_TO_REVIEW_MSG
         }
     }

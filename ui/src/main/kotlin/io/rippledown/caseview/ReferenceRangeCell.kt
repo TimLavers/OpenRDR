@@ -18,8 +18,7 @@ fun RowScope.ReferenceRangeCell(attribute: Attribute, result: Result, widthWeigh
         text = rangeText(result.referenceRange),
         modifier = Modifier.weight(widthWeight)
             .semantics{
-                contentDescription =
-                    rangeText(result.referenceRange).ifBlank { "Reference range for ${attribute.name}" }
+                contentDescription = referenceRangeCellContentDescription(attribute.name)
             },
         textAlign = TextAlign.Start
     )

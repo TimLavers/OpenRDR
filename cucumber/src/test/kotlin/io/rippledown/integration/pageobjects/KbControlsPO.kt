@@ -25,7 +25,7 @@ class KbControlsPO(private val contextProvider: () -> AccessibleContext) {
 
     fun currentKB(): String {
         val textContext = contextProvider().find(KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION, AccessibleRole.LABEL)!!
-        return textContext.accessibleName
+        return renderedText(textContext)
     }
 
     fun createKB(name: String) {

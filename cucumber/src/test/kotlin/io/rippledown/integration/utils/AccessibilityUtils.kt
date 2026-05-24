@@ -7,7 +7,30 @@ import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleRole
+import javax.accessibility.AccessibleText
 
+
+/**
+ * Reads the rendered text from a Compose Text node.
+ *
+ * From Compose 1.11 the Java accessibility bridge uses contentDescription as
+ * the accessible name on Text nodes, overriding the rendered text. So
+ * `accessibleName` on (e.g.) an AttributeCell returns
+ * "Header for case data row Einstein 0" rather than "MCV".
+ * `AccessibleText` exposes the actual displayed characters and is the
+ * supported way to recover the rendered text.
+ *
+ * Falls back to `accessibleName` for nodes without `AccessibleText`.
+ */
+fun renderedText(ctx: AccessibleContext): String {
+    val text = ctx.accessibleText ?: return ctx.accessibleName ?: ""
+    return buildString {
+        for (i in 0 until text.charCount) {
+            val ch = text.getAtIndex(AccessibleText.CHARACTER, i)
+            if (ch != null) append(ch)
+        }
+    }
+}
 
 fun AccessibleContext.find(description: String, role: AccessibleRole): AccessibleContext? {
     val matcher = { context: AccessibleContext ->

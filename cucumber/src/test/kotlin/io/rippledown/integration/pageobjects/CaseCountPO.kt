@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.constants.caseview.PROCESSED_SECTION_HEADER_ID
 import io.rippledown.integration.utils.find
+import io.rippledown.integration.utils.renderedText
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
@@ -24,7 +25,7 @@ class CaseCountPO(private val contextProvider: () -> AccessibleContext) {
     private fun countOfTheNumberOfCases(): Int {
         val context = contextForCaseCount() ?: return 0
         return execute<Int> {
-            val name = context.accessibleName ?: ""
+            val name = renderedText(context)
             countPattern.find(name)?.groupValues?.get(1)?.toInt() ?: 0
         }
     }
