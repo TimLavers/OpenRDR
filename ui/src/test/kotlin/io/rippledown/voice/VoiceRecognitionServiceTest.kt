@@ -307,4 +307,27 @@ class VoiceRecognitionServiceTest {
 
         wav.copyOfRange(44, wav.size) shouldBe pcm
     }
+
+    @Test
+    fun `isMicrophoneAvailable returns boolean without throwing exception`() {
+        // We can't guarantee the result in all test environments,
+        // but we can verify the function doesn't throw an exception
+        VoiceRecognitionService.isMicrophoneAvailable()
+    }
+
+    @Test
+    fun `openDefaultMicrophone throws meaningful exception when no microphone available`() {
+        val format = VoiceRecognitionService.pcmFormat(16_000f)
+
+        try {
+            // We can't easily mock AudioSystem statically, so we'll test the actual behavior
+            // If there's no microphone, it should throw an IllegalArgumentException
+            val line = VoiceRecognitionService.openDefaultMicrophone(format)
+            // If we get here, a microphone was available
+            line.close()
+        } catch (e: IllegalArgumentException) {
+            // Expected when no microphone is available
+            e.message shouldBe "No microphone available: No line matching interface TargetDataLine supporting format PCM_SIGNED 16000.0 Hz, 16 bit, mono, 2 bytes/frame, little-endian is supported."
+        }
+    }
 }

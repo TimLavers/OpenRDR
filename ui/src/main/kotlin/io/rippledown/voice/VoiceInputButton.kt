@@ -6,10 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Blue
@@ -35,6 +32,7 @@ fun VoiceInputButton(
 ) {
     val isListening by voiceRecognitionService.isListening.collectAsState()
     val partialResult by voiceRecognitionService.partialResult.collectAsState()
+    val microphoneAvailable = remember { VoiceRecognitionService.isMicrophoneAvailable() }
 
     LaunchedEffect(partialResult) {
         onPartialResult(partialResult)
@@ -64,7 +62,7 @@ fun VoiceInputButton(
             Icon(
                 imageVector = if (isListening) Icons.Filled.MicOff else Icons.Filled.Mic,
                 contentDescription = if (isListening) "Stop recording" else "Start recording",
-                tint = if (isListening) Color.Red else Blue,
+                tint = if (!microphoneAvailable) Color.Gray else if (isListening) Color.Red else Blue,
                 modifier = Modifier
                     .size(18.dp)
                     .semantics {
@@ -88,7 +86,7 @@ fun VoiceInputButton(
             tooltip = {
                 PlainTooltip {
                     Text(
-                        text = "Start recording",
+                        text = if (microphoneAvailable) "Start recording" else "No microphone available",
                         style = TextStyle(fontSize = 12.sp)
                     )
                 }

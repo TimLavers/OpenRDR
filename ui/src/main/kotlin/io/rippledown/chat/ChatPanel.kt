@@ -43,6 +43,7 @@ import io.rippledown.decoration.LIGHT_BLUE
 import io.rippledown.voice.RecordingIndicator
 import io.rippledown.voice.VoiceInputButton
 import io.rippledown.voice.VoiceRecognition
+import io.rippledown.voice.VoiceRecognitionService
 
 interface ChatMessage {
     val text: String
@@ -200,9 +201,10 @@ fun ChatPanel(
                 trailingIcon = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         if (voiceRecognitionService != null) {
+                            val microphoneAvailable = remember { VoiceRecognitionService.isMicrophoneAvailable() }
                             VoiceInputButton(
                                 voiceRecognitionService = voiceRecognitionService,
-                                enabled = sendIsEnabled,
+                                enabled = sendIsEnabled && microphoneAvailable,
                                 onPartialResult = { partial ->
                                     val base = inputText.text.dropLast(partialSuffixLength)
                                     val suffix = if (partial.isNotBlank()) {

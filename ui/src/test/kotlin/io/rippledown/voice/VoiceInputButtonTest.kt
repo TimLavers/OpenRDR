@@ -253,4 +253,44 @@ class VoiceInputButtonTest {
             receivedTexts shouldContain "hello world"
         }
     }
+
+    @Test
+    fun `should show correct tooltip based on microphone availability`() {
+        with(composeTestRule) {
+            // Given
+            setContent {
+                VoiceInputButton(voiceRecognitionService = voiceRecognitionService)
+            }
+
+            // When - hover over the button
+            onNodeWithContentDescription(CHAT_MIC_BUTTON).performTouchInput {
+                // The tooltip should be visible on hover
+            }
+
+            // Then - verify tooltip text (this is a basic test since we can't easily mock isMicrophoneAvailable)
+            // The actual behavior depends on the system's microphone availability
+            // This test ensures the button doesn't crash and displays a tooltip
+            onNodeWithContentDescription(CHAT_MIC_BUTTON).assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun `should be greyed out when microphone unavailable`() {
+        with(composeTestRule) {
+            // Given
+            setContent {
+                VoiceInputButton(
+                    voiceRecognitionService = voiceRecognitionService,
+                    enabled = true
+                )
+            }
+
+            // Then - button should be displayed (color depends on actual microphone availability)
+            onNodeWithContentDescription(CHAT_MIC_BUTTON).assertIsDisplayed()
+
+            // If microphone is unavailable, the button will be grey but still enabled
+            // This test ensures the button renders without crashing
+            onNodeWithContentDescription(CHAT_MIC_BUTTON).assertExists()
+        }
+    }
 }

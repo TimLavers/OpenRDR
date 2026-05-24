@@ -146,6 +146,20 @@ class VoiceRecognitionService(
         const val DEFAULT_SAMPLE_RATE = 16_000f
         private const val CAPTURE_FRAME_BYTES = 4_096
 
+        /**
+         * Checks if a microphone is available for audio capture.
+         * Returns true if at least one TargetDataLine supporting the format is available.
+         */
+        fun isMicrophoneAvailable(): Boolean {
+            val format = pcmFormat(DEFAULT_SAMPLE_RATE)
+            val info = DataLine.Info(TargetDataLine::class.java, format)
+            return try {
+                AudioSystem.getLine(info) != null
+            } catch (e: IllegalArgumentException) {
+                false
+            }
+        }
+
         fun pcmFormat(sampleRate: Float): AudioFormat = AudioFormat(
             AudioFormat.Encoding.PCM_SIGNED,
             sampleRate,
@@ -179,7 +193,11 @@ class VoiceRecognitionService(
                         return AudioSystem.getMixer(mixerInfo).getLine(info) as TargetDataLine
                     }
             }
-            return AudioSystem.getLine(info) as TargetDataLine
+            try {
+                return AudioSystem.getLine(info) as TargetDataLine
+            } catch (e: IllegalArgumentException) {
+                throw IllegalArgumentException("No microphone available: ${e.message}", e)
+            }
         }
 
         /**
