@@ -74,6 +74,13 @@ val stageMacUiApp = tasks.register<Sync>("stageMacUiApp") {
     onlyIf { demoOsClassifier == "macos" }
     dependsOn(":ui:createDistributable")
 
+    // jpackage's bundled JRE marks files under `legal/**` as read-only (444),
+    // which makes Sync's in-place overwrite fail with "Permission denied" on
+    // re-runs. Wipe the staging dir first so we always copy into empty space.
+    doFirst {
+        delete(macUiAppStagingDir)
+    }
+
     from(project(":ui").layout.buildDirectory.dir("compose/binaries/main/app/OpenRDR.app")) {
         into("OpenRDR.app")
     }
