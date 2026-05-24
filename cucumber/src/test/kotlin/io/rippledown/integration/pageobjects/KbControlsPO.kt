@@ -101,7 +101,20 @@ class KbControlsPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun expandDropdownMenu() {
-        execute { contextProvider().findAndClick(KB_CONTROL_DROPDOWN_DESCRIPTION) }
+        // Find-and-click in a single EDT pass and retry: the dropdown
+        // accessibility node can appear in one frame and be replaced by a
+        // freshly composed equivalent in the next (e.g. when the AppBar
+        // re-renders shortly after launch), so searching and clicking
+        // across two `execute { ... }` calls races against the swap.
+        waitUntilAsserted {
+            val clicked = execute<Boolean> {
+                val node = contextProvider().find(KB_CONTROL_DROPDOWN_DESCRIPTION)
+                    ?: return@execute false
+                node.accessibleAction?.doAccessibleAction(0) ?: false
+                true
+            }
+            clicked shouldBe true
+        }
     }
 
     private fun clickDropdownItem(description: String) {
