@@ -53,7 +53,7 @@ fun VoiceInputButton(
         tooltip = {
             Surface(modifier = Modifier.padding(4.dp)) {
                 Text(
-                    text = if (isListening) "Stop listening" else "Voice input",
+                    text = if (isListening) "Stop recording" else "Start recording",
                     color = Black,
                     style = TextStyle(fontSize = 12.sp)
                 )
@@ -87,7 +87,7 @@ fun VoiceInputButton(
         ) {
             Icon(
                 imageVector = if (isListening) Icons.Filled.MicOff else Icons.Filled.Mic,
-                contentDescription = if (isListening) "Stop listening" else "Voice input",
+                contentDescription = if (isListening) "Stop recording" else "Start recording",
                 tint = if (isListening) Color.Red else Blue,
                 modifier = Modifier
                     .size(18.dp)

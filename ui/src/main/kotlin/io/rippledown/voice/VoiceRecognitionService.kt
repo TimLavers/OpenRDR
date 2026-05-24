@@ -36,6 +36,9 @@ class VoiceRecognitionService(
     private val _isListening = MutableStateFlow(false)
     override val isListening: StateFlow<Boolean> = _isListening
 
+    private val _isTranscribing = MutableStateFlow(false)
+    override val isTranscribing: StateFlow<Boolean> = _isTranscribing
+
     private val _partialResult = MutableStateFlow("")
     override val partialResult: StateFlow<String> = _partialResult
 
@@ -94,12 +97,17 @@ class VoiceRecognitionService(
             val result = if (pcmBytes.isEmpty()) {
                 ""
             } else {
-                val wav = pcmToWav(pcmBytes, sampleRate)
+                _isTranscribing.value = true
                 try {
-                    withContext(Dispatchers.IO) { transcribe(wav) }
-                } catch (e: Exception) {
-                    logger.warn("VoiceRecognitionService: transcription failed: ${e.message}", e)
-                    ""
+                    val wav = pcmToWav(pcmBytes, sampleRate)
+                    try {
+                        withContext(Dispatchers.IO) { transcribe(wav) }
+                    } catch (e: Exception) {
+                        logger.warn("VoiceRecognitionService: transcription failed: ${e.message}", e)
+                        ""
+                    }
+                } finally {
+                    _isTranscribing.value = false
                 }
             }
             if (result.isNotBlank()) {

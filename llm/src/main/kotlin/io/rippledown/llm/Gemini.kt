@@ -52,6 +52,9 @@ const val TRANSCRIPTION_SYSTEM_INSTRUCTION =
             "Do not rephrase, summarise, translate or correct grammar. " +
             "Do NOT prefix the transcript with timestamps, durations, or any " +
             "bracketed metadata such as [00:00:03], [0m0s - 0m10s] or [0m0s]. " +
+            "Do NOT annotate non-speech sounds with bracketed tags such as " +
+            "[noise], [music], [laughter], [silence], [background noise] or " +
+            "[inaudible]. Simply omit such sounds. " +
             "Return only the spoken words. " +
             "If a word is unclear, write [?] in its place. " +
             "If the audio contains no intelligible speech, return an empty string."
@@ -67,10 +70,25 @@ const val TRANSCRIPTION_SYSTEM_INSTRUCTION =
 private val TIMESTAMP_BRACKET = Regex("""^\s*\[\s*\d[\d\smshMSH:.\-]*]\s*""")
 
 /**
- * Strip leading timestamp-style bracketed metadata that Gemini sometimes
- * emits despite the prompt forbidding it. Repeats until no further leading
- * bracket matches, then trims. Leaves `[?]` unclear-word markers and any
- * bracketed text appearing mid-transcript untouched.
+ * Matches a `[word]` or `[multi word]` annotation anywhere in the
+ * transcript - the kind of non-speech tag Gemini emits when it hears
+ * background sound, e.g. `[noise]`, `[music]`, `[background noise]`,
+ * `[laughter]`. The bracket body must start with a letter and contain
+ * only letters and whitespace, so the `[?]` unclear-word marker and
+ * timestamp-style numeric brackets are not matched here.
+ */
+private val WORD_ANNOTATION_BRACKET = Regex("""\[\s*[a-zA-Z][a-zA-Z\s]*]""")
+
+/**
+ * Strip Gemini-emitted bracketed metadata from a transcript:
+ *
+ *   - leading timestamp / duration brackets (`[00:00:03]`, `[0m0s - 0m10s]`, ...)
+ *   - inline non-speech annotations (`[noise]`, `[music]`, `[laughter]`, ...)
+ *
+ * The `[?]` unclear-word marker the prompt asks for is preserved, as is
+ * any bracketed text that doesn't match either of the above shapes (e.g.
+ * a user dictating `[important]`). Internal whitespace is collapsed so
+ * removing a mid-string `[noise]` doesn't leave a double space.
  */
 internal fun cleanTranscript(raw: String): String {
     var s = raw
@@ -79,6 +97,9 @@ internal fun cleanTranscript(raw: String): String {
         if (next == s) break
         s = next
     }
+    s = s.replace(WORD_ANNOTATION_BRACKET, "")
+    s = s.replace(Regex("""\s{2,}"""), " ")
+    s = s.replace(Regex("""\s+([,.;:!?])"""), "$1")
     return s.trim()
 }
 

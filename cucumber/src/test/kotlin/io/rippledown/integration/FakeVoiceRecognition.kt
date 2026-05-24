@@ -30,6 +30,9 @@ class FakeVoiceRecognition : VoiceRecognition {
     private val _isListening = MutableStateFlow(false)
     override val isListening: StateFlow<Boolean> = _isListening
 
+    private val _isTranscribing = MutableStateFlow(false)
+    override val isTranscribing: StateFlow<Boolean> = _isTranscribing
+
     private val _partialResult = MutableStateFlow("")
     override val partialResult: StateFlow<String> = _partialResult
 

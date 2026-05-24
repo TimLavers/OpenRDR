@@ -92,6 +92,7 @@ class VoiceRecognitionServiceTest {
 
         service.startListening(testScope, onFinalResult)
         waitFor { service.isListening.value.shouldBeTrue() }
+        service.isTranscribing.value.shouldBeFalse()
 
         service.stopListening()
 
@@ -99,7 +100,54 @@ class VoiceRecognitionServiceTest {
             transcribed.get().shouldBeTrue()
             captured shouldContainExactly listOf("hello world")
             service.isListening.value.shouldBeFalse()
+            // Transcribing flag is reset once the result has been delivered.
+            service.isTranscribing.value.shouldBeFalse()
         }
+    }
+
+    @Test
+    fun `isTranscribing is true while transcribe is running and false afterwards`() {
+        val transcribeStarted = AtomicBoolean(false)
+        val transcribeReleased = AtomicBoolean(false)
+        val service = VoiceRecognitionService(
+            microphoneFactory = { fakeMicrophone() },
+            transcribe = {
+                transcribeStarted.set(true)
+                while (!transcribeReleased.get()) Thread.sleep(5)
+                "done"
+            }
+        )
+
+        service.startListening(testScope, onFinalResult)
+        waitFor { service.isListening.value.shouldBeTrue() }
+
+        service.stopListening()
+        // Wait for transcribe() to actually start.
+        waitFor { transcribeStarted.get().shouldBeTrue() }
+        service.isTranscribing.value.shouldBeTrue()
+
+        // Release the fake transcriber and verify the flag clears.
+        transcribeReleased.set(true)
+        waitFor {
+            captured shouldContainExactly listOf("done")
+            service.isTranscribing.value.shouldBeFalse()
+        }
+    }
+
+    @Test
+    fun `isTranscribing stays false when nothing was captured`() {
+        val silentLine = mockk<TargetDataLine>(relaxed = true)
+        every { silentLine.read(any(), any(), any()) } answers { Thread.sleep(5); 0 }
+        val service = VoiceRecognitionService(
+            microphoneFactory = { silentLine },
+            transcribe = { error("transcribe should not be invoked when no audio captured") }
+        )
+
+        service.startListening(testScope, onFinalResult)
+        waitFor { service.isListening.value.shouldBeTrue() }
+        service.stopListening()
+        waitFor { service.isListening.value.shouldBeFalse() }
+        service.isTranscribing.value.shouldBeFalse()
     }
 
     @Test

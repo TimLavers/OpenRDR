@@ -59,8 +59,34 @@ class CleanTranscriptTest {
     }
 
     @Test
-    fun `does not strip a leading bracket that is not a timestamp`() {
-        cleanTranscript("[important] Yes please") shouldBe "[important] Yes please"
+    fun `strips trailing noise annotation`() {
+        cleanTranscript("Yes, please. [noise]") shouldBe "Yes, please."
+    }
+
+    @Test
+    fun `strips inline noise annotation and collapses whitespace`() {
+        cleanTranscript("Yes [noise] please") shouldBe "Yes please"
+    }
+
+    @Test
+    fun `strips multi-word non-speech annotation`() {
+        cleanTranscript("Yes [background noise] please") shouldBe "Yes please"
+    }
+
+    @Test
+    fun `strips known non-speech tags`() {
+        cleanTranscript("Hello [music] world [laughter] [silence] today") shouldBe
+                "Hello world today"
+    }
+
+    @Test
+    fun `noise annotation immediately before punctuation does not leave a gap`() {
+        cleanTranscript("Yes, please [noise].") shouldBe "Yes, please."
+    }
+
+    @Test
+    fun `strips both leading timestamps and inline noise tags`() {
+        cleanTranscript("[ 00:00:03 ] Yes, please. [noise]") shouldBe "Yes, please."
     }
 
     @Test
