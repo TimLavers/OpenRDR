@@ -2,11 +2,13 @@ package io.rippledown.integration.pageobjects
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.caseview.attributeCellContentDescriptionPrefix
+import io.rippledown.caseview.referenceRangeCellContentDescription
 import io.rippledown.caseview.valueCellContentDescriptionPrefix
 import io.rippledown.constants.caseview.*
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
 import io.rippledown.integration.utils.findAndClick
+import io.rippledown.integration.utils.renderedText
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
 import java.awt.Point
@@ -61,69 +63,25 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
         extractMatchingValuesInOrderShown(DATE_CELL_DESCRIPTION_PREFIX) { context -> DateCellPO(context) }
 
     fun attributeNames(): List<String> {
-        return execute<List<String>> {
-            val table = contextProvider().find(CASE_VIEW_TABLE) ?: return@execute emptyList()
-            table
-                .findAllByDescriptionPrefix("") // Find all elements with content description
-                .filter { context ->
-                    // Filter for attribute cells by checking if they have the expected structure
-                    // and don't match other known prefixes
-                    val description = context.accessibleName
-                    description.isNotBlank() &&
-                            context.accessibleRole == LABEL && // Only get LABEL elements (text)
-                            // Must be a single word that starts with uppercase letter and contains only letters
-                            description.matches(Regex("^[A-Z][a-zA-Z]*$")) &&
-                            // Exclude known non-attribute patterns
-                            !description.startsWith("Date") &&
-                            !description.startsWith("Reference") &&
-                            !description.startsWith("Out") &&
-                            !description.startsWith("Units") &&
-                            !description.startsWith("Filter") &&
-                            !description.startsWith("Clear") &&
-                            !description.startsWith("Case") &&
-                            !description.startsWith("Attributes") &&
-                            !description.contains("value") &&
-                            !description.contains("column") &&
-                            !description.contains("table") &&
-                            !description.contains("filter") &&
-                            description.length <= 20 // Reasonable length limit for attribute names
-                }
-                .map { it.accessibleName }
-                .sorted()
+        val caseName = awaitNameShown()
+        val contentDescriptionPrefix = attributeCellContentDescriptionPrefix(caseName)
+        return extractMatchingValuesInOrderShown(contentDescriptionPrefix) { context ->
+            AttributeCellPO(
+                context,
+                caseName
+            )
         }
     }
 
     fun valuesForAttribute(attribute: String): List<String> {
         val caseName = awaitNameShown()
-        return execute<List<String>> {
-            val table = contextProvider().find(CASE_VIEW_TABLE) ?: return@execute emptyList()
-            table
-                .findAllByDescriptionPrefix("") // Find all elements with content description
-                .filter { context ->
-                    // Look for value cells for the specific attribute
-                    val description = context.accessibleName
-                    description.isNotBlank() &&
-                            context.accessibleRole == LABEL &&
-                            !description.startsWith("Date for episode") &&
-                            !description.startsWith("Reference range for") &&
-                            !description.startsWith("Out of range marker for") &&
-                            !description.startsWith("Units for") &&
-                            !description.startsWith("Filter ") &&
-                            !description.startsWith("Clear filter") &&
-                            description != "Attributes column" &&
-                            description != "Reference ranges column" &&
-                            description != "Units column" &&
-                            description != "Case view table" &&
-                            description != "Filter" &&
-                            description != "Filter attributes or values" &&
-                            // Check if this looks like a value (numeric or contains the case name)
-                            (description.matches(Regex("^[<>]?\\d+(\\.\\d+)?$")) || // Numeric value
-                                    description.contains(caseName) || // Contains case name (fallback)
-                                    description.matches(Regex("^[+-]?\\d+(\\.\\d+)?[eE][+-]?\\d+$"))) // Scientific notation
-                }
-                .map { it.accessibleName }
-                .filter { it.isNotBlank() }
-                .sorted()
+        val contentDescriptionPrefix = valueCellContentDescriptionPrefix(caseName, attribute)
+        return extractMatchingValuesInOrderShown(contentDescriptionPrefix) { context ->
+            ValueCellPO(
+                context,
+                caseName,
+                attribute
+            )
         }
     }
 
@@ -183,23 +141,10 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
     // Returns "" rather than throwing NPE if the cell is not yet present. This
     // method is typically called inside an awaitility `untilAsserted` retry,
     // which only catches AssertionError — not NPE
-    fun referenceRange(attribute: String): String = execute<String> {
-        val table = contextProvider().find(CASE_VIEW_TABLE) ?: return@execute ""
-        table
-            .findAllByDescriptionPrefix("") // Find all elements with content description
-            .filter { context ->
-                // Look for reference range cells - they contain the actual reference range text
-                val description = context.accessibleName
-                description.isNotBlank() &&
-                        context.accessibleRole == LABEL &&
-                        (description.matches(Regex("^[<>]?\\d+(\\.\\d+)?\\s*-\\s*\\d+(\\.\\d+)?$")) || // "1.2 - 3.4"
-                                description.matches(Regex("^[<>]\\s*\\d+(\\.\\d+)?$")) || // "< 5.6" or "> 7.8"
-                                description.startsWith("Reference range for")) // Fallback for empty ranges
-            }
-            .map { it.accessibleName }
-            .firstOrNull { it.isNotBlank() && !it.startsWith("Reference range for") }
-            .orEmpty()
-    }
+    fun referenceRange(attribute: String): String = contextProvider()
+        .find(referenceRangeCellContentDescription(attribute), LABEL)
+        ?.let { renderedText(it) }
+        .orEmpty()
 
     /**
      * Replaces the case-view filter field's contents with [text]. The same
@@ -230,7 +175,7 @@ open class CellPO(val context: AccessibleContext, descriptionPrefix: String) : C
 
     override fun compareTo(other: CellPO) = index.compareTo(other.index)
 
-    fun text() = context.accessibleName ?: ""
+    fun text() = execute<String> { renderedText(context) }
 }
 
 class DateCellPO(context: AccessibleContext) : CellPO(context, DATE_CELL_DESCRIPTION_PREFIX)

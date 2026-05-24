@@ -23,6 +23,7 @@ Feature: Order of Attributes in Case View
       | B |
       | C |
 
+  @single
   Scenario: Attributes can be re-ordered by drag-and-drop
     Given I start the client application
     And the initial Attribute order is A, B, C
