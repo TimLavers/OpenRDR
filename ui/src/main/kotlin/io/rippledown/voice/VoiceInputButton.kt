@@ -1,33 +1,23 @@
-@file:OptIn(ExperimentalFoundationApi::class)
-
 package io.rippledown.voice
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.TooltipArea
-import androidx.compose.foundation.TooltipPlacement
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Icon
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MicOff
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.graphics.Color.Companion.Blue
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
@@ -35,6 +25,7 @@ import kotlinx.coroutines.Dispatchers
 
 const val CHAT_MIC_BUTTON = "CHAT_MIC_BUTTON"
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VoiceInputButton(
     voiceRecognitionService: VoiceRecognition,
@@ -49,27 +40,12 @@ fun VoiceInputButton(
         onPartialResult(partialResult)
     }
 
-    TooltipArea(
-        tooltip = {
-            Surface(modifier = Modifier.padding(4.dp)) {
-                Text(
-                    text = if (isListening) "Stop recording" else "Start recording",
-                    color = Black,
-                    style = TextStyle(fontSize = 12.sp)
-                )
-            }
-        },
-        // Default placement anchors at the cursor and so floats directly on
-        // top of the mic icon, intercepting the click. Anchor the tooltip's
-        // bottom edge to the top of the button so it sits just above, with a
-        // gap, instead of either covering the button or floating up into
-        // the chat messages.
-        tooltipPlacement = TooltipPlacement.ComponentRect(
-            anchor = Alignment.TopCenter,
-            alignment = Alignment.BottomCenter,
-            offset = DpOffset(x = 0.dp, y = (-20).dp)
-        ),
-    ) {
+    // The "Start recording" tooltip is helpful for discovery when the
+    // button is idle. We deliberately do NOT show a "Stop recording"
+    // tooltip while recording: the red MicOff icon plus the Recording
+    // indicator pill above the input field already communicate the state
+    // loudly, and another tooltip there is redundant.
+    val micButton: @Composable () -> Unit = {
         androidx.compose.material3.IconButton(
             onClick = {
                 if (isListening) {
@@ -95,6 +71,31 @@ fun VoiceInputButton(
                         contentDescription = CHAT_MIC_BUTTON
                     }
             )
+        }
+    }
+
+    if (isListening) {
+        micButton()
+    } else {
+        // Material 3 TooltipBox uses BasicTooltipDefaults.GlobalMutatorMutex
+        // by default, which coordinates dismissal across every TooltipBox
+        // in the app: showing one cancels any other that's currently visible.
+        // This is what makes the mic / send tooltips never get "stuck on"
+        // when the user sweeps between them, unlike the old foundation
+        // TooltipArea.
+        TooltipBox(
+            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(),
+            tooltip = {
+                PlainTooltip {
+                    Text(
+                        text = "Start recording",
+                        style = TextStyle(fontSize = 12.sp)
+                    )
+                }
+            },
+            state = rememberTooltipState()
+        ) {
+            micButton()
         }
     }
 }

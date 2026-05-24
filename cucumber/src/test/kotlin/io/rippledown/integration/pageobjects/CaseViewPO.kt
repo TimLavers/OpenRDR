@@ -22,7 +22,20 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
         //Awaits in waitForNameToShow and waitForRequiredCaseValues handle rendering delays
     }
 
-    fun nameShown(): String? = execute<String> { contextProvider().find(CASEVIEW_CASE_NAME_ID, LABEL)?.accessibleName }
+    fun nameShown(): String? = execute<String> {
+        // Find the case-name label by its contentDescription prefix and recover
+        // the case name from the suffix. From Compose 1.11 the Java accessibility
+        // bridge uses contentDescription as the accessible name on Text nodes,
+        // overriding the rendered text, so we cannot rely on accessibleName.
+        val matcher: (AccessibleContext) -> Boolean = { ctx ->
+            ctx.accessibleRole == LABEL &&
+                    ctx.accessibleDescription?.startsWith(CASEVIEW_CASE_NAME_ID) == true
+        }
+        contextProvider().find(matcher)
+            ?.accessibleDescription
+            ?.removePrefix(CASEVIEW_CASE_NAME_ID)
+            ?.takeIf { it.isNotEmpty() }
+    }
 
     private fun awaitNameShown(): String {
         await().atMost(ofSeconds(10)).until { nameShown() != null }
@@ -30,12 +43,12 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun requireNoNameShowing() {
-        contextProvider().find(CASEVIEW_CASE_NAME_ID, LABEL) shouldBe null
+        nameShown() shouldBe null
     }
 
     fun waitForNoNameShowing() {
         await().atMost(ofSeconds(5)).until {
-            contextProvider().find(CASEVIEW_CASE_NAME_ID, LABEL) == null
+            nameShown() == null
         }
     }
 

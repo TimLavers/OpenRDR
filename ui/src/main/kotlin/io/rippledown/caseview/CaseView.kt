@@ -46,7 +46,11 @@ fun CaseView(case: ViewableCase, handler: CaseViewHandler, modifier: Modifier = 
                     .padding(end = 12.dp)
                     .testTag("$CASEVIEW_CASE_NAME_ID${case.name}")
                     .semantics {
-                        contentDescription = CASEVIEW_CASE_NAME_ID
+                        // Embed the case name in the contentDescription so the
+                        // Java accessibility bridge exposes it. From Compose 1.11
+                        // the bridge uses contentDescription as the accessible
+                        // name on a Text node, overriding the rendered text.
+                        contentDescription = "$CASEVIEW_CASE_NAME_ID${case.name}"
                     }
             )
             Spacer(modifier = Modifier.weight(1f - columnWidths.attributeColumnWeight))

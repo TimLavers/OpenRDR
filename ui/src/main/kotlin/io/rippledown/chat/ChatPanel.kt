@@ -1,9 +1,7 @@
-@file:OptIn(ExperimentalFoundationApi::class)
+@file:OptIn(ExperimentalMaterial3Api::class)
 
 package io.rippledown.chat
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.TooltipArea
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,15 +11,19 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.PlainTooltip
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.graphics.Color.Companion.Blue
 import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.input.key.*
@@ -218,19 +220,21 @@ fun ChatPanel(
                                 }
                             )
                         }
-                    TooltipArea(
+                        // Material 3 TooltipBox - see VoiceInputButton for why
+                        // we switched from foundation TooltipArea. The global
+                        // MutatorMutex ensures only one tooltip is shown at a
+                        // time across all TooltipBoxes in the app.
+                        TooltipBox(
+                            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(),
                         tooltip = {
-                            Surface(
-                                modifier = Modifier
-                                    .padding(4.dp)
-                            ) {
-                                Text(
+                            PlainTooltip {
+                                androidx.compose.material3.Text(
                                     text = "Send",
-                                    color = Black,
                                     style = TextStyle(fontSize = 12.sp)
                                 )
                             }
                         },
+                            state = rememberTooltipState()
                     ) {
                         FilledIconButton(
                             onClick = {
