@@ -222,7 +222,8 @@ private fun SwitchKbHeader() {
 
 @Composable
 private fun CreateKbDialog(onDismiss: () -> Unit, onCreate: (String) -> Unit) {
-    val state = rememberDialogState(size = DpSize(420.dp, 160.dp))
+    // See ImportKbDialog: 160dp clipped the buttons under Compose 1.11.
+    val state = rememberDialogState(size = DpSize(420.dp, 240.dp))
     DialogWindow(onCloseRequest = onDismiss, title = "Create KB", state = state) {
         TextInputWithCancel(object : TextInputHandler {
             override fun handleInput(value: String) = onCreate(value)
@@ -252,7 +253,10 @@ private fun CreateKbFromSampleDialog(
 
 @Composable
 private fun ImportKbDialog(onDismiss: () -> Unit, onImport: (File) -> Unit) {
-    val state = rememberDialogState(size = DpSize(640.dp, 160.dp))
+    // 160dp clipped the Cancel / Import buttons off the bottom of the
+    // dialog under Compose 1.11 (OutlinedTextField now reserves more
+    // vertical space). Reserve enough room for the buttons row.
+    val state = rememberDialogState(size = DpSize(640.dp, 240.dp))
     DialogWindow(onCloseRequest = onDismiss, title = "Import KB", state = state) {
         TextInputWithCancel(object : TextInputHandler {
             override fun isValidInput(input: String): Boolean {
@@ -271,12 +275,14 @@ private fun ImportKbDialog(onDismiss: () -> Unit, onImport: (File) -> Unit) {
 
 @Composable
 private fun ExportKbDialog(onDismiss: () -> Unit, onExport: (File) -> Unit) {
-    val state = rememberDialogState(size = DpSize(640.dp, 160.dp))
+    // See ImportKbDialog: 160dp clipped the buttons under Compose 1.11.
+    val state = rememberDialogState(size = DpSize(640.dp, 240.dp))
     DialogWindow(onCloseRequest = onDismiss, title = "Export KB", state = state) {
         TextInputWithCancel(object : TextInputHandler {
-            override fun isValidInput(input: String): Boolean {
-                val file = File(input); return file.isFile && !file.exists()
-            }
+            // Allow any non-blank path: `file.isFile` is true only if the
+            // file already exists, so `isFile && !exists` was an
+            // unreachable predicate (the OK button could never be enabled).
+            override fun isValidInput(input: String) = input.isNotBlank()
 
             override fun labelText() = EXPORT_KB_NAME_FIELD_DESCRIPTION
             override fun inputFieldDescription() = EXPORT_KB_NAME_FIELD_DESCRIPTION

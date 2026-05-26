@@ -120,7 +120,12 @@ fun AccessibleContext.findLabelChildren(): List<String> {
     for (i in 0..<childCount) {
         val child = getAccessibleChild(i)
         if (child.accessibleContext.accessibleRole == AccessibleRole.LABEL) {
-            val caseName = child.accessibleContext.accessibleName
+            // Compose 1.11's accessibility bridge propagates a parent's
+            // contentDescription down to merged child Text nodes, so reading
+            // accessibleName returns "<contentDescription><name>" rather
+            // than just the rendered text. Read the visible characters via
+            // AccessibleText (renderedText) instead.
+            val caseName = renderedText(child.accessibleContext)
             //TODO. Why is this necessary? It seems that the same name is added multiple times.
             if (!result.contains(caseName)) result.add(caseName)
         }

@@ -24,7 +24,13 @@ class KbControlsPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun currentKB(): String {
-        val textContext = contextProvider().find(KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION, AccessibleRole.LABEL)!!
+        // Don't constrain by role: Compose 1.11 may report this merged Text
+        // node with a non-LABEL role (it sits inside a TextButton). Match
+        // by description only and poll until the AppBar has rendered.
+        waitUntilAsserted {
+            contextProvider().find(KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION) shouldNotBe null
+        }
+        val textContext = contextProvider().find(KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION)!!
         return renderedText(textContext)
     }
 
