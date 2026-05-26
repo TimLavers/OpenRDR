@@ -114,6 +114,29 @@ fun AccessibleContext.findAll(
     }
 }
 
+/**
+ * Search the descendant tree for a LABEL node whose rendered text equals
+ * [text]. Use this instead of [findByName] when the underlying Compose 1.11
+ * accessibility bridge prefixes the LABEL's `accessibleName` with the parent's
+ * contentDescription (which would defeat an exact-name match).
+ */
+fun AccessibleContext.findLabelByRenderedText(text: String): AccessibleContext? {
+    if (accessibleRole == AccessibleRole.LABEL && renderedText(this) == text) {
+        return this
+    }
+    val childCount = accessibleChildrenCount
+    for (i in 0..<childCount) {
+        try {
+            val match = getAccessibleChild(i).accessibleContext.findLabelByRenderedText(text)
+            if (match != null) return match
+        } catch (_: Exception) {
+            // Same defensive ignore as findAll: the AccessibleContext API
+            // can throw when traversing concurrently rebuilt subtrees.
+        }
+    }
+    return null
+}
+
 fun AccessibleContext.findLabelChildren(): List<String> {
     val result = mutableListOf<String>()
     val childCount = accessibleChildrenCount

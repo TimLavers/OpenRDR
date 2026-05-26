@@ -1,11 +1,12 @@
 package io.rippledown.integration.pageobjects
 
+import io.kotest.matchers.shouldBe
 import io.rippledown.constants.kb.EDIT_KB_DESCRIPTION_BUTTON_TEXT
 import io.rippledown.constants.kb.KB_CONTROL_DROPDOWN_DESCRIPTION
 import io.rippledown.constants.main.KBS_DROPDOWN_DESCRIPTION
 import io.rippledown.integration.utils.find
-import io.rippledown.integration.utils.findAndClick
 import io.rippledown.integration.utils.waitForComposeDialogToShow
+import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
@@ -21,7 +22,19 @@ class EditCurrentKbControlPO(private val contextProvider: () -> AccessibleContex
     }
 
     private fun expandDropdownMenu() {
-        execute { contextProvider().findAndClick(KB_CONTROL_DROPDOWN_DESCRIPTION) }
+        // Find-and-click in a single EDT pass and retry: under Compose 1.11
+        // the dropdown's accessibility node can be replaced by a freshly
+        // composed equivalent between a separate find() and click(), so a
+        // single-shot findAndClick races against the swap and NPEs.
+        waitUntilAsserted {
+            val clicked = execute<Boolean> {
+                val node = contextProvider().find(KB_CONTROL_DROPDOWN_DESCRIPTION)
+                    ?: return@execute false
+                node.accessibleAction?.doAccessibleAction(0) ?: false
+                true
+            }
+            clicked shouldBe true
+        }
     }
 
     /**
