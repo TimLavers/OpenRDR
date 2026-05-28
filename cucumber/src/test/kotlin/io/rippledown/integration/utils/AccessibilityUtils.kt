@@ -7,7 +7,30 @@ import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleRole
+import javax.accessibility.AccessibleText
 
+
+/**
+ * Reads the rendered text from a Compose Text node.
+ *
+ * From Compose 1.11 the Java accessibility bridge uses contentDescription as
+ * the accessible name on Text nodes, overriding the rendered text. So
+ * `accessibleName` on (e.g.) an AttributeCell returns
+ * "Header for case data row Einstein 0" rather than "MCV".
+ * `AccessibleText` exposes the actual displayed characters and is the
+ * supported way to recover the rendered text.
+ *
+ * Falls back to `accessibleName` for nodes without `AccessibleText`.
+ */
+fun renderedText(ctx: AccessibleContext): String {
+    val text = ctx.accessibleText ?: return ctx.accessibleName ?: ""
+    return buildString {
+        for (i in 0 until text.charCount) {
+            val ch = text.getAtIndex(AccessibleText.CHARACTER, i)
+            if (ch != null) append(ch)
+        }
+    }
+}
 
 fun AccessibleContext.find(description: String, role: AccessibleRole): AccessibleContext? {
     val matcher = { context: AccessibleContext ->
@@ -91,13 +114,41 @@ fun AccessibleContext.findAll(
     }
 }
 
+/**
+ * Search the descendant tree for a LABEL node whose rendered text equals
+ * [text]. Use this instead of [findByName] when the underlying Compose 1.11
+ * accessibility bridge prefixes the LABEL's `accessibleName` with the parent's
+ * contentDescription (which would defeat an exact-name match).
+ */
+fun AccessibleContext.findLabelByRenderedText(text: String): AccessibleContext? {
+    if (accessibleRole == AccessibleRole.LABEL && renderedText(this) == text) {
+        return this
+    }
+    val childCount = accessibleChildrenCount
+    for (i in 0..<childCount) {
+        try {
+            val match = getAccessibleChild(i).accessibleContext.findLabelByRenderedText(text)
+            if (match != null) return match
+        } catch (_: Exception) {
+            // Same defensive ignore as findAll: the AccessibleContext API
+            // can throw when traversing concurrently rebuilt subtrees.
+        }
+    }
+    return null
+}
+
 fun AccessibleContext.findLabelChildren(): List<String> {
     val result = mutableListOf<String>()
     val childCount = accessibleChildrenCount
     for (i in 0..<childCount) {
         val child = getAccessibleChild(i)
         if (child.accessibleContext.accessibleRole == AccessibleRole.LABEL) {
-            val caseName = child.accessibleContext.accessibleName
+            // Compose 1.11's accessibility bridge propagates a parent's
+            // contentDescription down to merged child Text nodes, so reading
+            // accessibleName returns "<contentDescription><name>" rather
+            // than just the rendered text. Read the visible characters via
+            // AccessibleText (renderedText) instead.
+            val caseName = renderedText(child.accessibleContext)
             //TODO. Why is this necessary? It seems that the same name is added multiple times.
             if (!result.contains(caseName)) result.add(caseName)
         }

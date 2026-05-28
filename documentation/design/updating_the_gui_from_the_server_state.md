@@ -13,14 +13,17 @@ There are several instances where we want the GUI to be updated when the state o
 
 ## Design
 
-There are 2 mechanisms for the client to be updated when the state of the server changes:
-1. The Server will provide an endpoint that returns its current state, i.e.
-a. the list of all case names, and
-b. the currently selected case
-The client will poll for this information.
-2. The server provides a web socket endpoint that the client can connect to. The server will send updates to the client
-   when the state of the server changes. For example, this is used to update the GUI when the user has initiated a rule
-   building session
-using the chat interface.
+The client is updated via a web socket endpoint exposed by the server. The
+client connects on startup, and the server pushes events to the client when
+its state changes — for example, when a new case arrives, when the currently
+selected case changes, or when the user initiates a rule-building session
+through the chat interface and the cornerstone view needs to show.
 
-The web socket approach is preferred over polling and it is planned to replace polling with web sockets in the future.
+### Alternative considered
+
+A polling approach was also considered, in which the server would expose an
+endpoint returning its current state (the list of case names and the
+currently selected case) and the client would poll it on a timer. This was
+rejected in favour of the web socket because pushing updates avoids the
+trade-off between latency and load that polling forces, and because the
+chat-driven cornerstone-review flow needs near-immediate updates.

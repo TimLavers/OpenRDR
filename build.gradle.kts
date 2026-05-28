@@ -55,11 +55,69 @@ val demoOsClassifier: String = org.gradle.internal.os.OperatingSystem.current().
     }
 }
 
+// On macOS the .app bundle ships ad-hoc signed by jpackage. The demo zip
+// then injects an extra `java` binary into Contents/runtime/Contents/Home/bin/
+// so the launch script can spin up the server without a system JDK. That
+// extra file is NOT covered by jpackage's signature seal, so the resulting
+// bundle fails `spctl` validation ("a sealed resource is missing or invalid").
+// On macOS Tahoe (26+) TCC reacts to a broken seal by silently denying every
+// permission request - including microphone - with no prompt and no entry in
+// the privacy panel. Re-signing the modified bundle restores the seal and
+// lets TCC prompt normally.
+//
+// Strategy: stage the .app + extra java binary into a build dir, codesign
+// it there, then have demoZip pull the .app from the staging dir.
+val javaHomeBin = file("${System.getProperty("java.home")}/bin")
+val macUiAppStagingDir = layout.buildDirectory.dir("staging/demo-mac-app")
+
+val stageMacUiApp = tasks.register<Sync>("stageMacUiApp") {
+    onlyIf { demoOsClassifier == "macos" }
+    dependsOn(":ui:createDistributable")
+
+    // jpackage's bundled JRE marks files under `legal/**` as read-only (444),
+    // which makes Sync's in-place overwrite fail with "Permission denied" on
+    // re-runs. Wipe the staging dir first so we always copy into empty space.
+    doFirst {
+        delete(macUiAppStagingDir)
+    }
+
+    from(project(":ui").layout.buildDirectory.dir("compose/binaries/main/app/OpenRDR.app")) {
+        into("OpenRDR.app")
+    }
+    from(javaHomeBin) {
+        include("java")
+        into("OpenRDR.app/Contents/runtime/Contents/Home/bin")
+        filePermissions { unix("755") }
+    }
+
+    into(macUiAppStagingDir)
+}
+
+val signMacUiApp = tasks.register<Exec>("signMacUiApp") {
+    onlyIf { demoOsClassifier == "macos" }
+    dependsOn(stageMacUiApp)
+
+    val appDir = macUiAppStagingDir.map { it.dir("OpenRDR.app").asFile }
+    inputs.dir(appDir)
+    outputs.dir(appDir)
+
+    // Ad-hoc sign (no Apple Developer ID needed). --force overwrites the
+    // existing jpackage signature; --deep re-signs nested binaries (the
+    // bundled JRE, the libapplauncher, etc.) so the seal is consistent.
+    commandLine("codesign", "--force", "--deep", "--sign", "-")
+    argumentProviders.add(CommandLineArgumentProvider { listOf(appDir.get().absolutePath) })
+}
+
 tasks.register<Zip>("demoZip") {
     group = "distribution"
     description = "Builds a portable zip containing the OpenRDR server and UI for demo use."
 
-    dependsOn(":server:shadowJar", ":ui:createDistributable")
+    dependsOn(":server:shadowJar")
+    if (demoOsClassifier == "macos") {
+        dependsOn(signMacUiApp)
+    } else {
+        dependsOn(":ui:createDistributable")
+    }
 
     archiveBaseName.set("openrdr-demo")
     archiveClassifier.set(demoOsClassifier)
@@ -77,34 +135,44 @@ tasks.register<Zip>("demoZip") {
 
     // UI distributable -> <top>/ui/
     //
-    // createDistributable produces ui/build/compose/binaries/main/app/
-    // containing the top-level launcher (e.g. OpenRDR.app on macOS,
-    // OpenRDR/ with bin+lib on Windows/Linux). Copy as-is.
-    val uiDistRoot = project(":ui").layout.buildDirectory
-        .dir("compose/binaries/main/app")
-    from(uiDistRoot) {
-        into("$topLevel/ui")
-        // Gradle's Zip task does not preserve source file permissions.
-        // The .app launcher binary and any bin/ launchers (Linux/Windows)
-        // must be executable when extracted.
-        eachFile {
-            val p = relativePath.pathString
-            if (p.contains("/Contents/MacOS/") ||
-                p.contains("/bin/") ||
-                p.endsWith(".dylib") ||
-                p.endsWith(".so")
-            ) {
-                permissions { unix("755") }
+    // On macOS we use the staged + re-signed bundle (see stageMacUiApp /
+    // signMacUiApp above). On other OSes we use the raw createDistributable
+    // output directly: createDistributable produces
+    // ui/build/compose/binaries/main/app/OpenRDR/ with bin+lib on
+    // Windows/Linux.
+    if (demoOsClassifier == "macos") {
+        from(macUiAppStagingDir) {
+            into("$topLevel/ui")
+            eachFile {
+                val p = relativePath.pathString
+                if (p.contains("/Contents/MacOS/") ||
+                    p.contains("/Contents/runtime/Contents/Home/bin/") ||
+                    p.endsWith(".dylib")
+                ) {
+                    permissions { unix("755") }
+                }
+            }
+        }
+    } else {
+        val uiDistRoot = project(":ui").layout.buildDirectory
+            .dir("compose/binaries/main/app")
+        from(uiDistRoot) {
+            into("$topLevel/ui")
+            // Gradle's Zip task does not preserve source file permissions.
+            // The bin/ launchers must be executable when extracted.
+            eachFile {
+                val p = relativePath.pathString
+                if (p.contains("/bin/") ||
+                    p.endsWith(".so")
+                ) {
+                    permissions { unix("755") }
+                }
             }
         }
     }
 
-    // The UI distributable bundles a private JRE under runtime/, but Compose
-    // Desktop's jpackage strips the `java` / `java.exe` launcher binary from
-    // it (only the GUI launcher is needed for the UI). The server is run as
-    // `java -jar ...`, so we add the launcher binary back from the JDK Gradle
-    // is using. This lets the demo run with no system Java installed.
-    val javaHomeBin = file("${System.getProperty("java.home")}/bin")
+    // On Windows/Linux we still need to add the `java` launcher binary that
+    // jpackage strips out (macOS handles this in stageMacUiApp above).
     when (demoOsClassifier) {
         "windows" -> from(javaHomeBin) {
             include("java.exe", "javaw.exe")
@@ -114,12 +182,6 @@ tasks.register<Zip>("demoZip") {
         "linux" -> from(javaHomeBin) {
             include("java")
             into("$topLevel/ui/OpenRDR/runtime/bin")
-            filePermissions { unix("755") }
-        }
-
-        "macos" -> from(javaHomeBin) {
-            include("java")
-            into("$topLevel/ui/OpenRDR.app/Contents/runtime/Contents/Home/bin")
             filePermissions { unix("755") }
         }
     }

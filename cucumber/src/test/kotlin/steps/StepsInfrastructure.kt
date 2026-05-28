@@ -9,6 +9,17 @@ import java.io.File
 object StepsInfrastructure {
     lateinit var uiTestBase: UITestBase
     private lateinit var launchedClient: LaunchedClient
+
+    /**
+     * Per-scenario flag set by the `@voice-is-fake` cucumber tag. When
+     * true, [LaunchedClient] installs a [io.rippledown.integration.FakeVoiceRecognition]
+     * so steps can drive the chat panel via `simulateUtterance`. When
+     * false (the default), the running UI uses the real microphone +
+     * Gemini transcription pipeline, which is what you want for paused
+     * free-play scenarios.
+     */
+    var useFakeVoice: Boolean = false
+
     private fun setup() {
         uiTestBase = UITestBase()
     }
@@ -77,6 +88,7 @@ object StepsInfrastructure {
     fun cleanup() {
         if (::launchedClient.isInitialized) launchedClient.stopClient()
         uiTestBase.serverProxy.shutdown()
+        useFakeVoice = false
     }
 }
 

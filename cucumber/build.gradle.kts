@@ -58,7 +58,8 @@ val featureFolders = listOf(
     "kb",
     "rulebuilding",
     "samples",
-    "trial-matching"
+    "trial-matching",
+    "voice"
 )
 fun runCucumber(cukeArgs: List<String>): Int {
     val javaHome = System.getProperty("java.home")
@@ -70,7 +71,7 @@ fun runCucumber(cukeArgs: List<String>): Int {
     argFile.writeText(
         listOf(
         "-Xmx4G",
-        "--enable-native-access=ALL-UNNAMED",
+            "--enable-native-access=ALL-UNNAMED",
         "-cp",
             "\"${cp.replace("\\", "\\\\")}\"",
         "io.cucumber.core.cli.Main"

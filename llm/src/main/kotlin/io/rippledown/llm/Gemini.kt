@@ -42,6 +42,95 @@ fun generateContentConfig(
 
 private fun noThinking(): ThinkingConfig = ThinkingConfig.builder().thinkingBudget(0).build()
 
+/**
+ * Transcription system prompt: bias the model toward verbatim transcription
+ * and away from helpful rewriting or invention on unclear audio.
+ */
+const val TRANSCRIPTION_SYSTEM_INSTRUCTION =
+    "Transcribe the user's speech literally and return only the transcript text. " +
+            "Do not add commentary, headings, quotation marks, or formatting. " +
+            "Do not rephrase, summarise, translate or correct grammar. " +
+            "Do NOT prefix the transcript with timestamps, durations, or any " +
+            "bracketed metadata such as [00:00:03], [0m0s - 0m10s] or [0m0s]. " +
+            "Do NOT annotate non-speech sounds with bracketed tags such as " +
+            "[noise], [music], [laughter], [silence], [background noise] or " +
+            "[inaudible]. Simply omit such sounds. " +
+            "Return only the spoken words. " +
+            "If a word is unclear, write [?] in its place. " +
+            "If the audio contains no intelligible speech, return an empty string."
+
+/**
+ * Regex that matches a single leading "timestamp-like" bracketed group such
+ * as `[ 00:00:03 ]`, `[ 0m0s700ms - 0m1s100ms ]` or `[ 0m0s ]`. The bracket
+ * body must start with a digit and may only contain digits, the unit
+ * letters m/s/h, colons, dots, dashes and whitespace. Crucially this does
+ * NOT match the `[?]` unclear-word marker the prompt asks the model to
+ * emit, because the body starts with `?` rather than a digit.
+ */
+private val TIMESTAMP_BRACKET = Regex("""^\s*\[\s*\d[\d\smshMSH:.\-]*]\s*""")
+
+/**
+ * Matches a `[word]` or `[multi word]` annotation anywhere in the
+ * transcript - the kind of non-speech tag Gemini emits when it hears
+ * background sound, e.g. `[noise]`, `[music]`, `[background noise]`,
+ * `[laughter]`. The bracket body must start with a letter and contain
+ * only letters and whitespace, so the `[?]` unclear-word marker and
+ * timestamp-style numeric brackets are not matched here.
+ */
+private val WORD_ANNOTATION_BRACKET = Regex("""\[\s*[a-zA-Z][a-zA-Z\s]*]""")
+
+/**
+ * Strip Gemini-emitted bracketed metadata from a transcript:
+ *
+ *   - leading timestamp / duration brackets (`[00:00:03]`, `[0m0s - 0m10s]`, ...)
+ *   - inline non-speech annotations (`[noise]`, `[music]`, `[laughter]`, ...)
+ *
+ * The `[?]` unclear-word marker the prompt asks for is preserved, as is
+ * any bracketed text that doesn't match either of the above shapes (e.g.
+ * a user dictating `[important]`). Internal whitespace is collapsed so
+ * removing a mid-string `[noise]` doesn't leave a double space.
+ */
+internal fun cleanTranscript(raw: String): String {
+    var s = raw
+    while (true) {
+        val next = s.replaceFirst(TIMESTAMP_BRACKET, "")
+        if (next == s) break
+        s = next
+    }
+    s = s.replace(WORD_ANNOTATION_BRACKET, "")
+    s = s.replace(Regex("""\s{2,}"""), " ")
+    s = s.replace(Regex("""\s+([,.;:!?])"""), "$1")
+    return s.trim()
+}
+
+/**
+ * Send a recorded audio clip to Gemini and return its transcript.
+ *
+ * The audio bytes must be a complete, self-contained clip in one of the
+ * formats Gemini accepts (`audio/wav`, `audio/mp3`, `audio/flac`, ...).
+ * The call is synchronous and is wrapped in [callWithTimeout] so a hung
+ * request cannot block the UI indefinitely.
+ */
+fun transcribeAudio(
+    audioBytes: ByteArray,
+    mimeType: String = "audio/wav",
+    timeoutMs: Long = 60_000
+): String {
+    if (audioBytes.isEmpty()) return ""
+    val config = GenerateContentConfig.builder()
+        .temperature(0f)
+        .topP(0.995f)
+        .thinkingConfig(noThinking())
+        .safetySettings(noSafetySettings())
+        .systemInstruction(Content.fromParts(Part.fromText(TRANSCRIPTION_SYSTEM_INSTRUCTION)))
+        .build()
+    val content = Content.fromParts(Part.fromBytes(audioBytes, mimeType))
+    val raw = callWithTimeout(timeoutMs) {
+        geminiClient.models.generateContent(GEMINI_MODEL, content, config).text() ?: ""
+    }
+    return cleanTranscript(raw)
+}
+
 fun noSafetySettings(): List<SafetySetting> =
     listOf(
         HarmCategory.Known.HARM_CATEGORY_HATE_SPEECH,

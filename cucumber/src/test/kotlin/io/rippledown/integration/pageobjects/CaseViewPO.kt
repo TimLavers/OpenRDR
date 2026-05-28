@@ -8,6 +8,7 @@ import io.rippledown.constants.caseview.*
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
 import io.rippledown.integration.utils.findAndClick
+import io.rippledown.integration.utils.renderedText
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
 import java.awt.Point
@@ -22,7 +23,20 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
         //Awaits in waitForNameToShow and waitForRequiredCaseValues handle rendering delays
     }
 
-    fun nameShown(): String? = execute<String> { contextProvider().find(CASEVIEW_CASE_NAME_ID, LABEL)?.accessibleName }
+    fun nameShown(): String? = execute<String> {
+        // Find the case-name label by its contentDescription prefix and recover
+        // the case name from the suffix. From Compose 1.11 the Java accessibility
+        // bridge uses contentDescription as the accessible name on Text nodes,
+        // overriding the rendered text, so we cannot rely on accessibleName.
+        val matcher: (AccessibleContext) -> Boolean = { ctx ->
+            ctx.accessibleRole == LABEL &&
+                    ctx.accessibleDescription?.startsWith(CASEVIEW_CASE_NAME_ID) == true
+        }
+        contextProvider().find(matcher)
+            ?.accessibleDescription
+            ?.removePrefix(CASEVIEW_CASE_NAME_ID)
+            ?.takeIf { it.isNotEmpty() }
+    }
 
     private fun awaitNameShown(): String {
         await().atMost(ofSeconds(10)).until { nameShown() != null }
@@ -30,12 +44,12 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun requireNoNameShowing() {
-        contextProvider().find(CASEVIEW_CASE_NAME_ID, LABEL) shouldBe null
+        nameShown() shouldBe null
     }
 
     fun waitForNoNameShowing() {
         await().atMost(ofSeconds(5)).until {
-            contextProvider().find(CASEVIEW_CASE_NAME_ID, LABEL) == null
+            nameShown() == null
         }
     }
 
@@ -129,7 +143,8 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
     // which only catches AssertionError — not NPE
     fun referenceRange(attribute: String): String = contextProvider()
         .find(referenceRangeCellContentDescription(attribute), LABEL)
-        ?.accessibleName.orEmpty()
+        ?.let { renderedText(it) }
+        .orEmpty()
 
     /**
      * Replaces the case-view filter field's contents with [text]. The same
@@ -160,7 +175,7 @@ open class CellPO(val context: AccessibleContext, descriptionPrefix: String) : C
 
     override fun compareTo(other: CellPO) = index.compareTo(other.index)
 
-    fun text() = context.accessibleName ?: ""
+    fun text() = execute<String> { renderedText(context) }
 }
 
 class DateCellPO(context: AccessibleContext) : CellPO(context, DATE_CELL_DESCRIPTION_PREFIX)

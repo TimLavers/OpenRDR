@@ -42,7 +42,18 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
 
     fun interpretationText(): String =
         execute<String> {
-            contextProvider().find(INTERPRETATION_TEXT_FIELD)?.accessibleName ?: ""
+            // From Compose 1.11 the Java accessibility bridge uses the
+            // contentDescription as the accessible name on Text nodes,
+            // overriding the rendered text. Read the rendered text via
+            // AccessibleText (which exposes the actual characters) instead.
+            val ctx = contextProvider().find(INTERPRETATION_TEXT_FIELD) ?: return@execute ""
+            val text = ctx.accessibleText ?: return@execute ctx.accessibleName ?: ""
+            buildString {
+                for (i in 0 until text.charCount) {
+                    val ch = text.getAtIndex(javax.accessibility.AccessibleText.CHARACTER, i)
+                    if (ch != null) append(ch)
+                }
+            }
         }
 
     fun waitForInterpretationText(expected: String): InterpretationPO {

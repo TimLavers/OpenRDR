@@ -1,6 +1,7 @@
 package steps
 
 import io.rippledown.TestClientLauncher
+import io.rippledown.integration.FakeVoiceRecognition
 import io.rippledown.integration.pageobjects.RippleDownUIOperator
 import java.awt.Robot
 import java.io.File
@@ -9,8 +10,24 @@ import javax.swing.SwingUtilities
 
 class LaunchedClient {
     private val testClientLauncher = TestClientLauncher()
-    private val composeWindow = testClientLauncher.launchClient()
+
+    /**
+     * Scenarios tagged `@voice-is-fake` install a [FakeVoiceRecognition]
+     * so steps can drive the chat panel's voice-input wiring via
+     * `simulateUtterance` without touching a real microphone or the
+     * Gemini transcription API. Untagged scenarios get the production
+     * pipeline (real mic + Gemini), which is what you want for paused
+     * free-play debugging — just add `And pause` and click the mic in
+     * the live window. The flag is set by the `@Before("@voice-is-fake")`
+     * hook in [Defs] before this constructor runs.
+     */
+    private val fakeVoiceRecognition: FakeVoiceRecognition? =
+        if (StepsInfrastructure.useFakeVoice) FakeVoiceRecognition() else null
+    private val composeWindow = testClientLauncher.launchClient(fakeVoiceRecognition)
     private val rdUiOperator = RippleDownUIOperator(composeWindow)
+
+    fun voiceRecognition(): FakeVoiceRecognition = fakeVoiceRecognition
+        ?: error("voiceRecognition() requested but the scenario is not tagged @voice-is-fake")
 
     fun bringToFront() {
         SwingUtilities.invokeAndWait {

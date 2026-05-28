@@ -73,6 +73,12 @@ if errorlevel 1 (
 )
 
 echo Launching OpenRDR UI ...
+rem JAVA_TOOL_OPTIONS is honoured automatically by the bundled JRE, so this
+rem is how we tell the UI's logback config where to write its log file.
+rem Without it the literal "${logFilePath}" placeholder is used and Logback
+rem fails to open the file.
+set "JAVA_TOOL_OPTIONS=-DlogFilePath=%CD%\logs\ui.log"
 start "" "!UI_EXE!"
+set "JAVA_TOOL_OPTIONS="
 
 endlocal
