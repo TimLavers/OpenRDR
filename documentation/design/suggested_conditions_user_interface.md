@@ -1,7 +1,5 @@
 # Suggested conditions - user interface
 
-TODO: change this documentation to reflect the chat design
-
 When a user is building a rule, they need to add conditions to the rule
 that are true for the session case but false for cases that should not be
 affected by the rule. Selecting or building conditions can be difficult for
@@ -9,9 +7,9 @@ users because it involves them translating their knowledge into mathematical
 formulas. 
 
 In [Building conditions from user hints](building_conditions_from_user_hints.md)
-we discuss graphical- and text-based approaches to condition editing. 
-In [Suggested conditions - version 1](suggested_conditions_version_1.md) we
-look at ways of generating lists of candidate conditions.
+we discuss graphical- and text-based approaches to condition editing.
+In [Suggested conditions — non-targeted generation](non_targeted_suggested_conditions.md)
+we look at ways of generating lists of candidate conditions.
 The present document describes a software design for a system that presents
 good suggestions to the user and allows the editing of those that require adjustments.
 
@@ -26,14 +24,19 @@ suggestions.
 On the other hand, a suggested condition such as `TSH ≥ 0.67` almost
 certainly requires editing.
 
-## `SuggestedCondition` class
-The class `SuggestedCondition` handles these situations.
+## `SuggestedCondition` interface
 
-| Method             | Return value         | Notes                                                                 |
-|--------------------|----------------------|-----------------------------------------------------------------------|
-| `initialCondition` | `Condition`          | This is the suggestion shown to the user.                             |
-| `editable`         | `Boolean`            | Can adjustments be made to the suggestion.                            |
-| `editableCondition`| `EditableCondition?` | Used to construct an editor popup, if not null. Null if not editable. |
+The sealed interface `SuggestedCondition` handles these situations. Two
+implementations exist: `NonEditableSuggestedCondition` for fixed
+suggestions and `EditableSuggestedCondition` wrapping an
+`EditableCondition`.
+
+| Method                           | Return value         | Notes                                                                      |
+|----------------------------------|----------------------|----------------------------------------------------------------------------|
+| `initialSuggestion()`            | `Condition`          | The suggestion shown to the user.                                          |
+| `isEditable()`                   | `Boolean`            | Whether adjustments can be made to the suggestion.                         |
+| `editableCondition()`            | `EditableCondition?` | Used to construct an editor popup, if not null. Null if not editable.      |
+| `shouldBeSuggestedForCase(case)` | `Boolean`            | Whether the suggestion is offered for the given case (filters falsehoods). |
 
 ## `EditableCondition` class
 As shown above, a `SuggestedCondition` for which `editable` returns `true` can provide
@@ -47,14 +50,16 @@ For conditions like `TSH ≥ ___` it must be a double.
 For `contains`, it must be text.
 For `FT4 is normal or high by at most ___%`, it must be an integer.
 
-Here's a first-cut for `EditableCondition`:
+The actual `EditableCondition` interface (in
+`common/src/main/kotlin/io/rippledown/model/condition/edit/EditableCondition.kt`):
 
-| Method             | Return type    | Notes                                                            |
-|--------------------|----------------|------------------------------------------------------------------|
-| `fixedText`        | `String`       | the uneditable part of the condition                             |
-| `variablePosition` | `Int`          | Where the parameter fits into the fixed text                     |
-| `parameterType`    | Class or enum. | What kind of value the variable must be                          |
-| `editedCondition`  | `Condition`    | The condition corresponding to the current value of the parameter|
-
-## Which 
+| Method                                     | Return type     | Notes                                                                          |
+|--------------------------------------------|-----------------|--------------------------------------------------------------------------------|
+| `fixedTextPart1()`                         | `String`        | The uneditable text shown before the editable value.                           |
+| `fixedTextPart2()`                         | `String`        | The uneditable text shown after the editable value (often blank).              |
+| `editableValue()`                          | `EditableValue` | The current value plus its `Type` (`Text`, `Integer`, `Real`).                 |
+| `condition(value)`                         | `Condition`     | The condition corresponding to a given value of the parameter.                 |
+| `prerequisite()`                           | `Condition`     | A gate that must hold before the suggestion is offered (defaults to `True`).   |
+| `shouldBeUsedAtMostOncePerRule()`          | `Boolean`       | Whether the editor allows adding multiple instances to one rule.               |
+| `initialValueRepresentsHoldingCondition()` | `Boolean`       | When false, the auto-populated value is treated as a placeholder to be edited. |
 

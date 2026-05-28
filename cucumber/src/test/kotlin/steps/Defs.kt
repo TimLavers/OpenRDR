@@ -48,6 +48,16 @@ class Defs {
         startServerWithPostgresDatabase()
     }
 
+    // Scenarios tagged @voice-is-fake get a FakeVoiceRecognition wired
+    // into the chat panel instead of the real mic + Gemini pipeline. The
+    // flag is consumed by [LaunchedClient] when the client application
+    // is started, so this hook must run before the `I start the client
+    // application` step (which all @Before hooks do).
+    @Before("@voice-is-fake")
+    fun beforeVoiceIsFake() {
+        StepsInfrastructure.useFakeVoice = true
+    }
+
     @After
     fun after(scenario: Scenario) {
         stopwatch.stop()
@@ -132,11 +142,19 @@ class Defs {
 
     @And("I move attribute {word} below attribute {word}")
     fun moveAttributeBelowAttribute(moved: String, target: String) {
-        val originalOrder = caseViewPO().attributeNames()
-        repeat(3) {
-            caseViewPO().dragAttribute(moved, target)
-            Thread.sleep(1000)
-            if (caseViewPO().attributeNames() != originalOrder) return
+        // The chat panel grabs keyboard focus on case selection and the OS
+        // window can drift out of front in this CI/IDE-shared environment.
+        // Robot mouse events must be delivered to the test window for
+        // Compose's drag gesture detector to see them; pin the window
+        // on top while we drag.
+        chatPO().waitForChatToBeFocusedQuietly()
+        StepsInfrastructure.client().withWindowOnTop {
+            val originalOrder = caseViewPO().attributeNames()
+            repeat(3) {
+                caseViewPO().dragAttribute(moved, target)
+                Thread.sleep(1000)
+                if (caseViewPO().attributeNames() != originalOrder) return@withWindowOnTop
+            }
         }
     }
 

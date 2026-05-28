@@ -33,9 +33,13 @@ fun TextInputWithCancel(handler: TextInputHandler) {
     var textValue by remember { mutableStateOf(handler.initialText()) }
 
     val focusRequester = remember { FocusRequester() }
-    LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
-    }
+    // NOTE: Under Compose 1.11 (compose-multiplatform), calling
+    // `focusRequester.requestFocus()` from a `LaunchedEffect` on a TextField
+    // inside a `DialogWindow` corrupts the dialog's Java accessibility tree
+    // so that none of the TextField's siblings (the OK / Cancel buttons)
+    // are exposed. The cucumber tests locate the buttons via the a11y
+    // tree, so we no longer auto-focus the TextField. Users can click the
+    // field manually or Tab into it.
 
     Surface {
         Box {

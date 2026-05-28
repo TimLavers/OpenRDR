@@ -12,8 +12,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.application
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Before
@@ -423,24 +421,6 @@ fun ParentComposable() {
                 contentDescription = "TEST_BUTTON"
             }) {
             Text("Click to reset chat")
-        }
-    }
-}
-
-fun main() {
-    application {
-        Window(
-            onCloseRequest = ::exitApplication,
-        ) {
-            ChatPanel(
-                id = -1,
-                sendIsEnabled = true,
-                listOf(
-                    BotMessage("Hi there"),
-                    UserMessage("Meaning of life?"),
-                    BotMessage("42")
-                ), mockk()
-            )
         }
     }
 }

@@ -1,17 +1,29 @@
-Current state
-The piece responsible for suggestions is @/C:
-/repos/OpenRDR/server/src/main/kotlin/io/rippledown/model/rule/ConditionSuggester.kt, invoked via
-RuleSessionManager.conditionHintsForCase (@/C:
-/repos/OpenRDR/server/src/main/kotlin/io/rippledown/kb/RuleSessionManager.kt:184-187). The chat-side entry point is @/C:
-/repos/OpenRDR/server/src/main/kotlin/io/rippledown/kb/chat/SuggestedConditionsHandler.kt.
+## State before Phase 1 (historical context)
 
-Key observation: the suggester is currently blind to the rule action. It takes only (attributes, sessionCase), generates
-a cartesian product of predicates × attributes × signatures, filters those that hold for the case, and sorts
-alphabetically (Sorter at line 118). The comment text and the action type (ChangeTreeToAddConclusion / ...Remove... /
-...Replace...) are available to RuleSessionManager but never reach the suggester.
+The piece responsible for suggestions was
+`server/src/main/kotlin/io/rippledown/model/rule/ConditionSuggester.kt`,
+invoked via `RuleSessionManager.conditionHintsForCase`. The chat-side
+entry point was (and still is)
+`server/src/main/kotlin/io/rippledown/kb/chat/SuggestedConditionsHandler.kt`.
 
-So "targeting" means threading action context through, then either ranking, filtering, or generating differently based
-on it.
+Key observation at the time of design: the suggester was blind to the
+rule action. It took only `(attributes, sessionCase)`, generated a
+cartesian product of predicates × attributes × signatures, filtered
+those that held for the case, and sorted alphabetically (a `Sorter`
+inner class). The comment text and the action type
+(`ChangeTreeToAddConclusion` / `...Remove...` / `...Replace...`) were
+available to `RuleSessionManager` but never reached the suggester.
+
+So "targeting" meant threading action context through, then either
+ranking, filtering, or generating differently based on it.
+
+> **Status update:** Phase 1 has since been implemented. The suggester
+> now lives in `io.rippledown.suggestions`, takes a
+> `SuggestionContext` carrying the action and cornerstones, and the
+> `Sorter` has been replaced by a `RelevanceRanker`. See
+> `targeted_suggested_conditions_phase_1.md` for the detailed design as
+> shipped. The high-level approaches below are kept as historical
+> evidence of the alternatives weighed.
 
 Approaches
 

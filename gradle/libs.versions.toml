@@ -4,7 +4,7 @@ awaitility = "4.3.0"
 commonsCodec = "1.21.0"
 commonsIo = "2.21.0"
 commonsLang3 = "3.20.0"
-compose = "1.10.3"
+compose = "1.11.0"
 cucumber = "7.34.3"
 exposed = "1.2.0"
 filepicker = "3.1.0"
@@ -22,7 +22,6 @@ material_icons = "1.7.3"
 mockk = "1.14.9"
 postgresql = "42.7.10"
 versionCatalogUpdate = "1.1.0"
-vosk = "0.3.45"
 
 [plugins]
 compose = { id = "org.jetbrains.compose", version.ref = "compose" }
@@ -74,7 +73,6 @@ logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 materialIcons = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "material_icons" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
-vosk = { module = "com.alphacephei:vosk", version.ref = "vosk" }
 
 [bundles]
 cucumber = [

@@ -78,6 +78,20 @@ for example:
 
 ```./gradlew cucumberFolderTest -Pfolder=chat```
 
+### Voice input in cucumber: real microphone vs fake
+
+By default cucumber scenarios run the production voice pipeline (real
+microphone capture + Gemini transcription). Tag a scenario or feature with
+`@voice-is-fake` to install a `FakeVoiceRecognition` instead, which lets steps
+drive the chat panel's voice-input wiring via `simulateUtterance(...)` without
+touching a real microphone or the Gemini API. The two scenarios in
+`voice/voice.feature` are tagged this way.
+
+For paused, hands-on debugging — e.g. add an `And pause` step to a scenario,
+run `./gradlew cucumberSingleTest`, click the mic in the live window and
+speak — leave the scenario untagged. `API_KEY` must be set (same Gemini key
+used elsewhere) for the transcription to work.
+
 ## Acknowledgements
 
 [water wave icon](https://uxwing.com/water-wave-icon) by [uxwing](https://www.uxwing.com)

@@ -24,8 +24,19 @@ class KbControlsPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun currentKB(): String {
-        val textContext = contextProvider().find(KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION, AccessibleRole.LABEL)!!
-        return textContext.accessibleName
+        // Don't constrain by role: Compose 1.11 may report this merged Text
+        // node with a non-LABEL role (it sits inside a TextButton). Match
+        // by description only and poll until the AppBar has rendered.
+        // Capture the rendered text inside the poll: under Compose 1.11 the
+        // node can be replaced between the polling lookup and a subsequent
+        // re-fetch (e.g. when the AppBar re-composes after a KB switch).
+        lateinit var text: String
+        waitUntilAsserted {
+            val node = contextProvider().find(KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION)
+                ?: throw AssertionError("Current KB label not yet rendered")
+            text = renderedText(node)
+        }
+        return text
     }
 
     fun createKB(name: String) {
@@ -52,7 +63,12 @@ class KbControlsPO(private val contextProvider: () -> AccessibleContext) {
         lateinit var menuItem: AccessibleContext
         waitUntilAsserted {
             val dropDown = contextProvider().find(KBS_DROPDOWN_DESCRIPTION, AccessibleRole.COMBO_BOX)
-            menuItem = dropDown?.findByName(name, AccessibleRole.LABEL)
+                ?: throw AssertionError("KB dropdown not yet available")
+            // Match by rendered text instead of `accessibleName`: under
+            // Compose 1.11 the LABEL node's accessibleName can include the
+            // parent's contentDescription as a prefix (see findLabelChildren),
+            // so an exact `name == accessibleName` check fails.
+            menuItem = dropDown.findLabelByRenderedText(name)
                 ?: throw AssertionError("KB '$name' not yet available in dropdown")
         }
         menuItem.accessibleAction.doAccessibleAction(0)
@@ -101,7 +117,20 @@ class KbControlsPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun expandDropdownMenu() {
-        execute { contextProvider().findAndClick(KB_CONTROL_DROPDOWN_DESCRIPTION) }
+        // Find-and-click in a single EDT pass and retry: the dropdown
+        // accessibility node can appear in one frame and be replaced by a
+        // freshly composed equivalent in the next (e.g. when the AppBar
+        // re-renders shortly after launch), so searching and clicking
+        // across two `execute { ... }` calls races against the swap.
+        waitUntilAsserted {
+            val clicked = execute<Boolean> {
+                val node = contextProvider().find(KB_CONTROL_DROPDOWN_DESCRIPTION)
+                    ?: return@execute false
+                node.accessibleAction?.doAccessibleAction(0) ?: false
+                true
+            }
+            clicked shouldBe true
+        }
     }
 
     private fun clickDropdownItem(description: String) {

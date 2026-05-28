@@ -27,9 +27,13 @@ fun CreateKBFromSample(handler: CreateKBFromSampleHandler) {
     var selectedSampleKB by remember { mutableStateOf(SampleKB.TSH) }
 
     val focusRequester = remember { FocusRequester() }
-    LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
-    }
+    // NOTE: Under Compose 1.11 (compose-multiplatform), calling
+    // `focusRequester.requestFocus()` from a `LaunchedEffect` on a TextField
+    // inside a `DialogWindow` corrupts the dialog's Java accessibility tree
+    // so that none of the TextField's siblings (here: the radio buttons
+    // and OK / Cancel buttons) are exposed. The cucumber tests locate
+    // those by accessible description, so we no longer auto-focus the
+    // TextField. (See TextInputWithCancel for the matching workaround.)
 
     Surface {
         Box {

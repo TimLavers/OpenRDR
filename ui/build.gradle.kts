@@ -19,7 +19,7 @@ dependencies {
     implementation(libs.bundles.ktor)
     implementation(libs.bundles.kotlinx)
     implementation(libs.commonsCodec)
-    implementation(libs.vosk)
+    implementation(project(":llm"))
 
     testImplementation(testFixtures(project(":common")))
     testImplementation(compose.desktop.uiTestJUnit4)
@@ -66,6 +66,20 @@ compose.desktop {
             val platformModules = if (org.gradle.internal.os.OperatingSystem.current().isWindows)
                 baseModules + "jdk.crypto.mscapi" else baseModules
             modules(*platformModules.toTypedArray())
+
+            macOS {
+                // Required for the chat-panel voice-input button. Without
+                // NSMicrophoneUsageDescription, macOS TCC silently denies
+                // mic access -- the user is never even prompted -- and
+                // javax.sound.sampled.TargetDataLine reads zero bytes,
+                // so Gemini transcription always returns empty.
+                infoPlist {
+                    extraKeysRawXml = """
+                        <key>NSMicrophoneUsageDescription</key>
+                        <string>OpenRDR uses the microphone to dictate chat messages.</string>
+                    """.trimIndent()
+                }
+            }
         }
     }
 }
