@@ -6,6 +6,7 @@ import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.rippledown.model.condition.containsText
 import io.rippledown.model.rule.Rule
 import io.rippledown.utils.*
+import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -433,6 +434,73 @@ class RDRCaseTest {
         copied.interpretation shouldNotBeSameInstanceAs  originalInterpretation
         copied.caseId shouldBeSameInstanceAs case.caseId
         copied.data shouldBeSameInstanceAs case.data
+    }
+
+    @Test
+    fun `empty cases have same data` () {
+        val empty1 = RDRCase(CaseId(1, "Empty1"), emptyMap())
+        val empty2 = RDRCase(CaseId(2, "Empty2"), emptyMap())
+        empty1.hasSameDataAs(empty2) shouldBe true
+    }
+
+    @Test
+    fun `same case data when one case contains the other` () {
+        val e1 = Event(abc, daysAgo(3))
+        val e2 = Event(def, daysAgo(3))
+        val e3 = Event(abc, daysAgo(1))
+        val e4 = Event(def, daysAgo(1))
+
+        val rangeA = ReferenceRange("0.5", "4.0")
+        val rangeB = ReferenceRange("1.0", "5.0")
+        val units1 = "mU/L"
+        val units2 = "x10*6/L"
+        val r1 = Result(Value("0.67"), rangeA, units1)
+        val r2 = Result(Value("0.5"), rangeB, units2)
+        val r3 = Result(Value("0.67"), rangeA, units1)
+        val r4 = Result(Value("0.5"), rangeB, units2)
+        val dataMap1 = mapOf(e1 to r1, e2 to r2, e3 to r3, e4 to r4)
+        val dataMap2 = mapOf(e1 to r1, e2 to r2, e3 to r3)
+        RDRCase(CaseId(1, "Case1"), dataMap1).hasSameDataAs(RDRCase(CaseId(2, "Case2"), dataMap2)) shouldBe false
+    }
+
+    @Test
+    fun `same attributes and values but different dates` () {
+
+    }
+
+    @Test
+    fun `same attributes and dates but different values` () {
+
+    }
+
+    @Test
+    fun `same dates and values but different attributes` () {
+
+    }
+
+    @Test
+    fun `same data but for units`() {
+
+    }
+
+    @Test
+    fun `same data but for reference ranges`() {
+
+    }
+
+    @Test
+    fun `cases with the same data but different names are identical`() {
+
+    }
+
+    @Test
+    fun `cases with the same data but different ids are identical`() {
+
+    }
+
+    @Test
+    fun `cases with the same data but different interpretations are identical`() {
+
     }
 
     private fun basicCase(): RDRCase {
