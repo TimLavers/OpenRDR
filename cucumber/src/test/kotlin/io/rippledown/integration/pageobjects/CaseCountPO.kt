@@ -4,5 +4,5 @@ import javax.accessibility.AccessibleContext
 
 class CaseCountPO(contextProvider: () -> AccessibleContext): AbstractCaseCountPO(contextProvider) {
     override fun currentCount(): Int = snapshot().processedCount
-    override fun isShowing(): Boolean = snapshot().processedCount > 0
+    override fun isShowing(): Boolean = snapshot().isShowing
 }

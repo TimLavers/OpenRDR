@@ -76,7 +76,8 @@ fun OpenRDRUI(handler: Handler, dispatcher: CoroutineDispatcher = MainUIDispatch
         CornerstoneTestHook.update(cornerstoneStatus)
         CaseSelectorTestHook.update(
             processedCount = casesInfo.caseIds.size,
-            cornerstoneCount = casesInfo.cornerstoneCaseIds.size
+            cornerstoneCount = casesInfo.cornerstoneCaseIds.size,
+            isShowing = casesInfo.count > 0 && !ruleInProgress
         )
     }
 

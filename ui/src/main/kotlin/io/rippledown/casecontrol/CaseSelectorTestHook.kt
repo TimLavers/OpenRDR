@@ -20,17 +20,18 @@ object CaseSelectorTestHook {
 
     data class Snapshot(
         val processedCount: Int,
-        val cornerstoneCount: Int
+        val cornerstoneCount: Int,
+        val isShowing: Boolean
     ) {
         companion object {
-            val EMPTY = Snapshot(0, 0)
+            val EMPTY = Snapshot(0, 0, false)
         }
     }
 
     private val snapshotRef = AtomicReference(Snapshot.EMPTY)
 
-    fun update(processedCount: Int, cornerstoneCount: Int) {
-        snapshotRef.set(Snapshot(processedCount, cornerstoneCount))
+    fun update(processedCount: Int, cornerstoneCount: Int, isShowing: Boolean) {
+        snapshotRef.set(Snapshot(processedCount, cornerstoneCount, isShowing))
     }
 
     fun snapshot(): Snapshot = snapshotRef.get()

@@ -1,5 +1,5 @@
 Feature: Creation of cornerstone cases when rules are built
-  @single
+  //@single
   Scenario: Only one copy of a case is stored as a cornerstone
     Given case Case1 is provided having data:
       | x | 1 |
