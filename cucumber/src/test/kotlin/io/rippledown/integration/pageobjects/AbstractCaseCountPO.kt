@@ -1,50 +1,49 @@
 package io.rippledown.integration.pageobjects
 
-import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
-import io.rippledown.constants.caseview.PROCESSED_SECTION_HEADER_ID
-import io.rippledown.integration.utils.find
-import io.rippledown.integration.waitUntilAsserted
-import org.assertj.swing.edt.GuiActionRunner.execute
+import io.rippledown.casecontrol.CaseSelectorTestHook
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
 import javax.accessibility.AccessibleContext
 
+/**
+ * Reads the live `Processed (N)` / `Cornerstones (N)` counts from the
+ * running [io.rippledown.main.OpenRDRUI] via [CaseSelectorTestHook].
+ *
+ * We don't walk the AWT accessibility tree because Compose-Desktop does
+ * not reliably expose the section header `Text` nodes there (see
+ * [CaseSelectorTestHook] kdoc). The `contextProvider` is retained for
+ * subclasses but is no longer used to read the count.
+ */
 abstract class AbstractCaseCountPO(val contextProvider: () -> AccessibleContext) {
 
     fun waitForCountOfNumberOfCasesToBe(count: Int) {
-        if (countOfTheNumberOfCases() == count) return
-        await().atMost(ofSeconds(120)).until {
-            countOfTheNumberOfCases() == count
+        if (currentCount() == count) return
+        await().atMost(ofSeconds(20)).until {
+            currentCount() == count
         }
     }
 
-    private val countPattern = Regex("\\((\\d+)\\)")
+    /** Return the count of this section from the live test hook. */
+    protected abstract fun currentCount(): Int
 
-    private fun countOfTheNumberOfCases(): Int {
-        val context = contextForCaseCount() ?: return 0
-        return execute<Int> {
-            val name = context.accessibleName ?: ""
-            countPattern.find(name)?.groupValues?.get(1)?.toInt() ?: 0
-        }
-    }
-
-    abstract fun contextForCaseCount(): AccessibleContext?
+    /** True when this section is currently visible in the UI. */
+    protected abstract fun isShowing(): Boolean
 
     fun requireCaseCountToBeHidden() {
-        waitUntilAsserted { contextForCaseCount() shouldBe null }
+        await().atMost(ofSeconds(5)).until { !isShowing() }
     }
 
     fun requireCasesLabelToBeHidden() {
-        waitUntilAsserted { contextForCaseCount() shouldBe null }
+        await().atMost(ofSeconds(5)).until { !isShowing() }
     }
 
     fun requireCasesLabelToBeShown() {
-        waitUntilAsserted { contextForCaseCount() shouldNotBe null }
+        await().atMost(ofSeconds(5)).until { isShowing() }
     }
 
     fun requireCaseCountToBeShown() {
-        waitUntilAsserted { contextForCaseCount() shouldNotBe null }
+        await().atMost(ofSeconds(5)).until { isShowing() }
     }
 
+    protected fun snapshot(): CaseSelectorTestHook.Snapshot = CaseSelectorTestHook.snapshot()
 }
