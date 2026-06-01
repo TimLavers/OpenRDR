@@ -864,4 +864,24 @@ class RuleSessionManagerTest {
         // Then
         kb.caseViewManager.allInOrder() shouldBe listOf(b, a)
     }
+
+    // --- cornerstone case creation
+
+    @Test
+    fun `add session case as cornerstone`() {
+        val sessionCase1 = createCase("Case1", value = "1.0")
+        rsm.startRuleSession(sessionCase1, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("C1")))
+        rsm.commitCurrentRuleSession()
+        kb.cornerstoneCaseIds().size shouldBe 1
+
+        val case2 = createCase("Case2", value = "1.1")
+        rsm.startRuleSession(case2, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("C2")))
+        rsm.commitCurrentRuleSession()
+        kb.cornerstoneCaseIds().size shouldBe 2
+
+        val case3 = createCase("Case3", value = "1.0")
+        rsm.startRuleSession(case3, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("C3")))
+        rsm.commitCurrentRuleSession()
+        kb.cornerstoneCaseIds().size shouldBe 2  // Case3 is identical to Case1 so is not stored
+    }
 }

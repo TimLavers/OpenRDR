@@ -144,7 +144,7 @@ class RuleSessionManager(
         checkSession()
         val rulesAdded = ruleSession!!.commit()
         kb.ruleSessionRecorder.recordRuleSessionCommitted(rulesAdded)
-        kb.addCornerstoneCase(ruleSession!!.case)
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(ruleSession!!.case)
         ruleSession = null
         currentDiff = null
         checkRuleSessionHistoryConsistency()

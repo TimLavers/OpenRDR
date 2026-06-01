@@ -1,5 +1,4 @@
 Feature: Creation of cornerstone cases when rules are built
-  //@single
   Scenario: Only one copy of a case is stored as a cornerstone
     Given case Case1 is provided having data:
       | x | 1 |
@@ -16,8 +15,6 @@ Feature: Creation of cornerstone cases when rules are built
     When I build another rule to append the comment "Shoot some tubes." with condition
       | y > 0 |
     And the interpretation should be "Go to the beach. Shoot some tubes."
-#TODO uncomment when the bug is fixed
-#    Then the cornerstone case count should be 1
-
+    Then the cornerstone case count should be 1
 
 

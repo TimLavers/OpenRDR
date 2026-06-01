@@ -126,9 +126,7 @@ data class RDRCase(
         return result
     }
 
-    fun hasSameDataAs(other: RDRCase): Boolean {
-        TODO()
-    }
+    fun hasSameDataAs(other: RDRCase) = data.equals(other.data)
 
     fun numberOfEpisodes() = dates.size
 

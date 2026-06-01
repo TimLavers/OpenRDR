@@ -104,9 +104,9 @@ class KBTest {
     @Test
     fun `sendCornerstoneStatus should send the first cornerstone when no selection has been made`() = runTest {
         //Given
-        val cc1 = kb.addCornerstoneCase(createCase("Case1"))
-        kb.addCornerstoneCase(createCase("Case2"))
-        kb.addCornerstoneCase(createCase("Case3"))
+        val cc1 = kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case1"))
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case2"))
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case3"))
         val vcc1 = kb.viewableCase(cc1)
         val sessionCase = createCase("Session")
         rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
@@ -494,7 +494,7 @@ class KBTest {
     }
 
     private fun buildRuleToAddAComment(kb: KB, comment: String) {
-        kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case1", value = "1.0"))
         val sessionCase = kb.getCornerstoneCaseByName("Case1")
         val conclusion = kb.conclusionManager.getOrCreate(comment)
         rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(conclusion))
@@ -599,8 +599,8 @@ class KBTest {
 
     @Test
     fun getCase() {
-        kb.addCornerstoneCase(createCase("Case1", value = "1.2"))
-        kb.addCornerstoneCase(createCase("Case2"))
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case1", value = "1.2"))
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case2"))
         val retrieved = kb.getCornerstoneCaseByName("Case1")
         retrieved.name shouldBe "Case1"
         retrieved.getLatest(glucose())!!.value.text shouldBe "1.2"
@@ -634,7 +634,7 @@ class KBTest {
 
     @Test
     fun `getProcessedCaseByName should not find cornerstone cases`() {
-        kb.addCornerstoneCase(createCase("Case1"))
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case1"))
         shouldThrow<NoSuchElementException> {
             kb.getProcessedCaseByName("Case1")
         }
@@ -664,8 +664,8 @@ class KBTest {
 
     @Test
     fun `getCornerstoneCaseByName should return the case with the given name`() {
-        kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
-        kb.addCornerstoneCase(createCase("Case2", value = "2.0"))
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case1", value = "1.0"))
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case2", value = "2.0"))
         val retrieved = kb.getCornerstoneCaseByName("Case2")
         retrieved.name shouldBe "Case2"
         retrieved.getLatest(glucose())!!.value.text shouldBe "2.0"
@@ -680,7 +680,7 @@ class KBTest {
 
     @Test
     fun `getCornerstoneCaseByName should throw when the name does not match any cornerstone case`() {
-        kb.addCornerstoneCase(createCase("Case1"))
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case1"))
         shouldThrow<NoSuchElementException> {
             kb.getCornerstoneCaseByName("Unknown")
         }
@@ -696,8 +696,8 @@ class KBTest {
 
     @Test
     fun `getCornerstoneCaseByName should return the first match when there are duplicates`() {
-        val first = kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
-        kb.addCornerstoneCase(createCase("Case1", value = "2.0"))
+        val first = kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case1", value = "1.0"))
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case1", value = "2.0"))
         val retrieved = kb.getCornerstoneCaseByName("Case1")
         retrieved.caseId.id shouldBe first.caseId.id
     }
@@ -879,7 +879,7 @@ class KBTest {
     @Test
     fun conflictingCases() {
         val sessionCase = createCase("Case1", value = "1.0")
-        kb.addCornerstoneCase(createCase("Case2", value = "2.0"))
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case2", value = "2.0"))
         sessionCase.interpretation.conclusionTexts() shouldBe emptySet()
         rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
         rsm.conflictingCasesInCurrentRuleSession().map { rdrCase -> rdrCase.name }.toSet() shouldBe setOf("Case2")
@@ -888,7 +888,7 @@ class KBTest {
     @Test
     fun addCondition() {
         val sessionCase = createCase("Case1", value = "1.0")
-        kb.addCornerstoneCase(createCase("Case2", value = "2.0"))
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case2", value = "2.0"))
         sessionCase.interpretation.conclusionTexts() shouldBe emptySet()
         rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
         rsm.addConditionToCurrentRuleSession(lessThanOrEqualTo(null, glucose(), 1.2))
@@ -900,7 +900,7 @@ class KBTest {
         //Given
         val sessionCase = createCase("Case1", value = "1.0")
         val cornerstoneCase = createViewableCase("Case2", caseId = 1, CaseType.Cornerstone)
-        kb.addCornerstoneCase(cornerstoneCase.case)
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(cornerstoneCase.case)
         sessionCase.interpretation.conclusionTexts() shouldBe emptySet()
         rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
         val condition = lessThanOrEqualTo(null, glucose(), 1.2)
@@ -1073,7 +1073,7 @@ class KBTest {
     fun `conclusions are aligned when building rules`() {
         val conclusionToAdd = kb.conclusionManager.getOrCreate("Whatever")
         val copyOfConclusion = conclusionToAdd.copy()
-        kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case1", value = "1.0"))
         val sessionCase = kb.getCornerstoneCaseByName("Case1")
         rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(copyOfConclusion))
         rsm.commitCurrentRuleSession()
@@ -1095,7 +1095,7 @@ class KBTest {
     @Test
     fun `cornerstoneCaseIds should return ids of cornerstone cases only`() {
         kb.cornerstoneCaseIds() shouldHaveSize 0
-        val cc = kb.addCornerstoneCase(createCase("CC1", value = "1.0"))
+        val cc = kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("CC1", value = "1.0"))
         kb.cornerstoneCaseIds() shouldHaveSize 1
         kb.cornerstoneCaseIds().first().name shouldBe "CC1"
     }
@@ -1119,7 +1119,7 @@ class KBTest {
 
     @Test
     fun `getCase should return a cornerstone case by id`() {
-        val cc = kb.addCornerstoneCase(createCase("CC1", value = "1.0"))
+        val cc = kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("CC1", value = "1.0"))
         val retrieved = kb.getCase(cc.caseId.id!!)
         retrieved shouldNotBe null
         retrieved!!.name shouldBe "CC1"
@@ -1179,7 +1179,7 @@ class KBTest {
 
     @Test
     fun `should update the cornerstone status when the conditions change`() {
-        val cc1 = kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
+        val cc1 = kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case1", value = "1.0"))
         val vcc1 = kb.viewableCase(cc1)
         val sessionCase = createCase("Case3", value = "3.0")
 
@@ -1195,7 +1195,7 @@ class KBTest {
 
     @Test
     fun `should not update the cornerstone status if no cornerstones are removed by the condition change`() {
-        val cc1 = kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
+        val cc1 = kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case1", value = "1.0"))
         val vcc1 = kb.viewableCase(cc1)
         val sessionCase = createCase("Case3", value = "3.0")
 
@@ -1211,9 +1211,9 @@ class KBTest {
 
     @Test
     fun `should reset the first cornerstone case if the current cornerstone has been removed by the condition change`() {
-        val cc1 = kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
-        val cc2 = kb.addCornerstoneCase(createCase("Case2", value = "2.0"))
-        kb.addCornerstoneCase(createCase("Case3", value = "3.0"))
+        val cc1 = kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case1", value = "1.0"))
+        val cc2 = kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case2", value = "2.0"))
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case3", value = "3.0"))
         val vcc1 = kb.viewableCase(cc1)
         val vcc2 = kb.viewableCase(cc2)
         val sessionCase = createCase("Case4", value = "4.0")
@@ -1231,9 +1231,9 @@ class KBTest {
 
     @Test
     fun `should remain on the current cornerstone case if it has not been removed by the condition change`() {
-        val cc1 = kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
-        kb.addCornerstoneCase(createCase("Case2", value = "2.0"))
-        kb.addCornerstoneCase(createCase("Case3", value = "3.0"))
+        val cc1 = kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case1", value = "1.0"))
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case2", value = "2.0"))
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case3", value = "3.0"))
         val vcc1 = kb.viewableCase(cc1)
         val sessionCase = createCase("Case4", value = "4.0")
 
@@ -1251,9 +1251,9 @@ class KBTest {
     @Test
     fun `should restore the index of the current cornerstone case if it has not been removed by the condition change`() {
         //Given
-        kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
-        val cc2 = kb.addCornerstoneCase(createCase("Case2", value = "2.0"))
-        kb.addCornerstoneCase(createCase("Case3", value = "3.0"))
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case1", value = "1.0"))
+        val cc2 = kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case2", value = "2.0"))
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case3", value = "3.0"))
         val vcc2 = kb.viewableCase(cc2)
         val sessionCase = createCase("Case4", value = "4.0")
 
@@ -1281,9 +1281,9 @@ class KBTest {
 
     @Test
     fun `should remain on the current cornerstone case if it has not been removed by the condition change and it is not the first one`() {
-        val cc1 = kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
-        val cc2 = kb.addCornerstoneCase(createCase("Case2", value = "2.0"))
-        kb.addCornerstoneCase(createCase("Case3", value = "3.0"))
+        val cc1 = kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case1", value = "1.0"))
+        val cc2 = kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case2", value = "2.0"))
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case3", value = "3.0"))
         kb.viewableCase(cc1)
         val vcc2 = kb.viewableCase(cc2)
         val sessionCase = createCase("Case4", value = "4.0")
@@ -1314,9 +1314,9 @@ class KBTest {
 
     @Test
     fun `should return all cornerstones when the rule session has just started and no cornerstone has been selected`() {
-        val cc1 = kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
-        kb.addCornerstoneCase(createCase("Case2", value = "2.0"))
-        kb.addCornerstoneCase(createCase("Case3", value = "3.0"))
+        val cc1 = kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case1", value = "1.0"))
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case2", value = "2.0"))
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case3", value = "3.0"))
         val vcc1 = kb.viewableCase(cc1)
 
         val sessionCase = createCase("Case4", value = "4.0")
@@ -1330,9 +1330,9 @@ class KBTest {
 
     @Test
     fun `should not change the index of the current cornerstone if it has not been removed`() {
-        val cc1 = kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
-        val cc2 = kb.addCornerstoneCase(createCase("Case2", value = "2.0"))
-        kb.addCornerstoneCase(createCase("Case3", value = "3.0"))
+        val cc1 = kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case1", value = "1.0"))
+        val cc2 = kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case2", value = "2.0"))
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case3", value = "3.0"))
         kb.viewableCase(cc1)
         val vcc2 = kb.viewableCase(cc2)
 
@@ -1781,7 +1781,7 @@ class KBTest {
     @Test
     fun `should include the diff in the cornerstone status when cornerstones exist`() {
         //Given
-        kb.addCornerstoneCase(createCase("Case2", value = "2.0"))
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case2", value = "2.0"))
         val sessionCase = createCase("Case1", value = "1.0", id = 1)
         val viewableCase = kb.viewableCase(sessionCase)
         val comment = "Go to Bondi."
@@ -1817,7 +1817,7 @@ class KBTest {
 
     @Test
     fun `cornerstoneStatus should have empty ruleConditions when no conditions have been added and there are cornerstones`() {
-        val cc1 = kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
+        val cc1 = kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case1", value = "1.0"))
         kb.viewableCase(cc1)
         val sessionCase = createCase("Case2", value = "2.0")
         rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
@@ -1837,7 +1837,7 @@ class KBTest {
 
     @Test
     fun `cornerstoneStatus should include ruleConditions after conditions have been added and there are cornerstones`() {
-        kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case1", value = "1.0"))
         val sessionCase = createCase("Case2", value = "2.0")
         rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
         val condition = lessThanOrEqualTo(null, glucose(), 2.5) //true for session case, true for cornerstone
