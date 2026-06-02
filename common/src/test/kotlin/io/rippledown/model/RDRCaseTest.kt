@@ -404,7 +404,7 @@ class RDRCaseTest {
             with(getLatest(tsh)!!) {
                 value.text shouldBe "0.67"
                 referenceRange!!.lower shouldBe "0.5".toFloat()
-                referenceRange!!.upper shouldBe "4.0".toFloat()
+                referenceRange.upper shouldBe "4.0".toFloat()
                 units shouldBe "mU/L"
             }
             with(getLatest(abc)!!) {
@@ -415,7 +415,7 @@ class RDRCaseTest {
             with(getLatest(def)!!) {
                 value.text shouldBe "100"
                 referenceRange!!.lower shouldBe "90".toFloat()
-                referenceRange!!.upper shouldBe "400".toFloat()
+                referenceRange.upper shouldBe "400".toFloat()
                 units shouldBe null
             }
         }

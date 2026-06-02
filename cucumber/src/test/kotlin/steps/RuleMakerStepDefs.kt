@@ -104,6 +104,12 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         completeRule()
     }
 
+    @And("I build another rule to append the comment {string} with condition(s)")
+    fun buildAnotherRuleToAppendTheCommentWithConditions(comment: String, conditions: DataTable) {
+        chatDefs.addCommentWithoutConfirmation(comment)
+        completeRuleWithConditions(conditions)
+    }
+
     @When("I build a rule to add the comment {string} with condition(s)")
     fun buildRuleToAddCommentWithConditions(comment: String, conditions: DataTable) {
         chatDefs.requestCommentBeAdded(comment)

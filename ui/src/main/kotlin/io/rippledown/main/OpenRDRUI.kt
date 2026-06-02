@@ -14,10 +14,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import io.rippledown.appbar.AppBarHandler
 import io.rippledown.appbar.ApplicationBar
-import io.rippledown.casecontrol.CaseControl
-import io.rippledown.casecontrol.CaseControlHandler
-import io.rippledown.casecontrol.CaseSelector
-import io.rippledown.casecontrol.CaseSelectorHandler
+import io.rippledown.casecontrol.*
 import io.rippledown.chat.ChatController
 import io.rippledown.chat.ChatControllerHandler
 import io.rippledown.cornerstone.CornerstoneTestHook
@@ -81,6 +78,11 @@ fun OpenRDRUI(
     // window containing a large case table.
     SideEffect {
         CornerstoneTestHook.update(cornerstoneStatus)
+        CaseSelectorTestHook.update(
+            processedCount = casesInfo.caseIds.size,
+            cornerstoneCount = casesInfo.cornerstoneCaseIds.size,
+            isShowing = casesInfo.count > 0 && !ruleInProgress
+        )
     }
 
     handler.setWindowSize(isShowingCornerstone)

@@ -59,11 +59,12 @@ There are two layers of tests:
 | cucumber tests    | cucumberTest             | 
 
 To run the unit tests, call the `test` task for each of the subprojects: 
-- `./gradlew common:test`
 - `./gradlew chat:test`
+- `./gradlew common:test`
 - `./gradlew hints:test`
-- `./gradlew server:test`
 - `./gradlew llm:test`
+- `./gradlew packaging:test`
+- `./gradlew server:test`
 - `./gradlew ui:test`
 
 The cucumber tests build a fat jar and run it in a separate JVM to the client. The client is controlled

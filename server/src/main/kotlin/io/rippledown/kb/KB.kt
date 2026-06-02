@@ -43,6 +43,14 @@ class KB(persistentKB: PersistentKB) {
         return caseManager.add(case.copyWithoutId(CaseType.Cornerstone))
     }
 
+    fun addCornerstoneCaseIfNoEquivalentAlreadyPresent(case: RDRCase): RDRCase {
+        val existing = caseManager.all(CaseType.Cornerstone).any { it.hasSameDataAs(case) }
+        if (!existing) {
+            return caseManager.add(case.copyWithoutId(CaseType.Cornerstone))
+        }
+        return case
+    }
+
     fun addCornerstoneCase(externalCase: ExternalCase): RDRCase {
         val builder = RDRCaseBuilder().apply { setCaseType(CaseType.Cornerstone) }
         externalCase.data.forEach {

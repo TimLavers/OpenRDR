@@ -126,6 +126,8 @@ data class RDRCase(
         return result
     }
 
+    fun hasSameDataAs(other: RDRCase) = data.equals(other.data)
+
     fun numberOfEpisodes() = dates.size
 
     fun resultsFor(attribute: Attribute): ResultsList? {
