@@ -78,11 +78,6 @@ fun OpenRDRUI(
     // window containing a large case table.
     SideEffect {
         CornerstoneTestHook.update(cornerstoneStatus)
-        CaseSelectorTestHook.update(
-            processedCount = casesInfo.caseIds.size,
-            cornerstoneCount = casesInfo.cornerstoneCaseIds.size,
-            isShowing = casesInfo.count > 0 && !ruleInProgress
-        )
     }
 
     handler.setWindowSize(isShowingCornerstone)

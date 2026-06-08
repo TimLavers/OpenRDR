@@ -4,7 +4,11 @@ import androidx.compose.ui.awt.ComposeDialog
 import androidx.compose.ui.awt.ComposeWindow
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.integration.waitUntilAsserted
+import net.sourceforge.tess4j.Tesseract
 import org.assertj.swing.edt.GuiActionRunner.execute
+import java.awt.Rectangle
+import java.awt.Robot
+import java.awt.image.BufferedImage
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleRole
 import javax.accessibility.AccessibleText
@@ -30,6 +34,33 @@ fun renderedText(ctx: AccessibleContext): String {
             if (ch != null) append(ch)
         }
     }
+}
+
+fun captureComponentScreenshot(context: AccessibleContext): BufferedImage? {
+    val accessibleComponent = context.accessibleComponent ?: return null
+    val screenLocation = accessibleComponent.locationOnScreen ?: return null
+    val size = accessibleComponent.size ?: return null
+    val screenRect = Rectangle(screenLocation.x, screenLocation.y, size.width, size.height)
+    return Robot().createScreenCapture(screenRect)
+}
+object TesseractInstallation {
+    val tesseract: Tesseract = Tesseract()
+    init {
+        tesseract.setDatapath("/opt/homebrew/opt/tesseract/share/tessdata")
+    }
+
+    fun getText(image: BufferedImage): String? {
+        return tesseract.doOCR(image)
+    }
+}
+fun getComponentTextUsingOCR(context: AccessibleContext?): List<String> {
+    if (context == null) return emptyList()
+    val image = captureComponentScreenshot(context) ?: return emptyList()
+
+    val text = TesseractInstallation.getText(image)
+    println("Extracted text from screenshot: $text")
+
+    return text?.split("\n")?.filter { it.isNotBlank() } ?: emptyList()
 }
 
 fun AccessibleContext.find(description: String, role: AccessibleRole): AccessibleContext? {

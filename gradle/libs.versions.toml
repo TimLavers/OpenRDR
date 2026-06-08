@@ -21,6 +21,7 @@ logback = "1.5.32"
 material_icons = "1.7.3"
 mockk = "1.14.9"
 postgresql = "42.7.10"
+tess4j = "5.14.0"
 versionCatalogUpdate = "1.1.0"
 
 [plugins]
@@ -73,6 +74,7 @@ logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 materialIcons = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "material_icons" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
+tess4j = { module = "net.sourceforge.tess4j:tess4j", version.ref = "tess4j" }
 
 [bundles]
 cucumber = [

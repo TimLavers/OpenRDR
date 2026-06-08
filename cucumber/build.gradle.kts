@@ -21,6 +21,7 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation(libs.mockk)
+    testImplementation(libs.tess4j)
 }
 
 val cukeClassPath = configurations.testRuntimeClasspath.get()
@@ -72,6 +73,7 @@ fun runCucumber(cukeArgs: List<String>): Int {
         listOf(
         "-Xmx4G",
             "--enable-native-access=ALL-UNNAMED",
+            "-Djna.library.path=/opt/homebrew/lib",
         "-cp",
             "\"${cp.replace("\\", "\\\\")}\"",
         "io.cucumber.core.cli.Main"
@@ -148,7 +150,7 @@ tasks.register<JavaExec>("cucumberFolderTest") {
 fun JavaExec.setupExec() {
     group = "verification"
     maxHeapSize = "4G"
-    jvmArgs("--enable-native-access=ALL-UNNAMED")
+    jvmArgs("--enable-native-access=ALL-UNNAMED", "-Djna.library.path=/opt/homebrew/lib")
     mainClass.set("io.cucumber.core.cli.Main")
     classpath = cukeClassPath
 }
