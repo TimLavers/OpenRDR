@@ -55,7 +55,6 @@ Feature: When building a rule, the user is provided with candidate conditions th
     Then the suggested conditions should not contain:
       | Waves ≤ 1.5 |
 
-  @single
   Scenario: The user can request to see the suggested conditions again
     Given case Bondi is provided having data:
       | Sun   | hot |

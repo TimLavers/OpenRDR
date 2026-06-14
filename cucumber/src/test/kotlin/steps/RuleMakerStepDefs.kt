@@ -74,7 +74,7 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         chatDefs.provideTheseReasons(listOf(text))
     }
 
-    @Then("the suggestions showing should include:")
+    @Then("the suggestions showing (should )include:")
     fun theConditionsShowingShouldInclude(dataTable: DataTable) {
         val expectedConditions = dataTable.asList().toSet()
         await().atMost(20, SECONDS).untilAsserted {
@@ -231,12 +231,17 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
     }
 
     @Then("the model should respond with a message containing:")
-    fun `require alert`(expected: String) {
+    fun `require message`(expected: String) {
         chatDefs.waitForBotText(expected)
     }
 
     @Then("the model should indicate that the expression is not a valid reason")
     fun `require invalid reason response`() {
         chatDefs.waitForBotResponseIndicatingInvalidReason()
+    }
+
+    @Then("the model should ask me to finish or cancel the current rule")
+    fun `require response to finish or cancel the current rule`() {
+        chatDefs.waitForBotText("finish", "cancel")
     }
 }

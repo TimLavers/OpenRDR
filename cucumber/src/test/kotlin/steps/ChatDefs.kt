@@ -248,6 +248,11 @@ class ChatDefs {
         addCommentWithoutConfirmation(comment)
     }
 
+    @And("I request that the comment {string} be added without being prompted")
+    fun requestCommentBeAddedWithoutPrompt(comment: String) {
+        addCommentWithoutConfirmation(comment)
+    }
+
     fun addCommentWithoutConfirmation(comment: String) {
         enterChatTextAndSend("Add the comment: \"$comment\"")
     }

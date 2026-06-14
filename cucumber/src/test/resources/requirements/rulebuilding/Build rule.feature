@@ -109,3 +109,16 @@ Feature: The user can make rules that change the interpretive report
     And I see the case Bondi as the current case
     When I start to build a rule to replace the comment "Let's surf." by "Let's swim."
     Then the message indicating the comment "Let's surf." is being replaced by "Let's swim." should be shown
+
+  Scenario: The user should be prevented from starting a new rule session if a previous session is not completed
+    Given case Bondi is provided having data:
+      | Wave | excellent |
+      | Sun  | hot       |
+    And I start the client application
+    And I see the case Bondi as the current case
+    And I request that the comment "Let's surf" be added
+    And the suggestions showing include:
+      | Sun is "hot"        |
+      | Wave is "excellent" |
+    When I request that the comment "Let's swim" be added without being prompted
+    Then the model should ask me to finish or cancel the current rule
