@@ -81,6 +81,19 @@ class ChatTestHookTest {
     }
 
     @Test
+    fun `messageList contains the actual messages in the correct order`() {
+        val messages = listOf(
+            BotMessage("hello"),
+            UserMessage("hi"),
+            BotMessage("how can I help"),
+            SuggestionListMessage(listOf("a", "b"))
+        )
+        ChatTestHook.update(messages = messages, sendIsEnabled = true)
+
+        ChatTestHook.snapshot().messageList shouldBe messages
+    }
+
+    @Test
     fun `mostRecentBotText is taken from the latest BotMessage even when followed by other kinds`() {
         ChatTestHook.update(
             messages = listOf(
