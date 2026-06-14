@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicReference
 object ChatTestHook {
 
     data class Snapshot(
-        val messageCount: Int,
+        val messageList: List<ChatMessage>,
         val suggestionRowCount: Int,
         val mostRecentBotText: String?,
         val mostRecentSuggestionText: String?,
@@ -36,7 +36,7 @@ object ChatTestHook {
     ) {
         companion object {
             val EMPTY = Snapshot(
-                messageCount = 0,
+                messageList = emptyList(),
                 suggestionRowCount = 0,
                 mostRecentBotText = null,
                 mostRecentSuggestionText = null,
@@ -65,7 +65,7 @@ object ChatTestHook {
         val suggestionRowCount = messages.count { it is SuggestionListMessage }
         snapshotRef.set(
             Snapshot(
-                messageCount = messages.size,
+                messageList = messages,
                 suggestionRowCount = suggestionRowCount,
                 mostRecentBotText = mostRecentBot,
                 mostRecentSuggestionText = mostRecentSuggestion,

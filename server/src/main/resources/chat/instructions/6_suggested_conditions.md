@@ -1,7 +1,8 @@
 # Suggested conditions
 
 You have access to the {{GET_SUGGESTED_CONDITIONS}} function. Calling it causes the system to display a list of
-suggested conditions to the user directly. You do NOT need to repeat the suggestions back.
+suggested conditions to the user directly. You do NOT need to repeat the suggestions back, unless the user specifically
+asks to see them again.
 
 ## When to call this function
 
@@ -22,6 +23,20 @@ suggested conditions to the user directly. You do NOT need to repeat the suggest
 {
   "action": "{{USER_ACTION}}",
   "message": "Here are some suggestions. You can select one or enter your own."
+}
+```
+
+## How to present the suggested conditions again
+
+- If the user specifically asks to see the suggestions again, call {{GET_SUGGESTED_CONDITIONS}} and repeat the process
+  above.
+- Indicate in your response that they are seeing the suggestions again.
+- Do not repeat the instruction to select one or enter your own reason.
+
+```json
+{
+  "action": "{{USER_ACTION}}",
+  "message": "Here are my suggestions again."
 }
 ```
 

@@ -8,7 +8,6 @@ Feature: Filtering attributes in the Case View
   # to clear, persistence across case selection and cornerstone changes) are
   # exercised by unit tests; this scenario is just the end-to-end happy path.
 
-  @single
   Scenario: Typing a filter restricts the case view to matching attributes
     Given a case with name Einstein is stored on the server
     And I start the client application

@@ -3,6 +3,7 @@ package io.rippledown.integration.pageobjects
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.rippledown.chat.*
+import io.rippledown.chat.ChatTestHook.snapshot
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAll
 import io.rippledown.integration.utils.renderedText
@@ -100,7 +101,7 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
      * surfaces as silently-dropped user input.
      */
     private fun waitForChatReady() {
-        await().atMost(ofSeconds(60)).until { ChatTestHook.snapshot().sendIsEnabled }
+        await().atMost(ofSeconds(60)).until { snapshot().sendIsEnabled }
     }
 
     fun enterChatText(text: String) {
@@ -206,17 +207,17 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
     fun mostRecentBotRowContainsTerms(terms: List<String>): Boolean {
         // Read the in-JVM test hook rather than walking the accessibility
         // tree — see [ChatTestHook] for the rationale.
-        val text = ChatTestHook.snapshot().mostRecentBotText
+        val text = snapshot().mostRecentBotText
         return text != null && terms.all { it -> text.contains(it, ignoreCase = true) }
     }
 
     fun mostRecentBotRowContainsAnyOfTheTerms(terms: List<String>): Boolean {
-        val text = ChatTestHook.snapshot().mostRecentBotText
+        val text = snapshot().mostRecentBotText
         return text != null && terms.any { it -> text.contains(it, ignoreCase = true) }
     }
 
     fun mostRecentBotRowDoesNotContainTheTerm(term: String) {
-        val text = ChatTestHook.snapshot().mostRecentBotText
+        val text = snapshot().mostRecentBotText
         val found = text != null && text.contains(term, ignoreCase = true)
         withClue("did not expect to find the text $term") {
             found shouldBe false
@@ -282,12 +283,12 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun mostRecentSuggestionRowContainsTerms(terms: List<String>): Boolean {
-        val text = ChatTestHook.snapshot().mostRecentSuggestionText
+        val text = snapshot().mostRecentSuggestionText
         return text != null && terms.all { it -> text.contains(it, ignoreCase = true) }
     }
 
     fun mostRecentSuggestionRowDoesNotContainsTerm(term: String): Boolean {
-        val text = ChatTestHook.snapshot().mostRecentSuggestionText ?: return true
+        val text = snapshot().mostRecentSuggestionText ?: return true
         return !text.contains(term, ignoreCase = true)
     }
 
@@ -320,7 +321,7 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
      * does not consistently emit accessibility nodes for off-screen items.
      */
     fun suggestionsInMostRecentMessage(): List<String> {
-        val text = ChatTestHook.snapshot().mostRecentSuggestionText ?: return emptyList()
+        val text = snapshot().mostRecentSuggestionText ?: return emptyList()
         if (text.isEmpty()) return emptyList()
         return text.lines().map { line ->
             // Each line is "<n>. <suggestion text>"; strip the numbering prefix.
@@ -329,7 +330,7 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
         }
     }
 
-    fun numberOfSuggestionRows(): Int = ChatTestHook.snapshot().suggestionRowCount
+    fun numberOfSuggestionRows(): Int = snapshot().suggestionRowCount
 
     fun chatTextFieldContains(text: String): Boolean {
         return execute<Boolean> {
@@ -342,7 +343,9 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
         }
     }
 
-    fun numberOfChatMessages(): Int = ChatTestHook.snapshot().messageCount
+    fun numberOfChatMessages(): Int = snapshot().messageList.size
+
+    fun messageList() = snapshot().messageList
 }
 
 

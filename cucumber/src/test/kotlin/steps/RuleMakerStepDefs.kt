@@ -5,6 +5,7 @@ import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.kotest.matchers.collections.shouldContainAll
+import io.rippledown.chat.SuggestionListMessage
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
 import java.util.concurrent.TimeUnit.SECONDS
@@ -180,6 +181,15 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         val terms = dataTable.asList()
         await().atMost(ofSeconds(20)).until {
             chatPO().mostRecentSuggestionRowContainsTerms(terms)
+        }
+    }
+
+    @And("the suggested conditions should be shown again")
+    fun theSuggestedConditionsShouldBeShownAgain() {
+        await().atMost(ofSeconds(20)).until {
+            chatPO().messageList().count {
+                it is SuggestionListMessage
+            } > 1
         }
     }
 

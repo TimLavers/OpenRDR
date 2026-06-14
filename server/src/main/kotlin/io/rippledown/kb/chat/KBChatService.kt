@@ -106,6 +106,7 @@ object KBChatService {
         "12_json_format_guidelines.md",
         "13_general-guidelines.md",
         "14_cancelling_the_rule.md",
+        "15_listing_capabilities.md",
     )
     val systemPromptExampleSections = listOf(
         "examples.md",
