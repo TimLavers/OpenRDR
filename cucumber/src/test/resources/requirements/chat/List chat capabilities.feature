@@ -17,4 +17,3 @@ Feature: List chat capabilities
       | undo      |
       | reorder   |
       | cancel    |
-    And pause
