@@ -14,8 +14,6 @@ import io.rippledown.integration.utils.findAndClick
 import io.rippledown.integration.utils.renderedText
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
-import org.awaitility.Awaitility.await
-import java.time.Duration
 import javax.accessibility.AccessibleContext
 
 // ORD2
@@ -30,7 +28,7 @@ class CornerstonePO(private val contextProvider: () -> AccessibleContext) {
     // case after a rule commit. See `CornerstoneTestHook` and
     // `ChatTestHook` for full context.
     fun requireCornerstoneCase(expectedCaseName: String) {
-        await().atMost(Duration.ofSeconds(10)).untilAsserted {
+        waitUntilAsserted {
             CornerstoneTestHook.snapshot().cornerstoneCaseName shouldBe expectedCaseName
         }
     }
@@ -48,7 +46,7 @@ class CornerstonePO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun requireCornerstoneLabel(expectedLabel: String) {
-        await().atMost(Duration.ofSeconds(10)).untilAsserted {
+        waitUntilAsserted {
             val s = CornerstoneTestHook.snapshot()
             // Mirror the formatting in `CornerstoneInspection`:
             //   total > 0 -> "Cornerstone ${index + 1} of $total"
