@@ -6,6 +6,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.kb.chat.RuleService
+import io.rippledown.kb.chat.action.ChatAction.Companion.RULE_SESSION_ALREADY_ACTIVE_ERROR
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.rule.CornerstoneStatus
@@ -65,6 +66,48 @@ class ReplaceCommentTest {
 
         //Then
         coVerify { ruleService.sendCornerstoneStatus() }
+    }
+
+    @Test
+    fun `should return error when rule session is already active`() = runTest {
+        //Given
+        val commentToRemove = "please replace me"
+        val commentToAdd = "please use me"
+        val action = ReplaceComment(commentToRemove, commentToAdd)
+        coEvery { ruleService.isRuleSessionActive() } returns true
+
+        //When
+        val response = action.doIt(ruleService, currentCase, modelResponder)
+
+        //Then
+        response shouldBe ChatResponse(RULE_SESSION_ALREADY_ACTIVE_ERROR)
+        coVerify(exactly = 0) { ruleService.startRuleSessionToReplaceComment(any(), any(), any()) }
+        coVerify(exactly = 0) { ruleService.sendCornerstoneStatus() }
+        coVerify(exactly = 0) { modelResponder.response(any<String>()) }
+    }
+
+    @Test
+    fun `should start rule session when no rule session is active`() = runTest {
+        //Given
+        val commentToRemove = "please replace me"
+        val commentToAdd = "please use me"
+        val action = ReplaceComment(commentToRemove, commentToAdd)
+        coEvery { ruleService.isRuleSessionActive() } returns false
+        val ccStatus = CornerstoneStatus(indexOfCornerstoneToReview = 42, numberOfCornerstones = 84)
+        coEvery {
+            ruleService.startRuleSessionToReplaceComment(any(), commentToRemove, commentToAdd)
+        } returns ccStatus
+
+        val responseFromModel = ChatResponse("There are 84 cornerstone cases. Do you want to review them?")
+        coEvery { modelResponder.response(any<String>()) } returns responseFromModel
+
+        //When
+        val response = action.doIt(ruleService, currentCase, modelResponder)
+
+        //Then
+        coVerify { ruleService.startRuleSessionToReplaceComment(any(), commentToRemove, commentToAdd) }
+        coVerify { ruleService.sendCornerstoneStatus() }
+        response shouldBe responseFromModel
     }
 
 }

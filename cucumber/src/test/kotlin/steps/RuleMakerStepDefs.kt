@@ -5,6 +5,7 @@ import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.kotest.matchers.collections.shouldContainAll
+import io.rippledown.chat.SuggestionListMessage
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
 import java.util.concurrent.TimeUnit.SECONDS
@@ -73,7 +74,7 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         chatDefs.provideTheseReasons(listOf(text))
     }
 
-    @Then("the suggestions showing should include:")
+    @Then("the suggestions showing (should )include:")
     fun theConditionsShowingShouldInclude(dataTable: DataTable) {
         val expectedConditions = dataTable.asList().toSet()
         await().atMost(20, SECONDS).untilAsserted {
@@ -183,6 +184,15 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         }
     }
 
+    @And("the suggested conditions should be shown again")
+    fun theSuggestedConditionsShouldBeShownAgain() {
+        await().atMost(ofSeconds(20)).until {
+            chatPO().messageList().count {
+                it is SuggestionListMessage
+            } > 1
+        }
+    }
+
     @When("I set the editable value to be {string}")
     fun setTheEditableValueToBe(text: String) {
         chatDefs.waitForBotText("you selected", "What value")
@@ -221,12 +231,17 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
     }
 
     @Then("the model should respond with a message containing:")
-    fun `require alert`(expected: String) {
+    fun `require message`(expected: String) {
         chatDefs.waitForBotText(expected)
     }
 
     @Then("the model should indicate that the expression is not a valid reason")
     fun `require invalid reason response`() {
         chatDefs.waitForBotResponseIndicatingInvalidReason()
+    }
+
+    @Then("the model should ask me to finish or cancel the current rule")
+    fun `require response to finish or cancel the current rule`() {
+        chatDefs.waitForBotText("finish", "cancel")
     }
 }

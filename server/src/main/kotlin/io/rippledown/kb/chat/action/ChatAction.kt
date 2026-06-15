@@ -7,4 +7,9 @@ import io.rippledown.model.chat.ChatResponse
 
 interface ChatAction {
     suspend fun doIt(ruleService: RuleService, currentCase: ViewableCase?, modelResponder: ModelResponder): ChatResponse
+
+    companion object {
+        const val RULE_SESSION_ALREADY_ACTIVE_ERROR =
+            "Please finish or cancel the current rule before starting a new one."
+    }
 }
