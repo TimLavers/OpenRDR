@@ -54,3 +54,13 @@ Feature: When building a rule, the user is provided with candidate conditions th
     And the chatbot has asked if I want to provide any more reasons and I confirm
     Then the suggested conditions should not contain:
       | Waves ≤ 1.5 |
+
+  Scenario: The user can request to see the suggested conditions again
+    Given case Bondi is provided having data:
+      | Sun   | hot |
+      | Waves | 1.5 |
+    And I start the client application
+    And I request that the comment "Beach time!" be added
+    And the chatbot has asked if I want to provide any reasons
+    When I ask to see the suggestions again
+    Then the suggested conditions should be shown again

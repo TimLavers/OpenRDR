@@ -67,7 +67,7 @@ class ChatDefs {
 
     @And("the chatbot has asked if I want to provide any (more )reasons")
     fun waitForBotQuestionToProvideReasons() {
-        waitForBotText(REASON)
+        waitForBotTextToContainAnyOf(REASON, SUGGESTION)
     }
 
     fun waitForBotSuggestions() {
@@ -248,6 +248,11 @@ class ChatDefs {
         addCommentWithoutConfirmation(comment)
     }
 
+    @And("I request that the comment {string} be added without being prompted")
+    fun requestCommentBeAddedWithoutPrompt(comment: String) {
+        addCommentWithoutConfirmation(comment)
+    }
+
     fun addCommentWithoutConfirmation(comment: String) {
         enterChatTextAndSend("Add the comment: \"$comment\"")
     }
@@ -314,6 +319,11 @@ class ChatDefs {
         enterChatTextAndSend("What reasons are there?")
     }
 
+    @When("I ask to see the suggestions again")
+    fun askToSeeSuggestedConditionsAgain() {
+        enterChatTextAndSend("Please show the suggestions again")
+    }
+
     @When("I remove the condition {string}")
     fun removeTheCondition(text: String) {
         waitForBotQuestionToProvideAnotherReasonOrGiveSuggestions()
@@ -341,6 +351,16 @@ class ChatDefs {
     @Then("the chatbot has mentioned the cornerstone case {string}")
     fun waitForBotToMentionCornerstoneCase(name: String) {
         waitForBotText(name)
+    }
+
+    @When("I ask what capabilities are available")
+    fun askWhatCapabilitiesAreAvailable() {
+        enterChatTextAndSend("What can you help me with? List the things you can do.")
+    }
+
+    @Then("the capabilities shown include:")
+    fun capabilitiesShownInclude(dataTable: DataTable) {
+        waitForBotText(*dataTable.asList().toTypedArray())
     }
 
 }

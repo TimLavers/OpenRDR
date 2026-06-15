@@ -8,7 +8,7 @@ import java.time.Duration.ofSeconds
 
 private fun snapshotDiagnostic(): String {
     val s = ChatTestHook.snapshot()
-    return "ChatTestHook{messageCount=${s.messageCount}, suggestionRowCount=${s.suggestionRowCount}, " +
+    return "ChatTestHook{messageCount=${s.messageList.size}, suggestionRowCount=${s.suggestionRowCount}, " +
             "mostRecentBotText=${s.mostRecentBotText?.take(120)}, " +
             "mostRecentSuggestionText=${s.mostRecentSuggestionText?.take(200)}, " +
             "sendIsEnabled=${s.sendIsEnabled}}"

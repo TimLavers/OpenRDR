@@ -31,7 +31,7 @@ class ChatTestHookTest {
     fun `EMPTY snapshot has zero counts and no text`() {
         val empty = ChatTestHook.Snapshot.EMPTY
 
-        empty.messageCount shouldBe 0
+        empty.messageList.size shouldBe 0
         empty.suggestionRowCount shouldBe 0
         empty.mostRecentBotText shouldBe null
         empty.mostRecentSuggestionText shouldBe null
@@ -58,7 +58,7 @@ class ChatTestHookTest {
         ChatTestHook.update(messages = emptyList(), sendIsEnabled = true)
 
         val s = ChatTestHook.snapshot()
-        s.messageCount shouldBe 0
+        s.messageList.size shouldBe 0
         s.suggestionRowCount shouldBe 0
         s.mostRecentBotText shouldBe null
         s.mostRecentSuggestionText shouldBe null
@@ -77,7 +77,20 @@ class ChatTestHookTest {
             sendIsEnabled = true
         )
 
-        ChatTestHook.snapshot().messageCount shouldBe 4
+        ChatTestHook.snapshot().messageList.size shouldBe 4
+    }
+
+    @Test
+    fun `messageList contains the actual messages in the correct order`() {
+        val messages = listOf(
+            BotMessage("hello"),
+            UserMessage("hi"),
+            BotMessage("how can I help"),
+            SuggestionListMessage(listOf("a", "b"))
+        )
+        ChatTestHook.update(messages = messages, sendIsEnabled = true)
+
+        ChatTestHook.snapshot().messageList shouldBe messages
     }
 
     @Test
@@ -228,7 +241,7 @@ class ChatTestHookTest {
         )
 
         val s = ChatTestHook.snapshot()
-        s.messageCount shouldBe 1
+        s.messageList.size shouldBe 1
         s.suggestionRowCount shouldBe 0
         s.mostRecentBotText shouldBe null
         s.mostRecentSuggestionText shouldBe null
@@ -281,11 +294,11 @@ class ChatTestHookTest {
                             // If messageCount > 0 then mostRecentBotText
                             // must be non-null (since every update we
                             // post above contains at least one BotMessage).
-                            if (s.messageCount > 0 && s.mostRecentBotText == null) {
+                            if (s.messageList.size > 0 && s.mostRecentBotText == null) {
                                 mismatches.incrementAndGet()
                             }
                             // suggestionRowCount must always be in [0, messageCount].
-                            if (s.suggestionRowCount < 0 || s.suggestionRowCount > s.messageCount) {
+                            if (s.suggestionRowCount < 0 || s.suggestionRowCount > s.messageList.size) {
                                 mismatches.incrementAndGet()
                             }
                         }

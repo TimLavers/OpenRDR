@@ -30,10 +30,11 @@
 }
 ```
 
-## Step 2 Receive confirmation that the rule session has been started
+## Step 2 Receive confirmation that the rule session has been started, or else cannot be started
 
-You will receive a message from the system with cornerstone case information. This indicates the rule session has
-been started. Wait for the message which has the format:
+If the rule can be started, you will receive a message from the system with cornerstone case information. This indicates
+the rule session has
+been started:
 
 ```
 Cornerstone: <name of the current cornerstone case, or null>, Index: <index>, Total: <number of cornerstone cases>
